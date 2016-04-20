@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:exponentjs/exp.git
+	branch = master
+	commit = bb74539f469b7ca2f474ee09777ac6ea72c4a63c
+	parent = a0f09353d22e91db9596ecd4e50d9b7f5ccb44d6
+	cmdver = 0.3.0
