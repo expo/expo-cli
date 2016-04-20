@@ -1,0 +1,8 @@
+# Dependency directory
+node_modules/
+
+# Babel output
+build/
+
+# Template zip
+template.zip
