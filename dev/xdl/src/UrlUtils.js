@@ -27,7 +27,7 @@ export async function constructPublishUrlAsync(projectRoot, entryPoint) {
 
   return bundleUrl + '?' + constructBundleQueryParams({
     dev: false,
-    minify: true,
+    minify: false,
   });
 }
 
