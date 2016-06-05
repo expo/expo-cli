@@ -1,6 +1,6 @@
 {
   "name": "xdl",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "description": "The Exponent Development Library",
   "main": "build/xdl.js",
   "files": [
