@@ -1,7 +1,6 @@
 # exp [![Slack](http://slack.exponentjs.com/badge.svg)](http://slack.exponentjs.com)
 The Exponent Development CLI - Beta release
 
-
 ## Installation
 
 ```bash
