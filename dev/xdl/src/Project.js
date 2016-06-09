@@ -2,7 +2,6 @@
 
 import 'instapromise';
 
-import _ from 'lodash';
 import child_process from 'child_process';
 import delayAsync from 'delay-async';
 import express from 'express';
@@ -10,6 +9,7 @@ import FormData from 'form-data';
 import freeportAsync from 'freeport-async';
 import fs from 'fs';
 import joi from 'joi';
+import _ from 'lodash';
 import ngrok from 'ngrok';
 import path from 'path';
 import request from 'request';
