@@ -1,11 +1,11 @@
 import {
-  Login,
+  User,
 } from 'xdl';
 
 var log = require('../log');
 
 async function action(options) {
-  let result = await Login.logoutAsync();
+  let result = await User.logoutAsync();
   if (result) {
     log("Success.");
     return result;

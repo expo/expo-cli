@@ -4,6 +4,8 @@ import 'instapromise';
 
 let _ = require('lodash');
 let request = require('request');
+import FormData from 'form-data';
+import got from 'got';
 
 let Config = require('./Config');
 let Session = require('./Session');
@@ -39,15 +41,36 @@ async function _callMethodAsync(url, method, requestBody) {
     method: method || 'get',
     headers,
   };
+
+  let response;
+  // TODO: move everything from `request` to `got`
   if (requestBody) {
-    options = {
-      ...options,
-      body: requestBody,
-      json: true,
+    if (requestBody instanceof FormData) {
+      // Use `got` library to handle FormData uploads
+      options = {
+        ...options,
+        body: requestBody,
+      };
+
+      options.headers = {
+        ...options.headers,
+        ...requestBody.getHeaders(),
+      };
+
+      response = await got(url, options);
+    } else {
+      options = {
+        ...options,
+        body: requestBody,
+        json: true,
+      };
     }
   }
 
-  let response = await request.promise(options);
+  if (!response) {
+    // Use `got` only for FormData. Use `request` for everything else.
+    response = await request.promise(options);
+  }
   let responseBody = response.body;
   var responseObj;
   if (_.isString(responseBody)) {

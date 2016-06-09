@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 
 var _ = require('lodash-node');
-var child_process = require('child_process');
 var Command = require('commander').Command;
 var crayon = require('@ccheever/crayon');
 var glob = require('glob');
 var instapromise = require('instapromise');
-var path = require('path');
 var program = require('commander');
 var url = require('url');
 
@@ -18,17 +16,17 @@ var log = require('./log');
 var update = require('./update');
 var urlOpts = require('./urlOpts');
 
-Command.prototype.urlOpts = function () {
+Command.prototype.urlOpts = function() {
   urlOpts.addOptions(this);
   return this;
 };
 
-Command.prototype.addUrlOption = function () {
+Command.prototype.addUrlOption = function() {
   urlOpts.addUrlOption(this);
   return this;
-}
+};
 
-Command.prototype.asyncAction = function (asyncFn) {
+Command.prototype.asyncAction = function(asyncFn) {
   return this.action(async (...args) => {
     try {
       let options = _.last(args).parent;
@@ -36,25 +34,21 @@ Command.prototype.asyncAction = function (asyncFn) {
         log.config.raw = true;
         process.env['PM2_SILENT'] = true;
       }
-      let result = await asyncFn(...args);
+      await asyncFn(...args);
     } catch (err) {
-     if (err._isCommandError) {
-       if (false) {
-         log.error(crayon.orange.bold(err.code) + ' ' + crayon.red(err.message));
-       } else {
-         log.error(err.message);
-       }
-     } else if (err._isApiError) {
-       log.error(crayon.red(err.message));
-     } else {
-       log.error(err.message);
-       crayon.gray.error(err.stack);
-     }
-   }
+      if (err._isCommandError) {
+        log.error(err.message);
+      } else if (err._isApiError) {
+        log.error(crayon.red(err.message));
+      } else {
+        log.error(err.message);
+        crayon.gray.error(err.stack);
+      }
+    }
   });
-}
+};
 
-Command.prototype.asyncActionProjectDir = function (asyncFn) {
+Command.prototype.asyncActionProjectDir = function(asyncFn) {
   return this.asyncAction(async (projectDir, ...args) => {
     if (!projectDir) {
       projectDir = process.cwd();
@@ -62,7 +56,7 @@ Command.prototype.asyncActionProjectDir = function (asyncFn) {
 
     return asyncFn(projectDir, ...args);
   });
-}
+};
 
 async function runAsync() {
   try {
@@ -87,6 +81,14 @@ async function runAsync() {
     }).forEach(file => {
       require('./' + file)(program);
     });
+
+    if (process.env.EXPONENT_DEBUG) {
+      glob.sync('debug_commands/*.js', {
+        cwd: __dirname,
+      }).forEach(file => {
+        require('./' + file)(program);
+      });
+    }
 
     program.parse(process.argv);
 

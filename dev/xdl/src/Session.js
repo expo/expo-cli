@@ -7,7 +7,7 @@ function _newIdentifier(type='c') {
 }
 
 async function clientIdAsync() {
-  var clientId = await UserSettings.getAsync('clientId', null);
+  var clientId = await UserSettings.getAsync('accessToken', null);
   if (clientId === null) {
     clientId = _newIdentifier();
     await setClientIdAsync(clientId);
@@ -16,7 +16,7 @@ async function clientIdAsync() {
 }
 
 async function setClientIdAsync(token) {
-  await UserSettings.setAsync('clientId', token);
+  await UserSettings.setAsync('accessToken', token);
   return token;
 }
 

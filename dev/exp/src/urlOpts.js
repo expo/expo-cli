@@ -11,7 +11,7 @@ import {
 var CommandError = require('./CommandError');
 var log = require('./log');
 
-var addOptions = function (program) {
+function addOptions(program) {
   program
     .option('-a, --android', 'Opens your app in Exponent on a connected Android device')
     .option('-i, --ios', 'Opens your app in Exponent in a currently running iOS simulator on your computer')
@@ -31,7 +31,7 @@ var addOptions = function (program) {
     .option('--http', 'Same as --protocol http')
     .option('--redirect', 'Same as --protocol redirect')
     ;
-}
+};
 
 function hasBooleanArg(rawArgs, argName) {
   return _.includes(rawArgs, '--' + argName) || _.includes(rawArgs, '--no-' + argName);
@@ -57,7 +57,7 @@ async function optsAsync(projectDir, options) {
   }
 
   if (options.host) { opts.hostType = options.host; }
-  if (options.tunnel) { opts.hostType = 'ngrok'; }
+  if (options.tunnel) { opts.hostType = 'tunnel'; }
   if (options.lan) { opts.hostType = 'lan'; }
   if (options.localhost) { opts.hostType = 'localhost'; }
 

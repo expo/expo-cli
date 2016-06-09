@@ -1,15 +1,15 @@
 import {
-  Login,
+  User,
 } from 'xdl';
 
 var log = require('../log');
 
 async function action(options) {
-  let result = await Login.whoamiAsync();
-  if (result && result.user && result.user.username) {
-    log(`Logged in as ${result.user.username}`);
-    log.raw(result.user.username);
-    return result;
+  let user = await User.whoamiAsync();
+  if (user && user.username) {
+    log(`Logged in as ${user.username}`);
+    log.raw(user.username);
+    return user;
   } else {
     throw new Error("Unexpected Error: Couldn't get user information");
   }

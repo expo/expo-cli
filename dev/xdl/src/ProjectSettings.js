@@ -1,4 +1,4 @@
-import instapromise from 'instapromise';
+import 'instapromise';
 
 import fs from 'fs';
 import JsonFile from '@exponent/json-file';
@@ -7,7 +7,7 @@ import path from 'path';
 
 let projectSettingsFile = 'settings.json';
 let projectSettingsDefaults = {
-  hostType: 'ngrok',
+  hostType: 'tunnel',
   dev: true,
   strict: false,
   minify: false,
@@ -26,6 +26,10 @@ async function readAsync(projectRoot) {
     projectSettings = await projectSettingsJsonFile(projectRoot, projectSettingsFile).readAsync();
   } catch (e) {
     projectSettings = await projectSettingsJsonFile(projectRoot, projectSettingsFile).writeAsync(projectSettingsDefaults);
+  }
+
+  if (projectSettings.hostType === 'ngrok') { // 'ngrok' is deprecated
+    projectSettings.hostType = 'tunnel';
   }
 
   return projectSettings;
@@ -73,17 +77,7 @@ function dotExponentProjectDirectoryExists(projectRoot) {
 
 async function getPackagerOptsAsync(projectRoot) {
   let projectSettings = await readAsync(projectRoot);
-
-  return {
-    http: (projectSettings.urlType === 'http'),
-    ngrok: (projectSettings.hostType === 'ngrok'),
-    lan: (projectSettings.hostType === 'lan'),
-    localhost: (projectSettings.hostType === 'localhost'),
-    dev: projectSettings.dev,
-    strict: projectSettings.strict,
-    minify: projectSettings.minify,
-    redirect: (projectSettings.urlType === 'redirect'),
-  };
+  return projectSettings;
 }
 
 module.exports = {

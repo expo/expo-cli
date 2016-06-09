@@ -1,14 +1,14 @@
 var inquirerAsync = require('inquirer-async');
 
 import {
-  Login,
+  User,
 } from 'xdl';
 
 var log = require('./log');
 
 async function signupOrLogin(options) {
   let username = options.username;
-  let password = options.password
+  let password = options.password;
 
   let questions = [];
   if (!username) {
@@ -42,12 +42,11 @@ async function signupOrLogin(options) {
     password: password || answers.password,
   };
 
-  var result = await Login.loginOrAddUserAsync(data);
-  var user = result.user;
+  var user = await User.loginAsync(data);
 
   if (user) {
     log("Success.");
-    return result;
+    return user;
   } else {
     throw new Error("Unexpected Error: No user returned from the API");
   }

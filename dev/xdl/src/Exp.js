@@ -7,19 +7,13 @@ let mkdirp = require('mkdirp');
 let path = require('path');
 
 let Api = require('./Api');
-let Login = require('./Login');
-let ProjectSettings = require('./ProjectSettings');
+let User = require('./User');
 let UrlUtils = require('./UrlUtils');
 let UserSettings = require('./UserSettings');
+let XDLError = require('./XDLError');
+let ProjectSettings = require('./ProjectSettings');
 
 let TEMPLATE_ROOT = path.resolve(__dirname, '../template');
-
-function NewExpError(code, message) {
-  let err = new Error(message);
-  err.code = code;
-  err._isNewExpError;
-  return err;
-}
 
 function packageJsonForRoot(root) {
   return new JsonFile(path.join(root, 'package.json'));
@@ -65,7 +59,7 @@ async function createNewExpAsync(root, info, opts = {}) {
 
   let exists = await existsAsync(pkgJson.file);
   if (exists && !opts.force) {
-    throw NewExpError('WONT_OVERWRITE_WITHOUT_FORCE', "Refusing to create new Exp because package.json already exists at root");
+    throw new XDLError('WONT_OVERWRITE_WITHOUT_FORCE', "Refusing to create new Exp because package.json already exists at root");
   }
 
   await mkdirp.promise(root);
@@ -87,19 +81,21 @@ async function createNewExpAsync(root, info, opts = {}) {
 }
 
 async function saveRecentExpRootAsync(root) {
+  root = path.resolve(root);
+
   // Write the recent Exps JSON file
   let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
   let recentExps = await recentExpsJsonFile.readAsync({cantReadFileDefault: []});
   // Filter out copies of this so we don't get dupes in this list
-  recentExps = recentExps.filter(function (x) {
-    return x != root;
+  recentExps = recentExps.filter(function(x) {
+    return x !== root;
   });
   recentExps.unshift(root);
   return await recentExpsJsonFile.writeAsync(recentExps.slice(0, 100));
 }
 
 function getHomeDir() {
-  return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 }
 
 function makePathReadable(pth) {
@@ -132,13 +128,13 @@ async function expInfoSafeAsync(root) {
   }
 }
 
+// TODO: remove
 async function getPublishInfoAsync(root) {
-  let username = (await Login.currentUserAsync()).username;
+  let username = await User.getUsernameAsync();
   let pkgJson = packageJsonForRoot(root);
   let pkg = await pkgJson.readAsync();
   let {
     name,
-    description,
     version,
     exp,
   } = pkg;
@@ -194,6 +190,26 @@ async function sendAsync(recipient, url_) {
   return result;
 }
 
+// TODO: figure out where these functions should live
+async function getProjectRandomnessAsync(projectRoot) {
+  let ps = await ProjectSettings.readAsync(projectRoot);
+  let randomness = ps.urlRandomness;
+  if (!randomness) {
+    randomness = UrlUtils.someRandomness();
+    ProjectSettings.setAsync(projectRoot, {'urlRandomness': randomness});
+  }
+  return randomness;
+}
+
+async function getLoggedOutPlaceholderUsernameAsync() {
+  let lpu = await UserSettings.getAsync('loggedOutPlaceholderUsername', null);
+  if (!lpu) {
+    lpu = UrlUtils.randomIdentifierForLoggedOutUser();
+    await UserSettings.setAsync('loggedOutPlaceholderUsername', lpu);
+  }
+  return lpu;
+}
+
 module.exports = {
   createNewExpAsync,
   determineEntryPointAsync,
@@ -203,4 +219,6 @@ module.exports = {
   recentValidExpsAsync,
   saveRecentExpRootAsync,
   sendAsync,
+  getProjectRandomnessAsync,
+  getLoggedOutPlaceholderUsernameAsync,
 };

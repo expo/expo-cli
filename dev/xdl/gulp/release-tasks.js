@@ -8,16 +8,17 @@ import spawnAsync from '@exponent/spawn-async';
 const paths = {
   template: path.resolve(__dirname, '../template'),
   templateNodeModules: path.resolve(__dirname, '../template/node_modules'),
-}
+};
 
 let tasks = {
   async archiveTemplate() {
     await verifyNodeModulesAsync();
+    await spawnAsync('rm', ['-rf', 'template/.exponent']);
     await spawnAsync('zip', ['-rq9', 'template.zip', 'template'], {
       stdio: 'inherit',
       cwd: path.resolve(__dirname, '..'),
     });
-  }
+  },
 };
 
 async function verifyNodeModulesAsync() {

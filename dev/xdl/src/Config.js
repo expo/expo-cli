@@ -1,8 +1,10 @@
 'use strict';
 
+import Env from './Env';
+
 module.exports = {
   api: {
-    host: 'exp.host',
+    host: Env.isStaging() ? 'staging.exp.host' : 'exp.host',
     port: null,
     //host: 'localhost',
     //port: 3000,

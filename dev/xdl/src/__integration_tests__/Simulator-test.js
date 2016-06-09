@@ -2,14 +2,14 @@
 
 jest.disableAutomock();
 jest.useRealTimers();
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
 
 import delayAsync from 'delay-async';
 
-import xdl from '../../';
+import xdl from '../xdl';
 
 describe('simulator', () => {
-  it('opens', async () => {
+  it('opens and loads url in exponent', async () => {
     let Simulator = xdl.Simulator;
     if (!await Simulator.isSimulatorInstalledAsync()) {
       throw new Error("Simulator isn't installed on this computer; can't run this test.");

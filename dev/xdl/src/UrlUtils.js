@@ -1,25 +1,27 @@
 'use strict';
 
-import crayon from '@ccheever/crayon';
-import ip from 'ip';
+import 'instapromise';
+
+import joi from 'joi';
 import myLocalIp from 'my-local-ip';
 import os from 'os';
 import url from 'url';
 
 import ProjectSettings from './ProjectSettings';
+import XDLError from './XDLError';
 
-export async function constructBundleUrlAsync(projectRoot, opts) {
+async function constructBundleUrlAsync(projectRoot, opts) {
   return constructUrlAsync(projectRoot, opts, true);
 }
 
-export async function constructManifestUrlAsync(projectRoot, opts) {
+async function constructManifestUrlAsync(projectRoot, opts) {
   return constructUrlAsync(projectRoot, opts, false);
 }
 
-export async function constructPublishUrlAsync(projectRoot, entryPoint) {
+async function constructPublishUrlAsync(projectRoot, entryPoint) {
   let bundleUrl = await constructBundleUrlAsync(projectRoot, {
-    ngrok: true,
-    http: true,
+    hostType: 'localhost',
+    urlType: 'http',
   });
 
   let mainModulePath = guessMainModulePath(entryPoint);
@@ -31,13 +33,13 @@ export async function constructPublishUrlAsync(projectRoot, entryPoint) {
   });
 }
 
-export async function constructDebuggerHostAsync(projectRoot) {
+async function constructDebuggerHostAsync(projectRoot) {
   return constructUrlAsync(projectRoot, {
-    noProtocol: true,
+    urlType: 'no-protocol',
   }, true);
 }
 
-export function constructBundleQueryParams(opts) {
+function constructBundleQueryParams(opts) {
   let queryParams = 'dev=' + encodeURIComponent(!!opts.dev);
 
   if (opts.hasOwnProperty('strict')) {
@@ -54,6 +56,23 @@ export function constructBundleQueryParams(opts) {
 }
 
 async function constructUrlAsync(projectRoot, opts, isPackager) {
+  if (opts) {
+    let schema = joi.object().keys({
+      urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
+      hostType: joi.any().valid('localhost', 'lan', 'lanIp', 'tunnel'),
+      dev: joi.boolean(),
+      strict: joi.boolean(),
+      minify: joi.boolean(),
+      urlRandomness: joi.string(),
+    });
+
+    try {
+      joi.promise.validate(opts, schema);
+    } catch (e) {
+      throw new XDLError('INVALID_OPTIONS', e.toString());
+    }
+  }
+
   let defaultOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
   if (!opts) {
     opts = defaultOpts;
@@ -64,28 +83,28 @@ async function constructUrlAsync(projectRoot, opts, isPackager) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
 
   let protocol = 'exp';
-  if (opts.http) {
+  if (opts.urlType === 'http') {
     protocol = 'http';
-  } else if (opts.noProtocol) {
+  } else if (opts.urlType === 'no-protocol') {
     protocol = null;
   }
 
   let hostname;
   let port;
 
-  if (opts.localhost) {
+  if (opts.hostType === 'localhost') {
     hostname = 'localhost';
-    port = isPackager ? packagerInfo.packagerPort : packagerInfo.port;
-  } else if (opts.lan) {
+    port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
+  } else if (opts.hostType === 'lan') {
     hostname = os.hostname();
-    port = isPackager ? packagerInfo.packagerPort : packagerInfo.port;
-  } else if (opts.lanIp) {
+    port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
+  } else if (opts.hostType === 'lanIp') { // TODO: is this used anywhere?
     hostname = myLocalIp;
-    port = isPackager ? packagerInfo.packagerPort : packagerInfo.port;
+    port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
   } else {
-    let ngrokUrl = isPackager ? packagerInfo.packagerNgrok : packagerInfo.ngrok;
+    let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.exponentServerNgrokUrl;
     if (!ngrokUrl) {
-      throw new Error("Can't get ngrok URL because ngrok not started yet");
+      throw new Error("Can't get tunnel URL because ngrok not started yet");
     }
 
     let pnu = url.parse(ngrokUrl);
@@ -95,7 +114,7 @@ async function constructUrlAsync(projectRoot, opts, isPackager) {
 
   let url_ = '';
   if (protocol) {
-    url_ += protocol + '://'
+    url_ += protocol + '://';
   }
 
   url_ += hostname;
@@ -106,26 +125,26 @@ async function constructUrlAsync(projectRoot, opts, isPackager) {
     url_ += ':80'; // DUMB BUG FIX!!!! Old RN needs a port number
   }
 
-  if (opts.redirect) {
+  if (opts.urlType === 'redirect') {
     return 'http://exp.host/--/to-exp/' + encodeURIComponent(url_);
   }
 
   return url_;
 }
 
-export function expUrlFromHttpUrl(url_) {
+function expUrlFromHttpUrl(url_) {
   return ('' + url_).replace(/^http(s?)/, 'exp');
 }
 
-export function httpUrlFromExpUrl(url_) {
+function httpUrlFromExpUrl(url_) {
   return ('' + url_).replace(/^exp(s?)/, 'http');
 }
 
-export function guessMainModulePath(entryPoint) {
+function guessMainModulePath(entryPoint) {
   return entryPoint.replace(/\.js$/, '');
 }
 
-export function randomIdentifier(length=6) {
+function randomIdentifier(length = 6) {
   let alphabet = '23456789qwertyuipasdfghjkzxcvbnm';
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -136,24 +155,40 @@ export function randomIdentifier(length=6) {
   return result;
 }
 
-export function sevenDigitIdentifier() {
+function sevenDigitIdentifier() {
   return randomIdentifier(3) + '-' + randomIdentifier(4);
 }
 
-export function randomIdentifierForUser(username) {
+function randomIdentifierForUser(username) {
   return username + '-' + randomIdentifier(3) + '-' + randomIdentifier(2);
 }
 
-
-export function randomIdentifierForLoggedOutUser() {
+function randomIdentifierForLoggedOutUser() {
   // TODO: Disallow usernames that start with `00-`
   return '00-' + sevenDigitIdentifier();
 }
 
-export function someRandomness() {
+function someRandomness() {
   return [randomIdentifier(2), randomIdentifier(3)].join('-');
 }
 
-export function domainify(s) {
+function domainify(s) {
   return s.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 }
+
+module.exports = {
+  constructBundleUrlAsync,
+  constructManifestUrlAsync,
+  constructPublishUrlAsync,
+  constructDebuggerHostAsync,
+  constructBundleQueryParams,
+  expUrlFromHttpUrl,
+  httpUrlFromExpUrl,
+  guessMainModulePath,
+  randomIdentifier,
+  sevenDigitIdentifier,
+  randomIdentifierForUser,
+  randomIdentifierForLoggedOutUser,
+  someRandomness,
+  domainify,
+};

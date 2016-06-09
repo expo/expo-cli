@@ -1,0 +1,15 @@
+{
+  "watchman": false,
+  "automock": false,
+  "testEnvironment": "node",
+  "testPathDirs": [
+    "src"
+  ],
+  "scriptPreprocessor": "<rootDir>/jest/preprocessor.js",
+  "moduleFileExtensions": [
+    "js",
+    "json"
+  ],
+  "testRegex": "__integration_tests__/.*\\.js$",
+  "mocksPattern": "__disabled__"
+}

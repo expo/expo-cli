@@ -4,15 +4,16 @@ let XDL = {
   get Android() { return require('./Android'); },
   get Api() { return require('./Api'); },
   get Config() { return require('./Config'); },
+  get Env() { return require('./Env'); },
   get Exp() { return require('./Exp'); },
   get FileSystem() { return require('./FileSystem'); },
-  get Login() { return require('./Login'); },
-  get PackagerController() { return require('./PackagerController'); },
+  get Project() { return require('./Project'); },
   get ProjectSettings() { return require('./ProjectSettings'); },
-  get RunPackager() { return require('./RunPackager'); },
   get Simulator() { return require('./Simulator'); },
   get UrlUtils() { return require('./UrlUtils'); },
+  get User() { return require('./User'); },
   get UserSettings() { return require('./UserSettings'); },
+  get XDLError() { return require('./XDLError'); },
 };
 
 module.exports = XDL;

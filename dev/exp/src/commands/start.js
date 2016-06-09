@@ -4,13 +4,10 @@ var pm2 = require('pm2');
 var simpleSpinner = require('@exponent/simple-spinner');
 
 import {
-  PackagerController,
-  RunPackager,
+  Project,
   UrlUtils,
-  UserSettings,
 } from 'xdl';
 
-var askUser = require('../askUser');
 var CommandError = require('../CommandError');
 var config = require('../config');
 var log = require('../log');
@@ -37,41 +34,35 @@ async function action(projectDir, options) {
 
     // pm2 spits out some log statements here
     let tempLog = console.log;
-    console.log = function () {};
+    console.log = function() {};
     await pm2.promise.connect();
     console.log = tempLog;
 
     await config.projectExpJsonFile(projectDir).writeAsync({pm2Id, pm2Name, state: 'STARTING'});
 
     // There is a race condition here, but let's just not worry about it for now...
-    var needToStart = true;
-    if (pm2Id != null) {
+    if (pm2Id !== null) {
       // If this is already being managed by pm2, then restart it
       var app = await pm2serve.getPm2AppByNameAsync(pm2Name);
       if (app) {
-        log("pm2 managed process exists; restarting it");
-        await pm2.promise.restart(app.pm_id);
-        //var app_ = await getPm2AppByIdAsync(pm2Id);
-        needToStart = false;
+        log("pm2 managed process exists");
+        await pm2.promise.delete(app.pm_id);
       } else {
         log("Can't find pm2 managed process", pm2Id, " so will start a new one");
         await config.projectExpJsonFile(projectDir).deleteKeyAsync('pm2Id');
       }
     }
 
-    if (needToStart) {
-      log("Starting exp-serve process under pm2");
+    log("Starting exp-serve process under pm2");
 
-      // If it's not being managed by pm2 then start it
-      var _apps = await pm2.promise.start({
-        name: pm2Name,
-        script: script,
-        args: args_,
-        watch: false,
-        cwd: process.cwd(),
-        env: process.env,
-      });
-    }
+    await pm2.promise.start({
+      name: pm2Name,
+      script,
+      args: args_,
+      watch: false,
+      cwd: process.cwd(),
+      env: process.env,
+    });
 
     var app = await pm2serve.getPm2AppByNameAsync(pm2Name);
     if (app) {
@@ -112,33 +103,30 @@ async function action(projectDir, options) {
 
   log(crayon.gray("Using project at", process.cwd()));
 
-  let pc = await RunPackager.runAsync({
-    root: path.resolve(process.cwd()),
-  });
-
-  pc.on('stdout', console.log);
-  pc.on('stderr', console.log);
-
+  let root = path.resolve(process.cwd());
   try {
-    await pc.startAsync();
+    await Project.startAsync(root);
+    Project.attachLogger(root, console.log);
 
-    config.projectExpJsonFile(projectDir).mergeAsync({
+    await config.projectExpJsonFile(projectDir).mergeAsync({
       err: null,
       state: 'RUNNING',
     });
   } catch (e) {
-    config.projectExpJsonFile(projectDir).mergeAsync({
+    await config.projectExpJsonFile(projectDir).mergeAsync({
       err: null,
       state: 'ERROR',
     });
+
+    throw e;
   }
 
-  process.on('exit', () => {
-    PackagerController.exit();
+  process.on('exit', async () => {
+    Project.stopAsync(root);
   });
 
-  process.on('SIGTERM', () => {
-    PackagerController.exit();
+  process.on('SIGTERM', async () => {
+    Project.stopAsync(root);
   });
 
   return config.projectExpJsonFile(projectDir).readAsync();

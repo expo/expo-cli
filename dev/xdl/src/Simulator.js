@@ -165,7 +165,7 @@ async function quitSimulatorAsync() {
 }
 
 function simulatorCacheDirectory() {
-  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
+  let dotExponentHomeDirectory = UserSettings._dotExponentHomeDirectory();
   return path.join(dotExponentHomeDirectory, 'simulator-app-cache');
 }
 

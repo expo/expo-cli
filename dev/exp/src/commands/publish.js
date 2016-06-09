@@ -2,7 +2,7 @@ var crayon = require('@ccheever/crayon');
 var simpleSpinner = require('@exponent/simple-spinner');
 
 import {
-  Exp,
+  Project,
 } from 'xdl';
 
 var config = require('../config');
@@ -23,7 +23,7 @@ async function action(projectDir, options) {
   }
 
   if (options.quiet) {
-    log('Not posting to Slack')
+    log('Not posting to Slack');
   }
 
   let recipient = await sendTo.getRecipient(options.sendTo);
@@ -31,18 +31,18 @@ async function action(projectDir, options) {
   simpleSpinner.start();
 
   let opts = {
-    stealth: !!options.quiet,
+    quiet: !!options.quiet,
   };
-  let result = await Exp.publishAsync(projectDir, opts);
+  let result = await Project.publishAsync(projectDir, opts);
 
   simpleSpinner.stop();
 
   log('Published');
-  log('Your URL is\n\n' + crayon.underline(result.expUrl) + '\n');
-  log.raw(result.expUrl);
+  log('Your URL is\n\n' + crayon.underline(result.url) + '\n');
+  log.raw(result.url);
 
   if (recipient) {
-    await sendTo.sendUrlAsync(result.expUrl, recipient);
+    await sendTo.sendUrlAsync(result.url, recipient);
   }
 
   return result;
