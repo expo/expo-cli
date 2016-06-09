@@ -1,16 +1,16 @@
 import 'instapromise';
 
-import existsAsync from 'exists-async';
 import delayAsync from 'delay-async';
 import download from 'download';
 import execAsync from 'exec-async';
+import existsAsync from 'exists-async';
 import fs from 'fs';
 import glob from 'glob';
 import homeDir from 'home-dir';
 import http from 'http';
 import md5hex from 'md5hex';
-import path from 'path';
 import osascript from '@exponent/osascript';
+import path from 'path';
 import spawnAsync from '@exponent/spawn-async';
 
 import Api from './Api';
