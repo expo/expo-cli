@@ -6,24 +6,19 @@
  */
 'use strict';
 
-let React = require('react-native');
-let {
-  Animated,
+import React from 'react';
+import {
   AppRegistry,
-  Easing,
-  Image,
-  ScrollView,
-  StatusBarIOS,
+  StatusBar,
   StyleSheet,
   Text,
-  View,
-} = React;
+} from 'react-native';
 
-let ExBoxes = require('./ExBoxes');
-let ExPhotoGallery = require('./ExPhotoGallery');
-let ExScreen = require('./ExScreen');
+import ExBoxes from './ExBoxes';
+import ExPhotoGallery from './ExPhotoGallery';
+import ExScreen from './ExScreen';
 
-let HORIZ_SPACE = 12;
+const HORIZ_SPACE = 12;
 
 class FirstExperience extends React.Component {
   constructor(props, context) {
@@ -46,6 +41,12 @@ class FirstExperience extends React.Component {
         headerColor={this.state.headerColor}
         scrollEnabled={!this.state.isBoxPressed}
         style={styles.container}>
+        <StatusBar
+          hidden={false}
+          showHideTransition="fade"
+          barStyle="light-content"
+          animated
+        />
 
         {/* Try editing this text and reloading your project in Exponent */}
         <Text style={styles.paragraph}>
@@ -84,13 +85,6 @@ class FirstExperience extends React.Component {
         </Text>
       </ExScreen>
     );
-  }
-
-  componentDidMount() {
-    if (StatusBarIOS) {
-      StatusBarIOS.setStyle('light-content', true);
-      StatusBarIOS.setHidden(false, 'fade');
-    }
   }
 
   _handleColorSelected(color) {

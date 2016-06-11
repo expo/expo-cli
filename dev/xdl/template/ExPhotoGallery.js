@@ -1,16 +1,15 @@
 'use strict';
 
-let React = require('react-native');
-let {
+import React from 'react';
+import {
   Image,
   ScrollView,
   StyleSheet,
   View,
-} = React;
+} from 'react-native';
 
-let PHOTO_SPACING = 40;
-
-let IMAGE_SOURCES = [
+const PHOTO_SPACING = 40;
+const IMAGE_SOURCES = [
   // hedgehog
   {uri: 'https://i.imgur.com/8049SBB.jpg'},
   // kittens
@@ -25,7 +24,7 @@ let IMAGE_SOURCES = [
   {uri: 'https://i.imgur.com/xlhiPb9.jpg'},
 ];
 
-class ExPhotoGallery extends React.Component {
+export default class ExPhotoGallery extends React.Component {
   render() {
     return (
       <ScrollView
@@ -72,5 +71,3 @@ let styles = StyleSheet.create({
     overflow: 'visible',
   },
 });
-
-module.exports = ExPhotoGallery;

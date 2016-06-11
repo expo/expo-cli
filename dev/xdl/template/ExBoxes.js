@@ -1,25 +1,24 @@
 'use strict';
 
-let React = require('react-native');
-let {
+import React from 'react';
+import {
   Animated,
-  Image,
   PanResponder,
   StyleSheet,
   View,
-} = React;
+} from 'react-native';
 
-let BOX_LENGTH = 88;
-let BOX_SPACING = 12;
-let PAN_THRESHOLD = 10;
-let PAN_STIFFNESS = 1.2;
+const BOX_LENGTH = 88;
+const BOX_SPACING = 12;
+const PAN_THRESHOLD = 10;
+const PAN_STIFFNESS = 1.2;
 
-class ExBoxes extends React.Component {
+export default class ExBoxes extends React.Component {
   render() {
     let { colors, ...props } = this.props;
     return (
       <View {...props} style={[styles.container, props.style]}>
-        {this.props.colors.map(color =>
+        {colors.map(color =>
           <Box
             key={color}
             color={color}
@@ -129,7 +128,7 @@ class Box extends React.Component {
             transform: [
               { scale: this.state.scale },
               ...this.state.position.getTranslateTransform(),
-            ]
+            ],
           },
         ]}
       />
@@ -155,5 +154,3 @@ let styles = StyleSheet.create({
     marginBottom: BOX_SPACING,
   },
 });
-
-module.exports = ExBoxes;

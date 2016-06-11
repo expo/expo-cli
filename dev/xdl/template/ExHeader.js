@@ -1,18 +1,20 @@
 'use strict';
 
-let React = require('react-native');
-let {
+import React from 'react';
+import {
   Animated,
   Easing,
   StyleSheet,
   View,
-} = React;
+} from 'react-native';
 
-let BODY_HEIGHT = 44;
-let TITLE_MARGIN_TOP = 12;
-let STATUS_BAR_HEIGHT = 20;
+const BODY_HEIGHT = 44;
+const TITLE_MARGIN_TOP = 12;
+const STATUS_BAR_HEIGHT = 20;
 
-class ExHeader extends React.Component {
+export default class ExHeader extends React.Component {
+  static HEIGHT = BODY_HEIGHT;
+
   render() {
     let {
       title,
@@ -62,8 +64,6 @@ class ExHeader extends React.Component {
   }
 }
 
-ExHeader.HEIGHT = BODY_HEIGHT;
-
 let styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
@@ -82,5 +82,3 @@ let styles = StyleSheet.create({
     alignSelf: 'center',
   },
 });
-
-module.exports = ExHeader;

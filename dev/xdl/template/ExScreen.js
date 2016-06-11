@@ -1,18 +1,18 @@
 'use strict';
 
-let React = require('react-native');
-let {
+import React from 'react';
+import {
   Animated,
   ScrollView,
   StyleSheet,
   View,
-} = React;
+} from 'react-native';
 
-let ExHeader = require('./ExHeader');
+import ExHeader from './ExHeader';
 
 const STATUS_BAR_HEIGHT = 20;
 
-class ExScreen extends React.Component {
+export default class ExScreen extends React.Component {
   constructor(props, context) {
     super(props, context);
     this.state = {
@@ -71,5 +71,3 @@ let styles = StyleSheet.create({
     right: 0,
   },
 });
-
-module.exports = ExScreen;

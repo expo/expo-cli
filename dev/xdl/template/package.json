@@ -2,10 +2,11 @@
   "private": true,
   "main": "main.js",
   "exp": {
-    "sdkVersion": "5.0.0"
+    "name": "Hello!",
+    "sdkVersion": "UNVERSIONED"
   },
   "dependencies": {
-    "react": "^0.14.5",
-    "react-native": "github:exponentjs/react-native#sdk-5.0.0"
+    "react": "^15.1.0",
+    "react-native": "github:exponentjs/react-native#sdk-6.0.0"
   }
 }
