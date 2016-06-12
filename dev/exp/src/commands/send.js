@@ -1,13 +1,13 @@
-var crayon = require('@ccheever/crayon');
+import crayon from '@ccheever/crayon';
 
 import {
   UrlUtils,
 } from 'xdl';
 
-var askUser = require('../askUser');
-var log = require('../log');
-var sendTo = require('../sendTo');
-var urlOpts = require('../urlOpts');
+import askUser from '../askUser';
+import log from '../log';
+import sendTo from '../sendTo';
+import urlOpts from '../urlOpts';
 
 async function action(projectDir, options) {
   await urlOpts.optsAsync(projectDir, options);
@@ -43,7 +43,7 @@ async function action(projectDir, options) {
   }
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('send [project-dir]')
     .description("Sends a link to your project to a phone number or e-mail address")

@@ -1,14 +1,13 @@
-var simpleSpinner = require('@exponent/simple-spinner');
+import simpleSpinner from '@exponent/simple-spinner';
 
 import {
   Simulator,
   UrlUtils,
 } from 'xdl';
 
-var log = require('../log');
+import log from '../log';
 
 async function action(projectDir, options) {
-
   let url = options.url || await UrlUtils.constructManifestUrlAsync(projectDir, {
     localhost: true,
   });
@@ -16,7 +15,7 @@ async function action(projectDir, options) {
   await Simulator.openUrlInSimulatorSafeAsync(url, log, log, simpleSpinner.start, simpleSpinner.stop);
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('ios [project-dir]')
     .addUrlOption()

@@ -2,7 +2,7 @@ import {
   User,
 } from 'xdl';
 
-var log = require('../log');
+import log from '../log';
 
 async function action(options) {
   let result = await User.logoutAsync();
@@ -14,7 +14,7 @@ async function action(options) {
   }
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('logout')
     .description('Logout from exp.host')

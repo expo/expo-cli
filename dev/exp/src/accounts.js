@@ -1,10 +1,10 @@
-var inquirerAsync = require('inquirer-async');
+import inquirerAsync from 'inquirer-async';
 
 import {
   User,
 } from 'xdl';
 
-var log = require('./log');
+import log from './log';
 
 async function signupOrLogin(options) {
   let username = options.username;
@@ -16,7 +16,7 @@ async function signupOrLogin(options) {
       type: 'input',
       name: 'username',
       message: 'username',
-      validate: function (val) {
+      validate(val) {
         // TODO: Validate username here
         return true;
       },
@@ -28,7 +28,7 @@ async function signupOrLogin(options) {
       type: 'password',
       name: 'password',
       message: 'password',
-      validate: function (val) {
+      validate(val) {
         // TODO: Validate
         return true;
       },
@@ -52,6 +52,6 @@ async function signupOrLogin(options) {
   }
 }
 
-module.exports = {
+export default {
   signupOrLogin,
 };

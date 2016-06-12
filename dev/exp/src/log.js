@@ -1,4 +1,4 @@
-var crayon = require('@ccheever/crayon');
+import crayon from '@ccheever/crayon';
 
 function log() {
   if (log.config.raw) {
@@ -6,7 +6,7 @@ function log() {
   }
   var prefix = crayon.gray("[") + crayon.gray('exp') + crayon.gray("]");
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0));
-  console.error.apply(console, args);
+  console.log(...args);
 }
 
 log.error = function error() {
@@ -15,7 +15,7 @@ log.error = function error() {
   }
   var prefix = crayon.red("[") + crayon.gray('exp') + crayon.red("]") + crayon.red.bold(" Error:");
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0).map((x) => crayon.red(x)));
-  console.error.apply(console, args);
+  console.error(...args);
 };
 
 log.warn = function warn() {
@@ -24,7 +24,7 @@ log.warn = function warn() {
   }
   var prefix = crayon.yellow('[') + crayon.gray('exp') + crayon.yellow(']');
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0).map((x) => crayon.yellow(x)));
-  console.warn.apply(console, args);
+  console.warn(...args);
 }
 
 log.gray = function() {
@@ -33,7 +33,7 @@ log.gray = function() {
   }
   var prefix = '[exp]';
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0));
-  crayon.gray.error.apply(crayon, args);
+  crayon.gray.error(...args);
 }
 
 log.raw = function (...args) {
@@ -49,4 +49,4 @@ log.config = {
   raw: false,
 };
 
-module.exports = log;
+export default log;

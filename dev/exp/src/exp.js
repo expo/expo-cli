@@ -1,20 +1,18 @@
 #!/usr/bin/env node
+import _ from 'lodash-node';
+import crayon from '@ccheever/crayon';
+import glob from 'glob';
+import instapromise from 'instapromise';
+import url from 'url';
 
-var _ = require('lodash-node');
-var Command = require('commander').Command;
-var crayon = require('@ccheever/crayon');
-var glob = require('glob');
-var instapromise = require('instapromise');
-var program = require('commander');
-var url = require('url');
-
+import program, { Command } from 'commander';
 import {
   Config,
 } from 'xdl';
 
-var log = require('./log');
-var update = require('./update');
-var urlOpts = require('./urlOpts');
+import log from './log';
+import update from './update';
+import urlOpts from './urlOpts';
 
 Command.prototype.urlOpts = function() {
   urlOpts.addOptions(this);

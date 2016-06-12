@@ -1,6 +1,6 @@
 var signupOrLogin = require('../accounts').signupOrLogin;
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('login')
     .description('Login to exp.host')

@@ -2,7 +2,7 @@ import {
   Exp,
 } from 'xdl';
 
-var log = require('../log');
+import log from '../log';
 
 async function action(projectDir, options) {
   let info = {};
@@ -14,7 +14,7 @@ async function action(projectDir, options) {
   log(`Your project is ready at ${projectDir}. Use "exp start ${projectDir}" to get started.`)
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('init [project-dir]')
     .alias('i')

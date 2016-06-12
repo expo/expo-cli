@@ -1,11 +1,11 @@
-var crayon = require('@ccheever/crayon');
+import crayon from '@ccheever/crayon';
 
 import {
   UrlUtils,
 } from 'xdl';
 
-var log = require('../log');
-var urlOpts = require('../urlOpts');
+import log from '../log';
+import urlOpts from '../urlOpts';
 
 async function action(projectDir, options) {
   await urlOpts.optsAsync(projectDir, options);
@@ -19,7 +19,7 @@ async function action(projectDir, options) {
   await urlOpts.handleMobileOptsAsync(url, options);
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('url [project-dir]')
     .alias('u')

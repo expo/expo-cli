@@ -1,12 +1,12 @@
-var simpleSpinner = require('@exponent/simple-spinner');
+import simpleSpinner from '@exponent/simple-spinner';
 
 import {
   Exp,
   UserSettings,
 } from 'xdl';
 
-var askUser = require('./askUser');
-var log = require('./log');
+import askUser from './askUser';
+import log from './log';
 
 async function getRecipient(sendTo) {
   let recipient;
@@ -37,7 +37,7 @@ async function sendUrlAsync(url, recipient) {
   return result;
 }
 
-module.exports = {
+export default {
   getRecipient,
   sendUrlAsync,
-}
+};

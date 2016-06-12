@@ -1,9 +1,9 @@
-var child_process = require('child_process');
-let crayon = require('@ccheever/crayon');
-var instapromise = require('instapromise');
-var jsonFile = require('@exponent/json-file');
-var path = require('path');
-var semver = require('semver');
+import child_process from 'child_process';
+import crayon from '@ccheever/crayon';
+import instapromise from 'instapromise';
+import jsonFile from '@exponent/json-file';
+import path from 'path';
+import semver from 'semver';
 
 async function latestExpVersionAsync() {
   var packageName = await jsonFile(path.join(__dirname, '..', 'package.json')).getAsync('name');
@@ -54,7 +54,7 @@ async function checkForExpUpdateAsync() {
 
 }
 
-module.exports = {
+export default {
   currentExpVersionAsync,
   latestExpVersionAsync,
   checkForExpUpdateAsync,

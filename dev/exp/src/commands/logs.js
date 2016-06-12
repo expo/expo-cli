@@ -1,10 +1,10 @@
-var crayon = require('@ccheever/crayon');
-var pm2 = require('pm2');
+import crayon from '@ccheever/crayon';
+import pm2 from 'pm2';
 
-var CommandError = require('../CommandError');
-var config = require('../config');
-var log = require('../log');
-var pm2serve = require('../pm2serve');
+import CommandError from '../CommandError';
+import config from '../config';
+import log from '../log';
+import pm2serve from '../pm2serve';
 
 async function action(projectDir, options) {
   await pm2serve.setupServeAsync(projectDir);
@@ -21,7 +21,7 @@ async function action(projectDir, options) {
   pm2.streamLogs(pm2Id, lines, !!options.raw);
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('logs [project-dir]')
     .alias('l')

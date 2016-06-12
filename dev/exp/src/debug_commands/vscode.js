@@ -2,7 +2,7 @@ import {
   Project,
 } from 'xdl';
 
-var delayAsync = require('delay-async');
+import delayAsync from 'delay-async';
 
 async function action(projectDir, options) {
   await Project.setOptionsAsync(projectDir, {
@@ -14,7 +14,7 @@ async function action(projectDir, options) {
   await delayAsync(1000 * 60 * 60);
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('vscode [project-dir]')
     .description('Runs Exponent on top of an existing packager. Run `react-native start` before calling this command.')

@@ -2,7 +2,7 @@ import {
   User,
 } from 'xdl';
 
-var log = require('../log');
+import log from '../log';
 
 async function action(options) {
   let user = await User.whoamiAsync();
@@ -15,7 +15,7 @@ async function action(options) {
   }
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('whoami')
     .alias('w')

@@ -3,7 +3,7 @@ import {
   UrlUtils,
 } from 'xdl';
 
-var log = require('../log');
+import log from '../log';
 
 async function action(projectDir, options) {
   let url = options.url || await UrlUtils.constructManifestUrlAsync(projectDir);
@@ -11,7 +11,7 @@ async function action(projectDir, options) {
   await Android.openUrlSafeAsync(url, log, log);
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('android [project-dir]')
     .addUrlOption()

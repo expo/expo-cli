@@ -1,19 +1,19 @@
-var crayon = require('@ccheever/crayon');
-var path = require('path');
-var pm2 = require('pm2');
-var simpleSpinner = require('@exponent/simple-spinner');
+import crayon from '@ccheever/crayon';
+import path from 'path';
+import pm2 from 'pm2';
+import simpleSpinner from '@exponent/simple-spinner';
 
 import {
   Project,
   UrlUtils,
 } from 'xdl';
 
-var CommandError = require('../CommandError');
-var config = require('../config');
-var log = require('../log');
-var pm2serve = require('../pm2serve');
-var sendTo = require('../sendTo');
-var urlOpts = require('../urlOpts');
+import CommandError from '../CommandError';
+import config from '../config';
+import log from '../log';
+import pm2serve from '../pm2serve';
+import sendTo from '../sendTo';
+import urlOpts from '../urlOpts';
 
 async function action(projectDir, options) {
   await pm2serve.setupServeAsync(projectDir);
@@ -132,7 +132,7 @@ async function action(projectDir, options) {
   return config.projectExpJsonFile(projectDir).readAsync();
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('start [project-dir]')
     .alias('r')

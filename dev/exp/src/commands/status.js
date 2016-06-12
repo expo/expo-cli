@@ -1,17 +1,17 @@
-var child_process = require('child_process');
-var fs = require('fs');
-var path = require('path');
+import child_process from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 import {
   ProjectSettings,
 } from 'xdl';
 
-var config = require('../config');
-var log = require('../log');
+import config from '../config';
+import log from '../log';
 
 async function action(projectDir, options) {
   if (options.all) {
-    let pm2 = path.resolve(path.join(require.resolve('pm2'), '..', 'bin', 'pm2'));
+    let pm2 = path.resolve(require.resolve('pm2'), '..', 'bin', 'pm2');
     let list = child_process.spawn(pm2, ['list'], {stdio: 'inherit'});
   } else {
     let status = await config.projectStatusAsync(projectDir);
@@ -21,7 +21,7 @@ async function action(projectDir, options) {
   }
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('status [project-dir]')
     .alias('s')

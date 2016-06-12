@@ -1,8 +1,8 @@
-var pm2 = require('pm2');
+import pm2 from 'pm2';
 
-var config = require('../config');
-var log = require('../log');
-var pm2serve = require('../pm2serve');
+import config from '../config';
+import log from '../log';
+import pm2serve from '../pm2serve';
 
 async function action(projectDir, options) {
   if (options.all) {
@@ -32,7 +32,7 @@ async function action(projectDir, options) {
   }
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('stop [project-dir]')
     .alias('q')

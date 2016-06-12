@@ -1,4 +1,4 @@
-var inquirerAsync = require('inquirer-async');
+import inquirerAsync from 'inquirer-async';
 
 import {
   UserSettings,
@@ -18,7 +18,7 @@ async function askForSendToAsync() {
   return recipient;
 }
 
-module.exports = {
+export default {
   askForSendToAsync,
 };
 

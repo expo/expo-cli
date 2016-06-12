@@ -1,6 +1,6 @@
-var _ = require('lodash-node');
-var qrcodeTerminal = require('qrcode-terminal');
-var simpleSpinner = require('@exponent/simple-spinner');
+import _ from 'lodash-node';
+import qrcodeTerminal from 'qrcode-terminal';
+import simpleSpinner from '@exponent/simple-spinner';
 
 import {
   Android,
@@ -8,8 +8,8 @@ import {
   Simulator,
 } from 'xdl';
 
-var CommandError = require('./CommandError');
-var log = require('./log');
+import CommandError from './CommandError';
+import log from './log';
 
 function addOptions(program) {
   program
@@ -31,7 +31,7 @@ function addOptions(program) {
     .option('--http', 'Same as --protocol http')
     .option('--redirect', 'Same as --protocol redirect')
     ;
-};
+}
 
 function hasBooleanArg(rawArgs, argName) {
   return _.includes(rawArgs, '--' + argName) || _.includes(rawArgs, '--no-' + argName);
@@ -102,7 +102,7 @@ function addUrlOption(command) {
     ;
 }
 
-module.exports = {
+export default {
   addOptions,
   addUrlOption,
   handleMobileOptsAsync,

@@ -1,13 +1,13 @@
-var crayon = require('@ccheever/crayon');
-var simpleSpinner = require('@exponent/simple-spinner');
+import crayon from '@ccheever/crayon';
+import simpleSpinner from '@exponent/simple-spinner';
 
 import {
   Project,
 } from 'xdl';
 
-var config = require('../config');
-var log = require('../log');
-var sendTo = require('../sendTo');
+import config from '../config';
+import log from '../log';
+import sendTo from '../sendTo';
 
 async function action(projectDir, options) {
   let status = await config.projectStatusAsync(projectDir);
@@ -48,7 +48,7 @@ async function action(projectDir, options) {
   return result;
 }
 
-module.exports = (program) => {
+export default (program) => {
   program
     .command('publish [project-dir]')
     .alias('p')

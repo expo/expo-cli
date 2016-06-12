@@ -1,21 +1,23 @@
 /**
  * Gets the configuration
- *
  */
 
 import {
   ProjectSettings,
 } from 'xdl';
 
-var jsonFile = require('@exponent/json-file');
-var path = require('path');
-var log = require('./log');
+import JsonFile from '@exponent/json-file';
+import path from 'path';
+import log from './log';
 
-var packageJsonFile = jsonFile('package.json');
+let packageJsonFile = new JsonFile('package.json');
 
 function projectExpJsonFile(projectRoot) {
-  let jsonFilePath = path.join(ProjectSettings.dotExponentProjectDirectory(projectRoot), 'exp-cli.json');
-  return new jsonFile(jsonFilePath, {cantReadFileDefault: {}});
+  let jsonFilePath = path.join(
+    ProjectSettings.dotExponentProjectDirectory(projectRoot),
+    'exp-cli.json',
+  );
+  return new JsonFile(jsonFilePath, { cantReadFileDefault: {} });
 }
 
 async function projectStatusAsync(projectRoot) {
@@ -28,7 +30,7 @@ async function projectStatusAsync(projectRoot) {
   }
 }
 
-module.exports = {
+export default {
   packageJsonFile,
   projectExpJsonFile,
   projectStatusAsync,
