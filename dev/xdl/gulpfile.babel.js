@@ -14,6 +14,7 @@ let tasks = {
 gulp.task('build', tasks.babel);
 gulp.task('watch', gulp.series(tasks.babel, tasks.watchBabel));
 gulp.task('clean', tasks.clean);
+gulp.task('archiveTemplate', tasks.archiveTemplate);
 
 gulp.task('publish', gulp.series(
   gulp.parallel(

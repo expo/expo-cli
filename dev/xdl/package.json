@@ -6,13 +6,13 @@
   "files": [
     "build",
     "simulator-app",
-    "template.zip",
+    "template.tar.gz",
     "adb"
   ],
   "scripts": {
     "build": "gulp build",
     "prepublish": "echo \"\\033[0;31mWarning: Use 'gulp publish' instead of 'npm publish'.\\033[0m\"",
-    "postinstall": "if [ -f template.zip ]; then unzip -qo template.zip; fi || true",
+    "postinstall": "if [ -f template.tar.gz ]; then mkdir template && tar -zxf template.tar.gz -C template; fi || true",
     "test": "jest --config jest/unit-test-config.json",
     "integration-tests": "jest --config jest/integration-test-config.json --no-cache --no-watchman"
   },

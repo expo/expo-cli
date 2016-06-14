@@ -1,23 +1,25 @@
 import 'instapromise';
 
+import spawnAsync from '@exponent/spawn-async';
 import fs from 'fs';
 import logger from 'gulplog';
 import path from 'path';
-import spawnAsync from '@exponent/spawn-async';
 
 const paths = {
-  template: path.resolve(__dirname, '../template'),
-  templateNodeModules: path.resolve(__dirname, '../template/node_modules'),
+  template: path.resolve(__dirname, '../template-src'),
+  templateNodeModules: path.resolve(__dirname, '../template-src/node_modules'),
 };
 
 let tasks = {
   async archiveTemplate() {
     await verifyNodeModulesAsync();
-    await spawnAsync('rm', ['-rf', 'template/.exponent']);
-    await spawnAsync('zip', ['-rq9', 'template.zip', 'template'], {
+    let options = {
       stdio: 'inherit',
       cwd: path.resolve(__dirname, '..'),
-    });
+    };
+    await spawnAsync('rm', ['-rf', 'template-src/.exponent'], options);
+    await spawnAsync('rm', ['template.tar.gz'], options);
+    await spawnAsync('tar', ['-zcvf', 'template.tar.gz', '-C', 'template-src', '.'], options);
   },
 };
 
