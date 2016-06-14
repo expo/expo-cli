@@ -25,6 +25,7 @@ const tasks = {
 };
 
 gulp.task('babel', tasks.babel);
+gulp.task('build', tasks.babel);
 gulp.task('watch', tasks.watchBabel);
 gulp.task('clean', done => {
   rimraf(paths.build, done);
