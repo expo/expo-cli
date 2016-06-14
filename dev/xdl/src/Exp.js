@@ -112,11 +112,13 @@ async function expInfoAsync(root) {
   let pkg = await pkgJson.readAsync();
   let name = pkg.name;
   let description = pkg.description;
+  let icon = pkg.exp && pkg.exp.iconUrl;
   return {
     readableRoot: makePathReadable(root),
     root,
     name,
     description,
+    icon,
   };
 }
 
