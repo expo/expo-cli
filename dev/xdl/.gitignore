@@ -5,5 +5,4 @@ node_modules/
 build/
 
 # Template
-template.tar.gz
 template/
