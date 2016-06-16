@@ -105,8 +105,13 @@ async function action(projectDir, options) {
   log(crayon.gray("Using project at", process.cwd()));
 
   let root = path.resolve(process.cwd());
+  let startOpts = {};
+  if (options.clear) {
+    startOpts.reset = true;
+  }
+
   try {
-    await Project.startAsync(root);
+    await Project.startAsync(root, startOpts);
     Project.attachLoggerStream(root, {
       stream: {
         write: (chunk) => {
@@ -138,6 +143,7 @@ export default (program) => {
     .alias('r')
     .description('Starts or restarts a local server for your app and gives you a URL to it')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
+    .option('-c, --clear', 'Clear the React Native packager cache')
     //.help("Starts a local server to serve your app and gives you a URL to it.\n" +
     //"[project-dir] defaults to '.'");
     .urlOpts()

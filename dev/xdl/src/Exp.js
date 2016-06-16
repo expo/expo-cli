@@ -36,7 +36,7 @@ async function determineEntryPointAsync(root) {
 
 async function createNewExpAsync(root, info, opts = {}) {
   let pp = path.parse(root);
-  let name = pp.name;
+  let name = pp.name || 'exponent-project';
 
   let author = await UserSettings.getAsync('email', null);
 
