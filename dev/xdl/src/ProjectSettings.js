@@ -1,7 +1,7 @@
 import 'instapromise';
 
-import fs from 'fs';
 import JsonFile from '@exponent/json-file';
+import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 

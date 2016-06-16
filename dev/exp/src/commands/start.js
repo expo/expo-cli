@@ -1,12 +1,12 @@
-import crayon from '@ccheever/crayon';
-import path from 'path';
-import pm2 from 'pm2';
-import simpleSpinner from '@exponent/simple-spinner';
-
 import {
   Project,
   UrlUtils,
 } from 'xdl';
+
+import crayon from '@ccheever/crayon';
+import simpleSpinner from '@exponent/simple-spinner';
+import path from 'path';
+import pm2 from 'pm2';
 
 import CommandError from '../CommandError';
 import config from '../config';
@@ -46,6 +46,7 @@ async function action(projectDir, options) {
       var app = await pm2serve.getPm2AppByNameAsync(pm2Name);
       if (app) {
         log("pm2 managed process exists");
+        await pm2.promise.stop(app.pm_id);
         await pm2.promise.delete(app.pm_id);
       } else {
         log("Can't find pm2 managed process", pm2Id, " so will start a new one");
@@ -106,7 +107,14 @@ async function action(projectDir, options) {
   let root = path.resolve(process.cwd());
   try {
     await Project.startAsync(root);
-    Project.attachLogger(root, console.log);
+    Project.attachLoggerStream(root, {
+      stream: {
+        write: (chunk) => {
+          console.log(chunk.msg);
+        },
+      },
+      type: 'raw',
+    });
 
     await config.projectExpJsonFile(projectDir).mergeAsync({
       err: null,
@@ -120,14 +128,6 @@ async function action(projectDir, options) {
 
     throw e;
   }
-
-  process.on('exit', async () => {
-    Project.stopAsync(root);
-  });
-
-  process.on('SIGTERM', async () => {
-    Project.stopAsync(root);
-  });
 
   return config.projectExpJsonFile(projectDir).readAsync();
 }

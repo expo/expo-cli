@@ -20,6 +20,7 @@ async function action(projectDir, options) {
     try {
       log("Stopping the server...");
       let name = await pm2serve.pm2NameAsync();
+      await pm2.promise.stop(name);
       await pm2.promise.delete(name);
     } catch (e) {
       log.error("Failed to stop the server\n" + e.message);

@@ -7,6 +7,7 @@ let mkdirp = require('mkdirp');
 let path = require('path');
 
 let Api = require('./Api');
+import ErrorCode from './ErrorCode';
 let User = require('./User');
 let UrlUtils = require('./UrlUtils');
 let UserSettings = require('./UserSettings');
@@ -59,7 +60,7 @@ async function createNewExpAsync(root, info, opts = {}) {
 
   let exists = await existsAsync(pkgJson.file);
   if (exists && !opts.force) {
-    throw new XDLError('WONT_OVERWRITE_WITHOUT_FORCE', "Refusing to create new Exp because package.json already exists at root");
+    throw new XDLError(ErrorCode.WONT_OVERWRITE_WITHOUT_FORCE, "Refusing to create new Exp because package.json already exists at root");
   }
 
   await mkdirp.promise(root);

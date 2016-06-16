@@ -6,7 +6,7 @@ import delayAsync from 'delay-async';
 
 async function action(projectDir, options) {
   await Project.setOptionsAsync(projectDir, {
-    packagerPort: Number(options.port),
+    packagerPort: parseInt(options.port, 10),
   });
   await Project.startExponentServerAsync(projectDir);
   await Project.startTunnelsAsync(projectDir);

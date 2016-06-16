@@ -17,7 +17,9 @@ import treekill from 'tree-kill';
 
 import Api from './Api';
 import Config from './Config';
+import ErrorCode from './ErrorCode';
 import Exp from './Exp';
+import Logger from './Logger';
 import ProjectSettings from './ProjectSettings';
 import UrlUtils from './UrlUtils';
 import User from './User';
@@ -32,45 +34,45 @@ let _cachedSignedManifest = {
   signedManifest: null,
 };
 
-function _emit(projectRoot, tag, message) {
-  // TODO: write to disk
+function _getLogger(projectRoot) {
   let logger = _projectRootToLogger[projectRoot];
   if (!logger) {
-    return;
+    logger = Logger.child({project: path.resolve(projectRoot)});
+    _projectRootToLogger[projectRoot] = logger;
   }
 
-  if (logger.length === 1) {
-    logger(message);
-  } else {
-    logger(tag, message);
-  }
+  return logger;
 }
 
-function attachLogger(projectRoot, logger) {
-  if (typeof logger !== 'function') {
-    throw new XDLError('INVALID_ARGUMENT', 'Not a function');
-  }
+function _logInfo(projectRoot, tag, message) {
+  _getLogger(projectRoot).info({tag}, message.toString());
+}
 
-  _projectRootToLogger[projectRoot] = logger;
+function _logError(projectRoot, tag, message) {
+  _getLogger(projectRoot).error({tag}, message.toString());
+}
+
+function attachLoggerStream(projectRoot, stream) {
+  _getLogger(projectRoot).addStream(stream);
 }
 
 async function _assertLoggedInAsync() {
   let user = await User.getCurrentUserAsync();
   if (!user) {
-    throw new XDLError('NOT_LOGGED_IN', 'Not logged in');
+    throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
   }
 }
 
 async function _assertValidProjectRoot(projectRoot) {
   if (!projectRoot) {
-    throw new XDLError('NO_PROJECT_ROOT', 'No project root specified');
+    throw new XDLError(ErrorCode.NO_PROJECT_ROOT, 'No project root specified');
   }
 }
 
 async function _getFreePortAsync(rangeStart) {
   let port = await freeportAsync(rangeStart);
   if (!port) {
-    throw new XDLError('NO_PORT_FOUND', 'No available port found');
+    throw new XDLError(ErrorCode.NO_PORT_FOUND, 'No available port found');
   }
 
   return port;
@@ -79,29 +81,29 @@ async function _getFreePortAsync(rangeStart) {
 async function _validatePackageJsonAsync(projectRoot) {
   let pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
   if (!pkg) {
-    _emit(projectRoot, 'stderr', `Error: Can't find package.json`);
+    _logError(projectRoot, 'exponent', `Error: Can't find package.json`);
     return;
   }
 
   if (!pkg.dependencies || !pkg.dependencies['react-native']) {
-    _emit(projectRoot, 'stderr', `Error: Can't find react-native in package.json dependencies`);
+    _logError(projectRoot, 'exponent', `Error: Can't find react-native in package.json dependencies`);
     return;
   }
 
   let reactNative = pkg.dependencies['react-native'];
   if (reactNative.indexOf('exponentjs/react-native#') === -1) {
-    _emit(projectRoot, 'stderr', `Error: Must use Exponent fork of react-native. See https://exponentjs.com/help`);
+    _logError(projectRoot, 'exponent', `Error: Must use the Exponent fork of react-native. See https://getexponent.com/help`);
     return;
   }
 
   if (!pkg.exp || !pkg.exp.sdkVersion) {
-    _emit(projectRoot, 'stderr', `Error: Can't find key exp.sdkVersion in package.json. See https://exponentjs.com/help`);
+    _logError(projectRoot, 'exponent', `Error: Can't find key exp.sdkVersion in package.json. See https://getexponent.com/help`);
     return;
   }
 
   let sdkVersion = pkg.exp.sdkVersion;
   if (sdkVersion === 'UNVERSIONED') {
-    _emit(projectRoot, 'stderr', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in package.json`);
+    _logError(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in package.json`);
     return;
   }
 
@@ -109,18 +111,18 @@ async function _validatePackageJsonAsync(projectRoot) {
 
   let sdkVersions = await Api.callPathAsync('/--/sdk-versions');
   if (!sdkVersions) {
-    _emit(projectRoot, 'stderr', `Error: Couldn't connect to server`);
+    _logError(projectRoot, 'exponent', `Error: Couldn't connect to server`);
     return;
   }
 
   if (!sdkVersions[sdkVersion]) {
-    _emit(projectRoot, 'stderr', `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`);
+    _logError(projectRoot, 'exponent', `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`);
     return;
   }
 
   let sdkVersionObject = sdkVersions[sdkVersion];
   if (sdkVersionObject['exponent-react-native-tag'] !== reactNativeTag) {
-    _emit(projectRoot, 'stderr', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponent-react-native-tag']}`);
+    _logError(projectRoot, 'exponent', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponent-react-native-tag']}`);
     return;
   }
 
@@ -136,11 +138,11 @@ async function _getBundleForPlatformAsync(url, platform) {
   });
 
   if (response.statusCode !== 200) {
-    throw new XDLError('INVALID_BUNDLE', `Packager returned unexpected code ${response.statusCode}`);
+    throw new XDLError(ErrorCode.INVALID_BUNDLE, `Packager returned unexpected code ${response.statusCode}`);
   }
 
   if (!response.body || response.body.length < MINIMUM_BUNDLE_SIZE) {
-    throw new XDLError('INVALID_BUNDLE', `Bundle is: ${response.body}`);
+    throw new XDLError(ErrorCode.INVALID_BUNDLE, `Bundle is: ${response.body}`);
   }
 
   return response.body;
@@ -157,12 +159,12 @@ async function publishAsync(projectRoot, options = {}) {
   try {
     joi.promise.validate(options, schema);
   } catch (e) {
-    throw new XDLError('INVALID_OPTIONS', e.toString());
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
-    throw new XDLError('NO_PACKAGER_PORT', `No packager found for project at ${projectRoot}.`);
+    throw new XDLError(ErrorCode.NO_PACKAGER_PORT, `No packager found for project at ${projectRoot}.`);
   }
 
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
@@ -179,7 +181,7 @@ async function publishAsync(projectRoot, options = {}) {
   try {
     packageJson = await fs.readFile.promise(path.join(projectRoot, 'package.json'), 'utf8');
   } catch (e) {
-    throw new XDLError('NO_PACKAGE_JSON', `Couldn't read package.json file in project at ${projectRoot}`);
+    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read package.json file in project at ${projectRoot}`);
   }
 
   let form = new FormData();
@@ -230,7 +232,7 @@ async function startReactNativeServerAsync(projectRoot, options = {}) {
     assetRoots: projectRoot,
   };
 
-  const userPackagerOpts = _.get(packageJSON, 'exp.packagerOpts', null);
+  const userPackagerOpts = _.get(packageJSON, 'exp.packagerOpts');
   if (userPackagerOpts) {
     packagerOpts = {
       ...packagerOpts,
@@ -280,20 +282,15 @@ async function startReactNativeServerAsync(projectRoot, options = {}) {
   packagerProcess.stdout.setEncoding('utf8');
   packagerProcess.stderr.setEncoding('utf8');
   packagerProcess.stdout.on('data', (data) => {
-    _emit(projectRoot, 'stdout', data);
+    _logInfo(projectRoot, 'packager', data.toString());
   });
 
   packagerProcess.stderr.on('data', (data) => {
-    _emit(projectRoot, 'stderr', data);
+    _logError(projectRoot, 'packager', data.toString());
   });
 
   packagerProcess.on('exit', async (code) => {
     console.log("packager process exited with code", code);
-
-    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-      packagerPort: null,
-      packagerPid: null,
-    });
   });
 
   let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
@@ -412,6 +409,8 @@ async function startExponentServerAsync(projectRoot) {
   await Exp.saveRecentExpRootAsync(projectRoot);
 }
 
+// This only works when called from the same process that called
+// startExponentServerAsync.
 async function stopExponentServerAsync(projectRoot) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
@@ -422,7 +421,7 @@ async function stopExponentServerAsync(projectRoot) {
     return;
   }
 
-  server.close();
+  await server.promise.close();
   _projectRootToExponentServer[projectRoot] = null;
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -448,7 +447,13 @@ async function _connectToNgrokAsync(args, ngrokPid, attempts) {
     if (e.error_code && e.error_code === 103) {
       // Failed to start tunnel. Might be because url already bound to another session.
       if (ngrokPid) {
-        process.kill(ngrokPid);
+        try {
+          process.kill(ngrokPid, 'SIGKILL');
+        } catch (e) {
+          console.warn(`Couldn't kill ngrok with PID ${ngrokPid}`);
+        }
+      } else {
+        await ngrok.promise.kill();
       }
     }
 
@@ -464,11 +469,11 @@ async function startTunnelsAsync(projectRoot) {
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
-    throw new XDLError('NO_PACKAGER_PORT', `No packager found for project at ${projectRoot}.`);
+    throw new XDLError(ErrorCode.NO_PACKAGER_PORT, `No packager found for project at ${projectRoot}.`);
   }
 
   if (!packagerInfo.exponentServerPort) {
-    throw new XDLError('NO_EXPONENT_SERVER_PORT', `No Exponent server found for project at ${projectRoot}.`);
+    throw new XDLError(ErrorCode.NO_EXPONENT_SERVER_PORT, `No Exponent server found for project at ${projectRoot}.`);
   }
 
   await stopTunnelsAsync(projectRoot);
@@ -513,14 +518,30 @@ async function stopTunnelsAsync(projectRoot) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
-  // This will kill all ngrok tunnels in the current process.
+  // This will kill all ngrok tunnels in the process.
   // We'll need to change this if we ever support more than one project
   // open at a time in XDE.
-  await ngrok.promise.kill();
+
+  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  let ngrokProcess = ngrok.process();
+  let ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;
+
+  if (packagerInfo.ngrokPid && packagerInfo.ngrokPid !== ngrokProcessPid) {
+    // Ngrok is running in some other process. Kill at the os level.
+    try {
+      process.kill(packagerInfo.ngrokPid);
+    } catch (e) {
+      console.warn(`Couldn't kill ngrok with PID ${packagerInfo.ngrokPid}`);
+    }
+  } else {
+    // Ngrok is running from the current process. Kill using ngrok api.
+    await ngrok.promise.kill();
+  }
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     exponentServerNgrokUrl: null,
     packagerNgrokUrl: null,
+    ngrokPid: null,
   });
 }
 
@@ -536,7 +557,7 @@ async function setOptionsAsync(projectRoot, options) {
   try {
     joi.promise.validate(options, schema);
   } catch (e) {
-    throw new XDLError('INVALID_OPTIONS', e.toString());
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
@@ -562,7 +583,7 @@ async function stopAsync(projectRoot) {
 }
 
 module.exports = {
-  attachLogger,
+  attachLoggerStream,
   getUrlAsync,
   publishAsync,
   setOptionsAsync,

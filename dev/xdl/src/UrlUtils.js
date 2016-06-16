@@ -7,6 +7,7 @@ import myLocalIp from 'my-local-ip';
 import os from 'os';
 import url from 'url';
 
+import ErrorCode from './ErrorCode';
 import ProjectSettings from './ProjectSettings';
 import XDLError from './XDLError';
 
@@ -69,7 +70,7 @@ async function constructUrlAsync(projectRoot, opts, isPackager) {
     try {
       joi.promise.validate(opts, schema);
     } catch (e) {
-      throw new XDLError('INVALID_OPTIONS', e.toString());
+      throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
     }
   }
 

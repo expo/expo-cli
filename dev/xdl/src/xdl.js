@@ -5,6 +5,7 @@ let XDL = {
   get Api() { return require('./Api'); },
   get Config() { return require('./Config'); },
   get Env() { return require('./Env'); },
+  get ErrorCode() { return require('./ErrorCode'); },
   get Exp() { return require('./Exp'); },
   get FileSystem() { return require('./FileSystem'); },
   get Project() { return require('./Project'); },

@@ -24,6 +24,7 @@ const tasks = {
   },
 };
 
+gulp.task('build', tasks.babel);
 gulp.task('babel', tasks.babel);
 gulp.task('build', tasks.babel);
 gulp.task('watch', tasks.watchBabel);
