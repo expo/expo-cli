@@ -202,15 +202,23 @@ async function publishAsync(projectRoot, options = {}) {
     _getBundleForPlatformAsync(publishUrl, 'android'),
   ]);
 
-  let packageJson;
-  try {
-    packageJson = await fs.readFile.promise(path.join(projectRoot, 'package.json'), 'utf8');
-  } catch (e) {
-    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read package.json file in project at ${projectRoot}`);
+  let { exp, pkg } = _readConfigJsonAsync(projectRoot);
+
+  if (Object.keys(exp).length === 0) {
+    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read exp.json file in project at ${projectRoot}`);
+  }
+
+  // Support version and name being specified in package.json for legacy
+  // support pre: exp.json
+  if (!exp.version && pkg.version) {
+    exp.version = pkg.version;
+  }
+  if (!exp.slug && pkg.name) {
+    exp.slug = pkg.name;
   }
 
   let form = new FormData();
-  form.append('packageJson', packageJson);
+  form.append('expJson', JSON.stringify(exp));
   form.append('iosBundle', iosBundle, {
     filename: 'iosBundle',
   });
@@ -367,8 +375,7 @@ async function startExponentServerAsync(projectRoot) {
       // down the request
       _validateConfigJsonAsync(projectRoot);
 
-      let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
-      let manifest = exp;
+      let { exp: manifest } = await _readConfigJsonAsync(projectRoot);
 
       // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
