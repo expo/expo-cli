@@ -78,34 +78,59 @@ async function _getFreePortAsync(rangeStart) {
   return port;
 }
 
-async function _validatePackageJsonAsync(projectRoot) {
+async function _readConfigJsonAsync(projectRoot) {
+  let exp = await Exp.expJsonForRoot(projectRoot).readAsync();
   let pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
+
+  // Easiest bail-out: package.json is missing
   if (!pkg) {
     _logError(projectRoot, 'exponent', `Error: Can't find package.json`);
+    return { exp: {}, pkg: {} };
+  }
+
+  // Grab our exp config from package.json (legacy) or exp.json
+  if (!exp && pkg.exp) {
+    exp = pkg.exp;
+    _logError(projectRoot, 'exponent', `Warning: Please move your exp config from package.json to exp.json, support for Exponent configuration in package.json is deprecated.`);
+  } else if (!exp && !pkg.exp) {
+    _logError(projectRoot, 'exponent', `Error: Missing exp.json. See https://docs.getexponent.com/`);
+    return { exp: {}, pkg: {} };
+  }
+
+  return { exp, pkg };
+}
+
+async function _validateConfigJsonAsync(projectRoot) {
+  let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
+
+  _logError(projectRoot, 'exponent', JSON.stringify(exp));
+
+  // sdkVersion is necessary
+  if (!exp.sdkVersion) {
+    _logError(projectRoot, 'exponent', `Error: Can't find key exp.sdkVersion in exp.json or package.json. See https://docs.getexponent.com/`);
     return;
   }
 
+  // Warn if sdkVersion is UNVERSIONED
+  let sdkVersion = exp.sdkVersion;
+  if (sdkVersion === 'UNVERSIONED') {
+    _logError(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in package.json`);
+    return;
+  }
+
+  // react-native is required
   if (!pkg.dependencies || !pkg.dependencies['react-native']) {
     _logError(projectRoot, 'exponent', `Error: Can't find react-native in package.json dependencies`);
     return;
   }
 
+  // Exponent fork of react-native is required
   let reactNative = pkg.dependencies['react-native'];
   if (reactNative.indexOf('exponentjs/react-native#') === -1) {
     _logError(projectRoot, 'exponent', `Error: Must use the Exponent fork of react-native. See https://getexponent.com/help`);
     return;
   }
 
-  if (!pkg.exp || !pkg.exp.sdkVersion) {
-    _logError(projectRoot, 'exponent', `Error: Can't find key exp.sdkVersion in package.json. See https://getexponent.com/help`);
-    return;
-  }
-
-  let sdkVersion = pkg.exp.sdkVersion;
-  if (sdkVersion === 'UNVERSIONED') {
-    _logError(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in package.json`);
-    return;
-  }
 
   let reactNativeTag = reactNative.substring(reactNative.lastIndexOf('#') + 1);
 
@@ -332,7 +357,7 @@ async function startExponentServerAsync(projectRoot) {
 
   let app = express();
 
-  _validatePackageJsonAsync(projectRoot);
+  _validateConfigJsonAsync(projectRoot);
 
   // Serve the manifest.
   let manifestHandler = async (req, res) => {
@@ -340,10 +365,10 @@ async function startExponentServerAsync(projectRoot) {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
       // down the request
-      _validatePackageJsonAsync(projectRoot);
+      _validateConfigJsonAsync(projectRoot);
 
-      let pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
-      let manifest = pkg.exp || {};
+      let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
+      let manifest = exp;
 
       // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);

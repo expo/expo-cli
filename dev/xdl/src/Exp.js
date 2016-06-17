@@ -20,6 +20,10 @@ function packageJsonForRoot(root) {
   return new JsonFile(path.join(root, 'package.json'));
 }
 
+function expJsonForRoot(root) {
+  return new JsonFile(path.join(root, 'exp.json'));
+}
+
 async function determineEntryPointAsync(root) {
   let pkgJson = packageJsonForRoot(root);
   let pkg = await pkgJson.readAsync();
@@ -134,13 +138,21 @@ async function expInfoSafeAsync(root) {
 // TODO: remove
 async function getPublishInfoAsync(root) {
   let username = await User.getUsernameAsync();
-  let pkgJson = packageJsonForRoot(root);
-  let pkg = await pkgJson.readAsync();
-  let {
-    name,
-    version,
-    exp,
-  } = pkg;
+  let exp = await expJsonForRoot(root).readAsync();
+  let pkg = await packageJsonForRoot(root).readAsync();
+
+  let name;
+  let version;
+
+  // Support legacy package.json with exp
+  if (!exp && pkg.exp) {
+    exp = pkg.exp;
+    name = pkg.name;
+    version = pkg.version;
+  } else {
+    name = exp.slug;
+    version = exp.version;
+  }
 
   if (!exp || !exp.sdkVersion) {
     throw new Error(`exp.sdkVersion is missing from package.json file`);
@@ -179,15 +191,6 @@ async function recentValidExpsAsync() {
   return filteredResults.slice(0, 5);
 }
 
-async function publishAsync(root, opts) {
-  let publishInfo = await getPublishInfoAsync(root);
-  if (opts) {
-    publishInfo.args = Object.assign(publishInfo.args, opts);
-  }
-  let result = await Api.callMethodAsync('publish', [publishInfo.args], 'post', publishInfo.body);
-  return result;
-}
-
 async function sendAsync(recipient, url_) {
   let result = await Api.callMethodAsync('send', [recipient, url_]);
   return result;
@@ -217,8 +220,8 @@ module.exports = {
   createNewExpAsync,
   determineEntryPointAsync,
   getPublishInfoAsync,
+  expJsonForRoot,
   packageJsonForRoot,
-  publishAsync,
   recentValidExpsAsync,
   saveRecentExpRootAsync,
   sendAsync,
