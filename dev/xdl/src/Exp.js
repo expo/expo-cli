@@ -135,11 +135,18 @@ async function expInfoSafeAsync(root) {
   }
 }
 
-// TODO: remove
+// TODO: remove / change, no longer publishInfo, this is just used for signing
 async function getPublishInfoAsync(root) {
   let username = await User.getUsernameAsync();
-  let exp = await expJsonForRoot(root).readAsync();
-  let pkg = await packageJsonForRoot(root).readAsync();
+  let pkg;
+  let exp;
+
+  try {
+    pkg = await packageJsonForRoot(root).readAsync();
+    exp = await expJsonForRoot(root).readAsync();
+  } catch (e) {
+    // exp or pkg missing
+  }
 
   let name;
   let version;

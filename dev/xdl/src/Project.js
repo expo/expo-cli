@@ -79,8 +79,15 @@ async function _getFreePortAsync(rangeStart) {
 }
 
 async function _readConfigJsonAsync(projectRoot) {
-  let exp = await Exp.expJsonForRoot(projectRoot).readAsync();
-  let pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
+  let exp;
+  let pkg;
+
+  try {
+    pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
+    exp = await Exp.expJsonForRoot(projectRoot).readAsync();
+  } catch (e) {
+    // exp or pkg missing
+  }
 
   // Easiest bail-out: package.json is missing
   if (!pkg) {
@@ -91,7 +98,7 @@ async function _readConfigJsonAsync(projectRoot) {
   // Grab our exp config from package.json (legacy) or exp.json
   if (!exp && pkg.exp) {
     exp = pkg.exp;
-    _logError(projectRoot, 'exponent', `Warning: Please move your exp config from package.json to exp.json, support for Exponent configuration in package.json is deprecated.`);
+    _logError(projectRoot, 'exponent', `Deprecation Warning: Move your "exp" config from package.json to exp.json.`);
   } else if (!exp && !pkg.exp) {
     _logError(projectRoot, 'exponent', `Error: Missing exp.json. See https://docs.getexponent.com/`);
     return { exp: {}, pkg: {} };
@@ -200,7 +207,7 @@ async function publishAsync(projectRoot, options = {}) {
     _getBundleForPlatformAsync(publishUrl, 'android'),
   ]);
 
-  let { exp, pkg } = _readConfigJsonAsync(projectRoot);
+  let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
 
   if (Object.keys(exp).length === 0) {
     throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read exp.json file in project at ${projectRoot}`);
