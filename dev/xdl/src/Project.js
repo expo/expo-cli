@@ -103,8 +103,6 @@ async function _readConfigJsonAsync(projectRoot) {
 async function _validateConfigJsonAsync(projectRoot) {
   let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
 
-  _logError(projectRoot, 'exponent', JSON.stringify(exp));
-
   // sdkVersion is necessary
   if (!exp.sdkVersion) {
     _logError(projectRoot, 'exponent', `Error: Can't find key exp.sdkVersion in exp.json or package.json. See https://docs.getexponent.com/`);
