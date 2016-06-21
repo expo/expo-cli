@@ -127,7 +127,7 @@ async function constructUrlAsync(projectRoot, opts, isPackager) {
   }
 
   if (opts.urlType === 'redirect') {
-    return 'http://exp.host/--/to-exp/' + encodeURIComponent(url_);
+    return 'https://exp.host/--/to-exp/' + encodeURIComponent(url_);
   }
 
   return url_;

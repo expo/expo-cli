@@ -4,8 +4,11 @@ import Env from './Env';
 
 module.exports = {
   api: {
-    host: process.env.XDL_HOST || (Env.isStaging() ? 'staging.exp.host' : 'exp.host'),
+    scheme: 'https',
+    host: process.env.XDL_HOST ||
+      (Env.isStaging() ? 'staging.exp.host' : 'exp.host'),
     port: process.env.XDL_PORT || null,
+    //scheme: 'http',
     //host: 'localhost',
     //port: 3000,
   },

@@ -22,7 +22,7 @@ function ApiError(code, message) {
   return err;
 }
 
-let ROOT_BASE_URL = 'http://' + Config.api.host;
+let ROOT_BASE_URL = `${Config.api.scheme}://${Config.api.host}`;
 if (Config.api.port) {
   ROOT_BASE_URL += ':' + Config.api.port;
 }
