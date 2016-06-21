@@ -34,8 +34,6 @@ async function _callMethodAsync(url, method, requestBody) {
     headers['Exp-Username'] = username;
   }
 
-  // console.log("headers=", headers);
-
   let options = {
     url,
     method: method || 'get',

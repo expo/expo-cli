@@ -21,7 +21,7 @@ function packageJsonForRoot(root) {
 }
 
 function expJsonForRoot(root) {
-  return new JsonFile(path.join(root, 'exp.json'));
+  return new JsonFile(path.join(root, 'exp.json'), {json5: true});
 }
 
 async function determineEntryPointAsync(root) {
@@ -31,6 +31,8 @@ async function determineEntryPointAsync(root) {
     main,
     exp,
   } = pkg;
+
+  // NOTE(brentvatne): why do we have entryPoint and main?
   let entryPoint = main || 'index.js';
   if (exp && exp.entryPoint) {
     entryPoint = exp.entryPoint;
