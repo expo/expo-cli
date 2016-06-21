@@ -5,9 +5,12 @@ import fs from 'fs';
 import logger from 'gulplog';
 import path from 'path';
 
+const TEMPLATE_DIR = '../../apps/new-project-template';
+
 const paths = {
-  template: path.resolve(__dirname, '../template-src'),
-  templateNodeModules: path.resolve(__dirname, '../template-src/node_modules'),
+  template: path.resolve(__dirname, `../${TEMPLATE_DIR}`),
+  templateNodeModules: path.resolve(__dirname, `../${TEMPLATE_DIR}/node_modules`),
+  templateExponentDir: path.resolve(__dirname, `../${TEMPLATE_DIR}/.exponent`),
 };
 
 let tasks = {
@@ -17,9 +20,9 @@ let tasks = {
       stdio: 'inherit',
       cwd: path.resolve(__dirname, '..'),
     };
-    await spawnAsync('rm', ['-rf', 'template-src/.exponent'], options);
+    await spawnAsync('rm', ['-rf', paths.templateExponentDir], options);
     await spawnAsync('rm', ['template.tar.gz'], options);
-    await spawnAsync('tar', ['-zcvf', 'template.tar.gz', '-C', 'template-src', '.'], options);
+    await spawnAsync('tar', ['-zcvf', 'template.tar.gz', '-C', paths.template, '.'], options);
   },
 };
 
