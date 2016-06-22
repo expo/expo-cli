@@ -1,6 +1,6 @@
+import 'instapromise';
+
 import child_process from 'child_process';
-import crayon from '@ccheever/crayon';
-import instapromise from 'instapromise';
 import jsonFile from '@exponent/json-file';
 import path from 'path';
 import semver from 'semver';

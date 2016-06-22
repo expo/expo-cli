@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "The command-line tool for creating and publishing Exponent apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@ccheever/crayon": "^5.0.0",
-    "@exponent/json-file": "^5.0.1",
+    "@exponent/json-file": "^5.2.0",
     "@exponent/md5hex": "^1.0.0",
     "@exponent/simple-spinner": "^1.0.2",
     "babel-runtime": "^6.9.2",
@@ -54,6 +54,6 @@
     "pm2": "^1.1.3",
     "qrcode-terminal": "^0.10.0",
     "semver": "^5.0.1",
-    "xdl": "0.1.1"
+    "xdl": "0.2.0"
   }
 }

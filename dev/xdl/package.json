@@ -1,6 +1,6 @@
 {
   "name": "xdl",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "The Exponent Development Library",
   "main": "build/xdl.js",
   "files": [
@@ -28,7 +28,7 @@
   "homepage": "https://github.com/exponentjs/xdl#readme",
   "dependencies": {
     "@ccheever/crayon": "^5.0.0",
-    "@exponent/json-file": "^5.1.0",
+    "@exponent/json-file": "^5.2.0",
     "@exponent/osascript": "^1.5.1",
     "babel-runtime": "^6.9.0",
     "bunyan": "^1.8.1",
