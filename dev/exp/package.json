@@ -36,7 +36,8 @@
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-babel": "^6.1.2",
     "gulp-changed": "^1.3.0",
-    "gulp-plumber": "^1.1.0"
+    "gulp-plumber": "^1.1.0",
+    "rimraf": "^2.5.2"
   },
   "dependencies": {
     "@ccheever/crayon": "^5.0.0",
