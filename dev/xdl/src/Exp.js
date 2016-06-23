@@ -116,10 +116,20 @@ function makePathReadable(pth) {
 
 async function expInfoAsync(root) {
   let pkgJson = packageJsonForRoot(root);
-  let pkg = await pkgJson.readAsync();
-  let name = pkg.name;
-  let description = pkg.description;
-  let icon = pkg.exp && pkg.exp.iconUrl;
+
+  let name, description, icon;
+  try {
+    let exp = await expJsonForRoot(root).readAsync();
+    name = exp.name;
+    description = exp.description;
+    icon = exp.iconUrl;
+  } catch (err) {
+    let pkg = await pkgJson.readAsync();
+    name = pkg.name;
+    description = pkg.description;
+    icon = pkg.exp && pkg.exp.iconUrl;
+  }
+
   return {
     readableRoot: makePathReadable(root),
     root,
@@ -228,6 +238,7 @@ async function getLoggedOutPlaceholderUsernameAsync() {
 module.exports = {
   createNewExpAsync,
   determineEntryPointAsync,
+  expInfoSafeAsync,
   getPublishInfoAsync,
   expJsonForRoot,
   packageJsonForRoot,
