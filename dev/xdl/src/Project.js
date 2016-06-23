@@ -235,6 +235,63 @@ async function publishAsync(projectRoot, options = {}) {
   return response;
 }
 
+async function buildAsync(projectRoot, options = {}) {
+  await _assertLoggedInAsync();
+  _assertValidProjectRoot(projectRoot);
+
+  let schema = joi.object().keys({
+    quiet: joi.boolean(),
+    mode: joi.string(),
+    platform: joi.any().valid('ios', 'android', 'all'),
+    expIds: joi.array(),
+  });
+
+  try {
+    joi.promise.validate(options, schema);
+  } catch (e) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
+  }
+
+  let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
+
+  if (Object.keys(exp).length === 0) {
+    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read exp.json file in project at ${projectRoot}`);
+  }
+
+  // Support version and name being specified in package.json for legacy
+  // support pre: exp.json
+  if (!exp.version && pkg.version) {
+    exp.version = pkg.version;
+  }
+  if (!exp.slug && pkg.name) {
+    exp.slug = pkg.name;
+  }
+
+  if (options.platform === 'ios' || options.platform === 'all') {
+    if (!exp.ios || !exp.ios.bundleIdentifier) {
+      throw new XDLError(ErrorCode.INVALID_MANIFEST, 'Must specify a bundle identifier in order to build this experience for iOS. Please specify one in exp.json at "ios.bundleIdentifier"');
+    }
+  }
+
+  if (options.platform === 'android' || options.platform === 'all') {
+    if (!exp.android || !exp.android.package) {
+      throw new XDLError(ErrorCode.INVALID_MANIFEST, 'Must specify a java package in order to build this experience for Android. Please specify one in exp.json at "android.package"');
+    }
+  }
+
+  let form = new FormData();
+  form.append('expJson', JSON.stringify(exp));
+
+  let response = await Api.callMethodAsync(
+    'build',
+    [options],
+    'put',
+    form
+  );
+
+  return response;
+}
+
 async function _waitForRunningAsync(url) {
   try {
     let response = await request.promise(url);
@@ -623,6 +680,7 @@ module.exports = {
   attachLoggerStream,
   getUrlAsync,
   publishAsync,
+  buildAsync,
   setOptionsAsync,
   startAsync,
   startExponentServerAsync,

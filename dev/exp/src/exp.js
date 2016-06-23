@@ -77,7 +77,14 @@ async function runAsync() {
     glob.sync('commands/*.js', {
       cwd: __dirname,
     }).forEach(file => {
-      require('./' + file)(program);
+      const commandModule = require('./' + file);
+      if (typeof commandModule === 'function') {
+        commandModule(program);
+      } else if (typeof commandModule.default === 'function') {
+        commandModule.default(program);
+      } else {
+        log.error(`'${file}.js' is not a properly formatted command.`);
+      }
     });
 
     if (process.env.EXPONENT_DEBUG) {
