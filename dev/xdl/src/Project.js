@@ -318,17 +318,7 @@ async function startReactNativeServerAsync(projectRoot, options = {}) {
 
   let packagerPort = await _getFreePortAsync(19001);
 
-  let pkg, exp;
-  try {
-    pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
-    exp = await Exp.expJsonForRoot(projectRoot).readAsync();
-  } catch (e) {
-    // exp or pkg missing
-  }
-
-  if (!exp && pkg) {
-    exp = pkg.exp;
-  }
+  let exp = await Exp.expConfigForRootAsync(projectRoot);
 
   // Create packager options
   let packagerOpts = {

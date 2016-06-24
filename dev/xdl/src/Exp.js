@@ -24,7 +24,7 @@ function expJsonForRoot(root) {
   return new JsonFile(path.join(root, 'exp.json'), {json5: true});
 }
 
-async function determineEntryPointAsync(root) {
+async function expConfigForRootAsync(root) {
   let pkg, exp;
   try {
     pkg = await packageJsonForRoot(root).readAsync();
@@ -33,11 +33,18 @@ async function determineEntryPointAsync(root) {
     // exp or pkg missing
   }
 
-  let { main } = pkg;
-
   if (!exp && pkg) {
     exp = pkg.exp;
   }
+
+  return exp;
+}
+
+async function determineEntryPointAsync(root) {
+  let exp = await expConfigForRootAsync(root);
+  let pkgJson = packageJsonForRoot(root);
+  let pkg = await pkgJson.readAsync();
+  let { main } = pkg;
 
   // NOTE(brentvatne): why do we have entryPoint and main?
   let entryPoint = main || 'index.js';
@@ -243,6 +250,7 @@ async function getLoggedOutPlaceholderUsernameAsync() {
 }
 
 module.exports = {
+  expConfigForRootAsync,
   createNewExpAsync,
   determineEntryPointAsync,
   expInfoSafeAsync,
