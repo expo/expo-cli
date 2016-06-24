@@ -25,12 +25,19 @@ function expJsonForRoot(root) {
 }
 
 async function determineEntryPointAsync(root) {
-  let pkgJson = packageJsonForRoot(root);
-  let pkg = await pkgJson.readAsync();
-  let {
-    main,
-    exp,
-  } = pkg;
+  let pkg, exp;
+  try {
+    pkg = await packageJsonForRoot(root).readAsync();
+    exp = await expJsonForRoot(root).readAsync();
+  } catch (e) {
+    // exp or pkg missing
+  }
+
+  let { main } = pkg;
+
+  if (!exp && pkg) {
+    exp = pkg.exp;
+  }
 
   // NOTE(brentvatne): why do we have entryPoint and main?
   let entryPoint = main || 'index.js';

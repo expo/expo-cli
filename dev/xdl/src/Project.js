@@ -318,7 +318,17 @@ async function startReactNativeServerAsync(projectRoot, options = {}) {
 
   let packagerPort = await _getFreePortAsync(19001);
 
-  const packageJSON = await Exp.packageJsonForRoot(projectRoot).readAsync();
+  let pkg, exp;
+  try {
+    pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
+    exp = await Exp.expJsonForRoot(projectRoot).readAsync();
+  } catch (e) {
+    // exp or pkg missing
+  }
+
+  if (!exp && pkg) {
+    exp = pkg.exp;
+  }
 
   // Create packager options
   let packagerOpts = {
@@ -327,7 +337,7 @@ async function startReactNativeServerAsync(projectRoot, options = {}) {
     assetRoots: projectRoot,
   };
 
-  const userPackagerOpts = _.get(packageJSON, 'exp.packagerOpts');
+  const userPackagerOpts = _.get(exp, 'packagerOpts');
   if (userPackagerOpts) {
     packagerOpts = {
       ...packagerOpts,
@@ -348,7 +358,7 @@ async function startReactNativeServerAsync(projectRoot, options = {}) {
 
   // Get custom CLI path from project package.json, but fall back to node_module path
   let defaultCliPath = path.join(projectRoot, 'node_modules/react-native/local-cli/cli.js');
-  const cliPath = _.get(packageJSON, 'exp.rnCliPath', defaultCliPath);
+  const cliPath = _.get(exp, 'rnCliPath', defaultCliPath);
 
   // Run the copy of Node that's embedded in Electron by setting the
   // ELECTRON_RUN_AS_NODE environment variable
