@@ -1,3 +1,5 @@
+import inquirerAsync from 'inquirer-async';
+
 import {
   Exp,
 } from 'xdl';
@@ -5,13 +7,26 @@ import {
 import log from '../log';
 
 async function action(projectDir, options) {
-  let info = {};
+  let validatedOptions = {};
   if (options.projectName) {
-    info.name = options.projectName;
+    validatedOptions.name = options.projectName;
+  } else {
+    let questions = [{
+      type: 'input',
+      name: 'name',
+      message: 'Project name',
+      validate(val) {
+        // TODO: Validate
+        return val.length > 0;
+      },
+    }];
+
+    var answers = await inquirerAsync.promptAsync(questions);
+    validatedOptions.name = answers.name;
   }
 
-  await Exp.createNewExpAsync(projectDir, info, {force: true});
-  log(`Your project is ready at ${projectDir}. Use "exp start ${projectDir}" to get started.`);
+  let root = await Exp.createNewExpAsync(projectDir, {}, validatedOptions);
+  log(`Your project is ready at ${root}. Use "exp start ${root}" to get started.`);
 }
 
 export default (program) => {
@@ -19,6 +34,6 @@ export default (program) => {
     .command('init [project-dir]')
     .alias('i')
     .description('Initializes a directory with an example project')
-    .option('-n, --projectName [name]', 'Specify a name for the new project. Otherwise will use the directory name.')
+    .option('-n, --projectName [name]', 'Specify a name for the new project')
     .asyncActionProjectDir(action);
 };

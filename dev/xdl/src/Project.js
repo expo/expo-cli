@@ -135,7 +135,6 @@ async function _validateConfigJsonAsync(projectRoot) {
     return;
   }
 
-
   let reactNativeTag = reactNative.substring(reactNative.lastIndexOf('#') + 1);
 
   let sdkVersions = await Api.sdkVersionsAsync();

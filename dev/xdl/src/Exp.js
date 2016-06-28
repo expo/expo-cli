@@ -1,13 +1,15 @@
 let JsonFile = require('@exponent/json-file');
 
-let existsAsync = require('exists-async');
 let fs = require('fs');
 let fsExtra = require('fs-extra');
 let mkdirp = require('mkdirp');
 let path = require('path');
+import joi from 'joi';
 
 let Api = require('./Api');
 import ErrorCode from './ErrorCode';
+import Logger from './Logger';
+import NotificationCode from './NotificationCode';
 let User = require('./User');
 let UrlUtils = require('./UrlUtils');
 let UserSettings = require('./UserSettings');
@@ -54,51 +56,71 @@ async function determineEntryPointAsync(root) {
   return entryPoint;
 }
 
-async function createNewExpAsync(root, info, opts = {}) {
-  let pp = path.parse(root);
-  let name = pp.name || 'exponent-project';
+async function createNewExpAsync(selectedDir, extraPackageJsonFields, opts) {
+  let schema = joi.object().keys({
+    name: joi.string().required(),
+  });
+
+  try {
+    joi.promise.validate(opts, schema);
+  } catch (e) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
+  }
+
+  let name = opts.name;
 
   let author = await UserSettings.getAsync('email', null);
 
   let templatePackageJsonFile = new JsonFile(path.join(__dirname, '../template/package.json'));
   let templatePackageJson = await templatePackageJsonFile.readAsync();
 
-  info = Object.assign(info, templatePackageJson);
+  let packageJson = Object.assign(extraPackageJsonFields, templatePackageJson);
 
-  let data = Object.assign({
+  let data = Object.assign(packageJson, {
     name,
     version: '0.0.0',
     description: "Hello Exponent!",
     author,
-    //license: "MIT",
-    // scripts: {
-    //   "test": "echo \"Error: no test specified\" && exit 1"
-    // },
-  }, info);
+  });
 
-  let pkgJson = new JsonFile(path.join(root, 'package.json'));
+  let root = path.join(selectedDir, name);
 
-  let exists = await existsAsync(pkgJson.file);
-  if (exists && !opts.force) {
-    throw new XDLError(ErrorCode.WONT_OVERWRITE_WITHOUT_FORCE, "Refusing to create new Exp because package.json already exists at root");
+  let fileExists = true;
+  try {
+    // If file doesn't exist it will throw an error.
+    // Don't want to continue unless there is nothing there.
+    fs.statSync(root);
+  } catch (e) {
+    fileExists = false;
+  }
+
+  if (fileExists) {
+    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `${root} already exists. Please choose a different directory or project name.`);
   }
 
   await mkdirp.promise(root);
 
-  let result = await pkgJson.writeAsync(data);
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Unzipping project files...');
+  let pkgJson = new JsonFile(path.join(root, 'package.json'));
+  await pkgJson.writeAsync(data);
 
   // Copy the template directory, which contains node_modules, without its
   // package.json
   await fsExtra.promise.copy(TEMPLATE_ROOT, root, {
-    filter: filePath => filePath !== path.join(TEMPLATE_ROOT, 'package.json')
+    filter: filePath => filePath !== path.join(TEMPLATE_ROOT, 'package.json'),
   });
 
   // Custom code for replacing __NAME__ in main.js
   let mainJs = await fs.readFile.promise(path.join(TEMPLATE_ROOT, 'main.js'), 'utf8');
   let customMainJs = mainJs.replace(/__NAME__/g, data.name);
-  result = await fs.writeFile.promise(path.join(root, 'main.js'), customMainJs, 'utf8');
+  await fs.writeFile.promise(path.join(root, 'main.js'), customMainJs, 'utf8');
 
-  return data;
+  // Update exp.json
+  let expJson = await fs.readFile.promise(path.join(root, 'exp.json'), 'utf8');
+  let customExpJson = expJson.replace(/\"My New Project\"/, `"${data.name}"`).replace(/\"my-new-project\"/, `"${data.name}"`);
+  await fs.writeFile.promise(path.join(root, 'exp.json'), customExpJson, 'utf8');
+
+  return root;
 }
 
 async function saveRecentExpRootAsync(root) {
