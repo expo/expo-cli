@@ -6,6 +6,10 @@ let _ = require('lodash');
 let request = require('request');
 import FormData from 'form-data';
 import got from 'got';
+import semver from 'semver';
+
+import ErrorCode from './ErrorCode';
+import XDLError from './XDLError';
 
 let Config = require('./Config');
 let Session = require('./Session');
@@ -100,6 +104,29 @@ export default class ApiClient {
   static async callPathAsync(path, method, requestBody) {
     let url = ROOT_BASE_URL + path;
     return _callMethodAsync(url, method, requestBody);
+  }
+
+  static async sdkVersionsAsync() {
+    return await ApiClient.callPathAsync('/--/sdk-versions');
+  }
+
+  // Gets most recent SDK version. Ensures optField is in SDK version if it is provided
+  static async currentSDKVersionAsync(optField) {
+    let sdkVersions = await ApiClient.callPathAsync('/--/sdk-versions');
+    let currentSDKVersion = null;
+
+    _.forEach(sdkVersions, (value, key) => {
+      if ((!currentSDKVersion || semver.gt(key, currentSDKVersion)) &&
+          (!optField || value[optField])) {
+        currentSDKVersion = key;
+      }
+    });
+
+    if (!currentSDKVersion) {
+      throw new XDLError(ErrorCode.NO_SDK_VERSION, 'No SDK version found');
+    }
+
+    return sdkVersions[currentSDKVersion];
   }
 }
 

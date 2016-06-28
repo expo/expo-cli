@@ -1,13 +1,19 @@
 #!/usr/bin/env node
+
+import 'instapromise';
+
 import _ from 'lodash-node';
+import bunyan from 'bunyan';
 import crayon from '@ccheever/crayon';
 import glob from 'glob';
-import instapromise from 'instapromise';
+import simpleSpinner from '@exponent/simple-spinner';
 import url from 'url';
 
 import program, { Command } from 'commander';
 import {
   Config,
+  Logger,
+  NotificationCode,
 } from 'xdl';
 
 import log from './log';
@@ -58,6 +64,8 @@ Command.prototype.asyncActionProjectDir = function(asyncFn) {
 
 async function runAsync() {
   try {
+    _registerLogs();
+
     if (process.env.SERVER_URL) {
       let serverUrl = process.env.SERVER_URL;
       if (!serverUrl.startsWith('http')) {
@@ -136,6 +144,36 @@ async function checkForUpdateAsync() {
     default:
       log.error("Confused about what version of exp you have?");
   }
+}
+
+function _registerLogs() {
+  let stream = {
+    level: 'info',
+    stream: {
+      write: (chunk) => {
+        if (chunk.code) {
+          switch (chunk.code) {
+            case NotificationCode.START_LOADING:
+              simpleSpinner.start();
+              return;
+            case NotificationCode.STOP_LOADING:
+              simpleSpinner.stop();
+              return;
+          }
+        }
+
+        if (chunk.level <= bunyan.INFO) {
+          log(chunk.msg);
+        } else {
+          log.error(chunk.msg);
+        }
+      },
+    },
+    type: 'raw',
+  };
+
+  Logger.notifications.addStream(stream);
+  Logger.global.addStream(stream);
 }
 
 if (require.main === module) {

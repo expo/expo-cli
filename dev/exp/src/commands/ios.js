@@ -5,14 +5,12 @@ import {
   UrlUtils,
 } from 'xdl';
 
-import log from '../log';
-
 async function action(projectDir, options) {
   let url = options.url || await UrlUtils.constructManifestUrlAsync(projectDir, {
-    localhost: true,
+    hostType: 'localhost',
   });
 
-  await Simulator.openUrlInSimulatorSafeAsync(url, log, log, simpleSpinner.start, simpleSpinner.stop);
+  await Simulator.openUrlInSimulatorSafeAsync(url, simpleSpinner.start, simpleSpinner.stop);
 }
 
 export default (program) => {
@@ -21,6 +19,5 @@ export default (program) => {
     .addUrlOption()
     .description("Opens your app in Exponent in an iOS simulator on your computer")
     //.help('You must already have Exponent installed on a simulator on your computer.')
-    .asyncActionProjectDir(action)
-    ;
+    .asyncActionProjectDir(action);
 };

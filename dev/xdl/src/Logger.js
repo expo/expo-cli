@@ -5,7 +5,7 @@ import path from 'path';
 
 import UserSettings from './UserSettings';
 
-export default bunyan.createLogger({
+let logger = bunyan.createLogger({
   name: 'exponent',
   streams: [{
     type: 'rotating-file',
@@ -14,3 +14,8 @@ export default bunyan.createLogger({
     count: 3,       // keep 3 back copies
   }],
 });
+
+logger.notifications = logger.child({type: 'notifications'});
+logger.global = logger.child({type: 'global'});
+
+module.exports = logger;

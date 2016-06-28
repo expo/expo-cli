@@ -4,20 +4,22 @@ import delayAsync from 'delay-async';
 import download from 'download';
 import execAsync from 'exec-async';
 import existsAsync from 'exists-async';
-import fs from 'fs';
 import glob from 'glob';
 import homeDir from 'home-dir';
-import http from 'http';
-import md5hex from 'md5hex';
+import mkdirp from 'mkdirp';
 import osascript from '@exponent/osascript';
 import path from 'path';
 import spawnAsync from '@exponent/spawn-async';
 
 import Api from './Api';
-import Metadata from './Metadata';
+import Logger from './Logger';
+import NotificationCode from './NotificationCode';
 import UserSettings from './UserSettings';
 
-async function isSimulatorInstalledAsync() {
+let _lastUrl = null;
+
+// Simulator installed
+async function _isSimulatorInstalledAsync() {
   let result;
   try {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
@@ -33,28 +35,38 @@ async function isSimulatorInstalledAsync() {
   }
 }
 
-async function openSimulatorAsync() {
+// Simulator opened
+async function _openSimulatorAsync() {
   return await spawnAsync('open', ['-a', 'Simulator']);
 }
 
-async function installAppOnSimulatorAsync(pathToApp) {
-  return await spawnAsync('xcrun', ['simctl', 'install', 'booted', pathToApp]);
-}
-
-async function isSimulatorRunningAsync() {
+async function _isSimulatorRunningAsync() {
   let zeroMeansNo = (await osascript.execAsync('tell app "System Events" to count processes whose name is "Simulator"')).trim();
-  // console.log("zeroMeansNo=", zeroMeansNo);
-  return (zeroMeansNo !== '0');
+  if (zeroMeansNo === '0') {
+    return false;
+  }
+
+  let bootedDevice = await _bootedSimulatorDeviceAsync();
+  return !!bootedDevice;
 }
 
-async function listSimulatorDevicesAsync() {
+async function _waitForSimulatorRunningAsync() {
+  if (await _isSimulatorRunningAsync()) {
+    return true;
+  } else {
+    await delayAsync(100);
+    return await _waitForSimulatorRunningAsync();
+  }
+}
+
+async function _listSimulatorDevicesAsync() {
   let infoJson = await execAsync('xcrun', ['simctl', 'list', 'devices', '--json']);
   let info = JSON.parse(infoJson);
   return info;
 }
 
-async function bootedSimulatorDeviceAsync() {
-  let simulatorDeviceInfo = await listSimulatorDevicesAsync();
+async function _bootedSimulatorDeviceAsync() {
+  let simulatorDeviceInfo = await _listSimulatorDevicesAsync();
   for (let runtime in simulatorDeviceInfo.devices) {
     let devices = simulatorDeviceInfo.devices[runtime];
     for (let i = 0; i < devices.length; i++) {
@@ -67,89 +79,93 @@ async function bootedSimulatorDeviceAsync() {
   return null;
 }
 
-function dirForSimulatorDevice(udid) {
+function _dirForSimulatorDevice(udid) {
   return path.resolve(homeDir(), 'Library/Developer/CoreSimulator/Devices', udid);
 }
 
-async function isExponentAppInstalledOnCurrentBootedSimulatorAsync() {
-  let device = await bootedSimulatorDeviceAsync();
+async function _quitSimulatorAsync() {
+  return await osascript.execAsync('tell application "Simulator" to quit');
+}
+
+// Exponent installed
+async function _isExponentAppInstalledOnCurrentBootedSimulatorAsync() {
+  let device = await _bootedSimulatorDeviceAsync();
   if (!device) {
     return false;
   }
-  let simDir = await dirForSimulatorDevice(device.udid);
+  let simDir = await _dirForSimulatorDevice(device.udid);
   let matches = await glob.promise('./data/Containers/Data/Application/*/Library/Caches/Snapshots/host.exp.Exponent', {cwd: simDir});
+
   return (matches.length > 0);
 }
 
-async function pathToExponentSimulatorAppAsync() {
-  let versionInfo = await Metadata.reactNativeVersionInfoAsync();
-  let versionPair = [versionInfo.versionDescription, versionInfo.versionSpecific];
-  return await simulatorAppForReactNativeVersionAsync(versionPair)
-}
-
-async function installExponentOnSimulatorAsync() {
-  let exponentAppPath = await pathToExponentSimulatorAppAsync();
-  return await installAppOnSimulatorAsync(exponentAppPath);
-}
-
-async function openUrlInSimulatorAsync(url) {
-  return await spawnAsync('xcrun', ['simctl', 'openurl', 'booted', url]);
-}
-
-async function openUrlInSimulatorSafeAsync(url, log, error, startLoading, stopLoading) {
-  if (!(await isSimulatorInstalledAsync())) {
-    error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
-    return;
-  }
-
-  if (!(await isSimulatorRunningAsync())) {
-    log("Opening iOS simulator");
-    if (startLoading) { startLoading(); }
-    await openSimulatorAsync();
-    // TODO: figure out a better way to do this
-    await delayAsync(5000);
-    if (stopLoading) { stopLoading(); }
-  }
-
-  if (!(await isExponentAppInstalledOnCurrentBootedSimulatorAsync())) {
-    log("Installing Exponent on iOS simulator");
-    if (startLoading) { startLoading(); }
-    await installExponentOnSimulatorAsync();
-    // TODO: figure out a better way to do this
-    await delayAsync(1000);
-    if (stopLoading) { stopLoading(); }
-  }
-
-  log(`Opening ${url} in iOS simulator`);
-  await openUrlInSimulatorAsync(url);
-}
-
-async function simulatorAppForReactNativeVersionAsync(versionPair) {
-  // Will download -- if necessary -- and then return the path to the simulator
-
-  let p = simulatorAppPathForReactNativeVersion(versionPair);
-  if (await existsAsync(p)) {
-    return p;
-  } else {
-    console.log("No simulator app for react-native version " + versionPair + " so downloading now");
-
-    let response = await Api.callMethodAsync('simulator.urlForSimulatorAppForReactNativeVersion', []);
-    let remoteUrl = response.result;
-
-    console.log("Downloading simulator app from " + remoteUrl);
-    // remoteUrl = 'https://s3.amazonaws.com/exp-us-standard/xde/SimulatorApps/1.0/Exponent.app.zip'
-
-    let dir = simulatorAppDirectoryForReactNativeVersion(versionPair);
-    let d$ = new download({extract: true}).get(remoteUrl).dest(dir).promise.run();
-    await d$;
-    return p;
-  }
-}
-
-async function uninstallExponentAppFromSimulatorAsync() {
-  try {
-    let result = await execAsync('xcrun', ['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
+async function _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync() {
+  if (await _isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
     return true;
+  } else {
+    await delayAsync(100);
+    return await _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync();
+  }
+}
+
+async function _exponentVersionOnCurrentBootedSimulatorAsync() {
+  let device = await _bootedSimulatorDeviceAsync();
+  if (!device) {
+    return null;
+  }
+  let simDir = await _dirForSimulatorDevice(device.udid);
+  let matches = await glob.promise('./data/Containers/Bundle/Application/*/Exponent-*.app', {cwd: simDir});
+
+  if (matches.length === 0) {
+    return null;
+  }
+
+  let regex = /Exponent\-([0-9\.]+)\.app/;
+  let regexMatch = regex.exec(matches[0]);
+  if (regexMatch.length < 2) {
+    return null;
+  }
+
+  return regexMatch[1];
+}
+
+async function _checkExponentUpToDateAsync() {
+  let sdkVersion = await Api.sdkVersionsAsync();
+  let installedVersion = await _exponentVersionOnCurrentBootedSimulatorAsync();
+
+  if (!installedVersion || installedVersion !== sdkVersion.iosVersion) {
+    Logger.notifications.warn({code: NotificationCode.OLD_IOS_APP_VERSION}, 'This version of the Exponent app is out of date.');
+  }
+}
+
+async function _downloadSimulatorAppAsync() {
+  let sdkVersion = await Api.sdkVersionsAsync();
+  let dir = path.join(_simulatorCacheDirectory(), `Exponent-${sdkVersion.iosVersion}.app`);
+
+  if (await existsAsync(dir)) {
+    return dir;
+  }
+
+  mkdirp.sync(dir);
+  let url = `https://s3.amazonaws.com/exp-ios-simulator-apps/Exponent-${sdkVersion.iosVersion}.app.zip`;
+  await new download({extract: true}).get(url).dest(dir).promise.run();
+  return dir;
+}
+
+async function _installExponentOnSimulatorAsync() {
+  Logger.global.info(`Downloading latest version of Exponent`);
+  Logger.notifications.info({code: NotificationCode.START_LOADING});
+  let dir = await _downloadSimulatorAppAsync();
+  Logger.global.info("Installing Exponent on iOS simulator");
+  let result = await spawnAsync('xcrun', ['simctl', 'install', 'booted', dir]);
+  Logger.notifications.info({code: NotificationCode.STOP_LOADING});
+  return result;
+}
+
+async function _uninstallExponentAppFromSimulatorAsync() {
+  try {
+    Logger.global.info('Uninstalling Exponent from iOS simulator.');
+    await execAsync('xcrun', ['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
   } catch (e) {
     if (e.message === 'Command failed: xcrun simctl uninstall booted host.exp.Exponent\nNo devices are booted.\n') {
       return null;
@@ -160,59 +176,77 @@ async function uninstallExponentAppFromSimulatorAsync() {
   }
 }
 
-async function quitSimulatorAsync() {
-  return await osascript.execAsync('tell application "Simulator" to quit');
+function _simulatorCacheDirectory() {
+  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
+  let dir = path.join(dotExponentHomeDirectory, 'ios-simulator-app-cache');
+  mkdirp.sync(dir);
+  return dir;
 }
 
-function simulatorCacheDirectory() {
-  let dotExponentHomeDirectory = UserSettings._dotExponentHomeDirectory();
-  return path.join(dotExponentHomeDirectory, 'simulator-app-cache');
+async function upgradeExponentOnSimulatorAsync() {
+  await _uninstallExponentAppFromSimulatorAsync();
+  await _installExponentOnSimulatorAsync();
+
+  if (_lastUrl) {
+    Logger.global.info(`Opening ${_lastUrl} in Exponent.`);
+    await spawnAsync('xcrun', ['simctl', 'openurl', 'booted', _lastUrl]);
+    _lastUrl = null;
+  }
 }
 
-function _escapeForFilesystem(s) {
-  let sStripped = s.replace(/[^0-9a-zA-Z]/g, '');
-  let full = sStripped + '-' + md5hex(s, 8);
-  // console.log("full=", full);
-  return full;
+// Open Url
+async function _openUrlInSimulatorAsync(url) {
+  _lastUrl = url;
+  _checkExponentUpToDateAsync(); // let this run in background
+  return await spawnAsync('xcrun', ['simctl', 'openurl', 'booted', url]);
 }
 
-function _strip(s) {
-  return s.replace(/[^0-9a-zA-Z]/g, '');
+async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url) {
+  if (!(await _isSimulatorRunningAsync())) {
+    Logger.global.info("Opening iOS simulator");
+    await _openSimulatorAsync();
+    await _waitForSimulatorRunningAsync();
+  }
+
+  if (!(await _isExponentAppInstalledOnCurrentBootedSimulatorAsync())) {
+    await _installExponentOnSimulatorAsync();
+    await _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync();
+  }
+
+  Logger.global.info(`Opening ${url} in iOS simulator`);
+  await _openUrlInSimulatorAsync(url);
 }
 
-function _escapeForFilesystem(list) {
-  let hash = md5hex(JSON.stringify(list), 8);
-  return list.map(_strip).join('.') + '-' + hash;
-}
+async function openUrlInSimulatorSafeAsync(url) {
+  if (!(await _isSimulatorInstalledAsync())) {
+    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
+    return;
+  }
 
-function simulatorAppPathForReactNativeVersion(versionPair) {
-  // For now, something seems broken about downloading over the Internet, so
-  // we'll just copy the Simulator app into this bundle
-  return path.resolve(__dirname, '../simulator-app/1.5.0/Exponent.app');
-  return path.join(simulatorAppDirectoryForReactNativeVersion(versionPair), 'Exponent.app');
-}
+  try {
+    await _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url);
+  } catch (e) {
+    Logger.global.error('Error running app. Uninstalling exponent and trying again.');
 
+    try {
+      await _uninstallExponentAppFromSimulatorAsync();
+    } catch (uninstallError) {}
 
-function simulatorAppDirectoryForReactNativeVersion(versionPair) {
-  // console.log("version=", version);
-  return path.join(simulatorCacheDirectory(), _escapeForFilesystem(versionPair));
+    await _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url);
+  }
 }
 
 module.exports = {
-  _escapeForFilesystem,
-  bootedSimulatorDeviceAsync,
-  dirForSimulatorDevice,
-  listSimulatorDevicesAsync,
-  installExponentOnSimulatorAsync,
-  isExponentAppInstalledOnCurrentBootedSimulatorAsync,
-  isSimulatorInstalledAsync,
-  isSimulatorRunningAsync,
-  openSimulatorAsync,
-  openUrlInSimulatorAsync,
   openUrlInSimulatorSafeAsync,
-  pathToExponentSimulatorAppAsync,
-  quitSimulatorAsync,
-  simulatorCacheDirectory,
-  simulatorAppForReactNativeVersionAsync,
-  uninstallExponentAppFromSimulatorAsync,
+  upgradeExponentOnSimulatorAsync,
+
+  // Used by tests
+  _installExponentOnSimulatorAsync,
+  _isExponentAppInstalledOnCurrentBootedSimulatorAsync,
+  _isSimulatorInstalledAsync,
+  _isSimulatorRunningAsync,
+  _openSimulatorAsync,
+  _openUrlInSimulatorAsync,
+  _quitSimulatorAsync,
+  _uninstallExponentAppFromSimulatorAsync,
 };

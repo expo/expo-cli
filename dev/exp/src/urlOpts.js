@@ -9,7 +9,6 @@ import {
 } from 'xdl';
 
 import CommandError from './CommandError';
-import log from './log';
 
 function addOptions(program) {
   program
@@ -86,11 +85,11 @@ function handleQROpt(url, options) {
 
 async function handleMobileOptsAsync(url, options) {
   if (options.android) {
-    await Android.openUrlSafeAsync(url, log, log);
+    await Android.openUrlSafeAsync(url);
   }
 
   if (options.ios) {
-    await Simulator.openUrlInSimulatorSafeAsync(url, log, log, simpleSpinner.start, simpleSpinner.stop);
+    await Simulator.openUrlInSimulatorSafeAsync(url, simpleSpinner.start, simpleSpinner.stop);
   }
 
   return !!options.android || !!options.ios;

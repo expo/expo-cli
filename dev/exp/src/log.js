@@ -25,7 +25,7 @@ log.warn = function warn() {
   var prefix = crayon.yellow('[') + crayon.gray('exp') + crayon.yellow(']');
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0).map((x) => crayon.yellow(x)));
   console.warn(...args);
-}
+};
 
 log.gray = function() {
   if (log.config.raw) {
@@ -34,14 +34,14 @@ log.gray = function() {
   var prefix = '[exp]';
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0));
   crayon.gray.error(...args);
-}
+};
 
-log.raw = function (...args) {
+log.raw = function(...args) {
   if (!log.config.raw) {
     return;
   }
   console.log(...args);
-}
+};
 
 log.crayon = crayon;
 

@@ -8,6 +8,8 @@ let XDL = {
   get ErrorCode() { return require('./ErrorCode'); },
   get Exp() { return require('./Exp'); },
   get FileSystem() { return require('./FileSystem'); },
+  get Logger() { return require('./Logger'); },
+  get NotificationCode() { return require('./NotificationCode'); },
   get Project() { return require('./Project'); },
   get ProjectSettings() { return require('./ProjectSettings'); },
   get Simulator() { return require('./Simulator'); },

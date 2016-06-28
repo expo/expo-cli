@@ -11,48 +11,48 @@ import xdl from '../xdl';
 describe('simulator', () => {
   it('opens and loads url in exponent', async () => {
     let Simulator = xdl.Simulator;
-    if (!await Simulator.isSimulatorInstalledAsync()) {
+    if (!await Simulator._isSimulatorInstalledAsync()) {
       throw new Error("Simulator isn't installed on this computer; can't run this test.");
     }
 
     // Quit the simulator to start the test
-    if (await Simulator.isSimulatorRunningAsync()) {
-      await Simulator.quitSimulatorAsync();
+    if (await Simulator._isSimulatorRunningAsync()) {
+      await Simulator._quitSimulatorAsync();
     }
 
     await delayAsync(1000); // 3 seconds
 
     // Open the simulator
-    await Simulator.openSimulatorAsync();
+    await Simulator._openSimulatorAsync();
 
     await delayAsync(9000); // 3 seconds
 
-    if (!await Simulator.isSimulatorRunningAsync()) {
+    if (!await Simulator._isSimulatorRunningAsync()) {
       throw new Error("Simulator should be running after being opened, but we're detecting that it isn't.");
     }
 
-    if (await Simulator.isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
-      await Simulator.uninstallExponentAppFromSimulatorAsync();
+    if (await Simulator._isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
+      await Simulator._uninstallExponentAppFromSimulatorAsync();
     }
-    if (await Simulator.isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
+    if (await Simulator._isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
       throw new Error("Exponent app shouldn't be installed on this simulator but it is");
     }
-    await Simulator.installExponentOnSimulatorAsync();
-    if (!await Simulator.isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
+    await Simulator._installExponentOnSimulatorAsync();
+    if (!await Simulator._isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
       throw new Error("Exponent app should be installed on this simulator but it isn't");
     }
 
-    await Simulator.openUrlInSimulatorAsync('exp://exp.host/@exponent/fluxpybird');
+    await Simulator._openUrlInSimulatorAsync('exp://exp.host/@exponent/fluxpybird');
 
     await delayAsync(6000);
 
-    await Simulator.uninstallExponentAppFromSimulatorAsync();
-    if (await Simulator.isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
+    await Simulator._uninstallExponentAppFromSimulatorAsync();
+    if (await Simulator._isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
       throw new Error("Exponent app shouldn't be installed on this simulator but it is (2)");
     }
 
-    await Simulator.quitSimulatorAsync();
-    if (await Simulator.isSimulatorRunningAsync()) {
+    await Simulator._quitSimulatorAsync();
+    if (await Simulator._isSimulatorRunningAsync()) {
       throw new Error("Simulator shouldn't be running but it is");
     }
   });

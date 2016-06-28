@@ -53,6 +53,7 @@
     "ngrok": "github:exponentjs/ngrok#c461b46dec4dc9a1da55903dfb061da091f7661c",
     "promise-props": "^1.0.0",
     "request": "^2.69.0",
+    "semver": "^5.1.1",
     "slugid": "^1.1.0",
     "tree-kill": "^1.1.0",
     "url": "^0.11.0"

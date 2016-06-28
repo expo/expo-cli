@@ -7,7 +7,6 @@ import delayAsync from 'delay-async';
 import express from 'express';
 import FormData from 'form-data';
 import freeportAsync from 'freeport-async';
-import fs from 'fs';
 import joi from 'joi';
 import _ from 'lodash';
 import ngrok from 'ngrok';
@@ -37,7 +36,7 @@ let _cachedSignedManifest = {
 function _getLogger(projectRoot) {
   let logger = _projectRootToLogger[projectRoot];
   if (!logger) {
-    logger = Logger.child({project: path.resolve(projectRoot)});
+    logger = Logger.child({type: 'project', project: path.resolve(projectRoot)});
     _projectRootToLogger[projectRoot] = logger;
   }
 
@@ -139,7 +138,7 @@ async function _validateConfigJsonAsync(projectRoot) {
 
   let reactNativeTag = reactNative.substring(reactNative.lastIndexOf('#') + 1);
 
-  let sdkVersions = await Api.callPathAsync('/--/sdk-versions');
+  let sdkVersions = await Api.sdkVersionsAsync();
   if (!sdkVersions) {
     _logError(projectRoot, 'exponent', `Error: Couldn't connect to server`);
     return;
@@ -151,8 +150,8 @@ async function _validateConfigJsonAsync(projectRoot) {
   }
 
   let sdkVersionObject = sdkVersions[sdkVersion];
-  if (sdkVersionObject['exponent-react-native-tag'] !== reactNativeTag) {
-    _logError(projectRoot, 'exponent', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponent-react-native-tag']}`);
+  if (sdkVersionObject['exponentReactNativeTag'] !== reactNativeTag) {
+    _logError(projectRoot, 'exponent', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
     return;
   }
 

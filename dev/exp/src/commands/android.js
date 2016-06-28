@@ -3,12 +3,10 @@ import {
   UrlUtils,
 } from 'xdl';
 
-import log from '../log';
-
 async function action(projectDir, options) {
   let url = options.url || await UrlUtils.constructManifestUrlAsync(projectDir);
 
-  await Android.openUrlSafeAsync(url, log, log);
+  await Android.openUrlSafeAsync(url);
 }
 
 export default (program) => {
