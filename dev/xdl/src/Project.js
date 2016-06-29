@@ -265,11 +265,10 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
     delete exp.ios.config;
   }
 
-  // Collect asset files
-  const iosAssets = JSON.parse(iosAssetsJson);
-  const androidAssets = JSON.parse(androidAssetsJson);
-
-  // TODO: actually upload ^
+  // Upload asset files -- we do this serially so that assets shared across iOS
+  // and Android aren't re-uploaded (they will have the same hash)
+  await uploadAssetsAsync(JSON.parse(iosAssetsJson));
+  await uploadAssetsAsync(JSON.parse(androidAssetsJson));
 
   let form = new FormData();
   form.append('expJson', JSON.stringify(exp));
@@ -282,6 +281,34 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
 
   let response = await Api.callMethodAsync('publish', [options], 'put', form);
   return response;
+}
+
+async function uploadAssetsAsync(assets) {
+  // Collect paths by key
+  const paths = {};
+  assets.forEach(asset => {
+    asset.files.forEach((path, index) => {
+      paths[asset.fileHashes[index]] = path;
+    });
+  });
+
+  // Collect list of assets missing on host
+  const metas = (await Api.callMethodAsync('assetsMetadata', [{
+    keys: Object.keys(paths),
+  }], 'get', {})).metadata;
+  const missing = Object.keys(paths).filter(key => !metas[key].exists);
+
+  // Upload them!
+  await Promise.all(_.chunk(missing, 5).map(async (keys) => {
+    let form = new FormData();
+    keys.forEach(key => {
+      console.log('uploading', paths[key]);
+      form.append(key, fs.createReadStream(paths[key]), {
+        filename: paths[key],
+      });
+    });
+    await Api.callMethodAsync('uploadAssets', [], 'put', form);
+  }));
 }
 
 export async function buildAsync(projectRoot: string, options: {
