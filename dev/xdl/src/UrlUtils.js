@@ -21,19 +21,27 @@ export async function constructManifestUrlAsync(projectRoot: string, opts: any) 
   return constructUrlAsync(projectRoot, opts, false);
 }
 
-export async function constructPublishUrlAsync(projectRoot: string, entryPoint: string) {
+export async function constructUrlWithExtensionAsync(projectRoot, entryPoint, ext) {
   let bundleUrl = await constructBundleUrlAsync(projectRoot, {
     hostType: 'localhost',
     urlType: 'http',
   });
 
   let mainModulePath = guessMainModulePath(entryPoint);
-  bundleUrl += `/${mainModulePath}.bundle`;
+  bundleUrl += `/${mainModulePath}.${ext}`;
 
   return bundleUrl + '?' + constructBundleQueryParams({
     dev: false,
     minify: true,
   });
+}
+
+export async function constructPublishUrlAsync(projectRoot, entryPoint) {
+  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'bundle');
+}
+
+export async function constructAssetsUrlAsync(projectRoot, entryPoint) {
+  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'assets');
 }
 
 export async function constructDebuggerHostAsync(projectRoot: string) {
@@ -185,3 +193,4 @@ export function someRandomness() {
 export function domainify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 }
+

@@ -179,7 +179,7 @@ async function _validateConfigJsonAsync(projectRoot: string) {
   // TODO: Check any native module versions here
 }
 
-async function _getBundleForPlatformAsync(url, platform) {
+async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
   let response = await request.promise.get({
     url: `${url}&platform=${platform}`,
     headers: {
@@ -191,8 +191,8 @@ async function _getBundleForPlatformAsync(url, platform) {
     throw new XDLError(ErrorCode.INVALID_BUNDLE, `Packager returned unexpected code ${response.statusCode}`);
   }
 
-  if (!response.body || response.body.length < MINIMUM_BUNDLE_SIZE) {
-    throw new XDLError(ErrorCode.INVALID_BUNDLE, `Bundle is: ${response.body}`);
+  if (!response.body || (minLength && response.body.length < minLength)) {
+    throw new XDLError(ErrorCode.INVALID_BUNDLE, `Body is: ${response.body}`);
   }
 
   return response.body;
@@ -219,12 +219,27 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
 
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
   let publishUrl = await UrlUtils.constructPublishUrlAsync(projectRoot, entryPoint);
+  let assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
   let [
     iosBundle,
     androidBundle,
+    iosAssetsJson,
+    androidAssetsJson,
   ] = await Promise.all([
-    _getBundleForPlatformAsync(publishUrl, 'ios'),
-    _getBundleForPlatformAsync(publishUrl, 'android'),
+    _getForPlatformAsync(publishUrl, 'ios', {
+      errorCode: ErrorCode.INVALID_BUNDLE,
+      minLength: MINIMUM_BUNDLE_SIZE,
+    }),
+    _getForPlatformAsync(publishUrl, 'android', {
+      errorCode: ErrorCode.INVALID_BUNDLE,
+      minLength: MINIMUM_BUNDLE_SIZE,
+    }),
+    _getForPlatformAsync(assetsUrl, 'ios', {
+      errorCode: ErrorCode.INVALID_ASSETS,
+    }),
+    _getForPlatformAsync(assetsUrl, 'android', {
+      errorCode: ErrorCode.INVALID_ASSETS,
+    }),
   ]);
 
   let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
@@ -249,6 +264,12 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
   if (exp.ios && exp.ios.config) {
     delete exp.ios.config;
   }
+
+  // Collect asset files
+  const iosAssets = JSON.parse(iosAssetsJson);
+  const androidAssets = JSON.parse(androidAssetsJson);
+
+  // TODO: actually upload ^
 
   let form = new FormData();
   form.append('expJson', JSON.stringify(exp));
