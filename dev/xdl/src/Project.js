@@ -189,11 +189,11 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
   });
 
   if (response.statusCode !== 200) {
-    throw new XDLError(ErrorCode.INVALID_BUNDLE, `Packager returned unexpected code ${response.statusCode}`);
+    throw new XDLError(errorCode, `Packager returned unexpected code ${response.statusCode}`);
   }
 
   if (!response.body || (minLength && response.body.length < minLength)) {
-    throw new XDLError(ErrorCode.INVALID_BUNDLE, `Body is: ${response.body}`);
+    throw new XDLError(errorCode, `Body is: ${response.body}`);
   }
 
   return response.body;
