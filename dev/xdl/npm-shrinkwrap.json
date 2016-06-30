@@ -1149,6 +1149,11 @@
         }
       }
     },
+    "dtrace-provider": {
+      "version": "0.6.0",
+      "from": "dtrace-provider@>=0.6.0 <0.7.0",
+      "resolved": "https://registry.npmjs.org/dtrace-provider/-/dtrace-provider-0.6.0.tgz"
+    },
     "duplexer2": {
       "version": "0.1.4",
       "from": "duplexer2@>=0.1.4 <0.2.0",
@@ -3297,9 +3302,9 @@
       "resolved": "https://registry.npmjs.org/next-tick/-/next-tick-1.0.0.tgz"
     },
     "ngrok": {
-      "version": "2.1.9",
-      "from": "exponentjs/ngrok#c461b46dec4dc9a1da55903dfb061da091f7661c",
-      "resolved": "git://github.com/exponentjs/ngrok.git#c461b46dec4dc9a1da55903dfb061da091f7661c",
+      "version": "2.2.1",
+      "from": "exponentjs/ngrok#v1.1.0",
+      "resolved": "git://github.com/exponentjs/ngrok.git#ef1648bc8c3487e39948b7df98b6988a234e34ac",
       "dependencies": {
         "async": {
           "version": "0.9.2",
@@ -3980,7 +3985,7 @@
     },
     "tar.gz": {
       "version": "1.0.5",
-      "from": "tar.gz@>=1.0.3 <2.0.0",
+      "from": "tar.gz@latest",
       "resolved": "https://registry.npmjs.org/tar.gz/-/tar.gz-1.0.5.tgz"
     },
     "through2": {

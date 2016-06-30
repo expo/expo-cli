@@ -50,7 +50,7 @@
     "md5hex": "^1.0.0",
     "mkdirp": "^0.5.1",
     "my-local-ip": "^1.0.0",
-    "ngrok": "github:exponentjs/ngrok#c461b46dec4dc9a1da55903dfb061da091f7661c",
+    "ngrok": "github:exponentjs/ngrok#v1.1.0",
     "promise-props": "^1.0.0",
     "request": "^2.69.0",
     "semver": "^5.1.1",
