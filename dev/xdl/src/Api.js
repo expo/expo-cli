@@ -106,13 +106,18 @@ export default class ApiClient {
     return _callMethodAsync(url, method, requestBody);
   }
 
+  static async versionsAsync() {
+    return await ApiClient.callPathAsync('/--/versions');
+  }
+
   static async sdkVersionsAsync() {
-    return await ApiClient.callPathAsync('/--/sdk-versions');
+    let versions = await ApiClient.versionsAsync();
+    return versions.sdkVersions;
   }
 
   // Gets most recent SDK version. Ensures optField is in SDK version if it is provided
   static async currentSDKVersionAsync(optField) {
-    let sdkVersions = await ApiClient.callPathAsync('/--/sdk-versions');
+    let sdkVersions = await ApiClient.sdkVersionsAsync();
     let currentSDKVersion = null;
 
     _.forEach(sdkVersions, (value, key) => {

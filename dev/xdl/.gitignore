@@ -3,6 +3,3 @@ node_modules/
 
 # Babel output
 build/
-
-# Template
-template/

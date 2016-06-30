@@ -130,24 +130,24 @@ async function _exponentVersionOnCurrentBootedSimulatorAsync() {
 }
 
 async function _checkExponentUpToDateAsync() {
-  let sdkVersion = await Api.sdkVersionsAsync();
+  let versions = await Api.versionsAsync();
   let installedVersion = await _exponentVersionOnCurrentBootedSimulatorAsync();
 
-  if (!installedVersion || installedVersion !== sdkVersion.iosVersion) {
+  if (!installedVersion || installedVersion !== versions.iosVersion) {
     Logger.notifications.warn({code: NotificationCode.OLD_IOS_APP_VERSION}, 'This version of the Exponent app is out of date.');
   }
 }
 
 async function _downloadSimulatorAppAsync() {
-  let sdkVersion = await Api.sdkVersionsAsync();
-  let dir = path.join(_simulatorCacheDirectory(), `Exponent-${sdkVersion.iosVersion}.app`);
+  let versions = await Api.versionsAsync();
+  let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
   if (await existsAsync(dir)) {
     return dir;
   }
 
   mkdirp.sync(dir);
-  let url = `https://s3.amazonaws.com/exp-ios-simulator-apps/Exponent-${sdkVersion.iosVersion}.app.zip`;
+  let url = `https://s3.amazonaws.com/exp-ios-simulator-apps/Exponent-${versions.iosVersion}.app.zip`;
   await new download({extract: true}).get(url).dest(dir).promise.run();
   return dir;
 }

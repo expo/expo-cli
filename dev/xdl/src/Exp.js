@@ -1,9 +1,14 @@
 let JsonFile = require('@exponent/json-file');
 
+import 'instapromise';
+
+import targz from 'tar.gz';
+import download from 'download';
+import existsAsync from 'exists-async';
 let fs = require('fs');
-let fsExtra = require('fs-extra');
 let mkdirp = require('mkdirp');
 let path = require('path');
+import spawnAsync from '@exponent/spawn-async';
 import joi from 'joi';
 
 let Api = require('./Api');
@@ -15,8 +20,6 @@ let UrlUtils = require('./UrlUtils');
 let UserSettings = require('./UserSettings');
 let XDLError = require('./XDLError');
 let ProjectSettings = require('./ProjectSettings');
-
-let TEMPLATE_ROOT = path.resolve(__dirname, '../template');
 
 function packageJsonForRoot(root) {
   return new JsonFile(path.join(root, 'package.json'));
@@ -56,33 +59,52 @@ async function determineEntryPointAsync(root) {
   return entryPoint;
 }
 
+function _starterAppCacheDirectory() {
+  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
+  let dir = path.join(dotExponentHomeDirectory, 'starter-app-cache');
+  mkdirp.sync(dir);
+  return dir;
+}
+
+async function _downloadStarterAppAsync(name) {
+  let versions = await Api.versionsAsync();
+  let starterAppVersion = versions.starterApps[name].version;
+  let filename = `${name}-${starterAppVersion}.tar.gz`;
+  let starterAppPath = path.join(_starterAppCacheDirectory(), filename);
+
+  if (await existsAsync(starterAppPath)) {
+    return starterAppPath;
+  }
+
+  let url = `https://s3.amazonaws.com/exp-starter-apps/${filename}`;
+  await new download().get(url).dest(_starterAppCacheDirectory()).promise.run();
+  return starterAppPath;
+}
+
+async function _extract(archive, dir) {
+  try {
+    await spawnAsync('tar', ['-xvf', archive, '-C', dir], {
+      stdio: 'inherit',
+      cwd: __dirname,
+    });
+  } catch (e) {
+    await targz().extract(archive, dir);
+  }
+}
+
 async function createNewExpAsync(selectedDir, extraPackageJsonFields, opts) {
+  // Validate
   let schema = joi.object().keys({
     name: joi.string().required(),
   });
 
   try {
-    joi.promise.validate(opts, schema);
+    await joi.promise.validate(opts, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
 
   let name = opts.name;
-
-  let author = await UserSettings.getAsync('email', null);
-
-  let templatePackageJsonFile = new JsonFile(path.join(__dirname, '../template/package.json'));
-  let templatePackageJson = await templatePackageJsonFile.readAsync();
-
-  let packageJson = Object.assign(extraPackageJsonFields, templatePackageJson);
-
-  let data = Object.assign(packageJson, {
-    name,
-    version: '0.0.0',
-    description: "Hello Exponent!",
-    author,
-  });
-
   let root = path.join(selectedDir, name);
 
   let fileExists = true;
@@ -98,20 +120,35 @@ async function createNewExpAsync(selectedDir, extraPackageJsonFields, opts) {
     throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `${root} already exists. Please choose a different directory or project name.`);
   }
 
+  // Download files
   await mkdirp.promise(root);
 
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Unzipping project files...');
-  let pkgJson = new JsonFile(path.join(root, 'package.json'));
-  await pkgJson.writeAsync(data);
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Downloading project files...');
+  let starterAppPath = await _downloadStarterAppAsync('default');
 
-  // Copy the template directory, which contains node_modules, without its
-  // package.json
-  await fsExtra.promise.copy(TEMPLATE_ROOT, root, {
-    filter: filePath => filePath !== path.join(TEMPLATE_ROOT, 'package.json'),
+  // Extract files
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Extracting project files...');
+  await _extract(starterAppPath, root);
+
+  // Update files
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Customizing project...');
+
+  let author = await UserSettings.getAsync('email', null);
+  let packageJsonFile = new JsonFile(path.join(root, 'package.json'));
+  let packageJson = await packageJsonFile.readAsync();
+  packageJson = Object.assign(packageJson, extraPackageJsonFields);
+
+  let data = Object.assign(packageJson, {
+    name,
+    version: '0.0.0',
+    description: "Hello Exponent!",
+    author,
   });
 
+  await packageJsonFile.writeAsync(data);
+
   // Custom code for replacing __NAME__ in main.js
-  let mainJs = await fs.readFile.promise(path.join(TEMPLATE_ROOT, 'main.js'), 'utf8');
+  let mainJs = await fs.readFile.promise(path.join(root, 'main.js'), 'utf8');
   let customMainJs = mainJs.replace(/__NAME__/g, data.name);
   await fs.writeFile.promise(path.join(root, 'main.js'), customMainJs, 'utf8');
 

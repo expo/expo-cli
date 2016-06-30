@@ -600,6 +600,11 @@
       "from": "balanced-match@>=0.4.1 <0.5.0",
       "resolved": "https://registry.npmjs.org/balanced-match/-/balanced-match-0.4.1.tgz"
     },
+    "base64-js": {
+      "version": "0.0.8",
+      "from": "base64-js@0.0.8",
+      "resolved": "https://registry.npmjs.org/base64-js/-/base64-js-0.0.8.tgz"
+    },
     "beeper": {
       "version": "1.1.0",
       "from": "beeper@>=1.0.0 <2.0.0",
@@ -685,6 +690,11 @@
       "version": "1.0.2",
       "from": "bser@>=1.0.2 <2.0.0",
       "resolved": "https://registry.npmjs.org/bser/-/bser-1.0.2.tgz"
+    },
+    "buffer": {
+      "version": "3.6.0",
+      "from": "buffer@>=3.0.1 <4.0.0",
+      "resolved": "https://registry.npmjs.org/buffer/-/buffer-3.6.0.tgz"
     },
     "buffer-crc32": {
       "version": "0.2.5",
@@ -964,90 +974,34 @@
       "resolved": "https://registry.npmjs.org/decamelize/-/decamelize-1.2.0.tgz"
     },
     "decompress": {
-      "version": "3.0.0",
-      "from": "decompress@>=3.0.0 <4.0.0",
-      "resolved": "https://registry.npmjs.org/decompress/-/decompress-3.0.0.tgz"
+      "version": "4.0.0",
+      "from": "decompress@latest",
+      "resolved": "https://registry.npmjs.org/decompress/-/decompress-4.0.0.tgz"
     },
     "decompress-tar": {
-      "version": "3.1.0",
-      "from": "decompress-tar@>=3.0.0 <4.0.0",
-      "resolved": "https://registry.npmjs.org/decompress-tar/-/decompress-tar-3.1.0.tgz",
-      "dependencies": {
-        "clone": {
-          "version": "0.2.0",
-          "from": "clone@>=0.2.0 <0.3.0",
-          "resolved": "https://registry.npmjs.org/clone/-/clone-0.2.0.tgz"
-        },
-        "object-assign": {
-          "version": "2.1.1",
-          "from": "object-assign@>=2.0.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-2.1.1.tgz"
-        },
-        "vinyl": {
-          "version": "0.4.6",
-          "from": "vinyl@>=0.4.3 <0.5.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-0.4.6.tgz"
-        }
-      }
+      "version": "4.1.0",
+      "from": "decompress-tar@>=4.0.0 <5.0.0",
+      "resolved": "https://registry.npmjs.org/decompress-tar/-/decompress-tar-4.1.0.tgz"
     },
     "decompress-tarbz2": {
-      "version": "3.1.0",
-      "from": "decompress-tarbz2@>=3.0.0 <4.0.0",
-      "resolved": "https://registry.npmjs.org/decompress-tarbz2/-/decompress-tarbz2-3.1.0.tgz",
-      "dependencies": {
-        "clone": {
-          "version": "0.2.0",
-          "from": "clone@>=0.2.0 <0.3.0",
-          "resolved": "https://registry.npmjs.org/clone/-/clone-0.2.0.tgz"
-        },
-        "object-assign": {
-          "version": "2.1.1",
-          "from": "object-assign@>=2.0.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-2.1.1.tgz"
-        },
-        "vinyl": {
-          "version": "0.4.6",
-          "from": "vinyl@>=0.4.3 <0.5.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-0.4.6.tgz"
-        }
-      }
+      "version": "4.1.0",
+      "from": "decompress-tarbz2@>=4.0.0 <5.0.0",
+      "resolved": "https://registry.npmjs.org/decompress-tarbz2/-/decompress-tarbz2-4.1.0.tgz"
     },
     "decompress-targz": {
-      "version": "3.1.0",
-      "from": "decompress-targz@>=3.0.0 <4.0.0",
-      "resolved": "https://registry.npmjs.org/decompress-targz/-/decompress-targz-3.1.0.tgz",
-      "dependencies": {
-        "clone": {
-          "version": "0.2.0",
-          "from": "clone@>=0.2.0 <0.3.0",
-          "resolved": "https://registry.npmjs.org/clone/-/clone-0.2.0.tgz"
-        },
-        "object-assign": {
-          "version": "2.1.1",
-          "from": "object-assign@>=2.0.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-2.1.1.tgz"
-        },
-        "vinyl": {
-          "version": "0.4.6",
-          "from": "vinyl@>=0.4.3 <0.5.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-0.4.6.tgz"
-        }
-      }
+      "version": "4.0.0",
+      "from": "decompress-targz@>=4.0.0 <5.0.0",
+      "resolved": "https://registry.npmjs.org/decompress-targz/-/decompress-targz-4.0.0.tgz"
     },
     "decompress-unzip": {
-      "version": "3.4.0",
-      "from": "decompress-unzip@>=3.0.0 <4.0.0",
-      "resolved": "https://registry.npmjs.org/decompress-unzip/-/decompress-unzip-3.4.0.tgz",
+      "version": "4.0.1",
+      "from": "decompress-unzip@>=4.0.1 <5.0.0",
+      "resolved": "https://registry.npmjs.org/decompress-unzip/-/decompress-unzip-4.0.1.tgz",
       "dependencies": {
-        "readable-stream": {
-          "version": "2.0.6",
-          "from": "readable-stream@>=2.0.0 <2.1.0",
-          "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz"
-        },
-        "through2": {
-          "version": "2.0.1",
-          "from": "through2@>=2.0.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/through2/-/through2-2.0.1.tgz"
+        "get-stream": {
+          "version": "2.3.0",
+          "from": "get-stream@>=2.2.0 <3.0.0",
+          "resolved": "https://registry.npmjs.org/get-stream/-/get-stream-2.3.0.tgz"
         }
       }
     },
@@ -2261,7 +2215,71 @@
     "gulp-decompress": {
       "version": "1.2.0",
       "from": "gulp-decompress@>=1.2.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/gulp-decompress/-/gulp-decompress-1.2.0.tgz"
+      "resolved": "https://registry.npmjs.org/gulp-decompress/-/gulp-decompress-1.2.0.tgz",
+      "dependencies": {
+        "clone": {
+          "version": "0.2.0",
+          "from": "clone@>=0.2.0 <0.3.0",
+          "resolved": "https://registry.npmjs.org/clone/-/clone-0.2.0.tgz"
+        },
+        "decompress": {
+          "version": "3.0.0",
+          "from": "decompress@>=3.0.0 <4.0.0",
+          "resolved": "https://registry.npmjs.org/decompress/-/decompress-3.0.0.tgz"
+        },
+        "decompress-tar": {
+          "version": "3.1.0",
+          "from": "decompress-tar@>=3.0.0 <4.0.0",
+          "resolved": "https://registry.npmjs.org/decompress-tar/-/decompress-tar-3.1.0.tgz"
+        },
+        "decompress-tarbz2": {
+          "version": "3.1.0",
+          "from": "decompress-tarbz2@>=3.0.0 <4.0.0",
+          "resolved": "https://registry.npmjs.org/decompress-tarbz2/-/decompress-tarbz2-3.1.0.tgz"
+        },
+        "decompress-targz": {
+          "version": "3.1.0",
+          "from": "decompress-targz@>=3.0.0 <4.0.0",
+          "resolved": "https://registry.npmjs.org/decompress-targz/-/decompress-targz-3.1.0.tgz"
+        },
+        "decompress-unzip": {
+          "version": "3.4.0",
+          "from": "decompress-unzip@>=3.0.0 <4.0.0",
+          "resolved": "https://registry.npmjs.org/decompress-unzip/-/decompress-unzip-3.4.0.tgz",
+          "dependencies": {
+            "clone": {
+              "version": "1.0.2",
+              "from": "clone@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+            },
+            "readable-stream": {
+              "version": "2.0.6",
+              "from": "readable-stream@>=2.0.0 <2.1.0",
+              "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz"
+            },
+            "through2": {
+              "version": "2.0.1",
+              "from": "through2@>=2.0.0 <3.0.0",
+              "resolved": "https://registry.npmjs.org/through2/-/through2-2.0.1.tgz"
+            },
+            "vinyl": {
+              "version": "1.1.1",
+              "from": "vinyl@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz"
+            }
+          }
+        },
+        "object-assign": {
+          "version": "2.1.1",
+          "from": "object-assign@>=2.0.0 <3.0.0",
+          "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-2.1.1.tgz"
+        },
+        "vinyl": {
+          "version": "0.4.6",
+          "from": "vinyl@>=0.4.3 <0.5.0",
+          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-0.4.6.tgz"
+        }
+      }
     },
     "gulp-rename": {
       "version": "1.2.2",
@@ -2436,6 +2454,11 @@
       "version": "0.4.13",
       "from": "iconv-lite@>=0.4.13 <0.5.0",
       "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.4.13.tgz"
+    },
+    "ieee754": {
+      "version": "1.1.6",
+      "from": "ieee754@>=1.1.4 <2.0.0",
+      "resolved": "https://registry.npmjs.org/ieee754/-/ieee754-1.1.6.tgz"
     },
     "indent-string": {
       "version": "2.1.0",
@@ -3988,6 +4011,11 @@
       "from": "tar.gz@latest",
       "resolved": "https://registry.npmjs.org/tar.gz/-/tar.gz-1.0.5.tgz"
     },
+    "through": {
+      "version": "2.3.8",
+      "from": "through@>=2.3.6 <3.0.0",
+      "resolved": "https://registry.npmjs.org/through/-/through-2.3.8.tgz"
+    },
     "through2": {
       "version": "0.6.5",
       "from": "through2@>=0.6.1 <0.7.0",
@@ -4165,6 +4193,11 @@
       "version": "1.0.2",
       "from": "uglify-to-browserify@>=1.0.0 <1.1.0",
       "resolved": "https://registry.npmjs.org/uglify-to-browserify/-/uglify-to-browserify-1.0.2.tgz"
+    },
+    "unbzip2-stream": {
+      "version": "1.0.9",
+      "from": "unbzip2-stream@>=1.0.9 <2.0.0",
+      "resolved": "https://registry.npmjs.org/unbzip2-stream/-/unbzip2-stream-1.0.9.tgz"
     },
     "underscore": {
       "version": "1.2.4",

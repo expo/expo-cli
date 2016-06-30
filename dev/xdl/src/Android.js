@@ -62,10 +62,10 @@ async function _exponentVersionAsync() {
 }
 
 async function _checkExponentUpToDateAsync() {
-  let sdkVersion = await Api.sdkVersionsAsync();
+  let versions = await Api.versionsAsync();
   let installedVersion = await _exponentVersionAsync();
 
-  if (!installedVersion || installedVersion !== sdkVersion.androidVersion) {
+  if (!installedVersion || installedVersion !== versions.androidVersion) {
     Logger.notifications.warn({code: NotificationCode.OLD_ANDROID_APP_VERSION}, 'This version of the Exponent app is out of date.');
   }
 }
@@ -78,14 +78,14 @@ function _apkCacheDirectory() {
 }
 
 async function _downloadApkAsync() {
-  let sdkVersion = await Api.sdkVersionsAsync();
-  let apkPath = path.join(_apkCacheDirectory(), `Exponent-${sdkVersion.androidVersion}.apk`);
+  let versions = await Api.versionsAsync();
+  let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
   if (await existsAsync(apkPath)) {
     return apkPath;
   }
 
-  let url = `https://s3.amazonaws.com/exp-android-apks/Exponent-${sdkVersion.androidVersion}.apk`;
+  let url = `https://s3.amazonaws.com/exp-android-apks/Exponent-${versions.androidVersion}.apk`;
   await new download().get(url).dest(_apkCacheDirectory()).promise.run();
   return apkPath;
 }

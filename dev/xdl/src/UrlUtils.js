@@ -68,7 +68,7 @@ async function constructUrlAsync(projectRoot, opts, isPackager) {
     });
 
     try {
-      joi.promise.validate(opts, schema);
+      await joi.promise.validate(opts, schema);
     } catch (e) {
       throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
     }

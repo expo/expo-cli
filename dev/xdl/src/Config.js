@@ -2,15 +2,23 @@
 
 import Env from './Env';
 
+let scheme = 'https';
+let host = process.env.XDL_HOST || 'exp.host';
+let port = process.env.XDL_PORT || null;
+
+if (Env.isStaging()) {
+  host = 'staging.exp.host';
+} else if (Env.isLocal()) {
+  scheme = 'http';
+  host = 'localhost';
+  port = 3000;
+}
+
 module.exports = {
   api: {
-    scheme: 'https',
-    host: process.env.XDL_HOST ||
-      (Env.isStaging() ? 'staging.exp.host' : 'exp.host'),
-    port: process.env.XDL_PORT || null,
-    //scheme: 'http',
-    //host: 'localhost',
-    //port: 3000,
+    scheme,
+    host,
+    port,
   },
   ngrok: {
     authToken: '5W1bR67GNbWcXqmxZzBG1_56GezNeaX6sSRvn8npeQ8',

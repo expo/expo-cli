@@ -5,14 +5,10 @@
   "main": "build/xdl.js",
   "files": [
     "build",
-    "simulator-app",
-    "template.tar.gz",
     "adb"
   ],
   "scripts": {
     "build": "gulp build",
-    "prepublish": "echo \"\\033[0;31mWarning: Use 'gulp publish' instead of 'npm publish'.\\033[0m\"",
-    "postinstall": "if [ -f template.tar.gz ]; then mkdir template; tar -zxf template.tar.gz -C template; fi || true",
     "test": "jest --config jest/unit-test-config.json",
     "integration-tests": "jest --config jest/integration-test-config.json --no-cache --no-watchman"
   },
@@ -30,6 +26,7 @@
     "@ccheever/crayon": "^5.0.0",
     "@exponent/json-file": "^5.2.0",
     "@exponent/osascript": "^1.5.1",
+    "@exponent/spawn-async": "^1.2.4",
     "babel-runtime": "^6.9.0",
     "bunyan": "^1.8.1",
     "delay-async": "^1.0.0",
@@ -55,11 +52,11 @@
     "request": "^2.69.0",
     "semver": "^5.1.1",
     "slugid": "^1.1.0",
+    "tar.gz": "^1.0.5",
     "tree-kill": "^1.1.0",
     "url": "^0.11.0"
   },
   "devDependencies": {
-    "@exponent/spawn-async": "^1.2.4",
     "babel-cli": "^6.9.0",
     "babel-jest": "^12.1.0",
     "babel-plugin-transform-runtime": "^6.9.0",

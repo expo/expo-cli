@@ -185,7 +185,7 @@ async function publishAsync(projectRoot, options = {}) {
   });
 
   try {
-    joi.promise.validate(options, schema);
+    await joi.promise.validate(options, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
@@ -245,7 +245,7 @@ async function buildAsync(projectRoot, options = {}) {
   });
 
   try {
-    joi.promise.validate(options, schema);
+    await joi.promise.validate(options, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
@@ -647,7 +647,7 @@ async function setOptionsAsync(projectRoot, options) {
   });
 
   try {
-    joi.promise.validate(options, schema);
+    await joi.promise.validate(options, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
