@@ -1,6 +1,6 @@
 import 'instapromise';
 
-import { exec } from 'child_process';
+import _ from 'lodash';
 import download from 'download';
 import spawnAsync from '@exponent/spawn-async';
 import existsAsync from 'exists-async';
@@ -14,27 +14,52 @@ import UserSettings from './UserSettings';
 
 let _lastUrl = null;
 
-let options = {
-  cwd: path.join(__dirname, '..'),
-};
+let options;
+let binaryName;
+
+if (process.platform === 'darwin') {
+  options = {
+    cwd: path.join(__dirname, '..', 'adb', 'osx'),
+  };
+  binaryName = './adb';
+} else if (process.platform === 'win32') {
+  options = {
+    cwd: path.join(__dirname, '..', 'adb', 'windows'),
+  };
+  binaryName = '.\\adb.exe';
+}
+
+function isPlatformSupported() {
+  return process.platform === 'darwin' || process.platform === 'win32';
+}
+
+async function _getAdbOutput(args) {
+  let result = await spawnAsync(binaryName, args, options);
+  return result.stdout;
+}
 
 // Device attached
 async function _isDeviceAttachedAsync() {
-  let devices = await exec.promise("./adb devices | awk '!/List of devices/ && NF' | wc -l", options);
-  return parseInt(devices, 10) > 0;
+  let devices = await _getAdbOutput(['devices']);
+  let lines = _.trim(devices).split(/\r?\n/);
+  // First line is "List of devices".
+  return lines.length > 1;
 }
 
 async function _isDeviceAuthorizedAsync() {
-  let devices = await exec.promise("./adb devices | awk '!/List of devices/ && NF'", options);
+  let devices = await _getAdbOutput(['devices']);
+  let lines = _.trim(devices).split(/\r?\n/);
+  lines.shift();
+  let listOfDevicesWithoutFirstLine = lines.join('\n');
   // result looks like "072c4cf200e333c7	device" when authorized
   // and "072c4cf200e333c7	unauthorized" when not.
-  return devices.includes('device');
+  return listOfDevicesWithoutFirstLine.includes('device');
 }
 
 // Exponent installed
 async function _isExponentInstalledAsync() {
-  let packages = await exec.promise("./adb shell 'pm list packages -f'", options);
-  let lines = packages.split('\n');
+  let packages = await _getAdbOutput(['shell', 'pm', 'list', 'packages', '-f']);
+  let lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
     if (line.includes('host.exp.exponent.test')) {
@@ -50,7 +75,7 @@ async function _isExponentInstalledAsync() {
 }
 
 async function _exponentVersionAsync() {
-  let info = await exec.promise(`adb shell dumpsys package host.exp.exponent | grep versionName`, options);
+  let info = await _getAdbOutput(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
   let regex = /versionName\=([0-9\.]+)/;
   let regexMatch = regex.exec(info);
@@ -95,14 +120,14 @@ async function _installExponentAsync() {
   Logger.notifications.info({code: NotificationCode.START_LOADING});
   let path = await _downloadApkAsync();
   Logger.global.info(`Installing Exponent on device`);
-  let result = await exec.promise(`./adb install ${path}`, options);
+  let result = await _getAdbOutput(['install', path]);
   Logger.notifications.info({code: NotificationCode.STOP_LOADING});
   return result;
 }
 
 async function _uninstallExponentAsync() {
   Logger.global.info('Uninstalling Exponent from Android device.');
-  return await exec.promise(`./adb uninstall host.exp.exponent`, options);
+  return await _getAdbOutput(['uninstall', 'host.exp.exponent']);
 }
 
 async function upgradeExponentAsync() {
@@ -111,7 +136,7 @@ async function upgradeExponentAsync() {
 
   if (_lastUrl) {
     Logger.global.info(`Opening ${_lastUrl} in Exponent.`);
-    await spawnAsync('./adb', ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', _lastUrl], options);
+    await _getAdbOutput(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', _lastUrl]);
     _lastUrl = null;
   }
 }
@@ -120,7 +145,7 @@ async function upgradeExponentAsync() {
 async function _openUrlAsync(url) {
   _lastUrl = url;
   _checkExponentUpToDateAsync(); // let this run in background
-  return await spawnAsync('./adb', ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url], options);
+  return await _getAdbOutput(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url]);
 }
 
 async function openUrlSafeAsync(url) {
@@ -143,6 +168,7 @@ async function openUrlSafeAsync(url) {
 }
 
 module.exports = {
+  isPlatformSupported,
   openUrlSafeAsync,
   upgradeExponentAsync,
 };

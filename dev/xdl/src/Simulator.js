@@ -18,6 +18,10 @@ import UserSettings from './UserSettings';
 
 let _lastUrl = null;
 
+function isPlatformSupported() {
+  return process.platform === 'darwin';
+}
+
 // Simulator installed
 async function _isSimulatorInstalledAsync() {
   let result;
@@ -237,6 +241,7 @@ async function openUrlInSimulatorSafeAsync(url) {
 }
 
 module.exports = {
+  isPlatformSupported,
   openUrlInSimulatorSafeAsync,
   upgradeExponentOnSimulatorAsync,
 
