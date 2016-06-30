@@ -66,7 +66,7 @@ async function _checkExponentUpToDateAsync() {
   let installedVersion = await _exponentVersionAsync();
 
   if (!installedVersion || installedVersion !== versions.androidVersion) {
-    Logger.notifications.warn({code: NotificationCode.OLD_ANDROID_APP_VERSION}, 'This version of the Exponent app is out of date.');
+    Logger.notifications.warn({code: NotificationCode.OLD_ANDROID_APP_VERSION}, 'This version of the Exponent app is out of date. Uninstall the app and run again to upgrade.');
   }
 }
 

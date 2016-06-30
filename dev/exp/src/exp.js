@@ -164,6 +164,8 @@ function _registerLogs() {
 
         if (chunk.level <= bunyan.INFO) {
           log(chunk.msg);
+        } else if (chunk.level === bunyan.WARN) {
+          log.warn(chunk.msg);
         } else {
           log.error(chunk.msg);
         }
