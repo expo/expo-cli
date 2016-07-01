@@ -85,13 +85,21 @@ async function _readConfigJsonAsync(projectRoot) {
     pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
     exp = await Exp.expJsonForRoot(projectRoot).readAsync();
   } catch (e) {
+    if (e.isJsonFileError) {
+      // TODO: add error codes to json-file
+      if (e.message.startsWith('Error parsing JSON file')) {
+        _logError(projectRoot, 'exponent', `Error parsing JSON file: ${e.cause.toString()}`);
+        return { exp: null, pkg: null };
+      }
+    }
+
     // exp or pkg missing
   }
 
   // Easiest bail-out: package.json is missing
   if (!pkg) {
     _logError(projectRoot, 'exponent', `Error: Can't find package.json`);
-    return { exp: {}, pkg: {} };
+    return { exp: null, pkg: null };
   }
 
   // Grab our exp config from package.json (legacy) or exp.json
@@ -100,7 +108,7 @@ async function _readConfigJsonAsync(projectRoot) {
     _logError(projectRoot, 'exponent', `Deprecation Warning: Move your "exp" config from package.json to exp.json.`);
   } else if (!exp && !pkg.exp) {
     _logError(projectRoot, 'exponent', `Error: Missing exp.json. See https://docs.getexponent.com/`);
-    return { exp: {}, pkg: {} };
+    return { exp: null, pkg: null };
   }
 
   return { exp, pkg };
@@ -108,6 +116,11 @@ async function _readConfigJsonAsync(projectRoot) {
 
 async function _validateConfigJsonAsync(projectRoot) {
   let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
+
+  if (!exp || !pkg) {
+    // _readConfigJsonAsync already logged an error
+    return;
+  }
 
   // sdkVersion is necessary
   if (!exp.sdkVersion) {
@@ -207,7 +220,7 @@ async function publishAsync(projectRoot, options = {}) {
 
   let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
 
-  if (Object.keys(exp).length === 0) {
+  if (!exp || !pkg) {
     throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read exp.json file in project at ${projectRoot}`);
   }
 
@@ -252,7 +265,7 @@ async function buildAsync(projectRoot, options = {}) {
 
   let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
 
-  if (Object.keys(exp).length === 0) {
+  if (!exp || !pkg) {
     throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read exp.json file in project at ${projectRoot}`);
   }
 
@@ -421,6 +434,15 @@ async function startExponentServerAsync(projectRoot) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
+  let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
+  if (!pkg) {
+    throw new Error('Error with package.json.');
+  }
+
+  if (!exp) {
+    throw new Error('Error with exp.json.');
+  }
+
   await stopExponentServerAsync(projectRoot);
 
   let app = express();
@@ -436,6 +458,9 @@ async function startExponentServerAsync(projectRoot) {
       _validateConfigJsonAsync(projectRoot);
 
       let { exp: manifest } = await _readConfigJsonAsync(projectRoot);
+      if (!manifest) {
+        throw new Error('No exp.json file found');
+      }
 
       // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
@@ -513,7 +538,11 @@ async function stopExponentServerAsync(projectRoot) {
     return;
   }
 
-  await server.promise.close();
+  try {
+    await server.promise.close();
+  } catch (e) {
+    // don't care if this fails
+  }
   _projectRootToExponentServer[projectRoot] = null;
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
