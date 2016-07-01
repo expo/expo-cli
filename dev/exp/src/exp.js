@@ -20,6 +20,10 @@ import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 
+if (process.env.NODE_ENV === 'development') {
+  require('source-map-support').install();
+}
+
 Command.prototype.urlOpts = function() {
   urlOpts.addOptions(this);
   return this;

@@ -37,7 +37,9 @@
     "gulp-babel": "^6.1.2",
     "gulp-changed": "^1.3.0",
     "gulp-plumber": "^1.1.0",
-    "rimraf": "^2.5.2"
+    "gulp-sourcemaps": "^1.6.0",
+    "rimraf": "^2.5.2",
+    "source-map-support": "^0.4.1"
   },
   "dependencies": {
     "@ccheever/crayon": "^5.0.0",
