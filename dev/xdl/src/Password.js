@@ -1,10 +1,11 @@
-let crypto = require('crypto');
-let salt = 'EXPONENT!';
+/**
+ * @flow
+ */
 
-function hashPassword(cleartextPassword) {
+import crypto from 'crypto';
+
+const salt = 'EXPONENT!';
+
+export function hashPassword(cleartextPassword: string) {
   return crypto.createHash('md5').update(salt + cleartextPassword).digest('hex');
 }
-
-module.exports = {
-  hashPassword,
-};

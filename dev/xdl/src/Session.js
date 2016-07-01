@@ -1,12 +1,16 @@
-var slugid = require('slugid');
+/**
+ * @flow
+ */
 
-var UserSettings = require('./UserSettings');
+import slugid from 'slugid';
 
-function _newIdentifier(type='c') {
+import UserSettings from './UserSettings';
+
+function _newIdentifier(type = 'c') {
   return type + '-' + slugid.v4();
 }
 
-async function clientIdAsync() {
+export async function clientIdAsync() {
   var clientId = await UserSettings.getAsync('accessToken', null);
   if (clientId === null) {
     clientId = _newIdentifier();
@@ -15,12 +19,7 @@ async function clientIdAsync() {
   return clientId;
 }
 
-async function setClientIdAsync(token) {
+export async function setClientIdAsync(token: string) {
   await UserSettings.setAsync('accessToken', token);
   return token;
 }
-
-module.exports = {
-  clientIdAsync,
-  setClientIdAsync,
-};

@@ -1,11 +1,15 @@
-require('instapromise');
+/**
+ * @flow
+ */
 
-import Env from './Env';
+import 'instapromise';
 
-var JsonFile = require('@exponent/json-file');
+import * as Env from './Env';
 
-var mkdirp = require('mkdirp');
-var path = require('path');
+import JsonFile from '@exponent/json-file';
+
+import mkdirp from 'mkdirp';
+import path from 'path';
 
 // TODO: Make this more configurable
 function userSettingsFile() {
@@ -22,10 +26,11 @@ function recentExpsJsonFile() {
 
 var mkdirped = false;
 function dotExponentHomeDirectory() {
-  if (!Env.home()) {
+  const home = Env.home();
+  if (!home) {
     throw new Error("Can't determine your home directory; make sure your $HOME environment variable is set.");
   }
-  var dirPath = path.join(Env.home(), '.exponent');
+  var dirPath = path.join(home, '.exponent');
   if (!mkdirped) {
     mkdirp.sync(dirPath);
     mkdirped = true;
@@ -33,11 +38,13 @@ function dotExponentHomeDirectory() {
   return dirPath;
 }
 
-module.exports = userSettingsJsonFile();
+const UserSettings = userSettingsJsonFile();
 
-Object.assign(module.exports, {
+Object.assign(UserSettings, {
   dotExponentHomeDirectory,
   recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,
 });
+
+export default UserSettings;

@@ -1,4 +1,6 @@
-'use strict';
+/**
+ * @flow
+ */
 
 import 'instapromise';
 
@@ -17,18 +19,24 @@ import treekill from 'tree-kill';
 import Api from './Api';
 import Config from './Config';
 import ErrorCode from './ErrorCode';
-import Exp from './Exp';
+import * as Exp from './Exp';
 import Logger from './Logger';
-import ProjectSettings from './ProjectSettings';
-import UrlUtils from './UrlUtils';
-import User from './User';
+import * as ProjectSettings from './ProjectSettings';
+import * as UrlUtils from './UrlUtils';
+import * as User from './User';
 import XDLError from './XDLError';
 
 const MINIMUM_BUNDLE_SIZE = 500;
 
 let _projectRootToExponentServer = {};
 let _projectRootToLogger = {};
-let _cachedSignedManifest = {
+
+type CachedSignedManifest = {
+  manifestString: ?string,
+  signedManifest: ?string,
+};
+
+let _cachedSignedManifest: CachedSignedManifest = {
   manifestString: null,
   signedManifest: null,
 };
@@ -51,7 +59,7 @@ function _logError(projectRoot, tag, message) {
   _getLogger(projectRoot).error({tag}, message.toString());
 }
 
-function attachLoggerStream(projectRoot, stream) {
+export function attachLoggerStream(projectRoot: string, stream: any) {
   _getLogger(projectRoot).addStream(stream);
 }
 
@@ -77,7 +85,7 @@ async function _getFreePortAsync(rangeStart) {
   return port;
 }
 
-async function _readConfigJsonAsync(projectRoot) {
+async function _readConfigJsonAsync(projectRoot): Promise<any> {
   let exp;
   let pkg;
 
@@ -114,7 +122,7 @@ async function _readConfigJsonAsync(projectRoot) {
   return { exp, pkg };
 }
 
-async function _validateConfigJsonAsync(projectRoot) {
+async function _validateConfigJsonAsync(projectRoot: string) {
   let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
 
   if (!exp || !pkg) {
@@ -189,7 +197,7 @@ async function _getBundleForPlatformAsync(url, platform) {
   return response.body;
 }
 
-async function publishAsync(projectRoot, options = {}) {
+export async function publishAsync(projectRoot: string, options: { quiet: bool } = { quiet: false }) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -246,11 +254,18 @@ async function publishAsync(projectRoot, options = {}) {
   return response;
 }
 
-async function buildAsync(projectRoot, options = {}) {
+export async function buildAsync(projectRoot: string, options: {
+  current?: bool,
+  quiet?: bool,
+  mode?: string,
+  platform?: string,
+  expIds?: Array<string>,
+} = {}) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   let schema = joi.object().keys({
+    current: joi.boolean(),
     quiet: joi.boolean(),
     mode: joi.string(),
     platform: joi.any().valid('ios', 'android', 'all'),
@@ -321,7 +336,7 @@ async function _waitForRunningAsync(url) {
   return _waitForRunningAsync(url);
 }
 
-async function startReactNativeServerAsync(projectRoot, options = {}) {
+export async function startReactNativeServerAsync(projectRoot: string, options: Object = {}) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -407,7 +422,7 @@ async function startReactNativeServerAsync(projectRoot, options = {}) {
   await _waitForRunningAsync(packagerUrl + '/debug');
 }
 
-async function stopReactNativeServerAsync(projectRoot) {
+export async function stopReactNativeServerAsync(projectRoot: string) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -430,7 +445,7 @@ async function stopReactNativeServerAsync(projectRoot) {
   });
 }
 
-async function startExponentServerAsync(projectRoot) {
+export async function startExponentServerAsync(projectRoot: string) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -525,7 +540,7 @@ async function startExponentServerAsync(projectRoot) {
 
 // This only works when called from the same process that called
 // startExponentServerAsync.
-async function stopExponentServerAsync(projectRoot) {
+export async function stopExponentServerAsync(projectRoot: string) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -547,7 +562,7 @@ async function stopExponentServerAsync(projectRoot) {
   });
 }
 
-async function _connectToNgrokAsync(args, ngrokPid, attempts) {
+async function _connectToNgrokAsync(args: mixed, ngrokPid: ?number, attempts: number = 0) {
   try {
     let url = await ngrok.promise.connect(args);
     return url;
@@ -581,7 +596,7 @@ async function _connectToNgrokAsync(args, ngrokPid, attempts) {
   }
 }
 
-async function startTunnelsAsync(projectRoot) {
+export async function startTunnelsAsync(projectRoot: string) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -632,7 +647,7 @@ async function startTunnelsAsync(projectRoot) {
   }
 }
 
-async function stopTunnelsAsync(projectRoot) {
+export async function stopTunnelsAsync(projectRoot: string) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -663,7 +678,7 @@ async function stopTunnelsAsync(projectRoot) {
   });
 }
 
-async function setOptionsAsync(projectRoot, options) {
+export async function setOptionsAsync(projectRoot: string, options: { packagerPort?: number }) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -681,37 +696,21 @@ async function setOptionsAsync(projectRoot, options) {
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
 }
 
-async function getUrlAsync(projectRoot, options = {}) {
+export async function getUrlAsync(projectRoot: string, options: Object = {}) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
 
-async function startAsync(projectRoot, options = {}) {
+export async function startAsync(projectRoot: string, options: Object = {}): Promise<void> {
   await startExponentServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options);
   await startTunnelsAsync(projectRoot);
 }
 
-async function stopAsync(projectRoot) {
+export async function stopAsync(projectRoot: string): Promise<void> {
   await stopTunnelsAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   await stopExponentServerAsync(projectRoot);
 }
-
-module.exports = {
-  attachLoggerStream,
-  getUrlAsync,
-  publishAsync,
-  buildAsync,
-  setOptionsAsync,
-  startAsync,
-  startExponentServerAsync,
-  startReactNativeServerAsync,
-  startTunnelsAsync,
-  stopAsync,
-  stopExponentServerAsync,
-  stopReactNativeServerAsync,
-  stopTunnelsAsync,
-};

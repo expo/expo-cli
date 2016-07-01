@@ -1,4 +1,6 @@
-'use strict';
+/**
+ * @flow
+ */
 
 import 'instapromise';
 
@@ -8,18 +10,18 @@ import os from 'os';
 import url from 'url';
 
 import ErrorCode from './ErrorCode';
-import ProjectSettings from './ProjectSettings';
+import * as ProjectSettings from './ProjectSettings';
 import XDLError from './XDLError';
 
-async function constructBundleUrlAsync(projectRoot, opts) {
+export async function constructBundleUrlAsync(projectRoot: string, opts: any) {
   return constructUrlAsync(projectRoot, opts, true);
 }
 
-async function constructManifestUrlAsync(projectRoot, opts) {
+export async function constructManifestUrlAsync(projectRoot: string, opts: any) {
   return constructUrlAsync(projectRoot, opts, false);
 }
 
-async function constructPublishUrlAsync(projectRoot, entryPoint) {
+export async function constructPublishUrlAsync(projectRoot: string, entryPoint: string) {
   let bundleUrl = await constructBundleUrlAsync(projectRoot, {
     hostType: 'localhost',
     urlType: 'http',
@@ -34,13 +36,13 @@ async function constructPublishUrlAsync(projectRoot, entryPoint) {
   });
 }
 
-async function constructDebuggerHostAsync(projectRoot) {
+export async function constructDebuggerHostAsync(projectRoot: string) {
   return constructUrlAsync(projectRoot, {
     urlType: 'no-protocol',
   }, true);
 }
 
-function constructBundleQueryParams(opts) {
+export function constructBundleQueryParams(opts: any) {
   let queryParams = 'dev=' + encodeURIComponent(!!opts.dev);
 
   if (opts.hasOwnProperty('strict')) {
@@ -56,7 +58,7 @@ function constructBundleQueryParams(opts) {
   return queryParams;
 }
 
-async function constructUrlAsync(projectRoot, opts, isPackager) {
+export async function constructUrlAsync(projectRoot: string, opts: any, isPackager: bool) {
   if (opts) {
     let schema = joi.object().keys({
       urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
@@ -118,6 +120,10 @@ async function constructUrlAsync(projectRoot, opts, isPackager) {
     url_ += protocol + '://';
   }
 
+  if (!hostname) {
+    throw new Error('Hostname cannot be inferred.');
+  }
+
   url_ += hostname;
 
   if (port) {
@@ -133,19 +139,19 @@ async function constructUrlAsync(projectRoot, opts, isPackager) {
   return url_;
 }
 
-function expUrlFromHttpUrl(url_) {
+export function expUrlFromHttpUrl(url_: string) {
   return ('' + url_).replace(/^http(s?)/, 'exp');
 }
 
-function httpUrlFromExpUrl(url_) {
+export function httpUrlFromExpUrl(url_: string) {
   return ('' + url_).replace(/^exp(s?)/, 'http');
 }
 
-function guessMainModulePath(entryPoint) {
+export function guessMainModulePath(entryPoint: string) {
   return entryPoint.replace(/\.js$/, '');
 }
 
-function randomIdentifier(length = 6) {
+export function randomIdentifier(length: number = 6) {
   let alphabet = '23456789qwertyuipasdfghjkzxcvbnm';
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -156,40 +162,23 @@ function randomIdentifier(length = 6) {
   return result;
 }
 
-function sevenDigitIdentifier() {
+export function sevenDigitIdentifier() {
   return randomIdentifier(3) + '-' + randomIdentifier(4);
 }
 
-function randomIdentifierForUser(username) {
+export function randomIdentifierForUser(username: string) {
   return username + '-' + randomIdentifier(3) + '-' + randomIdentifier(2);
 }
 
-function randomIdentifierForLoggedOutUser() {
+export function randomIdentifierForLoggedOutUser() {
   // TODO: Disallow usernames that start with `00-`
   return '00-' + sevenDigitIdentifier();
 }
 
-function someRandomness() {
+export function someRandomness() {
   return [randomIdentifier(2), randomIdentifier(3)].join('-');
 }
 
-function domainify(s) {
+export function domainify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 }
-
-module.exports = {
-  constructBundleUrlAsync,
-  constructManifestUrlAsync,
-  constructPublishUrlAsync,
-  constructDebuggerHostAsync,
-  constructBundleQueryParams,
-  expUrlFromHttpUrl,
-  httpUrlFromExpUrl,
-  guessMainModulePath,
-  randomIdentifier,
-  sevenDigitIdentifier,
-  randomIdentifierForUser,
-  randomIdentifierForLoggedOutUser,
-  someRandomness,
-  domainify,
-};

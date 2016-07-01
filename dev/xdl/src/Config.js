@@ -1,10 +1,12 @@
-'use strict';
+/**
+ * @flow
+ */
 
-import Env from './Env';
+import * as Env from './Env';
 
-let scheme = 'https';
+let scheme = process.env.XDL_SCHEME || 'https';
 let host = process.env.XDL_HOST || 'exp.host';
-let port = process.env.XDL_PORT || null;
+let port: ?number = parseInt(process.env.XDL_PORT, 10) || null;
 
 if (Env.isStaging()) {
   host = 'staging.exp.host';
@@ -14,7 +16,7 @@ if (Env.isStaging()) {
   port = 3000;
 }
 
-module.exports = {
+export default {
   api: {
     scheme,
     host,

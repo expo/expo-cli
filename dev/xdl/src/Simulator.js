@@ -1,3 +1,7 @@
+/**
+ * @flow
+ */
+
 import 'instapromise';
 
 import delayAsync from 'delay-async';
@@ -18,12 +22,12 @@ import UserSettings from './UserSettings';
 
 let _lastUrl = null;
 
-function isPlatformSupported() {
+export function isPlatformSupported() {
   return process.platform === 'darwin';
 }
 
 // Simulator installed
-async function _isSimulatorInstalledAsync() {
+export async function _isSimulatorInstalledAsync() {
   let result;
   try {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
@@ -40,11 +44,11 @@ async function _isSimulatorInstalledAsync() {
 }
 
 // Simulator opened
-async function _openSimulatorAsync() {
+export async function _openSimulatorAsync() {
   return await spawnAsync('open', ['-a', 'Simulator']);
 }
 
-async function _isSimulatorRunningAsync() {
+export async function _isSimulatorRunningAsync() {
   let zeroMeansNo = (await osascript.execAsync('tell app "System Events" to count processes whose name is "Simulator"')).trim();
   if (zeroMeansNo === '0') {
     return false;
@@ -83,16 +87,16 @@ async function _bootedSimulatorDeviceAsync() {
   return null;
 }
 
-function _dirForSimulatorDevice(udid) {
+export function _dirForSimulatorDevice(udid: string) {
   return path.resolve(homeDir(), 'Library/Developer/CoreSimulator/Devices', udid);
 }
 
-async function _quitSimulatorAsync() {
+export async function _quitSimulatorAsync() {
   return await osascript.execAsync('tell application "Simulator" to quit');
 }
 
 // Exponent installed
-async function _isExponentAppInstalledOnCurrentBootedSimulatorAsync() {
+export async function _isExponentAppInstalledOnCurrentBootedSimulatorAsync() {
   let device = await _bootedSimulatorDeviceAsync();
   if (!device) {
     return false;
@@ -103,7 +107,7 @@ async function _isExponentAppInstalledOnCurrentBootedSimulatorAsync() {
   return (matches.length > 0);
 }
 
-async function _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync() {
+export async function _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync() {
   if (await _isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
     return true;
   } else {
@@ -112,7 +116,7 @@ async function _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync() {
   }
 }
 
-async function _exponentVersionOnCurrentBootedSimulatorAsync() {
+export async function _exponentVersionOnCurrentBootedSimulatorAsync() {
   let device = await _bootedSimulatorDeviceAsync();
   if (!device) {
     return null;
@@ -133,7 +137,7 @@ async function _exponentVersionOnCurrentBootedSimulatorAsync() {
   return regexMatch[1];
 }
 
-async function _checkExponentUpToDateAsync() {
+export async function _checkExponentUpToDateAsync() {
   let versions = await Api.versionsAsync();
   let installedVersion = await _exponentVersionOnCurrentBootedSimulatorAsync();
 
@@ -142,7 +146,7 @@ async function _checkExponentUpToDateAsync() {
   }
 }
 
-async function _downloadSimulatorAppAsync() {
+export async function _downloadSimulatorAppAsync() {
   let versions = await Api.versionsAsync();
   let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
@@ -156,7 +160,7 @@ async function _downloadSimulatorAppAsync() {
   return dir;
 }
 
-async function _installExponentOnSimulatorAsync() {
+export async function _installExponentOnSimulatorAsync() {
   Logger.global.info(`Downloading latest version of Exponent`);
   Logger.notifications.info({code: NotificationCode.START_LOADING});
   let dir = await _downloadSimulatorAppAsync();
@@ -166,7 +170,7 @@ async function _installExponentOnSimulatorAsync() {
   return result;
 }
 
-async function _uninstallExponentAppFromSimulatorAsync() {
+export async function _uninstallExponentAppFromSimulatorAsync() {
   try {
     Logger.global.info('Uninstalling Exponent from iOS simulator.');
     await execAsync('xcrun', ['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
@@ -180,14 +184,14 @@ async function _uninstallExponentAppFromSimulatorAsync() {
   }
 }
 
-function _simulatorCacheDirectory() {
+export function _simulatorCacheDirectory() {
   let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
   let dir = path.join(dotExponentHomeDirectory, 'ios-simulator-app-cache');
   mkdirp.sync(dir);
   return dir;
 }
 
-async function upgradeExponentOnSimulatorAsync() {
+export async function upgradeExponentOnSimulatorAsync() {
   await _uninstallExponentAppFromSimulatorAsync();
   await _installExponentOnSimulatorAsync();
 
@@ -199,13 +203,13 @@ async function upgradeExponentOnSimulatorAsync() {
 }
 
 // Open Url
-async function _openUrlInSimulatorAsync(url) {
+export async function _openUrlInSimulatorAsync(url: string) {
   _lastUrl = url;
   _checkExponentUpToDateAsync(); // let this run in background
   return await spawnAsync('xcrun', ['simctl', 'openurl', 'booted', url]);
 }
 
-async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url) {
+export async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url: string) {
   if (!(await _isSimulatorRunningAsync())) {
     Logger.global.info("Opening iOS simulator");
     await _openSimulatorAsync();
@@ -221,7 +225,7 @@ async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url) {
   await _openUrlInSimulatorAsync(url);
 }
 
-async function openUrlInSimulatorSafeAsync(url) {
+export async function openUrlInSimulatorSafeAsync(url: string) {
   if (!(await _isSimulatorInstalledAsync())) {
     Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
     return;
@@ -239,19 +243,3 @@ async function openUrlInSimulatorSafeAsync(url) {
     await _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url);
   }
 }
-
-module.exports = {
-  isPlatformSupported,
-  openUrlInSimulatorSafeAsync,
-  upgradeExponentOnSimulatorAsync,
-
-  // Used by tests
-  _installExponentOnSimulatorAsync,
-  _isExponentAppInstalledOnCurrentBootedSimulatorAsync,
-  _isSimulatorInstalledAsync,
-  _isSimulatorRunningAsync,
-  _openSimulatorAsync,
-  _openUrlInSimulatorAsync,
-  _quitSimulatorAsync,
-  _uninstallExponentAppFromSimulatorAsync,
-};

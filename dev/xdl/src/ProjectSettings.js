@@ -1,3 +1,7 @@
+/**
+ * @flow
+ */
+
 import 'instapromise';
 
 import JsonFile from '@exponent/json-file';
@@ -16,11 +20,11 @@ let projectSettingsDefaults = {
 };
 let packagerInfoFile = 'packager-info.json';
 
-function projectSettingsJsonFile(projectRoot, filename) {
+export function projectSettingsJsonFile(projectRoot: string, filename: string) {
   return new JsonFile(path.join(dotExponentProjectDirectory(projectRoot), filename));
 }
 
-async function readAsync(projectRoot) {
+export async function readAsync(projectRoot: string) {
   let projectSettings;
   try {
     projectSettings = await projectSettingsJsonFile(projectRoot, projectSettingsFile).readAsync();
@@ -35,19 +39,19 @@ async function readAsync(projectRoot) {
   return projectSettings;
 }
 
-async function setAsync(projectRoot, json) {
+export async function setAsync(projectRoot: string, json: any) {
   return await projectSettingsJsonFile(projectRoot, projectSettingsFile).mergeAsync(json, {cantReadFileDefault: projectSettingsDefaults});
 }
 
-async function readPackagerInfoAsync(projectRoot) {
+export async function readPackagerInfoAsync(projectRoot: string) {
   return await projectSettingsJsonFile(projectRoot, packagerInfoFile).readAsync({cantReadFileDefault: {}});
 }
 
-async function setPackagerInfoAsync(projectRoot, json) {
+export async function setPackagerInfoAsync(projectRoot: string, json: any) {
   return await projectSettingsJsonFile(projectRoot, packagerInfoFile).mergeAsync(json, {cantReadFileDefault: {}});
 }
 
-function dotExponentProjectDirectory(projectRoot) {
+export function dotExponentProjectDirectory(projectRoot: string) {
   let dirPath = path.join(projectRoot, '.exponent');
   try {
     // remove .exponent file if it exists, we moved to a .exponent directory
@@ -62,7 +66,7 @@ function dotExponentProjectDirectory(projectRoot) {
   return dirPath;
 }
 
-function dotExponentProjectDirectoryExists(projectRoot) {
+export function dotExponentProjectDirectoryExists(projectRoot: string) {
   let dirPath = path.join(projectRoot, '.exponent');
   try {
     if (fs.statSync(dirPath).isDirectory()) {
@@ -75,18 +79,7 @@ function dotExponentProjectDirectoryExists(projectRoot) {
   return false;
 }
 
-async function getPackagerOptsAsync(projectRoot) {
+export async function getPackagerOptsAsync(projectRoot: string) {
   let projectSettings = await readAsync(projectRoot);
   return projectSettings;
 }
-
-module.exports = {
-  dotExponentProjectDirectory,
-  dotExponentProjectDirectoryExists,
-  getPackagerOptsAsync,
-  projectSettingsJsonFile,
-  readAsync,
-  readPackagerInfoAsync,
-  setAsync,
-  setPackagerInfoAsync,
-};

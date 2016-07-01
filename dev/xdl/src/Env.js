@@ -1,17 +1,15 @@
-function home() {
+/**
+ * @flow
+ */
+
+export function home(): ?string {
   return process.env.HOME;
 }
 
-function isStaging() {
+export function isStaging() {
   return !!process.env.EXPONENT_STAGING;
 }
 
-function isLocal() {
+export function isLocal() {
   return !!process.env.EXPONENT_LOCAL;
 }
-
-module.exports = {
-  home,
-  isStaging,
-  isLocal,
-};

@@ -1,6 +1,8 @@
-'use strict';
+/**
+ * @flow
+ */
 
-module.exports = {
+export default {
   DIRECTORY_ALREADY_EXISTS: 'DIRECTORY_ALREADY_EXISTS',
   INVALID_ARGUMENT: 'INVALID_ARGUMENT',
   INVALID_BUNDLE: 'INVALID_BUNDLE',

@@ -1,4 +1,6 @@
-'use strict';
+/**
+ * @flow
+ */
 
 import bunyan from 'bunyan';
 import path from 'path';
@@ -18,4 +20,4 @@ let logger = bunyan.createLogger({
 logger.notifications = logger.child({type: 'notifications'});
 logger.global = logger.child({type: 'global'});
 
-module.exports = logger;
+export default logger;

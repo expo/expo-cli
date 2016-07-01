@@ -1,10 +1,18 @@
-let Api = require('./Api');
-let Password = require('./Password');
-let UserSettings = require('./UserSettings');
+/**
+ * @flow
+ */
+
+import Api from './Api';
+import * as Password from './Password';
+import UserSettings from './UserSettings';
 
 let _currentUser = null;
 
-async function getCurrentUserAsync() {
+type User = {
+  username: string
+};
+
+export async function getCurrentUserAsync(): Promise<?User> {
   if (_currentUser) {
     return _currentUser;
   }
@@ -13,7 +21,7 @@ async function getCurrentUserAsync() {
   return _currentUser;
 }
 
-async function loginAsync(args) {
+export async function loginAsync(args: any) {
   // Default to `client` since xde is a client
   args.type = args.type || 'client';
 
@@ -41,7 +49,7 @@ async function loginAsync(args) {
   }
 }
 
-async function logoutAsync() {
+export async function logoutAsync() {
   let result = await Api.callMethodAsync('logout', []);
   await UserSettings.deleteKeyAsync('username');
   _currentUser = null;
@@ -49,7 +57,7 @@ async function logoutAsync() {
   return result;
 }
 
-async function whoamiAsync() {
+export async function whoamiAsync() {
   let result = await Api.callMethodAsync('whoami', []);
   if (result.user) {
     _currentUser = result.user;
@@ -57,7 +65,7 @@ async function whoamiAsync() {
   return result.user;
 }
 
-async function getUsernameAsync() {
+export async function getUsernameAsync(): Promise<?string> {
   let user = await getCurrentUserAsync();
   if (user) {
     return user.username;
@@ -65,11 +73,3 @@ async function getUsernameAsync() {
     return null;
   }
 }
-
-module.exports = {
-  getCurrentUserAsync,
-  getUsernameAsync,
-  loginAsync,
-  logoutAsync,
-  whoamiAsync,
-};

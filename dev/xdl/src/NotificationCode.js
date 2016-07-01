@@ -1,6 +1,8 @@
-'use strict';
+/**
+ * @flow
+ */
 
-module.exports = {
+export default {
   OLD_IOS_APP_VERSION: 'OLD_IOS_APP_VERSION',
   OLD_ANDROID_APP_VERSION: 'OLD_ANDROID_APP_VERSION',
   START_LOADING: 'START_LOADING',

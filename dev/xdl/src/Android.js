@@ -1,3 +1,7 @@
+/**
+ * @flow
+ */
+
 import 'instapromise';
 
 import _ from 'lodash';
@@ -29,7 +33,7 @@ if (process.platform === 'darwin') {
   binaryName = '.\\adb.exe';
 }
 
-function isPlatformSupported() {
+export function isPlatformSupported() {
   return process.platform === 'darwin' || process.platform === 'win32';
 }
 
@@ -130,7 +134,7 @@ async function _uninstallExponentAsync() {
   return await _getAdbOutput(['uninstall', 'host.exp.exponent']);
 }
 
-async function upgradeExponentAsync() {
+export async function upgradeExponentAsync() {
   await _uninstallExponentAsync();
   await _installExponentAsync();
 
@@ -142,13 +146,13 @@ async function upgradeExponentAsync() {
 }
 
 // Open Url
-async function _openUrlAsync(url) {
+async function _openUrlAsync(url: string) {
   _lastUrl = url;
   _checkExponentUpToDateAsync(); // let this run in background
   return await _getAdbOutput(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url]);
 }
 
-async function openUrlSafeAsync(url) {
+export async function openUrlSafeAsync(url: string) {
   if (!(await _isDeviceAttachedAsync())) {
     Logger.global.error(`No Android device found. Please connect a device and enable USB debugging.`);
     return;
@@ -166,9 +170,3 @@ async function openUrlSafeAsync(url) {
   Logger.global.info(`Opening on Android device`);
   await _openUrlAsync(url);
 }
-
-module.exports = {
-  isPlatformSupported,
-  openUrlSafeAsync,
-  upgradeExponentAsync,
-};

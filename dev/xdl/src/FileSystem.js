@@ -1,19 +1,17 @@
-let osascript = require('@exponent/osascript');
+/**
+ * @flow
+ */
 
-async function openFinderToFolderAsync(dir) {
+import osascript from '@exponent/osascript';
+
+export async function openFinderToFolderAsync(dir: string) {
   return await osascript.openFinderToFolderAsync(dir);
 }
 
-async function openFolderInItermOrTerminalAsync(dir) {
+export async function openFolderInItermOrTerminalAsync(dir: string) {
   return await osascript.openFolderInTerminalAppAsync(dir);
 }
 
-async function openProjectInEditorAsync(dir) {
+export async function openProjectInEditorAsync(dir: string) {
   return await osascript.openInEditorAsync(dir);
 }
-
-module.exports = {
-  openFinderToFolderAsync,
-  openFolderInItermOrTerminalAsync,
-  openProjectInEditorAsync,
-};

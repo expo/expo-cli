@@ -1,22 +1,26 @@
-'use strict';
+/**
+ * @flow
+ */
 
-let XDL = {
-  get Android() { return require('./Android'); },
-  get Api() { return require('./Api'); },
-  get Config() { return require('./Config'); },
-  get Env() { return require('./Env'); },
-  get ErrorCode() { return require('./ErrorCode'); },
-  get Exp() { return require('./Exp'); },
-  get FileSystem() { return require('./FileSystem'); },
-  get Logger() { return require('./Logger'); },
-  get NotificationCode() { return require('./NotificationCode'); },
-  get Project() { return require('./Project'); },
-  get ProjectSettings() { return require('./ProjectSettings'); },
-  get Simulator() { return require('./Simulator'); },
-  get UrlUtils() { return require('./UrlUtils'); },
-  get User() { return require('./User'); },
-  get UserSettings() { return require('./UserSettings'); },
-  get XDLError() { return require('./XDLError'); },
-};
+import { install as installSourceMapSupport } from 'source-map-support';
 
-module.exports = XDL;
+if (process.env.NODE_ENV !== 'production') {
+  installSourceMapSupport();
+}
+
+export * as Android from './Android';
+export { default as Api } from './Api';
+export { default as Config } from './Config';
+export * as Env from './Env';
+export { default as ErrorCode } from './ErrorCode';
+export * as Exp from './Exp';
+export * as FileSystem from './FileSystem';
+export { default as Logger } from './Logger';
+export { default as NotificationCode } from './NotificationCode';
+export * as Project from './Project';
+export * as ProjectSettings from './ProjectSettings';
+export * as Simulator from './Simulator';
+export * as UrlUtils from './UrlUtils';
+export * as User from './User';
+export { default as UserSettings } from './UserSettings';
+export { default as XDLError } from './XDLError';

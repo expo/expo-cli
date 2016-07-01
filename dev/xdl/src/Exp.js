@@ -1,3 +1,7 @@
+/**
+ * @flow
+ */
+
 let JsonFile = require('@exponent/json-file');
 
 import 'instapromise';
@@ -5,31 +9,31 @@ import 'instapromise';
 import targz from 'tar.gz';
 import download from 'download';
 import existsAsync from 'exists-async';
-let fs = require('fs');
-let mkdirp = require('mkdirp');
-let path = require('path');
+import fs from 'fs';
+import mkdirp from 'mkdirp';
+import path from 'path';
 import spawnAsync from '@exponent/spawn-async';
 import joi from 'joi';
 
-let Api = require('./Api');
+import Api from './Api';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-let User = require('./User');
-let UrlUtils = require('./UrlUtils');
-let UserSettings = require('./UserSettings');
-let XDLError = require('./XDLError');
-let ProjectSettings = require('./ProjectSettings');
+import * as User from './User';
+import * as UrlUtils from './UrlUtils';
+import UserSettings from './UserSettings';
+import XDLError from './XDlError';
+import * as ProjectSettings from './ProjectSettings';
 
-function packageJsonForRoot(root) {
+export function packageJsonForRoot(root: string) {
   return new JsonFile(path.join(root, 'package.json'));
 }
 
-function expJsonForRoot(root) {
+export function expJsonForRoot(root: string) {
   return new JsonFile(path.join(root, 'exp.json'), {json5: true});
 }
 
-async function expConfigForRootAsync(root) {
+export async function expConfigForRootAsync(root: string) {
   let pkg, exp;
   try {
     pkg = await packageJsonForRoot(root).readAsync();
@@ -45,7 +49,7 @@ async function expConfigForRootAsync(root) {
   return exp;
 }
 
-async function determineEntryPointAsync(root) {
+export async function determineEntryPointAsync(root: string) {
   let exp = await expConfigForRootAsync(root);
   let pkgJson = packageJsonForRoot(root);
   let pkg = await pkgJson.readAsync();
@@ -92,7 +96,7 @@ async function _extract(archive, dir) {
   }
 }
 
-async function createNewExpAsync(selectedDir, extraPackageJsonFields, opts) {
+export async function createNewExpAsync(selectedDir: string, extraPackageJsonFields: any, opts: any) {
   // Validate
   let schema = joi.object().keys({
     name: joi.string().required(),
@@ -148,11 +152,13 @@ async function createNewExpAsync(selectedDir, extraPackageJsonFields, opts) {
   await packageJsonFile.writeAsync(data);
 
   // Custom code for replacing __NAME__ in main.js
+  // $FlowFixMe - Need to flowify instapromise
   let mainJs = await fs.readFile.promise(path.join(root, 'main.js'), 'utf8');
   let customMainJs = mainJs.replace(/__NAME__/g, data.name);
   await fs.writeFile.promise(path.join(root, 'main.js'), customMainJs, 'utf8');
 
   // Update exp.json
+  // $FlowFixMe - Need to flowify instapromise
   let expJson = await fs.readFile.promise(path.join(root, 'exp.json'), 'utf8');
   let customExpJson = expJson.replace(/\"My New Project\"/, `"${data.name}"`).replace(/\"my-new-project\"/, `"${data.name}"`);
   await fs.writeFile.promise(path.join(root, 'exp.json'), customExpJson, 'utf8');
@@ -160,7 +166,7 @@ async function createNewExpAsync(selectedDir, extraPackageJsonFields, opts) {
   return root;
 }
 
-async function saveRecentExpRootAsync(root) {
+export async function saveRecentExpRootAsync(root: string) {
   root = path.resolve(root);
 
   // Write the recent Exps JSON file
@@ -174,8 +180,8 @@ async function saveRecentExpRootAsync(root) {
   return await recentExpsJsonFile.writeAsync(recentExps.slice(0, 100));
 }
 
-function getHomeDir() {
-  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+function getHomeDir(): string {
+  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'] || '';
 }
 
 function makePathReadable(pth) {
@@ -187,7 +193,7 @@ function makePathReadable(pth) {
   }
 }
 
-async function expInfoAsync(root) {
+export async function expInfoAsync(root: string) {
   let pkgJson = packageJsonForRoot(root);
 
   let name, description, icon;
@@ -212,7 +218,7 @@ async function expInfoAsync(root) {
   };
 }
 
-async function expInfoSafeAsync(root) {
+export async function expInfoSafeAsync(root: string) {
   try {
     return await expInfoAsync(root);
   } catch (e) {
@@ -221,10 +227,13 @@ async function expInfoSafeAsync(root) {
 }
 
 // TODO: remove / change, no longer publishInfo, this is just used for signing
-async function getPublishInfoAsync(root) {
+export async function getPublishInfoAsync(root: string) {
   let username = await User.getUsernameAsync();
-  let pkg;
-  let exp;
+  if (!username) {
+    throw new Error(`Can't get username!`);
+  }
+  let pkg: any;
+  let exp: any;
 
   try {
     pkg = await packageJsonForRoot(root).readAsync();
@@ -237,17 +246,21 @@ async function getPublishInfoAsync(root) {
   let version;
 
   // Support legacy package.json with exp
-  if (!exp && pkg.exp) {
+  if (!exp && pkg && pkg.exp) {
     exp = pkg.exp;
     name = pkg.name;
     version = pkg.version;
-  } else {
+  } else if (exp) {
     name = exp.slug;
     version = exp.version;
   }
 
   if (!exp || !exp.sdkVersion) {
     throw new Error(`exp.sdkVersion is missing from package.json file`);
+  }
+
+  if (!name) {
+    throw new Error(`Can't get name of package.`);
   }
 
   let remotePackageName = name;
@@ -274,7 +287,7 @@ async function getPublishInfoAsync(root) {
   };
 }
 
-async function recentValidExpsAsync() {
+export async function recentValidExpsAsync() {
   let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
   let recentExps = await recentExpsJsonFile.readAsync({cantReadFileDefault: []});
 
@@ -283,13 +296,13 @@ async function recentValidExpsAsync() {
   return filteredResults.slice(0, 5);
 }
 
-async function sendAsync(recipient, url_) {
+export async function sendAsync(recipient: string, url_: string) {
   let result = await Api.callMethodAsync('send', [recipient, url_]);
   return result;
 }
 
 // TODO: figure out where these functions should live
-async function getProjectRandomnessAsync(projectRoot) {
+export async function getProjectRandomnessAsync(projectRoot: string) {
   let ps = await ProjectSettings.readAsync(projectRoot);
   let randomness = ps.urlRandomness;
   if (!randomness) {
@@ -299,7 +312,7 @@ async function getProjectRandomnessAsync(projectRoot) {
   return randomness;
 }
 
-async function getLoggedOutPlaceholderUsernameAsync() {
+export async function getLoggedOutPlaceholderUsernameAsync() {
   let lpu = await UserSettings.getAsync('loggedOutPlaceholderUsername', null);
   if (!lpu) {
     lpu = UrlUtils.randomIdentifierForLoggedOutUser();
@@ -307,18 +320,3 @@ async function getLoggedOutPlaceholderUsernameAsync() {
   }
   return lpu;
 }
-
-module.exports = {
-  expConfigForRootAsync,
-  createNewExpAsync,
-  determineEntryPointAsync,
-  expInfoSafeAsync,
-  getPublishInfoAsync,
-  expJsonForRoot,
-  packageJsonForRoot,
-  recentValidExpsAsync,
-  saveRecentExpRootAsync,
-  sendAsync,
-  getProjectRandomnessAsync,
-  getLoggedOutPlaceholderUsernameAsync,
-};
