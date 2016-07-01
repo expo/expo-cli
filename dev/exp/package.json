@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "The command-line tool for creating and publishing Exponent apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -56,6 +56,6 @@
     "pm2": "^1.1.3",
     "qrcode-terminal": "^0.10.0",
     "semver": "^5.0.1",
-    "xdl": "0.3.0"
+    "xdl": "0.5.0"
   }
 }
