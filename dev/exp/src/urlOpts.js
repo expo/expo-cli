@@ -83,9 +83,10 @@ function handleQROpt(url, options) {
   return !!options.qr;
 }
 
-async function handleMobileOptsAsync(url, options) {
+// TODO: get rid of url param
+async function handleMobileOptsAsync(projectDir, url, options) {
   if (options.android) {
-    await Android.openUrlSafeAsync(url);
+    await Android.openProjectAsync(projectDir);
   }
 
   if (options.ios) {

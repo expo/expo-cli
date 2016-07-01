@@ -1,12 +1,9 @@
 import {
   Android,
-  UrlUtils,
 } from 'xdl';
 
 async function action(projectDir, options) {
-  let url = options.url || await UrlUtils.constructManifestUrlAsync(projectDir);
-
-  await Android.openUrlSafeAsync(url);
+  await Android.openProjectAsync(projectDir);
 }
 
 export default (program) => {

@@ -16,6 +16,7 @@ import path from 'path';
 import request from 'request';
 import treekill from 'tree-kill';
 
+import * as Android from './Android';
 import Api from './Api';
 import Config from './Config';
 import ErrorCode from './ErrorCode';
@@ -611,6 +612,10 @@ export async function startTunnelsAsync(projectRoot: string) {
 
   await stopTunnelsAsync(projectRoot);
 
+  if (await Android.startAdbReverseAsync(projectRoot)) {
+    _logInfo(projectRoot, 'packager', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.');
+  }
+
   let username = await User.getUsernameAsync();
   let packageShortName = path.parse(projectRoot).base;
   if (!username) {
@@ -676,6 +681,8 @@ export async function stopTunnelsAsync(projectRoot: string) {
     packagerNgrokUrl: null,
     ngrokPid: null,
   });
+
+  await Android.stopAdbReverseAsync(projectRoot);
 }
 
 export async function setOptionsAsync(projectRoot: string, options: { packagerPort?: number }) {

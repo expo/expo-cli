@@ -14,7 +14,9 @@ import path from 'path';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as ProjectSettings from './ProjectSettings';
 import UserSettings from './UserSettings';
+import * as UrlUtils from './UrlUtils';
 
 let _lastUrl = null;
 
@@ -169,4 +171,43 @@ export async function openUrlSafeAsync(url: string) {
 
   Logger.global.info(`Opening on Android device`);
   await _openUrlAsync(url);
+}
+
+export async function openProjectAsync(projectRoot: string) {
+  await startAdbReverseAsync(projectRoot);
+
+  let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
+  await openUrlSafeAsync(projectUrl);
+}
+
+// Adb reverse
+export async function startAdbReverseAsync(projectRoot: string) {
+  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  return await adbReverse(packagerInfo.packagerPort) && await adbReverse(packagerInfo.exponentServerPort);
+}
+
+export async function stopAdbReverseAsync(projectRoot: string) {
+  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  await adbReverseRemove(packagerInfo.packagerPort);
+  await adbReverseRemove(packagerInfo.exponentServerPort);
+}
+
+async function adbReverse(port: number) {
+  try {
+    await _getAdbOutput(['reverse', `tcp:${port}`, `tcp:${port}`]);
+    return true;
+  } catch (e) {
+    console.warn(`Couldn't adb reverse: ${e.toString()}`);
+    return false;
+  }
+}
+
+async function adbReverseRemove(port: number) {
+  try {
+    await _getAdbOutput(['reverse', '--remove', `tcp:${port}`]);
+    return true;
+  } catch (e) {
+    console.warn(`Couldn't adb reverse remove: ${e.toString()}`);
+    return false;
+  }
 }
