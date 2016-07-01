@@ -23,7 +23,7 @@ export default {
 };
 
 if (require.main === module) {
-  askForSendToAsync().then(function (sendTo) {
+  askForSendToAsync().then(function(sendTo) {
     console.log("Your mobile number or email is", sendTo);
   });
 }
