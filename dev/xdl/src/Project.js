@@ -294,9 +294,9 @@ async function uploadAssetsAsync(assets) {
   });
 
   // Collect list of assets missing on host
-  const metas = (await Api.callMethodAsync('assetsMetadata', [{
+  const metas = (await Api.callMethodAsync('assetsMetadata', [], 'post', {
     keys: Object.keys(paths),
-  }], 'get', {})).metadata;
+  })).metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
 
   // Upload them!
