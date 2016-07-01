@@ -4,6 +4,7 @@
 
 import 'instapromise';
 
+import _ from 'lodash';
 import JsonFile from '@exponent/json-file';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
@@ -12,6 +13,7 @@ import path from 'path';
 let projectSettingsFile = 'settings.json';
 let projectSettingsDefaults = {
   hostType: 'tunnel',
+  lanType: 'ip',
   dev: true,
   strict: false,
   minify: false,
@@ -36,6 +38,8 @@ export async function readAsync(projectRoot: string) {
     projectSettings.hostType = 'tunnel';
   }
 
+  // Set defaults for any missing fields
+  _.defaults(projectSettings, projectSettingsDefaults);
   return projectSettings;
 }
 

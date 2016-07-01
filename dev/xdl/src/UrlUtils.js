@@ -4,8 +4,8 @@
 
 import 'instapromise';
 
+import ip from 'ip';
 import joi from 'joi';
-import myLocalIp from 'my-local-ip';
 import os from 'os';
 import url from 'url';
 
@@ -62,7 +62,8 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
   if (opts) {
     let schema = joi.object().keys({
       urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
-      hostType: joi.any().valid('localhost', 'lan', 'lanIp', 'tunnel'),
+      lanType: joi.any().valid('ip', 'hostname'),
+      hostType: joi.any().valid('localhost', 'lan', 'tunnel'),
       dev: joi.boolean(),
       strict: joi.boolean(),
       minify: joi.boolean(),
@@ -99,10 +100,12 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
     hostname = 'localhost';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
   } else if (opts.hostType === 'lan') {
-    hostname = os.hostname();
-    port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
-  } else if (opts.hostType === 'lanIp') { // TODO: is this used anywhere?
-    hostname = myLocalIp;
+    if (opts.lanType === 'ip') {
+      hostname = ip.address();
+    } else {
+      // Some old versions of OSX work with hostname but not local ip address.
+      hostname = os.hostname();
+    }
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
   } else {
     let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.exponentServerNgrokUrl;

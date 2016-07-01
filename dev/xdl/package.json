@@ -46,7 +46,6 @@
     "lodash": "^4.12.0",
     "md5hex": "^1.0.0",
     "mkdirp": "^0.5.1",
-    "my-local-ip": "^1.0.0",
     "ngrok": "github:exponentjs/ngrok#v1.1.0",
     "promise-props": "^1.0.0",
     "request": "^2.69.0",
