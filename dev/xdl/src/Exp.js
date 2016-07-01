@@ -117,7 +117,7 @@ async function createNewExpAsync(selectedDir, extraPackageJsonFields, opts) {
   }
 
   if (fileExists) {
-    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `${root} already exists. Please choose a different directory or project name.`);
+    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `That directory already exists. Please choose a different parent directory or project name. (${root})`);
   }
 
   // Download files
