@@ -435,12 +435,9 @@ async function startExponentServerAsync(projectRoot) {
   _assertValidProjectRoot(projectRoot);
 
   let { exp, pkg } = await _readConfigJsonAsync(projectRoot);
-  if (!pkg) {
-    throw new Error('Error with package.json.');
-  }
-
-  if (!exp) {
-    throw new Error('Error with exp.json.');
+  if (!exp || !pkg) {
+    // TODO: actually say the correct file name when _readConfigJsonAsync is simpler
+    throw new Error('Error with package.json or exp.json');
   }
 
   await stopExponentServerAsync(projectRoot);
