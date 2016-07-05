@@ -242,6 +242,14 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
     exp.slug = pkg.name;
   }
 
+  if (exp.android && exp.android.config) {
+    delete exp.android.config;
+  }
+
+  if (exp.ios && exp.ios.config) {
+    delete exp.ios.config;
+  }
+
   let form = new FormData();
   form.append('expJson', JSON.stringify(exp));
   form.append('iosBundle', iosBundle, {
