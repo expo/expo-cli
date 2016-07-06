@@ -117,7 +117,7 @@ export default class IOSBuilder extends BaseBuilder {
       console.log(``);
 
       const questions = [{
-        type: 'list',
+        type: 'rawlist',
         name: 'manageCertificates',
         message: `Do you already have a distribution certificate you'd like us to use,\nor do you want us to manage your certificates for you?`,
         choices: [

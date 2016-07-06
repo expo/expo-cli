@@ -43,7 +43,7 @@ export default class AndroidBuilder extends BaseBuilder {
     if (this.options.clearCredentials || !credentials) {
       console.log('');
       const questions = [{
-        type: 'list',
+        type: 'rawlist',
         name: 'uploadKeystore',
         message: `Would you like to upload a keystore or have us generate one for you?\nIf you don't know what this means, let us handle it! :)\n`,
         choices: [
