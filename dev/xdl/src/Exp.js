@@ -152,13 +152,11 @@ export async function createNewExpAsync(selectedDir: string, extraPackageJsonFie
   await packageJsonFile.writeAsync(data);
 
   // Custom code for replacing __NAME__ in main.js
-  // $FlowFixMe - Need to flowify instapromise
   let mainJs = await fs.readFile.promise(path.join(root, 'main.js'), 'utf8');
   let customMainJs = mainJs.replace(/__NAME__/g, data.name);
   await fs.writeFile.promise(path.join(root, 'main.js'), customMainJs, 'utf8');
 
   // Update exp.json
-  // $FlowFixMe - Need to flowify instapromise
   let expJson = await fs.readFile.promise(path.join(root, 'exp.json'), 'utf8');
   let customExpJson = expJson.replace(/\"My New Project\"/, `"${data.name}"`).replace(/\"my-new-project\"/, `"${data.name}"`);
   await fs.writeFile.promise(path.join(root, 'exp.json'), customExpJson, 'utf8');
@@ -187,7 +185,7 @@ function getHomeDir(): string {
 function makePathReadable(pth) {
   let homedir = getHomeDir();
   if (pth.substr(0, homedir.length) === homedir) {
-    return '~' + pth.substr(homedir.length);
+    return `~${pth.substr(homedir.length)}`;
   } else {
     return pth;
   }
@@ -226,8 +224,22 @@ export async function expInfoSafeAsync(root: string) {
   }
 }
 
+type PublishInfo = {
+  args: {
+    username: string,
+    localPackageName: string,
+    packageVersion: string,
+    remoteUsername: string,
+    remotePackageName: string,
+    remoteFullPackageName: string,
+    ngrokUrl: string,
+    sdkVersion: string,
+  },
+  body: any,
+};
+
 // TODO: remove / change, no longer publishInfo, this is just used for signing
-export async function getPublishInfoAsync(root: string) {
+export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   let username = await User.getUsernameAsync();
   if (!username) {
     throw new Error(`Can't get username!`);
@@ -244,15 +256,14 @@ export async function getPublishInfoAsync(root: string) {
 
   let name;
   let version;
-
   // Support legacy package.json with exp
   if (!exp && pkg && pkg.exp) {
     exp = pkg.exp;
     name = pkg.name;
     version = pkg.version;
-  } else if (exp) {
+  } else if (exp && pkg) {
     name = exp.slug;
-    version = exp.version;
+    version = pkg.version || exp.version;
   }
 
   if (!exp || !exp.sdkVersion) {
@@ -263,9 +274,13 @@ export async function getPublishInfoAsync(root: string) {
     throw new Error(`Can't get name of package.`);
   }
 
+  if (!version) {
+    throw new Error(`Can't get version of package.`);
+  }
+
   let remotePackageName = name;
   let remoteUsername = username;
-  let remoteFullPackageName = '@' + remoteUsername + '/' + remotePackageName;
+  let remoteFullPackageName = `@${remoteUsername}/${remotePackageName}`;
   let localPackageName = name;
   let packageVersion = version;
   let sdkVersion = exp.sdkVersion;

@@ -181,7 +181,7 @@ async function _validateConfigJsonAsync(projectRoot: string) {
 
 async function _getBundleForPlatformAsync(url, platform) {
   let response = await request.promise.get({
-    url: url + `&platform=${platform}`,
+    url: `${url}&platform=${platform}`,
     headers: {
       'Exponent-Platform': platform,
     },
@@ -314,14 +314,14 @@ export async function buildAsync(projectRoot: string, options: {
     }
   }
 
-  let form = new FormData();
-  form.append('expJson', JSON.stringify(exp));
-
   let response = await Api.callMethodAsync(
     'build',
-    [options],
+    [],
     'put',
-    form
+    {
+      manifest: exp,
+      options,
+    },
   );
 
   return response;
@@ -428,7 +428,7 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
     hostType: 'localhost',
   });
 
-  await _waitForRunningAsync(packagerUrl + '/debug');
+  await _waitForRunningAsync(`${packagerUrl}/debug`);
 }
 
 export async function stopReactNativeServerAsync(projectRoot: string) {
@@ -445,7 +445,7 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
   try {
     await treekill.promise(packagerInfo.packagerPid, 'SIGKILL');
   } catch (e) {
-    console.warn(`Error stopping packager process: ` + e.toString());
+    console.warn(`Error stopping packager process: ${e.toString()}`);
   }
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -632,7 +632,7 @@ export async function startTunnelsAsync(projectRoot: string) {
   let randomness = await Exp.getProjectRandomnessAsync(projectRoot);
 
   let hostname = [randomness, UrlUtils.domainify(username), UrlUtils.domainify(packageShortName), Config.ngrok.domain].join('.');
-  let packagerHostname = 'packager.' + hostname;
+  let packagerHostname = `packager.${hostname}`;
 
   try {
     let exponentServerNgrokUrl = await _connectToNgrokAsync({
@@ -655,7 +655,7 @@ export async function startTunnelsAsync(projectRoot: string) {
       ngrokPid: ngrok.process().pid,
     });
   } catch (e) {
-    console.error("Problem with ngrok: " + e.toString());
+    console.error(`Problem with ngrok: ${e.toString()}`);
     throw e;
   }
 }

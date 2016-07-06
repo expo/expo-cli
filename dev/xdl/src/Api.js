@@ -32,7 +32,7 @@ if (Config.api.port) {
 }
 let API_BASE_URL = ROOT_BASE_URL + '/--/api/';
 
-async function _callMethodAsync(url, method, requestBody) {
+async function _callMethodAsync(url, method, requestBody): Promise<any> {
   let clientId = await Session.clientIdAsync();
   let {username} = await UserSettings.readAsync();
 
@@ -104,7 +104,7 @@ export default class ApiClient {
   static host: string = Config.api.host;
   static port: number = Config.api.port || 80;
 
-  static async callMethodAsync(methodName, args, method, requestBody) {
+  static async callMethodAsync(methodName, args, method, requestBody): Promise<any> {
     let url = API_BASE_URL + encodeURIComponent(methodName) + '/' +
       encodeURIComponent(JSON.stringify(args));
     return _callMethodAsync(url, method, requestBody);
@@ -121,7 +121,7 @@ export default class ApiClient {
 
   static async sdkVersionsAsync() {
     let versions = await ApiClient.versionsAsync();
-    return versions.sdkVersions;
+    return versions;
   }
 
   // Gets most recent SDK version. Ensures optField is in SDK version if it is provided

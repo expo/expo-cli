@@ -1,5 +1,6 @@
 /**
  * @flow
+ * @providesModule XDL
  */
 
 import { install as installSourceMapSupport } from 'source-map-support';
@@ -11,6 +12,7 @@ if (process.env.NODE_ENV !== 'production') {
 export * as Android from './Android';
 export { default as Api } from './Api';
 export { default as Config } from './Config';
+export * as Credentials from './Credentials';
 export * as Env from './Env';
 export { default as ErrorCode } from './ErrorCode';
 export * as Exp from './Exp';
