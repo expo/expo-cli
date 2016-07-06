@@ -38,6 +38,8 @@ import type { IOSCredentials } from 'XDLCredentials';
 export default class IOSBuilder extends BaseBuilder {
 
   async run() {
+    // Check status of packager
+    await this.checkPackagerStatus();
     // Check the status of any current builds
     await this.checkStatus();
     // Check for existing credentials, collect any missing credentials, and validate them

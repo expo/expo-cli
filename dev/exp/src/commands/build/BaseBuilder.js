@@ -5,6 +5,7 @@
 import { Project } from 'xdl';
 
 import log from '../../log';
+import config from '../../config';
 import { action as publishAction } from '../publish';
 
 import BuildError from './BuildError';
@@ -37,6 +38,20 @@ export default class BaseBuilder {
         log.error(e.message);
         process.exit(1);
       }
+    }
+  }
+
+  async checkPackagerStatus(): Promise<void> {
+    let status = await config.projectStatusAsync(this.projectDir);
+    if (!status) {
+      return;
+    }
+
+    if (status !== 'RUNNING') {
+      log.error(`Exponent server not running for project at ${this.projectDir}`);
+      log.error(`Please run "exp start ${this.projectDir}" first.`);
+      process.exit(1);
+      return;
     }
   }
 
