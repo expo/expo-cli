@@ -121,8 +121,8 @@ export default class IOSBuilder extends BaseBuilder {
         name: 'manageCertificates',
         message: `Do you already have a distribution certificate you'd like us to use,\nor do you want us to manage your certificates for you?`,
         choices: [
-          { name: 'You take care of it.', value: true },
-          { name: 'Upload my own!', value: false },
+          { name: 'Let Exponent handle the process!', value: true },
+          { name: 'I want to upload my own certificate!', value: false },
         ],
       }, {
         type: 'input',

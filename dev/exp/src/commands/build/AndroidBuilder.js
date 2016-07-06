@@ -47,8 +47,8 @@ export default class AndroidBuilder extends BaseBuilder {
         name: 'uploadKeystore',
         message: `Would you like to upload a keystore or have us generate one for you?\nIf you don't know what this means, let us handle it! :)\n`,
         choices: [
-          { name: 'You take care of it.', value: 'generate' },
-          { name: 'Upload my own!', value: 'upload' },
+          { name: 'Let Exponent handle the process!', value: true },
+          { name: 'I want to upload my own keystore!', value: false },
         ],
       }, {
         type: 'input',
