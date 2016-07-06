@@ -266,10 +266,10 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
     delete exp.ios.config;
   }
 
-  // Upload asset files -- we do this serially so that assets shared across iOS
-  // and Android aren't re-uploaded (they will have the same hash)
-  await uploadAssetsAsync(JSON.parse(iosAssetsJson));
-  await uploadAssetsAsync(JSON.parse(androidAssetsJson));
+  // Upload asset files
+  const iosAssets = JSON.parse(iosAssetsJson);
+  const androidAssets = JSON.parse(androidAssetsJson);
+  await uploadAssetsAsync(iosAssets.concat(androidAssets));
 
   let form = new FormData();
   form.append('expJson', JSON.stringify(exp));
@@ -285,7 +285,7 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
 }
 
 async function uploadAssetsAsync(assets) {
-  // Collect paths by key
+  // Collect paths by key, also effectively handles duplicates in the array
   const paths = {};
   assets.forEach(asset => {
     asset.files.forEach((path, index) => {
