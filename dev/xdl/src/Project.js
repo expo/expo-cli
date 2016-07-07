@@ -269,7 +269,10 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
   // Upload asset files
   const iosAssets = JSON.parse(iosAssetsJson);
   const androidAssets = JSON.parse(androidAssetsJson);
-  await uploadAssetsAsync(iosAssets.concat(androidAssets));
+  const assets = iosAssets.concat(androidAssets);
+  if (assets.length > 0 && assets[0].fileHashes) {
+    await uploadAssetsAsync(assets);
+  }
 
   let form = new FormData();
   form.append('expJson', JSON.stringify(exp));
