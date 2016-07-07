@@ -10,6 +10,7 @@ import spawnAsync from '@exponent/spawn-async';
 import existsAsync from 'exists-async';
 import mkdirp from 'mkdirp';
 import path from 'path';
+import semver from 'semver';
 
 import Api from './Api';
 import Logger from './Logger';
@@ -96,7 +97,7 @@ async function _checkExponentUpToDateAsync() {
   let versions = await Api.versionsAsync();
   let installedVersion = await _exponentVersionAsync();
 
-  if (!installedVersion || installedVersion !== versions.androidVersion) {
+  if (!installedVersion || semver.lt(installedVersion, versions.androidVersion)) {
     Logger.notifications.warn({code: NotificationCode.OLD_ANDROID_APP_VERSION}, 'This version of the Exponent app is out of date. Uninstall the app and run again to upgrade.');
   }
 }

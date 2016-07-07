@@ -13,6 +13,7 @@ import homeDir from 'home-dir';
 import mkdirp from 'mkdirp';
 import osascript from '@exponent/osascript';
 import path from 'path';
+import semver from 'semver';
 import spawnAsync from '@exponent/spawn-async';
 
 import Api from './Api';
@@ -141,7 +142,7 @@ export async function _checkExponentUpToDateAsync() {
   let versions = await Api.versionsAsync();
   let installedVersion = await _exponentVersionOnCurrentBootedSimulatorAsync();
 
-  if (!installedVersion || installedVersion !== versions.iosVersion) {
+  if (!installedVersion || semver.lt(installedVersion, versions.iosVersion)) {
     Logger.notifications.warn({code: NotificationCode.OLD_IOS_APP_VERSION}, 'This version of the Exponent app is out of date. Uninstall the app and run again to upgrade.');
   }
 }
