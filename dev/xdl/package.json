@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "gulp build",
-    "test": "jest --config jest/unit-test-config.json",
+    "test": "jest --config jest/unit-test-config.json --no-cache",
     "integration-tests": "jest --config jest/integration-test-config.json --no-cache --no-watchman"
   },
   "repository": {
