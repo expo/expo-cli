@@ -51,6 +51,7 @@
     "request": "^2.69.0",
     "semver": "^5.1.1",
     "slugid": "^1.1.0",
+    "source-map-support": "^0.4.1",
     "tar.gz": "^1.0.5",
     "tree-kill": "^1.1.0",
     "url": "^0.11.0"
@@ -74,7 +75,6 @@
     "jest-cli": "^12.1.0",
     "promise-print": "^2.3.0",
     "request": "^2.69.0",
-    "rimraf": "^2.5.2",
-    "source-map-support": "^0.4.1"
+    "rimraf": "^2.5.2"
   }
 }
