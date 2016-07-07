@@ -72,6 +72,6 @@ describe('constructManifestUrlAsync', () => {
 describe('constructPublishUrlAsync', () => {
   pit('returns the correct publish url', async () => {
     let packagerUrl = await UrlUtils.constructPublishUrlAsync(projectPath, 'test-project-entry-point');
-    expect(packagerUrl).toEqual('http://localhost:19001/test-project-entry-point.bundle?dev=false&minify=true&includeAssetFileHashes=true&hot=false');
+    expect(packagerUrl).toEqual('http://localhost:19001/test-project-entry-point.bundle?dev=false&minify=true&hot=false&includeAssetFileHashes=true');
   });
 });
