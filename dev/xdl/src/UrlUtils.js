@@ -33,6 +33,7 @@ export async function constructUrlWithExtensionAsync(projectRoot, entryPoint, ex
   return bundleUrl + '?' + constructBundleQueryParams({
     dev: false,
     minify: true,
+    includeAssetFileHashes: true,
   });
 }
 
@@ -59,6 +60,10 @@ export function constructBundleQueryParams(opts: any) {
 
   if (opts.hasOwnProperty('minify')) {
     queryParams += '&minify=' + encodeURIComponent(!!opts.minify);
+  }
+
+  if (opts.hasOwnProperty('includeAssetFileHashes')) {
+    queryParams += '&includeAssetFileHashes=' + encodeURIComponent(!!opts.includeAssetFileHashes);
   }
 
   queryParams += '&hot=false';
