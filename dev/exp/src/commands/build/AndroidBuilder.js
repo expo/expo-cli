@@ -47,8 +47,8 @@ export default class AndroidBuilder extends BaseBuilder {
         name: 'uploadKeystore',
         message: `Would you like to upload a keystore or have us generate one for you?\nIf you don't know what this means, let us handle it! :)\n`,
         choices: [
-          { name: 'Let Exponent handle the process!', value: true },
-          { name: 'I want to upload my own keystore!', value: false },
+          { name: 'Let Exponent handle the process!', value: false },
+          { name: 'I want to upload my own keystore!', value: true },
         ],
       }, {
         type: 'input',
@@ -71,19 +71,19 @@ export default class AndroidBuilder extends BaseBuilder {
           }
           return keystorePath;
         },
-        when: answers => answers.uploadKeystore === 'upload',
+        when: answers => answers.uploadKeystore,
       }, {
         type: 'input',
         name: 'keystoreAlias',
         message: `Keystore Alias:`,
         validate: val => val !== '',
-        when: answers => answers.uploadKeystore === 'upload',
+        when: answers => answers.uploadKeystore,
       }, {
         type: 'password',
         name: 'keystorePassword',
         message: `Keystore Password:`,
         validate: val => val !== '',
-        when: answers => answers.uploadKeystore === 'upload',
+        when: answers => answers.uploadKeystore,
       }, {
         type: 'password',
         name: 'keyPassword',
@@ -95,12 +95,12 @@ export default class AndroidBuilder extends BaseBuilder {
           // Todo validate keystore passwords
           return true;
         },
-        when: answers => answers.uploadKeystore === 'upload',
+        when: answers => answers.uploadKeystore,
       }];
 
       const answers = await inquirer.prompt(questions);
 
-      if (answers.uploadKeystore === 'generate') {
+      if (!answers.uploadKeystore) {
         if (this.options.clearCredentials) {
           await Credentials.removeCredentialsForPlatform('android', credentialMetadata);
         }
