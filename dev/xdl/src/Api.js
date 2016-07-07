@@ -121,7 +121,7 @@ export default class ApiClient {
 
   static async sdkVersionsAsync() {
     let versions = await ApiClient.versionsAsync();
-    return versions;
+    return versions.sdkVersions;
   }
 
   // Gets most recent SDK version. Ensures optField is in SDK version if it is provided
