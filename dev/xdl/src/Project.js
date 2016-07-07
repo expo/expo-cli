@@ -770,10 +770,13 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
 
-export async function startAsync(projectRoot: string, options: Object = {}): Promise<void> {
+export async function startAsync(projectRoot: string, options: Object = {}): Promise<any> {
   await startExponentServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options);
   await startTunnelsAsync(projectRoot);
+
+  let { exp } = await _readConfigJsonAsync(projectRoot);
+  return exp;
 }
 
 export async function stopAsync(projectRoot: string): Promise<void> {
