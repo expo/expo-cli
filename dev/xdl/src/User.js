@@ -2,6 +2,7 @@
  * @flow
  */
 
+import * as Analytics from './Analytics';
 import Api from './Api';
 import * as Password from './Password';
 import UserSettings from './UserSettings';
@@ -39,6 +40,14 @@ export async function loginAsync(args: any) {
   let result = await Api.callMethodAsync('adduser', data);
   // console.log("result=", result);
   if (result.user) {
+    Analytics.logEvent('Login', {
+      username: result.user.username,
+    });
+
+    Analytics.setUserProperties({
+      username: result.user.username,
+    });
+
     delete result.type;
     _currentUser = result.user;
     // console.log("Login as", result);
@@ -50,6 +59,12 @@ export async function loginAsync(args: any) {
 }
 
 export async function logoutAsync() {
+  if (_currentUser) {
+    Analytics.logEvent('Logout', {
+      username: _currentUser.username,
+    });
+  }
+
   let result = await Api.callMethodAsync('logout', []);
   await UserSettings.deleteKeyAsync('username');
   _currentUser = null;
@@ -61,6 +76,10 @@ export async function whoamiAsync() {
   let result = await Api.callMethodAsync('whoami', []);
   if (result.user) {
     _currentUser = result.user;
+
+    Analytics.setUserProperties({
+      username: result.user.username,
+    });
   }
   return result.user;
 }

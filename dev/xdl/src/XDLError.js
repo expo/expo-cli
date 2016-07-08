@@ -2,6 +2,8 @@
  * @flow
  */
 
+import * as Analytics from './Analytics';
+
 export default class XDLError extends Error {
   code: string;
   isXDLError: bool;
@@ -11,5 +13,10 @@ export default class XDLError extends Error {
 
     this.code = code;
     this.isXDLError = true;
+
+    Analytics.logEvent('XDL Error', {
+      code,
+      message,
+    });
   }
 }

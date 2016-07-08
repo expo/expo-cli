@@ -15,6 +15,7 @@ import path from 'path';
 import spawnAsync from '@exponent/spawn-async';
 import joi from 'joi';
 
+import * as Analytics from './Analytics';
 import Api from './Api';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
@@ -110,6 +111,11 @@ export async function createNewExpAsync(selectedDir: string, extraPackageJsonFie
 
   let name = opts.name;
   let root = path.join(selectedDir, name);
+
+  Analytics.logEvent('New Project', {
+    selectedDir,
+    name,
+  });
 
   let fileExists = true;
   try {

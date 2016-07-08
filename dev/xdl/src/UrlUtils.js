@@ -193,4 +193,3 @@ export function someRandomness() {
 export function domainify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 }
-

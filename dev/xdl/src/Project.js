@@ -22,6 +22,7 @@ import semver from 'semver';
 import spawnAsync from '@exponent/spawn-async';
 import treekill from 'tree-kill';
 
+import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import Config from './Config';
@@ -35,6 +36,7 @@ import * as Versions from './Versions';
 import XDLError from './XDLError';
 
 const MINIMUM_BUNDLE_SIZE = 500;
+const MAX_MESSAGE_LENGTH = 200;
 
 let _projectRootToExponentServer = {};
 let _projectRootToLogger = {};
@@ -86,6 +88,16 @@ export function logInfo(projectRoot: string, tag: string, message: string) {
 
 export function logError(projectRoot: string, tag: string, message: string) {
   _getLogger(projectRoot).error({tag}, message.toString());
+
+  let truncatedMessage = message.toString();
+  if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
+    truncatedMessage = truncatedMessage.substring(0, MAX_MESSAGE_LENGTH);
+  }
+  Analytics.logEvent('Project Error', {
+    projectRoot,
+    tag,
+    message: truncatedMessage,
+  });
 }
 
 export function attachLoggerStream(projectRoot: string, stream: any) {
@@ -234,6 +246,10 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
+  Analytics.logEvent('Publish', {
+    projectRoot,
+  });
+
   let schema = joi.object().keys({
     quiet: joi.boolean(),
   });
@@ -356,6 +372,10 @@ export async function buildAsync(projectRoot: string, options: {
 } = {}) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
+
+  Analytics.logEvent('Build Shell App', {
+    projectRoot,
+  });
 
   let schema = joi.object().keys({
     current: joi.boolean(),
@@ -924,6 +944,10 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
 }
 
 export async function startAsync(projectRoot: string, options: Object = {}): Promise<any> {
+  Analytics.logEvent('Start Project', {
+    projectRoot,
+  });
+
   await startExponentServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options);
   await startTunnelsAsync(projectRoot);

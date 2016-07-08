@@ -12,6 +12,7 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 import semver from 'semver';
 
+import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
@@ -166,12 +167,19 @@ export async function openUrlSafeAsync(url: string) {
     return;
   }
 
+  let installedExponent = false;
   if (!(await _isExponentInstalledAsync())) {
     await _installExponentAsync();
+    installedExponent = true;
   }
 
   Logger.global.info(`Opening on Android device`);
   await _openUrlAsync(url);
+
+  Analytics.logEvent('Open Url on Device', {
+    platform: 'android',
+    installedExponent,
+  });
 }
 
 export async function openProjectAsync(projectRoot: string) {

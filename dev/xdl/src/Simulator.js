@@ -16,6 +16,7 @@ import path from 'path';
 import semver from 'semver';
 import spawnAsync from '@exponent/spawn-async';
 
+import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
@@ -243,4 +244,8 @@ export async function openUrlInSimulatorSafeAsync(url: string) {
 
     await _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url);
   }
+
+  Analytics.logEvent('Open Url on Device', {
+    platform: 'ios',
+  });
 }

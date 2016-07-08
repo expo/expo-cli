@@ -9,6 +9,7 @@ if (process.env.NODE_ENV !== 'production') {
   installSourceMapSupport();
 }
 
+export * as Analytics from './Analytics';
 export * as Android from './Android';
 export { default as Api } from './Api';
 export { default as Config } from './Config';
