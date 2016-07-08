@@ -15,3 +15,11 @@ export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
 
   return semver.gte(expJson.sdkVersion, sdkVersion);
 }
+
+export function parseSdkVersionFromTag(tag: string) {
+  if (tag.startsWith('sdk-')) {
+    return tag.substring(4);
+  }
+
+  return tag;
+}

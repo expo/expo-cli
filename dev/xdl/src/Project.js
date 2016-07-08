@@ -18,6 +18,7 @@ import _ from 'lodash';
 import ngrok from 'ngrok';
 import path from 'path';
 import request from 'request';
+import semver from 'semver';
 import spawnAsync from '@exponent/spawn-async';
 import treekill from 'tree-kill';
 
@@ -30,6 +31,7 @@ import Logger from './Logger';
 import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
 import * as User from './User';
+import * as Versions from './Versions';
 import XDLError from './XDLError';
 
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -176,15 +178,6 @@ async function _validateConfigJsonAsync(projectRoot: string) {
     return;
   }
 
-  // Exponent fork of react-native is required
-  let reactNative = pkg.dependencies['react-native'];
-  if (reactNative.indexOf('exponentjs/react-native#') === -1) {
-    logError(projectRoot, 'exponent', `Error: Must use the Exponent fork of react-native. See https://getexponent.com/help`);
-    return;
-  }
-
-  let reactNativeTag = reactNative.substring(reactNative.lastIndexOf('#') + 1);
-
   let sdkVersions = await Api.sdkVersionsAsync();
   if (!sdkVersions) {
     logError(projectRoot, 'exponent', `Error: Couldn't connect to server`);
@@ -196,10 +189,23 @@ async function _validateConfigJsonAsync(projectRoot: string) {
     return;
   }
 
-  let sdkVersionObject = sdkVersions[sdkVersion];
-  if (sdkVersionObject['exponentReactNativeTag'] !== reactNativeTag) {
-    logError(projectRoot, 'exponent', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
-    return;
+  if (Config.validation.reactNativeVersionWarnings) {
+    let reactNative = pkg.dependencies['react-native'];
+
+    // Exponent fork of react-native is required
+    if (!reactNative.includes('exponentjs/react-native#')) {
+      logError(projectRoot, 'exponent', `Error: Must use the Exponent fork of react-native. See https://getexponent.com/help`);
+      return;
+    }
+
+    let reactNativeTag = reactNative.substring(reactNative.lastIndexOf('#') + 1);
+    let sdkVersionObject = sdkVersions[sdkVersion];
+    // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
+    if (semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
+        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['exponentReactNativeTag']))) {
+      logError(projectRoot, 'exponent', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
+      return;
+    }
   }
 
   // TODO: Check any native module versions here

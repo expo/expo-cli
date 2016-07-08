@@ -28,4 +28,7 @@ export default {
     domain: 'exp.direct',
   },
   developerTool: null,
+  validation: {
+    reactNativeVersionWarnings: true,
+  },
 };
