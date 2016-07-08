@@ -287,6 +287,7 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
   return response;
 }
 
+// TODO(jesse): Add analytics for upload
 async function uploadAssetsAsync(assets) {
   // Collect paths by key, also effectively handles duplicates in the array
   const paths = {};
