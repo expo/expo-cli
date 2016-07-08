@@ -206,7 +206,7 @@ async function adbReverse(port: number) {
     await _getAdbOutput(['reverse', `tcp:${port}`, `tcp:${port}`]);
     return true;
   } catch (e) {
-    console.warn(`Couldn't adb reverse: ${e.toString()}`);
+    Logger.global.debug(`Couldn't adb reverse: ${e.toString()}`);
     return false;
   }
 }
@@ -216,7 +216,7 @@ async function adbReverseRemove(port: number) {
     await _getAdbOutput(['reverse', '--remove', `tcp:${port}`]);
     return true;
   } catch (e) {
-    console.warn(`Couldn't adb reverse remove: ${e.toString()}`);
+    Logger.global.debug(`Couldn't adb reverse remove: ${e.toString()}`);
     return false;
   }
 }

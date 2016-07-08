@@ -82,6 +82,10 @@ function _logWithLevel(projectRoot: string, level: string, object: any, msg: str
   }
 }
 
+export function logDebug(projectRoot: string, tag: string, message: string) {
+  _getLogger(projectRoot).debug({tag}, message.toString());
+}
+
 export function logInfo(projectRoot: string, tag: string, message: string) {
   _getLogger(projectRoot).info({tag}, message.toString());
 }
@@ -318,7 +322,7 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
   const androidAssets = JSON.parse(androidAssetsJson);
   const assets = iosAssets.concat(androidAssets);
   if (assets.length > 0 && assets[0].fileHashes) {
-    await uploadAssetsAsync(assets);
+    await uploadAssetsAsync(projectRoot, assets);
   }
 
   let form = new FormData();
@@ -335,7 +339,7 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
 }
 
 // TODO(jesse): Add analytics for upload
-async function uploadAssetsAsync(assets) {
+async function uploadAssetsAsync(projectRoot, assets) {
   // Collect paths by key, also effectively handles duplicates in the array
   const paths = {};
   assets.forEach(asset => {
@@ -354,7 +358,7 @@ async function uploadAssetsAsync(assets) {
   await Promise.all(_.chunk(missing, 5).map(async (keys) => {
     let form = new FormData();
     keys.forEach(key => {
-      console.log('uploading', paths[key]);
+      logDebug(projectRoot, 'exponent', `uploading ${paths[key]}`);
       form.append(key, fs.createReadStream(paths[key]), {
         filename: paths[key],
       });
@@ -632,7 +636,7 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   });
 
   packagerProcess.on('exit', async (code) => {
-    console.log("packager process exited with code", code);
+    logDebug(projectRoot, 'exponent', `packager process exited with code ${code}`);
   });
 
   let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
@@ -649,15 +653,15 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort || !packagerInfo.packagerPid) {
-    console.log(`No packager found for project at ${projectRoot}.`);
+    logDebug(projectRoot, 'exponent', `No packager found for project at ${projectRoot}.`);
     return;
   }
 
-  console.log(`Killing packager process tree: ${packagerInfo.packagerPid}`);
+  logDebug(projectRoot, 'exponent', `Killing packager process tree: ${packagerInfo.packagerPid}`);
   try {
     await treekill.promise(packagerInfo.packagerPid, 'SIGKILL');
   } catch (e) {
-    console.warn(`Error stopping packager process: ${e.toString()}`);
+    logDebug(projectRoot, 'exponent', `Error stopping packager process: ${e.toString()}`);
   }
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -739,7 +743,7 @@ export async function startExponentServerAsync(projectRoot: string) {
 
       res.send(manifestString);
     } catch (e) {
-      console.error("Error in manifestHandler:", e, e.stack);
+      logDebug(projectRoot, 'exponent', `Error in manifestHandler: ${e} ${e.stack}`);
       // 5xx = Server Error HTTP code
       res.status(520).send({"error": e.toString()});
     }
@@ -765,7 +769,7 @@ export async function startExponentServerAsync(projectRoot: string) {
     let host = server.address().address;
     let port = server.address().port;
 
-    console.log('Local server listening at http://%s:%s', host, port);
+    logDebug(projectRoot, 'exponent', `Local server listening at http://${host}:${port}`);
   });
 
   _projectRootToExponentServer[projectRoot] = server;
@@ -780,7 +784,7 @@ export async function stopExponentServerAsync(projectRoot: string) {
 
   let server = _projectRootToExponentServer[projectRoot];
   if (!server) {
-    console.log(`No Exponent server found for project at ${projectRoot}.`);
+    logDebug(projectRoot, 'exponent', `No Exponent server found for project at ${projectRoot}.`);
     return;
   }
 
@@ -796,7 +800,7 @@ export async function stopExponentServerAsync(projectRoot: string) {
   });
 }
 
-async function _connectToNgrokAsync(args: mixed, ngrokPid: ?number, attempts: number = 0) {
+async function _connectToNgrokAsync(projectRoot: string, args: mixed, ngrokPid: ?number, attempts: number = 0) {
   try {
     let url = await ngrok.promise.connect(args);
     return url;
@@ -817,7 +821,7 @@ async function _connectToNgrokAsync(args: mixed, ngrokPid: ?number, attempts: nu
         try {
           process.kill(ngrokPid, 'SIGKILL');
         } catch (e) {
-          console.warn(`Couldn't kill ngrok with PID ${ngrokPid}`);
+          logDebug(projectRoot, 'exponent', `Couldn't kill ngrok with PID ${ngrokPid}`);
         }
       } else {
         await ngrok.promise.kill();
@@ -826,7 +830,7 @@ async function _connectToNgrokAsync(args: mixed, ngrokPid: ?number, attempts: nu
 
     // Wait 100ms and then try again
     await delayAsync(100);
-    return _connectToNgrokAsync(args, null, attempts + 1);
+    return _connectToNgrokAsync(projectRoot, args, null, attempts + 1);
   }
 }
 
@@ -860,14 +864,14 @@ export async function startTunnelsAsync(projectRoot: string) {
   let packagerHostname = `packager.${hostname}`;
 
   try {
-    let exponentServerNgrokUrl = await _connectToNgrokAsync({
+    let exponentServerNgrokUrl = await _connectToNgrokAsync(projectRoot, {
       hostname,
       authtoken: Config.ngrok.authToken,
       port: packagerInfo.exponentServerPort,
       proto: 'http',
     }, packagerInfo.ngrokPid);
 
-    let packagerNgrokUrl = await _connectToNgrokAsync({
+    let packagerNgrokUrl = await _connectToNgrokAsync(projectRoot, {
       hostname: packagerHostname,
       authtoken: Config.ngrok.authToken,
       port: packagerInfo.packagerPort,
@@ -880,7 +884,7 @@ export async function startTunnelsAsync(projectRoot: string) {
       ngrokPid: ngrok.process().pid,
     });
   } catch (e) {
-    console.error(`Problem with ngrok: ${e.toString()}`);
+    logError(projectRoot, 'exponent', `Error starting tunnel: ${e.toString()}`);
     throw e;
   }
 }
@@ -902,7 +906,7 @@ export async function stopTunnelsAsync(projectRoot: string) {
     try {
       process.kill(packagerInfo.ngrokPid);
     } catch (e) {
-      console.warn(`Couldn't kill ngrok with PID ${packagerInfo.ngrokPid}`);
+      logDebug(projectRoot, 'exponent', `Couldn't kill ngrok with PID ${packagerInfo.ngrokPid}`);
     }
   } else {
     // Ngrok is running from the current process. Kill using ngrok api.
