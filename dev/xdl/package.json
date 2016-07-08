@@ -28,6 +28,7 @@
     "@exponent/osascript": "^1.5.1",
     "@exponent/spawn-async": "^1.2.4",
     "babel-runtime": "^6.9.0",
+    "body-parser": "^1.15.2",
     "bunyan": "^1.8.1",
     "delay-async": "^1.0.0",
     "download": "^4.4.3",
@@ -52,6 +53,7 @@
     "semver": "^5.1.1",
     "slugid": "^1.1.0",
     "source-map-support": "^0.4.1",
+    "sprintf-js": "^1.0.3",
     "tar.gz": "^1.0.5",
     "tree-kill": "^1.1.0",
     "url": "^0.11.0"

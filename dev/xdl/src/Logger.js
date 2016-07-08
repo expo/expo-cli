@@ -10,6 +10,7 @@ import UserSettings from './UserSettings';
 let logger = bunyan.createLogger({
   name: 'exponent',
   streams: [{
+    level: 'debug',
     type: 'rotating-file',
     path: path.join(UserSettings.dotExponentHomeDirectory(), 'log'),
     period: '1d',   // daily rotation

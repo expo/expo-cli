@@ -152,7 +152,7 @@ async function checkForUpdateAsync() {
 
 function _registerLogs() {
   let stream = {
-    level: 'info',
+    level: 'debug',
     stream: {
       write: (chunk) => {
         if (chunk.code) {

@@ -4,6 +4,9 @@
 
 import 'instapromise';
 
+import { vsprintf } from 'sprintf-js';
+
+import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import delayAsync from 'delay-async';
 import express from 'express';
@@ -15,6 +18,7 @@ import _ from 'lodash';
 import ngrok from 'ngrok';
 import path from 'path';
 import request from 'request';
+import spawnAsync from '@exponent/spawn-async';
 import treekill from 'tree-kill';
 
 import * as Android from './Android';
@@ -43,7 +47,7 @@ let _cachedSignedManifest: CachedSignedManifest = {
   signedManifest: null,
 };
 
-function _getLogger(projectRoot) {
+function _getLogger(projectRoot: string) {
   let logger = _projectRootToLogger[projectRoot];
   if (!logger) {
     logger = Logger.child({type: 'project', project: path.resolve(projectRoot)});
@@ -53,11 +57,32 @@ function _getLogger(projectRoot) {
   return logger;
 }
 
-function _logInfo(projectRoot, tag, message) {
+function _logWithLevel(projectRoot: string, level: string, object: any, msg: string) {
+  let logger = _getLogger(projectRoot);
+  switch (level) {
+    case 'debug':
+      logger.debug(object, msg);
+      return;
+    case 'info':
+      logger.info(object, msg);
+      return;
+    case 'warn':
+      logger.warn(object, msg);
+      return;
+    case 'error':
+      logger.error(object, msg);
+      return;
+    default:
+      logger.debug(object, msg);
+      return;
+  }
+}
+
+export function logInfo(projectRoot: string, tag: string, message: string) {
   _getLogger(projectRoot).info({tag}, message.toString());
 }
 
-function _logError(projectRoot, tag, message) {
+export function logError(projectRoot: string, tag: string, message: string) {
   _getLogger(projectRoot).error({tag}, message.toString());
 }
 
@@ -98,7 +123,7 @@ async function _readConfigJsonAsync(projectRoot): Promise<any> {
     if (e.isJsonFileError) {
       // TODO: add error codes to json-file
       if (e.message.startsWith('Error parsing JSON file')) {
-        _logError(projectRoot, 'exponent', `Error parsing JSON file: ${e.cause.toString()}`);
+        logError(projectRoot, 'exponent', `Error parsing JSON file: ${e.cause.toString()}`);
         return { exp: null, pkg: null };
       }
     }
@@ -108,16 +133,16 @@ async function _readConfigJsonAsync(projectRoot): Promise<any> {
 
   // Easiest bail-out: package.json is missing
   if (!pkg) {
-    _logError(projectRoot, 'exponent', `Error: Can't find package.json`);
+    logError(projectRoot, 'exponent', `Error: Can't find package.json`);
     return { exp: null, pkg: null };
   }
 
   // Grab our exp config from package.json (legacy) or exp.json
   if (!exp && pkg.exp) {
     exp = pkg.exp;
-    _logError(projectRoot, 'exponent', `Deprecation Warning: Move your "exp" config from package.json to exp.json.`);
+    logError(projectRoot, 'exponent', `Deprecation Warning: Move your "exp" config from package.json to exp.json.`);
   } else if (!exp && !pkg.exp) {
-    _logError(projectRoot, 'exponent', `Error: Missing exp.json. See https://docs.getexponent.com/`);
+    logError(projectRoot, 'exponent', `Error: Missing exp.json. See https://docs.getexponent.com/`);
     return { exp: null, pkg: null };
   }
 
@@ -134,27 +159,27 @@ async function _validateConfigJsonAsync(projectRoot: string) {
 
   // sdkVersion is necessary
   if (!exp.sdkVersion) {
-    _logError(projectRoot, 'exponent', `Error: Can't find key exp.sdkVersion in exp.json or package.json. See https://docs.getexponent.com/`);
+    logError(projectRoot, 'exponent', `Error: Can't find key exp.sdkVersion in exp.json or package.json. See https://docs.getexponent.com/`);
     return;
   }
 
   // Warn if sdkVersion is UNVERSIONED
   let sdkVersion = exp.sdkVersion;
   if (sdkVersion === 'UNVERSIONED') {
-    _logError(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in package.json`);
+    logError(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in exp.json`);
     return;
   }
 
   // react-native is required
   if (!pkg.dependencies || !pkg.dependencies['react-native']) {
-    _logError(projectRoot, 'exponent', `Error: Can't find react-native in package.json dependencies`);
+    logError(projectRoot, 'exponent', `Error: Can't find react-native in package.json dependencies`);
     return;
   }
 
   // Exponent fork of react-native is required
   let reactNative = pkg.dependencies['react-native'];
   if (reactNative.indexOf('exponentjs/react-native#') === -1) {
-    _logError(projectRoot, 'exponent', `Error: Must use the Exponent fork of react-native. See https://getexponent.com/help`);
+    logError(projectRoot, 'exponent', `Error: Must use the Exponent fork of react-native. See https://getexponent.com/help`);
     return;
   }
 
@@ -162,18 +187,18 @@ async function _validateConfigJsonAsync(projectRoot: string) {
 
   let sdkVersions = await Api.sdkVersionsAsync();
   if (!sdkVersions) {
-    _logError(projectRoot, 'exponent', `Error: Couldn't connect to server`);
+    logError(projectRoot, 'exponent', `Error: Couldn't connect to server`);
     return;
   }
 
   if (!sdkVersions[sdkVersion]) {
-    _logError(projectRoot, 'exponent', `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`);
+    logError(projectRoot, 'exponent', `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`);
     return;
   }
 
   let sdkVersionObject = sdkVersions[sdkVersion];
   if (sdkVersionObject['exponentReactNativeTag'] !== reactNativeTag) {
-    _logError(projectRoot, 'exponent', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
+    logError(projectRoot, 'exponent', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
     return;
   }
 
@@ -398,6 +423,114 @@ async function _waitForRunningAsync(url) {
   return _waitForRunningAsync(url);
 }
 
+function _stripPackagerOutputBox(output: string) {
+  let re = /Running packager on port (\d+)/;
+  let found = output.match(re);
+  if (found && found.length >= 2) {
+    return `Running packager on port ${found[1]}\n`;
+  } else {
+    return null;
+  }
+}
+
+function _processPackagerLine(line: string) {
+  let re = /\s*\[\d+\:\d+\:\d+\ (AM)?(PM)?\]\s+/;
+  return line.replace(re, '');
+}
+
+async function _restartWatchmanAsync(projectRoot: string) {
+  try {
+    let result = await spawnAsync('watchman', ['watch-del-all']);
+    if (result.stdout.includes('roots')) {
+      logInfo(projectRoot, 'exponent', 'Restarted watchman.');
+      return;
+    }
+  } catch (e) {}
+
+  logError(projectRoot, 'exponent', 'Attempted to restart watchman but failed. Please try running `watchman watch-del-all`.');
+}
+
+function _logPackagerOutput(projectRoot: string, data: Object) {
+  let output = data.toString();
+  if (output.includes('─────')) {
+    output = _stripPackagerOutputBox(output);
+    if (output) {
+      logInfo(projectRoot, 'exponent', output);
+    }
+    return;
+  }
+
+  if (!output) {
+    return;
+  }
+
+  // Fix watchman if it's being dumb
+  if (output.includes('watchman watch-del')) {
+    _restartWatchmanAsync(projectRoot);
+    return;
+  }
+
+  let lines = output.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    lines[i] = _processPackagerLine(lines[i]);
+  }
+  output = lines.join('\n');
+
+  logInfo(projectRoot, 'packager', output);
+}
+
+function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
+  for (let i = 0; i < logs.length; i++) {
+    let log = logs[i];
+
+    let bodyArray = [];
+    if (typeof log.body === 'string') {
+      bodyArray.push(log.body);
+    } else {
+      // body is in this format:
+      // { 0: 'stuff', 1: 'more stuff' }
+      // so convert to an array first
+      let j = 0;
+      while (log.body[j]) {
+        bodyArray.push(log.body[j]);
+        j++;
+      }
+    }
+
+    let string;
+    if (bodyArray[0] && typeof bodyArray[0] === 'string' && bodyArray[0].includes('%')) {
+      string = vsprintf(bodyArray[0], bodyArray.slice(1));
+    } else {
+      string = bodyArray.map(obj => {
+        if (!obj) {
+          return 'null';
+        }
+
+        if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
+          return obj;
+        }
+
+        try {
+          return JSON.stringify(obj);
+        } catch (e) {
+          return obj.toString();
+        }
+      }).join(' ');
+    }
+
+    let level = log.level;
+    let groupDepth = log.groupDepth;
+    let shouldHide = log.shouldHide;
+    _logWithLevel(projectRoot, level, {
+      tag: 'device',
+      deviceId,
+      deviceName,
+      groupDepth,
+      shouldHide,
+    }, string);
+  }
+}
+
 export async function startReactNativeServerAsync(projectRoot: string, options: Object = {}) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
@@ -465,11 +598,11 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   packagerProcess.stdout.setEncoding('utf8');
   packagerProcess.stderr.setEncoding('utf8');
   packagerProcess.stdout.on('data', (data) => {
-    _logInfo(projectRoot, 'packager', data.toString());
+    _logPackagerOutput(projectRoot, data);
   });
 
   packagerProcess.stderr.on('data', (data) => {
-    _logError(projectRoot, 'packager', data.toString());
+    logError(projectRoot, 'packager', data.toString());
   });
 
   packagerProcess.on('exit', async (code) => {
@@ -520,6 +653,8 @@ export async function startExponentServerAsync(projectRoot: string) {
   await stopExponentServerAsync(projectRoot);
 
   let app = express();
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
 
   _validateConfigJsonAsync(projectRoot);
 
@@ -558,6 +693,9 @@ export async function startExponentServerAsync(projectRoot: string) {
       manifest.bundleUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts) + path;
       manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot);
       manifest.mainModuleName = mainModuleName;
+      manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(projectRoot, {
+        urlType: 'http',
+      })}/logs`;
 
       let manifestString = JSON.stringify(manifest);
       let currentUser = await User.getCurrentUserAsync();
@@ -584,6 +722,14 @@ export async function startExponentServerAsync(projectRoot: string) {
   app.get('/', manifestHandler);
   app.get('/manifest', manifestHandler);
   app.get('/index.exp', manifestHandler);
+  app.post('/logs', async (req, res) => {
+    let deviceId = req.get('Device-Id');
+    let deviceName = req.get('Device-Name');
+    if (deviceId && deviceName && req.body) {
+      _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
+    }
+    res.send('Success');
+  });
 
   let exponentServerPort = await _getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -674,7 +820,7 @@ export async function startTunnelsAsync(projectRoot: string) {
   await stopTunnelsAsync(projectRoot);
 
   if (await Android.startAdbReverseAsync(projectRoot)) {
-    _logInfo(projectRoot, 'packager', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.');
+    logInfo(projectRoot, 'exponent', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.');
   }
 
   let username = await User.getUsernameAsync();

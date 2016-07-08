@@ -25,4 +25,5 @@ export * as Simulator from './Simulator';
 export * as UrlUtils from './UrlUtils';
 export * as User from './User';
 export { default as UserSettings } from './UserSettings';
+export * as Versions from './Versions';
 export { default as XDLError } from './XDLError';
