@@ -23,7 +23,7 @@ import NotificationCode from './NotificationCode';
 import * as User from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
-import XDLError from './XDlError';
+import XDLError from './XDLError';
 import * as ProjectSettings from './ProjectSettings';
 
 export function packageJsonForRoot(root: string) {

@@ -2,8 +2,10 @@
  * @flow
  */
 
+import os from 'os';
+
 export function home(): ?string {
-  return process.env.HOME;
+  return os.homedir();
 }
 
 export function isStaging() {
