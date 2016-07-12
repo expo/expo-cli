@@ -480,7 +480,7 @@ async function _restartWatchmanAsync(projectRoot: string) {
   logError(projectRoot, 'exponent', 'Attempted to restart watchman but failed. Please try running `watchman watch-del-all`.');
 }
 
-function _logPackagerOutput(projectRoot: string, data: Object) {
+function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   let output = data.toString();
   if (output.includes('─────')) {
     output = _stripPackagerOutputBox(output);
@@ -506,7 +506,11 @@ function _logPackagerOutput(projectRoot: string, data: Object) {
   }
   output = lines.join('\n');
 
-  logInfo(projectRoot, 'packager', output);
+  if (level === 'info') {
+    logInfo(projectRoot, 'packager', output);
+  } else {
+    logError(projectRoot, 'packager', output);
+  }
 }
 
 function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
@@ -628,11 +632,11 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   packagerProcess.stdout.setEncoding('utf8');
   packagerProcess.stderr.setEncoding('utf8');
   packagerProcess.stdout.on('data', (data) => {
-    _logPackagerOutput(projectRoot, data);
+    _logPackagerOutput(projectRoot, 'info', data);
   });
 
   packagerProcess.stderr.on('data', (data) => {
-    logError(projectRoot, 'packager', data.toString());
+    _logPackagerOutput(projectRoot, 'error', data);
   });
 
   packagerProcess.on('exit', async (code) => {
