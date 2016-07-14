@@ -470,9 +470,9 @@ function _processPackagerLine(line: string) {
 
 async function _restartWatchmanAsync(projectRoot: string) {
   try {
-    let result = await spawnAsync('watchman', ['watch-del-all']);
-    await spawnAsync('watchman', ['shutdown-server']);
-    if (result.stdout.includes('roots')) {
+    let result = await spawnAsync('watchman', ['watch-del', projectRoot]);
+    await spawnAsync('watchman', ['watch-project', projectRoot]);
+    if (result.stdout.includes('root')) {
       logInfo(projectRoot, 'exponent', 'Restarted watchman.');
       return;
     }
