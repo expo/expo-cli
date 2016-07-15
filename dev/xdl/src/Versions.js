@@ -2,7 +2,10 @@
  * @flow
  */
 
+import _ from 'lodash';
 import semver from 'semver';
+
+import Api from './Api';
 
 export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
   if (!expJson.sdkVersion) {
@@ -22,4 +25,31 @@ export function parseSdkVersionFromTag(tag: string) {
   }
 
   return tag;
+}
+
+export async function facebookReactNativeVersionsAsync(): Promise<Array<string>> {
+  let sdkVersions = await Api.sdkVersionsAsync();
+  let facebookReactNativeVersions = new Set();
+
+  _.forEach(sdkVersions, (value) => {
+    if (value.facebookReactNativeVersion) {
+      facebookReactNativeVersions.add(value.facebookReactNativeVersion);
+    }
+  });
+
+  return Array.from(facebookReactNativeVersions);
+}
+
+export async function facebookReactNativeVersionToExponentVersionAsync(facebookReactNativeVersion: string): Promise<? string> {
+  let sdkVersions = await Api.sdkVersionsAsync();
+  let currentSdkVersion = null;
+
+  _.forEach(sdkVersions, (value, key) => {
+    if (value.facebookReactNativeVersion === facebookReactNativeVersion &&
+        (!currentSdkVersion || semver.gt(key, currentSdkVersion))) {
+      currentSdkVersion = key;
+    }
+  });
+
+  return currentSdkVersion;
 }
