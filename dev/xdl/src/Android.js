@@ -139,6 +139,10 @@ async function _uninstallExponentAsync() {
 }
 
 export async function upgradeExponentAsync() {
+  if (!(await _assertDeviceReadyAsync())) {
+    return;
+  }
+
   await _uninstallExponentAsync();
   await _installExponentAsync();
 
@@ -150,6 +154,20 @@ export async function upgradeExponentAsync() {
 }
 
 // Open Url
+async function _assertDeviceReadyAsync() {
+  if (!(await _isDeviceAttachedAsync())) {
+    Logger.global.error(`No Android device found. Please connect a device and enable USB debugging.`);
+    return false;
+  }
+
+  if (!(await _isDeviceAuthorizedAsync())) {
+    Logger.global.error(`This computer is not authorized to debug the device. Please allow USB debugging.`);
+    return false;
+  }
+
+  return true;
+}
+
 async function _openUrlAsync(url: string) {
   _lastUrl = url;
   _checkExponentUpToDateAsync(); // let this run in background
@@ -157,13 +175,7 @@ async function _openUrlAsync(url: string) {
 }
 
 export async function openUrlSafeAsync(url: string) {
-  if (!(await _isDeviceAttachedAsync())) {
-    Logger.global.error(`No Android device found. Please connect a device and enable USB debugging.`);
-    return;
-  }
-
-  if (!(await _isDeviceAuthorizedAsync())) {
-    Logger.global.error(`This computer is not authorized to debug the device. Please allow USB debugging.`);
+  if (!(await _assertDeviceReadyAsync())) {
     return;
   }
 

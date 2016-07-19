@@ -35,19 +35,25 @@ export async function _isSimulatorInstalledAsync() {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
   } catch (e) {
     console.error("Can't determine id of Simulator app; the Simulator is most likely not installed on this machine", e);
+    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
     return false;
   }
   if (result === 'com.apple.iphonesimulator') {
     return true;
   } else {
     console.warn("Simulator is installed but is identified as '" + result + "'; don't know what that is.");
+    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
     return false;
   }
 }
 
 // Simulator opened
 export async function _openSimulatorAsync() {
-  return await spawnAsync('open', ['-a', 'Simulator']);
+  if (!(await _isSimulatorRunningAsync())) {
+    Logger.global.info("Opening iOS simulator");
+    await spawnAsync('open', ['-a', 'Simulator']);
+    await _waitForSimulatorRunningAsync();
+  }
 }
 
 export async function _isSimulatorRunningAsync() {
@@ -193,7 +199,13 @@ export function _simulatorCacheDirectory() {
   return dir;
 }
 
-export async function upgradeExponentOnSimulatorAsync() {
+export async function upgradeExponentAsync() {
+  if (!(await _isSimulatorInstalledAsync())) {
+    return;
+  }
+
+  await _openSimulatorAsync();
+
   await _uninstallExponentAppFromSimulatorAsync();
   await _installExponentOnSimulatorAsync();
 
@@ -212,11 +224,7 @@ export async function _openUrlInSimulatorAsync(url: string) {
 }
 
 export async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url: string) {
-  if (!(await _isSimulatorRunningAsync())) {
-    Logger.global.info("Opening iOS simulator");
-    await _openSimulatorAsync();
-    await _waitForSimulatorRunningAsync();
-  }
+  await _openSimulatorAsync();
 
   if (!(await _isExponentAppInstalledOnCurrentBootedSimulatorAsync())) {
     await _installExponentOnSimulatorAsync();
@@ -229,7 +237,6 @@ export async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(
 
 export async function openUrlInSimulatorSafeAsync(url: string) {
   if (!(await _isSimulatorInstalledAsync())) {
-    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
     return;
   }
 
