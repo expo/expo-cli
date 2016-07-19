@@ -27,12 +27,12 @@ let binaryName;
 
 if (process.platform === 'darwin') {
   options = {
-    cwd: path.join(__dirname, '..', 'adb', 'osx'),
+    cwd: path.join(__dirname, '..', 'binaries', 'osx'),
   };
   binaryName = './adb';
 } else if (process.platform === 'win32') {
   options = {
-    cwd: path.join(__dirname, '..', 'adb', 'windows'),
+    cwd: path.join(__dirname, '..', 'binaries', 'windows'),
   };
   binaryName = '.\\adb.exe';
 }
@@ -41,21 +41,21 @@ export function isPlatformSupported() {
   return process.platform === 'darwin' || process.platform === 'win32';
 }
 
-async function _getAdbOutput(args) {
+async function _getAdbOutputAsync(args) {
   let result = await spawnAsync(binaryName, args, options);
   return result.stdout;
 }
 
 // Device attached
 async function _isDeviceAttachedAsync() {
-  let devices = await _getAdbOutput(['devices']);
+  let devices = await _getAdbOutputAsync(['devices']);
   let lines = _.trim(devices).split(/\r?\n/);
   // First line is "List of devices".
   return lines.length > 1;
 }
 
 async function _isDeviceAuthorizedAsync() {
-  let devices = await _getAdbOutput(['devices']);
+  let devices = await _getAdbOutputAsync(['devices']);
   let lines = _.trim(devices).split(/\r?\n/);
   lines.shift();
   let listOfDevicesWithoutFirstLine = lines.join('\n');
@@ -66,7 +66,7 @@ async function _isDeviceAuthorizedAsync() {
 
 // Exponent installed
 async function _isExponentInstalledAsync() {
-  let packages = await _getAdbOutput(['shell', 'pm', 'list', 'packages', '-f']);
+  let packages = await _getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
   let lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
@@ -83,7 +83,7 @@ async function _isExponentInstalledAsync() {
 }
 
 async function _exponentVersionAsync() {
-  let info = await _getAdbOutput(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
+  let info = await _getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
   let regex = /versionName\=([0-9\.]+)/;
   let regexMatch = regex.exec(info);
@@ -128,14 +128,14 @@ async function _installExponentAsync() {
   Logger.notifications.info({code: NotificationCode.START_LOADING});
   let path = await _downloadApkAsync();
   Logger.global.info(`Installing Exponent on device`);
-  let result = await _getAdbOutput(['install', path]);
+  let result = await _getAdbOutputAsync(['install', path]);
   Logger.notifications.info({code: NotificationCode.STOP_LOADING});
   return result;
 }
 
 async function _uninstallExponentAsync() {
   Logger.global.info('Uninstalling Exponent from Android device.');
-  return await _getAdbOutput(['uninstall', 'host.exp.exponent']);
+  return await _getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
 }
 
 export async function upgradeExponentAsync() {
@@ -144,7 +144,7 @@ export async function upgradeExponentAsync() {
 
   if (_lastUrl) {
     Logger.global.info(`Opening ${_lastUrl} in Exponent.`);
-    await _getAdbOutput(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', _lastUrl]);
+    await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', _lastUrl]);
     _lastUrl = null;
   }
 }
@@ -153,7 +153,7 @@ export async function upgradeExponentAsync() {
 async function _openUrlAsync(url: string) {
   _lastUrl = url;
   _checkExponentUpToDateAsync(); // let this run in background
-  return await _getAdbOutput(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url]);
+  return await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url]);
 }
 
 export async function openUrlSafeAsync(url: string) {
@@ -203,7 +203,7 @@ export async function stopAdbReverseAsync(projectRoot: string) {
 
 async function adbReverse(port: number) {
   try {
-    await _getAdbOutput(['reverse', `tcp:${port}`, `tcp:${port}`]);
+    await _getAdbOutputAsync(['reverse', `tcp:${port}`, `tcp:${port}`]);
     return true;
   } catch (e) {
     Logger.global.debug(`Couldn't adb reverse: ${e.toString()}`);
@@ -213,7 +213,7 @@ async function adbReverse(port: number) {
 
 async function adbReverseRemove(port: number) {
   try {
-    await _getAdbOutput(['reverse', '--remove', `tcp:${port}`]);
+    await _getAdbOutputAsync(['reverse', '--remove', `tcp:${port}`]);
     return true;
   } catch (e) {
     Logger.global.debug(`Couldn't adb reverse remove: ${e.toString()}`);

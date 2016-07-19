@@ -33,6 +33,7 @@ import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
 import * as User from './User';
 import * as Versions from './Versions';
+import * as Watchman from './Watchman';
 import XDLError from './XDLError';
 
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -496,7 +497,7 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   }
 
   // Fix watchman if it's being dumb
-  if (output.includes('watchman watch-del')) {
+  if (Watchman.isPlatformSupported() && output.includes('watchman watch-del')) {
     _restartWatchmanAsync(projectRoot);
     return;
   }
@@ -571,6 +572,8 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   _assertValidProjectRoot(projectRoot);
 
   await stopReactNativeServerAsync(projectRoot);
+
+  await Watchman.addToPathAsync();
 
   let packagerPort = await _getFreePortAsync(19001);
 
@@ -805,9 +808,13 @@ export async function stopExponentServerAsync(projectRoot: string) {
   });
 }
 
-async function _connectToNgrokAsync(projectRoot: string, args: mixed, ngrokPid: ?number, attempts: number = 0) {
+async function _connectToNgrokAsync(projectRoot: string, args: mixed, hostnameAsync: Function, ngrokPid: ?number, attempts: number = 0) {
   try {
-    let url = await ngrok.promise.connect(args);
+    let hostname = await hostnameAsync();
+    let url = await ngrok.promise.connect({
+      hostname,
+      ...args,
+    });
     return url;
   } catch (e) {
     // Attempt to connect 3 times
@@ -821,21 +828,26 @@ async function _connectToNgrokAsync(projectRoot: string, args: mixed, ngrokPid: 
 
     // Attempt to fix the issue
     if (e.error_code && e.error_code === 103) {
-      // Failed to start tunnel. Might be because url already bound to another session.
-      if (ngrokPid) {
-        try {
-          process.kill(ngrokPid, 'SIGKILL');
-        } catch (e) {
-          logDebug(projectRoot, 'exponent', `Couldn't kill ngrok with PID ${ngrokPid}`);
+      if (attempts === 0) {
+        // Failed to start tunnel. Might be because url already bound to another session.
+        if (ngrokPid) {
+          try {
+            process.kill(ngrokPid, 'SIGKILL');
+          } catch (e) {
+            logDebug(projectRoot, 'exponent', `Couldn't kill ngrok with PID ${ngrokPid}`);
+          }
+        } else {
+          await ngrok.promise.kill();
         }
       } else {
-        await ngrok.promise.kill();
+        // Change randomness to avoid conflict if killing ngrok didn't help
+        await Exp.resetProjectRandomnessAsync(projectRoot);
       }
     }
 
     // Wait 100ms and then try again
     await delayAsync(100);
-    return _connectToNgrokAsync(projectRoot, args, null, attempts + 1);
+    return _connectToNgrokAsync(projectRoot, args, hostnameAsync, null, attempts + 1);
   }
 }
 
@@ -863,24 +875,24 @@ export async function startTunnelsAsync(projectRoot: string) {
   if (!username) {
     username = await Exp.getLoggedOutPlaceholderUsernameAsync();
   }
-  let randomness = await Exp.getProjectRandomnessAsync(projectRoot);
-
-  let hostname = [randomness, UrlUtils.domainify(username), UrlUtils.domainify(packageShortName), Config.ngrok.domain].join('.');
-  let packagerHostname = `packager.${hostname}`;
 
   try {
     let exponentServerNgrokUrl = await _connectToNgrokAsync(projectRoot, {
-      hostname,
       authtoken: Config.ngrok.authToken,
       port: packagerInfo.exponentServerPort,
       proto: 'http',
+    }, async () => {
+      let randomness = await Exp.getProjectRandomnessAsync(projectRoot);
+      return [randomness, UrlUtils.domainify(username), UrlUtils.domainify(packageShortName), Config.ngrok.domain].join('.');
     }, packagerInfo.ngrokPid);
 
     let packagerNgrokUrl = await _connectToNgrokAsync(projectRoot, {
-      hostname: packagerHostname,
       authtoken: Config.ngrok.authToken,
       port: packagerInfo.packagerPort,
       proto: 'http',
+    }, async () => {
+      let randomness = await Exp.getProjectRandomnessAsync(projectRoot);
+      return ['packager', randomness, UrlUtils.domainify(username), UrlUtils.domainify(packageShortName), Config.ngrok.domain].join('.');
     }, packagerInfo.ngrokPid);
 
     await ProjectSettings.setPackagerInfoAsync(projectRoot, {

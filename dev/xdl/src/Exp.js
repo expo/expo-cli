@@ -326,10 +326,16 @@ export async function sendAsync(recipient: string, url_: string) {
 export async function getProjectRandomnessAsync(projectRoot: string) {
   let ps = await ProjectSettings.readAsync(projectRoot);
   let randomness = ps.urlRandomness;
-  if (!randomness) {
-    randomness = UrlUtils.someRandomness();
-    ProjectSettings.setAsync(projectRoot, {'urlRandomness': randomness});
+  if (randomness) {
+    return randomness;
+  } else {
+    return resetProjectRandomnessAsync(projectRoot);
   }
+}
+
+export async function resetProjectRandomnessAsync(projectRoot: string) {
+  let randomness = UrlUtils.someRandomness();
+  ProjectSettings.setAsync(projectRoot, {'urlRandomness': randomness});
   return randomness;
 }
 
