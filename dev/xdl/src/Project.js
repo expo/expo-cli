@@ -819,7 +819,7 @@ async function _connectToNgrokAsync(projectRoot: string, args: mixed, hostnameAs
   } catch (e) {
     // Attempt to connect 3 times
     if (attempts >= 2) {
-      throw new Error(JSON.stringify(e));
+      throw new XDLError(ErrorCode.NGROK_ERROR, JSON.stringify(e));
     }
 
     if (!attempts) {

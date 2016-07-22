@@ -6,13 +6,14 @@ import mkdirp from 'mkdirp';
 import ncp from 'ncp';
 import spawnAsync from '@exponent/spawn-async';
 import path from 'path';
-import runas from 'runas';
 
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
+
+let runas; // Crashes on windows, so load this lazily
 
 const SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
@@ -40,7 +41,8 @@ function _assertPlatformSupported() {
 async function _binaryExistsAsync(name) {
   try {
     let result = await spawnAsync('which', [name]);
-    return (result.stdout && result.stdout.length > 1);
+    // We add watchman to PATH when starting packager, so make sure we're not using that version
+    return (result.stdout && result.stdout.length > 1 && !result.stdout.includes(SOURCE_PATH));
   } catch (e) {
     console.log(e.toString());
     return false;
@@ -60,6 +62,9 @@ async function _installBinaryAsync(name) {
   }
 
   try {
+    if (!runas) {
+      runas = require('runas');
+    }
     let result = runas('/bin/ln', ['-s', path.join(_exponentBinaryDirectory(), name), path.join(INSTALL_PATH, name)], {
       admin: true,
     });

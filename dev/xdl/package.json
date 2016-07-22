@@ -1,11 +1,11 @@
 {
   "name": "xdl",
-  "version": "0.9.0",
+  "version": "0.10.2",
   "description": "The Exponent Development Library",
   "main": "build/xdl.js",
   "files": [
     "build",
-    "adb"
+    "binaries"
   ],
   "scripts": {
     "build": "gulp build",
