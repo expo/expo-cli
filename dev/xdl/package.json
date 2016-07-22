@@ -1,6 +1,6 @@
 {
   "name": "xdl",
-  "version": "0.10.2",
+  "version": "0.10.4",
   "description": "The Exponent Development Library",
   "main": "build/xdl.js",
   "files": [
@@ -51,7 +51,6 @@
     "ngrok": "github:exponentjs/ngrok#v1.1.0",
     "promise-props": "^1.0.0",
     "request": "^2.69.0",
-    "runas": "^3.1.1",
     "semver": "^5.1.1",
     "slugid": "^1.1.0",
     "source-map-support": "^0.4.1",
@@ -59,6 +58,9 @@
     "tar.gz": "^1.0.5",
     "tree-kill": "^1.1.0",
     "url": "^0.11.0"
+  },
+  "optionalDependencies": {
+    "runas": "^3.1.1"
   },
   "devDependencies": {
     "babel-cli": "^6.9.0",
