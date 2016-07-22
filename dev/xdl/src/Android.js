@@ -35,10 +35,15 @@ if (process.platform === 'darwin') {
     cwd: path.join(__dirname, '..', 'binaries', 'windows'),
   };
   binaryName = '.\\adb.exe';
+} else if (process.platform === 'linux') {
+  options = {
+    cwd: path.join(__dirname, '..', 'binaries', 'linux'),
+  };
+  binaryName = './adb';
 }
 
 export function isPlatformSupported() {
-  return process.platform === 'darwin' || process.platform === 'win32';
+  return process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux';
 }
 
 async function _getAdbOutputAsync(args) {
