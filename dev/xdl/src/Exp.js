@@ -103,6 +103,8 @@ export async function createNewExpAsync(selectedDir: string, extraPackageJsonFie
     name: joi.string().required(),
   });
 
+  // Should we validate that name is a valid name here?
+
   try {
     await joi.promise.validate(opts, schema);
   } catch (e) {
