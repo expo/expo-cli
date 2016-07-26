@@ -22,7 +22,7 @@ export default (program: any) => {
     .command('build:android [project-dir]')
     .alias('bi')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
-    .description('Build a standalone APK for your project, signed and ready for submission to the Apple App Store.')
+    .description('Build a standalone APK for your project, signed and ready for submission to the Google Play Store.')
     .asyncActionProjectDir((projectDir, options) => {
       const androidBuilder = new AndroidBuilder(projectDir, options);
       return androidBuilder.command();
