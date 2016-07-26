@@ -164,7 +164,7 @@ export default class BaseBuilder {
 
       log('Successfully built standalone app!');
     } else {
-      log('Build successfully started. Run "exp build" again to see status.');
+      log('Build successfully started, it may take a few minutes to complete. Run "exp build:status" to monitor it.');
     }
   }
 }
