@@ -23,6 +23,7 @@ export { default as Logger } from './Logger';
 export { default as NotificationCode } from './NotificationCode';
 export * as Project from './Project';
 export * as ProjectSettings from './ProjectSettings';
+export * as ProjectUtils from './project/ProjectUtils';
 export * as Simulator from './Simulator';
 export * as UrlUtils from './UrlUtils';
 export * as User from './User';

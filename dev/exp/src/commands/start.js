@@ -1,5 +1,6 @@
 import {
   Project,
+  ProjectUtils,
   UrlUtils,
 } from 'xdl';
 
@@ -112,7 +113,7 @@ async function action(projectDir, options) {
 
   try {
     await Project.startAsync(root, startOpts);
-    Project.attachLoggerStream(root, {
+    ProjectUtils.attachLoggerStream(root, {
       stream: {
         write: (chunk) => {
           console.log(chunk.msg);

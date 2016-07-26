@@ -21,7 +21,7 @@ export async function constructManifestUrlAsync(projectRoot: string, opts: any) 
   return constructUrlAsync(projectRoot, opts, false);
 }
 
-export async function constructUrlWithExtensionAsync(projectRoot, entryPoint, ext) {
+export async function constructUrlWithExtensionAsync(projectRoot: string, entryPoint: string, ext: string) {
   let bundleUrl = await constructBundleUrlAsync(projectRoot, {
     hostType: 'localhost',
     urlType: 'http',
@@ -30,17 +30,17 @@ export async function constructUrlWithExtensionAsync(projectRoot, entryPoint, ex
   let mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
-  return bundleUrl + '?' + constructBundleQueryParams({
+  return `${bundleUrl}?${constructBundleQueryParams({
     dev: false,
     minify: true,
-  });
+  })}`;
 }
 
-export async function constructPublishUrlAsync(projectRoot, entryPoint) {
+export async function constructPublishUrlAsync(projectRoot: string, entryPoint: string) {
   return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'bundle');
 }
 
-export async function constructAssetsUrlAsync(projectRoot, entryPoint) {
+export async function constructAssetsUrlAsync(projectRoot: string, entryPoint: string) {
   return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'assets');
 }
 
@@ -51,14 +51,14 @@ export async function constructDebuggerHostAsync(projectRoot: string) {
 }
 
 export function constructBundleQueryParams(opts: any) {
-  let queryParams = 'dev=' + encodeURIComponent(!!opts.dev);
+  let queryParams = `dev=${encodeURIComponent(!!opts.dev)}`;
 
   if (opts.hasOwnProperty('strict')) {
-    queryParams += '&strict=' + encodeURIComponent(!!opts.strict);
+    queryParams += `&strict=${encodeURIComponent(!!opts.strict)}`;
   }
 
   if (opts.hasOwnProperty('minify')) {
-    queryParams += '&minify=' + encodeURIComponent(!!opts.minify);
+    queryParams += `&minify=${encodeURIComponent(!!opts.minify)}`;
   }
 
   queryParams += '&hot=false&includeAssetFileHashes=true';
@@ -128,7 +128,7 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
 
   let url_ = '';
   if (protocol) {
-    url_ += protocol + '://';
+    url_ += `${protocol}://`;
   }
 
   if (!hostname) {
@@ -138,24 +138,16 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
   url_ += hostname;
 
   if (port) {
-    url_ += ':' + port;
+    url_ += `:${port}`;
   } else {
     url_ += ':80'; // DUMB BUG FIX!!!! Old RN needs a port number
   }
 
   if (opts.urlType === 'redirect') {
-    return 'https://exp.host/--/to-exp/' + encodeURIComponent(url_);
+    return `https://exp.host/--/to-exp/${encodeURIComponent(url_)}`;
   }
 
   return url_;
-}
-
-export function expUrlFromHttpUrl(url_: string) {
-  return ('' + url_).replace(/^http(s?)/, 'exp');
-}
-
-export function httpUrlFromExpUrl(url_: string) {
-  return ('' + url_).replace(/^exp(s?)/, 'http');
 }
 
 export function guessMainModulePath(entryPoint: string) {
@@ -174,16 +166,11 @@ export function randomIdentifier(length: number = 6) {
 }
 
 export function sevenDigitIdentifier() {
-  return randomIdentifier(3) + '-' + randomIdentifier(4);
+  return `${randomIdentifier(3)}-${randomIdentifier(4)}`;
 }
 
 export function randomIdentifierForUser(username: string) {
-  return username + '-' + randomIdentifier(3) + '-' + randomIdentifier(2);
-}
-
-export function randomIdentifierForLoggedOutUser() {
-  // TODO: Disallow usernames that start with `00-`
-  return '00-' + sevenDigitIdentifier();
+  return `${username}-${randomIdentifier(3)}-${randomIdentifier(2)}`;
 }
 
 export function someRandomness() {

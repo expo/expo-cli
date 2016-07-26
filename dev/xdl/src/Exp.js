@@ -338,12 +338,3 @@ export async function resetProjectRandomnessAsync(projectRoot: string) {
   ProjectSettings.setAsync(projectRoot, {'urlRandomness': randomness});
   return randomness;
 }
-
-export async function getLoggedOutPlaceholderUsernameAsync() {
-  let lpu = await UserSettings.getAsync('loggedOutPlaceholderUsername', null);
-  if (!lpu) {
-    lpu = UrlUtils.randomIdentifierForLoggedOutUser();
-    await UserSettings.setAsync('loggedOutPlaceholderUsername', lpu);
-  }
-  return lpu;
-}

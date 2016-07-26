@@ -23,5 +23,9 @@ export async function addToPathAsync() {
     // Add our copy of watchman to path
   }
 
+  if (!process.env.PATH) {
+    process.env.PATH = '';
+  }
+
   process.env.PATH = `${process.env.PATH}:${path.join(__dirname, '..', 'binaries', 'osx')}`;
 }
