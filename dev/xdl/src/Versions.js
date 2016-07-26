@@ -45,7 +45,8 @@ export async function facebookReactNativeVersionToExponentVersionAsync(facebookR
   let currentSdkVersion = null;
 
   _.forEach(sdkVersions, (value, key) => {
-    if (value.facebookReactNativeVersion === facebookReactNativeVersion &&
+    if (semver.major(value.facebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
+        semver.minor(value.facebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
         (!currentSdkVersion || semver.gt(key, currentSdkVersion))) {
       currentSdkVersion = key;
     }

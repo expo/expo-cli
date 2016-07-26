@@ -46,6 +46,11 @@ describe('facebookReactNativeVersionToExponentVersionAsync', () => {
     expect(exponentVersion).toEqual('7.0.0');
   });
 
+  pit('ignores patch version', async () => {
+    let exponentVersion = await Versions.facebookReactNativeVersionToExponentVersionAsync('0.27.3');
+    expect(exponentVersion).toEqual('7.0.0');
+  });
+
   pit('returns null when no matching version exists', async () => {
     let exponentVersion = await Versions.facebookReactNativeVersionToExponentVersionAsync('0.23.0');
     expect(exponentVersion).toEqual(null);

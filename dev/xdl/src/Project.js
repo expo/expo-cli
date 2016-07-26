@@ -713,10 +713,11 @@ export async function startTunnelsAsync(projectRoot: string) {
     ProjectUtils.logInfo(projectRoot, 'exponent', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.');
   }
 
-  let username = await User.getUsernameAsync();
-  if (!username) {
+  let optUsername = await User.getUsernameAsync();
+  if (!optUsername) {
     throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
   }
+  let username = optUsername; // For Flow bug
 
   let packageShortName = path.parse(projectRoot).base;
 
