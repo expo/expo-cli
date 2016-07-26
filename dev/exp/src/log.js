@@ -13,7 +13,7 @@ log.error = function error() {
   if (log.config.raw) {
     return;
   }
-  var prefix = crayon.red("[") + crayon.gray('exp') + crayon.red("]") + crayon.red.bold(" Error:");
+  var prefix = crayon.red("[") + crayon.gray('exp') + crayon.red("]");
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0).map((x) => crayon.red(x)));
   console.error(...args);
 };

@@ -10,42 +10,42 @@ import Config from '../Config';
 import * as ProjectUtils from './ProjectUtils';
 import * as Versions from '../Versions';
 
-export async function validateAsync(projectRoot: string) {
+export async function validateAsync(projectRoot: string): Promise<boolean> {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
   if (!exp || !pkg) {
     // readConfigJsonAsync already logged an error
-    return;
+    return false;
   }
 
   // sdkVersion is necessary
   if (!exp.sdkVersion) {
     ProjectUtils.logError(projectRoot, 'exponent', `Error: Can't find key exp.sdkVersion in exp.json or package.json. See https://docs.getexponent.com/`);
-    return;
+    return false;
   }
 
   // Warn if sdkVersion is UNVERSIONED
   let sdkVersion = exp.sdkVersion;
   if (sdkVersion === 'UNVERSIONED') {
     ProjectUtils.logError(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in exp.json`);
-    return;
+    return false;
   }
 
   // react-native is required
   if (!pkg.dependencies || !pkg.dependencies['react-native']) {
     ProjectUtils.logError(projectRoot, 'exponent', `Error: Can't find react-native in package.json dependencies`);
-    return;
+    return false;
   }
 
   let sdkVersions = await Api.sdkVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(projectRoot, 'exponent', `Error: Couldn't connect to server`);
-    return;
+    return false;
   }
 
   if (!sdkVersions[sdkVersion]) {
     ProjectUtils.logError(projectRoot, 'exponent', `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`);
-    return;
+    return false;
   }
 
   if (Config.validation.reactNativeVersionWarnings) {
@@ -54,7 +54,7 @@ export async function validateAsync(projectRoot: string) {
     // Exponent fork of react-native is required
     if (!reactNative.includes('exponentjs/react-native#')) {
       ProjectUtils.logError(projectRoot, 'exponent', `Error: Must use the Exponent fork of react-native. See https://getexponent.com/help`);
-      return;
+      return false;
     }
 
     let reactNativeTag = reactNative.substring(reactNative.lastIndexOf('#') + 1);
@@ -63,9 +63,11 @@ export async function validateAsync(projectRoot: string) {
     if (semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
         semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['exponentReactNativeTag']))) {
       ProjectUtils.logError(projectRoot, 'exponent', `Error: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
-      return;
+      return false;
     }
   }
 
   // TODO: Check any native module versions here
+
+  return true;
 }

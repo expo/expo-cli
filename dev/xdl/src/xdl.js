@@ -15,6 +15,7 @@ export { default as Api } from './Api';
 export * as Binaries from './Binaries';
 export { default as Config } from './Config';
 export * as Credentials from './Credentials';
+export * as Doctor from './project/Doctor';
 export * as Env from './Env';
 export { default as ErrorCode } from './ErrorCode';
 export * as Exp from './Exp';
