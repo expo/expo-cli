@@ -52,7 +52,7 @@ export async function validateAsync(projectRoot: string): Promise<boolean> {
     let reactNative = pkg.dependencies['react-native'];
 
     // Exponent fork of react-native is required
-    if (!reactNative.includes('exponentjs/react-native#')) {
+    if (!reactNative.match(/exponentjs\/react-native/)) {
       ProjectUtils.logError(projectRoot, 'exponent', `Error: Must use the Exponent fork of react-native. See https://getexponent.com/help`);
       return false;
     }
