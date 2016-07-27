@@ -6,6 +6,8 @@ import _ from 'lodash';
 import semver from 'semver';
 
 import Api from './Api';
+import ErrorCode from './ErrorCode';
+import XDLError from './XDLError';
 
 export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
   if (!expJson.sdkVersion) {
@@ -16,7 +18,11 @@ export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
     return true;
   }
 
-  return semver.gte(expJson.sdkVersion, sdkVersion);
+  try {
+    return semver.gte(expJson.sdkVersion, sdkVersion);
+  } catch (e) {
+    throw new XDLError(ErrorCode.INVALID_VERSION, `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
+  }
 }
 
 export function parseSdkVersionFromTag(tag: string) {
@@ -41,6 +47,10 @@ export async function facebookReactNativeVersionsAsync(): Promise<Array<string>>
 }
 
 export async function facebookReactNativeVersionToExponentVersionAsync(facebookReactNativeVersion: string): Promise<? string> {
+  if (!semver.valid(facebookReactNativeVersion)) {
+    throw new XDLError(ErrorCode.INVALID_VERSION, `${facebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`);
+  }
+
   let sdkVersions = await Api.sdkVersionsAsync();
   let currentSdkVersion = null;
 

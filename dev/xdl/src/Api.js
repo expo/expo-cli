@@ -123,23 +123,4 @@ export default class ApiClient {
     let versions = await ApiClient.versionsAsync();
     return versions.sdkVersions;
   }
-
-  // Gets most recent SDK version. Ensures optField is in SDK version if it is provided
-  static async currentSDKVersionAsync(optField) {
-    let sdkVersions = await ApiClient.sdkVersionsAsync();
-    let currentSDKVersion = null;
-
-    _.forEach(sdkVersions, (value, key) => {
-      if ((!currentSDKVersion || semver.gt(key, currentSDKVersion)) &&
-          (!optField || value[optField])) {
-        currentSDKVersion = key;
-      }
-    });
-
-    if (!currentSDKVersion) {
-      throw new XDLError(ErrorCode.NO_SDK_VERSION, 'No SDK version found');
-    }
-
-    return sdkVersions[currentSDKVersion];
-  }
 }

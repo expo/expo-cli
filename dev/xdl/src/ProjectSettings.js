@@ -22,7 +22,7 @@ let projectSettingsDefaults = {
 };
 let packagerInfoFile = 'packager-info.json';
 
-export function projectSettingsJsonFile(projectRoot: string, filename: string) {
+function projectSettingsJsonFile(projectRoot: string, filename: string) {
   return new JsonFile(path.join(dotExponentProjectDirectory(projectRoot), filename));
 }
 
@@ -44,15 +44,27 @@ export async function readAsync(projectRoot: string) {
 }
 
 export async function setAsync(projectRoot: string, json: any) {
-  return await projectSettingsJsonFile(projectRoot, projectSettingsFile).mergeAsync(json, {cantReadFileDefault: projectSettingsDefaults});
+  try {
+    return await projectSettingsJsonFile(projectRoot, projectSettingsFile).mergeAsync(json, {cantReadFileDefault: projectSettingsDefaults});
+  } catch (e) {
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).writeAsync(_.defaults(json, projectSettingsDefaults));
+  }
 }
 
 export async function readPackagerInfoAsync(projectRoot: string) {
-  return await projectSettingsJsonFile(projectRoot, packagerInfoFile).readAsync({cantReadFileDefault: {}});
+  try {
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).readAsync({cantReadFileDefault: {}});
+  } catch (e) {
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).writeAsync({});
+  }
 }
 
 export async function setPackagerInfoAsync(projectRoot: string, json: any) {
-  return await projectSettingsJsonFile(projectRoot, packagerInfoFile).mergeAsync(json, {cantReadFileDefault: {}});
+  try {
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).mergeAsync(json, {cantReadFileDefault: {}});
+  } catch (e) {
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).writeAsync(json);
+  }
 }
 
 export function dotExponentProjectDirectory(projectRoot: string) {

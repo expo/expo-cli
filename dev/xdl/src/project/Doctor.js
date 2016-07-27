@@ -65,10 +65,15 @@ async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>
 
     let reactNativeTag = reactNative.substring(reactNative.lastIndexOf('#') + 1);
     let sdkVersionObject = sdkVersions[sdkVersion];
-    // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
-    if (semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['exponentReactNativeTag']))) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
+    try {
+      // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
+      if (semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
+          semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['exponentReactNativeTag']))) {
+        ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
+        return WARNING;
+      }
+    } catch (e) {
+      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`);
       return WARNING;
     }
   }
@@ -112,9 +117,16 @@ export async function validateAsync(projectRoot: string): Promise<number> {
     status = newStatus;
   }
 
-  newStatus = await _validateNodeModulesAsync(projectRoot);
-  if (newStatus > status) {
-    status = newStatus;
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  if (!exp) {
+    exp = {};
+  }
+
+  if (!exp.ignoreNodeModulesValidation) {
+    newStatus = await _validateNodeModulesAsync(projectRoot);
+    if (newStatus > status) {
+      status = newStatus;
+    }
   }
 
   return status;

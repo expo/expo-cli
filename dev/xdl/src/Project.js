@@ -532,7 +532,7 @@ export async function startExponentServerAsync(projectRoot: string) {
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
   if (await Doctor.validateAsync(projectRoot) === Doctor.FATAL) {
-    throw new Error(`Couldn't start project. Please fix the above issues and click the Restart button.`);
+    throw new Error(`Couldn't start project. Please fix the above issues and restart the project.`);
   }
 
   // Serve the manifest.
