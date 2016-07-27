@@ -23,7 +23,7 @@ async function action(projectDir) {
     type: 'raw',
   });
 
-  if (await Doctor.validateAsync(projectDir)) {
+  if (await Doctor.validateAsync(projectDir) === Doctor.NO_ISSUES) {
     log(`Didn't find any issues with your project!`);
   }
 }

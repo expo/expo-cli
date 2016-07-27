@@ -525,19 +525,15 @@ export async function startExponentServerAsync(projectRoot: string) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (!exp || !pkg) {
-    // TODO: actually say the correct file name when readConfigJsonAsync is simpler
-    throw new Error('Error with package.json or exp.json');
-  }
-
   await stopExponentServerAsync(projectRoot);
 
   let app = express();
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
-  Doctor.validateAsync(projectRoot);
+  if (await Doctor.validateAsync(projectRoot) === Doctor.FATAL) {
+    throw new Error(`Couldn't start project. Please fix the above issues and click the Restart button.`);
+  }
 
   // Serve the manifest.
   let manifestHandler = async (req, res) => {

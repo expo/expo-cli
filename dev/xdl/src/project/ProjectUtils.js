@@ -64,6 +64,20 @@ export function logError(projectRoot: string, tag: string, message: string) {
   });
 }
 
+export function logWarning(projectRoot: string, tag: string, message: string) {
+  _getLogger(projectRoot).warn({tag}, message.toString());
+
+  let truncatedMessage = message.toString();
+  if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
+    truncatedMessage = truncatedMessage.substring(0, MAX_MESSAGE_LENGTH);
+  }
+  Analytics.logEvent('Project Warning', {
+    projectRoot,
+    tag,
+    message: truncatedMessage,
+  });
+}
+
 export function attachLoggerStream(projectRoot: string, stream: any) {
   _getLogger(projectRoot).addStream(stream);
 }
