@@ -2,8 +2,11 @@
  * @flow
  */
 
+import 'instapromise';
+
 import _ from 'lodash';
 import fs from 'fs';
+import joi from 'joi';
 import path from 'path';
 import semver from 'semver';
 
@@ -24,9 +27,59 @@ async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>
     return FATAL;
   }
 
-  // sdkVersion is necessary
-  if (!exp.sdkVersion) {
-    ProjectUtils.logError(projectRoot, 'exponent', `Error: Can't find key exp.sdkVersion in exp.json or package.json. See https://docs.getexponent.com/`);
+  let colorField = joi.string().regex(/^#|(&#x23;)\d{6}$/);
+  let schema = joi.object().keys({
+    name: joi.string().required(),
+    description: joi.string(),
+    slug: joi.string().regex(/^[a-zA-Z0-9\-]+$/).required(),
+    sdkVersion: joi.string().regex(/^(\d+\.\d+\.\d+)|(UNVERSIONED)$/).required(),
+    version: joi.string(),
+    orientation: joi.any().valid('default', 'portrait', 'landscape'),
+    primaryColor: colorField,
+    iconUrl: joi.string().uri(),
+    notification: joi.object().keys({
+      iconUrl: joi.string().uri(),
+      color: colorField,
+      androidMode: joi.any().valid('default', 'collapse'),
+      androidCollapsedTitle: joi.string(),
+    }),
+    loading: joi.object().keys({
+      iconUrl: joi.string().uri(),
+      exponentIconColor: colorField,
+      exponentIconGrayscale: joi.number().min(0).max(1),
+      backgroundImageUrl: joi.string().uri(),
+      backgroundColor: colorField,
+    }),
+    appKey: joi.string(),
+    androidStatusBarColor: colorField,
+    scheme: joi.string().alphanum(),
+
+    entryPoint: joi.string(),
+    rnCliPath: joi.string(),
+    packagerOpts: joi.object(),
+    ignoreNodeModulesValidation: joi.boolean(),
+
+    ios: joi.object().keys({
+      bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\_\.]+$/),
+      permissions: joi.object().keys({
+        remoteNotifications: joi.boolean(),
+      }),
+    }),
+    android: joi.object().keys({
+      package: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\_\.]+$/),
+      config: joi.object().keys({
+        fabric: joi.object().keys({
+          apiKey: joi.string().alphanum(),
+          buildSecret: joi.string().alphanum(),
+        }),
+      }),
+    }),
+  });
+
+  try {
+    await joi.promise.validate(exp, schema);
+  } catch (e) {
+    ProjectUtils.logError(projectRoot, 'exponent', `Error: Problem in exp.json. ${e.message}. See ${Config.helpUrl}.`);
     return FATAL;
   }
 
@@ -59,7 +112,7 @@ async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>
 
     // Exponent fork of react-native is required
     if (!reactNative.match(/exponentjs\/react-native/)) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Not using the Exponent fork of react-native. See https://getexponent.com/help`);
+      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Not using the Exponent fork of react-native. See ${Config.helpUrl}.`);
       return WARNING;
     }
 

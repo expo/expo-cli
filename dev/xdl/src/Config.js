@@ -31,4 +31,5 @@ export default {
   validation: {
     reactNativeVersionWarnings: true,
   },
+  helpUrl: 'https://docs.getexponent.com/',
 };

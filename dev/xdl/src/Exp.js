@@ -273,11 +273,11 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   }
 
   if (!exp || !exp.sdkVersion) {
-    throw new Error(`exp.sdkVersion is missing from package.json file`);
+    throw new Error(`sdkVersion is missing from exp.json`);
   }
 
   if (!name) {
-    throw new Error(`Can't get name of package.`);
+    throw new Error(`slug field is missing from exp.json`);
   }
 
   if (!version) {

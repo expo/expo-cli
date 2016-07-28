@@ -110,7 +110,7 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   // Grab our exp config from package.json (legacy) or exp.json
   if (!exp && pkg.exp) {
     exp = pkg.exp;
-    logError(projectRoot, 'exponent', `Deprecation Warning: Move your "exp" config from package.json to exp.json.`);
+    logError(projectRoot, 'exponent', `Error: Move your "exp" config from package.json to exp.json.`);
   } else if (!exp && !pkg.exp) {
     logError(projectRoot, 'exponent', `Error: Missing exp.json. See https://docs.getexponent.com/`);
     return { exp: null, pkg: null };
