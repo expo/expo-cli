@@ -12,7 +12,7 @@ import semver from 'semver';
 
 import Api from '../Api';
 import Config from '../Config';
-import ExpSchema from '../ExpSchema';
+import ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
 import * as Versions from '../Versions';
 
