@@ -13,6 +13,7 @@ import path from 'path';
 import semver from 'semver';
 
 import * as Analytics from './Analytics';
+import * as Binaries from './Binaries';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
@@ -22,32 +23,13 @@ import * as UrlUtils from './UrlUtils';
 
 let _lastUrl = null;
 
-let options;
-let binaryName;
-
-if (process.platform === 'darwin') {
-  options = {
-    cwd: path.join(__dirname, '..', 'binaries', 'osx'),
-  };
-  binaryName = './adb';
-} else if (process.platform === 'win32') {
-  options = {
-    cwd: path.join(__dirname, '..', 'binaries', 'windows'),
-  };
-  binaryName = '.\\adb.exe';
-} else if (process.platform === 'linux') {
-  options = {
-    cwd: path.join(__dirname, '..', 'binaries', 'linux'),
-  };
-  binaryName = './adb';
-}
-
 export function isPlatformSupported() {
   return process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux';
 }
 
 async function _getAdbOutputAsync(args) {
-  let result = await spawnAsync(binaryName, args, options);
+  await Binaries.addToPathAsync('adb');
+  let result = await spawnAsync('adb', args);
   return result.stdout;
 }
 

@@ -2,6 +2,7 @@
  * @flow
  */
 
+import hasbin from 'hasbin';
 import mkdirp from 'mkdirp';
 import ncp from 'ncp';
 import spawnAsync from '@exponent/spawn-async';
@@ -30,15 +31,15 @@ function _ncpAsync(source, dest) {
   });
 }
 
-function _assertPlatformSupported() {
-  if (process.platform === 'darwin') {
-    return;
-  }
-
-  throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
+function _hasbinAsync(name) {
+  return new Promise((resolve, reject) => {
+    hasbin(name, (result) => {
+      resolve(result);
+    });
+  });
 }
 
-async function _binaryExistsAsync(name) {
+async function _binaryInstalledAsync(name) {
   try {
     let result = await spawnAsync('which', [name]);
     // We add watchman to PATH when starting packager, so make sure we're not using that version
@@ -57,7 +58,7 @@ function _exponentBinaryDirectory() {
 }
 
 async function _installBinaryAsync(name) {
-  if (await _binaryExistsAsync(name)) {
+  if (await _binaryInstalledAsync(name)) {
     return false;
   }
 
@@ -76,7 +77,9 @@ async function _installBinaryAsync(name) {
 }
 
 export async function installShellCommandsAsync() {
-  _assertPlatformSupported();
+  if (process.platform !== 'darwin') {
+    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
+  }
 
   await _ncpAsync(SOURCE_PATH, _exponentBinaryDirectory());
 
@@ -93,4 +96,28 @@ export async function installShellCommandsAsync() {
   } else {
     Logger.notifications.info({code: NotificationCode.INSTALL_SHELL_COMMANDS_RESULT}, `Installed ${installedBinaries.join(', ')} to your shell`);
   }
+}
+
+export async function addToPathAsync(name: string) {
+  if (await _hasbinAsync(name)) {
+    return;
+  }
+
+  if (!process.env.PATH) {
+    process.env.PATH = '';
+  }
+
+  let binariesPath;
+  if (process.platform === 'darwin') {
+    binariesPath = path.join(__dirname, '..', 'binaries', 'osx');
+  } else if (process.platform === 'win32') {
+    binariesPath = path.join(__dirname, '..', 'binaries', 'windows');
+  } else if (process.platform === 'linux') {
+    binariesPath = path.join(__dirname, '..', 'binaries', 'linux');
+  } else {
+    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
+  }
+
+  let delimiter = process.platform === 'win32' ? ';' : ':';
+  process.env.PATH = `${process.env.PATH}${delimiter}${binariesPath}`;
 }

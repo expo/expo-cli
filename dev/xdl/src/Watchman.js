@@ -2,8 +2,7 @@
  * @flow
  */
 
-import spawnAsync from '@exponent/spawn-async';
-import path from 'path';
+import * as Binaries from './Binaries';
 
 export function isPlatformSupported() {
   return process.platform === 'darwin';
@@ -14,18 +13,5 @@ export async function addToPathAsync() {
     return;
   }
 
-  try {
-    let result = await spawnAsync('watchman', ['version']);
-    if (result.stdout && result.stdout.length > 0) {
-      return;
-    }
-  } catch (e) {
-    // Add our copy of watchman to path
-  }
-
-  if (!process.env.PATH) {
-    process.env.PATH = '';
-  }
-
-  process.env.PATH = `${process.env.PATH}:${path.join(__dirname, '..', 'binaries', 'osx')}`;
+  await Binaries.addToPathAsync('watchman');
 }
