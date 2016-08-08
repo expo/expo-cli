@@ -13,5 +13,6 @@ export async function addToPathAsync() {
     return;
   }
 
+  process.env.DYLD_LIBRARY_PATH = Binaries.OSX_SOURCE_PATH;
   await Binaries.addToPathAsync('watchman');
 }

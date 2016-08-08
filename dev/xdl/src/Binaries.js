@@ -16,7 +16,7 @@ import XDLError from './XDLError';
 
 let runas; // Crashes on windows, so load this lazily
 
-const SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
+export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
 
 function _ncpAsync(source, dest) {
@@ -43,7 +43,7 @@ async function _binaryInstalledAsync(name) {
   try {
     let result = await spawnAsync('which', [name]);
     // We add watchman to PATH when starting packager, so make sure we're not using that version
-    return (result.stdout && result.stdout.length > 1 && !result.stdout.includes(SOURCE_PATH));
+    return (result.stdout && result.stdout.length > 1 && !result.stdout.includes(OSX_SOURCE_PATH));
   } catch (e) {
     console.log(e.toString());
     return false;
@@ -82,7 +82,7 @@ export async function installShellCommandsAsync() {
     throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
   }
 
-  await _ncpAsync(SOURCE_PATH, _exponentBinaryDirectory());
+  await _ncpAsync(OSX_SOURCE_PATH, _exponentBinaryDirectory());
 
   let binaries = ['adb', 'watchman'];
   let installedBinaries = [];
