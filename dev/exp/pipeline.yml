@@ -1,0 +1,12 @@
+config:
+  name: Exp CLI
+  shortname: exp
+  description: 'Exponent command line tool'
+  depends_on:
+    - xdl
+  regions:
+    - dev/exp/**
+
+steps:
+  - name: 'Build EXP'
+    command: sleep 0

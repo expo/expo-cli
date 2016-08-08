@@ -1,0 +1,12 @@
+config:
+  name: XDL
+  shortname: xdl
+  description: 'Exponent Development Library'
+  depends_on:
+    - xdl
+  regions:
+    - dev/xdl/**
+
+steps:
+  - name: 'Build XDL'
+    command: sleep 0
