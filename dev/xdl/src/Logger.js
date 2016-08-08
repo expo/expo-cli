@@ -20,5 +20,9 @@ let logger = bunyan.createLogger({
 
 logger.notifications = logger.child({type: 'notifications'});
 logger.global = logger.child({type: 'global'});
+logger.DEBUG = bunyan.DEBUG;
+logger.INFO = bunyan.INFO;
+logger.WARN = bunyan.WARN;
+logger.ERROR = bunyan.ERROR;
 
 export default logger;

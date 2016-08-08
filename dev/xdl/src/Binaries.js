@@ -72,7 +72,8 @@ async function _installBinaryAsync(name) {
 
     return result === 0;
   } catch (e) {
-    return false;
+    Logger.notifications.error({code: NotificationCode.INSTALL_SHELL_COMMANDS_RESULT}, `Error installing ${name}: ${e.message}`);
+    throw e;
   }
 }
 
