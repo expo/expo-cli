@@ -11,6 +11,7 @@ export function boot(user_id, otherData) {
       user_id,
       ...otherData,
     });
+    window.IntercomUpdateStyle();
     return true;
   } else {
     return false;
