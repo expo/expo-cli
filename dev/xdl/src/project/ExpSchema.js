@@ -50,8 +50,8 @@ module.exports = joi.object().keys({
     iconUrl: joi.string().uri().description(
       `Url that points to the icon to display while starting up the app. Image size and aspect ratio are up to you.`
     ),
-    exponentIconColor: colorField.description(
-      `If no icon is provided, we will show the Exponent logo. You can specify the color of the logo here.`
+    exponentIconColor: joi.any().valid('white', 'blue').description(
+      "If no icon is provided, we will show the Exponent logo. You can choose between ``white`` and ``blue``."
     ),
     exponentIconGrayscale: joi.number().min(0).max(1).description(
       "Similar to ``exponentIconColor`` but instead indicate if it should be grayscale (``1``) or not (``0``)."
