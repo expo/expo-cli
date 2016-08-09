@@ -20,6 +20,7 @@ export * as Env from './Env';
 export { default as ErrorCode } from './ErrorCode';
 export * as Exp from './Exp';
 export * as FileSystem from './FileSystem';
+export * as Intercom from './Intercom';
 export { default as Logger } from './Logger';
 export { default as NotificationCode } from './NotificationCode';
 export * as Project from './Project';
