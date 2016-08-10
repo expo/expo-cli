@@ -4,6 +4,7 @@ import {
   UrlUtils,
 } from 'xdl';
 
+import bunyan from 'bunyan';
 import crayon from '@ccheever/crayon';
 import simpleSpinner from '@exponent/simple-spinner';
 import path from 'path';
@@ -61,6 +62,7 @@ async function action(projectDir, options) {
       name: pm2Name,
       script,
       args: args_,
+      autorestart: false,
       watch: false,
       cwd: process.cwd(),
       env: process.env,
@@ -112,15 +114,21 @@ async function action(projectDir, options) {
   }
 
   try {
-    await Project.startAsync(root, startOpts);
     ProjectUtils.attachLoggerStream(root, {
       stream: {
         write: (chunk) => {
-          console.log(chunk.msg);
+          if (chunk.level <= bunyan.INFO) {
+            console.log(chunk.msg);
+          } else if (chunk.level === bunyan.WARN) {
+            console.warn(chunk.msg);
+          } else {
+            console.error(chunk.msg);
+          }
         },
       },
       type: 'raw',
     });
+    await Project.startAsync(root, startOpts);
 
     await config.projectExpJsonFile(projectDir).mergeAsync({
       err: null,
