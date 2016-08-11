@@ -4,8 +4,6 @@
 
 import 'instapromise';
 
-import { vsprintf } from 'sprintf-js';
-
 import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import delayAsync from 'delay-async';
@@ -376,26 +374,21 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
       }
     }
 
-    let string;
-    if (bodyArray[0] && typeof bodyArray[0] === 'string' && bodyArray[0].includes('%')) {
-      string = vsprintf(bodyArray[0], bodyArray.slice(1));
-    } else {
-      string = bodyArray.map(obj => {
-        if (!obj) {
-          return 'null';
-        }
+    let string = bodyArray.map(obj => {
+      if (!obj) {
+        return 'null';
+      }
 
-        if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
-          return obj;
-        }
+      if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
+        return obj;
+      }
 
-        try {
-          return JSON.stringify(obj);
-        } catch (e) {
-          return obj.toString();
-        }
-      }).join(' ');
-    }
+      try {
+        return JSON.stringify(obj);
+      } catch (e) {
+        return obj.toString();
+      }
+    }).join(' ');
 
     let level = log.level;
     let groupDepth = log.groupDepth;
