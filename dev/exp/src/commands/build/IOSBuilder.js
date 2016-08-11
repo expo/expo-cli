@@ -163,7 +163,7 @@ export default class IOSBuilder extends BaseBuilder {
             certP12: p12Data.toString('base64'),
           };
 
-          isValid = await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
+          // isValid = await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
           await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
         }
       } catch (e) {
