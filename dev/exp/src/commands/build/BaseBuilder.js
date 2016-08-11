@@ -11,14 +11,12 @@ import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
 
 type BuilderOptions = {
-  quiet: bool,
   wait: bool,
 }
 
 export default class BaseBuilder {
   projectDir: string = '';
   options: BuilderOptions = {
-    quiet: false,
     wait: false,
   };
   run: () => Promise<void>;
@@ -124,9 +122,7 @@ export default class BaseBuilder {
     log('Starting build process...');
 
     //run publish -- in future, we should determine whether we NEED to do this
-    const { ids: expIds, url, err } = await publishAction(this.projectDir, {
-      quiet: true, // no need to publish to slack
-    });
+    const { ids: expIds, url, err } = await publishAction(this.projectDir);
 
     if (err) {
       throw new BuildError(`No url was returned from publish. Please try again.\n${err}`);
@@ -142,7 +138,6 @@ export default class BaseBuilder {
 
     let opts = {
       mode: 'create',
-      quiet: !!this.options.quiet,
       expIds,
       platform,
     };

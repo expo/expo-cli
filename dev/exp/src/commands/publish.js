@@ -22,18 +22,11 @@ export async function action(projectDir, options) {
     return;
   }
 
-  if (options.quiet) {
-    log('Not posting to Slack');
-  }
-
   let recipient = await sendTo.getRecipient(options.sendTo);
   log('Publishing...');
   simpleSpinner.start();
 
-  let opts = {
-    quiet: !!options.quiet,
-  };
-  let result = await Project.publishAsync(projectDir, opts);
+  let result = await Project.publishAsync(projectDir);
 
   simpleSpinner.stop();
 
@@ -54,7 +47,6 @@ export default (program) => {
     .alias('p')
     .description('Publishes your project to exp.host')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
-    .option('-q, --quiet', "Don't send a link to our Slack")
     //.help('You must have the server running for this command to work')
     .asyncActionProjectDir(action);
 };

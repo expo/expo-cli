@@ -88,7 +88,7 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
   return response.body;
 }
 
-export async function publishAsync(projectRoot: string, options: { quiet: bool } = { quiet: false }) {
+export async function publishAsync(projectRoot: string, options: Object = {}) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -97,7 +97,7 @@ export async function publishAsync(projectRoot: string, options: { quiet: bool }
   });
 
   let schema = joi.object().keys({
-    quiet: joi.boolean(),
+    // empty
   });
 
   try {
@@ -211,7 +211,6 @@ async function uploadAssetsAsync(projectRoot, assets) {
 
 export async function buildAsync(projectRoot: string, options: {
   current?: bool,
-  quiet?: bool,
   mode?: string,
   platform?: string,
   expIds?: Array<string>,
@@ -225,7 +224,6 @@ export async function buildAsync(projectRoot: string, options: {
 
   let schema = joi.object().keys({
     current: joi.boolean(),
-    quiet: joi.boolean(),
     mode: joi.string(),
     platform: joi.any().valid('ios', 'android', 'all'),
     expIds: joi.array(),
