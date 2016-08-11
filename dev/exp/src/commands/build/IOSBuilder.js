@@ -146,6 +146,11 @@ export default class IOSBuilder extends BaseBuilder {
           return p12Path;
         },
         when: answers => !answers.manageCertificates,
+      }, {
+        type: 'input',
+        name: 'certPassword',
+        message: 'Certificate password (empty is OK):',
+        when: answers => !answers.manageCertificates,
       }];
 
       const answers = await inquirer.prompt(questions);
@@ -161,10 +166,12 @@ export default class IOSBuilder extends BaseBuilder {
 
           const credentials: IOSCredentials = {
             certP12: p12Data.toString('base64'),
+            certPassword: answers.certPassword,
           };
 
           // isValid = await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
           await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
+          isValid = true;
         }
       } catch (e) {
         isValid = false;
