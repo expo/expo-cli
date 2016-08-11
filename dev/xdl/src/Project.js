@@ -591,10 +591,14 @@ export async function startExponentServerAsync(projectRoot: string) {
   app.get('/manifest', manifestHandler);
   app.get('/index.exp', manifestHandler);
   app.post('/logs', async (req, res) => {
-    let deviceId = req.get('Device-Id');
-    let deviceName = req.get('Device-Name');
-    if (deviceId && deviceName && req.body) {
-      _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
+    try {
+      let deviceId = req.get('Device-Id');
+      let deviceName = req.get('Device-Name');
+      if (deviceId && deviceName && req.body) {
+        _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
+      }
+    } catch (e) {
+      ProjectUtils.logError(projectRoot, 'exponent', `Error getting device logs: ${e} ${e.stack}`);
     }
     res.send('Success');
   });
