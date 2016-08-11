@@ -9,7 +9,7 @@ import config from '../config';
 import log from '../log';
 import sendTo from '../sendTo';
 
-export async function action(projectDir, options) {
+export async function action(projectDir, options = {}) {
   let status = await config.projectStatusAsync(projectDir);
   if (!status) {
     return;
