@@ -5,6 +5,8 @@ const colorField = joi.string().regex(/^#|(&#x23;)\d{6}$/).
 const reverseDnsField = joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\_\.]+$/).
   meta({regexHuman: "Reverse DNS notation unique name for your app. For example, host.exp.exponent, where exp.host is our domain and Exponent is our app."});
 
+const pngField = joi.string().uri().regex(/\.png$/);
+
 module.exports = joi.object().keys({
   name: joi.string().required().description(`
     The name of your app as it appears both within Exponent and on your home screen as a standalone app.
@@ -27,11 +29,11 @@ module.exports = joi.object().keys({
   primaryColor: colorField.description(`
     On Android, this will determine the color of your app in the multitasker. Currently this is not used on iOS, but it may be used for other purposes in the future.
   `),
-  iconUrl: joi.string().uri().description(`
+  iconUrl: pngField.description(`
     A url that points to your app's icon image. We recommend that you use a 512x512 png file with transparency. This icon will appear on the home screen and within the Exponent app.
   `),
   notification: joi.object().keys({
-    iconUrl: joi.string().uri().description(
+    iconUrl: pngField.description(
       `Url that points to the icon to use for push notifications. 48x48 png grayscale with transparency.`
     ),
     color: colorField.description(
@@ -47,7 +49,7 @@ module.exports = joi.object().keys({
     Configuration for remote (push) notifications.
   `),
   loading: joi.object().keys({
-    iconUrl: joi.string().uri().description(
+    iconUrl: pngField.uri().description(
       `Url that points to the icon to display while starting up the app. Image size and aspect ratio are up to you.`
     ),
     exponentIconColor: joi.any().valid('white', 'blue').description(
@@ -56,7 +58,7 @@ module.exports = joi.object().keys({
     exponentIconGrayscale: joi.number().min(0).max(1).description(
       "Similar to ``exponentIconColor`` but instead indicate if it should be grayscale (``1``) or not (``0``)."
     ),
-    backgroundImageUrl: joi.string().uri().description(
+    backgroundImageUrl: pngField.uri().description(
       "Url that points to an image to fill the background of the loading screen. Image size and aspect ratio are up to you."
     ),
     backgroundColor: colorField.description(
