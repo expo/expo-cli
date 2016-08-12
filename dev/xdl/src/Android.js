@@ -22,6 +22,7 @@ import UserSettings from './UserSettings';
 import * as UrlUtils from './UrlUtils';
 
 let _lastUrl = null;
+const beginningOfAdbErrorMessage = 'error: ';
 
 export function isPlatformSupported() {
   return process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux';
@@ -29,8 +30,17 @@ export function isPlatformSupported() {
 
 async function _getAdbOutputAsync(args) {
   await Binaries.addToPathAsync('adb');
-  let result = await spawnAsync('adb', args);
-  return result.stdout;
+
+  try {
+    let result = await spawnAsync('adb', args);
+    return result.stdout;
+  } catch (e) {
+    let errorMessage = _.trim(e.stderr);
+    if (errorMessage.startsWith(beginningOfAdbErrorMessage)) {
+      errorMessage = errorMessage.substring(beginningOfAdbErrorMessage.length);
+    }
+    throw new Error(errorMessage);
+  }
 }
 
 // Device attached
@@ -126,29 +136,35 @@ async function _uninstallExponentAsync() {
 }
 
 export async function upgradeExponentAsync() {
-  if (!(await _assertDeviceReadyAsync())) {
-    return;
-  }
+  try {
+    if (!(await _assertDeviceReadyAsync())) {
+      return;
+    }
 
-  await _uninstallExponentAsync();
-  await _installExponentAsync();
+    await _uninstallExponentAsync();
+    await _installExponentAsync();
 
-  if (_lastUrl) {
-    Logger.global.info(`Opening ${_lastUrl} in Exponent.`);
-    await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', _lastUrl]);
-    _lastUrl = null;
+    if (_lastUrl) {
+      Logger.global.info(`Opening ${_lastUrl} in Exponent.`);
+      await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', _lastUrl]);
+      _lastUrl = null;
+    }
+  } catch (e) {
+    Logger.global.error(`Error running adb: ${e.message}`);
   }
 }
 
 // Open Url
 async function _assertDeviceReadyAsync() {
+  const genymotionMessage = `\n\nIf you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory (/usr/local/bin if installed through XDE).`;
+
   if (!(await _isDeviceAttachedAsync())) {
-    Logger.global.error(`No Android device found. Please connect a device and enable USB debugging.`);
+    Logger.global.error(`No Android device found. Please connect a device and enable USB debugging.${genymotionMessage}`);
     return false;
   }
 
   if (!(await _isDeviceAuthorizedAsync())) {
-    Logger.global.error(`This computer is not authorized to debug the device. Please allow USB debugging.`);
+    Logger.global.error(`This computer is not authorized to debug the device. Please allow USB debugging.${genymotionMessage}`);
     return false;
   }
 
@@ -162,30 +178,38 @@ async function _openUrlAsync(url: string) {
 }
 
 export async function openUrlSafeAsync(url: string) {
-  if (!(await _assertDeviceReadyAsync())) {
-    return;
+  try {
+    if (!(await _assertDeviceReadyAsync())) {
+      return;
+    }
+
+    let installedExponent = false;
+    if (!(await _isExponentInstalledAsync())) {
+      await _installExponentAsync();
+      installedExponent = true;
+    }
+
+    Logger.global.info(`Opening on Android device`);
+    await _openUrlAsync(url);
+
+    Analytics.logEvent('Open Url on Device', {
+      platform: 'android',
+      installedExponent,
+    });
+  } catch (e) {
+    Logger.global.error(`Error running adb: ${e.message}`);
   }
-
-  let installedExponent = false;
-  if (!(await _isExponentInstalledAsync())) {
-    await _installExponentAsync();
-    installedExponent = true;
-  }
-
-  Logger.global.info(`Opening on Android device`);
-  await _openUrlAsync(url);
-
-  Analytics.logEvent('Open Url on Device', {
-    platform: 'android',
-    installedExponent,
-  });
 }
 
 export async function openProjectAsync(projectRoot: string) {
-  await startAdbReverseAsync(projectRoot);
+  try {
+    await startAdbReverseAsync(projectRoot);
 
-  let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
-  await openUrlSafeAsync(projectUrl);
+    let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
+    await openUrlSafeAsync(projectUrl);
+  } catch (e) {
+    Logger.global.error(`Error running adb: ${e.message}`);
+  }
 }
 
 // Adb reverse
@@ -205,7 +229,7 @@ async function adbReverse(port: number) {
     await _getAdbOutputAsync(['reverse', `tcp:${port}`, `tcp:${port}`]);
     return true;
   } catch (e) {
-    Logger.global.debug(`Couldn't adb reverse: ${e.toString()}`);
+    Logger.global.debug(`Couldn't adb reverse: ${e.message}`);
     return false;
   }
 }
@@ -215,7 +239,7 @@ async function adbReverseRemove(port: number) {
     await _getAdbOutputAsync(['reverse', '--remove', `tcp:${port}`]);
     return true;
   } catch (e) {
-    Logger.global.debug(`Couldn't adb reverse remove: ${e.toString()}`);
+    Logger.global.debug(`Couldn't adb reverse remove: ${e.message}`);
     return false;
   }
 }
