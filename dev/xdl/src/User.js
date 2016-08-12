@@ -14,7 +14,8 @@ type User = {
 };
 
 export async function getCurrentUserAsync(): Promise<?User> {
-  if (_currentUser) {
+  let diskUsername = await UserSettings.getAsync('username', null);
+  if (_currentUser && _currentUser.username === diskUsername) {
     return _currentUser;
   }
 
