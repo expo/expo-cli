@@ -136,3 +136,28 @@ export async function validateAsync(projectRoot: string): Promise<number> {
 
   return status;
 }
+
+export const EXPONENT_SDK_INSTALLED_AND_IMPORTED = 0;
+export const EXPONENT_SDK_NOT_INSTALLED = 1;
+export const EXPONENT_SDK_NOT_IMPORTED = 2;
+
+export async function getExponentSdkStatus(projectRoot: string): Promise<number> {
+  let { pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  try {
+    let exponentDep = pkg.dependencies['exponent'];
+    if (!exponentDep) {
+      return EXPONENT_SDK_NOT_INSTALLED;
+    }
+
+    let mainFilePath = path.join(projectRoot, pkg.main);
+    let mainFile = await fs.readFile.promise(mainFilePath, 'utf8');
+
+    if (mainFile.includes(`from 'exponent'`) || mainFile.includes(`require('exponent')`)) {
+      return EXPONENT_SDK_INSTALLED_AND_IMPORTED;
+    } else {
+      return EXPONENT_SDK_NOT_IMPORTED;
+    }
+  } catch (e) {
+    return EXPONENT_SDK_NOT_IMPORTED;
+  }
+}
