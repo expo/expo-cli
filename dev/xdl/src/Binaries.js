@@ -15,6 +15,7 @@ import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 
 let runas; // Crashes on windows, so load this lazily
+let hasSourcedBashLoginScripts = false;
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
@@ -78,6 +79,8 @@ async function _installBinaryAsync(name) {
 }
 
 export async function installShellCommandsAsync() {
+  await _sourceBashLoginScriptsAsync();
+
   if (process.platform !== 'darwin') {
     throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
   }
@@ -99,7 +102,21 @@ export async function installShellCommandsAsync() {
   }
 }
 
+function _getBinariesPath(): string {
+  if (process.platform === 'darwin') {
+    return path.join(__dirname, '..', 'binaries', 'osx');
+  } else if (process.platform === 'win32') {
+    return path.join(__dirname, '..', 'binaries', 'windows');
+  } else if (process.platform === 'linux') {
+    return path.join(__dirname, '..', 'binaries', 'linux');
+  } else {
+    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
+  }
+}
+
 export async function addToPathAsync(name: string) {
+  await _sourceBashLoginScriptsAsync();
+
   if (await _hasbinAsync(name)) {
     return;
   }
@@ -108,17 +125,25 @@ export async function addToPathAsync(name: string) {
     process.env.PATH = '';
   }
 
-  let binariesPath;
-  if (process.platform === 'darwin') {
-    binariesPath = path.join(__dirname, '..', 'binaries', 'osx');
-  } else if (process.platform === 'win32') {
-    binariesPath = path.join(__dirname, '..', 'binaries', 'windows');
-  } else if (process.platform === 'linux') {
-    binariesPath = path.join(__dirname, '..', 'binaries', 'linux');
-  } else {
-    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
-  }
-
+  let binariesPath = _getBinariesPath();
   let delimiter = process.platform === 'win32' ? ';' : ':';
   process.env.PATH = `${process.env.PATH}${delimiter}${binariesPath}`;
+}
+
+async function _sourceBashLoginScriptsAsync() {
+  if (hasSourcedBashLoginScripts || process.platform === 'win32') {
+    return;
+  }
+
+  hasSourcedBashLoginScripts = true;
+  let result = await spawnAsync(path.join(_getBinariesPath(), 'get-path'));
+  if (result.stderr && result.stderr.length > 0) {
+    Logger.global.debug(`Error sourcing bash login scripts: ${result.stderr}`);
+  }
+
+  if (process.env.PATH && process.env.PATH.length > 0) {
+    process.env.PATH = `${process.env.PATH}:${result.stdout}`;
+  } else {
+    process.env.PATH = result.stdout;
+  }
 }
