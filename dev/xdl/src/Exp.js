@@ -242,6 +242,8 @@ type PublishInfo = {
     remoteFullPackageName: string,
     ngrokUrl: string,
     sdkVersion: string,
+    bundleIdentifierIOS: string,
+    packageNameAndroid: string,
   },
   body: any,
 };
@@ -292,6 +294,8 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   let localPackageName = name;
   let packageVersion = version;
   let sdkVersion = exp.sdkVersion;
+  let bundleIdentifierIOS = exp.ios.bundleIdentifier;
+  let packageNameAndroid = exp.android.package;
 
   let entryPoint = await determineEntryPointAsync(root);
   let ngrokUrl = await UrlUtils.constructPublishUrlAsync(root, entryPoint);
@@ -305,6 +309,8 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
       remoteFullPackageName,
       ngrokUrl,
       sdkVersion,
+      bundleIdentifierIOS,
+      packageNameAndroid,
     },
     body: pkg,
   };

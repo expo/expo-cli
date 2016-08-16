@@ -17,24 +17,30 @@ export type IOSCredentials = {
   password?: string,
   teamId?: string,
   certP12?: string,
+  certPassword?: string,
+  pushP12?: string,
+  pushPassword?: string,
 };
 
 export type Credentials = IOSCredentials & AndroidCredentials;
 
-type CredentialMetadata = {
+export type CredentialMetadata = {
   username: string,
   experienceName: string,
+  bundleIdentifier: string,
   platform: string
 }
 
 export async function credentialsExistForPlatformAsync({
   username,
   experienceName,
+  bundleIdentifier,
   platform,
 }: CredentialMetadata): Promise<?Credentials> {
   const { err, credentials } = await Api.callMethodAsync('getCredentials', [], 'post', {
     username,
     experienceName,
+    bundleIdentifier,
     platform,
     decrypt: false,
   });
@@ -102,6 +108,34 @@ export async function fetchAppleCertificates(
 
   if (err || !success) {
     throw new Error('Unable to fetch new certificates.');
+  }
+
+  return success;
+}
+
+export async function ensureAppId(
+  metadata: CredentialMetadata,
+): Promise<void> {
+  const { err, success } = await Api.callMethodAsync('ensureAppId', [], 'post', {
+    ...metadata,
+  });
+
+  if (err || !success) {
+    throw new Error('Unable to create app id.');
+  }
+
+  return success;
+}
+
+export async function fetchPushCertificates(
+  metadata: CredentialMetadata,
+): Promise<void> {
+  const { err, success } = await Api.callMethodAsync('fetchPushCertificates', [], 'post', {
+    ...metadata,
+  });
+
+  if (err || !success) {
+    throw new Error('Unable to fetch push certificates.');
   }
 
   return success;

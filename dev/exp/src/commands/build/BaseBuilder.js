@@ -12,12 +12,14 @@ import BuildError from './BuildError';
 
 type BuilderOptions = {
   wait: bool,
+  clearCredentials: bool,
 }
 
 export default class BaseBuilder {
   projectDir: string = '';
   options: BuilderOptions = {
     wait: false,
+    clearCredentials: false,
   };
   run: () => Promise<void>;
 

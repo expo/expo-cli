@@ -14,7 +14,7 @@
  } from 'xdl';
 
 import BaseBuilder from './BaseBuilder';
-import type { IOSCredentials } from 'XDLCredentials';
+import type { IOSCredentials, CredentialMetadata } from 'XDLCredentials';
 
 /**
  * Steps:
@@ -51,140 +51,257 @@ export default class IOSBuilder extends BaseBuilder {
   }
 
   async collectAndValidateCredentials() {
-    const { args: { username, remoteFullPackageName: experienceName } } = await Exp.getPublishInfoAsync(this.projectDir);
+    const { args: {
+      username,
+      remoteFullPackageName: experienceName,
+      bundleIdentifierIOS: bundleIdentifier,
+    } } = await Exp.getPublishInfoAsync(this.projectDir);
 
     const credentialMetadata = {
       username,
       experienceName,
+      bundleIdentifier,
       platform: 'ios',
     };
 
     const existingCredentials: ?IOSCredentials =
       await Credentials.credentialsExistForPlatformAsync(credentialMetadata);
 
-    let hasAppleId, hasCert;
+    let hasAppleId, hasCert, hasPushCert;
     if (this.options.clearCredentials || !existingCredentials) {
       hasAppleId = false;
       hasCert = false;
+      hasPushCert = false;
     } else if (existingCredentials) {
       hasAppleId = !!existingCredentials.appleId;
       hasCert = !!existingCredentials.certP12;
+      hasPushCert = !!existingCredentials.pushP12;
     }
 
     if (!hasAppleId) {
-      // ask for creds
-      console.log('');
-      console.log('We need your Apple ID/password to manage certificates and provisioning profiles from your Apple Developer account.');
-      const questions = [{
-        type: 'input',
-        name: 'appleId',
-        message: `What's your Apple ID?`,
-        validate: val => val !== '',
-      }, {
-        type: 'password',
-        name: 'password',
-        message: `Password?`,
-        validate: val => val !== '',
-      }, {
-        type: 'input',
-        name: 'teamId',
-        message: `What is your Apple Team ID (you can find that on this page: https://developer.apple.com/account/#/membership)?`,
-        validate: val => val !== '',
-      }];
-
-      const answers = await inquirer.prompt(questions);
-
-      const credentials: IOSCredentials = {
-        appleId: answers.appleId,
-        password: answers.password,
-        teamId: answers.teamId,
-      };
-
-      const isValid = await Credentials.validateCredentialsForPlatform('ios', 'appleId', credentials, credentialMetadata);
-      if (!isValid) {
-        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Provided credentials are invalid!');
-      }
-      await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
+      await this.askForAppleId(credentialMetadata);
     } else {
-      const isValid = await Credentials.validateCredentialsForPlatform('ios', 'appleId', null, credentialMetadata);
-      if (!isValid) {
+      try {
+        await Credentials.validateCredentialsForPlatform('ios', 'appleId', null, credentialMetadata);
+      } catch (e) {
         throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Stored credentials are invalid! Rerun this command with "-c" in order to reinput your credentials.');
       }
     }
 
     if (!hasCert) {
-      // ask about certs
-      console.log(``);
-
-      const questions = [{
-        type: 'rawlist',
-        name: 'manageCertificates',
-        message: `Do you already have a distribution certificate you'd like us to use,\nor do you want us to manage your certificates for you?`,
-        choices: [
-          { name: 'Let Exponent handle the process!', value: true },
-          { name: 'I want to upload my own certificate!', value: false },
-        ],
-      }, {
-        type: 'input',
-        name: 'pathToP12',
-        message: 'Path to P12 file:',
-        validate: async p12Path => {
-          try {
-            const stats = await fs.stat.promise(p12Path);
-            return stats.isFile();
-          } catch (e) {
-            // file does not exist
-            console.log('\nFile does not exist.');
-            return false;
-          }
-        },
-        filter: p12Path => {
-          p12Path = untildify(p12Path);
-          if (!path.isAbsolute(p12Path)) {
-            p12Path = path.resolve(p12Path);
-          }
-          return p12Path;
-        },
-        when: answers => !answers.manageCertificates,
-      }, {
-        type: 'input',
-        name: 'certPassword',
-        message: 'Certificate password (empty is OK):',
-        when: answers => !answers.manageCertificates,
-      }];
-
-      const answers = await inquirer.prompt(questions);
-
-      let isValid;
+      await this.askForCerts(credentialMetadata);
+    } else {
       try {
-        if (answers.manageCertificates) {
-          // Attempt to fetch new certificates
-          isValid = await Credentials.fetchAppleCertificates(credentialMetadata);
-        } else {
-          // Upload credentials
-          const p12Data = await fs.readFile.promise(answers.pathToP12);
-
-          const credentials: IOSCredentials = {
-            certP12: p12Data.toString('base64'),
-            certPassword: answers.certPassword,
-          };
-
-          // isValid = await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
-          await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
-          isValid = true;
-        }
+        await Credentials.validateCredentialsForPlatform('ios', 'cert', null, credentialMetadata);
       } catch (e) {
-        isValid = false;
+        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Stored certificate is invalid! Rerun this command with "-c" in order to reinput your credentials and reupload/regenerate certificates.');
       }
+    }
 
-      if (!isValid) {
-        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Failed fetching/uploading certificates.');
+    if (!hasPushCert) {
+      await this.askForPushCerts(credentialMetadata);
+    } else {
+      try {
+        await Credentials.validateCredentialsForPlatform('ios', 'push', null, credentialMetadata);
+      } catch (e) {
+        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Stored push certificate is invalid! Rerun this command with "-c" in order to reinput your credentials and reupload/regenerate certificates.');
       }
-    } else { // has cert, let's verify
-      // const isValid = await Credentials.validateCredentialsForPlatform('ios', 'cert', null, credentialMetadata);
-      // if (!isValid) {
-      //   throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Stored certificate is invalid! Rerun this command with "-c" in order to reinput your credentials.');
-      // }
+    }
+  }
+
+  async askForAppleId(credentialMetadata: CredentialMetadata) {
+    // ask for creds
+    console.log('');
+    console.log('We need your Apple ID/password to manage certificates and provisioning profiles from your Apple Developer account.');
+    const questions = [{
+      type: 'input',
+      name: 'appleId',
+      message: `What's your Apple ID?`,
+      validate: val => val !== '',
+    }, {
+      type: 'password',
+      name: 'password',
+      message: `Password?`,
+      validate: val => val !== '',
+    }, {
+      type: 'input',
+      name: 'teamId',
+      message: `What is your Apple Team ID (you can find that on this page: https://developer.apple.com/account/#/membership)?`,
+      validate: val => val !== '',
+    }];
+
+    const answers = await inquirer.prompt(questions);
+
+    const credentials: IOSCredentials = {
+      appleId: answers.appleId,
+      password: answers.password,
+      teamId: answers.teamId,
+    };
+
+    const isValid = await Credentials.validateCredentialsForPlatform('ios', 'appleId', credentials, credentialMetadata);
+    if (!isValid) {
+      throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Provided credentials are invalid!');
+    }
+    await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
+  }
+
+  async askForCerts(credentialMetadata: CredentialMetadata) {
+    // ask about certs
+    console.log(``);
+
+    const questions = [{
+      type: 'rawlist',
+      name: 'manageCertificates',
+      message: `Do you already have a distribution certificate you'd like us to use,\nor do you want us to manage your certificates for you?`,
+      choices: [
+        { name: 'Let Exponent handle the process!', value: true },
+        { name: 'I want to upload my own certificate!', value: false },
+      ],
+    }, {
+      type: 'input',
+      name: 'pathToP12',
+      message: 'Path to P12 file:',
+      validate: async p12Path => {
+        try {
+          const stats = await fs.stat.promise(p12Path);
+          return stats.isFile();
+        } catch (e) {
+          // file does not exist
+          console.log('\nFile does not exist.');
+          return false;
+        }
+      },
+      filter: p12Path => {
+        p12Path = untildify(p12Path);
+        if (!path.isAbsolute(p12Path)) {
+          p12Path = path.resolve(p12Path);
+        }
+        return p12Path;
+      },
+      when: answers => !answers.manageCertificates,
+    }, {
+      type: 'password',
+      name: 'certPassword',
+      message: 'Certificate P12 password (empty is OK):',
+      when: answers => !answers.manageCertificates,
+    }];
+
+    const answers = await inquirer.prompt(questions);
+
+    let isValid;
+    try {
+      if (answers.manageCertificates) {
+        // Attempt to fetch new certificates
+        isValid = await Credentials.fetchAppleCertificates(credentialMetadata);
+      } else {
+        // Upload credentials
+        const p12Data = await fs.readFile.promise(answers.pathToP12);
+
+        const credentials: IOSCredentials = {
+          certP12: p12Data.toString('base64'),
+          certPassword: answers.certPassword,
+        };
+
+        try {
+          isValid = await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
+        } catch (e) {
+          throw new XDLError(ErrorCode.CREDENTIAL_ERROR, `Oops! This certificate doesn't seem to be present in your developer portal. Please upload a different certificate that exists in your developer portal.`);
+        }
+
+        await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
+      }
+    } catch (e) {
+      if (!e.isXDLError) {
+        isValid = false;
+      } else {
+        throw e;
+      }
+    }
+
+    if (!isValid) {
+      throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Failed fetching/uploading certificates.');
+    }
+  }
+
+  async askForPushCerts(credentialMetadata: CredentialMetadata) {
+    // ask about certs
+    console.log(``);
+
+    const questions = [{
+      type: 'rawlist',
+      name: 'managePushCertificates',
+      message: `Do you already have a push notification certificate you'd like us to use,\nor do you want us to manage your push certificates for you?`,
+      choices: [
+        { name: 'Let Exponent handle the process!', value: true },
+        { name: 'I want to upload my own certificate!', value: false },
+      ],
+    }, {
+      type: 'input',
+      name: 'pathToP12',
+      message: 'Path to P12 file:',
+      validate: async p12Path => {
+        try {
+          const stats = await fs.stat.promise(p12Path);
+          return stats.isFile();
+        } catch (e) {
+          // file does not exist
+          console.log('\nFile does not exist.');
+          return false;
+        }
+      },
+      filter: p12Path => {
+        p12Path = untildify(p12Path);
+        if (!path.isAbsolute(p12Path)) {
+          p12Path = path.resolve(p12Path);
+        }
+        return p12Path;
+      },
+      when: answers => !answers.managePushCertificates,
+    }, {
+      type: 'password',
+      name: 'pushPassword',
+      message: 'Push certificate P12 password (empty is OK):',
+      when: answers => !answers.managePushCertificates,
+    }];
+
+    const answers: {
+      managePushCertificates: bool,
+      pathToP12?: string,
+      pushPassword?: string,
+    } = await inquirer.prompt(questions);
+
+    let isValid;
+    try {
+      if (answers.managePushCertificates) {
+        // Attempt to fetch new certificates
+        isValid = await Credentials.fetchPushCertificates(credentialMetadata);
+      } else {
+        // Upload credentials
+        const p12Data = await fs.readFile.promise(answers.pathToP12);
+
+        const credentials: IOSCredentials = {
+          pushP12: p12Data.toString('base64'),
+          pushPassword: answers.pushPassword,
+        };
+
+        try {
+          isValid = await Credentials.validateCredentialsForPlatform('ios', 'push', credentials, credentialMetadata);
+        } catch (e) {
+          throw new XDLError(ErrorCode.CREDENTIAL_ERROR, `Oops! This push certificate doesn't seem to be present in your developer portal. Please upload a different certificate that exists in your developer portal.`);
+        }
+
+        await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
+      }
+    } catch (e) {
+      if (!e.isXDLError) {
+        isValid = false;
+      } else {
+        throw e;
+      }
+    }
+
+    if (!isValid) {
+      throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Failed fetching/uploading certificates.');
     }
   }
 }
