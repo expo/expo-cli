@@ -580,6 +580,10 @@ export async function startExponentServerAsync(projectRoot: string) {
       }
 
       res.send(manifestString);
+
+      Analytics.logEvent('Serve Manifest', {
+        projectRoot,
+      });
     } catch (e) {
       ProjectUtils.logDebug(projectRoot, 'exponent', `Error in manifestHandler: ${e} ${e.stack}`);
       // 5xx = Server Error HTTP code
