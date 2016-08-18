@@ -294,8 +294,8 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   let localPackageName = name;
   let packageVersion = version;
   let sdkVersion = exp.sdkVersion;
-  let bundleIdentifierIOS = exp.ios.bundleIdentifier;
-  let packageNameAndroid = exp.android.package;
+  let bundleIdentifierIOS = exp.ios ? exp.ios.bundleIdentifier : null;
+  let packageNameAndroid = exp.android ? exp.android.package : null;
 
   let entryPoint = await determineEntryPointAsync(root);
   let ngrokUrl = await UrlUtils.constructPublishUrlAsync(root, entryPoint);
