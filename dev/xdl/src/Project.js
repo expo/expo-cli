@@ -70,6 +70,8 @@ async function _getFreePortAsync(rangeStart) {
 }
 
 async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
+  url = UrlUtils.getPlatformSpecificBundleUrl(url, platform);
+
   let response = await request.promise.get({
     url: `${url}&platform=${platform}`,
     headers: {
@@ -554,8 +556,9 @@ export async function startExponentServerAsync(projectRoot: string) {
       manifest.packagerOpts = packagerOpts;
 
       let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-      let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
       let platform = req.headers['exponent-platform'] || 'ios';
+      entryPoint = UrlUtils.getPlatformSpecificBundleUrl(entryPoint, platform);
+      let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
       let queryParams = UrlUtils.constructBundleQueryParams(packagerOpts);
       let path = `/${mainModuleName}.bundle?platform=${platform}&${queryParams}`;
       manifest.bundleUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts) + path;

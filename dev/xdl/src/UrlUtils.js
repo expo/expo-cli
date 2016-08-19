@@ -12,6 +12,7 @@ import url from 'url';
 import ErrorCode from './ErrorCode';
 import * as ProjectSettings from './ProjectSettings';
 import XDLError from './XDLError';
+import { ENTRY_POINT_PLATFORM_TEMPLATE_STRING } from './Exp';
 
 export async function constructBundleUrlAsync(projectRoot: string, opts: any) {
   return constructUrlAsync(projectRoot, opts, true);
@@ -179,4 +180,12 @@ export function someRandomness() {
 
 export function domainify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').replace(/-+$/, '');
+}
+
+export function getPlatformSpecificBundleUrl(url: string, platform: string) {
+  if (url.includes(ENTRY_POINT_PLATFORM_TEMPLATE_STRING)) {
+    return url.replace(ENTRY_POINT_PLATFORM_TEMPLATE_STRING, platform);
+  } else {
+    return url;
+  }
 }

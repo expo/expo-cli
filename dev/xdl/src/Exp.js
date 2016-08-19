@@ -26,6 +26,8 @@ import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 import * as ProjectSettings from './ProjectSettings';
 
+export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
+
 export function packageJsonForRoot(root: string) {
   return new JsonFile(path.join(root, 'package.json'));
 }
@@ -50,18 +52,49 @@ export async function expConfigForRootAsync(root: string) {
   return exp;
 }
 
+function _doesFileExist(file) {
+  try {
+    return fs.statSync(file).isFile();
+  } catch (e) {
+    return false;
+  }
+}
+
+function _getPlatformSpecificEntryPoint(entryPoint, platform) {
+  if (entryPoint.endsWith('.js')) {
+    return `${entryPoint.substring(0, entryPoint.length - 3)}.${platform}.js`;
+  } else {
+    return `${entryPoint}.${platform}.js`;
+  }
+}
+
+// You must call UrlUtils.getPlatformSpecificBundleUrl to remove the platform template string
 export async function determineEntryPointAsync(root: string) {
   let exp = await expConfigForRootAsync(root);
   let pkgJson = packageJsonForRoot(root);
   let pkg = await pkgJson.readAsync();
   let { main } = pkg;
 
-  // NOTE(brentvatne): why do we have entryPoint and main?
+  // entryPoint is relative to the packager root and main is relative
+  // to the project root. So if your rn-cli.config.js points to a different
+  // root than the project root, these can be different. Most of the time
+  // you should use main.
   let entryPoint = main || 'index.js';
+  let hasSeparateIosAndAndroidFiles = false;
+  if (!_doesFileExist(path.join(root, entryPoint)) &&
+    (_doesFileExist(path.join(root, _getPlatformSpecificEntryPoint(entryPoint, 'android'))) || _doesFileExist(path.join(root, _getPlatformSpecificEntryPoint(entryPoint, 'ios'))))) {
+    hasSeparateIosAndAndroidFiles = true;
+  }
+
   if (exp && exp.entryPoint) {
     entryPoint = exp.entryPoint;
   }
-  return entryPoint;
+
+  if (hasSeparateIosAndAndroidFiles) {
+    return _getPlatformSpecificEntryPoint(entryPoint, ENTRY_POINT_PLATFORM_TEMPLATE_STRING);
+  } else {
+    return entryPoint;
+  }
 }
 
 function _starterAppCacheDirectory() {
@@ -235,17 +268,12 @@ export async function expInfoSafeAsync(root: string) {
 type PublishInfo = {
   args: {
     username: string,
-    localPackageName: string,
-    packageVersion: string,
     remoteUsername: string,
     remotePackageName: string,
     remoteFullPackageName: string,
-    ngrokUrl: string,
-    sdkVersion: string,
-    bundleIdentifierIOS: string,
-    packageNameAndroid: string,
+    bundleIdentifierIOS: ?string,
+    packageNameAndroid: ?string,
   },
-  body: any,
 };
 
 // TODO: remove / change, no longer publishInfo, this is just used for signing
@@ -291,28 +319,18 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   let remotePackageName = name;
   let remoteUsername = username;
   let remoteFullPackageName = `@${remoteUsername}/${remotePackageName}`;
-  let localPackageName = name;
-  let packageVersion = version;
-  let sdkVersion = exp.sdkVersion;
   let bundleIdentifierIOS = exp.ios ? exp.ios.bundleIdentifier : null;
   let packageNameAndroid = exp.android ? exp.android.package : null;
 
-  let entryPoint = await determineEntryPointAsync(root);
-  let ngrokUrl = await UrlUtils.constructPublishUrlAsync(root, entryPoint);
   return {
     args: {
       username,
-      localPackageName,
-      packageVersion,
       remoteUsername,
       remotePackageName,
       remoteFullPackageName,
-      ngrokUrl,
-      sdkVersion,
       bundleIdentifierIOS,
-      packageNameAndroid,
+      packageNameAndroid, // TODO: this isn't used anywhere
     },
-    body: pkg,
   };
 }
 

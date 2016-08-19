@@ -152,6 +152,7 @@ export async function getExponentSdkStatus(projectRoot: string): Promise<number>
     let mainFilePath = path.join(projectRoot, pkg.main);
     let mainFile = await fs.readFile.promise(mainFilePath, 'utf8');
 
+    // TODO: support separate .ios.js and .android.js files
     if (mainFile.includes(`from 'exponent'`) || mainFile.includes(`require('exponent')`)) {
       return EXPONENT_SDK_INSTALLED_AND_IMPORTED;
     } else {
