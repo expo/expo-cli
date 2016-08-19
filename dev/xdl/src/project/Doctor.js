@@ -9,6 +9,7 @@ import fs from 'fs';
 import joi from 'joi';
 import path from 'path';
 import semver from 'semver';
+import spawnAsync from '@exponent/spawn-async';
 
 import Api from '../Api';
 import Config from '../Config';
@@ -89,8 +90,15 @@ async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>
 }
 
 async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let nodeModulesPath = projectRoot;
+  if (exp.nodeModulesPath) {
+    nodeModulesPath = path.join(projectRoot, exp.nodeModulesPath);
+  }
+
+  // Check to make sure node_modules exists at all
   try {
-    let result = fs.statSync(path.join(projectRoot, 'node_modules'));
+    let result = fs.statSync(path.join(nodeModulesPath, 'node_modules'));
     if (!result.isDirectory()) {
       ProjectUtils.logError(projectRoot, 'exponent', `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`);
       return FATAL;
@@ -100,8 +108,9 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
     return FATAL;
   }
 
+  // Check to make sure react native is installed
   try {
-    let result = fs.statSync(path.join(projectRoot, 'node_modules', 'react-native', 'local-cli', 'cli.js'));
+    let result = fs.statSync(path.join(nodeModulesPath, 'node_modules', 'react-native', 'local-cli', 'cli.js'));
     if (!result.isFile()) {
       ProjectUtils.logError(projectRoot, 'exponent', `Error: React native is not installed. Please run \`npm install\` in your project directory.`);
       return FATAL;
@@ -109,6 +118,52 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
   } catch (e) {
     ProjectUtils.logError(projectRoot, 'exponent', `Error: React native is not installed. Please run \`npm install\` in your project directory.`);
     return FATAL;
+  }
+
+  // Validate all package.json dependencies are installed and up to date
+  if (pkg.dependencies) {
+    let npmls;
+    try {
+      let npmlsCommand = await spawnAsync('npm', ['ls', '--json', '--depth', '1'], {
+        cwd: nodeModulesPath,
+      });
+      npmls = npmlsCommand.stdout;
+    } catch (e) {
+      npmls = e.stdout; // `npm ls` sometimes returns an error code
+    }
+
+    if (!npmls) {
+      ProjectUtils.logError(projectRoot, 'exponent', `Error checking node_modules dependencies. Could not run \`npm ls\` in ${projectRoot}.`);
+      return WARNING;
+    }
+
+    let npmlsDependencies;
+    try {
+      npmlsDependencies = JSON.parse(npmls).dependencies;
+    } catch (e) {
+      ProjectUtils.logError(projectRoot, 'exponent', `Error checking node_modules dependencies: ${e.message}`);
+      return WARNING;
+    }
+
+    if (npmlsDependencies) {
+      let errorStrings = [];
+      _.forEach(pkg.dependencies, (versionRequired, dependency) => {
+        let installedDependency = npmlsDependencies[dependency];
+        if (!installedDependency || !installedDependency.version) {
+          errorStrings.push(`'${dependency}' dependency is not installed.`);
+        } else if (!semver.satisfies(installedDependency.version, versionRequired) && !versionRequired.includes(installedDependency.from)) {
+          // For react native, `from` field looks like "exponentjs/react-native#sdk-8.0.1" and
+          // versionRequired looks like "github:exponentjs/react-native#sdk-8.0.0"
+          errorStrings.push(`Installed version ${installedDependency.version} of '${dependency}' does not satify required version ${versionRequired}`);
+        }
+      });
+
+      if (errorStrings.length > 0) {
+        errorStrings.push(`\nPlease run \`npm install\` in ${projectRoot} and restart the project.`);
+        ProjectUtils.logWarning(projectRoot, 'exponent', errorStrings.join('\n'));
+        return WARNING;
+      }
+    }
   }
 
   return NO_ISSUES;

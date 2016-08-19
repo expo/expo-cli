@@ -81,6 +81,7 @@ module.exports = joi.object().keys({
   rnCliPath: joi.string(),
   packagerOpts: joi.object(),
   ignoreNodeModulesValidation: joi.boolean(),
+  nodeModulesPath: joi.string(),
 
   ios: joi.object().keys({
     bundleIdentifier: reverseDnsField.description(
