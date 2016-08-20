@@ -159,7 +159,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
       });
 
       if (errorStrings.length > 0) {
-        errorStrings.push(`\nPlease run \`npm install\` in ${projectRoot} and restart the project.`);
+        errorStrings.push(`\nPlease run \`npm install\` in ${nodeModulesPath} and restart the project.`);
         ProjectUtils.logWarning(projectRoot, 'exponent', errorStrings.join('\n'));
         return WARNING;
       }

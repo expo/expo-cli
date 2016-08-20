@@ -64,6 +64,9 @@ module.exports = joi.object().keys({
     backgroundColor: colorField.description(
       "Color to fill the loading screen background"
     ),
+    hideExponentText: joi.boolean().description(
+      "By default, Exponent shows some text at the bottom of the loading screen. Set this to ``true`` to disable."
+    ),
   }).description(`
     Configuration for the loading screen that users see when opening your app, while fetching & caching bundle and assets.
   `),
@@ -71,6 +74,9 @@ module.exports = joi.object().keys({
     "By default, Exponent looks for the application registered with the AppRegistry as ``main``. If you would like to change this, you can specify the name in this property."
   ),
   androidStatusBarColor: colorField,
+  androidHideExponentNotificationInShellApp: joi.boolean().description(
+    "By default, Exponent adds a notification to your app with refresh button and debug info. Set this to ``true`` to disable."
+  ),
   scheme: joi.string().alphanum().description(
     "Url scheme to link into your app. For example, if we set this to ``'rnplay'``, then rnplay:// urls would open your app when tapped."
   ).meta({standaloneOnly: true}),
