@@ -1,5 +1,6 @@
 /**
  * Gets the configuration
+ * @flow
  */
 
 import {

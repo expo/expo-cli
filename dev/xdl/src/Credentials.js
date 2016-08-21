@@ -4,6 +4,8 @@
  */
 
 import Api from './Api';
+import ErrorCode from './ErrorCode';
+import XDLError from './XDLError';
 
 export type AndroidCredentials = {
   keystore: string,
@@ -85,29 +87,41 @@ export async function validateCredentialsForPlatform(
   credentials: ?Credentials,
   metadata: CredentialMetadata
 ): Promise<void> {
-  const { err, isValid } = await Api.callMethodAsync('validateCredentials', [], 'post', {
+  const { isValid, error, errorCode } = await Api.callMethodAsync('validateCredentials', [], 'post', {
     credentials,
     platform,
     validationType,
     ...metadata,
   });
 
-  if (err || !isValid) {
-    throw new Error('Credentials are invalid.');
+  if (!isValid || error) {
+    switch (errorCode) {
+      case "ERROR_CREDENTIALS_VALIDATION_TWOFACTOR":
+        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Two factor authentication is not yet supported. Stay tuned!');
+      case "ERROR_CREDENTIALS_VALIDATION_USERPASS":
+        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Username/Password is incorrect.');
+      default:
+        throw new Error('Server error when validating credentials.');
+    }
   }
 
-  return isValid;
+  return;
 }
 
 export async function fetchAppleCertificates(
   metadata: CredentialMetadata,
 ): Promise<void> {
-  const { err, success } = await Api.callMethodAsync('fetchAppleCertificates', [], 'post', {
+  const { err, success, error, errorCode } = await Api.callMethodAsync('fetchAppleCertificates', [], 'post', {
     ...metadata,
   });
 
-  if (err || !success) {
-    throw new Error('Unable to fetch new certificates.');
+  if (err || !success || error) {
+    switch (errorCode) {
+      case 'ERROR_CERT_VALIDATION_MAXIMUM_CERTS_REACHED':
+        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Maximum number of certificates have been reached in your developer portal. Please delete them or choose one of them to upload to Exponent.');
+      default:
+        throw new Error('Unable to fetch new certificates.');
+    }
   }
 
   return success;

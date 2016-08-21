@@ -5,7 +5,7 @@ function CommandError(code, message) {
   return err;
 }
 
-CommandError.isCommandError = function (err) {
+CommandError.isCommandError = function(err) {
   return (err && !!err._isCommandError);
 };
 

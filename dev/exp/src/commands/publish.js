@@ -1,3 +1,7 @@
+/**
+ * @flow
+ */
+
 import crayon from '@ccheever/crayon';
 import simpleSpinner from '@exponent/simple-spinner';
 

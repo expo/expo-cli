@@ -13,6 +13,8 @@
    ErrorCode,
  } from 'xdl';
 
+ import CommandError from '../../CommandError';
+
 import BaseBuilder from './BaseBuilder';
 import type { IOSCredentials, CredentialMetadata } from 'XDLCredentials';
 
@@ -138,10 +140,16 @@ export default class IOSBuilder extends BaseBuilder {
       teamId: answers.teamId,
     };
 
-    const isValid = await Credentials.validateCredentialsForPlatform('ios', 'appleId', credentials, credentialMetadata);
-    if (!isValid) {
-      throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Provided credentials are invalid!');
+    try {
+      await Credentials.validateCredentialsForPlatform('ios', 'appleId', credentials, credentialMetadata);
+    } catch (e) {
+      if (e.isXDLError) { //Expected error
+        throw new CommandError(e.code, e.message);
+      } else {
+        throw e;
+      }
     }
+
     await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
   }
 
@@ -188,11 +196,10 @@ export default class IOSBuilder extends BaseBuilder {
 
     const answers = await inquirer.prompt(questions);
 
-    let isValid;
     try {
       if (answers.manageCertificates) {
         // Attempt to fetch new certificates
-        isValid = await Credentials.fetchAppleCertificates(credentialMetadata);
+        await Credentials.fetchAppleCertificates(credentialMetadata);
       } else {
         // Upload credentials
         const p12Data = await fs.readFile.promise(answers.pathToP12);
@@ -203,23 +210,22 @@ export default class IOSBuilder extends BaseBuilder {
         };
 
         try {
-          isValid = await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
+          await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
         } catch (e) {
-          throw new XDLError(ErrorCode.CREDENTIAL_ERROR, `Oops! This certificate doesn't seem to be present in your developer portal. Please upload a different certificate that exists in your developer portal.`);
+          if (e.isXDLError) {
+            throw new CommandError(e.code, `Oops! This certificate doesn't seem to be present in your developer portal. Please upload a different certificate that exists in your developer portal.`);
+          }
+          throw e;
         }
 
         await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
       }
     } catch (e) {
-      if (!e.isXDLError) {
-        isValid = false;
+      if (e.isXDLError) {
+        throw new CommandError(e.code, 'Failed fetching/uploading certificates.');
       } else {
         throw e;
       }
-    }
-
-    if (!isValid) {
-      throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Failed fetching/uploading certificates.');
     }
   }
 
