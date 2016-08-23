@@ -79,7 +79,7 @@ async function _installBinaryAsync(name) {
 }
 
 export async function installShellCommandsAsync() {
-  await _sourceBashLoginScriptsAsync();
+  await sourceBashLoginScriptsAsync();
 
   if (process.platform !== 'darwin') {
     throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
@@ -115,7 +115,7 @@ function _getBinariesPath(): string {
 }
 
 export async function addToPathAsync(name: string) {
-  await _sourceBashLoginScriptsAsync();
+  await sourceBashLoginScriptsAsync();
 
   if (await _hasbinAsync(name)) {
     return;
@@ -130,7 +130,7 @@ export async function addToPathAsync(name: string) {
   process.env.PATH = `${process.env.PATH}${delimiter}${binariesPath}`;
 }
 
-async function _sourceBashLoginScriptsAsync() {
+export async function sourceBashLoginScriptsAsync() {
   if (hasSourcedBashLoginScripts || process.platform === 'win32') {
     return;
   }

@@ -12,6 +12,7 @@ import semver from 'semver';
 import spawnAsync from '@exponent/spawn-async';
 
 import Api from '../Api';
+import * as Binaries from '../Binaries';
 import Config from '../Config';
 import ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
@@ -122,6 +123,8 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
 
   // Validate all package.json dependencies are installed and up to date
   if (pkg.dependencies) {
+    await Binaries.sourceBashLoginScriptsAsync();
+
     let npmls;
     try {
       let npmlsCommand = await spawnAsync('npm', ['ls', '--json', '--depth', '1'], {
