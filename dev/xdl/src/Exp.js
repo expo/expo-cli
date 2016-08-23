@@ -17,6 +17,7 @@ import joi from 'joi';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
+import * as Binaries from './Binaries';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
@@ -107,25 +108,54 @@ function _starterAppCacheDirectory() {
 async function _downloadStarterAppAsync(name) {
   let versions = await Api.versionsAsync();
   let starterAppVersion = versions.starterApps[name].version;
-  let filename = `${name}-${starterAppVersion}.tar.gz`;
+  let starterAppName = `${name}-${starterAppVersion}`;
+  let filename = `${starterAppName}.tar.gz`;
   let starterAppPath = path.join(_starterAppCacheDirectory(), filename);
 
   if (await existsAsync(starterAppPath)) {
-    return starterAppPath;
+    return {
+      starterAppPath,
+      starterAppName,
+    };;
   }
 
   let url = `https://s3.amazonaws.com/exp-starter-apps/${filename}`;
   await new download().get(url).dest(_starterAppCacheDirectory()).promise.run();
-  return starterAppPath;
+  return {
+    starterAppPath,
+    starterAppName,
+  };
 }
 
-async function _extract(archive, dir) {
+async function _extractWindowsAsync(archive, starterAppName, dir) {
+  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
+  let tmpDir = path.join(dotExponentHomeDirectory, 'starter-app-cache', 'tmp');
+  let tmpFile = path.join(tmpDir, `${starterAppName}.tar`)
+  let binary = path.join(Binaries.getBinariesPath(), '7z1602-extra', '7za');
   try {
-    await spawnAsync('tar', ['-xvf', archive, '-C', dir], {
-      stdio: 'inherit',
-      cwd: __dirname,
-    });
+    await spawnAsync(binary, ['x', archive, '-aoa', `-o${tmpDir}`]);
+    await spawnAsync(binary, ['x', tmpFile, '-aoa', `-o${dir}`]);
   } catch (e) {
+    console.error(e.message);
+    console.error(e.stderr);
+    throw e;
+  }
+}
+
+async function _extractAsync(archive, starterAppName, dir) {
+  try {
+    if (process.platform === 'win32') {
+      await _extractWindowsAsync(archive, starterAppName, dir);
+    } else {
+      await spawnAsync('tar', ['-xvf', archive, '-C', dir], {
+        stdio: 'inherit',
+        cwd: __dirname,
+      });
+    }
+  } catch (e) {
+    // tar.gz node module doesn't work consistently with big files, so only
+    // use it as a backup.
+    console.error(e.message);
     await targz().extract(archive, dir);
   }
 }
@@ -169,11 +199,11 @@ export async function createNewExpAsync(selectedDir: string, extraPackageJsonFie
   await mkdirp.promise(root);
 
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Downloading project files...');
-  let starterAppPath = await _downloadStarterAppAsync('default');
+  let { starterAppPath, starterAppName } = await _downloadStarterAppAsync('default');
 
   // Extract files
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Extracting project files...');
-  await _extract(starterAppPath, root);
+  await _extractAsync(starterAppPath, starterAppName, root);
 
   // Update files
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Customizing project...');

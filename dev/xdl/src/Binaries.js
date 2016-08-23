@@ -102,7 +102,7 @@ export async function installShellCommandsAsync() {
   }
 }
 
-function _getBinariesPath(): string {
+export function getBinariesPath(): string {
   if (process.platform === 'darwin') {
     return path.join(__dirname, '..', 'binaries', 'osx');
   } else if (process.platform === 'win32') {
@@ -125,7 +125,7 @@ export async function addToPathAsync(name: string) {
     process.env.PATH = '';
   }
 
-  let binariesPath = _getBinariesPath();
+  let binariesPath = getBinariesPath();
   let delimiter = process.platform === 'win32' ? ';' : ':';
   process.env.PATH = `${process.env.PATH}${delimiter}${binariesPath}`;
 }
@@ -136,7 +136,7 @@ export async function sourceBashLoginScriptsAsync() {
   }
 
   hasSourcedBashLoginScripts = true;
-  let result = await spawnAsync(path.join(_getBinariesPath(), 'get-path'));
+  let result = await spawnAsync(path.join(getBinariesPath(), 'get-path'));
   if (result.stderr && result.stderr.length > 0) {
     Logger.global.debug(`Error sourcing bash login scripts: ${result.stderr}`);
   }
