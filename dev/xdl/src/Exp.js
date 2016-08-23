@@ -116,7 +116,7 @@ async function _downloadStarterAppAsync(name) {
     return {
       starterAppPath,
       starterAppName,
-    };;
+    };
   }
 
   let url = `https://s3.amazonaws.com/exp-starter-apps/${filename}`;
@@ -130,7 +130,7 @@ async function _downloadStarterAppAsync(name) {
 async function _extractWindowsAsync(archive, starterAppName, dir) {
   let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
   let tmpDir = path.join(dotExponentHomeDirectory, 'starter-app-cache', 'tmp');
-  let tmpFile = path.join(tmpDir, `${starterAppName}.tar`)
+  let tmpFile = path.join(tmpDir, `${starterAppName}.tar`);
   let binary = path.join(Binaries.getBinariesPath(), '7z1602-extra', '7za');
   try {
     await spawnAsync(binary, ['x', archive, '-aoa', `-o${tmpDir}`]);
