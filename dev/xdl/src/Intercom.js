@@ -3,19 +3,31 @@
 // If that isn't the case, the functions in this file will just be
 // no-ops (your program won't crash), but don't expect it to work!
 
+let _version;
+
 export function boot(user_id, otherData) {
   if (window && window.Intercom) {
     window.Intercom('shutdown');
-    window.Intercom('boot', {
+    let data = {
       app_id: 'j3i1r6vl',
       user_id,
       ...otherData,
-    });
+    };
+
+    if (_version) {
+      data.version = _version;
+    }
+
+    window.Intercom('boot', data);
     window.IntercomUpdateStyle();
     return true;
   } else {
     return false;
   }
+}
+
+export function setVersionName(name) {
+  _version = name;
 }
 
 export function trackEvent(eventName, metadata) {
