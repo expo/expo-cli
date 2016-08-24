@@ -11,6 +11,7 @@ import url from 'url';
 
 import program, { Command } from 'commander';
 import {
+  Analytics,
   Config,
   Logger,
   NotificationCode,
@@ -68,6 +69,8 @@ Command.prototype.asyncActionProjectDir = function(asyncFn) {
 
 async function runAsync() {
   try {
+    Analytics.setSegmentInstance('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
+    Analytics.setVersionName(require('../package.json').version);
     _registerLogs();
 
     if (process.env.SERVER_URL) {

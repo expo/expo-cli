@@ -808,6 +808,9 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
 }
 
 export async function startAsync(projectRoot: string, options: Object = {}): Promise<any> {
+  await _assertLoggedInAsync();
+  _assertValidProjectRoot(projectRoot);
+
   Analytics.logEvent('Start Project', {
     projectRoot,
   });

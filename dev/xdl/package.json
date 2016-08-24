@@ -27,6 +27,7 @@
     "@exponent/json-file": "^5.2.0",
     "@exponent/osascript": "^1.5.1",
     "@exponent/spawn-async": "^1.2.8",
+    "analytics-node": "^2.1.0",
     "babel-runtime": "^6.11.6",
     "body-parser": "^1.15.2",
     "bunyan": "^1.8.1",

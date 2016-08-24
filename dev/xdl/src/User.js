@@ -45,7 +45,7 @@ export async function loginAsync(args: any) {
       username: result.user.username,
     });
 
-    Analytics.setUserProperties({
+    Analytics.setUserProperties(result.user.username, {
       username: result.user.username,
     });
 
@@ -78,7 +78,7 @@ export async function whoamiAsync() {
   if (result.user) {
     _currentUser = result.user;
 
-    Analytics.setUserProperties({
+    Analytics.setUserProperties(result.user.username, {
       username: result.user.username,
     });
   }
