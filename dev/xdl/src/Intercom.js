@@ -6,22 +6,26 @@
 let _version;
 
 export function boot(user_id, otherData) {
-  if (window && window.Intercom) {
-    window.Intercom('shutdown');
-    let data = {
-      app_id: 'j3i1r6vl',
-      user_id,
-      ...otherData,
-    };
+  try {
+    if (window && window.Intercom) {
+      window.Intercom('shutdown');
+      let data = {
+        app_id: 'j3i1r6vl',
+        user_id,
+        ...otherData,
+      };
 
-    if (_version) {
-      data.version = _version;
+      if (_version) {
+        data.version = _version;
+      }
+
+      window.Intercom('boot', data);
+      window.IntercomUpdateStyle();
+      return true;
+    } else {
+      return false;
     }
-
-    window.Intercom('boot', data);
-    window.IntercomUpdateStyle();
-    return true;
-  } else {
+  } catch (e) {
     return false;
   }
 }
