@@ -4,6 +4,7 @@
 
 import * as Analytics from './Analytics';
 import Api from './Api';
+import * as Intercom from './Intercom';
 import * as Password from './Password';
 import UserSettings from './UserSettings';
 
@@ -49,6 +50,8 @@ export async function loginAsync(args: any) {
       username: result.user.username,
     });
 
+    Intercom.boot(result.user.username);
+
     delete result.type;
     _currentUser = result.user;
     // console.log("Login as", result);
@@ -70,6 +73,8 @@ export async function logoutAsync() {
   await UserSettings.deleteKeyAsync('username');
   _currentUser = null;
 
+  Intercom.boot();
+
   return result;
 }
 
@@ -81,6 +86,10 @@ export async function whoamiAsync() {
     Analytics.setUserProperties(result.user.username, {
       username: result.user.username,
     });
+
+    Intercom.boot(result.user.username);
+  } else {
+    Intercom.boot(undefined);
   }
   return result.user;
 }
