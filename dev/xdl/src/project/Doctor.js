@@ -136,7 +136,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
     }
 
     if (!npmls) {
-      ProjectUtils.logError(projectRoot, 'exponent', `Error checking node_modules dependencies. Could not run \`npm ls\` in ${projectRoot}.`);
+      ProjectUtils.logWarning(projectRoot, 'exponent', `Problem checking node_modules dependencies. Could not run \`npm ls\` in ${projectRoot}.`);
       return WARNING;
     }
 
@@ -144,7 +144,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
     try {
       npmlsDependencies = JSON.parse(npmls).dependencies;
     } catch (e) {
-      ProjectUtils.logError(projectRoot, 'exponent', `Error checking node_modules dependencies: ${e.message}`);
+      ProjectUtils.logWarning(projectRoot, 'exponent', `Problem checking node_modules dependencies: ${e.message}`);
       return WARNING;
     }
 
@@ -162,7 +162,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
       });
 
       if (errorStrings.length > 0) {
-        errorStrings.push(`\nPlease run \`npm install\` in ${nodeModulesPath} and restart the project.`);
+        errorStrings.push(`\nIf there is an issue running your project, please run \`npm install\` in ${nodeModulesPath} and restart.`);
         ProjectUtils.logWarning(projectRoot, 'exponent', errorStrings.join('\n'));
         return WARNING;
       }
