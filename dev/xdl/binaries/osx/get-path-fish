@@ -1,0 +1,11 @@
+#!/usr/bin/env fish
+
+if [ -f ~/.exponent/fishrc ]; then
+   source ~/.exponent/fishrc > /dev/null
+else
+  if [ -f ~/.config/fish/config.fish ]; then
+    source ~/.config/fish/config.fish > /dev/null
+  fi
+fi
+
+echo $PATH

@@ -8,6 +8,7 @@ import ncp from 'ncp';
 import spawnAsync from '@exponent/spawn-async';
 import path from 'path';
 
+import Config from './Config';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
@@ -19,6 +20,7 @@ let hasSourcedBashLoginScripts = false;
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
+const SHELLS = ['bash', 'zsh', 'fish'];
 
 function _ncpAsync(source, dest) {
   return new Promise((resolve, reject) => {
@@ -135,15 +137,36 @@ export async function sourceBashLoginScriptsAsync() {
     return;
   }
 
-  hasSourcedBashLoginScripts = true;
-  let result = await spawnAsync(path.join(getBinariesPath(), 'get-path'));
-  if (result.stderr && result.stderr.length > 0) {
-    Logger.global.debug(`Error sourcing bash login scripts: ${result.stderr}`);
+  if (Config.developerTool === 'exp') {
+    return;
   }
 
-  if (process.env.PATH && process.env.PATH.length > 0) {
-    process.env.PATH = `${process.env.PATH}:${result.stdout}`;
-  } else {
-    process.env.PATH = result.stdout;
+  hasSourcedBashLoginScripts = true;
+  let currentPath = process.env.PATH ? process.env.PATH : '';
+
+  for (let i = 0; i < SHELLS.length; i++) {
+    let shell = SHELLS[i];
+    try {
+      let result = await spawnAsync(path.join(getBinariesPath(), `get-path-${shell}`), {
+        env: {
+          PATH: '',
+        },
+      });
+      if (result.stderr && result.stderr.length > 0) {
+        Logger.global.debug(`Error sourcing ${shell} startup scripts: ${result.stderr}`);
+      }
+
+      if (result.stdout && result.stdout.length > 0) {
+        if (currentPath.length > 0) {
+          currentPath = `${currentPath}:`;
+        }
+
+        currentPath = `${currentPath}${result.stdout}`;
+      }
+    } catch (e) {
+      Logger.global.debug(`Error sourcing ${shell} startup scripts: ${e.stderr}`);
+    }
   }
+
+  process.env.PATH = currentPath;
 }

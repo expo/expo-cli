@@ -1,0 +1,16 @@
+#!/usr/bin/env zsh
+
+if [ -f ~/.exponent/zshrc ]; then
+   source ~/.exponent/zshrc > /dev/null
+else
+  ZDOTDIR="${ZDOTDIR:-$HOME}"
+  if [ -f $ZDOTDIR/.zshenv ]; then
+    source $ZDOTDIR/.zshenv > /dev/null
+  fi
+
+  if [ -f $ZDOTDIR/.zshrc ]; then
+    source $ZDOTDIR/.zshrc > /dev/null
+  fi
+fi
+
+echo $PATH
