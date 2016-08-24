@@ -84,6 +84,10 @@ module.exports = joi.object().keys({
   entryPoint: joi.string().description(`
     The relative path to your main JavaScript file.
   `),
+
+  extra: joi.object().description(`
+    Any extra fields you want to pass to your experience.
+  `),
   rnCliPath: joi.string(),
   packagerOpts: joi.object(),
   ignoreNodeModulesValidation: joi.boolean(),

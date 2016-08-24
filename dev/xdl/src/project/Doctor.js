@@ -33,8 +33,8 @@ async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>
   try {
     await joi.promise.validate(exp, ExpSchema);
   } catch (e) {
-    ProjectUtils.logError(projectRoot, 'exponent', `Error: Problem in exp.json. ${e.message}. See ${Config.helpUrl}.`);
-    return FATAL;
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in exp.json. ${e.message}. See ${Config.helpUrl}.`);
+    return WARNING;
   }
 
   // Warn if sdkVersion is UNVERSIONED
