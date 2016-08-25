@@ -50,7 +50,7 @@ export async function loginAsync(args: any) {
       username: result.user.username,
     });
 
-    Intercom.boot(result.user.username);
+    Intercom.update(result.user.username, result.user.intercomUserHash);
 
     delete result.type;
     _currentUser = result.user;
@@ -73,7 +73,7 @@ export async function logoutAsync() {
   await UserSettings.deleteKeyAsync('username');
   _currentUser = null;
 
-  Intercom.boot();
+  Intercom.update(null, null);
 
   return result;
 }
@@ -87,9 +87,9 @@ export async function whoamiAsync() {
       username: result.user.username,
     });
 
-    Intercom.boot(result.user.username);
+    Intercom.update(result.user.username, result.user.intercomUserHash);
   } else {
-    Intercom.boot(undefined);
+    Intercom.update(null, null);
   }
   return result.user;
 }

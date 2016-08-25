@@ -1,41 +1,45 @@
-// This assumes that you are in a web context and that Intercom has
-// been included via a `<script>` tag and is available as a global.
-// If that isn't the case, the functions in this file will just be
-// no-ops (your program won't crash), but don't expect it to work!
+/**
+ * @flow
+ */
 
 let _version;
+let _isBooted = false;
 
-export function boot(user_id, otherData) {
+export function update(user_id: ?string, user_hash: ?string) {
   try {
     if (window && window.Intercom) {
-      window.Intercom('shutdown');
       let data = {
-        app_id: 'j3i1r6vl',
+        app_id: 'fhlr5ht1',
         user_id,
-        ...otherData,
+        user_hash,
       };
 
       if (_version) {
-        data.version = _version;
+        data = {
+          ...data,
+          version: _version,
+        };
       }
 
-      window.Intercom('boot', data);
+      if (_isBooted) {
+        if (user_id) {
+          // Call update so that any conversations carry over from the logged out to
+          // the logged in user.
+          window.Intercom('update', data);
+        } else {
+          // Was logged in and is now logging out, restart intercom.
+          window.Intercom('shutdown');
+          window.Intercom('boot', data);
+        }
+      } else {
+        window.Intercom('boot', data);
+        _isBooted = true;
+      }
       window.IntercomUpdateStyle();
-      return true;
-    } else {
-      return false;
     }
-  } catch (e) {
-    return false;
-  }
+  } catch (e) {}
 }
 
-export function setVersionName(name) {
+export function setVersionName(name: string) {
   _version = name;
-}
-
-export function trackEvent(eventName, metadata) {
-  if (window && window.Intercom) {
-    return window.Intercom('trackEvent', eventName, metadata);
-  }
 }
