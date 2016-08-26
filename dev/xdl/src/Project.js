@@ -360,22 +360,12 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
   for (let i = 0; i < logs.length; i++) {
     let log = logs[i];
 
-    let bodyArray = [];
-    if (typeof log.body === 'string') {
-      bodyArray.push(log.body);
-    } else {
-      // body is in this format:
-      // { 0: 'stuff', 1: 'more stuff' }
-      // so convert to an array first
-      let j = 0;
-      while (log.body[j]) {
-        bodyArray.push(log.body[j]);
-        j++;
+    let body = typeof log.body === 'string' ? [log.body] : log.body;
+    let string = body.map(obj => {
+      if (typeof obj === 'undefined') {
+        return 'undefined';
       }
-    }
-
-    let string = bodyArray.map(obj => {
-      if (!obj) {
+      if (obj === 'null') {
         return 'null';
       }
 
