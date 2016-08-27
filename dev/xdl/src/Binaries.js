@@ -2,6 +2,7 @@
  * @flow
  */
 
+import fs from 'fs';
 import hasbin from 'hasbin';
 import mkdirp from 'mkdirp';
 import ncp from 'ncp';
@@ -20,7 +21,6 @@ let hasSourcedBashLoginScripts = false;
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
-const SHELLS = ['bash', 'zsh', 'fish'];
 
 function _ncpAsync(source, dest) {
   return new Promise((resolve, reject) => {
@@ -132,6 +132,14 @@ export async function addToPathAsync(name: string) {
   process.env.PATH = `${process.env.PATH}${delimiter}${binariesPath}`;
 }
 
+function _exponentRCFileExists() {
+  try {
+    return fs.statSync(path.join(process.env.HOME, '.exponent', 'bashrc')).isFile();
+  } catch (e) {
+    return false;
+  }
+}
+
 export async function sourceBashLoginScriptsAsync() {
   if (hasSourcedBashLoginScripts || process.platform === 'win32') {
     return;
@@ -144,28 +152,57 @@ export async function sourceBashLoginScriptsAsync() {
   hasSourcedBashLoginScripts = true;
   let currentPath = process.env.PATH ? process.env.PATH : '';
 
-  for (let i = 0; i < SHELLS.length; i++) {
-    let shell = SHELLS[i];
-    try {
-      let result = await spawnAsync(path.join(getBinariesPath(), `get-path-${shell}`), {
+  try {
+    if (_exponentRCFileExists()) {
+      // User has a ~/.exponent/bashrc. Run that and grab PATH.
+      let result = await spawnAsync(path.join(getBinariesPath(), `get-path-bash`), {
         env: {
           PATH: '',
         },
       });
-      if (result.stderr && result.stderr.length > 0) {
-        Logger.global.debug(`Error sourcing ${shell} startup scripts: ${result.stderr}`);
+
+      if (result.stderr) {
+        Logger.global.debug(`Error sourcing ~/.exponent/bashrc script: ${result.stderr}`);
       }
 
-      if (result.stdout && result.stdout.length > 0) {
+      if (result.stdout) {
         if (currentPath.length > 0) {
           currentPath = `${currentPath}:`;
         }
 
         currentPath = `${currentPath}${result.stdout}`;
       }
-    } catch (e) {
-      Logger.global.debug(`Error sourcing ${shell} startup scripts: ${e.stderr}`);
+    } else {
+      // No ~/.exponent/bashrc file found. Run `env` in process.env.SHELL.
+      let result;
+      if (/t?csh$/.test(process.env.SHELL)) {
+        // csh
+        result = await spawnAsync(process.env.SHELL, ['-d', '-c', 'env']);
+      } else {
+        // bash, zsh, fish
+        result = await spawnAsync(process.env.SHELL, ['-l', '-c', 'env']);
+      }
+
+      if (result.stderr) {
+        Logger.global.debug(`Error sourcing shell startup scripts: ${result.stderr}`);
+      }
+
+      if (result.stdout) {
+        let regexResult = result.stdout.match(/(^|\n)PATH=(.+)/);
+
+        if (regexResult.length >= 3) {
+          if (currentPath.length > 0) {
+            currentPath = `${currentPath}:`;
+          }
+
+          currentPath = `${currentPath}${regexResult[2]}`;
+        } else {
+          Logger.global.debug(`Error parsing shell startup scripts output: ${result.stderr}`);
+        }
+      }
     }
+  } catch (e) {
+    Logger.global.debug(`Error sourcing shell startup scripts: ${e.stderr}`);
   }
 
   process.env.PATH = currentPath;
