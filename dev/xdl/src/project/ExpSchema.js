@@ -112,6 +112,11 @@ module.exports = joi.object().keys({
       }).description(
         "`Twitter Fabric <https://get.fabric.io/>`_ keys to hook up Crashlytics and other services."
       ),
+      googleMaps: joi.object().keys({
+        apiKey: joi.string().alphanum().description('Your Google Maps Android SDK API key'),
+      }).description(
+        "`Google Maps Android SDK <https://developers.google.com/maps/documentation/android-api/signup>`_ key for your standalone app."
+      ),
     }),
   }).description('Android standalone app specific configuration').meta({standaloneOnly: true}),
 });
