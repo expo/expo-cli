@@ -102,6 +102,9 @@ module.exports = joi.object().keys({
     package: reverseDnsField.description(
       "The package name for your Android standalone app. You make it up, but it needs to be unique on the Play Store. See `this StackOverflow question <http://stackoverflow.com/questions/6273892/android-package-name-convention>`_."
     ),
+    versionCode: joi.number().description(
+      "Version number required by Google Play. Increment by one for each release. https://developer.android.com/studio/publish/versioning.html."
+    ),
     config: joi.object().keys({
       fabric: joi.object().keys({
         apiKey: joi.string().alphanum().description('Your Fabric API key'),
