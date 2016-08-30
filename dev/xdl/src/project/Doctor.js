@@ -153,11 +153,15 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
       _.forEach(pkg.dependencies, (versionRequired, dependency) => {
         let installedDependency = npmlsDependencies[dependency];
         if (!installedDependency || !installedDependency.version) {
-          errorStrings.push(`'${dependency}' dependency is not installed.`);
+          if (installedDependency && installedDependency.peerMissing) {
+            errorStrings.push(`Warning: '${dependency}' peer depencency missing. Run \`npm ls\` in ${nodeModulesPath} to see full warning.`);
+          } else {
+            errorStrings.push(`Warning: '${dependency}' dependency is not installed.`);
+          }
         } else if (!semver.satisfies(installedDependency.version, versionRequired) && !versionRequired.includes(installedDependency.from)) {
           // For react native, `from` field looks like "exponentjs/react-native#sdk-8.0.1" and
           // versionRequired looks like "github:exponentjs/react-native#sdk-8.0.0"
-          errorStrings.push(`Installed version ${installedDependency.version} of '${dependency}' does not satify required version ${versionRequired}`);
+          errorStrings.push(`Warning: Installed version ${installedDependency.version} of '${dependency}' does not satify required version ${versionRequired}`);
         }
       });
 

@@ -232,6 +232,8 @@ export async function createNewExpAsync(selectedDir: string, extraPackageJsonFie
   let customExpJson = expJson.replace(/\"My New Project\"/, `"${data.name}"`).replace(/\"my-new-project\"/, `"${data.name}"`);
   await fs.writeFile.promise(path.join(root, 'exp.json'), customExpJson, 'utf8');
 
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Starting project...');
+
   return root;
 }
 
