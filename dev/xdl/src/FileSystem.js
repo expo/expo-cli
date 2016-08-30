@@ -17,7 +17,7 @@ export function openFolderName() {
   if (process.platform === 'darwin') {
     return 'Show in Finder';
   } else if (process.platform === 'win32') {
-    return 'Show in File Explorer'
+    return 'Show in File Explorer';
   }
 }
 
@@ -25,7 +25,7 @@ export function openConsoleName() {
   if (process.platform === 'darwin') {
     return 'Open in Terminal';
   } else if (process.platform === 'win32') {
-    return 'Open in Cmd'
+    return 'Open in Cmd';
   }
 }
 
