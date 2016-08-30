@@ -1,5 +1,6 @@
 'use strict';
 
+jest.mock('analytics-node');
 jest.mock('fs');
 
 const UrlUtils = require('../UrlUtils');
