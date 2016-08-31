@@ -11,9 +11,10 @@ import JsonFile from '@exponent/json-file';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-// TODO: Make this more configurable
+const SETTINGS_FILE_NAME = 'exponent.json';
+
 function userSettingsFile() {
-  return path.join(dotExponentHomeDirectory(), 'exponent.json');
+  return path.join(dotExponentHomeDirectory(), SETTINGS_FILE_NAME);
 }
 
 function userSettingsJsonFile() {
@@ -45,6 +46,7 @@ Object.assign(UserSettings, {
   recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,
+  SETTINGS_FILE_NAME,
 });
 
 export default UserSettings;

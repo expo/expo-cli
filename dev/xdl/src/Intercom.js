@@ -7,9 +7,13 @@ import * as Diagnostics from './Diagnostics';
 let _version;
 let _isBooted = false;
 
+function _isWindowDefined() {
+  return typeof(window) !== 'undefined' && window && window.Intercom;
+}
+
 export async function update(user_id: ?string, user_hash: ?string) {
   try {
-    if (window && window.Intercom) {
+    if (_isWindowDefined()) {
       let deviceInfo = await Diagnostics.getDeviceInfoAsync({
         limitLengthForIntercom: true,
       });
@@ -50,7 +54,7 @@ export async function update(user_id: ?string, user_hash: ?string) {
 
 export function trackEvent(name: string, metadata: any) {
   try {
-    if (window && window.Intercom) {
+    if (_isWindowDefined()) {
       window.Intercom('trackEvent', name, metadata);
     }
   } catch (e) {
@@ -60,7 +64,7 @@ export function trackEvent(name: string, metadata: any) {
 
 export function showNewMessage(message: string) {
   try {
-    if (window && window.Intercom) {
+    if (_isWindowDefined()) {
       window.Intercom('showNewMessage', message);
     }
   } catch (e) {

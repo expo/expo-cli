@@ -5,37 +5,29 @@
 import 'instapromise';
 
 import _ from 'lodash';
-import aws from 'aws-sdk';
 import child_process from 'child_process';
 import diskusage from 'diskusage';
+import FormData from 'form-data';
 import fs from 'fs';
 import ip from 'ip';
+import JsonFile from '@exponent/json-file';
 import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
 import spawnAsync from '@exponent/spawn-async';
 import targz from 'tar.gz';
-import uuid from 'node-uuid';
 
+import Api from './Api';
 import * as Binaries from './Binaries';
 import * as Env from './Env';
 import * as User from './User';
 import UserSettings from './UserSettings';
 
-function _s3Client() {
-  aws.config.update({
-    accessKeyId: 'AKIAJRAQBU4Y4W7IKXLQ',
-    secretAccessKey: '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',
-    region: 'us-east-1',
-  });
-
-  return new aws.S3();
-}
-
 async function _uploadLogsAsync() {
   let user = await User.getCurrentUserAsync();
   let username = user ? user.username : 'anonymous';
 
+  // copy files to tempDir
   let tempDir = path.join(Env.home(), `${username}-diagnostics`);
   let exponentHome = UserSettings.dotExponentHomeDirectory();
   let archivePath = path.join(exponentHome, 'diagnostics.tar.gz');
@@ -48,19 +40,28 @@ async function _uploadLogsAsync() {
       }
     },
   });
+
+  // remove access token
+  try {
+    let settingsJsonFile = new JsonFile(path.join(tempDir, UserSettings.SETTINGS_FILE_NAME));
+    let settingsJson = await settingsJsonFile.readAsync();
+    settingsJson.accessToken = 'redacted';
+    await settingsJsonFile.writeAsync(settingsJson);
+  } catch (e) {
+    console.error(e);
+  }
+
+  // compress
   await targz().compress(tempDir, archivePath);
   rimraf.sync(tempDir);
 
+  // upload
   let file = fs.createReadStream(archivePath);
-  let s3 = _s3Client();
-  let uploadResult = await s3.promise.upload({
-    Bucket: 'exp-xde-diagnostics',
-    Key: `${username}-${uuid.v4()}.tar.gz`,
-    Body: file,
-    ACL: 'public-read',
-  });
+  let form = new FormData();
+  form.append('archive', file);
 
-  return uploadResult.Location;
+  let response = await Api.callMethodAsync('uploadDiagnostics', [{}], 'put', form);
+  return response.url;
 }
 
 // From http://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
