@@ -4,7 +4,7 @@
 
 import os from 'os';
 
-export function home(): ?string {
+export function home(): string {
   return os.homedir();
 }
 

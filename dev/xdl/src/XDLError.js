@@ -3,6 +3,7 @@
  */
 
 import * as Analytics from './Analytics';
+import * as Intercom from './Intercom';
 
 export default class XDLError extends Error {
   code: string;
@@ -15,6 +16,11 @@ export default class XDLError extends Error {
     this.isXDLError = true;
 
     Analytics.logEvent('XDL Error', {
+      code,
+      message,
+    });
+
+    Intercom.trackEvent('error', {
       code,
       message,
     });

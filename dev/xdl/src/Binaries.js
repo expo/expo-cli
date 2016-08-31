@@ -3,6 +3,7 @@
  */
 
 import fs from 'fs';
+import os from 'os';
 import hasbin from 'hasbin';
 import mkdirp from 'mkdirp';
 import ncp from 'ncp';
@@ -22,9 +23,9 @@ let hasSourcedBashLoginScripts = false;
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
 
-function _ncpAsync(source, dest) {
+export function ncpAsync(source: string, dest: string, options: any = {}) {
   return new Promise((resolve, reject) => {
-    ncp(source, dest, (err) => {
+    ncp(source, dest, options, (err) => {
       if (err) {
         reject();
       } else {
@@ -87,7 +88,7 @@ export async function installShellCommandsAsync() {
     throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
   }
 
-  await _ncpAsync(OSX_SOURCE_PATH, _exponentBinaryDirectory());
+  await ncpAsync(OSX_SOURCE_PATH, _exponentBinaryDirectory());
 
   let binaries = ['adb', 'watchman'];
   let installedBinaries = [];
@@ -134,7 +135,7 @@ export async function addToPathAsync(name: string) {
 
 function _exponentRCFileExists() {
   try {
-    return fs.statSync(path.join(process.env.HOME, '.exponent', 'bashrc')).isFile();
+    return fs.statSync(path.join(os.homedir(), '.exponent', 'bashrc')).isFile();
   } catch (e) {
     return false;
   }

@@ -2,16 +2,22 @@
  * @flow
  */
 
+import * as Diagnostics from './Diagnostics';
+
 let _version;
 let _isBooted = false;
 
-export function update(user_id: ?string, user_hash: ?string) {
+export async function update(user_id: ?string, user_hash: ?string) {
   try {
     if (window && window.Intercom) {
+      let deviceInfo = await Diagnostics.getDeviceInfoAsync({
+        limitLengthForIntercom: true,
+      });
       let data = {
         app_id: 'fhlr5ht1',
         user_id,
         user_hash,
+        ...deviceInfo,
       };
 
       if (_version) {
@@ -37,7 +43,29 @@ export function update(user_id: ?string, user_hash: ?string) {
       }
       window.IntercomUpdateStyle();
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function trackEvent(name: string, metadata: any) {
+  try {
+    if (window && window.Intercom) {
+      window.Intercom('trackEvent', name, metadata);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+export function showNewMessage(message: string) {
+  try {
+    if (window && window.Intercom) {
+      window.Intercom('showNewMessage', message);
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 export function setVersionName(name: string) {
