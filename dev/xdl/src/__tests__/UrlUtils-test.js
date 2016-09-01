@@ -1,8 +1,7 @@
-'use strict';
-
 jest.mock('analytics-node');
 jest.mock('diskusage');
 jest.mock('fs');
+jest.mock('../Env');
 
 const UrlUtils = require('../UrlUtils');
 const fs = require('fs');
@@ -30,19 +29,19 @@ fs.__setMockFilesystem({
 });
 
 describe('constructBundleUrlAsync', () => {
-  pit('returns the correct default packager url', async () => {
+  it('returns the correct default packager url', async () => {
     let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectPath, {});
     expect(packagerUrl).toEqual('exp://packager.ab-cde.jesse.test-project.exp.direct:80');
   });
 
-  pit('returns the correct http packager url', async () => {
+  it('returns the correct http packager url', async () => {
     let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectPath, {
       urlType: 'http',
     });
     expect(packagerUrl).toEqual('http://packager.ab-cde.jesse.test-project.exp.direct:80');
   });
 
-  pit('returns the correct localhost packager url', async () => {
+  it('returns the correct localhost packager url', async () => {
     let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectPath, {
       hostType: 'localhost',
     });
@@ -51,19 +50,19 @@ describe('constructBundleUrlAsync', () => {
 });
 
 describe('constructManifestUrlAsync', () => {
-  pit('returns the correct default manifest url', async () => {
+  it('returns the correct default manifest url', async () => {
     let packagerUrl = await UrlUtils.constructManifestUrlAsync(projectPath, {});
     expect(packagerUrl).toEqual('exp://ab-cde.jesse.test-project.exp.direct:80');
   });
 
-  pit('returns the correct http manifest url', async () => {
+  it('returns the correct http manifest url', async () => {
     let packagerUrl = await UrlUtils.constructManifestUrlAsync(projectPath, {
       urlType: 'http',
     });
     expect(packagerUrl).toEqual('http://ab-cde.jesse.test-project.exp.direct:80');
   });
 
-  pit('returns the correct localhost manifest url', async () => {
+  it('returns the correct localhost manifest url', async () => {
     let packagerUrl = await UrlUtils.constructManifestUrlAsync(projectPath, {
       hostType: 'localhost',
     });
@@ -72,7 +71,7 @@ describe('constructManifestUrlAsync', () => {
 });
 
 describe('constructPublishUrlAsync', () => {
-  pit('returns the correct publish url', async () => {
+  it('returns the correct publish url', async () => {
     let packagerUrl = await UrlUtils.constructPublishUrlAsync(projectPath, 'test-project-entry-point');
     expect(packagerUrl).toEqual('http://localhost:19001/test-project-entry-point.bundle?dev=false&minify=true&hot=false&includeAssetFileHashes=true');
   });

@@ -30,29 +30,29 @@ request.__setMockResponse({
 });
 
 describe('facebookReactNativeVersionsAsync', () => {
-  pit('checks list of versions is correct', async () => {
+  it('checks list of versions is correct', async () => {
     let facebookReactNativeVersions = await Versions.facebookReactNativeVersionsAsync();
     expect(facebookReactNativeVersions).toEqual(['0.24.0', '0.27.0']);
   });
 });
 
 describe('facebookReactNativeVersionToExponentVersionAsync', () => {
-  pit('returns exponent version when available', async () => {
+  it('returns exponent version when available', async () => {
     let exponentVersion = await Versions.facebookReactNativeVersionToExponentVersionAsync('0.24.0');
     expect(exponentVersion).toEqual('5.0.0');
   });
 
-  pit('returns newest exponent version when multiple versions exist', async () => {
+  it('returns newest exponent version when multiple versions exist', async () => {
     let exponentVersion = await Versions.facebookReactNativeVersionToExponentVersionAsync('0.27.0');
     expect(exponentVersion).toEqual('7.0.0');
   });
 
-  pit('ignores patch version', async () => {
+  it('ignores patch version', async () => {
     let exponentVersion = await Versions.facebookReactNativeVersionToExponentVersionAsync('0.27.3');
     expect(exponentVersion).toEqual('7.0.0');
   });
 
-  pit('returns null when no matching version exists', async () => {
+  it('returns null when no matching version exists', async () => {
     let exponentVersion = await Versions.facebookReactNativeVersionToExponentVersionAsync('0.23.0');
     expect(exponentVersion).toEqual(null);
   });

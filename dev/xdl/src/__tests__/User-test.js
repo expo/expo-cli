@@ -6,7 +6,7 @@ jest.mock('../Env');
 jest.mock('request');
 
 describe('loginAsync', () => {
-  pit('calls login Api and stores the username', async () => {
+  it('calls login Api and stores the username', async () => {
     const fs = require('fs');
     const request = require('request');
     const User = require('../User');
@@ -38,7 +38,7 @@ describe('loginAsync', () => {
 });
 
 describe('logoutAsync', () => {
-  pit('calls logout Api and cleans the username', async () => {
+  it('calls logout Api and cleans the username', async () => {
     const fs = require('fs');
     const request = require('request');
     const User = require('../User');

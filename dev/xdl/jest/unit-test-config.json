@@ -7,5 +7,6 @@
   "moduleFileExtensions": [
     "js",
     "json"
-  ]
+  ],
+  "resetModules": true
 }

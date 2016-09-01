@@ -218,7 +218,7 @@ fs.close.mockImpl((fd, callback = noop) => {
 });
 
 let filesystem = {
-  'home': {},
+  // 'home': {},
 };
 
 fs.__setMockFilesystem = (object) => filesystem = object;
@@ -273,6 +273,12 @@ function writeNode(filepath, data, mkdir) {
     }
     node = node[part];
   });
+
+  if (!node) {
+    let err = new Error('Does not exist.');
+    err.code = 'ENOENT';
+    throw err;
+  }
 
   if (mkdir) {
     if (node[parts[parts.length - 1]]) {
