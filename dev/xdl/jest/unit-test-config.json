@@ -1,5 +1,4 @@
 {
-  "automock": false,
   "testEnvironment": "node",
   "testPathDirs": [
     "src"

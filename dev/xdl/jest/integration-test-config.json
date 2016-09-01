@@ -1,6 +1,5 @@
 {
   "watchman": false,
-  "automock": false,
   "testEnvironment": "node",
   "testPathDirs": [
     "src"
