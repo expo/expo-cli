@@ -272,13 +272,13 @@ function writeNode(filepath, data, mkdir) {
       node = getToNode(node.SYMLINK);
     }
     node = node[part];
-  });
 
-  if (!node) {
-    let err = new Error('Does not exist.');
-    err.code = 'ENOENT';
-    throw err;
-  }
+    if (!node) {
+      let err = new Error('Does not exist.');
+      err.code = 'ENOENT';
+      throw err;
+    }
+  });
 
   if (mkdir) {
     if (node[parts[parts.length - 1]]) {
