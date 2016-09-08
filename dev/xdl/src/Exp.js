@@ -83,14 +83,14 @@ export async function determineEntryPointAsync(root: string) {
   // root than the project root, these can be different. Most of the time
   // you should use main.
   let entryPoint = main || 'index.js';
+  if (exp && exp.entryPoint) {
+    entryPoint = exp.entryPoint;
+  }
+
   let hasSeparateIosAndAndroidFiles = false;
   if (!_doesFileExist(path.join(root, entryPoint)) &&
     (_doesFileExist(path.join(root, _getPlatformSpecificEntryPoint(entryPoint, 'android'))) || _doesFileExist(path.join(root, _getPlatformSpecificEntryPoint(entryPoint, 'ios'))))) {
     hasSeparateIosAndAndroidFiles = true;
-  }
-
-  if (exp && exp.entryPoint) {
-    entryPoint = exp.entryPoint;
   }
 
   if (hasSeparateIosAndAndroidFiles) {
