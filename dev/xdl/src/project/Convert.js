@@ -2,10 +2,6 @@
  * @flow
  */
 
-
-// Warning: we are going to modify your package.json, delete your
-// node_modules directory, and modify your .babelrc file. Are
-// you OK with this?
 import slug from 'slugify';
 
 import path from 'path';
@@ -19,11 +15,11 @@ import babelRcTemplate from './templates/babelrc';
 export default async function convertProjectAsync(projectDir, {projectName, projectDescription, projectEntryPoint}) {
   let projectSlug = slug(projectName.toLowerCase())
 
-  let expJsonTargetPath = path.resolve(`${projectDir}/exp.json`);
-  let babelRcTargetPath = path.resolve(`${projectDir}/.babelrc`);
+  let expJsonTargetPath = path.join(projectDir, '/exp.json');
+  let babelRcTargetPath = path.join(projectDir, '/.babelrc');
 
-  let packageJsonSourcePath = path.resolve(`${projectDir}/package.json`);
-  let packageJsonTargetPath = path.resolve(`${projectDir}/package.json`);
+  let packageJsonSourcePath = path.join(projectDir, '/package.json');
+  let packageJsonTargetPath = path.join(projectDir, '/package.json');
 
   // Add values to exp.json,) save to given path
   let expJson = {...expJsonTemplate};
@@ -45,11 +41,14 @@ export default async function convertProjectAsync(projectDir, {projectName, proj
     }
   });
 
-  packageJson.main = projectEntryPoint;
+  if (projectEntryPoint !== 'index.*.js' && projectEntryPoint !== 'index.js' && projectEntryPoint !== 'index.ios.js' && projectEntryPoint !== 'index.android.js') {
+    packageJson.main = projectEntryPoint;
+  }
   jsonfile.writeFileSync(packageJsonTargetPath, packageJson, {spaces: 2});
   console.log('Updated package.json');
 
   // TODO: Add import Exponent from 'exponent'; at the top of main file
+  // TODO: Add .exponent/* to gitignore
 
   // Copy babelrc
   jsonfile.writeFileSync(babelRcTargetPath, babelRcTemplate, {spaces: 2});
@@ -86,8 +85,8 @@ function showCompatibilityMessage(packages) {
 }
 
 async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
-  let nodeModulesPath = path.resolve(`${projectDir}/node_modules`);
-  let nextStepMessagePath = path.resolve(`${projectDir}/exponent-next-steps.txt`);
+  let nodeModulesPath = path.join(projectDir, '/node_modules');
+  let nextStepMessagePath = path.join(projectDir, '/exponent-next-steps.txt');
 
   fse.removeSync(nodeModulesPath);
   console.log('Running npm install, this may take a few minutes.');
