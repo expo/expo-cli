@@ -107,10 +107,21 @@ function _starterAppCacheDirectory() {
   return dir;
 }
 
-async function _downloadStarterAppAsync(name) {
+async function _downloadStarterAppAsync(templateId) {
   let versions = await Api.versionsAsync();
-  let starterAppVersion = versions.starterApps[name].version;
-  let starterAppName = `${name}-${starterAppVersion}`;
+  let templateApp = null;
+  for (let i = 0; i < versions.templates.length; i++) {
+    if (templateId === versions.templates[i].id) {
+      templateApp = versions.templates[i];
+    }
+  }
+
+  if (!templateApp) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, `No template app with id ${templateId}.`);
+  }
+
+  let starterAppVersion = templateApp.version;
+  let starterAppName = `${templateId}-${starterAppVersion}`;
   let filename = `${starterAppName}.tar.gz`;
   let starterAppPath = path.join(_starterAppCacheDirectory(), filename);
 
@@ -162,7 +173,7 @@ async function _extractAsync(archive, starterAppName, dir) {
   }
 }
 
-export async function createNewExpAsync(selectedDir: string, extraPackageJsonFields: any, opts: any) {
+export async function createNewExpAsync(templateId: string, selectedDir: string, extraPackageJsonFields: any, opts: any) {
   // Validate
   let schema = joi.object().keys({
     name: joi.string().required(),
@@ -194,14 +205,14 @@ export async function createNewExpAsync(selectedDir: string, extraPackageJsonFie
   }
 
   if (fileExists) {
-    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `That directory already exists. Please choose a different parent directory or project name. (${root})`);
+    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `That directory already exists. Please choose a different parent directory or project name.`);
   }
 
   // Download files
   await mkdirp.promise(root);
 
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Downloading project files...');
-  let { starterAppPath, starterAppName } = await _downloadStarterAppAsync('default');
+  let { starterAppPath, starterAppName } = await _downloadStarterAppAsync(templateId);
 
   // Extract files
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Extracting project files...');
