@@ -6,7 +6,7 @@
 // Warning: we are going to modify your package.json, delete your
 // node_modules directory, and modify your .babelrc file. Are
 // you OK with this?
-import slug from 'slug';
+import slug from 'slugify';
 
 import path from 'path';
 import jsonfile from 'jsonfile';
