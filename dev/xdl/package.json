@@ -32,7 +32,6 @@
     "body-parser": "^1.15.2",
     "bunyan": "^1.8.1",
     "delay-async": "^1.0.0",
-    "diskusage": "^0.1.5",
     "download": "^4.4.3",
     "exec-async": "^2.2.0",
     "exists-async": "^2.0.0",
@@ -65,7 +64,8 @@
     "url": "^0.11.0"
   },
   "optionalDependencies": {
-    "runas": "^3.1.1"
+    "runas": "^3.1.1",
+    "diskusage": "^0.1.5"
   },
   "devDependencies": {
     "babel-cli": "^6.14.0",

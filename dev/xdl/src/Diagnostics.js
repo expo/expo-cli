@@ -6,7 +6,6 @@ import 'instapromise';
 
 import _ from 'lodash';
 import child_process from 'child_process';
-import diskusage from 'diskusage';
 import FormData from 'form-data';
 import fs from 'fs';
 import ip from 'ip';
@@ -22,6 +21,12 @@ import * as Binaries from './Binaries';
 import * as Env from './Env';
 import * as User from './User';
 import UserSettings from './UserSettings';
+
+// requires python, so might not be installed
+let diskusage;
+try {
+  diskusage = require('diskusage');
+} catch (e) {}
 
 async function _uploadLogsAsync() {
   let user = await User.getCurrentUserAsync();
@@ -64,6 +69,7 @@ async function _uploadLogsAsync() {
   return response.url;
 }
 
+/* eslint-disable prefer-template */
 // From http://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
 function _formatBytes(bytes: number): string {
   if (bytes >= 1000000000) { return (bytes / 1000000000).toFixed(2) + ' GB'; }
@@ -73,6 +79,7 @@ function _formatBytes(bytes: number): string {
   else if (bytes === 1) { return bytes + '${bytes} byte'; }
   else { return '0 bytes'; }
 }
+/* eslint-enable prefer-template */
 
 export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   let info = {};
@@ -135,12 +142,14 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   info.ip = ip.address();
   info.hostname = os.hostname();
 
-  try {
-    let result = await diskusage.promise.check((process.platform === 'win32') ? 'c:' : '/');
-    info.diskAvailable = _formatBytes(result.available);
-    info.diskFree = _formatBytes(result.free);
-    info.diskTotal = _formatBytes(result.total);
-  } catch (e) {}
+  if (diskusage) {
+    try {
+      let result = await diskusage.promise.check((process.platform === 'win32') ? 'c:' : '/');
+      info.diskAvailable = _formatBytes(result.available);
+      info.diskFree = _formatBytes(result.free);
+      info.diskTotal = _formatBytes(result.total);
+    } catch (e) {}
+  }
 
   if (process.platform === 'darwin' || process.platform === 'linux') {
     try {
