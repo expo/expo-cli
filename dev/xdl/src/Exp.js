@@ -29,6 +29,8 @@ import * as ProjectSettings from './ProjectSettings';
 
 export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 
+export { default as convertProjectAsync } from './project/Convert';
+
 export function packageJsonForRoot(root: string) {
   return new JsonFile(path.join(root, 'package.json'));
 }
