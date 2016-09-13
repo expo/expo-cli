@@ -2,7 +2,7 @@ module.exports = {
   "name": "",
   "description": "",
   "slug": "",
-  "sdkVersion": "9.0.0",
+  "sdkVersion": "10.0.0",
   "version": "1.0.0",
   "orientation": "portrait",
   "primaryColor": "#cccccc",

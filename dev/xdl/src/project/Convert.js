@@ -24,9 +24,10 @@ export default async function convertProjectAsync(projectDir, {projectName, proj
   // Add values to exp.json,) save to given path
   let expJson = {...expJsonTemplate};
   expJson.name = projectName;
-  expJson.description = projectDescription;
+  expJson.description = projectDescription || 'No description';
   expJson.slug = projectSlug;
   jsonfile.writeFileSync(expJsonTargetPath, expJson, {spaces: 2});
+  console.log('Wrote exp.json');
 
   // Add entry point and dependencies to package.json
   let unsupportedPackagesUsed = [];
@@ -60,18 +61,17 @@ export default async function convertProjectAsync(projectDir, {projectName, proj
 
 const dependencies = {
   "@exponent/vector-icons": "^1.0.1",
-  "babel-plugin-transform-decorators-legacy": "^1.3.4",
-  "babel-preset-react-native-stage-0": "^1.0.1",
-  "exponent": "^9.0.2",
-  "react": "15.2.1",
-  "react-native": "github:exponentjs/react-native#sdk-9.0.0"
+  "exponent": "^10.0.0",
+  "react": "15.3.1",
+  "react-native": "github:exponentjs/react-native#sdk-10.0.0"
 };
 
 const unsupportedPackages = {
   'react-native-vector-icons': `We installed @exponent/vector-icons for you instead. Change any use of react-native-vector-icons to this.
 For example: "import Icon from 'react-native-vector-icons/Ionicons'" becomes "import { Ionicons as Icon } from '@exponent/vector-icons'" `,
   'react-native-video': `Exponent provides a video component for you with the same API as react-native-video. You can use it with "import { Components } from 'exponent';" and <Components.Video /> in your render function. `,
-  'react-native-svg': `Exponent provides react-native-svg for you. You can use it with "import { Components } from 'exponent';" and <Components.Svg /> in your render function.`
+  'react-native-svg': `Exponent provides react-native-svg for you. You can use it with "import { Components } from 'exponent';" and <Components.Svg /> in your render function.`,
+  'react-native-maps': `Exponent provides react-native-maps for you. You can use it with "import { Components } from 'exponent';" and <Components.Map /> in your render function.`,
 };
 
 function showCompatibilityMessage(packages) {
@@ -91,11 +91,24 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
   fse.removeSync(nodeModulesPath);
   console.log('Running npm install, this may take a few minutes.');
   console.log('-----------------------------------------------------');
-  let result = await spawnAsync('npm', ['install'], { cwd: projectDir, stdio: 'inherit' });
+  let npmInstallError = false;
+  try {
+    await spawnAsync('npm', ['install'], { cwd: projectDir, stdio: 'inherit' });
+  } catch(e) {
+    console.log('\n');
+    npmInstallError = true;
+
+  }
   console.log('\n');
   console.log('#####################################################');
   console.log('             npm install complete');
   console.log('#####################################################');
+
+  if (npmInstallError) {
+    console.log('\n');
+    console.log('* There was an error though, please read the error message, try to fix the issue and then run npm install again. No need to run exp convert again.');
+  }
+
   console.log('\n');
   const nextStepMessage = `Next steps:
 ------------
