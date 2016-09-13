@@ -69,7 +69,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn) {
 
 async function runAsync() {
   try {
-    Analytics.setSegmentInstance('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
+    Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
     Analytics.setVersionName(require('../package.json').version);
     _registerLogs();
 

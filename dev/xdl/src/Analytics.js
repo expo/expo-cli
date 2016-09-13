@@ -6,8 +6,8 @@ import ip from 'ip';
 import os from 'os';
 import Segment from 'analytics-node';
 
-let _amplitudeInstance;
-let _segmentInstance;
+let _segmentNodeInstance;
+let _segmentWebInstance;
 let _userId;
 let _version;
 const PLATFORM_TO_ANALYTICS_PLATFORM = {
@@ -16,43 +16,47 @@ const PLATFORM_TO_ANALYTICS_PLATFORM = {
   'linux': 'Linux',
 };
 
-export function setAmplitudeInstance(amplitude: any, key: string) {
-  amplitude.getInstance().init(key, null, null, (instance) => {
-    _amplitudeInstance = instance;
-  });
+export function setSegmentNodeKey(key: string) {
+  _segmentNodeInstance = new Segment(key);
 }
 
-export function setSegmentInstance(key: string) {
-  _segmentInstance = new Segment(key);
+export function setSegmentWebInstance(instance: any) {
+  _segmentWebInstance = instance;
 }
 
 export function setUserProperties(userId: string, traits: any) {
   _userId = userId;
 
-  if (_segmentInstance) {
-    _segmentInstance.identify({
+  if (_segmentNodeInstance) {
+    _segmentNodeInstance.identify({
       userId,
       traits,
       context: _getContext(),
     });
   }
 
-  if (_amplitudeInstance) {
-    _amplitudeInstance.setUserProperties(traits);
+  if (_segmentWebInstance) {
+    // The Amplitude SDK isn't initialized right away, so call setVersion before every call to make sure it's actually updated.
+    setVersionName(_version);
+
+    window.analytics.identify(userId, traits, {
+      context: _getContext(),
+    });
   }
 }
 
 export function setVersionName(version: string) {
   _version = version;
 
-  if (_amplitudeInstance) {
-    _amplitudeInstance.setVersionName(version);
+  if (_segmentWebInstance && window.amplitude) {
+    // Segment injects amplitude into the window. Call this manually because Segment isn't passing it along.
+    window.amplitude.getInstance().setVersionName(version);
   }
 }
 
 export function logEvent(name: string, properties: any = {}) {
-  if (_segmentInstance && _userId) {
-    _segmentInstance.track({
+  if (_segmentNodeInstance && _userId) {
+    _segmentNodeInstance.track({
       userId: _userId,
       event: name,
       properties,
@@ -60,8 +64,13 @@ export function logEvent(name: string, properties: any = {}) {
     });
   }
 
-  if (_amplitudeInstance) {
-    _amplitudeInstance.logEvent(name, properties);
+  if (_segmentWebInstance) {
+    // The Amplitude SDK isn't initialized right away, so call setVersion before every call to make sure it's actually updated.
+    setVersionName(_version);
+
+    window.analytics.track(name, properties, {
+      context: _getContext(),
+    });
   }
 }
 

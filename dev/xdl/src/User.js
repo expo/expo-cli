@@ -42,13 +42,14 @@ export async function loginAsync(args: any) {
   let result = await Api.callMethodAsync('adduser', data);
   // console.log("result=", result);
   if (result.user) {
+    Analytics.setUserProperties(result.user.username, {
+      username: result.user.username,
+    });
+
     Analytics.logEvent('Login', {
       username: result.user.username,
     });
 
-    Analytics.setUserProperties(result.user.username, {
-      username: result.user.username,
-    });
 
     Intercom.update(result.user.username, result.user.intercomUserHash);
 

@@ -184,15 +184,16 @@ export async function validateAsync(projectRoot: string): Promise<number> {
     status = newStatus;
   }
 
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (!exp) {
-    exp = {};
-  }
+  if (status !== FATAL) {
+    let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
-  if (!exp.ignoreNodeModulesValidation) {
-    newStatus = await _validateNodeModulesAsync(projectRoot);
-    if (newStatus > status) {
-      status = newStatus;
+    if (exp) {
+      if (!exp.ignoreNodeModulesValidation) {
+        newStatus = await _validateNodeModulesAsync(projectRoot);
+        if (newStatus > status) {
+          status = newStatus;
+        }
+      }
     }
   }
 
