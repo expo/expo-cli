@@ -42,7 +42,11 @@ export default async function convertProjectAsync(projectDir:string, {projectNam
   // Remove
   Object.keys(packageJson.dependencies).forEach(dep => {
     if (unsupportedPackages[dep]) {
-      delete packageJson.dependencies[dep];
+      if (dep === 'react-native-vector-icons') {
+        packageJson.dependencies[dep] = 'github:exponentjs/react-native-vector-icons';
+      } else {
+        delete packageJson.dependencies[dep];
+      }
       unsupportedPackagesUsed.push(dep);
     }
   });
@@ -72,11 +76,12 @@ const dependencies = {
 };
 
 const unsupportedPackages = {
-  'react-native-vector-icons': `We installed @exponent/vector-icons for you instead. Change any use of react-native-vector-icons to this.
-For example: "import Icon from 'react-native-vector-icons/Ionicons'" becomes "import { Ionicons as Icon } from '@exponent/vector-icons'" `,
+  'react-native-vector-icons': `We installed @exponent/vector-icons for you instead. When you feel like it, you can change any use of react-native-vector-icons to this. But no rush, we also installed our fork of react-native-vector-icons that uses @exponent/vector-icons behind the scenes, so you don't actually *need* to make any changes.
+When you want to convert it, you'll just need to do something like this: "import Icon from 'react-native-vector-icons/Ionicons'" becomes "import { Ionicons as Icon } from '@exponent/vector-icons'" `,
   'react-native-video': `Exponent provides a video component for you with the same API as react-native-video. You can use it with "import { Components } from 'exponent';" and <Components.Video /> in your render function. `,
   'react-native-svg': `Exponent provides react-native-svg for you. You can use it with "import { Components } from 'exponent';" and <Components.Svg /> in your render function.`,
   'react-native-maps': `Exponent provides react-native-maps for you. You can use it with "import { Components } from 'exponent';" and <Components.Map /> in your render function.`,
+  'react-native-linear-gradient': `Exponent provides react-native-linear-gradient for you. You can use it with "import { Components } from 'exponent';" and <Components.LinearGradient /> in your render function.`,
 };
 
 function showCompatibilityMessage(packages) {
