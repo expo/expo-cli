@@ -28,13 +28,17 @@ try {
   diskusage = require('diskusage');
 } catch (e) {}
 
-async function _uploadLogsAsync() {
+async function _uploadLogsAsync(info) {
   let user = await User.getCurrentUserAsync();
   let username = user ? user.username : 'anonymous';
 
+  // write info to file
+  let exponentHome = UserSettings.dotExponentHomeDirectory();
+  let infoJsonFile = new JsonFile(path.join(exponentHome, 'debug-info.json'));
+  await infoJsonFile.writeAsync(info);
+
   // copy files to tempDir
   let tempDir = path.join(Env.home(), `${username}-diagnostics`);
-  let exponentHome = UserSettings.dotExponentHomeDirectory();
   let archivePath = path.join(exponentHome, 'diagnostics.tar.gz');
   await Binaries.ncpAsync(exponentHome, tempDir, {
     filter: (filename) => {
@@ -83,10 +87,6 @@ function _formatBytes(bytes: number): string {
 
 export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   let info = {};
-
-  if (options.uploadLogs) {
-    info.logsUrl = await _uploadLogsAsync();
-  }
 
   await Binaries.sourceBashLoginScriptsAsync();
   let whichCommand = (process.platform === 'win32') ? 'where' : 'which';
@@ -192,6 +192,10 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
       let result = await spawnAsync('launchctl', ['limit']);
       info.launchctlLimit = _.trim(result.stdout);
     } catch (e) {}
+  }
+
+  if (options.uploadLogs) {
+    info.url = await _uploadLogsAsync(info);
   }
 
   if (options.limitLengthForIntercom) {
