@@ -117,7 +117,7 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
   console.log('\n');
   const nextStepMessage = `Next steps:
 ------------
-1. Find your AppRegistry.registerComponent('YourApplicationName', () => RootComponent) call and change YourApplicationName to 'main'.
+1. Find your AppRegistry.registerComponent('YourApplicationName', () => YourRootComponent) call and replace it with Exponent.registerRootComponent(YourRootComponent) (you will need to import Exponent from 'exponent').
 2. Upload your app icon somewhere on the web and add it the newly created exp.json file, in the iconUrl and loading.iconUrl fields.
 3. Delete your 'android' and 'ios' directories if you have them -- you no longer need to compile any native code to run your app.
 4. ${showCompatibilityMessage(unsupportedPackagesUsed)}
