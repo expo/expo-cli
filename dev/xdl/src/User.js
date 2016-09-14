@@ -80,19 +80,25 @@ export async function logoutAsync() {
 }
 
 export async function whoamiAsync() {
-  let result = await Api.callMethodAsync('whoami', []);
-  if (result.user) {
-    _currentUser = result.user;
+  try {
+    let result = await Api.callMethodAsync('whoami', []);
+    if (result.user) {
+      _currentUser = result.user;
 
-    Analytics.setUserProperties(result.user.username, {
-      username: result.user.username,
-    });
+      Analytics.setUserProperties(result.user.username, {
+        username: result.user.username,
+      });
 
-    Intercom.update(result.user.username, result.user.intercomUserHash);
-  } else {
+      Intercom.update(result.user.username, result.user.intercomUserHash);
+    } else {
+      Intercom.update(null, null);
+    }
+    return result.user;
+  } catch (e) {
+    // Intercom should show up no matter what
     Intercom.update(null, null);
+    throw e;
   }
-  return result.user;
 }
 
 export async function getUsernameAsync(): Promise<?string> {
