@@ -11,8 +11,13 @@ import spawnAsync from '@exponent/spawn-async';
 import expJsonTemplate from './templates/exp';
 import babelRcTemplate from './templates/babelrc';
 
+type params = {
+  projectName: string,
+  projectDescription: string,
+  projectEntryPoint: string,
+}
 
-export default async function convertProjectAsync(projectDir, {projectName, projectDescription, projectEntryPoint}) {
+export default async function convertProjectAsync(projectDir:string, {projectName, projectDescription, projectEntryPoint}:params) {
   let projectSlug = slug(projectName.toLowerCase())
 
   let expJsonTargetPath = path.join(projectDir, '/exp.json');
