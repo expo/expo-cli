@@ -14,9 +14,16 @@ function _isWindowDefined() {
 export async function update(user_id: ?string, user_hash: ?string) {
   try {
     if (_isWindowDefined()) {
-      let deviceInfo = await Diagnostics.getDeviceInfoAsync({
-        limitLengthForIntercom: true,
-      });
+      let deviceInfo = {};
+
+      try {
+        deviceInfo = await Diagnostics.getDeviceInfoAsync({
+          limitLengthForIntercom: true,
+        });
+      } catch (e) {
+        console.error(e);
+      }
+
       let data = {
         app_id: 'fhlr5ht1',
         user_id,
