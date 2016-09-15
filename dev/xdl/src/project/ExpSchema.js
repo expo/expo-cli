@@ -5,7 +5,8 @@ const colorField = joi.string().regex(/^#|(&#x23;)\d{6}$/).
 const reverseDnsField = joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\_\.]+$/).
   meta({regexHuman: "Reverse DNS notation unique name for your app. For example, host.exp.exponent, where exp.host is our domain and Exponent is our app."});
 
-const pngField = joi.string().uri().regex(/\.png$/);
+// Update the PNG_FIELDS exported value when you use this
+const pngField = joi.string().uri();
 
 module.exports = joi.object().keys({
   name: joi.string().required().description(`
@@ -50,7 +51,7 @@ module.exports = joi.object().keys({
   `),
   loading: joi.object().keys({
     iconUrl: pngField.uri().description(
-      `Url that points to the icon to display while starting up the app. Image size and aspect ratio are up to you.`
+      `Url that points to the icon to display while starting up the app. Image size and aspect ratio are up to you. Must be a .png.`
     ),
     exponentIconColor: joi.any().valid('white', 'blue').description(
       "If no icon is provided, we will show the Exponent logo. You can choose between ``white`` and ``blue``."
@@ -59,7 +60,7 @@ module.exports = joi.object().keys({
       "Similar to ``exponentIconColor`` but instead indicate if it should be grayscale (``1``) or not (``0``)."
     ),
     backgroundImageUrl: pngField.uri().description(
-      "Url that points to an image to fill the background of the loading screen. Image size and aspect ratio are up to you."
+      "Url that points to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png."
     ),
     backgroundColor: colorField.description(
       "Color to fill the loading screen background"
@@ -120,3 +121,5 @@ module.exports = joi.object().keys({
     }),
   }).description('Android standalone app specific configuration').meta({standaloneOnly: true}),
 });
+
+module.exports.PNG_FIELDS = ['iconUrl', 'notification.iconUrl', 'loading.iconUrl', 'loading.backgroundImageUrl'];

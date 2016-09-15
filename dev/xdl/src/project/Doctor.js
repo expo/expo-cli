@@ -8,6 +8,7 @@ import _ from 'lodash';
 import fs from 'fs';
 import joi from 'joi';
 import path from 'path';
+import request from 'request';
 import semver from 'semver';
 import spawnAsync from '@exponent/spawn-async';
 
@@ -22,6 +23,23 @@ export const NO_ISSUES = 0;
 export const WARNING = 1;
 export const FATAL = 2;
 
+async function _validatePngFieldsAsync(projectRoot, exp) {
+  for (let i = 0; i < ExpSchema.PNG_FIELDS.length; i++) {
+    let fieldName = ExpSchema.PNG_FIELDS[i];
+    let value = _.get(exp, fieldName);
+    if (value) {
+      let response = await request.promise.head({
+        url: value,
+      });
+
+      let contentType = response.headers['content-type'];
+      if (contentType !== 'image/png') {
+        ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in exp.json. Field '${fieldName}' must be a .png file but returned content-type ${contentType}. See ${Config.helpUrl}.`);
+      }
+    }
+  }
+}
+
 async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>  {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
@@ -29,6 +47,9 @@ async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>
     // readConfigJsonAsync already logged an error
     return FATAL;
   }
+
+  // Don't block this! It has to make network requests so it's slow.
+  _validatePngFieldsAsync(projectRoot, exp);
 
   try {
     await joi.promise.validate(exp, ExpSchema);
