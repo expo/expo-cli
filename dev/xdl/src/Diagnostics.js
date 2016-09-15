@@ -200,7 +200,7 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
 
   if (options.limitLengthForIntercom) {
     info = _.mapValues(info, (value) => {
-      if (value.length > 100 && !value.startsWith('http')) {
+      if (value && value.length > 100 && !value.startsWith('http')) {
         return value.substring(0, 100);
       } else {
         return value;
