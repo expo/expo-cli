@@ -6,7 +6,6 @@ import 'instapromise';
 
 import delayAsync from 'delay-async';
 import download from 'download';
-import execAsync from 'exec-async';
 import existsAsync from 'exists-async';
 import glob from 'glob';
 import homeDir from 'home-dir';
@@ -18,14 +17,33 @@ import spawnAsync from '@exponent/spawn-async';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
+import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import UserSettings from './UserSettings';
+import XDLError from './XDLError';
 
 let _lastUrl = null;
 
 export function isPlatformSupported() {
   return process.platform === 'darwin';
+}
+
+function _isLicenseOutOfDate(text) {
+  let lower = text.toLowerCase();
+  return lower.includes('xcode') && lower.includes('license');
+}
+
+async function _xcrunAsync(args) {
+  try {
+    return await spawnAsync('xcrun', args);
+  } catch (e) {
+    if (_isLicenseOutOfDate(e.stdout) || _isLicenseOutOfDate(e.stderr)) {
+      throw new XDLError(ErrorCode.XCODE_LICENSE_NOT_ACCEPTED, 'Xcode license is not accepted. Please run `sudo xcodebuild -license`.');
+    } else {
+      throw e;
+    }
+  }
 }
 
 // Simulator installed
@@ -76,8 +94,8 @@ async function _waitForSimulatorRunningAsync() {
 }
 
 async function _listSimulatorDevicesAsync() {
-  let infoJson = await execAsync('xcrun', ['simctl', 'list', 'devices', '--json']);
-  let info = JSON.parse(infoJson);
+  let infoJson = await _xcrunAsync(['simctl', 'list', 'devices', '--json']);
+  let info = JSON.parse(infoJson.stdout);
   return info;
 }
 
@@ -173,7 +191,7 @@ export async function _installExponentOnSimulatorAsync() {
   Logger.notifications.info({code: NotificationCode.START_LOADING});
   let dir = await _downloadSimulatorAppAsync();
   Logger.global.info("Installing Exponent on iOS simulator");
-  let result = await spawnAsync('xcrun', ['simctl', 'install', 'booted', dir]);
+  let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({code: NotificationCode.STOP_LOADING});
   return result;
 }
@@ -181,9 +199,9 @@ export async function _installExponentOnSimulatorAsync() {
 export async function _uninstallExponentAppFromSimulatorAsync() {
   try {
     Logger.global.info('Uninstalling Exponent from iOS simulator.');
-    await execAsync('xcrun', ['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
+    await _xcrunAsync(['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
   } catch (e) {
-    if (e.message === 'Command failed: xcrun simctl uninstall booted host.exp.Exponent\nNo devices are booted.\n') {
+    if (e.message && e.message.includes('No devices are booted.')) {
       return null;
     } else {
       console.error(e);
@@ -211,7 +229,7 @@ export async function upgradeExponentAsync() {
 
   if (_lastUrl) {
     Logger.global.info(`Opening ${_lastUrl} in Exponent.`);
-    await spawnAsync('xcrun', ['simctl', 'openurl', 'booted', _lastUrl]);
+    await _xcrunAsync(['simctl', 'openurl', 'booted', _lastUrl]);
     _lastUrl = null;
   }
 }
@@ -220,7 +238,7 @@ export async function upgradeExponentAsync() {
 export async function _openUrlInSimulatorAsync(url: string) {
   _lastUrl = url;
   _checkExponentUpToDateAsync(); // let this run in background
-  return await spawnAsync('xcrun', ['simctl', 'openurl', 'booted', url]);
+  return await _xcrunAsync(['simctl', 'openurl', 'booted', url]);
 }
 
 export async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url: string) {
@@ -243,6 +261,13 @@ export async function openUrlInSimulatorSafeAsync(url: string) {
   try {
     await _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url);
   } catch (e) {
+    if (e.isXDLError) {
+      // Hit some internal error, don't try again.
+      // This includes Xcode license errors
+      Logger.global.error(e.message);
+      return;
+    }
+
     Logger.global.error('Error running app. Uninstalling exponent and trying again.');
 
     try {
