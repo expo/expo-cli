@@ -151,7 +151,8 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
     } catch (e) {}
   }
 
-  if (process.platform === 'darwin' || process.platform === 'linux') {
+  // TODO: fix these commands on linux
+  if (process.platform === 'darwin') { // || process.platform === 'linux') {
     try {
       info.xdeProcesses = _.trim(child_process.execSync('pgrep XDE | xargs ps -p').toString());
     } catch (e) {}
