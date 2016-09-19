@@ -59,6 +59,10 @@ export default class IOSBuilder extends BaseBuilder {
       bundleIdentifierIOS: bundleIdentifier,
     } } = await Exp.getPublishInfoAsync(this.projectDir);
 
+    if (!bundleIdentifier) {
+      throw new XDLError(ErrorCode.INVALID_OPTIONS, `Your project must have a bundleIdentifier set in exp.json. See https://docs.getexponent.com/versions/latest/guides/building-standalone-apps.html`);
+    }
+
     const credentialMetadata = {
       username,
       experienceName,
@@ -98,6 +102,16 @@ export default class IOSBuilder extends BaseBuilder {
       } catch (e) {
         throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Stored certificate is invalid! Rerun this command with "-c" in order to reinput your credentials and reupload/regenerate certificates.');
       }
+    }
+
+    // ensure that the app id exists or is created
+    try {
+      await Credentials.ensureAppId(credentialMetadata);
+    } catch (e) {
+      throw new XDLError(
+        ErrorCode.CREDENTIAL_ERROR,
+        `It seems like we can't create an app on the Apple developer center with this app id: ${bundleIdentifier}. Please change your bundle identifier to something else.`
+      );
     }
 
     if (!hasPushCert) {
