@@ -1,18 +1,18 @@
 import 'instapromise';
 
 import child_process from 'child_process';
-import jsonFile from '@exponent/json-file';
+import JsonFile from '@exponent/json-file';
 import path from 'path';
 import semver from 'semver';
 
 async function latestExpVersionAsync() {
-  var packageName = await jsonFile(path.join(__dirname, '..', 'package.json')).getAsync('name');
+  var packageName = await new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('name');
   var version_ = await child_process.promise.exec('npm view ' + packageName + ' version');
   return version_.trim();
 }
 
 async function currentExpVersionAsync() {
-  return jsonFile(path.join(__dirname, '..', 'package.json')).getAsync('version');
+  return new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('version');
 }
 
 async function checkForExpUpdateAsync() {
