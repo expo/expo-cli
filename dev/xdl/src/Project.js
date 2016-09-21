@@ -550,7 +550,7 @@ export async function startExponentServerAsync(projectRoot: string) {
       let platform = req.headers['exponent-platform'] || 'ios';
       entryPoint = UrlUtils.getPlatformSpecificBundleUrl(entryPoint, platform);
       let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
-      let queryParams = UrlUtils.constructBundleQueryParams(packagerOpts);
+      let queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
       let path = `/${mainModuleName}.bundle?platform=${platform}&${queryParams}`;
       manifest.bundleUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts) + path;
       manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot);

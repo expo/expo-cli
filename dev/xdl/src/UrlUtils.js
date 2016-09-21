@@ -7,12 +7,13 @@ import 'instapromise';
 import ip from 'ip';
 import joi from 'joi';
 import os from 'os';
+import semver from 'semver';
 import url from 'url';
 
 import ErrorCode from './ErrorCode';
+import * as Exp from './Exp';
 import * as ProjectSettings from './ProjectSettings';
 import XDLError from './XDLError';
-import { ENTRY_POINT_PLATFORM_TEMPLATE_STRING } from './Exp';
 
 export async function constructBundleUrlAsync(projectRoot: string, opts: any) {
   return constructUrlAsync(projectRoot, opts, true);
@@ -31,10 +32,11 @@ export async function constructUrlWithExtensionAsync(projectRoot: string, entryP
   let mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
-  return `${bundleUrl}?${constructBundleQueryParams({
+  let queryParams = await constructBundleQueryParamsAsync(projectRoot, {
     dev: false,
     minify: true,
-  })}`;
+  });
+  return `${bundleUrl}?${queryParams}`;
 }
 
 export async function constructPublishUrlAsync(projectRoot: string, entryPoint: string) {
@@ -51,7 +53,7 @@ export async function constructDebuggerHostAsync(projectRoot: string) {
   }, true);
 }
 
-export function constructBundleQueryParams(opts: any) {
+export async function constructBundleQueryParamsAsync(projectRoot: string, opts: any) {
   let queryParams = `dev=${encodeURIComponent(!!opts.dev)}`;
 
   if (opts.hasOwnProperty('strict')) {
@@ -62,7 +64,18 @@ export function constructBundleQueryParams(opts: any) {
     queryParams += `&minify=${encodeURIComponent(!!opts.minify)}`;
   }
 
-  queryParams += '&hot=false&includeAssetFileHashes=true';
+  queryParams += '&hot=false';
+
+  let pluginModule = 'exponent/tools/hashAssetFiles';
+  queryParams += `&assetPlugin=${pluginModule}`;
+
+  // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
+  // major version in the sdkVersion field, so check for 11.0.0 to be sure.
+  let exp = await Exp.expJsonForRoot(projectRoot).readAsync();
+  let supportsAssetPlugins = semver.gte(exp.sdkVersion, '11.0.0');
+  if (!supportsAssetPlugins) {
+    queryParams += '&includeAssetFileHashes=true';
+  }
 
   return queryParams;
 }
@@ -183,8 +196,8 @@ export function domainify(s: string) {
 }
 
 export function getPlatformSpecificBundleUrl(url: string, platform: string) {
-  if (url.includes(ENTRY_POINT_PLATFORM_TEMPLATE_STRING)) {
-    return url.replace(ENTRY_POINT_PLATFORM_TEMPLATE_STRING, platform);
+  if (url.includes(Exp.ENTRY_POINT_PLATFORM_TEMPLATE_STRING)) {
+    return url.replace(Exp.ENTRY_POINT_PLATFORM_TEMPLATE_STRING, platform);
   } else {
     return url;
   }
