@@ -30,6 +30,7 @@ import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
 import * as User from './User';
+import UserSettings from './UserSettings';
 import * as Watchman from './Watchman';
 import XDLError from './XDLError';
 
@@ -642,16 +643,22 @@ export async function stopExponentServerAsync(projectRoot: string) {
 
 async function _connectToNgrokAsync(projectRoot: string, args: mixed, hostnameAsync: Function, ngrokPid: ?number, attempts: number = 0) {
   try {
+    let configPath = path.join(UserSettings.dotExponentHomeDirectory(), 'ngrok.yml');
     let hostname = await hostnameAsync();
     let url = await ngrok.promise.connect({
       hostname,
+      configPath,
       ...args,
     });
     return url;
   } catch (e) {
     // Attempt to connect 3 times
     if (attempts >= 2) {
-      throw new XDLError(ErrorCode.NGROK_ERROR, JSON.stringify(e));
+      if (e.message) {
+        throw new XDLError(ErrorCode.NGROK_ERROR, e.toString());
+      } else {
+        throw new XDLError(ErrorCode.NGROK_ERROR, JSON.stringify(e));
+      }
     }
 
     if (!attempts) {

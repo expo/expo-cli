@@ -51,7 +51,7 @@
     "md5hex": "^1.0.0",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
-    "ngrok": "github:exponentjs/ngrok#v1.2.0",
+    "ngrok": "github:exponentjs/ngrok#v1.3.0",
     "promise-props": "^1.0.0",
     "request": "^2.69.0",
     "rimraf": "^2.5.4",
