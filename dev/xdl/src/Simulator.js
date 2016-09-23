@@ -14,6 +14,8 @@ import osascript from '@exponent/osascript';
 import path from 'path';
 import semver from 'semver';
 import spawnAsync from '@exponent/spawn-async';
+import rimraf from 'rimraf';
+import fs from 'fs';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
@@ -177,12 +179,23 @@ export async function _downloadSimulatorAppAsync() {
   let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
   if (await existsAsync(dir)) {
-    return dir;
+    let filesInDir = await fs.promise.readdir(dir);
+    if (filesInDir.length > 0) {
+      return dir;
+    } else {
+      rimraf.sync(dir);
+    }
   }
 
   mkdirp.sync(dir);
-  let url = `https://s3.amazonaws.com/exp-ios-simulator-apps/Exponent-${versions.iosVersion}.app.zip`;
-  await new download({extract: true}).get(url).dest(dir).promise.run();
+  try {
+    let url = `https://s3.amazonaws.com/exp-ios-simulator-apps/Exponent-${versions.iosVersion}.app.zip`;
+    await new download({extract: true}).get(url).dest(dir).promise.run();
+  } catch (e) {
+    rimraf.sync(dir);
+    throw e;
+  }
+
   return dir;
 }
 

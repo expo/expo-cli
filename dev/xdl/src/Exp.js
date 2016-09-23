@@ -14,6 +14,7 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 import spawnAsync from '@exponent/spawn-async';
 import joi from 'joi';
+import rimraf from 'rimraf';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
@@ -408,4 +409,12 @@ export async function resetProjectRandomnessAsync(projectRoot: string) {
   let randomness = UrlUtils.someRandomness();
   ProjectSettings.setAsync(projectRoot, {'urlRandomness': randomness});
   return randomness;
+}
+
+export async function clearXDLCacheAsync() {
+  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
+  rimraf.sync(path.join(dotExponentHomeDirectory, 'ios-simulator-app-cache'));
+  rimraf.sync(path.join(dotExponentHomeDirectory, 'android-apk-cache'));
+  rimraf.sync(path.join(dotExponentHomeDirectory, 'starter-app-cache'));
+  Logger.notifications.info(`Cleared cache`);
 }
