@@ -182,7 +182,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
         } else if (!semver.satisfies(installedDependency.version, versionRequired) && !versionRequired.includes(installedDependency.from)) {
           // For react native, `from` field looks like "exponentjs/react-native#sdk-8.0.1" and
           // versionRequired looks like "github:exponentjs/react-native#sdk-8.0.0"
-          errorStrings.push(`Warning: Installed version ${installedDependency.version} of '${dependency}' does not satify required version ${versionRequired}`);
+          errorStrings.push(`Warning: Installed version ${installedDependency.version} of '${dependency}' does not satisfy required version ${versionRequired}`);
         }
       });
 
