@@ -25,6 +25,9 @@ fs.__setMockFilesystem({
         "packagerNgrokUrl": "https://packager.ab-cde.jesse.test-project.exp.direct",
       }),
     },
+    'exp.json': JSON.stringify({
+      sdkVersion: '11.0.0',
+    }),
   },
 });
 
@@ -73,6 +76,6 @@ describe('constructManifestUrlAsync', () => {
 describe('constructPublishUrlAsync', () => {
   it('returns the correct publish url', async () => {
     let packagerUrl = await UrlUtils.constructPublishUrlAsync(projectPath, 'test-project-entry-point');
-    expect(packagerUrl).toEqual('http://localhost:19001/test-project-entry-point.bundle?dev=false&minify=true&hot=false&includeAssetFileHashes=true');
+    expect(packagerUrl).toEqual('http://localhost:19001/test-project-entry-point.bundle?dev=false&minify=true&hot=false&assetPlugin=exponent/tools/hashAssetFiles');
   });
 });
