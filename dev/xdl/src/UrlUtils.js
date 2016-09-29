@@ -14,7 +14,6 @@ import * as Exp from './Exp';
 import * as ProjectSettings from './ProjectSettings';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
-import * as Versions from './Versions';
 
 export async function constructBundleUrlAsync(projectRoot: string, opts: any) {
   return constructUrlAsync(projectRoot, opts, true);
