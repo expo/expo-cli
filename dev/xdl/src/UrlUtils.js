@@ -7,13 +7,13 @@ import 'instapromise';
 import ip from 'ip';
 import joi from 'joi';
 import os from 'os';
-import semver from 'semver';
 import url from 'url';
 
 import ErrorCode from './ErrorCode';
 import * as Exp from './Exp';
 import * as ProjectSettings from './ProjectSettings';
 import XDLError from './XDLError';
+import * as Versions from './Versions';
 
 export async function constructBundleUrlAsync(projectRoot: string, opts: any) {
   return constructUrlAsync(projectRoot, opts, true);
@@ -72,7 +72,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
   // major version in the sdkVersion field, so check for 11.0.0 to be sure.
   let exp = await Exp.expJsonForRoot(projectRoot).readAsync();
-  let supportsAssetPlugins = semver.gte(exp.sdkVersion, '11.0.0');
+  let supportsAssetPlugins = Versions.gteSdkVersion(exp, '11.0.0');
   if (!supportsAssetPlugins) {
     queryParams += '&includeAssetFileHashes=true';
   }
