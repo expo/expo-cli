@@ -435,7 +435,18 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   // Get custom CLI path from project package.json, but fall back to node_module path
   let defaultCliPath = path.join(projectRoot, 'node_modules', 'react-native', 'local-cli', 'cli.js');
   const cliPath = _.get(exp, 'rnCliPath', defaultCliPath);
-  const packagerCwd = exp.rnCliPath ? projectRoot : path.join(projectRoot, 'node_modules', 'react-native', 'packager');
+
+  let packagerCwd;
+  let nodePath;
+  // When using a custom path for the RN CLI, we want it to use the project
+  // root to look up config files and Node modules
+  if (exp.rnCliPath) {
+    packagerCwd = projectRoot;
+    nodePath = _nodePathForProjectRoot(projectRoot);
+  } else {
+    packagerCwd = path.join(projectRoot, 'node_modules', 'react-native', 'packager');
+    nodePath = null;
+  }
 
   // Run the copy of Node that's embedded in Electron by setting the
   // ELECTRON_RUN_AS_NODE environment variable
@@ -445,7 +456,7 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
     cwd: packagerCwd,
     env: {
       ...process.env,
-      NODE_PATH: null,
+      NODE_PATH: nodePath,
       ELECTRON_RUN_AS_NODE: 1,
     },
     silent: true,
@@ -481,6 +492,20 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   });
 
   await _waitForRunningAsync(`${packagerUrl}/debug`);
+}
+
+function _nodePathForProjectRoot(projectRoot: string): string {
+  let paths = [];
+  let directory = path.resolve(projectRoot);
+  while (true) {
+    paths.push(path.join(directory, 'node_modules'));
+    let parentDirectory = path.dirname(directory);
+    if (directory === parentDirectory) {
+      break;
+    }
+    directory = parentDirectory;
+  }
+  return paths.join(path.delimiter);
 }
 
 export async function stopReactNativeServerAsync(projectRoot: string) {

@@ -12,6 +12,7 @@ import url from 'url';
 import ErrorCode from './ErrorCode';
 import * as Exp from './Exp';
 import * as ProjectSettings from './ProjectSettings';
+import * as Versions from './Versions';
 import XDLError from './XDLError';
 import * as Versions from './Versions';
 
