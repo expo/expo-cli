@@ -21,6 +21,7 @@ import * as Binaries from './Binaries';
 import * as Env from './Env';
 import * as User from './User';
 import UserSettings from './UserSettings';
+import * as Watchman from './Watchman';
 
 // requires python, so might not be installed
 let diskusage;
@@ -112,8 +113,7 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   } catch (e) {}
 
   try {
-    let result = await spawnAsync('watchman', ['--version']);
-    info.watchmanVersion = _.trim(result.stdout);
+    info.watchmanVersion = await Watchman.getVersionAsync();
   } catch (e) {}
 
   try {

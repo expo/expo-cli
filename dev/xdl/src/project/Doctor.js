@@ -5,11 +5,11 @@
 import 'instapromise';
 
 import _ from 'lodash';
+import semver from 'semver';
 import fs from 'fs';
 import joi from 'joi';
 import path from 'path';
 import request from 'request';
-import semver from 'semver';
 import spawnAsync from '@exponent/spawn-async';
 
 import Api from '../Api';
@@ -18,10 +18,38 @@ import Config from '../Config';
 import ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
 import * as Versions from '../Versions';
+import * as Watchman from '../Watchman';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
 export const FATAL = 2;
+
+const MIN_WATCHMAN_VERSION = '4.7.0';
+
+async function _checkWatchmanVersionAsync(projectRoot) {
+
+  // There's no point in checking any of this stuff if watchman isn't supported on this platform
+  if (!Watchman.isPlatformSupported()) {
+    return;
+  }
+
+  let watchmanVersion = await Watchman.getVersionAsync();
+
+  // If we can't get the watchman version, `getVersionAsync` will return `null`
+  if (!watchmanVersion) {
+    // watchman is probably just not installed
+    return;
+  }
+  if (semver.lt(watchmanVersion, MIN_WATCHMAN_VERSION)) {
+    let warningMessage = `Warning: You are using an old version of watchman (v${watchmanVersion}). This may cause problems for you.\n\nWe recommend that you either uninstall watchman (and XDE will try to use a copy it is bundled with) or upgrade watchman to a newer version, at least v${MIN_WATCHMAN_VERSION}.`;
+
+    // Add a note about homebrew if the user is on a Mac
+    if (process.platform === 'darwin') {
+      warningMessage += `\n\nIf you are using homebrew, try:\nbrew uninstall watchman; brew install watchman`;
+    }
+    ProjectUtils.logWarning(projectRoot, 'exponent', warningMessage);
+  }
+}
 
 async function _validatePngFieldsAsync(projectRoot, exp) {
   for (let i = 0; i < ExpSchema.PNG_FIELDS.length; i++) {
@@ -50,6 +78,12 @@ async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>
 
   // Don't block this! It has to make network requests so it's slow.
   _validatePngFieldsAsync(projectRoot, exp);
+
+  try {
+    await _checkWatchmanVersionAsync(projectRoot);
+  } catch (e) {
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem checking watchman version. ${e.message}.`);
+  }
 
   try {
     await joi.promise.validate(exp, ExpSchema);
