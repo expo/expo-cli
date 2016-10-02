@@ -1,0 +1,49 @@
+{
+  "name": "@exponent/osascript",
+  "version": "1.6.1",
+  "description": "Tools for running an osascripts in Node",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "./node_modules/.bin/babel src --out-dir lib --source-maps",
+    "watch": "./node_modules/.bin/babel src --out-dir lib --source-maps --watch",
+    "prepublish": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exponentjs/osascript.git"
+  },
+  "keywords": [
+    "osascript",
+    "mac",
+    "osx",
+    "spawn",
+    "exec"
+  ],
+  "author": "exponent.team@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/exponentjs/osascript/issues"
+  },
+  "homepage": "https://github.com/exponentjs/osascript#readme",
+  "dependencies": {
+    "@exponent/spawn-async": "^1.1.0",
+    "exec-async": "^2.2.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.16.0",
+    "babel-core": "^5.8.24",
+    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-preset-es2015": "^6.16.0",
+    "babel-preset-es2016": "^6.16.0",
+    "babel-preset-es2017": "^6.16.0",
+    "babel-preset-stage-1": "^6.16.0",
+    "babel-preset-stage-2": "^6.17.0",
+    "babel-runtime": "^5.8.24",
+    "gulp": "^3.9.0",
+    "gulp-plumber": "^1.0.1",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-util": "^3.0.6",
+    "gulp-watch": "^4.3.5"
+  }
+}
