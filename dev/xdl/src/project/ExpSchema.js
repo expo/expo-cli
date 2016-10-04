@@ -98,6 +98,14 @@ module.exports = joi.object().keys({
     bundleIdentifier: reverseDnsField.description(
       "The bundle identifier for your iOS standalone app. You make it up, but it needs to be unique on the App Store. See `this StackOverflow question <http://stackoverflow.com/questions/11347470/what-does-bundle-identifier-mean-in-the-ios-project>`_."
     ),
+    config: joi.object().keys({
+      fabric: joi.object().keys({
+        apiKey: joi.string().alphanum().description('Your Fabric API key'),
+        buildSecret: joi.string().alphanum().description('Your Fabric build secret'),
+      }).description(
+        "`Twitter Fabric <https://get.fabric.io/>`_ keys to hook up Crashlytics and other services."
+      ),
+    }),
   }).description('iOS standalone app specific configuration').meta({standaloneOnly: true}),
   android: joi.object().keys({
     package: reverseDnsField.description(
