@@ -32,7 +32,7 @@
     "body-parser": "^1.15.2",
     "bunyan": "^1.8.1",
     "delay-async": "^1.0.0",
-    "download": "^4.4.3",
+    "download": "^5.0.2",
     "exec-async": "^2.2.0",
     "exists-async": "^2.0.0",
     "express": "^4.13.4",

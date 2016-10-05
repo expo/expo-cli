@@ -190,7 +190,7 @@ export async function _downloadSimulatorAppAsync() {
   mkdirp.sync(dir);
   try {
     let url = `https://s3.amazonaws.com/exp-ios-simulator-apps/Exponent-${versions.iosVersion}.app.zip`;
-    await new download({extract: true}).get(url).dest(dir).promise.run();
+    await download(url, dir, {extract: true});
   } catch (e) {
     rimraf.sync(dir);
     throw e;

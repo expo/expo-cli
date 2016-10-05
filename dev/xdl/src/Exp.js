@@ -134,7 +134,7 @@ async function _downloadStarterAppAsync(templateId) {
   }
 
   let url = `https://s3.amazonaws.com/exp-starter-apps/${filename}`;
-  await new download().get(url).dest(_starterAppCacheDirectory()).promise.run();
+  await download(url, _starterAppCacheDirectory());
   return {
     starterAppPath,
     starterAppName,
