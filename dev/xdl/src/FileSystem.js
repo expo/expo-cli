@@ -5,6 +5,7 @@
 import child_process from 'child_process';
 import spawnAsync from '@exponent/spawn-async';
 
+import * as Binaries from './Binaries';
 import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
 
@@ -50,6 +51,9 @@ export async function openProjectInEditorAsync(dir: string) {
 
     // This will use the ENV var $EXPONENT_EDITOR if set, or else will try various
     // popular editors, looking for one that is open, or if none are, one that is installed
+
+    // I hope this is idempotent
+    await Binaries.sourceBashLoginScriptsAsync();
     return await osascript.openInEditorAsync(dir, process.env.EXPONENT_EDITOR);
 
   } else if (process.platform === 'win32') {
