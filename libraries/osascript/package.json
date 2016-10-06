@@ -1,6 +1,6 @@
 {
   "name": "@exponent/osascript",
-  "version": "1.6.1",
+  "version": "1.6.4",
   "description": "Tools for running an osascripts in Node",
   "main": "lib/index.js",
   "scripts": {
@@ -28,6 +28,7 @@
   "homepage": "https://github.com/exponentjs/osascript#readme",
   "dependencies": {
     "@exponent/spawn-async": "^1.1.0",
+    "babel-runtime": "^5.8.38",
     "exec-async": "^2.2.0"
   },
   "devDependencies": {
@@ -45,5 +46,9 @@
     "gulp-sourcemaps": "^1.5.2",
     "gulp-util": "^3.0.6",
     "gulp-watch": "^4.3.5"
-  }
+  },
+  "files": [
+    "lib/",
+    "src/"
+  ]
 }
