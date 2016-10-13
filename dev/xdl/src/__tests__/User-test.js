@@ -5,6 +5,8 @@ jest.mock('fs');
 jest.mock('../Env');
 jest.mock('request');
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
 describe('loginAsync', () => {
   it('calls login Api and stores the username', async () => {
     const fs = require('fs');
