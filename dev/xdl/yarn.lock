@@ -962,7 +962,7 @@ balanced-match@^0.4.1:
 
 base64-js@0.0.8:
   version "0.0.8"
-  resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-0.0.8.tgz#1101e9544f4a76b1bc3b26d452ca96d7a35e7978"
+  resolved base64-js-0.0.8.tgz#1101e9544f4a76b1bc3b26d452ca96d7a35e7978
 
 bcrypt-pbkdf@^1.0.0:
   version "1.0.0"
@@ -2265,7 +2265,7 @@ gulp-changed@^1.3.1:
     gulp-util "^3.0.0"
     through2 "^2.0.0"
 
-gulp-cli@^1.0.0:
+gulp-cli, gulp-cli@^1.0.0:
   version "1.2.2"
   resolved gulp-cli-1.2.2.tgz#7392def6316c6e7939a4f296f3f540151ae3a275
   dependencies:
@@ -2301,7 +2301,7 @@ gulp-rename@^1.2.2:
 
 gulp-shell@^0.5.2:
   version "0.5.2"
-  resolved "https://registry.yarnpkg.com/gulp-shell/-/gulp-shell-0.5.2.tgz#a4959ca0651ad1c7bbfe70b2d0adbbb4e1aea98d"
+  resolved gulp-shell-0.5.2.tgz#a4959ca0651ad1c7bbfe70b2d0adbbb4e1aea98d
   dependencies:
     async "^1.5.0"
     gulp-util "^3.0.7"
@@ -3975,7 +3975,7 @@ process-nextick-args@~1.0.6:
 
 promise-print@^2.3.0:
   version "2.3.0"
-  resolved "https://registry.yarnpkg.com/promise-print/-/promise-print-2.3.0.tgz#4076fe86e535a7bf2ce902697717ed06a20fbbda"
+  resolved promise-print-2.3.0.tgz#4076fe86e535a7bf2ce902697717ed06a20fbbda
   dependencies:
     "@ccheever/crayon" "^5.0.0"
 
