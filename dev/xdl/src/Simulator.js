@@ -32,6 +32,10 @@ export function isPlatformSupported() {
 }
 
 function _isLicenseOutOfDate(text) {
+  if (!text) {
+    return false;
+  }
+
   let lower = text.toLowerCase();
   return lower.includes('xcode') && lower.includes('license');
 }
@@ -43,6 +47,7 @@ async function _xcrunAsync(args) {
     if (_isLicenseOutOfDate(e.stdout) || _isLicenseOutOfDate(e.stderr)) {
       throw new XDLError(ErrorCode.XCODE_LICENSE_NOT_ACCEPTED, 'Xcode license is not accepted. Please run `sudo xcodebuild -license`.');
     } else {
+      Logger.global.error(`Error running \`xcrun ${args.join(' ')}\`: ${e.stderr}`);
       throw e;
     }
   }
