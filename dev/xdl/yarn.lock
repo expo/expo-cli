@@ -2521,6 +2521,10 @@ instapromise@^2.0.2:
   version "2.0.5"
   resolved instapromise-2.0.5.tgz#da8301152ab982e7a021f98e87243821b1adbb7c
 
+instapromise@latest:
+  version "2.0.6"
+  resolved instapromise-2.0.6.tgz#db3976bfcdb4e5f0908861d7bfe3a8d4aafd807e
+
 interpret@^1.0.0:
   version "1.0.1"
   resolved interpret-1.0.1.tgz#d579fb7f693b858004947af39fa0db49f795602c
