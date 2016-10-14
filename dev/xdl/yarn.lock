@@ -2265,7 +2265,7 @@ gulp-changed@^1.3.1:
     gulp-util "^3.0.0"
     through2 "^2.0.0"
 
-gulp-cli, gulp-cli@^1.0.0:
+gulp-cli@^1.0.0, gulp-cli@^1.2.2:
   version "1.2.2"
   resolved gulp-cli-1.2.2.tgz#7392def6316c6e7939a4f296f3f540151ae3a275
   dependencies:
@@ -3639,7 +3639,7 @@ next-tick@^1.0.0:
 
 "ngrok@github:exponentjs/ngrok#v1.3.0":
   version "2.2.1"
-  resolved ef4cba8f387fd26b39a2c3259d9d85091c52c73b#f04287b1abb569e0eec9ad5814e36d069b839c40
+  resolved ef4cba8f387fd26b39a2c3259d9d85091c52c73b#5ae15b15942d0f974ea2157be38538294c17e07c
   dependencies:
     async "^0.9.0"
     decompress-zip "^0.3.0"
