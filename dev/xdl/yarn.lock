@@ -2,14 +2,14 @@
 # yarn lockfile v1
 "@ccheever/crayon@^5.0.0":
   version "5.0.0"
-  resolved crayon-5.0.0.tgz#a7192753c1c25d7588ed01d6058c64c457a71c63
+  resolved "@ccheever-crayon-5.0.0.tgz#a7192753c1c25d7588ed01d6058c64c457a71c63"
   dependencies:
     has-color "^0.1.7"
     strip-ansi "^0.2.1"
 
 "@exponent/json-file@^5.2.0":
   version "5.2.0"
-  resolved json-file-5.2.0.tgz#409647015e05d627d4186e87709cd1d434a7f43f
+  resolved "@exponent-json-file-5.2.0.tgz#409647015e05d627d4186e87709cd1d434a7f43f"
   dependencies:
     instapromise "^2.0.2"
     json5 "^0.5.0"
@@ -17,7 +17,7 @@
 
 "@exponent/osascript@^1.6.4":
   version "1.6.4"
-  resolved osascript-1.6.4.tgz#1c5c0b28dd41b8cb4e11e06c7a3230bfbedf16ad
+  resolved "@exponent-osascript-1.6.4.tgz#1c5c0b28dd41b8cb4e11e06c7a3230bfbedf16ad"
   dependencies:
     "@exponent/spawn-async" "^1.1.0"
     babel-runtime "^5.8.38"
@@ -25,7 +25,7 @@
 
 "@exponent/spawn-async@^1.1.0", "@exponent/spawn-async@^1.2.8":
   version "1.2.8"
-  resolved spawn-async-1.2.8.tgz#cbffa457049395d02b590f6c04f06f4acd0cb729
+  resolved "@exponent-spawn-async-1.2.8.tgz#cbffa457049395d02b590f6c04f06f4acd0cb729"
   dependencies:
     cross-spawn "^4.0.0"
 
@@ -260,10 +260,10 @@ async@^1.4.0, async@^1.4.2, async@^1.5.0, async@~1.5, async@1.x:
   resolved async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a
 
 async@^2.0.1:
-  version "2.0.1"
-  resolved async-2.0.1.tgz#b709cc0280a9c36f09f4536be823c838a9049e25
+  version "2.1.1"
+  resolved async-2.1.1.tgz#e11b6d10043f2254efb61a21163d840ccddb8d28
   dependencies:
-    lodash "^4.8.0"
+    lodash "^4.14.0"
 
 async@~0.2.6:
   version "0.2.10"
@@ -282,8 +282,8 @@ aws-sign2@~0.6.0:
   resolved aws-sign2-0.6.0.tgz#14342dd38dbcc94d0e5b87d763cd63612c0e794f
 
 aws4@^1.2.1:
-  version "1.4.1"
-  resolved aws4-1.4.1.tgz#fde7d5292466d230e5ee0f4e038d9dfaab08fc61
+  version "1.5.0"
+  resolved aws4-1.5.0.tgz#0a29ffb79c31c9e712eeb087e8e7a64b4a56d755
 
 babel-cli@^6.14.0:
   version "6.16.0"
@@ -475,7 +475,7 @@ babel-helpers@^6.16.0:
     babel-runtime "^6.0.0"
     babel-template "^6.16.0"
 
-babel-jest, babel-jest@^16.0.0:
+babel-jest@^16.0.0:
   version "16.0.0"
   resolved babel-jest-16.0.0.tgz#348729aea6d624a4774b8a934d07a40dd2cfd640
   dependencies:
@@ -939,8 +939,8 @@ babel-types@^6.10.2, babel-types@^6.13.0, babel-types@^6.14.0, babel-types@^6.15
     to-fast-properties "^1.0.1"
 
 babylon@^6.11.0, babylon@^6.8.1:
-  version "6.11.4"
-  resolved babylon-6.11.4.tgz#75e1f52187efa0cde5a541a7f7fdda38f6eb5bd2
+  version "6.11.6"
+  resolved babylon-6.11.6.tgz#56dc52e624882841c7fe095257fbcb4a5bb61ae1
 
 bach@^1.0.0:
   version "1.0.0"
@@ -962,7 +962,7 @@ balanced-match@^0.4.1:
 
 base64-js@0.0.8:
   version "0.0.8"
-  resolved base64-js-0.0.8.tgz#1101e9544f4a76b1bc3b26d452ca96d7a35e7978
+  resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-0.0.8.tgz#1101e9544f4a76b1bc3b26d452ca96d7a35e7978"
 
 bcrypt-pbkdf@^1.0.0:
   version "1.0.0"
@@ -1313,7 +1313,7 @@ content-type@~1.0.2:
   version "1.0.2"
   resolved content-type-1.0.2.tgz#b7d113aee7a8dd27bd21133c4dc2529df1721eed
 
-convert-source-map@^1.1.0, convert-source-map@1.X:
+convert-source-map@^1.1.0, convert-source-map@^1.1.1, convert-source-map@1.X:
   version "1.3.0"
   resolved convert-source-map-1.3.0.tgz#e9f3e9c6e2728efc2676696a70eb382f73106a67
 
@@ -1412,7 +1412,15 @@ dateformat@^1.0.11:
     get-stdin "^4.0.1"
     meow "^3.3.0"
 
-debug@*, debug@^2.1.1, debug@^2.2.0, debug@~2.2.0, debug@2:
+debug-fabulous@0.0.X:
+  version "0.0.4"
+  resolved debug-fabulous-0.0.4.tgz#fa071c5d87484685424807421ca4b16b0b1a0763
+  dependencies:
+    debug "2.X"
+    lazy-debug-legacy "0.0.X"
+    object-assign "4.1.0"
+
+debug@*, debug@^2.1.1, debug@^2.2.0, debug@~2.2.0, debug@2, debug@2.X:
   version "2.2.0"
   resolved debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da
   dependencies:
@@ -1910,8 +1918,8 @@ find-versions@^1.0.0:
     semver-regex "^1.0.0"
 
 findup-sync@^0.4.2:
-  version "0.4.2"
-  resolved findup-sync-0.4.2.tgz#a8117d0f73124f5a4546839579fe52d7129fb5e5
+  version "0.4.3"
+  resolved findup-sync-0.4.3.tgz#40043929e7bc60adf0b7f4827c4c6e75a0deca12
   dependencies:
     detect-file "^0.1.0"
     is-glob "^2.0.1"
@@ -2293,26 +2301,37 @@ gulp-rename@^1.2.2:
 
 gulp-shell@^0.5.2:
   version "0.5.2"
-  resolved gulp-shell-0.5.2.tgz#a4959ca0651ad1c7bbfe70b2d0adbbb4e1aea98d
+  resolved "https://registry.yarnpkg.com/gulp-shell/-/gulp-shell-0.5.2.tgz#a4959ca0651ad1c7bbfe70b2d0adbbb4e1aea98d"
   dependencies:
     async "^1.5.0"
     gulp-util "^3.0.7"
     lodash "^4.0.0"
     through2 "^2.0.0"
 
-gulp-sourcemaps@^1.5.2, gulp-sourcemaps@^1.6.0:
-  version "1.7.1"
-  resolved gulp-sourcemaps-1.7.1.tgz#2a6aa5fb2d6315f56cdb750d9a90257d752e2fc2
+gulp-sourcemaps@^1.6.0:
+  version "1.8.1"
+  resolved gulp-sourcemaps-1.8.1.tgz#714bb359ac7dfe50f42aa22f4a8fbcce476da22f
   dependencies:
     acorn "4.X"
     convert-source-map "1.X"
     css "2.X"
+    debug-fabulous "0.0.X"
     detect-newline "2.X"
     graceful-fs "4.X"
     source-map "0.X"
     strip-bom "2.X"
     through2 "2.X"
     vinyl "1.X"
+
+gulp-sourcemaps@1.6.0:
+  version "1.6.0"
+  resolved gulp-sourcemaps-1.6.0.tgz#b86ff349d801ceb56e1d9e7dc7bbcb4b7dee600c
+  dependencies:
+    convert-source-map "^1.1.1"
+    graceful-fs "^4.1.2"
+    strip-bom "^2.0.0"
+    through2 "^2.0.0"
+    vinyl "^1.0.0"
 
 gulp-util@^3, gulp-util@^3.0.0, gulp-util@^3.0.7:
   version "3.0.7"
@@ -2480,8 +2499,8 @@ indent-string@^2.1.0:
     repeating "^2.0.0"
 
 inflight@^1.0.4:
-  version "1.0.5"
-  resolved inflight-1.0.5.tgz#db3204cd5a9de2e6cd890b85c6e2f66bcf4f620a
+  version "1.0.6"
+  resolved inflight-1.0.6.tgz#49bd6331d7d02d0c09bc910a1075ba8165b56df9
   dependencies:
     once "^1.3.0"
     wrappy "1"
@@ -2499,8 +2518,8 @@ ini@^1.3.4, ini@~1.3.0:
   resolved ini-1.3.4.tgz#0537cb79daf59b59a1a517dff706c86ec039162e
 
 instapromise@^2.0.2:
-  version "2.0.2"
-  resolved instapromise-2.0.2.tgz#f20cb8da51fec85a1381c95ae7c5c931f128762e
+  version "2.0.5"
+  resolved instapromise-2.0.5.tgz#da8301152ab982e7a021f98e87243821b1adbb7c
 
 interpret@^1.0.0:
   version "1.0.1"
@@ -2579,9 +2598,9 @@ is-extglob@^1.0.0:
   version "1.0.0"
   resolved is-extglob-1.0.0.tgz#ac468177c4943405a092fc8f29760c6ffc6206c0
 
-is-extglob@^2.0.0:
-  version "2.0.0"
-  resolved is-extglob-2.0.0.tgz#a9b92c1ae2d7a975ad307be0722049c7e4ea2f13
+is-extglob@^2.1.0:
+  version "2.1.0"
+  resolved is-extglob-2.1.0.tgz#33411a482b046bf95e6b0cb27ee2711af4cf15ad
 
 is-finite@^1.0.0:
   version "1.0.2"
@@ -2602,10 +2621,10 @@ is-glob@^2.0.0, is-glob@^2.0.1:
     is-extglob "^1.0.0"
 
 is-glob@^3.0.0:
-  version "3.0.0"
-  resolved is-glob-3.0.0.tgz#e433c222db9d77844084d72db1eff047845985c1
+  version "3.1.0"
+  resolved is-glob-3.1.0.tgz#7ba5ae24217804ac70707b96922567486cc3e84a
   dependencies:
-    is-extglob "^2.0.0"
+    is-extglob "^2.1.0"
 
 is-my-json-valid@^2.12.4:
   version "2.15.0"
@@ -2809,7 +2828,7 @@ jest-changed-files@^16.0.0:
   version "16.0.0"
   resolved jest-changed-files-16.0.0.tgz#7931deff4424182b8173d80e06800d7363b19c45
 
-jest-cli:
+jest-cli@^16.0.1:
   version "16.0.1"
   resolved jest-cli-16.0.1.tgz#c8c48ce0d1ece34d470562105b236f4f34f39f9d
   dependencies:
@@ -2987,8 +3006,8 @@ jodid25519@^1.0.0:
     jsbn "~0.1.0"
 
 joi@^9.0.4:
-  version "9.1.0"
-  resolved joi-9.1.0.tgz#ddad93811592b0f9ae7603fe82c4b63e5bb49e40
+  version "9.1.1"
+  resolved joi-9.1.1.tgz#357a04c3ad424abcb9790829be8c01a131d93500
   dependencies:
     hoek "4.x.x"
     isemail "2.x.x"
@@ -3113,6 +3132,10 @@ last-run@^1.1.0:
 lazy-cache@^1.0.3:
   version "1.0.4"
   resolved lazy-cache-1.0.4.tgz#a1d78fc3a50474cb80845d3b3b6e1da49a446e8e
+
+lazy-debug-legacy@0.0.X:
+  version "0.0.1"
+  resolved lazy-debug-legacy-0.0.1.tgz#537716c0776e4cf79e3ed1b621f7658c2911b1b1
 
 lazystream@^1.0.0:
   version "1.0.0"
@@ -3361,7 +3384,7 @@ lodash.templatesettings@^3.0.0:
     lodash._reinterpolate "^3.0.0"
     lodash.escape "^3.0.0"
 
-lodash@^4.0.0, lodash@^4.14.1, lodash@^4.2.0, lodash@^4.6.1, lodash@^4.8.0:
+lodash@^4.0.0, lodash@^4.14.0, lodash@^4.14.1, lodash@^4.2.0, lodash@^4.6.1:
   version "4.16.4"
   resolved lodash-4.16.4.tgz#01ce306b9bad1319f2a5528674f88297aeb70127
 
@@ -3616,7 +3639,7 @@ next-tick@^1.0.0:
 
 "ngrok@github:exponentjs/ngrok#v1.3.0":
   version "2.2.1"
-  resolved ef4cba8f387fd26b39a2c3259d9d85091c52c73b#5ae15b15942d0f974ea2157be38538294c17e07c
+  resolved ef4cba8f387fd26b39a2c3259d9d85091c52c73b#f04287b1abb569e0eec9ad5814e36d069b839c40
   dependencies:
     async "^0.9.0"
     decompress-zip "^0.3.0"
@@ -3726,7 +3749,7 @@ object-assign@^3.0.0:
   version "3.0.0"
   resolved object-assign-3.0.0.tgz#9bedd5ca0897949bca47e7ff408062d549f587f2
 
-object-assign@^4.0.0, object-assign@^4.0.1, object-assign@^4.1.0:
+object-assign@^4.0.0, object-assign@^4.0.1, object-assign@^4.1.0, object-assign@4.1.0:
   version "4.1.0"
   resolved object-assign-4.1.0.tgz#7a3b3d0e98063d43f4c03f2e8ae6cd51a86883a0
 
@@ -3952,7 +3975,7 @@ process-nextick-args@~1.0.6:
 
 promise-print@^2.3.0:
   version "2.3.0"
-  resolved promise-print-2.3.0.tgz#4076fe86e535a7bf2ce902697717ed06a20fbbda
+  resolved "https://registry.yarnpkg.com/promise-print/-/promise-print-2.3.0.tgz#4076fe86e535a7bf2ce902697717ed06a20fbbda"
   dependencies:
     "@ccheever/crayon" "^5.0.0"
 
@@ -5013,13 +5036,13 @@ verror@1.3.6:
     extsprintf "1.0.2"
 
 vinyl-fs@^2.0.0:
-  version "2.4.3"
-  resolved vinyl-fs-2.4.3.tgz#3d97e562ebfdd4b66921dea70626b84bde9d2d07
+  version "2.4.4"
+  resolved vinyl-fs-2.4.4.tgz#be6ff3270cb55dfd7d3063640de81f25d7532239
   dependencies:
     duplexify "^3.2.0"
     glob-stream "^5.3.2"
     graceful-fs "^4.0.0"
-    gulp-sourcemaps "^1.5.2"
+    gulp-sourcemaps "1.6.0"
     is-valid-glob "^0.3.0"
     lazystream "^1.0.0"
     lodash.isequal "^4.0.0"
