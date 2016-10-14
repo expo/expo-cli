@@ -179,8 +179,11 @@ export async function sourceBashLoginScriptsAsync() {
       if (/t?csh$/.test(process.env.SHELL)) {
         // csh
         result = await spawnAsync(process.env.SHELL, ['-d', '-c', 'env']);
+      } else if (/zsh$/.test(process.env.SHELL)) {
+        // zsh
+        result = await spawnAsync(process.env.SHELL, ['-l', '-c', '-i', 'env']);
       } else {
-        // bash, zsh, fish
+        // bash, fish
         result = await spawnAsync(process.env.SHELL, ['-l', '-c', 'env']);
       }
 
