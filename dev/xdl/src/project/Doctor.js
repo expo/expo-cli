@@ -24,10 +24,9 @@ export const NO_ISSUES = 0;
 export const WARNING = 1;
 export const FATAL = 2;
 
-const MIN_WATCHMAN_VERSION = '4.7.0';
+const MIN_WATCHMAN_VERSION = '4.6.0';
 
 async function _checkWatchmanVersionAsync(projectRoot) {
-
   // There's no point in checking any of this stuff if watchman isn't supported on this platform
   if (!Watchman.isPlatformSupported()) {
     return;
@@ -40,6 +39,7 @@ async function _checkWatchmanVersionAsync(projectRoot) {
     // watchman is probably just not installed
     return;
   }
+
   if (semver.lt(watchmanVersion, MIN_WATCHMAN_VERSION)) {
     let warningMessage = `Warning: You are using an old version of watchman (v${watchmanVersion}). This may cause problems for you.\n\nWe recommend that you either uninstall watchman (and XDE will try to use a copy it is bundled with) or upgrade watchman to a newer version, at least v${MIN_WATCHMAN_VERSION}.`;
 

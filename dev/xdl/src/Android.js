@@ -225,20 +225,29 @@ export async function stopAdbReverseAsync(projectRoot: string) {
 }
 
 async function adbReverse(port: number) {
+  if (!await _isDeviceAuthorizedAsync()) {
+    return false;
+  }
+
   try {
     await _getAdbOutputAsync(['reverse', `tcp:${port}`, `tcp:${port}`]);
     return true;
   } catch (e) {
-    Logger.global.debug(`Couldn't adb reverse: ${e.message}`);
+    Logger.global.warn(`Couldn't adb reverse: ${e.message}`);
     return false;
   }
 }
 
 async function adbReverseRemove(port: number) {
+  if (!await _isDeviceAuthorizedAsync()) {
+    return false;
+  }
+
   try {
     await _getAdbOutputAsync(['reverse', '--remove', `tcp:${port}`]);
     return true;
   } catch (e) {
+    // Don't send this to warn because we call this preemptively sometimes
     Logger.global.debug(`Couldn't adb reverse remove: ${e.message}`);
     return false;
   }
