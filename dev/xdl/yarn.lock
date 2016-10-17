@@ -4281,7 +4281,7 @@ replace-ext@0.0.1:
   version "0.0.1"
   resolved replace-ext-0.0.1.tgz#29bbd92078a739f0bcce2b4ee41e837953522924
 
-request@^2.55.0, request@^2.65.0, request@^2.69.0, request@2.x:
+request@^2.55.0, request@^2.65.0, request@^2.74.0, request@2.x:
   version "2.75.0"
   resolved request-2.75.0.tgz#d2b8268a286da13eaa5d01adf5d18cc90f657d93
   dependencies:
