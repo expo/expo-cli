@@ -260,8 +260,8 @@ async@^1.4.0, async@^1.4.2, async@^1.5.0, async@~1.5, async@1.x:
   resolved async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a
 
 async@^2.0.1:
-  version "2.1.1"
-  resolved async-2.1.1.tgz#e11b6d10043f2254efb61a21163d840ccddb8d28
+  version "2.1.2"
+  resolved async-2.1.2.tgz#612a4ab45ef42a70cde806bad86ee6db047e8385
   dependencies:
     lodash "^4.14.0"
 
@@ -496,12 +496,12 @@ babel-plugin-check-es2015-constants@^6.3.13:
     babel-runtime "^6.0.0"
 
 babel-plugin-istanbul@^2.0.0:
-  version "2.0.2"
-  resolved babel-plugin-istanbul-2.0.2.tgz#66c957fd3b2ace69215955c0ea5920980958cbf3
+  version "2.0.3"
+  resolved babel-plugin-istanbul-2.0.3.tgz#266b304b9109607d60748474394676982f660df4
   dependencies:
     find-up "^1.1.2"
-    istanbul-lib-instrument "^1.1.1"
-    lodash.assign "^4.2.0"
+    istanbul-lib-instrument "^1.1.4"
+    object-assign "^4.1.0"
     test-exclude "^2.1.1"
 
 babel-plugin-jest-hoist@^16.0.0:
@@ -1097,10 +1097,10 @@ builtin-modules@^1.0.0:
   resolved builtin-modules-1.1.1.tgz#270f076c5a72c02f5b65a47df94c5fe3a278892f
 
 bunyan@^1.8.1:
-  version "1.8.1"
-  resolved bunyan-1.8.1.tgz#68c6a4a502d5620bc9f72d6736810c1b1898097f
+  version "1.8.2"
+  resolved bunyan-1.8.2.tgz#edcc94d47f921bc1b4030c832da21a3857aaf2a9
   optionalDependencies:
-    dtrace-provider "~0.6"
+    dtrace-provider "~0.7"
     moment "^2.10.6"
     mv "~2"
     safe-json-stringify "~1"
@@ -1308,6 +1308,10 @@ console-control-strings@^1.0.0, console-control-strings@~1.1.0:
 content-disposition@0.5.1:
   version "0.5.1"
   resolved content-disposition-0.5.1.tgz#87476c6a67c8daa87e32e87616df883ba7fb071b
+
+content-type-parser@^1.0.1:
+  version "1.0.1"
+  resolved content-type-parser-1.0.1.tgz#c3e56988c53c65127fb46d4032a3a900246fdc94
 
 content-type@~1.0.2:
   version "1.0.2"
@@ -1601,11 +1605,11 @@ download@^5.0.2:
     mkdirp "^0.5.1"
     pify "^2.3.0"
 
-dtrace-provider@~0.6:
-  version "0.6.0"
-  resolved dtrace-provider-0.6.0.tgz#0b078d5517937d873101452d9146737557b75e51
+dtrace-provider@~0.7:
+  version "0.7.0"
+  resolved dtrace-provider-0.7.0.tgz#9ac6d3eb78ffbe90385063e6d14dfe7bc377005d
   dependencies:
-    nan "^2.0.8"
+    nan "^2.3.3"
 
 duplexer2@0.0.2:
   version "0.0.2"
@@ -1618,8 +1622,8 @@ duplexer3@^0.1.4:
   resolved duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2
 
 duplexify@^3.2.0:
-  version "3.4.5"
-  resolved duplexify-3.4.5.tgz#0e7e287a775af753bf57e6e7b7f21f183f6c3a53
+  version "3.4.6"
+  resolved duplexify-3.4.6.tgz#1e586a13028caf31d5144a059813f9b071fec557
   dependencies:
     end-of-stream "1.0.0"
     inherits "^2.0.1"
@@ -1851,8 +1855,8 @@ ffi@^2.0.0:
     ref-struct "1"
 
 file-type@^3.8.0:
-  version "3.8.0"
-  resolved file-type-3.8.0.tgz#bcadf6a8f624ebe4a10e5ad26727b6b93f16d78d
+  version "3.9.0"
+  resolved file-type-3.9.0.tgz#257a078384d1db8087bc449d107d52a52672b9e9
 
 file-uri-to-path@0:
   version "0.0.2"
@@ -2452,6 +2456,12 @@ hosted-git-info@^2.1.4:
   version "2.1.5"
   resolved hosted-git-info-2.1.5.tgz#0ba81d90da2e25ab34a332e6ec77936e1598118b
 
+html-encoding-sniffer@^1.0.1:
+  version "1.0.1"
+  resolved html-encoding-sniffer-1.0.1.tgz#79bf7a785ea495fe66165e734153f363ff5437da
+  dependencies:
+    whatwg-encoding "^1.0.1"
+
 http-errors@~1.5.0:
   version "1.5.0"
   resolved http-errors-1.5.0.tgz#b1cb3d8260fd8e2386cad3189045943372d48211
@@ -2523,7 +2533,7 @@ instapromise@^2.0.2:
 
 instapromise@2.0.7-rc.1:
   version "2.0.7-rc.1"
-  resolved instapromise-2.0.7-rc.1.tgz#34aff619a45ea7d32bb122866a9e315ee73033e8
+  resolved "https://registry.yarnpkg.com/instapromise/-/instapromise-2.0.7-rc.1.tgz#34aff619a45ea7d32bb122866a9e315ee73033e8"
 
 interpret@^1.0.0:
   version "1.0.1"
@@ -2554,11 +2564,11 @@ is-absolute@^0.1.5:
     is-relative "^0.1.0"
 
 is-absolute@^0.2.3:
-  version "0.2.5"
-  resolved is-absolute-0.2.5.tgz#994142b9f468d27c14fbf0cd30fe77db934ca76d
+  version "0.2.6"
+  resolved is-absolute-0.2.6.tgz#20de69f3db942ef2d87b9c2da36f172235b1b5eb
   dependencies:
     is-relative "^0.2.1"
-    is-windows "^0.1.1"
+    is-windows "^0.2.0"
 
 is-arrayish@^0.2.1:
   version "0.2.1"
@@ -2701,10 +2711,6 @@ is-valid-glob@^0.3.0:
   version "0.3.0"
   resolved is-valid-glob-0.3.0.tgz#d4b55c69f51886f9b65c70d6c2622d37e29f48fe
 
-is-windows@^0.1.1:
-  version "0.1.1"
-  resolved is-windows-0.1.1.tgz#be310715431cfabccc54ab3951210fa0b6d01abe
-
 is-windows@^0.2.0:
   version "0.2.0"
   resolved is-windows-0.2.0.tgz#de1aa6d63ea29dd248737b69f1ff8b8002d2108c
@@ -2762,9 +2768,9 @@ istanbul-lib-hook@^1.0.0-alpha:
   dependencies:
     append-transform "^0.3.0"
 
-istanbul-lib-instrument@^1.0.0-alpha, istanbul-lib-instrument@^1.1.1:
-  version "1.1.3"
-  resolved istanbul-lib-instrument-1.1.3.tgz#66d5353d1f592b9e34d1cf9acda9c3f1ab509696
+istanbul-lib-instrument@^1.0.0-alpha, istanbul-lib-instrument@^1.1.1, istanbul-lib-instrument@^1.1.4:
+  version "1.1.4"
+  resolved istanbul-lib-instrument-1.1.4.tgz#95be56e5c321456ffdfddc925ad4dcfc28edab9c
   dependencies:
     babel-generator "^6.11.3"
     babel-template "^6.9.0"
@@ -2794,8 +2800,8 @@ istanbul-lib-source-maps@^1.0.0-alpha:
     source-map "^0.5.3"
 
 istanbul-reports@^1.0.0-alpha:
-  version "1.0.0-alpha.8"
-  resolved istanbul-reports-1.0.0-alpha.8.tgz#094830f4c7f3d482e466aac8abda2495f9ae4689
+  version "1.0.0"
+  resolved istanbul-reports-1.0.0.tgz#24b4eb2b1d29d50f103b369bd422f6e640aa0777
   dependencies:
     handlebars "^4.0.3"
 
@@ -3010,8 +3016,8 @@ jodid25519@^1.0.0:
     jsbn "~0.1.0"
 
 joi@^9.0.4:
-  version "9.1.1"
-  resolved joi-9.1.1.tgz#357a04c3ad424abcb9790829be8c01a131d93500
+  version "9.2.0"
+  resolved joi-9.2.0.tgz#3385ac790192130cbe230e802ec02c9215bbfeda
   dependencies:
     hoek "4.x.x"
     isemail "2.x.x"
@@ -3043,16 +3049,18 @@ jsbn@~0.1.0:
   resolved jsbn-0.1.0.tgz#650987da0dd74f4ebf5a11377a2aa2d273e97dfd
 
 jsdom@^9.5.0:
-  version "9.6.0"
-  resolved jsdom-9.6.0.tgz#e0e9b15ba07e90b1d9ec083f9bedee0f6800a4fb
+  version "9.8.0"
+  resolved jsdom-9.8.0.tgz#8766594cf994549d8a809cf6dca0246aceef9305
   dependencies:
     abab "^1.0.0"
     acorn "^2.4.0"
     acorn-globals "^1.0.4"
     array-equal "^1.0.0"
+    content-type-parser "^1.0.1"
     cssom ">= 0.3.0 < 0.4.0"
     cssstyle ">= 0.2.36 < 0.3.0"
     escodegen "^1.6.1"
+    html-encoding-sniffer "^1.0.1"
     iconv-lite "^0.4.13"
     nwmatcher ">= 1.3.7 < 2.0.0"
     parse5 "^1.5.1"
@@ -3061,6 +3069,7 @@ jsdom@^9.5.0:
     symbol-tree ">= 3.1.0 < 4.0.0"
     tough-cookie "^2.3.1"
     webidl-conversions "^3.0.1"
+    whatwg-encoding "^1.0.1"
     whatwg-url "^3.0.0"
     xml-name-validator ">= 2.0.1 < 3.0.0"
 
@@ -3617,7 +3626,7 @@ mv@~2:
     ncp "~2.0.0"
     rimraf "~2.4.0"
 
-nan@^2.0.8, nan@^2.3.0, nan@2, nan@2.x:
+nan@^2.3.0, nan@^2.3.3, nan@2, nan@2.x:
   version "2.4.0"
   resolved nan-2.4.0.tgz#fb3c59d45fe4effe215f0b890f8adf6eb32d2232
 
@@ -4516,8 +4525,8 @@ source-map-resolve@^0.3.0:
     urix "~0.1.0"
 
 source-map-support@^0.4.2:
-  version "0.4.3"
-  resolved source-map-support-0.4.3.tgz#693c8383d4389a4569486987c219744dfc601685
+  version "0.4.5"
+  resolved source-map-support-0.4.5.tgz#4438df4219e1b3c7feb674614b4c67f9722db1e4
   dependencies:
     source-map "^0.5.3"
 
@@ -5096,6 +5105,12 @@ watch@~0.10.0:
 webidl-conversions@^3.0.0, webidl-conversions@^3.0.1:
   version "3.0.1"
   resolved webidl-conversions-3.0.1.tgz#24534275e2a7bc6be7bc86611cc16ae0a5654871
+
+whatwg-encoding@^1.0.1:
+  version "1.0.1"
+  resolved whatwg-encoding-1.0.1.tgz#3c6c451a198ee7aec55b1ec61d0920c67801a5f4
+  dependencies:
+    iconv-lite "0.4.13"
 
 whatwg-url@^3.0.0:
   version "3.0.0"
