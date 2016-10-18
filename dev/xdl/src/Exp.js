@@ -161,7 +161,7 @@ async function _extractAsync(archive, starterAppName, dir) {
     if (process.platform === 'win32') {
       await _extractWindowsAsync(archive, starterAppName, dir);
     } else {
-      await spawnAsync('tar', ['-xvf', archive, '-C', dir], {
+      await spawnAsync('tar', ['-xf', archive, '-C', dir], {
         stdio: 'inherit',
         cwd: __dirname,
       });
