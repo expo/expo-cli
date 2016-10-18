@@ -51,11 +51,8 @@ export async function openProjectInEditorAsync(dir: string) {
 
     // This will use the ENV var $EXPONENT_EDITOR if set, or else will try various
     // popular editors, looking for one that is open, or if none are, one that is installed
-
-    // I hope this is idempotent
     await Binaries.sourceBashLoginScriptsAsync();
     return await osascript.openInEditorAsync(dir, process.env.EXPONENT_EDITOR);
-
   } else if (process.platform === 'win32') {
     throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'openProjectInEditorAsync not supported');
   }

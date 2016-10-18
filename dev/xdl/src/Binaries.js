@@ -22,6 +22,7 @@ let hasSourcedBashLoginScripts = false;
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
+const ERROR_MESSAGE = '\nPlease create a file at ~/.exponent/bashrc that exports your PATH.';
 
 export function ncpAsync(source: string, dest: string, options: any = {}) {
   return new Promise((resolve, reject) => {
@@ -153,8 +154,8 @@ export async function sourceBashLoginScriptsAsync() {
   hasSourcedBashLoginScripts = true;
   let currentPath = process.env.PATH ? process.env.PATH : '';
 
-  try {
-    if (_exponentRCFileExists()) {
+  if (_exponentRCFileExists()) {
+    try {
       // User has a ~/.exponent/bashrc. Run that and grab PATH.
       let result = await spawnAsync(path.join(getBinariesPath(), `get-path-bash`), {
         env: {
@@ -163,7 +164,7 @@ export async function sourceBashLoginScriptsAsync() {
       });
 
       if (result.stderr) {
-        Logger.global.debug(`Error sourcing ~/.exponent/bashrc script: ${result.stderr}`);
+        Logger.global.warn(`Error sourcing ~/.exponent/bashrc script: ${result.stderr}`);
       }
 
       if (result.stdout) {
@@ -173,7 +174,11 @@ export async function sourceBashLoginScriptsAsync() {
 
         currentPath = `${currentPath}${result.stdout}`;
       }
-    } else {
+    } catch (e) {
+      Logger.global.warn(`Error sourcing ~/.exponent/bashrc script: ${e.stderr}`);
+    }
+  } else {
+    try {
       // No ~/.exponent/bashrc file found. Run `env` in process.env.SHELL.
       let result;
       if (/t?csh$/.test(process.env.SHELL)) {
@@ -188,7 +193,7 @@ export async function sourceBashLoginScriptsAsync() {
       }
 
       if (result.stderr) {
-        Logger.global.debug(`Error sourcing shell startup scripts: ${result.stderr}`);
+        Logger.global.warn(`Error sourcing shell startup scripts: ${result.stderr}.${ERROR_MESSAGE}`);
       }
 
       if (result.stdout) {
@@ -201,12 +206,12 @@ export async function sourceBashLoginScriptsAsync() {
 
           currentPath = `${currentPath}${regexResult[2]}`;
         } else {
-          Logger.global.debug(`Error parsing shell startup scripts output: ${result.stderr}`);
+          Logger.global.warn(`Error parsing shell startup scripts output: ${result.stderr}.${ERROR_MESSAGE}`);
         }
       }
+    } catch (e) {
+      Logger.global.warn(`Error sourcing shell startup scripts: ${e.stderr}.${ERROR_MESSAGE}`);
     }
-  } catch (e) {
-    Logger.global.debug(`Error sourcing shell startup scripts: ${e.stderr}`);
   }
 
   process.env.PATH = currentPath;
