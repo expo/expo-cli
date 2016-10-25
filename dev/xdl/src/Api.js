@@ -104,7 +104,7 @@ export default class ApiClient {
   static host: string = Config.api.host;
   static port: number = Config.api.port || 80;
 
-  static async callMethodAsync(methodName, args, method, requestBody): Promise<any> {
+  static async callMethodAsync(methodName: string, args: Array<*>, method: string, requestBody: Object): Promise<any> {
     let url = API_BASE_URL + encodeURIComponent(methodName) + '/' +
       encodeURIComponent(JSON.stringify(args));
     return _callMethodAsync(url, method, requestBody);
