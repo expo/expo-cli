@@ -1,9 +1,12 @@
 const joi = require('joi');
-const colorField = joi.string().regex(/^#|(&#x23;)\d{6}$/).
-  meta({regexHuman: "6 character long hex color string, eg: ``'#000000'``"});
+const colorField = joi.string().regex(/^#|(&#x23;)\d{6}$/)
+  .meta({regexHuman: "6 character long hex color string, eg: ``'#000000'``"});
 
-const reverseDnsField = joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\_\.]+$/).
-  meta({regexHuman: "Reverse DNS notation unique name for your app. For example, host.exp.exponent, where exp.host is our domain and Exponent is our app."});
+const reverseDnsField = joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\_\.]+$/)
+  .meta({regexHuman: "Reverse DNS notation unique name for your app. For example, host.exp.exponent, where exp.host is our domain and Exponent is our app."});
+
+const iosBundleIdentifier = joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-\.]+$/)
+  .meta({regexHuman: "iOS bundle identifier notation unique name for your app. For example, host.exp.exponent, where exp.host is our domain and Exponent is our app."});
 
 // Update the PNG_FIELDS exported value when you use this
 const pngField = joi.string().uri();
@@ -95,7 +98,7 @@ module.exports = joi.object().keys({
   nodeModulesPath: joi.string(),
 
   ios: joi.object().keys({
-    bundleIdentifier: reverseDnsField.description(
+    bundleIdentifier: iosBundleIdentifier.description(
       "The bundle identifier for your iOS standalone app. You make it up, but it needs to be unique on the App Store. See `this StackOverflow question <http://stackoverflow.com/questions/11347470/what-does-bundle-identifier-mean-in-the-ios-project>`_."
     ),
     config: joi.object().keys({
