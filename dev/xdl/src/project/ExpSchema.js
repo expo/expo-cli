@@ -108,6 +108,13 @@ module.exports = joi.object().keys({
       }).description(
         "`Twitter Fabric <https://get.fabric.io/>`_ keys to hook up Crashlytics and other services."
       ),
+      googleSignIn: joi.object().keys({
+        reservedClientId: joi.string().description(
+          'The reserved client id url scheme. Can be found in `GoogeService-Info.plist`.'
+        ),
+      }).description(
+        "`Google Sign-In iOS SDK <https://developers.google.com/identity/sign-in/ios/start-integrating>`_ keys for your standalone app."
+      ),
     }),
   }).description('iOS standalone app specific configuration').meta({standaloneOnly: true}),
   android: joi.object().keys({
@@ -128,6 +135,14 @@ module.exports = joi.object().keys({
         apiKey: joi.string().alphanum().description('Your Google Maps Android SDK API key'),
       }).description(
         "`Google Maps Android SDK <https://developers.google.com/maps/documentation/android-api/signup>`_ key for your standalone app."
+      ),
+      googleSignIn: joi.object().keys({
+        apiKey: joi.string().alphanum().description('The Android API key. Can be found in the credentials section of the developer console or in `google-services.json`.'),
+        certificateHash: joi.string().alphanum().description(
+          'The SHA-1 hash of the signing certificate used to build the apk without any separator `:`. Can be found in `google-services.json`. https://developers.google.com/android/guides/client-auth'
+        ),
+      }).description(
+        "`Google Sign-In Android SDK <https://developers.google.com/identity/sign-in/android/start-integrating>`_ keys for your standalone app."
       ),
     }),
   }).description('Android standalone app specific configuration').meta({standaloneOnly: true}),
