@@ -246,9 +246,29 @@ export async function createNewExpAsync(templateId: string, selectedDir: string,
   let customExpJson = expJson.replace(/\"My New Project\"/, `"${data.name}"`).replace(/\"my-new-project\"/, `"${data.name}"`);
   await fs.writeFile.promise(path.join(root, 'exp.json'), customExpJson, 'utf8');
 
+  await initGitRepo(root);
+
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Starting project...');
 
   return root;
+}
+
+async function initGitRepo(root: string) {
+  // let's see if we're in a git tree
+  let insideGit = true;
+  try {
+    await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], { cwd: root });
+  } catch (e) {
+    insideGit = false;
+  }
+
+  if (!insideGit) {
+    try {
+      await spawnAsync('git', ['init'], { cwd: root });
+    } catch (e) {
+      // no-op -- this is just a convenience and we don't care if it fails
+    }
+  }
 }
 
 export async function saveRecentExpRootAsync(root: string) {
