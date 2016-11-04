@@ -34,7 +34,7 @@
     "babel-plugin-transform-runtime": "^6.9.0",
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-stage-1": "^6.5.0",
-    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp": "git+https://github.com/gulpjs/gulp#4.0",
     "gulp-babel": "^6.1.2",
     "gulp-changed": "^1.3.0",
     "gulp-plumber": "^1.1.0",
@@ -58,10 +58,10 @@
     "inquirer-async": "^1.1.0",
     "instapromise": "2.0.7-rc.1",
     "lodash-node": "^3.10.0",
-    "pm2": "^1.1.3",
+    "pm2": "git+https://github.com/exponentjs/pm2.git#exp-master",
     "qrcode-terminal": "^0.10.0",
     "semver": "^5.0.1",
     "untildify": "^3.0.2",
-    "xdl": "0.23.0"
+    "xdl": "0.23.1"
   }
 }
