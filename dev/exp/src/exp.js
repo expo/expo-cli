@@ -168,11 +168,11 @@ function _registerLogs() {
           }
         }
 
-        if (chunk.level <= bunyan.INFO) {
+        if (chunk.level === bunyan.INFO) {
           log(chunk.msg);
         } else if (chunk.level === bunyan.WARN) {
           log.warn(chunk.msg);
-        } else {
+        } else if (chunk.level >= bunyan.ERROR) {
           log.error(chunk.msg);
         }
       },
