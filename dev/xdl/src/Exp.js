@@ -258,6 +258,7 @@ async function initGitRepo(root: string) {
   let insideGit = true;
   try {
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], { cwd: root });
+    Logger.global.debug('New project is already inside of a git repo, skipping git init.');
   } catch (e) {
     insideGit = false;
   }
@@ -267,6 +268,7 @@ async function initGitRepo(root: string) {
       await spawnAsync('git', ['init'], { cwd: root });
     } catch (e) {
       // no-op -- this is just a convenience and we don't care if it fails
+      Logger.global.debug(`Unable to initialize git repo: ${e.stderr}`);
     }
   }
 }
