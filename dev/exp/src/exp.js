@@ -76,7 +76,7 @@ async function runAsync() {
     if (process.env.SERVER_URL) {
       let serverUrl = process.env.SERVER_URL;
       if (!serverUrl.startsWith('http')) {
-        serverUrl = 'http://' + serverUrl;
+        serverUrl = `http://${serverUrl}`;
       }
       let parsedUrl = url.parse(serverUrl);
       Config.api.host = parsedUrl.hostname;
@@ -92,7 +92,7 @@ async function runAsync() {
     glob.sync('commands/*.js', {
       cwd: __dirname,
     }).forEach(file => {
-      const commandModule = require('./' + file);
+      const commandModule = require(`./${file}`);
       if (typeof commandModule === 'function') {
         commandModule(program);
       } else if (typeof commandModule.default === 'function') {
@@ -106,7 +106,7 @@ async function runAsync() {
       glob.sync('debug_commands/*.js', {
         cwd: __dirname,
       }).forEach(file => {
-        require('./' + file)(program);
+        require(`./${file}`)(program);
       });
     }
 
