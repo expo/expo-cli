@@ -5,10 +5,30 @@ import JsonFile from '@exponent/json-file';
 import path from 'path';
 import semver from 'semver';
 
-async function latestExpVersionAsync() {
+import { UserSettings } from 'xdl';
+
+function updatesObject() {
+  let updatesJsonPath = path.join(UserSettings.dotExponentHomeDirectory(), 'updates.json');
+  return new JsonFile(updatesJsonPath, {cantReadFileDefault: {}});
+}
+
+async function needToUpdate() {
+  let updateAfter = new Date(await updatesObject().getAsync('lastUpdatedExp', new Date(1998, 11, 17)));
+  updateAfter.setDate(updateAfter.getDate() + 1); // once a day check
+  return updateAfter <= new Date();
+}
+
+async function fetchAndWriteLatestExpVersionAsync() {
   var packageName = await new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('name');
-  var version_ = await child_process.promise.exec('npm view ' + packageName + ' version');
-  return version_.trim();
+  var version_ = await child_process.promise.exec(`npm view ${packageName} version`);
+  let trimmed = version_.trim();
+
+  await updatesObject().mergeAsync({
+    lastUpdatedExp: new Date(),
+    latestVersionExp: trimmed,
+  });
+
+  return trimmed;
 }
 
 async function currentExpVersionAsync() {
@@ -16,29 +36,28 @@ async function currentExpVersionAsync() {
 }
 
 async function checkForExpUpdateAsync() {
-  var current$ = currentExpVersionAsync();
-  var latest$ = latestExpVersionAsync();
-  var [current, latest] = await Promise.all([current$, latest$]);
+  var current = await currentExpVersionAsync();
+
+  // check for an outdated install based on either a fresh npm query or our cache
+  let latest;
+  if (await needToUpdate()) {
+    latest = await fetchAndWriteLatestExpVersionAsync();
+  } else {
+    latest = await updatesObject().getAsync('latestVersionExp', current);
+  }
 
   var state;
-  var message;
   switch (semver.compare(current, latest)) {
     case -1:
       state = 'out-of-date';
-      message = "There is a new version of exp available (" + latest + ").\n" +
-        "You are currently using exp " + current + "\n" +
-        "Run `npm update -g exp` to get the latest version";
       break;
 
     case 0:
       state = 'up-to-date';
-      message = "Your version of exp (" + current + ") is the latest version available.";
       break;
 
     case 1:
       state = 'ahead-of-published';
-      message = "Your version of exp (" + current + ") is newer than the" +
-        " latest version published to npm (" + latest + ").";
       break;
 
     default:
@@ -47,7 +66,6 @@ async function checkForExpUpdateAsync() {
 
   return {
     state,
-    message,
     current,
     latest,
   };
@@ -56,6 +74,5 @@ async function checkForExpUpdateAsync() {
 
 export default {
   currentExpVersionAsync,
-  latestExpVersionAsync,
   checkForExpUpdateAsync,
 };

@@ -135,19 +135,24 @@ async function runAsync() {
 }
 
 async function checkForUpdateAsync() {
-  let checkForUpdate = await update.checkForExpUpdateAsync();
-  switch (checkForUpdate.state) {
+  let { state, current, latest } = await update.checkForExpUpdateAsync();
+  let message;
+  switch (state) {
     case 'up-to-date':
       break;
+
     case 'out-of-date':
-      crayon.green.error(checkForUpdate.message);
+      message = `There is a new version of exp available (${latest}).
+You are currently using exp ${current}
+Run \`npm update -g exp\` to get the latest version`;
+      crayon.green.error(message);
       break;
+
     case 'ahead-of-published':
-      crayon.cyan.error(checkForUpdate.message);
+      message = `Your version of exp (${current}) is newer than the latest version published to npm (${latest}).`;
+      crayon.cyan.error(message);
       break;
-    case 'deprecated':
-      crayon.yellow.bold.error(checkForUpdate.message);
-      break;
+
     default:
       log.error("Confused about what version of exp you have?");
   }
