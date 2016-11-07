@@ -36,3 +36,5 @@ gulp.task('watch', tasks.watchBabel);
 gulp.task('clean', done => {
   rimraf(paths.build, done);
 });
+
+gulp.task('default', gulp.series('watch'));
