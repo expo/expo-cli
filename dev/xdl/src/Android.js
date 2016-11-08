@@ -156,15 +156,15 @@ export async function upgradeExponentAsync() {
 
 // Open Url
 async function _assertDeviceReadyAsync() {
-  const usbDebuggingLink = `https://developer.android.com/studio/run/device.html#developer-device-options`;
+  const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
   if (!(await _isDeviceAttachedAsync())) {
-    Logger.global.error(`No Android device found. Please connect a device and follow the instructions here to enable USB debugging:\n${usbDebuggingLink}`);
+    Logger.global.error(`No Android device found. Please connect a device and follow the instructions here to enable USB debugging:\n${genymotionMessage}`);
     return false;
   }
 
   if (!(await _isDeviceAuthorizedAsync())) {
-    Logger.global.error(`This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${usbDebuggingLink}`);
+    Logger.global.error(`This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`);
     return false;
   }
 

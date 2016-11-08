@@ -131,8 +131,11 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
         return WARNING;
       }
     } catch (e) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`);
-      return WARNING;
+      // TODO: Fix when we have more time
+      return NO_ISSUES;
+
+      // ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`);
+      // return WARNING;
     }
   }
 
@@ -141,6 +144,7 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
   return NO_ISSUES;
 }
 
+// TODO: use `yarn check`
 async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let nodeModulesPath = projectRoot;
@@ -244,12 +248,15 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
     _validatePngFieldsAsync(projectRoot, exp);
   }
 
-  if (status !== FATAL && exp && !exp.ignoreNodeModulesValidation) {
+
+  // TODO: this broke once we started using yarn because `npm ls` doesn't
+  // work on a yarn install. Use `yarn check` in the future.
+  /*if (status !== FATAL && exp && !exp.ignoreNodeModulesValidation) {
     let nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
     if (nodeModulesStatus > status) {
       return nodeModulesStatus;
     }
-  }
+  }*/
 
   return status;
 }
