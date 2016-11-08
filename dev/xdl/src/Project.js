@@ -307,8 +307,11 @@ function _stripPackagerOutputBox(output: string) {
 }
 
 function _processPackagerLine(line: string) {
-  let re = /\s*\[\d+\:\d+\:\d+\ (AM)?(PM)?\]\s+/;
-  return line.replace(re, '');
+  // [10:02:59 AM]
+  let timestampRe = /\s*\[\d+\:\d+\:\d+\ (AM)?(PM)?\]\s+/;
+  // [11/8/2016, 10:02:59 AM]
+  let sdk11AndUpTimestampRe = /\s*\[\d+\/\d+\/\d+, \d+\:\d+\:\d+\ (AM)?(PM)?\]\s+/;
+  return line.replace(timestampRe, '').replace(sdk11AndUpTimestampRe, '');
 }
 
 async function _restartWatchmanAsync(projectRoot: string) {
