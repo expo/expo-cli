@@ -114,20 +114,6 @@ async function action(projectDir, options) {
   }
 
   try {
-    ProjectUtils.attachLoggerStream(root, {
-      stream: {
-        write: (chunk) => {
-          if (chunk.level <= bunyan.INFO) {
-            console.log(chunk.msg);
-          } else if (chunk.level === bunyan.WARN) {
-            console.warn(chunk.msg);
-          } else {
-            console.error(chunk.msg);
-          }
-        },
-      },
-      type: 'raw',
-    });
     await Project.startAsync(root, startOpts);
 
     await config.projectExpJsonFile(projectDir).mergeAsync({

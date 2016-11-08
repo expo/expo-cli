@@ -68,16 +68,11 @@ async function _validatePngFieldsAsync(projectRoot, exp) {
   }
 }
 
-async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>  {
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-
+async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promise<number>  {
   if (!exp || !pkg) {
     // readConfigJsonAsync already logged an error
     return FATAL;
   }
-
-  // Don't block this! It has to make network requests so it's slow.
-  _validatePngFieldsAsync(projectRoot, exp);
 
   try {
     await _checkWatchmanVersionAsync(projectRoot);
@@ -105,9 +100,10 @@ async function _validatePackageJsonAndExpJsonAsync(projectRoot): Promise<number>
     return WARNING;
   }
 
+  // TODO(adam) set up caching for this
   let sdkVersions = await Api.sdkVersionsAsync();
   if (!sdkVersions) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Couldn't connect to server`);
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Couldn't connect to SDK versions server`);
     return WARNING;
   }
 
@@ -231,24 +227,27 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
   return NO_ISSUES;
 }
 
-export async function validateAsync(projectRoot: string): Promise<number> {
-  let status = NO_ISSUES;
+export async function validateLowLatencyAsync(projectRoot: string): Promise<number> {
+  return validateAsync(projectRoot, false);
+}
 
-  let newStatus = await _validatePackageJsonAndExpJsonAsync(projectRoot);
-  if (newStatus > status) {
-    status = newStatus;
+export async function validateWithNetworkAsync(projectRoot: string): Promise<number> {
+  return validateAsync(projectRoot, true);
+}
+
+async function validateAsync(projectRoot: string, allowNetwork: boolean): Promise<number> {
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let status = await _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot);
+
+  // Don't block this! It has to make network requests so it's slow.
+  if (allowNetwork) {
+    _validatePngFieldsAsync(projectRoot, exp);
   }
 
-  if (status !== FATAL) {
-    let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-
-    if (exp) {
-      if (!exp.ignoreNodeModulesValidation) {
-        newStatus = await _validateNodeModulesAsync(projectRoot);
-        if (newStatus > status) {
-          status = newStatus;
-        }
-      }
+  if (status !== FATAL && exp && !exp.ignoreNodeModulesValidation) {
+    let nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
+    if (nodeModulesStatus > status) {
+      return nodeModulesStatus;
     }
   }
 

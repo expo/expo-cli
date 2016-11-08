@@ -544,7 +544,7 @@ export async function startExponentServerAsync(projectRoot: string) {
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
-  if (await Doctor.validateAsync(projectRoot) === Doctor.FATAL) {
+  if (await Doctor.validateWithNetworkAsync(projectRoot) === Doctor.FATAL) {
     throw new Error(`Couldn't start project. Please fix the above issues and restart the project.`);
   }
 
@@ -554,7 +554,7 @@ export async function startExponentServerAsync(projectRoot: string) {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
       // down the request
-      Doctor.validateAsync(projectRoot);
+      Doctor.validateWithNetworkAsync(projectRoot);
 
       let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(projectRoot);
       if (!manifest) {

@@ -13,8 +13,10 @@ import program, { Command } from 'commander';
 import {
   Analytics,
   Config,
+  Doctor,
   Logger,
   NotificationCode,
+  ProjectUtils,
 } from 'xdl';
 
 import log from './log';
@@ -53,6 +55,7 @@ Command.prototype.asyncAction = function(asyncFn) {
         log.error(err.message);
         crayon.gray.error(err.stack);
       }
+      process.exit(1);
     }
   });
 };
@@ -61,6 +64,28 @@ Command.prototype.asyncActionProjectDir = function(asyncFn) {
   return this.asyncAction(async (projectDir, ...args) => {
     if (!projectDir) {
       projectDir = process.cwd();
+    }
+
+    // needed for validation logging to function
+    ProjectUtils.attachLoggerStream(projectDir, {
+      stream: {
+        write: (chunk) => {
+          if (chunk.level <= bunyan.INFO) {
+            log(chunk.msg);
+          } else if (chunk.level === bunyan.WARN) {
+            log.warn(chunk.msg);
+          } else {
+            log.error(chunk.msg);
+          }
+        },
+      },
+      type: 'raw',
+    });
+
+    // validate that this is a good projectDir before we try anything else
+    let status = await Doctor.validateLowLatencyAsync(projectDir);
+    if (status === Doctor.FATAL) {
+      throw new Error(`Invalid project directory. See above logs for information.`);
     }
 
     return asyncFn(projectDir, ...args);
