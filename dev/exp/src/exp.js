@@ -60,7 +60,7 @@ Command.prototype.asyncAction = function(asyncFn) {
   });
 };
 
-Command.prototype.asyncActionProjectDir = function(asyncFn) {
+Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation) {
   return this.asyncAction(async (projectDir, ...args) => {
     if (!projectDir) {
       projectDir = process.cwd();
@@ -82,10 +82,14 @@ Command.prototype.asyncActionProjectDir = function(asyncFn) {
       type: 'raw',
     });
 
-    // validate that this is a good projectDir before we try anything else
-    let status = await Doctor.validateLowLatencyAsync(projectDir);
-    if (status === Doctor.FATAL) {
-      throw new Error(`Invalid project directory. See above logs for information.`);
+    // the existing CLI modules only pass one argument to this function, so skipProjectValidation
+    // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
+    if (!skipProjectValidation) {
+      // validate that this is a good projectDir before we try anything else
+      let status = await Doctor.validateLowLatencyAsync(projectDir);
+      if (status === Doctor.FATAL) {
+        throw new Error(`Invalid project directory. See above logs for information.`);
+      }
     }
 
     return asyncFn(projectDir, ...args);

@@ -70,5 +70,5 @@ export default (program) => {
     .description('Initializes a directory with an example project')
     .option('-n, --projectName [name]', 'Specify a name for the new project')
     .option('-t, --projectType [type]', 'Specify what type of template to use. Run without this options to see all choices.')
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(action, true); // pass true to skip validation
 };

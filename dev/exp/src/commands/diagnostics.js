@@ -6,7 +6,7 @@ import simpleSpinner from '@exponent/simple-spinner';
 
 import log from '../log';
 
-async function action(projectDir, options) {
+async function action(options) {
   log('Generating diagnostics report...');
   simpleSpinner.start();
   let { url } = await Diagnostics.getDeviceInfoAsync({
@@ -23,5 +23,5 @@ export default (program) => {
   program
     .command('diagnostics [project-dir]')
     .description('Uploads diagnostics information and returns a url to share with the Exponent team.')
-    .asyncActionProjectDir(action);
+    .asyncAction(action);
 };

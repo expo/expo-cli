@@ -39,5 +39,5 @@ export default (program) => {
     .alias('q')
     .description('Stops the server')
     .option('-a, --all', 'Stop all processes')
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(action, true); // skip validation since this can be run globally
 };
