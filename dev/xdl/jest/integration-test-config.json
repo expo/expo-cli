@@ -4,10 +4,13 @@
   "testPathDirs": [
     "src"
   ],
-  "scriptPreprocessor": "<rootDir>/jest/preprocessor.js",
+  "transform": {
+    ".*\\.js$": "<rootDir>/jest/preprocessor.js"
+  },
   "moduleFileExtensions": [
     "js",
-    "json"
+    "json",
+    "node"
   ],
   "testRegex": "__integration_tests__/.*\\.js$",
   "mocksPattern": "__disabled__"

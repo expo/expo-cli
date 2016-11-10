@@ -1,12 +1,8 @@
-'use strict';
-
-jest.disableAutomock();
-jest.useRealTimers();
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
 
 import delayAsync from 'delay-async';
 
-import xdl from '../xdl';
+const xdl = require('../xdl');
 
 describe('simulator', () => {
   it('opens and loads url in exponent', async () => {

@@ -3,7 +3,6 @@
   "testPathDirs": [
     "src"
   ],
-  "scriptPreprocessor": "<rootDir>/jest/preprocessor.js",
   "moduleFileExtensions": [
     "js",
     "json"

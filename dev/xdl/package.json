@@ -9,8 +9,8 @@
   ],
   "scripts": {
     "build": "gulp build",
-    "test": "jest --config jest/unit-test-config.json --no-cache",
-    "integration-tests": "jest --config jest/integration-test-config.json --no-cache --no-watchman"
+    "test": "jest --config jest/unit-test-config.json",
+    "integration-tests": "jest --config jest/integration-test-config.json --no-cache"
   },
   "repository": {
     "type": "git",
@@ -69,7 +69,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.14.0",
-    "babel-jest": "^16.0.0",
+    "babel-jest": "^17.0.0",
     "babel-plugin-transform-flow-strip-types": "^6.14.0",
     "babel-plugin-transform-runtime": "^6.12.0",
     "babel-preset-es2015": "^6.14.0",
@@ -85,7 +85,7 @@
     "gulp-shell": "^0.5.2",
     "gulp-sourcemaps": "^1.6.0",
     "gulplog": "^1.0.0",
-    "jest-cli": "^16.0.1",
+    "jest-cli": "^17.0.0",
     "promise-print": "^2.3.0",
     "request": "^2.74.0",
     "rimraf": "^2.5.4"

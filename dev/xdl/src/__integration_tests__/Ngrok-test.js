@@ -4,7 +4,6 @@
  */
 'use strict';
 
-jest.disableAutomock();
 jest.useRealTimers();
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
