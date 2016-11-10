@@ -46,6 +46,11 @@ async function checkForExpUpdateAsync() {
     latest = await updatesObject().getAsync('latestVersionExp', current);
   }
 
+  if (semver.compare(current, latest) === 1) {
+    // if the current version is ahead of npm version, we should explicitly check again (bypassing cache)
+    latest = await fetchAndWriteLatestExpVersionAsync();
+  }
+
   var state;
   switch (semver.compare(current, latest)) {
     case -1:
