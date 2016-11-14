@@ -173,7 +173,7 @@ async function checkForUpdateAsync() {
     case 'out-of-date':
       message = `There is a new version of exp available (${latest}).
 You are currently using exp ${current}
-Run \`npm update -g exp\` to get the latest version`;
+Run \`npm install -g exp\` to get the latest version`;
       crayon.green.error(message);
       break;
 
