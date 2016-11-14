@@ -101,6 +101,7 @@ module.exports = joi.object().keys({
     bundleIdentifier: iosBundleIdentifier.description(
       "The bundle identifier for your iOS standalone app. You make it up, but it needs to be unique on the App Store. See `this StackOverflow question <http://stackoverflow.com/questions/11347470/what-does-bundle-identifier-mean-in-the-ios-project>`_."
     ),
+    buildNumber: joi.string().regex(/^[0-9]+$/).description('Build number for your iOS standalone app'),
     config: joi.object().keys({
       fabric: joi.object().keys({
         apiKey: joi.string().alphanum().description('Your Fabric API key'),
