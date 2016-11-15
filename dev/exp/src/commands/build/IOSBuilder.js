@@ -60,6 +60,7 @@ export default class IOSBuilder extends BaseBuilder {
     } } = await Exp.getPublishInfoAsync(this.projectDir);
 
     if (!bundleIdentifier) {
+      // TODO(adam) this should be validated before hitting the network
       throw new XDLError(ErrorCode.INVALID_OPTIONS, `Your project must have a bundleIdentifier set in exp.json. See https://docs.getexponent.com/versions/latest/guides/building-standalone-apps.html`);
     }
 
@@ -236,7 +237,7 @@ export default class IOSBuilder extends BaseBuilder {
       }
     } catch (e) {
       if (e.isXDLError) {
-        throw new CommandError(e.code, 'Failed fetching/uploading certificates.');
+        throw new CommandError(e.code, 'Failed fetching/uploading distribution certificates.');
       } else {
         throw e;
       }
@@ -321,7 +322,7 @@ export default class IOSBuilder extends BaseBuilder {
     }
 
     if (!isValid) {
-      throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Failed fetching/uploading certificates.');
+      throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Failed fetching/uploading push certificates.');
     }
   }
 }

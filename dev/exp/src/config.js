@@ -13,7 +13,7 @@ import log from './log';
 
 let packageJsonFile = new JsonFile('package.json');
 
-function projectExpJsonFile(projectRoot) {
+function projectExpJsonFile(projectRoot: string) {
   let jsonFilePath = path.join(
     ProjectSettings.dotExponentProjectDirectory(projectRoot),
     'exp-cli.json',
@@ -21,7 +21,7 @@ function projectExpJsonFile(projectRoot) {
   return new JsonFile(jsonFilePath, { cantReadFileDefault: {} });
 }
 
-async function projectStatusAsync(projectRoot) {
+async function projectStatusAsync(projectRoot: string) {
   if (ProjectSettings.dotExponentProjectDirectoryExists(projectRoot)) {
     var state = await projectExpJsonFile(projectRoot).getAsync('state', null);
     return state;
