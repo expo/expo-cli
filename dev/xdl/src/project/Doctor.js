@@ -131,11 +131,8 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
         return WARNING;
       }
     } catch (e) {
-      // TODO: Fix when we have more time
-      return NO_ISSUES;
-
-      // ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`);
-      // return WARNING;
+      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`);
+      return WARNING;
     }
   }
 
@@ -213,7 +210,9 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
           } else {
             errorStrings.push(`Warning: '${dependency}' dependency is not installed.`);
           }
-        } else if (!semver.satisfies(installedDependency.version, versionRequired) && !versionRequired.includes(installedDependency.from)) {
+        }
+        // TODO: also check react-native
+        else if (dependency !== 'react-native' && !semver.satisfies(installedDependency.version, versionRequired) && !versionRequired.includes(installedDependency.from)) {
           // For react native, `from` field looks like "exponentjs/react-native#sdk-8.0.1" and
           // versionRequired looks like "github:exponentjs/react-native#sdk-8.0.0"
           errorStrings.push(`Warning: Installed version ${installedDependency.version} of '${dependency}' does not satisfy required version ${versionRequired}`);
@@ -251,12 +250,12 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
 
   // TODO: this broke once we started using yarn because `npm ls` doesn't
   // work on a yarn install. Use `yarn check` in the future.
-  /*if (status !== FATAL && exp && !exp.ignoreNodeModulesValidation) {
+  if (status !== FATAL && exp && !exp.ignoreNodeModulesValidation) {
     let nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
     if (nodeModulesStatus > status) {
       return nodeModulesStatus;
     }
-  }*/
+  }
 
   return status;
 }
