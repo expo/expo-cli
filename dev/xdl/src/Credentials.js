@@ -4,7 +4,6 @@
  */
 
 import Api from './Api';
-import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
 
 export type AndroidCredentials = {
@@ -87,7 +86,7 @@ export async function validateCredentialsForPlatform(
   credentials: ?Credentials,
   metadata: CredentialMetadata
 ): Promise<void> {
-  const { isValid, error, errorCode } = await Api.callMethodAsync('validateCredentials', [], 'post', {
+  const { isValid, error, errorCode, errorMessage } = await Api.callMethodAsync('validateCredentials', [], 'post', {
     credentials,
     platform,
     validationType,
@@ -95,14 +94,7 @@ export async function validateCredentialsForPlatform(
   });
 
   if (!isValid || error) {
-    switch (errorCode) {
-      case "ERROR_CREDENTIALS_VALIDATION_TWOFACTOR":
-        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Two factor authentication is not yet supported. Stay tuned!');
-      case "ERROR_CREDENTIALS_VALIDATION_USERPASS":
-        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Username/Password is incorrect.');
-      default:
-        throw new Error('Server error when validating credentials.');
-    }
+    throw new XDLError(errorCode, `Unable to validate credentials: ${errorMessage}`);
   }
 
   return;
@@ -111,17 +103,12 @@ export async function validateCredentialsForPlatform(
 export async function fetchAppleCertificates(
   metadata: CredentialMetadata,
 ): Promise<void> {
-  const { err, success, error, errorCode } = await Api.callMethodAsync('fetchAppleCertificates', [], 'post', {
+  const { err, success, error, errorCode, errorMessage } = await Api.callMethodAsync('fetchAppleCertificates', [], 'post', {
     ...metadata,
   });
 
   if (err || !success || error) {
-    switch (errorCode) {
-      case 'ERROR_CERT_VALIDATION_MAXIMUM_CERTS_REACHED':
-        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Maximum number of certificates have been reached in your developer portal. Please delete them or choose one of them to upload to Exponent.');
-      default:
-        throw new Error('Unable to fetch new certificates.');
-    }
+    throw new XDLError(errorCode, `Unable to fetch distribution certificate: ${errorMessage}`);
   }
 
   return success;
@@ -130,12 +117,12 @@ export async function fetchAppleCertificates(
 export async function ensureAppId(
   metadata: CredentialMetadata,
 ): Promise<void> {
-  const { err, success } = await Api.callMethodAsync('ensureAppId', [], 'post', {
+  const { err, success, errorCode, errorMessage } = await Api.callMethodAsync('ensureAppId', [], 'post', {
     ...metadata,
   });
 
   if (err || !success) {
-    throw new Error('Unable to create app id.');
+    throw new XDLError(errorCode, `Unable to create app id: ${errorMessage}`);
   }
 
   return success;
@@ -144,13 +131,15 @@ export async function ensureAppId(
 export async function fetchPushCertificates(
   metadata: CredentialMetadata,
 ): Promise<void> {
-  const { err, success } = await Api.callMethodAsync('fetchPushCertificates', [], 'post', {
+  const result = await Api.callMethodAsync('fetchPushCertificates', [], 'post', {
     ...metadata,
   });
 
-  if (err || !success) {
-    throw new Error('Unable to fetch push certificates.');
+
+
+  if (result.err || !result.success) {
+    throw new XDLError(result.errorCode, `Unable to fetch push certificate: ${result.errorMessage}`);
   }
 
-  return success;
+  return result.success;
 }

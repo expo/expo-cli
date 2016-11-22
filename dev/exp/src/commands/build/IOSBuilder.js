@@ -2,21 +2,20 @@
  * @flow
  */
 
- import fs from 'fs';
- import path from 'path';
- import inquirer from 'inquirer';
- import untildify from 'untildify';
- import {
-   Exp,
-   Credentials,
-   XDLError,
-   ErrorCode,
- } from 'xdl';
+import fs from 'fs';
+import path from 'path';
+import inquirer from 'inquirer';
+import untildify from 'untildify';
+import {
+ Exp,
+ Credentials,
+ XDLError,
+ ErrorCode,
+} from 'xdl';
 
- import CommandError from '../../CommandError';
-
-import BaseBuilder from './BaseBuilder';
 import type { IOSCredentials, CredentialMetadata } from 'XDLCredentials';
+import BaseBuilder from './BaseBuilder';
+import log from '../../log';
 
 /**
  * Steps:
@@ -42,17 +41,8 @@ export default class IOSBuilder extends BaseBuilder {
   async run() {
     // Check status of packager
     await this.checkPackagerStatus();
-    // Check the status of any current builds
-    await this.checkStatus();
-    // Check for existing credentials, collect any missing credentials, and validate them
-    await this.collectAndValidateCredentials();
-    // Publish the experience
-    const publishedExpIds = await this.publish();
-    // Initiate the build with the published experience
-    await this.build(publishedExpIds, 'ios');
-  }
 
-  async collectAndValidateCredentials() {
+    // validate bundleIdentifier before hitting the network to check build status
     const { args: {
       username,
       remoteFullPackageName: experienceName,
@@ -60,10 +50,25 @@ export default class IOSBuilder extends BaseBuilder {
     } } = await Exp.getPublishInfoAsync(this.projectDir);
 
     if (!bundleIdentifier) {
-      // TODO(adam) this should be validated before hitting the network
       throw new XDLError(ErrorCode.INVALID_OPTIONS, `Your project must have a bundleIdentifier set in exp.json. See https://docs.getexponent.com/versions/latest/guides/building-standalone-apps.html`);
     }
 
+    // Check the status of any current builds
+    await this.checkStatus();
+    // Check for existing credentials, collect any missing credentials, and validate them
+    try {
+      await this.collectAndValidateCredentials(username, experienceName, bundleIdentifier);
+    } catch (e) {
+      log.error('Error validating credentials. You may need to clear them (with `-c`) and try again.');
+      throw e;
+    }
+    // Publish the experience
+    const publishedExpIds = await this.publish();
+    // Initiate the build with the published experience
+    await this.build(publishedExpIds, 'ios');
+  }
+
+  async collectAndValidateCredentials(username: string, experienceName: string, bundleIdentifier: string) {
     const credentialMetadata = {
       username,
       experienceName,
@@ -71,6 +76,7 @@ export default class IOSBuilder extends BaseBuilder {
       platform: 'ios',
     };
 
+    log('Checking for existing Apple credentials...');
     const existingCredentials: ?IOSCredentials =
       await Credentials.credentialsExistForPlatformAsync(credentialMetadata);
 
@@ -88,25 +94,21 @@ export default class IOSBuilder extends BaseBuilder {
     if (!hasAppleId) {
       await this.askForAppleId(credentialMetadata);
     } else {
-      try {
-        await Credentials.validateCredentialsForPlatform('ios', 'appleId', null, credentialMetadata);
-      } catch (e) {
-        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Stored credentials are invalid! Rerun this command with "-c" in order to reinput your credentials.');
-      }
+      log('Validating Apple credentials...');
+      await Credentials.validateCredentialsForPlatform('ios', 'appleId', null, credentialMetadata);
     }
+    log('Credentials valid.');
 
     if (!hasCert) {
       await this.askForCerts(credentialMetadata);
     } else {
-      try {
-        await Credentials.validateCredentialsForPlatform('ios', 'cert', null, credentialMetadata);
-      } catch (e) {
-        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Stored certificate is invalid! Rerun this command with "-c" in order to reinput your credentials and reupload/regenerate certificates.');
-      }
+      log('Validating distribution certificate...');
+      await Credentials.validateCredentialsForPlatform('ios', 'cert', null, credentialMetadata);
     }
 
     // ensure that the app id exists or is created
     try {
+      log('Validating app id...');
       await Credentials.ensureAppId(credentialMetadata);
     } catch (e) {
       throw new XDLError(
@@ -118,11 +120,8 @@ export default class IOSBuilder extends BaseBuilder {
     if (!hasPushCert) {
       await this.askForPushCerts(credentialMetadata);
     } else {
-      try {
-        await Credentials.validateCredentialsForPlatform('ios', 'push', null, credentialMetadata);
-      } catch (e) {
-        throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Stored push certificate is invalid! Rerun this command with "-c" in order to reinput your credentials and reupload/regenerate certificates.');
-      }
+      log('Validating push certificate...');
+      await Credentials.validateCredentialsForPlatform('ios', 'push', null, credentialMetadata);
     }
   }
 
@@ -155,16 +154,8 @@ export default class IOSBuilder extends BaseBuilder {
       teamId: answers.teamId,
     };
 
-    try {
-      await Credentials.validateCredentialsForPlatform('ios', 'appleId', credentials, credentialMetadata);
-    } catch (e) {
-      if (e.isXDLError) { //Expected error
-        throw new CommandError(e.code, e.message);
-      } else {
-        throw e;
-      }
-    }
-
+    log('Validating Apple credentials...');
+    await Credentials.validateCredentialsForPlatform('ios', 'appleId', credentials, credentialMetadata);
     await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
   }
 
@@ -211,42 +202,28 @@ export default class IOSBuilder extends BaseBuilder {
 
     const answers = await inquirer.prompt(questions);
 
-    try {
-      if (answers.manageCertificates) {
-        // Attempt to fetch new certificates
-        await Credentials.fetchAppleCertificates(credentialMetadata);
-      } else {
-        // Upload credentials
-        const p12Data = await fs.readFile.promise(answers.pathToP12);
+    if (answers.manageCertificates) {
+      // Attempt to fetch new certificates
+      log('Generating distribution certificate...');
+      await Credentials.fetchAppleCertificates(credentialMetadata);
+    } else {
+      // Upload credentials
+      const p12Data = await fs.readFile.promise(answers.pathToP12);
 
-        const credentials: IOSCredentials = {
-          certP12: p12Data.toString('base64'),
-          certPassword: answers.certPassword,
-        };
+      const credentials: IOSCredentials = {
+        certP12: p12Data.toString('base64'),
+        certPassword: answers.certPassword,
+      };
 
-        try {
-          await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
-        } catch (e) {
-          if (e.isXDLError) {
-            throw new CommandError(e.code, `Oops! This certificate doesn't seem to be present in your developer portal. Please upload a different certificate that exists in your developer portal.`);
-          }
-          throw e;
-        }
-
-        await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
-      }
-    } catch (e) {
-      if (e.isXDLError) {
-        throw new CommandError(e.code, 'Failed fetching/uploading distribution certificates.');
-      } else {
-        throw e;
-      }
+      log('Validating distribution certificate...');
+      await Credentials.validateCredentialsForPlatform('ios', 'cert', credentials, credentialMetadata);
+      await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
     }
+    log('Distribution certificate setup complete.');
   }
 
   async askForPushCerts(credentialMetadata: CredentialMetadata) {
     // ask about certs
-    console.log(``);
 
     const questions = [{
       type: 'rawlist',
@@ -291,38 +268,23 @@ export default class IOSBuilder extends BaseBuilder {
       pushPassword?: string,
     } = await inquirer.prompt(questions);
 
-    let isValid;
-    try {
-      if (answers.managePushCertificates) {
-        // Attempt to fetch new certificates
-        isValid = await Credentials.fetchPushCertificates(credentialMetadata);
-      } else {
-        // Upload credentials
-        const p12Data = await fs.readFile.promise(answers.pathToP12);
+    if (answers.managePushCertificates) {
+      // Attempt to fetch new certificates
+      log('Fetching a new push certificate...');
+      await Credentials.fetchPushCertificates(credentialMetadata);
+    } else {
+      // Upload credentials
+      const p12Data = await fs.readFile.promise(answers.pathToP12);
 
-        const credentials: IOSCredentials = {
-          pushP12: p12Data.toString('base64'),
-          pushPassword: answers.pushPassword,
-        };
+      const credentials: IOSCredentials = {
+        pushP12: p12Data.toString('base64'),
+        pushPassword: answers.pushPassword,
+      };
 
-        try {
-          isValid = await Credentials.validateCredentialsForPlatform('ios', 'push', credentials, credentialMetadata);
-        } catch (e) {
-          throw new XDLError(ErrorCode.CREDENTIAL_ERROR, `Oops! This push certificate doesn't seem to be present in your developer portal. Please upload a different certificate that exists in your developer portal.`);
-        }
-
-        await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
-      }
-    } catch (e) {
-      if (!e.isXDLError) {
-        isValid = false;
-      } else {
-        throw e;
-      }
+      log('Validating push certificate...');
+      await Credentials.validateCredentialsForPlatform('ios', 'push', credentials, credentialMetadata);
+      await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
     }
-
-    if (!isValid) {
-      throw new XDLError(ErrorCode.CREDENTIAL_ERROR, 'Failed fetching/uploading push certificates.');
-    }
+    log('Push certificate setup complete.');
   }
 }
