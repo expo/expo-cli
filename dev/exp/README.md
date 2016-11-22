@@ -1,13 +1,11 @@
 # exp [![Slack](http://slack.exponentjs.com/badge.svg)](http://slack.exponentjs.com)
-The Exponent Development CLI - Beta release
+The Exponent Development CLI
 
 ## Installation
 
-```bash
-$ npm install -g exp
-```
+[Installation instructions and documentation here.](https://docs.getexponent.com/versions/latest/guides/exp-cli.html)
 
-## Making a New Project
+## Getting Started
 
 To make a new project use `exp init [path]`. The path is optional and it will use the current directory if not specified (all commands that need a path behave similarly).
 
