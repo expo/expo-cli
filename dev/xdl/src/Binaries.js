@@ -147,7 +147,7 @@ export async function sourceBashLoginScriptsAsync() {
     return;
   }
 
-  if (Config.developerTool === 'exp') {
+  if (Config.developerTool === 'exp' || !Config.developerTool) {
     return;
   }
 
