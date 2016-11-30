@@ -32,7 +32,6 @@
     "body-parser": "^1.15.2",
     "bunyan": "^1.8.1",
     "delay-async": "^1.0.0",
-    "download": "^5.0.2",
     "exec-async": "^2.2.0",
     "exists-async": "^2.0.0",
     "express": "^4.13.4",
@@ -59,6 +58,7 @@
     "source-map-support": "^0.4.2",
     "tar.gz": "^1.0.5",
     "tree-kill": "^1.1.0",
+    "unzip": "^0.1.11",
     "url": "^0.11.0"
   },
   "optionalDependencies": {

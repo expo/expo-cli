@@ -5,7 +5,6 @@
 import 'instapromise';
 
 import delayAsync from 'delay-async';
-import download from 'download';
 import existsAsync from 'exists-async';
 import glob from 'glob';
 import homeDir from 'home-dir';
@@ -195,7 +194,7 @@ export async function _downloadSimulatorAppAsync() {
   mkdirp.sync(dir);
   try {
     let url = `https://s3.amazonaws.com/exp-ios-simulator-apps/Exponent-${versions.iosVersion}.app.zip`;
-    await download(url, dir, {extract: true});
+    await Api.downloadAsync(url, dir, {extract: true});
   } catch (e) {
     rimraf.sync(dir);
     throw e;

@@ -7,7 +7,6 @@ let JsonFile = require('@exponent/json-file');
 import 'instapromise';
 
 import targz from 'tar.gz';
-import download from 'download';
 import existsAsync from 'exists-async';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
@@ -134,7 +133,7 @@ async function _downloadStarterAppAsync(templateId) {
   }
 
   let url = `https://s3.amazonaws.com/exp-starter-apps/${filename}`;
-  await download(url, _starterAppCacheDirectory());
+  await Api.downloadAsync(url, path.join(_starterAppCacheDirectory(), filename));
   return {
     starterAppPath,
     starterAppName,

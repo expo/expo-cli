@@ -7,6 +7,7 @@ import 'instapromise';
 import _ from 'lodash';
 import request from 'request';
 import fs from 'fs';
+import unzip from 'unzip';
 
 import Config from './Config';
 import * as Session from './Session';
@@ -82,10 +83,15 @@ async function _callMethodAsync(url, method, requestBody, requestOptions): Promi
   }
 }
 
-async function _downloadAsync(url, path) {
+async function _downloadAsync(url, path, options) {
   return new Promise((resolve, reject) => {
     try {
-      request(url).pipe(fs.createWriteStream(path)).on('finish', resolve).on('error', reject);
+      let stream = request(url);
+      if (options.extract) {
+        stream.pipe(unzip.Extract({path})).on('close', resolve).on('error', reject);
+      } else {
+        stream.pipe(fs.createWriteStream(path)).on('finish', resolve).on('error', reject);
+      }
     } catch (e) {
       reject(e);
     }
@@ -116,7 +122,7 @@ export default class ApiClient {
     return versions.sdkVersions;
   }
 
-  static async downloadAsync(url, path) {
-    await _downloadAsync(url, path);
+  static async downloadAsync(url, path, options = {}) {
+    await _downloadAsync(url, path, options);
   }
 }
