@@ -6,6 +6,7 @@ import _ from 'lodash';
 import spawnAsync from '@exponent/spawn-async';
 import delayAsync from 'delay-async';
 
+import * as Analytics from './Analytics';
 import * as Binaries from './Binaries';
 
 const WAIT_FOR_WATCHMAN_VERSION_MS = 5000;
@@ -54,7 +55,9 @@ async function _unblockAndVersionAsync() {
   ]);
 
   if (result.isUnblock) {
-    return await _versionAsync();
+    result = await _versionAsync();
+    Analytics.logEvent('version after launchctl unload');
+    return result;
   } else {
     return result;
   }
@@ -64,6 +67,7 @@ async function _unblockAsync(cancelObject) {
   await delayAsync(WAIT_FOR_WATCHMAN_VERSION_MS);
 
   if (!cancelObject.isDoneWithVersionCheck) {
+    Analytics.logEvent('launchctl unload');
     await spawnAsync('launchctl', ['unload', '-F', '~/Library/LaunchAgents/com.github.facebook.watchman.plist']);
   }
 
