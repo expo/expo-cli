@@ -113,7 +113,7 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   } catch (e) {}
 
   try {
-    info.watchmanVersion = await Watchman.getVersionAsync();
+    info.watchmanVersion = await Watchman.unblockAndGetVersionAsync();
   } catch (e) {}
 
   try {

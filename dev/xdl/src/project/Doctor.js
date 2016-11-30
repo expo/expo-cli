@@ -32,7 +32,7 @@ async function _checkWatchmanVersionAsync(projectRoot) {
     return;
   }
 
-  let watchmanVersion = await Watchman.getVersionAsync();
+  let watchmanVersion = await Watchman.unblockAndGetVersionAsync();
 
   // If we can't get the watchman version, `getVersionAsync` will return `null`
   if (!watchmanVersion) {
