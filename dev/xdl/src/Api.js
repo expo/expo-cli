@@ -6,12 +6,7 @@ import 'instapromise';
 
 import _ from 'lodash';
 import request from 'request';
-import FormData from 'form-data';
-import got from 'got';
-import semver from 'semver';
-
-import ErrorCode from './ErrorCode';
-import XDLError from './XDLError';
+import fs from 'fs';
 
 import Config from './Config';
 import * as Session from './Session';
@@ -32,7 +27,7 @@ if (Config.api.port) {
 }
 let API_BASE_URL = ROOT_BASE_URL + '/--/api/';
 
-async function _callMethodAsync(url, method, requestBody): Promise<any> {
+async function _callMethodAsync(url, method, requestBody, requestOptions): Promise<any> {
   let clientId = await Session.clientIdAsync();
   let {username} = await UserSettings.readAsync();
 
@@ -50,35 +45,22 @@ async function _callMethodAsync(url, method, requestBody): Promise<any> {
     headers,
   };
 
-  let response;
-  // TODO: move everything from `request` to `got`
+  if (requestOptions) {
+    options = {
+      ...options,
+      ...requestOptions,
+    };
+  }
+
   if (requestBody) {
-    if (requestBody instanceof FormData) {
-      // Use `got` library to handle FormData uploads
-      options = {
-        ...options,
-        body: requestBody,
-      };
-
-      options.headers = {
-        ...options.headers,
-        ...requestBody.getHeaders(),
-      };
-
-      response = await got(url, options);
-    } else {
-      options = {
-        ...options,
-        body: requestBody,
-        json: true,
-      };
-    }
+    options = {
+      ...options,
+      body: requestBody,
+      json: true,
+    };
   }
 
-  if (!response) {
-    // Use `got` only for FormData. Use `request` for everything else.
-    response = await request.promise(options);
-  }
+  let response = await request.promise(options);
   let responseBody = response.body;
   var responseObj;
   if (_.isString(responseBody)) {
@@ -100,19 +82,29 @@ async function _callMethodAsync(url, method, requestBody): Promise<any> {
   }
 }
 
+async function _downloadAsync(url, path) {
+  return new Promise((resolve, reject) => {
+    try {
+      request(url).pipe(fs.createWriteStream(path)).on('finish', resolve).on('error', reject);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
 export default class ApiClient {
   static host: string = Config.api.host;
   static port: number = Config.api.port || 80;
 
-  static async callMethodAsync(methodName: string, args: Array<*>, method: string, requestBody: Object): Promise<any> {
+  static async callMethodAsync(methodName: string, args: Array<*>, method: string, requestBody: ?Object, requestOptions: ?Object = {}): Promise<any> {
     let url = API_BASE_URL + encodeURIComponent(methodName) + '/' +
       encodeURIComponent(JSON.stringify(args));
-    return _callMethodAsync(url, method, requestBody);
+    return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
-  static async callPathAsync(path, method, requestBody) {
+  static async callPathAsync(path, method, requestBody, requestOptions: ?Object = {}) {
     let url = ROOT_BASE_URL + path;
-    return _callMethodAsync(url, method, requestBody);
+    return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
   static async versionsAsync() {
@@ -122,5 +114,9 @@ export default class ApiClient {
   static async sdkVersionsAsync() {
     let versions = await ApiClient.versionsAsync();
     return versions.sdkVersions;
+  }
+
+  static async downloadAsync(url, path) {
+    await _downloadAsync(url, path);
   }
 }

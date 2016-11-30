@@ -6,7 +6,6 @@ import 'instapromise';
 
 import _ from 'lodash';
 import child_process from 'child_process';
-import FormData from 'form-data';
 import fs from 'fs';
 import ip from 'ip';
 import JsonFile from '@exponent/json-file';
@@ -67,10 +66,11 @@ async function _uploadLogsAsync(info) {
 
   // upload
   let file = fs.createReadStream(archivePath);
-  let form = new FormData();
-  form.append('archive', file);
+  let formData = {
+    archive: file,
+  };
 
-  let response = await Api.callMethodAsync('uploadDiagnostics', [{}], 'put', form);
+  let response = await Api.callMethodAsync('uploadDiagnostics', [{}], 'put', null, {formData});
   return response.url;
 }
 

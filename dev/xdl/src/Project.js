@@ -8,7 +8,6 @@ import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import delayAsync from 'delay-async';
 import express from 'express';
-import FormData from 'form-data';
 import freeportAsync from 'freeport-async';
 import fs from 'fs';
 import joi from 'joi';
@@ -170,16 +169,23 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
     await uploadAssetsAsync(projectRoot, assets);
   }
 
-  let form = new FormData();
-  form.append('expJson', JSON.stringify(exp));
-  form.append('iosBundle', iosBundle, {
-    filename: 'iosBundle',
-  });
-  form.append('androidBundle', androidBundle, {
-    filename: 'androidBundle',
-  });
+  let formData = {
+    expJson: JSON.stringify(exp),
+    iosBundle: {
+      value: iosBundle,
+      options: {
+        filename: 'iosBundle',
+      },
+    },
+    androidBundle: {
+      value: androidBundle,
+      options: {
+        filename: 'androidBundle',
+      },
+    },
+  };
 
-  let response = await Api.callMethodAsync('publish', [options], 'put', form);
+  let response = await Api.callMethodAsync('publish', [options], 'put', null, {formData});
   return response;
 }
 
@@ -201,14 +207,17 @@ async function uploadAssetsAsync(projectRoot, assets) {
 
   // Upload them!
   await Promise.all(_.chunk(missing, 5).map(async (keys) => {
-    let form = new FormData();
+    let formData = {};
     keys.forEach(key => {
       ProjectUtils.logDebug(projectRoot, 'exponent', `uploading ${paths[key]}`);
-      form.append(key, fs.createReadStream(paths[key]), {
-        filename: paths[key],
-      });
+      formData[key] = {
+        value: fs.createReadStream(paths[key]),
+        options: {
+          filename: paths[key],
+        },
+      };
     });
-    await Api.callMethodAsync('uploadAssets', [], 'put', form);
+    await Api.callMethodAsync('uploadAssets', [], 'put', {formData});
   }));
 }
 

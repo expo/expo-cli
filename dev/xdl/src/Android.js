@@ -5,7 +5,6 @@
 import 'instapromise';
 
 import _ from 'lodash';
-import download from 'download';
 import spawnAsync from '@exponent/spawn-async';
 import existsAsync from 'exists-async';
 import mkdirp from 'mkdirp';
@@ -116,7 +115,7 @@ async function _downloadApkAsync() {
   }
 
   let url = `https://s3.amazonaws.com/exp-android-apks/Exponent-${versions.androidVersion}.apk`;
-  await download(url, _apkCacheDirectory());
+  await Api.downloadAsync(url, path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`));
   return apkPath;
 }
 
