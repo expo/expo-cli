@@ -117,6 +117,7 @@ module.exports = joi.object().keys({
         "`Google Sign-In iOS SDK <https://developers.google.com/identity/sign-in/ios/start-integrating>`_ keys for your standalone app."
       ),
     }),
+    supportsTablet: joi.boolean().description('Whether your standalone iOS app supports tablet screen sizes.'),
   }).description('iOS standalone app specific configuration').meta({standaloneOnly: true}),
   android: joi.object().keys({
     package: reverseDnsField.description(
