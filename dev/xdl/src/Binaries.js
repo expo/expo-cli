@@ -17,7 +17,6 @@ import NotificationCode from './NotificationCode';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 
-let runas; // Crashes on windows, so load this lazily
 let hasSourcedBashLoginScripts = false;
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
@@ -68,28 +67,39 @@ async function _installBinaryAsync(name) {
   }
 
   try {
-    if (!runas) {
-      runas = require('runas');
-    }
-    let result = runas('/bin/ln', ['-s', path.join(_exponentBinaryDirectory(), name), path.join(INSTALL_PATH, name)], {
-      admin: true,
-    });
-
-    return result === 0;
+    let result = await spawnAsync('ln', ['-s', path.join(_exponentBinaryDirectory(), name), path.join(INSTALL_PATH, name)]);
+    return result.status === 0;
   } catch (e) {
     Logger.notifications.error({code: NotificationCode.INSTALL_SHELL_COMMANDS_RESULT}, `Error installing ${name}: ${e.message}`);
     throw e;
   }
 }
 
-export async function installShellCommandsAsync() {
-  await sourceBashLoginScriptsAsync();
-
+async function _copyBinariesToExponentDirAsync() {
   if (process.platform !== 'darwin') {
     throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
   }
 
   await ncpAsync(OSX_SOURCE_PATH, _exponentBinaryDirectory());
+}
+
+export async function installXDECommandAsync() {
+  try {
+    await sourceBashLoginScriptsAsync();
+    await _copyBinariesToExponentDirAsync();
+
+    if (fs.existsSync(path.join(INSTALL_PATH, 'xde'))) {
+      return;
+    }
+    await _installBinaryAsync('xde');
+  } catch (e) {
+    Logger.global.debug(`Couldn't install xde binary: ${e.message}`);
+  }
+}
+
+export async function installShellCommandsAsync() {
+  await sourceBashLoginScriptsAsync();
+  await _copyBinariesToExponentDirAsync();
 
   let binaries = ['adb', 'watchman'];
   let installedBinaries = [];

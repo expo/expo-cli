@@ -1,0 +1,3 @@
+#!/bin/bash
+
+open -a "Exponent XDE" --args --executed-from="$(pwd)" --pid=$$ --path-environment="$PATH" "$@"
