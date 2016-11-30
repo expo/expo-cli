@@ -285,13 +285,7 @@ export async function openUrlInSimulatorSafeAsync(url: string) {
       return;
     }
 
-    Logger.global.error('Error running app. Uninstalling exponent and trying again.');
-
-    try {
-      await _uninstallExponentAppFromSimulatorAsync();
-    } catch (uninstallError) {}
-
-    await _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url);
+    Logger.global.error(`Error installing or running app. ${e.toString()}`);
   }
 
   Analytics.logEvent('Open Url on Device', {
