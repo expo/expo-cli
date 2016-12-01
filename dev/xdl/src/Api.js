@@ -117,6 +117,10 @@ export default class ApiClient {
     return await ApiClient.callPathAsync('/--/versions');
   }
 
+  static async xdlSchemaAsync(sdkVersion) {
+    return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`);
+  }
+
   static async sdkVersionsAsync() {
     let versions = await ApiClient.versionsAsync();
     return versions.sdkVersions;

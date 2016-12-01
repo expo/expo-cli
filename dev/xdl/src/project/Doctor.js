@@ -7,7 +7,7 @@ import 'instapromise';
 import _ from 'lodash';
 import semver from 'semver';
 import fs from 'fs';
-import joi from 'joi';
+import jsonschema from 'jsonschema';
 import path from 'path';
 import request from 'request';
 import spawnAsync from '@exponent/spawn-async';
@@ -15,7 +15,7 @@ import spawnAsync from '@exponent/spawn-async';
 import Api from '../Api';
 import * as Binaries from '../Binaries';
 import Config from '../Config';
-import ExpSchema from './ExpSchema';
+import * as ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
@@ -52,8 +52,14 @@ async function _checkWatchmanVersionAsync(projectRoot) {
 }
 
 async function _validatePngFieldsAsync(projectRoot, exp) {
-  for (let i = 0; i < ExpSchema.PNG_FIELDS.length; i++) {
-    let fieldName = ExpSchema.PNG_FIELDS[i];
+  let sdkVersion = exp.sdkVersion;
+  if (sdkVersion === 'UNVERSIONED') {
+    ProjectUtils.logDebug(projectRoot, 'exponent', 'Not validating pngs for UNVERSIONED.');
+    return;
+  }
+
+  let pngFields = await ExpSchema.getPNGFieldsAsync(sdkVersion);
+  for (let fieldName of pngFields) {
     let value = _.get(exp, fieldName);
     if (value) {
       let response = await request.promise.head({
@@ -80,15 +86,33 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
     ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem checking watchman version. ${e.message}.`);
   }
 
-  try {
-    await joi.promise.validate(exp, ExpSchema);
-  } catch (e) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in exp.json. ${e.message}. See ${Config.helpUrl}.`);
-    return WARNING;
+  let sdkVersion = exp.sdkVersion;
+
+  if (sdkVersion !== 'UNVERSIONED') {
+    try {
+      let schema = await ExpSchema.getSchemaAsync(sdkVersion);
+      let validator = new jsonschema.Validator();
+      let validationResult = validator.validate(exp, schema);
+      if (validationResult.errors && validationResult.errors.length > 0) {
+        let fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in exp.json. See https://docs.getexponent.com/versions/v${sdkVersion}/guides/configuration.html.`;
+
+        for (let error of validationResult.errors) {
+          // Formate the message nicely
+          let message = error.stack.replace(/instance\./g, '').replace(/exists in instance/g, 'exists in exp.json').replace('instance additionalProperty', 'additional property');
+          fullMessage += `\n  - ${message}.`;
+        }
+
+        ProjectUtils.logWarning(projectRoot, 'exponent', fullMessage);
+        return WARNING;
+      }
+    } catch (e) {
+      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem validating exp.json: ${e.message}.`);
+    }
+  } else {
+    ProjectUtils.logDebug(projectRoot, 'exponent', 'Not validating against schema for UNVERSIONED.');
   }
 
   // Warn if sdkVersion is UNVERSIONED
-  let sdkVersion = exp.sdkVersion;
   if (sdkVersion === 'UNVERSIONED') {
     ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in exp.json`);
     return WARNING;

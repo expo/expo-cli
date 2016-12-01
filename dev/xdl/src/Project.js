@@ -482,6 +482,8 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
     nodePath = null;
   }
 
+  ProjectUtils.logInfo(projectRoot, 'exponent', 'Starting React Native packager...');
+
   // Run the copy of Node that's embedded in Electron by setting the
   // ELECTRON_RUN_AS_NODE environment variable
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
