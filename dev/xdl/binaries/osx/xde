@@ -1,3 +1,5 @@
 #!/bin/bash
 
-open -a "Exponent XDE" --args --executed-from="$(pwd)" --pid=$$ --path-environment="$PATH" "$@"
+# commandLineArgs has dir + executable in development but only executable in prod, so add a dummy
+# arg that gets cut off in prod when we do commandLineArgs.slice(2).
+open -b host.exp.xde -n --args --dummy dummy --executed-from="$(pwd)" --pid=$$ --path-environment="$PATH" "$@"

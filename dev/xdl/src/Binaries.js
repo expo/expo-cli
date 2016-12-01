@@ -54,6 +54,19 @@ async function _binaryInstalledAsync(name) {
   }
 }
 
+// Sometimes `which` fails mysteriously, so try to just look for the file too.
+async function _binaryExistsAsync(name) {
+  try {
+    if (fs.lstatSync(path.join(INSTALL_PATH, name)).isSymbolicLink()) {
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 function _exponentBinaryDirectory() {
   let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
   let dir = path.join(dotExponentHomeDirectory, 'bin');
@@ -62,7 +75,7 @@ function _exponentBinaryDirectory() {
 }
 
 async function _installBinaryAsync(name) {
-  if (await _binaryInstalledAsync(name)) {
+  if (await _binaryInstalledAsync(name) || await _binaryExistsAsync(name)) {
     return false;
   }
 
@@ -87,10 +100,6 @@ export async function installXDECommandAsync() {
   try {
     await sourceBashLoginScriptsAsync();
     await _copyBinariesToExponentDirAsync();
-
-    if (fs.existsSync(path.join(INSTALL_PATH, 'xde'))) {
-      return;
-    }
     await _installBinaryAsync('xde');
   } catch (e) {
     Logger.global.debug(`Couldn't install xde binary: ${e.message}`);
