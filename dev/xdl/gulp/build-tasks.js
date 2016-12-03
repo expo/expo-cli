@@ -20,9 +20,11 @@ const tasks = {
     return gulp.src(paths.source.js)
       .pipe(changed(paths.build))
       .pipe(plumber())
-      .pipe(sourcemaps.init())
+      .pipe(sourcemaps.init({
+        identityMap: true,
+      }))
       .pipe(babel())
-      .pipe(sourcemaps.write('__sourcemaps__', { sourceRoot: paths.sourceRoot }))
+      .pipe(sourcemaps.write('__sourcemaps__', { sourceRoot: '/xdl/src' }))
       .pipe(gulp.dest(paths.build));
   },
 

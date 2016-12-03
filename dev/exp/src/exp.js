@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+/**
+ * @flow
+ */
+
 import 'instapromise';
 
 import _ from 'lodash-node';
@@ -221,6 +225,7 @@ function _registerLogs() {
   Logger.global.addStream(stream);
 }
 
+// $FlowFixMe
 if (require.main === module) {
   Promise.all([
     runAsync(),
