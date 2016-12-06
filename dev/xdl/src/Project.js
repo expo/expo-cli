@@ -82,7 +82,7 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
   });
 
   if (response.statusCode !== 200) {
-    throw new XDLError(errorCode, `Packager returned unexpected code ${response.statusCode}`);
+    throw new XDLError(errorCode, `Packager returned unexpected code ${response.statusCode}. Please open your project in the Exponent app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`);
   }
 
   if (!response.body || (minLength && response.body.length < minLength)) {
