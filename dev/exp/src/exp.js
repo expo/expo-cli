@@ -6,6 +6,7 @@ import _ from 'lodash-node';
 import bunyan from 'bunyan';
 import crayon from '@ccheever/crayon';
 import glob from 'glob';
+import path from 'path';
 import simpleSpinner from '@exponent/simple-spinner';
 import url from 'url';
 
@@ -64,6 +65,8 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
   return this.asyncAction(async (projectDir, ...args) => {
     if (!projectDir) {
       projectDir = process.cwd();
+    } else {
+      projectDir = path.resolve(process.cwd(), projectDir);
     }
 
     // needed for validation logging to function
