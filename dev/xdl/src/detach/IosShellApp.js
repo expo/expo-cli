@@ -57,6 +57,9 @@ async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, pr
   await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
     // bundle id
     config.CFBundleIdentifier = (manifest.ios && manifest.ios.bundleIdentifier) ? manifest.ios.bundleIdentifier : bundleIdentifier;
+    if (!config.CFBundleIdentifier) {
+      throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
+    }
 
     // app name
     config.CFBundleName = manifest.name;
