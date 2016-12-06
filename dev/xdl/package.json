@@ -5,7 +5,8 @@
   "main": "build/xdl.js",
   "files": [
     "build",
-    "binaries"
+    "binaries",
+    "scripts"
   ],
   "scripts": {
     "build": "gulp build",
