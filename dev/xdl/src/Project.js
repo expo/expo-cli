@@ -17,8 +17,6 @@ import path from 'path';
 import request from 'request';
 import spawnAsync from '@exponent/spawn-async';
 import treekill from 'tree-kill';
-import pty from 'pty.js';
-import stripAnsi from 'strip-ansi';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -322,11 +320,7 @@ function _processPackagerLine(line: string) {
   let timestampRe = /\s*\[\d+\:\d+\:\d+\ (AM)?(PM)?\]\s+/;
   // [11/8/2016, 10:02:59 AM]
   let sdk11AndUpTimestampRe = /\s*\[\d+\/\d+\/\d+, \d+\:\d+\:\d+\ (AM)?(PM)?\]\s+/;
-  let timestampWithDashesRe = /\s*\[\d+-\d+-\d+, \d+\:\d+\:\d+\ (AM)?(PM)?\]\s+/;
-  return line.
-    replace(timestampRe, '').
-    replace(sdk11AndUpTimestampRe, '').
-    replace(timestampWithDashesRe, '');
+  return line.replace(timestampRe, '').replace(sdk11AndUpTimestampRe, '');
 }
 
 async function _restartWatchmanAsync(projectRoot: string) {
@@ -342,10 +336,8 @@ async function _restartWatchmanAsync(projectRoot: string) {
   ProjectUtils.logError(projectRoot, 'exponent', 'Attempted to restart watchman but failed. Please try running `watchman watch-del-all`.');
 }
 
-const progressRe = /transformed \d+\/\d+ \(\d+%\)/g;
 function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
-  let output = stripAnsi(data.toString());
-
+  let output = data.toString();
   if (output.includes('─────')) {
     output = _stripPackagerOutputBox(output);
     if (output) {
@@ -365,27 +357,15 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   }
 
   let lines = output.split(/\r?\n/);
-
   for (let i = 0; i < lines.length; i++) {
-    let line = _processPackagerLine(lines[i]);
+    lines[i] = _processPackagerLine(lines[i]);
+  }
+  output = lines.join('\n');
 
-    // Skip blank lines
-    if (!line || !line.match(/\w/)) {
-      continue;
-    }
-
-    // Progress updates can sometimes come grouped together without newlines,
-    // we only care about the most recent one.
-    let progressUpdates = line.match(progressRe);
-    if (progressUpdates && progressUpdates.length > 1) {
-      line = progressUpdates[progressUpdates.length - 1];
-    }
-
-    if (level === 'info') {
-      ProjectUtils.logInfo(projectRoot, 'packager', line);
-    } else {
-      ProjectUtils.logError(projectRoot, 'packager', line);
-    }
+  if (level === 'info') {
+    ProjectUtils.logInfo(projectRoot, 'packager', output);
+  } else {
+    ProjectUtils.logError(projectRoot, 'packager', output);
   }
 }
 
@@ -488,27 +468,15 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   // ELECTRON_RUN_AS_NODE environment variable
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
   // child process
-  let packagerProcess;
-  let env = {
-    ...process.env,
-    NODE_PATH: nodePath,
-    ELECTRON_RUN_AS_NODE: 1,
-  };
-  if (process.platform === 'win32') {
-    packagerProcess = child_process.fork(cliPath, cliOpts, {
-      cwd: packagerCwd,
-      env,
-      silent: true,
-    });
-  } else {
-    packagerProcess = pty.fork(process.execPath, [ cliPath, ...cliOpts ], {
-      cwd: packagerCwd,
-      cols: 140,
-      rows: 80,
-      name: 'xterm',
-      env,
-    });
-  }
+  let packagerProcess = child_process.fork(cliPath, cliOpts, {
+    cwd: packagerCwd,
+    env: {
+      ...process.env,
+      NODE_PATH: nodePath,
+      ELECTRON_RUN_AS_NODE: 1,
+    },
+    silent: true,
+  });
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     packagerPort,
@@ -521,8 +489,13 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   });
 
   packagerProcess.stdout.setEncoding('utf8');
+  packagerProcess.stderr.setEncoding('utf8');
   packagerProcess.stdout.on('data', (data) => {
     _logPackagerOutput(projectRoot, 'info', data);
+  });
+
+  packagerProcess.stderr.on('data', (data) => {
+    _logPackagerOutput(projectRoot, 'error', data);
   });
 
   packagerProcess.on('exit', async (code) => {
