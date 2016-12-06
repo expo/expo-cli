@@ -14,7 +14,7 @@ import {
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
   configureIOSIconsAsync,
-} from './DetachTools';
+} from './ExponentTools';
 
 function validateConfigArguments(manifest, cmdArgs, configFilePath) {
   if (!configFilePath) {

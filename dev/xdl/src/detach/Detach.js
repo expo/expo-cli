@@ -8,7 +8,7 @@ import {
   spawnAsync,
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
-} from './DetachTools';
+} from './ExponentTools';
 import {
   configureStandaloneIOSInfoPlistAsync,
   configureStandaloneIOSShellPlistAsync,

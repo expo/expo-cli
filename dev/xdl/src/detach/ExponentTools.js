@@ -45,7 +45,7 @@ async function spawnAsyncThrowError(...args) {
   if (args.length === 2) {
     return spawnAsyncQuiet(args[0], args[1], {
       stdio: 'inherit',
-      cwd: __dirname,
+      cwd: process.cwd(),
     });
   } else {
     return spawnAsyncQuiet(...args);
