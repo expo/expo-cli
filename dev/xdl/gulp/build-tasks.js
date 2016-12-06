@@ -1,11 +1,11 @@
-import path from 'path';
-import gulp from 'gulp';
-import babel from 'gulp-babel';
-import changed from 'gulp-changed';
-import plumber from 'gulp-plumber';
-import rename from 'gulp-rename';
-import sourcemaps from 'gulp-sourcemaps';
-import rimraf from 'rimraf';
+const path = require('path');
+const gulp = require('gulp');
+const babel = require('gulp-babel');
+const changed = require('gulp-changed');
+const plumber = require('gulp-plumber');
+const rename = require('gulp-rename');
+const sourcemaps = require('gulp-sourcemaps');
+const rimraf = require('rimraf');
 
 const paths = {
   source: {
@@ -15,7 +15,7 @@ const paths = {
   build: 'build',
 };
 
-let tasks = {
+const tasks = {
   babel() {
     return gulp.src(paths.source.js)
       .pipe(changed(paths.build))
@@ -42,4 +42,4 @@ let tasks = {
   },
 };
 
-export default tasks;
+module.exports = tasks;
