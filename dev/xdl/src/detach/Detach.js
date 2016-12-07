@@ -14,6 +14,10 @@ import {
   configureStandaloneIOSInfoPlistAsync,
   configureStandaloneIOSShellPlistAsync,
 } from './IosShellApp';
+import {
+  renderExponentViewPodspecAsync,
+  renderPodfileAsync,
+} from './IosPodsTools.js';
 
 import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
@@ -173,19 +177,13 @@ export async function detachIOSAsync(args, manifest) {
   await configureIOSIconsAsync(manifest, iconPath);
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
+  console.log('Configuring dependencies...');
+  await renderExponentViewPodspecAsync(`${tmpExponentDirectory}/template-files/ios/ExponentView.podspec`, `${exponentDirectory}/ExponentView.podspec`);
+  await renderPodfileAsync(projectName, `${tmpExponentDirectory}/template-files/ios/ExponentView-Podfile`, `${iosProjectDirectory}/Podfile`);
+
   console.log('Cleaning up...');
   await cleanPropertyListBackupsAsync(infoPlistPath);
   await spawnAsync('/bin/rm', ['-rf', tmpExponentDirectory]);
 
-  /*
-  TODO:
-  - generate myproj/ios/Podfile
-  --- ExponentView local pod
-  --- ExponentCPP local pod
-  --- React remote pod, on correct sdk branch or tag
-  ----- postinstall
-  --- versioned React local pod, if needed
-  ----- postinstall
-   */
   return;
 }
