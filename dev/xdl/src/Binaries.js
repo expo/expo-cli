@@ -178,7 +178,7 @@ export async function sourceBashLoginScriptsAsync() {
     return;
   }
 
-  if (Config.developerTool === 'exp' || !Config.developerTool) {
+  if (Config.developerTool !== 'xde') {
     return;
   }
 
