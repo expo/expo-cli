@@ -145,6 +145,12 @@ export async function addToPathAsync(name: string) {
     return;
   }
 
+  // Users can set {ignoreBundledBinaries: ["watchman"]} to tell us to never use our version
+  let ignoreBundledBinaries = await UserSettings.getAsync('ignoreBundledBinaries', []);
+  if (ignoreBundledBinaries.includes(name)) {
+    return;
+  }
+
   if (!process.env.PATH) {
     process.env.PATH = '';
   }
