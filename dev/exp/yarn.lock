@@ -266,12 +266,6 @@ async@^0.9.0:
   version "0.9.2"
   resolved async-0.9.2.tgz#aea74d5e61c1f899613bf64bda66d4c78f2fd17d
 
-async@^2.0.1:
-  version "2.1.2"
-  resolved async-2.1.2.tgz#612a4ab45ef42a70cde806bad86ee6db047e8385
-  dependencies:
-    lodash "^4.14.0"
-
 asynckit@^0.4.0:
   version "0.4.0"
   resolved asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79
@@ -908,10 +902,6 @@ balanced-match@^0.4.1:
   version "0.4.2"
   resolved balanced-match-0.4.2.tgz#cb3f3e3c732dc0f01ee70b403f302e61d7709838
 
-base64-js@0.0.8:
-  version "0.0.8"
-  resolved base64-js-0.0.8.tgz#1101e9544f4a76b1bc3b26d452ca96d7a35e7978
-
 bcrypt-pbkdf@^1.0.0:
   version "1.0.0"
   resolved bcrypt-pbkdf-1.0.0.tgz#3ca76b85241c7170bf7d9703e7b9aa74630040d4
@@ -926,7 +916,7 @@ binary-extensions@^1.0.0:
   version "1.7.0"
   resolved binary-extensions-1.7.0.tgz#6c1610db163abfb34edfe42fa423343a1e01185d
 
-binary@^0.3.0:
+"binary@>= 0.3.0 < 1", binary@^0.3.0:
   version "0.3.0"
   resolved binary-0.3.0.tgz#9f60553bc5ce8c3386f3b553cff47462adecaa79
   dependencies:
@@ -936,12 +926,6 @@ binary@^0.3.0:
 bindings@1, bindings@~1.2.0:
   version "1.2.1"
   resolved bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11
-
-bl@^1.0.0:
-  version "1.1.2"
-  resolved bl-1.1.2.tgz#fdca871a99713aa00d19e3bbba41c44787a65398
-  dependencies:
-    readable-stream "~2.0.5"
 
 block-stream@*:
   version "0.0.9"
@@ -993,21 +977,9 @@ breakable@~1.0.0:
   version "1.0.0"
   resolved breakable-1.0.0.tgz#784a797915a38ead27bad456b5572cb4bbaa78c1
 
-buffer-crc32@~0.2.3:
-  version "0.2.5"
-  resolved buffer-crc32-0.2.5.tgz#db003ac2671e62ebd6ece78ea2c2e1b405736e91
-
 buffer-shims@^1.0.0:
   version "1.0.0"
   resolved buffer-shims-1.0.0.tgz#9978ce317388c649ad8793028c3477ef044a8b51
-
-buffer@^3.0.1:
-  version "3.6.0"
-  resolved buffer-3.6.0.tgz#a72c936f77b96bf52f5f7e7b467180628551defb
-  dependencies:
-    base64-js "0.0.8"
-    ieee754 "^1.1.4"
-    isarray "^1.0.0"
 
 buffers@~0.1.1:
   version "0.1.1"
@@ -1045,20 +1017,9 @@ camelcase@^2.0.0, camelcase@^2.0.1:
   version "2.1.1"
   resolved camelcase-2.1.1.tgz#7c1d16d679a1bbe59ca02cacecfb011e201f5a1f
 
-capture-stack-trace@^1.0.0:
-  version "1.0.0"
-  resolved capture-stack-trace-1.0.0.tgz#4a6fa07399c26bba47f0b2496b4d0fb408c5550d
-
 caseless@~0.11.0:
   version "0.11.0"
   resolved caseless-0.11.0.tgz#715b96ea9841593cc33067923f5ec60ebda4f7d7
-
-caw@^2.0.0:
-  version "2.0.0"
-  resolved caw-2.0.0.tgz#11f8bddc2f801469952d5e3225ba98495a2fa0ff
-  dependencies:
-    get-proxy "^1.0.1"
-    tunnel-agent "^0.4.0"
 
 center-align@^0.1.1:
   version "0.1.3"
@@ -1198,12 +1159,6 @@ commander@^2.5.0, commander@^2.8.1, commander@^2.9, commander@^2.9.0:
   dependencies:
     graceful-readlink ">= 1.0.0"
 
-commander@~2.8.1:
-  version "2.8.1"
-  resolved commander-2.8.1.tgz#06be367febfda0c330aa1e2a072d3dc9762425d4
-  dependencies:
-    graceful-readlink ">= 1.0.0"
-
 commoner@~0.10.3:
   version "0.10.4"
   resolved commoner-0.10.4.tgz#98f3333dd3ad399596bb2d384a783bb7213d68f8
@@ -1281,12 +1236,6 @@ core-js@^2.4.0:
 core-util-is@~1.0.0:
   version "1.0.2"
   resolved core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7
-
-create-error-class@^3.0.0:
-  version "3.0.2"
-  resolved create-error-class-3.0.2.tgz#06be7abef947a3f14a30fd610671d401bca8b7b6
-  dependencies:
-    capture-stack-trace "^1.0.0"
 
 cron@1.1.0:
   version "1.1.0"
@@ -1367,42 +1316,6 @@ decamelize@^1.0.0, decamelize@^1.1.1, decamelize@^1.1.2:
   version "1.2.0"
   resolved decamelize-1.2.0.tgz#f6534d15148269b20352e7bee26f501f9a191290
 
-decompress-tar@^4.0.0, decompress-tar@^4.1.0:
-  version "4.1.0"
-  resolved decompress-tar-4.1.0.tgz#1f092ab698440558c72fc78e77d246d3ecb453b0
-  dependencies:
-    file-type "^3.8.0"
-    is-stream "^1.1.0"
-    tar-stream "^1.5.2"
-
-decompress-tarbz2@^4.0.0:
-  version "4.1.0"
-  resolved decompress-tarbz2-4.1.0.tgz#fbab58d5de73f3fd213cac3af1c18334f51cb891
-  dependencies:
-    decompress-tar "^4.1.0"
-    file-type "^3.8.0"
-    is-stream "^1.1.0"
-    pify "^2.3.0"
-    seek-bzip "^1.0.5"
-    unbzip2-stream "^1.0.9"
-
-decompress-targz@^4.0.0:
-  version "4.0.0"
-  resolved decompress-targz-4.0.0.tgz#a21206fb1267c5ece65501ec03a39da5bc7662cc
-  dependencies:
-    decompress-tar "^4.0.0"
-    file-type "^3.8.0"
-    pify "^2.3.0"
-
-decompress-unzip@^4.0.1:
-  version "4.0.1"
-  resolved decompress-unzip-4.0.1.tgz#deaaccdfd14aeaf85578f733ae8210f9b4848f69
-  dependencies:
-    file-type "^3.8.0"
-    get-stream "^2.2.0"
-    pify "^2.3.0"
-    yauzl "^2.4.2"
-
 decompress-zip@^0.3.0:
   version "0.3.0"
   resolved decompress-zip-0.3.0.tgz#ae3bcb7e34c65879adfe77e19c30f86602b4bdb0
@@ -1414,18 +1327,6 @@ decompress-zip@^0.3.0:
     q "^1.1.2"
     readable-stream "^1.1.8"
     touch "0.0.3"
-
-decompress@^4.0.0:
-  version "4.0.0"
-  resolved decompress-4.0.0.tgz#fa23aa579a2629f7a4d3cd377f7b197aa0c5cf20
-  dependencies:
-    decompress-tar "^4.0.0"
-    decompress-tarbz2 "^4.0.0"
-    decompress-targz "^4.0.0"
-    decompress-unzip "^4.0.1"
-    mkdirp "^0.5.1"
-    pify "^2.3.0"
-    strip-dirs "^1.1.1"
 
 deep-extend@~0.4.0:
   version "0.4.1"
@@ -1520,18 +1421,6 @@ diskusage@^0.1.5:
     ref-array "~1.1.1"
     ref-struct "~1.0.1"
 
-download@^5.0.2:
-  version "5.0.2"
-  resolved download-5.0.2.tgz#89c8ab55a3be41ef2c8d787995af81a1d91d2302
-  dependencies:
-    caw "^2.0.0"
-    decompress "^4.0.0"
-    filenamify "^1.2.1"
-    get-stream "^2.2.0"
-    got "^6.3.0"
-    mkdirp "^0.5.1"
-    pify "^2.3.0"
-
 dtrace-provider@~0.7:
   version "0.7.1"
   resolved dtrace-provider-0.7.1.tgz#c06b308f2f10d5d5838aec9c571e5d588dc71d04
@@ -1543,10 +1432,6 @@ duplexer2@0.0.2:
   resolved duplexer2-0.0.2.tgz#c614dcf67e2fb14995a91711e5a617e8a60a31db
   dependencies:
     readable-stream "~1.1.9"
-
-duplexer3@^0.1.4:
-  version "0.1.4"
-  resolved duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2
 
 duplexify@^3.2.0:
   version "3.5.0"
@@ -1577,7 +1462,7 @@ end-of-stream@1.0.0:
   dependencies:
     once "~1.3.0"
 
-end-of-stream@^1.0.0, end-of-stream@^1.1.0:
+end-of-stream@^1.1.0:
   version "1.1.0"
   resolved end-of-stream-1.1.0.tgz#e9353258baa9108965efc41cb0ef8ade2f3cfb07
   dependencies:
@@ -1771,12 +1656,6 @@ fast-levenshtein@~2.0.4:
   version "2.0.5"
   resolved fast-levenshtein-2.0.5.tgz#bd33145744519ab1c36c3ee9f31f08e9079b67f2
 
-fd-slicer@~1.0.1:
-  version "1.0.1"
-  resolved fd-slicer-1.0.1.tgz#8b5bcbd9ec327c5041bf9ab023fd6750f1177e65
-  dependencies:
-    pend "~1.2.0"
-
 ffi@^2.0.0:
   version "2.2.0"
   resolved ffi-2.2.0.tgz#bf18b04666a29f71227ed56895d5430af47042fa
@@ -1794,10 +1673,6 @@ figures@^1.3.5:
     escape-string-regexp "^1.0.5"
     object-assign "^4.1.0"
 
-file-type@^3.8.0:
-  version "3.9.0"
-  resolved file-type-3.9.0.tgz#257a078384d1db8087bc449d107d52a52672b9e9
-
 file-uri-to-path@0:
   version "0.0.2"
   resolved file-uri-to-path-0.0.2.tgz#37cdd1b5b905404b3f05e1b23645be694ff70f82
@@ -1805,18 +1680,6 @@ file-uri-to-path@0:
 filename-regex@^2.0.0:
   version "2.0.0"
   resolved filename-regex-2.0.0.tgz#996e3e80479b98b9897f15a8a58b3d084e926775
-
-filename-reserved-regex@^1.0.0:
-  version "1.0.0"
-  resolved filename-reserved-regex-1.0.0.tgz#e61cf805f0de1c984567d0386dc5df50ee5af7e4
-
-filenamify@^1.2.1:
-  version "1.2.1"
-  resolved filenamify-1.2.1.tgz#a9f2ffd11c503bed300015029272378f1f1365a5
-  dependencies:
-    filename-reserved-regex "^1.0.0"
-    strip-outer "^1.0.0"
-    trim-repeated "^1.0.0"
 
 fill-range@^2.1.0:
   version "2.2.3"
@@ -1902,14 +1765,6 @@ form-data@1.0.0-rc3:
     combined-stream "^1.0.5"
     mime-types "^2.1.3"
 
-form-data@^1.0.1:
-  version "1.0.1"
-  resolved form-data-1.0.1.tgz#ae315db9a4907fa065502304a66d7733475ee37c
-  dependencies:
-    async "^2.0.1"
-    combined-stream "^1.0.5"
-    mime-types "^2.1.11"
-
 form-data@~2.1.1:
   version "2.1.1"
   resolved form-data-2.1.1.tgz#4adf0342e1a79afa1e84c8c320a9ffc82392a1f3
@@ -1967,6 +1822,15 @@ fstream-ignore@~1.0.5:
     inherits "2"
     minimatch "^3.0.0"
 
+"fstream@>= 0.1.30 < 1":
+  version "0.1.31"
+  resolved "https://registry.yarnpkg.com/fstream/-/fstream-0.1.31.tgz#7337f058fbbbbefa8c9f561a28cab0849202c988"
+  dependencies:
+    graceful-fs "~3.0.2"
+    inherits "~2.0.0"
+    mkdirp "0.5"
+    rimraf "2"
+
 fstream@^1.0.0, fstream@^1.0.2, fstream@^1.0.8, fstream@~1.0.10:
   version "1.0.10"
   resolved fstream-1.0.10.tgz#604e8a92fe26ffd9f6fae30399d4984e1ab22822
@@ -2007,22 +1871,9 @@ generate-object-property@^1.1.0:
   dependencies:
     is-property "^1.0.0"
 
-get-proxy@^1.0.1:
-  version "1.1.0"
-  resolved get-proxy-1.1.0.tgz#894854491bc591b0f147d7ae570f5c678b7256eb
-  dependencies:
-    rc "^1.1.2"
-
 get-stdin@^4.0.1:
   version "4.0.1"
   resolved get-stdin-4.0.1.tgz#b968c6b0a04384324902e8bf1a5df32579a450fe
-
-get-stream@^2.2.0, get-stream@^2.3.0:
-  version "2.3.1"
-  resolved get-stream-2.3.1.tgz#5f38f93f346009666ee0150a054167f91bdd95de
-  dependencies:
-    object-assign "^4.0.1"
-    pinkie-promise "^2.0.0"
 
 get-uri@1:
   version "1.1.0"
@@ -2149,25 +2000,15 @@ glogg@^1.0.0:
   dependencies:
     sparkles "^1.0.0"
 
-got@^6.3.0:
-  version "6.6.1"
-  resolved got-6.6.1.tgz#542d7a0e34676060e561b1b90d103876eefabed2
-  dependencies:
-    create-error-class "^3.0.0"
-    duplexer3 "^0.1.4"
-    get-stream "^2.3.0"
-    is-redirect "^1.0.0"
-    is-retry-allowed "^1.0.0"
-    is-stream "^1.0.0"
-    lowercase-keys "^1.0.0"
-    node-status-codes "^2.0.0"
-    timed-out "^3.0.0"
-    unzip-response "^2.0.1"
-    url-parse-lax "^1.0.0"
-
 graceful-fs@4.X, graceful-fs@^4.0.0, graceful-fs@^4.1.2, graceful-fs@^4.1.3, graceful-fs@^4.1.6, graceful-fs@^4.1.9:
   version "4.1.10"
   resolved graceful-fs-4.1.10.tgz#f2d720c22092f743228775c75e3612632501f131
+
+graceful-fs@~3.0.2:
+  version "3.0.11"
+  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-3.0.11.tgz#7613c778a1afea62f25c630a086d7f3acbbdd818"
+  dependencies:
+    natives "^1.1.0"
 
 "graceful-readlink@>= 1.0.0":
   version "1.0.1"
@@ -2387,10 +2228,6 @@ iconv-lite@0.4.13, iconv-lite@^0.4.5:
   version "0.4.13"
   resolved iconv-lite-0.4.13.tgz#1f88aba4ab0b1508e8312acc39345f36e992e2f2
 
-ieee754@^1.1.4:
-  version "1.1.8"
-  resolved ieee754-1.1.8.tgz#be33d40ac10ef1926701f6f08a2d86fbfd1ad3e4
-
 "ikt@git+http://ikt.pm2.io/ikt.git#3325a3e":
   version "0.0.0"
   resolved ikt.git-3325a3e#65ec82f11bbde17238710153bbc309ae66e0cdb0
@@ -2491,12 +2328,6 @@ ipaddr.js@1.1.1:
   version "1.1.1"
   resolved ipaddr.js-1.1.1.tgz#c791d95f52b29c1247d5df80ada39b8a73647230
 
-is-absolute@^0.1.5:
-  version "0.1.7"
-  resolved is-absolute-0.1.7.tgz#847491119fccb5fb436217cc737f7faad50f603f
-  dependencies:
-    is-relative "^0.1.0"
-
 is-absolute@^0.2.3:
   version "0.2.6"
   resolved is-absolute-0.2.6.tgz#20de69f3db942ef2d87b9c2da36f172235b1b5eb
@@ -2579,10 +2410,6 @@ is-my-json-valid@^2.12.4:
     jsonpointer "^4.0.0"
     xtend "^4.0.0"
 
-is-natural-number@^2.0.0:
-  version "2.1.1"
-  resolved is-natural-number-2.1.1.tgz#7d4c5728377ef386c3e194a9911bf57c6dc335e7
-
 is-number@^2.0.2, is-number@^2.1.0:
   version "2.1.0"
   resolved is-number-2.1.0.tgz#01fcbbb393463a548f2f466cce16dece49db908f
@@ -2605,25 +2432,13 @@ is-property@^1.0.0:
   version "1.0.2"
   resolved is-property-1.0.2.tgz#57fe1c4e48474edd65b09911f26b1cd4095dda84
 
-is-redirect@^1.0.0:
-  version "1.0.0"
-  resolved is-redirect-1.0.0.tgz#1d03dded53bd8db0f30c26e4f95d36fc7c87dc24
-
-is-relative@^0.1.0:
-  version "0.1.3"
-  resolved is-relative-0.1.3.tgz#905fee8ae86f45b3ec614bc3c15c869df0876e82
-
 is-relative@^0.2.1:
   version "0.2.1"
   resolved is-relative-0.2.1.tgz#d27f4c7d516d175fb610db84bbeef23c3bc97aa5
   dependencies:
     is-unc-path "^0.1.1"
 
-is-retry-allowed@^1.0.0:
-  version "1.1.0"
-  resolved is-retry-allowed-1.1.0.tgz#11a060568b67339444033d0125a61a20d564fb34
-
-is-stream@^1.0.0, is-stream@^1.0.1, is-stream@^1.1.0:
+is-stream@^1.0.1:
   version "1.1.0"
   resolved is-stream-1.1.0.tgz#12d4a3dd4e68e0b79ceb8dbc84173ae80d91ca44
 
@@ -2653,7 +2468,7 @@ isarray@0.0.1:
   version "0.0.1"
   resolved isarray-0.0.1.tgz#8a18acfca9a8f4177e09abfc6038939b05d1eedf
 
-isarray@1.0.0, isarray@^1.0.0, isarray@~1.0.0:
+isarray@1.0.0, isarray@~1.0.0:
   version "1.0.0"
   resolved isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11
 
@@ -2685,14 +2500,13 @@ jodid25519@^1.0.0:
   dependencies:
     jsbn "~0.1.0"
 
-joi@^9.0.4:
-  version "9.2.0"
-  resolved joi-9.2.0.tgz#3385ac790192130cbe230e802ec02c9215bbfeda
+joi@^10.0.2:
+  version "10.0.5"
+  resolved "https://registry.yarnpkg.com/joi/-/joi-10.0.5.tgz#2e43af9bf24d2d5745852e9ab968c85be357bd6a"
   dependencies:
     hoek "4.x.x"
     isemail "2.x.x"
     items "2.x.x"
-    moment "2.x.x"
     topo "2.x.x"
 
 join-component@~1.0.0:
@@ -2746,6 +2560,10 @@ jsonify@~0.0.0:
 jsonpointer@^4.0.0:
   version "4.0.0"
   resolved jsonpointer-4.0.0.tgz#6661e161d2fc445f19f98430231343722e1fcbd5
+
+jsonschema@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/jsonschema/-/jsonschema-1.1.0.tgz#039cc219ed524b06e71daf12ca60d02639faf29a"
 
 jsprim@^1.2.2:
   version "1.3.1"
@@ -3000,7 +2818,7 @@ lodash@^3.3.1:
   version "3.10.1"
   resolved lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6
 
-lodash@^4.14.0, lodash@^4.14.1, lodash@^4.2.0, lodash@^4.3.0, lodash@^4.6.1:
+lodash@^4.14.1, lodash@^4.2.0, lodash@^4.3.0, lodash@^4.6.1:
   version "4.16.6"
   resolved lodash-4.16.6.tgz#d22c9ac660288f3843e16ba7d2b5d06cca27d777
 
@@ -3025,10 +2843,6 @@ loud-rejection@^1.0.0:
     currently-unhandled "^0.4.1"
     signal-exit "^3.0.0"
 
-lowercase-keys@^1.0.0:
-  version "1.0.0"
-  resolved lowercase-keys-1.0.0.tgz#4e3366b39e7f5457e35f1324bdf6f88d0bfc7306
-
 lru-cache@^4.0.1:
   version "4.0.1"
   resolved lru-cache-4.0.1.tgz#1343955edaf2e37d9b9e7ee7241e27c4b9fb72be
@@ -3047,6 +2861,13 @@ map-cache@^0.2.0:
 map-obj@^1.0.0, map-obj@^1.0.1:
   version "1.0.1"
   resolved map-obj-1.0.1.tgz#d933ceb9205d82bdcf4886f6742bdc2b4dea146d
+
+"match-stream@>= 0.0.2 < 1":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/match-stream/-/match-stream-0.0.2.tgz#99eb050093b34dffade421b9ac0b410a9cfa17cf"
+  dependencies:
+    buffers "~0.1.1"
+    readable-stream "~1.0.0"
 
 matchdep@^1.0.0:
   version "1.0.1"
@@ -3116,7 +2937,7 @@ mime-db@~1.24.0:
   version "1.24.0"
   resolved mime-db-1.24.0.tgz#e2d13f939f0016c6e4e9ad25a8652f126c467f0c
 
-mime-types@^2.1.11, mime-types@^2.1.12, mime-types@^2.1.3, mime-types@~2.1.11, mime-types@~2.1.7:
+mime-types@^2.1.12, mime-types@^2.1.3, mime-types@~2.1.11, mime-types@~2.1.7:
   version "2.1.12"
   resolved mime-types-2.1.12.tgz#152ba256777020dd4663f54c2e7bc26381e71729
   dependencies:
@@ -3146,7 +2967,7 @@ minimist@^1.1.0, minimist@^1.1.3, minimist@^1.2.0:
   version "1.2.0"
   resolved minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284
 
-mkdirp@0.5.1, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
+mkdirp@0.5, mkdirp@0.5.1, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
   version "0.5.1"
   resolved mkdirp-0.5.1.tgz#30057438eac6cf7f8c4767f38648d6697d75c903
   dependencies:
@@ -3162,7 +2983,7 @@ moment-timezone@~0.3.0:
   dependencies:
     moment ">= 2.6.0"
 
-moment@2.x.x, "moment@>= 2.6.0", moment@^2.10.6, moment@^2.12:
+"moment@>= 2.6.0", moment@^2.10.6, moment@^2.12:
   version "2.15.2"
   resolved moment-2.15.2.tgz#1bfdedf6a6e345f322fe956d5df5bd08a8ce84dc
 
@@ -3200,9 +3021,13 @@ mv@~2:
     ncp "~2.0.0"
     rimraf "~2.4.0"
 
-nan@2, nan@2.x, nan@^2.3.0, nan@^2.3.3:
+nan@2, nan@^2.3.0, nan@^2.3.3:
   version "2.4.0"
   resolved nan-2.4.0.tgz#fb3c59d45fe4effe215f0b890f8adf6eb32d2232
+
+natives@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/natives/-/natives-1.1.0.tgz#e9ff841418a6b2ec7a495e939984f78f163e6e31"
 
 ncp@^2.0.0, ncp@~2.0.0:
   version "2.0.0"
@@ -3245,10 +3070,6 @@ node-pre-gyp@^0.6.29:
     semver "~5.3.0"
     tar "~2.2.1"
     tar-pack "~3.3.0"
-
-node-status-codes@^2.0.0:
-  version "2.0.1"
-  resolved node-status-codes-2.0.1.tgz#298067659cb68a2b4670abbefde02a3819981f5b
 
 node-uuid@^1.4.3, node-uuid@~1.4.7:
   version "1.4.7"
@@ -3389,6 +3210,10 @@ osenv@^0.1.3:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
 
+"over@>= 0.0.5 < 1":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/over/-/over-0.0.5.tgz#f29852e70fd7e25f360e013a8ec44c82aedb5708"
+
 pac-proxy-agent@1:
   version "1.0.0"
   resolved pac-proxy-agent-1.0.0.tgz#dcd5b746581367430a236e88eacfd4e5b8d068a5
@@ -3476,15 +3301,11 @@ path-type@^1.0.0:
     pify "^2.0.0"
     pinkie-promise "^2.0.0"
 
-pend@~1.2.0:
-  version "1.2.0"
-  resolved pend-1.2.0.tgz#7a57eb550a6783f9115331fcf4663d5c8e007a50
-
 pidusage@^1.0.1:
   version "1.1.0"
   resolved pidusage-1.1.0.tgz#ffd58339a97aec470cff7cfe1a9853ec5cd415f8
 
-pify@^2.0.0, pify@^2.3.0:
+pify@^2.0.0:
   version "2.3.0"
   resolved pify-2.3.0.tgz#ed141a6ac043a849ea588498e7dca8b15330e90c
 
@@ -3570,10 +3391,6 @@ prelude-ls@~1.1.2:
   version "1.1.2"
   resolved prelude-ls-1.1.2.tgz#21932a549f5e52ffd9a827f570e04be62a97da54
 
-prepend-http@^1.0.1:
-  version "1.0.4"
-  resolved prepend-http-1.0.4.tgz#d4f4562b0ce3696e41ac52d0e002e57a635dc6dc
-
 preserve@^0.2.0:
   version "0.2.0"
   resolved preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b
@@ -3617,6 +3434,15 @@ proxy-agent@2:
 pseudomap@^1.0.1:
   version "1.0.2"
   resolved pseudomap-1.0.2.tgz#f052a28da70e618917ef0a8ac34c1ae5a68286b3
+
+"pullstream@>= 0.4.1 < 1":
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/pullstream/-/pullstream-0.4.1.tgz#d6fb3bf5aed697e831150eb1002c25a3f8ae1314"
+  dependencies:
+    over ">= 0.0.5 < 1"
+    readable-stream "~1.0.31"
+    setimmediate ">= 1.0.2 < 2"
+    slice-stream ">= 1.0.0 < 2"
 
 punycode@1.3.2:
   version "1.3.2"
@@ -3669,7 +3495,7 @@ raw-body@~2.1.7:
     iconv-lite "0.4.13"
     unpipe "1.0.0"
 
-rc@^1.1.2, rc@~1.1.6:
+rc@~1.1.6:
   version "1.1.6"
   resolved rc-1.1.6.tgz#43651b76b6ae53b5c802f1151fa3fc3b059969c9
   dependencies:
@@ -3723,7 +3549,7 @@ readable-stream@2, "readable-stream@^2.0.0 || ^1.1.13", readable-stream@~2.1.4:
     string_decoder "~0.10.x"
     util-deprecate "~1.0.1"
 
-"readable-stream@>=1.0.33-1 <1.1.0-0":
+"readable-stream@>=1.0.33-1 <1.1.0-0", readable-stream@~1.0.0, readable-stream@~1.0.31:
   version "1.0.34"
   resolved readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c
   dependencies:
@@ -3732,7 +3558,7 @@ readable-stream@2, "readable-stream@^2.0.0 || ^1.1.13", readable-stream@~2.1.4:
     isarray "0.0.1"
     string_decoder "~0.10.x"
 
-readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.4, readable-stream@^2.0.5, readable-stream@~2.0.0, readable-stream@~2.0.5:
+readable-stream@^2.0.0, readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.4, readable-stream@^2.0.5, readable-stream@~2.0.0:
   version "2.0.6"
   resolved readable-stream-2.0.6.tgz#8f90341e68a53ccc928788dacfcd11b36eb9b78e
   dependencies:
@@ -3943,12 +3769,6 @@ run-async@^2.2.0:
     is-promise "^2.1.0"
     pinkie-promise "^2.0.0"
 
-runas@^3.1.1:
-  version "3.1.1"
-  resolved runas-3.1.1.tgz#52dd538db0e41745399535a347091ba45cc0eab0
-  dependencies:
-    nan "2.x"
-
 rx@^2.4.3:
   version "2.5.3"
   resolved rx-2.5.3.tgz#21adc7d80f02002af50dae97fd9dbf248755f566
@@ -3960,12 +3780,6 @@ rx@^4.1.0:
 safe-json-stringify@~1:
   version "1.0.3"
   resolved safe-json-stringify-1.0.3.tgz#3cb6717660a086d07cb5bd9b7a6875bcf67bd05e
-
-seek-bzip@^1.0.5:
-  version "1.0.5"
-  resolved seek-bzip-1.0.5.tgz#cfe917cb3d274bcffac792758af53173eb1fabdc
-  dependencies:
-    commander "~2.8.1"
 
 semver-greatest-satisfied-range@^1.0.0:
   version "1.0.0"
@@ -4029,6 +3843,10 @@ set-immediate-shim@^1.0.1:
   version "1.0.1"
   resolved set-immediate-shim-1.0.1.tgz#4b2b1b27eb808a9f8dcc481a58e5e56f599f3f61
 
+"setimmediate@>= 1.0.1 < 2", "setimmediate@>= 1.0.2 < 2":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz#290cbb232e306942d7d7ea9b83732ab7856f8285"
+
 setprototypeof@1.0.1:
   version "1.0.1"
   resolved setprototypeof-1.0.1.tgz#52009b27888c4dc48f591949c0a8275834c1ca7e
@@ -4052,6 +3870,12 @@ simple-is@~0.2.0:
 slash@^1.0.0:
   version "1.0.0"
   resolved slash-1.0.0.tgz#c41f2f6c39fc16d1cd17ad4b5d896114ae470d55
+
+"slice-stream@>= 1.0.0 < 2":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/slice-stream/-/slice-stream-1.0.0.tgz#5b33bd66f013b1a7f86460b03d463dec39ad3ea0"
+  dependencies:
+    readable-stream "~1.0.31"
 
 slugid@^1.1.0:
   version "1.1.0"
@@ -4260,17 +4084,6 @@ strip-bom@2.X, strip-bom@^2.0.0:
   dependencies:
     is-utf8 "^0.2.0"
 
-strip-dirs@^1.1.1:
-  version "1.1.1"
-  resolved strip-dirs-1.1.1.tgz#960bbd1287844f3975a4558aa103a8255e2456a0
-  dependencies:
-    chalk "^1.0.0"
-    get-stdin "^4.0.1"
-    is-absolute "^0.1.5"
-    is-natural-number "^2.0.0"
-    minimist "^1.1.0"
-    sum-up "^1.0.1"
-
 strip-indent@^1.0.1:
   version "1.0.1"
   resolved strip-indent-1.0.1.tgz#0c7962a6adefa7bbd4ac366460a638552ae1a0a2
@@ -4280,18 +4093,6 @@ strip-indent@^1.0.1:
 strip-json-comments@~1.0.4:
   version "1.0.4"
   resolved strip-json-comments-1.0.4.tgz#1e15fbcac97d3ee99bf2d73b4c656b082bbafb91
-
-strip-outer@^1.0.0:
-  version "1.0.0"
-  resolved strip-outer-1.0.0.tgz#aac0ba60d2e90c5d4f275fd8869fd9a2d310ffb8
-  dependencies:
-    escape-string-regexp "^1.0.2"
-
-sum-up@^1.0.1:
-  version "1.0.3"
-  resolved sum-up-1.0.3.tgz#1c661f667057f63bcb7875aa1438bc162525156e
-  dependencies:
-    chalk "^1.0.0"
 
 superagent-proxy@^1.0.0:
   version "1.0.1"
@@ -4336,15 +4137,6 @@ tar-pack@~3.3.0:
     rimraf "~2.5.1"
     tar "~2.2.1"
     uid-number "~0.0.6"
-
-tar-stream@^1.5.2:
-  version "1.5.2"
-  resolved tar-stream-1.5.2.tgz#fbc6c6e83c1a19d4cb48c7d96171fc248effc7bf
-  dependencies:
-    bl "^1.0.0"
-    end-of-stream "^1.0.0"
-    readable-stream "^2.0.0"
-    xtend "^4.0.0"
 
 tar.gz@^1.0.3, tar.gz@^1.0.5:
   version "1.0.5"
@@ -4403,10 +4195,6 @@ time-stamp@^1.0.0:
   version "1.0.1"
   resolved time-stamp-1.0.1.tgz#9f4bd23559c9365966f3302dbba2b07c6b99b151
 
-timed-out@^3.0.0:
-  version "3.0.0"
-  resolved timed-out-3.0.0.tgz#ff88de96030ce960eabd42487db61d3add229273
-
 tmp@^0.0.29:
   version "0.0.29"
   resolved tmp-0.0.29.tgz#f25125ff0dd9da3ccb0c2dd371ee1288bb9128c0
@@ -4453,17 +4241,11 @@ trim-newlines@^1.0.0:
   version "1.0.0"
   resolved trim-newlines-1.0.0.tgz#5887966bb582a4503a41eb524f7d35011815a613
 
-trim-repeated@^1.0.0:
-  version "1.0.0"
-  resolved trim-repeated-1.0.0.tgz#e3646a2ea4e891312bf7eace6cfb05380bc01c21
-  dependencies:
-    escape-string-regexp "^1.0.2"
-
 tryor@~0.1.2:
   version "0.1.2"
   resolved tryor-0.1.2.tgz#8145e4ca7caff40acde3ccf946e8b8bb75b4172b
 
-tunnel-agent@^0.4.0, tunnel-agent@~0.4.1:
+tunnel-agent@~0.4.1:
   version "0.4.3"
   resolved tunnel-agent-0.4.3.tgz#6373db76909fe570e08d73583365ed828a74eeeb
 
@@ -4495,13 +4277,6 @@ typedarray@~0.0.5:
 uid-number@~0.0.6:
   version "0.0.6"
   resolved uid-number-0.0.6.tgz#0ea10e8035e8eb5b8e4449f06da1c730663baa81
-
-unbzip2-stream@^1.0.9:
-  version "1.0.10"
-  resolved unbzip2-stream-1.0.10.tgz#b21f7555f9bb1055891f35a61b8af8c377ff51bc
-  dependencies:
-    buffer "^3.0.1"
-    through "^2.3.6"
 
 unc-path-regex@^0.1.0:
   version "0.1.2"
@@ -4547,19 +4322,20 @@ untildify@^3.0.2:
   version "3.0.2"
   resolved untildify-3.0.2.tgz#7f1f302055b3fea0f3e81dc78eb36766cb65e3f1
 
-unzip-response@^2.0.1:
-  version "2.0.1"
-  resolved unzip-response-2.0.1.tgz#d2f0f737d16b0615e72a6935ed04214572d56f97
+unzip@^0.1.11:
+  version "0.1.11"
+  resolved "https://registry.yarnpkg.com/unzip/-/unzip-0.1.11.tgz#89749c63b058d7d90d619f86b98aa1535d3b97f0"
+  dependencies:
+    binary ">= 0.3.0 < 1"
+    fstream ">= 0.1.30 < 1"
+    match-stream ">= 0.0.2 < 1"
+    pullstream ">= 0.4.1 < 1"
+    readable-stream "~1.0.31"
+    setimmediate ">= 1.0.1 < 2"
 
 urix@^0.1.0, urix@~0.1.0:
   version "0.1.0"
   resolved urix-0.1.0.tgz#da937f7a62e21fec1fd18d49b35c2935067a6c72
-
-url-parse-lax@^1.0.0:
-  version "1.0.0"
-  resolved url-parse-lax-1.0.0.tgz#7af8f303645e9bd79a272e7a14ac68bc0609da73
-  dependencies:
-    prepend-http "^1.0.1"
 
 url@^0.11.0:
   version "0.11.0"
@@ -4702,9 +4478,9 @@ wreck@^6.3.0:
     boom "2.x.x"
     hoek "2.x.x"
 
-xdl@0.25.0:
-  version "0.25.0"
-  resolved xdl-0.25.0.tgz#105ecca4cb67fa6bfea63e1d45aceb5a74317013
+xdl@0.26.6:
+  version "0.26.6"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-0.26.6.tgz#a60361def119907bdf67aaab87d58da8c640da29"
   dependencies:
     "@ccheever/crayon" "^5.0.0"
     "@exponent/json-file" "^5.2.0"
@@ -4715,23 +4491,22 @@ xdl@0.25.0:
     body-parser "^1.15.2"
     bunyan "^1.8.1"
     delay-async "^1.0.0"
-    download "^5.0.2"
     exec-async "^2.2.0"
     exists-async "^2.0.0"
     express "^4.13.4"
-    form-data "^1.0.1"
     freeport-async "^1.1.0"
     fs-extra "^0.30.0"
     glob "^7.0.3"
-    got "^6.3.0"
     hasbin "^1.2.3"
     home-dir "^1.0.0"
     instapromise "2.0.7-rc.1"
     ip "^1.1.3"
-    joi "^9.0.4"
+    joi "^10.0.2"
     jsonfile "^2.3.1"
+    jsonschema "^1.1.0"
     lodash "^4.14.1"
     md5hex "^1.0.0"
+    minimist "^1.2.0"
     mkdirp "^0.5.1"
     ncp "^2.0.0"
     ngrok "git+https://github.com/exponentjs/ngrok#v1.3.0"
@@ -4744,10 +4519,10 @@ xdl@0.25.0:
     source-map-support "^0.4.2"
     tar.gz "^1.0.5"
     tree-kill "^1.1.0"
+    unzip "^0.1.11"
     url "^0.11.0"
   optionalDependencies:
     diskusage "^0.1.5"
-    runas "^3.1.1"
 
 xregexp@2.0.0:
   version "2.0.0"
@@ -4794,10 +4569,3 @@ yargs@~3.27.0:
     os-locale "^1.4.0"
     window-size "^0.1.2"
     y18n "^3.2.0"
-
-yauzl@^2.4.2:
-  version "2.7.0"
-  resolved yauzl-2.7.0.tgz#e21d847868b496fc29eaec23ee87fdd33e9b2bce
-  dependencies:
-    buffer-crc32 "~0.2.3"
-    fd-slicer "~1.0.1"
