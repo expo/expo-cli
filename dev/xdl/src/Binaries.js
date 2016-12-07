@@ -151,13 +151,8 @@ export async function addToPathAsync(name: string) {
     return;
   }
 
-  if (!process.env.PATH) {
-    process.env.PATH = '';
-  }
-
   let binariesPath = path.join(getBinariesPath(), name);
-  let delimiter = process.platform === 'win32' ? ';' : ':';
-  process.env.PATH = `${process.env.PATH}${delimiter}${binariesPath}`;
+  _prependToPath(binariesPath)
 }
 
 function _exponentRCFileExists() {
@@ -166,6 +161,16 @@ function _exponentRCFileExists() {
   } catch (e) {
     return false;
   }
+}
+
+function _prependToPath(newPath) {
+  let currentPath = process.env.PATH ? process.env.PATH : '';
+  if (currentPath.length > 0) {
+    let delimiter = process.platform === 'win32' ? ';' : ':';
+    currentPath = `${delimiter}${currentPath}`;
+  }
+
+  process.env.PATH = `${newPath}${currentPath}`;
 }
 
 export async function sourceBashLoginScriptsAsync() {
@@ -178,16 +183,11 @@ export async function sourceBashLoginScriptsAsync() {
   }
 
   hasSourcedBashLoginScripts = true;
-  let currentPath = process.env.PATH ? process.env.PATH : '';
 
   let userSettingsPATH = await UserSettings.getAsync('PATH', null);
 
   if (userSettingsPATH) {
-    if (currentPath.length > 0) {
-      currentPath = `${currentPath}:`;
-    }
-
-    currentPath = `${currentPath}${userSettingsPATH}`;
+    _prependToPath(userSettingsPATH);
   } else if (_exponentRCFileExists()) {
     try {
       // User has a ~/.exponent/bashrc. Run that and grab PATH.
@@ -202,11 +202,7 @@ export async function sourceBashLoginScriptsAsync() {
       }
 
       if (result.stdout) {
-        if (currentPath.length > 0) {
-          currentPath = `${currentPath}:`;
-        }
-
-        currentPath = `${currentPath}${result.stdout}`;
+        _prependToPath(result.stdout);
       }
     } catch (e) {
       Logger.global.warn(`Error sourcing ~/.exponent/bashrc script: ${e.stderr}`);
@@ -234,11 +230,7 @@ export async function sourceBashLoginScriptsAsync() {
         let regexResult = result.stdout.match(/(^|\n)PATH=(.+)/);
 
         if (regexResult.length >= 3) {
-          if (currentPath.length > 0) {
-            currentPath = `${currentPath}:`;
-          }
-
-          currentPath = `${currentPath}${regexResult[2]}`;
+          _prependToPath(regexResult[2]);
         } else {
           Logger.global.warn(`Error parsing shell startup scripts output: ${result.stderr}.${ERROR_MESSAGE}`);
         }
@@ -247,6 +239,4 @@ export async function sourceBashLoginScriptsAsync() {
       Logger.global.warn(`Error sourcing shell startup scripts: ${e.stderr}.${ERROR_MESSAGE}`);
     }
   }
-
-  process.env.PATH = currentPath;
 }
