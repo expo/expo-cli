@@ -37,10 +37,6 @@ const MINIMUM_BUNDLE_SIZE = 500;
 
 let _projectRootToExponentServer = {};
 
-export function exponentServerFromProjectRoot(projectRoot: string) {
-  return _projectRootToExponentServer[projectRoot];
-}
-
 type CachedSignedManifest = {
   manifestString: ?string,
   signedManifest: ?string,
