@@ -79,7 +79,8 @@ export async function detachIOSAsync(args) {
   let tmpExponentDirectory = `${args.outputDirectory}/exponent-src-tmp`;
   let exponentDirectory = `${args.outputDirectory}/exponent`;
   let iosProjectDirectory = `${args.outputDirectory}/ios`;
-  let projectName = manifest.name;
+  let projectNameLabel = manifest.name;
+  let projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
 
   console.log('Downloading Exponent kernel...');
   // TODO: Make this method work
