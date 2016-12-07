@@ -217,7 +217,7 @@ async function uploadAssetsAsync(projectRoot, assets) {
         },
       };
     });
-    await Api.callMethodAsync('uploadAssets', [], 'put', {formData});
+    await Api.callMethodAsync('uploadAssets', [], 'put', null, {formData});
   }));
 }
 
