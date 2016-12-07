@@ -3,11 +3,16 @@ import {
 } from 'xdl';
 
 async function action(projectDir, options) {
-  await Detach.detachIOSAsync({
-    outputDirectory: projectDir,
-    sdkVersion: options.sdkVersion,
-    url: options.url,
-  });
+  // just for testing
+  if (options.sdkVersion > 0 && options.url) {
+    await Detach.detachIOSAsync({
+      outputDirectory: projectDir,
+      sdkVersion: options.sdkVersion,
+      url: options.url,
+    });
+  } else {
+    await Detach.detachAsync(projectDir);
+  }
 }
 
 export default (program) => {
@@ -16,5 +21,5 @@ export default (program) => {
     .option('-v, --sdkVersion [string]', 'SDK Version')
     .option('-u, --url [string]', 'URL')
     .description('Detaches your app')
-    .asyncActionProjectDir(action, true);
+    .asyncActionProjectDir(action);
 };

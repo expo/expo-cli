@@ -3,7 +3,6 @@
 'use strict';
 
 import {
-  getManifestAsync,
   spawnAsyncThrowError,
   spawnAsync,
   modifyIOSPropertyListAsync,
@@ -15,8 +14,18 @@ import {
   configureStandaloneIOSShellPlistAsync,
 } from './IosShellApp';
 
+import ErrorCode from '../ErrorCode';
+import * as ProjectUtils from '../project/ProjectUtils';
+import * as User from '../User';
+import Logger from '../Logger';
+import XDLError from '../XDLError';
+
+import fs from 'fs';
+import path from 'path';
+
 const EXPONENT_SRC_URL = 'https://github.com/exponentjs/exponent.git';
 const EXPONENT_ARCHIVE_URL = 'https://api.github.com/repos/exponentjs/exponent/tarball/master';
+const DETACH_DIRECTORIES = ['exponent', 'ios', 'android'];
 
 function validateArgs(args) {
   if (!args.outputDirectory) {
@@ -58,22 +67,56 @@ async function cleanPropertyListBackupsAsync(configFilePath) {
   await cleanIOSPropertyListBackupAsync(configFilePath, 'EXSDKVersions', false);
 }
 
+function isDirectory(dir) {
+  try {
+    if (fs.statSync(dir).isDirectory()) {
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function detachAsync(projectRoot) {
+  let user = await User.getCurrentUserAsync();
+  let username = user.username;
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let experienceName = `@${username}/${exp.slug}`;
+  let experienceUrl = `exp://exp.host/${experienceName}`;
+
+  // Check to make sure project isn't detached already
+  let badDirectories = [];
+  for (let i = 0; i < DETACH_DIRECTORIES.length; i++) {
+    if (isDirectory(path.join(projectRoot, DETACH_DIRECTORIES[i]))) {
+      badDirectories.push(DETACH_DIRECTORIES[i]);
+    }
+  }
+
+  if (badDirectories.length > 0) {
+    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `Error detaching. Please remove ${badDirectories.join(', ')} director${badDirectories.length === 1 ? 'y' : 'ies'} first. Are you sure you aren't already detached?`);
+  }
+
+  await detachIOSAsync({
+    outputDirectory: projectRoot,
+    sdkVersion: exp.sdkVersion,
+    url: experienceUrl,
+  }, exp);
+}
+
 /**
  *  Create a detached Exponent iOS app pointing at the given project.
  *  @param args.url url of the Exponent project.
  *  @param args.outputDirectory directory to create the detached project.
  */
-export async function detachIOSAsync(args) {
+export async function detachIOSAsync(args, manifest) {
   args = validateArgs(args);
 
   console.log('Validating output directory...');
   await spawnAsyncThrowError('/bin/mkdir', ['-p', args.outputDirectory]);
 
-  console.log('Downloading and validating project manifest...');
-  let manifest = await getManifestAsync(args.url, {
-    'Exponent-SDK-Version': args.sdkVersion,
-    'Exponent-Platform': 'ios',
-  });
+  console.log('Validating project manifest...');
   manifest = validateManifest(manifest);
 
   let tmpExponentDirectory = `${args.outputDirectory}/exponent-src-tmp`;
