@@ -12,7 +12,6 @@ if (process.env.NODE_ENV !== 'production') {
 export * as Analytics from './Analytics';
 export * as Android from './Android';
 export { default as Api } from './Api';
-export * as Banner from './Banner';
 export * as Binaries from './Binaries';
 export { default as Config } from './Config';
 export * as Credentials from './Credentials';
