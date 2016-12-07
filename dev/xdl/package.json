@@ -10,7 +10,6 @@
   ],
   "scripts": {
     "build": "gulp build",
-    "postinstall": "node scripts/postinstall.js",
     "test": "jest --config jest/unit-test-config.json",
     "integration-tests": "jest --config jest/integration-test-config.json --no-cache"
   },
