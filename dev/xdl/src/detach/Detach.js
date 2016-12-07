@@ -8,11 +8,11 @@ import {
   spawnAsync,
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
+  configureIOSIconsAsync,
 } from './ExponentTools';
 import {
   configureStandaloneIOSInfoPlistAsync,
   configureStandaloneIOSShellPlistAsync,
-  configureIOSIconsAsync,
 } from './IosShellApp';
 
 const EXPONENT_SRC_URL = 'https://github.com/exponentjs/exponent.git';
@@ -76,23 +76,23 @@ export async function detachIOSAsync(args) {
   });
   manifest = validateManifest(manifest);
 
-  console.log('Downloading Exponent kernel...');
   let tmpExponentDirectory = `${args.outputDirectory}/exponent-src-tmp`;
+  let exponentDirectory = `${args.outputDirectory}/exponent`;
+  let iosProjectDirectory = `${args.outputDirectory}/ios`;
+  let projectName = manifest.name;
+
+  console.log('Downloading Exponent kernel...');
   // TODO: Make this method work
   // await spawnAsync(`/usr/bin/curl -L ${EXPONENT_ARCHIVE_URL} | tar xzf -`, null, { shell: true });
   await spawnAsyncThrowError('/usr/bin/git', ['clone', EXPONENT_SRC_URL, tmpExponentDirectory]);
 
   console.log('Moving project files...');
-  let exponentDirectory = `${args.outputDirectory}/exponent`;
-  let iosProjectDirectory = `${args.outputDirectory}/ios`;
   await spawnAsyncThrowError('/bin/mkdir', ['-p', exponentDirectory]);
   await spawnAsync('/bin/cp', ['-r', `${tmpExponentDirectory}/ios`, `${exponentDirectory}/ios`]);
   await spawnAsync('/bin/cp', ['-r', `${tmpExponentDirectory}/cpp`, `${exponentDirectory}/cpp`]);
-  await spawnAsync('/bin/cp', [`${tmpExponentDirectory}/ExponentView.podspec`, `${exponentDirectory}/.`]);
   await spawnAsync('/bin/cp', ['-r', `${tmpExponentDirectory}/exponent-view-template/ios`, iosProjectDirectory]);
 
   console.log('Naming project...');
-  let projectName = manifest.name;
   await spawnAsyncThrowError('sed', [
     '-i', `''`, '--',
     `s/exponent-view-template/${projectName}/g`,
@@ -113,7 +113,7 @@ export async function detachIOSAsync(args) {
 
   console.log('Configuring project...');
   let infoPlistPath = `${iosProjectDirectory}/${projectName}/Supporting`;
-  let iconPath = `${iosProjectDirectory}/${projectName}/Images.xcassets/AppIcon.appiconset`;
+  let iconPath = `${iosProjectDirectory}/${projectName}/Assets.xcassets/AppIcon.appiconset`;
   await configureStandaloneIOSInfoPlistAsync(infoPlistPath, manifest);
   await configureStandaloneIOSShellPlistAsync(infoPlistPath, manifest, args.url);
   // TODO: logic for when kernel sdk version is different from detached sdk version
