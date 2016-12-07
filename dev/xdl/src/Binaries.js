@@ -80,7 +80,8 @@ async function _installBinaryAsync(name) {
   }
 
   try {
-    let result = await spawnAsync('ln', ['-s', path.join(_exponentBinaryDirectory(), name), path.join(INSTALL_PATH, name)]);
+    // adb lives at ~/.exponent/adb/adb
+    let result = await spawnAsync('ln', ['-s', path.join(_exponentBinaryDirectory(), name, name), path.join(INSTALL_PATH, name)]);
     return result.status === 0;
   } catch (e) {
     Logger.notifications.error({code: NotificationCode.INSTALL_SHELL_COMMANDS_RESULT}, `Error installing ${name}: ${e.message}`);
@@ -148,7 +149,7 @@ export async function addToPathAsync(name: string) {
     process.env.PATH = '';
   }
 
-  let binariesPath = getBinariesPath();
+  let binariesPath = path.join(getBinariesPath(), name);
   let delimiter = process.platform === 'win32' ? ';' : ':';
   process.env.PATH = `${process.env.PATH}${delimiter}${binariesPath}`;
 }
@@ -173,7 +174,15 @@ export async function sourceBashLoginScriptsAsync() {
   hasSourcedBashLoginScripts = true;
   let currentPath = process.env.PATH ? process.env.PATH : '';
 
-  if (_exponentRCFileExists()) {
+  let userSettingsPATH = await UserSettings.getAsync('PATH', null);
+
+  if (userSettingsPATH) {
+    if (currentPath.length > 0) {
+      currentPath = `${currentPath}:`;
+    }
+
+    currentPath = `${currentPath}${userSettingsPATH}`;
+  } else if (_exponentRCFileExists()) {
     try {
       // User has a ~/.exponent/bashrc. Run that and grab PATH.
       let result = await spawnAsync(path.join(getBinariesPath(), `get-path-bash`), {
