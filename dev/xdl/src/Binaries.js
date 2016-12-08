@@ -5,7 +5,6 @@
 import fs from 'fs';
 import hasbin from 'hasbin';
 import mkdirp from 'mkdirp';
-import ncp from 'ncp';
 import spawnAsync from '@exponent/spawn-async';
 import path from 'path';
 
@@ -16,24 +15,13 @@ import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
+import * as Utils from './Utils';
 
 let hasSourcedBashLoginScripts = false;
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
 const ERROR_MESSAGE = '\nPlease create a file at ~/.exponent/bashrc that exports your PATH.';
-
-export function ncpAsync(source: string, dest: string, options: any = {}) {
-  return new Promise((resolve, reject) => {
-    ncp(source, dest, options, (err) => {
-      if (err) {
-        reject();
-      } else {
-        resolve();
-      }
-    });
-  });
-}
 
 function _hasbinAsync(name) {
   return new Promise((resolve, reject) => {
@@ -94,7 +82,7 @@ async function _copyBinariesToExponentDirAsync() {
     throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
   }
 
-  await ncpAsync(OSX_SOURCE_PATH, _exponentBinaryDirectory());
+  await Utils.ncpAsync(OSX_SOURCE_PATH, _exponentBinaryDirectory());
 }
 
 export async function installXDECommandAsync() {

@@ -24,7 +24,9 @@ import * as ProjectUtils from '../project/ProjectUtils';
 import * as User from '../User';
 import Logger from '../Logger';
 import XDLError from '../XDLError';
+import * as Utils from '../Utils';
 
+import mkdirp from 'mkdirp';
 import fs from 'fs';
 import path from 'path';
 
@@ -116,24 +118,18 @@ export async function detachAsync(projectRoot) {
  *  @param args.outputDirectory directory to create the detached project.
  */
 export async function detachIOSAsync(args, manifest) {
+  if (process.platform === 'win32') {
+    return;
+  }
+
   args = validateArgs(args);
 
-  console.log('Validating output directory...');
-  await spawnAsyncThrowError('/bin/mkdir', ['-p', args.outputDirectory]);
-
   console.log('Validating project manifest...');
-  // TODO: remove this once @ben is ready
-  if (!manifest) {
-    manifest = await getManifestAsync(args.url, {
-      'Exponent-SDK-Version': args.sdkVersion,
-      'Exponent-Platform': 'ios',
-    });
-  }
   manifest = validateManifest(manifest);
 
-  let tmpExponentDirectory = `${args.outputDirectory}/exponent-src-tmp`;
-  let exponentDirectory = `${args.outputDirectory}/exponent`;
-  let iosProjectDirectory = `${args.outputDirectory}/ios`;
+  let tmpExponentDirectory = path.join(args.outputDirectory, 'exponent-src-tmp');
+  let exponentDirectory = path.join(args.outputDirectory, 'exponent');
+  let iosProjectDirectory = path.join(args.outputDirectory, 'ios');
   let projectNameLabel = manifest.name;
   let projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
 
@@ -143,10 +139,10 @@ export async function detachIOSAsync(args, manifest) {
   await spawnAsyncThrowError('/usr/bin/git', ['clone', EXPONENT_SRC_URL, tmpExponentDirectory]);
 
   console.log('Moving project files...');
-  await spawnAsyncThrowError('/bin/mkdir', ['-p', exponentDirectory]);
-  await spawnAsync('/bin/cp', ['-r', `${tmpExponentDirectory}/ios`, `${exponentDirectory}/ios`]);
-  await spawnAsync('/bin/cp', ['-r', `${tmpExponentDirectory}/cpp`, `${exponentDirectory}/cpp`]);
-  await spawnAsync('/bin/cp', ['-r', `${tmpExponentDirectory}/exponent-view-template/ios`, iosProjectDirectory]);
+  mkdirp.sync(exponentDirectory);
+  await Utils.ncpAsync(path.join(tmpExponentDirectory, 'ios'), `${exponentDirectory}/ios`);
+  await Utils.ncpAsync(path.join(tmpExponentDirectory, 'cpp'), `${exponentDirectory}/cpp`);
+  await Utils.ncpAsync(path.join(tmpExponentDirectory, 'exponent-view-template', 'ios'), iosProjectDirectory);
 
   console.log('Naming project...');
   await spawnAsyncThrowError('sed', [
