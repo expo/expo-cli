@@ -169,10 +169,12 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
     path.join(exponentDirectory, 'ExponentView.podspec')
   );
   await renderPodfileAsync(
-    projectName,
-    '../exponent',
     path.join(tmpExponentDirectory, 'template-files', 'ios', 'ExponentView-Podfile'),
-    path.join(iosProjectDirectory, 'Podfile')
+    path.join(iosProjectDirectory, 'Podfile'),
+    {
+      TARGET_NAME: projectName,
+      EXPONENT_ROOT_PATH: '../exponent',
+    }
   );
 
   console.log('Cleaning up iOS...');

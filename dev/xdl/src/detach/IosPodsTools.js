@@ -3,30 +3,47 @@
 'use strict';
 
 import fs from 'fs';
+import glob from 'glob';
 import 'instapromise';
+import path from 'path';
 import * as Versions from '../Versions';
 
 /**
- *  @param targetName name of main iOS project build target
- *  @param exponentRelativePath path from Podfile to `exponent` root directory
  *  @param pathToTemplate path to template Podfile
  *  @param pathToOutput path to render final Podfile
+ *  @param moreSubstitutions dictionary of additional substitution keys and values to replace
+ *         in the template, such as: TARGET_NAME, EXPONENT_ROOT_PATH, REACT_NATIVE_PATH
  */
-async function renderPodfileAsync(targetName, exponentRelativePath, pathToTemplate, pathToOutput) {
-  // TODO: make this work on the main iOS client repo as well
+async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
+  if (!moreSubstitutions) {
+    moreSubstitutions = {};
+  }
+  let templatesDirectory = path.dirname(pathToTemplate);
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
   let newestVersion = await Versions.newestSdkVersionAsync();
 
-  let substitutions = {
-    TARGET_NAME: targetName,
-    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency({
+  let reactNativePath = moreSubstitutions.REACT_NATIVE_PATH;
+  let rnDependencyOptions;
+  if (reactNativePath) {
+    rnDependencyOptions = { reactNativePath };
+  } else {
+    rnDependencyOptions = {
       isRemote: true,
       remoteTag: newestVersion.exponentReactNativeTag,
-    }),
-    EXPONENT_ROOT_PATH: exponentRelativePath,
+    };
+  }
+
+  let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(templatesDirectory);
+  let versionedPostinstalls = await renderVersionedReactNativePostinstallsAsync(templatesDirectory);
+
+  let substitutions = {
+    EXPONENT_CLIENT_DEPS: renderPodDependencies({ isPodfile: true }),
+    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(rnDependencyOptions),
     PODFILE_UNVERSIONED_POSTINSTALL: renderUnversionedPostinstall(),
-    PODFILE_VERSIONED_RN_DEPENDENCIES: '',
-    PODFILE_VERSIONED_POSTINSTALLS: '',
+    PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
+    PODFILE_VERSIONED_POSTINSTALLS: versionedPostinstalls,
+    PODFILE_TEST_TARGET: renderPodfileTestTarget(reactNativePath),
+    ...moreSubstitutions,
   };
 
   let result = templateString;
@@ -41,7 +58,6 @@ async function renderPodfileAsync(targetName, exponentRelativePath, pathToTempla
 }
 
 async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput) {
-  // TODO: make generate-dynamic-macros put ExponentView.podspec back under exponent (and gitignore)
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
   let dependencies = renderPodDependencies({ isPodfile: false });
   let result = templateString.replace(/\$\{IOS_EXPONENT_VIEW_DEPS\}/g, dependencies);
@@ -50,39 +66,65 @@ async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput) {
 }
 
 function renderUnversionedReactNativeDependency(options) {
-  // TODO: extend this to work with iOS client and rn-lab
+  let attributes;
   if (options.isRemote && options.remoteTag) {
-    return `
-  pod 'React',
-      :git => 'https://github.com/exponentjs/react-native.git',
-      :tag => '${options.remoteTag}',
-      :subspecs => [
-        'Core',
-        'ART',
-        'RCTActionSheet',
-        'RCTAnimation',
-        'RCTCameraRoll',
-        'RCTGeolocation',
-        'RCTImage',
-        'RCTNetwork',
-        'RCTText',
-        'RCTVibration',
-        'RCTWebSocket',
-      ]
-`;
+    attributes = {
+      git: 'https://github.com/exponentjs/react-native.git',
+      tag: options.remoteTag,
+    };
+  } else if (options.reactNativePath) {
+    attributes = {
+      path: options.reactNativePath,
+    };
   } else {
     throw new Error(`Unsupported options for RN dependency: ${options}`);
   }
+  let attributesStrings = [];
+  for (let key in attributes) {
+    if (attributes.hasOwnProperty(key)) {
+      attributesStrings.push(`    :${key} => '${attributes[key]}',\n`);
+    }
+  }
+  attributes = attributesStrings.join('');
+  return `
+  pod 'React',
+${attributes}
+    :subspecs => [
+      'Core',
+      'ART',
+      'RCTActionSheet',
+      'RCTAnimation',
+      'RCTCameraRoll',
+      'RCTGeolocation',
+      'RCTImage',
+      'RCTNetwork',
+      'RCTText',
+      'RCTVibration',
+      'RCTWebSocket',
+    ]
+`;
 }
 
-function renderVersionedReactNativeDependency(version, parentDirectory) {
-  // TODO: create template-files/ios/versioned-react-native/<VERSION>-dependency.template
-  // and have the versioning script write/remove that file.
+async function renderVersionedReactNativeDependenciesAsync(templatesDirectory) {
+  // TODO: write these files with versioning script
+  return concatTemplateFilesInDirectoryAsync(path.join(templatesDirectory, 'versioned-react-native', 'dependencies'));
 }
 
-function renderVersionedReactNativePostinstall(version) {
-  // TODO: create template-files/ios/versioned-react-native/<VERSION>-postinstall.template
-  // and have the versioning script write/remove that file.
+async function renderVersionedReactNativePostinstallsAsync(templatesDirectory) {
+  // TODO: write these files with versioning script
+  return concatTemplateFilesInDirectoryAsync(path.join(templatesDirectory, 'versioned-react-native', 'postinstalls'));
+}
+
+async function concatTemplateFilesInDirectoryAsync(directory) {
+  let templateFilenames = await glob.promise(path.join(directory, '*.rb'));
+  let templateStrings = [];
+  await Promise.all(templateFilenames.map(async (filename) => {
+    let templateString = await fs.promise.readFile(filename, 'utf8');
+    if (templateString) {
+      templateStrings.push(templateString);
+    }
+  }));
+  return templateStrings.join('\n');
 }
 
 function renderUnversionedPostinstall() {
@@ -93,6 +135,16 @@ function renderUnversionedPostinstall() {
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_DEV=1'
     end
+`;
+}
+
+function renderPodfileTestTarget(reactNativePath) {
+  return `
+  # if you run into problems pre-downloading this, rm Pods/Local\ Podspecs/RCTTest.podspec.json
+  target 'ExponentIntegrationTests' do
+    inherit! :search_paths
+    pod 'RCTTest', :podspec => './RCTTest.podspec', :path => '${reactNativePath}'
+  end
 `;
 }
 
@@ -119,19 +171,3 @@ export {
   renderExponentViewPodspecAsync,
   renderPodfileAsync,
 };
-
-/*
-
-main exponent podfile:
-
-(beginning cruft)
-- pods
-- exponentcpp
-- unversioned react rn-lab
-- versioned reacts (in subdirectories)
-- versioned postinstalls
-- unversioned postinstall
-- rcttest
-(end)
-
-*/
