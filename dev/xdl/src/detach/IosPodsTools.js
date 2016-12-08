@@ -4,14 +4,19 @@
 
 import fs from 'fs';
 import 'instapromise';
+import * as Versions from '../Versions';
 
 async function renderPodfileAsync(targetName, pathToTemplate, pathToOutput) {
   // TODO: make this work on the main iOS client repo as well
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
+  let newestVersion = await Versions.newestSdkVersionAsync();
 
   let substitutions = {
     TARGET_NAME: targetName,
-    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency({ isRemote: true, remoteSdkVersion: '12.0.0' }),
+    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency({
+      isRemote: true,
+      remoteTag: newestVersion.exponentReactNativeTag,
+    }),
     PODFILE_UNVERSIONED_POSTINSTALL: renderUnversionedPostinstall(),
     PODFILE_VERSIONED_RN_DEPENDENCIES: '',
     PODFILE_VERSIONED_POSTINSTALLS: '',
@@ -39,12 +44,11 @@ async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput) {
 
 function renderUnversionedReactNativeDependency(options) {
   // TODO: extend this to work with iOS client and rn-lab
-  if (options.isRemote && options.remoteSdkVersion) {
-    let remoteTag = `sdk-${options.remoteSdkVersion}`;
+  if (options.isRemote && options.remoteTag) {
     return `
   pod 'React',
       :git => 'https://github.com/exponentjs/react-native.git',
-      :tag => '${remoteTag}',
+      :tag => '${options.remoteTag}',
       :subspecs => [
         'Core',
         'ART',

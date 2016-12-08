@@ -33,6 +33,20 @@ export function parseSdkVersionFromTag(tag: string) {
   return tag;
 }
 
+export async function newestSdkVersionAsync() {
+  let sdkVersions = await Api.sdkVersionsAsync();
+  let result;
+  let highestMajorVersion = '0.0.0';
+  _.forEach(sdkVersions, (value, key) => {
+    if (semver.major(key) > semver.major(highestMajorVersion)) {
+      highestMajorVersion = key;
+      result = value;
+    }
+  });
+  result.version = highestMajorVersion;
+  return result;
+}
+
 export async function facebookReactNativeVersionsAsync(): Promise<Array<string>> {
   let sdkVersions = await Api.sdkVersionsAsync();
   let facebookReactNativeVersions = new Set();
