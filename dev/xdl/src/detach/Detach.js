@@ -3,6 +3,7 @@
 'use strict';
 
 import {
+  getManifestAsync,
   spawnAsyncThrowError,
   spawnAsync,
   modifyIOSPropertyListAsync,
@@ -117,6 +118,13 @@ export async function detachIOSAsync(args, manifest) {
   await spawnAsyncThrowError('/bin/mkdir', ['-p', args.outputDirectory]);
 
   console.log('Validating project manifest...');
+  // TODO: remove this once @ben is ready
+  if (!manifest) {
+    manifest = await getManifestAsync(args.url, {
+      'Exponent-SDK-Version': args.sdkVersion,
+      'Exponent-Platform': 'ios',
+    });
+  }
   manifest = validateManifest(manifest);
 
   let tmpExponentDirectory = `${args.outputDirectory}/exponent-src-tmp`;
