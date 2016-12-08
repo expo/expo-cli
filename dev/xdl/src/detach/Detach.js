@@ -101,8 +101,14 @@ export async function detachAsync(projectRoot) {
   // await spawnAsync(`/usr/bin/curl -L ${EXPONENT_ARCHIVE_URL} | tar xzf -`, null, { shell: true });
   await spawnAsyncThrowError('/usr/bin/git', ['clone', EXPONENT_SRC_URL, tmpExponentDirectory]);
 
+  let exponentDirectory = path.join(projectRoot, 'exponent');
+  mkdirp.sync(exponentDirectory);
+
   // iOS
-  await detachIOSAsync(projectRoot, tmpExponentDirectory, exp.sdkVersion, experienceUrl, exp);
+  await detachIOSAsync(projectRoot, tmpExponentDirectory, exponentDirectory, exp.sdkVersion, experienceUrl, exp);
+
+  // Android
+  await detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDirectory, exp.sdkVersion, experienceUrl, exp);
 
   // Clean up
   console.log('Cleaning up...');
@@ -114,18 +120,16 @@ export async function detachAsync(projectRoot) {
  *  @param args.url url of the Exponent project.
  *  @param args.outputDirectory directory to create the detached project.
  */
-export async function detachIOSAsync(projectRoot, tmpExponentDirectory, sdkVersion, experienceUrl, manifest) {
+export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponentDirectory, sdkVersion, experienceUrl, manifest) {
   if (process.platform === 'win32') {
     return;
   }
 
-  let exponentDirectory = path.join(projectRoot, 'exponent');
   let iosProjectDirectory = path.join(projectRoot, 'ios');
   let projectNameLabel = manifest.name;
   let projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
 
   console.log('Moving iOS project files...');
-  mkdirp.sync(exponentDirectory);
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'ios'), `${exponentDirectory}/ios`);
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'cpp'), `${exponentDirectory}/cpp`);
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'exponent-view-template', 'ios'), iosProjectDirectory);
@@ -175,4 +179,11 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, sdkVersi
   await cleanPropertyListBackupsAsync(infoPlistPath);
 
   return;
+}
+
+async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDirectory, sdkVersion, experienceUrl, manifest) {
+  let androidProjectDirectory = path.join(projectRoot, 'android');
+
+  await Utils.ncpAsync(path.join(tmpExponentDirectory, 'android', 'maven'), path.join(exponentDirectory, 'maven'));
+  await Utils.ncpAsync(path.join(tmpExponentDirectory, 'exponent-view-template', 'android'), androidProjectDirectory);
 }
