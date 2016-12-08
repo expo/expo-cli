@@ -160,8 +160,16 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, sdkVersi
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
   console.log('Configuring dependencies...');
-  await renderExponentViewPodspecAsync(`${tmpExponentDirectory}/template-files/ios/ExponentView.podspec`, `${exponentDirectory}/ExponentView.podspec`);
-  await renderPodfileAsync(projectName, `${tmpExponentDirectory}/template-files/ios/ExponentView-Podfile`, `${iosProjectDirectory}/Podfile`);
+  await renderExponentViewPodspecAsync(
+    path.join(tmpExponentDirectory, 'template-files', 'ios', 'ExponentView.podspec'),
+    path.join(exponentDirectory, 'ExponentView.podspec')
+  );
+  await renderPodfileAsync(
+    projectName,
+    '../exponent',
+    path.join(tmpExponentDirectory, 'template-files', 'ios', 'ExponentView-Podfile'),
+    path.join(iosProjectDirectory, 'Podfile')
+  );
 
   console.log('Cleaning up iOS...');
   await cleanPropertyListBackupsAsync(infoPlistPath);

@@ -6,7 +6,13 @@ import fs from 'fs';
 import 'instapromise';
 import * as Versions from '../Versions';
 
-async function renderPodfileAsync(targetName, pathToTemplate, pathToOutput) {
+/**
+ *  @param targetName name of main iOS project build target
+ *  @param exponentRelativePath path from Podfile to `exponent` root directory
+ *  @param pathToTemplate path to template Podfile
+ *  @param pathToOutput path to render final Podfile
+ */
+async function renderPodfileAsync(targetName, exponentRelativePath, pathToTemplate, pathToOutput) {
   // TODO: make this work on the main iOS client repo as well
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
   let newestVersion = await Versions.newestSdkVersionAsync();
@@ -17,6 +23,7 @@ async function renderPodfileAsync(targetName, pathToTemplate, pathToOutput) {
       isRemote: true,
       remoteTag: newestVersion.exponentReactNativeTag,
     }),
+    EXPONENT_ROOT_PATH: exponentRelativePath,
     PODFILE_UNVERSIONED_POSTINSTALL: renderUnversionedPostinstall(),
     PODFILE_VERSIONED_RN_DEPENDENCIES: '',
     PODFILE_VERSIONED_POSTINSTALLS: '',

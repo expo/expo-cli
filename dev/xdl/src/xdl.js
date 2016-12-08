@@ -24,6 +24,7 @@ export { default as ErrorCode } from './ErrorCode';
 export * as Exp from './Exp';
 export * as FileSystem from './FileSystem';
 export * as Intercom from './Intercom';
+export * as IosPodsTools from './detach/IosPodsTools';
 export * as IosShellApp from './detach/IosShellApp';
 export { default as Logger } from './Logger';
 export { default as NotificationCode } from './NotificationCode';
