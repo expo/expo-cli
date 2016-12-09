@@ -45,6 +45,7 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
     EXPONENT_CLIENT_DEPS: podDependencies,
     PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(rnDependencyOptions),
     PODFILE_UNVERSIONED_POSTINSTALL: renderUnversionedPostinstall(),
+    PODFILE_DETACHED_POSTINSTALL: renderDetachedPostinstall(),
     PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
     PODFILE_VERSIONED_POSTINSTALLS: versionedPostinstalls,
     PODFILE_TEST_TARGET: renderPodfileTestTarget(reactNativePath),
@@ -134,6 +135,17 @@ async function concatTemplateFilesInDirectoryAsync(directory) {
     }
   }));
   return templateStrings.join('\n');
+}
+
+function renderDetachedPostinstall() {
+  return `
+    if target.pod_name == 'ExponentView'
+      target.native_target.build_configurations.each do |config|
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'
+      end
+    end
+`;
 }
 
 function renderUnversionedPostinstall() {
