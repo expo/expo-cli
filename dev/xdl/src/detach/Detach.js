@@ -261,6 +261,10 @@ async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDir
   let androidManifest = path.join(androidProjectDirectory, 'app', 'src', 'main', 'AndroidManifest.xml');
   await regexFileAsync(androidManifest, 'PLACEHOLDER_DETACH_SCHEME', manifest.detachedScheme);
 
+  // Fix MainActivity
+  let mainActivity = path.join(androidProjectDirectory, 'app', 'src', 'main', 'java', 'detach', 'app', 'template', 'pkg', 'name', 'MainActivity.java');
+  await regexFileAsync(mainActivity, 'TEMPLATE_INITIAL_URL', experienceUrl);
+
   // Fix package name
   let packageName = manifest.android.package;
   await renamePackageAsync(path.join(androidProjectDirectory, 'app', 'src', 'main', 'java'), ANDROID_TEMPLATE_PKG, packageName);
