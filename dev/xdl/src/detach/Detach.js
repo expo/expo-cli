@@ -105,6 +105,7 @@ export async function detachAsync(projectRoot) {
   exp.isDetached = true;
   let detachedUUID = uuid.v4().replace(/-/g, '');
   exp.detachedScheme = `exp${detachedUUID}`;
+  await fs.promise.writeFile(path.join(projectRoot, 'exp.json'), JSON.stringify(exp, null, 2));
 
   // Download exponent repo
   console.log('Downloading Exponent kernel...');
@@ -125,6 +126,14 @@ export async function detachAsync(projectRoot) {
   // Clean up
   console.log('Cleaning up...');
   await spawnAsync('/bin/rm', ['-rf', tmpExponentDirectory]);
+
+  // These files cause @providesModule naming collisions
+  let rnFilesToDelete = await glob.promise(path.join(exponentDirectory, 'ios', 'versioned-react-native') + '/**/*.@(js|json)');
+  if (rnFilesToDelete) {
+    for (let i = 0; i < rnFilesToDelete.length; i++) {
+      await fs.promise.unlink(rnFilesToDelete[i]);
+    }
+  }
 }
 
 /**

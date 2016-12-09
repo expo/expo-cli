@@ -12,6 +12,7 @@ import url from 'url';
 import ErrorCode from './ErrorCode';
 import * as Exp from './Exp';
 import * as ProjectSettings from './ProjectSettings';
+import * as ProjectUtils from './project/ProjectUtils';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 
@@ -108,11 +109,18 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
 
-  let protocol = 'exp';
+  let protocol;
   if (opts.urlType === 'http') {
     protocol = 'http';
   } else if (opts.urlType === 'no-protocol') {
     protocol = null;
+  } else {
+    protocol = 'exp';
+
+    let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+    if (exp.detachedScheme) {
+      protocol = exp.detachedScheme;
+    }
   }
 
   let hostname;
