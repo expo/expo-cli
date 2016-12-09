@@ -5,6 +5,7 @@
 import fs from 'fs';
 import glob from 'glob';
 import 'instapromise';
+import JsonFile from '@exponent/json-file';
 import path from 'path';
 import * as Versions from '../Versions';
 
@@ -35,9 +36,13 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
 
   let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(templatesDirectory);
   let versionedPostinstalls = await renderVersionedReactNativePostinstallsAsync(templatesDirectory);
+  let podDependencies = await renderPodDependenciesAsync(
+    path.join(templatesDirectory, 'dependencies.json'),
+    { isPodfile: true }
+  );
 
   let substitutions = {
-    EXPONENT_CLIENT_DEPS: renderPodDependencies({ isPodfile: true }),
+    EXPONENT_CLIENT_DEPS: podDependencies,
     PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(rnDependencyOptions),
     PODFILE_UNVERSIONED_POSTINSTALL: renderUnversionedPostinstall(),
     PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
@@ -58,8 +63,12 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
 }
 
 async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput) {
+  let templatesDirectory = path.dirname(pathToTemplate);
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
-  let dependencies = renderPodDependencies({ isPodfile: false });
+  let dependencies = await renderPodDependenciesAsync(
+    path.join(templatesDirectory, 'dependencies.json'),
+    { isPodfile: false }
+  );
   let result = templateString.replace(/\$\{IOS_EXPONENT_VIEW_DEPS\}/g, dependencies);
   
   await fs.promise.writeFile(pathToOutput, result);
@@ -148,20 +157,8 @@ function renderPodfileTestTarget(reactNativePath) {
 `;
 }
 
-function renderPodDependencies(options) {
-  let dependencies = [
-    { name: 'AppAuth', version: '~> 0.4' },
-    { name: 'CocoaLumberjack', version: '~> 2.3' },
-    { name: 'Crashlytics', version: '~> 3.8' },
-    { name: 'Fabric', version: '~> 1.6' },
-    { name: 'Google/SignIn', version: '~> 3.0' },
-    { name: 'Amplitude-iOS', version: '~> 3.8' },
-    { name: 'FBSDKCoreKit', version: '~> 4.15' },
-    { name: 'FBSDKLoginKit', version: '~> 4.15' },
-    { name: 'FBSDKShareKit', version: '~> 4.15' },
-    { name: 'Analytics', version: '~> 3.5' },
-  ];
-
+async function renderPodDependenciesAsync(dependenciesConfigPath, options) {
+  let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
   let type = (options.isPodfile) ? 'pod' : 's.dependency';
   let depsStrings = dependencies.map((dependency) => `  ${type} '${dependency.name}', '${dependency.version}'`);
   return depsStrings.join('\n');
