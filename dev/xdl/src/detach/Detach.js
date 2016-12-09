@@ -5,7 +5,7 @@
 import 'instapromise';
 
 import {
-  getManifestAsync,
+  saveUrlToPathAsync,
   spawnAsyncThrowError,
   spawnAsync,
   modifyIOSPropertyListAsync,
@@ -244,15 +244,28 @@ async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDir
   await renamePackageAsync(path.join(androidProjectDirectory, 'app', 'src', 'test', 'java'), ANDROID_TEMPLATE_PKG, packageName);
   await renamePackageAsync(path.join(androidProjectDirectory, 'app', 'src', 'androidTest', 'java'), ANDROID_TEMPLATE_PKG, packageName);
 
-  let matches = await glob.promise(androidProjectDirectory + '/**/*.@(java|gradle|xml)');
-  if (matches) {
+  let packageNameMatches = await glob.promise(androidProjectDirectory + '/**/*.@(java|gradle|xml)');
+  if (packageNameMatches) {
     let oldPkgRegex = new RegExp(`${ANDROID_TEMPLATE_PKG.replace(/\./g, '\\\.')}`, 'g');
-    for (let i = 0; i < matches.length; i++) {
-      regexFileAsync(path.resolve(androidProjectDirectory, matches[i]), oldPkgRegex, packageName);
+    for (let i = 0; i < packageNameMatches.length; i++) {
+      await regexFileAsync(packageNameMatches[i], oldPkgRegex, packageName);
     }
   }
 
   // Fix app name
+  let appName = manifest.name;
+  await regexFileAsync(path.resolve(androidProjectDirectory, 'app', 'src', 'main', 'res', 'values', 'strings.xml'), ANDROID_TEMPLATE_NAME, appName);
 
   // Fix image
+  let iconUrl = manifest.iconUrl;
+  if (iconUrl) {
+    let iconMatches = await glob.promise(path.join(androidProjectDirectory, 'app', 'src', 'main', 'res') + '/**/ic_launcher.png');
+    if (iconMatches) {
+      for (let i = 0; i < iconMatches.length; i++) {
+        await fs.promise.unlink(iconMatches[i]);
+        // TODO: make more efficient
+        await saveUrlToPathAsync(iconUrl, iconMatches[i]);
+      }
+    }
+  }
 }
