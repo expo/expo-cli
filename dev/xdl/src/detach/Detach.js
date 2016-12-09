@@ -33,6 +33,7 @@ import fs from 'fs';
 import path from 'path';
 import rimraf from 'rimraf';
 import glob from 'glob';
+import uuid from 'node-uuid';
 
 const EXPONENT_SRC_URL = 'https://github.com/exponentjs/exponent.git';
 const EXPONENT_ARCHIVE_URL = 'https://api.github.com/repos/exponentjs/exponent/tarball/master';
@@ -100,10 +101,14 @@ export async function detachAsync(projectRoot) {
     throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `Error detaching. Please remove ${badDirectories.join(', ')} director${badDirectories.length === 1 ? 'y' : 'ies'} first. Are you sure you aren't already detached?`);
   }
 
-  let tmpExponentDirectory = path.join(projectRoot, 'exponent-src-tmp');
+  // Modify exp.json
+  exp.isDetached = true;
+  let detachedUUID = uuid.v4().replace(/-/g, '');
+  exp.detachedScheme = `exp${detachedUUID}`;
 
   // Download exponent repo
   console.log('Downloading Exponent kernel...');
+  let tmpExponentDirectory = path.join(projectRoot, 'exponent-src-tmp');
   // TODO: Make this method work
   // await spawnAsync(`/usr/bin/curl -L ${EXPONENT_ARCHIVE_URL} | tar xzf -`, null, { shell: true });
   await spawnAsyncThrowError('/usr/bin/git', ['clone', EXPONENT_SRC_URL, tmpExponentDirectory]);
@@ -237,6 +242,10 @@ async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDir
   await regexFileAsync(appBuildGradle, '/* UNCOMMENT WHEN DISTRIBUTING', '');
   await regexFileAsync(appBuildGradle, 'END UNCOMMENT WHEN DISTRIBUTING */', '');
   await regexFileAsync(appBuildGradle, `compile project(':exponentview')`, '');
+
+  // Fix AndroidManifest
+  let androidManifest = path.join(androidProjectDirectory, 'app', 'src', 'main', 'AndroidManifest.xml');
+  await regexFileAsync(androidManifest, 'PLACEHOLDER_DETACH_SCHEME', manifest.detachedScheme);
 
   // Fix package name
   let packageName = manifest.android.package;
