@@ -2,6 +2,8 @@
 
 'use strict';
 
+import 'instapromise';
+
 import {
   getManifestAsync,
   spawnAsyncThrowError,
@@ -29,10 +31,15 @@ import * as Utils from '../Utils';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 import path from 'path';
+import rimraf from 'rimraf';
+import glob from 'glob';
 
 const EXPONENT_SRC_URL = 'https://github.com/exponentjs/exponent.git';
 const EXPONENT_ARCHIVE_URL = 'https://api.github.com/repos/exponentjs/exponent/tarball/master';
 const DETACH_DIRECTORIES = ['exponent', 'ios', 'android'];
+const ANDROID_TEMPLATE_PKG = 'detach.app.template.pkg.name';
+const ANDROID_TEMPLATE_COMPANY = 'detach.app.template.company.domain';
+const ANDROID_TEMPLATE_NAME = 'DetachAppTemplate';
 
 function validateManifest(manifest) {
   if (!manifest.name) {
@@ -183,9 +190,69 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   return;
 }
 
+async function regexFileAsync(filename, regex, replace) {
+  let file = await fs.promise.readFile(filename);
+  let fileString = file.toString();
+  await fs.promise.writeFile(filename, fileString.replace(regex, replace));
+}
+
+async function renamePackageAsync(directory, originalPkg, destPkg) {
+  let originalSplitPackage = originalPkg.split('.');
+  let originalDeepDirectory = directory;
+  for (let i = 0; i < originalSplitPackage.length; i++) {
+    originalDeepDirectory = path.join(originalDeepDirectory, originalSplitPackage[i]);
+  }
+
+  // copy files into temp directory
+  let tmpDirectory = path.join(directory, 'tmp-exponent-directory');
+  mkdirp.sync(tmpDirectory);
+  await Utils.ncpAsync(originalDeepDirectory, tmpDirectory);
+
+  // delete old package
+  rimraf.sync(path.join(directory, originalSplitPackage[0]));
+
+  // make new package
+  let newSplitPackage = destPkg.split('.');
+  let newDeepDirectory = directory;
+  for (let i = 0; i < newSplitPackage.length; i++) {
+    newDeepDirectory = path.join(newDeepDirectory, newSplitPackage[i]);
+    mkdirp.sync(newDeepDirectory);
+  }
+
+  // copy from temp to new package
+  await Utils.ncpAsync(tmpDirectory, newDeepDirectory);
+
+  // delete temp
+  rimraf.sync(tmpDirectory);
+}
+
 async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDirectory, sdkVersion, experienceUrl, manifest) {
   let androidProjectDirectory = path.join(projectRoot, 'android');
 
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'android', 'maven'), path.join(exponentDirectory, 'maven'));
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'exponent-view-template', 'android'), androidProjectDirectory);
+
+  // Fix up app/build.gradle
+  let appBuildGradle = path.join(androidProjectDirectory, 'app', 'build.gradle');
+  await regexFileAsync(appBuildGradle, '/* UNCOMMENT WHEN DISTRIBUTING', '');
+  await regexFileAsync(appBuildGradle, 'END UNCOMMENT WHEN DISTRIBUTING */', '');
+  await regexFileAsync(appBuildGradle, `compile project(':exponentview')`, '');
+
+  // Fix package name
+  let packageName = manifest.android.package;
+  await renamePackageAsync(path.join(androidProjectDirectory, 'app', 'src', 'main', 'java'), ANDROID_TEMPLATE_PKG, packageName);
+  await renamePackageAsync(path.join(androidProjectDirectory, 'app', 'src', 'test', 'java'), ANDROID_TEMPLATE_PKG, packageName);
+  await renamePackageAsync(path.join(androidProjectDirectory, 'app', 'src', 'androidTest', 'java'), ANDROID_TEMPLATE_PKG, packageName);
+
+  let matches = await glob.promise(androidProjectDirectory + '/**/*.@(java|gradle|xml)');
+  if (matches) {
+    let oldPkgRegex = new RegExp(`${ANDROID_TEMPLATE_PKG.replace(/\./g, '\\\.')}`, 'g');
+    for (let i = 0; i < matches.length; i++) {
+      regexFileAsync(path.resolve(androidProjectDirectory, matches[i]), oldPkgRegex, packageName);
+    }
+  }
+
+  // Fix app name
+
+  // Fix image
 }
