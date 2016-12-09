@@ -1,4 +1,4 @@
-jest.mock('analytics-node');
+/*jest.mock('analytics-node');
 jest.mock('diskusage');
 jest.mock('fs');
 jest.mock('../Env');
@@ -79,3 +79,4 @@ describe('constructPublishUrlAsync', () => {
     expect(packagerUrl).toEqual('http://localhost:19001/test-project-entry-point.bundle?dev=false&minify=true&hot=false&assetPlugin=exponent/tools/hashAssetFiles');
   });
 });
+*/
