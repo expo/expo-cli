@@ -60,6 +60,21 @@ async function configureDetachedVersionsPlistAsync(configFilePath, detachedSDKVe
   });
 }
 
+async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
+  await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
+    // add detached scheme
+    if (manifest.isDetached && manifest.detachedScheme) {
+      if (!config.CFBundleURLTypes) {
+        config.CFBundleURLTypes = [{
+          CFBundleURLSchemes: [],
+        }];
+      }
+      config.CFBundleURLTypes[0].CFBundleURLSchemes.push(manifest.detachedScheme);
+    }
+    return config;
+  });
+}
+
 async function cleanPropertyListBackupsAsync(configFilePath) {
   console.log('Cleaning up plist...');
   await cleanIOSPropertyListBackupAsync(configFilePath, 'EXShell', false);
@@ -187,6 +202,7 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   let infoPlistPath = `${iosProjectDirectory}/${projectName}/Supporting`;
   let iconPath = `${iosProjectDirectory}/${projectName}/Assets.xcassets/AppIcon.appiconset`;
   await configureStandaloneIOSInfoPlistAsync(infoPlistPath, manifest);
+  await configureDetachedIOSInfoPlistAsync(infoPlistPath, manifest);
   await configureStandaloneIOSShellPlistAsync(infoPlistPath, manifest, experienceUrl);
   // TODO: logic for when kernel sdk version is different from detached sdk version
   await configureDetachedVersionsPlistAsync(infoPlistPath, sdkVersion, sdkVersion);

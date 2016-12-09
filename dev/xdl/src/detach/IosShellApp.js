@@ -51,7 +51,7 @@ async function configureShellAppSecretsAsync(args, iosDir) {
  * @param configFilePath Path to Info.plist
  * @param manifest the app's manifest
  * @param privateConfig optional config with the app's private keys
- * @param optional bundle id if the manifest doesn't contain one already
+ * @param bundleIdentifier optional bundle id if the manifest doesn't contain one already
  */
 async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, privateConfig = null, bundleIdentifier = null) {
   await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
