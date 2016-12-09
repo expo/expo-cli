@@ -153,6 +153,11 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
     `${iosProjectDirectory}/exponent-view-template.xcodeproj/project.pbxproj`,
   ]);
   await spawnAsyncThrowError('sed', [
+    '-i', `''`, '--',
+    `s/exponent-view-template/${projectName}/g`,
+    `${iosProjectDirectory}/exponent-view-template.xcworkspace/contents.xcworkspacedata`,
+  ]);
+  await spawnAsyncThrowError('sed', [
     '-i', `''`,
     `s/exponent-view-template/${projectName}/g`,
     `${iosProjectDirectory}/exponent-view-template.xcodeproj/xcshareddata/xcschemes/exponent-view-template.xcscheme`,
