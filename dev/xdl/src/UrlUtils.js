@@ -140,12 +140,15 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
   } else {
     let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.exponentServerNgrokUrl;
     if (!ngrokUrl) {
-      throw new Error("Can't get tunnel URL because ngrok not started yet");
+      // use localhost
+      hostname = 'localhost';
+      port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
+      ProjectUtils.logError(projectRoot, 'exponent', `Can't get tunnel URL because ngrok not started yet. Switching to localhost.`);
+    } else {
+      let pnu = url.parse(ngrokUrl);
+      hostname = pnu.hostname;
+      port = pnu.port;
     }
-
-    let pnu = url.parse(ngrokUrl);
-    hostname = pnu.hostname;
-    port = pnu.port;
   }
 
   let url_ = '';

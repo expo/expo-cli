@@ -856,7 +856,11 @@ export async function startAsync(projectRoot: string, options: Object = {}): Pro
 
   await startExponentServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options);
-  await startTunnelsAsync(projectRoot);
+  try {
+    await startTunnelsAsync(projectRoot);
+  } catch (e) {
+    ProjectUtils.logDebug(projectRoot, 'exponent', `Error starting ngrok ${e.message}`);
+  }
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   return exp;
@@ -865,5 +869,9 @@ export async function startAsync(projectRoot: string, options: Object = {}): Pro
 export async function stopAsync(projectRoot: string): Promise<void> {
   await stopTunnelsAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
-  await stopExponentServerAsync(projectRoot);
+  try {
+    await stopExponentServerAsync(projectRoot);
+  } catch (e) {
+    ProjectUtils.logDebug(projectRoot, 'exponent', `Error stopping ngrok ${e.message}`);
+  }
 }
