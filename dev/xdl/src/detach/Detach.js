@@ -316,3 +316,26 @@ async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDir
     }
   }
 }
+
+export async function prepareDetachedBuildAsync(projectDir, args) {
+  if (args.platform !== 'ios') {
+    throw new Error('This command is only available for --platform ios');
+  }
+  console.log(`Preparing iOS build at ${projectDir}/ios...`);
+  // These files cause @providesModule naming collisions
+  // but are not available until after `pod install` has run.
+  let podsDirectory = path.join(projectDir, 'ios', 'Pods');
+  if (!isDirectory(podsDirectory)) {
+    throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
+  }
+  let rnPodDirectory = path.join(podsDirectory, 'React');
+  if (isDirectory(rnPodDirectory)) {
+    let rnFilesToDelete = await glob.promise(rnPodDirectory + '/**/*.@(js|json)');
+    if (rnFilesToDelete) {
+      for (let i = 0; i < rnFilesToDelete.length; i++) {
+        await fs.promise.unlink(rnFilesToDelete[i]);
+      }
+    }
+  }
+  return;
+}
