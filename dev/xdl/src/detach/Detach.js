@@ -112,7 +112,7 @@ export async function detachAsync(projectRoot) {
   let tmpExponentDirectory = path.join(projectRoot, 'exponent-src-tmp');
   // TODO: Make this method work
   // await spawnAsync(`/usr/bin/curl -L ${EXPONENT_ARCHIVE_URL} | tar xzf -`, null, { shell: true });
-  await spawnAsyncThrowError('/usr/bin/git', ['clone', EXPONENT_SRC_URL, tmpExponentDirectory]);
+  // await spawnAsyncThrowError('/usr/bin/git', ['clone', EXPONENT_SRC_URL, tmpExponentDirectory]);
 
   let exponentDirectory = path.join(projectRoot, 'exponent');
   mkdirp.sync(exponentDirectory);
@@ -125,7 +125,7 @@ export async function detachAsync(projectRoot) {
 
   // Clean up
   console.log('Cleaning up...');
-  await spawnAsync('/bin/rm', ['-rf', tmpExponentDirectory]);
+  // await spawnAsync('/bin/rm', ['-rf', tmpExponentDirectory]);
 
   // These files cause @providesModule naming collisions
   let rnFilesToDelete = await glob.promise(path.join(exponentDirectory, 'ios', 'versioned-react-native') + '/**/*.@(js|json)');
@@ -154,6 +154,10 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'ios'), `${exponentDirectory}/ios`);
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'cpp'), `${exponentDirectory}/cpp`);
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'exponent-view-template', 'ios'), iosProjectDirectory);
+  // make sure generated stub exists
+  let generatedExponentDir = path.join(exponentDirectory, 'ios', 'Exponent', 'Generated');
+  mkdirp.sync(generatedExponentDir);
+  fs.closeSync(fs.openSync(path.join(generatedExponentDir, 'EXKeys.h'), 'w'));
 
   console.log('Naming project...');
   await spawnAsyncThrowError('sed', [
