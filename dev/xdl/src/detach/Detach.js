@@ -151,6 +151,12 @@ export async function detachAsync(projectRoot) {
   }
 }
 
+async function capturePathAsync(outputFile) {
+  let path = process.env.PATH;
+  let output = (path) ? `PATH=$PATH:${path}` : '';
+  await fs.promise.writeFile(outputFile, output);
+}
+
 /**
  *  Create a detached Exponent iOS app pointing at the given project.
  *  @param args.url url of the Exponent project.
@@ -222,6 +228,7 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
       EXPONENT_ROOT_PATH: '../exponent',
     }
   );
+  await capturePathAsync(path.join(exponentDirectory, 'exponent-path.sh'));
 
   console.log('Cleaning up iOS...');
   await cleanPropertyListBackupsAsync(infoPlistPath);
