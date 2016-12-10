@@ -26,6 +26,7 @@ import * as ProjectUtils from '../project/ProjectUtils';
 import * as User from '../User';
 import Logger from '../Logger';
 import XDLError from '../XDLError';
+import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
 
 import mkdirp from 'mkdirp';
@@ -157,6 +158,16 @@ async function capturePathAsync(outputFile) {
   await fs.promise.writeFile(outputFile, output);
 }
 
+function getIosPaths(projectRoot, manifest) {
+  let iosProjectDirectory = path.join(projectRoot, 'ios');
+  let projectNameLabel = manifest.name;
+  let projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
+  return {
+    iosProjectDirectory,
+    projectName,
+  };
+}
+
 /**
  *  Create a detached Exponent iOS app pointing at the given project.
  *  @param args.url url of the Exponent project.
@@ -167,9 +178,10 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
     return;
   }
 
-  let iosProjectDirectory = path.join(projectRoot, 'ios');
-  let projectNameLabel = manifest.name;
-  let projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
+  let {
+    iosProjectDirectory,
+    projectName,
+  } = getIosPaths(projectRoot, manifest);
 
   console.log('Moving iOS project files...');
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'ios'), `${exponentDirectory}/ios`);
@@ -328,10 +340,16 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
   if (args.platform !== 'ios') {
     throw new Error('This command is only available for --platform ios');
   }
-  console.log(`Preparing iOS build at ${projectDir}/ios...`);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  let {
+    iosProjectDirectory,
+    projectName,
+  } = getIosPaths(projectDir, exp);
+  
+  console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.
-  let podsDirectory = path.join(projectDir, 'ios', 'Pods');
+  let podsDirectory = path.join(iosProjectDirectory, 'Pods');
   if (!isDirectory(podsDirectory)) {
     throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
   }
@@ -344,5 +362,12 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
       }
     }
   }
+  // insert exponent development url into iOS config
+  let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+  let configFilePath = path.join(iosProjectDirectory, projectName, 'Supporting');
+  await modifyIOSPropertyListAsync(configFilePath, 'EXShell', (shellConfig) => {
+    shellConfig.developmentUrl = devUrl;
+    return shellConfig;
+  });
   return;
 }
