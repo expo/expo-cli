@@ -53,11 +53,6 @@ async function _checkWatchmanVersionAsync(projectRoot) {
 
 async function _validatePngFieldsAsync(projectRoot, exp) {
   let sdkVersion = exp.sdkVersion;
-  if (sdkVersion === 'UNVERSIONED') {
-    ProjectUtils.logDebug(projectRoot, 'exponent', 'Not validating pngs for UNVERSIONED.');
-    return;
-  }
-
   let pngFields = await ExpSchema.getPNGFieldsAsync(sdkVersion);
   for (let fieldName of pngFields) {
     let value = _.get(exp, fieldName);
@@ -87,29 +82,24 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
   }
 
   let sdkVersion = exp.sdkVersion;
+  try {
+    let schema = await ExpSchema.getSchemaAsync(sdkVersion);
+    let validator = new jsonschema.Validator();
+    let validationResult = validator.validate(exp, schema);
+    if (validationResult.errors && validationResult.errors.length > 0) {
+      let fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in exp.json. See https://docs.getexponent.com/versions/v${sdkVersion}/guides/configuration.html.`;
 
-  if (sdkVersion !== 'UNVERSIONED') {
-    try {
-      let schema = await ExpSchema.getSchemaAsync(sdkVersion);
-      let validator = new jsonschema.Validator();
-      let validationResult = validator.validate(exp, schema);
-      if (validationResult.errors && validationResult.errors.length > 0) {
-        let fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in exp.json. See https://docs.getexponent.com/versions/v${sdkVersion}/guides/configuration.html.`;
-
-        for (let error of validationResult.errors) {
-          // Formate the message nicely
-          let message = error.stack.replace(/instance\./g, '').replace(/exists in instance/g, 'exists in exp.json').replace('instance additionalProperty', 'additional property');
-          fullMessage += `\n  - ${message}.`;
-        }
-
-        ProjectUtils.logWarning(projectRoot, 'exponent', fullMessage);
-        return WARNING;
+      for (let error of validationResult.errors) {
+        // Formate the message nicely
+        let message = error.stack.replace(/instance\./g, '').replace(/exists in instance/g, 'exists in exp.json').replace('instance additionalProperty', 'additional property');
+        fullMessage += `\n  - ${message}.`;
       }
-    } catch (e) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem validating exp.json: ${e.message}.`);
+
+      ProjectUtils.logWarning(projectRoot, 'exponent', fullMessage);
+      return WARNING;
     }
-  } else {
-    ProjectUtils.logDebug(projectRoot, 'exponent', 'Not validating against schema for UNVERSIONED.');
+  } catch (e) {
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem validating exp.json: ${e.message}.`);
   }
 
   // Warn if sdkVersion is UNVERSIONED

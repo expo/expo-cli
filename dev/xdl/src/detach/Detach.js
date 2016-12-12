@@ -43,13 +43,6 @@ const ANDROID_TEMPLATE_PKG = 'detach.app.template.pkg.name';
 const ANDROID_TEMPLATE_COMPANY = 'detach.app.template.company.domain';
 const ANDROID_TEMPLATE_NAME = 'DetachAppTemplate';
 
-function validateManifest(manifest) {
-  if (!manifest.name) {
-    throw new Error('Manifest is missing `name`');
-  }
-  return manifest;
-}
-
 async function configureDetachedVersionsPlistAsync(configFilePath, detachedSDKVersion, kernelSDKVersion) {
   await modifyIOSPropertyListAsync(configFilePath, 'EXSDKVersions', (versionConfig) => {
     versionConfig.sdkVersions = [detachedSDKVersion];
@@ -103,7 +96,13 @@ export async function detachAsync(projectRoot) {
   let experienceUrl = `exp://exp.host/${experienceName}`;
 
   console.log('Validating project manifest...');
-  exp = validateManifest(exp);
+  if (!exp.name) {
+    throw new Error('Manifest is missing `name`');
+  }
+
+  if (!exp.android || !exp.android.package) {
+
+  }
 
   // Check to make sure project isn't detached already
   let badDirectories = [];
