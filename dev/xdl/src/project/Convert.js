@@ -42,11 +42,7 @@ export default async function convertProjectAsync(projectDir:string, {projectNam
   // Remove
   Object.keys(packageJson.dependencies).forEach(dep => {
     if (unsupportedPackages[dep]) {
-      if (dep === 'react-native-vector-icons') {
-        packageJson.dependencies[dep] = 'github:exponentjs/react-native-vector-icons';
-      } else {
-        delete packageJson.dependencies[dep];
-      }
+      delete packageJson.dependencies[dep];
       unsupportedPackagesUsed.push(dep);
     }
   });
@@ -69,14 +65,13 @@ export default async function convertProjectAsync(projectDir:string, {projectNam
 }
 
 const dependencies = {
-  "@exponent/vector-icons": "~2.0.0",
-  "exponent": "~11.0.2",
+  "@exponent/vector-icons": "~2.0.3",
+  "exponent": "~12.0.3",
   "react": "~15.3.2",
-  "react-native": "github:exponentjs/react-native#sdk-11.0.3"
+  "react-native": "github:exponentjs/react-native#sdk-12.0.0"
 };
 
 const unsupportedPackages = {
-  'react-native-vector-icons': `We installed @exponent/vector-icons for you instead. You can continue to use react-native-vector-icons exactly how you have been using it though -- we alias @exponent/vector-icons to react-native-vector-icons for your convenience.`,
   'react-native-video': `Exponent provides a video component for you with the same API as react-native-video. You can use it with "import { Components } from 'exponent';" and <Components.Video /> in your render function. `,
   'react-native-svg': `Exponent provides react-native-svg for you. You can use it with "import { Components } from 'exponent';" and <Components.Svg /> in your render function.`,
   'react-native-maps': `Exponent provides react-native-maps for you. You can use it with "import { Components } from 'exponent';" and <Components.Map /> in your render function.`,
