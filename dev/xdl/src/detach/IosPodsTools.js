@@ -63,7 +63,7 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
   await fs.promise.writeFile(pathToOutput, result);
 }
 
-async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput) {
+async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
   let templatesDirectory = path.dirname(pathToTemplate);
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
   let dependencies = await renderPodDependenciesAsync(
@@ -71,6 +71,9 @@ async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput) {
     { isPodfile: false }
   );
   let result = templateString.replace(/\$\{IOS_EXPONENT_VIEW_DEPS\}/g, dependencies);
+  if (moreSubstitutions && moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION) {
+    result = result.replace(/\$\{IOS_EXPONENT_CLIENT_VERSION\}/g, moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION);
+  }
   
   await fs.promise.writeFile(pathToOutput, result);
 }

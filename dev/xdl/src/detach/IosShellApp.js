@@ -54,7 +54,7 @@ async function configureShellAppSecretsAsync(args, iosDir) {
  * @param bundleIdentifier optional bundle id if the manifest doesn't contain one already
  */
 async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, privateConfig = null, bundleIdentifier = null) {
-  await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
+  let result = await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
     // bundle id
     config.CFBundleIdentifier = (manifest.ios && manifest.ios.bundleIdentifier) ? manifest.ios.bundleIdentifier : bundleIdentifier;
     if (!config.CFBundleIdentifier) {
@@ -128,6 +128,7 @@ async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, pr
 
     return config;
   });
+  return result;
 }
 
 /**

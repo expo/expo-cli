@@ -84,7 +84,7 @@ async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
   await spawnAsyncThrowError('/bin/cp', [configPlistName, `${configPlistName}.bak`]);
   await fs.promise.writeFile(configFilename, JSON.stringify(config));
   await spawnAsyncThrowError('plutil', ['-convert', 'xml1', configFilename, '-o', configPlistName]);
-  return;
+  return config;
 }
 
 async function cleanIOSPropertyListBackupAsync(plistPath, plistName, restoreOriginal = true) {

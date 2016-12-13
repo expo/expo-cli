@@ -55,7 +55,7 @@ async function configureDetachedVersionsPlistAsync(configFilePath, detachedSDKVe
 }
 
 async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
-  await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
+  let result = await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
     // add detached scheme
     if (manifest.isDetached && manifest.detachedScheme) {
       if (!config.CFBundleURLTypes) {
@@ -67,6 +67,7 @@ async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
     }
     return config;
   });
+  return result;
 }
 
 async function cleanPropertyListBackupsAsync(configFilePath) {
@@ -219,7 +220,7 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   let infoPlistPath = `${iosProjectDirectory}/${projectName}/Supporting`;
   let iconPath = `${iosProjectDirectory}/${projectName}/Assets.xcassets/AppIcon.appiconset`;
   await configureStandaloneIOSInfoPlistAsync(infoPlistPath, manifest);
-  await configureDetachedIOSInfoPlistAsync(infoPlistPath, manifest);
+  let infoPlist = await configureDetachedIOSInfoPlistAsync(infoPlistPath, manifest);
   await configureStandaloneIOSShellPlistAsync(infoPlistPath, manifest, experienceUrl);
   // TODO: logic for when kernel sdk version is different from detached sdk version
   await configureDetachedVersionsPlistAsync(infoPlistPath, sdkVersion, sdkVersion);
@@ -229,7 +230,8 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   console.log('Configuring dependencies...');
   await renderExponentViewPodspecAsync(
     path.join(tmpExponentDirectory, 'template-files', 'ios', 'ExponentView.podspec'),
-    path.join(exponentDirectory, 'ExponentView.podspec')
+    path.join(exponentDirectory, 'ExponentView.podspec'),
+    { IOS_EXPONENT_CLIENT_VERSION: infoPlist.EXClientVersion }
   );
   await renderPodfileAsync(
     path.join(tmpExponentDirectory, 'template-files', 'ios', 'ExponentView-Podfile'),
