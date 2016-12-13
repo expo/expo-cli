@@ -30,10 +30,12 @@ import * as ExpSchema from './project/ExpSchema';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
-import * as User from './User';
+import User from './User';
 import UserSettings from './UserSettings';
 import * as Watchman from './Watchman';
 import XDLError from './XDLError';
+
+import type { User as ExpUser } from './User'; //eslint-disable-line
 
 const MINIMUM_BUNDLE_SIZE = 500;
 
@@ -48,13 +50,6 @@ let _cachedSignedManifest: CachedSignedManifest = {
   manifestString: null,
   signedManifest: null,
 };
-
-async function _assertLoggedInAsync() {
-  let user = await User.getCurrentUserAsync();
-  if (!user) {
-    throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
-  }
-}
 
 async function _assertValidProjectRoot(projectRoot) {
   if (!projectRoot) {
@@ -113,7 +108,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver) {
 }
 
 export async function publishAsync(projectRoot: string, options: Object = {}) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   Analytics.logEvent('Publish', {
@@ -259,7 +254,7 @@ export async function buildAsync(projectRoot: string, options: {
   platform?: string,
   expIds?: Array<string>,
 } = {}) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   Analytics.logEvent('Build Shell App', {
@@ -439,7 +434,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
 }
 
 export async function startReactNativeServerAsync(projectRoot: string, options: Object = {}) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   await stopReactNativeServerAsync(projectRoot);
@@ -557,7 +552,7 @@ function _nodePathForProjectRoot(projectRoot: string): string {
 }
 
 export async function stopReactNativeServerAsync(projectRoot: string) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -580,7 +575,7 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
 }
 
 export async function startExponentServerAsync(projectRoot: string) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   await stopExponentServerAsync(projectRoot);
@@ -638,7 +633,8 @@ export async function startExponentServerAsync(projectRoot: string) {
         manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + path);
 
       let manifestString = JSON.stringify(manifest);
-      let currentUser = await User.getCurrentUserAsync();
+      const currentUser = await User.getCurrentUserAsync();
+
       if (req.headers['exponent-accept-signature'] && currentUser) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
@@ -697,7 +693,7 @@ export async function startExponentServerAsync(projectRoot: string) {
 // This only works when called from the same process that called
 // startExponentServerAsync.
 export async function stopExponentServerAsync(projectRoot: string) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   let server = _projectRootToExponentServer[projectRoot];
@@ -768,7 +764,7 @@ async function _connectToNgrokAsync(projectRoot: string, args: mixed, hostnameAs
 }
 
 export async function startTunnelsAsync(projectRoot: string) {
-  await _assertLoggedInAsync();
+  const user = await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -786,11 +782,7 @@ export async function startTunnelsAsync(projectRoot: string) {
     ProjectUtils.logInfo(projectRoot, 'exponent', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.');
   }
 
-  let optUsername = await User.getUsernameAsync();
-  if (!optUsername) {
-    throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
-  }
-  let username = optUsername; // For Flow bug
+  const { username } = user;
 
   let packageShortName = path.parse(projectRoot).base;
 
@@ -825,7 +817,7 @@ export async function startTunnelsAsync(projectRoot: string) {
 }
 
 export async function stopTunnelsAsync(projectRoot: string) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   // This will kill all ngrok tunnels in the process.
@@ -858,7 +850,7 @@ export async function stopTunnelsAsync(projectRoot: string) {
 }
 
 export async function setOptionsAsync(projectRoot: string, options: { packagerPort?: number }) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   // Check to make sure all options are valid
@@ -876,14 +868,14 @@ export async function setOptionsAsync(projectRoot: string, options: { packagerPo
 }
 
 export async function getUrlAsync(projectRoot: string, options: Object = {}) {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
 
 export async function startAsync(projectRoot: string, options: Object = {}): Promise<any> {
-  await _assertLoggedInAsync();
+  await User.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   Analytics.logEvent('Start Project', {

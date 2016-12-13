@@ -2,8 +2,6 @@
  * @flow
  */
 
-let JsonFile = require('@exponent/json-file');
-
 import 'instapromise';
 
 import targz from 'tar.gz';
@@ -12,6 +10,7 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import spawnAsync from '@exponent/spawn-async';
+import JsonFile from '@exponent/json-file';
 import joi from 'joi';
 import rimraf from 'rimraf';
 
@@ -21,7 +20,7 @@ import * as Binaries from './Binaries';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-import * as User from './User';
+import User from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
@@ -345,10 +344,8 @@ type PublishInfo = {
 
 // TODO: remove / change, no longer publishInfo, this is just used for signing
 export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
-  let username = await User.getUsernameAsync();
-  if (!username) {
-    throw new Error(`Can't get username!`);
-  }
+  const { username } = await User.ensureLoggedInAsync();
+
   let pkg: any;
   let exp: any;
 

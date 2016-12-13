@@ -1,4 +1,7 @@
 // Copyright 2015-present 650 Industries. All rights reserved.
+/**
+ * @flow
+ */
 
 'use strict';
 
@@ -23,7 +26,8 @@ import {
 
 import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
-import * as User from '../User';
+import User from '../User';
+import Logger from '../Logger';
 import XDLError from '../XDLError';
 import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
@@ -91,8 +95,8 @@ function isDirectory(dir) {
   }
 }
 
-export async function detachAsync(projectRoot) {
-  let user = await User.getCurrentUserAsync();
+export async function detachAsync(projectRoot: string) {
+  let user = await User.ensureLoggedInAsync();
   let username = user.username;
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let experienceName = `@${username}/${exp.slug}`;

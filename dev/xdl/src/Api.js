@@ -11,7 +11,7 @@ import unzip from 'unzip';
 
 import Config from './Config';
 import * as Session from './Session';
-import UserSettings from './UserSettings';
+import User from './User';
 
 function ApiError(code, message) {
   let err = new Error(message);
@@ -29,15 +29,21 @@ if (Config.api.port) {
 let API_BASE_URL = ROOT_BASE_URL + '/--/api/';
 
 async function _callMethodAsync(url, method, requestBody, requestOptions): Promise<any> {
-  let clientId = await Session.clientIdAsync();
-  let {username} = await UserSettings.readAsync();
+  const clientId = await Session.clientIdAsync();
+  const user = await User.getCurrentUserAsync() || {};
+
+  const { idToken, accessToken } = user;
 
   let headers: any = {
     'Exp-ClientId': clientId,
   };
 
-  if (username) {
-    headers['Exp-Username'] = username;
+  if (idToken) {
+    headers['Authorization'] = `Bearer ${idToken}`;
+  }
+
+  if (accessToken) {
+    headers['Exp-Access-Token'] = accessToken;
   }
 
   let options = {

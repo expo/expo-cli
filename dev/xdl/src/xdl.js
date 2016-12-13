@@ -13,6 +13,7 @@ module.exports = {
   get Analytics() { return require('./Analytics'); },
   get Android() { return require('./Android'); },
   get Api() { return require('./Api').default; },
+  get ApiV2() { return require('./ApiV2').default; },
   get Binaries() { return require('./Binaries'); },
   get Config() { return require('./Config').default; },
   get Credentials() { return require('./Credentials'); },

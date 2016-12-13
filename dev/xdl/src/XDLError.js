@@ -5,24 +5,32 @@
 import * as Analytics from './Analytics';
 import * as Intercom from './Intercom';
 
+import type { ErrorCodes } from './ErrorCode';
+
 export default class XDLError extends Error {
   code: string;
   isXDLError: bool;
 
-  constructor(code: string, message: string) {
+  constructor(
+    code: $Keys<ErrorCodes>,
+    message: string,
+    options: { noTrack: bool } = { noTrack: false }
+  ) {
     super(message);
 
     this.code = code;
     this.isXDLError = true;
 
-    Analytics.logEvent('XDL Error', {
-      code,
-      message,
-    });
+    if (options && !options.noTrack) {
+      Analytics.logEvent('XDL Error', {
+        code,
+        message,
+      });
 
-    Intercom.trackEvent('error', {
-      code,
-      message,
-    });
+      Intercom.trackEvent('error', {
+        code,
+        message,
+      });
+    }
   }
 }

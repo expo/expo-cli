@@ -18,8 +18,9 @@ import targz from 'tar.gz';
 import Api from './Api';
 import * as Binaries from './Binaries';
 import * as Env from './Env';
-import * as User from './User';
+import User from './User';
 import UserSettings from './UserSettings';
+import * as Utils from './Utils';
 import * as Watchman from './Watchman';
 
 // requires python, so might not be installed
@@ -28,7 +29,7 @@ try {
   diskusage = require('diskusage');
 } catch (e) {}
 
-async function _uploadLogsAsync(info) {
+async function _uploadLogsAsync(info: any): Promise<boolean|string> {
   let user = await User.getCurrentUserAsync();
   let username = user ? user.username : 'anonymous';
 
@@ -40,7 +41,7 @@ async function _uploadLogsAsync(info) {
   // copy files to tempDir
   let tempDir = path.join(Env.home(), `${username}-diagnostics`);
   let archivePath = path.join(exponentHome, 'diagnostics.tar.gz');
-  await Binaries.ncpAsync(exponentHome, tempDir, {
+  await Utils.ncpAsync(exponentHome, tempDir, {
     filter: (filename) => {
       if (filename.includes('diagnostics') || filename.includes('starter-app-cache') || filename.includes('android-apk-cache') || filename.includes('ios-simulator-app-cache')) {
         return false;
