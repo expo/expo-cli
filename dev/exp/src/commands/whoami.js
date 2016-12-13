@@ -1,3 +1,7 @@
+/**
+ * @flow
+ */
+
 import {
   User,
 } from 'xdl';
@@ -5,7 +9,7 @@ import {
 import log from '../log';
 
 async function action(options) {
-  let user = await User.whoamiAsync();
+  const user = await User.ensureLoggedInAsync();
   if (user && user.username) {
     log(`Logged in as ${user.username}`);
     log.raw(user.username);

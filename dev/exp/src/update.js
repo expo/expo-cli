@@ -1,3 +1,7 @@
+/**
+ * @flow
+ */
+
 import 'instapromise';
 
 import child_process from 'child_process';
@@ -8,20 +12,21 @@ import semver from 'semver';
 import { UserSettings } from 'xdl';
 
 function updatesObject() {
-  let updatesJsonPath = path.join(UserSettings.dotExponentHomeDirectory(), 'updates.json');
+  const updatesJsonPath = path.join(UserSettings.dotExponentHomeDirectory(), 'updates.json');
   return new JsonFile(updatesJsonPath, {cantReadFileDefault: {}});
 }
 
 async function needToUpdate() {
-  let updateAfter = new Date(await updatesObject().getAsync('lastUpdatedExp', new Date(1998, 11, 17)));
+  const updateAfter = new Date(await updatesObject().getAsync('lastUpdatedExp', new Date(1998, 11, 17)));
   updateAfter.setDate(updateAfter.getDate() + 1); // once a day check
   return updateAfter <= new Date();
 }
 
 async function fetchAndWriteLatestExpVersionAsync() {
-  var packageName = await new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('name');
-  var version_ = await child_process.promise.exec(`npm view ${packageName} version`);
-  let trimmed = version_.trim();
+  const packageName = await new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('name');
+  // $FlowFixMe
+  const version_ = await child_process.promise.exec(`npm view ${packageName} version`);
+  const trimmed = version_.trim();
 
   await updatesObject().mergeAsync({
     lastUpdatedExp: new Date(),
@@ -36,7 +41,7 @@ async function currentExpVersionAsync() {
 }
 
 async function checkForExpUpdateAsync() {
-  var current = await currentExpVersionAsync();
+  const current = await currentExpVersionAsync();
 
   // check for an outdated install based on either a fresh npm query or our cache
   let latest;
@@ -51,7 +56,7 @@ async function checkForExpUpdateAsync() {
     latest = await fetchAndWriteLatestExpVersionAsync();
   }
 
-  var state;
+  let state;
   switch (semver.compare(current, latest)) {
     case -1:
       state = 'out-of-date';

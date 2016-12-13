@@ -1,3 +1,7 @@
+/**
+ * @flow
+ */
+
 import {
   User,
 } from 'xdl';
@@ -5,11 +9,10 @@ import {
 import log from '../log';
 
 async function action(options) {
-  let result = await User.logoutAsync();
-  if (result) {
+  try {
+    await User.logoutAsync();
     log("Success.");
-    return result;
-  } else {
+  } catch (e) {
     throw new Error("Unexpected Error: Couldn't logout");
   }
 }

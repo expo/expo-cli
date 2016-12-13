@@ -1,0 +1,9 @@
+{
+  extends: 'exponent/react',
+  globals: {
+    window: true,
+  },
+  rules: {
+    'no-duplicate-imports': 0,
+  }
+}

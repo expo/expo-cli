@@ -1,4 +1,8 @@
-var signupOrLogin = require('../accounts').signupOrLogin;
+/**
+ * @flow
+ */
+
+import { login } from '../accounts';
 
 export default (program) => {
   program
@@ -6,5 +10,7 @@ export default (program) => {
     .description('Login to exp.host')
     .option('-u, --username [string]', 'Username')
     .option('-p, --password [string]', 'Password')
-    .asyncAction(signupOrLogin);
+    .option('-t, --token [string]', 'Token')
+    .option('--github', 'Login with Github')
+    .asyncAction(login);
 };

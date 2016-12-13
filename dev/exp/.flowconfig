@@ -10,7 +10,6 @@
 ../
 
 [options]
-module.system=haste
 esproposal.decorators=ignore
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
@@ -22,4 +21,5 @@ suppress_comment=.*\\$FlowFixMe
 suppress_comment=.*\\$FlowIssue
 suppress_comment=\\(.\\|\n\\)*\\$FlowNewLine
 
-module.name_mapper='^xdl$' -> 'XDL'
+module.name_mapper='^xdl$' -> '<PROJECT_ROOT>/../xdl/src/xdl.js'
+module.name_mapper='^xdl/build/\(.*\)$' -> '<PROJECT_ROOT>/../xdl/src/\1'

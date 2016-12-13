@@ -44,18 +44,23 @@ Command.prototype.addUrlOption = function() {
 
 Command.prototype.asyncAction = function(asyncFn) {
   return this.action(async (...args) => {
+    try { await checkForUpdateAsync(); } catch (e) {}
+
     try {
       let options = _.last(args).parent;
       if (options.output === 'raw') {
         log.config.raw = true;
-        process.env['PM2_SILENT'] = true;
+        process.env['PM2_SILENT'] = 'true';
       }
       await asyncFn(...args);
+      process.exit(0);
     } catch (err) {
       if (err._isCommandError) {
         log.error(err.message);
       } else if (err._isApiError) {
         log.error(crayon.red(err.message));
+      } else if (err.isXDLError) {
+        log.error(err.message);
       } else {
         log.error(err.message);
         crayon.gray.error(err.stack);
@@ -103,7 +108,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
   });
 };
 
-async function runAsync() {
+function runAsync() {
   try {
     Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
     Analytics.setVersionName(require('../package.json').version);
@@ -227,8 +232,10 @@ function _registerLogs() {
 
 // $FlowFixMe
 if (require.main === module) {
-  Promise.all([
-    runAsync(),
-    checkForUpdateAsync(),
-  ]);
+  (async function() {
+    await runAsync();
+  })().catch(e => {
+    console.error('Uncaught Error', e);
+    process.exit(1);
+  });
 }
