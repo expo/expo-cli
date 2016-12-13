@@ -65,6 +65,9 @@ async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
       }
       config.CFBundleURLTypes[0].CFBundleURLSchemes.push(manifest.detachedScheme);
     }
+    if (config.UIDeviceFamily) {
+      delete config.UIDeviceFamily;
+    }
     return config;
   });
   return result;
