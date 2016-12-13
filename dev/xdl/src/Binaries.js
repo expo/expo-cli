@@ -140,7 +140,7 @@ export async function addToPathAsync(name: string) {
   }
 
   let binariesPath = path.join(getBinariesPath(), name);
-  _prependToPath(binariesPath)
+  _prependToPath(binariesPath);
 }
 
 function _exponentRCFileExists() {
@@ -204,7 +204,7 @@ export async function sourceBashLoginScriptsAsync() {
         result = await spawnAsync(process.env.SHELL, ['-d', '-c', 'env']);
       } else if (/zsh$/.test(process.env.SHELL)) {
         // zsh
-        result = await spawnAsync(process.env.SHELL, ['-l', '-c', '-i', 'env']);
+        result = await spawnAsync(process.env.SHELL, ['-l', '-c', 'env']);
       } else {
         // bash, fish
         result = await spawnAsync(process.env.SHELL, ['-l', '-c', 'env']);
