@@ -2,10 +2,16 @@
   "presets": ["es2015", "stage-1"],
   "plugins": [
     "transform-runtime",
-    "transform-flow-strip-types",
-    ["transform-inline-imports-commonjs", {
-      "excludeNodeBuiltins": true,
-    }]
+    "transform-flow-strip-types"
   ],
+  "env": {
+    "production": {
+      "plugins": [
+        ["transform-inline-imports-commonjs", {
+          "excludeNodeBuiltins": true,
+        }]
+      ],
+    }
+  },
   "sourceMaps": true,
 }

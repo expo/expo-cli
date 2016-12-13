@@ -9,7 +9,8 @@
     "scripts"
   ],
   "scripts": {
-    "build": "gulp build",
+    "build": "cross-env NODE_ENV=production gulp clean && gulp build",
+    "postinstall": "npm run build",
     "test": "jest --config jest/unit-test-config.json",
     "integration-tests": "jest --config jest/integration-test-config.json --no-cache"
   },
@@ -77,6 +78,7 @@
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-stage-1": "^6.5.0",
     "babel-runtime": "^6.11.6",
+    "cross-env": "^3.1.3",
     "extend": "^3.0.0",
     "gulp": "git+https://github.com/gulpjs/gulp#4.0",
     "gulp-babel": "^6.1.2",
