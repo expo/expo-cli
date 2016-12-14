@@ -18,7 +18,7 @@ import targz from 'tar.gz';
 import Api from './Api';
 import * as Binaries from './Binaries';
 import * as Env from './Env';
-import User from './User';
+import UserManager from './User';
 import UserSettings from './UserSettings';
 import * as Utils from './Utils';
 import * as Watchman from './Watchman';
@@ -30,7 +30,7 @@ try {
 } catch (e) {}
 
 async function _uploadLogsAsync(info: any): Promise<boolean|string> {
-  let user = await User.getCurrentUserAsync();
+  let user = await UserManager.getCurrentUserAsync();
   let username = user ? user.username : 'anonymous';
 
   // write info to file

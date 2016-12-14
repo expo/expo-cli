@@ -11,7 +11,7 @@ describe('loginAsync', () => {
   it('calls login Api and stores the username', async () => {
     const fs = require('fs');
     const request = require('request');
-    const User = require('../User');
+    const UserManager = require('../User');
 
     request.__setMockResponse({
       body: {
@@ -23,7 +23,7 @@ describe('loginAsync', () => {
       },
     });
 
-    await User.loginAsync({
+    await UserManager.loginAsync({
       username: 'jesse',
       password: 'kicho0',
     });
@@ -43,7 +43,7 @@ describe('logoutAsync', () => {
   it('calls logout Api and cleans the username', async () => {
     const fs = require('fs');
     const request = require('request');
-    const User = require('../User');
+    const UserManager = require('../User');
 
     request.__setMockResponse({
       body: {
@@ -53,7 +53,7 @@ describe('logoutAsync', () => {
 
     fs.__addLoggedInUser();
 
-    await User.logoutAsync();
+    await UserManager.logoutAsync();
 
     expect(request.mock.calls[0][0].url).toEqual('https://exp.host/--/api/logout/%5B%5D');
 

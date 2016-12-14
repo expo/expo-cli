@@ -20,7 +20,7 @@ import * as Binaries from './Binaries';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-import User from './User';
+import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
@@ -344,7 +344,7 @@ type PublishInfo = {
 
 // TODO: remove / change, no longer publishInfo, this is just used for signing
 export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
-  const { username } = await User.ensureLoggedInAsync();
+  const { username } = await UserManager.ensureLoggedInAsync();
 
   let pkg: any;
   let exp: any;

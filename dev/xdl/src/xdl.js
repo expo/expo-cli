@@ -35,7 +35,7 @@ module.exports = {
   get ProjectUtils() { return require('./project/ProjectUtils'); },
   get Simulator() { return require('./Simulator'); },
   get UrlUtils() { return require('./UrlUtils'); },
-  get User() { return require('./User'); },
+  get User() { return require('./User').default; },
   get UserSettings() { return require('./UserSettings').default; },
   get Versions() { return require('./Versions'); },
   get XDLError() { return require('./XDLError').default; },

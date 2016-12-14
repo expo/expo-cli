@@ -26,8 +26,7 @@ import {
 
 import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
-import User from '../User';
-import Logger from '../Logger';
+import UserManager from '../User';
 import XDLError from '../XDLError';
 import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
@@ -96,7 +95,7 @@ function isDirectory(dir) {
 }
 
 export async function detachAsync(projectRoot: string) {
-  let user = await User.ensureLoggedInAsync();
+  let user = await UserManager.ensureLoggedInAsync();
   let username = user.username;
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let experienceName = `@${username}/${exp.slug}`;

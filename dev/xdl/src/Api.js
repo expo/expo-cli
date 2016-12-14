@@ -11,7 +11,7 @@ import unzip from 'unzip';
 
 import Config from './Config';
 import * as Session from './Session';
-import User from './User';
+import UserManager from './User';
 
 function ApiError(code, message) {
   let err = new Error(message);
@@ -30,7 +30,7 @@ let API_BASE_URL = ROOT_BASE_URL + '/--/api/';
 
 async function _callMethodAsync(url, method, requestBody, requestOptions): Promise<any> {
   const clientId = await Session.clientIdAsync();
-  const user = await User.getCurrentUserAsync() || {};
+  const user = await UserManager.getCurrentUserAsync() || {};
 
   const { idToken, accessToken } = user;
 
