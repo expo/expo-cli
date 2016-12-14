@@ -11,6 +11,11 @@ export async function getSchemaAsync(sdkVersion) {
   return json.schema;
 }
 
+export async function getAssetFieldsAsync(sdkVersion) {
+  let json = await _getSchemaJSONAsync(sdkVersion);
+  return json.assetFields;
+}
+
 export async function getPNGFieldsAsync(sdkVersion) {
   let json = await _getSchemaJSONAsync(sdkVersion);
   return json.pngFields;

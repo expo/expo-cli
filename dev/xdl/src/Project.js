@@ -26,6 +26,7 @@ import Config from './Config';
 import * as Doctor from './project/Doctor';
 import ErrorCode from './ErrorCode';
 import * as Exp from './Exp';
+import * as ExpSchema from './project/ExpSchema';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
@@ -93,13 +94,8 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
 
 async function _resolveManifestAssets(projectRoot, manifest, resolver) {
   // Asset fields that the user has set
-  // TODO: This should be in the `exp.json` schema
-  const assetFields = [
-    'icon',
-    'notification.icon',
-    'loading.icon',
-    'loading.backgroundImage',
-  ].filter((assetField) => _.get(manifest, assetField));
+  const assetFields = (await ExpSchema.getAssetFieldsAsync()).filter(
+    (assetField) => _.get(manifest, assetField));
 
   // Get the URLs
   const urls = await Promise.all(assetFields.map(async (assetField) => {
