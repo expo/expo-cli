@@ -200,6 +200,27 @@ function getIosPaths(projectRoot, manifest) {
 }
 
 /**
+ *  Delete xcodeproj|xcworkspace under searchPath.
+ *  Needed because extraneous xcode files will interfere with `react-native link`.
+ */
+async function cleanXCodeProjectsAsync(searchPath) {
+  let xcodeFilesToDelete = await glob.promise(searchPath + '/**/*.@(xcodeproj|xcworkspace)');
+  if (xcodeFilesToDelete) {
+    for (let ii = 0; ii < xcodeFilesToDelete.length; ii++) {
+      let toRemove = xcodeFilesToDelete[ii];
+      if (fs.existsSync(toRemove)) { // needed because we may have recursively removed in past iteration
+        if (isDirectory(toRemove)) {
+          rimraf.sync(toRemove);
+        } else {
+          await fs.promise.unlink(toRemove);
+        }
+      }
+    }
+  }
+  return;
+}
+
+/**
  *  Create a detached Exponent iOS app pointing at the given project.
  *  @param args.url url of the Exponent project.
  *  @param args.outputDirectory directory to create the detached project.
@@ -272,6 +293,7 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
 
   console.log('Cleaning up iOS...');
   await cleanPropertyListBackupsAsync(infoPlistPath);
+  await cleanXCodeProjectsAsync(path.join(exponentDirectory, 'ios'));
 
   return;
 }
