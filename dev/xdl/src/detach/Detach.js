@@ -24,7 +24,6 @@ import {
 import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
 import * as User from '../User';
-import Logger from '../Logger';
 import XDLError from '../XDLError';
 import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
@@ -35,10 +34,10 @@ import path from 'path';
 import rimraf from 'rimraf';
 import glob from 'glob';
 import uuid from 'node-uuid';
+import yesno from 'yesno';
 
 const EXPONENT_SRC_URL = 'https://github.com/exponentjs/exponent.git';
 const EXPONENT_ARCHIVE_URL = 'https://api.github.com/repos/exponentjs/exponent/tarball/master';
-const DETACH_DIRECTORIES = ['exponent', 'ios', 'android'];
 const ANDROID_TEMPLATE_PKG = 'detach.app.template.pkg.name';
 const ANDROID_TEMPLATE_COMPANY = 'detach.app.template.company.domain';
 const ANDROID_TEMPLATE_NAME = 'DetachAppTemplate';
@@ -99,32 +98,51 @@ export async function detachAsync(projectRoot) {
   let experienceName = `@${username}/${exp.slug}`;
   let experienceUrl = `exp://exp.host/${experienceName}`;
 
-  console.log('Validating project manifest...');
-  if (!exp.name) {
-    throw new Error('Manifest is missing `name`');
+  // Check to make sure project isn't fully detached already
+  let hasIosDirectory = isDirectory(path.join(projectRoot, 'ios'));
+  let hasAndroidDirectory = isDirectory(path.join(projectRoot, 'android'));
+
+  if (hasIosDirectory && hasAndroidDirectory) {
+    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, 'Error detaching. `ios` and `android` directories already exist.');
   }
 
-  if (!exp.android || !exp.android.package) {
-
-  }
-
-  // Check to make sure project isn't detached already
-  let badDirectories = [];
-  for (let i = 0; i < DETACH_DIRECTORIES.length; i++) {
-    if (isDirectory(path.join(projectRoot, DETACH_DIRECTORIES[i]))) {
-      badDirectories.push(DETACH_DIRECTORIES[i]);
+  // Project was already detached on Windows or Linux
+  if (!hasIosDirectory && hasAndroidDirectory && process.platform === 'darwin') {
+    let response = await yesno.promise.ask(`This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`, null);
+    if (!response) {
+      console.log('Exiting...');
+      return false;
     }
   }
 
-  if (badDirectories.length > 0) {
-    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `Error detaching. Please remove ${badDirectories.join(', ')} director${badDirectories.length === 1 ? 'y' : 'ies'} first. Are you sure you aren't already detached?`);
+  if (hasIosDirectory && !hasAndroidDirectory) {
+    throw new Error('`ios` directory already exists. Please remove it and try again.');
+  }
+
+  console.log('Validating project manifest...');
+  if (!exp.name) {
+    throw new Error('exp.json is missing `name`');
+  }
+
+  if (!exp.android || !exp.android.package) {
+    throw new Error('exp.json is missing android.package field. See https://docs.getexponent.com/versions/latest/guides/configuration.html#package');
+  }
+
+  if (process.platform !== 'darwin') {
+    let response = await yesno.promise.ask(`Can't create an iOS project since you are not on macOS. You can rerun this command on macOS in the future to add an iOS project. Enter 'yes' to continue and just create an Android project:`, null);
+    if (!response) {
+      console.log('Exiting...');
+      return false;
+    }
   }
 
   // Modify exp.json
-  exp.isDetached = true;
-  let detachedUUID = uuid.v4().replace(/-/g, '');
-  exp.detachedScheme = `exp${detachedUUID}`;
-  await fs.promise.writeFile(path.join(projectRoot, 'exp.json'), JSON.stringify(exp, null, 2));
+  if (!exp.isDetached || !exp.detachedScheme) {
+    exp.isDetached = true;
+    let detachedUUID = uuid.v4().replace(/-/g, '');
+    exp.detachedScheme = `exp${detachedUUID}`;
+    await fs.promise.writeFile(path.join(projectRoot, 'exp.json'), JSON.stringify(exp, null, 2));
+  }
 
   // Download exponent repo
   console.log('Downloading Exponent kernel...');
@@ -137,28 +155,38 @@ export async function detachAsync(projectRoot) {
   mkdirp.sync(exponentDirectory);
 
   // iOS
-  await detachIOSAsync(projectRoot, tmpExponentDirectory, exponentDirectory, exp.sdkVersion, experienceUrl, exp);
+  if (process.platform === 'darwin' && !hasIosDirectory) {
+    await detachIOSAsync(projectRoot, tmpExponentDirectory, exponentDirectory, exp.sdkVersion, experienceUrl, exp);
+  }
 
   // Android
-  await detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDirectory, exp.sdkVersion, experienceUrl, exp);
+  if (!hasAndroidDirectory) {
+    await detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDirectory, exp.sdkVersion, experienceUrl, exp);
+  }
 
   // Clean up
   console.log('Cleaning up...');
   await spawnAsync('/bin/rm', ['-rf', tmpExponentDirectory]);
 
   // These files cause @providesModule naming collisions
-  let rnFilesToDelete = await glob.promise(path.join(exponentDirectory, 'ios', 'versioned-react-native') + '/**/*.@(js|json)');
-  if (rnFilesToDelete) {
-    for (let i = 0; i < rnFilesToDelete.length; i++) {
-      await fs.promise.unlink(rnFilesToDelete[i]);
+  if (process.platform === 'darwin') {
+    let rnFilesToDelete = await glob.promise(path.join(exponentDirectory, 'ios', 'versioned-react-native') + '/**/*.@(js|json)');
+    if (rnFilesToDelete) {
+      for (let i = 0; i < rnFilesToDelete.length; i++) {
+        await fs.promise.unlink(rnFilesToDelete[i]);
+      }
     }
   }
+
+  return true;
 }
 
 async function capturePathAsync(outputFile) {
-  let path = process.env.PATH;
-  let output = (path) ? `PATH=$PATH:${path}` : '';
-  await fs.promise.writeFile(outputFile, output);
+  if (process.platform !== 'win32') {
+    let path = process.env.PATH;
+    let output = (path) ? `PATH=$PATH:${path}` : '';
+    await fs.promise.writeFile(outputFile, output);
+  }
 }
 
 function getIosPaths(projectRoot, manifest) {
@@ -177,10 +205,6 @@ function getIosPaths(projectRoot, manifest) {
  *  @param args.outputDirectory directory to create the detached project.
  */
 export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponentDirectory, sdkVersion, experienceUrl, manifest) {
-  if (process.platform === 'win32') {
-    return;
-  }
-
   let {
     iosProjectDirectory,
     projectName,
@@ -195,7 +219,7 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   mkdirp.sync(generatedExponentDir);
   fs.closeSync(fs.openSync(path.join(generatedExponentDir, 'EXKeys.h'), 'w'));
 
-  console.log('Naming project...');
+  console.log('Naming iOS project...');
   await spawnAsyncThrowError('sed', [
     '-i', `''`, '--',
     `s/exponent-view-template/${projectName}/g`,
@@ -219,7 +243,7 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   await spawnAsync('/bin/mv', [`${iosProjectDirectory}/exponent-view-template.xcodeproj`, `${iosProjectDirectory}/${projectName}.xcodeproj`]);
   await spawnAsync('/bin/mv', [`${iosProjectDirectory}/exponent-view-template.xcworkspace`, `${iosProjectDirectory}/${projectName}.xcworkspace`]);
 
-  console.log('Configuring project...');
+  console.log('Configuring iOS project...');
   let infoPlistPath = `${iosProjectDirectory}/${projectName}/Supporting`;
   let iconPath = `${iosProjectDirectory}/${projectName}/Assets.xcassets/AppIcon.appiconset`;
   await configureStandaloneIOSInfoPlistAsync(infoPlistPath, manifest);
@@ -230,7 +254,7 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   await configureIOSIconsAsync(manifest, iconPath);
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
-  console.log('Configuring dependencies...');
+  console.log('Configuring iOS dependencies...');
   await renderExponentViewPodspecAsync(
     path.join(tmpExponentDirectory, 'template-files', 'ios', 'ExponentView.podspec'),
     path.join(exponentDirectory, 'ExponentView.podspec'),
@@ -291,10 +315,13 @@ async function renamePackageAsync(directory, originalPkg, destPkg) {
 async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDirectory, sdkVersion, experienceUrl, manifest) {
   let androidProjectDirectory = path.join(projectRoot, 'android');
 
+  console.log('Moving Android project files...');
+
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'android', 'maven'), path.join(exponentDirectory, 'maven'));
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'exponent-view-template', 'android'), androidProjectDirectory);
 
   // Fix up app/build.gradle
+  console.log('Configuring Android project...');
   let appBuildGradle = path.join(androidProjectDirectory, 'app', 'build.gradle');
   await regexFileAsync(appBuildGradle, '/* UNCOMMENT WHEN DISTRIBUTING', '');
   await regexFileAsync(appBuildGradle, 'END UNCOMMENT WHEN DISTRIBUTING */', '');
@@ -323,6 +350,7 @@ async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDir
   }
 
   // Fix app name
+  console.log('Naming Android project...');
   let appName = manifest.name;
   await regexFileAsync(path.resolve(androidProjectDirectory, 'app', 'src', 'main', 'res', 'values', 'strings.xml'), ANDROID_TEMPLATE_NAME, appName);
 
@@ -349,7 +377,7 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
     iosProjectDirectory,
     projectName,
   } = getIosPaths(projectDir, exp);
-  
+
   console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.

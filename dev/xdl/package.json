@@ -63,7 +63,8 @@
     "tar.gz": "^1.0.5",
     "tree-kill": "^1.1.0",
     "unzip": "^0.1.11",
-    "url": "^0.11.0"
+    "url": "^0.11.0",
+    "yesno": "^0.0.1"
   },
   "optionalDependencies": {
     "diskusage": "^0.1.5"
