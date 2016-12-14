@@ -17,6 +17,7 @@ import path from 'path';
 import request from 'request';
 import spawnAsync from '@exponent/spawn-async';
 import treekill from 'tree-kill';
+import md5hex from 'md5hex';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -90,6 +91,25 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
   return response.body;
 }
 
+async function _resolveManifestAssets(manifest, resolver) {
+  // Asset fields that the user has set
+  // TODO: This should be in the `exp.json` schema
+  const assetFields = [
+    'icon',
+    'notification.icon',
+    'loading.icon',
+    'loading.backgroundImage',
+  ].filter((assetField) => _.get(manifest, assetField));
+
+  // Get the URLs
+  const urls = await Promise.all(assetFields.map((assetField) =>
+    resolver(_.get(manifest, assetField))))
+
+  // Set the corresponding URL fields
+  assetFields.forEach((assetField, index) =>
+    _.set(manifest, assetField + 'Url', urls[index]));
+}
+
 export async function publishAsync(projectRoot: string, options: Object = {}) {
   await _assertLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
@@ -161,10 +181,19 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
     delete exp.ios.config;
   }
 
+  // Resolve manifest assets to their S3 URL and add them to the list of assets to
+  // be uploaded
+  const manifestAssets = [];
+  await _resolveManifestAssets(exp, async (path) => {
+    const hash = md5hex(await fs.promise.readFile(path));
+    manifestAssets.push({ files: [path], fileHashes: [hash] });
+    return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
+  });
+
   // Upload asset files
   const iosAssets = JSON.parse(iosAssetsJson);
   const androidAssets = JSON.parse(androidAssetsJson);
-  const assets = iosAssets.concat(androidAssets);
+  const assets = iosAssets.concat(androidAssets).concat(manifestAssets);
   if (assets.length > 0 && assets[0].fileHashes) {
     await uploadAssetsAsync(projectRoot, assets);
   }
@@ -600,6 +629,10 @@ export async function startExponentServerAsync(projectRoot: string) {
       manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(projectRoot, {
         urlType: 'http',
       })}/logs`;
+
+      // Resolve assets to their packager URL
+      await _resolveManifestAssets(manifest, async (path) =>
+        manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + path);
 
       let manifestString = JSON.stringify(manifest);
       let currentUser = await User.getCurrentUserAsync();
