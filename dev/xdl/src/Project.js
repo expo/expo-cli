@@ -91,7 +91,7 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
   return response.body;
 }
 
-async function _resolveManifestAssets(manifest, resolver) {
+async function _resolveManifestAssets(projectRoot, manifest, resolver) {
   // Asset fields that the user has set
   // TODO: This should be in the `exp.json` schema
   const assetFields = [
@@ -102,8 +102,14 @@ async function _resolveManifestAssets(manifest, resolver) {
   ].filter((assetField) => _.get(manifest, assetField));
 
   // Get the URLs
-  const urls = await Promise.all(assetFields.map((assetField) =>
-    resolver(_.get(manifest, assetField))))
+  const urls = await Promise.all(assetFields.map(async (assetField) => {
+    const pathOrURL = _.get(manifest, assetField);
+    if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
+      return await resolver(pathOrURL);
+    } else {
+      return pathOrURL; // Assume already a URL
+    }
+  }));
 
   // Set the corresponding URL fields
   assetFields.forEach((assetField, index) =>
@@ -184,9 +190,10 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
   // Resolve manifest assets to their S3 URL and add them to the list of assets to
   // be uploaded
   const manifestAssets = [];
-  await _resolveManifestAssets(exp, async (path) => {
-    const hash = md5hex(await fs.promise.readFile(path));
-    manifestAssets.push({ files: [path], fileHashes: [hash] });
+  await _resolveManifestAssets(projectRoot, exp, async (assetPath) => {
+    const contents = await fs.promise.readFile(path.resolve(projectRoot, assetPath));
+    const hash = md5hex(contents);
+    manifestAssets.push({ files: [assetPath], fileHashes: [hash] });
     return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
   });
 
@@ -630,8 +637,8 @@ export async function startExponentServerAsync(projectRoot: string) {
         urlType: 'http',
       })}/logs`;
 
-      // Resolve assets to their packager URL
-      await _resolveManifestAssets(manifest, async (path) =>
+      // Resolve manifest assets to their packager URL
+      await _resolveManifestAssets(projectRoot, manifest, async (path) =>
         manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + path);
 
       let manifestString = JSON.stringify(manifest);
