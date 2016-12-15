@@ -11,14 +11,23 @@ export async function getSchemaAsync(sdkVersion) {
   return json.schema;
 }
 
-export async function getAssetFieldsAsync(sdkVersion) {
-  let json = await _getSchemaJSONAsync(sdkVersion);
-  return json.assetFields;
-}
-
-export async function getPNGFieldsAsync(sdkVersion) {
-  let json = await _getSchemaJSONAsync(sdkVersion);
-  return json.pngFields;
+// Array of schema nodes that refer to assets along with their field
+// path (eg. 'notification.icon')
+export async function getAssetSchemasAsync(sdkVersion) {
+  const schema = await getSchemaAsync(sdkVersion);
+  const assetSchemas = [];
+  const visit = (node, fieldPath) => {
+    if (node.meta && node.meta.asset) {
+      assetSchemas.push({ schema: node, fieldPath });
+    }
+    const properties = node.properties;
+    if (properties) {
+      Object.keys(properties).forEach((property) =>
+        visit(properties[property], `${fieldPath}${fieldPath.length > 0 ? '.' : ''}${property}`));
+    }
+  }
+  visit(schema, '');
+  return assetSchemas;
 }
 
 async function _getSchemaJSONAsync(sdkVersion) {

@@ -1736,6 +1736,10 @@ ffi@^2.0.0:
     ref "1"
     ref-struct "1"
 
+file-type@^4.0.0:
+  version "4.0.0"
+  resolved file-type-4.0.0.tgz#2bf44cf97112ae5040752f731ac5f329aad29522
+
 file-uri-to-path@0:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/file-uri-to-path/-/file-uri-to-path-0.0.2.tgz#37cdd1b5b905404b3f05e1b23645be694ff70f82"
@@ -1898,7 +1902,7 @@ fstream-ignore@~1.0.5:
 
 "fstream@>= 0.1.30 < 1":
   version "0.1.31"
-  resolved "https://registry.yarnpkg.com/fstream/-/fstream-0.1.31.tgz#7337f058fbbbbefa8c9f561a28cab0849202c988"
+  resolved fstream-0.1.31.tgz#7337f058fbbbbefa8c9f561a28cab0849202c988
   dependencies:
     graceful-fs "~3.0.2"
     inherits "~2.0.0"
@@ -1907,7 +1911,7 @@ fstream-ignore@~1.0.5:
 
 fstream@^1.0.0, fstream@^1.0.2, fstream@^1.0.8, fstream@~1.0.10:
   version "1.0.10"
-  resolved "https://registry.yarnpkg.com/fstream/-/fstream-1.0.10.tgz#604e8a92fe26ffd9f6fae30399d4984e1ab22822"
+  resolved fstream-1.0.10.tgz#604e8a92fe26ffd9f6fae30399d4984e1ab22822
   dependencies:
     graceful-fs "^4.1.2"
     inherits "~2.0.0"
@@ -2367,7 +2371,7 @@ instapromise@2.0.7-rc.1:
 
 instapromise@^2.0.2:
   version "2.0.7"
-  resolved "https://registry.yarnpkg.com/instapromise/-/instapromise-2.0.7.tgz#85e66b31021194da11214c865127ef04ec30167a"
+  resolved instapromise-2.0.7.tgz#85e66b31021194da11214c865127ef04ec30167a
 
 interpret@^1.0.0:
   version "1.0.1"
@@ -2919,7 +2923,7 @@ jsonpointer@^4.0.0:
 
 jsonschema@^1.1.0:
   version "1.1.0"
-  resolved "https://registry.yarnpkg.com/jsonschema/-/jsonschema-1.1.0.tgz#039cc219ed524b06e71daf12ca60d02639faf29a"
+  resolved jsonschema-1.1.0.tgz#039cc219ed524b06e71daf12ca60d02639faf29a
 
 jsprim@^1.2.2:
   version "1.3.1"
@@ -3269,7 +3273,7 @@ marked@^0.3.6:
 
 "match-stream@>= 0.0.2 < 1":
   version "0.0.2"
-  resolved "https://registry.yarnpkg.com/match-stream/-/match-stream-0.0.2.tgz#99eb050093b34dffade421b9ac0b410a9cfa17cf"
+  resolved match-stream-0.0.2.tgz#99eb050093b34dffade421b9ac0b410a9cfa17cf
   dependencies:
     buffers "~0.1.1"
     readable-stream "~1.0.0"
@@ -3643,7 +3647,7 @@ output-file-sync@^1.1.0:
 
 "over@>= 0.0.5 < 1":
   version "0.0.5"
-  resolved "https://registry.yarnpkg.com/over/-/over-0.0.5.tgz#f29852e70fd7e25f360e013a8ec44c82aedb5708"
+  resolved over-0.0.5.tgz#f29852e70fd7e25f360e013a8ec44c82aedb5708
 
 pac-proxy-agent@1:
   version "1.0.0"
@@ -3744,7 +3748,7 @@ path-type@^1.0.0:
     pify "^2.0.0"
     pinkie-promise "^2.0.0"
 
-pify@^2.0.0:
+pify@^2.0.0, pify@^2.3.0:
   version "2.3.0"
   resolved pify-2.3.0.tgz#ed141a6ac043a849ea588498e7dca8b15330e90c
 
@@ -3822,7 +3826,7 @@ pseudomap@^1.0.1:
 
 "pullstream@>= 0.4.1 < 1":
   version "0.4.1"
-  resolved "https://registry.yarnpkg.com/pullstream/-/pullstream-0.4.1.tgz#d6fb3bf5aed697e831150eb1002c25a3f8ae1314"
+  resolved pullstream-0.4.1.tgz#d6fb3bf5aed697e831150eb1002c25a3f8ae1314
   dependencies:
     over ">= 0.0.5 < 1"
     readable-stream "~1.0.31"
@@ -3884,6 +3888,12 @@ rc@~1.1.6:
     ini "~1.3.0"
     minimist "^1.2.0"
     strip-json-comments "~1.0.4"
+
+read-chunk@^2.0.0:
+  version "2.0.0"
+  resolved read-chunk-2.0.0.tgz#3246e877829116cec059674c4d5f300f7a9261f3
+  dependencies:
+    pify "^2.3.0"
 
 read-pkg-up@^1.0.1:
   version "1.0.1"
@@ -4244,7 +4254,7 @@ set-immediate-shim@^1.0.1:
 
 "setimmediate@>= 1.0.1 < 2", "setimmediate@>= 1.0.2 < 2":
   version "1.0.5"
-  resolved "https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz#290cbb232e306942d7d7ea9b83732ab7856f8285"
+  resolved setimmediate-1.0.5.tgz#290cbb232e306942d7d7ea9b83732ab7856f8285
 
 setprototypeof@1.0.2:
   version "1.0.2"
@@ -4272,7 +4282,7 @@ slash@^1.0.0:
 
 "slice-stream@>= 1.0.0 < 2":
   version "1.0.0"
-  resolved "https://registry.yarnpkg.com/slice-stream/-/slice-stream-1.0.0.tgz#5b33bd66f013b1a7f86460b03d463dec39ad3ea0"
+  resolved slice-stream-1.0.0.tgz#5b33bd66f013b1a7f86460b03d463dec39ad3ea0
   dependencies:
     readable-stream "~1.0.31"
 
@@ -4735,7 +4745,7 @@ unpipe@1.0.0, unpipe@~1.0.0:
 
 unzip@^0.1.11:
   version "0.1.11"
-  resolved "https://registry.yarnpkg.com/unzip/-/unzip-0.1.11.tgz#89749c63b058d7d90d619f86b98aa1535d3b97f0"
+  resolved unzip-0.1.11.tgz#89749c63b058d7d90d619f86b98aa1535d3b97f0
   dependencies:
     binary ">= 0.3.0 < 1"
     fstream ">= 0.1.30 < 1"

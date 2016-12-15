@@ -11,6 +11,8 @@ import jsonschema from 'jsonschema';
 import path from 'path';
 import request from 'request';
 import spawnAsync from '@exponent/spawn-async';
+import readChunk from 'read-chunk';
+import fileType from 'file-type';
 
 import Api from '../Api';
 import * as Binaries from '../Binaries';
@@ -51,22 +53,26 @@ async function _checkWatchmanVersionAsync(projectRoot) {
   }
 }
 
-async function _validatePngFieldsAsync(projectRoot, exp) {
-  let sdkVersion = exp.sdkVersion;
-  let pngFields = await ExpSchema.getPNGFieldsAsync(sdkVersion);
-  for (let fieldName of pngFields) {
-    let value = _.get(exp, fieldName);
-    if (value) {
-      let response = await request.promise.head({
-        url: value,
-      });
-
-      let contentType = response.headers['content-type'];
-      if (contentType !== 'image/png') {
-        ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in exp.json. Field '${fieldName}' must be a .png file but returned content-type ${contentType}. See ${Config.helpUrl}.`);
+async function _validateAssetFieldsAsync(projectRoot, exp) {
+  const assetSchemas = await ExpSchema.getAssetSchemasAsync(exp.sdkVersion);
+  await Promise.all(assetSchemas.map(async ({
+    fieldPath,
+    schema: {
+      meta: { asset, contentTypePattern, contentTypeHuman },
+    },
+  }) => {
+    const value = _.get(exp, fieldPath);
+    if (asset && value) {
+      if (contentTypePattern) {
+        let contentType = fs.existsSync(path.resolve(projectRoot, value)) ?
+                          fileType(await readChunk(value, 0, 4100)).mime :
+                          (await request.promise.head({ url: value })).headers['content-type'];
+        if (!contentType.match(new RegExp(contentTypePattern))) {
+          ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in exp.json. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`);
+        }
       }
     }
-  }
+  }));
 }
 
 async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promise<number>  {
@@ -258,7 +264,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
 
   // Don't block this! It has to make network requests so it's slow.
   if (allowNetwork) {
-    _validatePngFieldsAsync(projectRoot, exp);
+    _validateAssetFieldsAsync(projectRoot, exp);
   }
 
 

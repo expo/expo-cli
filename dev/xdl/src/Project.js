@@ -94,12 +94,12 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
 
 async function _resolveManifestAssets(projectRoot, manifest, resolver) {
   // Asset fields that the user has set
-  const assetFields = (await ExpSchema.getAssetFieldsAsync()).filter(
-    (assetField) => _.get(manifest, assetField));
+  const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion))
+    .filter(({ fieldPath }) => _.get(manifest, fieldPath));
 
   // Get the URLs
-  const urls = await Promise.all(assetFields.map(async (assetField) => {
-    const pathOrURL = _.get(manifest, assetField);
+  const urls = await Promise.all(assetSchemas.map(async ({ fieldPath }) => {
+    const pathOrURL = _.get(manifest, fieldPath);
     if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
       return await resolver(pathOrURL);
     } else {
@@ -108,8 +108,8 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver) {
   }));
 
   // Set the corresponding URL fields
-  assetFields.forEach((assetField, index) =>
-    _.set(manifest, assetField + 'Url', urls[index]));
+  assetSchemas.forEach(({ fieldPath }, index) =>
+    _.set(manifest, fieldPath + 'Url', urls[index]));
 }
 
 export async function publishAsync(projectRoot: string, options: Object = {}) {
