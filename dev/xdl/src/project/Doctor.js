@@ -64,6 +64,9 @@ async function _validateAssetFieldsAsync(projectRoot, exp) {
     const value = _.get(exp, fieldPath);
     if (asset && value) {
       if (contentTypePattern) {
+        // NOTE(nikki): The '4100' below should be enough for most file types, though we
+        //              could probably go shorter....
+        //              http://www.garykessler.net/library/file_sigs.html
         let contentType = fs.existsSync(path.resolve(projectRoot, value)) ?
                           fileType(await readChunk(value, 0, 4100)).mime :
                           (await request.promise.head({ url: value })).headers['content-type'];
