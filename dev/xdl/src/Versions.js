@@ -6,8 +6,21 @@ import _ from 'lodash';
 import semver from 'semver';
 
 import Api from './Api';
+import ApiV2Client from './ApiV2';
 import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
+import UserManager from './User';
+
+export async function versionsAsync() {
+  const api = new ApiV2Client();
+  return await api.getAsync('versions');
+}
+
+export async function setVersionsAsync(json: any) {
+  const user = await UserManager.getCurrentUserAsync();
+  const api = ApiV2Client.clientForUser(user);
+  return await api.postAsync('versions/update', json);
+}
 
 export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
   if (!expJson.sdkVersion) {

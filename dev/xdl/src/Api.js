@@ -119,6 +119,7 @@ export default class ApiClient {
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
+  // TODO: remove once db versions are deployed
   static async versionsAsync() {
     return await ApiClient.callPathAsync('/--/versions');
   }

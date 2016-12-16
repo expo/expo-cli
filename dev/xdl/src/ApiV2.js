@@ -33,7 +33,7 @@ export class ApiV2Error extends ExtendableError {
 }
 
 type RequestOptions = {
-  httpMethod: 'get' | 'post',
+  httpMethod: 'get' | 'post' | 'put',
   queryParameters?: ?QueryParameters,
   body?: ?Object,
 };
@@ -84,6 +84,13 @@ export default class ApiV2Client {
   async postAsync(methodName: string, data: ?Object, extraOptions: Object = {}): Promise<*> {
     return this._requestAsync(methodName, {
       httpMethod: 'post',
+      body: data,
+    }, extraOptions);
+  }
+
+  async putAsync(methodName: string, data: ?Object, extraOptions: Object = {}): Promise<*> {
+    return this._requestAsync(methodName, {
+      httpMethod: 'put',
       body: data,
     }, extraOptions);
   }

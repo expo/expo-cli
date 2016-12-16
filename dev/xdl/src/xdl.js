@@ -34,6 +34,7 @@ module.exports = {
   get ProjectSettings() { return require('./ProjectSettings'); },
   get ProjectUtils() { return require('./project/ProjectUtils'); },
   get Simulator() { return require('./Simulator'); },
+  get UpdateVersions() { return require('./tools/UpdateVersions'); },
   get UrlUtils() { return require('./UrlUtils'); },
   get User() { return require('./User').default; },
   get UserSettings() { return require('./UserSettings').default; },
