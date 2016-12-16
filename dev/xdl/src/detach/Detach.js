@@ -220,6 +220,20 @@ async function cleanXCodeProjectsAsync(searchPath) {
   return;
 }
 
+async function cleanVersionedReactNativeAsync(searchPath) {
+  // TODO: make it possible to allow a version for the kernel
+  let versionsToDelete = await glob.promise(searchPath + '/ABI*');
+  if (versionsToDelete) {
+    for (let ii = 0; ii < versionsToDelete.length; ii++) {
+      let toRemove = versionsToDelete[ii];
+      if (isDirectory(toRemove)) {
+        rimraf.sync(toRemove);
+      }
+    }
+  }
+  return;
+}
+
 /**
  *  Create a detached Exponent iOS app pointing at the given project.
  *  @param args.url url of the Exponent project.
@@ -293,6 +307,7 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
 
   console.log('Cleaning up iOS...');
   await cleanPropertyListBackupsAsync(infoPlistPath);
+  await cleanVersionedReactNativeAsync(path.join(exponentDirectory, 'ios', 'versioned-react-native'));
   await cleanXCodeProjectsAsync(path.join(exponentDirectory, 'ios'));
 
   return;
