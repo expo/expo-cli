@@ -26,6 +26,8 @@ import XDLError from './XDLError';
 
 let _lastUrl = null;
 
+const SUGGESTED_XCODE_VERSION = `8.2.0`;
+
 export function isPlatformSupported() {
   return process.platform === 'darwin';
 }
@@ -62,13 +64,55 @@ export async function _isSimulatorInstalledAsync() {
     Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
     return false;
   }
-  if (result === 'com.apple.iphonesimulator') {
-    return true;
-  } else {
+  if (result !== 'com.apple.iphonesimulator') {
     console.warn("Simulator is installed but is identified as '" + result + "'; don't know what that is.");
     Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
     return false;
   }
+
+  // check xcode version
+  try {
+    const { stdout } = await spawnAsync('xcodebuild -version');
+
+    // find something that looks like a dot separated version number
+    let matches = stdout.match(/[\d]{1,2}\.[\d]{1,3}/);
+    if (matches.length === 0) {
+      // very unlikely
+      console.error('No version number found from `xcodebuild -version`.');
+      Logger.global.error('Unable to check Xcode version. Command ran successfully but no version number was found.');
+      return false;
+    }
+
+    // we're cheating to use the semver lib, but it expects a proper patch version which xcode doesn't have
+    const version = matches[0] + '.0';
+
+    if (!semver.valid(version)) {
+      console.error('Invalid version number found: ' + matches[0]);
+      return false;
+    }
+
+    if (semver.lt(version, SUGGESTED_XCODE_VERSION)) {
+      console.warn(`Found Xcode ${version}, which is older than the recommended Xcode ${SUGGESTED_XCODE_VERSION}.`);
+    }
+
+  } catch (e) {
+    // how would this happen? presumably if Simulator id is found then xcodebuild is installed
+    const { stderr } = e;
+    console.error(`Unable to check Xcode version: ${stderr}`);
+    Logger.global.error('You may need to install Xcode from https://developer.apple.com/xcode/download/.');
+    return false;
+  }
+
+  // make sure we can run simctl
+  try {
+    await spawnAsync('xcrun simctl help');
+  } catch (e) {
+    console.warn(`Unable to run simctl: ${e.toString}`);
+    Logger.global.error('xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.');
+    return false;
+  }
+
+  return true;
 }
 
 // Simulator opened
@@ -272,7 +316,10 @@ export async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(
 
 export async function openUrlInSimulatorSafeAsync(url: string) {
   if (!(await _isSimulatorInstalledAsync())) {
-    return;
+    return {
+      success: false,
+      msg: 'Unable to verify Xcode and Simulator installation.',
+    };
   }
 
   try {
@@ -282,13 +329,24 @@ export async function openUrlInSimulatorSafeAsync(url: string) {
       // Hit some internal error, don't try again.
       // This includes Xcode license errors
       Logger.global.error(e.message);
-      return;
+      return {
+        success: false,
+        msg: `${e.toString()}`,
+      };
     }
 
     Logger.global.error(`Error installing or running app. ${e.toString()}`);
+    return {
+      success: false,
+      msg: `${e.toString()}`,
+    };
   }
 
   Analytics.logEvent('Open Url on Device', {
     platform: 'ios',
   });
+
+  return {
+    success: true,
+  };
 }
