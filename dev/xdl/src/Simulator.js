@@ -72,7 +72,7 @@ export async function _isSimulatorInstalledAsync() {
 
   // check xcode version
   try {
-    const { stdout } = await spawnAsync('xcodebuild -version');
+    const { stdout } = await spawnAsync('xcodebuild', ['-version']);
 
     // find something that looks like a dot separated version number
     let matches = stdout.match(/[\d]{1,2}\.[\d]{1,3}/);
@@ -97,15 +97,14 @@ export async function _isSimulatorInstalledAsync() {
 
   } catch (e) {
     // how would this happen? presumably if Simulator id is found then xcodebuild is installed
-    const { stderr } = e;
-    console.error(`Unable to check Xcode version: ${stderr}`);
+    console.error(`Unable to check Xcode version: ${e}`);
     Logger.global.error('You may need to install Xcode from https://developer.apple.com/xcode/download/.');
     return false;
   }
 
   // make sure we can run simctl
   try {
-    await spawnAsync('xcrun simctl help');
+    await spawnAsync('xcrun', ['simctl', 'help']);
   } catch (e) {
     console.warn(`Unable to run simctl: ${e.toString}`);
     Logger.global.error('xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.');
