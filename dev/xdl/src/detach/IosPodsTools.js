@@ -82,7 +82,7 @@ function renderUnversionedReactNativeDependency(options) {
   let attributes;
   if (options.isRemote && options.remoteTag) {
     attributes = {
-      git: 'https://github.com/exponentjs/react-native.git',
+      git: 'https://github.com/exponent/react-native.git',
       tag: options.remoteTag,
     };
   } else if (options.reactNativePath) {
