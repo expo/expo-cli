@@ -35,7 +35,7 @@ export function parseSdkVersionFromTag(tag: string) {
 
 export async function newestSdkVersionAsync() {
   let sdkVersions = await Api.sdkVersionsAsync();
-  let result;
+  let result = {};
   let highestMajorVersion = '0.0.0';
   _.forEach(sdkVersions, (value, key) => {
     if (semver.major(key) > semver.major(highestMajorVersion)) {

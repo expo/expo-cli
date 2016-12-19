@@ -10,6 +10,9 @@ import qs from 'querystring';
 import opn from 'opn';
 import jwt from 'jsonwebtoken';
 
+import type Auth0JS from 'auth0-js';
+import type Auth0Node from 'auth0';
+
 import ApiV2Client, { ApiV2Error } from './ApiV2';
 
 import * as Analytics from './Analytics';
@@ -616,7 +619,7 @@ function _buildAuth0SocialLoginUrl(auth0Options: Auth0Options, loginOptions: Log
   return `https://${AUTH0_DOMAIN}/authorize?${queryString}`;
 }
 
-function _auth0JSInstanceWithOptions(options: Object = {}) {
+function _auth0JSInstanceWithOptions(options: Object = {}): any {
   const Auth0 = require('auth0-js');
 
   let auth0Options = {
@@ -633,7 +636,7 @@ function _auth0JSInstanceWithOptions(options: Object = {}) {
   return Auth0Instance;
 }
 
-function _nodeAuth0InstanceWithOptions(options: Object = {}): Object {
+function _nodeAuth0InstanceWithOptions(options: Object = {}): any {
   let auth0Options = {
     domain: AUTH0_DOMAIN,
     clientId: UserManager.clientID,
@@ -693,9 +696,12 @@ class Deferred<X> {
   }
 }
 
-type ServerWithDestroy = http.Server & {
+type ServerWithDestroy = {
   destroy: Function,
   listening: boolean,
+  on: Function,
+  close: Function,
+  listen: Function,
 };
 
 async function _startLoginServerAsync(): Promise<{
