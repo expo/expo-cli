@@ -29,7 +29,7 @@ function initParams(uri, options, callback) {
   return params;
 }
 
-request.mockImpl((uri, options, callback) => {
+request.mockImplementation((uri, options, callback) => {
   if (typeof uri === 'undefined') {
     throw new Error('undefined is not a valid uri or options object.');
   }

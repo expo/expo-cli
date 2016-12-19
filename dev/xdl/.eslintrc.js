@@ -3,4 +3,7 @@ module.exports = {
   globals: {
     window: true,
   },
+  env: {
+    jasmine: true,
+  }
 };

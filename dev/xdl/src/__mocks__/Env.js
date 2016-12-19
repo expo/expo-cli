@@ -2,7 +2,7 @@
 
 const Env = jest.genMockFromModule('../Env');
 
-Env.home.mockImpl(() => {
+Env.home.mockImplementation(() => {
   return '/home';
 });
 

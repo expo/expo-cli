@@ -7,5 +7,5 @@
     "js",
     "json"
   ],
-  "resetModules": true
+  "resetModules": false
 }
