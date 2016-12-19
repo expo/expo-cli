@@ -36,8 +36,8 @@ import glob from 'glob';
 import uuid from 'node-uuid';
 import yesno from 'yesno';
 
-const EXPONENT_SRC_URL = 'https://github.com/exponentjs/exponent.git';
-const EXPONENT_ARCHIVE_URL = 'https://api.github.com/repos/exponentjs/exponent/tarball/master';
+const EXPONENT_SRC_URL = 'https://github.com/exponent/exponent.git';
+const EXPONENT_ARCHIVE_URL = 'https://api.github.com/repos/exponent/exponent/tarball/master';
 const ANDROID_TEMPLATE_PKG = 'detach.app.template.pkg.name';
 const ANDROID_TEMPLATE_COMPANY = 'detach.app.template.company.domain';
 const ANDROID_TEMPLATE_NAME = 'DetachAppTemplate';
