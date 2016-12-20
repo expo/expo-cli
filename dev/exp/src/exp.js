@@ -190,8 +190,7 @@ Run \`npm install -g exp\` to get the latest version`;
       break;
 
     case 'ahead-of-published':
-      message = `Your version of exp (${current}) is newer than the latest version published to npm (${latest}).`;
-      crayon.cyan.error(message);
+      // if the user is ahead of npm, we're going to assume they know what they're doing
       break;
 
     default:
