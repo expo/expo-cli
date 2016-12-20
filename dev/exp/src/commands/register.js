@@ -4,10 +4,10 @@
 
 import { register } from '../accounts';
 
-export default (program) => {
+export default (program: any) => {
   program
-    .command('register')
-    .description('Register a new Exponent account')
-    .option('--github', 'Register with a GitHub account')
+    .command('signup')
+    .description('Sign up for a new Exponent account')
+    .option('--github', 'Sign up with a GitHub account')
     .asyncAction(register);
 };
