@@ -63,7 +63,7 @@ export type LegacyUser = {
   }
 };
 
-export type UserObject = User | LegacyUser;
+export type UserOrLegacyUser = User | LegacyUser;
 
 type ConnectionType = 'Username-Password-Authentication' | 'facebook' | 'google-oauth2' | 'github';
 
@@ -205,7 +205,7 @@ export default class UserManager {
     return profile;
   }
 
-  static async registerAsync(userData: RegistrationData, user: ?UserObject): Promise<User> {
+  static async registerAsync(userData: RegistrationData, user: ?UserOrLegacyUser): Promise<User> {
     if (!user) {
       user = await UserManager.getCurrentUserAsync();
     }
