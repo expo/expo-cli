@@ -22,6 +22,7 @@ import {
   Logger,
   NotificationCode,
   ProjectUtils,
+  User as UserManager,
 } from 'xdl';
 
 import log from './log';
@@ -42,9 +43,11 @@ Command.prototype.addUrlOption = function() {
   return this;
 };
 
-Command.prototype.asyncAction = function(asyncFn) {
+Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
   return this.action(async (...args) => {
-    try { await checkForUpdateAsync(); } catch (e) {}
+    if (!skipUpdateCheck) {
+      try { await checkForUpdateAsync(); } catch (e) {}
+    }
 
     try {
       let options = _.last(args).parent;
@@ -70,8 +73,14 @@ Command.prototype.asyncAction = function(asyncFn) {
   });
 };
 
-Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation) {
+Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
   return this.asyncAction(async (projectDir, ...args) => {
+    try { await checkForUpdateAsync(); } catch (e) {}
+
+    if (!skipAuthCheck) {
+      await UserManager.ensureLoggedInAsync();
+    }
+
     if (!projectDir) {
       projectDir = process.cwd();
     } else {
@@ -109,7 +118,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     }
 
     return asyncFn(projectDir, ...args);
-  });
+  }, true);
 };
 
 function runAsync() {
