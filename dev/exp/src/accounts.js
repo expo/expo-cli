@@ -10,11 +10,8 @@ import {
 
 import type {
   User,
-  UserObject,
-  RegistrationData,
+  UserOrLegacyUser,
 } from 'xdl/build/User';
-
-import log from './log';
 
 const EXP_CLIENT_ID = 'Zso9S1J7xpRYzT4QNlanGYLL5aBrqy1l';
 UserManager.initialize(EXP_CLIENT_ID);
@@ -72,6 +69,7 @@ async function _socialAuth(provider: string) {
 }
 
 async function _tokenAuth(token: string) {
+  console.log('\nStay tuned! This feature is not yet implemented.');
   return;
 }
 
@@ -131,7 +129,7 @@ async function _usernamePasswordAuth(
   }
 }
 
-async function _onboardUser(user?: UserObject, usernamePass?: { username: string, password: string }): Promise<User> {
+async function _onboardUser(user?: UserOrLegacyUser, usernamePass?: { username: string, password: string }): Promise<User> {
   console.log('');
 
   const legacyMigration = (user && user.kind === 'legacyUser') ||
