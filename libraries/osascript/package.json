@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/exponentjs/osascript.git"
+    "url": "git+https://github.com/exponent/osascript.git"
   },
   "keywords": [
     "osascript",
@@ -23,9 +23,9 @@
   "author": "exponent.team@gmail.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/exponentjs/osascript/issues"
+    "url": "https://github.com/exponent/osascript/issues"
   },
-  "homepage": "https://github.com/exponentjs/osascript#readme",
+  "homepage": "https://github.com/exponent/osascript#readme",
   "dependencies": {
     "@exponent/spawn-async": "^1.1.0",
     "babel-runtime": "^5.8.38",
