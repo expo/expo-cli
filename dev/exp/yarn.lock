@@ -3067,9 +3067,9 @@ next-tick@^1.0.0:
   version "1.0.0"
   resolved next-tick-1.0.0.tgz#ca86d1fe8828169b0120208e3dc8424b9db8342c
 
-"ngrok@git+https://github.com/exponentjs/ngrok.git#v1.3.0":
+"ngrok@git+https://github.com/exponent/ngrok.git#v1.3.0":
   version "2.2.1"
-  resolved "git+https://github.com/exponentjs/ngrok.git#ef4cba8f387fd26b39a2c3259d9d85091c52c73b"
+  resolved "git+https://github.com/exponent/ngrok.git#ef4cba8f387fd26b39a2c3259d9d85091c52c73b"
   dependencies:
     async "^0.9.0"
     decompress-zip "^0.3.0"
@@ -3369,9 +3369,9 @@ pm2-multimeter@0.1.2:
   dependencies:
     charm "~0.1.1"
 
-"pm2@git+https://github.com/exponentjs/pm2.git#exp-master":
+"pm2@git+https://github.com/exponent/pm2.git#exp-master":
   version "1.1.3"
-  resolved "git+https://github.com/exponentjs/pm2.git#1b338d06858ab2fbe36915e73e546de73e9aae6a"
+  resolved "git+https://github.com/exponent/pm2.git#1b338d06858ab2fbe36915e73e546de73e9aae6a"
   dependencies:
     async "1.5"
     chalk "1.1.1"
@@ -4569,7 +4569,7 @@ xdl@0.26.6:
     minimist "^1.2.0"
     mkdirp "^0.5.1"
     ncp "^2.0.0"
-    ngrok "git+https://github.com/exponentjs/ngrok#v1.3.0"
+    ngrok "git+https://github.com/exponent/ngrok#v1.3.0"
     promise-props "^1.0.0"
     request "^2.74.0"
     rimraf "^2.5.4"

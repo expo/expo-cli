@@ -5,7 +5,7 @@
     crossPlatform: true
   },
   subtree: {
-    remote: "git@github.com:exponentjs/xdl.git",
+    remote: "git@github.com:exponent/xdl.git",
     branch: "master",
     squash: false
   }

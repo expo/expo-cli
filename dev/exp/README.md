@@ -1,4 +1,4 @@
-# exp [![Slack](http://slack.exponentjs.com/badge.svg)](http://slack.exponentjs.com)
+# exp [![Slack](http://slack.getexponent.com/badge.svg)](https://slack.getexponent.com)
 The Exponent Development CLI
 
 ## Installation

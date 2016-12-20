@@ -4024,9 +4024,9 @@ next-tick@^1.0.0:
   version "1.0.0"
   resolved next-tick-1.0.0.tgz#ca86d1fe8828169b0120208e3dc8424b9db8342c
 
-"ngrok@git+https://github.com/exponentjs/ngrok#v1.3.0":
+"ngrok@git+https://github.com/exponent/ngrok#v1.3.0":
   version "2.2.1"
-  resolved "git+https://github.com/exponentjs/ngrok#ef4cba8f387fd26b39a2c3259d9d85091c52c73b"
+  resolved "git+https://github.com/exponent/ngrok#ef4cba8f387fd26b39a2c3259d9d85091c52c73b"
   dependencies:
     async "^0.9.0"
     decompress-zip "^0.3.0"

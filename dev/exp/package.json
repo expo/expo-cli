@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/exponentjs/exp.git"
+    "url": "git+https://github.com/exponent/exp.git"
   },
   "keywords": [
     "exponent",
@@ -25,9 +25,9 @@
   "author": "support@getexponent.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/exponentjs/exp/issues"
+    "url": "https://github.com/exponent/exp/issues"
   },
-  "homepage": "https://github.com/exponentjs/exp#readme",
+  "homepage": "https://github.com/exponent/exp#readme",
   "devDependencies": {
     "babel-eslint": "^7.1.0",
     "babel-plugin-add-module-exports": "^0.2.1",
@@ -65,7 +65,7 @@
     "inquirer-async": "^1.1.0",
     "instapromise": "2.0.7-rc.1",
     "lodash-node": "^3.10.0",
-    "pm2": "git+https://github.com/exponentjs/pm2.git#exp-master",
+    "pm2": "git+https://github.com/exponent/pm2.git#exp-master",
     "qrcode-terminal": "^0.10.0",
     "semver": "^5.0.1",
     "source-map-support": "^0.4.1",

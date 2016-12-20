@@ -68,7 +68,7 @@ const dependencies = {
   "@exponent/vector-icons": "~2.0.3",
   "exponent": "~12.0.3",
   "react": "~15.3.2",
-  "react-native": "github:exponentjs/react-native#sdk-12.0.0"
+  "react-native": "github:exponent/react-native#sdk-12.0.0"
 };
 
 const unsupportedPackages = {

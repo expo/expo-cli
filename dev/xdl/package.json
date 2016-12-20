@@ -16,14 +16,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/exponentjs/xdl.git"
+    "url": "git+https://github.com/exponent/xdl.git"
   },
-  "author": "support@exponentjs.com",
+  "author": "support@getexponent.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/exponentjs/xdl/issues"
+    "url": "https://github.com/exponent/xdl/issues"
   },
-  "homepage": "https://github.com/exponentjs/xdl#readme",
+  "homepage": "https://github.com/exponent/xdl#readme",
   "dependencies": {
     "@ccheever/crayon": "^5.0.0",
     "@exponent/json-file": "^5.2.0",
@@ -57,7 +57,7 @@
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
-    "ngrok": "git+https://github.com/exponentjs/ngrok#v1.3.0",
+    "ngrok": "git+https://github.com/exponent/ngrok#v1.3.0",
     "node-uuid": "^1.4.7",
     "opn": "^4.0.2",
     "promise-props": "^1.0.0",

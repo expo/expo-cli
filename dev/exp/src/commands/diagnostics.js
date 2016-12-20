@@ -15,7 +15,7 @@ async function action(options) {
   simpleSpinner.stop();
 
   log(`Please share this URL with the Exponent team: ${url}.`);
-  log('You can join our slack here: https://slack.exponentjs.com/.');
+  log('You can join our slack here: https://slack.getexponent.com/.');
   log.raw(url);
 }
 

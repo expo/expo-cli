@@ -139,7 +139,8 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
     let reactNative = pkg.dependencies['react-native'];
 
     // Exponent fork of react-native is required
-    if (!reactNative.match(/exponentjs\/react-native/)) {
+    // TODO(2016-12-20): Remove the check for our old "exponentjs" org eventually
+    if (!reactNative.match(/exponent(?:js)?\/react-native/)) {
       ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Not using the Exponent fork of react-native. See ${Config.helpUrl}.`);
       return WARNING;
     }
@@ -150,7 +151,7 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
           semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['exponentReactNativeTag']))) {
-        ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponentjs/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
+        ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject['exponentReactNativeTag']}`);
         return WARNING;
       }
     } catch (e) {
@@ -236,8 +237,8 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
         }
         // TODO: also check react-native
         else if (dependency !== 'react-native' && !semver.satisfies(installedDependency.version, versionRequired) && !versionRequired.includes(installedDependency.from)) {
-          // For react native, `from` field looks like "exponentjs/react-native#sdk-8.0.1" and
-          // versionRequired looks like "github:exponentjs/react-native#sdk-8.0.0"
+          // For react native, `from` field looks like "exponent/react-native#sdk-8.0.1" and
+          // versionRequired looks like "github:exponent/react-native#sdk-8.0.0"
           errorStrings.push(`Warning: Installed version ${installedDependency.version} of '${dependency}' does not satisfy required version ${versionRequired}`);
         }
       });
