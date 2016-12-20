@@ -477,15 +477,12 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   let defaultCliPath = path.join(projectRoot, 'node_modules', 'react-native', 'local-cli', 'cli.js');
   const cliPath = _.get(exp, 'rnCliPath', defaultCliPath);
 
-  let packagerCwd;
   let nodePath;
   // When using a custom path for the RN CLI, we want it to use the project
   // root to look up config files and Node modules
   if (exp.rnCliPath) {
-    packagerCwd = projectRoot;
     nodePath = _nodePathForProjectRoot(projectRoot);
   } else {
-    packagerCwd = path.join(projectRoot, 'node_modules', 'react-native', 'packager');
     nodePath = null;
   }
 
@@ -496,7 +493,7 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
   // child process
   let packagerProcess = child_process.fork(cliPath, cliOpts, {
-    cwd: packagerCwd,
+    cwd: projectRoot,
     env: {
       ...process.env,
       NODE_PATH: nodePath,
@@ -537,6 +534,9 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   await _waitForRunningAsync(`${packagerUrl}/debug`);
 }
 
+// Simulate the node_modules resolution
+// If you project dir is /Jesse/Exponent/Universe/BubbleBounce, returns
+// "/Jesse/node_modules:/Jesse/Exponent/node_modules:/Jesse/Exponent/Universe/node_modules:/Jesse/Exponent/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
   let paths = [];
   let directory = path.resolve(projectRoot);
