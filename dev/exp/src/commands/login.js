@@ -4,9 +4,10 @@
 
 import { login } from '../accounts';
 
-export default (program) => {
+export default (program: any) => {
   program
     .command('login')
+    .alias('signin')
     .description('Login to Exponent')
     .option('-u, --username [string]', 'Username')
     .option('-p, --password [string]', 'Password')

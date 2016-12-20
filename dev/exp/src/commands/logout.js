@@ -17,7 +17,7 @@ async function action(options) {
   }
 }
 
-export default (program) => {
+export default (program: any) => {
   program
     .command('logout')
     .description('Logout from exp.host')

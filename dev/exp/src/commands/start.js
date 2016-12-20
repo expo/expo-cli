@@ -1,10 +1,12 @@
+/**
+ * @flow
+ */
+
 import {
   Project,
-  ProjectUtils,
   UrlUtils,
 } from 'xdl';
 
-import bunyan from 'bunyan';
 import crayon from '@ccheever/crayon';
 import simpleSpinner from '@exponent/simple-spinner';
 import path from 'path';
@@ -25,19 +27,21 @@ async function action(projectDir, options) {
   if (!options.foreground) {
     await urlOpts.optsAsync(projectDir, options);
 
-    var [pm2Name, pm2Id] = await Promise.all([
+    const [pm2Name, pm2Id] = await Promise.all([
       pm2serve.pm2NameAsync(),
       config.projectExpJsonFile(projectDir).getAsync('pm2Id', null),
     ]);
 
-    var script = process.argv[1];
-    var args_ = process.argv.slice(2);
+    const script = process.argv[1];
+    const args_ = process.argv.slice(2);
     args_.push('--foreground');
 
     // pm2 spits out some log statements here
     let tempLog = console.log;
+    // $FlowFixMe
     console.log = function() {};
     await pm2.promise.connect();
+    // $FlowFixMe
     console.log = tempLog;
 
     await config.projectExpJsonFile(projectDir).writeAsync({pm2Id, pm2Name, state: 'STARTING'});
@@ -45,7 +49,7 @@ async function action(projectDir, options) {
     // There is a race condition here, but let's just not worry about it for now...
     if (pm2Id !== null) {
       // If this is already being managed by pm2, then restart it
-      var app = await pm2serve.getPm2AppByNameAsync(pm2Name);
+      let app = await pm2serve.getPm2AppByNameAsync(pm2Name);
       if (app) {
         log("pm2 managed process exists");
         await pm2.promise.stop(app.pm_id);
@@ -68,7 +72,7 @@ async function action(projectDir, options) {
       env: process.env,
     });
 
-    var app = await pm2serve.getPm2AppByNameAsync(pm2Name);
+    const app = await pm2serve.getPm2AppByNameAsync(pm2Name);
     if (app) {
       await config.projectExpJsonFile(projectDir).mergeAsync({pm2Name, pm2Id: app.pm_id});
     } else {
@@ -77,7 +81,7 @@ async function action(projectDir, options) {
 
     await pm2.promise.disconnect();
 
-    var recipient = await sendTo.getRecipient(options.sendTo);
+    const recipient = await sendTo.getRecipient(options.sendTo);
 
     log("Waiting for packager, etc. to start");
     simpleSpinner.start();
@@ -132,7 +136,7 @@ async function action(projectDir, options) {
   return config.projectExpJsonFile(projectDir).readAsync();
 }
 
-export default (program) => {
+export default (program: any) => {
   program
     .command('start [project-dir]')
     .alias('r')

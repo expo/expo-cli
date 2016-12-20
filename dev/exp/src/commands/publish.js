@@ -13,7 +13,11 @@ import config from '../config';
 import log from '../log';
 import sendTo from '../sendTo';
 
-export async function action(projectDir, options = {}) {
+type Options = {
+  sendTo?: string,
+};
+
+export async function action(projectDir: string, options: Options = {}) {
   let status = await config.projectStatusAsync(projectDir);
   if (!status) {
     return;
@@ -45,7 +49,7 @@ export async function action(projectDir, options = {}) {
   return result;
 }
 
-export default (program) => {
+export default (program: any) => {
   program
     .command('publish [project-dir]')
     .alias('p')
