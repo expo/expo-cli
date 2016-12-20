@@ -136,9 +136,9 @@ async function _onboardUser(user?: UserOrLegacyUser, usernamePass?: { username: 
     (user && user.kind === 'user' && user.currentConnection === 'Username-Password-Authentication');
 
   if (user && legacyMigration) {
-    console.log(`Welcome back, ${user.username}!
-We've upgraded our account system and need a little bit more information from you!
-Please fill in the form below and we'll get you on your way.`);
+    console.log(`Signed in as: @${user.username}
+Hi there! We don't currently have any way to identify you if you were to lose
+your password. Please provide us with your name and e-mail address.`);
   } else {
     console.log(`Thanks for signing up for Exponent!
 Just a few questions:`);
