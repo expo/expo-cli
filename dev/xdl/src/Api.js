@@ -14,6 +14,7 @@ import Config from './Config';
 import * as Extract from './Extract';
 import * as Session from './Session';
 import UserManager from './User';
+import UserSettings from './UserSettings';
 
 function ApiError(code, message) {
   let err = new Error(message);
