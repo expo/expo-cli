@@ -4,7 +4,6 @@
 
 import 'instapromise';
 
-import targz from 'tar.gz';
 import existsAsync from 'exists-async';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
@@ -16,8 +15,8 @@ import rimraf from 'rimraf';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
-import * as Binaries from './Binaries';
 import ErrorCode from './ErrorCode';
+import * as Extract from './Extract';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import UserManager from './User';
@@ -139,39 +138,6 @@ async function _downloadStarterAppAsync(templateId) {
   };
 }
 
-async function _extractWindowsAsync(archive, starterAppName, dir) {
-  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
-  let tmpDir = path.join(dotExponentHomeDirectory, 'starter-app-cache', 'tmp');
-  let tmpFile = path.join(tmpDir, `${starterAppName}.tar`);
-  let binary = path.join(Binaries.getBinariesPath(), '7z1602-extra', '7za');
-  try {
-    await spawnAsync(binary, ['x', archive, '-aoa', `-o${tmpDir}`]);
-    await spawnAsync(binary, ['x', tmpFile, '-aoa', `-o${dir}`]);
-  } catch (e) {
-    console.error(e.message);
-    console.error(e.stderr);
-    throw e;
-  }
-}
-
-async function _extractAsync(archive, starterAppName, dir) {
-  try {
-    if (process.platform === 'win32') {
-      await _extractWindowsAsync(archive, starterAppName, dir);
-    } else {
-      await spawnAsync('tar', ['-xf', archive, '-C', dir], {
-        stdio: 'inherit',
-        cwd: __dirname,
-      });
-    }
-  } catch (e) {
-    // tar.gz node module doesn't work consistently with big files, so only
-    // use it as a backup.
-    console.error(e.message);
-    await targz().extract(archive, dir);
-  }
-}
-
 export async function createNewExpAsync(templateId: string, selectedDir: string, extraPackageJsonFields: any, opts: any) {
   // Validate
   let schema = joi.object().keys({
@@ -215,7 +181,7 @@ export async function createNewExpAsync(templateId: string, selectedDir: string,
 
   // Extract files
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Extracting project files...');
-  await _extractAsync(starterAppPath, starterAppName, root);
+  await Extract.extractAsync(starterAppPath, root);
 
   // Update files
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Customizing project...');

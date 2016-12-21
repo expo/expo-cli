@@ -7,9 +7,11 @@ import 'instapromise';
 import _ from 'lodash';
 import request from 'request';
 import fs from 'fs';
-import unzip from 'unzip';
+import rimraf from 'rimraf';
+import path from 'path';
 
 import Config from './Config';
+import * as Extract from './Extract';
 import * as Session from './Session';
 import UserManager from './User';
 
@@ -89,15 +91,10 @@ async function _callMethodAsync(url, method, requestBody, requestOptions): Promi
   }
 }
 
-async function _downloadAsync(url, path, options) {
+async function _downloadAsync(url, path) {
   return new Promise((resolve, reject) => {
     try {
-      let stream = request(url);
-      if (options.extract) {
-        stream.pipe(unzip.Extract({path})).on('close', resolve).on('error', reject);
-      } else {
-        stream.pipe(fs.createWriteStream(path)).on('finish', resolve).on('error', reject);
-      }
+      request(url).pipe(fs.createWriteStream(path)).on('finish', resolve).on('error', reject);
     } catch (e) {
       reject(e);
     }
@@ -132,7 +129,15 @@ export default class ApiClient {
     return versions.sdkVersions;
   }
 
-  static async downloadAsync(url, path, options = {}) {
-    await _downloadAsync(url, path, options);
+  static async downloadAsync(url, outputPath, options = {}) {
+    if (options.extract) {
+      let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
+      let tmpPath = path.join(dotExponentHomeDirectory, 'tmp-download-file');
+      await _downloadAsync(url, tmpPath);
+      await Extract.extractAsync(tmpPath, outputPath);
+      rimraf.sync(tmpPath);
+    } else {
+      await _downloadAsync(url, outputPath);
+    }
   }
 }
