@@ -12,7 +12,12 @@ import UserSettings from './UserSettings';
 async function _extractWindowsAsync(archive: string, dir: string) {
   let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
   let tmpDir = path.join(dotExponentHomeDirectory, 'starter-app-cache', 'tmp');
-  let fileNameNoExtension = path.basename(archive, path.extname(archive));
+  let fileNameNoExtension;
+  if (archive.endsWith('.tar.gz')) {
+    fileNameNoExtension = path.basename(archive.substr(0, archive.length - '.tar.gz'.length));
+  } else {
+    fileNameNoExtension = path.basename(archive, path.extname(archive));
+  }
   let tmpFile = path.join(tmpDir, `${fileNameNoExtension}.tar`);
   let binary = path.join(Binaries.getBinariesPath(), '7z1602-extra', '7za');
   try {
