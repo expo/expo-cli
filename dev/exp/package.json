@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "30.0.0",
+  "version": "0.30.0",
   "description": "The command-line tool for creating and publishing Exponent apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -70,6 +70,6 @@
     "semver": "^5.0.1",
     "source-map-support": "^0.4.1",
     "untildify": "^3.0.2",
-    "xdl": "0.26.6"
+    "xdl": "0.27.1"
   }
 }
