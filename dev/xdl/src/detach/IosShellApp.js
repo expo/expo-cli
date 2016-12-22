@@ -84,6 +84,14 @@ async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, pr
       CFBundleURLSchemes: [config.CFBundleIdentifier],
     }];
 
+    // set ITSAppUsesNonExemptEncryption to let people skip manually
+    // entering it in iTunes Connect
+    if (privateConfig &&
+        privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
+        privateConfig.usesNonExemptEncryption === false) {
+      config.ITSAppUsesNonExemptEncryption = false;
+    }
+
     // permanently save the exponent client version at time of configuration
     config.EXClientVersion = config.CFBundleVersion;
 
