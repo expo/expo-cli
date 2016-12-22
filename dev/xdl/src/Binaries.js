@@ -228,3 +228,7 @@ export async function sourceBashLoginScriptsAsync() {
     }
   }
 }
+
+export async function writePathToUserSettingsAsync() {
+  await UserSettings.setAsync('PATH', process.env.PATH);
+}

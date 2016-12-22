@@ -17,6 +17,7 @@ import url from 'url';
 import program, { Command } from 'commander';
 import {
   Analytics,
+  Binaries,
   Config,
   Doctor,
   Logger,
@@ -245,7 +246,10 @@ function _registerLogs() {
 // $FlowFixMe
 if (require.main === module) {
   (async function() {
-    await runAsync();
+    await Promise.all([
+      Binaries.writePathToUserSettingsAsync(),
+      runAsync(),
+    ]);
   })().catch(e => {
     console.error('Uncaught Error', e);
     process.exit(1);
