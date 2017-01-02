@@ -28,6 +28,9 @@
     "url": "https://github.com/exponent/exp/issues"
   },
   "homepage": "https://github.com/exponent/exp#readme",
+  "engines": {
+    "node": ">=6.9.1"
+  },
   "devDependencies": {
     "babel-eslint": "^7.1.0",
     "babel-plugin-add-module-exports": "^0.2.1",
