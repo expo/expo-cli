@@ -454,7 +454,6 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   let packagerOpts = {
     port: packagerPort,
     projectRoots: projectRoot,
-    assetRoots: projectRoot,
   };
 
   const userPackagerOpts = _.get(exp, 'packagerOpts');
