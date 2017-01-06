@@ -57,7 +57,6 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
         process.env['PM2_SILENT'] = 'true';
       }
       await asyncFn(...args);
-      process.exit(0);
     } catch (err) {
       if (err._isCommandError) {
         log.error(err.message);

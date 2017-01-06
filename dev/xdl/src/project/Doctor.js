@@ -14,11 +14,11 @@ import spawnAsync from '@exponent/spawn-async';
 import readChunk from 'read-chunk';
 import fileType from 'file-type';
 
+import * as ExpSchema from './ExpSchema';
+import * as ProjectUtils from './ProjectUtils';
 import Api from '../Api';
 import * as Binaries from '../Binaries';
 import Config from '../Config';
-import * as ExpSchema from './ExpSchema';
-import * as ProjectUtils from './ProjectUtils';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
 
@@ -71,7 +71,8 @@ async function _validateAssetFieldsAsync(projectRoot, exp) {
                           fileType(await readChunk(value, 0, 4100)).mime :
                           (await request.promise.head({ url: value })).headers['content-type'];
         if (!contentType.match(new RegExp(contentTypePattern))) {
-          ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in exp.json. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`);
+          const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+          ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`);
         }
       }
     }
@@ -90,17 +91,27 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
     ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem checking watchman version. ${e.message}.`);
   }
 
+  const expJsonExists = await ProjectUtils.fileExistsAsync(path.join(projectRoot, 'exp.json'));
+  const appJsonExists = await ProjectUtils.fileExistsAsync(path.join(projectRoot, 'app.json'));
+
+  if (expJsonExists && appJsonExists) {
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Both app.json and exp.json exist in this directory. Only one should exist for a single project.`);
+    return WARNING;
+  }
+
   let sdkVersion = exp.sdkVersion;
+  const configName = await ProjectUtils.configFilenameAsync(projectRoot);
   try {
+    // TODO(perry) figure out a way to tell the schema validator whether this is exp.json or app.json
     let schema = await ExpSchema.getSchemaAsync(sdkVersion);
     let validator = new jsonschema.Validator();
     let validationResult = validator.validate(exp, schema);
     if (validationResult.errors && validationResult.errors.length > 0) {
-      let fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in exp.json. See https://docs.getexponent.com/versions/v${sdkVersion}/guides/configuration.html.`;
+      let fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in ${configName}. See https://docs.getexponent.com/versions/v${sdkVersion}/guides/configuration.html.`;
 
       for (let error of validationResult.errors) {
         // Formate the message nicely
-        let message = error.stack.replace(/instance\./g, '').replace(/exists in instance/g, 'exists in exp.json').replace('instance additionalProperty', 'additional property');
+        let message = error.stack.replace(/instance\./g, '').replace(/exists in instance/g, `exists in ${configName}`).replace('instance additionalProperty', 'additional property');
         fullMessage += `\n  - ${message}.`;
       }
 
@@ -108,12 +119,12 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
       return WARNING;
     }
   } catch (e) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem validating exp.json: ${e.message}.`);
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem validating ${configName}: ${e.message}.`);
   }
 
   // Warn if sdkVersion is UNVERSIONED
   if (sdkVersion === 'UNVERSIONED') {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in exp.json`);
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in ${configName}`);
     return WARNING;
   }
 

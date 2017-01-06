@@ -158,7 +158,8 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
   if (!exp || !pkg) {
-    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read exp.json file in project at ${projectRoot}`);
+    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read ${configName} file in project at ${projectRoot}`);
   }
 
   // Support version and name being specified in package.json for legacy
@@ -275,9 +276,11 @@ export async function buildAsync(projectRoot: string, options: {
   }
 
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+  const configPrefix = (configName === 'app.json') ? 'exponent.' : '';
 
   if (!exp || !pkg) {
-    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read exp.json file in project at ${projectRoot}`);
+    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read ${configName} file in project at ${projectRoot}`);
   }
 
   // Support version and name being specified in package.json for legacy
@@ -291,13 +294,13 @@ export async function buildAsync(projectRoot: string, options: {
 
   if (options.platform === 'ios' || options.platform === 'all') {
     if (!exp.ios || !exp.ios.bundleIdentifier) {
-      throw new XDLError(ErrorCode.INVALID_MANIFEST, 'Must specify a bundle identifier in order to build this experience for iOS. Please specify one in exp.json at "ios.bundleIdentifier"');
+      throw new XDLError(ErrorCode.INVALID_MANIFEST, `Must specify a bundle identifier in order to build this experience for iOS. Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`);
     }
   }
 
   if (options.platform === 'android' || options.platform === 'all') {
     if (!exp.android || !exp.android.package) {
-      throw new XDLError(ErrorCode.INVALID_MANIFEST, 'Must specify a java package in order to build this experience for Android. Please specify one in exp.json at "android.package"');
+      throw new XDLError(ErrorCode.INVALID_MANIFEST, `Must specify a java package in order to build this experience for Android. Please specify one in ${configName} at "${configPrefix}android.package"`);
     }
   }
 
@@ -445,7 +448,7 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
 
   let packagerPort = await _getFreePortAsync(19001);
 
-  let exp = await Exp.expConfigForRootAsync(projectRoot);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
   // Create packager options
   let packagerOpts = {
@@ -598,7 +601,8 @@ export async function startExponentServerAsync(projectRoot: string) {
 
       let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(projectRoot);
       if (!manifest) {
-        throw new Error('No exp.json file found');
+        const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+        throw new Error(`No ${configName} file found`);
       }
 
       // Get packager opts and then copy into bundleUrlPackagerOpts

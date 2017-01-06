@@ -2,10 +2,14 @@
  * @flow
  */
 
+import fsp from 'mz/fs';
 import path from 'path';
 
+import JsonFile from '@exponent/json-file';
+import slug from 'slugify';
+
 import * as Analytics from '../Analytics';
-import * as Exp from '../Exp';
+import Config from '../Config';
 import Logger from '../Logger';
 
 const MAX_MESSAGE_LENGTH = 200;
@@ -82,13 +86,45 @@ export function attachLoggerStream(projectRoot: string, stream: any) {
   _getLogger(projectRoot).addStream(stream);
 }
 
+export async function fileExistsAsync(file: string): Promise<boolean> {
+  try {
+    return (await fsp.stat(file)).isFile();
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function configFilenameAsync(projectRoot: string): Promise<string> {
+  // we should always default to exp.json, and only use app.json if it exists
+  const appJsonExists = await fileExistsAsync(path.join(projectRoot, 'app.json'));
+  const expJsonExists = await fileExistsAsync(path.join(projectRoot, 'exp.json'));
+
+  if (appJsonExists) {
+    return 'app.json';
+  } else if (expJsonExists || Config.developerTool !== 'crna') {
+    return 'exp.json';
+  } else {
+    return 'app.json';
+  }
+}
+
 export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   let exp;
   let pkg;
 
+  const packageJsonPath = path.join(projectRoot, 'package.json');
+  const configName = await configFilenameAsync(projectRoot);
+  const configPath = path.join(projectRoot, configName);
+
   try {
-    pkg = await Exp.packageJsonForRoot(projectRoot).readAsync();
-    exp = await Exp.expJsonForRoot(projectRoot).readAsync();
+    pkg = await (new JsonFile(packageJsonPath)).readAsync();
+    exp = await (new JsonFile(configPath, {json5: true})).readAsync();
+
+    if (configName === 'app.json') {
+      // if we're not using exp.json, then we've stashed everything under an exponent key
+      // this is only for app.json at time of writing
+      exp = exp.exponent;
+    }
   } catch (e) {
     if (e.isJsonFileError) {
       // TODO: add error codes to json-file
@@ -112,8 +148,24 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
     exp = pkg.exp;
     logError(projectRoot, 'exponent', `Error: Move your "exp" config from package.json to exp.json.`);
   } else if (!exp && !pkg.exp) {
-    logError(projectRoot, 'exponent', `Error: Missing exp.json. See https://docs.getexponent.com/`);
+    logError(projectRoot, 'exponent', `Error: Missing ${configName}. See https://docs.getexponent.com/`);
     return { exp: null, pkg: null };
+  }
+
+  // fill any required fields we might care about
+
+  // TODO(adam) decide if there are other fields we want to provide defaults for
+
+  if (exp && !exp.name) {
+    exp.name = pkg.name;
+  }
+
+  if (exp && !exp.slug) {
+    exp.slug = slug(exp.name.toLowerCase());
+  }
+
+  if (exp && !exp.version) {
+    exp.version = pkg.version;
   }
 
   return { exp, pkg };

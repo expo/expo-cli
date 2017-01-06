@@ -19,47 +19,17 @@ import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as ProjectUtils from './project/ProjectUtils';
 import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 import * as ProjectSettings from './ProjectSettings';
 
+// FIXME(perry) eliminate usage of this template
 export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 
 export { default as convertProjectAsync } from './project/Convert';
-
-export function packageJsonForRoot(root: string) {
-  return new JsonFile(path.join(root, 'package.json'));
-}
-
-export function expJsonForRoot(root: string) {
-  return new JsonFile(path.join(root, 'exp.json'), {json5: true});
-}
-
-export async function expConfigForRootAsync(root: string) {
-  let pkg, exp;
-  try {
-    pkg = await packageJsonForRoot(root).readAsync();
-    exp = await expJsonForRoot(root).readAsync();
-  } catch (e) {
-    // exp or pkg missing
-  }
-
-  if (!exp && pkg) {
-    exp = pkg.exp;
-  }
-
-  return exp;
-}
-
-function _doesFileExist(file) {
-  try {
-    return fs.statSync(file).isFile();
-  } catch (e) {
-    return false;
-  }
-}
 
 function _getPlatformSpecificEntryPoint(entryPoint, platform) {
   if (entryPoint.endsWith('.js')) {
@@ -69,33 +39,19 @@ function _getPlatformSpecificEntryPoint(entryPoint, platform) {
   }
 }
 
-// You must call UrlUtils.getPlatformSpecificBundleUrl to remove the platform template string
 export async function determineEntryPointAsync(root: string) {
-  let exp = await expConfigForRootAsync(root);
-  let pkgJson = packageJsonForRoot(root);
-  let pkg = await pkgJson.readAsync();
-  let { main } = pkg;
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(root);
 
   // entryPoint is relative to the packager root and main is relative
   // to the project root. So if your rn-cli.config.js points to a different
   // root than the project root, these can be different. Most of the time
   // you should use main.
-  let entryPoint = main || 'index.js';
+  let entryPoint = pkg.main || 'index.js';
   if (exp && exp.entryPoint) {
     entryPoint = exp.entryPoint;
   }
 
-  let hasSeparateIosAndAndroidFiles = false;
-  if (!_doesFileExist(path.join(root, entryPoint)) &&
-    (_doesFileExist(path.join(root, _getPlatformSpecificEntryPoint(entryPoint, 'android'))) || _doesFileExist(path.join(root, _getPlatformSpecificEntryPoint(entryPoint, 'ios'))))) {
-    hasSeparateIosAndAndroidFiles = true;
-  }
-
-  if (hasSeparateIosAndAndroidFiles) {
-    return _getPlatformSpecificEntryPoint(entryPoint, ENTRY_POINT_PLATFORM_TEMPLATE_STRING);
-  } else {
-    return entryPoint;
-  }
+  return entryPoint;
 }
 
 function _starterAppCacheDirectory() {
@@ -177,7 +133,7 @@ export async function createNewExpAsync(templateId: string, selectedDir: string,
   await mkdirp.promise(root);
 
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Downloading project files...');
-  let { starterAppPath, starterAppName } = await _downloadStarterAppAsync(templateId);
+  let { starterAppPath } = await _downloadStarterAppAsync(templateId);
 
   // Extract files
   Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Extracting project files...');
@@ -264,34 +220,17 @@ function makePathReadable(pth) {
   }
 }
 
-export async function expInfoAsync(root: string) {
-  let pkgJson = packageJsonForRoot(root);
-
-  let name, description, icon;
-  try {
-    let exp = await expJsonForRoot(root).readAsync();
-    name = exp.name;
-    description = exp.description;
-    icon = exp.iconUrl;
-  } catch (err) {
-    let pkg = await pkgJson.readAsync();
-    name = pkg.name;
-    description = pkg.description;
-    icon = pkg.exp && pkg.exp.iconUrl;
-  }
-
-  return {
-    readableRoot: makePathReadable(root),
-    root,
-    name,
-    description,
-    icon,
-  };
-}
-
 export async function expInfoSafeAsync(root: string) {
   try {
-    return await expInfoAsync(root);
+    const { exp: { name, description, icon } } = await ProjectUtils.readConfigJsonAsync(root);
+
+    return {
+      readableRoot: makePathReadable(root),
+      root,
+      name,
+      description,
+      icon,
+    };
   } catch (e) {
     return null;
   }
@@ -312,34 +251,20 @@ type PublishInfo = {
 export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const { username } = await UserManager.ensureLoggedInAsync();
 
-  let pkg: any;
-  let exp: any;
+  const { exp } = await ProjectUtils.readConfigJsonAsync(root);
 
-  try {
-    pkg = await packageJsonForRoot(root).readAsync();
-    exp = await expJsonForRoot(root).readAsync();
-  } catch (e) {
-    // exp or pkg missing
-  }
+  const name = exp.slug;
+  const version = exp.version;
 
-  let name;
-  let version;
-  // Support legacy package.json with exp
-  if (!exp && pkg && pkg.exp) {
-    exp = pkg.exp;
-    name = pkg.name;
-    version = pkg.version;
-  } else if (exp && pkg) {
-    name = exp.slug;
-    version = pkg.version || exp.version;
-  }
+  const configName = await ProjectUtils.configFilenameAsync(root);
 
   if (!exp || !exp.sdkVersion) {
-    throw new Error(`sdkVersion is missing from exp.json`);
+    throw new Error(`sdkVersion is missing from ${configName}`);
   }
 
   if (!name) {
-    throw new Error(`slug field is missing from exp.json`);
+    // slug is made programmatically for app.json
+    throw new Error(`slug field is missing from exp.json.`);
   }
 
   if (!version) {

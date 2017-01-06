@@ -123,12 +123,13 @@ export async function detachAsync(projectRoot: string) {
   }
 
   console.log('Validating project manifest...');
+  const configName = await ProjectUtils.configFilenameAsync(projectRoot);
   if (!exp.name) {
-    throw new Error('exp.json is missing `name`');
+    throw new Error(`${configName} is missing \`name\``);
   }
 
   if (!exp.android || !exp.android.package) {
-    throw new Error('exp.json is missing android.package field. See https://docs.getexponent.com/versions/latest/guides/configuration.html#package');
+    throw new Error(`${configName} is missing android.package field. See https://docs.getexponent.com/versions/latest/guides/configuration.html#package`);
   }
 
   if (process.platform !== 'darwin') {
@@ -144,7 +145,13 @@ export async function detachAsync(projectRoot: string) {
     exp.isDetached = true;
     let detachedUUID = uuid.v4().replace(/-/g, '');
     exp.detachedScheme = `exp${detachedUUID}`;
-    await fs.promise.writeFile(path.join(projectRoot, 'exp.json'), JSON.stringify(exp, null, 2));
+
+    // if we're writing to app.json, we need to place the configuration under the exponent key
+    const nameToWrite = await ProjectUtils.configFilenameAsync(projectRoot);
+    if (nameToWrite === 'app.json') {
+      exp = { exponent: exp };
+    }
+    await fs.promise.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
   }
 
   // Download exponent repo

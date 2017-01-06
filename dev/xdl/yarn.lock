@@ -9,13 +9,13 @@
     has-color "^0.1.7"
     strip-ansi "^0.2.1"
 
-"@exponent/json-file@^5.2.0":
-  version "5.2.0"
-  resolved "@exponent-json-file-5.2.0.tgz#409647015e05d627d4186e87709cd1d434a7f43f"
+"@exponent/json-file@^5.3.0":
+  version "5.3.0"
+  resolved "@exponent-json-file-5.3.0.tgz#46d454a4f9e6a872f30654c45a28cfdc83e79c03"
   dependencies:
-    instapromise "^2.0.2"
     json5 "^0.5.0"
     lodash "^4.6.1"
+    mz "^2.6.0"
 
 "@exponent/osascript@^1.6.4":
   version "1.6.4"
@@ -144,6 +144,10 @@ ansi-styles@^2.2.1:
 ansicolors@~0.2.1:
   version "0.2.1"
   resolved ansicolors-0.2.1.tgz#be089599097b74a5c9c4a84a0cdbcdb62bd87aef
+
+any-promise@^1.0.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/any-promise/-/any-promise-1.3.0.tgz#abc6afeedcea52e809cdc0376aed3ce39635d17f"
 
 anymatch@^1.3.0:
   version "1.3.0"
@@ -274,13 +278,19 @@ async-settle@^1.0.0:
   dependencies:
     async-done "^1.2.2"
 
-async@1.x, async@^1.4.0, async@^1.4.2, async@^1.5.0, async@~1.5:
-  version "1.5.2"
-  resolved async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a
-
 async@^0.9.0:
   version "0.9.2"
   resolved async-0.9.2.tgz#aea74d5e61c1f899613bf64bda66d4c78f2fd17d
+
+async@^1.4.0, async@^1.4.2, async@^1.5.0, async@~1.5:
+  version "1.5.2"
+  resolved async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a
+
+async@^2.1.4:
+  version "2.1.4"
+  resolved async-2.1.4.tgz#2d2160c7788032e4dd6cbe2502f1f9a2c8f6cde4
+  dependencies:
+    lodash "^4.14.0"
 
 async@~0.2.6:
   version "0.2.10"
@@ -1060,11 +1070,7 @@ bluebird@^2.10.2, bluebird@^2.9.34:
   version "2.11.0"
   resolved bluebird-2.11.0.tgz#534b9033c022c9579c56ba3b3e5a5caafbb650e1
 
-bluebird@^3.1.1:
-  version "3.4.6"
-  resolved bluebird-3.4.6.tgz#01da8d821d87813d158967e743d5fe6c62cf8c0f
-
-bluebird@^3.4.7:
+bluebird@^3.1.1, bluebird@^3.4.7:
   version "3.4.7"
   resolved bluebird-3.4.7.tgz#f72d760be09b7f76d08ed8fae98b289a8d05fab3
 
@@ -1314,7 +1320,7 @@ clone-stats@^0.0.1:
   version "0.0.1"
   resolved clone-stats-0.0.1.tgz#b88f94a82cf38b8791d58046ea4029ad88ca99d1
 
-clone@^1.0.0, clone@^1.0.2:
+clone@^1.0.0:
   version "1.0.2"
   resolved clone-1.0.2.tgz#260b7a99ebb1edfe247538175f783243cb19d149
 
@@ -2114,12 +2120,12 @@ filename-regex@^2.0.0:
   version "2.0.0"
   resolved filename-regex-2.0.0.tgz#996e3e80479b98b9897f15a8a58b3d084e926775
 
-fileset@0.2.x:
-  version "0.2.1"
-  resolved fileset-0.2.1.tgz#588ef8973c6623b2a76df465105696b96aac8067
+fileset@^2.0.2:
+  version "2.0.3"
+  resolved fileset-2.0.3.tgz#8e7548a96d3cc2327ee5e674168723a333bba2a0
   dependencies:
-    glob "5.x"
-    minimatch "2.x"
+    glob "^7.0.3"
+    minimatch "^3.0.3"
 
 fill-range@^2.1.0:
   version "2.2.3"
@@ -2415,7 +2421,7 @@ glob-watcher@^3.0.0:
     lodash.assignwith "^4.0.6"
     lodash.debounce "^4.0.6"
 
-glob@5.x, glob@^5.0.15, glob@^5.0.3, glob@^5.0.5, glob@~5.0.0:
+glob@^5.0.15, glob@^5.0.3, glob@^5.0.5, glob@~5.0.0:
   version "5.0.15"
   resolved glob-5.0.15.tgz#1bc936b9e02f4a603fcc222ecf7633d30b8b93b1
   dependencies:
@@ -2805,10 +2811,6 @@ instapromise@2.0.7-rc.1:
   version "2.0.7-rc.1"
   resolved instapromise-2.0.7-rc.1.tgz#34aff619a45ea7d32bb122866a9e315ee73033e8
 
-instapromise@^2.0.2:
-  version "2.0.7"
-  resolved instapromise-2.0.7.tgz#85e66b31021194da11214c865127ef04ec30167a
-
 interpret@^1.0.0:
   version "1.0.1"
   resolved interpret-1.0.1.tgz#d579fb7f693b858004947af39fa0db49f795602c
@@ -3037,34 +3039,33 @@ isstream@~0.1.2:
   version "0.1.2"
   resolved isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a
 
-istanbul-api@^1.0.0-aplha.10:
-  version "1.0.0-aplha.10"
-  resolved istanbul-api-1.0.0-aplha.10.tgz#902edf5cf5404e0eba7e00ef46408488a0d3e337
+istanbul-api@^1.1.0-alpha.1:
+  version "1.1.0"
+  resolved istanbul-api-1.1.0.tgz#fb3f62edd5bfc6ae09da09453ded6e10ae7e483b
   dependencies:
-    async "1.x"
-    clone "^1.0.2"
-    fileset "0.2.x"
-    istanbul-lib-coverage "^1.0.0-alpha"
-    istanbul-lib-hook "^1.0.0-alpha"
-    istanbul-lib-instrument "^1.0.0-alpha"
-    istanbul-lib-report "^1.0.0-alpha"
-    istanbul-lib-source-maps "^1.0.0-alpha"
-    istanbul-reports "^1.0.0-alpha"
-    js-yaml "3.x"
-    mkdirp "0.5.x"
-    once "1.x"
+    async "^2.1.4"
+    fileset "^2.0.2"
+    istanbul-lib-coverage "^1.0.0"
+    istanbul-lib-hook "^1.0.0-alpha.4"
+    istanbul-lib-instrument "^1.3.0"
+    istanbul-lib-report "^1.0.0-alpha.3"
+    istanbul-lib-source-maps "^1.1.0"
+    istanbul-reports "^1.0.0"
+    js-yaml "^3.7.0"
+    mkdirp "^0.5.1"
+    once "^1.4.0"
 
 istanbul-lib-coverage@^1.0.0, istanbul-lib-coverage@^1.0.0-alpha, istanbul-lib-coverage@^1.0.0-alpha.0:
   version "1.0.0"
   resolved istanbul-lib-coverage-1.0.0.tgz#c3f9b6d226da12424064cce87fce0fb57fdfa7a2
 
-istanbul-lib-hook@^1.0.0-alpha:
+istanbul-lib-hook@^1.0.0-alpha.4:
   version "1.0.0-alpha.4"
   resolved istanbul-lib-hook-1.0.0-alpha.4.tgz#8c5bb9f6fbd8526e0ae6cf639af28266906b938f
   dependencies:
     append-transform "^0.3.0"
 
-istanbul-lib-instrument@^1.0.0-alpha, istanbul-lib-instrument@^1.1.1, istanbul-lib-instrument@^1.1.4:
+istanbul-lib-instrument@^1.1.1, istanbul-lib-instrument@^1.1.4, istanbul-lib-instrument@^1.3.0:
   version "1.3.0"
   resolved istanbul-lib-instrument-1.3.0.tgz#19f0a973397454989b98330333063a5b56df0e58
   dependencies:
@@ -3076,7 +3077,7 @@ istanbul-lib-instrument@^1.0.0-alpha, istanbul-lib-instrument@^1.1.1, istanbul-l
     istanbul-lib-coverage "^1.0.0"
     semver "^5.3.0"
 
-istanbul-lib-report@^1.0.0-alpha:
+istanbul-lib-report@^1.0.0-alpha.3:
   version "1.0.0-alpha.3"
   resolved istanbul-lib-report-1.0.0-alpha.3.tgz#32d5f6ec7f33ca3a602209e278b2e6ff143498af
   dependencies:
@@ -3087,7 +3088,7 @@ istanbul-lib-report@^1.0.0-alpha:
     rimraf "^2.4.3"
     supports-color "^3.1.2"
 
-istanbul-lib-source-maps@^1.0.0-alpha:
+istanbul-lib-source-maps@^1.1.0:
   version "1.1.0"
   resolved istanbul-lib-source-maps-1.1.0.tgz#9d429218f35b823560ea300a96ff0c3bbdab785f
   dependencies:
@@ -3096,7 +3097,7 @@ istanbul-lib-source-maps@^1.0.0-alpha:
     rimraf "^2.4.4"
     source-map "^0.5.3"
 
-istanbul-reports@^1.0.0-alpha:
+istanbul-reports@^1.0.0:
   version "1.0.0"
   resolved istanbul-reports-1.0.0.tgz#24b4eb2b1d29d50f103b369bd422f6e640aa0777
   dependencies:
@@ -3110,30 +3111,30 @@ jest-changed-files@^17.0.2:
   version "17.0.2"
   resolved jest-changed-files-17.0.2.tgz#f5657758736996f590a51b87e5c9369d904ba7b7
 
-jest-cli@^18.0.0:
-  version "18.0.0"
-  resolved jest-cli-18.0.0.tgz#11d141f5e9158d4f02c5c303815b5280f6887c55
+jest-cli@^18.1.0:
+  version "18.1.0"
+  resolved jest-cli-18.1.0.tgz#5ead36ecad420817c2c9baa2aa7574f63257b3d6
   dependencies:
     ansi-escapes "^1.4.0"
     callsites "^2.0.0"
     chalk "^1.1.1"
     graceful-fs "^4.1.6"
     is-ci "^1.0.9"
-    istanbul-api "^1.0.0-aplha.10"
+    istanbul-api "^1.1.0-alpha.1"
     istanbul-lib-coverage "^1.0.0"
     istanbul-lib-instrument "^1.1.1"
     jest-changed-files "^17.0.2"
-    jest-config "^18.0.0"
-    jest-environment-jsdom "^18.0.0"
+    jest-config "^18.1.0"
+    jest-environment-jsdom "^18.1.0"
     jest-file-exists "^17.0.0"
-    jest-haste-map "^18.0.0"
-    jest-jasmine2 "^18.0.0"
+    jest-haste-map "^18.1.0"
+    jest-jasmine2 "^18.1.0"
     jest-mock "^18.0.0"
-    jest-resolve "^18.0.0"
-    jest-resolve-dependencies "^18.0.0"
-    jest-runtime "^18.0.0"
-    jest-snapshot "^18.0.0"
-    jest-util "^18.0.0"
+    jest-resolve "^18.1.0"
+    jest-resolve-dependencies "^18.1.0"
+    jest-runtime "^18.1.0"
+    jest-snapshot "^18.1.0"
+    jest-util "^18.1.0"
     json-stable-stringify "^1.0.0"
     node-notifier "^4.6.1"
     sane "~1.4.1"
@@ -3143,136 +3144,137 @@ jest-cli@^18.0.0:
     worker-farm "^1.3.1"
     yargs "^6.3.0"
 
-jest-config@^18.0.0:
-  version "18.0.0"
-  resolved jest-config-18.0.0.tgz#21473ab68fef2fa79760d05419859b3c320e55e9
+jest-config@^18.1.0:
+  version "18.1.0"
+  resolved jest-config-18.1.0.tgz#6111740a6d48aab86ff5a9e6ab0b98bd993b6ff4
   dependencies:
     chalk "^1.1.1"
-    jest-environment-jsdom "^18.0.0"
-    jest-environment-node "^18.0.0"
-    jest-jasmine2 "^18.0.0"
+    jest-environment-jsdom "^18.1.0"
+    jest-environment-node "^18.1.0"
+    jest-jasmine2 "^18.1.0"
     jest-mock "^18.0.0"
-    jest-resolve "^18.0.0"
-    jest-util "^18.0.0"
+    jest-resolve "^18.1.0"
+    jest-util "^18.1.0"
     json-stable-stringify "^1.0.0"
 
-jest-diff@^18.0.0:
-  version "18.0.0"
-  resolved jest-diff-18.0.0.tgz#f24b6f8bedaae425548511ab45edbfb9fee930b7
+jest-diff@^18.1.0:
+  version "18.1.0"
+  resolved jest-diff-18.1.0.tgz#4ff79e74dd988c139195b365dc65d87f606f4803
   dependencies:
     chalk "^1.1.3"
     diff "^3.0.0"
-    jest-matcher-utils "^18.0.0"
-    pretty-format "^18.0.0"
+    jest-matcher-utils "^18.1.0"
+    pretty-format "^18.1.0"
 
-jest-environment-jsdom@^18.0.0:
-  version "18.0.0"
-  resolved jest-environment-jsdom-18.0.0.tgz#7341266285abce09f13f60e9b49de899802b76c5
+jest-environment-jsdom@^18.1.0:
+  version "18.1.0"
+  resolved jest-environment-jsdom-18.1.0.tgz#18b42f0c4ea2bae9f36cab3639b1e8f8c384e24e
   dependencies:
     jest-mock "^18.0.0"
-    jest-util "^18.0.0"
-    jsdom "^9.8.1"
+    jest-util "^18.1.0"
+    jsdom "^9.9.1"
 
-jest-environment-node@^18.0.0:
-  version "18.0.0"
-  resolved jest-environment-node-18.0.0.tgz#6f4947b324d6b4e17df20b1998f532c161a2821d
+jest-environment-node@^18.1.0:
+  version "18.1.0"
+  resolved jest-environment-node-18.1.0.tgz#4d6797572c8dda99acf5fae696eb62945547c779
   dependencies:
     jest-mock "^18.0.0"
-    jest-util "^18.0.0"
+    jest-util "^18.1.0"
 
 jest-file-exists@^17.0.0:
   version "17.0.0"
   resolved jest-file-exists-17.0.0.tgz#7f63eb73a1c43a13f461be261768b45af2cdd169
 
-jest-haste-map@^18.0.0:
-  version "18.0.0"
-  resolved jest-haste-map-18.0.0.tgz#707d3b5ae3bcbda971c39e8b911d20ad8502c748
+jest-haste-map@^18.1.0:
+  version "18.1.0"
+  resolved jest-haste-map-18.1.0.tgz#06839c74b770a40c1a106968851df8d281c08375
   dependencies:
     fb-watchman "^1.9.0"
     graceful-fs "^4.1.6"
-    multimatch "^2.1.0"
+    micromatch "^2.3.11"
     sane "~1.4.1"
     worker-farm "^1.3.1"
 
-jest-jasmine2@^18.0.0:
-  version "18.0.0"
-  resolved jest-jasmine2-18.0.0.tgz#05a35ee8cf61dd6d6d04826aa0e5915a2167a877
+jest-jasmine2@^18.1.0:
+  version "18.1.0"
+  resolved jest-jasmine2-18.1.0.tgz#094e104c2c189708766c77263bb2aecb5860a80b
   dependencies:
     graceful-fs "^4.1.6"
-    jest-matcher-utils "^18.0.0"
-    jest-matchers "^18.0.0"
-    jest-snapshot "^18.0.0"
-    jest-util "^18.0.0"
+    jest-matcher-utils "^18.1.0"
+    jest-matchers "^18.1.0"
+    jest-snapshot "^18.1.0"
+    jest-util "^18.1.0"
 
-jest-matcher-utils@^18.0.0:
-  version "18.0.0"
-  resolved jest-matcher-utils-18.0.0.tgz#74ad046aeb9414094fc6cd0d313847e4311f8538
+jest-matcher-utils@^18.1.0:
+  version "18.1.0"
+  resolved jest-matcher-utils-18.1.0.tgz#1ac4651955ee2a60cef1e7fcc98cdfd773c0f932
   dependencies:
     chalk "^1.1.3"
-    pretty-format "^18.0.0"
+    pretty-format "^18.1.0"
 
-jest-matchers@^18.0.0:
-  version "18.0.0"
-  resolved jest-matchers-18.0.0.tgz#d081e2dfd556a0c9f11c7fdc26dc1702fad50189
+jest-matchers@^18.1.0:
+  version "18.1.0"
+  resolved jest-matchers-18.1.0.tgz#0341484bf87a1fd0bac0a4d2c899e2b77a3f1ead
   dependencies:
-    jest-diff "^18.0.0"
-    jest-matcher-utils "^18.0.0"
-    jest-util "^18.0.0"
+    jest-diff "^18.1.0"
+    jest-matcher-utils "^18.1.0"
+    jest-util "^18.1.0"
+    pretty-format "^18.1.0"
 
 jest-mock@^18.0.0:
   version "18.0.0"
   resolved jest-mock-18.0.0.tgz#5c248846ea33fa558b526f5312ab4a6765e489b3
 
-jest-resolve-dependencies@^18.0.0:
-  version "18.0.0"
-  resolved jest-resolve-dependencies-18.0.0.tgz#a2980a634ae2554d8ed5922686883a2988979b70
+jest-resolve-dependencies@^18.1.0:
+  version "18.1.0"
+  resolved jest-resolve-dependencies-18.1.0.tgz#8134fb5caf59c9ed842fe0152ab01c52711f1bbb
   dependencies:
     jest-file-exists "^17.0.0"
-    jest-resolve "^18.0.0"
+    jest-resolve "^18.1.0"
 
-jest-resolve@^18.0.0:
-  version "18.0.0"
-  resolved jest-resolve-18.0.0.tgz#a47b0b939d8c53fc79e907db0a5110384432f3c8
+jest-resolve@^18.1.0:
+  version "18.1.0"
+  resolved jest-resolve-18.1.0.tgz#6800accb536658c906cd5e29de412b1ab9ac249b
   dependencies:
     browser-resolve "^1.11.2"
     jest-file-exists "^17.0.0"
-    jest-haste-map "^18.0.0"
-    resolve "^1.1.6"
+    jest-haste-map "^18.1.0"
+    resolve "^1.2.0"
 
-jest-runtime@^18.0.0:
-  version "18.0.0"
-  resolved jest-runtime-18.0.0.tgz#fff982dffe061b89bbea5c3b6f4d3fbf7b3cf56e
+jest-runtime@^18.1.0:
+  version "18.1.0"
+  resolved jest-runtime-18.1.0.tgz#3abfd687175b21fc3b85a2b8064399e997859922
   dependencies:
     babel-core "^6.0.0"
     babel-jest "^18.0.0"
     babel-plugin-istanbul "^3.0.0"
     chalk "^1.1.3"
     graceful-fs "^4.1.6"
-    jest-config "^18.0.0"
+    jest-config "^18.1.0"
     jest-file-exists "^17.0.0"
-    jest-haste-map "^18.0.0"
+    jest-haste-map "^18.1.0"
     jest-mock "^18.0.0"
-    jest-resolve "^18.0.0"
-    jest-snapshot "^18.0.0"
-    jest-util "^18.0.0"
+    jest-resolve "^18.1.0"
+    jest-snapshot "^18.1.0"
+    jest-util "^18.1.0"
     json-stable-stringify "^1.0.0"
-    multimatch "^2.1.0"
+    micromatch "^2.3.11"
     yargs "^6.3.0"
 
-jest-snapshot@^18.0.0:
-  version "18.0.0"
-  resolved jest-snapshot-18.0.0.tgz#3602c6b13cbf5788fd101bf0d73fc76104b88486
+jest-snapshot@^18.1.0:
+  version "18.1.0"
+  resolved jest-snapshot-18.1.0.tgz#55b96d2ee639c9bce76f87f2a3fd40b71c7a5916
   dependencies:
-    jest-diff "^18.0.0"
+    jest-diff "^18.1.0"
     jest-file-exists "^17.0.0"
-    jest-matcher-utils "^18.0.0"
-    jest-util "^18.0.0"
+    jest-matcher-utils "^18.1.0"
+    jest-util "^18.1.0"
     natural-compare "^1.4.0"
-    pretty-format "^18.0.0"
+    pretty-format "^18.1.0"
 
-jest-util@^18.0.0:
-  version "18.0.0"
-  resolved jest-util-18.0.0.tgz#4ef7c397ad7e1ac8f9c63a482c12a31df5e376a7
+jest-util@^18.1.0:
+  version "18.1.0"
+  resolved jest-util-18.1.0.tgz#3a99c32114ab17f84be094382527006e6d4bfc6a
   dependencies:
     chalk "^1.1.1"
     diff "^3.0.0"
@@ -3281,11 +3283,11 @@ jest-util@^18.0.0:
     jest-mock "^18.0.0"
     mkdirp "^0.5.1"
 
-jest@^18.0.0:
-  version "18.0.0"
-  resolved jest-18.0.0.tgz#ef12f70befe0fcb30f1c61c0ae58748706267d4b
+jest@^18.1.0:
+  version "18.1.0"
+  resolved jest-18.1.0.tgz#bcebf1e203dee5c2ad2091c805300a343d9e6c7d
   dependencies:
-    jest-cli "^18.0.0"
+    jest-cli "^18.1.0"
 
 jodid25519@^1.0.0:
   version "1.0.2"
@@ -3319,7 +3321,7 @@ js-tokens@^2.0.0:
   version "2.0.0"
   resolved js-tokens-2.0.0.tgz#79903f5563ee778cc1162e6dcf1a0027c97f9cb5
 
-js-yaml@3.x, js-yaml@^3.5.1:
+js-yaml@^3.5.1, js-yaml@^3.7.0:
   version "3.7.0"
   resolved js-yaml-3.7.0.tgz#5c967ddd837a9bfdca5f2de84253abe8a1c03b80
   dependencies:
@@ -3330,9 +3332,9 @@ jsbn@~0.1.0:
   version "0.1.0"
   resolved jsbn-0.1.0.tgz#650987da0dd74f4ebf5a11377a2aa2d273e97dfd
 
-jsdom@^9.8.1:
-  version "9.8.3"
-  resolved jsdom-9.8.3.tgz#fde29c109c32a1131e0b6c65914e64198f97c370
+jsdom@^9.9.1:
+  version "9.9.1"
+  resolved jsdom-9.9.1.tgz#84f3972ad394ab963233af8725211bce4d01bfd5
   dependencies:
     abab "^1.0.0"
     acorn "^2.4.0"
@@ -3344,7 +3346,7 @@ jsdom@^9.8.1:
     escodegen "^1.6.1"
     html-encoding-sniffer "^1.0.1"
     iconv-lite "^0.4.13"
-    nwmatcher ">= 1.3.7 < 2.0.0"
+    nwmatcher ">= 1.3.9 < 2.0.0"
     parse5 "^1.5.1"
     request "^2.55.0"
     sax "^1.1.4"
@@ -3352,7 +3354,7 @@ jsdom@^9.8.1:
     tough-cookie "^2.3.1"
     webidl-conversions "^3.0.1"
     whatwg-encoding "^1.0.1"
-    whatwg-url "^3.0.0"
+    whatwg-url "^4.1.0"
     xml-name-validator ">= 2.0.1 < 3.0.0"
 
 jsesc@^1.3.0:
@@ -3737,7 +3739,7 @@ lodash.templatesettings@^3.0.0:
     lodash._reinterpolate "^3.0.0"
     lodash.escape "^3.0.0"
 
-lodash@^4.0.0, lodash@^4.11.2, lodash@^4.14.1, lodash@^4.15.0, lodash@^4.2.0, lodash@^4.3.0, lodash@^4.6.1:
+lodash@^4.0.0, lodash@^4.11.2, lodash@^4.14.0, lodash@^4.14.1, lodash@^4.15.0, lodash@^4.2.0, lodash@^4.3.0, lodash@^4.6.1:
   version "4.17.2"
   resolved lodash-4.17.2.tgz#34a3055babe04ce42467b607d700072c7ff6bf42
 
@@ -3907,12 +3909,6 @@ mime@1.3.4, mime@^1.2.11:
   dependencies:
     brace-expansion "^1.0.0"
 
-minimatch@2.x:
-  version "2.0.10"
-  resolved minimatch-2.0.10.tgz#8d087c39c6b38c001b97fca7ce6d0e1e80afbac7
-  dependencies:
-    brace-expansion "^1.0.0"
-
 minimist@0.0.8, minimist@~0.0.1:
   version "0.0.8"
   resolved minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d
@@ -3921,7 +3917,7 @@ minimist@^1.1.0, minimist@^1.1.1, minimist@^1.1.3, minimist@^1.2.0:
   version "1.2.0"
   resolved minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284
 
-mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
+"mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
   version "0.5.1"
   resolved mkdirp-0.5.1.tgz#30057438eac6cf7f8c4767f38648d6697d75c903
   dependencies:
@@ -3930,6 +3926,13 @@ mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
 mkpath@^0.1.0:
   version "0.1.0"
   resolved mkpath-0.1.0.tgz#7554a6f8d871834cc97b5462b122c4c124d6de91
+
+mock-fs@^3.12.1:
+  version "3.12.1"
+  resolved mock-fs-3.12.1.tgz#ff27824cd6ab263a7eb05a115239d41d3631f5f8
+  dependencies:
+    rewire "2.5.2"
+    semver "5.3.0"
 
 moment@2.x.x, moment@^2.10.6:
   version "2.17.1"
@@ -3946,15 +3949,6 @@ ms@0.7.1:
 ms@^0.7.1:
   version "0.7.2"
   resolved ms-0.7.2.tgz#ae25cf2512b3885a1d95d7f037868d8431124765
-
-multimatch@^2.1.0:
-  version "2.1.0"
-  resolved multimatch-2.1.0.tgz#9c7906a22fb4c02919e2f5f75161b4cdbd4b2a2b
-  dependencies:
-    array-differ "^1.0.0"
-    array-union "^1.0.1"
-    arrify "^1.0.0"
-    minimatch "^3.0.0"
 
 multipipe@^0.1.2:
   version "0.1.2"
@@ -3977,6 +3971,14 @@ mv@~2:
     mkdirp "~0.5.1"
     ncp "~2.0.0"
     rimraf "~2.4.0"
+
+mz@^2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/mz/-/mz-2.6.0.tgz#c8b8521d958df0a4f2768025db69c719ee4ef1ce"
+  dependencies:
+    any-promise "^1.0.0"
+    object-assign "^4.0.1"
+    thenify-all "^1.0.0"
 
 nan@2, nan@^2.3.0, nan@^2.3.3:
   version "2.4.0"
@@ -4098,7 +4100,7 @@ number-is-nan@^1.0.0:
   version "1.0.1"
   resolved number-is-nan-1.0.1.tgz#097b602b53422a522c1afb8790318336941a011d
 
-"nwmatcher@>= 1.3.7 < 2.0.0":
+"nwmatcher@>= 1.3.9 < 2.0.0":
   version "1.3.9"
   resolved nwmatcher-1.3.9.tgz#8bab486ff7fa3dfd086656bbe8b17116d3692d2a
 
@@ -4131,7 +4133,7 @@ on-finished@~2.3.0:
   dependencies:
     ee-first "1.1.1"
 
-once@1.x, once@^1.3.0, once@^1.3.2:
+once@^1.3.0, once@^1.3.2, once@^1.4.0:
   version "1.4.0"
   resolved once-1.4.0.tgz#583b1aa775961d4b113ac17d9c50baef9dd76bd1
   dependencies:
@@ -4361,9 +4363,9 @@ preserve@^0.2.0:
   version "0.2.0"
   resolved preserve-0.2.0.tgz#815ed1f6ebc65926f865b310c0713bcb3315ce4b
 
-pretty-format@^18.0.0:
-  version "18.0.0"
-  resolved pretty-format-18.0.0.tgz#5f45c59fe2ed6749d46765429679670b08b21137
+pretty-format@^18.1.0:
+  version "18.1.0"
+  resolved pretty-format-18.1.0.tgz#fb65a86f7a7f9194963eee91865c1bcf1039e284
   dependencies:
     ansi-styles "^2.2.1"
 
@@ -4779,7 +4781,7 @@ resolve@1.1.7, resolve@~1.1.6:
   version "1.1.7"
   resolved resolve-1.1.7.tgz#203114d82ad2c5ed9e8e0411b3932875e889e97b
 
-resolve@^1.1.6, resolve@^1.1.7:
+resolve@^1.1.6, resolve@^1.1.7, resolve@^1.2.0:
   version "1.2.0"
   resolved resolve-1.2.0.tgz#9589c3f2f6149d1417a40becc1663db6ec6bc26c
 
@@ -4797,6 +4799,10 @@ restore-cursor@^1.0.1:
   dependencies:
     exit-hook "^1.0.0"
     onetime "^1.0.0"
+
+rewire@2.5.2:
+  version "2.5.2"
+  resolved rewire-2.5.2.tgz#6427de7b7feefa7d36401507eb64a5385bc58dc7
 
 right-align@^0.1.1:
   version "0.1.3"
@@ -4864,7 +4870,7 @@ semver-regex@^1.0.0:
   version "1.0.0"
   resolved semver-regex-1.0.0.tgz#92a4969065f9c70c694753d55248fc68f8f652c9
 
-"semver@2 || 3 || 4 || 5", semver@^5.1.0, semver@^5.3.0, semver@~5.3.0:
+"semver@2 || 3 || 4 || 5", semver@5.3.0, semver@^5.1.0, semver@^5.3.0, semver@~5.3.0:
   version "5.3.0"
   resolved semver-5.3.0.tgz#9b2ce5d3de02d17c6012ad326aa6b4d0cf54f94f
 
@@ -5297,6 +5303,18 @@ text-table@~0.2.0:
   version "0.2.0"
   resolved text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4
 
+thenify-all@^1.0.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/thenify-all/-/thenify-all-1.6.0.tgz#1a1918d402d8fc3f98fbf234db0bcc8cc10e9726"
+  dependencies:
+    thenify ">= 3.1.0 < 4"
+
+"thenify@>= 3.1.0 < 4":
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/thenify/-/thenify-3.2.1.tgz#251fd1c80aff6e5cf57cb179ab1fcb724269bd11"
+  dependencies:
+    any-promise "^1.0.0"
+
 throat@^3.0.0:
   version "3.0.0"
   resolved throat-3.0.0.tgz#e7c64c867cbb3845f10877642f7b60055b8ec0d6
@@ -5633,9 +5651,9 @@ whatwg-encoding@^1.0.1:
   dependencies:
     iconv-lite "0.4.13"
 
-whatwg-url@^3.0.0:
-  version "3.1.0"
-  resolved whatwg-url-3.1.0.tgz#7bdcae490f921aef6451fb6739ec6bbd8e907bf6
+whatwg-url@^4.1.0:
+  version "4.1.1"
+  resolved whatwg-url-4.1.1.tgz#567074923352de781e3500d64a86aa92a971b4a4
   dependencies:
     tr46 "~0.0.3"
     webidl-conversions "^3.0.0"

@@ -72,7 +72,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
   // major version in the sdkVersion field, so check for 11.0.0 to be sure.
-  let exp = await Exp.expJsonForRoot(projectRoot).readAsync();
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let supportsAssetPlugins = Versions.gteSdkVersion(exp, '11.0.0');
   if (!supportsAssetPlugins) {
     queryParams += '&includeAssetFileHashes=true';

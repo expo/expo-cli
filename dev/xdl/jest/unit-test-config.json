@@ -7,5 +7,6 @@
     "js",
     "json"
   ],
-  "resetModules": false
+  "resetModules": false,
+  "setupFiles": ["<rootDir>/jest/fs-mock-setup.js"]
 }

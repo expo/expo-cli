@@ -2,8 +2,6 @@
 
 let extend = require('extend');
 
-const request = jest.genMockFromModule('request');
-
 function asyncCallback(cb) {
   return function() {
     setImmediate(() => cb.apply(this, arguments));
@@ -29,7 +27,7 @@ function initParams(uri, options, callback) {
   return params;
 }
 
-request.mockImplementation((uri, options, callback) => {
+function request(uri, options, callback) {
   if (typeof uri === 'undefined') {
     throw new Error('undefined is not a valid uri or options object.');
   }
@@ -37,7 +35,7 @@ request.mockImplementation((uri, options, callback) => {
   var params = initParams(uri, options, callback);
   callback = asyncCallback(params.callback);
   callback(null, currentResponse);
-});
+}
 
 let currentResponse;
 request.__setMockResponse = (object) => currentResponse = object;
