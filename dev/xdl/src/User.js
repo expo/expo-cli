@@ -351,7 +351,7 @@ export default class UserManager {
     }
 
     try {
-      const updatedUser: User = await _updateUserAsync({
+      const updatedUser: User = await _createOrUpdateUserAsync({
         ...userData,
       });
       UserManager._currentUser = {
@@ -570,7 +570,7 @@ async function _auth0ForgotPasswordAsync(usernameOrEmail: string): Promise<void>
   });
 }
 
-async function _updateUserAsync(userData: Object): Promise<*> {
+async function _createOrUpdateUserAsync(userData: Object): Promise<*> {
   const api = ApiV2Client.clientForUser(UserManager._currentUser);
 
   const { user } = await api.postAsync('auth/createOrUpdateUser', {
