@@ -88,23 +88,27 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
 }
 
 async function _resolveManifestAssets(projectRoot, manifest, resolver) {
-  // Asset fields that the user has set
-  const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion))
-    .filter(({ fieldPath }) => _.get(manifest, fieldPath));
+  try {
+    // Asset fields that the user has set
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion))
+      .filter(({ fieldPath }) => _.get(manifest, fieldPath));
 
-  // Get the URLs
-  const urls = await Promise.all(assetSchemas.map(async ({ fieldPath }) => {
-    const pathOrURL = _.get(manifest, fieldPath);
-    if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
-      return await resolver(pathOrURL);
-    } else {
-      return pathOrURL; // Assume already a URL
-    }
-  }));
+    // Get the URLs
+    const urls = await Promise.all(assetSchemas.map(async ({ fieldPath }) => {
+      const pathOrURL = _.get(manifest, fieldPath);
+      if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
+        return await resolver(pathOrURL);
+      } else {
+        return pathOrURL; // Assume already a URL
+      }
+    }));
 
-  // Set the corresponding URL fields
-  assetSchemas.forEach(({ fieldPath }, index) =>
-    _.set(manifest, fieldPath + 'Url', urls[index]));
+    // Set the corresponding URL fields
+    assetSchemas.forEach(({ fieldPath }, index) =>
+      _.set(manifest, fieldPath + 'Url', urls[index]));
+  } catch (e) {
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Unable to resolve manifest assets. Icons might not work. ${e.message}.`);
+  }
 }
 
 export async function publishAsync(projectRoot: string, options: Object = {}) {

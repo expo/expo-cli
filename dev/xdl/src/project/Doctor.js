@@ -54,29 +54,33 @@ async function _checkWatchmanVersionAsync(projectRoot) {
 }
 
 async function _validateAssetFieldsAsync(projectRoot, exp) {
-  const assetSchemas = await ExpSchema.getAssetSchemasAsync(exp.sdkVersion);
-  await Promise.all(assetSchemas.map(async ({
-    fieldPath,
-    schema: {
-      meta: { asset, contentTypePattern, contentTypeHuman },
-    },
-  }) => {
-    const value = _.get(exp, fieldPath);
-    if (asset && value) {
-      if (contentTypePattern) {
-        // NOTE(nikki): The '4100' below should be enough for most file types, though we
-        //              could probably go shorter....
-        //              http://www.garykessler.net/library/file_sigs.html
-        let contentType = fs.existsSync(path.resolve(projectRoot, value)) ?
-                          fileType(await readChunk(value, 0, 4100)).mime :
-                          (await request.promise.head({ url: value })).headers['content-type'];
-        if (!contentType.match(new RegExp(contentTypePattern))) {
-          const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-          ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`);
+  try {
+    const assetSchemas = await ExpSchema.getAssetSchemasAsync(exp.sdkVersion);
+    await Promise.all(assetSchemas.map(async ({
+      fieldPath,
+      schema: {
+        meta: { asset, contentTypePattern, contentTypeHuman },
+      },
+    }) => {
+      const value = _.get(exp, fieldPath);
+      if (asset && value) {
+        if (contentTypePattern) {
+          // NOTE(nikki): The '4100' below should be enough for most file types, though we
+          //              could probably go shorter....
+          //              http://www.garykessler.net/library/file_sigs.html
+          let contentType = fs.existsSync(path.resolve(projectRoot, value)) ?
+                            fileType(await readChunk(value, 0, 4100)).mime :
+                            (await request.promise.head({ url: value })).headers['content-type'];
+          if (!contentType.match(new RegExp(contentTypePattern))) {
+            const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+            ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`);
+          }
         }
       }
-    }
-  }));
+    }));
+  } catch (e) {
+    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem validating asset fields: ${e.message}.`);
+  }
 }
 
 async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promise<number>  {
@@ -281,7 +285,6 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
   if (allowNetwork) {
     _validateAssetFieldsAsync(projectRoot, exp);
   }
-
 
   // TODO: this broke once we started using yarn because `npm ls` doesn't
   // work on a yarn install. Use `yarn check` in the future.

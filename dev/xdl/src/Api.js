@@ -11,10 +11,12 @@ import rimraf from 'rimraf';
 import path from 'path';
 
 import Config from './Config';
+import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import * as Session from './Session';
 import UserManager from './User';
 import UserSettings from './UserSettings';
+import XDLError from './XDLError';
 
 function ApiError(code, message) {
   let err = new Error(message);
@@ -77,7 +79,7 @@ async function _callMethodAsync(url, method, requestBody, requestOptions): Promi
     try {
       responseObj = JSON.parse(responseBody);
     } catch (e) {
-      throw new Error("Invalid JSON returned from API: " + e + ". Response body: " + responseBody);
+      throw new XDLError(ErrorCode.INVALID_JSON, "Invalid JSON returned from API: " + e + ". Response body: " + responseBody);
     }
   } else {
     responseObj = responseBody;
