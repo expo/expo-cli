@@ -32,4 +32,5 @@ export default {
     reactNativeVersionWarnings: true,
   },
   helpUrl: 'https://docs.getexponent.com/',
+  offline: false,
 };
