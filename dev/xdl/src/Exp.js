@@ -222,7 +222,10 @@ function makePathReadable(pth) {
 
 export async function expInfoSafeAsync(root: string) {
   try {
-    const { exp: { name, description, icon } } = await ProjectUtils.readConfigJsonAsync(root);
+    let { exp: { name, description, icon, iconUrl } } = await ProjectUtils.readConfigJsonAsync(root);
+    if (!icon && iconUrl) {
+      icon = iconUrl;
+    }
 
     return {
       readableRoot: makePathReadable(root),
