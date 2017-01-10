@@ -16,10 +16,13 @@ export async function versionsAsync() {
   return await api.getAsync('versions');
 }
 
-export async function setVersionsAsync(json: any) {
+export async function setVersionsAsync(value: any) {
   const user = await UserManager.getCurrentUserAsync();
   const api = ApiV2Client.clientForUser(user);
-  return await api.postAsync('versions/update', json);
+  return await api.postAsync('versions/update', {
+    value,
+    secret: process.env.EXPONENT_VERSIONS_SECRET,
+  });
 }
 
 export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
