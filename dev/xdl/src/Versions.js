@@ -12,8 +12,7 @@ import XDLError from './XDLError';
 import UserManager from './User';
 
 export async function versionsAsync() {
-  const api = new ApiV2Client();
-  return await api.getAsync('versions');
+  return await Api.versionsAsync();
 }
 
 export async function setVersionsAsync(value: any) {
