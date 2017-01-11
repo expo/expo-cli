@@ -7,6 +7,14 @@
 
 import 'instapromise';
 
+import mkdirp from 'mkdirp';
+import fs from 'fs';
+import path from 'path';
+import rimraf from 'rimraf';
+import glob from 'glob';
+import uuid from 'node-uuid';
+import yesno from 'yesno';
+
 import {
   saveUrlToPathAsync,
   spawnAsyncThrowError,
@@ -24,26 +32,174 @@ import {
   renderPodfileAsync,
 } from './IosPodsTools.js';
 
+import Api from '../Api';
 import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
 import UserManager from '../User';
 import XDLError from '../XDLError';
 import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
+import * as Versions from '../Versions';
 
-import mkdirp from 'mkdirp';
-import fs from 'fs';
-import path from 'path';
-import rimraf from 'rimraf';
-import glob from 'glob';
-import uuid from 'node-uuid';
-import yesno from 'yesno';
-
-const EXPONENT_SRC_URL = 'https://github.com/exponent/exponent.git';
-const EXPONENT_ARCHIVE_URL = 'https://api.github.com/repos/exponent/exponent/tarball/master';
 const ANDROID_TEMPLATE_PKG = 'detach.app.template.pkg.name';
 const ANDROID_TEMPLATE_COMPANY = 'detach.app.template.company.domain';
 const ANDROID_TEMPLATE_NAME = 'DetachAppTemplate';
+
+function _isDirectory(dir) {
+  try {
+    if (fs.statSync(dir).isDirectory()) {
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function detachAsync(projectRoot: string) {
+  let user = await UserManager.ensureLoggedInAsync();
+  let username = user.username;
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let experienceName = `@${username}/${exp.slug}`;
+  let experienceUrl = `exp://exp.host/${experienceName}`;
+
+  // Check to make sure project isn't fully detached already
+  let hasIosDirectory = _isDirectory(path.join(projectRoot, 'ios'));
+  let hasAndroidDirectory = _isDirectory(path.join(projectRoot, 'android'));
+
+  if (hasIosDirectory && hasAndroidDirectory) {
+    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, 'Error detaching. `ios` and `android` directories already exist.');
+  }
+
+  // Project was already detached on Windows or Linux
+  if (!hasIosDirectory && hasAndroidDirectory && process.platform === 'darwin') {
+    let response = await yesno.promise.ask(`This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`, null);
+    if (!response) {
+      console.log('Exiting...');
+      return false;
+    }
+  }
+
+  if (hasIosDirectory && !hasAndroidDirectory) {
+    throw new Error('`ios` directory already exists. Please remove it and try again.');
+  }
+
+  console.log('Validating project manifest...');
+  const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+  if (!exp.name) {
+    throw new Error(`${configName} is missing \`name\``);
+  }
+
+  if (!exp.android || !exp.android.package) {
+    throw new Error(`${configName} is missing android.package field. See https://docs.getexponent.com/versions/latest/guides/configuration.html#package`);
+  }
+
+  if (!exp.sdkVersion) {
+    throw new Error(`${configName} is missing \`sdkVersion\``);
+  }
+  const versions = await Versions.versionsAsync();
+  const sdkVersionConfig = versions.sdkVersions[exp.sdkVersion];
+  if (!sdkVersionConfig || !sdkVersionConfig.androidExponentViewUrl || !sdkVersionConfig.iosExponentViewUrl) {
+    throw new Error(`Detaching is not supported for SDK version ${exp.sdkVersion}`);
+  }
+
+  if (process.platform !== 'darwin') {
+    let response = await yesno.promise.ask(`Can't create an iOS project since you are not on macOS. You can rerun this command on macOS in the future to add an iOS project. Enter 'yes' to continue and just create an Android project:`, null);
+    if (!response) {
+      console.log('Exiting...');
+      return false;
+    }
+  }
+
+  // Modify exp.json
+  if (!exp.isDetached || !exp.detachedScheme) {
+    exp.isDetached = true;
+    let detachedUUID = uuid.v4().replace(/-/g, '');
+    exp.detachedScheme = `exp${detachedUUID}`;
+
+    // if we're writing to app.json, we need to place the configuration under the exponent key
+    const nameToWrite = await ProjectUtils.configFilenameAsync(projectRoot);
+    if (nameToWrite === 'app.json') {
+      exp = { exponent: exp };
+    }
+    await fs.promise.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
+  }
+
+  let exponentDirectory = path.join(projectRoot, '.exponent-source');
+  mkdirp.sync(exponentDirectory);
+
+  // iOS
+  if (process.platform === 'darwin' && !hasIosDirectory) {
+    let iosDirectory = path.join(exponentDirectory, 'ios');
+    rimraf.sync(iosDirectory);
+    mkdirp.sync(iosDirectory);
+    await detachIOSAsync(projectRoot, iosDirectory, exp.sdkVersion, experienceUrl, exp, sdkVersionConfig.iosExponentViewUrl);
+  }
+
+  // Android
+  if (!hasAndroidDirectory) {
+    let androidDirectory = path.join(exponentDirectory, 'android');
+    rimraf.sync(androidDirectory);
+    mkdirp.sync(androidDirectory);
+    await detachAndroidAsync(projectRoot, androidDirectory, exp.sdkVersion, experienceUrl, exp, sdkVersionConfig.androidExponentViewUrl);
+  }
+
+  return true;
+}
+
+async function capturePathAsync(outputFile) {
+  if (process.platform !== 'win32') {
+    let path = process.env.PATH;
+    let output = (path) ? `PATH=$PATH:${path}` : '';
+    await fs.promise.writeFile(outputFile, output);
+  }
+}
+
+function getIosPaths(projectRoot, manifest) {
+  let iosProjectDirectory = path.join(projectRoot, 'ios');
+  let projectNameLabel = manifest.name;
+  let projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
+  return {
+    iosProjectDirectory,
+    projectName,
+  };
+}
+
+/**
+ *  Delete xcodeproj|xcworkspace under searchPath.
+ *  Needed because extraneous xcode files will interfere with `react-native link`.
+ */
+async function cleanXCodeProjectsAsync(searchPath) {
+  let xcodeFilesToDelete = await glob.promise(searchPath + '/**/*.@(xcodeproj|xcworkspace)');
+  if (xcodeFilesToDelete) {
+    for (let ii = 0; ii < xcodeFilesToDelete.length; ii++) {
+      let toRemove = xcodeFilesToDelete[ii];
+      if (fs.existsSync(toRemove)) { // needed because we may have recursively removed in past iteration
+        if (_isDirectory(toRemove)) {
+          rimraf.sync(toRemove);
+        } else {
+          await fs.promise.unlink(toRemove);
+        }
+      }
+    }
+  }
+  return;
+}
+
+async function cleanVersionedReactNativeAsync(searchPath) {
+  // TODO: make it possible to allow a version for the kernel
+  let versionsToDelete = await glob.promise(searchPath + '/ABI*');
+  if (versionsToDelete) {
+    for (let ii = 0; ii < versionsToDelete.length; ii++) {
+      let toRemove = versionsToDelete[ii];
+      if (_isDirectory(toRemove)) {
+        rimraf.sync(toRemove);
+      }
+    }
+  }
+  return;
+}
 
 async function configureDetachedVersionsPlistAsync(configFilePath, detachedSDKVersion, kernelSDKVersion) {
   await modifyIOSPropertyListAsync(configFilePath, 'EXSDKVersions', (versionConfig) => {
@@ -82,178 +238,19 @@ async function cleanPropertyListBackupsAsync(configFilePath) {
   await cleanIOSPropertyListBackupAsync(configFilePath, 'EXSDKVersions', false);
 }
 
-function isDirectory(dir) {
-  try {
-    if (fs.statSync(dir).isDirectory()) {
-      return true;
-    }
-
-    return false;
-  } catch (e) {
-    return false;
-  }
-}
-
-export async function detachAsync(projectRoot: string) {
-  let user = await UserManager.ensureLoggedInAsync();
-  let username = user.username;
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  let experienceName = `@${username}/${exp.slug}`;
-  let experienceUrl = `exp://exp.host/${experienceName}`;
-
-  // Check to make sure project isn't fully detached already
-  let hasIosDirectory = isDirectory(path.join(projectRoot, 'ios'));
-  let hasAndroidDirectory = isDirectory(path.join(projectRoot, 'android'));
-
-  if (hasIosDirectory && hasAndroidDirectory) {
-    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, 'Error detaching. `ios` and `android` directories already exist.');
-  }
-
-  // Project was already detached on Windows or Linux
-  if (!hasIosDirectory && hasAndroidDirectory && process.platform === 'darwin') {
-    let response = await yesno.promise.ask(`This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`, null);
-    if (!response) {
-      console.log('Exiting...');
-      return false;
-    }
-  }
-
-  if (hasIosDirectory && !hasAndroidDirectory) {
-    throw new Error('`ios` directory already exists. Please remove it and try again.');
-  }
-
-  console.log('Validating project manifest...');
-  const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-  if (!exp.name) {
-    throw new Error(`${configName} is missing \`name\``);
-  }
-
-  if (!exp.android || !exp.android.package) {
-    throw new Error(`${configName} is missing android.package field. See https://docs.getexponent.com/versions/latest/guides/configuration.html#package`);
-  }
-
-  if (process.platform !== 'darwin') {
-    let response = await yesno.promise.ask(`Can't create an iOS project since you are not on macOS. You can rerun this command on macOS in the future to add an iOS project. Enter 'yes' to continue and just create an Android project:`, null);
-    if (!response) {
-      console.log('Exiting...');
-      return false;
-    }
-  }
-
-  // Modify exp.json
-  if (!exp.isDetached || !exp.detachedScheme) {
-    exp.isDetached = true;
-    let detachedUUID = uuid.v4().replace(/-/g, '');
-    exp.detachedScheme = `exp${detachedUUID}`;
-
-    // if we're writing to app.json, we need to place the configuration under the exponent key
-    const nameToWrite = await ProjectUtils.configFilenameAsync(projectRoot);
-    if (nameToWrite === 'app.json') {
-      exp = { exponent: exp };
-    }
-    await fs.promise.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
-  }
-
-  // Download exponent repo
-  console.log('Downloading Exponent kernel...');
-  let tmpExponentDirectory = path.join(projectRoot, 'exponent-src-tmp');
-  // TODO: Make this method work
-  // await spawnAsync(`/usr/bin/curl -L ${EXPONENT_ARCHIVE_URL} | tar xzf -`, null, { shell: true });
-  await spawnAsyncThrowError('/usr/bin/git', ['clone', EXPONENT_SRC_URL, tmpExponentDirectory]);
-
-  let exponentDirectory = path.join(projectRoot, 'exponent');
-  mkdirp.sync(exponentDirectory);
-
-  // iOS
-  if (process.platform === 'darwin' && !hasIosDirectory) {
-    await detachIOSAsync(projectRoot, tmpExponentDirectory, exponentDirectory, exp.sdkVersion, experienceUrl, exp);
-  }
-
-  // Android
-  if (!hasAndroidDirectory) {
-    await detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDirectory, exp.sdkVersion, experienceUrl, exp);
-  }
-
-  // Clean up
-  console.log('Cleaning up...');
-  await spawnAsync('/bin/rm', ['-rf', tmpExponentDirectory]);
-
-  // These files cause @providesModule naming collisions
-  if (process.platform === 'darwin') {
-    let rnFilesToDelete = await glob.promise(path.join(exponentDirectory, 'ios', 'versioned-react-native') + '/**/*.@(js|json)');
-    if (rnFilesToDelete) {
-      for (let i = 0; i < rnFilesToDelete.length; i++) {
-        await fs.promise.unlink(rnFilesToDelete[i]);
-      }
-    }
-  }
-
-  return true;
-}
-
-async function capturePathAsync(outputFile) {
-  if (process.platform !== 'win32') {
-    let path = process.env.PATH;
-    let output = (path) ? `PATH=$PATH:${path}` : '';
-    await fs.promise.writeFile(outputFile, output);
-  }
-}
-
-function getIosPaths(projectRoot, manifest) {
-  let iosProjectDirectory = path.join(projectRoot, 'ios');
-  let projectNameLabel = manifest.name;
-  let projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
-  return {
-    iosProjectDirectory,
-    projectName,
-  };
-}
-
-/**
- *  Delete xcodeproj|xcworkspace under searchPath.
- *  Needed because extraneous xcode files will interfere with `react-native link`.
- */
-async function cleanXCodeProjectsAsync(searchPath) {
-  let xcodeFilesToDelete = await glob.promise(searchPath + '/**/*.@(xcodeproj|xcworkspace)');
-  if (xcodeFilesToDelete) {
-    for (let ii = 0; ii < xcodeFilesToDelete.length; ii++) {
-      let toRemove = xcodeFilesToDelete[ii];
-      if (fs.existsSync(toRemove)) { // needed because we may have recursively removed in past iteration
-        if (isDirectory(toRemove)) {
-          rimraf.sync(toRemove);
-        } else {
-          await fs.promise.unlink(toRemove);
-        }
-      }
-    }
-  }
-  return;
-}
-
-async function cleanVersionedReactNativeAsync(searchPath) {
-  // TODO: make it possible to allow a version for the kernel
-  let versionsToDelete = await glob.promise(searchPath + '/ABI*');
-  if (versionsToDelete) {
-    for (let ii = 0; ii < versionsToDelete.length; ii++) {
-      let toRemove = versionsToDelete[ii];
-      if (isDirectory(toRemove)) {
-        rimraf.sync(toRemove);
-      }
-    }
-  }
-  return;
-}
-
 /**
  *  Create a detached Exponent iOS app pointing at the given project.
- *  @param args.url url of the Exponent project.
- *  @param args.outputDirectory directory to create the detached project.
  */
-export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponentDirectory, sdkVersion, experienceUrl, manifest) {
+export async function detachIOSAsync(projectRoot: string, exponentDirectory: string, sdkVersion: string, experienceUrl: string, manifest: any, exponentViewUrl: string) {
   let {
     iosProjectDirectory,
     projectName,
   } = getIosPaths(projectRoot, manifest);
+
+  let tmpExponentDirectory = path.join(projectRoot, 'temp-ios-directory');
+  mkdirp.sync(tmpExponentDirectory);
+  console.log('Downloading iOS code...');
+  await Api.downloadAsync(exponentViewUrl, tmpExponentDirectory, {extract: true});
 
   console.log('Moving iOS project files...');
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'ios'), `${exponentDirectory}/ios`);
@@ -320,6 +317,18 @@ export async function detachIOSAsync(projectRoot, tmpExponentDirectory, exponent
   await cleanVersionedReactNativeAsync(path.join(exponentDirectory, 'ios', 'versioned-react-native'));
   await cleanXCodeProjectsAsync(path.join(exponentDirectory, 'ios'));
 
+  rimraf.sync(tmpExponentDirectory);
+
+  // These files cause @providesModule naming collisions
+  if (process.platform === 'darwin') {
+    let rnFilesToDelete = await glob.promise(path.join(exponentDirectory, 'ios') + '/**/*.@(js|json)');
+    if (rnFilesToDelete) {
+      for (let i = 0; i < rnFilesToDelete.length; i++) {
+        await fs.promise.unlink(rnFilesToDelete[i]);
+      }
+    }
+  }
+
   return;
 }
 
@@ -359,7 +368,12 @@ async function renamePackageAsync(directory, originalPkg, destPkg) {
   rimraf.sync(tmpDirectory);
 }
 
-async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDirectory, sdkVersion, experienceUrl, manifest) {
+async function detachAndroidAsync(projectRoot, exponentDirectory, sdkVersion, experienceUrl, manifest, exponentViewUrl: string) {
+  let tmpExponentDirectory = path.join(projectRoot, 'temp-android-directory');
+  mkdirp.sync(tmpExponentDirectory);
+  console.log('Downloading Android code...');
+  await Api.downloadAsync(exponentViewUrl, tmpExponentDirectory, {extract: true});
+
   let androidProjectDirectory = path.join(projectRoot, 'android');
 
   console.log('Moving Android project files...');
@@ -413,9 +427,12 @@ async function detachAndroidAsync(projectRoot, tmpExponentDirectory, exponentDir
       }
     }
   }
+
+  // Clean up
+  rimraf.sync(tmpExponentDirectory);
 }
 
-export async function prepareDetachedBuildAsync(projectDir, args) {
+export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
   if (args.platform !== 'ios') {
     throw new Error('This command is only available for --platform ios');
   }
@@ -429,11 +446,11 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.
   let podsDirectory = path.join(iosProjectDirectory, 'Pods');
-  if (!isDirectory(podsDirectory)) {
+  if (!_isDirectory(podsDirectory)) {
     throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
   }
   let rnPodDirectory = path.join(podsDirectory, 'React');
-  if (isDirectory(rnPodDirectory)) {
+  if (_isDirectory(rnPodDirectory)) {
     let rnFilesToDelete = await glob.promise(rnPodDirectory + '/**/*.@(js|json)');
     if (rnFilesToDelete) {
       for (let i = 0; i < rnFilesToDelete.length; i++) {
