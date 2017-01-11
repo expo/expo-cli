@@ -25,6 +25,7 @@ module.exports = {
   get ErrorCode() { return require('./ErrorCode').default; },
   get Exp() { return require('./Exp'); },
   get FileSystem() { return require('./FileSystem'); },
+  get FsCache() { return require('./tools/FsCache'); },
   get Intercom() { return require('./Intercom'); },
   get IosPodsTools() { return require('./detach/IosPodsTools'); },
   get IosShellApp() { return require('./detach/IosShellApp'); },

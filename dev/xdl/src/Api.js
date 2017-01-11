@@ -10,6 +10,7 @@ import fs from 'fs';
 import rimraf from 'rimraf';
 import path from 'path';
 
+import { Cacher } from './tools/FsCache';
 import Config from './Config';
 import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
@@ -108,6 +109,13 @@ export default class ApiClient {
   static host: string = Config.api.host;
   static port: number = Config.api.port || 80;
 
+  static _versionCache = new Cacher(
+    async () => { return await ApiClient.callPathAsync('/--/versions'); },
+    'versions.json',
+  );
+
+  static _schemaCaches = {};
+
   static async callMethodAsync(methodName: string, args: Array<*>, method: string, requestBody: ?Object, requestOptions: ?Object = {}): Promise<any> {
     let url = API_BASE_URL + encodeURIComponent(methodName) + '/' +
       encodeURIComponent(JSON.stringify(args));
@@ -120,11 +128,18 @@ export default class ApiClient {
   }
 
   static async versionsAsync() {
-    return await ApiClient.callPathAsync('/--/versions');
+    return await ApiClient._versionCache.getAsync();
   }
 
   static async xdlSchemaAsync(sdkVersion) {
-    return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`);
+    if (!ApiClient._schemaCaches.hasOwnProperty(sdkVersion)) {
+      ApiClient._schemaCaches[sdkVersion] = new Cacher(
+        async () => { return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`); },
+        `schema-${sdkVersion}.json`,
+      );
+    }
+
+    return await ApiClient._schemaCaches[sdkVersion].getAsync();
   }
 
   static async sdkVersionsAsync() {

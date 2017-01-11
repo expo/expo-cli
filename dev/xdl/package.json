@@ -56,6 +56,7 @@
     "md5hex": "^1.0.0",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
+    "mkdirp-promise": "^5.0.0",
     "mz": "^2.6.0",
     "ncp": "^2.0.0",
     "ngrok": "git+https://github.com/exponent/ngrok#v1.3.0",
