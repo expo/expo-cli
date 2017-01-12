@@ -2259,9 +2259,9 @@ forwarded@~0.1.0:
   version "0.1.0"
   resolved forwarded-0.1.0.tgz#19ef9874c4ae1c297bcf078fde63a09b66a84363
 
-freeport-async@^1.1.0:
-  version "1.1.0"
-  resolved freeport-async-1.1.0.tgz#a9bbaa8e1a0a8bad613e9425d50930627ea1569f
+freeport-async@^1.1.1:
+  version "1.1.1"
+  resolved freeport-async-1.1.1.tgz#5c8cf4fc1aba812578317bd4d7a1e5597baf958e
 
 fresh@0.3.0:
   version "0.3.0"
