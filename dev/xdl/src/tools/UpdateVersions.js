@@ -18,10 +18,11 @@ export async function updateSdkVersionsAsync(sdkVersion: string, reactNativeTag:
 }
 
 export async function updateIOSSimulatorBuild(s3Client: any, pathToApp: string, appVersion: string) {
-  let tempAppPath = path.join(__dirname, 'temp-app.tar.gz');
+  let tempAppPath = path.join(process.cwd(), 'temp-app.tar.gz');
 
   await spawnAsync('tar', ['-zcvf', tempAppPath, '-C', pathToApp, '.'], {
-    cwd: __dirname,
+    cwd: process.cwd(),
+    stdio: ['ignore', 'ignore', 'inherit'], // only stderr
   });
 
   let file = fs.createReadStream(tempAppPath);
