@@ -16,6 +16,10 @@ import {
   configureIOSIconsAsync,
 } from './ExponentTools';
 
+// TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
+// but xdl doesn't have access to that.
+const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
+
 function validateConfigArguments(manifest, cmdArgs, configFilePath) {
   if (!configFilePath) {
     throw new Error('No path to config files provided');
@@ -103,21 +107,8 @@ async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, pr
     config.CFBundleShortVersionString = version;
     config.CFBundleVersion = buildNumber;
 
-    let internalKeys;
-    try {
-      internalKeys = require('../__internal__/keys.json'); // universe/exponent/tools
-    } catch (e) {
-      try {
-        internalKeys = require('../template-files/keys.json'); // public/exponent/tools
-      } catch (e) {
-        // TODO (jesse): figure out a better place to put this
-        internalKeys = require('../../client-keys.json'); // xdl
-      }
-    }
-    const defaultFabricKey = internalKeys.FABRIC_API_KEY;
-
     config.Fabric = {
-      APIKey: (privateConfig && privateConfig.fabric && privateConfig.fabric.apiKey) || defaultFabricKey,
+      APIKey: (privateConfig && privateConfig.fabric && privateConfig.fabric.apiKey) || DEFAULT_FABRIC_KEY,
       Kits: [{
         KitInfo: {},
         KitName: 'Crashlytics',
