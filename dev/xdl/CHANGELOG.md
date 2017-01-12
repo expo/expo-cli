@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [28.0.0] - 2017-1-11
+
+### Changed
+
+* Better accounts system!
+
 ## [0.26.6] - 2016-12-07
 
 Start of change log.
