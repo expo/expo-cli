@@ -96,15 +96,8 @@ async function handleMobileOptsAsync(projectDir, url, options) {
   return !!options.android || !!options.ios;
 }
 
-function addUrlOption(command) {
-  return command
-    .option('-u, --url [exp-url-to-open]', "Opens the specified URL")
-    ;
-}
-
 export default {
   addOptions,
-  addUrlOption,
   handleMobileOptsAsync,
   handleQROpt,
   optsAsync,
