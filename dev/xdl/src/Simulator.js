@@ -21,6 +21,7 @@ import Api from './Api';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as ProjectUtils from './project/ProjectUtils';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 import * as UrlUtils from './UrlUtils';
@@ -297,24 +298,10 @@ export async function upgradeExponentAsync() {
 
 // Open Url
 export async function _openUrlInSimulatorAsync(url: string) {
-  _lastUrl = url;
-  _checkExponentUpToDateAsync(); // let this run in background
   return await _xcrunAsync(['simctl', 'openurl', 'booted', url]);
 }
 
-export async function _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url: string) {
-  await _openSimulatorAsync();
-
-  if (!(await _isExponentAppInstalledOnCurrentBootedSimulatorAsync())) {
-    await _installExponentOnSimulatorAsync();
-    await _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync();
-  }
-
-  Logger.global.info(`Opening ${url} in iOS simulator`);
-  await _openUrlInSimulatorAsync(url);
-}
-
-export async function openUrlInSimulatorSafeAsync(url: string) {
+export async function openUrlInSimulatorSafeAsync(url: string, isDetached: boolean = false) {
   if (!(await _isSimulatorInstalledAsync())) {
     return {
       success: false,
@@ -323,7 +310,20 @@ export async function openUrlInSimulatorSafeAsync(url: string) {
   }
 
   try {
-    await _tryOpeningSimulatorInstallingExponentAndOpeningLinkAsync(url);
+    await _openSimulatorAsync();
+
+    if (!isDetached && !(await _isExponentAppInstalledOnCurrentBootedSimulatorAsync())) {
+      await _installExponentOnSimulatorAsync();
+      await _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync();
+    }
+
+    if (!isDetached) {
+      _lastUrl = url;
+      _checkExponentUpToDateAsync(); // let this run in background
+    }
+
+    Logger.global.info(`Opening ${url} in iOS simulator`);
+    await _openUrlInSimulatorAsync(url);
   } catch (e) {
     if (e.isXDLError) {
       // Hit some internal error, don't try again.
@@ -335,7 +335,12 @@ export async function openUrlInSimulatorSafeAsync(url: string) {
       };
     }
 
-    Logger.global.error(`Error installing or running app. ${e.toString()}`);
+    if (isDetached) {
+      Logger.global.error(`Error running app. Have you installed the app already using Xcode? Since you are detached you must build manually. ${e.toString()}`);
+    } else {
+      Logger.global.error(`Error installing or running app. ${e.toString()}`);
+    }
+
     return {
       success: false,
       msg: `${e.toString()}`,
@@ -356,5 +361,7 @@ export async function openProjectAsync(projectRoot: string) {
     hostType: 'localhost',
   });
 
-  await openUrlInSimulatorSafeAsync(projectUrl);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
+  await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
 }

@@ -16,12 +16,14 @@ import * as Binaries from './Binaries';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import UserSettings from './UserSettings';
 import * as UrlUtils from './UrlUtils';
 
 let _lastUrl = null;
-const beginningOfAdbErrorMessage = 'error: ';
+const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
+const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
 
 export function isPlatformSupported() {
   return process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux';
@@ -35,8 +37,8 @@ async function _getAdbOutputAsync(args) {
     return result.stdout;
   } catch (e) {
     let errorMessage = _.trim(e.stderr);
-    if (errorMessage.startsWith(beginningOfAdbErrorMessage)) {
-      errorMessage = errorMessage.substring(beginningOfAdbErrorMessage.length);
+    if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
+      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
     throw new Error(errorMessage);
   }
@@ -171,25 +173,43 @@ async function _assertDeviceReadyAsync() {
 }
 
 async function _openUrlAsync(url: string) {
-  _lastUrl = url;
-  _checkExponentUpToDateAsync(); // let this run in background
-  return await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url]);
+  let output = await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url]);
+  if (output.includes(CANT_START_ACTIVITY_ERROR)) {
+    throw new Error(output.substring(output.indexOf('Error: ')));
+  }
+
+  return output;
 }
 
-export async function openUrlSafeAsync(url: string) {
+export async function openUrlSafeAsync(url: string, isDetached: boolean = false) {
   try {
     if (!(await _assertDeviceReadyAsync())) {
       return;
     }
 
     let installedExponent = false;
-    if (!(await _isExponentInstalledAsync())) {
+    if (!isDetached && !(await _isExponentInstalledAsync())) {
       await _installExponentAsync();
       installedExponent = true;
     }
 
+    if (!isDetached) {
+      _lastUrl = url;
+      _checkExponentUpToDateAsync(); // let this run in background
+    }
+
     Logger.global.info(`Opening on Android device`);
-    await _openUrlAsync(url);
+    try {
+      await _openUrlAsync(url);
+    } catch (e) {
+      if (isDetached) {
+        Logger.global.error(`Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`);
+      } else {
+        Logger.global.error(`Error running app. ${e.message}`);
+      }
+
+      return;
+    }
 
     Analytics.logEvent('Open Url on Device', {
       platform: 'android',
@@ -205,7 +225,9 @@ export async function openProjectAsync(projectRoot: string) {
     await startAdbReverseAsync(projectRoot);
 
     let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
-    await openUrlSafeAsync(projectUrl);
+    let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
+    await openUrlSafeAsync(projectUrl, !!exp.isDetached);
   } catch (e) {
     Logger.global.error(`Error running adb: ${e.message}`);
   }
