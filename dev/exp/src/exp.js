@@ -106,7 +106,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     // the existing CLI modules only pass one argument to this function, so skipProjectValidation
     // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
     if (!skipProjectValidation) {
-      log('Making sure project is setup correctly...');
+      log('Making sure project is set up correctly...');
       simpleSpinner.start();
       // validate that this is a good projectDir before we try anything else
       let status = await Doctor.validateLowLatencyAsync(projectDir);
