@@ -16,7 +16,7 @@ async function action(projectDir, options) {
   log.raw(url);
 
   urlOpts.handleQROpt(url, options);
-  await urlOpts.handleMobileOptsAsync(projectDir, url, options);
+  await urlOpts.handleMobileOptsAsync(projectDir, options);
 }
 
 export default (program) => {

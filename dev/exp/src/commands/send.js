@@ -19,7 +19,7 @@ async function action(projectDir, options) {
 
   let shouldQuit = false;
   if (urlOpts.handleQROpt(url, options)) { shouldQuit = true; }
-  if (await urlOpts.handleMobileOptsAsync(projectDir, url, options)) { shouldQuit = true; }
+  if (await urlOpts.handleMobileOptsAsync(projectDir, options)) { shouldQuit = true; }
 
   if (shouldQuit) {
     return;

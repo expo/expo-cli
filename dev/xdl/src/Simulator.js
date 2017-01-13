@@ -23,6 +23,7 @@ import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
+import * as UrlUtils from './UrlUtils';
 
 let _lastUrl = null;
 
@@ -348,4 +349,12 @@ export async function openUrlInSimulatorSafeAsync(url: string) {
   return {
     success: true,
   };
+}
+
+export async function openProjectAsync(projectRoot: string) {
+  let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
+    hostType: 'localhost',
+  });
+
+  await openUrlInSimulatorSafeAsync(projectUrl);
 }

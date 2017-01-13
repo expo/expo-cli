@@ -104,7 +104,7 @@ async function action(projectDir, options) {
     }
 
     urlOpts.handleQROpt(url, options);
-    await urlOpts.handleMobileOptsAsync(projectDir, url, options);
+    await urlOpts.handleMobileOptsAsync(projectDir, options);
 
     return config.projectExpJsonFile(projectDir).readAsync();
   }

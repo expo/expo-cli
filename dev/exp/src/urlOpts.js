@@ -1,6 +1,5 @@
 import _ from 'lodash-node';
 import qrcodeTerminal from 'qrcode-terminal';
-import simpleSpinner from '@exponent/simple-spinner';
 
 import {
   Android,
@@ -83,14 +82,13 @@ function handleQROpt(url, options) {
   return !!options.qr;
 }
 
-// TODO: get rid of url param
-async function handleMobileOptsAsync(projectDir, url, options) {
+async function handleMobileOptsAsync(projectDir, options) {
   if (options.android) {
     await Android.openProjectAsync(projectDir);
   }
 
   if (options.ios) {
-    await Simulator.openUrlInSimulatorSafeAsync(url, simpleSpinner.start, simpleSpinner.stop);
+    await Simulator.openProjectAsync(projectDir);
   }
 
   return !!options.android || !!options.ios;
