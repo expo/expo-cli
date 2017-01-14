@@ -237,11 +237,21 @@ function _registerLogs() {
   Logger.global.addStream(stream);
 }
 
+async function writePathAsync() {
+  let subCommand = process.argv[2];
+  if (subCommand === 'prepare-detached-build') {
+    // This is being run from Android Studio or Xcode. Don't want to write PATH in this case.
+    return;
+  }
+
+  await Binaries.writePathToUserSettingsAsync();
+}
+
 // $FlowFixMe
 if (require.main === module) {
   (async function() {
     await Promise.all([
-      Binaries.writePathToUserSettingsAsync(),
+      writePathAsync(),
       runAsync(),
     ]);
   })().catch(e => {

@@ -2,6 +2,8 @@
  * @flow
  */
 
+import 'instapromise';
+
 import fs from 'fs';
 import hasbin from 'hasbin';
 import mkdirp from 'mkdirp';
@@ -231,4 +233,8 @@ export async function sourceBashLoginScriptsAsync() {
 
 export async function writePathToUserSettingsAsync() {
   await UserSettings.setAsync('PATH', process.env.PATH);
+
+  // Used in detach app
+  let pathFile = path.join(UserSettings.dotExponentHomeDirectory(), 'PATH');
+  await fs.promise.writeFile(pathFile, process.env.PATH);
 }
