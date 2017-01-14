@@ -247,10 +247,16 @@ export async function detachIOSAsync(projectRoot: string, exponentDirectory: str
     projectName,
   } = getIosPaths(projectRoot, manifest);
 
-  let tmpExponentDirectory = path.join(projectRoot, 'temp-ios-directory');
-  mkdirp.sync(tmpExponentDirectory);
-  console.log('Downloading iOS code...');
-  await Api.downloadAsync(exponentViewUrl, tmpExponentDirectory, {extract: true});
+  let tmpExponentDirectory;
+  if (process.env.EXPONENT_VIEW_DIR) {
+    // Only for testing
+    tmpExponentDirectory = process.env.EXPONENT_VIEW_DIR;
+  } else {
+    tmpExponentDirectory = path.join(projectRoot, 'temp-ios-directory');
+    mkdirp.sync(tmpExponentDirectory);
+    console.log('Downloading iOS code...');
+    await Api.downloadAsync(exponentViewUrl, tmpExponentDirectory, {extract: true});
+  }
 
   console.log('Moving iOS project files...');
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'ios'), `${exponentDirectory}/ios`);
@@ -317,7 +323,9 @@ export async function detachIOSAsync(projectRoot: string, exponentDirectory: str
   await cleanVersionedReactNativeAsync(path.join(exponentDirectory, 'ios', 'versioned-react-native'));
   await cleanXCodeProjectsAsync(path.join(exponentDirectory, 'ios'));
 
-  rimraf.sync(tmpExponentDirectory);
+  if (!process.env.EXPONENT_VIEW_DIR) {
+    rimraf.sync(tmpExponentDirectory);
+  }
 
   // These files cause @providesModule naming collisions
   if (process.platform === 'darwin') {
@@ -369,17 +377,28 @@ async function renamePackageAsync(directory, originalPkg, destPkg) {
 }
 
 async function detachAndroidAsync(projectRoot, exponentDirectory, sdkVersion, experienceUrl, manifest, exponentViewUrl: string) {
-  let tmpExponentDirectory = path.join(projectRoot, 'temp-android-directory');
-  mkdirp.sync(tmpExponentDirectory);
-  console.log('Downloading Android code...');
-  await Api.downloadAsync(exponentViewUrl, tmpExponentDirectory, {extract: true});
+  let tmpExponentDirectory;
+  if (process.env.EXPONENT_VIEW_DIR) {
+    // Only for testing
+    tmpExponentDirectory = process.env.EXPONENT_VIEW_DIR;
+  } else {
+    tmpExponentDirectory = path.join(projectRoot, 'temp-android-directory');
+    mkdirp.sync(tmpExponentDirectory);
+    console.log('Downloading Android code...');
+    await Api.downloadAsync(exponentViewUrl, tmpExponentDirectory, {extract: true});
+  }
 
   let androidProjectDirectory = path.join(projectRoot, 'android');
 
   console.log('Moving Android project files...');
 
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'android', 'maven'), path.join(exponentDirectory, 'maven'));
+  await Utils.ncpAsync(path.join(tmpExponentDirectory, 'android', 'detach-scripts'), path.join(exponentDirectory, 'detach-scripts'));
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'exponent-view-template', 'android'), androidProjectDirectory);
+  if (process.env.EXPONENT_VIEW_DIR) {
+    rimraf.sync(path.join(androidProjectDirectory, 'build'));
+    rimraf.sync(path.join(androidProjectDirectory, 'app', 'build'));
+  }
 
   // Fix up app/build.gradle
   console.log('Configuring Android project...');
@@ -429,7 +448,9 @@ async function detachAndroidAsync(projectRoot, exponentDirectory, sdkVersion, ex
   }
 
   // Clean up
-  rimraf.sync(tmpExponentDirectory);
+  if (!process.env.EXPONENT_VIEW_DIR) {
+    rimraf.sync(tmpExponentDirectory);
+  }
 }
 
 export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
