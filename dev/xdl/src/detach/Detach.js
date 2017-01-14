@@ -433,37 +433,44 @@ async function detachAndroidAsync(projectRoot, exponentDirectory, sdkVersion, ex
 }
 
 export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
-  if (args.platform !== 'ios') {
-    throw new Error('This command is only available for --platform ios');
-  }
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
-  let {
-    iosProjectDirectory,
-    projectName,
-  } = getIosPaths(projectDir, exp);
 
-  console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
-  // These files cause @providesModule naming collisions
-  // but are not available until after `pod install` has run.
-  let podsDirectory = path.join(iosProjectDirectory, 'Pods');
-  if (!_isDirectory(podsDirectory)) {
-    throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
-  }
-  let rnPodDirectory = path.join(podsDirectory, 'React');
-  if (_isDirectory(rnPodDirectory)) {
-    let rnFilesToDelete = await glob.promise(rnPodDirectory + '/**/*.@(js|json)');
-    if (rnFilesToDelete) {
-      for (let i = 0; i < rnFilesToDelete.length; i++) {
-        await fs.promise.unlink(rnFilesToDelete[i]);
+  if (args.platform === 'ios') {
+    let {
+      iosProjectDirectory,
+      projectName,
+    } = getIosPaths(projectDir, exp);
+
+    console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
+    // These files cause @providesModule naming collisions
+    // but are not available until after `pod install` has run.
+    let podsDirectory = path.join(iosProjectDirectory, 'Pods');
+    if (!_isDirectory(podsDirectory)) {
+      throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
+    }
+    let rnPodDirectory = path.join(podsDirectory, 'React');
+    if (_isDirectory(rnPodDirectory)) {
+      let rnFilesToDelete = await glob.promise(rnPodDirectory + '/**/*.@(js|json)');
+      if (rnFilesToDelete) {
+        for (let i = 0; i < rnFilesToDelete.length; i++) {
+          await fs.promise.unlink(rnFilesToDelete[i]);
+        }
       }
     }
+    // insert exponent development url into iOS config
+    let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+    let configFilePath = path.join(iosProjectDirectory, projectName, 'Supporting');
+    await modifyIOSPropertyListAsync(configFilePath, 'EXShell', (shellConfig) => {
+      shellConfig.developmentUrl = devUrl;
+      return shellConfig;
+    });
+  } else {
+    let androidProjectDirectory = path.join(projectDir, 'android');
+    let exponentBuildConstantsMatches = await glob.promise(androidProjectDirectory + '/**/ExponentBuildConstants.java');
+    if (exponentBuildConstantsMatches && exponentBuildConstantsMatches.length) {
+      let exponentBuildConstants = exponentBuildConstantsMatches[0];
+      let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+      await regexFileAsync(exponentBuildConstants, /DEVELOPMENT_URL \= \"[^\"]*\"\;/, `DEVELOPMENT_URL = "${devUrl}";`);
+    }
   }
-  // insert exponent development url into iOS config
-  let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
-  let configFilePath = path.join(iosProjectDirectory, projectName, 'Supporting');
-  await modifyIOSPropertyListAsync(configFilePath, 'EXShell', (shellConfig) => {
-    shellConfig.developmentUrl = devUrl;
-    return shellConfig;
-  });
-  return;
 }
