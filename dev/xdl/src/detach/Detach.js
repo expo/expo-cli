@@ -57,6 +57,14 @@ function _isDirectory(dir) {
   }
 }
 
+function yesnoAsync(question) {
+  return new Promise((resolve) => {
+    yesno.ask(question, null, (ok) => {
+      resolve(ok);
+    });
+  });
+}
+
 export async function detachAsync(projectRoot: string) {
   let user = await UserManager.ensureLoggedInAsync();
   let username = user.username;
@@ -74,7 +82,7 @@ export async function detachAsync(projectRoot: string) {
 
   // Project was already detached on Windows or Linux
   if (!hasIosDirectory && hasAndroidDirectory && process.platform === 'darwin') {
-    let response = await yesno.promise.ask(`This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`, null);
+    let response = await yesnoAsync(`This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`);
     if (!response) {
       console.log('Exiting...');
       return false;
@@ -105,7 +113,7 @@ export async function detachAsync(projectRoot: string) {
   }
 
   if (process.platform !== 'darwin') {
-    let response = await yesno.promise.ask(`Can't create an iOS project since you are not on macOS. You can rerun this command on macOS in the future to add an iOS project. Enter 'yes' to continue and just create an Android project:`, null);
+    let response = await yesnoAsync(`Can't create an iOS project since you are not on macOS. You can rerun this command on macOS in the future to add an iOS project. Enter 'yes' to continue and just create an Android project:`);
     if (!response) {
       console.log('Exiting...');
       return false;
