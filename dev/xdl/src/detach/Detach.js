@@ -148,14 +148,6 @@ export async function detachAsync(projectRoot: string) {
   return true;
 }
 
-async function capturePathAsync(outputFile) {
-  if (process.platform !== 'win32') {
-    let path = process.env.PATH;
-    let output = (path) ? `PATH=$PATH:${path}` : '';
-    await fs.promise.writeFile(outputFile, output);
-  }
-}
-
 function getIosPaths(projectRoot, manifest) {
   let iosProjectDirectory = path.join(projectRoot, 'ios');
   let projectNameLabel = manifest.name;
@@ -318,7 +310,6 @@ export async function detachIOSAsync(projectRoot: string, exponentDirectory: str
       EXPONENT_ROOT_PATH: path.relative(iosProjectDirectory, exponentDirectory),
     }
   );
-  await capturePathAsync(path.join(exponentDirectory, 'exponent-path.sh'));
 
   console.log('Cleaning up iOS...');
   await cleanPropertyListBackupsAsync(infoPlistPath);
