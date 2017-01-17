@@ -259,6 +259,8 @@ export async function detachIOSAsync(projectRoot: string, exponentDirectory: str
   }
 
   console.log('Moving iOS project files...');
+  // HEY: if you need other paths into the extracted archive, be sure and include them
+  // when the archive is generated in `ios/pipeline.js`
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'ios'), `${exponentDirectory}/ios`);
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'cpp'), `${exponentDirectory}/cpp`);
   await Utils.ncpAsync(path.join(tmpExponentDirectory, 'exponent-view-template', 'ios'), iosProjectDirectory);
@@ -313,7 +315,7 @@ export async function detachIOSAsync(projectRoot: string, exponentDirectory: str
     path.join(iosProjectDirectory, 'Podfile'),
     {
       TARGET_NAME: projectName,
-      EXPONENT_ROOT_PATH: '../exponent',
+      EXPONENT_ROOT_PATH: path.relative(iosProjectDirectory, exponentDirectory),
     }
   );
   await capturePathAsync(path.join(exponentDirectory, 'exponent-path.sh'));
