@@ -17,6 +17,15 @@
     lodash "^4.6.1"
     mz "^2.6.0"
 
+"@exponent/node-auth0@^2.6.0":
+  version "2.6.0"
+  resolved "@exponent-node-auth0-2.6.0.tgz#d7037717c54b6183923a2da772adbf82f21f12da"
+  dependencies:
+    bluebird "^2.10.2"
+    request "^2.75.0"
+    rest-facade "^1.2.7"
+    url-join "0.0.1"
+
 "@exponent/osascript@^1.6.4":
   version "1.6.4"
   resolved "@exponent-osascript-1.6.4.tgz#1c5c0b28dd41b8cb4e11e06c7a3230bfbedf16ad"
@@ -317,15 +326,6 @@ auth0-js@^7.4.0:
     winchan "0.1.4"
     xtend "~2.1.1"
 
-auth0@^2.6.0:
-  version "2.6.0"
-  resolved auth0-2.6.0.tgz#dbab309155fbbce41b88f9c08336ba5fbab8520e
-  dependencies:
-    bluebird "^2.10.2"
-    request "^2.75.0"
-    rest-facade "^1.2.7"
-    url-join "0.0.1"
-
 aws-sign2@~0.6.0:
   version "0.6.0"
   resolved aws-sign2-0.6.0.tgz#14342dd38dbcc94d0e5b87d763cd63612c0e794f
@@ -559,6 +559,14 @@ babel-plugin-istanbul@^3.0.0:
 babel-plugin-jest-hoist@^18.0.0:
   version "18.0.0"
   resolved babel-plugin-jest-hoist-18.0.0.tgz#4150e70ecab560e6e7344adc849498072d34e12a
+
+babel-plugin-module-resolver@^2.4.0:
+  version "2.4.0"
+  resolved babel-plugin-module-resolver-2.4.0.tgz#b7b66e1494ebf955d5f6d83d59d3f282d7c1d71f
+  dependencies:
+    find-babel-config "^1.0.1"
+    glob "^7.1.1"
+    resolve "^1.1.7"
 
 babel-plugin-syntax-async-functions@^6.8.0:
   version "6.13.0"
@@ -2147,6 +2155,13 @@ finalhandler@0.5.0:
     statuses "~1.3.0"
     unpipe "~1.0.0"
 
+find-babel-config@^1.0.1:
+  version "1.0.1"
+  resolved find-babel-config-1.0.1.tgz#179fa7b36bf3e94b487410855df448b6f853b9ec
+  dependencies:
+    json5 "^0.5.0"
+    path-exists "^3.0.0"
+
 find-up@^1.0.0, find-up@^1.1.2:
   version "1.1.2"
   resolved find-up-1.1.2.tgz#6b2e9822b1a2ce0a60ab64d610eccad53cb24d0f
@@ -2441,7 +2456,7 @@ glob@^6.0.1:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^7.0.0, glob@^7.0.3, glob@^7.0.5, glob@^7.0.6:
+glob@^7.0.0, glob@^7.0.3, glob@^7.0.5, glob@^7.0.6, glob@^7.1.1:
   version "7.1.1"
   resolved glob-7.1.1.tgz#805211df04faaf1c63a3600306cdf5ade50b2ec8
   dependencies:
@@ -4294,6 +4309,10 @@ path-exists@^2.0.0:
   resolved path-exists-2.1.0.tgz#0feb6c64f0fc518d9a754dd5efb62c7022761f4b
   dependencies:
     pinkie-promise "^2.0.0"
+
+path-exists@^3.0.0:
+  version "3.0.0"
+  resolved path-exists-3.0.0.tgz#ce0ebeaa5f78cb18925ea7d810d7b59b010fd515
 
 path-is-absolute@^1.0.0:
   version "1.0.1"

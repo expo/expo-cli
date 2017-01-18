@@ -425,7 +425,8 @@ export default class UserManager {
     try {
       const dtoken = jwt.decode(idToken, { complete: true });
       const { exp } = dtoken.payload;
-      if (exp - ((new Date()).getTime() / 1000) <= 60) { // if there's less than one minute left on the token, refresh it
+      const REFRESH_THRESHOLD = 60 * 60; // 1 hour
+      if (exp - (Date.now() / 1000) <= REFRESH_THRESHOLD) { // if there's less than 1 hour left on the token, refresh it
         const delegationResult = await _auth0RefreshToken(refreshToken);
         idToken = delegationResult.id_token;
       }
@@ -538,6 +539,7 @@ async function _auth0RefreshToken(refreshToken: string): Promise<*> {
     scope: 'openid offline_access nickname username',
     target: UserManager.clientID,
   });
+
   return delegationResult;
 }
 

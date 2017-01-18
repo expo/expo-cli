@@ -2,6 +2,11 @@
   "presets": ["es2015-node6", "stage-1"],
   "plugins": [
     "transform-flow-strip-types",
+    ["module-resolver", {
+      "alias": {
+        "auth0": "@exponent/node-auth0"
+      }
+    }],
     ["transform-inline-imports-commonjs", {
       "excludeNodeBuiltins": true,
     }]
