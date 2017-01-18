@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * @flow
  */
@@ -247,8 +245,7 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
-// $FlowFixMe
-if (require.main === module) {
+export function run() {
   (async function() {
     await Promise.all([
       writePathAsync(),
