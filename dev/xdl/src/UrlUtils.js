@@ -118,8 +118,8 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
     protocol = 'exp';
 
     let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-    if (exp.detachedScheme) {
-      protocol = exp.detachedScheme;
+    if (exp.detach && exp.detach.scheme) {
+      protocol = exp.detach.scheme;
     }
   }
 

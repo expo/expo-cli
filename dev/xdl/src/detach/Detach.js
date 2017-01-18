@@ -121,17 +121,15 @@ export async function detachAsync(projectRoot: string) {
   }
 
   // Modify exp.json
-  if (!exp.isDetached || !exp.detachedScheme) {
-    exp.isDetached = true;
-    let detachedUUID = uuid.v4().replace(/-/g, '');
-    exp.detachedScheme = `exp${detachedUUID}`;
+  exp.isDetached = true;
 
-    // if we're writing to app.json, we need to place the configuration under the exponent key
-    const nameToWrite = await ProjectUtils.configFilenameAsync(projectRoot);
-    if (nameToWrite === 'app.json') {
-      exp = { exponent: exp };
-    }
-    await fs.promise.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
+  if (!exp.detach) {
+    exp.detach = {};
+  }
+
+  if (!exp.detach.scheme) {
+    let detachedUUID = uuid.v4().replace(/-/g, '');
+    exp.detach.scheme = `exp${detachedUUID}`;
   }
 
   let exponentDirectory = path.join(projectRoot, '.exponent-source');
@@ -143,6 +141,7 @@ export async function detachAsync(projectRoot: string) {
     rimraf.sync(iosDirectory);
     mkdirp.sync(iosDirectory);
     await detachIOSAsync(projectRoot, iosDirectory, exp.sdkVersion, experienceUrl, exp, sdkVersionConfig.iosExponentViewUrl);
+    exp.detach.iosExponentViewUrl = sdkVersionConfig.iosExponentViewUrl;
   }
 
   // Android
@@ -151,7 +150,16 @@ export async function detachAsync(projectRoot: string) {
     rimraf.sync(androidDirectory);
     mkdirp.sync(androidDirectory);
     await detachAndroidAsync(projectRoot, androidDirectory, exp.sdkVersion, experienceUrl, exp, sdkVersionConfig.androidExponentViewUrl);
+    exp.detach.androidExponentViewUrl = sdkVersionConfig.androidExponentViewUrl;
   }
+
+  // Update exp.json/app.json
+  // if we're writing to app.json, we need to place the configuration under the exponent keys
+  const nameToWrite = await ProjectUtils.configFilenameAsync(projectRoot);
+  if (nameToWrite === 'app.json') {
+    exp = { exponent: exp };
+  }
+  await fs.promise.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
 
   return true;
 }
@@ -215,13 +223,13 @@ async function configureDetachedVersionsPlistAsync(configFilePath, detachedSDKVe
 async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
   let result = await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
     // add detached scheme
-    if (manifest.isDetached && manifest.detachedScheme) {
+    if (manifest.isDetached && manifest.detach.scheme) {
       if (!config.CFBundleURLTypes) {
         config.CFBundleURLTypes = [{
           CFBundleURLSchemes: [],
         }];
       }
-      config.CFBundleURLTypes[0].CFBundleURLSchemes.push(manifest.detachedScheme);
+      config.CFBundleURLTypes[0].CFBundleURLSchemes.push(manifest.detach.scheme);
     }
     if (config.UIDeviceFamily) {
       delete config.UIDeviceFamily;
@@ -410,7 +418,7 @@ async function detachAndroidAsync(projectRoot, exponentDirectory, sdkVersion, ex
 
   // Fix AndroidManifest
   let androidManifest = path.join(androidProjectDirectory, 'app', 'src', 'main', 'AndroidManifest.xml');
-  await regexFileAsync(androidManifest, 'PLACEHOLDER_DETACH_SCHEME', manifest.detachedScheme);
+  await regexFileAsync(androidManifest, 'PLACEHOLDER_DETACH_SCHEME', manifest.detach.scheme);
 
   // Fix MainActivity
   let mainActivity = path.join(androidProjectDirectory, 'app', 'src', 'main', 'java', 'detach', 'app', 'template', 'pkg', 'name', 'MainActivity.java');

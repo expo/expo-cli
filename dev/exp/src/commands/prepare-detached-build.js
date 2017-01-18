@@ -11,5 +11,5 @@ export default (program) => {
     .command('prepare-detached-build [project-dir]')
     .option('--platform [platform]', 'detached project platform')
     .description('Prepares a detached project for building')
-    .asyncActionProjectDir(action, true);
+    .asyncActionProjectDir(action, true, true);
 };

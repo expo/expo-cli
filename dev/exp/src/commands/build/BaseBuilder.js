@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project } from 'xdl';
+import { Project, ProjectUtils } from 'xdl';
 
 import log from '../../log';
 import config from '../../config';
@@ -30,6 +30,7 @@ export default class BaseBuilder {
 
   async command() {
     try {
+      await this._checkProjectConfig();
       await this.run();
     } catch (e) {
       if (!(e instanceof BuildError)) {
@@ -38,6 +39,15 @@ export default class BaseBuilder {
         log.error(e.message);
         process.exit(1);
       }
+    }
+  }
+
+  async _checkProjectConfig(): Promise<void> {
+    let { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
+    if (exp.isDetached) {
+      log.error(`\`exp build\` is not supported for detached projects.`);
+      process.exit(1);
+      return;
     }
   }
 
@@ -56,6 +66,8 @@ export default class BaseBuilder {
   }
 
   async checkStatus(current: bool = true): Promise<void> {
+    await this._checkProjectConfig();
+
     log('Checking if current build exists...\n');
 
     const buildStatus = await Project.buildAsync(this.projectDir, {
