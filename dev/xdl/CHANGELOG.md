@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [28.0.0] - 2017-1-17
+
+### Changed
+
+* Fix accounts bugs
+* First release of detach
+
 ## [28.0.0] - 2017-1-11
 
 ### Changed
