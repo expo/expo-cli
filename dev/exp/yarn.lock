@@ -33,7 +33,7 @@
 
 "@exponent/md5hex@^1.0.0":
   version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@exponent/md5hex/-/md5hex-1.0.0.tgz#208df8fb8bbc74acb7d3e41568249eba0dab55f7"
+  resolved "@exponent-md5hex-1.0.0.tgz#208df8fb8bbc74acb7d3e41568249eba0dab55f7"
 
 "@exponent/osascript@^1.6.4":
   version "1.6.4"
@@ -76,7 +76,7 @@ acorn-jsx@^3.0.0, acorn-jsx@^3.0.1:
 
 acorn@4.X, acorn@^4.0.1:
   version "4.0.4"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-4.0.4.tgz#17a8d6a7a6c4ef538b814ec9abac2779293bf30a"
+  resolved acorn-4.0.4.tgz#17a8d6a7a6c4ef538b814ec9abac2779293bf30a
 
 acorn@^3.0.4, acorn@^3.1.0:
   version "3.3.0"
@@ -91,11 +91,11 @@ agent-base@2:
 
 ajv-keywords@^1.0.0:
   version "1.5.0"
-  resolved "https://registry.yarnpkg.com/ajv-keywords/-/ajv-keywords-1.5.0.tgz#c11e6859eafff83e0dafc416929472eca946aa2c"
+  resolved ajv-keywords-1.5.0.tgz#c11e6859eafff83e0dafc416929472eca946aa2c
 
 ajv@^4.7.0:
   version "4.10.4"
-  resolved "https://registry.yarnpkg.com/ajv/-/ajv-4.10.4.tgz#c0974dd00b3464984892d6010aa9c2c945933254"
+  resolved ajv-4.10.4.tgz#c0974dd00b3464984892d6010aa9c2c945933254
   dependencies:
     co "^4.6.0"
     json-stable-stringify "^1.0.1"
@@ -191,7 +191,7 @@ are-we-there-yet@~1.1.2:
 
 argparse@^0.1.15:
   version "0.1.16"
-  resolved "https://registry.yarnpkg.com/argparse/-/argparse-0.1.16.tgz#cfd01e0fbba3d6caed049fbd758d40f65196f57c"
+  resolved argparse-0.1.16.tgz#cfd01e0fbba3d6caed049fbd758d40f65196f57c
   dependencies:
     underscore "~1.7.0"
     underscore.string "~2.4.0"
@@ -524,7 +524,7 @@ babel-messages@^6.8.0:
 
 babel-plugin-add-module-exports@^0.2.1:
   version "0.2.1"
-  resolved "https://registry.yarnpkg.com/babel-plugin-add-module-exports/-/babel-plugin-add-module-exports-0.2.1.tgz#9ae9a1f4a8dc67f0cdec4f4aeda1e43a5ff65e25"
+  resolved babel-plugin-add-module-exports-0.2.1.tgz#9ae9a1f4a8dc67f0cdec4f4aeda1e43a5ff65e25
 
 babel-plugin-check-es2015-constants@^6.3.13:
   version "6.8.0"
@@ -1134,7 +1134,7 @@ chainsaw@~0.1.0:
   dependencies:
     traverse ">=0.3.0 <0.4"
 
-chalk@1.1.1:
+chalk@1.1.1, chalk@^1.0.0:
   version "1.1.1"
   resolved chalk-1.1.1.tgz#509afb67066e7499f7eb3535c77445772ae2d019
   dependencies:
@@ -1144,7 +1144,7 @@ chalk@1.1.1:
     strip-ansi "^3.0.0"
     supports-color "^2.0.0"
 
-chalk@^1.0.0, chalk@^1.1.0, chalk@^1.1.1, chalk@^1.1.3:
+chalk@^1.1.0, chalk@^1.1.1, chalk@^1.1.3:
   version "1.1.3"
   resolved chalk-1.1.3.tgz#a8115c55e4a702fe4d150abd3872822a7e09fc98
   dependencies:
@@ -1433,13 +1433,7 @@ debug-fabulous@0.0.X:
     lazy-debug-legacy "0.0.X"
     object-assign "4.1.0"
 
-debug@*, debug@2, debug@2.X, debug@^2.1.1, debug@^2.2, debug@^2.2.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.0.tgz#bc596bcabe7617f11d9fa15361eded5608b8499b"
-  dependencies:
-    ms "0.7.2"
-
-debug@2.2.0, debug@~2.2.0:
+debug@*, debug@2, debug@2.2.0, debug@2.X, debug@^2.1.1, debug@^2.2, debug@^2.2.0, debug@~2.2.0:
   version "2.2.0"
   resolved debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da
   dependencies:
@@ -1670,7 +1664,7 @@ es6-error@^3.0.0:
 
 es6-error@^4.0.0:
   version "4.0.1"
-  resolved "https://registry.yarnpkg.com/es6-error/-/es6-error-4.0.1.tgz#eeb3e280f57e2ec48d72a9fccaf6247d3c1f5719"
+  resolved es6-error-4.0.1.tgz#eeb3e280f57e2ec48d72a9fccaf6247d3c1f5719
 
 es6-iterator@2:
   version "2.0.0"
@@ -2152,7 +2146,7 @@ forwarded@~0.1.0:
   version "0.1.0"
   resolved forwarded-0.1.0.tgz#19ef9874c4ae1c297bcf078fde63a09b66a84363
 
-freeport-async@^1.1.0:
+freeport-async@^1.1.0, freeport-async@^1.1.1:
   version "1.1.1"
   resolved freeport-async-1.1.1.tgz#5c8cf4fc1aba812578317bd4d7a1e5597baf958e
 
@@ -2180,7 +2174,7 @@ fs.realpath@^1.0.0:
 
 fsevents@^1.0.0:
   version "1.0.17"
-  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-1.0.17.tgz#8537f3f12272678765b4fd6528c0f1f66f8f4558"
+  resolved fsevents-1.0.17.tgz#8537f3f12272678765b4fd6528c0f1f66f8f4558
   dependencies:
     nan "^2.3.0"
     node-pre-gyp "^0.6.29"
@@ -2289,7 +2283,7 @@ glob-stream@^5.3.2:
 
 glob-watcher@^3.0.0:
   version "3.1.0"
-  resolved "https://registry.yarnpkg.com/glob-watcher/-/glob-watcher-3.1.0.tgz#375b7c73f042c608756221d5c511eb09b8178080"
+  resolved glob-watcher-3.1.0.tgz#375b7c73f042c608756221d5c511eb09b8178080
   dependencies:
     async-done "^1.2.0"
     chokidar "^1.4.3"
@@ -2298,7 +2292,7 @@ glob-watcher@^3.0.0:
 
 glob@^4.0.0:
   version "4.5.3"
-  resolved "https://registry.yarnpkg.com/glob/-/glob-4.5.3.tgz#c6cb73d3226c1efef04de3c56d012f03377ee15f"
+  resolved glob-4.5.3.tgz#c6cb73d3226c1efef04de3c56d012f03377ee15f
   dependencies:
     inflight "^1.0.4"
     inherits "2"
@@ -3429,7 +3423,7 @@ mime@1.3.4:
 
 minimatch@^2.0.1:
   version "2.0.10"
-  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-2.0.10.tgz#8d087c39c6b38c001b97fca7ce6d0e1e80afbac7"
+  resolved minimatch-2.0.10.tgz#8d087c39c6b38c001b97fca7ce6d0e1e80afbac7
   dependencies:
     brace-expansion "^1.0.0"
 
@@ -3440,6 +3434,10 @@ minimist@0.0.8:
 minimist@^1.1.0, minimist@^1.2.0:
   version "1.2.0"
   resolved minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284
+
+mkdirp-promise@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/mkdirp-promise/-/mkdirp-promise-5.0.0.tgz#b8bc7d6eab71c2b2e37cb06ea48a459d14366ea2"
 
 mkdirp@0.5.1, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
   version "0.5.1"
@@ -3465,13 +3463,9 @@ mout@^0.11.0:
   version "0.11.1"
   resolved mout-0.11.1.tgz#ba3611df5f0e5b1ffbfd01166b8f02d1f5fa2b99
 
-ms@0.7.1:
+ms@0.7.1, ms@^0.7.1:
   version "0.7.1"
   resolved ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098
-
-ms@0.7.2, ms@^0.7.1:
-  version "0.7.2"
-  resolved ms-0.7.2.tgz#ae25cf2512b3885a1d95d7f037868d8431124765
 
 multipipe@^0.1.2:
   version "0.1.2"
@@ -4422,7 +4416,7 @@ shelljs@0.6.0:
 
 shelljs@^0.7.5:
   version "0.7.6"
-  resolved "https://registry.yarnpkg.com/shelljs/-/shelljs-0.7.6.tgz#379cccfb56b91c8601e4793356eb5382924de9ad"
+  resolved shelljs-0.7.6.tgz#379cccfb56b91c8601e4793356eb5382924de9ad
   dependencies:
     glob "^7.0.0"
     interpret "^1.0.0"
@@ -4915,11 +4909,11 @@ unc-path-regex@^0.1.0:
 
 underscore.string@~2.4.0:
   version "2.4.0"
-  resolved "https://registry.yarnpkg.com/underscore.string/-/underscore.string-2.4.0.tgz#8cdd8fbac4e2d2ea1e7e2e8097c42f442280f85b"
+  resolved underscore.string-2.4.0.tgz#8cdd8fbac4e2d2ea1e7e2e8097c42f442280f85b
 
 underscore@~1.7.0:
   version "1.7.0"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.7.0.tgz#6bbaf0877500d36be34ecaa584e0db9fef035209"
+  resolved underscore-1.7.0.tgz#6bbaf0877500d36be34ecaa584e0db9fef035209
 
 undertaker-registry@^1.0.0:
   version "1.0.0"
@@ -5126,9 +5120,9 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@28.0.0:
-  version "28.0.0"
-  resolved xdl-28.0.0.tgz#043f2692449ca5234856f0904e5afb64c033c55e
+xdl@29.0.0:
+  version "29.0.0"
+  resolved xdl-29.0.0.tgz#39d309435b58e6cd65c806ead948bac48e145c79
   dependencies:
     "@ccheever/crayon" "^5.0.0"
     "@exponent/json-file" "^5.3.0"
@@ -5146,7 +5140,7 @@ xdl@28.0.0:
     exists-async "^2.0.0"
     express "^4.13.4"
     file-type "^4.0.0"
-    freeport-async "^1.1.0"
+    freeport-async "^1.1.1"
     fs-extra "^0.30.0"
     glob "^7.0.3"
     hasbin "^1.2.3"
@@ -5161,6 +5155,7 @@ xdl@28.0.0:
     md5hex "^1.0.0"
     minimist "^1.2.0"
     mkdirp "^0.5.1"
+    mkdirp-promise "^5.0.0"
     mz "^2.6.0"
     ncp "^2.0.0"
     ngrok "git+https://github.com/exponent/ngrok#v1.3.0"
