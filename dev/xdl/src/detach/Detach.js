@@ -412,8 +412,8 @@ async function detachAndroidAsync(projectRoot, exponentDirectory, sdkVersion, ex
   // Fix up app/build.gradle
   console.log('Configuring Android project...');
   let appBuildGradle = path.join(androidProjectDirectory, 'app', 'build.gradle');
-  await regexFileAsync(appBuildGradle, '/* UNCOMMENT WHEN DISTRIBUTING', '');
-  await regexFileAsync(appBuildGradle, 'END UNCOMMENT WHEN DISTRIBUTING */', '');
+  await regexFileAsync(appBuildGradle, /\/\* UNCOMMENT WHEN DISTRIBUTING/g, '');
+  await regexFileAsync(appBuildGradle, /END UNCOMMENT WHEN DISTRIBUTING \*\//g, '');
   await regexFileAsync(appBuildGradle, `compile project(':exponentview')`, '');
 
   // Fix AndroidManifest
