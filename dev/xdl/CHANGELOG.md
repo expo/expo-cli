@@ -10,7 +10,14 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
-## [28.0.0] - 2017-1-17
+## [29.2.0] - 2017-1-18
+
+### Changed
+
+* Ensure that the user is logged in on every api call
+* Fix detach script to remove all comments from .gradle file
+
+## [29.0.0] - 2017-1-17
 
 ### Changed
 
