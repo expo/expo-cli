@@ -35,6 +35,15 @@
   version "1.0.0"
   resolved "@exponent-md5hex-1.0.0.tgz#208df8fb8bbc74acb7d3e41568249eba0dab55f7"
 
+"@exponent/node-auth0@^2.6.0":
+  version "2.6.0"
+  resolved "@exponent-node-auth0-2.6.0.tgz#d7037717c54b6183923a2da772adbf82f21f12da"
+  dependencies:
+    bluebird "^2.10.2"
+    request "^2.75.0"
+    rest-facade "^1.2.7"
+    url-join "0.0.1"
+
 "@exponent/osascript@^1.6.4":
   version "1.6.4"
   resolved "@exponent-osascript-1.6.4.tgz#1c5c0b28dd41b8cb4e11e06c7a3230bfbedf16ad"
@@ -326,15 +335,6 @@ auth0-js@^7.4.0:
     trim "~0.0.1"
     winchan "0.1.4"
     xtend "~2.1.1"
-
-auth0@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/auth0/-/auth0-2.6.0.tgz#dbab309155fbbce41b88f9c08336ba5fbab8520e"
-  dependencies:
-    bluebird "^2.10.2"
-    request "^2.75.0"
-    rest-facade "^1.2.7"
-    url-join "0.0.1"
 
 aws-sign2@~0.6.0:
   version "0.6.0"
@@ -1134,7 +1134,7 @@ chainsaw@~0.1.0:
   dependencies:
     traverse ">=0.3.0 <0.4"
 
-chalk@1.1.1, chalk@^1.0.0:
+chalk@1.1.1:
   version "1.1.1"
   resolved chalk-1.1.1.tgz#509afb67066e7499f7eb3535c77445772ae2d019
   dependencies:
@@ -1144,7 +1144,7 @@ chalk@1.1.1, chalk@^1.0.0:
     strip-ansi "^3.0.0"
     supports-color "^2.0.0"
 
-chalk@^1.1.0, chalk@^1.1.1, chalk@^1.1.3:
+chalk@^1.0.0, chalk@^1.1.0, chalk@^1.1.1, chalk@^1.1.3:
   version "1.1.3"
   resolved chalk-1.1.3.tgz#a8115c55e4a702fe4d150abd3872822a7e09fc98
   dependencies:
@@ -5120,16 +5120,16 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@29.0.0:
-  version "29.0.0"
-  resolved xdl-29.0.0.tgz#39d309435b58e6cd65c806ead948bac48e145c79
+xdl@29.2.0:
+  version "29.2.0"
+  resolved xdl-29.2.0.tgz#85c7dad14edcfb35e88673ec45839d3b5b1479e4
   dependencies:
     "@ccheever/crayon" "^5.0.0"
     "@exponent/json-file" "^5.3.0"
+    "@exponent/node-auth0" "^2.6.0"
     "@exponent/osascript" "^1.6.4"
     "@exponent/spawn-async" "^1.2.8"
     analytics-node "^2.1.0"
-    auth0 "^2.6.0"
     auth0-js "^7.4.0"
     bluebird "^3.4.7"
     body-parser "^1.15.2"
