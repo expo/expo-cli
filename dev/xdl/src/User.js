@@ -90,7 +90,7 @@ const AUTH0_DOMAIN = 'exponent.auth0.com';
 const AUTHENTICATION_SERVER_TIMEOUT = 1000 * 60 * 5; // 5 minutes
 
 export default class UserManager {
-  static clientID = null;
+  static clientID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y'; // Default Client ID
   static loginServer = null;
   static _currentUser: ?User = null;
 
