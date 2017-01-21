@@ -25,6 +25,7 @@ import Api from './Api';
 import Config from './Config';
 import * as Doctor from './project/Doctor';
 import ErrorCode from './ErrorCode';
+import * as ExponentTools from './detach/ExponentTools';
 import * as Exp from './Exp';
 import * as ExpSchema from './project/ExpSchema';
 import * as ProjectSettings from './ProjectSettings';
@@ -183,6 +184,10 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
     delete exp.ios.config;
   }
 
+  if (exp.sdkVersion === 'UNVERSIONED') {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, 'Cannot publish with sdkVersion UNVERSIONED.');
+  }
+
   // Resolve manifest assets to their S3 URL and add them to the list of assets to
   // be uploaded
   const manifestAssets = [];
@@ -218,6 +223,43 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
   };
 
   let response = await Api.callMethodAsync('publish', [options], 'put', null, {formData});
+
+  if (exp.android && exp.android.publishBundlePath) {
+    await fs.promise.writeFile(path.resolve(projectRoot, exp.android.publishBundlePath), androidBundle);
+  }
+
+  if (exp.ios && exp.ios.publishBundlePath) {
+    await fs.promise.writeFile(path.resolve(projectRoot, exp.ios.publishBundlePath), iosBundle);
+  }
+
+  if (exp.isKernel) {
+    let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
+    if (Config.api.port) {
+      kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
+    }
+    kernelBundleUrl = `${kernelBundleUrl}/@exponent/home/bundle`;
+
+    if (exp.kernel.androidManifestPath) {
+      let manifest = await ExponentTools.getManifestAsync(response.url, {
+        'Exponent-SDK-Version': exp.sdkVersion,
+        'Exponent-Platform': 'android',
+      });
+      manifest.bundleUrl = kernelBundleUrl;
+      manifest.sdkVersion = 'UNVERSIONED';
+      await fs.promise.writeFile(path.resolve(projectRoot, exp.kernel.androidManifestPath), JSON.stringify(manifest));
+    }
+
+    if (exp.kernel.iosManifestPath) {
+      let manifest = await ExponentTools.getManifestAsync(response.url, {
+        'Exponent-SDK-Version': exp.sdkVersion,
+        'Exponent-Platform': 'ios',
+      });
+      manifest.bundleUrl = kernelBundleUrl;
+      manifest.sdkVersion = 'UNVERSIONED';
+      await fs.promise.writeFile(path.resolve(projectRoot, exp.kernel.iosManifestPath), JSON.stringify(manifest));
+    }
+  }
+
   return response;
 }
 
