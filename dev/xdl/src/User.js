@@ -166,6 +166,7 @@ export default class UserManager {
           accessToken: loginResp.access_token,
           refreshToken: loginResp.refresh_token,
           idToken: loginResp.id_token,
+          refreshTokenClientId: UserManager.clientID,
         });
       } catch (err) {
         throw err;
@@ -200,6 +201,7 @@ export default class UserManager {
       accessToken: tokenInfo.access_token,
       refreshToken: tokenInfo.refresh_token,
       idToken: tokenInfo.id_token,
+      refreshTokenClientId: UserManager.clientID,
     });
 
     return profile;
@@ -415,8 +417,8 @@ export default class UserManager {
    * @private
    */
   static async _getProfileAsync(
-    { currentConnection, accessToken, idToken, refreshToken }:
-    { currentConnection: ConnectionType, accessToken: string, idToken: string, refreshToken: string }
+    { currentConnection, accessToken, idToken, refreshToken, refreshTokenClientId }:
+    { currentConnection: ConnectionType, accessToken: string, idToken: string, refreshToken: string, refreshTokenClientId?: string }
   ): Promise<User> {
 
     // Attempt to grab profile from Auth0.
@@ -424,10 +426,28 @@ export default class UserManager {
     let user;
     try {
       const dtoken = jwt.decode(idToken, { complete: true });
-      const { exp } = dtoken.payload;
+      const { exp, aud } = dtoken.payload;
+
+      // If it's not a new login, refreshTokenClientId won't be set in the arguments.
+      // In this case, try to get the currentRefreshTokenClientId from UserSettings,
+      // otherwise, default back to the audience of the current id_token
+      if (!refreshTokenClientId) {
+        const {
+          refreshTokenClientId: currentRefreshTokenClientId,
+        } = await UserSettings.getAsync('auth', {});
+        if (!currentRefreshTokenClientId) {
+          refreshTokenClientId = aud; // set it to the "aud" property of the existing token
+        } else {
+          refreshTokenClientId = currentRefreshTokenClientId;
+        }
+      }
+
       const REFRESH_THRESHOLD = 60 * 60; // 1 hour
       if (exp - (Date.now() / 1000) <= REFRESH_THRESHOLD) { // if there's less than 1 hour left on the token, refresh it
-        const delegationResult = await _auth0RefreshToken(refreshToken);
+        const delegationResult = await _auth0RefreshToken(
+          refreshTokenClientId, // client id that's associated with the refresh token
+          refreshToken, // refresh token to use
+        );
         idToken = delegationResult.id_token;
       }
       user = await _auth0GetProfileAsync(idToken);
@@ -459,6 +479,7 @@ export default class UserManager {
         accessToken,
         idToken,
         refreshToken,
+        ...(refreshTokenClientId ? { refreshTokenClientId } : {}),
       },
     });
 
@@ -524,20 +545,30 @@ async function _auth0LoginAsync(auth0Options: Auth0Options, loginOptions: LoginO
   }
 }
 
-async function _auth0RefreshToken(refreshToken: string): Promise<*> {
+async function _auth0RefreshToken(clientId: string, refreshToken: string): Promise<*> {
+  const delegationTokenOptions = {
+    refresh_token: refreshToken,
+    api_type: 'app',
+    scope: 'openid offline_access nickname username',
+    target: UserManager.clientID,
+    client_id: clientId,
+  };
+
   if (typeof window !== 'undefined' && window) {
-    const Auth0JS = _auth0JSInstanceWithOptions();
-    return await Auth0JS.refreshTokenAsync(refreshToken);
+    const Auth0JS = _auth0JSInstanceWithOptions({
+      clientID: clientId,
+    });
+
+    return await Auth0JS.getDelegationTokenAsync({
+      ...delegationTokenOptions,
+    });
   }
 
   const Auth0Node = _nodeAuth0InstanceWithOptions();
 
   const delegationResult = await Auth0Node.tokens.getDelegationToken({
-    refresh_token: refreshToken,
     grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    api_type: 'app',
-    scope: 'openid offline_access nickname username',
-    target: UserManager.clientID,
+    ...delegationTokenOptions,
   });
 
   return delegationResult;
