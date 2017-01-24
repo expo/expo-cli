@@ -216,6 +216,13 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
   if (pkg.dependencies) {
     await Binaries.sourceBashLoginScriptsAsync();
 
+    try {
+      await spawnAsync('npm', ['--version']);
+    } catch (e) {
+      ProjectUtils.logWarning(projectRoot, 'exponent', `\`npm\` command not found. If you have npm installed please run \`npm install -g exp && exp path\`.`);
+      return WARNING;
+    }
+
     let npmls;
     try {
       let npmlsCommand = await spawnAsync('npm', ['ls', '--json', '--depth', '1'], {
