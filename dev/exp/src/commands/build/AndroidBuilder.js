@@ -13,7 +13,7 @@ import {
 
 import BaseBuilder from './BaseBuilder';
 
-import type { AndroidCredentials } from 'XDLCredentials';
+import type { AndroidCredentials } from 'xdl/build/credentials';
 
 export default class AndroidBuilder extends BaseBuilder {
   async run() {

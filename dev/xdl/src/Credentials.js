@@ -1,6 +1,5 @@
 /**
  * @flow
- * @providesModule XDLCredentials
  */
 
 import Api from './Api';
