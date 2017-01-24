@@ -3999,7 +3999,7 @@ mz@^2.6.0:
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
 
-nan@2, nan@^2.3.0, nan@^2.3.3:
+nan@2, nan@2.x, nan@^2.3.0, nan@^2.3.3:
   version "2.4.0"
   resolved nan-2.4.0.tgz#fb3c59d45fe4effe215f0b890f8adf6eb32d2232
 
@@ -4850,6 +4850,12 @@ run-async@^0.1.0:
   resolved run-async-0.1.0.tgz#c8ad4a5e110661e402a7d21b530e009f25f8e389
   dependencies:
     once "^1.3.0"
+
+runas@^3.1.1:
+  version "3.1.1"
+  resolved runas-3.1.1.tgz#52dd538db0e41745399535a347091ba45cc0eab0
+  dependencies:
+    nan "2.x"
 
 rx-lite@4.0.8:
   version "4.0.8"

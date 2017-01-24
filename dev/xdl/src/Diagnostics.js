@@ -29,6 +29,18 @@ try {
   diskusage = require('diskusage');
 } catch (e) {}
 
+function _isDirectory(dir) {
+  try {
+    if (fs.statSync(dir).isDirectory()) {
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function _uploadLogsAsync(info: any): Promise<boolean|string> {
   let user = await UserManager.getCurrentUserAsync();
   let username = user ? user.username : 'anonymous';
@@ -180,15 +192,18 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   }
 
   if (process.platform === 'darwin') {
-    try {
-      let result = await spawnAsync('xcrun', ['--version']);
-      info.xcrunVersion = _.trim(result.stdout);
-    } catch (e) {}
+    // `xcrun` and `xcodebuild` will pop up a dialog if Xcode isn't installed
+    if (_isDirectory('/Applications/Xcode.app/')) {
+      try {
+        let result = await spawnAsync('xcrun', ['--version']);
+        info.xcrunVersion = _.trim(result.stdout);
+      } catch (e) {}
 
-    try {
-      let result = await spawnAsync('xcodebuild', ['-version']);
-      info.xcodebuildVersion = _.trim(result.stdout);
-    } catch (e) {}
+      try {
+        let result = await spawnAsync('xcodebuild', ['-version']);
+        info.xcodebuildVersion = _.trim(result.stdout);
+      } catch (e) {}
+    }
 
     try {
       let result = await spawnAsync('launchctl', ['limit']);

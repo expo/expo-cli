@@ -18,6 +18,7 @@ import NotificationCode from './NotificationCode';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 import * as Utils from './Utils';
+let runas = null; // defer until used
 
 let hasSourcedBashLoginScripts = false;
 
@@ -64,15 +65,31 @@ function _exponentBinaryDirectory() {
   return dir;
 }
 
+// Only called on darwin
 async function _installBinaryAsync(name) {
   if (await _binaryInstalledAsync(name) || await _binaryExistsAsync(name)) {
     return false;
   }
 
   try {
+    if (!runas) {
+      runas = require('runas');
+    }
+
     // adb lives at ~/.exponent/adb/adb
-    let result = await spawnAsync('ln', ['-s', path.join(_exponentBinaryDirectory(), name, name), path.join(INSTALL_PATH, name)]);
-    return result.status === 0;
+    if (runas('/bin/rm', ['-f', path.join(INSTALL_PATH, name)], { admin: true }) !== 0) {
+      throw new Error(`Could not run \`rm -f ${path.join(INSTALL_PATH, name)}\`.`);
+    }
+
+    if (runas('/bin/mkdir', ['-p', INSTALL_PATH], { admin: true }) !== 0) {
+      throw new Error(`Could not run \`mkdir -p ${INSTALL_PATH}\`.`);
+    }
+
+    if (runas('/bin/ln', ['-s', path.join(_exponentBinaryDirectory(), name, name), path.join(INSTALL_PATH, name)], { admin: true }) !== 0) {
+      throw new Error(`Could not symlink \`${name}\`.`);
+    }
+
+    return true;
   } catch (e) {
     Logger.notifications.error({code: NotificationCode.INSTALL_SHELL_COMMANDS_RESULT}, `Error installing ${name}: ${e.message}`);
     throw e;
