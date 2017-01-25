@@ -5,11 +5,13 @@
 import _ from 'lodash';
 import spawnAsync from '@exponent/spawn-async';
 import delayAsync from 'delay-async';
+import rimraf from 'rimraf';
+import path from 'path';
 
 import * as Analytics from './Analytics';
 import * as Binaries from './Binaries';
 
-const WAIT_FOR_WATCHMAN_VERSION_MS = 5000;
+const WAIT_FOR_WATCHMAN_VERSION_MS = 3000;
 
 export function isPlatformSupported() {
   return process.platform === 'darwin';
@@ -23,7 +25,7 @@ export async function addToPathAsync() {
   await Binaries.addToPathAsync('watchman');
 }
 
-export async function unblockAndGetVersionAsync() {
+export async function unblockAndGetVersionAsync(projectRoot: string) {
   if (!isPlatformSupported()) {
     return null;
   }
@@ -33,7 +35,7 @@ export async function unblockAndGetVersionAsync() {
     // {
     //  "version": "4.7.0"
     // }
-    let result = await _unblockAndVersionAsync();
+    let result = await _unblockAndVersionAsync(projectRoot);
     let watchmanVersion = JSON.parse(_.trim(result.stdout)).version;
     return watchmanVersion;
   } catch (e) {
@@ -43,18 +45,24 @@ export async function unblockAndGetVersionAsync() {
   }
 }
 
-async function _unblockAndVersionAsync() {
+async function _unblockAndVersionAsync(projectRoot: string) {
   let cancelObject = {
     isDoneWithVersionCheck: false,
   };
 
   let result = await Promise.race([
-    _unblockAsync(cancelObject),
+    _unblockAsync(projectRoot, cancelObject),
     _versionAsync(cancelObject),
   ]);
 
   if (result.isUnblock) {
-    result = await _versionAsync();
+    result = await Promise.race([
+      _versionAsync(),
+      async () => {
+        await delayAsync(WAIT_FOR_WATCHMAN_VERSION_MS);
+        throw new Error(`\`watchman version\` failed even after \`launchctl unload\``);
+      },
+    ]);
     Analytics.logEvent('version after launchctl unload');
     return result;
   } else {
@@ -62,12 +70,19 @@ async function _unblockAndVersionAsync() {
   }
 }
 
-async function _unblockAsync(cancelObject) {
+async function _unblockAsync(projectRoot: string, cancelObject) {
   await delayAsync(WAIT_FOR_WATCHMAN_VERSION_MS);
 
   if (!cancelObject.isDoneWithVersionCheck) {
     Analytics.logEvent('launchctl unload');
-    await spawnAsync('launchctl', ['unload', '-F', '~/Library/LaunchAgents/com.github.facebook.watchman.plist']);
+    if (process.env.TMPDIR && process.env.USER) {
+      rimraf.sync(path.join(process.env.TMPDIR, `${process.env.USER}-state`));
+    }
+    if (process.platform === 'darwin') {
+      await spawnAsync('launchctl', ['unload', '-F', '~/Library/LaunchAgents/com.github.facebook.watchman.plist']);
+    }
+    await spawnAsync('watchman', ['watch-del', projectRoot]);
+    await spawnAsync('watchman', ['watch-project', projectRoot]);
   }
 
   return {
