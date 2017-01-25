@@ -68,15 +68,20 @@ class Cacher<T> {
     }
 
     let fromCache: ?T;
+    let failedRefresh = null;
 
     // if mtime + ttl >= now, attempt to fetch the value, otherwise read from disk
     if (new Date() - mtime > this.ttlMilliseconds) {
       try {
         fromCache = await this.refresher();
-        await fsp.writeFile(this.filename, JSON.stringify(fromCache), 'utf8');
+        try {
+          await fsp.writeFile(this.filename, JSON.stringify(fromCache), 'utf8');
+        } catch (e) {
+          this.writeError = e;
+          // do nothing, if the refresh succeeded it'll be returned, if the persist failed we don't care
+        }
       } catch (e) {
-        this.writeError = e;
-        // do nothing, if the refresh succeeded it'll be returned, if the persist failed we don't care
+        failedRefresh = e;
       }
     }
 
@@ -92,7 +97,11 @@ class Cacher<T> {
     if (fromCache) {
       return fromCache;
     } else {
-      throw new Error(`Unable to read ${this.filename}. ${this.readError || ''}`);
+      if (failedRefresh) {
+        throw new Error(`Unable to perform cache refresh for ${this.filename}: ${failedRefresh}`);
+      } else {
+        throw new Error(`Unable to read ${this.filename}. ${this.readError || ''}`);
+      }
     }
   }
 
