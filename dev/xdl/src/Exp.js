@@ -15,6 +15,7 @@ import rimraf from 'rimraf';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
+import * as Binaries from './Binaries';
 import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import Logger from './Logger';
@@ -174,6 +175,11 @@ export async function createNewExpAsync(templateId: string, selectedDir: string,
 }
 
 async function initGitRepo(root: string) {
+  if (process.platform === 'darwin' && !Binaries.isXcodeInstalled()) {
+    Logger.global.warn(`Unable to initialize git repo. \`git\` not installed.`);
+    return;
+  }
+
   // let's see if we're in a git tree
   let insideGit = true;
   try {
@@ -188,7 +194,7 @@ async function initGitRepo(root: string) {
       await spawnAsync('git', ['init'], { cwd: root });
     } catch (e) {
       // no-op -- this is just a convenience and we don't care if it fails
-      Logger.global.debug(`Unable to initialize git repo: ${e.stderr}`);
+      Logger.global.warn(`Unable to initialize git repo: ${e.stderr}`);
     }
   }
 }

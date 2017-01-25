@@ -255,3 +255,19 @@ export async function writePathToUserSettingsAsync() {
   let pathFile = path.join(UserSettings.dotExponentHomeDirectory(), 'PATH');
   await fs.promise.writeFile(pathFile, process.env.PATH);
 }
+
+function _isDirectory(dir) {
+  try {
+    if (fs.statSync(dir).isDirectory()) {
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
+export function isXcodeInstalled() {
+  return _isDirectory('/Applications/Xcode.app/');
+}
