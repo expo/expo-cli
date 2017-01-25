@@ -106,10 +106,14 @@ export async function _isSimulatorInstalledAsync() {
 
   // make sure we can run simctl
   try {
-    await spawnAsync('xcrun', ['simctl', 'help']);
+    await _xcrunAsync(['simctl', 'help']);
   } catch (e) {
-    console.warn(`Unable to run simctl: ${e.toString}`);
-    Logger.global.error('xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.');
+    if (e.isXDLError) {
+      Logger.global.error(e.toString());
+    } else {
+      console.warn(`Unable to run simctl: ${e.toString()}`);
+      Logger.global.error('xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.');
+    }
     return false;
   }
 
