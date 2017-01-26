@@ -695,7 +695,7 @@ export async function startExponentServerAsync(projectRoot: string) {
         currentUser = await UserManager.getCurrentUserAsync();
       }
 
-      if (req.headers['exponent-accept-signature'] && currentUser) {
+      if (req.headers['exponent-accept-signature'] && (currentUser || Config.offline)) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
         } else {
