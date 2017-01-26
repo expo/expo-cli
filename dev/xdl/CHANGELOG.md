@@ -10,6 +10,23 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [29.4.0] - 2017-01-25
+
+### Added
+
+* Support for running the RN packager with the `Config.offline` flag, bypassing an Exponent account.
+* Workarounds for state corruption problems in watchman.
+
+### Changed
+
+* Improved error messages for a variety of issues.
+
+## [29.3.0] - 2017-01-23
+
+### Changed
+
+* Resolved several issues that resulted in premature logout of Exponent account sessions.
+
 ## [29.2.0] - 2017-1-18
 
 ### Changed
