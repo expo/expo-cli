@@ -68,9 +68,10 @@ async function _validateAssetFieldsAsync(projectRoot, exp) {
           // NOTE(nikki): The '4100' below should be enough for most file types, though we
           //              could probably go shorter....
           //              http://www.garykessler.net/library/file_sigs.html
-          let contentType = fs.existsSync(path.resolve(projectRoot, value)) ?
-                            fileType(await readChunk(value, 0, 4100)).mime :
-                            (await request.promise.head({ url: value })).headers['content-type'];
+          const filePath = path.resolve(projectRoot, value);
+          const contentType = fs.existsSync(filePath) ?
+                              fileType(await readChunk(filePath, 0, 4100)).mime :
+                              (await request.promise.head({ url: value })).headers['content-type'];
           if (!contentType.match(new RegExp(contentTypePattern))) {
             const configName = await ProjectUtils.configFilenameAsync(projectRoot);
             ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`);
