@@ -65,10 +65,10 @@ export default async function convertProjectAsync(projectDir:string, {projectNam
 }
 
 const dependencies = {
-  "@exponent/vector-icons": "~2.0.3",
-  "exponent": "~12.0.3",
+  "@exponent/vector-icons": "~4.0.0",
+  "exponent": "~13.1.0",
   "react": "~15.3.2",
-  "react-native": "github:exponent/react-native#sdk-12.0.0"
+  "react-native": "github:exponent/react-native#sdk-13.0.1"
 };
 
 const unsupportedPackages = {
