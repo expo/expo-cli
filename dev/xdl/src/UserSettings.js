@@ -6,6 +6,7 @@ import 'instapromise';
 
 import * as Env from './Env';
 
+import uuid from 'node-uuid';
 import JsonFile from '@exponent/json-file';
 
 import mkdirp from 'mkdirp';
@@ -39,6 +40,19 @@ function dotExponentHomeDirectory() {
   return dirPath;
 }
 
+// returns an anonymous, unique identifier for a user on the current computer
+async function anonymousIdentifier(): Promise<string> {
+  const settings = await userSettingsJsonFile();
+  let id = await settings.getAsync('uuid', null);
+
+  if (!id) {
+    id = uuid.v4();
+    await settings.setAsync('uuid', id);
+  }
+
+  return id;
+}
+
 const UserSettings = userSettingsJsonFile();
 
 Object.assign(UserSettings, {
@@ -46,6 +60,7 @@ Object.assign(UserSettings, {
   recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,
+  anonymousIdentifier,
   SETTINGS_FILE_NAME,
 });
 

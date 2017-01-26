@@ -16,7 +16,7 @@ import type Auth0Node from 'auth0';
 import ApiV2Client, { ApiV2Error } from './ApiV2';
 
 import * as Analytics from './Analytics';
-
+import Config from './Config';
 import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
 
@@ -276,7 +276,11 @@ export default class UserManager {
    *
    * If there are any issues with the login, this method throws.
    */
-  static async ensureLoggedInAsync(): Promise<User> {
+  static async ensureLoggedInAsync(): Promise<?User> {
+    if (Config.offline) {
+      return null;
+    }
+
     const user = await UserManager.getCurrentUserAsync();
     if (!user) {
       if (await UserManager.getLegacyUserData()) {

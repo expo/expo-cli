@@ -13,6 +13,7 @@ import fs from 'fs';
 import joi from 'joi';
 import _ from 'lodash';
 import ngrok from 'ngrok';
+import os from 'os';
 import path from 'path';
 import request from 'request';
 import spawnAsync from '@exponent/spawn-async';
@@ -681,21 +682,52 @@ export async function startExponentServerAsync(projectRoot: string) {
       await _resolveManifestAssets(projectRoot, manifest, async (path) =>
         manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + path);
 
+      // the server normally inserts this but if we're offline we'll do it here
+      const hostUUID = await UserSettings.anonymousIdentifier();
+      if (Config.offline) {
+        manifest.id = `@anonymous/${manifest.slug}-${hostUUID}`;
+      }
+
       let manifestString = JSON.stringify(manifest);
-      const currentUser = await UserManager.getCurrentUserAsync();
+
+      let currentUser;
+      if (!Config.offline) {
+        currentUser = await UserManager.getCurrentUserAsync();
+      }
 
       if (req.headers['exponent-accept-signature'] && currentUser) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
         } else {
-          let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
-          let signedManifest = await Api.callMethodAsync('signManifest', [publishInfo.args], 'post', manifest);
-          _cachedSignedManifest.manifestString = manifestString;
-          _cachedSignedManifest.signedManifest = signedManifest.response;
-          manifestString = signedManifest.response;
+          if (Config.offline) {
+            const unsignedManifest = {
+              manifestString,
+              signature: 'UNSIGNED',
+            };
+
+            _cachedSignedManifest.manifestString = manifestString;
+            manifestString = JSON.stringify(unsignedManifest);
+            _cachedSignedManifest.signedManifest = manifestString;
+          } else {
+            let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
+            let signedManifest = await Api.callMethodAsync('signManifest', [publishInfo.args], 'post', manifest);
+            _cachedSignedManifest.manifestString = manifestString;
+            _cachedSignedManifest.signedManifest = signedManifest.response;
+            manifestString = signedManifest.response;
+          }
         }
       }
 
+      const hostInfo = {
+        host: hostUUID,
+        server: 'xdl',
+        serverVersion: require('../package.json').version,
+        serverDriver: Config.developerTool,
+        serverOS: os.platform(),
+        serverOSVersion: os.release(),
+      };
+
+      res.append('Exponent-Server', JSON.stringify(hostInfo));
       res.send(manifestString);
 
       Analytics.logEvent('Serve Manifest', {
@@ -743,6 +775,7 @@ export async function startExponentServerAsync(projectRoot: string) {
 // startExponentServerAsync.
 export async function stopExponentServerAsync(projectRoot: string) {
   await UserManager.ensureLoggedInAsync();
+
   _assertValidProjectRoot(projectRoot);
 
   let server = _projectRootToExponentServer[projectRoot];
@@ -814,6 +847,11 @@ async function _connectToNgrokAsync(projectRoot: string, args: mixed, hostnameAs
 
 export async function startTunnelsAsync(projectRoot: string) {
   const user = await UserManager.ensureLoggedInAsync();
+
+  if (!user) {
+    throw new Error("Internal error -- tunnel started in offline mode.");
+  }
+
   _assertValidProjectRoot(projectRoot);
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -924,6 +962,10 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
 }
 
 export async function startAsync(projectRoot: string, options: Object = {}): Promise<any> {
+  if (Config.offline) {
+    await ProjectSettings.setAsync(projectRoot, { hostType: 'lan' });
+  }
+
   await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -933,10 +975,13 @@ export async function startAsync(projectRoot: string, options: Object = {}): Pro
 
   await startExponentServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options);
-  try {
-    await startTunnelsAsync(projectRoot);
-  } catch (e) {
-    ProjectUtils.logDebug(projectRoot, 'exponent', `Error starting ngrok ${e.message}`);
+
+  if (!Config.offline) {
+    try {
+      await startTunnelsAsync(projectRoot);
+    } catch (e) {
+      ProjectUtils.logDebug(projectRoot, 'exponent', `Error starting ngrok ${e.message}`);
+    }
   }
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
@@ -944,11 +989,13 @@ export async function startAsync(projectRoot: string, options: Object = {}): Pro
 }
 
 export async function stopAsync(projectRoot: string): Promise<void> {
-  await stopTunnelsAsync(projectRoot);
-  await stopReactNativeServerAsync(projectRoot);
-  try {
-    await stopExponentServerAsync(projectRoot);
-  } catch (e) {
-    ProjectUtils.logDebug(projectRoot, 'exponent', `Error stopping ngrok ${e.message}`);
+  if (!Config.offline) {
+    try {
+      await stopTunnelsAsync(projectRoot);
+    } catch (e) {
+      ProjectUtils.logDebug(projectRoot, 'exponent', `Error stopping ngrok ${e.message}`);
+    }
   }
+  await stopReactNativeServerAsync(projectRoot);
+  await stopExponentServerAsync(projectRoot);
 }

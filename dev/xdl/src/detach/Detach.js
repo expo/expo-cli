@@ -67,6 +67,11 @@ function yesnoAsync(question) {
 
 export async function detachAsync(projectRoot: string) {
   let user = await UserManager.ensureLoggedInAsync();
+
+  if (!user) {
+    throw new Error("Internal error -- somehow detach is being run in offline mode.");
+  }
+
   let username = user.username;
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let experienceName = `@${username}/${exp.slug}`;

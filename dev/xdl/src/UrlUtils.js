@@ -9,6 +9,7 @@ import joi from 'joi';
 import os from 'os';
 import url from 'url';
 
+import Config from './Config';
 import ErrorCode from './ErrorCode';
 import * as Exp from './Exp';
 import * as ProjectSettings from './ProjectSettings';
@@ -83,6 +84,15 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
 export async function constructUrlAsync(projectRoot: string, opts: any, isPackager: bool) {
   if (opts) {
+
+    // the randomness is only important if we're online and can build a tunnel
+    let urlRandomnessSchema;
+    if (Config.offline) {
+      urlRandomnessSchema = joi.string().optional().allow(null);
+    } else {
+      urlRandomnessSchema = joi.string();
+    }
+
     let schema = joi.object().keys({
       urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
       lanType: joi.any().valid('ip', 'hostname'),
@@ -90,7 +100,7 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
       dev: joi.boolean(),
       strict: joi.boolean(),
       minify: joi.boolean(),
-      urlRandomness: joi.string(),
+      urlRandomness: urlRandomnessSchema,
     });
 
     try {
@@ -143,7 +153,10 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
       // use localhost
       hostname = 'localhost';
       port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
-      ProjectUtils.logError(projectRoot, 'exponent', `Can't get tunnel URL because ngrok not started yet. Switching to localhost.`);
+
+      if (!Config.offline) {
+        ProjectUtils.logError(projectRoot, 'exponent', `Can't get tunnel URL because ngrok not started yet. Switching to localhost.`);
+      }
     } else {
       let pnu = url.parse(ngrokUrl);
       hostname = pnu.hostname;
