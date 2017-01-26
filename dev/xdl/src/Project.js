@@ -680,7 +680,7 @@ export async function startExponentServerAsync(projectRoot: string) {
 
       // Resolve manifest assets to their packager URL
       await _resolveManifestAssets(projectRoot, manifest, async (path) =>
-        manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + path);
+        manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path);
 
       // the server normally inserts this but if we're offline we'll do it here
       const hostUUID = await UserSettings.anonymousIdentifier();
