@@ -229,8 +229,12 @@ function makePathReadable(pth) {
 export async function expInfoSafeAsync(root: string) {
   try {
     let { exp: { name, description, icon, iconUrl } } = await ProjectUtils.readConfigJsonAsync(root);
-    if (!icon && iconUrl) {
-      icon = iconUrl;
+    let pathOrUrl = icon || iconUrl;
+    let resolvedPath = path.resolve(root, pathOrUrl);
+    if (fs.existsSync(resolvedPath)) {
+      icon = `file://${resolvedPath}`;
+    } else {
+      icon = pathOrUrl; // Assume already a URL
     }
 
     return {
