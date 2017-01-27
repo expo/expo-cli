@@ -16,7 +16,7 @@ import uuid from 'node-uuid';
 import yesno from 'yesno';
 
 import {
-  saveUrlToPathAsync,
+  saveIconToPathAsync,
   spawnAsyncThrowError,
   spawnAsync,
   modifyIOSPropertyListAsync,
@@ -314,7 +314,7 @@ export async function detachIOSAsync(projectRoot: string, exponentDirectory: str
   await configureStandaloneIOSShellPlistAsync(infoPlistPath, manifest, experienceUrl);
   // TODO: logic for when kernel sdk version is different from detached sdk version
   await configureDetachedVersionsPlistAsync(infoPlistPath, sdkVersion, sdkVersion);
-  await configureIOSIconsAsync(manifest, iconPath);
+  await configureIOSIconsAsync(manifest, iconPath, projectRoot);
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
   console.log('Configuring iOS dependencies...');
@@ -449,14 +449,14 @@ async function detachAndroidAsync(projectRoot, exponentDirectory, sdkVersion, ex
   await regexFileAsync(path.resolve(androidProjectDirectory, 'app', 'src', 'main', 'res', 'values', 'strings.xml'), ANDROID_TEMPLATE_NAME, appName);
 
   // Fix image
-  let iconUrl = manifest.iconUrl;
-  if (iconUrl) {
+  let icon = manifest.icon;
+  if (icon) {
     let iconMatches = await glob.promise(path.join(androidProjectDirectory, 'app', 'src', 'main', 'res') + '/**/ic_launcher.png');
     if (iconMatches) {
       for (let i = 0; i < iconMatches.length; i++) {
         await fs.promise.unlink(iconMatches[i]);
         // TODO: make more efficient
-        await saveUrlToPathAsync(iconUrl, iconMatches[i]);
+        await saveIconToPathAsync(projectRoot, icon, iconMatches[i]);
       }
     }
   }

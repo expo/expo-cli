@@ -21,6 +21,25 @@ function saveUrlToPathAsync(url, path) {
   });
 }
 
+function saveIconToPathAsync(projectRoot, pathOrURL, outPath) {
+  const localPath = path.resolve(projectRoot, pathOrURL);
+  return new Promise(function(resolve, reject) {
+    let stream = fs.createWriteStream(outPath);
+    stream.on('close', () => {
+      if (getFilesizeInBytes(outPath) < 10) {
+        throw new Error(`{filename} is too small`);
+      }
+      resolve();
+    });
+    stream.on('error', reject);
+    if (fs.existsSync(localPath)) {
+      fs.createReadStream(localPath).pipe(stream);
+    } else {
+      request(pathOrURL).pipe(stream);
+    }
+  });
+}
+
 function getFilesizeInBytes(path) {
   let stats = fs.statSync(path);
   let fileSizeInBytes = stats['size'];
@@ -122,12 +141,15 @@ function getAppleIconQualifier(iconSize, iconResolution) {
  *
  * This only works on MacOS (as far as I know) because it uses the sips utility.
  */
-async function configureIOSIconsAsync(manifest, destinationIconPath) {
+async function configureIOSIconsAsync(manifest, destinationIconPath, projectRoot) {
   let defaultIconFilename;
   if (manifest.iconUrl) {
-     defaultIconFilename = 'exp-icon.png';
-     await saveUrlToPathAsync(manifest.iconUrl, `${destinationIconPath}/${defaultIconFilename}`);
-   }
+    defaultIconFilename = 'exp-icon.png';
+    await saveUrlToPathAsync(manifest.iconUrl, `${destinationIconPath}/${defaultIconFilename}`);
+  } else if (projectRoot && manifest.icon) {
+    defaultIconFilename = 'exp-icon.png';
+    await saveIconToPathAsync(projectRoot, manifest.icon, `${destinationIconPath}/${defaultIconFilename}`);
+  }
 
   let iconSizes = [29, 40, 60, 76, 83.5];
   iconSizes.forEach(iconSize => {
@@ -140,6 +162,7 @@ async function configureIOSIconsAsync(manifest, destinationIconPath) {
     }
     iconResolutions.forEach(async (iconResolution) => {
       let iconQualifier = getAppleIconQualifier(iconSize, iconResolution);
+      // TODO(nikki): Support local paths for these icons
       let iconKey = `iconUrl${iconQualifier}`;
       let rawIconFilename;
       let usesDefault = false;
@@ -183,6 +206,7 @@ async function configureIOSIconsAsync(manifest, destinationIconPath) {
 
 export {
   saveUrlToPathAsync,
+  saveIconToPathAsync,
   getManifestAsync,
   spawnAsyncThrowError,
   spawnAsync,
