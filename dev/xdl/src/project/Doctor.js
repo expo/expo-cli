@@ -161,9 +161,10 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
       return WARNING;
     }
 
-    let reactNativeTag = reactNative.substring(reactNative.lastIndexOf('#') + 1);
-    let sdkVersionObject = sdkVersions[sdkVersion];
     try {
+      let reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
+      let sdkVersionObject = sdkVersions[sdkVersion];
+
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
           semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['exponentReactNativeTag']))) {
