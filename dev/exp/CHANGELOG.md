@@ -10,19 +10,25 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
-## [32.1.0] - 2017-1-18
+## [32.3.0] - 2017-01-27
+
+### Changed
+
+* Update `xdl` to v29.5.0.
+
+## [32.1.0] - 2017-01-18
 
 ### Changed
 
 * Update `xdl` to v29.2.0.
 
-## [32.0.0] - 2017-1-17
+## [32.0.0] - 2017-01-17
 
 ### Changed
 
 * Update `xdl` to v29.0.0.
 
-## [31.0.0] - 2017-1-11
+## [31.0.0] - 2017-01-11
 
 ### Changed
 

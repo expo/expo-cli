@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [29.5.0] - 2017-01-27
+
+### Changed
+
+* Compile bundled watchman without pcre.
+* Better Xcode error handling
+
 ## [29.4.0] - 2017-01-25
 
 ### Added
