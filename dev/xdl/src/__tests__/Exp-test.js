@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 jest.mock('fs');
 
 const fs = require('fs');

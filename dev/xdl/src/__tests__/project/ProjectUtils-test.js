@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 jest.mock('analytics-node');
 jest.mock('fs');
 

@@ -1,5 +1,3 @@
-// @flow
-
 jest.mock('analytics-node');
 
 const fsp = require('mz/fs');

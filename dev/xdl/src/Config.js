@@ -16,7 +16,26 @@ if (Env.isStaging()) {
   port = 3000;
 }
 
-export default {
+declare interface XDLConfig {
+  api: {
+    scheme: string,
+    host: string,
+    port: ?number,
+  },
+  ngrok: {
+    authToken: string,
+    authTokenPublicId: string,
+    domain: string,
+  },
+  developerTool: ?string,
+  validation: {
+    reactNativeVersionWarnings: boolean,
+  },
+  helpUrl: string,
+  offline: boolean,
+}
+
+const config: XDLConfig = {
   api: {
     scheme,
     host,
@@ -27,10 +46,12 @@ export default {
     authTokenPublicId: '5W1bR67GNbWcXqmxZzBG1',
     domain: 'exp.direct',
   },
-  developerTool: null,
+  developerTool: (null: ?string),
   validation: {
     reactNativeVersionWarnings: true,
   },
   helpUrl: 'https://docs.getexponent.com/',
   offline: false,
 };
+
+export default config;

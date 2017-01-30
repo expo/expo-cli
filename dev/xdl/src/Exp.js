@@ -262,7 +262,13 @@ type PublishInfo = {
 
 // TODO: remove / change, no longer publishInfo, this is just used for signing
 export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
-  const { username } = await UserManager.ensureLoggedInAsync();
+  const user = await UserManager.ensureLoggedInAsync();
+
+  if (!user) {
+    throw new Error('Attempted to login in offline mode. This is a bug.');
+  }
+
+  const { username } = user;
 
   const { exp } = await ProjectUtils.readConfigJsonAsync(root);
 
