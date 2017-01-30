@@ -12,6 +12,6 @@ async function action(projectDir, options) {
 export default (program) => {
   program
     .command('detach [project-dir]')
-    .description('Creates Xcode and Android Studio projects for your app. Use this is you need to add custom native functionality.')
+    .description('Creates Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.')
     .asyncActionProjectDir(action);
 };
