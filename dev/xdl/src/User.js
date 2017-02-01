@@ -19,6 +19,7 @@ import * as Analytics from './Analytics';
 import Config from './Config';
 import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
+import Logger from './Logger';
 
 import * as Intercom from './Intercom';
 import UserSettings from './UserSettings';
@@ -322,7 +323,7 @@ export default class UserManager {
         refreshToken,
       });
     } catch (e) {
-      console.error(e);
+      Logger.global.error(e);
       // log us out if theres a fatal error when getting the profile with
       // current access token
       await UserManager.logoutAsync();
