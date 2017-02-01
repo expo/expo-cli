@@ -322,6 +322,7 @@ export default class UserManager {
         refreshToken,
       });
     } catch (e) {
+      console.error(e);
       // log us out if theres a fatal error when getting the profile with
       // current access token
       await UserManager.logoutAsync();
@@ -424,7 +425,6 @@ export default class UserManager {
     { currentConnection, accessToken, idToken, refreshToken, refreshTokenClientId }:
     { currentConnection: ConnectionType, accessToken: string, idToken: string, refreshToken: string, refreshTokenClientId?: string }
   ): Promise<User> {
-
     // Attempt to grab profile from Auth0.
     // If token is expired / getting the profile fails, use refresh token to
     let user;
