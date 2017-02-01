@@ -10,6 +10,7 @@ export default (program) => {
   program
     .command('prepare-detached-build [project-dir]')
     .option('--platform [platform]', 'detached project platform')
+    .option('--skipXcodeConfig', '[iOS only] if true, do not configure Xcode project')
     .description('Prepares a detached project for building')
     .asyncActionProjectDir(action, true, true);
 };

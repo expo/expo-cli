@@ -245,7 +245,6 @@ async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
 }
 
 async function cleanPropertyListBackupsAsync(configFilePath) {
-  console.log('Cleaning up plist...');
   await cleanIOSPropertyListBackupAsync(configFilePath, 'EXShell', false);
   await cleanIOSPropertyListBackupAsync(configFilePath, 'Info', false);
   await cleanIOSPropertyListBackupAsync(configFilePath, 'EXSDKVersions', false);
@@ -351,6 +350,7 @@ export async function detachIOSAsync(projectRoot: string, exponentDirectory: str
     }
   }
 
+  console.log('iOS detach is complete! To configure iOS native dependencies, make sure you have the Cocoapods gem, then `cd ios && ./pod-install-exponent.sh`\n\n');
   return;
 }
 
@@ -493,12 +493,14 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
       }
     }
     // insert exponent development url into iOS config
-    let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
-    let configFilePath = path.join(iosProjectDirectory, projectName, 'Supporting');
-    await modifyIOSPropertyListAsync(configFilePath, 'EXShell', (shellConfig) => {
-      shellConfig.developmentUrl = devUrl;
-      return shellConfig;
-    });
+    if (!args.skipXcodeConfig) {
+      let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+      let configFilePath = path.join(iosProjectDirectory, projectName, 'Supporting');
+      await modifyIOSPropertyListAsync(configFilePath, 'EXShell', (shellConfig) => {
+        shellConfig.developmentUrl = devUrl;
+        return shellConfig;
+      });
+    }
   } else {
     let androidProjectDirectory = path.join(projectDir, 'android');
     let exponentBuildConstantsMatches = await glob.promise(androidProjectDirectory + '/**/ExponentBuildConstants.java');
