@@ -4,19 +4,19 @@
 
 import { connect as reduxConnect } from 'react-redux';
 
-import * as project from './reducers/project';
+import * as notifications from './reducers/notifications';
 import { createXDLStore } from './store';
 
 // Reducers
 export const reducers = {
-  project: project.reducer,
+  notifications: notifications.reducer,
 };
 
 export const store = createXDLStore(reducers);
 
 // Actions
 export const actions = {
-  project: project.actions,
+  notifications: notifications.actions,
 };
 
 export const connect = (mapStateToProps: any, mapDispatchToProps: any, mergeProps: any, options: any = {}) => {

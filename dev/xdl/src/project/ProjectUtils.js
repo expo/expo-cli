@@ -11,6 +11,7 @@ import slug from 'slugify';
 import * as Analytics from '../Analytics';
 import Config from '../Config';
 import Logger from '../Logger';
+import * as state from '../state';
 
 const MAX_MESSAGE_LENGTH = 200;
 let _projectRootToLogger = {};
@@ -25,37 +26,51 @@ function _getLogger(projectRoot: string) {
   return logger;
 }
 
-export function logWithLevel(projectRoot: string, level: string, object: any, msg: string) {
+export function logWithLevel(projectRoot: string, level: string, object: any, msg: string, id: ?string) {
+  let useRedux = id && Config.useReduxNotifications;
+
   let logger = _getLogger(projectRoot);
   switch (level) {
     case 'debug':
       logger.debug(object, msg);
-      return;
+      break;
     case 'info':
       logger.info(object, msg);
-      return;
+      break;
     case 'warn':
-      logger.warn(object, msg);
-      return;
+      if (!useRedux) {
+        logger.warn(object, msg);
+      }
+      break;
     case 'error':
-      logger.error(object, msg);
-      return;
+      if (!useRedux) {
+        logger.error(object, msg);
+      }
+      break;
     default:
       logger.debug(object, msg);
-      return;
+      break;
+  }
+
+  if (useRedux && (level === 'warn' || level === 'error')) {
+    state.store.dispatch(state.actions.notifications.add(`${projectRoot}-${id}`, msg, projectRoot, level));
   }
 }
 
-export function logDebug(projectRoot: string, tag: string, message: string) {
+export function logDebug(projectRoot: string, tag: string, message: string, id: ?string) {
   _getLogger(projectRoot).debug({tag}, message.toString());
 }
 
-export function logInfo(projectRoot: string, tag: string, message: string) {
+export function logInfo(projectRoot: string, tag: string, message: string, id: ?string) {
   _getLogger(projectRoot).info({tag}, message.toString());
 }
 
-export function logError(projectRoot: string, tag: string, message: string) {
-  _getLogger(projectRoot).error({tag}, message.toString());
+export function logError(projectRoot: string, tag: string, message: string, id: ?string) {
+  if (id && Config.useReduxNotifications) {
+    state.store.dispatch(state.actions.notifications.add(`${projectRoot}-${id}`, message, tag, 'error'));
+  } else {
+    _getLogger(projectRoot).error({tag}, message.toString());
+  }
 
   let truncatedMessage = message.toString();
   if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
@@ -68,8 +83,12 @@ export function logError(projectRoot: string, tag: string, message: string) {
   });
 }
 
-export function logWarning(projectRoot: string, tag: string, message: string) {
-  _getLogger(projectRoot).warn({tag}, message.toString());
+export function logWarning(projectRoot: string, tag: string, message: string, id: ?string) {
+  if (id && Config.useReduxNotifications) {
+    state.store.dispatch(state.actions.notifications.add(`${projectRoot}-${id}`, message, tag, 'warn'));
+  } else {
+    _getLogger(projectRoot).warn({tag}, message.toString());
+  }
 
   let truncatedMessage = message.toString();
   if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
@@ -80,6 +99,12 @@ export function logWarning(projectRoot: string, tag: string, message: string) {
     tag,
     message: truncatedMessage,
   });
+}
+
+export function clearNotification(projectRoot: string, id: string) {
+  if (Config.useReduxNotifications) {
+    state.store.dispatch(state.actions.notifications.clear(`${projectRoot}-${id}`));
+  }
 }
 
 export function attachLoggerStream(projectRoot: string, stream: any) {

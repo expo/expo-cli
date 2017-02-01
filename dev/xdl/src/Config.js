@@ -33,6 +33,7 @@ declare interface XDLConfig {
   },
   helpUrl: string,
   offline: boolean,
+  useReduxNotifications: boolean,
 }
 
 const config: XDLConfig = {
@@ -52,6 +53,7 @@ const config: XDLConfig = {
   },
   helpUrl: 'https://docs.getexponent.com/',
   offline: false,
+  useReduxNotifications: false,
 };
 
 export default config;
