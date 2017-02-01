@@ -143,6 +143,11 @@ async function configureStandaloneIOSShellPlistAsync(configFilePath, manifest, m
     if (manifest.ios && manifest.ios.permissions) {
       shellConfig.permissions = manifest.ios.permissions;
     }
+    if (manifest.isDetached) {
+      // disable manifest verification on detached apps until
+      // the developer adds the correct entitlements to their bundle id.
+      shellConfig.isManifestVerificationBypassed = true;
+    }
 
     console.log('Using shell config:', shellConfig);
     return shellConfig;
