@@ -6,9 +6,10 @@ import _ from 'lodash';
 
 export const actions = {
   // logLevel = 'warning', 'error', or 'info'
-  add: (id: string, message: string, tag: string, logLevel: string) => {
+  add: (projectRoot: string, id: string, message: string, tag: string, logLevel: string) => {
     return {
       type: 'ADD_NOTIFICATION',
+      projectRoot,
       id,
       message,
       tag,
@@ -16,15 +17,16 @@ export const actions = {
     };
   },
 
-  clear: (id: string) => {
+  clear: (projectRoot: string, id: string) => {
     return {
       type: 'CLEAR_NOTIFICATION',
+      projectRoot,
       id,
     };
   },
 };
 
-const INITIAL_STATE = {
+const INITIAL_PROJECT_STATE = {
   count: 0,
   color: '#595C68',
   info: [],
@@ -32,7 +34,7 @@ const INITIAL_STATE = {
   error: [],
 };
 
-export const reducer = (state: any = INITIAL_STATE, action: any) => {
+export const reducer = (state: any = {}, action: any) => {
   switch (action.type) {
     case 'ADD_NOTIFICATION':
       return _addNotification(state, action);
@@ -44,53 +46,66 @@ export const reducer = (state: any = INITIAL_STATE, action: any) => {
 };
 
 function _addNotification(state: any, action: any) {
-  let { id, message, tag, logLevel } = action;
+  let { projectRoot, id, message, tag, logLevel } = action;
 
-  let array = state[logLevel];
-  let index = _.findIndex(array, { id });
+  let projectObject = state[projectRoot] || INITIAL_PROJECT_STATE;
+  let arrayOfIssues = projectObject[logLevel];
+  let index = _.findIndex(arrayOfIssues, { id });
   if (index === -1) {
-    array.push({
+    arrayOfIssues.push({
       id,
       message,
       tag,
       count: 0,
     });
   } else {
-    array[index] = {
+    arrayOfIssues[index] = {
       id,
       message,
       tag,
-      count: array[index].count + 1,
+      count: arrayOfIssues[index].count + 1,
     };
   }
 
-  let newState = state;
-  newState[logLevel] = array;
-  _setCount(newState);
+  // TODO: switch to immutable.js
+  let newState = JSON.parse(JSON.stringify(state));
+  projectObject[logLevel] = arrayOfIssues;
+  _setCount(projectObject);
+  newState[projectRoot] = projectObject;
   return newState;
 }
 
 function _clearNotification(state: any, action: any) {
-  let newState = {};
-  _.forEach(state, function(array, key) {
+  let { projectRoot, id } = action;
+
+  if (!state[projectRoot]) {
+    return state;
+  }
+
+  let projectObject = state[projectRoot];
+  let newProjectObject = {};
+  _.forEach(projectObject, function(array, key) {
     _.remove(array, (notification) => {
-      return notification.id === action.id;
+      return notification.id === id;
     });
 
-    newState[key] = array;
+    newProjectObject[key] = array;
   });
 
-  _setCount(newState);
+  _setCount(newProjectObject);
+  // TODO: switch to immutable.js
+  let newState = JSON.parse(JSON.stringify(state));
+  newState[projectRoot] = newProjectObject;
   return newState;
 }
 
-function _setCount(state: any) {
-  state.count = state.warn.length + state.error.length;
-  if (state.count === 0) {
-    state.color = '#595C68';
+function _setCount(projectObject: any) {
+  projectObject.count = projectObject.warn.length + projectObject.error.length;
+  if (projectObject.count === 0) {
+    projectObject.color = '#595C68';
   } else {
-    state.color = state.error.length > 0 ? '#F6345D' : '#FF8C00';
+    projectObject.color = projectObject.error.length > 0 ? '#F6345D' : '#FF8C00';
   }
 
-  return state;
+  return projectObject;
 }
