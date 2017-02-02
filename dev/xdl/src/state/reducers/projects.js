@@ -16,8 +16,16 @@ export const actions = {
       projectRoot,
     };
   },
+
+  togglePane: (projectRoot: string) => {
+    return {
+      type: 'TOGGLE_PANE',
+      projectRoot,
+    };
+  },
 };
 
+const TOGGLE = -1;
 const PACKAGER_PANE = 0;
 const NOTIFICATIONS_PANE = 1;
 
@@ -33,6 +41,8 @@ export const reducer = (state: any = {}, action: any) => {
       return _selectPane(state, action, PACKAGER_PANE);
     case 'SELECT_NOTIFICATIONS_PANE':
       return _selectPane(state, action, NOTIFICATIONS_PANE);
+    case 'TOGGLE_PANE':
+      return _selectPane(state, action, TOGGLE);
     default:
       return state;
   }
@@ -42,6 +52,10 @@ function _selectPane(state: any, action: any, pane: number) {
   let { projectRoot } = action;
 
   let projectObject = state[projectRoot] || INITIAL_PROJECT_STATE;
+  if (pane === TOGGLE) {
+    pane = projectObject.selectedLeftPane === PACKAGER_PANE ? NOTIFICATIONS_PANE : PACKAGER_PANE;
+  }
+
   projectObject.selectedLeftPane = pane;
   projectObject.isPackagerSelected = pane === PACKAGER_PANE;
   projectObject.isNotificationsSelected = pane === NOTIFICATIONS_PANE;

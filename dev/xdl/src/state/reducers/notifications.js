@@ -49,6 +49,7 @@ function _addNotification(state: any, action: any) {
   let { projectRoot, id, message, tag, logLevel } = action;
 
   let projectObject = state[projectRoot] || INITIAL_PROJECT_STATE;
+  projectObject = JSON.parse(JSON.stringify(projectObject));
   let arrayOfIssues = projectObject[logLevel];
   let index = _.findIndex(arrayOfIssues, { id });
   if (index === -1) {
@@ -85,11 +86,16 @@ function _clearNotification(state: any, action: any) {
   let projectObject = state[projectRoot];
   let newProjectObject = {};
   _.forEach(projectObject, function(array, key) {
-    _.remove(array, (notification) => {
-      return notification.id === id;
-    });
+    if (Array.isArray(array)) {
+      _.remove(array, (notification) => {
+        if (notification.id === id) {
+          console.log("REMOVED" + id);
+        }
+        return notification.id === id;
+      });
 
-    newProjectObject[key] = array;
+      newProjectObject[key] = array;
+    }
   });
 
   _setCount(newProjectObject);

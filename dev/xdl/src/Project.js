@@ -634,7 +634,7 @@ export async function startExponentServerAsync(projectRoot: string) {
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
   if (await Doctor.validateWithNetworkAsync(projectRoot) === Doctor.FATAL) {
-    throw new Error(`Couldn't start project. Please fix the above issues and restart the project.`);
+    throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
   }
 
   // Serve the manifest.
@@ -866,7 +866,9 @@ export async function startTunnelsAsync(projectRoot: string) {
   await stopTunnelsAsync(projectRoot);
 
   if (await Android.startAdbReverseAsync(projectRoot)) {
-    ProjectUtils.logInfo(projectRoot, 'exponent', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.');
+    ProjectUtils.logInfo(projectRoot, 'exponent', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.', 'project-adb-reverse');
+  } else {
+    ProjectUtils.clearNotification(projectRoot, 'project-adb-reverse');
   }
 
   const { username } = user;

@@ -53,7 +53,7 @@ export function logWithLevel(projectRoot: string, level: string, object: any, ms
   }
 
   if (useRedux && (level === 'warn' || level === 'error')) {
-    state.store.dispatch(state.actions.notifications.add(projectRoot, `${projectRoot}-${id}`, msg, projectRoot, level));
+    state.store.dispatch(state.actions.notifications.add(projectRoot, id, msg, projectRoot, level));
   }
 }
 
@@ -62,12 +62,16 @@ export function logDebug(projectRoot: string, tag: string, message: string, id: 
 }
 
 export function logInfo(projectRoot: string, tag: string, message: string, id: ?string) {
-  _getLogger(projectRoot).info({tag}, message.toString());
+  if (id && Config.useReduxNotifications) {
+    state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'info'));
+  } else {
+    _getLogger(projectRoot).info({tag}, message.toString());
+  }
 }
 
 export function logError(projectRoot: string, tag: string, message: string, id: ?string) {
   if (id && Config.useReduxNotifications) {
-    state.store.dispatch(state.actions.notifications.add(projectRoot, `${projectRoot}-${id}`, message, tag, 'error'));
+    state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'error'));
   } else {
     _getLogger(projectRoot).error({tag}, message.toString());
   }
@@ -85,7 +89,7 @@ export function logError(projectRoot: string, tag: string, message: string, id: 
 
 export function logWarning(projectRoot: string, tag: string, message: string, id: ?string) {
   if (id && Config.useReduxNotifications) {
-    state.store.dispatch(state.actions.notifications.add(projectRoot, `${projectRoot}-${id}`, message, tag, 'warn'));
+    state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'warn'));
   } else {
     _getLogger(projectRoot).warn({tag}, message.toString());
   }
@@ -103,7 +107,7 @@ export function logWarning(projectRoot: string, tag: string, message: string, id
 
 export function clearNotification(projectRoot: string, id: string) {
   if (Config.useReduxNotifications) {
-    state.store.dispatch(state.actions.notifications.clear(projectRoot, `${projectRoot}-${id}`));
+    state.store.dispatch(state.actions.notifications.clear(projectRoot, id));
   }
 }
 
