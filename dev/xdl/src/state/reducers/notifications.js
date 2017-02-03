@@ -4,6 +4,16 @@
 
 import _ from 'lodash';
 
+const INITIAL_PROJECT_STATE = {
+  count: 0,
+  color: '#595C68',
+  info: [],
+  warn: [],
+  error: [],
+};
+
+const GLOBAL = 'global';
+
 export const actions = {
   // logLevel = 'warning', 'error', or 'info'
   add: (projectRoot: string, id: string, message: string, tag: string, logLevel: string) => {
@@ -24,14 +34,25 @@ export const actions = {
       id,
     };
   },
-};
 
-const INITIAL_PROJECT_STATE = {
-  count: 0,
-  color: '#595C68',
-  info: [],
-  warn: [],
-  error: [],
+  addGlobal: (id: string, message: string, tag: string, logLevel: string) => {
+    return {
+      type: 'ADD_NOTIFICATION',
+      projectRoot: GLOBAL,
+      id,
+      message,
+      tag,
+      logLevel,
+    };
+  },
+
+  clearGlobal: (id: string) => {
+    return {
+      type: 'CLEAR_NOTIFICATION',
+      projectRoot: GLOBAL,
+      id,
+    };
+  },
 };
 
 export const reducer = (state: any = {}, action: any) => {
@@ -47,6 +68,10 @@ export const reducer = (state: any = {}, action: any) => {
 
 function _addNotification(state: any, action: any) {
   let { projectRoot, id, message, tag, logLevel } = action;
+
+  if (logLevel !== 'info' && logLevel !== 'warn' && logLevel !== 'error') {
+    logLevel = 'info';
+  }
 
   let projectObject = state[projectRoot] || INITIAL_PROJECT_STATE;
   projectObject = JSON.parse(JSON.stringify(projectObject));
