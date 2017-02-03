@@ -187,7 +187,7 @@ async function configureIOSIconsAsync(manifest, destinationIconPath, projectRoot
         cwd: destinationIconPath,
       });
       await spawnAsyncThrowError('sips', ['-Z', iconSizePx, iconFilename], {
-        stdio: 'inherit',
+        stdio: ['ignore', 'ignore', 'inherit' ], // only stderr
         cwd: destinationIconPath,
       });
       if (!usesDefault) {

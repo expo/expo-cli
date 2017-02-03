@@ -158,6 +158,7 @@ export async function detachAsync(projectRoot: string) {
     exp.detach.androidExponentViewUrl = sdkVersionConfig.androidExponentViewUrl;
   }
 
+  console.log('Writing ExponentKit configuration...');
   // Update exp.json/app.json
   // if we're writing to app.json, we need to place the configuration under the exponent keys
   const nameToWrite = await ProjectUtils.configFilenameAsync(projectRoot);
@@ -166,6 +167,7 @@ export async function detachAsync(projectRoot: string) {
   }
   await fs.promise.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
 
+  console.log('Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects.');
   return true;
 }
 
@@ -350,7 +352,7 @@ export async function detachIOSAsync(projectRoot: string, exponentDirectory: str
     }
   }
 
-  console.log('iOS detach is complete! To configure iOS native dependencies, make sure you have the Cocoapods gem, then `cd ios && ./pod-install-exponent.sh`\n\n');
+  console.log('iOS detach is complete! To configure iOS native dependencies, make sure you have the Cocoapods gem, then `cd ios && ./pod-install-exponent.sh`\n');
   return;
 }
 
@@ -462,9 +464,11 @@ async function detachAndroidAsync(projectRoot, exponentDirectory, sdkVersion, ex
   }
 
   // Clean up
+  console.log('Cleaning up Android...');
   if (!process.env.EXPONENT_VIEW_DIR) {
     rimraf.sync(tmpExponentDirectory);
   }
+  console.log('Android detach is complete!\n');
 }
 
 export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
