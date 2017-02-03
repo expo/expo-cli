@@ -59,6 +59,18 @@ async function configureShellAppSecretsAsync(args, iosDir) {
  */
 async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, privateConfig = null, bundleIdentifier = null) {
   let result = await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
+
+    // make sure this happens first:
+    // apply any custom information from ios.infoPlist prior to all other exponent config
+    if (manifest.ios && manifest.ios.infoPlist) {
+      let extraConfig = manifest.ios.infoPlist;
+      for (let key in extraConfig) {
+        if (extraConfig.hasOwnProperty(key)) {
+          config[key] = extraConfig[key];
+        }
+      }
+    }
+
     // bundle id
     config.CFBundleIdentifier = (manifest.ios && manifest.ios.bundleIdentifier) ? manifest.ios.bundleIdentifier : bundleIdentifier;
     if (!config.CFBundleIdentifier) {
