@@ -448,35 +448,35 @@ export default class UserManager {
       }
 
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { console.debug('REFRESH_TOKEN_CLIENT_ID', refreshTokenClientId); }
+      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESH_TOKEN_CLIENT_ID', refreshTokenClientId); }
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { console.debug('DECODED TOKEN', dtoken); }
+      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('DECODED TOKEN', dtoken); }
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { console.debug('TOKEN EXPIRATION', exp); }
+      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('TOKEN EXPIRATION', exp); }
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { console.debug('TOKEN TIME LEFT', exp - (Date.now() / 1000)); }
+      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('TOKEN TIME LEFT', exp - (Date.now() / 1000)); }
 
       const REFRESH_THRESHOLD = 60 * 60; // 1 hour
       if (exp - (Date.now() / 1000) <= REFRESH_THRESHOLD) { // if there's less than 1 hour left on the token, refresh it
         // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') { console.debug('REFRESHING ID TOKEN'); }
+        if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESHING ID TOKEN'); }
         // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') { console.debug('REFRESH TOKEN', refreshToken); }
+        if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESH TOKEN', refreshToken); }
         const delegationResult = await _auth0RefreshToken(
           refreshTokenClientId, // client id that's associated with the refresh token
           refreshToken, // refresh token to use
         );
         // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') { console.debug('SUCCESSFULLY GOT NEW ID TOKEN'); }
+        if (process.env.NODE_ENV !== 'production') { Logger.global.debug('SUCCESSFULLY GOT NEW ID TOKEN'); }
         idToken = delegationResult.id_token;
         // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') { console.debug('NEW ID TOKEN', idToken); }
+        if (process.env.NODE_ENV !== 'production') { Logger.global.debug('NEW ID TOKEN', idToken); }
       }
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { console.debug('ID TOKEN FOR PROFILE', idToken); }
+      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('ID TOKEN FOR PROFILE', idToken); }
       user = await _auth0GetProfileAsync(idToken);
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { console.debug('USER DATA', user); }
+      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('USER DATA', user); }
       if (!user) {
         throw new Error('No user profile associated with this token');
       }
