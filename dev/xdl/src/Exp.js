@@ -229,7 +229,7 @@ function makePathReadable(pth) {
 export async function expInfoSafeAsync(root: string) {
   try {
     let { exp: { name, description, icon, iconUrl } } = await ProjectUtils.readConfigJsonAsync(root);
-    let pathOrUrl = icon || iconUrl;
+    let pathOrUrl = icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
     let resolvedPath = path.resolve(root, pathOrUrl);
     if (fs.existsSync(resolvedPath)) {
       icon = `file://${resolvedPath}`;
