@@ -1,3 +1,4 @@
+import indentString from 'indent-string';
 import _ from 'lodash-node';
 import qrcodeTerminal from 'qrcode-terminal';
 
@@ -13,7 +14,6 @@ function addOptions(program) {
   program
     .option('-a, --android', 'Opens your app in Exponent on a connected Android device')
     .option('-i, --ios', 'Opens your app in Exponent in a currently running iOS simulator on your computer')
-    .option('-q, --qr', 'Will generate a QR code for the URL')
     .option('-m, --host [mode]', 'tunnel (default), lan, localhost. Type of host to use. "tunnel" allows you to view your link on other networks')
     .option('-p, --protocol [mode]', 'exp (default), http, redirect. Type of protocol. "exp" is recommended right now')
     .option('--tunnel', 'Same as --host tunnel')
@@ -74,12 +74,8 @@ async function optsAsync(projectDir, options) {
   return opts;
 }
 
-function handleQROpt(url, options) {
-  if (options.qr) {
-    qrcodeTerminal.generate(url);
-  }
-
-  return !!options.qr;
+function printQRCode(url) {
+  qrcodeTerminal.generate(url, {small: true}, (code) => console.log(indentString(code, 2)));
 }
 
 async function handleMobileOptsAsync(projectDir, options) {
@@ -97,6 +93,6 @@ async function handleMobileOptsAsync(projectDir, options) {
 export default {
   addOptions,
   handleMobileOptsAsync,
-  handleQROpt,
+  printQRCode,
   optsAsync,
 };

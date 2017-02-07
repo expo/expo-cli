@@ -1,6 +1,7 @@
 import crayon from '@ccheever/crayon';
 
 import {
+  UserSettings,
   UrlUtils,
 } from 'xdl';
 
@@ -18,7 +19,8 @@ async function action(projectDir, options) {
   log.raw(url);
 
   let shouldQuit = false;
-  if (urlOpts.handleQROpt(url, options)) { shouldQuit = true; }
+  log('You can also scan this QR code:\n');
+  urlOpts.printQRCode(url);
   if (await urlOpts.handleMobileOptsAsync(projectDir, options)) { shouldQuit = true; }
 
   if (shouldQuit) {

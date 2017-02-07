@@ -15,8 +15,10 @@ async function action(projectDir, options) {
   log("Your URL is\n\n" + crayon.underline(url) + "\n");
   log.raw(url);
 
-  urlOpts.handleQROpt(url, options);
+  log('You can also scan this QR code:\n');
+  urlOpts.printQRCode(url);
   await urlOpts.handleMobileOptsAsync(projectDir, options);
+  process.exit();
 }
 
 export default (program) => {
@@ -24,7 +26,6 @@ export default (program) => {
     .command('url [project-dir]')
     .alias('u')
     .description('Displays the URL you can use to view your project in Exponent')
-    //.help('You must have the server running for this command to work')
     .urlOpts()
     .asyncActionProjectDir(action);
 };

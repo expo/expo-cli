@@ -21,10 +21,13 @@ function projectExpJsonFile(projectRoot: string) {
   return new JsonFile(jsonFilePath, { cantReadFileDefault: {} });
 }
 
-async function projectStatusAsync(projectRoot: string) {
+async function setProjectStatusAsync(projectRoot: string, state: string, err: ?string) {
+  await projectExpJsonFile(projectRoot).mergeAsync({ err, state });
+}
+
+async function projectStatusAsync(projectRoot: string): Promise<?string> {
   if (ProjectSettings.dotExponentProjectDirectoryExists(projectRoot)) {
-    var state = await projectExpJsonFile(projectRoot).getAsync('state', null);
-    return state;
+    return await projectExpJsonFile(projectRoot).getAsync('state', null);
   } else {
     log.error("No project found at " + projectRoot);
     return null;
@@ -35,4 +38,5 @@ export default {
   packageJsonFile,
   projectExpJsonFile,
   projectStatusAsync,
+  setProjectStatusAsync,
 };

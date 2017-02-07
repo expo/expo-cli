@@ -20,10 +20,13 @@ type Options = {
 export async function action(projectDir: string, options: Options = {}) {
   let status = await config.projectStatusAsync(projectDir);
   if (!status) {
+    log.error("No project found at " + projectDir);
+    log.error("Have you already run `exp start` for this directory?");
     return;
   }
 
   if (status !== 'RUNNING') {
+    // TODO run start ourselves?
     log.error(`Exponent server not running for project at ${projectDir}`);
     log.error(`Please run "exp start ${projectDir}" first.`);
     process.exit(1);
@@ -55,6 +58,5 @@ export default (program: any) => {
     .alias('p')
     .description('Publishes your project to exp.host')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
-    //.help('You must have the server running for this command to work')
     .asyncActionProjectDir(action);
 };

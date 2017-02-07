@@ -4,110 +4,76 @@
 
 import {
   Project,
+  ProjectSettings,
   UrlUtils,
 } from 'xdl';
 
 import crayon from '@ccheever/crayon';
-import simpleSpinner from '@exponent/simple-spinner';
 import path from 'path';
-import pm2 from 'pm2';
 
-import CommandError from '../CommandError';
 import config from '../config';
 import log from '../log';
-import pm2serve from '../pm2serve';
 import sendTo from '../sendTo';
 import urlOpts from '../urlOpts';
 
-async function action(projectDir, options) {
-  await pm2serve.setupServeAsync(projectDir);
-
-  // If run without --foreground, we spawn a new pm2 process that runs
-  // the same command with --foreground added.
-  if (!options.foreground) {
-    await urlOpts.optsAsync(projectDir, options);
-
-    const [pm2Name, pm2Id] = await Promise.all([
-      pm2serve.pm2NameAsync(),
-      config.projectExpJsonFile(projectDir).getAsync('pm2Id', null),
-    ]);
-
-    const script = process.argv[1];
-    const args_ = process.argv.slice(2);
-    args_.push('--foreground');
-
-    // pm2 spits out some log statements here
-    let tempLog = console.log;
-    // $FlowFixMe
-    console.log = function() {};
-    await pm2.promise.connect();
-    // $FlowFixMe
-    console.log = tempLog;
-
-    await config.projectExpJsonFile(projectDir).writeAsync({pm2Id, pm2Name, state: 'STARTING'});
-
-    // There is a race condition here, but let's just not worry about it for now...
-    if (pm2Id !== null) {
-      // If this is already being managed by pm2, then restart it
-      let app = await pm2serve.getPm2AppByNameAsync(pm2Name);
-      if (app) {
-        log("pm2 managed process exists");
-        await pm2.promise.stop(app.pm_id);
-        await pm2.promise.delete(app.pm_id);
-      } else {
-        log("Can't find pm2 managed process", pm2Id, " so will start a new one");
-        await config.projectExpJsonFile(projectDir).deleteKeyAsync('pm2Id');
-      }
-    }
-
-    log("Starting exp-serve process under pm2");
-
-    await pm2.promise.start({
-      name: pm2Name,
-      script,
-      args: args_,
-      autorestart: false,
-      watch: false,
-      cwd: process.cwd(),
-      env: process.env,
+function installExitHooks(projectDir) {
+  // install ctrl+c handler that writes non-running state to directory
+  if (process.platform === 'win32') {
+    require('readline').createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    })
+    .on("SIGINT", () => {
+      process.emit("SIGINT");
     });
-
-    const app = await pm2serve.getPm2AppByNameAsync(pm2Name);
-    if (app) {
-      await config.projectExpJsonFile(projectDir).mergeAsync({pm2Name, pm2Id: app.pm_id});
-    } else {
-      throw CommandError('PM2_ERROR_STARTING_PROCESS', "Something went wrong starting exp serve:");
-    }
-
-    await pm2.promise.disconnect();
-
-    const recipient = await sendTo.getRecipient(options.sendTo);
-
-    log("Waiting for packager, etc. to start");
-    simpleSpinner.start();
-    let result = await pm2serve.waitForRunningAsync(config.projectExpJsonFile(projectDir));
-    simpleSpinner.stop();
-    if (!result) {
-      log.error(`Error while starting. Please run "exp logs ${projectDir}" to view the errors.`);
-      process.exit(1);
-      return;
-    }
-
-    log("Exponent is ready.");
-
-    let url = await UrlUtils.constructManifestUrlAsync(projectDir);
-    log("Your URL is\n\n" + crayon.underline(url) + "\n");
-    log.raw(url);
-
-    if (recipient) {
-      await sendTo.sendUrlAsync(url, recipient);
-    }
-
-    urlOpts.handleQROpt(url, options);
-    await urlOpts.handleMobileOptsAsync(projectDir, options);
-
-    return config.projectExpJsonFile(projectDir).readAsync();
   }
+
+  process.on('SIGINT', () => {
+    console.log(crayon.blue('\nStopping packager...'));
+    Promise.all([
+      cleanUpPackager(projectDir),
+      config.setProjectStatusAsync(projectDir, 'EXITED', null),
+    ]).then(() => {
+      console.log(crayon.green('Packager stopped.'));
+      process.exit();
+    });
+  });
+}
+
+async function cleanUpPackager(projectDir) {
+  const result = await Promise.race([
+    Project.stopAsync(projectDir),
+    new Promise((resolve, reject) => setTimeout(resolve, 1000, 'stopFailed')),
+  ]);
+
+  if (result === 'stopFailed') {
+    // find RN packager and ngrok pids, attempt to kill them manually
+    try {
+      const { packagerPid, ngrokPid } = await ProjectSettings.readPackagerInfoAsync(projectDir);
+
+      process.kill(packagerPid);
+      process.kill(ngrokPid);
+    } catch (e) {
+      process.exit();
+    }
+  }
+}
+
+async function action(projectDir, options) {
+  // check if we're already running elsewhere
+
+  const previousState = await config.projectStatusAsync(projectDir);
+  if (previousState === 'RUNNING') {
+    // NOTE this might have bad state present if we failed to write our exiting
+    // NOTE should we try to validate the packager pid before printing this? or take some other action?
+    log.warn('exp is already running for this directory. Please kill the other process before proceeding.');
+    process.exit(1);
+    return;
+  }
+
+  installExitHooks(projectDir);
+
+  await urlOpts.optsAsync(projectDir, options);
 
   log(crayon.gray("Using project at", process.cwd()));
 
@@ -119,19 +85,29 @@ async function action(projectDir, options) {
 
   try {
     await Project.startAsync(root, startOpts);
-
-    await config.projectExpJsonFile(projectDir).mergeAsync({
-      err: null,
-      state: 'RUNNING',
-    });
+    await config.setProjectStatusAsync(projectDir, 'RUNNING', null);
   } catch (e) {
-    await config.projectExpJsonFile(projectDir).mergeAsync({
-      err: null,
-      state: 'ERROR',
-    });
-
+    await config.setProjectStatusAsync(projectDir, 'ERROR', JSON.stringify(e));
     throw e;
   }
+
+  log("Exponent is ready.");
+
+  let url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  log("Your URL is\n\n" + crayon.underline(url) + "\n");
+  log.raw(url);
+
+  log('You can also scan this QR code:\n');
+  urlOpts.printQRCode(url);
+
+  const recipient = await sendTo.getRecipient(options.sendTo);
+  if (recipient) {
+    await sendTo.sendUrlAsync(url, recipient);
+  }
+
+  await urlOpts.handleMobileOptsAsync(projectDir, options);
+
+  log(crayon.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
 
   return config.projectExpJsonFile(projectDir).readAsync();
 }
@@ -143,9 +119,6 @@ export default (program: any) => {
     .description('Starts or restarts a local server for your app and gives you a URL to it')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
-    //.help("Starts a local server to serve your app and gives you a URL to it.\n" +
-    //"[project-dir] defaults to '.'");
     .urlOpts()
-    .option('--foreground', 'Start in the foreground. Not recommended. Use "exp logs" instead')
     .asyncActionProjectDir(action);
 };

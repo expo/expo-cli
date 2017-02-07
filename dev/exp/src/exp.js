@@ -84,12 +84,17 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     ProjectUtils.attachLoggerStream(projectDir, {
       stream: {
         write: (chunk) => {
+          const logLines = (msg, logFn) => {
+            for (let line of msg.split('\n')) {
+              logFn(line);
+            }
+          }
           if (chunk.level <= bunyan.INFO) {
-            log(chunk.msg);
+            logLines(chunk.msg, log);
           } else if (chunk.level === bunyan.WARN) {
-            log.warn(chunk.msg);
+            logLines(chunk.msg, log.warn);
           } else {
-            log.error(chunk.msg);
+            logLines(chunk.msg, log.error);
           }
         },
       },

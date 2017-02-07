@@ -127,16 +127,6 @@ amdefine@>=0.0.4:
   version "1.0.1"
   resolved amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5
 
-amp-message@~0.1.1:
-  version "0.1.2"
-  resolved amp-message-0.1.2.tgz#a78f1c98995087ad36192a41298e4db49e3dfc45
-  dependencies:
-    amp "0.3.1"
-
-amp@0.3.1, amp@~0.3.1:
-  version "0.3.1"
-  resolved amp-0.3.1.tgz#6adf8d58a74f361e82c1fa8d389c079e139fc47d
-
 analytics-node@^2.1.0:
   version "2.1.0"
   resolved analytics-node-2.1.0.tgz#f2bb60ab450327ecdbc5fbc42cfeaa4a96e3b00a
@@ -168,7 +158,7 @@ ansi-regex@^2.0.0:
   version "2.0.0"
   resolved ansi-regex-2.0.0.tgz#c5061b6e0ef8a81775e50f5d66151bf6bf371107
 
-ansi-styles@^2.1.0, ansi-styles@^2.2.1:
+ansi-styles@^2.2.1:
   version "2.2.1"
   resolved ansi-styles-2.2.1.tgz#b432dd3358b634cf75e1e4664368240533c1ddbe
 
@@ -197,13 +187,6 @@ are-we-there-yet@~1.1.2:
   dependencies:
     delegates "^1.0.0"
     readable-stream "^2.0.0 || ^1.1.13"
-
-argparse@^0.1.15:
-  version "0.1.16"
-  resolved argparse-0.1.16.tgz#cfd01e0fbba3d6caed049fbd758d40f65196f57c
-  dependencies:
-    underscore "~1.7.0"
-    underscore.string "~2.4.0"
 
 argparse@^1.0.7:
   version "1.0.9"
@@ -303,17 +286,13 @@ async-settle@^1.0.0:
   dependencies:
     async-done "^1.2.2"
 
-async@1.4.2:
-  version "1.4.2"
-  resolved async-1.4.2.tgz#6c9edcb11ced4f0dd2f2d40db0d49a109c088aab
-
-async@1.5, async@^1.4.0, async@~1.5:
-  version "1.5.2"
-  resolved async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a
-
 async@^0.9.0:
   version "0.9.2"
   resolved async-0.9.2.tgz#aea74d5e61c1f899613bf64bda66d4c78f2fd17d
+
+async@^1.4.0, async@~1.5:
+  version "1.5.2"
+  resolved async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a
 
 asynckit@^0.4.0:
   version "0.4.0"
@@ -400,7 +379,7 @@ babel-generator@^6.21.0:
 
 babel-helper-bindify-decorators@^6.18.0:
   version "6.18.0"
-  resolved "https://registry.yarnpkg.com/babel-helper-bindify-decorators/-/babel-helper-bindify-decorators-6.18.0.tgz#fc00c573676a6e702fffa00019580892ec8780a5"
+  resolved babel-helper-bindify-decorators-6.18.0.tgz#fc00c573676a6e702fffa00019580892ec8780a5
   dependencies:
     babel-runtime "^6.0.0"
     babel-traverse "^6.18.0"
@@ -442,7 +421,7 @@ babel-helper-explode-assignable-expression@^6.18.0:
 
 babel-helper-explode-class@^6.8.0:
   version "6.18.0"
-  resolved "https://registry.yarnpkg.com/babel-helper-explode-class/-/babel-helper-explode-class-6.18.0.tgz#c44f76f4fa23b9c5d607cbac5d4115e7a76f62cb"
+  resolved babel-helper-explode-class-6.18.0.tgz#c44f76f4fa23b9c5d607cbac5d4115e7a76f62cb
   dependencies:
     babel-helper-bindify-decorators "^6.18.0"
     babel-runtime "^6.0.0"
@@ -490,7 +469,7 @@ babel-helper-regex@^6.8.0:
 
 babel-helper-remap-async-to-generator@^6.16.0, babel-helper-remap-async-to-generator@^6.16.2:
   version "6.20.3"
-  resolved "https://registry.yarnpkg.com/babel-helper-remap-async-to-generator/-/babel-helper-remap-async-to-generator-6.20.3.tgz#9dd3b396f13e35ef63e538098500adc24c63c4e7"
+  resolved babel-helper-remap-async-to-generator-6.20.3.tgz#9dd3b396f13e35ef63e538098500adc24c63c4e7
   dependencies:
     babel-helper-function-name "^6.18.0"
     babel-runtime "^6.20.0"
@@ -578,7 +557,7 @@ babel-plugin-syntax-trailing-function-commas@^6.3.13:
 
 babel-plugin-transform-async-generator-functions@^6.17.0:
   version "6.17.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-async-generator-functions/-/babel-plugin-transform-async-generator-functions-6.17.0.tgz#d0b5a2b2f0940f2b245fa20a00519ed7bc6cae54"
+  resolved babel-plugin-transform-async-generator-functions-6.17.0.tgz#d0b5a2b2f0940f2b245fa20a00519ed7bc6cae54
   dependencies:
     babel-helper-remap-async-to-generator "^6.16.2"
     babel-plugin-syntax-async-generators "^6.5.0"
@@ -586,7 +565,7 @@ babel-plugin-transform-async-generator-functions@^6.17.0:
 
 babel-plugin-transform-async-to-generator@^6.16.0:
   version "6.16.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-async-to-generator/-/babel-plugin-transform-async-to-generator-6.16.0.tgz#19ec36cb1486b59f9f468adfa42ce13908ca2999"
+  resolved babel-plugin-transform-async-to-generator-6.16.0.tgz#19ec36cb1486b59f9f468adfa42ce13908ca2999
   dependencies:
     babel-helper-remap-async-to-generator "^6.16.0"
     babel-plugin-syntax-async-functions "^6.8.0"
@@ -611,7 +590,7 @@ babel-plugin-transform-class-properties@^6.18.0:
 
 babel-plugin-transform-decorators@^6.13.0:
   version "6.13.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-decorators/-/babel-plugin-transform-decorators-6.13.0.tgz#82d65c1470ae83e2d13eebecb0a1c2476d62da9d"
+  resolved babel-plugin-transform-decorators-6.13.0.tgz#82d65c1470ae83e2d13eebecb0a1c2476d62da9d
   dependencies:
     babel-helper-define-map "^6.8.0"
     babel-helper-explode-class "^6.8.0"
@@ -672,7 +651,7 @@ babel-plugin-transform-es2015-destructuring@^6.18.0:
 
 babel-plugin-transform-es2015-duplicate-keys@^6.6.0:
   version "6.8.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-es2015-duplicate-keys/-/babel-plugin-transform-es2015-duplicate-keys-6.8.0.tgz#fd8f7f7171fc108cc1c70c3164b9f15a81c25f7d"
+  resolved babel-plugin-transform-es2015-duplicate-keys-6.8.0.tgz#fd8f7f7171fc108cc1c70c3164b9f15a81c25f7d
   dependencies:
     babel-runtime "^6.0.0"
     babel-types "^6.8.0"
@@ -699,7 +678,7 @@ babel-plugin-transform-es2015-literals@^6.3.13:
 
 babel-plugin-transform-es2015-modules-amd@^6.18.0:
   version "6.18.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-es2015-modules-amd/-/babel-plugin-transform-es2015-modules-amd-6.18.0.tgz#49a054cbb762bdf9ae2d8a807076cfade6141e40"
+  resolved babel-plugin-transform-es2015-modules-amd-6.18.0.tgz#49a054cbb762bdf9ae2d8a807076cfade6141e40
   dependencies:
     babel-plugin-transform-es2015-modules-commonjs "^6.18.0"
     babel-runtime "^6.0.0"
@@ -716,7 +695,7 @@ babel-plugin-transform-es2015-modules-commonjs@^6.18.0:
 
 babel-plugin-transform-es2015-modules-systemjs@^6.18.0:
   version "6.19.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-es2015-modules-systemjs/-/babel-plugin-transform-es2015-modules-systemjs-6.19.0.tgz#50438136eba74527efa00a5b0fefaf1dc4071da6"
+  resolved babel-plugin-transform-es2015-modules-systemjs-6.19.0.tgz#50438136eba74527efa00a5b0fefaf1dc4071da6
   dependencies:
     babel-helper-hoist-variables "^6.18.0"
     babel-runtime "^6.11.6"
@@ -724,7 +703,7 @@ babel-plugin-transform-es2015-modules-systemjs@^6.18.0:
 
 babel-plugin-transform-es2015-modules-umd@^6.18.0:
   version "6.18.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-es2015-modules-umd/-/babel-plugin-transform-es2015-modules-umd-6.18.0.tgz#23351770ece5c1f8e83ed67cb1d7992884491e50"
+  resolved babel-plugin-transform-es2015-modules-umd-6.18.0.tgz#23351770ece5c1f8e83ed67cb1d7992884491e50
   dependencies:
     babel-plugin-transform-es2015-modules-amd "^6.18.0"
     babel-runtime "^6.0.0"
@@ -777,7 +756,7 @@ babel-plugin-transform-es2015-template-literals@^6.6.0:
 
 babel-plugin-transform-es2015-typeof-symbol@^6.18.0:
   version "6.18.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-es2015-typeof-symbol/-/babel-plugin-transform-es2015-typeof-symbol-6.18.0.tgz#0b14c48629c90ff47a0650077f6aa699bee35798"
+  resolved babel-plugin-transform-es2015-typeof-symbol-6.18.0.tgz#0b14c48629c90ff47a0650077f6aa699bee35798
   dependencies:
     babel-runtime "^6.0.0"
 
@@ -813,7 +792,7 @@ babel-plugin-transform-flow-strip-types@^6.8.0:
 
 babel-plugin-transform-inline-imports-commonjs@^1.2.0:
   version "1.2.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-inline-imports-commonjs/-/babel-plugin-transform-inline-imports-commonjs-1.2.0.tgz#20c7d192bafc54c8727386e3387d8ee4ef19e6a5"
+  resolved babel-plugin-transform-inline-imports-commonjs-1.2.0.tgz#20c7d192bafc54c8727386e3387d8ee4ef19e6a5
   dependencies:
     babel-plugin-transform-strict-mode "^6.8.0"
     builtin-modules "^1.1.1"
@@ -833,7 +812,7 @@ babel-plugin-transform-regenerator@^6.16.0:
 
 babel-plugin-transform-runtime@^6.9.0:
   version "6.15.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-transform-runtime/-/babel-plugin-transform-runtime-6.15.0.tgz#3d75b4d949ad81af157570273846fb59aeb0d57c"
+  resolved babel-plugin-transform-runtime-6.15.0.tgz#3d75b4d949ad81af157570273846fb59aeb0d57c
   dependencies:
     babel-runtime "^6.9.0"
 
@@ -846,7 +825,7 @@ babel-plugin-transform-strict-mode@^6.18.0, babel-plugin-transform-strict-mode@^
 
 babel-preset-es2015@^6.9.0:
   version "6.18.0"
-  resolved "https://registry.yarnpkg.com/babel-preset-es2015/-/babel-preset-es2015-6.18.0.tgz#b8c70df84ec948c43dcf2bf770e988eb7da88312"
+  resolved babel-preset-es2015-6.18.0.tgz#b8c70df84ec948c43dcf2bf770e988eb7da88312
   dependencies:
     babel-plugin-check-es2015-constants "^6.3.13"
     babel-plugin-transform-es2015-arrow-functions "^6.3.13"
@@ -875,7 +854,7 @@ babel-preset-es2015@^6.9.0:
 
 babel-preset-stage-1@^6.5.0:
   version "6.16.0"
-  resolved "https://registry.yarnpkg.com/babel-preset-stage-1/-/babel-preset-stage-1-6.16.0.tgz#9d31fbbdae7b17c549fd3ac93e3cf6902695e479"
+  resolved babel-preset-stage-1-6.16.0.tgz#9d31fbbdae7b17c549fd3ac93e3cf6902695e479
   dependencies:
     babel-plugin-transform-class-constructor-call "^6.3.13"
     babel-plugin-transform-export-extensions "^6.3.13"
@@ -883,7 +862,7 @@ babel-preset-stage-1@^6.5.0:
 
 babel-preset-stage-2@^6.16.0:
   version "6.18.0"
-  resolved "https://registry.yarnpkg.com/babel-preset-stage-2/-/babel-preset-stage-2-6.18.0.tgz#9eb7bf9a8e91c68260d5ba7500493caaada4b5b5"
+  resolved babel-preset-stage-2-6.18.0.tgz#9eb7bf9a8e91c68260d5ba7500493caaada4b5b5
   dependencies:
     babel-plugin-syntax-dynamic-import "^6.18.0"
     babel-plugin-transform-class-properties "^6.18.0"
@@ -892,7 +871,7 @@ babel-preset-stage-2@^6.16.0:
 
 babel-preset-stage-3@^6.17.0:
   version "6.17.0"
-  resolved "https://registry.yarnpkg.com/babel-preset-stage-3/-/babel-preset-stage-3-6.17.0.tgz#b6638e46db6e91e3f889013d8ce143917c685e39"
+  resolved babel-preset-stage-3-6.17.0.tgz#b6638e46db6e91e3f889013d8ce143917c685e39
   dependencies:
     babel-plugin-syntax-trailing-function-commas "^6.3.13"
     babel-plugin-transform-async-generator-functions "^6.17.0"
@@ -1134,16 +1113,6 @@ chainsaw@~0.1.0:
   dependencies:
     traverse ">=0.3.0 <0.4"
 
-chalk@1.1.1:
-  version "1.1.1"
-  resolved chalk-1.1.1.tgz#509afb67066e7499f7eb3535c77445772ae2d019
-  dependencies:
-    ansi-styles "^2.1.0"
-    escape-string-regexp "^1.0.2"
-    has-ansi "^2.0.0"
-    strip-ansi "^3.0.0"
-    supports-color "^2.0.0"
-
 chalk@^1.0.0, chalk@^1.1.0, chalk@^1.1.1, chalk@^1.1.3:
   version "1.1.3"
   resolved chalk-1.1.3.tgz#a8115c55e4a702fe4d150abd3872822a7e09fc98
@@ -1175,11 +1144,7 @@ change-case@^2.3.0:
     upper-case "^1.1.1"
     upper-case-first "^1.1.0"
 
-charm@~0.1.1:
-  version "0.1.2"
-  resolved charm-0.1.2.tgz#06c21eed1a1b06aeb67553cdc53e23274bac2296
-
-chokidar@^1.4.3, chokidar@~1.4.0:
+chokidar@^1.4.3:
   version "1.4.3"
   resolved chokidar-1.4.3.tgz#5fe733a4d9acaea51b26454b7e59559163d0dbb2
   dependencies:
@@ -1203,12 +1168,6 @@ cli-cursor@^1.0.1:
   resolved cli-cursor-1.0.2.tgz#64da3f7d56a54412e59794bd62dc35295e8f2987
   dependencies:
     restore-cursor "^1.0.1"
-
-cli-table@0.3.1:
-  version "0.3.1"
-  resolved cli-table-0.3.1.tgz#f53b05266a8b1a0b934b3d0821e6e2dc5914ae23
-  dependencies:
-    colors "1.0.3"
 
 cli-width@^1.0.1:
   version "1.1.1"
@@ -1258,27 +1217,13 @@ code-point-at@^1.0.0:
   version "1.1.0"
   resolved code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77
 
-coffee-script@~1.10.0:
-  version "1.10.0"
-  resolved coffee-script-1.10.0.tgz#12938bcf9be1948fa006f92e0c4c9e81705108c0
-
-colors@1.0.3:
-  version "1.0.3"
-  resolved colors-1.0.3.tgz#0433f44d809680fdeb60ed260f1b0c262e82a40b
-
 combined-stream@^1.0.5, combined-stream@~1.0.5:
   version "1.0.5"
   resolved combined-stream-1.0.5.tgz#938370a57b4a51dea2c77c15d5c5fdf895164009
   dependencies:
     delayed-stream "~1.0.0"
 
-commander@1.0.5:
-  version "1.0.5"
-  resolved commander-1.0.5.tgz#457295bb976e388e9dd0db52de4333e249f3d88c
-  dependencies:
-    keypress "0.1.x"
-
-commander@^2.5.0, commander@^2.8.1, commander@^2.9, commander@^2.9.0:
+commander@^2.5.0, commander@^2.8.1, commander@^2.9.0:
   version "2.9.0"
   resolved commander-2.9.0.tgz#9c99094176e12240cb22d6c5146098400fe0f7d4
   dependencies:
@@ -1318,10 +1263,6 @@ concat-stream@^1.4.6, concat-stream@^1.4.7:
     readable-stream "^2.2.2"
     typedarray "^0.0.6"
 
-configurable@0.0.1:
-  version "0.0.1"
-  resolved configurable-0.0.1.tgz#47d75b727b51b4eb84c1dadafe3f8240313833b1
-
 console-control-strings@^1.0.0, console-control-strings@~1.1.0:
   version "1.1.0"
   resolved console-control-strings-1.1.0.tgz#3d7cf4464db6446ea644bf4b39507f9851008e8e
@@ -1335,7 +1276,7 @@ constant-case@^1.1.0:
 
 contains-path@^0.1.0:
   version "0.1.0"
-  resolved "https://registry.yarnpkg.com/contains-path/-/contains-path-0.1.0.tgz#fe8cf184ff6670b6baef01a9d4861a5cbec4120a"
+  resolved contains-path-0.1.0.tgz#fe8cf184ff6670b6baef01a9d4861a5cbec4120a
 
 content-disposition@0.5.1:
   version "0.5.1"
@@ -1372,12 +1313,6 @@ core-js@^2.4.0:
 core-util-is@~1.0.0:
   version "1.0.2"
   resolved core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7
-
-cron@1.1.0:
-  version "1.1.0"
-  resolved cron-1.1.0.tgz#61e868c6f18f98e8bcb88bcd7ab9fb8fae909453
-  dependencies:
-    moment-timezone "~0.3.0"
 
 cross-spawn@^4.0.0:
   version "4.0.2"
@@ -1433,7 +1368,7 @@ debug-fabulous@0.0.X:
     lazy-debug-legacy "0.0.X"
     object-assign "4.1.0"
 
-debug@*, debug@2, debug@2.2.0, debug@2.X, debug@^2.1.1, debug@^2.2, debug@^2.2.0, debug@~2.2.0:
+debug@*, debug@2, debug@2.2.0, debug@2.X, debug@^2.1.1, debug@^2.2.0, debug@~2.2.0:
   version "2.2.0"
   resolved debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da
   dependencies:
@@ -1715,10 +1650,6 @@ escape-html@~1.0.3:
   version "1.0.3"
   resolved escape-html-1.0.3.tgz#0258eae4d3d0c0974de1c169188ef0051d1d1988
 
-escape-regexp@0.0.1:
-  version "0.0.1"
-  resolved escape-regexp-0.0.1.tgz#f44bda12d45bbdf9cb7f862ee7e4827b3dd32254
-
 escape-string-regexp@^1.0.2, escape-string-regexp@^1.0.5:
   version "1.0.5"
   resolved escape-string-regexp-1.0.5.tgz#1b61c0562190a8dff6ae3bb2cf0200ca130b86d4
@@ -1749,7 +1680,7 @@ eslint-config-exponent@^5.0.1:
 
 eslint-import-resolver-node@^0.2.0:
   version "0.2.3"
-  resolved "https://registry.yarnpkg.com/eslint-import-resolver-node/-/eslint-import-resolver-node-0.2.3.tgz#5add8106e8c928db2cba232bcd9efa846e3da16c"
+  resolved eslint-import-resolver-node-0.2.3.tgz#5add8106e8c928db2cba232bcd9efa846e3da16c
   dependencies:
     debug "^2.2.0"
     object-assign "^4.0.1"
@@ -1757,7 +1688,7 @@ eslint-import-resolver-node@^0.2.0:
 
 eslint-module-utils@^2.0.0:
   version "2.0.0"
-  resolved "https://registry.yarnpkg.com/eslint-module-utils/-/eslint-module-utils-2.0.0.tgz#a6f8c21d901358759cdc35dbac1982ae1ee58bce"
+  resolved eslint-module-utils-2.0.0.tgz#a6f8c21d901358759cdc35dbac1982ae1ee58bce
   dependencies:
     debug "2.2.0"
     pkg-dir "^1.0.0"
@@ -1774,7 +1705,7 @@ eslint-plugin-flowtype@^2.25.0:
 
 eslint-plugin-import@^2.2.0:
   version "2.2.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-import/-/eslint-plugin-import-2.2.0.tgz#72ba306fad305d67c4816348a4699a4229ac8b4e"
+  resolved eslint-plugin-import-2.2.0.tgz#72ba306fad305d67c4816348a4699a4229ac8b4e
   dependencies:
     builtin-modules "^1.1.1"
     contains-path "^0.1.0"
@@ -1886,10 +1817,6 @@ event-emitter@~0.3.4:
   dependencies:
     d "~0.1.1"
     es5-ext "~0.10.7"
-
-eventemitter2@0.4.14, eventemitter2@~0.4.14:
-  version "0.4.14"
-  resolved eventemitter2-0.4.14.tgz#8f61b75cde012b2e9eb284d4545583b5643b61ab
 
 exec-async@^2.2.0:
   version "2.2.0"
@@ -2290,15 +2217,6 @@ glob-watcher@^3.0.0:
     lodash.assignwith "^4.0.6"
     lodash.debounce "^4.0.6"
 
-glob@^4.0.0:
-  version "4.5.3"
-  resolved glob-4.5.3.tgz#c6cb73d3226c1efef04de3c56d012f03377ee15f
-  dependencies:
-    inflight "^1.0.4"
-    inherits "2"
-    minimatch "^2.0.1"
-    once "^1.3.0"
-
 glob@^5.0.15, glob@^5.0.3, glob@~5.0.0:
   version "5.0.15"
   resolved glob-5.0.15.tgz#1bc936b9e02f4a603fcc222ecf7633d30b8b93b1
@@ -2517,7 +2435,7 @@ has-unicode@^2.0.0:
 
 has@^1.0.1:
   version "1.0.1"
-  resolved "https://registry.yarnpkg.com/has/-/has-1.0.1.tgz#8461733f538b0837c9361e39a9ab9e9704dc2f28"
+  resolved has-1.0.1.tgz#8461733f538b0837c9361e39a9ab9e9704dc2f28
   dependencies:
     function-bind "^1.0.2"
 
@@ -2601,13 +2519,13 @@ ignore@^3.2.0:
   version "3.2.0"
   resolved ignore-3.2.0.tgz#8d88f03c3002a0ac52114db25d2c673b0bf1e435
 
-"ikt@git+http://ikt.pm2.io/ikt.git#3325a3e":
-  version "0.0.0"
-  resolved "git+http://ikt.pm2.io/ikt.git#3325a3e"
-
 imurmurhash@^0.1.4:
   version "0.1.4"
   resolved imurmurhash-0.1.4.tgz#9218b9b2b928a238b13dc4fb6b6d576f231453ea
+
+indent-string@^3.1.0:
+  version "3.1.0"
+  resolved indent-string-3.1.0.tgz#08ff4334603388399b329e6b9538dc7a3cf5de7d
 
 inflight@^1.0.4:
   version "1.0.6"
@@ -2770,7 +2688,7 @@ is-fullwidth-code-point@^1.0.0:
 
 is-fullwidth-code-point@^2.0.0:
   version "2.0.0"
-  resolved "https://registry.yarnpkg.com/is-fullwidth-code-point/-/is-fullwidth-code-point-2.0.0.tgz#a3b30a5c4f199183167aaab93beefae3ddfb654f"
+  resolved is-fullwidth-code-point-2.0.0.tgz#a3b30a5c4f199183167aaab93beefae3ddfb654f
 
 is-glob@^2.0.0, is-glob@^2.0.1:
   version "2.0.1"
@@ -2988,7 +2906,7 @@ json-stable-stringify@^1.0.0, json-stable-stringify@^1.0.1:
   dependencies:
     jsonify "~0.0.0"
 
-json-stringify-safe@*, json-stringify-safe@^5.0, json-stringify-safe@~5.0.1:
+json-stringify-safe@~5.0.1:
   version "5.0.1"
   resolved json-stringify-safe-5.0.1.tgz#1296a2d58fd45f19a0f6ce01d65701e2c735b6eb
 
@@ -3062,10 +2980,6 @@ jws@^3.1.4:
     jwa "^1.1.4"
     safe-buffer "^5.0.1"
 
-keypress@0.1.x:
-  version "0.1.0"
-  resolved keypress-0.1.0.tgz#4a3188d4291b66b4f65edb99f806aa9ae293592a
-
 kind-of@^3.0.2:
   version "3.1.0"
   resolved kind-of-3.1.0.tgz#475d698a5e49ff5e53d14e3e732429dc8bf4cf47
@@ -3092,10 +3006,6 @@ lazy-cache@^1.0.3:
 lazy-debug-legacy@0.0.X:
   version "0.0.1"
   resolved lazy-debug-legacy-0.0.1.tgz#537716c0776e4cf79e3ed1b621f7658c2911b1b1
-
-lazy@~1.0.11:
-  version "1.0.11"
-  resolved lazy-1.0.11.tgz#daa068206282542c088288e975c297c1ae77b690
 
 lazystream@^1.0.0:
   version "1.0.0"
@@ -3180,7 +3090,7 @@ lodash.assignwith@^4.0.6, lodash.assignwith@^4.0.7:
 
 lodash.cond@^4.3.0:
   version "4.5.2"
-  resolved "https://registry.yarnpkg.com/lodash.cond/-/lodash.cond-4.5.2.tgz#f471a1da486be60f6ab955d17115523dd1d255d5"
+  resolved lodash.cond-4.5.2.tgz#f471a1da486be60f6ab955d17115523dd1d255d5
 
 lodash.debounce@^4.0.6:
   version "4.0.8"
@@ -3421,12 +3331,6 @@ mime@1.3.4:
   dependencies:
     brace-expansion "^1.0.0"
 
-minimatch@^2.0.1:
-  version "2.0.10"
-  resolved minimatch-2.0.10.tgz#8d087c39c6b38c001b97fca7ce6d0e1e80afbac7
-  dependencies:
-    brace-expansion "^1.0.0"
-
 minimist@0.0.8:
   version "0.0.8"
   resolved minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d
@@ -3439,7 +3343,7 @@ mkdirp-promise@^5.0.0:
   version "5.0.0"
   resolved mkdirp-promise-5.0.0.tgz#b8bc7d6eab71c2b2e37cb06ea48a459d14366ea2
 
-mkdirp@0.5.1, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
+"mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
   version "0.5.1"
   resolved mkdirp-0.5.1.tgz#30057438eac6cf7f8c4767f38648d6697d75c903
   dependencies:
@@ -3449,13 +3353,7 @@ mkpath@^0.1.0:
   version "0.1.0"
   resolved mkpath-0.1.0.tgz#7554a6f8d871834cc97b5462b122c4c124d6de91
 
-moment-timezone@~0.3.0:
-  version "0.3.1"
-  resolved moment-timezone-0.3.1.tgz#3ef47856b02d53b718a10a5ec2023aa299e07bf5
-  dependencies:
-    moment ">= 2.6.0"
-
-moment@2.x.x, "moment@>= 2.6.0", moment@^2.10.6, moment@^2.12:
+moment@2.x.x, moment@^2.10.6:
   version "2.17.1"
   resolved moment-2.17.1.tgz#fed9506063f36b10f066c8b59a144d7faebe1d82
 
@@ -3529,9 +3427,9 @@ next-tick@^1.0.0:
   version "1.0.0"
   resolved next-tick-1.0.0.tgz#ca86d1fe8828169b0120208e3dc8424b9db8342c
 
-"ngrok@git+https://github.com/exponent/ngrok.git#v1.3.0":
+"ngrok@git+https://github.com/exponent/ngrok#v1.3.0":
   version "2.2.1"
-  resolved "git+https://github.com/exponent/ngrok.git#ef4cba8f387fd26b39a2c3259d9d85091c52c73b"
+  resolved "git+https://github.com/exponent/ngrok#ef4cba8f387fd26b39a2c3259d9d85091c52c73b"
   dependencies:
     async "^0.9.0"
     decompress-zip "^0.3.0"
@@ -3589,13 +3487,6 @@ npmlog@^4.0.1:
     console-control-strings "~1.1.0"
     gauge "~2.7.1"
     set-blocking "~2.0.0"
-
-nssocket@0.6.0:
-  version "0.6.0"
-  resolved nssocket-0.6.0.tgz#59f96f6ff321566f33c70f7dbeeecdfdc07154fa
-  dependencies:
-    eventemitter2 "~0.4.14"
-    lazy "~1.0.11"
 
 number-is-nan@^1.0.0:
   version "1.0.1"
@@ -3793,10 +3684,6 @@ path-to-regexp@0.1.7:
   version "0.1.7"
   resolved path-to-regexp-0.1.7.tgz#df604178005f522f15eb4490e7247a1bfaa67f8c
 
-pidusage@^1.0.1:
-  version "1.1.0"
-  resolved pidusage-1.1.0.tgz#ffd58339a97aec470cff7cfe1a9853ec5cd415f8
-
 pify@^2.0.0, pify@^2.3.0:
   version "2.3.0"
   resolved pify-2.3.0.tgz#ed141a6ac043a849ea588498e7dca8b15330e90c
@@ -3819,81 +3706,13 @@ pkg-dir@^1.0.0:
 
 pkg-up@^1.0.0:
   version "1.0.0"
-  resolved "https://registry.yarnpkg.com/pkg-up/-/pkg-up-1.0.0.tgz#3e08fb461525c4421624a33b9f7e6d0af5b05a26"
+  resolved pkg-up-1.0.0.tgz#3e08fb461525c4421624a33b9f7e6d0af5b05a26
   dependencies:
     find-up "^1.0.0"
 
 pluralize@^1.2.1:
   version "1.2.1"
   resolved pluralize-1.2.1.tgz#d1a21483fd22bb41e58a12fa3421823140897c45
-
-pm2-axon-rpc@0.3.6:
-  version "0.3.6"
-  resolved pm2-axon-rpc-0.3.6.tgz#0a8931f4f6de47bf3791633cc675b0e4700f36a0
-  dependencies:
-    commander "1.0.5"
-    debug "*"
-    json-stringify-safe "*"
-
-pm2-axon@~2.0.9:
-  version "2.0.11"
-  resolved pm2-axon-2.0.11.tgz#468eb9bfa157c12c701b6b298d74b06c83f356bf
-  dependencies:
-    amp "~0.3.1"
-    amp-message "~0.1.1"
-    configurable "0.0.1"
-    debug "~2.2.0"
-    escape-regexp "0.0.1"
-
-pm2-deploy@0.2.1:
-  version "0.2.1"
-  resolved pm2-deploy-0.2.1.tgz#7c59a35fbc7a0634fe67390e0edda34eb22d00ae
-  dependencies:
-    async "1.4.2"
-    tv4 "~1.0.18"
-
-pm2-multimeter@0.1.2:
-  version "0.1.2"
-  resolved pm2-multimeter-0.1.2.tgz#1a1e55153d41a05534cea23cfe860abaa0eb4ace
-  dependencies:
-    charm "~0.1.1"
-
-"pm2@git+https://github.com/exponent/pm2.git#exp-master":
-  version "1.1.3"
-  resolved "git+https://github.com/exponent/pm2.git#1b338d06858ab2fbe36915e73e546de73e9aae6a"
-  dependencies:
-    async "1.5"
-    chalk "1.1.1"
-    chokidar "~1.4.0"
-    cli-table "0.3.1"
-    coffee-script "~1.10.0"
-    commander "^2.9"
-    cron "1.1.0"
-    debug "2.2.0"
-    eventemitter2 "0.4.14"
-    mkdirp "0.5.1"
-    moment "^2.12"
-    nssocket "0.6.0"
-    pidusage "^1.0.1"
-    pm2-axon "~2.0.9"
-    pm2-axon-rpc "0.3.6"
-    pm2-deploy "0.2.1"
-    pm2-multimeter "0.1.2"
-    pmx "^0.6"
-    semver "~5.1.0"
-    shelljs "0.6.0"
-    source-map-support "0.4.0"
-    vizion "^0.2"
-    yamljs "0.2.7"
-  optionalDependencies:
-    ikt "git+http://ikt.pm2.io/ikt.git#3325a3e"
-
-pmx@^0.6:
-  version "0.6.8"
-  resolved pmx-0.6.8.tgz#8f9d6db4707ea6ec7383053747510367cd1f6332
-  dependencies:
-    debug "^2.2"
-    json-stringify-safe "^5.0"
 
 prelude-ls@~1.1.2:
   version "1.1.2"
@@ -3959,9 +3778,9 @@ q@^1.1.2:
   version "1.4.1"
   resolved q-1.4.1.tgz#55705bcd93c5f3673530c2c2cbc0c2b3addc286e
 
-qrcode-terminal@^0.10.0:
-  version "0.10.0"
-  resolved qrcode-terminal-0.10.0.tgz#a76a48e2610a18f97fa3a2bd532b682acff86c53
+qrcode-terminal@^0.11.0:
+  version "0.11.0"
+  resolved qrcode-terminal-0.11.0.tgz#ffc6c28a2fc0bfb47052b47e23f4f446a5fbdb9e
 
 qs@2.3.3:
   version "2.3.3"
@@ -4320,7 +4139,7 @@ run-async@^2.2.0:
 
 runas@^3.1.1:
   version "3.1.1"
-  resolved "https://registry.yarnpkg.com/runas/-/runas-3.1.1.tgz#52dd538db0e41745399535a347091ba45cc0eab0"
+  resolved runas-3.1.1.tgz#52dd538db0e41745399535a347091ba45cc0eab0
   dependencies:
     nan "2.x"
 
@@ -4367,10 +4186,6 @@ semver@~5.0.1:
   version "5.0.3"
   resolved semver-5.0.3.tgz#77466de589cd5d3c95f138aa78bc569a3cb5d27a
 
-semver@~5.1.0:
-  version "5.1.1"
-  resolved semver-5.1.1.tgz#a3292a373e6f3e0798da0b20641b9a9c5bc47e19
-
 send@0.14.1:
   version "0.14.1"
   resolved send-0.14.1.tgz#a954984325392f51532a7760760e459598c89f7a
@@ -4415,10 +4230,6 @@ set-immediate-shim@^1.0.1:
 setprototypeof@1.0.2:
   version "1.0.2"
   resolved setprototypeof-1.0.2.tgz#81a552141ec104b88e89ce383103ad5c66564d08
-
-shelljs@0.6.0:
-  version "0.6.0"
-  resolved shelljs-0.6.0.tgz#ce1ed837b4b0e55b5ec3dab84251ab9dbdc0c7ec
 
 shelljs@^0.7.5:
   version "0.7.6"
@@ -4498,12 +4309,6 @@ source-map-resolve@^0.3.0:
     source-map-url "~0.3.0"
     urix "~0.1.0"
 
-source-map-support@0.4.0:
-  version "0.4.0"
-  resolved source-map-support-0.4.0.tgz#cb92292bc05455ce48691de545ac2690bb1cc976
-  dependencies:
-    source-map "0.1.32"
-
 source-map-support@^0.4.1, source-map-support@^0.4.2:
   version "0.4.8"
   resolved source-map-support-0.4.8.tgz#4871918d8a3af07289182e974e32844327b2e98b
@@ -4513,12 +4318,6 @@ source-map-support@^0.4.1, source-map-support@^0.4.2:
 source-map-url@~0.3.0:
   version "0.3.0"
   resolved source-map-url-0.3.0.tgz#7ecaf13b57bcd09da8a40c5d269db33799d4aaf9
-
-source-map@0.1.32:
-  version "0.1.32"
-  resolved source-map-0.1.32.tgz#c8b6c167797ba4740a8ea33252162ff08591b266
-  dependencies:
-    amdefine ">=0.0.4"
 
 source-map@0.X, source-map@^0.5.0, source-map@^0.5.1, source-map@^0.5.3, source-map@~0.5.0:
   version "0.5.6"
@@ -4606,7 +4405,7 @@ string-width@^1.0.1:
 
 string-width@^2.0.0:
   version "2.0.0"
-  resolved "https://registry.yarnpkg.com/string-width/-/string-width-2.0.0.tgz#635c5436cc72a6e0c387ceca278d4e2eec52687e"
+  resolved string-width-2.0.0.tgz#635c5436cc72a6e0c387ceca278d4e2eec52687e
   dependencies:
     is-fullwidth-code-point "^2.0.0"
     strip-ansi "^3.0.0"
@@ -4714,7 +4513,7 @@ swap-case@^1.1.0:
 
 table@^3.7.8:
   version "3.8.3"
-  resolved "https://registry.yarnpkg.com/table/-/table-3.8.3.tgz#2bbc542f0fda9861a755d3947fefd8b3f513855f"
+  resolved table-3.8.3.tgz#2bbc542f0fda9861a755d3947fefd8b3f513855f
   dependencies:
     ajv "^4.7.0"
     ajv-keywords "^1.0.0"
@@ -4880,10 +4679,6 @@ tunnel-agent@~0.4.1:
   version "0.4.3"
   resolved tunnel-agent-0.4.3.tgz#6373db76909fe570e08d73583365ed828a74eeeb
 
-tv4@~1.0.18:
-  version "1.0.18"
-  resolved tv4-1.0.18.tgz#7397769f00358e33bf528dc5c8764c61b6de8245
-
 tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
   resolved tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64
@@ -4912,14 +4707,6 @@ uid-number@~0.0.6:
 unc-path-regex@^0.1.0:
   version "0.1.2"
   resolved unc-path-regex-0.1.2.tgz#e73dd3d7b0d7c5ed86fbac6b0ae7d8c6a69d50fa
-
-underscore.string@~2.4.0:
-  version "2.4.0"
-  resolved underscore.string-2.4.0.tgz#8cdd8fbac4e2d2ea1e7e2e8097c42f442280f85b
-
-underscore@~1.7.0:
-  version "1.7.0"
-  resolved underscore-1.7.0.tgz#6bbaf0877500d36be34ecaa584e0db9fef035209
 
 undertaker-registry@^1.0.0:
   version "1.0.0"
@@ -5068,12 +4855,6 @@ vinyl@^0.5.0:
     clone-stats "^0.0.1"
     replace-ext "0.0.1"
 
-vizion@^0.2:
-  version "0.2.13"
-  resolved vizion-0.2.13.tgz#1314cdee2b34116f9f5b1248536f95dbfcd6ef5f
-  dependencies:
-    async "1.5"
-
 which@^1.2.12, which@^1.2.9:
   version "1.2.12"
   resolved which-1.2.12.tgz#de67b5e450269f194909ef23ece4ebe416fa1192
@@ -5208,13 +4989,6 @@ y18n@^3.2.0:
 yallist@^2.0.0:
   version "2.0.0"
   resolved yallist-2.0.0.tgz#306c543835f09ee1a4cb23b7bce9ab341c91cdd4
-
-yamljs@0.2.7:
-  version "0.2.7"
-  resolved yamljs-0.2.7.tgz#84c7e20c790e3dbc711697fef8115b628584ad0c
-  dependencies:
-    argparse "^0.1.15"
-    glob "^4.0.0"
 
 yargs@^3.28.0:
   version "3.32.0"
