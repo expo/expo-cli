@@ -227,7 +227,14 @@ export async function _checkExponentUpToDateAsync() {
   }
 }
 
-export async function _downloadSimulatorAppAsync() {
+export async function _downloadSimulatorAppAsync(url) {
+  // If specific URL given just always download it and don't use cache
+  if (url) {
+    let dir = path.join(_simulatorCacheDirectory(), `Exponent-tmp.app`);
+    await Api.downloadAsync(url, dir, { extract: true });
+    return dir;
+  }
+
   let versions = await Api.versionsAsync();
   let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
@@ -252,10 +259,11 @@ export async function _downloadSimulatorAppAsync() {
   return dir;
 }
 
-export async function _installExponentOnSimulatorAsync() {
+// url: Optional URL of Exponent.app tarball to download
+export async function _installExponentOnSimulatorAsync(url) {
   Logger.global.info(`Downloading latest version of Exponent`);
   Logger.notifications.info({code: NotificationCode.START_LOADING});
-  let dir = await _downloadSimulatorAppAsync();
+  let dir = await _downloadSimulatorAppAsync(url);
   Logger.global.info("Installing Exponent on iOS simulator");
   let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({code: NotificationCode.STOP_LOADING});
