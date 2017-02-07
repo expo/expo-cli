@@ -11,7 +11,6 @@ import spawnAsync from '@exponent/spawn-async';
 import path from 'path';
 
 import Config from './Config';
-import * as Env from './Env';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
@@ -164,7 +163,7 @@ export async function addToPathAsync(name: string) {
 
 function _exponentRCFileExists() {
   try {
-    return fs.statSync(path.join(Env.home(), '.exponent', 'bashrc')).isFile();
+    return fs.statSync(path.join(UserSettings.dotExponentHomeDirectory(), 'bashrc')).isFile();
   } catch (e) {
     return false;
   }

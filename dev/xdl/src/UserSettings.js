@@ -4,13 +4,13 @@
 
 import 'instapromise';
 
-import * as Env from './Env';
-
 import uuid from 'node-uuid';
 import JsonFile from '@exponent/json-file';
 
 import mkdirp from 'mkdirp';
 import path from 'path';
+
+import * as Env from './Env';
 
 const SETTINGS_FILE_NAME = 'exponent.json';
 
@@ -28,11 +28,16 @@ function recentExpsJsonFile() {
 
 var mkdirped = false;
 function dotExponentHomeDirectory() {
-  const home = Env.home();
-  if (!home) {
-    throw new Error("Can't determine your home directory; make sure your $HOME environment variable is set.");
+  let dirPath;
+  if (process.env.__UNSAFE_EXPONENT_HOME_DIRECTORY) {
+    dirPath = process.env.__UNSAFE_EXPONENT_HOME_DIRECTORY;
+  } else {
+    const home = Env.home();
+    if (!home) {
+      throw new Error("Can't determine your home directory; make sure your $HOME environment variable is set.");
+    }
+    dirPath = path.join(home, '.exponent');
   }
-  var dirPath = path.join(home, '.exponent');
   if (!mkdirped) {
     mkdirp.sync(dirPath);
     mkdirped = true;
