@@ -68,7 +68,7 @@ export async function _isSimulatorInstalledAsync() {
   }
   if (result !== 'com.apple.iphonesimulator') {
     console.warn("Simulator is installed but is identified as '" + result + "'; don't know what that is.");
-    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
+    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.");
     return false;
   }
 
