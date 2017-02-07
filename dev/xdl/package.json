@@ -11,7 +11,7 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production gulp clean && gulp build",
     "test": "jest --config jest/unit-test-config.json",
-    "integration-tests": "jest --config jest/integration-test-config.json --no-cache",
+    "integration-tests": "jest --config jest/integration-test-config.json",
     "flow-typed": "flow-typed install --flowVersion=\"$(flow version | awk '{ print $9 }')\""
   },
   "repository": {
