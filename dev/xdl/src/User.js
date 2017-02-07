@@ -24,6 +24,8 @@ import Logger from './Logger';
 import * as Intercom from './Intercom';
 import UserSettings from './UserSettings';
 
+import { Semaphore } from './Utils';
+
 export type User = {
   kind: 'user',
   // required
@@ -84,19 +86,34 @@ export type RegistrationData = {
 };
 
 type Auth0Options = {
+  clientID: string,
   callbackURL?: string,
 };
+
+type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 
 const AUTH0_DOMAIN = 'exponent.auth0.com';
 const AUTHENTICATION_SERVER_TIMEOUT = 1000 * 60 * 5; // 5 minutes
 
-export default class UserManager {
-  static clientID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y'; // Default Client ID
-  static loginServer = null;
-  static _currentUser: ?User = null;
+export class UserManagerInstance {
+  clientID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y'; // Default Client ID
+  loginServer = null;
+  refreshSessionThreshold = 60 * 60; // 1 hour
+  _currentUser: ?User = null;
+  _getSessionLock = new Semaphore();
 
-  static initialize(clientID: string) {
-    UserManager.clientID = clientID;
+  static getGlobalInstance() {
+    if (!__globalInstance) {
+      __globalInstance = new UserManagerInstance();
+    }
+    return __globalInstance;
+  }
+
+  initialize(clientID: string) {
+    this.clientID = clientID;
+    this.loginServer = null;
+    this._currentUser = null;
+    this._getSessionLock = new Semaphore();
   }
 
   /**
@@ -115,8 +132,8 @@ export default class UserManager {
    * that can act as the receiver of the OAuth callback from the authentication
    * process. The response we receive on that web server will be token data.
    */
-  static async loginAsync(
-    loginType: string,
+  async loginAsync(
+    loginType: LoginType,
     loginArgs?: { username: string, password: string }
   ): Promise<User> {
     let loginOptions;
@@ -157,17 +174,19 @@ export default class UserManager {
       device: 'xdl',
     };
 
-    let auth0Options = {};
+    let auth0Options = {
+      clientID: this.clientID,
+    };
 
     if (loginType === 'user-pass') {
       try {
-        const loginResp = await _auth0LoginAsync(auth0Options, loginOptions);
-        return await UserManager._getProfileAsync({
+        const loginResp = await this._auth0LoginAsync(auth0Options, loginOptions);
+        return await this._getProfileAsync({
           currentConnection: loginOptions.connection,
           accessToken: loginResp.access_token,
           refreshToken: loginResp.refresh_token,
           idToken: loginResp.id_token,
-          refreshTokenClientId: UserManager.clientID,
+          refreshTokenClientId: this.clientID,
         });
       } catch (err) {
         throw err;
@@ -185,36 +204,37 @@ export default class UserManager {
     }, AUTHENTICATION_SERVER_TIMEOUT);
 
     auth0Options = {
+      clientID: this.clientID,
       callbackURL,
     };
 
     // Don't await -- we'll get response back through server
     // This will open a browser window
-    _auth0LoginAsync(auth0Options, loginOptions);
+    this._auth0LoginAsync(auth0Options, loginOptions);
 
     // Wait for token info to come back from server
     const tokenInfo = await getTokenInfoAsync();
 
     server.destroy();
 
-    const profile = await UserManager._getProfileAsync({
+    const profile = await this._getProfileAsync({
       currentConnection: loginOptions.connection,
       accessToken: tokenInfo.access_token,
       refreshToken: tokenInfo.refresh_token,
       idToken: tokenInfo.id_token,
-      refreshTokenClientId: UserManager.clientID,
+      refreshTokenClientId: this.clientID,
     });
 
     return profile;
   }
 
-  static async registerAsync(userData: RegistrationData, user: ?UserOrLegacyUser): Promise<User> {
+  async registerAsync(userData: RegistrationData, user: ?UserOrLegacyUser): Promise<User> {
     if (!user) {
-      user = await UserManager.getCurrentUserAsync();
+      user = await this.getCurrentUserAsync();
     }
 
     if (user && user.kind === 'user' && user.userMetadata && user.userMetadata.onboarded) {
-      await UserManager.logoutAsync();
+      await this.logoutAsync();
       user = null;
     }
 
@@ -222,7 +242,7 @@ export default class UserManager {
     if (user && user.kind === 'legacyUser') {
       // we're upgrading from an older client,
       // so login with username/pass
-      user = await UserManager.loginAsync('user-pass', {
+      user = await this.loginAsync('user-pass', {
         username: userData.username,
         password: userData.password,
       });
@@ -236,7 +256,7 @@ export default class UserManager {
 
     try {
       // Create or update the profile
-      let registeredUser = await UserManager.createOrUpdateUserAsync({
+      let registeredUser = await this.createOrUpdateUserAsync({
         connection: 'Username-Password-Authentication', // Always create/update username password
         email: userData.email,
         userMetadata: {
@@ -260,7 +280,7 @@ export default class UserManager {
       if (shouldLinkAccount || (
           registeredUser && (!registeredUser.loginsCount || (registeredUser.loginsCount && registeredUser.loginsCount < 1)))) {
         // this is a new registration, log them in
-        registeredUser = await UserManager.loginAsync('user-pass', {
+        registeredUser = await this.loginAsync('user-pass', {
           username: userData.username,
           password: userData.password,
         });
@@ -277,14 +297,14 @@ export default class UserManager {
    *
    * If there are any issues with the login, this method throws.
    */
-  static async ensureLoggedInAsync(): Promise<?User> {
+  async ensureLoggedInAsync(): Promise<?User> {
     if (Config.offline) {
       return null;
     }
 
-    const user = await UserManager.getCurrentUserAsync();
+    const user = await this.getCurrentUserAsync();
     if (!user) {
-      if (await UserManager.getLegacyUserData()) {
+      if (await this.getLegacyUserData()) {
         throw new XDLError(ErrorCode.LEGACY_ACCOUNT_ERROR, `We've updated our account system! Please login again by running \`exp login\`. Sorry for the inconvenience!`);
       }
       throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
@@ -296,44 +316,52 @@ export default class UserManager {
    * Get the current user based on the available token.
    * If there is no current token, returns null.
    */
-  static async getCurrentUserAsync(): Promise<?User> {
-    // If it's cached
-    if (UserManager._currentUser) {
-      return UserManager._currentUser;
-    }
-
-    // Not cached, check for token
-    let {
-      currentConnection,
-      idToken,
-      accessToken,
-      refreshToken,
-    } = await UserSettings.getAsync('auth', {});
-
-    // No tokens, no current user. Need to login
-    if (!currentConnection || !idToken || !accessToken || !refreshToken) {
-      return null;
-    }
+  async getCurrentUserAsync(): Promise<?User> {
+    await this._getSessionLock.acquire();
 
     try {
-      return await UserManager._getProfileAsync({
+      // If user is cached and token isn't expired
+      // return the user
+      if (this._currentUser && !this._isTokenExpired(this._currentUser.idToken)) {
+        return this._currentUser;
+      }
+
+      // Not cached, check for token
+      let {
         currentConnection,
-        accessToken,
         idToken,
+        accessToken,
         refreshToken,
-      });
-    } catch (e) {
-      Logger.global.error(e);
-      // log us out if theres a fatal error when getting the profile with
-      // current access token
-      await UserManager.logoutAsync();
+      } = await UserSettings.getAsync('auth', {});
+
+      // No tokens, no current user. Need to login
+      if (!currentConnection || !idToken || !accessToken || !refreshToken) {
+        return null;
+      }
+
+      try {
+        return await this._getProfileAsync({
+          currentConnection,
+          accessToken,
+          idToken,
+          refreshToken,
+        });
+      } catch (e) {
+        Logger.global.error(e);
+        // log us out if theres a fatal error when getting the profile with
+        // current access token
+        await this.logoutAsync();
+        return null;
+      }
+    } finally {
+      this._getSessionLock.release();
     }
   }
 
   /**
    * Get legacy user data from UserSettings.
    */
-  static async getLegacyUserData(): Promise<?LegacyUser> {
+  async getLegacyUserData(): Promise<?LegacyUser> {
     const legacyUsername = await UserSettings.getAsync('username', null);
     if (legacyUsername) {
       return {
@@ -351,20 +379,23 @@ export default class UserManager {
   /**
    * Create or update a user.
    */
-  static async createOrUpdateUserAsync(userData: Object): Promise<User> {
-    let currentUser = UserManager._currentUser;
+  async createOrUpdateUserAsync(userData: Object): Promise<User> {
+    let currentUser = this._currentUser;
     if (!currentUser) {
       // attempt to get the current user
-      currentUser = await UserManager.getCurrentUserAsync();
+      currentUser = await this.getCurrentUserAsync();
     }
 
     try {
-      const updatedUser: User = await _createOrUpdateUserAsync({
-        ...userData,
+      const api = ApiV2Client.clientForUser(this._currentUser);
+
+      const { user: updatedUser } = await api.postAsync('auth/createOrUpdateUser', {
+        userData: _prepareAuth0Profile(userData),
       });
-      UserManager._currentUser = {
-        ...(UserManager._currentUser || {}),
-        ...updatedUser,
+
+      this._currentUser = {
+        ...(this._currentUser || {}),
+        ..._parseAuth0Profile(updatedUser),
       };
       return {
         kind: 'user',
@@ -382,14 +413,14 @@ export default class UserManager {
   /**
    * Logout
    */
-  static async logoutAsync(): Promise<void> {
-    if (UserManager._currentUser) {
+  async logoutAsync(): Promise<void> {
+    if (this._currentUser) {
       Analytics.logEvent('Logout', {
-        username: UserManager._currentUser.username,
+        username: this._currentUser.username,
       });
     }
 
-    UserManager._currentUser = null;
+    this._currentUser = null;
 
     // Delete saved JWT
     await UserSettings.deleteKeyAsync('auth');
@@ -403,8 +434,8 @@ export default class UserManager {
   /**
    * Forgot Password
    */
-  static async forgotPasswordAsync(usernameOrEmail: string): Promise<void> {
-    return await _auth0ForgotPasswordAsync(usernameOrEmail);
+  async forgotPasswordAsync(usernameOrEmail: string): Promise<void> {
+    return await this._auth0ForgotPasswordAsync(usernameOrEmail);
   }
 
   /**
@@ -422,7 +453,7 @@ export default class UserManager {
    *
    * @private
    */
-  static async _getProfileAsync(
+  async _getProfileAsync(
     { currentConnection, accessToken, idToken, refreshToken, refreshTokenClientId }:
     { currentConnection: ConnectionType, accessToken: string, idToken: string, refreshToken: string, refreshTokenClientId?: string }
   ): Promise<User> {
@@ -431,7 +462,7 @@ export default class UserManager {
     let user;
     try {
       const dtoken = jwt.decode(idToken, { complete: true });
-      const { exp, aud } = dtoken.payload;
+      const { aud } = dtoken.payload;
 
       // If it's not a new login, refreshTokenClientId won't be set in the arguments.
       // In this case, try to get the currentRefreshTokenClientId from UserSettings,
@@ -451,18 +482,13 @@ export default class UserManager {
       if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESH_TOKEN_CLIENT_ID', refreshTokenClientId); }
       // TODO(@skevy): remove
       if (process.env.NODE_ENV !== 'production') { Logger.global.debug('DECODED TOKEN', dtoken); }
-      // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('TOKEN EXPIRATION', exp); }
-      // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('TOKEN TIME LEFT', exp - (Date.now() / 1000)); }
 
-      const REFRESH_THRESHOLD = 60 * 60; // 1 hour
-      if (exp - (Date.now() / 1000) <= REFRESH_THRESHOLD) { // if there's less than 1 hour left on the token, refresh it
+      if (this._isTokenExpired(idToken)) { // if there's less than the refresh session threshold left on the token, refresh it
         // TODO(@skevy): remove
         if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESHING ID TOKEN'); }
         // TODO(@skevy): remove
         if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESH TOKEN', refreshToken); }
-        const delegationResult = await _auth0RefreshToken(
+        const delegationResult = await this._auth0RefreshToken(
           refreshTokenClientId, // client id that's associated with the refresh token
           refreshToken, // refresh token to use
         );
@@ -474,7 +500,7 @@ export default class UserManager {
       }
       // TODO(@skevy): remove
       if (process.env.NODE_ENV !== 'production') { Logger.global.debug('ID TOKEN FOR PROFILE', idToken); }
-      user = await _auth0GetProfileAsync(idToken);
+      user = await this._auth0GetProfileAsync(idToken);
       // TODO(@skevy): remove
       if (process.env.NODE_ENV !== 'production') { Logger.global.debug('USER DATA', user); }
       if (!user) {
@@ -513,7 +539,7 @@ export default class UserManager {
 
     // If no currentUser, or currentUser.id differs from profiles
     // user id, that means we have a new login
-    if ((!UserManager._currentUser || UserManager._currentUser.userId !== user.userId) &&
+    if ((!this._currentUser || this._currentUser.userId !== user.userId) &&
         user.username &&
         user.username !== '') {
       Analytics.logEvent('Login', {
@@ -535,112 +561,115 @@ export default class UserManager {
       Intercom.update(null, null);
     }
 
-    UserManager._currentUser = user;
+    this._currentUser = user;
 
     return user;
   }
-}
 
-async function _auth0LoginAsync(auth0Options: Auth0Options, loginOptions: LoginOptions): Promise<*> {
-  if (typeof window !== 'undefined' && window) {
-    const Auth0JS = _auth0JSInstanceWithOptions(auth0Options);
-    const resp = await Auth0JS.loginAsync(loginOptions);
-    return {
-      access_token: resp.accessToken,
-      id_token: resp.idToken,
-      refresh_token: resp.refreshToken,
-    };
+  _isTokenExpired(idToken: string): boolean {
+    const dtoken = jwt.decode(idToken, { complete: true });
+    const { exp } = dtoken.payload;
+    // TODO(@skevy): remove
+    if (process.env.NODE_ENV !== 'production') { Logger.global.debug('TOKEN EXPIRATION', exp); }
+    // TODO(@skevy): remove
+    if (process.env.NODE_ENV !== 'production') { Logger.global.debug('TOKEN TIME LEFT', exp - (Date.now() / 1000)); }
+
+    return exp - (Date.now() / 1000) <= this.refreshSessionThreshold;
   }
 
-  const Auth0Node = _nodeAuth0InstanceWithOptions(auth0Options);
-
-  if (loginOptions.connection === 'Username-Password-Authentication') {
-    try {
-      return await Auth0Node.oauth.signIn(loginOptions);
-    } catch (e) {
-      const err = _formatAuth0NodeError(e);
-      if (err.message === 'invalid_user_password') {
-        throw new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, 'Invalid username or password');
-      } else {
-        throw err;
-      }
+  async _auth0LoginAsync(auth0Options: Auth0Options, loginOptions: LoginOptions): Promise<*> {
+    if (typeof window !== 'undefined' && window) {
+      const Auth0JS = _auth0JSInstanceWithOptions(auth0Options);
+      const resp = await Auth0JS.loginAsync(loginOptions);
+      return {
+        access_token: resp.accessToken,
+        id_token: resp.idToken,
+        refresh_token: resp.refreshToken,
+      };
     }
-  } else { // social
-    opn(_buildAuth0SocialLoginUrl(auth0Options, loginOptions), { wait: false });
-    return {};
+
+    const Auth0Node = _nodeAuth0InstanceWithOptions(auth0Options);
+
+    if (loginOptions.connection === 'Username-Password-Authentication') {
+      try {
+        return await Auth0Node.oauth.signIn(loginOptions);
+      } catch (e) {
+        const err = _formatAuth0NodeError(e);
+        if (err.message === 'invalid_user_password') {
+          throw new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, 'Invalid username or password');
+        } else {
+          throw err;
+        }
+      }
+    } else { // social
+      opn(_buildAuth0SocialLoginUrl(auth0Options, loginOptions), { wait: false });
+      return {};
+    }
   }
-}
 
-async function _auth0RefreshToken(clientId: string, refreshToken: string): Promise<*> {
-  const delegationTokenOptions = {
-    refresh_token: refreshToken,
-    api_type: 'app',
-    scope: 'openid offline_access nickname username',
-    target: UserManager.clientID,
-    client_id: clientId,
-  };
+  async _auth0GetProfileAsync(idToken: string): Promise<*> {
+    if (typeof window !== 'undefined' && window) {
+      const Auth0JS = _auth0JSInstanceWithOptions({ clientID: this.clientID });
+      return await Auth0JS.getProfileAsync(idToken);
+    }
 
-  if (typeof window !== 'undefined' && window) {
-    const Auth0JS = _auth0JSInstanceWithOptions({
-      clientID: clientId,
-    });
+    const Auth0Node = _nodeAuth0InstanceWithOptions({ clientID: this.clientID });
 
-    return await Auth0JS.getDelegationTokenAsync({
+    const profile = await Auth0Node.tokens.getInfo(idToken);
+    return profile;
+  }
+
+  async _auth0RefreshToken(clientId: string, refreshToken: string): Promise<*> {
+    const delegationTokenOptions = {
+      refresh_token: refreshToken,
+      api_type: 'app',
+      scope: 'openid offline_access nickname username',
+      target: this.clientID,
+      client_id: clientId,
+    };
+
+    if (typeof window !== 'undefined' && window) {
+      const Auth0JS = _auth0JSInstanceWithOptions({
+        clientID: clientId,
+      });
+
+      return await Auth0JS.getDelegationTokenAsync({
+        ...delegationTokenOptions,
+      });
+    }
+
+    const Auth0Node = _nodeAuth0InstanceWithOptions({ clientID: this.clientID });
+
+    const delegationResult = await Auth0Node.tokens.getDelegationToken({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       ...delegationTokenOptions,
     });
+
+    return delegationResult;
   }
 
-  const Auth0Node = _nodeAuth0InstanceWithOptions();
+  async _auth0ForgotPasswordAsync(usernameOrEmail: string): Promise<void> {
+    if (typeof window !== 'undefined' && window) {
+      const Auth0JS = _auth0JSInstanceWithOptions({ clientID: this.clientID });
+      return await Auth0JS.changePasswordAsync({
+        connection: 'Username-Password-Authentication',
+        email: usernameOrEmail,
+      });
+    }
 
-  const delegationResult = await Auth0Node.tokens.getDelegationToken({
-    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-    ...delegationTokenOptions,
-  });
+    const Auth0Node = _nodeAuth0InstanceWithOptions({ clientID: this.clientID });
 
-  return delegationResult;
-}
-
-async function _auth0GetProfileAsync(idToken: string): Promise<*> {
-  if (typeof window !== 'undefined' && window) {
-    const Auth0JS = _auth0JSInstanceWithOptions();
-    return await Auth0JS.getProfileAsync(idToken);
-  }
-
-  const Auth0Node = _nodeAuth0InstanceWithOptions();
-
-  const profile = await Auth0Node.tokens.getInfo(idToken);
-  return profile;
-}
-
-async function _auth0ForgotPasswordAsync(usernameOrEmail: string): Promise<void> {
-  if (typeof window !== 'undefined' && window) {
-    const Auth0JS = _auth0JSInstanceWithOptions();
-    return await Auth0JS.changePasswordAsync({
+    return await Auth0Node.database.changePassword({
       connection: 'Username-Password-Authentication',
       email: usernameOrEmail,
     });
   }
-
-  const Auth0Node = _nodeAuth0InstanceWithOptions();
-
-  return await Auth0Node.database.changePassword({
-    connection: 'Username-Password-Authentication',
-    email: usernameOrEmail,
-  });
 }
 
-async function _createOrUpdateUserAsync(userData: Object): Promise<*> {
-  const api = ApiV2Client.clientForUser(UserManager._currentUser);
+let __globalInstance;
+export default UserManagerInstance.getGlobalInstance();
 
-  const { user } = await api.postAsync('auth/createOrUpdateUser', {
-    userData: _prepareAuth0Profile(userData),
-  });
-
-  return {
-    ...(UserManager._currentUser || {}),
-    ..._parseAuth0Profile(user),
-  };
-}
+/** Private Methods **/
 
 type APIError = Error & {
   name: string,
@@ -669,7 +698,7 @@ function _buildAuth0SocialLoginUrl(auth0Options: Auth0Options, loginOptions: Log
     response_mode: loginOptions.responseMode,
     connection: loginOptions.connection,
     device: 'xdl',
-    client_id: UserManager.clientID,
+    client_id: auth0Options.clientID,
     redirect_uri: auth0Options.callbackURL,
   };
 
@@ -684,7 +713,6 @@ function _auth0JSInstanceWithOptions(options: Object = {}): any {
   let auth0Options = {
     domain: AUTH0_DOMAIN,
     responseType: 'token',
-    clientID: UserManager.clientID,
     ...options,
   };
 
@@ -698,7 +726,7 @@ function _auth0JSInstanceWithOptions(options: Object = {}): any {
 function _nodeAuth0InstanceWithOptions(options: Object = {}): any {
   let auth0Options = {
     domain: AUTH0_DOMAIN,
-    clientId: UserManager.clientID,
+    clientId: options.clientID || options.clientId,
     ...options,
   };
 
