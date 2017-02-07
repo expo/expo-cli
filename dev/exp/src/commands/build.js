@@ -20,7 +20,7 @@ export default (program: any) => {
 
   program
     .command('build:android [project-dir]')
-    .alias('bi')
+    .alias('ba')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
     .description('Build a standalone APK for your project, signed and ready for submission to the Google Play Store.')
     .asyncActionProjectDir((projectDir, options) => {
