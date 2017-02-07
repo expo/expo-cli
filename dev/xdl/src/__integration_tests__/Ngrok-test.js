@@ -13,7 +13,7 @@ const path = require('path');
 const xdl = require('../xdl');
 
 describe('ngrok', () => {
-  it('starts running and serves manifest', async () => {
+  xit('starts running and serves manifest', async () => {
     let projectRoot = path.resolve(__dirname, '../../../../apps/new-project-template');
     await xdl.Project.startAsync(projectRoot);
     let ngrokUrl = await xdl.Project.getUrlAsync(projectRoot, {

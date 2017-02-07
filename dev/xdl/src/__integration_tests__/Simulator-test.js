@@ -5,7 +5,7 @@ import delayAsync from 'delay-async';
 const xdl = require('../xdl');
 
 describe('simulator', () => {
-  it('opens and loads url in exponent', async () => {
+  xit('opens and loads url in exponent', async () => {
     let Simulator = xdl.Simulator;
     if (!await Simulator._isSimulatorInstalledAsync()) {
       throw new Error("Simulator isn't installed on this computer; can't run this test.");
