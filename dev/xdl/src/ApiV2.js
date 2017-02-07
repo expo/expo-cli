@@ -74,21 +74,21 @@ export default class ApiV2Client {
     }
   }
 
-  async getAsync(methodName: string, args: ?QueryParameters, extraOptions: Object = {}): Promise<*> {
+  async getAsync(methodName: string, args: QueryParameters = {}, extraOptions: Object = {}): Promise<*> {
     return this._requestAsync(methodName, {
       httpMethod: 'get',
       queryParameters: args,
     }, extraOptions);
   }
 
-  async postAsync(methodName: string, data: ?Object, extraOptions: Object = {}): Promise<*> {
+  async postAsync(methodName: string, data: Object = {}, extraOptions: Object = {}): Promise<*> {
     return this._requestAsync(methodName, {
       httpMethod: 'post',
       body: data,
     }, extraOptions);
   }
 
-  async putAsync(methodName: string, data: ?Object, extraOptions: Object = {}): Promise<*> {
+  async putAsync(methodName: string, data: Object = {}, extraOptions: Object = {}): Promise<*> {
     return this._requestAsync(methodName, {
       httpMethod: 'put',
       body: data,
