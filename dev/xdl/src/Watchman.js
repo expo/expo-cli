@@ -76,7 +76,10 @@ async function _unblockAsync(projectRoot: string, cancelObject) {
   if (!cancelObject.isDoneWithVersionCheck) {
     Analytics.logEvent('launchctl unload');
     if (process.env.TMPDIR && process.env.USER) {
+      // XDL's copy of watchman:
       rimraf.sync(path.join(process.env.TMPDIR, `${process.env.USER}-state`));
+      // homebrew's watchman:
+      rimraf.sync(`/usr/local/var/run/watchman/${process.env.USER}-state`);
     }
     if (process.platform === 'darwin') {
       await spawnAsync('launchctl', ['unload', '-F', '~/Library/LaunchAgents/com.github.facebook.watchman.plist']);
