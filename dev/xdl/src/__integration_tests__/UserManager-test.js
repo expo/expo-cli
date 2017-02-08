@@ -134,7 +134,7 @@ describe('UserManager', () => {
       password: userForTestPassword,
     });
     // set the refresh session threshold to a very high value, simulating an expired token
-    UserManager.refreshSessionThreshold = 37000;
+    UserManager.refreshSessionThreshold = 605000;
 
     // Spy on _auth0RefreshToken
     const _auth0RefreshTokenSpy = jest.fn(UserManager._auth0RefreshToken);
