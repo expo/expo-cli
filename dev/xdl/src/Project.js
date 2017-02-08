@@ -144,7 +144,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver) {
 }
 
 export async function publishAsync(projectRoot: string, options: Object = {}) {
-  await UserManager.ensureLoggedInAsync();
+  const user = await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
   Analytics.logEvent('Publish', {
@@ -269,7 +269,7 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
     if (Config.api.port) {
       kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
     }
-    kernelBundleUrl = `${kernelBundleUrl}/@exponent/home/bundle`;
+    kernelBundleUrl = `${kernelBundleUrl}/@${user.username}/${exp.slug}/bundle`;
 
     if (exp.kernel.androidManifestPath) {
       let manifest = await ExponentTools.getManifestAsync(response.url, {
