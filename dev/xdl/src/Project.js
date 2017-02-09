@@ -101,15 +101,16 @@ async function _getFreePortAsync(rangeStart) {
 async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
   url = UrlUtils.getPlatformSpecificBundleUrl(url, platform);
 
+  let fullUrl = `${url}&platform=${platform}`;
   let response = await request.promise.get({
-    url: `${url}&platform=${platform}`,
+    url: fullUrl,
     headers: {
       'Exponent-Platform': platform,
     },
   });
 
   if (response.statusCode !== 200) {
-    throw new XDLError(errorCode, `Packager returned unexpected code ${response.statusCode}. Please open your project in the Exponent app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`);
+    throw new XDLError(errorCode, `Packager url ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Exponent app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`);
   }
 
   if (!response.body || (minLength && response.body.length < minLength)) {
@@ -213,10 +214,6 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
 
   if (exp.ios && exp.ios.config) {
     delete exp.ios.config;
-  }
-
-  if (exp.sdkVersion === 'UNVERSIONED') {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, 'Cannot publish with sdkVersion UNVERSIONED.');
   }
 
   // Resolve manifest assets to their S3 URL and add them to the list of assets to
