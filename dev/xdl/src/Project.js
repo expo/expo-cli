@@ -193,9 +193,10 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
   // be uploaded
   const manifestAssets = [];
   await _resolveManifestAssets(projectRoot, exp, async (assetPath) => {
-    const contents = await fs.promise.readFile(path.resolve(projectRoot, assetPath));
+    const absolutePath = path.resolve(projectRoot, assetPath);
+    const contents = await fs.promise.readFile(absolutePath);
     const hash = md5hex(contents);
-    manifestAssets.push({ files: [assetPath], fileHashes: [hash] });
+    manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
     return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
   });
 
