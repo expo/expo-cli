@@ -23,7 +23,7 @@ let hasSourcedBashLoginScripts = false;
 
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const INSTALL_PATH = '/usr/local/bin';
-const ERROR_MESSAGE = '\nPlease create a file at ~/.exponent/bashrc that exports your PATH.';
+const ERROR_MESSAGE = '\nPlease run `npm install -g exp && exp path`';
 
 function _hasbinAsync(name) {
   return new Promise((resolve, reject) => {
