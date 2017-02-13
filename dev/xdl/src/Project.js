@@ -41,8 +41,6 @@ import type { User as ExpUser } from './User'; //eslint-disable-line
 
 const MINIMUM_BUNDLE_SIZE = 500;
 
-let _projectRootToExponentServer = {};
-
 type CachedSignedManifest = {
   manifestString: ?string,
   signedManifest: ?string,
@@ -756,6 +754,10 @@ export async function startExponentServerAsync(projectRoot: string) {
     }
     res.send('Success');
   });
+  app.post('/shutdown', async(req, res) => {
+    server.close();
+    res.send('Success');
+  });
 
   let exponentServerPort = await _getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -768,7 +770,6 @@ export async function startExponentServerAsync(projectRoot: string) {
     ProjectUtils.logDebug(projectRoot, 'exponent', `Local server listening at http://${host}:${port}`);
   });
 
-  _projectRootToExponentServer[projectRoot] = server;
   await Exp.saveRecentExpRootAsync(projectRoot);
 }
 
@@ -779,18 +780,17 @@ export async function stopExponentServerAsync(projectRoot: string) {
 
   _assertValidProjectRoot(projectRoot);
 
-  let server = _projectRootToExponentServer[projectRoot];
   if (!server) {
     ProjectUtils.logDebug(projectRoot, 'exponent', `No Exponent server found for project at ${projectRoot}.`);
     return;
   }
 
-  try {
-    await server.promise.close();
-  } catch (e) {
-    // don't care if this fails
+  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  if (packagerInfo) {
+    try {
+      await request.post.promise(`http://localhost:${packagerInfo.exponentServerPort}/shutdown`);
+    } catch (e) {}
   }
-  _projectRootToExponentServer[projectRoot] = null;
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     exponentServerPort: null,
