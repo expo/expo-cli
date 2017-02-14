@@ -10,12 +10,24 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [30.0.0] - 2017-02-14
+
+### Added
+
+* Add redux store for notifications.
+* Add suggestion to point command line tools to Xcode.
+
+### Changed
+
+* Another fix for getting logged out.
+* Make Project.stopAsync more reliable.
+
 ## [29.5.0] - 2017-01-27
 
 ### Changed
 
 * Compile bundled watchman without pcre.
-* Better Xcode error handling
+* Better Xcode error handling.
 
 ## [29.4.0] - 2017-01-25
 
@@ -38,15 +50,15 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Changed
 
-* Ensure that the user is logged in on every api call
-* Fix detach script to remove all comments from .gradle file
+* Ensure that the user is logged in on every api call.
+* Fix detach script to remove all comments from .gradle file.
 
 ## [29.0.0] - 2017-1-17
 
 ### Changed
 
-* Fix accounts bugs
-* First release of detach
+* Fix accounts bugs.
+* First release of detach.
 
 ## [28.0.0] - 2017-1-11
 

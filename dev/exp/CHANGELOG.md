@@ -10,6 +10,19 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [33.0.0] - 2017-02-14
+
+### Changed
+
+* Update `xdl` to v30.0.0.
+* `start` runs in the foreground.
+* `publish` starts running the project if necessary.
+
+### Removed
+
+* Removed `logs`, `status`, `stop`.
+* Removed pm2 dependency.
+
 ## [32.3.0] - 2017-01-27
 
 ### Changed
