@@ -12,29 +12,8 @@ import path from 'path';
 
 import log from '../log';
 import sendTo from '../sendTo';
-import { currentProjectStatus } from '../status';
+import { currentProjectStatus, installExitHooks } from '../status';
 import urlOpts from '../urlOpts';
-
-function installExitHooks(projectDir) {
-  // install ctrl+c handler that writes non-running state to directory
-  if (process.platform === 'win32') {
-    require('readline').createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    })
-      .on("SIGINT", () => {
-        process.emit("SIGINT");
-      });
-  }
-
-  process.on('SIGINT', () => {
-    console.log(crayon.blue('\nStopping packager...'));
-    Project.stopAsync(projectDir).then(() => {
-      console.log(crayon.green('Packager stopped.'));
-      process.exit();
-    });
-  });
-}
 
 async function action(projectDir, options) {
   const projectState = await currentProjectStatus(projectDir);

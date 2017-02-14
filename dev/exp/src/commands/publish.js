@@ -11,7 +11,7 @@ import {
 
 import log from '../log';
 import sendTo from '../sendTo';
-import { currentProjectStatus } from '../status';
+import { currentProjectStatus, installExitHooks } from '../status';
 
 type Options = {
   sendTo?: string,
@@ -24,6 +24,7 @@ export async function action(projectDir: string, options: Options = {}) {
   let startedOurOwn = false;
   if (status !== 'running') {
     log('Unable to find an existing exp instance for this directory, starting a new one...');
+    installExitHooks(projectDir);
     await Project.startAsync(projectDir, {}, options.verbose || false);
     startedOurOwn = true;
   }
