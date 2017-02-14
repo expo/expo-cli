@@ -39,9 +39,6 @@ import log from '../../log';
 export default class IOSBuilder extends BaseBuilder {
 
   async run() {
-    // Check status of packager
-    await this.checkPackagerStatus();
-
     // validate bundleIdentifier before hitting the network to check build status
     const { args: {
       username,

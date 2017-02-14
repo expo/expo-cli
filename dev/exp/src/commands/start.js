@@ -4,16 +4,15 @@
 
 import {
   Project,
-  ProjectSettings,
   UrlUtils,
 } from 'xdl';
 
 import crayon from '@ccheever/crayon';
 import path from 'path';
 
-import config from '../config';
 import log from '../log';
 import sendTo from '../sendTo';
+import { currentProjectStatus } from '../status';
 import urlOpts from '../urlOpts';
 
 function installExitHooks(projectDir) {
@@ -23,52 +22,28 @@ function installExitHooks(projectDir) {
       input: process.stdin,
       output: process.stdout,
     })
-    .on("SIGINT", () => {
-      process.emit("SIGINT");
-    });
+      .on("SIGINT", () => {
+        process.emit("SIGINT");
+      });
   }
 
   process.on('SIGINT', () => {
     console.log(crayon.blue('\nStopping packager...'));
-    Promise.all([
-      cleanUpPackager(projectDir),
-      config.setProjectStatusAsync(projectDir, 'EXITED', null),
-    ]).then(() => {
+    Project.stopAsync(projectDir).then(() => {
       console.log(crayon.green('Packager stopped.'));
       process.exit();
     });
   });
 }
 
-async function cleanUpPackager(projectDir) {
-  const result = await Promise.race([
-    Project.stopAsync(projectDir),
-    new Promise((resolve, reject) => setTimeout(resolve, 1000, 'stopFailed')),
-  ]);
-
-  if (result === 'stopFailed') {
-    // find RN packager and ngrok pids, attempt to kill them manually
-    try {
-      const { packagerPid, ngrokPid } = await ProjectSettings.readPackagerInfoAsync(projectDir);
-
-      process.kill(packagerPid);
-      process.kill(ngrokPid);
-    } catch (e) {
-      process.exit();
-    }
-  }
-}
-
 async function action(projectDir, options) {
-  // check if we're already running elsewhere
+  const projectState = await currentProjectStatus(projectDir);
 
-  const previousState = await config.projectStatusAsync(projectDir);
-  if (previousState === 'RUNNING') {
-    // NOTE this might have bad state present if we failed to write our exiting
-    // NOTE should we try to validate the packager pid before printing this? or take some other action?
-    log.warn('exp is already running for this directory. Please kill the other process before proceeding.');
+  if (projectState === 'running') {
+    log.warn('exp is already running for this project. Exiting...');
     process.exit(1);
-    return;
+  } else if (projectState === 'ill') {
+    log.warn('exp may have exited improperly. Proceeding, but you should check for orphaned processes.');
   }
 
   installExitHooks(projectDir);
@@ -83,13 +58,7 @@ async function action(projectDir, options) {
     startOpts.reset = true;
   }
 
-  try {
-    await Project.startAsync(root, startOpts);
-    await config.setProjectStatusAsync(projectDir, 'RUNNING', null);
-  } catch (e) {
-    await config.setProjectStatusAsync(projectDir, 'ERROR', JSON.stringify(e));
-    throw e;
-  }
+  await Project.startAsync(root, startOpts);
 
   log("Exponent is ready.");
 
@@ -108,8 +77,6 @@ async function action(projectDir, options) {
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
   log(crayon.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
-
-  return config.projectExpJsonFile(projectDir).readAsync();
 }
 
 export default (program: any) => {

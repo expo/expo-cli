@@ -9,28 +9,22 @@ import {
   Project,
 } from 'xdl';
 
-import config from '../config';
 import log from '../log';
 import sendTo from '../sendTo';
+import { currentProjectStatus } from '../status';
 
 type Options = {
   sendTo?: string,
 };
 
 export async function action(projectDir: string, options: Options = {}) {
-  let status = await config.projectStatusAsync(projectDir);
-  if (!status) {
-    log.error("No project found at " + projectDir);
-    log.error("Have you already run `exp start` for this directory?");
-    return;
-  }
+  const status = await currentProjectStatus(projectDir);
 
-  if (status !== 'RUNNING') {
-    // TODO run start ourselves?
-    log.error(`Exponent server not running for project at ${projectDir}`);
-    log.error(`Please run "exp start ${projectDir}" first.`);
-    process.exit(1);
-    return;
+  let startedOurOwn = false;
+  if (status !== 'running') {
+    log('Unable to find an existing exp instance for this directory, starting a new one...');
+    await Project.startAsync(projectDir);
+    startedOurOwn = true;
   }
 
   let recipient = await sendTo.getRecipient(options.sendTo);
@@ -47,6 +41,10 @@ export async function action(projectDir: string, options: Options = {}) {
 
   if (recipient) {
     await sendTo.sendUrlAsync(result.url, recipient);
+  }
+
+  if (startedOurOwn) {
+    await Project.stopAsync(projectDir);
   }
 
   return result;
