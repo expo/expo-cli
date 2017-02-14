@@ -780,13 +780,8 @@ export async function stopExponentServerAsync(projectRoot: string) {
 
   _assertValidProjectRoot(projectRoot);
 
-  if (!server) {
-    ProjectUtils.logDebug(projectRoot, 'exponent', `No Exponent server found for project at ${projectRoot}.`);
-    return;
-  }
-
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (packagerInfo) {
+  if (packagerInfo && packagerInfo.exponentServerPort) {
     try {
       await request.post.promise(`http://localhost:${packagerInfo.exponentServerPort}/shutdown`);
     } catch (e) {}
@@ -991,7 +986,10 @@ export async function startAsync(projectRoot: string, options: Object = {}): Pro
   return exp;
 }
 
-export async function stopAsync(projectRoot: string): Promise<void> {
+async function _stopInternalAsync(projectRoot: string): Promise<void> {
+  await stopExponentServerAsync(projectRoot);
+  await stopReactNativeServerAsync(projectRoot);
+
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);
@@ -999,6 +997,28 @@ export async function stopAsync(projectRoot: string): Promise<void> {
       ProjectUtils.logDebug(projectRoot, 'exponent', `Error stopping ngrok ${e.message}`);
     }
   }
-  await stopReactNativeServerAsync(projectRoot);
-  await stopExponentServerAsync(projectRoot);
+}
+
+export async function stopAsync(projectDir: string): Promise<void> {
+  const result = await Promise.race([
+    _stopInternalAsync(projectDir),
+    new Promise((resolve, reject) => setTimeout(resolve, 1000, 'stopFailed')),
+  ]);
+
+  if (result === 'stopFailed') {
+    // find RN packager and ngrok pids, attempt to kill them manually
+    const { packagerPid, ngrokPid } = await ProjectSettings.readPackagerInfoAsync(projectDir);
+
+    if (packagerPid) {
+      try {
+        process.kill(packagerPid);
+      } catch (e) {}
+    }
+
+    if (ngrokPid) {
+      try {
+        process.kill(ngrokPid);
+      } catch (e) {}
+    }
+  }
 }
