@@ -482,7 +482,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
   }
 }
 
-export async function startReactNativeServerAsync(projectRoot: string, options: Object = {}) {
+export async function startReactNativeServerAsync(projectRoot: string, options: Object = {}, verbose: boolean = true) {
   await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -562,12 +562,17 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
 
   packagerProcess.stdout.setEncoding('utf8');
   packagerProcess.stderr.setEncoding('utf8');
+
   packagerProcess.stdout.on('data', (data) => {
-    _logPackagerOutput(projectRoot, 'info', data);
+    if (verbose) {
+      _logPackagerOutput(projectRoot, 'info', data);
+    }
   });
 
   packagerProcess.stderr.on('data', (data) => {
-    _logPackagerOutput(projectRoot, 'error', data);
+    if (verbose) {
+      _logPackagerOutput(projectRoot, 'error', data);
+    }
   });
 
   packagerProcess.on('exit', async (code) => {
@@ -959,7 +964,7 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
 
-export async function startAsync(projectRoot: string, options: Object = {}): Promise<any> {
+export async function startAsync(projectRoot: string, options: Object = {}, verbose: boolean = true): Promise<any> {
   if (Config.offline) {
     await ProjectSettings.setAsync(projectRoot, { hostType: 'lan' });
   }
@@ -972,7 +977,7 @@ export async function startAsync(projectRoot: string, options: Object = {}): Pro
   });
 
   await startExponentServerAsync(projectRoot);
-  await startReactNativeServerAsync(projectRoot, options);
+  await startReactNativeServerAsync(projectRoot, options, verbose);
 
   if (!Config.offline) {
     try {
