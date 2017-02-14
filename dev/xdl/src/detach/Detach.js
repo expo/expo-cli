@@ -112,9 +112,14 @@ export async function detachAsync(projectRoot: string) {
     throw new Error(`${configName} is missing \`sdkVersion\``);
   }
   const versions = await Versions.versionsAsync();
-  const sdkVersionConfig = versions.sdkVersions[exp.sdkVersion];
+  let sdkVersionConfig = versions.sdkVersions[exp.sdkVersion];
   if (!sdkVersionConfig || !sdkVersionConfig.androidExponentViewUrl || !sdkVersionConfig.iosExponentViewUrl) {
-    throw new Error(`Detaching is not supported for SDK version ${exp.sdkVersion}`);
+    if (process.env.EXPONENT_VIEW_DIR) {
+      console.warn(`Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPONENT_VIEW_DIR`);
+      sdkVersionConfig = {};
+    } else {
+      throw new Error(`Detaching is not supported for SDK version ${exp.sdkVersion}`);
+    }
   }
 
   if (process.platform !== 'darwin') {
