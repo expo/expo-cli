@@ -63,11 +63,12 @@ async function action(projectDir, options) {
   log("Exponent is ready.");
 
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
+
+  log('You can scan this QR code:\n');
+  urlOpts.printQRCode(url);
+
   log("Your URL is\n\n" + crayon.underline(url) + "\n");
   log.raw(url);
-
-  log('You can also scan this QR code:\n');
-  urlOpts.printQRCode(url);
 
   const recipient = await sendTo.getRecipient(options.sendTo);
   if (recipient) {

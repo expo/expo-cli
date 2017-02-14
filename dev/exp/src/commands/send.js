@@ -15,12 +15,13 @@ async function action(projectDir, options) {
 
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
+  log('You can scan this QR code:\n');
+  urlOpts.printQRCode(url);
+
   log("Your URL is\n\n" + crayon.underline(url) + "\n");
   log.raw(url);
 
   let shouldQuit = false;
-  log('You can also scan this QR code:\n');
-  urlOpts.printQRCode(url);
   if (await urlOpts.handleMobileOptsAsync(projectDir, options)) { shouldQuit = true; }
 
   if (shouldQuit) {
