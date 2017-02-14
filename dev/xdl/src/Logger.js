@@ -48,10 +48,4 @@ logger.INFO = bunyan.INFO;
 logger.WARN = bunyan.WARN;
 logger.ERROR = bunyan.ERROR;
 
-logger.clearNotification = (id: string) => {
-  if (Config.useReduxNotifications) {
-    state.store.dispatch(state.actions.notifications.clearGlobal(id));
-  }
-}
-
 export default logger;
