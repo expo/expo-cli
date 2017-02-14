@@ -11,7 +11,7 @@ import {
 
 import log from '../log';
 import sendTo from '../sendTo';
-import { currentProjectStatus, installExitHooks } from '../status';
+import { installExitHooks } from '../exit';
 
 type Options = {
   sendTo?: string,
@@ -19,7 +19,7 @@ type Options = {
 };
 
 export async function action(projectDir: string, options: Options = {}) {
-  const status = await currentProjectStatus(projectDir);
+  const status = await Project.currentStatus(projectDir);
 
   let startedOurOwn = false;
   if (status !== 'running') {

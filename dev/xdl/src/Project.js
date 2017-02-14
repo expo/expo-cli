@@ -51,6 +51,38 @@ let _cachedSignedManifest: CachedSignedManifest = {
   signedManifest: null,
 };
 
+export type ProjectStatus = 'running' | 'ill' | 'exited';
+
+export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
+  const manifestUrl = await UrlUtils.constructManifestUrlAsync(projectDir, { urlType: 'http' });
+  const packagerUrl = await UrlUtils.constructBundleUrlAsync(projectDir, { urlType: 'http' });
+
+  let packagerRunning = false;
+  try {
+    const res = await request.promise(`${packagerUrl}/debug`);
+
+    if (res.statusCode < 400) {
+      packagerRunning = true;
+    }
+  } catch (e) { }
+
+  let manifestServerRunning = false;
+  try {
+    const res = await request.promise(manifestUrl);
+    if (res.statusCode < 400) {
+      manifestServerRunning = true;
+    }
+  } catch (e) { }
+
+  if (packagerRunning && manifestServerRunning) {
+    return 'running';
+  } else if (packagerRunning || manifestServerRunning) {
+    return 'ill';
+  } else {
+    return 'exited';
+  }
+}
+
 async function _assertValidProjectRoot(projectRoot) {
   if (!projectRoot) {
     throw new XDLError(ErrorCode.NO_PROJECT_ROOT, 'No project root specified');

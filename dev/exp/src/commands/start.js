@@ -12,11 +12,11 @@ import path from 'path';
 
 import log from '../log';
 import sendTo from '../sendTo';
-import { currentProjectStatus, installExitHooks } from '../status';
+import { installExitHooks } from '../exit';
 import urlOpts from '../urlOpts';
 
 async function action(projectDir, options) {
-  const projectState = await currentProjectStatus(projectDir);
+  const projectState = await Project.currentStatus(projectDir);
 
   if (projectState === 'running') {
     log.warn('exp is already running for this project. Exiting...');
