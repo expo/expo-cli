@@ -80,21 +80,46 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
       projectDir = path.resolve(process.cwd(), projectDir);
     }
 
+    const logLines = (msg, logFn) => {
+      for (let line of msg.split('\n')) {
+        logFn(line);
+      }
+    }
+
+    const logWithLevel = (chunk) => {
+      if (!chunk.msg) {
+        return;
+      }
+      if (chunk.level <= bunyan.INFO) {
+        logLines(chunk.msg, log);
+      } else if (chunk.level === bunyan.WARN) {
+        logLines(chunk.msg, log.warn);
+      } else {
+        logLines(chunk.msg, log.error);
+      }
+    }
+
+    const formatPackagerLog = (chunk) => {
+      if (chunk.msg.match(/Transforming modules/)) {
+        let progress = chunk.msg.match(/\d+\.\d+% \(\d+\/\d+\)/);
+        if (progress[0]) {
+          chunk.msg = `Transforming modules: ${progress[0]}`;
+        }
+      } else if (chunk.msg.match(/^[\u001b]/)) {
+        chunk.msg = '';
+      }
+
+      return chunk;
+    }
+
     // needed for validation logging to function
     ProjectUtils.attachLoggerStream(projectDir, {
       stream: {
         write: (chunk) => {
-          const logLines = (msg, logFn) => {
-            for (let line of msg.split('\n')) {
-              logFn(line);
-            }
-          }
-          if (chunk.level <= bunyan.INFO) {
-            logLines(chunk.msg, log);
-          } else if (chunk.level === bunyan.WARN) {
-            logLines(chunk.msg, log.warn);
+          if (chunk.tag === 'device') {
+            logWithLevel(chunk);
           } else {
-            logLines(chunk.msg, log.error);
+            logWithLevel(formatPackagerLog(chunk));
           }
         },
       },
