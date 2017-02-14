@@ -19,6 +19,7 @@ async function action(projectDir, options) {
   log.raw(url);
 
   await urlOpts.handleMobileOptsAsync(projectDir, options);
+  // this is necessary because we have undiagnosed event loop gunk that prevents exit
   process.exit();
 }
 
