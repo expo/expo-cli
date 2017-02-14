@@ -153,6 +153,8 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
       // use localhost
       hostname = 'localhost';
       port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
+
+      // TODO report a warning when this is for a currently served project, suppress for status checks
     } else {
       let pnu = url.parse(ngrokUrl);
       hostname = pnu.hostname;
