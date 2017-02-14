@@ -75,7 +75,7 @@ async function optsAsync(projectDir, options) {
 }
 
 function printQRCode(url) {
-  qrcodeTerminal.generate(url, (code) => console.log(indentString(code, 2)));
+  qrcodeTerminal.generate(url, (code) => console.log(`${indentString(code, 2)}\n`));
 }
 
 async function handleMobileOptsAsync(projectDir, options) {
