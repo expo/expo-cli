@@ -9,7 +9,7 @@
     "bin"
   ],
   "scripts": {
-    "build": "gulp babel",
+    "build": "gulp clean && gulp babel",
     "watch": "gulp watch"
   },
   "bin": {
