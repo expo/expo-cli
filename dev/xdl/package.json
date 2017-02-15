@@ -9,7 +9,9 @@
     "scripts"
   ],
   "scripts": {
+    "start": "yarn run build && yarn run watch",
     "build": "cross-env NODE_ENV=production gulp clean && gulp build",
+    "watch": "gulp watch",
     "test": "jest --config jest/unit-test-config.json",
     "integration-tests": "jest --config jest/integration-test-config.json",
     "flow-typed": "flow-typed install --flowVersion=\"$(flow version | awk '{ print $9 }')\""
