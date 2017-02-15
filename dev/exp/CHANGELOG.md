@@ -10,6 +10,18 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [33.0.2] - 2017-02-15
+
+### Changed
+
+* Fixed a typo in progress indicator crash fix
+
+## [33.0.1] - 2017-02-15
+
+### Changed
+
+* Fixed progress indicator crash
+
 ## [33.0.0] - 2017-02-14
 
 ### Changed

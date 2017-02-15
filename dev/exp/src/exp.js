@@ -102,7 +102,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     const formatPackagerLog = (chunk) => {
       if (chunk.msg.match(/Transforming modules/)) {
         let progress = chunk.msg.match(/\d+\.\d+% \(\d+\/\d+\)/);
-        if (progress[0]) {
+        if (progress && progress[0]) {
           chunk.msg = `Transforming modules: ${progress[0]}`;
         }
       } else if (chunk.msg.match(/^[\u001b]/)) {
