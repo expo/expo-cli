@@ -25,7 +25,7 @@ export async function addToPathAsync() {
   await Binaries.addToPathAsync('watchman');
 }
 
-export async function unblockAndGetVersionAsync(projectRoot: string) {
+export async function unblockAndGetVersionAsync(projectRoot?: string) {
   if (!isPlatformSupported()) {
     return null;
   }
@@ -45,7 +45,7 @@ export async function unblockAndGetVersionAsync(projectRoot: string) {
   }
 }
 
-async function _unblockAndVersionAsync(projectRoot: string) {
+async function _unblockAndVersionAsync(projectRoot?: string) {
   let cancelObject = {
     isDoneWithVersionCheck: false,
   };
@@ -70,7 +70,7 @@ async function _unblockAndVersionAsync(projectRoot: string) {
   }
 }
 
-async function _unblockAsync(projectRoot: string, cancelObject) {
+async function _unblockAsync(projectRoot?: string, cancelObject) {
   await delayAsync(WAIT_FOR_WATCHMAN_VERSION_MS);
 
   if (!cancelObject.isDoneWithVersionCheck) {
@@ -84,8 +84,10 @@ async function _unblockAsync(projectRoot: string, cancelObject) {
     if (process.platform === 'darwin') {
       await spawnAsync('launchctl', ['unload', '-F', '~/Library/LaunchAgents/com.github.facebook.watchman.plist']);
     }
-    await spawnAsync('watchman', ['watch-del', projectRoot]);
-    await spawnAsync('watchman', ['watch-project', projectRoot]);
+    if (projectRoot) {
+      await spawnAsync('watchman', ['watch-del', projectRoot]);
+      await spawnAsync('watchman', ['watch-project', projectRoot]);
+    }
   }
 
   return {
