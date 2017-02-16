@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [33.0.3] - 2017-02-16
+
+### Changed
+
+* Added `--quiet` option to `exp publish`.
+* Removed `exp publish --verbose` option in favor of `exp publish` defaulting to verbose output.
+
 ## [33.0.2] - 2017-02-15
 
 ### Changed
