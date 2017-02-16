@@ -15,7 +15,7 @@ import { installExitHooks } from '../exit';
 
 type Options = {
   sendTo?: string,
-  verbose?: boolean,
+  quiet?: boolean,
 };
 
 export async function action(projectDir: string, options: Options = {}) {
@@ -25,20 +25,20 @@ export async function action(projectDir: string, options: Options = {}) {
   if (status !== 'running') {
     log('Unable to find an existing exp instance for this directory, starting a new one...');
     installExitHooks(projectDir);
-    await Project.startAsync(projectDir, {}, options.verbose || false);
+    await Project.startAsync(projectDir, {}, !options.quiet);
     startedOurOwn = true;
   }
 
   let recipient = await sendTo.getRecipient(options.sendTo);
   log('Publishing...');
 
-  if (!options.verbose) {
+  if (options.quiet) {
     simpleSpinner.start();
   }
 
   let result = await Project.publishAsync(projectDir);
 
-  if (!options.verbose) {
+  if (options.quiet) {
     simpleSpinner.stop();
   }
 
@@ -62,7 +62,7 @@ export default (program: any) => {
     .command('publish [project-dir]')
     .alias('p')
     .description('Publishes your project to exp.host')
-    .option('-v, --verbose', 'Enable verbose output from the React Native packager.')
+    .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .asyncActionProjectDir(action);
 };
