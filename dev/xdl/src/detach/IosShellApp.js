@@ -108,6 +108,11 @@ async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, pr
       config.ITSAppUsesNonExemptEncryption = false;
     }
 
+    // google maps api key
+    if (privateConfig && privateConfig.googleMapsApiKey) {
+      config.GMSApiKey = privateConfig.googleMapsApiKey;
+    }
+
     // permanently save the exponent client version at time of configuration
     config.EXClientVersion = config.CFBundleVersion;
 
