@@ -10,6 +10,15 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [30.0.1] - 2017-02-20
+
+### Changed
+
+* Make offline mode only use local IP temporarily.
+* Minor watchman stability improvements.
+
+### Removed
+
 ## [30.0.0] - 2017-02-14
 
 ### Added
