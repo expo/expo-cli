@@ -167,6 +167,35 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
     throw new XDLError(ErrorCode.NO_PACKAGER_PORT, `No packager found for project at ${projectRoot}.`);
   }
 
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
+  if (!exp || !pkg) {
+    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read ${configName} file in project at ${projectRoot}`);
+  }
+
+  // Support version and name being specified in package.json for legacy
+  // support pre: exp.json
+  if (!exp.version && pkg.version) {
+    exp.version = pkg.version;
+  }
+  if (!exp.slug && pkg.name) {
+    exp.slug = pkg.name;
+  }
+
+  if (exp.android && exp.android.config) {
+    delete exp.android.config;
+  }
+
+  if (exp.ios && exp.ios.config) {
+    delete exp.ios.config;
+  }
+
+  // Only allow test-suite to be published with UNVERSIONED
+  if (exp.sdkVersion === 'UNVERSIONED' && !exp.slug.includes('test-suite')) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, 'Cannot publish with sdkVersion UNVERSIONED.');
+  }
+
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
   let publishUrl = await UrlUtils.constructPublishUrlAsync(projectRoot, entryPoint);
   let assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
@@ -191,30 +220,6 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
       errorCode: ErrorCode.INVALID_ASSETS,
     }),
   ]);
-
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-
-  if (!exp || !pkg) {
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-    throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read ${configName} file in project at ${projectRoot}`);
-  }
-
-  // Support version and name being specified in package.json for legacy
-  // support pre: exp.json
-  if (!exp.version && pkg.version) {
-    exp.version = pkg.version;
-  }
-  if (!exp.slug && pkg.name) {
-    exp.slug = pkg.name;
-  }
-
-  if (exp.android && exp.android.config) {
-    delete exp.android.config;
-  }
-
-  if (exp.ios && exp.ios.config) {
-    delete exp.ios.config;
-  }
 
   // Resolve manifest assets to their S3 URL and add them to the list of assets to
   // be uploaded
