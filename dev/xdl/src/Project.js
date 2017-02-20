@@ -1035,7 +1035,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
 export async function stopAsync(projectDir: string): Promise<void> {
   const result = await Promise.race([
     _stopInternalAsync(projectDir),
-    new Promise((resolve, reject) => setTimeout(resolve, 1000, 'stopFailed')),
+    new Promise((resolve, reject) => setTimeout(resolve, 2000, 'stopFailed')),
   ]);
 
   if (result === 'stopFailed') {
@@ -1053,5 +1053,14 @@ export async function stopAsync(projectDir: string): Promise<void> {
         process.kill(ngrokPid);
       } catch (e) {}
     }
+
+    await ProjectSettings.setPackagerInfoAsync(projectDir, {
+      exponentServerPort: null,
+      packagerPort: null,
+      packagerPid: null,
+      exponentServerNgrokUrl: null,
+      packagerNgrokUrl: null,
+      ngrokPid: null,
+    });
   }
 }
