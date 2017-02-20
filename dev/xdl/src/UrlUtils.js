@@ -139,7 +139,7 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
   if (opts.hostType === 'localhost') {
     hostname = 'localhost';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
-  } else if (opts.hostType === 'lan') {
+  } else if (opts.hostType === 'lan' || Config.offline) {
     if (opts.lanType === 'ip') {
       hostname = ip.address();
     } else {

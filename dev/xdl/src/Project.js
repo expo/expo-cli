@@ -997,10 +997,6 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
 }
 
 export async function startAsync(projectRoot: string, options: Object = {}, verbose: boolean = true): Promise<any> {
-  if (Config.offline) {
-    await ProjectSettings.setAsync(projectRoot, { hostType: 'lan' });
-  }
-
   await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
