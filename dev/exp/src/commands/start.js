@@ -67,5 +67,6 @@ export default (program: any) => {
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
     .urlOpts()
+    .allowOffline()
     .asyncActionProjectDir(action);
 };

@@ -29,5 +29,6 @@ export default (program) => {
     .alias('u')
     .description('Displays the URL you can use to view your project in Exponent')
     .urlOpts()
+    .allowOffline()
     .asyncActionProjectDir(action);
 };

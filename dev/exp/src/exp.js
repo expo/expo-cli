@@ -37,6 +37,11 @@ Command.prototype.urlOpts = function() {
   return this;
 };
 
+Command.prototype.allowOffline = function() {
+  this.option('--offline', 'Allows this command to run while offline');
+  return this;
+};
+
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
   return this.action(async (...args) => {
     if (!skipUpdateCheck) {
@@ -44,10 +49,12 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
     }
 
     try {
-      let options = _.last(args).parent;
+      let options = _.last(args);
       if (options.output === 'raw') {
         log.config.raw = true;
-        process.env['PM2_SILENT'] = 'true';
+      }
+      if (options.offline) {
+        Config.offline = true;
       }
       await asyncFn(...args);
     } catch (err) {
