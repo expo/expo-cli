@@ -63,7 +63,7 @@ export async function _isSimulatorInstalledAsync() {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
   } catch (e) {
     console.error("Can't determine id of Simulator app; the Simulator is most likely not installed on this machine", e);
-    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator");
+    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.");
     return false;
   }
   if (result !== 'com.apple.iphonesimulator') {
