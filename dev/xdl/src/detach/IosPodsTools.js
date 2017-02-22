@@ -141,11 +141,16 @@ async function concatTemplateFilesInDirectoryAsync(directory) {
 }
 
 function renderDetachedPostinstall() {
+  let podsRootSub = "${PODS_ROOT}";
   return `
     if target.pod_name == 'ExponentView'
       target.native_target.build_configurations.each do |config|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'
+        # needed for GoogleMaps 2.x
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'
       end
     end
 `;
