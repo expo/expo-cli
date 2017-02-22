@@ -29,9 +29,9 @@ async function action(projectDir, options) {
 
   await urlOpts.optsAsync(projectDir, options);
 
-  log(crayon.gray("Using project at", process.cwd()));
+  log(crayon.gray("Using project at", projectDir));
 
-  let root = path.resolve(process.cwd());
+  let root = path.resolve(projectDir);
   let startOpts = {};
   if (options.clear) {
     startOpts.reset = true;
