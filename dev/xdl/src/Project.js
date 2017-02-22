@@ -98,7 +98,7 @@ async function _getFreePortAsync(rangeStart) {
   return port;
 }
 
-async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
+async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, minLength }) {
   url = UrlUtils.getPlatformSpecificBundleUrl(url, platform);
 
   let fullUrl = `${url}&platform=${platform}`;
@@ -110,6 +110,12 @@ async function _getForPlatformAsync(url, platform, { errorCode, minLength }) {
   });
 
   if (response.statusCode !== 200) {
+    if (response.body) {
+      let body = JSON.parse(response.body);
+      if (body && body.message) {
+        ProjectUtils.logError(projectRoot, 'exponent', body.message);
+      }
+    }
     throw new XDLError(errorCode, `Packager url ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Exponent app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`);
   }
 
@@ -205,18 +211,18 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
     iosAssetsJson,
     androidAssetsJson,
   ] = await Promise.all([
-    _getForPlatformAsync(publishUrl, 'ios', {
+    _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
       errorCode: ErrorCode.INVALID_BUNDLE,
       minLength: MINIMUM_BUNDLE_SIZE,
     }),
-    _getForPlatformAsync(publishUrl, 'android', {
+    _getForPlatformAsync(projectRoot, publishUrl, 'android', {
       errorCode: ErrorCode.INVALID_BUNDLE,
       minLength: MINIMUM_BUNDLE_SIZE,
     }),
-    _getForPlatformAsync(assetsUrl, 'ios', {
+    _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
       errorCode: ErrorCode.INVALID_ASSETS,
     }),
-    _getForPlatformAsync(assetsUrl, 'android', {
+    _getForPlatformAsync(projectRoot, assetsUrl, 'android', {
       errorCode: ErrorCode.INVALID_ASSETS,
     }),
   ]);
