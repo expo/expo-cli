@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "34.0.0",
+  "version": "34.1.0",
   "description": "The command-line tool for creating and publishing Exponent apps",
   "preferGlobal": true,
   "main": "build/exp.js",
