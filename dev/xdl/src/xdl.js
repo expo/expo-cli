@@ -1,6 +1,5 @@
 /**
  * @flow
- * @providesModule XDL
  */
 
 import { install as installSourceMapSupport } from 'source-map-support';
