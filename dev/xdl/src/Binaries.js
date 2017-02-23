@@ -76,8 +76,10 @@ async function _installBinaryAsync(name) {
     }
 
     // adb lives at ~/.exponent/adb/adb
-    if (runas('/bin/rm', ['-f', path.join(INSTALL_PATH, name)], { admin: true }) !== 0) {
-      throw new Error(`Could not run \`rm -f ${path.join(INSTALL_PATH, name)}\`.`);
+    try {
+      runas('/bin/rm', ['-f', path.join(INSTALL_PATH, name)], { admin: true });
+    } catch (e) {
+      // Don't worry if we can't rm the file, we'll just get an error later
     }
 
     if (runas('/bin/mkdir', ['-p', INSTALL_PATH], { admin: true }) !== 0) {
