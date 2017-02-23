@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [31.0.0] - 2017-02-22
+
+### Changed
+
+* Updates to iOS detach script.
+
 ## [30.0.1] - 2017-02-20
 
 ### Changed

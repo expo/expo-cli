@@ -10,6 +10,18 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [34.1.0] - 2017-02-22
+
+### Added
+
+* Add `--offline` option to `start`, `android`, `ios`, and `url`.
+
+## [34.0.0] - 2017-02-22
+
+### Changed
+
+* Update `xdl` to v31.0.0.
+
 ## [33.0.3] - 2017-02-16
 
 ### Changed
