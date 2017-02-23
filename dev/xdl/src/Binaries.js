@@ -105,21 +105,11 @@ async function _copyBinariesToExponentDirAsync() {
   await Utils.ncpAsync(OSX_SOURCE_PATH, _exponentBinaryDirectory());
 }
 
-export async function installXDECommandAsync() {
-  try {
-    await sourceBashLoginScriptsAsync();
-    await _copyBinariesToExponentDirAsync();
-    await _installBinaryAsync('xde');
-  } catch (e) {
-    Logger.global.debug(`Couldn't install xde binary: ${e.message}`);
-  }
-}
-
 export async function installShellCommandsAsync() {
   await sourceBashLoginScriptsAsync();
   await _copyBinariesToExponentDirAsync();
 
-  let binaries = ['adb', 'watchman'];
+  let binaries = ['adb', 'watchman', 'xde'];
   let installedBinaries = [];
   for (let i = 0; i < binaries.length; i++) {
     if (await _installBinaryAsync(binaries[i])) {
