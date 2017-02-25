@@ -10,6 +10,14 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [31.1.0] - 2017-02-24
+
+### Changed
+
+* Fix detach on windows.
+* Add Xcode warning if osascript command fails.
+* Show full error if publish gets a 500 response from packager.
+
 ## [31.0.0] - 2017-02-22
 
 ### Changed
@@ -22,8 +30,6 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 * Make offline mode only use local IP temporarily.
 * Minor watchman stability improvements.
-
-### Removed
 
 ## [30.0.0] - 2017-02-14
 
