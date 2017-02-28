@@ -197,7 +197,7 @@ function runAsync() {
       }
     });
 
-    if (process.env.EXPONENT_DEBUG) {
+    if (process.env.EXPO_DEBUG) {
       glob.sync('debug_commands/*.js', {
         cwd: __dirname,
       }).forEach(file => {

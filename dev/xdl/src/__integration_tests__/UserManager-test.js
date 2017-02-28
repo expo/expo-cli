@@ -17,7 +17,7 @@ describe('UserManager', () => {
   let userForTestPassword;
 
   beforeAll(async () => {
-    process.env.__UNSAFE_EXPONENT_HOME_DIRECTORY = path.join('/', 'tmp', `.exponent-${uuid.v1()}`);
+    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = path.join('/', 'tmp', `.expo-${uuid.v1()}`);
 
     const UserManager = _newTestUserManager();
 
@@ -40,8 +40,8 @@ describe('UserManager', () => {
   });
 
   afterAll(async () => {
-    if (process.env.__UNSAFE_EXPONENT_HOME_DIRECTORY) {
-      fs.removeSync(process.env.__UNSAFE_EXPONENT_HOME_DIRECTORY);
+    if (process.env.__UNSAFE_EXPO_HOME_DIRECTORY) {
+      fs.removeSync(process.env.__UNSAFE_EXPO_HOME_DIRECTORY);
     }
 
     const api = ApiV2Client.clientForUser(userForTest);

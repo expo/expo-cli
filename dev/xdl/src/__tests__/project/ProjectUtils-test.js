@@ -23,7 +23,7 @@ const expJson = {
 };
 
 const appJson = {
-  exponent: {
+  expo: {
     sdkVersion: '12.0.0',
   },
 };
@@ -103,7 +103,7 @@ describe('readConfigJsonAsync', () => {
   it('parses a project root with an app.json relying on package.json fallbacks', async () => {
     const { exp, pkg } = await ProjectUtils.readConfigJsonAsync('/home/mocky/appjson');
 
-    expect(exp.sdkVersion).toEqual(appJson.exponent.sdkVersion);
+    expect(exp.sdkVersion).toEqual(appJson.expo.sdkVersion);
     expect(exp.version).toEqual(packageJson.version);
     expect(exp.name).toEqual(packageJson.name);
     expect(exp.slug).toEqual(slugify(packageJson.name));

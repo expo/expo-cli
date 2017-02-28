@@ -62,8 +62,8 @@ async function _isDeviceAuthorizedAsync() {
   return listOfDevicesWithoutFirstLine.includes('device');
 }
 
-// Exponent installed
-async function _isExponentInstalledAsync() {
+// Expo installed
+async function _isExpoInstalledAsync() {
   let packages = await _getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
   let lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
@@ -80,7 +80,7 @@ async function _isExponentInstalledAsync() {
   return false;
 }
 
-async function _exponentVersionAsync() {
+async function _expoVersionAsync() {
   let info = await _getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
   let regex = /versionName\=([0-9\.]+)/;
@@ -92,18 +92,18 @@ async function _exponentVersionAsync() {
   return regexMatch[1];
 }
 
-async function _checkExponentUpToDateAsync() {
+async function _checkExpoUpToDateAsync() {
   let versions = await Api.versionsAsync();
-  let installedVersion = await _exponentVersionAsync();
+  let installedVersion = await _expoVersionAsync();
 
   if (!installedVersion || semver.lt(installedVersion, versions.androidVersion)) {
-    Logger.notifications.warn({code: NotificationCode.OLD_ANDROID_APP_VERSION}, 'This version of the Exponent app is out of date. Uninstall the app and run again to upgrade.');
+    Logger.notifications.warn({code: NotificationCode.OLD_ANDROID_APP_VERSION}, 'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.');
   }
 }
 
 function _apkCacheDirectory() {
-  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
-  let dir = path.join(dotExponentHomeDirectory, 'android-apk-cache');
+  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  let dir = path.join(dotExpoHomeDirectory, 'android-apk-cache');
   mkdirp.sync(dir);
   return dir;
 }
@@ -121,32 +121,32 @@ async function _downloadApkAsync() {
   return apkPath;
 }
 
-async function _installExponentAsync() {
-  Logger.global.info(`Downloading latest version of Exponent`);
+async function _installExpoAsync() {
+  Logger.global.info(`Downloading latest version of Expo`);
   Logger.notifications.info({code: NotificationCode.START_LOADING});
   let path = await _downloadApkAsync();
-  Logger.global.info(`Installing Exponent on device`);
+  Logger.global.info(`Installing Expo on device`);
   let result = await _getAdbOutputAsync(['install', path]);
   Logger.notifications.info({code: NotificationCode.STOP_LOADING});
   return result;
 }
 
-async function _uninstallExponentAsync() {
-  Logger.global.info('Uninstalling Exponent from Android device.');
+async function _uninstallExpoAsync() {
+  Logger.global.info('Uninstalling Expo from Android device.');
   return await _getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
 }
 
-export async function upgradeExponentAsync() {
+export async function upgradeExpoAsync() {
   try {
     if (!(await _assertDeviceReadyAsync())) {
       return;
     }
 
-    await _uninstallExponentAsync();
-    await _installExponentAsync();
+    await _uninstallExpoAsync();
+    await _installExpoAsync();
 
     if (_lastUrl) {
-      Logger.global.info(`Opening ${_lastUrl} in Exponent.`);
+      Logger.global.info(`Opening ${_lastUrl} in Expo.`);
       await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', _lastUrl]);
       _lastUrl = null;
     }
@@ -181,15 +181,15 @@ async function openUrlAsync(url: string, isDetached: boolean = false) {
   try {
     await _assertDeviceReadyAsync();
 
-    let installedExponent = false;
-    if (!isDetached && !(await _isExponentInstalledAsync())) {
-      await _installExponentAsync();
-      installedExponent = true;
+    let installedExpo = false;
+    if (!isDetached && !(await _isExpoInstalledAsync())) {
+      await _installExpoAsync();
+      installedExpo = true;
     }
 
     if (!isDetached) {
       _lastUrl = url;
-      _checkExponentUpToDateAsync(); // let this run in background
+      _checkExpoUpToDateAsync(); // let this run in background
     }
 
     Logger.global.info(`Opening on Android device`);
@@ -207,7 +207,7 @@ async function openUrlAsync(url: string, isDetached: boolean = false) {
 
     Analytics.logEvent('Open Url on Device', {
       platform: 'android',
-      installedExponent,
+      installedExpo,
     });
   } catch (e) {
     e.message = `Error running adb: ${e.message}`;

@@ -1,5 +1,5 @@
 # xdl
-The Exponent Development Library.
+The Expo Development Library.
 [Documentation](https://docs.getexponent.com/versions/devdocs/index.html)
 
 ## Building Watchman

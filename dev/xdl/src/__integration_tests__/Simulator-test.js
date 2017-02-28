@@ -5,7 +5,7 @@ import delayAsync from 'delay-async';
 const xdl = require('../xdl');
 
 describe('simulator', () => {
-  xit('opens and loads url in exponent', async () => {
+  xit('opens and loads url in expo', async () => {
     let Simulator = xdl.Simulator;
     if (!await Simulator._isSimulatorInstalledAsync()) {
       throw new Error("Simulator isn't installed on this computer; can't run this test.");
@@ -27,24 +27,24 @@ describe('simulator', () => {
       throw new Error("Simulator should be running after being opened, but we're detecting that it isn't.");
     }
 
-    if (await Simulator._isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
-      await Simulator._uninstallExponentAppFromSimulatorAsync();
+    if (await Simulator._isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+      await Simulator._uninstallExpoAppFromSimulatorAsync();
     }
-    if (await Simulator._isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
-      throw new Error("Exponent app shouldn't be installed on this simulator but it is");
+    if (await Simulator._isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+      throw new Error("Expo app shouldn't be installed on this simulator but it is");
     }
-    await Simulator._installExponentOnSimulatorAsync();
-    if (!await Simulator._isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
-      throw new Error("Exponent app should be installed on this simulator but it isn't");
+    await Simulator._installExpoOnSimulatorAsync();
+    if (!await Simulator._isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+      throw new Error("Expo app should be installed on this simulator but it isn't");
     }
 
     await Simulator._openUrlInSimulatorAsync('exp://exp.host/@exponent/fluxpybird');
 
     await delayAsync(6000);
 
-    await Simulator._uninstallExponentAppFromSimulatorAsync();
-    if (await Simulator._isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
-      throw new Error("Exponent app shouldn't be installed on this simulator but it is (2)");
+    await Simulator._uninstallExpoAppFromSimulatorAsync();
+    if (await Simulator._isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+      throw new Error("Expo app shouldn't be installed on this simulator but it is (2)");
     }
 
     await Simulator._quitSimulatorAsync();

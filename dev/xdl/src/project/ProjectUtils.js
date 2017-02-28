@@ -148,7 +148,7 @@ export async function readExpRcAsync(projectRoot: string): Promise<any> {
   try {
     return await (new JsonFile(expRcPath, {json5: true})).readAsync();
   } catch (e) {
-    logError(projectRoot, 'exponent', `Error parsing JSON file: ${e.toString()}`);
+    logError(projectRoot, 'expo', `Error parsing JSON file: ${e.toString()}`);
     return {};
   }
 }
@@ -166,15 +166,15 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
     exp = await (new JsonFile(configPath, {json5: true})).readAsync();
 
     if (configName === 'app.json') {
-      // if we're not using exp.json, then we've stashed everything under an exponent key
+      // if we're not using exp.json, then we've stashed everything under an expo key
       // this is only for app.json at time of writing
-      exp = exp.exponent;
+      exp = exp.expo;
     }
   } catch (e) {
     if (e.isJsonFileError) {
       // TODO: add error codes to json-file
       if (e.message.startsWith('Error parsing JSON file')) {
-        logError(projectRoot, 'exponent', `Error parsing JSON file: ${e.cause.toString()}`);
+        logError(projectRoot, 'expo', `Error parsing JSON file: ${e.cause.toString()}`);
         return { exp: null, pkg: null };
       }
     }
@@ -184,16 +184,16 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
 
   // Easiest bail-out: package.json is missing
   if (!pkg) {
-    logError(projectRoot, 'exponent', `Error: Can't find package.json`);
+    logError(projectRoot, 'expo', `Error: Can't find package.json`);
     return { exp: null, pkg: null };
   }
 
   // Grab our exp config from package.json (legacy) or exp.json
   if (!exp && pkg.exp) {
     exp = pkg.exp;
-    logError(projectRoot, 'exponent', `Error: Move your "exp" config from package.json to exp.json.`);
+    logError(projectRoot, 'expo', `Error: Move your "exp" config from package.json to exp.json.`);
   } else if (!exp && !pkg.exp) {
-    logError(projectRoot, 'exponent', `Error: Missing ${configName}. See https://docs.getexponent.com/`);
+    logError(projectRoot, 'expo', `Error: Missing ${configName}. See https://docs.getexponent.com/`);
     return { exp: null, pkg: null };
   }
 

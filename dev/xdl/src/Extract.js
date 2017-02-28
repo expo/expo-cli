@@ -14,8 +14,8 @@ import * as Binaries from './Binaries';
 import UserSettings from './UserSettings';
 
 async function _extractWindowsAsync(archive: string, dir: string) {
-  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
-  let tmpDir = path.join(dotExponentHomeDirectory, 'tmp', uuid.v4());
+  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  let tmpDir = path.join(dotExpoHomeDirectory, 'tmp', uuid.v4());
   mkdirp.sync(tmpDir);
   let binary = path.join(Binaries.getBinariesPath(), '7z1602-extra', '7za');
   try {

@@ -51,7 +51,7 @@ async function _checkWatchmanVersionAsync(projectRoot) {
     if (process.platform === 'darwin') {
       warningMessage += `\n\nIf you are using homebrew, try:\nbrew uninstall watchman; brew install watchman`;
     }
-    ProjectUtils.logWarning(projectRoot, 'exponent', warningMessage, 'doctor-watchman-version');
+    ProjectUtils.logWarning(projectRoot, 'expo', warningMessage, 'doctor-watchman-version');
   } else {
     ProjectUtils.clearNotification(projectRoot, 'doctor-watchman-version');
   }
@@ -78,7 +78,7 @@ async function _validateAssetFieldsAsync(projectRoot, exp) {
                               (await request.promise.head({ url: value })).headers['content-type'];
           if (!contentType.match(new RegExp(contentTypePattern))) {
             const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-            ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`,
+            ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`,
               `doctor-validate-asset-fields-${fieldPath}`);
           } else {
             ProjectUtils.clearNotification(projectRoot, `doctor-validate-asset-fields-${fieldPath}`);
@@ -89,7 +89,7 @@ async function _validateAssetFieldsAsync(projectRoot, exp) {
 
     ProjectUtils.clearNotification(projectRoot, 'doctor-validate-asset-fields');
   } catch (e) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem validating asset fields: ${e.message}.`, 'doctor-validate-asset-fields');
+    ProjectUtils.logWarning(projectRoot, 'expon', `Warning: Problem validating asset fields: ${e.message}.`, 'doctor-validate-asset-fields');
   }
 }
 
@@ -102,7 +102,7 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
   try {
     await _checkWatchmanVersionAsync(projectRoot);
   } catch (e) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem checking watchman version. ${e.message}.`, 'doctor-problem-checking-watchman-version');
+    ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Problem checking watchman version. ${e.message}.`, 'doctor-problem-checking-watchman-version');
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-watchman-version');
 
@@ -110,7 +110,7 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
   const appJsonExists = await ProjectUtils.fileExistsAsync(path.join(projectRoot, 'app.json'));
 
   if (expJsonExists && appJsonExists) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Both app.json and exp.json exist in this directory. Only one should exist for a single project.`, 'doctor-both-app-and-exp-json');
+    ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Both app.json and exp.json exist in this directory. Only one should exist for a single project.`, 'doctor-both-app-and-exp-json');
     return WARNING;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-both-app-and-exp-json');
@@ -131,7 +131,7 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
         fullMessage += `\n  - ${message}.`;
       }
 
-      ProjectUtils.logWarning(projectRoot, 'exponent', fullMessage, 'doctor-schema-validation');
+      ProjectUtils.logWarning(projectRoot, 'expo', fullMessage, 'doctor-schema-validation');
       return WARNING;
     } else {
       ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation');
@@ -139,19 +139,19 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
 
     ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation-exception');
   } catch (e) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Problem validating ${configName}: ${e.message}.`, 'doctor-schema-validation-exception');
+    ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Problem validating ${configName}: ${e.message}.`, 'doctor-schema-validation-exception');
   }
 
   // Warn if sdkVersion is UNVERSIONED
   if (sdkVersion === 'UNVERSIONED') {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Using unversioned Exponent SDK. Do not publish until you set sdkVersion in ${configName}`, 'doctor-unversioned');
+    ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Using unversioned Expo SDK. Do not publish until you set sdkVersion in ${configName}`, 'doctor-unversioned');
     return WARNING;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
 
   // react-native is required
   if (!pkg.dependencies || !pkg.dependencies['react-native']) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Can't find react-native in package.json dependencies`, 'doctor-no-react-native-in-package-json');
+    ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Can't find react-native in package.json dependencies`, 'doctor-no-react-native-in-package-json');
     return WARNING;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
@@ -159,13 +159,13 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
   // TODO(adam) set up caching for this
   let sdkVersions = await Api.sdkVersionsAsync();
   if (!sdkVersions) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Couldn't connect to SDK versions server`, 'doctor-versions-endpoint-failed');
+    ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Couldn't connect to SDK versions server`, 'doctor-versions-endpoint-failed');
     return WARNING;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-versions-endpoint-failed');
 
   if (!sdkVersions[sdkVersion]) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`, 'doctor-invalid-sdk-version');
+    ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`, 'doctor-invalid-sdk-version');
     return WARNING;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-sdk-version');
@@ -173,13 +173,13 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
   if (Config.validation.reactNativeVersionWarnings) {
     let reactNative = pkg.dependencies['react-native'];
 
-    // Exponent fork of react-native is required
+    // Expo fork of react-native is required
     // TODO(2016-12-20): Remove the check for our old "exponentjs" org eventually
     if (!reactNative.match(/exponent(?:js)?\/react-native/)) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Not using the Exponent fork of react-native. See ${Config.helpUrl}.`, 'doctor-not-using-exponent-fork');
+      ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`, 'doctor-not-using-expo-fork');
       return WARNING;
     }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-exponent-fork');
+    ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
 
     try {
       let reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
@@ -188,14 +188,14 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
           semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['exponentReactNativeTag']))) {
-        ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject['exponentReactNativeTag']}`, 'doctor-invalid-version-of-react-native');
+        ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject['exponentReactNativeTag']}`, 'doctor-invalid-version-of-react-native');
         return WARNING;
       }
       ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
 
       ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
     } catch (e) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`, 'doctor-malformed-version-of-react-native');
+      ProjectUtils.logWarning(projectRoot, 'expo', `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`, 'doctor-malformed-version-of-react-native');
       return WARNING;
     }
   }
@@ -217,13 +217,13 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
   try {
     let result = fs.statSync(path.join(nodeModulesPath, 'node_modules'));
     if (!result.isDirectory()) {
-      ProjectUtils.logError(projectRoot, 'exponent', `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`, 'doctor-node-modules-missing');
+      ProjectUtils.logError(projectRoot, 'expo', `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`, 'doctor-node-modules-missing');
       return FATAL;
     }
 
     ProjectUtils.clearNotification(projectRoot, 'doctor-node-modules-missing');
   } catch (e) {
-    ProjectUtils.logError(projectRoot, 'exponent', `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`, 'doctor-node-modules-missing');
+    ProjectUtils.logError(projectRoot, 'expo', `Error: node_modules directory is missing. Please run \`npm install\` in your project directory.`, 'doctor-node-modules-missing');
     return FATAL;
   }
 
@@ -231,13 +231,13 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
   try {
     let result = fs.statSync(path.join(nodeModulesPath, 'node_modules', 'react-native', 'local-cli', 'cli.js'));
     if (!result.isFile()) {
-      ProjectUtils.logError(projectRoot, 'exponent', `Error: React native is not installed. Please run \`npm install\` in your project directory.`, 'doctor-react-native-not-installed');
+      ProjectUtils.logError(projectRoot, 'expo', `Error: React native is not installed. Please run \`npm install\` in your project directory.`, 'doctor-react-native-not-installed');
       return FATAL;
     }
 
     ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
   } catch (e) {
-    ProjectUtils.logError(projectRoot, 'exponent', `Error: React native is not installed. Please run \`npm install\` in your project directory.`, 'doctor-react-native-not-installed');
+    ProjectUtils.logError(projectRoot, 'expo', `Error: React native is not installed. Please run \`npm install\` in your project directory.`, 'doctor-react-native-not-installed');
     return FATAL;
   }
 
@@ -248,7 +248,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
     try {
       await spawnAsync('npm', ['--version']);
     } catch (e) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `\`npm\` command not found. If you have npm installed please run \`npm install -g exp && exp path\`.`, 'doctor-npm-not-found');
+      ProjectUtils.logWarning(projectRoot, 'expo', `\`npm\` command not found. If you have npm installed please run \`npm install -g exp && exp path\`.`, 'doctor-npm-not-found');
       return WARNING;
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-npm-not-found');
@@ -264,7 +264,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
     }
 
     if (!npmls) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `Problem checking node_modules dependencies. Could not run \`npm ls\` in ${projectRoot}.`, 'doctor-could-not-run-npm-ls');
+      ProjectUtils.logWarning(projectRoot, 'expo', `Problem checking node_modules dependencies. Could not run \`npm ls\` in ${projectRoot}.`, 'doctor-could-not-run-npm-ls');
       return WARNING;
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-could-not-run-npm-ls');
@@ -273,7 +273,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
     try {
       npmlsDependencies = JSON.parse(npmls).dependencies;
     } catch (e) {
-      ProjectUtils.logWarning(projectRoot, 'exponent', `Problem checking node_modules dependencies: ${e.message}`, 'doctor-problem-checking-node-modules');
+      ProjectUtils.logWarning(projectRoot, 'expo', `Problem checking node_modules dependencies: ${e.message}`, 'doctor-problem-checking-node-modules');
       return WARNING;
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-node-modules');
@@ -299,7 +299,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number>  {
 
       if (errorStrings.length > 0) {
         errorStrings.push(`\nIf there is an issue running your project, please run \`npm install\` in ${nodeModulesPath} and restart.`);
-        ProjectUtils.logWarning(projectRoot, 'exponent', errorStrings.join('\n'), 'doctor-node-modules-issues');
+        ProjectUtils.logWarning(projectRoot, 'expo', errorStrings.join('\n'), 'doctor-node-modules-issues');
         return WARNING;
       } else {
         ProjectUtils.clearNotification(projectRoot, 'doctor-node-modules-issues');
@@ -339,28 +339,28 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
   return status;
 }
 
-export const EXPONENT_SDK_INSTALLED_AND_IMPORTED = 0;
-export const EXPONENT_SDK_NOT_INSTALLED = 1;
-export const EXPONENT_SDK_NOT_IMPORTED = 2;
+export const EXPO_SDK_INSTALLED_AND_IMPORTED = 0;
+export const EXPO_SDK_NOT_INSTALLED = 1;
+export const EXPO_SDK_NOT_IMPORTED = 2;
 
-export async function getExponentSdkStatus(projectRoot: string): Promise<number> {
+export async function getExpoSdkStatus(projectRoot: string): Promise<number> {
   let { pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   try {
-    let exponentDep = pkg.dependencies['exponent'];
-    if (!exponentDep) {
-      return EXPONENT_SDK_NOT_INSTALLED;
+    let expoDep = pkg.dependencies['expo'];
+    if (!expoDep) {
+      return EXPO_SDK_NOT_INSTALLED;
     }
 
     let mainFilePath = path.join(projectRoot, pkg.main);
     let mainFile = await fs.readFile.promise(mainFilePath, 'utf8');
 
     // TODO: support separate .ios.js and .android.js files
-    if (mainFile.includes(`from 'exponent'`) || mainFile.includes(`require('exponent')`)) {
-      return EXPONENT_SDK_INSTALLED_AND_IMPORTED;
+    if (mainFile.includes(`from 'expo'`) || mainFile.includes(`require('expo')`)) {
+      return EXPO_SDK_INSTALLED_AND_IMPORTED;
     } else {
-      return EXPONENT_SDK_NOT_IMPORTED;
+      return EXPO_SDK_NOT_IMPORTED;
     }
   } catch (e) {
-    return EXPONENT_SDK_NOT_IMPORTED;
+    return EXPO_SDK_NOT_IMPORTED;
   }
 }

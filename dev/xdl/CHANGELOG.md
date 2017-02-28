@@ -69,7 +69,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Added
 
-* Support for running the RN packager with the `Config.offline` flag, bypassing an Exponent account.
+* Support for running the RN packager with the `Config.offline` flag, bypassing an Expo account.
 * Workarounds for state corruption problems in watchman.
 
 ### Changed
@@ -80,7 +80,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Changed
 
-* Resolved several issues that resulted in premature logout of Exponent account sessions.
+* Resolved several issues that resulted in premature logout of Expo account sessions.
 
 ## [29.2.0] - 2017-1-18
 

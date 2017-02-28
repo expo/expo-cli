@@ -177,8 +177,8 @@ export async function _quitSimulatorAsync() {
   return await osascript.execAsync('tell application "Simulator" to quit');
 }
 
-// Exponent installed
-export async function _isExponentAppInstalledOnCurrentBootedSimulatorAsync() {
+// Expo installed
+export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
   let device = await _bootedSimulatorDeviceAsync();
   if (!device) {
     return false;
@@ -189,16 +189,16 @@ export async function _isExponentAppInstalledOnCurrentBootedSimulatorAsync() {
   return (matches.length > 0);
 }
 
-export async function _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync() {
-  if (await _isExponentAppInstalledOnCurrentBootedSimulatorAsync()) {
+export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync() {
+  if (await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
     return true;
   } else {
     await delayAsync(100);
-    return await _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync();
+    return await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
   }
 }
 
-export async function _exponentVersionOnCurrentBootedSimulatorAsync() {
+export async function _expoVersionOnCurrentBootedSimulatorAsync() {
   let device = await _bootedSimulatorDeviceAsync();
   if (!device) {
     return null;
@@ -219,12 +219,12 @@ export async function _exponentVersionOnCurrentBootedSimulatorAsync() {
   return regexMatch[1];
 }
 
-export async function _checkExponentUpToDateAsync() {
+export async function _checkExpoUpToDateAsync() {
   let versions = await Api.versionsAsync();
-  let installedVersion = await _exponentVersionOnCurrentBootedSimulatorAsync();
+  let installedVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
 
   if (!installedVersion || semver.lt(installedVersion, versions.iosVersion)) {
-    Logger.notifications.warn({code: NotificationCode.OLD_IOS_APP_VERSION}, 'This version of the Exponent app is out of date. Uninstall the app and run again to upgrade.');
+    Logger.notifications.warn({code: NotificationCode.OLD_IOS_APP_VERSION}, 'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.');
   }
 }
 
@@ -261,19 +261,19 @@ export async function _downloadSimulatorAppAsync(url) {
 }
 
 // url: Optional URL of Exponent.app tarball to download
-export async function _installExponentOnSimulatorAsync(url) {
-  Logger.global.info(`Downloading latest version of Exponent`);
+export async function _installExpoOnSimulatorAsync(url) {
+  Logger.global.info(`Downloading latest version of Expo`);
   Logger.notifications.info({code: NotificationCode.START_LOADING});
   let dir = await _downloadSimulatorAppAsync(url);
-  Logger.global.info("Installing Exponent on iOS simulator");
+  Logger.global.info("Installing Expo on iOS simulator");
   let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({code: NotificationCode.STOP_LOADING});
   return result;
 }
 
-export async function _uninstallExponentAppFromSimulatorAsync() {
+export async function _uninstallExpoAppFromSimulatorAsync() {
   try {
-    Logger.global.info('Uninstalling Exponent from iOS simulator.');
+    Logger.global.info('Uninstalling Expo from iOS simulator.');
     await _xcrunAsync(['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
   } catch (e) {
     if (e.message && e.message.includes('No devices are booted.')) {
@@ -286,24 +286,24 @@ export async function _uninstallExponentAppFromSimulatorAsync() {
 }
 
 export function _simulatorCacheDirectory() {
-  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
-  let dir = path.join(dotExponentHomeDirectory, 'ios-simulator-app-cache');
+  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  let dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
   mkdirp.sync(dir);
   return dir;
 }
 
-export async function upgradeExponentAsync() {
+export async function upgradeExpoAsync() {
   if (!(await _isSimulatorInstalledAsync())) {
     return;
   }
 
   await _openSimulatorAsync();
 
-  await _uninstallExponentAppFromSimulatorAsync();
-  await _installExponentOnSimulatorAsync();
+  await _uninstallExpoAppFromSimulatorAsync();
+  await _installExpoOnSimulatorAsync();
 
   if (_lastUrl) {
-    Logger.global.info(`Opening ${_lastUrl} in Exponent.`);
+    Logger.global.info(`Opening ${_lastUrl} in Expo.`);
     await _xcrunAsync(['simctl', 'openurl', 'booted', _lastUrl]);
     _lastUrl = null;
   }
@@ -325,14 +325,14 @@ export async function openUrlInSimulatorSafeAsync(url: string, isDetached: boole
   try {
     await _openSimulatorAsync();
 
-    if (!isDetached && !(await _isExponentAppInstalledOnCurrentBootedSimulatorAsync())) {
-      await _installExponentOnSimulatorAsync();
-      await _waitForExponentAppInstalledOnCurrentBootedSimulatorAsync();
+    if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
+      await _installExpoOnSimulatorAsync();
+      await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
     }
 
     if (!isDetached) {
       _lastUrl = url;
-      _checkExponentUpToDateAsync(); // let this run in background
+      _checkExpoUpToDateAsync(); // let this run in background
     }
 
     Logger.global.info(`Opening ${url} in iOS simulator`);

@@ -23,7 +23,7 @@ let projectSettingsDefaults = {
 let packagerInfoFile = 'packager-info.json';
 
 function projectSettingsJsonFile(projectRoot: string, filename: string) {
-  return new JsonFile(path.join(dotExponentProjectDirectory(projectRoot), filename));
+  return new JsonFile(path.join(dotExpoProjectDirectory(projectRoot), filename));
 }
 
 export async function readAsync(projectRoot: string) {
@@ -67,7 +67,7 @@ export async function setPackagerInfoAsync(projectRoot: string, json: any) {
   }
 }
 
-export function dotExponentProjectDirectory(projectRoot: string) {
+export function dotExpoProjectDirectory(projectRoot: string) {
   let dirPath = path.join(projectRoot, '.exponent');
   try {
     // remove .exponent file if it exists, we moved to a .exponent directory
@@ -82,7 +82,7 @@ export function dotExponentProjectDirectory(projectRoot: string) {
   return dirPath;
 }
 
-export function dotExponentProjectDirectoryExists(projectRoot: string) {
+export function dotExpoProjectDirectoryExists(projectRoot: string) {
   let dirPath = path.join(projectRoot, '.exponent');
   try {
     if (fs.statSync(dirPath).isDirectory()) {

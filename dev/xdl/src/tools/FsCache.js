@@ -119,12 +119,12 @@ function getCacheDir(): string {
   if (process.env.XDG_CACHE_HOME) {
     return process.env.XDG_CACHE_HOME;
   } else if (process.platform === 'win32') {
-    return path.join(homeDir, 'AppData', 'Local', 'Exponent');
+    return path.join(homeDir, 'AppData', 'Local', 'Expo');
   } else if (process.platform === 'darwin') {
     // too many mac users have broken permissions on their ~/.cache directory
-    return path.join(homeDir, '.exponent', 'cache');
+    return path.join(homeDir, '.expo', 'cache');
   } else {
-    return path.join(homeDir, '.cache', 'exponent');
+    return path.join(homeDir, '.cache', 'expo');
   }
 }
 

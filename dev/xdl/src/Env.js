@@ -9,9 +9,9 @@ export function home(): string {
 }
 
 export function isStaging() {
-  return !!process.env.EXPONENT_STAGING;
+  return !!process.env.EXPO_STAGING;
 }
 
 export function isLocal() {
-  return !!process.env.EXPONENT_LOCAL;
+  return !!process.env.EXPO_LOCAL;
 }

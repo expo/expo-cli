@@ -22,13 +22,13 @@ class ConsoleRawStream {
 }
 
 let logger = bunyan.createLogger({
-  name: 'exponent',
+  name: 'expo',
   serializers: bunyan.stdSerializers,
   streams: [
     {
       level: 'debug',
       type: 'rotating-file',
-      path: path.join(UserSettings.dotExponentHomeDirectory(), 'log'),
+      path: path.join(UserSettings.dotExpoHomeDirectory(), 'log'),
       period: '1d',   // daily rotation
       count: 3,       // keep 3 back copies
     },

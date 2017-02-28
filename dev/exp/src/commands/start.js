@@ -39,7 +39,7 @@ async function action(projectDir, options) {
 
   await Project.startAsync(root, startOpts);
 
-  log("Exponent is ready.");
+  log("Expo is ready.");
 
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
 

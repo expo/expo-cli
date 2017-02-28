@@ -32,7 +32,7 @@ export async function loginOrRegisterIfLoggedOut() {
     return;
   }
 
-  console.log(chalk.yellow('\nAn Exponent user account is required to proceed.\n'));
+  console.log(chalk.yellow('\nAn Expo user account is required to proceed.\n'));
 
   const questions = [
     {
@@ -41,11 +41,11 @@ export async function loginOrRegisterIfLoggedOut() {
       message: 'How would you like to authenticate?',
       choices: [
         {
-          name: 'Make a new Exponent account',
+          name: 'Make a new Expo account',
           value: 'register',
         },
         {
-          name: 'Log in with an existing Exponent account',
+          name: 'Log in with an existing Expo account',
           value: 'existingUser',
         },
         {
@@ -185,7 +185,7 @@ async function _onboardUser(user?: UserOrLegacyUser, usernamePass?: { username: 
 Hi there! We don't currently have any way to identify you if you were to lose
 your password. Please provide us with your name and e-mail address.`);
   } else {
-    console.log(`Thanks for signing up for Exponent!
+    console.log(`Thanks for signing up for Expo!
 Just a few questions:`);
   }
 

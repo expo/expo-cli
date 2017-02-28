@@ -34,14 +34,14 @@ async function _uploadLogsAsync(info: any): Promise<boolean|string> {
   let username = user ? user.username : 'anonymous';
 
   // write info to file
-  let exponentHome = UserSettings.dotExponentHomeDirectory();
-  let infoJsonFile = new JsonFile(path.join(exponentHome, 'debug-info.json'));
+  let expoHome = UserSettings.dotExpoHomeDirectory();
+  let infoJsonFile = new JsonFile(path.join(expoHome, 'debug-info.json'));
   await infoJsonFile.writeAsync(info);
 
   // copy files to tempDir
   let tempDir = path.join(Env.home(), `${username}-diagnostics`);
-  let archivePath = path.join(exponentHome, 'diagnostics.tar.gz');
-  await Utils.ncpAsync(exponentHome, tempDir, {
+  let archivePath = path.join(expoHome, 'diagnostics.tar.gz');
+  await Utils.ncpAsync(expoHome, tempDir, {
     filter: (filename) => {
       if (filename.includes('diagnostics') || filename.includes('starter-app-cache') || filename.includes('android-apk-cache') || filename.includes('ios-simulator-app-cache')) {
         return false;

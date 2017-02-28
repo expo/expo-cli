@@ -68,7 +68,7 @@ export default (program) => {
   program
     .command('convert [project-dir]')
     .alias('onentize')
-    .description('Initialize Exponent project files within an existing React Native project')
+    .description('Initialize Expo project files within an existing React Native project')
     .allowNonInteractive()
     .asyncActionProjectDir(action, true); // skip validation because the project dir isn't a valid exp dir yet
 };

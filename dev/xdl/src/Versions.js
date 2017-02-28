@@ -20,7 +20,7 @@ export async function setVersionsAsync(value: any) {
   const api = ApiV2Client.clientForUser(user);
   return await api.postAsync('versions/update', {
     value,
-    secret: process.env.EXPONENT_VERSIONS_SECRET,
+    secret: process.env.EXPO_VERSIONS_SECRET,
   });
 }
 
@@ -75,7 +75,7 @@ export async function facebookReactNativeVersionsAsync(): Promise<Array<string>>
   return Array.from(facebookReactNativeVersions);
 }
 
-export async function facebookReactNativeVersionToExponentVersionAsync(facebookReactNativeVersion: string): Promise<? string> {
+export async function facebookReactNativeVersionToExpoVersionAsync(facebookReactNativeVersion: string): Promise<? string> {
   if (!semver.valid(facebookReactNativeVersion)) {
     throw new XDLError(ErrorCode.INVALID_VERSION, `${facebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`);
   }

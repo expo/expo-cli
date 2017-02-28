@@ -1,7 +1,7 @@
 {
   "name": "xdl",
   "version": "32.0.0",
-  "description": "The Exponent Development Library",
+  "description": "The Expo Development Library",
   "main": "build/xdl.js",
   "files": [
     "build",
@@ -20,7 +20,7 @@
     "type": "git",
     "url": "git+https://github.com/exponent/xdl.git"
   },
-  "author": "support@getexponent.com",
+  "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/exponent/xdl/issues"

@@ -53,8 +53,8 @@ export default async function convertProjectAsync(projectDir:string, {projectNam
   jsonfile.writeFileSync(packageJsonTargetPath, packageJson, {spaces: 2});
   console.log('Updated package.json');
 
-  // TODO: Add import Exponent from 'exponent'; at the top of main file
-  // TODO: Add .exponent/* to gitignore
+  // TODO: Add import Expo from 'expo'; at the top of main file
+  // TODO: Add .expo/* to gitignore
 
   // Copy babelrc
   jsonfile.writeFileSync(babelRcTargetPath, babelRcTemplate, {spaces: 2});
@@ -72,17 +72,17 @@ const dependencies = {
 };
 
 const unsupportedPackages = {
-  'react-native-video': `Exponent provides a video component for you with the same API as react-native-video. You can use it with "import { Components } from 'exponent';" and <Components.Video /> in your render function. `,
-  'react-native-svg': `Exponent provides react-native-svg for you. You can use it with "import { Components } from 'exponent';" and <Components.Svg /> in your render function.`,
-  'react-native-maps': `Exponent provides react-native-maps for you. You can use it with "import { Components } from 'exponent';" and <Components.Map /> in your render function.`,
-  'react-native-linear-gradient': `Exponent provides react-native-linear-gradient for you. You can use it with "import { Components } from 'exponent';" and <Components.LinearGradient /> in your render function.`,
+  'react-native-video': `Expo provides a video component for you with the same API as react-native-video. You can use it with "import { Components } from 'expo';" and <Components.Video /> in your render function. `,
+  'react-native-svg': `Expo provides react-native-svg for you. You can use it with "import { Components } from 'expo';" and <Components.Svg /> in your render function.`,
+  'react-native-maps': `Expo provides react-native-maps for you. You can use it with "import { Components } from 'expo';" and <Components.Map /> in your render function.`,
+  'react-native-linear-gradient': `Expo provides react-native-linear-gradient for you. You can use it with "import { Components } from 'expo';" and <Components.LinearGradient /> in your render function.`,
 };
 
 function showCompatibilityMessage(packages) {
   if (packages.length) {
     return `Resolve any issues with potentially incompatible packages: \n\n` + packages.map(pkg => {
       return `** ${pkg}: ${unsupportedPackages[pkg]}`
-    }).join('\n') + `\n** This may not be an exhaustive list of packages you will need to address -- any package that has a native code dependency will need to be converted to an Exponent equivalent or removed. Refer to the SDK API reference here: https://docs.getexponent.com/versions/latest/sdk/index.html`;
+    }).join('\n') + `\n** This may not be an exhaustive list of packages you will need to address -- any package that has a native code dependency will need to be converted to an Expo equivalent or removed. Refer to the SDK API reference here: https://docs.getexponent.com/versions/latest/sdk/index.html`;
   } else {
     return `We didn't detect any known incompatible packages, but if you have any with native dependencies installed, you will need to remove them from your project.`
   }
@@ -90,7 +90,7 @@ function showCompatibilityMessage(packages) {
 
 async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
   let nodeModulesPath = path.join(projectDir, '/node_modules');
-  let nextStepMessagePath = path.join(projectDir, '/exponent-next-steps.txt');
+  let nextStepMessagePath = path.join(projectDir, '/expo-next-steps.txt');
 
   fse.removeSync(nodeModulesPath);
   console.log('Running npm install, this may take a few minutes.');
@@ -116,7 +116,7 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
   console.log('\n');
   const nextStepMessage = `Next steps:
 ------------
-1. Find your AppRegistry.registerComponent('YourApplicationName', () => YourRootComponent) call and replace it with Exponent.registerRootComponent(YourRootComponent) (you will need to import Exponent from 'exponent').
+1. Find your AppRegistry.registerComponent('YourApplicationName', () => YourRootComponent) call and replace it with Expo.registerRootComponent(YourRootComponent) (you will need to import Expo from 'expo').
 2. Upload your app icon somewhere on the web and add it the newly created exp.json file, in the iconUrl and loading.iconUrl fields.
 3. Delete your 'android' and 'ios' directories if you have them -- you no longer need to compile any native code to run your app.
 4. ${showCompatibilityMessage(unsupportedPackagesUsed)}
@@ -124,5 +124,5 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
 `
   console.log(nextStepMessage);
   fse.outputFileSync(nextStepMessagePath, nextStepMessage);
-  console.log('(This message has been saved to exponent-next-steps.txt for your convenience)');
+  console.log('(This message has been saved to expo-next-steps.txt for your convenience)');
 }

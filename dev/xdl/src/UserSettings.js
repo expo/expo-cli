@@ -15,7 +15,7 @@ import * as Env from './Env';
 const SETTINGS_FILE_NAME = 'exponent.json';
 
 function userSettingsFile() {
-  return path.join(dotExponentHomeDirectory(), SETTINGS_FILE_NAME);
+  return path.join(dotExpoHomeDirectory(), SETTINGS_FILE_NAME);
 }
 
 function userSettingsJsonFile() {
@@ -23,14 +23,14 @@ function userSettingsJsonFile() {
 }
 
 function recentExpsJsonFile() {
-  return new JsonFile(path.join(dotExponentHomeDirectory(), 'xde-recent-exps.json'));
+  return new JsonFile(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'));
 }
 
 var mkdirped = false;
-function dotExponentHomeDirectory() {
+function dotExpoHomeDirectory() {
   let dirPath;
-  if (process.env.__UNSAFE_EXPONENT_HOME_DIRECTORY) {
-    dirPath = process.env.__UNSAFE_EXPONENT_HOME_DIRECTORY;
+  if (process.env.__UNSAFE_EXPO_HOME_DIRECTORY) {
+    dirPath = process.env.__UNSAFE_EXPO_HOME_DIRECTORY;
   } else {
     const home = Env.home();
     if (!home) {
@@ -61,7 +61,7 @@ async function anonymousIdentifier(): Promise<string> {
 const UserSettings = userSettingsJsonFile();
 
 Object.assign(UserSettings, {
-  dotExponentHomeDirectory,
+  dotExpoHomeDirectory,
   recentExpsJsonFile,
   userSettingsFile,
   userSettingsJsonFile,

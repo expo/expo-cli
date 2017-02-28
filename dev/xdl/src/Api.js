@@ -149,8 +149,8 @@ export default class ApiClient {
 
   static async downloadAsync(url, outputPath, options = {}) {
     if (options.extract) {
-      let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
-      let tmpPath = path.join(dotExponentHomeDirectory, 'tmp-download-file');
+      let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+      let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
       await _downloadAsync(url, tmpPath);
       await Extract.extractAsync(tmpPath, outputPath);
       rimraf.sync(tmpPath);

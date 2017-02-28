@@ -27,7 +27,7 @@ export default (program) => {
   program
     .command('url [project-dir]')
     .alias('u')
-    .description('Displays the URL you can use to view your project in Exponent')
+    .description('Displays the URL you can use to view your project in Expo')
     .urlOpts()
     .allowOffline()
     .allowNonInteractive()

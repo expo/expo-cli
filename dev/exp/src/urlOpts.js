@@ -12,8 +12,8 @@ import CommandError from './CommandError';
 
 function addOptions(program) {
   program
-    .option('-a, --android', 'Opens your app in Exponent on a connected Android device')
-    .option('-i, --ios', 'Opens your app in Exponent in a currently running iOS simulator on your computer')
+    .option('-a, --android', 'Opens your app in Expo on a connected Android device')
+    .option('-i, --ios', 'Opens your app in Expo in a currently running iOS simulator on your computer')
     .option('-m, --host [mode]', 'tunnel (default), lan, localhost. Type of host to use. "tunnel" allows you to view your link on other networks')
     .option('-p, --protocol [mode]', 'exp (default), http, redirect. Type of protocol. "exp" is recommended right now')
     .option('--tunnel', 'Same as --host tunnel')

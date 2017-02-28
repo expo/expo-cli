@@ -56,8 +56,8 @@ export async function determineEntryPointAsync(root: string) {
 }
 
 function _starterAppCacheDirectory() {
-  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
-  let dir = path.join(dotExponentHomeDirectory, 'starter-app-cache');
+  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  let dir = path.join(dotExpoHomeDirectory, 'starter-app-cache');
   mkdirp.sync(dir);
   return dir;
 }
@@ -151,7 +151,7 @@ export async function createNewExpAsync(templateId: string, selectedDir: string,
   let data = Object.assign(packageJson, {
     name,
     version: '0.0.0',
-    description: "Hello Exponent!",
+    description: "Hello Expo!",
     author,
   });
 
@@ -340,9 +340,9 @@ export async function resetProjectRandomnessAsync(projectRoot: string) {
 }
 
 export async function clearXDLCacheAsync() {
-  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
-  rimraf.sync(path.join(dotExponentHomeDirectory, 'ios-simulator-app-cache'));
-  rimraf.sync(path.join(dotExponentHomeDirectory, 'android-apk-cache'));
-  rimraf.sync(path.join(dotExponentHomeDirectory, 'starter-app-cache'));
+  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  rimraf.sync(path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache'));
+  rimraf.sync(path.join(dotExpoHomeDirectory, 'android-apk-cache'));
+  rimraf.sync(path.join(dotExpoHomeDirectory, 'starter-app-cache'));
   Logger.notifications.info(`Cleared cache`);
 }

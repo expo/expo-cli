@@ -14,14 +14,14 @@ async function action(options) {
   });
   simpleSpinner.stop();
 
-  log(`Please share this URL with the Exponent team: ${url}.`);
-  log('You can join our slack here: https://slack.getexponent.com/.');
+  log(`Please share this URL with the Expo team: ${url}.`);
+  log('You can join our slack here: https://slack.expo.io/.');
   log.raw(url);
 }
 
 export default (program) => {
   program
     .command('diagnostics [project-dir]')
-    .description('Uploads diagnostics information and returns a url to share with the Exponent team.')
+    .description('Uploads diagnostics information and returns a url to share with the Expo team.')
     .asyncAction(action);
 };

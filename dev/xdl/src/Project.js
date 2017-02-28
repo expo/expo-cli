@@ -113,10 +113,10 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
     if (response.body) {
       let body = JSON.parse(response.body);
       if (body && body.message) {
-        ProjectUtils.logError(projectRoot, 'exponent', body.message);
+        ProjectUtils.logError(projectRoot, 'expo', body.message);
       }
     }
-    throw new XDLError(errorCode, `Packager url ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Exponent app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`);
+    throw new XDLError(errorCode, `Packager url ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`);
   }
 
   if (!response.body || (minLength && response.body.length < minLength)) {
@@ -146,7 +146,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver) {
     assetSchemas.forEach(({ fieldPath }, index) =>
       _.set(manifest, fieldPath + 'Url', urls[index]));
   } catch (e) {
-    ProjectUtils.logWarning(projectRoot, 'exponent', `Warning: Unable to resolve manifest assets. Icons might not work. ${e.message}.`);
+    ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Unable to resolve manifest assets. Icons might not work. ${e.message}.`);
   }
 }
 
@@ -323,7 +323,7 @@ async function uploadAssetsAsync(projectRoot, assets) {
   await Promise.all(_.chunk(missing, 5).map(async (keys) => {
     let formData = {};
     keys.forEach(key => {
-      ProjectUtils.logDebug(projectRoot, 'exponent', `uploading ${paths[key]}`);
+      ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
       formData[key] = {
         value: fs.createReadStream(paths[key]),
         options: {
@@ -363,7 +363,7 @@ export async function buildAsync(projectRoot: string, options: {
 
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-  const configPrefix = (configName === 'app.json') ? 'exponent.' : '';
+  const configPrefix = (configName === 'app.json') ? 'expo.' : '';
 
   if (!exp || !pkg) {
     throw new XDLError(ErrorCode.NO_PACKAGE_JSON, `Couldn't read ${configName} file in project at ${projectRoot}`);
@@ -444,12 +444,12 @@ async function _restartWatchmanAsync(projectRoot: string) {
     let result = await spawnAsync('watchman', ['watch-del', projectRoot]);
     await spawnAsync('watchman', ['watch-project', projectRoot]);
     if (result.stdout.includes('root')) {
-      ProjectUtils.logInfo(projectRoot, 'exponent', 'Restarted watchman.');
+      ProjectUtils.logInfo(projectRoot, 'expo', 'Restarted watchman.');
       return;
     }
   } catch (e) {}
 
-  ProjectUtils.logError(projectRoot, 'exponent', 'Attempted to restart watchman but failed. Please try running `watchman watch-del-all`.');
+  ProjectUtils.logError(projectRoot, 'expo', 'Attempted to restart watchman but failed. Please try running `watchman watch-del-all`.');
 }
 
 function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
@@ -457,7 +457,7 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   if (output.includes('─────')) {
     output = _stripPackagerOutputBox(output);
     if (output) {
-      ProjectUtils.logInfo(projectRoot, 'exponent', output);
+      ProjectUtils.logInfo(projectRoot, 'expo', output);
     }
     return;
   }
@@ -574,7 +574,7 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
     nodePath = null;
   }
 
-  ProjectUtils.logInfo(projectRoot, 'exponent', 'Starting React Native packager...');
+  ProjectUtils.logInfo(projectRoot, 'expo', 'Starting React Native packager...');
 
   // Run the copy of Node that's embedded in Electron by setting the
   // ELECTRON_RUN_AS_NODE environment variable
@@ -616,7 +616,7 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   });
 
   packagerProcess.on('exit', async (code) => {
-    ProjectUtils.logDebug(projectRoot, 'exponent', `packager process exited with code ${code}`);
+    ProjectUtils.logDebug(projectRoot, 'expo', `packager process exited with code ${code}`);
   });
 
   let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
@@ -628,8 +628,8 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
 }
 
 // Simulate the node_modules resolution
-// If you project dir is /Jesse/Exponent/Universe/BubbleBounce, returns
-// "/Jesse/node_modules:/Jesse/Exponent/node_modules:/Jesse/Exponent/Universe/node_modules:/Jesse/Exponent/Universe/BubbleBounce/node_modules"
+// If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns
+// "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
   let paths = [];
   let directory = path.resolve(projectRoot);
@@ -650,15 +650,15 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort || !packagerInfo.packagerPid) {
-    ProjectUtils.logDebug(projectRoot, 'exponent', `No packager found for project at ${projectRoot}.`);
+    ProjectUtils.logDebug(projectRoot, 'expo', `No packager found for project at ${projectRoot}.`);
     return;
   }
 
-  ProjectUtils.logDebug(projectRoot, 'exponent', `Killing packager process tree: ${packagerInfo.packagerPid}`);
+  ProjectUtils.logDebug(projectRoot, 'expo', `Killing packager process tree: ${packagerInfo.packagerPid}`);
   try {
     await treekill.promise(packagerInfo.packagerPid, 'SIGKILL');
   } catch (e) {
-    ProjectUtils.logDebug(projectRoot, 'exponent', `Error stopping packager process: ${e.toString()}`);
+    ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping packager process: ${e.toString()}`);
   }
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -667,11 +667,11 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
   });
 }
 
-export async function startExponentServerAsync(projectRoot: string) {
+export async function startExpoServerAsync(projectRoot: string) {
   await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
-  await stopExponentServerAsync(projectRoot);
+  await stopExpoServerAsync(projectRoot);
 
   let app = express();
   app.use(bodyParser.json({ limit: '10mb' }));
@@ -778,7 +778,7 @@ export async function startExponentServerAsync(projectRoot: string) {
         projectRoot,
       });
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'exponent', `Error in manifestHandler: ${e} ${e.stack}`);
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`);
       // 5xx = Server Error HTTP code
       res.status(520).send({"error": e.toString()});
     }
@@ -795,7 +795,7 @@ export async function startExponentServerAsync(projectRoot: string) {
         _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
       }
     } catch (e) {
-      ProjectUtils.logError(projectRoot, 'exponent', `Error getting device logs: ${e} ${e.stack}`);
+      ProjectUtils.logError(projectRoot, 'expo', `Error getting device logs: ${e} ${e.stack}`);
     }
     res.send('Success');
   });
@@ -814,15 +814,13 @@ export async function startExponentServerAsync(projectRoot: string) {
     let host = server.address().address;
     let port = server.address().port;
 
-    ProjectUtils.logDebug(projectRoot, 'exponent', `Local server listening at http://${host}:${port}`);
+    ProjectUtils.logDebug(projectRoot, 'expo', `Local server listening at http://${host}:${port}`);
   });
 
   await Exp.saveRecentExpRootAsync(projectRoot);
 }
 
-// This only works when called from the same process that called
-// startExponentServerAsync.
-export async function stopExponentServerAsync(projectRoot: string) {
+export async function stopExpoServerAsync(projectRoot: string) {
   await UserManager.ensureLoggedInAsync();
 
   _assertValidProjectRoot(projectRoot);
@@ -841,7 +839,7 @@ export async function stopExponentServerAsync(projectRoot: string) {
 
 async function _connectToNgrokAsync(projectRoot: string, args: mixed, hostnameAsync: Function, ngrokPid: ?number, attempts: number = 0) {
   try {
-    let configPath = path.join(UserSettings.dotExponentHomeDirectory(), 'ngrok.yml');
+    let configPath = path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
     let hostname = await hostnameAsync();
     let url = await ngrok.promise.connect({
       hostname,
@@ -871,7 +869,7 @@ async function _connectToNgrokAsync(projectRoot: string, args: mixed, hostnameAs
           try {
             process.kill(ngrokPid, 'SIGKILL');
           } catch (e) {
-            ProjectUtils.logDebug(projectRoot, 'exponent', `Couldn't kill ngrok with PID ${ngrokPid}`);
+            ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
           }
         } else {
           await ngrok.promise.kill();
@@ -903,13 +901,13 @@ export async function startTunnelsAsync(projectRoot: string) {
   }
 
   if (!packagerInfo.exponentServerPort) {
-    throw new XDLError(ErrorCode.NO_EXPONENT_SERVER_PORT, `No Exponent server found for project at ${projectRoot}.`);
+    throw new XDLError(ErrorCode.NO_EXPO_SERVER_PORT, `No Expo server found for project at ${projectRoot}.`);
   }
 
   await stopTunnelsAsync(projectRoot);
 
   if (await Android.startAdbReverseAsync(projectRoot)) {
-    ProjectUtils.logInfo(projectRoot, 'exponent', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.', 'project-adb-reverse');
+    ProjectUtils.logInfo(projectRoot, 'expo', 'Sucessfully ran `adb reverse`. Localhost urls should work on the connected Android device.', 'project-adb-reverse');
   } else {
     ProjectUtils.clearNotification(projectRoot, 'project-adb-reverse');
   }
@@ -945,7 +943,7 @@ export async function startTunnelsAsync(projectRoot: string) {
       ngrokPid: ngrok.process().pid,
     });
   } catch (e) {
-    ProjectUtils.logError(projectRoot, 'exponent', `Error starting tunnel: ${e.toString()}`);
+    ProjectUtils.logError(projectRoot, 'expo', `Error starting tunnel: ${e.toString()}`);
     throw e;
   }
 }
@@ -967,7 +965,7 @@ export async function stopTunnelsAsync(projectRoot: string) {
     try {
       process.kill(packagerInfo.ngrokPid);
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'exponent', `Couldn't kill ngrok with PID ${packagerInfo.ngrokPid}`);
+      ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${packagerInfo.ngrokPid}`);
     }
   } else {
     // Ngrok is running from the current process. Kill using ngrok api.
@@ -1016,14 +1014,14 @@ export async function startAsync(projectRoot: string, options: Object = {}, verb
     projectRoot,
   });
 
-  await startExponentServerAsync(projectRoot);
+  await startExpoServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options, verbose);
 
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'exponent', `Error starting ngrok ${e.message}`);
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error starting ngrok ${e.message}`);
     }
   }
 
@@ -1032,14 +1030,14 @@ export async function startAsync(projectRoot: string, options: Object = {}, verb
 }
 
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
-  await stopExponentServerAsync(projectRoot);
+  await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
 
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'exponent', `Error stopping ngrok ${e.message}`);
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
     }
   }
 }

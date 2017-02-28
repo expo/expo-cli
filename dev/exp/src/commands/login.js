@@ -8,7 +8,7 @@ export default (program: any) => {
   program
     .command('login')
     .alias('signin')
-    .description('Login to Exponent')
+    .description('Login to Expo')
     .option('-u, --username [string]', 'Username')
     .option('-p, --password [string]', 'Password')
     .option('-t, --token [string]', 'Token')

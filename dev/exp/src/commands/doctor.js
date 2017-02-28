@@ -14,7 +14,7 @@ async function action(projectDir) {
 export default (program) => {
   program
     .command('doctor [project-dir]')
-    .description('Diagnoses issues with your Exponent project.')
+    .description('Diagnoses issues with your Expo project.')
     .allowNonInteractive()
     .asyncActionProjectDir(action);
 };

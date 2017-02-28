@@ -57,9 +57,9 @@ async function _binaryExistsAsync(name) {
   }
 }
 
-function _exponentBinaryDirectory() {
-  let dotExponentHomeDirectory = UserSettings.dotExponentHomeDirectory();
-  let dir = path.join(dotExponentHomeDirectory, 'bin');
+function _expoBinaryDirectory() {
+  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
+  let dir = path.join(dotExpoHomeDirectory, 'bin');
   mkdirp.sync(dir);
   return dir;
 }
@@ -75,7 +75,7 @@ async function _installBinaryAsync(name) {
       runas = require('runas');
     }
 
-    // adb lives at ~/.exponent/adb/adb
+    // adb lives at ~/.expo/adb/adb
     try {
       runas('/bin/rm', ['-f', path.join(INSTALL_PATH, name)], { admin: true });
     } catch (e) {
@@ -86,7 +86,7 @@ async function _installBinaryAsync(name) {
       throw new Error(`Could not run \`mkdir -p ${INSTALL_PATH}\`.`);
     }
 
-    if (runas('/bin/ln', ['-s', path.join(_exponentBinaryDirectory(), name, name), path.join(INSTALL_PATH, name)], { admin: true }) !== 0) {
+    if (runas('/bin/ln', ['-s', path.join(_expoBinaryDirectory(), name, name), path.join(INSTALL_PATH, name)], { admin: true }) !== 0) {
       throw new Error(`Could not symlink \`${name}\`.`);
     }
 
@@ -97,17 +97,17 @@ async function _installBinaryAsync(name) {
   }
 }
 
-async function _copyBinariesToExponentDirAsync() {
+async function _copyBinariesToExpoDirAsync() {
   if (process.platform !== 'darwin') {
     throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
   }
 
-  await Utils.ncpAsync(OSX_SOURCE_PATH, _exponentBinaryDirectory());
+  await Utils.ncpAsync(OSX_SOURCE_PATH, _expoBinaryDirectory());
 }
 
 export async function installShellCommandsAsync() {
   await sourceBashLoginScriptsAsync();
-  await _copyBinariesToExponentDirAsync();
+  await _copyBinariesToExpoDirAsync();
 
   let binaries = ['adb', 'watchman', 'xde'];
   let installedBinaries = [];
@@ -153,9 +153,9 @@ export async function addToPathAsync(name: string) {
   _prependToPath(binariesPath);
 }
 
-function _exponentRCFileExists() {
+function _expoRCFileExists() {
   try {
-    return fs.statSync(path.join(UserSettings.dotExponentHomeDirectory(), 'bashrc')).isFile();
+    return fs.statSync(path.join(UserSettings.dotExpoHomeDirectory(), 'bashrc')).isFile();
   } catch (e) {
     return false;
   }
@@ -186,9 +186,9 @@ export async function sourceBashLoginScriptsAsync() {
 
   if (userSettingsPATH) {
     _prependToPath(userSettingsPATH);
-  } else if (_exponentRCFileExists()) {
+  } else if (_expoRCFileExists()) {
     try {
-      // User has a ~/.exponent/bashrc. Run that and grab PATH.
+      // User has a ~/.expo/bashrc. Run that and grab PATH.
       let result = await spawnAsync(path.join(getBinariesPath(), `get-path-bash`), {
         env: {
           PATH: '',
@@ -196,18 +196,18 @@ export async function sourceBashLoginScriptsAsync() {
       });
 
       if (result.stderr) {
-        Logger.global.warn(`Error sourcing ~/.exponent/bashrc script: ${result.stderr}`);
+        Logger.global.warn(`Error sourcing ~/.expo/bashrc script: ${result.stderr}`);
       }
 
       if (result.stdout) {
         _prependToPath(result.stdout);
       }
     } catch (e) {
-      Logger.global.warn(`Error sourcing ~/.exponent/bashrc script: ${e.stderr}`);
+      Logger.global.warn(`Error sourcing ~/.expo/bashrc script: ${e.stderr}`);
     }
   } else {
     try {
-      // No ~/.exponent/bashrc file found. Run `env` in process.env.SHELL.
+      // No ~/.expo/bashrc file found. Run `env` in process.env.SHELL.
       let result;
       if (/t?csh$/.test(process.env.SHELL)) {
         // csh
@@ -243,7 +243,7 @@ export async function writePathToUserSettingsAsync() {
   await UserSettings.setAsync('PATH', process.env.PATH);
 
   // Used in detach app
-  let pathFile = path.join(UserSettings.dotExponentHomeDirectory(), 'PATH');
+  let pathFile = path.join(UserSettings.dotExpoHomeDirectory(), 'PATH');
   await fs.promise.writeFile(pathFile, process.env.PATH);
 }
 

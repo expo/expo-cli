@@ -1,7 +1,7 @@
 {
   "name": "exp",
   "version": "34.2.0",
-  "description": "The command-line tool for creating and publishing Exponent apps",
+  "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
   "files": [
@@ -21,10 +21,10 @@
     "url": "git+https://github.com/exponent/exp.git"
   },
   "keywords": [
-    "exponent",
+    "expo",
     "react-native"
   ],
-  "author": "support@getexponent.com",
+  "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/exponent/exp/issues"
