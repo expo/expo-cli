@@ -29,6 +29,7 @@ import * as UrlUtils from './UrlUtils';
 let _lastUrl = null;
 
 const SUGGESTED_XCODE_VERSION = `8.2.0`;
+const XCODE_NOT_INSTALLED_ERROR = "Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.";
 
 export function isPlatformSupported() {
   return process.platform === 'darwin';
@@ -63,12 +64,12 @@ export async function _isSimulatorInstalledAsync() {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
   } catch (e) {
     console.error("Can't determine id of Simulator app; the Simulator is most likely not installed on this machine", e);
-    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.");
+    Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
   if (result !== 'com.apple.iphonesimulator') {
     console.warn("Simulator is installed but is identified as '" + result + "'; don't know what that is.");
-    Logger.global.error("Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.");
+    Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
 
@@ -100,7 +101,7 @@ export async function _isSimulatorInstalledAsync() {
   } catch (e) {
     // how would this happen? presumably if Simulator id is found then xcodebuild is installed
     console.error(`Unable to check Xcode version: ${e}`);
-    Logger.global.error('You may need to install Xcode from https://developer.apple.com/xcode/download/.');
+    Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
 
