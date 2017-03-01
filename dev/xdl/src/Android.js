@@ -225,9 +225,10 @@ export async function openProjectAsync(projectRoot: string) {
     let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
     await openUrlAsync(projectUrl, !!exp.isDetached);
+    return { success: true, error: null };
   } catch (e) {
     Logger.global.error(`Couldn't start project on Android: ${e.message}`);
-    return e;
+    return { success: false, error: e };
   }
 }
 
