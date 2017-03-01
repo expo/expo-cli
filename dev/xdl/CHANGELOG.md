@@ -10,6 +10,21 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [32.0.0] - 2017-02-28
+
+### Added
+
+* New iOS simulator warnings.
+
+### Changed
+
+* `Android.openProjectAsync` now returns an object with `success` (boolean) and `error` (nullable object) keys to indicate the result of the action.
+* Fixed a bug in persisting project settings.
+
+### Removed
+
+* Removed export of `Android.openUrlAsync` that is not used by any current consumers.
+
 ## [31.1.0] - 2017-02-24
 
 ### Changed
