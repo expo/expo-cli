@@ -151,7 +151,7 @@ export async function upgradeExponentAsync() {
       _lastUrl = null;
     }
   } catch (e) {
-    Logger.global.error(`Error running adb: ${e.message}`);
+    Logger.global.error(e.message);
   }
 }
 
@@ -160,16 +160,12 @@ async function _assertDeviceReadyAsync() {
   const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
   if (!(await _isDeviceAttachedAsync())) {
-    Logger.global.error(`No Android device found. Please connect a device and follow the instructions here to enable USB debugging:\n${genymotionMessage}`);
-    return false;
+    throw new Error(`No Android device found. Please connect a device and follow the instructions here to enable USB debugging:\n${genymotionMessage}`);
   }
 
   if (!(await _isDeviceAuthorizedAsync())) {
-    Logger.global.error(`This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`);
-    return false;
+    throw new Error(`This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`);
   }
-
-  return true;
 }
 
 async function _openUrlAsync(url: string) {
@@ -181,7 +177,7 @@ async function _openUrlAsync(url: string) {
   return output;
 }
 
-export async function openUrlSafeAsync(url: string, isDetached: boolean = false) {
+async function openUrlAsync(url: string, isDetached: boolean = false) {
   try {
     if (!(await _assertDeviceReadyAsync())) {
       return;
@@ -203,12 +199,12 @@ export async function openUrlSafeAsync(url: string, isDetached: boolean = false)
       await _openUrlAsync(url);
     } catch (e) {
       if (isDetached) {
-        Logger.global.error(`Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`);
+        e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
       } else {
-        Logger.global.error(`Error running app. ${e.message}`);
+        e.message = `Error running app. ${e.message}`;
       }
 
-      return;
+      throw e;
     }
 
     Analytics.logEvent('Open Url on Device', {
@@ -216,7 +212,8 @@ export async function openUrlSafeAsync(url: string, isDetached: boolean = false)
       installedExponent,
     });
   } catch (e) {
-    Logger.global.error(`Error running adb: ${e.message}`);
+    e.message = `Error running adb: ${e.message}`;
+    throw e;
   }
 }
 
@@ -227,9 +224,10 @@ export async function openProjectAsync(projectRoot: string) {
     let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
     let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
-    await openUrlSafeAsync(projectUrl, !!exp.isDetached);
+    await openUrlAsync(projectUrl, !!exp.isDetached);
   } catch (e) {
-    Logger.global.error(`Error running adb: ${e.message}`);
+    Logger.global.error(`Couldn't start project on Android: ${e.message}`);
+    return e;
   }
 }
 
