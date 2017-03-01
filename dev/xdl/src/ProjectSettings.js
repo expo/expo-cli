@@ -47,7 +47,7 @@ export async function setAsync(projectRoot: string, json: any) {
   try {
     return await projectSettingsJsonFile(projectRoot, projectSettingsFile).mergeAsync(json, {cantReadFileDefault: projectSettingsDefaults});
   } catch (e) {
-    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).writeAsync(_.defaults(json, projectSettingsDefaults));
+    return await projectSettingsJsonFile(projectRoot, projectSettingsFile).writeAsync(_.defaults(json, projectSettingsDefaults));
   }
 }
 
