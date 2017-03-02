@@ -6,7 +6,11 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Added
 
+* Commands which may require a login session have a `--non-interactive` flag that can be used to disable the use of interactive prompts.
+
 ### Changed
+
+* If not logged in for a command that requires authentication, an interactive login/registration prompt will be presented to the user.
 
 ### Removed
 
