@@ -2,6 +2,7 @@
  * @flow
  */
 
+import fs from 'fs';
 import fsp from 'mz/fs';
 import path from 'path';
 
@@ -134,6 +135,21 @@ export async function configFilenameAsync(projectRoot: string): Promise<string> 
     return 'exp.json';
   } else {
     return 'app.json';
+  }
+}
+
+export async function readExpRcAsync(projectRoot: string): Promise<any> {
+  const expRcPath = path.join(projectRoot, '.exprc');
+
+  if (!fs.existsSync(expRcPath)) {
+    return {};
+  }
+
+  try {
+    return await (new JsonFile(expRcPath, {json5: true})).readAsync();
+  } catch (e) {
+    logError(projectRoot, 'exponent', `Error parsing JSON file: ${e.toString()}`);
+    return {};
   }
 }
 

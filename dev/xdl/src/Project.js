@@ -804,7 +804,9 @@ export async function startExponentServerAsync(projectRoot: string) {
     res.send('Success');
   });
 
-  let exponentServerPort = await _getFreePortAsync(19000);
+  let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+
+  let exponentServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     exponentServerPort,
   });
@@ -916,13 +918,15 @@ export async function startTunnelsAsync(projectRoot: string) {
 
   let packageShortName = path.parse(projectRoot).base;
 
+  let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+
   try {
     let exponentServerNgrokUrl = await _connectToNgrokAsync(projectRoot, {
       authtoken: Config.ngrok.authToken,
       port: packagerInfo.exponentServerPort,
       proto: 'http',
     }, async () => {
-      let randomness = await Exp.getProjectRandomnessAsync(projectRoot);
+      let randomness = expRc.manifestTunnelRandomness ? expRc.manifestTunnelRandomness : await Exp.getProjectRandomnessAsync(projectRoot);
       return [randomness, UrlUtils.domainify(username), UrlUtils.domainify(packageShortName), Config.ngrok.domain].join('.');
     }, packagerInfo.ngrokPid);
 
@@ -931,7 +935,7 @@ export async function startTunnelsAsync(projectRoot: string) {
       port: packagerInfo.packagerPort,
       proto: 'http',
     }, async () => {
-      let randomness = await Exp.getProjectRandomnessAsync(projectRoot);
+      let randomness = expRc.manifestTunnelRandomness ? expRc.manifestTunnelRandomness : await Exp.getProjectRandomnessAsync(projectRoot);
       return ['packager', randomness, UrlUtils.domainify(username), UrlUtils.domainify(packageShortName), Config.ngrok.domain].join('.');
     }, packagerInfo.ngrokPid);
 
