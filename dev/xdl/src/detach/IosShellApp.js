@@ -135,7 +135,7 @@ async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, pr
     let permissionsAppName = (manifest.name) ? manifest.name : 'this app';
     for (let key in config) {
       if (config.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1) {
-        config[key] = config[key].replace('Exponent experiences', permissionsAppName);
+        config[key] = config[key].replace('Expo experiences', permissionsAppName);
       }
     }
 

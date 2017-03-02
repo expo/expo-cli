@@ -176,7 +176,7 @@ async function configureIOSIconsAsync(manifest, destinationIconPath, projectRoot
         if (defaultIconFilename) {
           rawIconFilename = defaultIconFilename;
         } else {
-          console.warn(`Manifest does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Exponent logo.`);
+          console.warn(`Manifest does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`);
           return;
         }
       }
