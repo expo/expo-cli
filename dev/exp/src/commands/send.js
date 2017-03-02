@@ -44,6 +44,8 @@ async function action(projectDir, options) {
   } else {
     log.gray("(Not sending anything because you didn't specify a recipient.)");
   }
+
+  process.exit();
 }
 
 export default (program) => {
@@ -53,5 +55,6 @@ export default (program) => {
     //.help('You must have the server running for this command to work')
     .option('-s, --send-to  [dest]', 'Specifies the mobile number or e-mail address to send this URL to')
     .urlOpts()
+    .allowNonInteractive()
     .asyncActionProjectDir(action);
 };

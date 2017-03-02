@@ -24,6 +24,7 @@ import {
   User as UserManager,
 } from 'xdl';
 
+import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
@@ -41,6 +42,11 @@ Command.prototype.allowOffline = function() {
   this.option('--offline', 'Allows this command to run while offline');
   return this;
 };
+
+Command.prototype.allowNonInteractive = function() {
+  this.option('--non-interactive', 'Fails if an interactive prompt would be required to continue.')
+  return this;
+}
 
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
   return this.action(async (...args) => {
@@ -76,6 +82,11 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
 Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
   return this.asyncAction(async (projectDir, ...args) => {
     try { await checkForUpdateAsync(); } catch (e) {}
+
+    const opts = args[0];
+    if (!skipAuthCheck && !opts.nonInteractive && !opts.offline) {
+      await loginOrRegisterIfLoggedOut();
+    }
 
     if (!skipAuthCheck) {
       await UserManager.ensureLoggedInAsync();

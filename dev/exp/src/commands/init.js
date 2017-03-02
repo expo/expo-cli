@@ -61,6 +61,7 @@ async function action(projectDir, options) {
 
   let root = await Exp.createNewExpAsync(templateType, projectDir, {}, validatedOptions);
   log(`Your project is ready at ${root}. Use "exp start ${root}" to get started.`);
+  process.exit();
 }
 
 export default (program) => {
@@ -70,5 +71,6 @@ export default (program) => {
     .description('Initializes a directory with an example project. Run it without any options and you will be prompted for the name and type.')
     .option('-n, --projectName [name]', 'Specify a name for the new project')
     .option('-t, --projectType [type]', 'Specify what type of template to use. Run without this option to see all choices.')
+    .allowNonInteractive()
     .asyncActionProjectDir(action, true); // pass true to skip validation
 };

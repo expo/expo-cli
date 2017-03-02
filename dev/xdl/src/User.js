@@ -90,7 +90,7 @@ type Auth0Options = {
   callbackURL?: string,
 };
 
-type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
+export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 
 const AUTH0_DOMAIN = 'exponent.auth0.com';
 const AUTHENTICATION_SERVER_TIMEOUT = 1000 * 60 * 5; // 5 minutes

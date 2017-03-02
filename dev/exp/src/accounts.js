@@ -2,6 +2,7 @@
  * @flow
  */
 
+import chalk from 'chalk';
 import inquirer from 'inquirer';
 
 import {
@@ -9,6 +10,7 @@ import {
 } from 'xdl';
 
 import type {
+  LoginType,
   User,
   UserOrLegacyUser,
 } from 'xdl/build/User';
@@ -24,6 +26,49 @@ type CommandOptions = {
   username?: string,
   password?: string,
 };
+
+export async function loginOrRegisterIfLoggedOut() {
+  if (await UserManager.getCurrentUserAsync()) {
+    return;
+  }
+
+  console.log(chalk.yellow('\nAn Exponent user account is required to proceed.\n'));
+
+  const questions = [
+    {
+      type: 'list',
+      name: 'action',
+      message: 'How would you like to authenticate?',
+      choices: [
+        {
+          name: 'Make a new Exponent account',
+          value: 'register',
+        },
+        {
+          name: 'Log in with an existing Exponent account',
+          value: 'existingUser',
+        },
+        {
+          name: 'Cancel',
+          value: 'cancel',
+        },
+      ],
+    },
+  ];
+
+  const { action } = await inquirer.prompt(questions);
+
+  if (action === 'github') {
+    await login({ github: true });
+  } else if (action === 'register') {
+    await _onboardUser();
+    console.log(chalk.green('Thanks!\n'));
+  } else if (action === 'existingUser') {
+    await login({});
+  } else {
+    throw new Error('Not logged in.');
+  }
+}
 
 export async function login(options: CommandOptions) {
   if (options.facebook) { // handle fb login
@@ -52,7 +97,7 @@ export async function register(options: CommandOptions) {
   }
 }
 
-async function _socialAuth(provider: string) {
+async function _socialAuth(provider: LoginType) {
   let user = await UserManager.loginAsync(provider);
   if (user) {
     if (user.userMetadata.onboarded) {

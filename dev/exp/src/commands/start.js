@@ -19,7 +19,7 @@ async function action(projectDir, options) {
   const projectState = await Project.currentStatus(projectDir);
 
   if (projectState === 'running') {
-    log.warn('exp is already running for this project. Exiting...');
+    log.error('exp is already running for this project. Exiting...');
     process.exit(1);
   } else if (projectState === 'ill') {
     log.warn('exp may have exited improperly. Proceeding, but you should check for orphaned processes.');
@@ -67,6 +67,7 @@ export default (program: any) => {
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
     .urlOpts()
+    .allowNonInteractive()
     .allowOffline()
     .asyncActionProjectDir(action);
 };

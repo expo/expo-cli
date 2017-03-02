@@ -64,5 +64,6 @@ export default (program: any) => {
     .description('Publishes your project to exp.host')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
+    .allowNonInteractive()
     .asyncActionProjectDir(action);
 };

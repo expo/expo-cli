@@ -19,5 +19,6 @@ export default (program) => {
     .command('vscode [project-dir]')
     .description('Runs Exponent on top of an existing packager. Run `react-native start` before calling this command.')
     .option('-p, --port [number]', 'Port of existing packager')
+    .allowNonInteractive()
     .asyncActionProjectDir(action);
 };

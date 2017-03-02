@@ -10,6 +10,7 @@ export default (program) => {
   program
     .command('android [project-dir]')
     .description('Opens your app in Exponent on a connected Android device')
+    .allowNonInteractive()
     .allowOffline()
     .asyncActionProjectDir(action);
 };
