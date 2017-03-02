@@ -335,6 +335,10 @@ export async function detachIOSAsync(projectRoot: string, expoDirectory: string,
     {
       TARGET_NAME: projectName,
       EXPONENT_ROOT_PATH: path.relative(iosProjectDirectory, expoDirectory),
+      REACT_NATIVE_PATH: path.relative(
+        iosProjectDirectory,
+        path.join(projectRoot, 'node_modules', 'react-native'),
+      ),
     }
   );
 

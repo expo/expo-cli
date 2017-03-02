@@ -4,10 +4,10 @@
 
 import fs from 'fs';
 import glob from 'glob';
+import indentString from 'indent-string';
 import 'instapromise';
 import JsonFile from '@exponent/json-file';
 import path from 'path';
-import * as Versions from '../Versions';
 
 /**
  *  @param pathToTemplate path to template Podfile
@@ -21,17 +21,13 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
   }
   let templatesDirectory = path.dirname(pathToTemplate);
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
-  let newestVersion = await Versions.newestSdkVersionAsync();
 
   let reactNativePath = moreSubstitutions.REACT_NATIVE_PATH;
   let rnDependencyOptions;
   if (reactNativePath) {
     rnDependencyOptions = { reactNativePath };
   } else {
-    rnDependencyOptions = {
-      isRemote: true,
-      remoteTag: newestVersion.exponentReactNativeTag,
-    };
+    rnDependencyOptions = {};
   }
 
   let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(templatesDirectory);
@@ -59,7 +55,7 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
       result = result.replace(new RegExp(`\\\$\\\{${key}\\\}`, 'g'), replacement);
     }
   }
-  
+
   await fs.promise.writeFile(pathToOutput, result);
 }
 
@@ -74,48 +70,65 @@ async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput, more
   if (moreSubstitutions && moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION) {
     result = result.replace(/\$\{IOS_EXPONENT_CLIENT_VERSION\}/g, moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION);
   }
-  
+
   await fs.promise.writeFile(pathToOutput, result);
 }
 
 function renderUnversionedReactNativeDependency(options) {
+  return indentString(`
+${renderUnversionedReactDependency(options)}
+${renderUnversionedYogaDependency(options)}
+`, 2);
+}
+
+function renderUnversionedReactDependency(options) {
   let attributes;
-  if (options.isRemote && options.remoteTag) {
-    attributes = {
-      git: 'https://github.com/exponent/react-native.git',
-      tag: options.remoteTag,
-    };
-  } else if (options.reactNativePath) {
+  if (options.reactNativePath) {
     attributes = {
       path: options.reactNativePath,
     };
   } else {
     throw new Error(`Unsupported options for RN dependency: ${options}`);
   }
-  let attributesStrings = [];
-  for (let key in attributes) {
-    if (attributes.hasOwnProperty(key)) {
-      attributesStrings.push(`    :${key} => '${attributes[key]}',\n`);
-    }
+
+  attributes.subspecs = [
+    'Core',
+    'ART',
+    'RCTActionSheet',
+    'RCTAnimation',
+    'RCTCameraRoll',
+    'RCTGeolocation',
+    'RCTImage',
+    'RCTNetwork',
+    'RCTText',
+    'RCTVibration',
+    'RCTWebSocket',
+  ];
+
+  return `pod 'React',
+${indentString(renderDependencyAttributes(attributes), 2)}`;
+}
+
+function renderUnversionedYogaDependency(options) {
+  let attributes;
+  if (options.reactNativePath) {
+    attributes = {
+      path: path.join(options.reactNativePath, 'ReactCommon', 'yoga'),
+    };
+  } else {
+    throw new Error(`Unsupported options for Yoga dependency: ${options}`);
   }
-  attributes = attributesStrings.join('');
-  return `
-  pod 'React',
-${attributes}
-    :subspecs => [
-      'Core',
-      'ART',
-      'RCTActionSheet',
-      'RCTAnimation',
-      'RCTCameraRoll',
-      'RCTGeolocation',
-      'RCTImage',
-      'RCTNetwork',
-      'RCTText',
-      'RCTVibration',
-      'RCTWebSocket',
-    ]
-`;
+  return `pod 'Yoga',
+${indentString(renderDependencyAttributes(attributes), 2)}`;
+}
+
+function renderDependencyAttributes(attributes) {
+  let attributesStrings = [];
+  for (let key of Object.keys(attributes)) {
+    let value = JSON.stringify(attributes[key], null, 2);
+    attributesStrings.push(`:${key} => ${value}`);
+  }
+  return attributesStrings.join(',\n');
 }
 
 async function renderVersionedReactNativeDependenciesAsync(templatesDirectory) {
