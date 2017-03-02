@@ -179,9 +179,7 @@ async function _openUrlAsync(url: string) {
 
 async function openUrlAsync(url: string, isDetached: boolean = false) {
   try {
-    if (!(await _assertDeviceReadyAsync())) {
-      return;
-    }
+    await _assertDeviceReadyAsync();
 
     let installedExponent = false;
     if (!isDetached && !(await _isExponentInstalledAsync())) {
