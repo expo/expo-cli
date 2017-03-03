@@ -4,6 +4,7 @@
 
 import 'instapromise';
 
+import fs from 'fs';
 import uuid from 'node-uuid';
 import JsonFile from '@exponent/json-file';
 
@@ -12,10 +13,21 @@ import path from 'path';
 
 import * as Env from './Env';
 
-const SETTINGS_FILE_NAME = 'exponent.json';
+const SETTINGS_FILE_NAME = 'state.json';
 
 function userSettingsFile() {
-  return path.join(dotExpoHomeDirectory(), SETTINGS_FILE_NAME);
+  let dir = dotExpoHomeDirectory();
+  let file = path.join(dir, SETTINGS_FILE_NAME);
+  try {
+    // move exponent.json to state.json
+    let oldFile = path.join(dir, 'exponent.json');
+    if (fs.statSync(oldFile).isFile()) {
+      fs.renameSync(oldFile, file);
+    }
+  } catch (e) {
+    // no old directory, continue
+  }
+  return file;
 }
 
 function userSettingsJsonFile() {
@@ -36,7 +48,17 @@ function dotExpoHomeDirectory() {
     if (!home) {
       throw new Error("Can't determine your home directory; make sure your $HOME environment variable is set.");
     }
-    dirPath = path.join(home, '.exponent');
+    dirPath = path.join(home, '.expo');
+
+    try {
+      // move .exponent to .expo
+      let oldDirPath = path.join(home, '.exponent');
+      if (fs.statSync(oldDirPath).isDirectory()) {
+        fs.renameSync(oldDirPath, dirPath);
+      }
+    } catch (e) {
+      // no old directory, continue
+    }
   }
   if (!mkdirped) {
     mkdirp.sync(dirPath);

@@ -142,7 +142,7 @@ export async function detachAsync(projectRoot: string) {
     exp.detach.scheme = `exp${detachedUUID}`;
   }
 
-  let expoDirectory = path.join(projectRoot, '.exponent-source');
+  let expoDirectory = path.join(projectRoot, '.expo-source');
   mkdirp.sync(expoDirectory);
 
   // iOS

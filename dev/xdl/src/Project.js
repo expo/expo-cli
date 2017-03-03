@@ -806,11 +806,11 @@ export async function startExpoServerAsync(projectRoot: string) {
 
   let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
 
-  let exponentServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
+  let expoServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    exponentServerPort,
+    expoServerPort,
   });
-  let server = app.listen(exponentServerPort, () => {
+  let server = app.listen(expoServerPort, () => {
     let host = server.address().address;
     let port = server.address().port;
 
@@ -826,14 +826,14 @@ export async function stopExpoServerAsync(projectRoot: string) {
   _assertValidProjectRoot(projectRoot);
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (packagerInfo && packagerInfo.exponentServerPort) {
+  if (packagerInfo && packagerInfo.expoServerPort) {
     try {
-      await request.post.promise(`http://localhost:${packagerInfo.exponentServerPort}/shutdown`);
+      await request.post.promise(`http://localhost:${packagerInfo.expoServerPort}/shutdown`);
     } catch (e) {}
   }
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    exponentServerPort: null,
+    expoServerPort: null,
   });
 }
 
@@ -900,7 +900,7 @@ export async function startTunnelsAsync(projectRoot: string) {
     throw new XDLError(ErrorCode.NO_PACKAGER_PORT, `No packager found for project at ${projectRoot}.`);
   }
 
-  if (!packagerInfo.exponentServerPort) {
+  if (!packagerInfo.expoServerPort) {
     throw new XDLError(ErrorCode.NO_EXPO_SERVER_PORT, `No Expo server found for project at ${projectRoot}.`);
   }
 
@@ -919,9 +919,9 @@ export async function startTunnelsAsync(projectRoot: string) {
   let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
 
   try {
-    let exponentServerNgrokUrl = await _connectToNgrokAsync(projectRoot, {
+    let expoServerNgrokUrl = await _connectToNgrokAsync(projectRoot, {
       authtoken: Config.ngrok.authToken,
-      port: packagerInfo.exponentServerPort,
+      port: packagerInfo.expoServerPort,
       proto: 'http',
     }, async () => {
       let randomness = expRc.manifestTunnelRandomness ? expRc.manifestTunnelRandomness : await Exp.getProjectRandomnessAsync(projectRoot);
@@ -938,7 +938,7 @@ export async function startTunnelsAsync(projectRoot: string) {
     }, packagerInfo.ngrokPid);
 
     await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-      exponentServerNgrokUrl,
+      expoServerNgrokUrl,
       packagerNgrokUrl,
       ngrokPid: ngrok.process().pid,
     });
@@ -973,7 +973,7 @@ export async function stopTunnelsAsync(projectRoot: string) {
   }
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    exponentServerNgrokUrl: null,
+    expoServerNgrokUrl: null,
     packagerNgrokUrl: null,
     ngrokPid: null,
   });
@@ -1065,10 +1065,10 @@ export async function stopAsync(projectDir: string): Promise<void> {
     }
 
     await ProjectSettings.setPackagerInfoAsync(projectDir, {
-      exponentServerPort: null,
+      expoServerPort: null,
       packagerPort: null,
       packagerPid: null,
-      exponentServerNgrokUrl: null,
+      expoServerNgrokUrl: null,
       packagerNgrokUrl: null,
       ngrokPid: null,
     });

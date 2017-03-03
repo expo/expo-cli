@@ -68,14 +68,15 @@ export async function setPackagerInfoAsync(projectRoot: string, json: any) {
 }
 
 export function dotExpoProjectDirectory(projectRoot: string) {
-  let dirPath = path.join(projectRoot, '.exponent');
+  let dirPath = path.join(projectRoot, '.expo');
   try {
-    // remove .exponent file if it exists, we moved to a .exponent directory
-    if (fs.statSync(dirPath).isFile()) {
-      fs.unlinkSync(dirPath);
+    // move .exponent to .expo
+    let oldDirPath = path.join(projectRoot, '.exponent');
+    if (fs.statSync(oldDirPath).isDirectory()) {
+      fs.renameSync(oldDirPath, dirPath);
     }
   } catch (e) {
-    // no file or directory, continue
+    // no old directory, continue
   }
 
   mkdirp.sync(dirPath);
@@ -83,7 +84,7 @@ export function dotExpoProjectDirectory(projectRoot: string) {
 }
 
 export function dotExpoProjectDirectoryExists(projectRoot: string) {
-  let dirPath = path.join(projectRoot, '.exponent');
+  let dirPath = path.join(projectRoot, '.expo');
   try {
     if (fs.statSync(dirPath).isDirectory()) {
       return true;

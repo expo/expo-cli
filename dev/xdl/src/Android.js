@@ -233,13 +233,13 @@ export async function openProjectAsync(projectRoot: string) {
 // Adb reverse
 export async function startAdbReverseAsync(projectRoot: string) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  return await adbReverse(packagerInfo.packagerPort) && await adbReverse(packagerInfo.exponentServerPort);
+  return await adbReverse(packagerInfo.packagerPort) && await adbReverse(packagerInfo.expoServerPort);
 }
 
 export async function stopAdbReverseAsync(projectRoot: string) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   await adbReverseRemove(packagerInfo.packagerPort);
-  await adbReverseRemove(packagerInfo.exponentServerPort);
+  await adbReverseRemove(packagerInfo.expoServerPort);
 }
 
 async function adbReverse(port: number) {

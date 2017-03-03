@@ -138,7 +138,7 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
 
   if (opts.hostType === 'localhost') {
     hostname = 'localhost';
-    port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
+    port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else if (opts.hostType === 'lan' || Config.offline) {
     if (opts.lanType === 'ip') {
       hostname = ip.address();
@@ -146,13 +146,13 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
       // Some old versions of OSX work with hostname but not local ip address.
       hostname = os.hostname();
     }
-    port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
+    port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else {
-    let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.exponentServerNgrokUrl;
+    let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
     if (!ngrokUrl) {
       // use localhost
       hostname = 'localhost';
-      port = isPackager ? packagerInfo.packagerPort : packagerInfo.exponentServerPort;
+      port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
 
       // TODO report a warning when this is for a currently served project, suppress for status checks
     } else {
