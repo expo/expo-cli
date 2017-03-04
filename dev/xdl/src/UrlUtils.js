@@ -68,12 +68,16 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   queryParams += '&hot=false';
 
-  let pluginModule = 'exponent/tools/hashAssetFiles';
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
+  // Be backwards compatible for users who haven't migrated from `exponent`
+  // to the `expo` sdk package.
+  let sdkPkg = pkg.dependencies['expo'] ? 'expo' : 'exponent';
+  let pluginModule = `${sdkPkg}/tools/hashAssetFiles`;
   queryParams += `&assetPlugin=${pluginModule}`;
 
   // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
   // major version in the sdkVersion field, so check for 11.0.0 to be sure.
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let supportsAssetPlugins = Versions.gteSdkVersion(exp, '11.0.0');
   if (!supportsAssetPlugins) {
     queryParams += '&includeAssetFileHashes=true';

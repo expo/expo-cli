@@ -345,9 +345,14 @@ export const EXPO_SDK_NOT_IMPORTED = 2;
 
 export async function getExpoSdkStatus(projectRoot: string): Promise<number> {
   let { pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
   try {
-    let expoDep = pkg.dependencies['expo'];
-    if (!expoDep) {
+    let sdkPkg;
+    if (pkg.dependencies['exponent']) {
+      sdkPkg = 'exponent';
+    } else if (pkg.dependencies['expo']) {
+      sdkPkg = 'expo';
+    } else {
       return EXPO_SDK_NOT_INSTALLED;
     }
 
@@ -355,7 +360,7 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<number> {
     let mainFile = await fs.readFile.promise(mainFilePath, 'utf8');
 
     // TODO: support separate .ios.js and .android.js files
-    if (mainFile.includes(`from 'expo'`) || mainFile.includes(`require('expo')`)) {
+    if (mainFile.includes(`from '${sdkPkg}'`) || mainFile.includes(`require('${sdkPkg}')`)) {
       return EXPO_SDK_INSTALLED_AND_IMPORTED;
     } else {
       return EXPO_SDK_NOT_IMPORTED;
