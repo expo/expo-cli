@@ -157,13 +157,15 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   let exp;
   let pkg;
 
-  const packageJsonPath = path.join(projectRoot, 'package.json');
   const configName = await configFilenameAsync(projectRoot);
   const configPath = path.join(projectRoot, configName);
 
   try {
-    pkg = await (new JsonFile(packageJsonPath)).readAsync();
     exp = await (new JsonFile(configPath, {json5: true})).readAsync();
+
+    // Use package.json at nodeModulesPath
+    const packageJsonPath = exp.nodeModulesPath ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json') : path.join(projectRoot, 'package.json');
+    pkg = await (new JsonFile(packageJsonPath)).readAsync();
 
     if (configName === 'app.json') {
       // if we're not using exp.json, then we've stashed everything under an expo key
