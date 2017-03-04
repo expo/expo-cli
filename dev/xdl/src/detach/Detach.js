@@ -430,7 +430,7 @@ async function detachAndroidAsync(projectRoot, expoDirectory, sdkVersion, experi
   let appBuildGradle = path.join(androidProjectDirectory, 'app', 'build.gradle');
   await regexFileAsync(appBuildGradle, /\/\* UNCOMMENT WHEN DISTRIBUTING/g, '');
   await regexFileAsync(appBuildGradle, /END UNCOMMENT WHEN DISTRIBUTING \*\//g, '');
-  await regexFileAsync(appBuildGradle, `compile project(':exponentview')`, '');
+  await regexFileAsync(appBuildGradle, `compile project(':expoview')`, '');
 
   // Fix AndroidManifest
   let androidManifest = path.join(androidProjectDirectory, 'app', 'src', 'main', 'AndroidManifest.xml');
