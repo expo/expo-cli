@@ -156,7 +156,7 @@ async function concatTemplateFilesInDirectoryAsync(directory) {
 function renderDetachedPostinstall() {
   let podsRootSub = "${PODS_ROOT}";
   return `
-    if target.pod_name == 'ExponentView'
+    if target.pod_name == 'ExpoKit'
       target.native_target.build_configurations.each do |config|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'

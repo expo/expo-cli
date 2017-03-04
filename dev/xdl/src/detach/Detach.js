@@ -325,12 +325,12 @@ export async function detachIOSAsync(projectRoot: string, expoDirectory: string,
 
   console.log('Configuring iOS dependencies...');
   await renderExponentViewPodspecAsync(
-    path.join(tmpExpoDirectory, 'template-files', 'ios', 'ExponentView.podspec'),
-    path.join(expoDirectory, 'ExponentView.podspec'),
+    path.join(tmpExpoDirectory, 'template-files', 'ios', 'ExpoKit.podspec'),
+    path.join(expoDirectory, 'ExpoKit.podspec'),
     { IOS_EXPONENT_CLIENT_VERSION: infoPlist.EXClientVersion }
   );
   await renderPodfileAsync(
-    path.join(tmpExpoDirectory, 'template-files', 'ios', 'ExponentView-Podfile'),
+    path.join(tmpExpoDirectory, 'template-files', 'ios', 'ExpoKit-Podfile'),
     path.join(iosProjectDirectory, 'Podfile'),
     {
       TARGET_NAME: projectName,
