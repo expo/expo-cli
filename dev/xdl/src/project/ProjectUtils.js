@@ -163,10 +163,6 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   try {
     exp = await (new JsonFile(configPath, {json5: true})).readAsync();
 
-    // Use package.json at nodeModulesPath
-    const packageJsonPath = exp.nodeModulesPath ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json') : path.join(projectRoot, 'package.json');
-    pkg = await (new JsonFile(packageJsonPath)).readAsync();
-
     if (configName === 'app.json') {
       // if we're not using exp.json, then we've stashed everything under an expo key
       // this is only for app.json at time of writing
@@ -181,7 +177,22 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
       }
     }
 
-    // exp or pkg missing
+    // exp missing. might be in package.json
+  }
+
+  try {
+    const packageJsonPath = exp && exp.nodeModulesPath ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json') : path.join(projectRoot, 'package.json');
+    pkg = await (new JsonFile(packageJsonPath)).readAsync();
+  } catch (e) {
+    if (e.isJsonFileError) {
+      // TODO: add error codes to json-file
+      if (e.message.startsWith('Error parsing JSON file')) {
+        logError(projectRoot, 'expo', `Error parsing JSON file: ${e.cause.toString()}`);
+        return { exp: null, pkg: null };
+      }
+    }
+
+    // pkg missing
   }
 
   // Easiest bail-out: package.json is missing

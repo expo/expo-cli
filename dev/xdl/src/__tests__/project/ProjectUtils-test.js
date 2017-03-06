@@ -34,6 +34,14 @@ const packageJsonWithExp = {
   exp: expJson,
 };
 
+const expJsonWithNodeModulesPath = {
+  sdkVersion: '12.0.0',
+  name: "My New Project",
+  slug: "my-new-project",
+  version: "1.0.0",
+  nodeModulesPath: "node-modules-path",
+};
+
 function setupDirs() {
   const fs = require('fs');
 
@@ -44,6 +52,8 @@ function setupDirs() {
     '/home/mocky/expjson/package.json': packageJsonString,
     '/home/mocky/expjson/exp.json': JSON.stringify(expJson, null, 2),
     '/home/mocky/nojson/package.json': JSON.stringify(packageJsonWithExp, null, 2),
+    '/home/mocky/expjson-with-node-modules/exp.json': JSON.stringify(expJsonWithNodeModulesPath, null, 2),
+    '/home/mocky/expjson-with-node-modules/node-modules-path/package.json': packageJsonString,
   });
 }
 
@@ -108,6 +118,13 @@ describe('readConfigJsonAsync', () => {
     expect(exp.name).toEqual(packageJson.name);
     expect(exp.slug).toEqual(slugify(packageJson.name));
 
+    expect(pkg).toEqual(packageJson);
+  });
+
+  it('reads package.json at nodeModulesPath', async () => {
+    const { exp, pkg } = await ProjectUtils.readConfigJsonAsync('/home/mocky/expjson-with-node-modules');
+
+    expect(exp).toEqual(expJsonWithNodeModulesPath);
     expect(pkg).toEqual(packageJson);
   });
 });
