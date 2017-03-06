@@ -116,8 +116,7 @@ async function _downloadApkAsync() {
     return apkPath;
   }
 
-  let url = `https://s3.amazonaws.com/exp-android-apks/Exponent-${versions.androidVersion}.apk`;
-  await Api.downloadAsync(url, path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`));
+  await Api.downloadAsync(versions.androidUrl, path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`));
   return apkPath;
 }
 

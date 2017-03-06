@@ -187,8 +187,8 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
 
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-          semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['exponentReactNativeTag']))) {
-        ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject['exponentReactNativeTag']}`, 'doctor-invalid-version-of-react-native');
+          semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))) {
+        ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject['expoReactNativeTag']}`, 'doctor-invalid-version-of-react-native');
         return WARNING;
       }
       ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');

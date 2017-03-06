@@ -113,7 +113,7 @@ export async function detachAsync(projectRoot: string) {
   }
   const versions = await Versions.versionsAsync();
   let sdkVersionConfig = versions.sdkVersions[exp.sdkVersion];
-  if (!sdkVersionConfig || !sdkVersionConfig.androidExponentViewUrl || !sdkVersionConfig.iosExponentViewUrl) {
+  if (!sdkVersionConfig || !sdkVersionConfig.androidExpoViewUrl || !sdkVersionConfig.iosExpoViewUrl) {
     if (process.env.EXPO_VIEW_DIR) {
       console.warn(`Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPO_VIEW_DIR`);
       sdkVersionConfig = {};
@@ -150,8 +150,8 @@ export async function detachAsync(projectRoot: string) {
     let iosDirectory = path.join(expoDirectory, 'ios');
     rimraf.sync(iosDirectory);
     mkdirp.sync(iosDirectory);
-    await detachIOSAsync(projectRoot, iosDirectory, exp.sdkVersion, experienceUrl, exp, sdkVersionConfig.iosExponentViewUrl);
-    exp.detach.iosExponentViewUrl = sdkVersionConfig.iosExponentViewUrl;
+    await detachIOSAsync(projectRoot, iosDirectory, exp.sdkVersion, experienceUrl, exp, sdkVersionConfig.iosExpoViewUrl);
+    exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
   }
 
   // Android
@@ -159,8 +159,8 @@ export async function detachAsync(projectRoot: string) {
     let androidDirectory = path.join(expoDirectory, 'android');
     rimraf.sync(androidDirectory);
     mkdirp.sync(androidDirectory);
-    await detachAndroidAsync(projectRoot, androidDirectory, exp.sdkVersion, experienceUrl, exp, sdkVersionConfig.androidExponentViewUrl);
-    exp.detach.androidExponentViewUrl = sdkVersionConfig.androidExponentViewUrl;
+    await detachAndroidAsync(projectRoot, androidDirectory, exp.sdkVersion, experienceUrl, exp, sdkVersionConfig.androidExpoViewUrl);
+    exp.detach.androidExpoViewUrl = sdkVersionConfig.androidExpoViewUrl;
   }
 
   console.log('Writing ExpoKit configuration...');

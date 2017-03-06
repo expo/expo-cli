@@ -14,15 +14,15 @@ request.__setMockResponse({
     "androidVersion": "1.6.0",
     "sdkVersions": {
       "5.0.0": {
-        "exponentReactNativeTag": "sdk-5.0.0",
+        "expoReactNativeTag": "sdk-5.0.0",
         "facebookReactNativeVersion": "0.24.0",
       },
       "6.0.0": {
-        "exponentReactNativeTag": "sdk-6.0.0",
+        "expoReactNativeTag": "sdk-6.0.0",
         "facebookReactNativeVersion": "0.27.0",
       },
       "7.0.0": {
-        "exponentReactNativeTag": "sdk-7.0.0",
+        "expoReactNativeTag": "sdk-7.0.0",
         "facebookReactNativeVersion": "0.27.0",
       },
     },

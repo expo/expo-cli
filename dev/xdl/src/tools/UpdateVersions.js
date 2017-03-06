@@ -11,7 +11,7 @@ export async function updateSdkVersionsAsync(sdkVersion: string, reactNativeTag:
   let versions = await Versions.versionsAsync();
   versions.sdkVersions[sdkVersion] = {
     ...versions.sdkVersions[sdkVersion],
-    'exponentReactNativeTag': reactNativeTag,
+    'expoReactNativeTag': reactNativeTag,
     'facebookReactNativeVersion': facebookRNVersion,
   };
   await Versions.setVersionsAsync(versions);
@@ -42,6 +42,7 @@ export async function updateIOSSimulatorBuild(s3Client: any, pathToApp: string, 
 
   let versions = await Versions.versionsAsync();
   versions['iosVersion'] = appVersion;
+  versions['iosUrl'] = `https://dpq5q02fu5f55.cloudfront.net/Exponent-${appVersion}.tar.gz`;
   await Versions.setVersionsAsync(versions);
 }
 
@@ -61,5 +62,6 @@ export async function updateAndroidApk(s3Client: any, pathToApp: string, appVers
 
   let versions = await Versions.versionsAsync();
   versions['androidVersion'] = appVersion;
+  versions['androidUrl'] = `https://d1ahtucjixef4r.cloudfront.net/Exponent-${appVersion}.apk`;
   await Versions.setVersionsAsync(versions);
 }
