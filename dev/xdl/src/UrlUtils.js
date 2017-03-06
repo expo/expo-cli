@@ -179,8 +179,6 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
 
   if (port) {
     url_ += `:${port}`;
-  } else {
-    url_ += ':80'; // DUMB BUG FIX!!!! Old RN needs a port number
   }
 
   if (opts.urlType === 'redirect') {
