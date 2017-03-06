@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [33.0.0] - 2017-03-06
+
+### Changed
+
+* References to Exponent have been renamed to Expo.
+
 ## [32.0.0] - 2017-02-28
 
 ### Added
