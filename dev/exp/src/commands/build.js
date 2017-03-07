@@ -22,7 +22,9 @@ export default (program: any) => {
   program
     .command('build:android [project-dir]')
     .alias('ba')
-    .option('-c, --clear-credentials', 'Clear stored credentials.')
+    // TODO: add this option back once we have a better way to download credentials.
+    // For now, just handle this manually for people.
+    //.option('-c, --clear-credentials', 'Clear stored credentials.')
     .description('Build a standalone APK for your project, signed and ready for submission to the Google Play Store.')
     .allowNonInteractive()
     .asyncActionProjectDir((projectDir, options) => {
