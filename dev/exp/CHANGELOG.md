@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [35.1.0] - 2017-03-07
+
+### Removed
+
+* Removed `-c` option from `exp build:android`. Contact us if you need to remove your credentials and we can handle it manually for now.
+
 ## [35.0.0] - 2017-03-06
 
 ### Added
@@ -20,8 +26,6 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 * References to Exponent have been renamed to Expo.
 * If not logged in for a command that requires authentication, an interactive login/registration prompt will be presented to the user.
-
-### Removed
 
 ## [34.2.0] - 2017-02-24
 
