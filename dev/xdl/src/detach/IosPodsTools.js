@@ -15,7 +15,7 @@ import path from 'path';
  *  @param moreSubstitutions dictionary of additional substitution keys and values to replace
  *         in the template, such as: TARGET_NAME, EXPONENT_ROOT_PATH, REACT_NATIVE_PATH
  */
-async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
+async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitutions, sdkVersion = 'UNVERSIONED') {
   if (!moreSubstitutions) {
     moreSubstitutions = {};
   }
@@ -39,9 +39,9 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
 
   let substitutions = {
     EXPONENT_CLIENT_DEPS: podDependencies,
-    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(rnDependencyOptions),
+    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(rnDependencyOptions, sdkVersion),
     PODFILE_UNVERSIONED_POSTINSTALL: renderUnversionedPostinstall(),
-    PODFILE_DETACHED_POSTINSTALL: renderDetachedPostinstall(),
+    PODFILE_DETACHED_POSTINSTALL: renderDetachedPostinstall(sdkVersion),
     PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
     PODFILE_VERSIONED_POSTINSTALLS: versionedPostinstalls,
     PODFILE_TEST_TARGET: renderPodfileTestTarget(reactNativePath),
@@ -74,11 +74,17 @@ async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput, more
   await fs.promise.writeFile(pathToOutput, result);
 }
 
-function renderUnversionedReactNativeDependency(options) {
-  return indentString(`
+function renderUnversionedReactNativeDependency(options, sdkVersion) {
+  if (sdkVersion === '14.0.0') {
+    return indentString(`
+${renderUnversionedReactDependency(options)}
+`, 2);
+  } else {
+    return indentString(`
 ${renderUnversionedReactDependency(options)}
 ${renderUnversionedYogaDependency(options)}
 `, 2);
+  }
 }
 
 function renderUnversionedReactDependency(options) {
@@ -153,10 +159,12 @@ async function concatTemplateFilesInDirectoryAsync(directory) {
   return templateStrings.join('\n');
 }
 
-function renderDetachedPostinstall() {
+function renderDetachedPostinstall(sdkVersion) {
+  let podName = sdkVersion === '14.0.0' ? 'ExponentView' : 'ExpoKit';
+
   let podsRootSub = "${PODS_ROOT}";
   return `
-    if target.pod_name == 'ExpoKit'
+    if target.pod_name == '${podName}'
       target.native_target.build_configurations.each do |config|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'

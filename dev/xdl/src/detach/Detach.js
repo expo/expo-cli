@@ -341,7 +341,8 @@ export async function detachIOSAsync(projectRoot: string, expoDirectory: string,
         iosProjectDirectory,
         path.join(projectRoot, 'node_modules', 'react-native'),
       ),
-    }
+    },
+    sdkVersion
   );
 
   console.log('Cleaning up iOS...');
