@@ -1128,8 +1128,8 @@ bluebird@^3.1.1, bluebird@^3.4.7:
   resolved bluebird-3.5.0.tgz#791420d7f551eea2897453a8a77653f96606d67c
 
 body-parser@^1.15.2:
-  version "1.17.0"
-  resolved body-parser-1.17.0.tgz#d956ae2d756ae10bb784187725ea5a249430febd
+  version "1.17.1"
+  resolved body-parser-1.17.1.tgz#75b3bc98ddd6e7e0d8ffe750dfaca5c66993fa47
   dependencies:
     bytes "2.4.0"
     content-type "~1.0.2"
@@ -1138,7 +1138,7 @@ body-parser@^1.15.2:
     http-errors "~1.6.1"
     iconv-lite "0.4.15"
     on-finished "~2.3.0"
-    qs "6.3.1"
+    qs "6.4.0"
     raw-body "~2.2.0"
     type-is "~1.6.14"
 
@@ -1759,8 +1759,8 @@ dot-case@^1.1.0:
     sentence-case "^1.1.2"
 
 dtrace-provider@~0.8:
-  version "0.8.0"
-  resolved dtrace-provider-0.8.0.tgz#fa95fbf67ed3ae3e97364f9664af7302e5ff5625
+  version "0.8.1"
+  resolved dtrace-provider-0.8.1.tgz#cd4d174a233bea1bcf4a1fbfa5798f44f48cda9f
   dependencies:
     nan "^2.3.3"
 
@@ -1951,12 +1951,12 @@ eslint-module-utils@^2.0.0:
     pkg-dir "^1.0.0"
 
 eslint-plugin-babel@^4.0.0:
-  version "4.1.0"
-  resolved eslint-plugin-babel-4.1.0.tgz#837a74c092ad4d74f9fc74aed43f750906adc827
+  version "4.1.1"
+  resolved eslint-plugin-babel-4.1.1.tgz#ef285c87039b67beb3bbd227f5b0eed4fb376b87
 
 eslint-plugin-flowtype@^2.25.0:
-  version "2.30.0"
-  resolved eslint-plugin-flowtype-2.30.0.tgz#3054a265f9c8afe3046c3d41b72d32a736f9b4ae
+  version "2.30.3"
+  resolved eslint-plugin-flowtype-2.30.3.tgz#57835d2c0ed388da7a2725803ec32af2f437c301
   dependencies:
     lodash "^4.15.0"
 
@@ -1986,8 +1986,8 @@ eslint-plugin-react@^6.6.0:
     object.assign "^4.0.4"
 
 eslint@^3.9.1:
-  version "3.17.0"
-  resolved eslint-3.17.0.tgz#e2704b09c5bae9fb49ee8bafeea3832c7257d498
+  version "3.17.1"
+  resolved eslint-3.17.1.tgz#b80ae12d9c406d858406fccda627afce33ea10ea
   dependencies:
     babel-code-frame "^6.16.0"
     chalk "^1.1.3"
@@ -2118,8 +2118,8 @@ expand-tilde@^1.2.1, expand-tilde@^1.2.2:
     os-homedir "^1.0.1"
 
 express@^4.13.4:
-  version "4.15.1"
-  resolved express-4.15.1.tgz#e32897816d94cc477e45f0149a8966bc938a329b
+  version "4.15.2"
+  resolved express-4.15.2.tgz#af107fc148504457f2dca9a6f2571d7129b97b35
   dependencies:
     accepts "~1.3.3"
     array-flatten "1.1.1"
@@ -2140,7 +2140,7 @@ express@^4.13.4:
     parseurl "~1.3.1"
     path-to-regexp "0.1.7"
     proxy-addr "~1.1.3"
-    qs "6.3.1"
+    qs "6.4.0"
     range-parser "~1.2.0"
     send "0.15.1"
     serve-static "1.12.1"
@@ -2437,8 +2437,8 @@ fstream-ignore@~1.0.5:
     minimatch "^3.0.0"
 
 fstream@^1.0.0, fstream@^1.0.2, fstream@^1.0.8, fstream@~1.0.10:
-  version "1.0.10"
-  resolved fstream-1.0.10.tgz#604e8a92fe26ffd9f6fae30399d4984e1ab22822
+  version "1.0.11"
+  resolved fstream-1.0.11.tgz#5c1fb1f117477114f0632a0eb4b71b3cb0fd3171
   dependencies:
     graceful-fs "^4.1.2"
     inherits "~2.0.0"
@@ -2745,7 +2745,7 @@ gulp-util@^3, gulp-util@^3.0.0, gulp-util@^3.0.7:
 
 "gulp@git+https://github.com/gulpjs/gulp#4.0":
   version "4.0.0-alpha.2"
-  resolved "git+https://github.com/gulpjs/gulp#3f5aba28718dc19e4bf600fb88f128158ff2ff83"
+  resolved gulp-3f5aba28718dc19e4bf600fb88f128158ff2ff83#fd2cb0fb43246e321ea6a0b19e5cc131fa5a908b
   dependencies:
     glob-watcher "^3.0.0"
     gulp-cli "^1.0.0"
@@ -4203,8 +4203,8 @@ nopt@~1.0.10:
     abbrev "1"
 
 normalize-package-data@^2.3.2:
-  version "2.3.5"
-  resolved normalize-package-data-2.3.5.tgz#8d924f142960e1777e7ffe170543631cc7cb02df
+  version "2.3.6"
+  resolved normalize-package-data-2.3.6.tgz#498fa420c96401f787402ba21e600def9f981fff
   dependencies:
     hosted-git-info "^2.1.4"
     is-builtin-module "^1.0.0"
@@ -4618,13 +4618,13 @@ qs@2.3.3:
   version "2.3.3"
   resolved qs-2.3.3.tgz#e9e85adbe75da0bbe4c8e0476a086290f863b404
 
-qs@6.3.1, qs@~6.3.0:
-  version "6.3.1"
-  resolved qs-6.3.1.tgz#918c0b3bcd36679772baf135b1acb4c1651ed79d
-
-qs@^6.1.0, qs@^6.2.1:
+qs@6.4.0, qs@^6.1.0, qs@^6.2.1:
   version "6.4.0"
   resolved qs-6.4.0.tgz#13e26d28ad6b0ffaa91312cd3bf708ed351e7233
+
+qs@~6.3.0:
+  version "6.3.2"
+  resolved qs-6.3.2.tgz#e75bd5f6e268122a2a0e0bda630b2550c166502c
 
 querystring@0.2.0:
   version "0.2.0"
@@ -5679,8 +5679,8 @@ ua-parser-js@^0.7.9:
   resolved ua-parser-js-0.7.12.tgz#04c81a99bdd5dc52263ea29d24c6bf8d4818a4bb
 
 uglify-js@^2.6:
-  version "2.8.7"
-  resolved uglify-js-2.8.7.tgz#e0391911507b6d2e05697a528f1686e90a11b160
+  version "2.8.9"
+  resolved uglify-js-2.8.9.tgz#01194b91cc0795214093c05594ef5ac1e0b2e900
   dependencies:
     source-map "~0.5.1"
     uglify-to-browserify "~1.0.0"

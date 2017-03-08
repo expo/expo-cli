@@ -5140,9 +5140,9 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@33.0.0:
-  version "33.0.0"
-  resolved xdl-33.0.0.tgz#83046937be236a2a69e572dc5f14003bbf83d3b7
+xdl@34.0.0:
+  version "34.0.0"
+  resolved xdl-34.0.0.tgz#d48018d163a11ef77f1254521140570440938cc6
   dependencies:
     "@ccheever/crayon" "^5.0.0"
     "@exponent/json-file" "^5.3.0"
