@@ -323,14 +323,16 @@ export async function detachIOSAsync(projectRoot: string, expoDirectory: string,
   await configureIOSIconsAsync(manifest, iconPath, projectRoot);
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
+
   console.log('Configuring iOS dependencies...');
+  let podName = sdkVersion === '14.0.0' ? 'ExponentView' : 'ExpoKit';
   await renderExponentViewPodspecAsync(
-    path.join(tmpExpoDirectory, 'template-files', 'ios', 'ExpoKit.podspec'),
-    path.join(expoDirectory, 'ExpoKit.podspec'),
+    path.join(tmpExpoDirectory, 'template-files', 'ios', `${podName}.podspec`),
+    path.join(expoDirectory, `${podName}.podspec`),
     { IOS_EXPONENT_CLIENT_VERSION: infoPlist.EXClientVersion }
   );
   await renderPodfileAsync(
-    path.join(tmpExpoDirectory, 'template-files', 'ios', 'ExpoKit-Podfile'),
+    path.join(tmpExpoDirectory, 'template-files', 'ios', `${podName}-Podfile`),
     path.join(iosProjectDirectory, 'Podfile'),
     {
       TARGET_NAME: projectName,
