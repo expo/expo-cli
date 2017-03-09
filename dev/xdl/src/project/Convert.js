@@ -15,10 +15,13 @@ type params = {
   projectName: string,
   projectDescription: string,
   projectEntryPoint: string,
-}
+};
 
-export default async function convertProjectAsync(projectDir:string, {projectName, projectDescription, projectEntryPoint}:params) {
-  let projectSlug = slug(projectName.toLowerCase())
+export default (async function convertProjectAsync(
+  projectDir: string,
+  { projectName, projectDescription, projectEntryPoint }: params
+) {
+  let projectSlug = slug(projectName.toLowerCase());
 
   let expJsonTargetPath = path.join(projectDir, '/exp.json');
   let babelRcTargetPath = path.join(projectDir, '/.babelrc');
@@ -26,18 +29,18 @@ export default async function convertProjectAsync(projectDir:string, {projectNam
   let packageJsonSourcePath = path.join(projectDir, '/package.json');
   let packageJsonTargetPath = path.join(projectDir, '/package.json');
 
-  // Add values to exp.json,) save to given path
-  let expJson = {...expJsonTemplate};
+  // Add values to exp.json, save to given path
+  let expJson = { ...expJsonTemplate };
   expJson.name = projectName;
   expJson.description = projectDescription || 'No description';
   expJson.slug = projectSlug;
-  jsonfile.writeFileSync(expJsonTargetPath, expJson, {spaces: 2});
+  jsonfile.writeFileSync(expJsonTargetPath, expJson, { spaces: 2 });
   console.log('Wrote exp.json');
 
   // Add entry point and dependencies to package.json
   let unsupportedPackagesUsed = [];
   let packageJson = jsonfile.readFileSync(packageJsonSourcePath);
-  packageJson.dependencies = {...packageJson.dependencies, ...dependencies};
+  packageJson.dependencies = { ...packageJson.dependencies, ...dependencies };
 
   // Remove
   Object.keys(packageJson.dependencies).forEach(dep => {
@@ -47,28 +50,34 @@ export default async function convertProjectAsync(projectDir:string, {projectNam
     }
   });
 
-  if (projectEntryPoint !== 'index.*.js' && projectEntryPoint !== 'index.js' && projectEntryPoint !== 'index.ios.js' && projectEntryPoint !== 'index.android.js') {
+  // TODO: we don't actually support index.android.js and index.ios.js right now!
+  if (
+    projectEntryPoint !== 'index.*.js' &&
+    projectEntryPoint !== 'index.js' &&
+    projectEntryPoint !== 'index.ios.js' &&
+    projectEntryPoint !== 'index.android.js'
+  ) {
     packageJson.main = projectEntryPoint;
   }
-  jsonfile.writeFileSync(packageJsonTargetPath, packageJson, {spaces: 2});
+  jsonfile.writeFileSync(packageJsonTargetPath, packageJson, { spaces: 2 });
   console.log('Updated package.json');
 
   // TODO: Add import Expo from 'expo'; at the top of main file
   // TODO: Add .expo/* to gitignore
 
   // Copy babelrc
-  jsonfile.writeFileSync(babelRcTargetPath, babelRcTemplate, {spaces: 2});
+  jsonfile.writeFileSync(babelRcTargetPath, babelRcTemplate, { spaces: 2 });
   console.log('Updated .babelrc');
 
   // Save next steps to a file, display, exit
   await installAndInstructAsync(projectDir, unsupportedPackagesUsed);
-}
+});
 
 const dependencies = {
-  "@exponent/vector-icons": "~4.0.0",
-  "exponent": "~13.1.0",
-  "react": "~15.3.2",
-  "react-native": "github:exponent/react-native#sdk-13.0.1"
+  '@expo/vector-icons': '~4.0.0',
+  expo: '~14.0.2',
+  react: '~15.4.0',
+  'react-native': 'github:exponent/react-native#sdk-14.0.0',
 };
 
 const unsupportedPackages = {
@@ -80,11 +89,15 @@ const unsupportedPackages = {
 
 function showCompatibilityMessage(packages) {
   if (packages.length) {
-    return `Resolve any issues with potentially incompatible packages: \n\n` + packages.map(pkg => {
-      return `** ${pkg}: ${unsupportedPackages[pkg]}`
-    }).join('\n') + `\n** This may not be an exhaustive list of packages you will need to address -- any package that has a native code dependency will need to be converted to an Expo equivalent or removed. Refer to the SDK API reference here: https://docs.getexponent.com/versions/latest/sdk/index.html`;
+    return `Resolve any issues with potentially incompatible packages: \n\n` +
+      packages
+        .map(pkg => {
+          return `** ${pkg}: ${unsupportedPackages[pkg]}`;
+        })
+        .join('\n') +
+      `\n** This may not be an exhaustive list of packages you will need to address -- any package that has a native code dependency will need to be converted to an Expo equivalent or removed. Refer to the SDK API reference here: https://docs.expo.io/versions/latest/sdk/index.html`;
   } else {
-    return `We didn't detect any known incompatible packages, but if you have any with native dependencies installed, you will need to remove them from your project.`
+    return `We didn't detect any known incompatible packages, but if you have any with native dependencies installed, you will need to remove them from your project.`;
   }
 }
 
@@ -98,10 +111,9 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
   let npmInstallError = false;
   try {
     await spawnAsync('npm', ['install'], { cwd: projectDir, stdio: 'inherit' });
-  } catch(e) {
+  } catch (e) {
     console.log('\n');
     npmInstallError = true;
-
   }
   console.log('\n');
   console.log('#####################################################');
@@ -110,7 +122,9 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
 
   if (npmInstallError) {
     console.log('\n');
-    console.log('* There was an error though, please read the error message, try to fix the issue and then run npm install again. No need to run exp convert again.');
+    console.log(
+      '* There was an error though, please read the error message, try to fix the issue and then run npm install again. No need to run exp convert again.'
+    );
   }
 
   console.log('\n');
@@ -121,8 +135,10 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
 3. Delete your 'android' and 'ios' directories if you have them -- you no longer need to compile any native code to run your app.
 4. ${showCompatibilityMessage(unsupportedPackagesUsed)}
 5. Open your app in XDE and run it, fix bugs as they arise.
-`
+`;
   console.log(nextStepMessage);
   fse.outputFileSync(nextStepMessagePath, nextStepMessage);
-  console.log('(This message has been saved to expo-next-steps.txt for your convenience)');
+  console.log(
+    '(This message has been saved to expo-next-steps.txt for your convenience)'
+  );
 }
