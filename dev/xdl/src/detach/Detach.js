@@ -364,7 +364,10 @@ export async function detachIOSAsync(projectRoot: string, expoDirectory: string,
     }
   }
 
-  console.log('iOS detach is complete! To configure iOS native dependencies, make sure you have the Cocoapods gem, then `cd ios && ./pod-install-exponent.sh`\n');
+  const podsInstructions = (sdkVersion === '14.0.0') ?
+        '`cd ios && ./pod-install-exponent.sh`' :
+        '`cd ios && pod install`';
+  console.log(`iOS detach is complete! To configure iOS native dependencies, make sure you have the Cocoapods gem, then ${podsInstructions}\n`);
   return;
 }
 
