@@ -540,6 +540,7 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
   let packagerOpts = {
     port: packagerPort,
     projectRoots: projectRoot,
+    assetExts: ['ttf'],
   };
 
   const userPackagerOpts = _.get(exp, 'packagerOpts');
@@ -547,6 +548,9 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
     packagerOpts = {
       ...packagerOpts,
       ...userPackagerOpts,
+      ...(userPackagerOpts.assetExts ? { 
+        assetExts: _.uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]) 
+      }: {}),
     };
   }
 
