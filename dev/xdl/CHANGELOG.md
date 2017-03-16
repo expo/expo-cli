@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [35.0.0] - 2017-03-15
+
+### Changed
+
+* Detach changes for SDK 15.
+
 ## [34.0.0] - 2017-03-07
 
 ### Changed

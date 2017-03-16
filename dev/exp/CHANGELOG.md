@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [36.0.0] - 2017-03-15
+
+### Changed
+
+* Update `xdl` to v35.0.0.
+
 ## [35.2.0] - 2017-03-07
 
 ### Changed

@@ -3949,11 +3949,11 @@ qs@2.3.3:
   version "2.3.3"
   resolved qs-2.3.3.tgz#e9e85adbe75da0bbe4c8e0476a086290f863b404
 
-qs@6.4.0, qs@^6.1.0, qs@^6.2.1:
+qs@6.4.0, qs@^6.1.0:
   version "6.4.0"
   resolved qs-6.4.0.tgz#13e26d28ad6b0ffaa91312cd3bf708ed351e7233
 
-qs@~6.3.0:
+qs@^6.2.1, qs@~6.3.0:
   version "6.3.2"
   resolved qs-6.3.2.tgz#e75bd5f6e268122a2a0e0bda630b2550c166502c
 
@@ -5140,9 +5140,9 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@34.0.0:
-  version "34.0.0"
-  resolved xdl-34.0.0.tgz#d48018d163a11ef77f1254521140570440938cc6
+xdl@35.0.0:
+  version "35.0.0"
+  resolved xdl-35.0.0.tgz#875719b91b7f8cc6b767ff52aa682384183cc2be
   dependencies:
     "@ccheever/crayon" "^5.0.0"
     "@exponent/json-file" "^5.3.0"
