@@ -38,6 +38,7 @@ module.exports = {
   get UrlUtils() { return require('./UrlUtils'); },
   get User() { return require('./User').default; },
   get UserSettings() { return require('./UserSettings').default; },
+  get Utils() { return require('./Utils'); },
   get Versions() { return require('./Versions'); },
   get XDLError() { return require('./XDLError').default; },
   get XDLProvider() { return require('./state/XDLProvider').default; },
