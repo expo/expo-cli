@@ -29,7 +29,7 @@
   "dependencies": {
     "@ccheever/crayon": "^5.0.0",
     "@exponent/json-file": "^5.3.0",
-    "@exponent/ngrok": "2.2.1",
+    "@exponent/ngrok": "2.2.7",
     "@exponent/node-auth0": "^2.6.0",
     "@exponent/osascript": "^1.6.4",
     "@exponent/spawn-async": "^1.2.8",
