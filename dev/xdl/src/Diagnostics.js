@@ -23,12 +23,6 @@ import UserSettings from './UserSettings';
 import * as Utils from './Utils';
 import * as Watchman from './Watchman';
 
-// requires python, so might not be installed
-let diskusage;
-try {
-  diskusage = require('diskusage');
-} catch (e) {}
-
 async function _uploadLogsAsync(info: any): Promise<boolean|string> {
   let user = await UserManager.getCurrentUserAsync();
   let username = user ? user.username : 'anonymous';
@@ -142,15 +136,6 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   info.memoryTotal = _formatBytes(os.totalmem());
   info.ip = ip.address();
   info.hostname = os.hostname();
-
-  if (diskusage) {
-    try {
-      let result = await diskusage.promise.check((process.platform === 'win32') ? 'c:' : '/');
-      info.diskAvailable = _formatBytes(result.available);
-      info.diskFree = _formatBytes(result.free);
-      info.diskTotal = _formatBytes(result.total);
-    } catch (e) {}
-  }
 
   // TODO: fix these commands on linux
   if (process.platform === 'darwin') { // || process.platform === 'linux') {
