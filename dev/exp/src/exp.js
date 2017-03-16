@@ -264,6 +264,8 @@ function _registerLogs() {
             case NotificationCode.STOP_LOADING:
               simpleSpinner.stop();
               return;
+            case NotificationCode.DOWNLOAD_CLI_PROGRESS:
+              return;
           }
         }
 

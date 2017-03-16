@@ -28,6 +28,7 @@ module.exports = {
   get Intercom() { return require('./Intercom'); },
   get IosPodsTools() { return require('./detach/IosPodsTools'); },
   get IosShellApp() { return require('./detach/IosShellApp'); },
+  get MessageCode() { return require('./MessageCode').default; },
   get Logger() { return require('./Logger').default; },
   get NotificationCode() { return require('./NotificationCode').default; },
   get Project() { return require('./Project'); },

@@ -26,6 +26,7 @@ import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 import * as ProjectSettings from './ProjectSettings';
+import MessageCode from './MessageCode';
 
 // FIXME(perry) eliminate usage of this template
 export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
@@ -62,7 +63,7 @@ function _starterAppCacheDirectory() {
   return dir;
 }
 
-async function _downloadStarterAppAsync(templateId) {
+async function _downloadStarterAppAsync(templateId, progressFunction, retryFunction) {
   let versions = await Api.versionsAsync();
   let templateApp = null;
   for (let i = 0; i < versions.templates.length; i++) {
@@ -87,27 +88,26 @@ async function _downloadStarterAppAsync(templateId) {
     };
   }
 
-  await Api.downloadAsync(templateApp.url, path.join(_starterAppCacheDirectory(), filename));
+  let url = `https://s3.amazonaws.com/exp-starter-apps/${filename}`;
+  await Api.downloadAsync(url, path.join(_starterAppCacheDirectory(), filename), {}, progressFunction, retryFunction);
   return {
     starterAppPath,
     starterAppName,
   };
 }
 
-export async function createNewExpAsync(templateId: string, selectedDir: string, extraPackageJsonFields: any, opts: any) {
+export async function downloadTemplateApp(templateId: string, selectedDir: string, opts: any) {
   // Validate
   let schema = joi.object().keys({
     name: joi.string().required(),
   });
 
   // Should we validate that name is a valid name here?
-
   try {
-    await joi.promise.validate(opts, schema);
+    await joi.promise.validate({name: opts.name}, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
-
   let name = opts.name;
   let root = path.join(selectedDir, name);
 
@@ -124,29 +124,29 @@ export async function createNewExpAsync(templateId: string, selectedDir: string,
   } catch (e) {
     fileExists = false;
   }
-
-  if (fileExists) {
+  // This check is required because without it, the retry button would throw an error because the directory already exists,
+  // even though it is empty.
+  if (fileExists && fs.readdirSync(root).length !== 0) {
     throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `That directory already exists. Please choose a different parent directory or project name.`);
   }
 
   // Download files
   await mkdirp.promise(root);
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, MessageCode.DOWNLOADING);
+  let { starterAppPath } = await _downloadStarterAppAsync(templateId, opts.progressFunction, opts.retryFunction);
+  return { starterAppPath, name, root };
+}
 
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Downloading project files...');
-  let { starterAppPath } = await _downloadStarterAppAsync(templateId);
-
-  // Extract files
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Extracting project files...');
+export async function extractTemplateApp(starterAppPath: string, name: string, root: string) {
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, MessageCode.EXTRACTING);
   await Extract.extractAsync(starterAppPath, root);
 
   // Update files
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Customizing project...');
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, '\n' + MessageCode.CUSTOMIZING);
 
   let author = await UserSettings.getAsync('email', null);
   let packageJsonFile = new JsonFile(path.join(root, 'package.json'));
   let packageJson = await packageJsonFile.readAsync();
-  packageJson = Object.assign(packageJson, extraPackageJsonFields);
-
   let data = Object.assign(packageJson, {
     name,
     version: '0.0.0',

@@ -6,6 +6,7 @@ import 'instapromise';
 
 import _ from 'lodash';
 import request from 'request';
+import progress from 'request-progress';
 import fs from 'fs';
 import rimraf from 'rimraf';
 import path from 'path';
@@ -18,6 +19,9 @@ import * as Session from './Session';
 import UserManager from './User';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
+
+const TIMER_DURATION = 30000;
+const TIMEOUT = 60000;
 
 function ApiError(code, message) {
   let err = new Error(message);
@@ -95,10 +99,49 @@ async function _callMethodAsync(url, method, requestBody, requestOptions): Promi
   }
 }
 
-async function _downloadAsync(url, path) {
+async function _downloadAsync(url, path, progressFunction, retryFunction) {
+  let promptShown = false;
+  let currentProgress = 0;
+  let warningTimer = setTimeout(
+      () => {
+        retryFunction();
+        promptShown = true;
+      },
+    TIMER_DURATION
+  );
+
   return new Promise((resolve, reject) => {
     try {
-      request(url).pipe(fs.createWriteStream(path)).on('finish', resolve).on('error', reject);
+      progress(request(url, {timeout: TIMEOUT}, (err) => {
+        if (err !== null) {
+          if (err.code === 'ETIMEDOUT') {
+            reject(Error("Server timeout."));
+          } else {
+            reject(Error("Couldn't connect to the server, check your internet connection."));
+          }
+        }
+      }))
+        .on('progress', (progress) => {
+          const roundedProgress = Math.round(progress.percent * 100);
+          if (currentProgress !== roundedProgress) {
+            currentProgress = roundedProgress;
+            clearTimeout(warningTimer);
+            if (!promptShown) {
+              warningTimer = setTimeout(
+                  () => {
+                    retryFunction();
+                    promptShown = true;
+                  },
+                TIMER_DURATION
+              );
+            }
+          }
+          let percent = ((progress.percent !== undefined) ? progress.percent : 0);
+          progressFunction(percent);
+        })
+        .pipe(fs.createWriteStream(path))
+        .on('finish', resolve)
+        .on('error', reject);
     } catch (e) {
       reject(e);
     }
@@ -147,7 +190,7 @@ export default class ApiClient {
     return versions.sdkVersions;
   }
 
-  static async downloadAsync(url, outputPath, options = {}) {
+  static async downloadAsync(url, outputPath, options = {}, progressFunction, retryFunction) {
     if (options.extract) {
       let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
       let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
@@ -155,7 +198,7 @@ export default class ApiClient {
       await Extract.extractAsync(tmpPath, outputPath);
       rimraf.sync(tmpPath);
     } else {
-      await _downloadAsync(url, outputPath);
+      await _downloadAsync(url, outputPath, progressFunction, retryFunction);
     }
   }
 }
