@@ -75,9 +75,9 @@ export default (async function convertProjectAsync(
 
 const dependencies = {
   '@expo/vector-icons': '~4.0.0',
-  expo: '~14.0.2',
-  react: '~15.4.0',
-  'react-native': 'github:exponent/react-native#sdk-14.0.0',
+  expo: '~15.0.0',
+  react: '~15.4.2',
+  'react-native': 'github:exponent/react-native#sdk-15.0.0',
 };
 
 const unsupportedPackages = {
@@ -130,11 +130,12 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
   console.log('\n');
   const nextStepMessage = `Next steps:
 ------------
-1. Find your AppRegistry.registerComponent('YourApplicationName', () => YourRootComponent) call and replace it with Expo.registerRootComponent(YourRootComponent) (you will need to import Expo from 'expo').
-2. Upload your app icon somewhere on the web and add it the newly created exp.json file, in the iconUrl and loading.iconUrl fields.
-3. Delete your 'android' and 'ios' directories if you have them -- you no longer need to compile any native code to run your app.
-4. ${showCompatibilityMessage(unsupportedPackagesUsed)}
-5. Open your app in XDE and run it, fix bugs as they arise.
+1. If you have separate index.ios.js and index.android.js files, you'll need to create a main.js file that contains \`require('./index');\`. Also set `"main": "main.js"` in package.json.
+2. Find your AppRegistry.registerComponent('YourApplicationName', () => YourRootComponent) call and replace it with Expo.registerRootComponent(YourRootComponent) (you will need to import Expo from 'expo').
+3. Upload your app icon somewhere on the web and add it the newly created exp.json file, in the iconUrl and loading.iconUrl fields.
+4. Delete your 'android' and 'ios' directories if you have them -- you no longer need to compile any native code to run your app.
+5. ${showCompatibilityMessage(unsupportedPackagesUsed)}
+6. Open your app in XDE and run it, fix bugs as they arise.
 `;
   console.log(nextStepMessage);
   fse.outputFileSync(nextStepMessagePath, nextStepMessage);
