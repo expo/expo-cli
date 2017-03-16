@@ -21,7 +21,8 @@ class ConsoleRawStream {
   }
 }
 
-let logger = bunyan.createLogger({
+// TODO(perry) teach flow about the logger type here
+let logger: any = bunyan.createLogger({
   name: 'expo',
   serializers: bunyan.stdSerializers,
   streams: [
