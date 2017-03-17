@@ -10,6 +10,22 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [36.0.0] - 2017-03-16
+
+### Added
+
+* Converting RN projects to SDK 15 is now supported.
+* Improved template downloads.
+
+### Changed
+
+* Eliminated a large class of Flow errors for xdl consumers.
+* xdl's ngrok dependency now bundles the binaries with the package. This is a tradeoff -- the download is larger, but there's no need to rely on an external CDN which may or may not respect npm/yarn's network configuration.
+
+### Removed
+
+* Removed the `diskusage` and `runas` optional dependencies. They were causing problems for users without native build tools who were also using certain versions of yarn.
+
 ## [35.0.0] - 2017-03-15
 
 ### Changed
