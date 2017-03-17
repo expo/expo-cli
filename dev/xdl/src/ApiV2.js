@@ -6,7 +6,8 @@ import 'instapromise';
 
 import _ from 'lodash';
 import ExtendableError from 'es6-error';
-import request from 'request';
+import querystring from 'querystring';
+import axios from 'axios';
 
 import Config from './Config';
 
@@ -125,7 +126,6 @@ export default class ApiV2Client {
     extraRequestOptions: Object
   ): Promise<*> {
     const url = `${API_BASE_URL}/${methodName}`;
-
     let reqOptions: Object = {
       url,
       method: options.httpMethod,
@@ -142,24 +142,23 @@ export default class ApiV2Client {
       reqOptions.headers['Exp-Access-Token'] = this.accessToken;
     }
 
-    // Handle qs
-    if (options.queryParameters) {
-      reqOptions.qs = options.queryParameters;
-    }
-
     // Handle body
     if (options.body) {
-      reqOptions.body = options.body;
-      reqOptions.json = true;
+      reqOptions.data = options.body;
     }
 
     reqOptions = _.merge({}, reqOptions, extraRequestOptions);
-
     let response;
     let result;
+    let queryString;
     try {
-      response = await request.promise(reqOptions);
-      result = response.body;
+      if (!options.queryParameters) {
+        response = await axios.request(reqOptions);
+      } else {
+        queryString = querystring.stringify(options.queryParameters);
+        response = await axios.request({ ...reqOptions, params: queryString });
+      }
+      result = response.data;
     } catch (e) {
       const error: ErrorWithResponseBody = new Error(
         `There was a problem understanding the server. Please try again.`

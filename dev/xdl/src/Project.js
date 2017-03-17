@@ -31,6 +31,7 @@ import logger from './Logger';
 import * as ExponentTools from './detach/ExponentTools';
 import * as Exp from './Exp';
 import * as ExpSchema from './project/ExpSchema';
+import FormData, { append } from './tools/FormData';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
@@ -338,21 +339,12 @@ async function _uploadArtifactsAsync({
   options,
 }) {
   logger.global.info('Uploading JavaScript bundles');
-  let formData = {
-    expJson: JSON.stringify(exp),
-    iosBundle: {
-      value: iosBundle,
-      options: {
-        filename: 'iosBundle',
-      },
-    },
-    androidBundle: {
-      value: androidBundle,
-      options: {
-        filename: 'androidBundle',
-      },
-    },
-  };
+  let formData = new FormData();
+  append(formData, 'expJson', JSON.stringify(exp));
+  append(formData, 'iosBundle', iosBundle, { filename: 'iosBundle' });
+  append(formData, 'androidBundle', androidBundle, {
+    filename: 'androidBundle',
+  });
 
   let response = await Api.callMethodAsync('publish', [options], 'put', null, {
     formData,
@@ -640,19 +632,16 @@ async function uploadAssetsAsync(projectRoot, assets) {
   // Upload them!
   await Promise.all(
     _.chunk(missing, 5).map(async keys => {
-      let formData = {};
+      let formData = new FormData();
       keys.forEach(key => {
         ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
 
         let relativePath = paths[key].replace(projectRoot, '');
         logger.global.info({ quiet: true }, `Uploading ${relativePath}`);
 
-        formData[key] = {
-          value: fs.createReadStream(paths[key]),
-          options: {
-            filename: paths[key],
-          },
-        };
+        append(formData, key, fs.createReadStream(paths[key]), {
+          filename: paths[key],
+        });
       });
       await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
     })
