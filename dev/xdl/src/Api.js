@@ -104,7 +104,10 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
   let currentProgress = 0;
   let warningTimer = setTimeout(
       () => {
-        retryFunction();
+        // TODO (perry & jesse) figure out if this is the right semantics
+        if (retryFunction) {
+          retryFunction();
+        }
         promptShown = true;
       },
     TIMER_DURATION
@@ -129,7 +132,10 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
             if (!promptShown) {
               warningTimer = setTimeout(
                   () => {
-                    retryFunction();
+                    // TODO(perry & jesse) figure out if this is the right fix
+                    if (retryFunction) {
+                      retryFunction();
+                    }
                     promptShown = true;
                   },
                 TIMER_DURATION
@@ -137,7 +143,10 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
             }
           }
           let percent = ((progress.percent !== undefined) ? progress.percent : 0);
-          progressFunction(percent);
+          // TODO(perry & jesse) figure out if this is the correct fix for this bug
+          if (progressFunction) {
+            progressFunction(percent);
+          }
         })
         .pipe(fs.createWriteStream(path))
         .on('finish', resolve)
