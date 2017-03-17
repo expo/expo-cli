@@ -165,6 +165,10 @@ async function configureStandaloneIOSShellPlistAsync(configFilePath, manifest, m
       // the developer adds the correct entitlements to their bundle id.
       shellConfig.isManifestVerificationBypassed = true;
     }
+    if (manifest.ios && manifest.ios.isRemoteJSEnabled) {
+      // enable/disable code push if the developer provided specific behavior
+      shellConfig.isRemoteJSEnabled = manifest.ios.isRemoteJSEnabled;
+    }
 
     console.log('Using shell config:', shellConfig);
     return shellConfig;
