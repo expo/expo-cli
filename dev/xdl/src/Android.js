@@ -137,9 +137,7 @@ async function _uninstallExpoAsync() {
 
 export async function upgradeExpoAsync() {
   try {
-    if (!(await _assertDeviceReadyAsync())) {
-      return;
-    }
+    await _assertDeviceReadyAsync();
 
     await _uninstallExpoAsync();
     await _installExpoAsync();
