@@ -105,7 +105,7 @@ export async function detachAsync(projectRoot: string) {
   }
 
   if (!exp.android || !exp.android.package) {
-    throw new Error(`${configName} is missing android.package field. See https://docs.getexponent.com/versions/latest/guides/configuration.html#package`);
+    throw new Error(`${configName} is missing android.package field. See https://docs.expo.io/versions/latest/guides/configuration.html#package`);
   }
 
   if (!exp.sdkVersion) {

@@ -206,7 +206,7 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
     exp = pkg.exp;
     logError(projectRoot, 'expo', `Error: Move your "exp" config from package.json to exp.json.`);
   } else if (!exp && !pkg.exp) {
-    logError(projectRoot, 'expo', `Error: Missing ${configName}. See https://docs.getexponent.com/`);
+    logError(projectRoot, 'expo', `Error: Missing ${configName}. See https://docs.expo.io/`);
     return { exp: null, pkg: null };
   }
 

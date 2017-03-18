@@ -47,7 +47,7 @@ export default class IOSBuilder extends BaseBuilder {
     } } = await Exp.getPublishInfoAsync(this.projectDir);
 
     if (!bundleIdentifier) {
-      throw new XDLError(ErrorCode.INVALID_OPTIONS, `Your project must have a bundleIdentifier set in exp.json. See https://docs.getexponent.com/versions/latest/guides/building-standalone-apps.html`);
+      throw new XDLError(ErrorCode.INVALID_OPTIONS, `Your project must have a bundleIdentifier set in exp.json. See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`);
     }
 
     // Check the status of any current builds

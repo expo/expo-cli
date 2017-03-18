@@ -51,7 +51,7 @@ const config: XDLConfig = {
   validation: {
     reactNativeVersionWarnings: true,
   },
-  helpUrl: 'https://docs.getexponent.com/',
+  helpUrl: 'https://docs.expo.io/',
   offline: false,
   useReduxNotifications: false,
 };

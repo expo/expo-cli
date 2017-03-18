@@ -3,7 +3,7 @@ The Expo Development CLI
 
 ## Installation
 
-[Installation instructions and documentation here.](https://docs.getexponent.com/versions/latest/guides/exp-cli.html)
+[Installation instructions and documentation here.](https://docs.expo.io/versions/latest/guides/exp-cli.html)
 
 ## Getting Started
 

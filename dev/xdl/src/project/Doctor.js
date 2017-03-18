@@ -123,7 +123,7 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
     let validator = new jsonschema.Validator();
     let validationResult = validator.validate(exp, schema);
     if (validationResult.errors && validationResult.errors.length > 0) {
-      let fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in ${configName}. See https://docs.getexponent.com/versions/v${sdkVersion}/guides/configuration.html.`;
+      let fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
 
       for (let error of validationResult.errors) {
         // Formate the message nicely
