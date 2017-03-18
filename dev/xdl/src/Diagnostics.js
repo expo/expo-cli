@@ -184,6 +184,7 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
     } catch (e) {}
   }
 
+  // TODO: can probably get rid of these options if we remove Intercom
   if (options.uploadLogs) {
     info.url = await _uploadLogsAsync(info);
   }
