@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [36.1.0] - 2017-03-17
+
+### Changed
+
+* Fixed `Android.upgradeExpoAsync`.
+* Change docs url from docs.getexponent.com to docs.expo.io.
+
 ## [36.0.0] - 2017-03-16
 
 ### Added
