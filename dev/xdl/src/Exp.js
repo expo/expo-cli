@@ -142,7 +142,7 @@ export async function extractTemplateApp(starterAppPath: string, name: string, r
   await Extract.extractAsync(starterAppPath, root);
 
   // Update files
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, '\n' + MessageCode.CUSTOMIZING);
+  Logger.notifications.info({code: NotificationCode.PROGRESS}, MessageCode.CUSTOMIZING);
 
   let author = await UserSettings.getAsync('email', null);
   let packageJsonFile = new JsonFile(path.join(root, 'package.json'));

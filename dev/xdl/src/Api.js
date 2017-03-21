@@ -149,7 +149,13 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
           }
         })
         .pipe(fs.createWriteStream(path))
-        .on('finish', resolve)
+        .on('finish', () => {
+          // Since .on'finish' overrides on.'progress', loading bar will never get to 100%
+          // this line fixes it.
+          progressFunction(100);
+          clearTimeout(warningTimer);
+          resolve();
+        })
         .on('error', reject);
     } catch (e) {
       reject(e);
