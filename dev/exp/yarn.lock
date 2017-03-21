@@ -35,17 +35,15 @@
   version "1.0.0"
   resolved "@exponent-md5hex-1.0.0.tgz#208df8fb8bbc74acb7d3e41568249eba0dab55f7"
 
-"@exponent/ngrok@2.2.1":
-  version "2.2.1"
-  resolved "@exponent-ngrok-2.2.1.tgz#71ec9a00bd3c754bb5b55f9d74ac649d2f602191"
+"@exponent/ngrok@2.2.7":
+  version "2.2.7"
+  resolved "@exponent-ngrok-2.2.7.tgz#37fe66f922b1003da2a78c66b7d4d3bc9313e423"
   dependencies:
     async "^0.9.0"
     decompress-zip "^0.3.0"
     lock "^0.1.2"
-    node-uuid "^1.4.3"
-    request "^2.55.0"
-    tar.gz "^1.0.3"
-    xtend "^4.0.1"
+    request "^2.81.0"
+    uuid "^3.0.0"
 
 "@exponent/node-auth0@^2.6.0":
   version "2.6.0"
@@ -247,12 +245,6 @@ array-each@^1.0.0:
 array-flatten@1.1.1:
   version "1.1.1"
   resolved array-flatten-1.1.1.tgz#9a5f699051b1e7073328f2a008968b64ea2955d2
-
-array-index@~0.1.1:
-  version "0.1.1"
-  resolved array-index-0.1.1.tgz#4d5eaf06cc3d925847cd73d1535c217ba306d3e1
-  dependencies:
-    debug "*"
 
 array-initial@^1.0.0:
   version "1.0.0"
@@ -1040,10 +1032,6 @@ binary@^0.3.0:
     buffers "~0.1.1"
     chainsaw "~0.1.0"
 
-bindings@1, bindings@~1.2.0:
-  version "1.2.1"
-  resolved bindings-1.2.1.tgz#14ad6113812d2d37d72e67b4cacb4bb726505f11
-
 block-stream@*:
   version "0.0.9"
   resolved block-stream-0.0.9.tgz#13ebfe778a03205cfe03751481ebb4b3300c126a
@@ -1572,15 +1560,6 @@ detective@^4.3.1:
     acorn "^4.0.3"
     defined "^1.0.0"
 
-diskusage@^0.1.5:
-  version "0.1.5"
-  resolved diskusage-0.1.5.tgz#7644b9dd3acd9837eb1838b635d14ce05b3d9227
-  dependencies:
-    ffi "^2.0.0"
-    ref "^1.1.1"
-    ref-array "~1.1.1"
-    ref-struct "~1.0.1"
-
 doctrine@1.5.0, doctrine@^1.2.2:
   version "1.5.0"
   resolved doctrine-1.5.0.tgz#379dce730f6166f76cefa4e6707a159b02c5a6fa
@@ -2018,16 +1997,6 @@ fbjs@^0.8.4:
     promise "^7.1.1"
     setimmediate "^1.0.5"
     ua-parser-js "^0.7.9"
-
-ffi@^2.0.0:
-  version "2.2.0"
-  resolved ffi-2.2.0.tgz#bf18b04666a29f71227ed56895d5430af47042fa
-  dependencies:
-    bindings "~1.2.0"
-    debug "2"
-    nan "2"
-    ref "1"
-    ref-struct "1"
 
 figures@^1.3.5:
   version "1.7.0"
@@ -2520,7 +2489,7 @@ har-schema@^1.0.5:
   version "1.0.5"
   resolved har-schema-1.0.5.tgz#d263135f43307c02c602afc8fe95970c0151369e
 
-har-validator@~4.2.0:
+har-validator@~4.2.0, har-validator@~4.2.1:
   version "4.2.1"
   resolved har-validator-4.2.1.tgz#33481d0f1bbff600dd203d75812a6a5fba002e2a
   dependencies:
@@ -3530,7 +3499,7 @@ mz@^2.6.0:
     object-assign "^4.0.1"
     thenify-all "^1.0.0"
 
-nan@2, nan@2.x, nan@^2.3.0, nan@^2.3.3:
+nan@^2.3.0, nan@^2.3.3:
   version "2.5.1"
   resolved nan-2.5.1.tgz#d5b01691253326a97a2bbee9e61c55d8d60351e2
 
@@ -3575,7 +3544,7 @@ node-pre-gyp@^0.6.29:
     tar "~2.2.1"
     tar-pack "~3.3.0"
 
-node-uuid@^1.4.3, node-uuid@^1.4.7:
+node-uuid@^1.4.7:
   version "1.4.7"
   resolved node-uuid-1.4.7.tgz#6da5a17668c4b3dd59623bda11cf7fa4c1f60a6f
 
@@ -3949,7 +3918,7 @@ qs@2.3.3:
   version "2.3.3"
   resolved qs-2.3.3.tgz#e9e85adbe75da0bbe4c8e0476a086290f863b404
 
-qs@6.4.0, qs@^6.1.0:
+qs@6.4.0, qs@^6.1.0, qs@~6.4.0:
   version "6.4.0"
   resolved qs-6.4.0.tgz#13e26d28ad6b0ffaa91312cd3bf708ed351e7233
 
@@ -4131,29 +4100,6 @@ redux@^3.6.0:
     loose-envify "^1.1.0"
     symbol-observable "^1.0.2"
 
-ref-array@~1.1.1:
-  version "1.1.2"
-  resolved ref-array-1.1.2.tgz#38598e3e84e0dfead3a8ec6b5974b0617ec86a35
-  dependencies:
-    array-index "~0.1.1"
-    debug "2"
-    ref "1"
-
-ref-struct@1, ref-struct@~1.0.1:
-  version "1.0.2"
-  resolved ref-struct-1.0.2.tgz#6e37cafa2db5f5f2ddaf5ae8bafced3e246cbc90
-  dependencies:
-    debug "2"
-    ref "1"
-
-ref@1, ref@^1.1.1:
-  version "1.3.4"
-  resolved ref-1.3.4.tgz#724d2bf8ac85f8c8db194d3d85be6efe416bc1e5
-  dependencies:
-    bindings "1"
-    debug "2"
-    nan "2"
-
 regenerate@^1.2.1:
   version "1.3.2"
   resolved regenerate-1.3.2.tgz#d1941c67bad437e1be76433add5b385f95b19260
@@ -4229,7 +4175,13 @@ replace-ext@0.0.1:
   version "0.0.1"
   resolved replace-ext-0.0.1.tgz#29bbd92078a739f0bcce2b4ee41e837953522924
 
-request@^2.55.0, request@^2.74.0, request@^2.75.0, request@^2.79.0:
+request-progress@^3.0.0:
+  version "3.0.0"
+  resolved request-progress-3.0.0.tgz#4ca754081c7fec63f505e4faa825aa06cd669dbe
+  dependencies:
+    throttleit "^1.0.0"
+
+request@^2.74.0, request@^2.75.0, request@^2.79.0:
   version "2.80.0"
   resolved request-2.80.0.tgz#8cc162d76d79381cdefdd3505d76b80b60589bd0
   dependencies:
@@ -4253,6 +4205,33 @@ request@^2.55.0, request@^2.74.0, request@^2.75.0, request@^2.79.0:
     stringstream "~0.0.4"
     tough-cookie "~2.3.0"
     tunnel-agent "~0.4.1"
+    uuid "^3.0.0"
+
+request@^2.81.0:
+  version "2.81.0"
+  resolved request-2.81.0.tgz#c6928946a0e06c5f8d6f8a9333469ffda46298a0
+  dependencies:
+    aws-sign2 "~0.6.0"
+    aws4 "^1.2.1"
+    caseless "~0.12.0"
+    combined-stream "~1.0.5"
+    extend "~3.0.0"
+    forever-agent "~0.6.1"
+    form-data "~2.1.1"
+    har-validator "~4.2.1"
+    hawk "~3.1.3"
+    http-signature "~1.1.0"
+    is-typedarray "~1.0.0"
+    isstream "~0.1.2"
+    json-stringify-safe "~5.0.1"
+    mime-types "~2.1.7"
+    oauth-sign "~0.8.1"
+    performance-now "^0.2.0"
+    qs "~6.4.0"
+    safe-buffer "^5.0.1"
+    stringstream "~0.0.4"
+    tough-cookie "~2.3.0"
+    tunnel-agent "^0.6.0"
     uuid "^3.0.0"
 
 require-uncached@^1.0.2:
@@ -4341,12 +4320,6 @@ run-async@^2.2.0:
   resolved run-async-2.3.0.tgz#0371ab4ae0bdd720d4166d7dfda64ff7a445a6c0
   dependencies:
     is-promise "^2.1.0"
-
-runas@^3.1.1:
-  version "3.1.1"
-  resolved runas-3.1.1.tgz#52dd538db0e41745399535a347091ba45cc0eab0
-  dependencies:
-    nan "2.x"
 
 rx-lite@^3.1.2:
   version "3.1.2"
@@ -4755,7 +4728,7 @@ tar-pack@~3.3.0:
     tar "~2.2.1"
     uid-number "~0.0.6"
 
-tar.gz@^1.0.3, tar.gz@^1.0.5:
+tar.gz@^1.0.5:
   version "1.0.5"
   resolved tar.gz-1.0.5.tgz#e1ada7e45ef2241b4b1ee58123c8f40b5d3c1bc4
   dependencies:
@@ -4788,6 +4761,10 @@ thenify-all@^1.0.0:
   resolved thenify-3.2.1.tgz#251fd1c80aff6e5cf57cb179ab1fcb724269bd11
   dependencies:
     any-promise "^1.0.0"
+
+throttleit@^1.0.0:
+  version "1.0.0"
+  resolved throttleit-1.0.0.tgz#9e785836daf46743145a5984b6268d828528ac6c
 
 through2-filter@^2.0.0:
   version "2.0.0"
@@ -4898,6 +4875,12 @@ tryit@^1.0.1:
 tryor@~0.1.2:
   version "0.1.2"
   resolved tryor-0.1.2.tgz#8145e4ca7caff40acde3ccf946e8b8bb75b4172b
+
+tunnel-agent@^0.6.0:
+  version "0.6.0"
+  resolved tunnel-agent-0.6.0.tgz#27a5dea06b36b04a0a9966774b290868f0fc40fd
+  dependencies:
+    safe-buffer "^5.0.1"
 
 tunnel-agent@~0.4.1:
   version "0.4.3"
@@ -5140,13 +5123,13 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@35.0.0:
-  version "35.0.0"
-  resolved xdl-35.0.0.tgz#875719b91b7f8cc6b767ff52aa682384183cc2be
+xdl@37.0.0:
+  version "37.0.0"
+  resolved xdl-37.0.0.tgz#45353b436368446532a317dec6a92cd1dcfd9107
   dependencies:
     "@ccheever/crayon" "^5.0.0"
     "@exponent/json-file" "^5.3.0"
-    "@exponent/ngrok" "2.2.1"
+    "@exponent/ngrok" "2.2.7"
     "@exponent/node-auth0" "^2.6.0"
     "@exponent/osascript" "^1.6.4"
     "@exponent/spawn-async" "^1.2.8"
@@ -5189,6 +5172,7 @@ xdl@35.0.0:
     redux "^3.6.0"
     redux-logger "^2.7.4"
     request "^2.74.0"
+    request-progress "^3.0.0"
     semver "^5.3.0"
     slugid "^1.1.0"
     slugify "^1.0.2"
@@ -5198,9 +5182,6 @@ xdl@35.0.0:
     url "^0.11.0"
     xhr2 "^0.1.3"
     yesno "^0.0.1"
-  optionalDependencies:
-    diskusage "^0.1.5"
-    runas "^3.1.1"
 
 xhr2@^0.1.3:
   version "0.1.4"
