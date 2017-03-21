@@ -110,7 +110,7 @@ export class UserManagerInstance {
   }
 
   initialize(clientID: ?string) {
-    if (clientId) {
+    if (clientID) {
       this.clientID = clientID;
     }
     this.loginServer = null;
