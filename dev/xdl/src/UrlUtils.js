@@ -144,7 +144,11 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
     hostname = 'localhost';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else if (opts.hostType === 'lan' || Config.offline) {
-    if (opts.lanType === 'ip') {
+    if (process.env.EXPO_PACKAGER_HOSTNAME) {
+      hostname = process.env.EXPO_PACKAGER_HOSTNAME;
+    } else if (process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
+      hostname = process.env.REACT_NATIVE_PACKAGER_HOSTNAME;
+    } else if (opts.lanType === 'ip') {
       hostname = ip.address();
     } else {
       // Some old versions of OSX work with hostname but not local ip address.
