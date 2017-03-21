@@ -548,8 +548,8 @@ export async function startReactNativeServerAsync(projectRoot: string, options: 
     packagerOpts = {
       ...packagerOpts,
       ...userPackagerOpts,
-      ...(userPackagerOpts.assetExts ? { 
-        assetExts: _.uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]) 
+      ...(userPackagerOpts.assetExts ? {
+        assetExts: _.uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts])
       }: {}),
     };
   }
@@ -712,6 +712,13 @@ export async function startExpoServerAsync(projectRoot: string) {
         tool: Config.developerTool,
       };
       manifest.packagerOpts = packagerOpts;
+
+      manifest.env = {};
+      for (let key of Object.keys(process.env)) {
+        if (key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_')) {
+          manifest.env[key] = process.env[key];
+        }
+      }
 
       let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
       let platform = req.headers['exponent-platform'] || 'ios';
