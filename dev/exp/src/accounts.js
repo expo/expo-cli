@@ -15,8 +15,8 @@ import type {
   UserOrLegacyUser,
 } from 'xdl/build/User';
 
-const EXP_CLIENT_ID = 'Zso9S1J7xpRYzT4QNlanGYLL5aBrqy1l';
-UserManager.initialize(EXP_CLIENT_ID);
+// const EXP_CLIENT_ID = 'Zso9S1J7xpRYzT4QNlanGYLL5aBrqy1l';
+UserManager.initialize();
 
 type CommandOptions = {
   facebook?: boolean,

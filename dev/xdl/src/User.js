@@ -109,8 +109,10 @@ export class UserManagerInstance {
     return __globalInstance;
   }
 
-  initialize(clientID: string) {
-    this.clientID = clientID;
+  initialize(clientID: ?string) {
+    if (clientId) {
+      this.clientID = clientID;
+    }
     this.loginServer = null;
     this._currentUser = null;
     this._getSessionLock = new Semaphore();
