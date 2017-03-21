@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [37.0.1] - 2017-03-21
+
+### Changed
+
+* Fixed download bug.
+
 ## [37.0.0] - 2017-03-20
 
 ### Added
