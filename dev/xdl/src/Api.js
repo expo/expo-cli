@@ -104,7 +104,6 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
   let currentProgress = 0;
   let warningTimer = setTimeout(
       () => {
-        // TODO (perry & jesse) figure out if this is the right semantics
         if (retryFunction) {
           retryFunction();
         }
@@ -132,7 +131,6 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
             if (!promptShown) {
               warningTimer = setTimeout(
                   () => {
-                    // TODO(perry & jesse) figure out if this is the right fix
                     if (retryFunction) {
                       retryFunction();
                     }
@@ -143,7 +141,6 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
             }
           }
           let percent = ((progress.percent !== undefined) ? progress.percent : 0);
-          // TODO(perry & jesse) figure out if this is the correct fix for this bug
           if (progressFunction) {
             progressFunction(percent);
           }
@@ -152,7 +149,9 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
         .on('finish', () => {
           // Since on('finish') overrides on('progress'), loading bar will never get to 100%
           // this line fixes it.
-          progressFunction(100);
+          if (progressFunction) {
+            progressFunction(100);
+          }
           clearTimeout(warningTimer);
           resolve();
         })
