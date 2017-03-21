@@ -10,6 +10,17 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [37.0.0] - 2017-03-20
+
+### Added
+
+* Support `EXPO_PACKAGER_HOSTNAME` and `REACT_NATIVE_PACKAGER_HOSTNAME` env variables.
+* All `EXPO_*` and `REACT_NATIVE_*` env variables are sent in the manifest.
+
+### Changed
+
+* New project download progress bar fixes.
+
 ## [36.1.0] - 2017-03-17
 
 ### Changed

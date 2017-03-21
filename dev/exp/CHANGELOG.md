@@ -14,7 +14,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Changed
 
-* Update `xdl` to v36.1.0.
+* Update `xdl` to v37.0.0.
 
 ## [36.0.0] - 2017-03-15
 
