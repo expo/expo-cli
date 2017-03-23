@@ -183,6 +183,9 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
 
   if (port) {
     url_ += `:${port}`;
+  } else {
+    // Android HMR breaks without this :|
+    url_ += ':80';
   }
 
   if (opts.urlType === 'redirect') {
