@@ -17,7 +17,11 @@ describe('UserManager', () => {
   let userForTestPassword;
 
   beforeAll(async () => {
-    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = path.join('/', 'tmp', `.expo-${uuid.v1()}`);
+    process.env.__UNSAFE_EXPO_HOME_DIRECTORY = path.join(
+      '/',
+      'tmp',
+      `.expo-${uuid.v1()}`
+    );
 
     const UserManager = _newTestUserManager();
 
@@ -134,7 +138,7 @@ describe('UserManager', () => {
       password: userForTestPassword,
     });
     // set the refresh session threshold to a very high value, simulating an expired token
-    UserManager.refreshSessionThreshold = 605000;
+    UserManager.refreshSessionThreshold = 63072000;
 
     // Spy on _auth0RefreshToken
     const _auth0RefreshTokenSpy = jest.fn(UserManager._auth0RefreshToken);
