@@ -256,6 +256,10 @@ export default class PackagerLogsStream {
   }
 
   _legacyFormatter = (chunk: ChunkT) => {
+    if (typeof chunk.msg === 'object') {
+      return chunk;
+    }
+
     if (chunk.msg.match(/Transforming modules/)) {
       let progress = chunk.msg.match(/\d+\.\d+% \(\d+\/\d+\)/);
       if (progress && progress[0]) {
@@ -267,6 +271,10 @@ export default class PackagerLogsStream {
   };
 
   _cleanUpNodeErrors = (chunk: ChunkT) => {
+    if (typeof chunk.msg === 'object') {
+      return chunk;
+    }
+
     if (chunk.msg.match(/\(node:.\d*\)/)) {
       // Example: (node:13817) UnhandledPromiseRejectionWarning: Unhandled promise rejection (rejection id: 1): SyntaxError: SyntaxError /Users/brent/universe/apps/new-project-template/main.js: Unexpected token (10:6)
       // The first part of this is totally useless, so let's remove it.

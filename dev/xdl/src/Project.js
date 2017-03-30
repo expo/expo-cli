@@ -616,7 +616,7 @@ export async function startReactNativeServerAsync(
     assetExts: ['ttf'],
   };
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (Versions.gteSdkVersion(exp, '15.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '15.0.0')) {
     delete packagerOpts.customLogReporterPath;
   }
   const userPackagerOpts = _.get(exp, 'packagerOpts');
