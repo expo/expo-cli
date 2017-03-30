@@ -4,6 +4,7 @@
 
 import 'instapromise';
 
+import ProgressBar from 'progress';
 import _ from 'lodash-node';
 import bunyan from 'bunyan';
 import crayon from '@ccheever/crayon';
@@ -19,6 +20,7 @@ import {
   Config,
   Doctor,
   Logger,
+  PackagerLogsStream,
   NotificationCode,
   ProjectUtils,
   User as UserManager,
@@ -44,14 +46,19 @@ Command.prototype.allowOffline = function() {
 };
 
 Command.prototype.allowNonInteractive = function() {
-  this.option('--non-interactive', 'Fails if an interactive prompt would be required to continue.')
+  this.option(
+    '--non-interactive',
+    'Fails if an interactive prompt would be required to continue.'
+  );
   return this;
-}
+};
 
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
   return this.action(async (...args) => {
     if (!skipUpdateCheck) {
-      try { await checkForUpdateAsync(); } catch (e) {}
+      try {
+        await checkForUpdateAsync();
+      } catch (e) {}
     }
 
     try {
@@ -79,87 +86,120 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
   });
 };
 
-Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
-  return this.asyncAction(async (projectDir, ...args) => {
-    try { await checkForUpdateAsync(); } catch (e) {}
+Command.prototype.asyncActionProjectDir = function(
+  asyncFn,
+  skipProjectValidation,
+  skipAuthCheck
+) {
+  return this.asyncAction(
+    async (projectDir, ...args) => {
+      try {
+        await checkForUpdateAsync();
+      } catch (e) {}
 
-    const opts = args[0];
-    if (!skipAuthCheck && !opts.nonInteractive && !opts.offline) {
-      await loginOrRegisterIfLoggedOut();
-    }
-
-    if (!skipAuthCheck) {
-      await UserManager.ensureLoggedInAsync();
-    }
-
-    if (!projectDir) {
-      projectDir = process.cwd();
-    } else {
-      projectDir = path.resolve(process.cwd(), projectDir);
-    }
-
-    const logLines = (msg, logFn) => {
-      for (let line of msg.split('\n')) {
-        logFn(line);
+      const opts = args[0];
+      if (!skipAuthCheck && !opts.nonInteractive && !opts.offline) {
+        await loginOrRegisterIfLoggedOut();
       }
-    }
 
-    const logWithLevel = (chunk) => {
-      if (!chunk.msg) {
-        return;
+      if (!skipAuthCheck) {
+        await UserManager.ensureLoggedInAsync();
       }
-      if (chunk.level <= bunyan.INFO) {
-        logLines(chunk.msg, log);
-      } else if (chunk.level === bunyan.WARN) {
-        logLines(chunk.msg, log.warn);
+
+      if (!projectDir) {
+        projectDir = process.cwd();
       } else {
-        logLines(chunk.msg, log.error);
+        projectDir = path.resolve(process.cwd(), projectDir);
       }
-    }
 
-    const formatPackagerLog = (chunk) => {
-      if (chunk.msg.match(/Transforming modules/)) {
-        let progress = chunk.msg.match(/\d+\.\d+% \(\d+\/\d+\)/);
-        if (progress && progress[0]) {
-          chunk.msg = `Transforming modules: ${progress[0]}`;
+      const logLines = (msg, logFn) => {
+        for (let line of msg.split('\n')) {
+          logFn(line);
         }
-      } else if (chunk.msg.match(/^[\u001b]/)) {
-        chunk.msg = '';
-      }
+      };
 
-      return chunk;
-    }
+      const logWithLevel = chunk => {
+        if (!chunk.msg) {
+          return;
+        }
+        if (chunk.level <= bunyan.INFO) {
+          logLines(chunk.msg, log);
+        } else if (chunk.level === bunyan.WARN) {
+          logLines(chunk.msg, log.warn);
+        } else {
+          logLines(chunk.msg, log.error);
+        }
+      };
 
-    // needed for validation logging to function
-    ProjectUtils.attachLoggerStream(projectDir, {
-      stream: {
-        write: (chunk) => {
-          if (chunk.tag === 'device') {
-            logWithLevel(chunk);
-          } else {
-            logWithLevel(formatPackagerLog(chunk));
+      let bar;
+      let packagerLogsStream = new PackagerLogsStream({
+        projectRoot: projectDir,
+        onStartBuildBundle: () => {
+          bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
+            total: 100,
+            clear: true,
+            complete: '=',
+            incomplete: ' ',
+          });
+
+          log.setBundleProgressBar(bar);
+        },
+        onProgressBuildBundle: percent => {
+          if (!bar || bar.complete) return;
+          let ticks = percent - bar.curr;
+          ticks > 0 && bar.tick(ticks);
+        },
+        onFinishBuildBundle: () => {
+          if (bar && !bar.complete) {
+            bar.tick(100 - bar.curr);
+          }
+
+          if (bar) {
+            log.setBundleProgressBar(null);
+            bar = null;
+            log(crayon.green('Finished building JavaScript bundle'));
           }
         },
-      },
-      type: 'raw',
-    });
+        updateLogs: updater => {
+          let newLogChunks = updater([]);
+          newLogChunks.forEach(newLogChunk => {
+            logWithLevel(newLogChunk);
+          });
+        },
+      });
 
-    // the existing CLI modules only pass one argument to this function, so skipProjectValidation
-    // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
-    if (!skipProjectValidation) {
-      log('Making sure project is set up correctly...');
-      simpleSpinner.start();
-      // validate that this is a good projectDir before we try anything else
-      let status = await Doctor.validateLowLatencyAsync(projectDir);
-      if (status === Doctor.FATAL) {
-        throw new Error(`Invalid project directory. See above logs for information.`);
+      // needed for validation logging to function
+      ProjectUtils.attachLoggerStream(projectDir, {
+        stream: {
+          write: chunk => {
+            if (chunk.tag === 'device') {
+              logWithLevel(chunk);
+            }
+          },
+        },
+        type: 'raw',
+      });
+
+      // the existing CLI modules only pass one argument to this function, so skipProjectValidation
+      // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
+      if (!skipProjectValidation) {
+        log('Making sure project is set up correctly...');
+        simpleSpinner.start();
+        // validate that this is a good projectDir before we try anything else
+        let status = await Doctor.validateLowLatencyAsync(projectDir);
+        if (status === Doctor.FATAL) {
+          throw new Error(
+            `Invalid project directory. See above logs for information.`
+          );
+        }
+        simpleSpinner.stop();
+        log('Your project looks good!');
       }
-      simpleSpinner.stop();
-      log('Your project looks good!');
-    }
 
-    return asyncFn(projectDir, ...args);
-  }, true);
+      return asyncFn(projectDir, ...args);
+    },
+    true
+  );
 };
 
 function runAsync() {
@@ -184,25 +224,29 @@ function runAsync() {
     program
       .version(require('../package.json').version)
       .option('-o, --output [format]', 'Output format. pretty (default), raw');
-    glob.sync('commands/*.js', {
-      cwd: __dirname,
-    }).forEach(file => {
-      const commandModule = require(`./${file}`);
-      if (typeof commandModule === 'function') {
-        commandModule(program);
-      } else if (typeof commandModule.default === 'function') {
-        commandModule.default(program);
-      } else {
-        log.error(`'${file}.js' is not a properly formatted command.`);
-      }
-    });
+    glob
+      .sync('commands/*.js', {
+        cwd: __dirname,
+      })
+      .forEach(file => {
+        const commandModule = require(`./${file}`);
+        if (typeof commandModule === 'function') {
+          commandModule(program);
+        } else if (typeof commandModule.default === 'function') {
+          commandModule.default(program);
+        } else {
+          log.error(`'${file}.js' is not a properly formatted command.`);
+        }
+      });
 
     if (process.env.EXPO_DEBUG) {
-      glob.sync('debug_commands/*.js', {
-        cwd: __dirname,
-      }).forEach(file => {
-        require(`./${file}`)(program);
-      });
+      glob
+        .sync('debug_commands/*.js', {
+          cwd: __dirname,
+        })
+        .forEach(file => {
+          require(`./${file}`)(program);
+        });
     }
 
     program.parse(process.argv);
@@ -218,7 +262,9 @@ function runAsync() {
         }
       });
       if (!_.includes(commands, subCommand)) {
-        console.log(`"${subCommand}" is not an exp command. See "exp --help" for the full list of commands.`);
+        console.log(
+          `"${subCommand}" is not an exp command. See "exp --help" for the full list of commands.`
+        );
       }
     } else {
       program.help();
@@ -248,14 +294,14 @@ Run \`npm install -g exp\` to get the latest version`;
       break;
 
     default:
-      log.error("Confused about what version of exp you have?");
+      log.error('Confused about what version of exp you have?');
   }
 }
 
 function _registerLogs() {
   let stream = {
     stream: {
-      write: (chunk) => {
+      write: chunk => {
         if (chunk.code) {
           switch (chunk.code) {
             case NotificationCode.START_LOADING:
@@ -297,10 +343,7 @@ async function writePathAsync() {
 
 export function run() {
   (async function() {
-    await Promise.all([
-      writePathAsync(),
-      runAsync(),
-    ]);
+    await Promise.all([writePathAsync(), runAsync()]);
   })().catch(e => {
     console.error('Uncaught Error', e);
     process.exit(1);
