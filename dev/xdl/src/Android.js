@@ -230,13 +230,36 @@ export async function openProjectAsync(projectRoot: string) {
 // Adb reverse
 export async function startAdbReverseAsync(projectRoot: string) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  return await adbReverse(packagerInfo.packagerPort) && await adbReverse(packagerInfo.expoServerPort);
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
+  let success = true;
+
+  success = success && await adbReverse(packagerInfo.packagerPort);
+  success = success && await adbReverse(packagerInfo.expoServerPort);
+
+  // Extra ports to reverse specified in exp.json
+  if (exp && exp.dev && exp.dev.adbReversePorts) {
+    for (let i = 0; i < exp.dev.adbReversePorts.length; i++) {
+      success = success && await adbReverse(exp.dev.adbReversePorts[i]);
+    }
+  }
+
+  return success;
 }
 
 export async function stopAdbReverseAsync(projectRoot: string) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
   await adbReverseRemove(packagerInfo.packagerPort);
   await adbReverseRemove(packagerInfo.expoServerPort);
+
+  // Extra ports to reverse specified in exp.json
+  if (exp && exp.dev && exp.dev.adbReversePorts) {
+    for (let i = 0; i < exp.dev.adbReversePorts.length; i++) {
+      await adbReverseRemove(exp.dev.adbReversePorts[i]);
+    }
+  }
 }
 
 async function adbReverse(port: number) {
