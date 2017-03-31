@@ -781,13 +781,16 @@ export async function startExpoServerAsync(projectRoot: string) {
       let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(
         projectRoot
       );
+
       if (!manifest) {
         const configName = await ProjectUtils.configFilenameAsync(projectRoot);
         throw new Error(`No ${configName} file found`);
       } // Get packager opts and then copy into bundleUrlPackagerOpts
+
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(
         projectRoot
       );
+
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
       if (bundleUrlPackagerOpts.hostType === 'redirect') {
@@ -797,6 +800,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       manifest.developer = {
         tool: Config.developerTool,
       };
+
       manifest.packagerOpts = packagerOpts;
       manifest.env = {};
       for (let key of Object.keys(process.env)) {
@@ -804,28 +808,33 @@ export async function startExpoServerAsync(projectRoot: string) {
           manifest.env[key] = process.env[key];
         }
       }
+
       let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
       let platform = req.headers['exponent-platform'] || 'ios';
       entryPoint = UrlUtils.getPlatformSpecificBundleUrl(entryPoint, platform);
       let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
       let queryParams = await UrlUtils.constructBundleQueryParamsAsync(
         projectRoot,
-        packagerOpts
+        packagerOpts,
+        req.hostname
       );
       let path = `/${mainModuleName}.bundle?platform=${platform}&${queryParams}`;
       manifest.bundleUrl = (await UrlUtils.constructBundleUrlAsync(
         projectRoot,
-        bundleUrlPackagerOpts
+        bundleUrlPackagerOpts,
+        req.hostname
       )) + path;
       manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(
-        projectRoot
+        projectRoot,
+        req.hostname
       );
       manifest.mainModuleName = mainModuleName;
       manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(
         projectRoot,
         {
           urlType: 'http',
-        }
+        },
+        req.hostname
       )}/logs`; // Resolve manifest assets to their packager URL
       await _resolveManifestAssets(
         projectRoot,

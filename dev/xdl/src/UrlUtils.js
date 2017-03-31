@@ -17,19 +17,19 @@ import * as ProjectUtils from './project/ProjectUtils';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 
-export async function constructBundleUrlAsync(projectRoot: string, opts: any) {
-  return constructUrlAsync(projectRoot, opts, true);
+export async function constructBundleUrlAsync(projectRoot: string, opts: any, requestHostname?: string) {
+  return constructUrlAsync(projectRoot, opts, true, requestHostname);
 }
 
-export async function constructManifestUrlAsync(projectRoot: string, opts: any) {
-  return constructUrlAsync(projectRoot, opts, false);
+export async function constructManifestUrlAsync(projectRoot: string, opts: any, requestHostname?: string) {
+  return constructUrlAsync(projectRoot, opts, false, requestHostname);
 }
 
-export async function constructUrlWithExtensionAsync(projectRoot: string, entryPoint: string, ext: string) {
+export async function constructUrlWithExtensionAsync(projectRoot: string, entryPoint: string, ext: string, requestHostname?: string) {
   let bundleUrl = await constructBundleUrlAsync(projectRoot, {
     hostType: 'localhost',
     urlType: 'http',
-  });
+  }, requestHostname);
 
   let mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
@@ -37,22 +37,22 @@ export async function constructUrlWithExtensionAsync(projectRoot: string, entryP
   let queryParams = await constructBundleQueryParamsAsync(projectRoot, {
     dev: false,
     minify: true,
-  });
+  }, requestHostname);
   return `${bundleUrl}?${queryParams}`;
 }
 
-export async function constructPublishUrlAsync(projectRoot: string, entryPoint: string) {
-  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'bundle');
+export async function constructPublishUrlAsync(projectRoot: string, entryPoint: string, requestHostname?: string) {
+  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'bundle', requestHostname);
 }
 
-export async function constructAssetsUrlAsync(projectRoot: string, entryPoint: string) {
-  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'assets');
+export async function constructAssetsUrlAsync(projectRoot: string, entryPoint: string, requestHostname?: string) {
+  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'assets', requestHostname);
 }
 
-export async function constructDebuggerHostAsync(projectRoot: string) {
+export async function constructDebuggerHostAsync(projectRoot: string, requestHostname?: string) {
   return constructUrlAsync(projectRoot, {
     urlType: 'no-protocol',
-  }, true);
+  }, true, requestHostname);
 }
 
 export async function constructBundleQueryParamsAsync(projectRoot: string, opts: any) {
@@ -86,7 +86,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
-export async function constructUrlAsync(projectRoot: string, opts: any, isPackager: bool) {
+export async function constructUrlAsync(projectRoot: string, opts: any, isPackager: bool, requestHostname?: string) {
   if (opts) {
 
     // the randomness is only important if we're online and can build a tunnel
@@ -149,7 +149,11 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
     } else if (process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
       hostname = process.env.REACT_NATIVE_PACKAGER_HOSTNAME;
     } else if (opts.lanType === 'ip') {
-      hostname = ip.address();
+      if (requestHostname) {
+        hostname = requestHostname;
+      } else {
+        hostname = ip.address();
+      }
     } else {
       // Some old versions of OSX work with hostname but not local ip address.
       hostname = os.hostname();
