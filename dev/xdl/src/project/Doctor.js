@@ -175,7 +175,7 @@ async function _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot): Promi
 
     // Expo fork of react-native is required
     // TODO(2016-12-20): Remove the check for our old "exponentjs" org eventually
-    if (!reactNative.match(/exponent(?:js)?\/react-native/)) {
+    if (!reactNative.match(/(exponent(?:js)?|expo)\/react-native/)) {
       ProjectUtils.logWarning(projectRoot, 'expo', `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`, 'doctor-not-using-expo-fork');
       return WARNING;
     }
