@@ -229,36 +229,38 @@ export async function openProjectAsync(projectRoot: string) {
 
 // Adb reverse
 export async function startAdbReverseAsync(projectRoot: string) {
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+  const userDefinedAdbReversePorts = expRc.extraAdbReversePorts || [];
 
-  let success = true;
+  let adbReversePorts = [
+    packagerInfo.packagerPort,
+    packagerInfo.expoServerPort,
+    ...userDefinedAdbReversePorts,
+  ];
 
-  success = success && await adbReverse(packagerInfo.packagerPort);
-  success = success && await adbReverse(packagerInfo.expoServerPort);
-
-  // Extra ports to reverse specified in exp.json
-  if (exp && exp.dev && exp.dev.adbReversePorts) {
-    for (let i = 0; i < exp.dev.adbReversePorts.length; i++) {
-      success = success && await adbReverse(exp.dev.adbReversePorts[i]);
+  for (let port of adbReversePorts) {
+    if (!(await adbReverse(packagerInfo.packagerPort))) {
+      return false;
     }
   }
 
-  return success;
+  return true;
 }
 
 export async function stopAdbReverseAsync(projectRoot: string) {
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  const expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+  const userDefinedAdbReversePorts = expRc.extraAdbReversePorts || [];
 
-  await adbReverseRemove(packagerInfo.packagerPort);
-  await adbReverseRemove(packagerInfo.expoServerPort);
+  let adbReversePorts = [
+    packagerInfo.packagerPort,
+    packagerInfo.expoServerPort,
+    ...userDefinedAdbReversePorts,
+  ];
 
-  // Extra ports to reverse specified in exp.json
-  if (exp && exp.dev && exp.dev.adbReversePorts) {
-    for (let i = 0; i < exp.dev.adbReversePorts.length; i++) {
-      await adbReverseRemove(exp.dev.adbReversePorts[i]);
-    }
+  for (let port of adbReversePorts) {
+    await adbReverseRemove(packagerInfo.packagerPort);
   }
 }
 
