@@ -10,6 +10,14 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [37.0.2] - 2017-04-02
+
+### Added
+
+* When serving manifest over LAN, if request hostname is localhost then
+manifest urls also use localhost. This makes it easier to open a project
+in simulator when on locked-down wifi.
+
 ## [37.0.1] - 2017-03-21
 
 ### Changed
