@@ -103,11 +103,13 @@ export default class PackagerLogsStream {
     }
 
     if (msg.type === 'dep_graph_loading') {
-      chunk.msg = 'Loading dependency graph'; // doesn't seem important to log this
+      chunk.msg = 'Loading dependency graph.'; // doesn't seem important to log this
     } else if (msg.type == 'dep_graph_loaded') {
-      chunk.msg = 'Dependency graph loaded'; // doesn't seem important to log this
+      chunk.msg = 'Dependency graph loaded.'; // doesn't seem important to log this
     } else if (msg.type === 'transform_cache_reset') {
       chunk.msg = 'Your JavaScript transform cache is empty, rebuilding (this may take a minute).';
+    } else if (msg.type === 'initialize_packager_done') {
+      chunk.msg = `Running packager on port ${chunk.port}.`;
     }
 
     this._enqueueAppendLogChunk(chunk);

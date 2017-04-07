@@ -488,14 +488,13 @@ async function _waitForRunningAsync(url) {
 }
 
 function _stripPackagerOutputBox(output: string) {
-  return null;
-  // let re = /Running packager on port (\d+)/;
-  // let found = output.match(re);
-  // if (found && found.length >= 2) {
-  //   return `Running packager on port ${found[1]}\n`;
-  // } else {
-  //   return null;
-  // }
+  let re = /Running packager on port (\d+)/;
+  let found = output.match(re);
+  if (found && found.length >= 2) {
+    return `Running packager on port ${found[1]}\n`;
+  } else {
+    return null;
+  }
 }
 
 function _processPackagerLine(line: string) {
