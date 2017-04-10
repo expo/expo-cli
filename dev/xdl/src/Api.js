@@ -169,6 +169,8 @@ export default class ApiClient {
   static _versionCache = new Cacher(
     async () => { return await ApiClient.callPathAsync('/--/versions'); },
     'versions.json',
+    0,
+    path.join(__dirname, '../caches/versions.json'),
   );
 
   static _schemaCaches = {};
@@ -193,6 +195,8 @@ export default class ApiClient {
       ApiClient._schemaCaches[sdkVersion] = new Cacher(
         async () => { return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`); },
         `schema-${sdkVersion}.json`,
+        0,
+        path.join(__dirname, `../caches/schema-${sdkVersion}.json`),
       );
     }
 

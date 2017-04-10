@@ -1,0 +1,389 @@
+{
+  "schema": {
+    "type":"object",
+    "properties":{
+      "name":{
+        "description":"The name of your app as it appears both within Exponent and on your home screen as a standalone app.",
+        "type":"string"
+      },
+      "description":{
+        "description":"A short description of what your app is and why it is great.",
+        "type":"string"
+      },
+      "slug":{
+        "description":"The friendly url name for publishing. eg: ``exp.host/@your-username/slug``.",
+        "type":"string",
+        "pattern":"^[a-zA-Z0-9\\-]+$"
+      },
+      "privacy":{
+        "description":"Either ``public`` or ``unlisted``. If not provided, defaults to ``unlisted``. In the future ``private`` will be supported. ``unlisted`` hides the experience from search results.",
+        "enum":[
+          "public",
+          "unlisted"
+        ],
+        "type":[
+          "array",
+          "boolean",
+          "number",
+          "object",
+          "string",
+          "null"
+        ]
+      },
+      "sdkVersion":{
+        "description":"The Exponent sdkVersion to run the project on. This should line up with the version specified in your package.json.",
+        "type":"string",
+        "pattern":"^(\\d+\\.\\d+\\.\\d+)|(UNVERSIONED)$"
+      },
+      "version":{
+        "description":"Your app version, use whatever versioning scheme that you like.",
+        "type":"string"
+      },
+      "orientation":{
+        "description":"Lock your app to a specific orientation with ``portrait`` or ``landscape``. Defaults to no lock.",
+        "enum":[
+          "default",
+          "portrait",
+          "landscape"
+        ],
+        "type":[
+          "array",
+          "boolean",
+          "number",
+          "object",
+          "string",
+          "null"
+        ]
+      },
+      "primaryColor":{
+        "description":"On Android, this will determine the color of your app in the multitasker. Currently this is not used on iOS, but it may be used for other purposes in the future.",
+        "type":"string",
+        "pattern":"^#|(&#x23;)\\d{6}$",
+        "meta": {
+          "regexHuman": "6 character long hex color string, eg: ``'#000000'``"
+        }
+      },
+      "icon":{
+        "description":"Local path or remote url to an image to use for your app's icon. We recommend that you use a 512x512 png file with transparency. This icon will appear on the home screen and within the Exponent app.",
+        "type":"string",
+        "meta":{
+          "asset":true,
+          "contentTypePattern":"^image/png$",
+          "contentTypeHuman":".png image"
+        }
+      },
+      "notification":{
+        "description":"Configuration for remote (push) notifications.",
+        "type":"object",
+        "properties":{
+          "icon":{
+            "description":"Local path or remote url to an image to use as the icon for push notifications. 48x48 png grayscale with transparency.",
+            "type":"string",
+            "meta":{
+              "asset":true,
+              "contentTypePattern":"^image/png$",
+              "contentTypeHuman":".png image"
+            }
+          },
+          "color":{
+            "description":"Tint color for the push notification image when it appears in the notification tray.",
+            "type":"string",
+            "pattern":"^#|(&#x23;)\\d{6}$",
+            "meta": {
+              "regexHuman": "6 character long hex color string, eg: ``'#000000'``"
+            }
+          },
+          "androidMode":{
+            "description":"Show each push notification individually (``default``) or collapse into one (``collapse``).",
+            "enum":[
+              "default",
+              "collapse"
+            ],
+            "type":[
+              "array",
+              "boolean",
+              "number",
+              "object",
+              "string",
+              "null"
+            ]
+          },
+          "androidCollapsedTitle":{
+            "description":"If ``androidMode`` is set to ``collapse``, this title is used for the collapsed notification message. eg: ``'#{unread_notifications} new interactions'``.",
+            "type":"string"
+          }
+        },
+        "additionalProperties":false
+      },
+      "loading":{
+        "description":"Configuration for the loading screen that users see when opening your app, while fetching & caching bundle and assets.",
+        "type":"object",
+        "properties":{
+          "icon":{
+            "description":"Local path or remote url to an image to display while starting up the app. Image size and aspect ratio are up to you. Must be a .png.",
+            "type":"string",
+            "meta":{
+              "asset":true,
+              "contentTypePattern":"^image/png$",
+              "contentTypeHuman":".png image"
+            }
+          },
+          "exponentIconColor":{
+            "description":"If no icon is provided, we will show the Exponent logo. You can choose between ``white`` and ``blue``.",
+            "enum":[
+              "white",
+              "blue"
+            ],
+            "type":[
+              "array",
+              "boolean",
+              "number",
+              "object",
+              "string",
+              "null"
+            ]
+          },
+          "exponentIconGrayscale":{
+            "description":"Similar to ``exponentIconColor`` but instead indicate if it should be grayscale (``1``) or not (``0``).",
+            "type":"number",
+            "minimum":0,
+            "maximum":1
+          },
+          "backgroundImage":{
+            "description":"Local path or remote url to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.",
+            "type":"string",
+            "meta":{
+              "asset":true,
+              "contentTypePattern":"^image/png$",
+              "contentTypeHuman":".png image"
+            }
+          },
+          "backgroundColor":{
+            "description":"Color to fill the loading screen background",
+            "type":"string",
+            "pattern":"^#|(&#x23;)\\d{6}$",
+            "meta": {
+              "regexHuman": "6 character long hex color string, eg: ``'#000000'``"
+            }
+          },
+          "hideExponentText":{
+            "description":"By default, Exponent shows some text at the bottom of the loading screen. Set this to ``true`` to disable.",
+            "type":"boolean"
+          }
+        },
+        "additionalProperties":false
+      },
+      "appKey":{
+        "description":"By default, Exponent looks for the application registered with the AppRegistry as ``main``. If you would like to change this, you can specify the name in this property.",
+        "type":"string"
+      },
+      "androidStatusBarColor":{
+        "type":"string",
+        "pattern":"^#|(&#x23;)\\d{6}$",
+        "meta": {
+          "regexHuman": "6 character long hex color string, eg: ``'#000000'``"
+        }
+      },
+      "androidHideExponentNotificationInShellApp":{
+        "description":"By default, Exponent adds a notification to your app with refresh button and debug info. Set this to ``true`` to disable.",
+        "type":"boolean"
+      },
+      "scheme":{
+        "description":"Url scheme to link into your app. For example, if we set this to ``'rnplay'``, then rnplay:// urls would open your app when tapped.",
+        "type":"string",
+        "meta": {
+          "standaloneOnly": true
+        }
+      },
+      "entryPoint":{
+        "description":"The relative path to your main JavaScript file.",
+        "type":"string"
+      },
+      "extra":{
+        "description":"Any extra fields you want to pass to your experience.",
+        "type":"object",
+        "properties":{
+
+        },
+        "additionalProperties":true
+      },
+      "rnCliPath":{
+        "type":"string"
+      },
+      "packagerOpts":{
+        "type":"object",
+        "properties":{
+
+        },
+        "additionalProperties":true
+      },
+      "ignoreNodeModulesValidation":{
+        "type":"boolean"
+      },
+      "nodeModulesPath":{
+        "type":"string"
+      },
+      "ios":{
+        "description":"iOS standalone app specific configuration",
+        "type":"object",
+        "meta": {
+          "standaloneOnly": true
+        },
+        "properties":{
+          "bundleIdentifier":{
+            "description":"The bundle identifier for your iOS standalone app. You make it up, but it needs to be unique on the App Store. See `this StackOverflow question <http://stackoverflow.com/questions/11347470/what-does-bundle-identifier-mean-in-the-ios-project>`_.",
+            "type":"string",
+            "pattern":"^[a-zA-Z][a-zA-Z0-9\\-\\.]+$",
+            "meta": {
+              "regexHuman": "iOS bundle identifier notation unique name for your app. For example, host.exp.exponent, where exp.host is our domain and Exponent is our app."
+            }
+          },
+          "buildNumber":{
+            "description":"Build number for your iOS standalone app",
+            "type":"string",
+            "pattern":"^[0-9]+$"
+          },
+          "config":{
+            "type":"object",
+            "properties":{
+              "usesNonExemptEncryption":{
+                "description":"Sets ``ITSAppUsesNonExemptEncryption`` in the standalone ipa's Info.plist to the given boolean value.",
+                "type":"boolean"
+              },
+              "fabric":{
+                "description":"`Twitter Fabric <https://get.fabric.io/>`_ keys to hook up Crashlytics and other services.",
+                "type":"object",
+                "properties":{
+                  "apiKey":{
+                    "description":"Your Fabric API key",
+                    "type":"string"
+                  },
+                  "buildSecret":{
+                    "description":"Your Fabric build secret",
+                    "type":"string"
+                  }
+                },
+                "additionalProperties":false
+              },
+              "googleSignIn":{
+                "description":"`Google Sign-In iOS SDK <https://developers.google.com/identity/sign-in/ios/start-integrating>`_ keys for your standalone app.",
+                "type":"object",
+                "properties":{
+                  "reservedClientId":{
+                    "description":"The reserved client id url scheme. Can be found in `GoogeService-Info.plist`.",
+                    "type":"string"
+                  }
+                },
+                "additionalProperties":false
+              }
+            },
+            "additionalProperties":false
+          },
+          "supportsTablet":{
+            "description":"Whether your standalone iOS app supports tablet screen sizes.",
+            "type":"boolean"
+          }
+        },
+        "additionalProperties":false
+      },
+      "android":{
+        "description":"Android standalone app specific configuration",
+        "type":"object",
+        "meta": {
+          "standaloneOnly": true
+        },
+        "properties":{
+          "package":{
+            "description":"The package name for your Android standalone app. You make it up, but it needs to be unique on the Play Store. See `this StackOverflow question <http://stackoverflow.com/questions/6273892/android-package-name-convention>`_.",
+            "type":"string",
+            "pattern":"^[a-zA-Z][a-zA-Z0-9\\_\\.]+$",
+            "meta": {
+              "regexHuman": "Reverse DNS notation unique name for your app. For example, host.exp.exponent, where exp.host is our domain and Exponent is our app."
+            }
+          },
+          "versionCode":{
+            "description":"Version number required by Google Play. Increment by one for each release. https://developer.android.com/studio/publish/versioning.html.",
+            "type":"integer"
+          },
+          "config":{
+            "type":"object",
+            "properties":{
+              "fabric":{
+                "description":"`Twitter Fabric <https://get.fabric.io/>`_ keys to hook up Crashlytics and other services.",
+                "type":"object",
+                "properties":{
+                  "apiKey":{
+                    "description":"Your Fabric API key",
+                    "type":"string"
+                  },
+                  "buildSecret":{
+                    "description":"Your Fabric build secret",
+                    "type":"string"
+                  }
+                },
+                "additionalProperties":false
+              },
+              "googleMaps":{
+                "description":"`Google Maps Android SDK <https://developers.google.com/maps/documentation/android-api/signup>`_ key for your standalone app.",
+                "type":"object",
+                "properties":{
+                  "apiKey":{
+                    "description":"Your Google Maps Android SDK API key",
+                    "type":"string"
+                  }
+                },
+                "additionalProperties":false
+              },
+              "googleSignIn":{
+                "description":"`Google Sign-In Android SDK <https://developers.google.com/identity/sign-in/android/start-integrating>`_ keys for your standalone app.",
+                "type":"object",
+                "properties":{
+                  "apiKey":{
+                    "description":"The Android API key. Can be found in the credentials section of the developer console or in `google-services.json`.",
+                    "type":"string"
+                  },
+                  "certificateHash":{
+                    "description":"The SHA-1 hash of the signing certificate used to build the apk without any separator `:`. Can be found in `google-services.json`. https://developers.google.com/android/guides/client-auth",
+                    "type":"string"
+                  }
+                },
+                "additionalProperties":false
+              }
+            },
+            "additionalProperties":false
+          }
+        },
+        "additionalProperties":false
+      },
+      "facebookScheme":{
+        "description":"Used for Facebook native login. Starts with 'fb' and followed by a string of digits, like 'fb1234567890'. You can find your scheme at https://developers.facebook.com/docs/facebook-login/ios in the 'Configuring Your info.plist' section.",
+        "type":"string",
+        "pattern": "^fb[0-9]+$"
+      },
+      "isDetached": {
+        "description": "Is app detached",
+        "type": "boolean",
+        "meta": {
+          "autogenerated": true
+        }
+      },
+      "detach":{
+        "description":"Extra fields needed by detached apps",
+        "type":"object",
+        "properties":{
+
+        },
+        "meta": {
+          "autogenerated": true
+        },
+        "additionalProperties":true
+      }
+    },
+    "additionalProperties":false,
+    "required":[
+      "name",
+      "slug",
+      "sdkVersion"
+    ]
+  }
+}

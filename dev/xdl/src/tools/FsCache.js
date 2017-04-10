@@ -5,8 +5,6 @@ import mkdirp from 'mkdirp-promise';
 import os from 'os';
 import path from 'path';
 
-import Config from '../Config';
-
 /*
 A Cacher is used to wrap a fallible or expensive function and to memoize its results on disk
 in case it either fails or we don't need fresh results very often. It stores objects in JSON, and
