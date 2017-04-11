@@ -50,6 +50,13 @@
   dependencies:
     cross-spawn "^4.0.0"
 
+"@gulp-sourcemaps/map-sources@1.X":
+  version "1.0.0"
+  resolved "@gulp-sourcemaps-map-sources-1.0.0.tgz#890ae7c5d8c877f6d384860215ace9d7ec945bda"
+  dependencies:
+    normalize-path "^2.0.1"
+    through2 "^2.0.3"
+
 "@segment/loosely-validate-event@^1.1.2":
   version "1.1.2"
   resolved "@segment-loosely-validate-event-1.1.2.tgz#d77840999e3f7e43e74b3b0d43391c1526f793b8"
@@ -88,10 +95,6 @@ acorn-jsx@^3.0.0:
   dependencies:
     acorn "^3.0.4"
 
-acorn@4.0.4:
-  version "4.0.4"
-  resolved acorn-4.0.4.tgz#17a8d6a7a6c4ef538b814ec9abac2779293bf30a
-
 acorn@4.X, acorn@^4.0.3, acorn@^4.0.4:
   version "4.0.11"
   resolved acorn-4.0.11.tgz#edcda3bd937e7556410d42ed5860f67399c794c0
@@ -99,6 +102,10 @@ acorn@4.X, acorn@^4.0.3, acorn@^4.0.4:
 acorn@^3.0.4:
   version "3.3.0"
   resolved acorn-3.3.0.tgz#45e37fb39e8da3f25baee3ff5369e2bb5f22017a
+
+acorn@^5.0.1:
+  version "5.0.3"
+  resolved acorn-5.0.3.tgz#c460df08491463f028ccb82eab3730bf01087b3d
 
 agent-base@2:
   version "2.0.1"
@@ -112,8 +119,8 @@ ajv-keywords@^1.0.0:
   resolved ajv-keywords-1.5.1.tgz#314dd0a4b3368fad3dfcdc54ede6171b886daf3c
 
 ajv@^4.7.0, ajv@^4.9.1:
-  version "4.11.5"
-  resolved ajv-4.11.5.tgz#b6ee74657b993a01dce44b7944d56f485828d5bd
+  version "4.11.6"
+  resolved ajv-4.11.6.tgz#947e93049790942b2a2d60a8289b28924d39f987
   dependencies:
     co "^4.6.0"
     json-stable-stringify "^1.0.1"
@@ -283,8 +290,8 @@ array-unique@^0.2.1:
   resolved array-unique-0.2.1.tgz#a1d97ccafcbc2625cc70fadceb36a50c58b01a53
 
 array.prototype.find@^2.0.1:
-  version "2.0.3"
-  resolved array.prototype.find-2.0.3.tgz#08c3ec33e32ec4bab362a2958e686ae92f59271d
+  version "2.0.4"
+  resolved array.prototype.find-2.0.4.tgz#556a5c5362c08648323ddaeb9de9d14bc1864c90
   dependencies:
     define-properties "^1.1.2"
     es-abstract "^1.7.0"
@@ -317,9 +324,13 @@ ast-types@0.8.12:
   version "0.8.12"
   resolved ast-types-0.8.12.tgz#a0d90e4351bb887716c83fd637ebf818af4adfcc
 
-ast-types@0.9.6, ast-types@0.x.x:
+ast-types@0.9.6:
   version "0.9.6"
   resolved ast-types-0.9.6.tgz#102c9e9e9005d3e7e3829bf0c4fa24ee862ee9b9
+
+ast-types@0.x.x:
+  version "0.9.11"
+  resolved ast-types-0.9.11.tgz#371177bb59232ff5ceaa1d09ee5cad705b1a5aa9
 
 async-done@^1.2.0, async-done@^1.2.2:
   version "1.2.2"
@@ -344,13 +355,13 @@ async@^0.9.0:
   version "0.9.2"
   resolved async-0.9.2.tgz#aea74d5e61c1f899613bf64bda66d4c78f2fd17d
 
-async@^1.4.0, async@^1.4.2, async@^1.5.0, async@~1.5:
+async@^1.4.0, async@^1.5.0, async@~1.5:
   version "1.5.2"
   resolved async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a
 
 async@^2.1.4:
-  version "2.1.5"
-  resolved async-2.1.5.tgz#e587c68580994ac67fc56ff86d3ac56bdbe810bc
+  version "2.3.0"
+  resolved async-2.3.0.tgz#1013d1051047dd320fe24e494d5c66ecaf6147d9
   dependencies:
     lodash "^4.14.0"
 
@@ -384,12 +395,12 @@ aws4@^1.2.1:
   resolved aws4-1.6.0.tgz#83ef5ca860b2b32e4a0deedee8c771b9db57471e
 
 babel-cli@^6.14.0:
-  version "6.24.0"
-  resolved babel-cli-6.24.0.tgz#a05ffd210dca0c288a26d5319c5ac8669a265ad0
+  version "6.24.1"
+  resolved babel-cli-6.24.1.tgz#207cd705bba61489b2ea41b5312341cf6aca2283
   dependencies:
-    babel-core "^6.24.0"
+    babel-core "^6.24.1"
     babel-polyfill "^6.23.0"
-    babel-register "^6.24.0"
+    babel-register "^6.24.1"
     babel-runtime "^6.22.0"
     commander "^2.8.1"
     convert-source-map "^1.1.0"
@@ -412,19 +423,19 @@ babel-code-frame@^6.16.0, babel-code-frame@^6.22.0:
     esutils "^2.0.2"
     js-tokens "^3.0.0"
 
-babel-core@^6.0.0, babel-core@^6.0.2, babel-core@^6.24.0:
-  version "6.24.0"
-  resolved babel-core-6.24.0.tgz#8f36a0a77f5c155aed6f920b844d23ba56742a02
+babel-core@^6.0.0, babel-core@^6.0.2, babel-core@^6.24.1:
+  version "6.24.1"
+  resolved babel-core-6.24.1.tgz#8c428564dce1e1f41fb337ec34f4c3b022b5ad83
   dependencies:
     babel-code-frame "^6.22.0"
-    babel-generator "^6.24.0"
-    babel-helpers "^6.23.0"
+    babel-generator "^6.24.1"
+    babel-helpers "^6.24.1"
     babel-messages "^6.23.0"
-    babel-register "^6.24.0"
+    babel-register "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
-    babel-traverse "^6.23.1"
-    babel-types "^6.23.0"
+    babel-template "^6.24.1"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
     babylon "^6.11.0"
     convert-source-map "^1.1.0"
     debug "^2.1.1"
@@ -437,145 +448,144 @@ babel-core@^6.0.0, babel-core@^6.0.2, babel-core@^6.24.0:
     source-map "^0.5.0"
 
 babel-eslint@^7.1.0:
-  version "7.1.1"
-  resolved babel-eslint-7.1.1.tgz#8a6a884f085aa7060af69cfc77341c2f99370fb2
+  version "7.2.1"
+  resolved babel-eslint-7.2.1.tgz#079422eb73ba811e3ca0865ce87af29327f8c52f
   dependencies:
-    babel-code-frame "^6.16.0"
-    babel-traverse "^6.15.0"
-    babel-types "^6.15.0"
-    babylon "^6.13.0"
-    lodash.pickby "^4.6.0"
+    babel-code-frame "^6.22.0"
+    babel-traverse "^6.23.1"
+    babel-types "^6.23.0"
+    babylon "^6.16.1"
 
-babel-generator@^6.18.0, babel-generator@^6.24.0:
-  version "6.24.0"
-  resolved babel-generator-6.24.0.tgz#eba270a8cc4ce6e09a61be43465d7c62c1f87c56
+babel-generator@^6.18.0, babel-generator@^6.24.1:
+  version "6.24.1"
+  resolved babel-generator-6.24.1.tgz#e715f486c58ded25649d888944d52aa07c5d9497
   dependencies:
     babel-messages "^6.23.0"
     babel-runtime "^6.22.0"
-    babel-types "^6.23.0"
+    babel-types "^6.24.1"
     detect-indent "^4.0.0"
     jsesc "^1.3.0"
     lodash "^4.2.0"
     source-map "^0.5.0"
     trim-right "^1.0.1"
 
-babel-helper-bindify-decorators@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-bindify-decorators-6.22.0.tgz#d7f5bc261275941ac62acfc4e20dacfb8a3fe952
+babel-helper-bindify-decorators@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-bindify-decorators-6.24.1.tgz#14c19e5f142d7b47f19a52431e52b1ccbc40a330
   dependencies:
     babel-runtime "^6.22.0"
-    babel-traverse "^6.22.0"
-    babel-types "^6.22.0"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-helper-builder-binary-assignment-operator-visitor@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-builder-binary-assignment-operator-visitor-6.22.0.tgz#29df56be144d81bdeac08262bfa41d2c5e91cdcd
+babel-helper-builder-binary-assignment-operator-visitor@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-builder-binary-assignment-operator-visitor-6.24.1.tgz#cce4517ada356f4220bcae8a02c2b346f9a56664
   dependencies:
-    babel-helper-explode-assignable-expression "^6.22.0"
+    babel-helper-explode-assignable-expression "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
 
-babel-helper-call-delegate@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-call-delegate-6.22.0.tgz#119921b56120f17e9dae3f74b4f5cc7bcc1b37ef
+babel-helper-call-delegate@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-call-delegate-6.24.1.tgz#ece6aacddc76e41c3461f88bfc575bd0daa2df8d
   dependencies:
-    babel-helper-hoist-variables "^6.22.0"
+    babel-helper-hoist-variables "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-traverse "^6.22.0"
-    babel-types "^6.22.0"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-helper-define-map@^6.23.0:
-  version "6.23.0"
-  resolved babel-helper-define-map-6.23.0.tgz#1444f960c9691d69a2ced6a205315f8fd00804e7
+babel-helper-define-map@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-define-map-6.24.1.tgz#7a9747f258d8947d32d515f6aa1c7bd02204a080
   dependencies:
-    babel-helper-function-name "^6.23.0"
+    babel-helper-function-name "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-types "^6.23.0"
+    babel-types "^6.24.1"
     lodash "^4.2.0"
 
-babel-helper-explode-assignable-expression@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-explode-assignable-expression-6.22.0.tgz#c97bf76eed3e0bae4048121f2b9dae1a4e7d0478
+babel-helper-explode-assignable-expression@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-explode-assignable-expression-6.24.1.tgz#f25b82cf7dc10433c55f70592d5746400ac22caa
   dependencies:
     babel-runtime "^6.22.0"
-    babel-traverse "^6.22.0"
-    babel-types "^6.22.0"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-helper-explode-class@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-explode-class-6.22.0.tgz#646304924aa6388a516843ba7f1855ef8dfeb69b
+babel-helper-explode-class@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-explode-class-6.24.1.tgz#7dc2a3910dee007056e1e31d640ced3d54eaa9eb
   dependencies:
-    babel-helper-bindify-decorators "^6.22.0"
+    babel-helper-bindify-decorators "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-traverse "^6.22.0"
-    babel-types "^6.22.0"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-helper-function-name@^6.22.0, babel-helper-function-name@^6.23.0:
-  version "6.23.0"
-  resolved babel-helper-function-name-6.23.0.tgz#25742d67175c8903dbe4b6cb9d9e1fcb8dcf23a6
+babel-helper-function-name@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-function-name-6.24.1.tgz#d3475b8c03ed98242a25b48351ab18399d3580a9
   dependencies:
-    babel-helper-get-function-arity "^6.22.0"
+    babel-helper-get-function-arity "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
-    babel-traverse "^6.23.0"
-    babel-types "^6.23.0"
+    babel-template "^6.24.1"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-helper-get-function-arity@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-get-function-arity-6.22.0.tgz#0beb464ad69dc7347410ac6ade9f03a50634f5ce
+babel-helper-get-function-arity@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-get-function-arity-6.24.1.tgz#8f7782aa93407c41d3aa50908f89b031b1b6853d
   dependencies:
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
 
-babel-helper-hoist-variables@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-hoist-variables-6.22.0.tgz#3eacbf731d80705845dd2e9718f600cfb9b4ba72
+babel-helper-hoist-variables@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-hoist-variables-6.24.1.tgz#1ecb27689c9d25513eadbc9914a73f5408be7a76
   dependencies:
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
 
-babel-helper-optimise-call-expression@^6.23.0:
-  version "6.23.0"
-  resolved babel-helper-optimise-call-expression-6.23.0.tgz#f3ee7eed355b4282138b33d02b78369e470622f5
+babel-helper-optimise-call-expression@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-optimise-call-expression-6.24.1.tgz#f7a13427ba9f73f8f4fa993c54a97882d1244257
   dependencies:
     babel-runtime "^6.22.0"
-    babel-types "^6.23.0"
+    babel-types "^6.24.1"
 
-babel-helper-regex@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-regex-6.22.0.tgz#79f532be1647b1f0ee3474b5f5c3da58001d247d
+babel-helper-regex@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-regex-6.24.1.tgz#d36e22fab1008d79d88648e32116868128456ce8
   dependencies:
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
     lodash "^4.2.0"
 
-babel-helper-remap-async-to-generator@^6.22.0:
-  version "6.22.0"
-  resolved babel-helper-remap-async-to-generator-6.22.0.tgz#2186ae73278ed03b8b15ced089609da981053383
+babel-helper-remap-async-to-generator@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-remap-async-to-generator-6.24.1.tgz#5ec581827ad723fecdd381f1c928390676e4551b
   dependencies:
-    babel-helper-function-name "^6.22.0"
+    babel-helper-function-name "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-template "^6.22.0"
-    babel-traverse "^6.22.0"
-    babel-types "^6.22.0"
+    babel-template "^6.24.1"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-helper-replace-supers@^6.22.0, babel-helper-replace-supers@^6.23.0:
-  version "6.23.0"
-  resolved babel-helper-replace-supers-6.23.0.tgz#eeaf8ad9b58ec4337ca94223bacdca1f8d9b4bfd
+babel-helper-replace-supers@^6.24.1:
+  version "6.24.1"
+  resolved babel-helper-replace-supers-6.24.1.tgz#bf6dbfe43938d17369a213ca8a8bf74b6a90ab1a
   dependencies:
-    babel-helper-optimise-call-expression "^6.23.0"
+    babel-helper-optimise-call-expression "^6.24.1"
     babel-messages "^6.23.0"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
-    babel-traverse "^6.23.0"
-    babel-types "^6.23.0"
+    babel-template "^6.24.1"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-helpers@^6.23.0:
-  version "6.23.0"
-  resolved babel-helpers-6.23.0.tgz#4f8f2e092d0b6a8808a4bde79c27f1e2ecf0d992
+babel-helpers@^6.24.1:
+  version "6.24.1"
+  resolved babel-helpers-6.24.1.tgz#3471de9caec388e5c850e597e58a26ddf37602b2
   dependencies:
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
+    babel-template "^6.24.1"
 
 babel-jest@^18.0.0:
   version "18.0.0"
@@ -611,8 +621,8 @@ babel-plugin-jest-hoist@^18.0.0:
   resolved babel-plugin-jest-hoist-18.0.0.tgz#4150e70ecab560e6e7344adc849498072d34e12a
 
 babel-plugin-module-resolver@^2.4.0:
-  version "2.5.0"
-  resolved babel-plugin-module-resolver-2.5.0.tgz#a1204b4aeada066e8afb9b9f9c43e238d73d41bb
+  version "2.7.0"
+  resolved babel-plugin-module-resolver-2.7.0.tgz#9c1cb2fcf2a1bdb45e91c6c985b96311123797f9
   dependencies:
     find-babel-config "^1.0.1"
     glob "^7.1.1"
@@ -662,48 +672,48 @@ babel-plugin-syntax-trailing-function-commas@^6.22.0:
   version "6.22.0"
   resolved babel-plugin-syntax-trailing-function-commas-6.22.0.tgz#ba0360937f8d06e40180a43fe0d5616fff532cf3
 
-babel-plugin-transform-async-generator-functions@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-async-generator-functions-6.22.0.tgz#a720a98153a7596f204099cd5409f4b3c05bab46
+babel-plugin-transform-async-generator-functions@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-async-generator-functions-6.24.1.tgz#f058900145fd3e9907a6ddf28da59f215258a5db
   dependencies:
-    babel-helper-remap-async-to-generator "^6.22.0"
+    babel-helper-remap-async-to-generator "^6.24.1"
     babel-plugin-syntax-async-generators "^6.5.0"
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-async-to-generator@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-async-to-generator-6.22.0.tgz#194b6938ec195ad36efc4c33a971acf00d8cd35e
+babel-plugin-transform-async-to-generator@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-async-to-generator-6.24.1.tgz#6536e378aff6cb1d5517ac0e40eb3e9fc8d08761
   dependencies:
-    babel-helper-remap-async-to-generator "^6.22.0"
+    babel-helper-remap-async-to-generator "^6.24.1"
     babel-plugin-syntax-async-functions "^6.8.0"
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-class-constructor-call@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-class-constructor-call-6.22.0.tgz#11a4d2216abb5b0eef298b493748f4f2f4869120
+babel-plugin-transform-class-constructor-call@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-class-constructor-call-6.24.1.tgz#80dc285505ac067dcb8d6c65e2f6f11ab7765ef9
   dependencies:
     babel-plugin-syntax-class-constructor-call "^6.18.0"
     babel-runtime "^6.22.0"
-    babel-template "^6.22.0"
+    babel-template "^6.24.1"
 
-babel-plugin-transform-class-properties@^6.22.0:
-  version "6.23.0"
-  resolved babel-plugin-transform-class-properties-6.23.0.tgz#187b747ee404399013563c993db038f34754ac3b
+babel-plugin-transform-class-properties@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-class-properties-6.24.1.tgz#6a79763ea61d33d36f37b611aa9def81a81b46ac
   dependencies:
-    babel-helper-function-name "^6.23.0"
+    babel-helper-function-name "^6.24.1"
     babel-plugin-syntax-class-properties "^6.8.0"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
+    babel-template "^6.24.1"
 
-babel-plugin-transform-decorators@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-decorators-6.22.0.tgz#c03635b27a23b23b7224f49232c237a73988d27c
+babel-plugin-transform-decorators@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-decorators-6.24.1.tgz#788013d8f8c6b5222bdf7b344390dfd77569e24d
   dependencies:
-    babel-helper-explode-class "^6.22.0"
+    babel-helper-explode-class "^6.24.1"
     babel-plugin-syntax-decorators "^6.13.0"
     babel-runtime "^6.22.0"
-    babel-template "^6.22.0"
-    babel-types "^6.22.0"
+    babel-template "^6.24.1"
+    babel-types "^6.24.1"
 
 babel-plugin-transform-es2015-arrow-functions@^6.22.0:
   version "6.22.0"
@@ -717,36 +727,36 @@ babel-plugin-transform-es2015-block-scoped-functions@^6.22.0:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-es2015-block-scoping@^6.22.0:
-  version "6.23.0"
-  resolved babel-plugin-transform-es2015-block-scoping-6.23.0.tgz#e48895cf0b375be148cd7c8879b422707a053b51
+babel-plugin-transform-es2015-block-scoping@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-block-scoping-6.24.1.tgz#76c295dc3a4741b1665adfd3167215dcff32a576
   dependencies:
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
-    babel-traverse "^6.23.0"
-    babel-types "^6.23.0"
+    babel-template "^6.24.1"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
     lodash "^4.2.0"
 
-babel-plugin-transform-es2015-classes@^6.22.0:
-  version "6.23.0"
-  resolved babel-plugin-transform-es2015-classes-6.23.0.tgz#49b53f326202a2fd1b3bbaa5e2edd8a4f78643c1
+babel-plugin-transform-es2015-classes@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-classes-6.24.1.tgz#5a4c58a50c9c9461e564b4b2a3bfabc97a2584db
   dependencies:
-    babel-helper-define-map "^6.23.0"
-    babel-helper-function-name "^6.23.0"
-    babel-helper-optimise-call-expression "^6.23.0"
-    babel-helper-replace-supers "^6.23.0"
+    babel-helper-define-map "^6.24.1"
+    babel-helper-function-name "^6.24.1"
+    babel-helper-optimise-call-expression "^6.24.1"
+    babel-helper-replace-supers "^6.24.1"
     babel-messages "^6.23.0"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
-    babel-traverse "^6.23.0"
-    babel-types "^6.23.0"
+    babel-template "^6.24.1"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-plugin-transform-es2015-computed-properties@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-es2015-computed-properties-6.22.0.tgz#7c383e9629bba4820c11b0425bdd6290f7f057e7
+babel-plugin-transform-es2015-computed-properties@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-computed-properties-6.24.1.tgz#6fe2a8d16895d5634f4cd999b6d3480a308159b3
   dependencies:
     babel-runtime "^6.22.0"
-    babel-template "^6.22.0"
+    babel-template "^6.24.1"
 
 babel-plugin-transform-es2015-destructuring@^6.22.0, babel-plugin-transform-es2015-destructuring@^6.6.5:
   version "6.23.0"
@@ -754,12 +764,12 @@ babel-plugin-transform-es2015-destructuring@^6.22.0, babel-plugin-transform-es20
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-es2015-duplicate-keys@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-es2015-duplicate-keys-6.22.0.tgz#672397031c21610d72dd2bbb0ba9fb6277e1c36b
+babel-plugin-transform-es2015-duplicate-keys@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-duplicate-keys-6.24.1.tgz#73eb3d310ca969e3ef9ec91c53741a6f1576423e
   dependencies:
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
 
 babel-plugin-transform-es2015-for-of@^6.22.0:
   version "6.23.0"
@@ -767,13 +777,13 @@ babel-plugin-transform-es2015-for-of@^6.22.0:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-es2015-function-name@^6.22.0, babel-plugin-transform-es2015-function-name@^6.5.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-es2015-function-name-6.22.0.tgz#f5fcc8b09093f9a23c76ac3d9e392c3ec4b77104
+babel-plugin-transform-es2015-function-name@^6.24.1, babel-plugin-transform-es2015-function-name@^6.5.0:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-function-name-6.24.1.tgz#834c89853bc36b1af0f3a4c5dbaa94fd8eacaa8b
   dependencies:
-    babel-helper-function-name "^6.22.0"
+    babel-helper-function-name "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
 
 babel-plugin-transform-es2015-literals@^6.22.0:
   version "6.22.0"
@@ -781,63 +791,63 @@ babel-plugin-transform-es2015-literals@^6.22.0:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-es2015-modules-amd@^6.24.0:
-  version "6.24.0"
-  resolved babel-plugin-transform-es2015-modules-amd-6.24.0.tgz#a1911fb9b7ec7e05a43a63c5995007557bcf6a2e
+babel-plugin-transform-es2015-modules-amd@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-modules-amd-6.24.1.tgz#3b3e54017239842d6d19c3011c4bd2f00a00d154
   dependencies:
-    babel-plugin-transform-es2015-modules-commonjs "^6.24.0"
+    babel-plugin-transform-es2015-modules-commonjs "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-template "^6.22.0"
+    babel-template "^6.24.1"
 
-babel-plugin-transform-es2015-modules-commonjs@^6.24.0, babel-plugin-transform-es2015-modules-commonjs@^6.7.4:
-  version "6.24.0"
-  resolved babel-plugin-transform-es2015-modules-commonjs-6.24.0.tgz#e921aefb72c2cc26cb03d107626156413222134f
+babel-plugin-transform-es2015-modules-commonjs@^6.24.1, babel-plugin-transform-es2015-modules-commonjs@^6.7.4:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-modules-commonjs-6.24.1.tgz#d3e310b40ef664a36622200097c6d440298f2bfe
   dependencies:
-    babel-plugin-transform-strict-mode "^6.22.0"
+    babel-plugin-transform-strict-mode "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
-    babel-types "^6.23.0"
+    babel-template "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-plugin-transform-es2015-modules-systemjs@^6.22.0:
-  version "6.23.0"
-  resolved babel-plugin-transform-es2015-modules-systemjs-6.23.0.tgz#ae3469227ffac39b0310d90fec73bfdc4f6317b0
+babel-plugin-transform-es2015-modules-systemjs@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-modules-systemjs-6.24.1.tgz#ff89a142b9119a906195f5f106ecf305d9407d23
   dependencies:
-    babel-helper-hoist-variables "^6.22.0"
+    babel-helper-hoist-variables "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
+    babel-template "^6.24.1"
 
-babel-plugin-transform-es2015-modules-umd@^6.24.0:
-  version "6.24.0"
-  resolved babel-plugin-transform-es2015-modules-umd-6.24.0.tgz#fd5fa63521cae8d273927c3958afd7c067733450
+babel-plugin-transform-es2015-modules-umd@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-modules-umd-6.24.1.tgz#ac997e6285cd18ed6176adb607d602344ad38468
   dependencies:
-    babel-plugin-transform-es2015-modules-amd "^6.24.0"
+    babel-plugin-transform-es2015-modules-amd "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
+    babel-template "^6.24.1"
 
-babel-plugin-transform-es2015-object-super@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-es2015-object-super-6.22.0.tgz#daa60e114a042ea769dd53fe528fc82311eb98fc
+babel-plugin-transform-es2015-object-super@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-object-super-6.24.1.tgz#24cef69ae21cb83a7f8603dad021f572eb278f8d
   dependencies:
-    babel-helper-replace-supers "^6.22.0"
+    babel-helper-replace-supers "^6.24.1"
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-es2015-parameters@^6.22.0, babel-plugin-transform-es2015-parameters@^6.8.0:
-  version "6.23.0"
-  resolved babel-plugin-transform-es2015-parameters-6.23.0.tgz#3a2aabb70c8af945d5ce386f1a4250625a83ae3b
+babel-plugin-transform-es2015-parameters@^6.24.1, babel-plugin-transform-es2015-parameters@^6.8.0:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-parameters-6.24.1.tgz#57ac351ab49caf14a97cd13b09f66fdf0a625f2b
   dependencies:
-    babel-helper-call-delegate "^6.22.0"
-    babel-helper-get-function-arity "^6.22.0"
+    babel-helper-call-delegate "^6.24.1"
+    babel-helper-get-function-arity "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-template "^6.23.0"
-    babel-traverse "^6.23.0"
-    babel-types "^6.23.0"
+    babel-template "^6.24.1"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
 
-babel-plugin-transform-es2015-shorthand-properties@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-es2015-shorthand-properties-6.22.0.tgz#8ba776e0affaa60bff21e921403b8a652a2ff723
+babel-plugin-transform-es2015-shorthand-properties@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-shorthand-properties-6.24.1.tgz#24f875d6721c87661bbd99a4622e51f14de38aa0
   dependencies:
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
 
 babel-plugin-transform-es2015-spread@^6.22.0:
   version "6.22.0"
@@ -845,13 +855,13 @@ babel-plugin-transform-es2015-spread@^6.22.0:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-es2015-sticky-regex@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-es2015-sticky-regex-6.22.0.tgz#ab316829e866ee3f4b9eb96939757d19a5bc4593
+babel-plugin-transform-es2015-sticky-regex@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-sticky-regex-6.24.1.tgz#00c1cdb1aca71112cdf0cf6126c2ed6b457ccdbc
   dependencies:
-    babel-helper-regex "^6.22.0"
+    babel-helper-regex "^6.24.1"
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
 
 babel-plugin-transform-es2015-template-literals@^6.22.0:
   version "6.22.0"
@@ -865,19 +875,19 @@ babel-plugin-transform-es2015-typeof-symbol@^6.22.0:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-es2015-unicode-regex@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-es2015-unicode-regex-6.22.0.tgz#8d9cc27e7ee1decfe65454fb986452a04a613d20
+babel-plugin-transform-es2015-unicode-regex@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-es2015-unicode-regex-6.24.1.tgz#d38b12f42ea7323f729387f18a7c5ae1faeb35e9
   dependencies:
-    babel-helper-regex "^6.22.0"
+    babel-helper-regex "^6.24.1"
     babel-runtime "^6.22.0"
     regexpu-core "^2.0.0"
 
-babel-plugin-transform-exponentiation-operator@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-exponentiation-operator-6.22.0.tgz#d57c8335281918e54ef053118ce6eb108468084d
+babel-plugin-transform-exponentiation-operator@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-exponentiation-operator-6.24.1.tgz#2ab0c9c7f3098fa48907772bb813fe41e8de3a0e
   dependencies:
-    babel-helper-builder-binary-assignment-operator-visitor "^6.22.0"
+    babel-helper-builder-binary-assignment-operator-visitor "^6.24.1"
     babel-plugin-syntax-exponentiation-operator "^6.8.0"
     babel-runtime "^6.22.0"
 
@@ -909,11 +919,11 @@ babel-plugin-transform-object-rest-spread@^6.22.0:
     babel-plugin-syntax-object-rest-spread "^6.8.0"
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-regenerator@^6.22.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-regenerator-6.22.0.tgz#65740593a319c44522157538d690b84094617ea6
+babel-plugin-transform-regenerator@^6.24.1:
+  version "6.24.1"
+  resolved babel-plugin-transform-regenerator-6.24.1.tgz#b8da305ad43c3c99b4848e4fe4037b770d23c418
   dependencies:
-    regenerator-transform "0.9.8"
+    regenerator-transform "0.9.11"
 
 babel-plugin-transform-runtime@^6.12.0:
   version "6.23.0"
@@ -921,12 +931,12 @@ babel-plugin-transform-runtime@^6.12.0:
   dependencies:
     babel-runtime "^6.22.0"
 
-babel-plugin-transform-strict-mode@^6.22.0, babel-plugin-transform-strict-mode@^6.8.0:
-  version "6.22.0"
-  resolved babel-plugin-transform-strict-mode-6.22.0.tgz#e008df01340fdc87e959da65991b7e05970c8c7c
+babel-plugin-transform-strict-mode@^6.24.1, babel-plugin-transform-strict-mode@^6.8.0:
+  version "6.24.1"
+  resolved babel-plugin-transform-strict-mode-6.24.1.tgz#d5faf7aa578a65bbe591cf5edae04a0c67020758
   dependencies:
     babel-runtime "^6.22.0"
-    babel-types "^6.22.0"
+    babel-types "^6.24.1"
 
 babel-polyfill@^6.23.0, babel-polyfill@^6.6.1:
   version "6.23.0"
@@ -946,33 +956,33 @@ babel-preset-es2015-node6@^0.4.0:
     babel-plugin-transform-es2015-parameters "^6.8.0"
 
 babel-preset-es2015@^6.14.0:
-  version "6.24.0"
-  resolved babel-preset-es2015-6.24.0.tgz#c162d68b1932696e036cd3110dc1ccd303d2673a
+  version "6.24.1"
+  resolved babel-preset-es2015-6.24.1.tgz#d44050d6bc2c9feea702aaf38d727a0210538939
   dependencies:
     babel-plugin-check-es2015-constants "^6.22.0"
     babel-plugin-transform-es2015-arrow-functions "^6.22.0"
     babel-plugin-transform-es2015-block-scoped-functions "^6.22.0"
-    babel-plugin-transform-es2015-block-scoping "^6.22.0"
-    babel-plugin-transform-es2015-classes "^6.22.0"
-    babel-plugin-transform-es2015-computed-properties "^6.22.0"
+    babel-plugin-transform-es2015-block-scoping "^6.24.1"
+    babel-plugin-transform-es2015-classes "^6.24.1"
+    babel-plugin-transform-es2015-computed-properties "^6.24.1"
     babel-plugin-transform-es2015-destructuring "^6.22.0"
-    babel-plugin-transform-es2015-duplicate-keys "^6.22.0"
+    babel-plugin-transform-es2015-duplicate-keys "^6.24.1"
     babel-plugin-transform-es2015-for-of "^6.22.0"
-    babel-plugin-transform-es2015-function-name "^6.22.0"
+    babel-plugin-transform-es2015-function-name "^6.24.1"
     babel-plugin-transform-es2015-literals "^6.22.0"
-    babel-plugin-transform-es2015-modules-amd "^6.24.0"
-    babel-plugin-transform-es2015-modules-commonjs "^6.24.0"
-    babel-plugin-transform-es2015-modules-systemjs "^6.22.0"
-    babel-plugin-transform-es2015-modules-umd "^6.24.0"
-    babel-plugin-transform-es2015-object-super "^6.22.0"
-    babel-plugin-transform-es2015-parameters "^6.22.0"
-    babel-plugin-transform-es2015-shorthand-properties "^6.22.0"
+    babel-plugin-transform-es2015-modules-amd "^6.24.1"
+    babel-plugin-transform-es2015-modules-commonjs "^6.24.1"
+    babel-plugin-transform-es2015-modules-systemjs "^6.24.1"
+    babel-plugin-transform-es2015-modules-umd "^6.24.1"
+    babel-plugin-transform-es2015-object-super "^6.24.1"
+    babel-plugin-transform-es2015-parameters "^6.24.1"
+    babel-plugin-transform-es2015-shorthand-properties "^6.24.1"
     babel-plugin-transform-es2015-spread "^6.22.0"
-    babel-plugin-transform-es2015-sticky-regex "^6.22.0"
+    babel-plugin-transform-es2015-sticky-regex "^6.24.1"
     babel-plugin-transform-es2015-template-literals "^6.22.0"
     babel-plugin-transform-es2015-typeof-symbol "^6.22.0"
-    babel-plugin-transform-es2015-unicode-regex "^6.22.0"
-    babel-plugin-transform-regenerator "^6.22.0"
+    babel-plugin-transform-es2015-unicode-regex "^6.24.1"
+    babel-plugin-transform-regenerator "^6.24.1"
 
 babel-preset-jest@^18.0.0:
   version "18.0.0"
@@ -981,37 +991,37 @@ babel-preset-jest@^18.0.0:
     babel-plugin-jest-hoist "^18.0.0"
 
 babel-preset-stage-1@^6.5.0:
-  version "6.22.0"
-  resolved babel-preset-stage-1-6.22.0.tgz#7da05bffea6ad5a10aef93e320cfc6dd465dbc1a
+  version "6.24.1"
+  resolved babel-preset-stage-1-6.24.1.tgz#7692cd7dcd6849907e6ae4a0a85589cfb9e2bfb0
   dependencies:
-    babel-plugin-transform-class-constructor-call "^6.22.0"
+    babel-plugin-transform-class-constructor-call "^6.24.1"
     babel-plugin-transform-export-extensions "^6.22.0"
-    babel-preset-stage-2 "^6.22.0"
+    babel-preset-stage-2 "^6.24.1"
 
-babel-preset-stage-2@^6.22.0:
-  version "6.22.0"
-  resolved babel-preset-stage-2-6.22.0.tgz#ccd565f19c245cade394b21216df704a73b27c07
+babel-preset-stage-2@^6.24.1:
+  version "6.24.1"
+  resolved babel-preset-stage-2-6.24.1.tgz#d9e2960fb3d71187f0e64eec62bc07767219bdc1
   dependencies:
     babel-plugin-syntax-dynamic-import "^6.18.0"
-    babel-plugin-transform-class-properties "^6.22.0"
-    babel-plugin-transform-decorators "^6.22.0"
-    babel-preset-stage-3 "^6.22.0"
+    babel-plugin-transform-class-properties "^6.24.1"
+    babel-plugin-transform-decorators "^6.24.1"
+    babel-preset-stage-3 "^6.24.1"
 
-babel-preset-stage-3@^6.22.0:
-  version "6.22.0"
-  resolved babel-preset-stage-3-6.22.0.tgz#a4e92bbace7456fafdf651d7a7657ee0bbca9c2e
+babel-preset-stage-3@^6.24.1:
+  version "6.24.1"
+  resolved babel-preset-stage-3-6.24.1.tgz#836ada0a9e7a7fa37cb138fb9326f87934a48395
   dependencies:
     babel-plugin-syntax-trailing-function-commas "^6.22.0"
-    babel-plugin-transform-async-generator-functions "^6.22.0"
-    babel-plugin-transform-async-to-generator "^6.22.0"
-    babel-plugin-transform-exponentiation-operator "^6.22.0"
+    babel-plugin-transform-async-generator-functions "^6.24.1"
+    babel-plugin-transform-async-to-generator "^6.24.1"
+    babel-plugin-transform-exponentiation-operator "^6.24.1"
     babel-plugin-transform-object-rest-spread "^6.22.0"
 
-babel-register@^6.24.0:
-  version "6.24.0"
-  resolved babel-register-6.24.0.tgz#5e89f8463ba9970356d02eb07dabe3308b080cfd
+babel-register@^6.24.1:
+  version "6.24.1"
+  resolved babel-register-6.24.1.tgz#7e10e13a2f71065bdfad5a1787ba45bca6ded75f
   dependencies:
-    babel-core "^6.24.0"
+    babel-core "^6.24.1"
     babel-runtime "^6.22.0"
     core-js "^2.4.0"
     home-or-tmp "^2.0.0"
@@ -1032,40 +1042,40 @@ babel-runtime@^6.18.0, babel-runtime@^6.22.0:
     core-js "^2.4.0"
     regenerator-runtime "^0.10.0"
 
-babel-template@^6.16.0, babel-template@^6.22.0, babel-template@^6.23.0:
-  version "6.23.0"
-  resolved babel-template-6.23.0.tgz#04d4f270adbb3aa704a8143ae26faa529238e638
+babel-template@^6.16.0, babel-template@^6.24.1:
+  version "6.24.1"
+  resolved babel-template-6.24.1.tgz#04ae514f1f93b3a2537f2a0f60a5a45fb8308333
   dependencies:
     babel-runtime "^6.22.0"
-    babel-traverse "^6.23.0"
-    babel-types "^6.23.0"
+    babel-traverse "^6.24.1"
+    babel-types "^6.24.1"
     babylon "^6.11.0"
     lodash "^4.2.0"
 
-babel-traverse@^6.15.0, babel-traverse@^6.18.0, babel-traverse@^6.22.0, babel-traverse@^6.23.0, babel-traverse@^6.23.1:
-  version "6.23.1"
-  resolved babel-traverse-6.23.1.tgz#d3cb59010ecd06a97d81310065f966b699e14f48
+babel-traverse@^6.18.0, babel-traverse@^6.23.1, babel-traverse@^6.24.1:
+  version "6.24.1"
+  resolved babel-traverse-6.24.1.tgz#ab36673fd356f9a0948659e7b338d5feadb31695
   dependencies:
     babel-code-frame "^6.22.0"
     babel-messages "^6.23.0"
     babel-runtime "^6.22.0"
-    babel-types "^6.23.0"
+    babel-types "^6.24.1"
     babylon "^6.15.0"
     debug "^2.2.0"
     globals "^9.0.0"
     invariant "^2.2.0"
     lodash "^4.2.0"
 
-babel-types@^6.15.0, babel-types@^6.18.0, babel-types@^6.19.0, babel-types@^6.22.0, babel-types@^6.23.0:
-  version "6.23.0"
-  resolved babel-types-6.23.0.tgz#bb17179d7538bad38cd0c9e115d340f77e7e9acf
+babel-types@^6.18.0, babel-types@^6.19.0, babel-types@^6.23.0, babel-types@^6.24.1:
+  version "6.24.1"
+  resolved babel-types-6.24.1.tgz#a136879dc15b3606bda0d90c1fc74304c2ff0975
   dependencies:
     babel-runtime "^6.22.0"
     esutils "^2.0.2"
     lodash "^4.2.0"
     to-fast-properties "^1.0.1"
 
-babylon@^6.11.0, babylon@^6.13.0, babylon@^6.15.0:
+babylon@^6.11.0, babylon@^6.13.0, babylon@^6.15.0, babylon@^6.16.1:
   version "6.16.1"
   resolved babylon-6.16.1.tgz#30c5a22f481978a9e7f8cdfdf496b11d94b404d3
 
@@ -1148,8 +1158,8 @@ boom@2.x.x:
     hoek "2.x.x"
 
 brace-expansion@^1.0.0:
-  version "1.1.6"
-  resolved brace-expansion-1.1.6.tgz#7197d7eaa9b87e648390ea61fc66c84427420df9
+  version "1.1.7"
+  resolved brace-expansion-1.1.7.tgz#3effc3c50e000531fb720eaff80f0ae8ef23cf59
   dependencies:
     balanced-match "^0.4.1"
     concat-map "0.0.1"
@@ -1182,7 +1192,7 @@ buffer-equal-constant-time@1.0.1:
   version "1.0.1"
   resolved buffer-equal-constant-time-1.0.1.tgz#f8e71132f7ffe6e01a5c9697a4c6f3e48d5cc819
 
-buffer-shims@^1.0.0:
+buffer-shims@~1.0.0:
   version "1.0.0"
   resolved buffer-shims-1.0.0.tgz#9978ce317388c649ad8793028c3477ef044a8b51
 
@@ -1195,8 +1205,8 @@ builtin-modules@^1.0.0, builtin-modules@^1.1.1:
   resolved builtin-modules-1.1.1.tgz#270f076c5a72c02f5b65a47df94c5fe3a278892f
 
 bunyan@^1.8.4:
-  version "1.8.8"
-  resolved bunyan-1.8.8.tgz#6549ed6db088e4d82b7be3bcc6d0697159f6e209
+  version "1.8.10"
+  resolved bunyan-1.8.10.tgz#201fedd26c7080b632f416072f53a90b9a52981c
   optionalDependencies:
     dtrace-provider "~0.8"
     moment "^2.10.6"
@@ -1428,7 +1438,7 @@ commoner@~0.10.3:
     q "^1.1.2"
     recast "^0.11.17"
 
-component-emitter@^1.2.0, component-emitter@~1.2.0:
+component-emitter@^1.2.0:
   version "1.2.1"
   resolved component-emitter-1.2.1.tgz#137918d6d78283f7df7a6b7c5a63e140e69425e6
 
@@ -1440,7 +1450,7 @@ concat-map@0.0.1:
   version "0.0.1"
   resolved concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b
 
-concat-stream@^1.4.6:
+concat-stream@^1.5.2:
   version "1.6.0"
   resolved concat-stream-1.6.0.tgz#0aac662fd52be78964d5532f694784e70110acf7
   dependencies:
@@ -1476,8 +1486,8 @@ content-type@~1.0.2:
   resolved content-type-1.0.2.tgz#b7d113aee7a8dd27bd21133c4dc2529df1721eed
 
 convert-source-map@1.X, convert-source-map@^1.1.0, convert-source-map@^1.1.1:
-  version "1.4.0"
-  resolved convert-source-map-1.4.0.tgz#e3dad195bf61bfe13a7a3c73e9876ec14a0268f3
+  version "1.5.0"
+  resolved convert-source-map-1.5.0.tgz#9acd70851c6d5dfdd93d9282e5edf94a03ff46b5
 
 cookie-signature@1.0.6:
   version "1.0.6"
@@ -1487,13 +1497,9 @@ cookie@0.3.1:
   version "0.3.1"
   resolved cookie-0.3.1.tgz#e7e0a1f9ef43b4c8ba925c5c5a96e806d16873bb
 
-cookiejar@2.0.6:
-  version "2.0.6"
-  resolved cookiejar-2.0.6.tgz#0abf356ad00d1c5a219d88d44518046dd026acfe
-
 cookiejar@^2.0.6:
-  version "2.1.0"
-  resolved cookiejar-2.1.0.tgz#86549689539b6d0e269b6637a304be508194d898
+  version "2.1.1"
+  resolved cookiejar-2.1.1.tgz#41ad57b1b555951ec171412a81942b1e8200d34a
 
 core-js@^1.0.0:
   version "1.2.7"
@@ -1506,6 +1512,13 @@ core-js@^2.4.0:
 core-util-is@~1.0.0:
   version "1.0.2"
   resolved core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7
+
+create-react-class@^15.5.1:
+  version "15.5.2"
+  resolved create-react-class-15.5.2.tgz#6a8758348df660b88326a0e764d569f274aad681
+  dependencies:
+    fbjs "^0.8.9"
+    object-assign "^4.1.1"
 
 cross-env@^3.1.3:
   version "3.2.4"
@@ -1568,12 +1581,6 @@ d@1:
   dependencies:
     es5-ext "^0.10.9"
 
-d@~0.1.1:
-  version "0.1.1"
-  resolved d-0.1.1.tgz#da184c535d18d8ee7ba2aa229b914009fae11309
-  dependencies:
-    es5-ext "~0.10.2"
-
 dashdash@^1.12.0:
   version "1.14.1"
   resolved dashdash-1.14.1.tgz#853cfa0f7cbe2fed5de20326b8dd581035f6e2f0
@@ -1596,13 +1603,13 @@ debug-fabulous@0.0.X:
     lazy-debug-legacy "0.0.X"
     object-assign "4.1.0"
 
-debug@*, debug@2, debug@2.X, debug@^2.1.1, debug@^2.2.0:
+debug@*, debug@2, debug@2.6.3, debug@2.X, debug@^2.1.1, debug@^2.2.0:
   version "2.6.3"
   resolved debug-2.6.3.tgz#0f7eb8c30965ec08c72accfa0130c8b79984141d
   dependencies:
     ms "0.7.2"
 
-debug@2.2.0, debug@~2.2.0:
+debug@2.2.0:
   version "2.2.0"
   resolved debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da
   dependencies:
@@ -1752,6 +1759,13 @@ doctrine@1.5.0, doctrine@^1.2.2:
     esutils "^2.0.2"
     isarray "^1.0.0"
 
+doctrine@^2.0.0:
+  version "2.0.0"
+  resolved doctrine-2.0.0.tgz#c73d8d2909d22291e1a007a395804da8b665fe63
+  dependencies:
+    esutils "^2.0.2"
+    isarray "^1.0.0"
+
 dot-case@^1.1.0:
   version "1.1.2"
   resolved dot-case-1.1.2.tgz#1e73826900de28d6de5480bc1de31d0842b06bec
@@ -1847,9 +1861,9 @@ es-to-primitive@^1.1.1:
     is-date-object "^1.0.1"
     is-symbol "^1.0.1"
 
-es5-ext@^0.10.14, es5-ext@^0.10.9, es5-ext@~0.10.11, es5-ext@~0.10.14, es5-ext@~0.10.2:
-  version "0.10.14"
-  resolved es5-ext-0.10.14.tgz#625bc9ab9cac0f6fb9dc271525823d1800b3d360
+es5-ext@^0.10.14, es5-ext@^0.10.9, es5-ext@~0.10.14:
+  version "0.10.15"
+  resolved es5-ext-0.10.15.tgz#c330a5934c1ee21284a7c081a86e5fd937c91ea6
   dependencies:
     es6-iterator "2"
     es6-symbol "~3.1"
@@ -1867,17 +1881,17 @@ es6-iterator@2, es6-iterator@^2.0.1, es6-iterator@~2.0.1:
     es6-symbol "^3.1"
 
 es6-map@^0.1.3:
-  version "0.1.4"
-  resolved es6-map-0.1.4.tgz#a34b147be224773a4d7da8072794cefa3632b897
+  version "0.1.5"
+  resolved es6-map-0.1.5.tgz#9136e0503dcc06a301690f0bb14ff4e364e949f0
   dependencies:
-    d "~0.1.1"
-    es5-ext "~0.10.11"
-    es6-iterator "2"
-    es6-set "~0.1.3"
-    es6-symbol "~3.1.0"
-    event-emitter "~0.3.4"
+    d "1"
+    es5-ext "~0.10.14"
+    es6-iterator "~2.0.1"
+    es6-set "~0.1.5"
+    es6-symbol "~3.1.1"
+    event-emitter "~0.3.5"
 
-es6-set@~0.1.3:
+es6-set@~0.1.5:
   version "0.1.5"
   resolved es6-set-0.1.5.tgz#d2b3ec5d4d800ced818db538d28974db0a73ccb1
   dependencies:
@@ -1887,7 +1901,7 @@ es6-set@~0.1.3:
     es6-symbol "3.1.1"
     event-emitter "~0.3.5"
 
-es6-symbol@3.1.1, es6-symbol@^3.1, es6-symbol@^3.1.1, es6-symbol@~3.1, es6-symbol@~3.1.0:
+es6-symbol@3.1.1, es6-symbol@^3.1, es6-symbol@^3.1.1, es6-symbol@~3.1, es6-symbol@~3.1.1:
   version "3.1.1"
   resolved es6-symbol-3.1.1.tgz#bf00ef4fdab6ba1b46ecb7b629b4c7ed5715cc77
   dependencies:
@@ -1955,8 +1969,8 @@ eslint-plugin-babel@^4.0.0:
   resolved eslint-plugin-babel-4.1.1.tgz#ef285c87039b67beb3bbd227f5b0eed4fb376b87
 
 eslint-plugin-flowtype@^2.25.0:
-  version "2.30.3"
-  resolved eslint-plugin-flowtype-2.30.3.tgz#57835d2c0ed388da7a2725803ec32af2f437c301
+  version "2.30.4"
+  resolved eslint-plugin-flowtype-2.30.4.tgz#771d6bb4578ab8598e9c58018fea2e1a22946249
   dependencies:
     lodash "^4.15.0"
 
@@ -1976,8 +1990,8 @@ eslint-plugin-import@^2.2.0:
     pkg-up "^1.0.0"
 
 eslint-plugin-react@^6.6.0:
-  version "6.10.0"
-  resolved eslint-plugin-react-6.10.0.tgz#9c48b48d101554b5355413e7c64238abde6ef1ef
+  version "6.10.3"
+  resolved eslint-plugin-react-6.10.3.tgz#c5435beb06774e12c7db2f6abaddcbf900cd3f78
   dependencies:
     array.prototype.find "^2.0.1"
     doctrine "^1.2.2"
@@ -1986,16 +2000,17 @@ eslint-plugin-react@^6.6.0:
     object.assign "^4.0.4"
 
 eslint@^3.9.1:
-  version "3.17.1"
-  resolved eslint-3.17.1.tgz#b80ae12d9c406d858406fccda627afce33ea10ea
+  version "3.19.0"
+  resolved eslint-3.19.0.tgz#c8fc6201c7f40dd08941b87c085767386a679acc
   dependencies:
     babel-code-frame "^6.16.0"
     chalk "^1.1.3"
-    concat-stream "^1.4.6"
+    concat-stream "^1.5.2"
     debug "^2.1.1"
-    doctrine "^1.2.2"
+    doctrine "^2.0.0"
     escope "^3.6.0"
     espree "^3.4.0"
+    esquery "^1.0.0"
     estraverse "^4.2.0"
     esutils "^2.0.2"
     file-entry-cache "^2.0.0"
@@ -2025,10 +2040,10 @@ eslint@^3.9.1:
     user-home "^2.0.0"
 
 espree@^3.4.0:
-  version "3.4.0"
-  resolved espree-3.4.0.tgz#41656fa5628e042878025ef467e78f125cb86e1d
+  version "3.4.1"
+  resolved espree-3.4.1.tgz#28a83ab4aaed71ed8fe0f5efe61b76a05c13c4d2
   dependencies:
-    acorn "4.0.4"
+    acorn "^5.0.1"
     acorn-jsx "^3.0.0"
 
 esprima-fb@~15001.1001.0-dev-harmony-fb:
@@ -2047,6 +2062,12 @@ esprima@~3.0.0:
   version "3.0.0"
   resolved esprima-3.0.0.tgz#53cf247acda77313e551c3aa2e73342d3fb4f7d9
 
+esquery@^1.0.0:
+  version "1.0.0"
+  resolved esquery-1.0.0.tgz#cfba8b57d7fba93f17298a8a006a04cda13d80fa
+  dependencies:
+    estraverse "^4.0.0"
+
 esrecurse@^4.1.0:
   version "4.1.0"
   resolved esrecurse-4.1.0.tgz#4713b6536adf7f2ac4f327d559e7756bff648220
@@ -2058,7 +2079,7 @@ estraverse@^1.9.1:
   version "1.9.3"
   resolved estraverse-1.9.3.tgz#af67f2dc922582415950926091a4005d29c9bb44
 
-estraverse@^4.1.1, estraverse@^4.2.0:
+estraverse@^4.0.0, estraverse@^4.1.1, estraverse@^4.2.0:
   version "4.2.0"
   resolved estraverse-4.2.0.tgz#0dee3fed31fcd469618ce7342099fc1afa0bdb13
 
@@ -2074,7 +2095,7 @@ etag@~1.8.0:
   version "1.8.0"
   resolved etag-1.8.0.tgz#6f631aef336d6c46362b51764044ce216be3c051
 
-event-emitter@~0.3.4, event-emitter@~0.3.5:
+event-emitter@~0.3.5:
   version "0.3.5"
   resolved event-emitter-0.3.5.tgz#df8c69eef1647923c7157b9ce83840610b02cc39
   dependencies:
@@ -2156,7 +2177,7 @@ extend-shallow@^2.0.1:
   dependencies:
     is-extendable "^0.1.0"
 
-extend@3, extend@3.0.0, extend@^3.0.0, extend@~3.0.0:
+extend@3, extend@^3.0.0, extend@~3.0.0:
   version "3.0.0"
   resolved extend-3.0.0.tgz#5a474353b9f3353ddd8176dfd37b91c83a46f1d4
 
@@ -2187,9 +2208,9 @@ fb-watchman@^1.8.0, fb-watchman@^1.9.0:
   dependencies:
     bser "1.0.2"
 
-fbjs@^0.8.4:
-  version "0.8.9"
-  resolved fbjs-0.8.9.tgz#180247fbd347dcc9004517b904f865400a0c8f14
+fbjs@^0.8.9:
+  version "0.8.12"
+  resolved fbjs-0.8.12.tgz#10b5d92f76d45575fd63a217d4ea02bea2f8ed04
   dependencies:
     core-js "^1.0.0"
     isomorphic-fetch "^2.1.1"
@@ -2243,10 +2264,10 @@ fill-range@^2.1.0:
     repeat-string "^1.5.2"
 
 finalhandler@~1.0.0:
-  version "1.0.0"
-  resolved finalhandler-1.0.0.tgz#b5691c2c0912092f18ac23e9416bde5cd7dc6755
+  version "1.0.1"
+  resolved finalhandler-1.0.1.tgz#bcd15d1689c0e5ed729b6f7f541a6df984117db8
   dependencies:
-    debug "2.6.1"
+    debug "2.6.3"
     encodeurl "~1.0.1"
     escape-html "~1.0.3"
     on-finished "~2.3.0"
@@ -2353,17 +2374,9 @@ forever-agent@~0.6.1:
   version "0.6.1"
   resolved forever-agent-0.6.1.tgz#fbc71f0c41adeb37f96c577ad1ed42d8fdacca91
 
-form-data@1.0.0-rc3:
-  version "1.0.0-rc3"
-  resolved form-data-1.0.0-rc3.tgz#d35bc62e7fbc2937ae78f948aaa0d38d90607577
-  dependencies:
-    async "^1.4.0"
-    combined-stream "^1.0.5"
-    mime-types "^2.1.3"
-
 form-data@^2.1.1, form-data@~2.1.1:
-  version "2.1.2"
-  resolved form-data-2.1.2.tgz#89c3534008b97eada4cbb157d58f6f5df025eae4
+  version "2.1.4"
+  resolved form-data-2.1.4.tgz#33c183acf193276ecaa98143a69e94bfee1750d1
   dependencies:
     asynckit "^0.4.0"
     combined-stream "^1.0.5"
@@ -2372,10 +2385,6 @@ form-data@^2.1.1, form-data@~2.1.1:
 formidable@^1.1.1:
   version "1.1.1"
   resolved formidable-1.1.1.tgz#96b8886f7c3c3508b932d6bd70c4d3a88f35f1a9
-
-formidable@~1.0.14:
-  version "1.0.17"
-  resolved formidable-1.0.17.tgz#ef5491490f9433b705faa77249c99029ae348559
 
 forwarded@~0.1.0:
   version "0.1.0"
@@ -2418,7 +2427,7 @@ fsevents@^1.0.0:
     nan "^2.3.0"
     node-pre-gyp "^0.6.29"
 
-fstream-ignore@~1.0.5:
+fstream-ignore@^1.0.5:
   version "1.0.5"
   resolved fstream-ignore-1.0.5.tgz#9c31dae34767018fe1d249b24dada67d092da105
   dependencies:
@@ -2426,7 +2435,7 @@ fstream-ignore@~1.0.5:
     inherits "2"
     minimatch "^3.0.0"
 
-fstream@^1.0.0, fstream@^1.0.2, fstream@^1.0.8, fstream@~1.0.10:
+fstream@^1.0.0, fstream@^1.0.10, fstream@^1.0.2, fstream@^1.0.8:
   version "1.0.11"
   resolved fstream-1.0.11.tgz#5c1fb1f117477114f0632a0eb4b71b3cb0fd3171
   dependencies:
@@ -2592,8 +2601,8 @@ global-prefix@^0.1.4:
     which "^1.2.12"
 
 globals@^9.0.0, globals@^9.14.0:
-  version "9.16.0"
-  resolved globals-9.16.0.tgz#63e903658171ec2d9f51b1d31de5e2b8dc01fb80
+  version "9.17.0"
+  resolved globals-9.17.0.tgz#0c0ca696d9b9bb694d2e5470bd37777caad50286
 
 globby@^5.0.0:
   version "5.0.0"
@@ -2696,9 +2705,10 @@ gulp-sourcemaps@1.6.0:
     vinyl "^1.0.0"
 
 gulp-sourcemaps@^1.6.0:
-  version "1.11.1"
-  resolved gulp-sourcemaps-1.11.1.tgz#b534376deab49387d406c3aebeb8beaf02ef3548
+  version "1.12.0"
+  resolved gulp-sourcemaps-1.12.0.tgz#786f97c94a0f968492465d70558e04242c679598
   dependencies:
+    "@gulp-sourcemaps/map-sources" "1.X"
     acorn "4.X"
     convert-source-map "1.X"
     css "2.X"
@@ -2819,8 +2829,8 @@ hoek@2.x.x:
   resolved hoek-2.16.3.tgz#20bb7403d3cea398e91dc4710a8ff1b8274a25ed
 
 hoek@4.x.x:
-  version "4.1.0"
-  resolved hoek-4.1.0.tgz#4a4557460f69842ed463aa00628cc26d2683afa7
+  version "4.1.1"
+  resolved hoek-4.1.1.tgz#9cc573ffba2b7b408fb5e9c2a13796be94cddce9
 
 hoist-non-react-statics@^1.0.3:
   version "1.2.0"
@@ -2844,8 +2854,8 @@ homedir-polyfill@^1.0.0:
     parse-passwd "^1.0.0"
 
 hosted-git-info@^2.1.4:
-  version "2.2.0"
-  resolved hosted-git-info-2.2.0.tgz#7a0d097863d886c0fabbdcd37bf1758d8becf8a5
+  version "2.4.1"
+  resolved hosted-git-info-2.4.1.tgz#4b0445e41c004a8bd1337773a4ff790ca40318c8
 
 html-encoding-sniffer@^1.0.1:
   version "1.0.1"
@@ -2895,8 +2905,8 @@ iconv-lite@0.4.15, iconv-lite@^0.4.5, iconv-lite@~0.4.13:
   resolved iconv-lite-0.4.15.tgz#fe265a218ac6a57cfe854927e9d04c19825eddeb
 
 ignore@^3.2.0:
-  version "3.2.6"
-  resolved ignore-3.2.6.tgz#26e8da0644be0bb4cb39516f6c79f0e0f4ffe48c
+  version "3.2.7"
+  resolved ignore-3.2.7.tgz#4810ca5f1d8eca5595213a34b94f2eb4ed926bbd
 
 imurmurhash@^0.1.4:
   version "0.1.4"
@@ -2944,8 +2954,8 @@ instapromise@2.0.7-rc.1:
   resolved instapromise-2.0.7-rc.1.tgz#34aff619a45ea7d32bb122866a9e315ee73033e8
 
 interpret@^1.0.0:
-  version "1.0.1"
-  resolved interpret-1.0.1.tgz#d579fb7f693b858004947af39fa0db49f795602c
+  version "1.0.2"
+  resolved interpret-1.0.2.tgz#f4f623f0bb7122f15f5717c8e254b8161b5c5b2d
 
 invariant@^2.0.0, invariant@^2.2.0:
   version "2.2.2"
@@ -2961,9 +2971,9 @@ ip@^1.1.3, ip@^1.1.4:
   version "1.1.5"
   resolved ip-1.1.5.tgz#bdded70114290828c0a039e72ef25f5aaec4354a
 
-ipaddr.js@1.2.0:
-  version "1.2.0"
-  resolved ipaddr.js-1.2.0.tgz#8aba49c9192799585bdd643e0ccb50e8ae777ba4
+ipaddr.js@1.3.0:
+  version "1.3.0"
+  resolved ipaddr.js-1.3.0.tgz#1e03a52fdad83a8bbb2b25cbf4998b4cffcd3dec
 
 is-absolute@^0.2.3:
   version "0.2.6"
@@ -3189,9 +3199,9 @@ isemail@2.x.x:
   version "2.2.1"
   resolved isemail-2.2.1.tgz#0353d3d9a62951080c262c2aa0a42b8ea8e9e2a6
 
-isexe@^1.1.1:
-  version "1.1.2"
-  resolved isexe-1.1.2.tgz#36f3e22e60750920f5e7241a476a8c6a42275ad0
+isexe@^2.0.0:
+  version "2.0.0"
+  resolved isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10
 
 isobject@^1.0.0:
   version "1.0.2"
@@ -3215,66 +3225,64 @@ isstream@~0.1.2:
   resolved isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a
 
 istanbul-api@^1.1.0-alpha.1:
-  version "1.1.1"
-  resolved istanbul-api-1.1.1.tgz#d36e2f1560d1a43ce304c4ff7338182de61c8f73
+  version "1.1.7"
+  resolved istanbul-api-1.1.7.tgz#f6f37f09f8002b130f891c646b70ee4a8e7345ae
   dependencies:
     async "^2.1.4"
     fileset "^2.0.2"
-    istanbul-lib-coverage "^1.0.0"
-    istanbul-lib-hook "^1.0.0"
-    istanbul-lib-instrument "^1.3.0"
-    istanbul-lib-report "^1.0.0-alpha.3"
-    istanbul-lib-source-maps "^1.1.0"
-    istanbul-reports "^1.0.0"
+    istanbul-lib-coverage "^1.0.2"
+    istanbul-lib-hook "^1.0.5"
+    istanbul-lib-instrument "^1.7.0"
+    istanbul-lib-report "^1.0.0"
+    istanbul-lib-source-maps "^1.1.1"
+    istanbul-reports "^1.0.2"
     js-yaml "^3.7.0"
     mkdirp "^0.5.1"
     once "^1.4.0"
 
-istanbul-lib-coverage@^1.0.0, istanbul-lib-coverage@^1.0.0-alpha, istanbul-lib-coverage@^1.0.0-alpha.0:
-  version "1.0.1"
-  resolved istanbul-lib-coverage-1.0.1.tgz#f263efb519c051c5f1f3343034fc40e7b43ff212
+istanbul-lib-coverage@^1.0.0, istanbul-lib-coverage@^1.0.2:
+  version "1.0.2"
+  resolved istanbul-lib-coverage-1.0.2.tgz#87a0c015b6910651cb3b184814dfb339337e25e1
 
-istanbul-lib-hook@^1.0.0:
-  version "1.0.0"
-  resolved istanbul-lib-hook-1.0.0.tgz#fc5367ee27f59268e8f060b0c7aaf051d9c425c5
+istanbul-lib-hook@^1.0.5:
+  version "1.0.5"
+  resolved istanbul-lib-hook-1.0.5.tgz#6ca3d16d60c5f4082da39f7c5cd38ea8a772b88e
   dependencies:
     append-transform "^0.4.0"
 
-istanbul-lib-instrument@^1.1.1, istanbul-lib-instrument@^1.3.0, istanbul-lib-instrument@^1.4.2:
-  version "1.4.2"
-  resolved istanbul-lib-instrument-1.4.2.tgz#0e2fdfac93c1dabf2e31578637dc78a19089f43e
+istanbul-lib-instrument@^1.1.1, istanbul-lib-instrument@^1.4.2, istanbul-lib-instrument@^1.7.0:
+  version "1.7.0"
+  resolved istanbul-lib-instrument-1.7.0.tgz#b8e0dc25709bb44e17336ab47b7bb5c97c23f659
   dependencies:
     babel-generator "^6.18.0"
     babel-template "^6.16.0"
     babel-traverse "^6.18.0"
     babel-types "^6.18.0"
     babylon "^6.13.0"
-    istanbul-lib-coverage "^1.0.0"
+    istanbul-lib-coverage "^1.0.2"
     semver "^5.3.0"
 
-istanbul-lib-report@^1.0.0-alpha.3:
-  version "1.0.0-alpha.3"
-  resolved istanbul-lib-report-1.0.0-alpha.3.tgz#32d5f6ec7f33ca3a602209e278b2e6ff143498af
+istanbul-lib-report@^1.0.0:
+  version "1.0.0"
+  resolved istanbul-lib-report-1.0.0.tgz#d83dac7f26566b521585569367fe84ccfc7aaecb
   dependencies:
-    async "^1.4.2"
-    istanbul-lib-coverage "^1.0.0-alpha"
+    istanbul-lib-coverage "^1.0.2"
     mkdirp "^0.5.1"
     path-parse "^1.0.5"
-    rimraf "^2.4.3"
     supports-color "^3.1.2"
 
-istanbul-lib-source-maps@^1.1.0:
-  version "1.1.0"
-  resolved istanbul-lib-source-maps-1.1.0.tgz#9d429218f35b823560ea300a96ff0c3bbdab785f
+istanbul-lib-source-maps@^1.1.1:
+  version "1.1.1"
+  resolved istanbul-lib-source-maps-1.1.1.tgz#f8c8c2e8f2160d1d91526d97e5bd63b2079af71c
   dependencies:
-    istanbul-lib-coverage "^1.0.0-alpha.0"
+    istanbul-lib-coverage "^1.0.2"
     mkdirp "^0.5.1"
     rimraf "^2.4.4"
     source-map "^0.5.3"
 
-istanbul-reports@^1.0.0:
-  version "1.0.1"
-  resolved istanbul-reports-1.0.1.tgz#9a17176bc4a6cbebdae52b2f15961d52fa623fbc
+istanbul-reports@^1.0.2:
+  version "1.0.2"
+  resolved istanbul-reports-1.0.2.tgz#4e8366abe6fa746cc1cd6633f108de12cc6ac6fa
   dependencies:
     handlebars "^4.0.3"
 
@@ -3471,8 +3479,8 @@ jodid25519@^1.0.0:
     jsbn "~0.1.0"
 
 joi@^10.0.2:
-  version "10.2.2"
-  resolved joi-10.2.2.tgz#dc5a792b7b4c6fffa562242a95b55d9d3f077e24
+  version "10.4.1"
+  resolved joi-10.4.1.tgz#a2fca1f0d603d1b843f2c1e086b52461f6be1f36
   dependencies:
     hoek "4.x.x"
     isemail "2.x.x"
@@ -3497,8 +3505,8 @@ js-tokens@^3.0.0:
   resolved js-tokens-3.0.1.tgz#08e9f132484a2c45a30907e9dc4d5567b7f114d7
 
 js-yaml@^3.5.1, js-yaml@^3.7.0:
-  version "3.8.2"
-  resolved js-yaml-3.8.2.tgz#02d3e2c0f6beab20248d412c352203827d786721
+  version "3.8.3"
+  resolved js-yaml-3.8.3.tgz#33a05ec481c850c8875929166fe1beb61c728766
   dependencies:
     argparse "^1.0.7"
     esprima "^3.1.1"
@@ -3852,10 +3860,6 @@ lodash.pick@^4.2.1:
   version "4.4.0"
   resolved lodash.pick-4.4.0.tgz#52f05610fff9ded422611441ed1fc123a03001b3
 
-lodash.pickby@^4.6.0:
-  version "4.6.0"
-  resolved lodash.pickby-4.6.0.tgz#7dea21d8c18d7703a27c704c15d3b84a67e33aff
-
 lodash.restparam@^3.0.0:
   version "3.6.1"
   resolved lodash.restparam-3.6.1.tgz#936a4e309ef330a7645ed4145986c85ae5b20805
@@ -3995,7 +3999,7 @@ merge@^1.1.3:
   version "1.2.0"
   resolved merge-1.2.0.tgz#7531e39d4949c281a66b8c5a6e0265e8b05894da
 
-methods@^1.1.1, methods@~1.1.1, methods@~1.1.2:
+methods@^1.1.1, methods@~1.1.2:
   version "1.1.2"
   resolved methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee
 
@@ -4017,15 +4021,15 @@ micromatch@^2.1.5, micromatch@^2.3.11, micromatch@^2.3.7:
     parse-glob "^3.0.4"
     regex-cache "^0.4.2"
 
-mime-db@~1.26.0:
-  version "1.26.0"
-  resolved mime-db-1.26.0.tgz#eaffcd0e4fc6935cf8134da246e2e6c35305adff
+mime-db@~1.27.0:
+  version "1.27.0"
+  resolved mime-db-1.27.0.tgz#820f572296bbd20ec25ed55e5b5de869e5436eb1
 
-mime-types@^2.1.12, mime-types@^2.1.3, mime-types@~2.1.11, mime-types@~2.1.13, mime-types@~2.1.7:
-  version "2.1.14"
-  resolved mime-types-2.1.14.tgz#f7ef7d97583fcaf3b7d282b6f8b5679dab1e94ee
+mime-types@^2.1.12, mime-types@~2.1.11, mime-types@~2.1.15, mime-types@~2.1.7:
+  version "2.1.15"
+  resolved mime-types-2.1.15.tgz#a4ebf5064094569237b8cf70046776d09fc92aed
   dependencies:
-    mime-db "~1.26.0"
+    mime-db "~1.27.0"
 
 mime@1.3.4, mime@^1.2.11, mime@^1.3.4:
   version "1.3.4"
@@ -4069,8 +4073,8 @@ mock-fs@^3.12.1:
     semver "5.3.0"
 
 moment@2.x.x, moment@^2.10.6:
-  version "2.17.1"
-  resolved moment-2.17.1.tgz#fed9506063f36b10f066c8b59a144d7faebe1d82
+  version "2.18.1"
+  resolved moment-2.18.1.tgz#c36193dd3ce1c2eed2adb7c802dbbc77a81b1c0f
 
 mout@^0.11.0:
   version "0.11.1"
@@ -4119,8 +4123,8 @@ mz@^2.6.0:
     thenify-all "^1.0.0"
 
 nan@^2.3.0, nan@^2.3.3:
-  version "2.5.1"
-  resolved nan-2.5.1.tgz#d5b01691253326a97a2bbee9e61c55d8d60351e2
+  version "2.6.1"
+  resolved nan-2.6.1.tgz#8c84f7b14c96b89f57fbc838012180ec8ca39a01
 
 natural-compare@^1.4.0:
   version "1.4.0"
@@ -4172,28 +4176,35 @@ node-notifier@^4.6.1:
     which "^1.0.5"
 
 node-pre-gyp@^0.6.29:
-  version "0.6.33"
-  resolved node-pre-gyp-0.6.33.tgz#640ac55198f6a925972e0c16c4ac26a034d5ecc9
+  version "0.6.34"
+  resolved node-pre-gyp-0.6.34.tgz#94ad1c798a11d7fc67381b50d47f8cc18d9799f7
   dependencies:
-    mkdirp "~0.5.1"
-    nopt "~3.0.6"
-    npmlog "^4.0.1"
-    rc "~1.1.6"
-    request "^2.79.0"
-    rimraf "~2.5.4"
-    semver "~5.3.0"
-    tar "~2.2.1"
-    tar-pack "~3.3.0"
+    mkdirp "^0.5.1"
+    nopt "^4.0.1"
+    npmlog "^4.0.2"
+    rc "^1.1.7"
+    request "^2.81.0"
+    rimraf "^2.6.1"
+    semver "^5.3.0"
+    tar "^2.2.1"
+    tar-pack "^3.4.0"
 
 node-uuid@^1.4.7:
-  version "1.4.7"
-  resolved node-uuid-1.4.7.tgz#6da5a17668c4b3dd59623bda11cf7fa4c1f60a6f
+  version "1.4.8"
+  resolved node-uuid-1.4.8.tgz#b040eb0923968afabf8d32fb1f17f1167fdab907
 
-nopt@^3.0.1, nopt@~3.0.6:
+nopt@^3.0.1:
   version "3.0.6"
   resolved nopt-3.0.6.tgz#c6465dbf08abcd4db359317f79ac68a646b28ff9
   dependencies:
     abbrev "1"
+
+nopt@^4.0.1:
+  version "4.0.1"
+  resolved nopt-4.0.1.tgz#d0d4685afd5415193c8c7505602d0d17cd64474d
+  dependencies:
+    abbrev "1"
+    osenv "^0.1.4"
 
 nopt@~1.0.10:
   version "1.0.10"
@@ -4211,8 +4222,10 @@ normalize-package-data@^2.3.2:
     validate-npm-package-license "^3.0.1"
 
 normalize-path@^2.0.1:
-  version "2.0.1"
-  resolved normalize-path-2.0.1.tgz#47886ac1662760d4261b7d979d241709d3ce3f7a
+  version "2.1.1"
+  resolved normalize-path-2.1.1.tgz#1ab28b556e198363a8c1a6f7e6fa20137fe6aed9
+  dependencies:
+    remove-trailing-separator "^1.0.1"
 
 now-and-later@^1.0.0:
   version "1.0.0"
@@ -4220,7 +4233,7 @@ now-and-later@^1.0.0:
   dependencies:
     once "^1.3.2"
 
-npmlog@^4.0.1:
+npmlog@^4.0.2:
   version "4.0.2"
   resolved npmlog-4.0.2.tgz#d03950e0e78ce1527ba26d2a7592e9348ac3e75f
   dependencies:
@@ -4249,7 +4262,7 @@ object-assign@^3.0.0:
   version "3.0.0"
   resolved object-assign-3.0.0.tgz#9bedd5ca0897949bca47e7ff408062d549f587f2
 
-object-assign@^4.0.0, object-assign@^4.0.1, object-assign@^4.1.0:
+object-assign@^4.0.0, object-assign@^4.0.1, object-assign@^4.1.0, object-assign@^4.1.1:
   version "4.1.1"
   resolved object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863
 
@@ -4297,13 +4310,13 @@ on-finished@~2.3.0:
   dependencies:
     ee-first "1.1.1"
 
-once@^1.3.0, once@^1.3.2, once@^1.4.0:
+once@^1.3.0, once@^1.3.2, once@^1.3.3, once@^1.4.0:
   version "1.4.0"
   resolved once-1.4.0.tgz#583b1aa775961d4b113ac17d9c50baef9dd76bd1
   dependencies:
     wrappy "1"
 
-once@~1.3.0, once@~1.3.3:
+once@~1.3.0:
   version "1.3.3"
   resolved once-1.3.3.tgz#b2e261557ce4c314ec8304f3fa82663e4297ca20
   dependencies:
@@ -4355,9 +4368,16 @@ os-locale@^1.4.0:
   dependencies:
     lcid "^1.0.0"
 
-os-tmpdir@^1.0.1:
+os-tmpdir@^1.0.0, os-tmpdir@^1.0.1:
   version "1.0.2"
   resolved os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274
+
+osenv@^0.1.4:
+  version "0.1.4"
+  resolved osenv-0.1.4.tgz#42fe6d5953df06c8064be6f176c3d05aaaa34644
+  dependencies:
+    os-homedir "^1.0.0"
+    os-tmpdir "^1.0.0"
 
 output-file-sync@^1.1.0:
   version "1.1.2"
@@ -4573,12 +4593,18 @@ promise@^7.1.1:
   dependencies:
     asap "~2.0.3"
 
+prop-types@^15.0.0, prop-types@^15.5.7:
+  version "15.5.7"
+  resolved prop-types-15.5.7.tgz#231c4f29cdd82e355011d4889386ca9059544dd1
+  dependencies:
+    fbjs "^0.8.9"
+
 proxy-addr@~1.1.3:
-  version "1.1.3"
-  resolved proxy-addr-1.1.3.tgz#dc97502f5722e888467b3fa2297a7b1ff47df074
+  version "1.1.4"
+  resolved proxy-addr-1.1.4.tgz#27e545f6960a44a627d9b44467e35c1b6b4ce2f3
   dependencies:
     forwarded "~0.1.0"
-    ipaddr.js "1.2.0"
+    ipaddr.js "1.3.0"
 
 proxy-agent@2:
   version "2.0.0"
@@ -4610,12 +4636,8 @@ punycode@^1.4.1:
   resolved punycode-1.4.1.tgz#c0d5a63b2718800ad8e1eb0fa5269c84dd41845e
 
 q@^1.1.2:
-  version "1.4.1"
-  resolved q-1.4.1.tgz#55705bcd93c5f3673530c2c2cbc0c2b3addc286e
-
-qs@2.3.3:
-  version "2.3.3"
-  resolved qs-2.3.3.tgz#e9e85adbe75da0bbe4c8e0476a086290f863b404
+  version "1.5.0"
+  resolved q-1.5.0.tgz#dd01bac9d06d30e6f219aecb8253ee9ebdc308f1
 
 qs@6.4.0, qs@^6.1.0, qs@^6.2.1, qs@~6.4.0:
   version "6.4.0"
@@ -4644,9 +4666,9 @@ raw-body@~2.2.0:
     iconv-lite "0.4.15"
     unpipe "1.0.0"
 
-rc@~1.1.6:
-  version "1.1.7"
-  resolved rc-1.1.7.tgz#c5ea564bb07aff9fd3a5b32e906c1d3a65940fea
+rc@^1.1.7:
+  version "1.2.1"
+  resolved rc-1.2.1.tgz#2e03e8e42ee450b8cb3dce65be1bf8974e1dfd95
   dependencies:
     deep-extend "~0.4.0"
     ini "~1.3.0"
@@ -4654,22 +4676,25 @@ rc@~1.1.6:
     strip-json-comments "~2.0.1"
 
 react-redux@^5.0.2:
-  version "5.0.3"
-  resolved react-redux-5.0.3.tgz#86c3b68d56e74294a42e2a740ab66117ef6c019f
+  version "5.0.4"
+  resolved react-redux-5.0.4.tgz#1563babadcfb2672f57f9ceaa439fb16bf85d55b
   dependencies:
+    create-react-class "^15.5.1"
     hoist-non-react-statics "^1.0.3"
     invariant "^2.0.0"
     lodash "^4.2.0"
     lodash-es "^4.2.0"
     loose-envify "^1.1.0"
+    prop-types "^15.0.0"
 
 react@^15.4.2:
-  version "15.4.2"
-  resolved react-15.4.2.tgz#41f7991b26185392ba9bae96c8889e7e018397ef
+  version "15.5.4"
+  resolved react-15.5.4.tgz#fa83eb01506ab237cdc1c8c3b1cea8de012bf047
   dependencies:
-    fbjs "^0.8.4"
+    fbjs "^0.8.9"
     loose-envify "^1.1.0"
     object-assign "^4.1.0"
+    prop-types "^15.5.7"
 
 read-chunk@^2.0.0:
   version "2.0.0"
@@ -4692,15 +4717,6 @@ read-pkg@^1.0.0:
     normalize-package-data "^2.3.2"
     path-type "^1.0.0"
 
-readable-stream@1.0.27-1:
-  version "1.0.27-1"
-  resolved readable-stream-1.0.27-1.tgz#6b67983c20357cefd07f0165001a16d710d91078
-  dependencies:
-    core-util-is "~1.0.0"
-    inherits "~2.0.1"
-    isarray "0.0.1"
-    string_decoder "~0.10.x"
-
 readable-stream@1.1.x, readable-stream@^1.1.8, readable-stream@~1.1.9:
   version "1.1.14"
   resolved readable-stream-1.1.14.tgz#7cf4c54ef648e3813084c636dd2079e166c081d9
@@ -4710,16 +4726,16 @@ readable-stream@1.1.x, readable-stream@^1.1.8, readable-stream@~1.1.9:
     isarray "0.0.1"
     string_decoder "~0.10.x"
 
-readable-stream@2, readable-stream@^2.0.0, "readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.4, readable-stream@^2.0.5, readable-stream@^2.1.5, readable-stream@^2.2.2:
-  version "2.2.6"
-  resolved readable-stream-2.2.6.tgz#8b43aed76e71483938d12a8d46c6cf1a00b1f816
+readable-stream@2, readable-stream@^2.0.0, "readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.4, readable-stream@^2.0.5, readable-stream@^2.1.4, readable-stream@^2.1.5, readable-stream@^2.2.2:
+  version "2.2.9"
+  resolved readable-stream-2.2.9.tgz#cf78ec6f4a6d1eb43d26488cac97f042e74b7fc8
   dependencies:
-    buffer-shims "^1.0.0"
+    buffer-shims "~1.0.0"
     core-util-is "~1.0.0"
     inherits "~2.0.1"
     isarray "~1.0.0"
     process-nextick-args "~1.0.6"
-    string_decoder "~0.10.x"
+    string_decoder "~1.0.0"
     util-deprecate "~1.0.1"
 
 "readable-stream@>=1.0.33-1 <1.1.0-0":
@@ -4730,18 +4746,6 @@ readable-stream@2, readable-stream@^2.0.0, "readable-stream@^2.0.0 || ^1.1.13", 
     inherits "~2.0.1"
     isarray "0.0.1"
     string_decoder "~0.10.x"
-
-readable-stream@~2.1.4:
-  version "2.1.5"
-  resolved readable-stream-2.1.5.tgz#66fa8b720e1438b364681f2ad1a63c618448c9d0
-  dependencies:
-    buffer-shims "^1.0.0"
-    core-util-is "~1.0.0"
-    inherits "~2.0.1"
-    isarray "~1.0.0"
-    process-nextick-args "~1.0.6"
-    string_decoder "~0.10.x"
-    util-deprecate "~1.0.1"
 
 readdirp@^2.0.0:
   version "2.1.0"
@@ -4790,13 +4794,9 @@ redeyed@~1.0.0:
   dependencies:
     esprima "~3.0.0"
 
-reduce-component@1.0.1:
-  version "1.0.1"
-  resolved reduce-component-1.0.1.tgz#e0c93542c574521bea13df0f9488ed82ab77c5da
-
 redux-logger@^2.7.4:
-  version "2.8.2"
-  resolved redux-logger-2.8.2.tgz#52140a89afa1c1d25312cc17649c116650bf7fca
+  version "2.10.2"
+  resolved redux-logger-2.10.2.tgz#3c5a5f0a6f32577c1deadf6655f257f82c6c3937
   dependencies:
     deep-diff "0.3.4"
 
@@ -4821,9 +4821,9 @@ regenerator-runtime@~0.9.5:
   version "0.9.6"
   resolved regenerator-runtime-0.9.6.tgz#d33eb95d0d2001a4be39659707c51b0cb71ce029
 
-regenerator-transform@0.9.8:
-  version "0.9.8"
-  resolved regenerator-transform-0.9.8.tgz#0f88bb2bc03932ddb7b6b7312e68078f01026d6c
+regenerator-transform@0.9.11:
+  version "0.9.11"
+  resolved regenerator-transform-0.9.11.tgz#3a7d067520cb7b7176769eb5ff868691befe1283
   dependencies:
     babel-runtime "^6.18.0"
     babel-types "^6.19.0"
@@ -4865,6 +4865,10 @@ regjsparser@^0.1.4:
   resolved regjsparser-0.1.5.tgz#7ee8f84dc6fa792d3fd0ae228d24bd949ead205c
   dependencies:
     jsesc "~0.5.0"
+
+remove-trailing-separator@^1.0.1:
+  version "1.0.1"
+  resolved remove-trailing-separator-1.0.1.tgz#615ebb96af559552d4bf4057c8436d486ab63cc4
 
 remove-trailing-slash@^0.1.0:
   version "0.1.0"
@@ -4966,12 +4970,12 @@ resolve@^1.1.6, resolve@^1.1.7, resolve@^1.2.0:
     path-parse "^1.0.5"
 
 rest-facade@^1.2.7:
-  version "1.4.1"
-  resolved rest-facade-1.4.1.tgz#c9b87a4ddf04d95fc5a8acf0f1341561cacee4a2
+  version "1.5.0"
+  resolved rest-facade-1.5.0.tgz#9d886eaf0256c7ecc902c17c9f7bf9072438dcee
   dependencies:
     bluebird "^2.10.2"
     change-case "^2.3.0"
-    superagent "^1.4.0"
+    superagent "^3.5.2"
 
 restore-cursor@^1.0.1:
   version "1.0.1"
@@ -4990,7 +4994,7 @@ right-align@^0.1.1:
   dependencies:
     align-text "^0.1.1"
 
-rimraf@2, rimraf@^2.2.8, rimraf@^2.4.3, rimraf@^2.4.4, rimraf@^2.5.4:
+rimraf@2, rimraf@^2.2.8, rimraf@^2.4.4, rimraf@^2.5.1, rimraf@^2.5.4, rimraf@^2.6.1:
   version "2.6.1"
   resolved rimraf-2.6.1.tgz#c2338ec643df7a1b7fe5c54fa86f57428a55f33d
   dependencies:
@@ -5001,12 +5005,6 @@ rimraf@~2.4.0:
   resolved rimraf-2.4.5.tgz#ee710ce5d93a8fdb856fb5ea8ff0e2d75934b2da
   dependencies:
     glob "^6.0.1"
-
-rimraf@~2.5.1, rimraf@~2.5.4:
-  version "2.5.4"
-  resolved rimraf-2.5.4.tgz#96800093cbf1a0c86bd95b4625467535c29dfa04
-  dependencies:
-    glob "^7.0.5"
 
 run-async@^0.1.0:
   version "0.1.0"
@@ -5056,7 +5054,7 @@ semver-regex@^1.0.0:
   version "1.0.0"
   resolved semver-regex-1.0.0.tgz#92a4969065f9c70c694753d55248fc68f8f652c9
 
-"semver@2 || 3 || 4 || 5", semver@5.3.0, semver@^5.1.0, semver@^5.3.0, semver@~5.3.0:
+"semver@2 || 3 || 4 || 5", semver@5.3.0, semver@^5.1.0, semver@^5.3.0:
   version "5.3.0"
   resolved semver-5.3.0.tgz#9b2ce5d3de02d17c6012ad326aa6b4d0cf54f94f
 
@@ -5210,8 +5208,8 @@ source-map-resolve@^0.3.0:
     urix "~0.1.0"
 
 source-map-support@^0.4.2:
-  version "0.4.13"
-  resolved source-map-support-0.4.13.tgz#9782e6f7deb424d5f173327a1879eb46453bdcd4
+  version "0.4.14"
+  resolved source-map-support-0.4.14.tgz#9d4463772598b86271b4f523f6c1f4e02a7d6aef
   dependencies:
     source-map "^0.5.6"
 
@@ -5331,6 +5329,12 @@ string_decoder@~0.10.x:
   version "0.10.31"
   resolved string_decoder-0.10.31.tgz#62e203bc41766c6c28c9fc84301dab1c5310fa94
 
+string_decoder@~1.0.0:
+  version "1.0.0"
+  resolved string_decoder-1.0.0.tgz#f06f41157b664d86069f84bdbdc9b0d8ab281667
+  dependencies:
+    buffer-shims "~1.0.0"
+
 stringmap@~0.2.2:
   version "0.2.2"
   resolved stringmap-0.2.2.tgz#556c137b258f942b8776f5b2ef582aa069d7d1b1
@@ -5387,25 +5391,9 @@ superagent-retry@^0.6.0:
   version "0.6.0"
   resolved superagent-retry-0.6.0.tgz#e49b35ca96c0e3b1d0e3f49605136df0e0a028b7
 
-superagent@^1.4.0:
-  version "1.8.5"
-  resolved superagent-1.8.5.tgz#1c0ddc3af30e80eb84ebc05cb2122da8fe940b55
-  dependencies:
-    component-emitter "~1.2.0"
-    cookiejar "2.0.6"
-    debug "2"
-    extend "3.0.0"
-    form-data "1.0.0-rc3"
-    formidable "~1.0.14"
-    methods "~1.1.1"
-    mime "1.3.4"
-    qs "2.3.3"
-    readable-stream "1.0.27-1"
-    reduce-component "1.0.1"
-
-superagent@^3.0.0:
-  version "3.5.0"
-  resolved superagent-3.5.0.tgz#56872b8e1ee6de994035ada2e53266899af95a6d
+superagent@^3.0.0, superagent@^3.5.2:
+  version "3.5.2"
+  resolved superagent-3.5.2.tgz#3361a3971567504c351063abeaae0faa23dbf3f8
   dependencies:
     component-emitter "^1.2.0"
     cookiejar "^2.0.6"
@@ -5467,18 +5455,18 @@ table@^3.7.8:
     slice-ansi "0.0.4"
     string-width "^2.0.0"
 
-tar-pack@~3.3.0:
-  version "3.3.0"
-  resolved tar-pack-3.3.0.tgz#30931816418f55afc4d21775afdd6720cee45dae
+tar-pack@^3.4.0:
+  version "3.4.0"
+  resolved tar-pack-3.4.0.tgz#23be2d7f671a8339376cbdb0b8fe3fdebf317984
   dependencies:
-    debug "~2.2.0"
-    fstream "~1.0.10"
-    fstream-ignore "~1.0.5"
-    once "~1.3.3"
-    readable-stream "~2.1.4"
-    rimraf "~2.5.1"
-    tar "~2.2.1"
-    uid-number "~0.0.6"
+    debug "^2.2.0"
+    fstream "^1.0.10"
+    fstream-ignore "^1.0.5"
+    once "^1.3.3"
+    readable-stream "^2.1.4"
+    rimraf "^2.5.1"
+    tar "^2.2.1"
+    uid-number "^0.0.6"
 
 tar.gz@^1.0.5:
   version "1.0.5"
@@ -5490,7 +5478,7 @@ tar.gz@^1.0.5:
     mout "^0.11.0"
     tar "^2.1.1"
 
-tar@^2.1.1, tar@~2.2.1:
+tar@^2.1.1, tar@^2.2.1:
   version "2.2.1"
   resolved tar-2.2.1.tgz#8e4d2a256c0e2185c6b18ad694aec968b83cb1d1
   dependencies:
@@ -5539,7 +5527,7 @@ through2-filter@^2.0.0:
     through2 "~2.0.0"
     xtend "~4.0.0"
 
-through2@2.X, through2@^2, through2@^2.0.0, through2@~2.0.0:
+through2@2.X, through2@^2, through2@^2.0.0, through2@^2.0.3, through2@~2.0.0:
   version "2.0.3"
   resolved through2-2.0.3.tgz#0004569b37c7c74ba39c43f3ced78d1ad94140be
   dependencies:
@@ -5651,8 +5639,8 @@ tunnel-agent@^0.6.0:
     safe-buffer "^5.0.1"
 
 tv4@^1.2.7:
-  version "1.2.7"
-  resolved tv4-1.2.7.tgz#bd29389afc73ade49ae5f48142b5d544bf68d120
+  version "1.3.0"
+  resolved tv4-1.3.0.tgz#d020c846fadd50c855abb25ebaecc68fc10f7963
 
 tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
@@ -5665,11 +5653,11 @@ type-check@~0.3.2:
     prelude-ls "~1.1.2"
 
 type-is@~1.6.14:
-  version "1.6.14"
-  resolved type-is-1.6.14.tgz#e219639c17ded1ca0789092dd54a03826b817cb2
+  version "1.6.15"
+  resolved type-is-1.6.15.tgz#cab10fb4909e441c82842eafe1ad646c81804410
   dependencies:
     media-typer "0.3.0"
-    mime-types "~2.1.13"
+    mime-types "~2.1.15"
 
 typedarray@^0.0.6:
   version "0.0.6"
@@ -5680,18 +5668,19 @@ ua-parser-js@^0.7.9:
   resolved ua-parser-js-0.7.12.tgz#04c81a99bdd5dc52263ea29d24c6bf8d4818a4bb
 
 uglify-js@^2.6:
-  version "2.8.13"
-  resolved uglify-js-2.8.13.tgz#d0cdf02f3c661484fac601b7e723207b735a374c
+  version "2.8.22"
+  resolved uglify-js-2.8.22.tgz#d54934778a8da14903fa29a326fb24c0ab51a1a0
   dependencies:
     source-map "~0.5.1"
-    uglify-to-browserify "~1.0.0"
     yargs "~3.10.0"
+  optionalDependencies:
+    uglify-to-browserify "~1.0.0"
 
 uglify-to-browserify@~1.0.0:
   version "1.0.2"
   resolved uglify-to-browserify-1.0.2.tgz#6e0924d6bda6b5afe349e39a6d632850a0f882b7
 
-uid-number@~0.0.6:
+uid-number@^0.0.6:
   version "0.0.6"
   resolved uid-number-0.0.6.tgz#0ea10e8035e8eb5b8e4449f06da1c730663baa81
 
@@ -5780,8 +5769,8 @@ uuid@^3.0.0:
   resolved uuid-3.0.1.tgz#6544bba2dfda8c1cf17e629a3a305e2bb1fee6c1
 
 v8flags@^2.0.10, v8flags@^2.0.9:
-  version "2.0.11"
-  resolved v8flags-2.0.11.tgz#bca8f30f0d6d60612cc2c00641e6962d42ae6881
+  version "2.0.12"
+  resolved v8flags-2.0.12.tgz#73235d9f7176f8e8833fb286795445f7938d84e5
   dependencies:
     user-home "^1.1.1"
 
@@ -5797,8 +5786,8 @@ validate-npm-package-license@^3.0.1:
     spdx-expression-parse "~1.0.0"
 
 vary@~1.1.0:
-  version "1.1.0"
-  resolved vary-1.1.0.tgz#e1e5affbbd16ae768dd2674394b9ad3022653140
+  version "1.1.1"
+  resolved vary-1.1.1.tgz#67535ebb694c1d52257457984665323f587e8d37
 
 verror@1.3.6:
   version "1.3.6"
@@ -5879,8 +5868,8 @@ whatwg-fetch@>=0.10.0:
   resolved whatwg-fetch-2.0.3.tgz#9c84ec2dcf68187ff00bc64e1274b442176e1c84
 
 whatwg-url@^4.3.0:
-  version "4.6.0"
-  resolved whatwg-url-4.6.0.tgz#ef98da442273be04cf9632e176f257d2395a1ae4
+  version "4.7.0"
+  resolved whatwg-url-4.7.0.tgz#202035ac1955b087cdd20fa8b58ded3ab1cd2af5
   dependencies:
     tr46 "~0.0.3"
     webidl-conversions "^3.0.0"
@@ -5890,10 +5879,10 @@ which-module@^1.0.0:
   resolved which-module-1.0.0.tgz#bba63ca861948994ff307736089e3b96026c2a4f
 
 which@^1.0.5, which@^1.1.1, which@^1.2.11, which@^1.2.12, which@^1.2.9:
-  version "1.2.12"
-  resolved which-1.2.12.tgz#de67b5e450269f194909ef23ece4ebe416fa1192
+  version "1.2.14"
+  resolved which-1.2.14.tgz#9a87c4378f03e827cecaf1acdf56c736c01c14e5
   dependencies:
-    isexe "^1.1.1"
+    isexe "^2.0.0"
 
 wide-align@^1.1.0:
   version "1.1.0"
