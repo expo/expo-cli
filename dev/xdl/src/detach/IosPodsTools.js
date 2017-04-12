@@ -100,6 +100,7 @@ function renderUnversionedReactDependency(options) {
   attributes.subspecs = [
     'Core',
     'ART',
+    'DevSupport',
     'RCTActionSheet',
     'RCTAnimation',
     'RCTCameraRoll',
