@@ -118,7 +118,7 @@ async function triggerRetryPrompt() {
 
 export default (program) => {
   program
-    .command('init [project-dir]')
+    .command('init [parent-of-project-dir]')
     .alias('i')
     .description('Initializes a directory with an example project. Run it without any options and you will be prompted for the name and type.')
     .option('-n, --projectName [name]', 'Specify a name for the new project')
