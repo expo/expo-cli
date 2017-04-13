@@ -314,9 +314,11 @@ export default class PackagerLogsStream {
 
     if (chunk.msg.match(/Looking for JS files in/)) {
       chunk.msg = '';
+    } else if (chunk.msg.match(/^[\u001b]/)) {
+      chunk.msg = '';
     }
 
-    chunk.msg = chunk.msg.replace(/\[\w{2}m?/g, '');
+    chunk.msg = chunk.msg.replace(/\[\w{2}m/g, '');
     chunk.msg = trim(chunk.msg);
     return chunk;
   }
