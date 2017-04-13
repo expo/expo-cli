@@ -22,6 +22,7 @@ export default class PackagerLogsStream {
   _onStartBuildBundle: ?Function;
   _onProgressBuildBundle: ?Function;
   _onFinishBuildBundle: ?Function;
+  _onFailBuildBundle: ?Function;
 
   _resetState = () => {
     this._logsToAdd = [];
@@ -159,6 +160,7 @@ export default class PackagerLogsStream {
     let { msg } = progressChunk;
     let percentProgress;
     let bundleComplete = false;
+    let bundleError = false;
 
     if (msg.type === 'bundle_build_done') {
       percentProgress = 100;
@@ -166,6 +168,7 @@ export default class PackagerLogsStream {
     } else if (msg.type === 'bundle_build_failed') {
       percentProgress = -1;
       bundleComplete = true;
+      bundleError = new Error('Failed to build bundle');
     } else {
       percentProgress = Math.floor(
         msg.transformedFileCount / msg.totalFileCount * 100
@@ -176,7 +179,7 @@ export default class PackagerLogsStream {
       this._onProgressBuildBundle(percentProgress);
 
       if (bundleComplete) {
-        this._onFinishBuildBundle && this._onFinishBuildBundle();
+        this._onFinishBuildBundle && this._onFinishBuildBundle(bundleError);
         this._bundleBuildChunkID = null;
       }
     } else {
