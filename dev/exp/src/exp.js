@@ -149,7 +149,7 @@ Command.prototype.asyncActionProjectDir = function(
           let ticks = percent - bar.curr;
           ticks > 0 && bar.tick(ticks);
         },
-        onFinishBuildBundle: (err) => {
+        onFinishBuildBundle: (err, startTime: Date, endTime: Date) => {
           if (bar && !bar.complete) {
             bar.tick(100 - bar.curr);
           }
@@ -161,7 +161,11 @@ Command.prototype.asyncActionProjectDir = function(
             if (err) {
               log(crayon.red('Failed building JavaScript bundle.'));
             } else {
-              log(crayon.green('Finished building JavaScript bundle.'));
+              log(
+                crayon.green(
+                  `Finished building JavaScript bundle in ${endTime - startTime}ms.`
+                )
+              );
             }
           }
         },
