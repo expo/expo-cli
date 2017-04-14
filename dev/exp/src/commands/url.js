@@ -1,8 +1,6 @@
 import crayon from '@ccheever/crayon';
 
-import {
-  UrlUtils,
-} from 'xdl';
+import { UrlUtils } from 'xdl';
 
 import log from '../log';
 import urlOpts from '../urlOpts';
@@ -15,7 +13,7 @@ async function action(projectDir, options) {
   log('You can scan this QR code:\n');
   urlOpts.printQRCode(url);
 
-  log("Your URL is\n\n" + crayon.underline(url) + "\n");
+  log('Your URL is\n\n' + crayon.underline(url) + '\n');
   log.raw(url);
 
   await urlOpts.handleMobileOptsAsync(projectDir, options);
@@ -23,7 +21,7 @@ async function action(projectDir, options) {
   process.exit();
 }
 
-export default (program) => {
+export default program => {
   program
     .command('url [project-dir]')
     .alias('u')

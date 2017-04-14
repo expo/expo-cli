@@ -30,20 +30,24 @@ let logger: any = bunyan.createLogger({
       level: 'debug',
       type: 'rotating-file',
       path: path.join(UserSettings.dotExpoHomeDirectory(), 'log'),
-      period: '1d',   // daily rotation
-      count: 3,       // keep 3 back copies
+      period: '1d', // daily rotation
+      count: 3, // keep 3 back copies
     },
-    ...(process.env.DEBUG && process.env.NODE_ENV !== 'production' ? [{
-      type: 'raw',
-      stream: new ConsoleRawStream(),
-      closeOnExit: false,
-      level: 'debug',
-    }] : []),
+    ...(process.env.DEBUG && process.env.NODE_ENV !== 'production'
+      ? [
+          {
+            type: 'raw',
+            stream: new ConsoleRawStream(),
+            closeOnExit: false,
+            level: 'debug',
+          },
+        ]
+      : []),
   ],
 });
 
-logger.notifications = logger.child({type: 'notifications'});
-logger.global = logger.child({type: 'global'});
+logger.notifications = logger.child({ type: 'notifications' });
+logger.global = logger.child({ type: 'global' });
 logger.DEBUG = bunyan.DEBUG;
 logger.INFO = bunyan.INFO;
 logger.WARN = bunyan.WARN;

@@ -6,12 +6,13 @@ import { Project } from 'xdl';
 export function installExitHooks(projectDir: string) {
   // install ctrl+c handler that writes non-running state to directory
   if (process.platform === 'win32') {
-    require('readline').createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    })
-      .on("SIGINT", () => {
-        process.emit("SIGINT");
+    require('readline')
+      .createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      })
+      .on('SIGINT', () => {
+        process.emit('SIGINT');
       });
   }
 

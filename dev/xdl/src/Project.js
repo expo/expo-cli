@@ -162,7 +162,8 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver) {
 
     // Set the corresponding URL fields
     assetSchemas.forEach(({ fieldPath }, index) =>
-      _.set(manifest, fieldPath + 'Url', urls[index]));
+      _.set(manifest, fieldPath + 'Url', urls[index])
+    );
   } catch (e) {
     ProjectUtils.logWarning(
       projectRoot,
@@ -818,23 +819,18 @@ export async function startExpoServerAsync(projectRoot: string) {
         req.hostname
       );
       let path = `/${mainModuleName}.bundle?platform=${platform}&${queryParams}`;
-      manifest.bundleUrl = (await UrlUtils.constructBundleUrlAsync(
-        projectRoot,
-        bundleUrlPackagerOpts,
-        req.hostname
-      )) + path;
+      manifest.bundleUrl =
+        (await UrlUtils.constructBundleUrlAsync(
+          projectRoot,
+          bundleUrlPackagerOpts,
+          req.hostname
+        )) + path;
       manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(
         projectRoot,
         req.hostname
       );
       manifest.mainModuleName = mainModuleName;
-      manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(
-        projectRoot,
-        {
-          urlType: 'http',
-        },
-        req.hostname
-      )}/logs`; // Resolve manifest assets to their packager URL
+      manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(projectRoot, { urlType: 'http' }, req.hostname)}/logs`; // Resolve manifest assets to their packager URL
       await _resolveManifestAssets(
         projectRoot,
         manifest,
@@ -1051,9 +1047,7 @@ export async function startTunnelsAsync(projectRoot: string) {
   } else {
     ProjectUtils.clearNotification(projectRoot, 'project-adb-reverse');
   }
-  const {
-    username,
-  } = user;
+  const { username } = user;
   let packageShortName = path.parse(projectRoot).base;
   let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
   try {

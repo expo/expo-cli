@@ -63,7 +63,11 @@ function _starterAppCacheDirectory() {
   return dir;
 }
 
-async function _downloadStarterAppAsync(templateId, progressFunction, retryFunction) {
+async function _downloadStarterAppAsync(
+  templateId,
+  progressFunction,
+  retryFunction
+) {
   let versions = await Api.versionsAsync();
   let templateApp = null;
   for (let i = 0; i < versions.templates.length; i++) {
@@ -73,7 +77,10 @@ async function _downloadStarterAppAsync(templateId, progressFunction, retryFunct
   }
 
   if (!templateApp) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, `No template app with id ${templateId}.`);
+    throw new XDLError(
+      ErrorCode.INVALID_OPTIONS,
+      `No template app with id ${templateId}.`
+    );
   }
 
   let starterAppVersion = templateApp.version;
@@ -89,14 +96,24 @@ async function _downloadStarterAppAsync(templateId, progressFunction, retryFunct
   }
 
   let url = `https://s3.amazonaws.com/exp-starter-apps/${filename}`;
-  await Api.downloadAsync(url, path.join(_starterAppCacheDirectory(), filename), {}, progressFunction, retryFunction);
+  await Api.downloadAsync(
+    url,
+    path.join(_starterAppCacheDirectory(), filename),
+    {},
+    progressFunction,
+    retryFunction
+  );
   return {
     starterAppPath,
     starterAppName,
   };
 }
 
-export async function downloadTemplateApp(templateId: string, selectedDir: string, opts: any) {
+export async function downloadTemplateApp(
+  templateId: string,
+  selectedDir: string,
+  opts: any
+) {
   // Validate
   let schema = joi.object().keys({
     name: joi.string().required(),
@@ -104,7 +121,7 @@ export async function downloadTemplateApp(templateId: string, selectedDir: strin
 
   // Should we validate that name is a valid name here?
   try {
-    await joi.promise.validate({name: opts.name}, schema);
+    await joi.promise.validate({ name: opts.name }, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
@@ -127,22 +144,42 @@ export async function downloadTemplateApp(templateId: string, selectedDir: strin
   // This check is required because without it, the retry button would throw an error because the directory already exists,
   // even though it is empty.
   if (fileExists && fs.readdirSync(root).length !== 0) {
-    throw new XDLError(ErrorCode.DIRECTORY_ALREADY_EXISTS, `That directory already exists. Please choose a different parent directory or project name.`);
+    throw new XDLError(
+      ErrorCode.DIRECTORY_ALREADY_EXISTS,
+      `That directory already exists. Please choose a different parent directory or project name.`
+    );
   }
 
   // Download files
   await mkdirp.promise(root);
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, MessageCode.DOWNLOADING);
-  let { starterAppPath } = await _downloadStarterAppAsync(templateId, opts.progressFunction, opts.retryFunction);
+  Logger.notifications.info(
+    { code: NotificationCode.PROGRESS },
+    MessageCode.DOWNLOADING
+  );
+  let { starterAppPath } = await _downloadStarterAppAsync(
+    templateId,
+    opts.progressFunction,
+    opts.retryFunction
+  );
   return { starterAppPath, name, root };
 }
 
-export async function extractTemplateApp(starterAppPath: string, name: string, root: string) {
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, MessageCode.EXTRACTING);
+export async function extractTemplateApp(
+  starterAppPath: string,
+  name: string,
+  root: string
+) {
+  Logger.notifications.info(
+    { code: NotificationCode.PROGRESS },
+    MessageCode.EXTRACTING
+  );
   await Extract.extractAsync(starterAppPath, root);
 
   // Update files
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, MessageCode.CUSTOMIZING);
+  Logger.notifications.info(
+    { code: NotificationCode.PROGRESS },
+    MessageCode.CUSTOMIZING
+  );
 
   let author = await UserSettings.getAsync('email', null);
   let packageJsonFile = new JsonFile(path.join(root, 'package.json'));
@@ -150,7 +187,7 @@ export async function extractTemplateApp(starterAppPath: string, name: string, r
   let data = Object.assign(packageJson, {
     name,
     version: '0.0.0',
-    description: "Hello Expo!",
+    description: 'Hello Expo!',
     author,
   });
 
@@ -163,12 +200,21 @@ export async function extractTemplateApp(starterAppPath: string, name: string, r
 
   // Update exp.json
   let expJson = await fs.readFile.promise(path.join(root, 'exp.json'), 'utf8');
-  let customExpJson = expJson.replace(/\"My New Project\"/, `"${data.name}"`).replace(/\"my-new-project\"/, `"${data.name}"`);
-  await fs.writeFile.promise(path.join(root, 'exp.json'), customExpJson, 'utf8');
+  let customExpJson = expJson
+    .replace(/\"My New Project\"/, `"${data.name}"`)
+    .replace(/\"my-new-project\"/, `"${data.name}"`);
+  await fs.writeFile.promise(
+    path.join(root, 'exp.json'),
+    customExpJson,
+    'utf8'
+  );
 
   await initGitRepo(root);
 
-  Logger.notifications.info({code: NotificationCode.PROGRESS}, 'Starting project...');
+  Logger.notifications.info(
+    { code: NotificationCode.PROGRESS },
+    'Starting project...'
+  );
 
   return root;
 }
@@ -182,8 +228,12 @@ async function initGitRepo(root: string) {
   // let's see if we're in a git tree
   let insideGit = true;
   try {
-    await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], { cwd: root });
-    Logger.global.debug('New project is already inside of a git repo, skipping git init.');
+    await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: root,
+    });
+    Logger.global.debug(
+      'New project is already inside of a git repo, skipping git init.'
+    );
   } catch (e) {
     insideGit = false;
   }
@@ -203,7 +253,9 @@ export async function saveRecentExpRootAsync(root: string) {
 
   // Write the recent Exps JSON file
   let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
-  let recentExps = await recentExpsJsonFile.readAsync({cantReadFileDefault: []});
+  let recentExps = await recentExpsJsonFile.readAsync({
+    cantReadFileDefault: [],
+  });
   // Filter out copies of this so we don't get dupes in this list
   recentExps = recentExps.filter(function(x) {
     return x !== root;
@@ -213,7 +265,9 @@ export async function saveRecentExpRootAsync(root: string) {
 }
 
 function getHomeDir(): string {
-  return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'] || '';
+  return (
+    process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || ''
+  );
 }
 
 function makePathReadable(pth) {
@@ -227,8 +281,13 @@ function makePathReadable(pth) {
 
 export async function expInfoSafeAsync(root: string) {
   try {
-    let { exp: { name, description, icon, iconUrl } } = await ProjectUtils.readConfigJsonAsync(root);
-    let pathOrUrl = icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
+    let {
+      exp: { name, description, icon, iconUrl },
+    } = await ProjectUtils.readConfigJsonAsync(root);
+    let pathOrUrl =
+      icon ||
+      iconUrl ||
+      'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
     let resolvedPath = path.resolve(root, pathOrUrl);
     if (fs.existsSync(resolvedPath)) {
       icon = `file://${resolvedPath}`;
@@ -309,7 +368,9 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
 export async function recentValidExpsAsync() {
   let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
-  let recentExps = await recentExpsJsonFile.readAsync({cantReadFileDefault: []});
+  let recentExps = await recentExpsJsonFile.readAsync({
+    cantReadFileDefault: [],
+  });
 
   let results = await Promise.all(recentExps.map(expInfoSafeAsync));
   let filteredResults = results.filter(result => result);
@@ -334,7 +395,7 @@ export async function getProjectRandomnessAsync(projectRoot: string) {
 
 export async function resetProjectRandomnessAsync(projectRoot: string) {
   let randomness = UrlUtils.someRandomness();
-  ProjectSettings.setAsync(projectRoot, {'urlRandomness': randomness});
+  ProjectSettings.setAsync(projectRoot, { urlRandomness: randomness });
   return randomness;
 }
 

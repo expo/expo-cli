@@ -10,9 +10,9 @@ import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
 
 type BuilderOptions = {
-  wait: bool,
-  clearCredentials: bool,
-}
+  wait: boolean,
+  clearCredentials: boolean,
+};
 
 export default class BaseBuilder {
   projectDir: string = '';
@@ -50,7 +50,7 @@ export default class BaseBuilder {
     }
   }
 
-  async checkStatus(current: bool = true): Promise<void> {
+  async checkStatus(current: boolean = true): Promise<void> {
     await this._checkProjectConfig();
 
     log('Checking if current build exists...\n');
@@ -79,12 +79,24 @@ export default class BaseBuilder {
 
         let status;
         switch (j.status) {
-          case 'pending': status = 'Build waiting in queue...'; break;
-          case 'started': status = 'Build started...'; break;
-          case 'in-progress': status = 'Build in progress...'; break;
-          case 'finished': status = 'Build finished.'; break;
-          case 'errored': status = 'There was an error with this build. Please try again.'; break;
-          default: status = ''; break;
+          case 'pending':
+            status = 'Build waiting in queue...';
+            break;
+          case 'started':
+            status = 'Build started...';
+            break;
+          case 'in-progress':
+            status = 'Build in progress...';
+            break;
+          case 'finished':
+            status = 'Build finished.';
+            break;
+          case 'errored':
+            status = 'There was an error with this build. Please try again.';
+            break;
+          default:
+            status = '';
+            break;
         }
 
         if (j.status !== 'finished') {
@@ -110,7 +122,9 @@ export default class BaseBuilder {
         }
       });
 
-      throw new BuildError('Cannot start new build, as there is a build in progress.');
+      throw new BuildError(
+        'Cannot start new build, as there is a build in progress.'
+      );
     }
 
     log('No currently active or previous builds for this project.');
@@ -124,9 +138,13 @@ export default class BaseBuilder {
     const { ids: expIds, url, err } = await publishAction(this.projectDir);
 
     if (err) {
-      throw new BuildError(`No url was returned from publish. Please try again.\n${err}`);
+      throw new BuildError(
+        `No url was returned from publish. Please try again.\n${err}`
+      );
     } else if (!url || url === '') {
-      throw new BuildError('No url was returned from publish. Please try again.');
+      throw new BuildError(
+        'No url was returned from publish. Please try again.'
+      );
     }
 
     return expIds;
@@ -150,7 +168,9 @@ export default class BaseBuilder {
       if (buildErr) {
         throw new BuildError(`Build failed with error.\n${buildErr}`);
       } else if (!ipaUrl || ipaUrl === '' || !apkUrl || apkUrl === '') {
-        throw new BuildError('No url was returned from the build process. Please try again.');
+        throw new BuildError(
+          'No url was returned from the build process. Please try again.'
+        );
       }
 
       log(`IPA Url: ${ipaUrl}`);
@@ -158,7 +178,9 @@ export default class BaseBuilder {
 
       log('Successfully built standalone app!');
     } else {
-      log('Build successfully started, it may take a few minutes to complete. Run "exp build:status" to monitor it.');
+      log(
+        'Build successfully started, it may take a few minutes to complete. Run "exp build:status" to monitor it.'
+      );
     }
   }
 }

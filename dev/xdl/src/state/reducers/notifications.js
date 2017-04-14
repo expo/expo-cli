@@ -16,7 +16,13 @@ const GLOBAL = 'global';
 
 export const actions = {
   // logLevel = 'warning', 'error', or 'info'
-  add: (projectRoot: string, id: string, message: string, tag: string, logLevel: string) => {
+  add: (
+    projectRoot: string,
+    id: string,
+    message: string,
+    tag: string,
+    logLevel: string
+  ) => {
     return {
       type: 'ADD_NOTIFICATION',
       projectRoot,
@@ -112,9 +118,9 @@ function _clearNotification(state: any, action: any) {
   let newProjectObject = {};
   _.forEach(projectObject, function(array, key) {
     if (Array.isArray(array)) {
-      _.remove(array, (notification) => {
+      _.remove(array, notification => {
         if (notification.id === id) {
-          console.log("REMOVED" + id);
+          console.log('REMOVED' + id);
         }
         return notification.id === id;
       });
@@ -135,7 +141,9 @@ function _setCount(projectObject: any) {
   if (projectObject.count === 0) {
     projectObject.color = '#595C68';
   } else {
-    projectObject.color = projectObject.error.length > 0 ? '#F6345D' : '#FF8C00';
+    projectObject.color = projectObject.error.length > 0
+      ? '#F6345D'
+      : '#FF8C00';
   }
 
   return projectObject;

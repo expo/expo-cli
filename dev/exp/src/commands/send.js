@@ -1,9 +1,6 @@
 import crayon from '@ccheever/crayon';
 
-import {
-  UserSettings,
-  UrlUtils,
-} from 'xdl';
+import { UserSettings, UrlUtils } from 'xdl';
 
 import askUser from '../askUser';
 import log from '../log';
@@ -18,18 +15,20 @@ async function action(projectDir, options) {
   log('You can scan this QR code:\n');
   urlOpts.printQRCode(url);
 
-  log("Your URL is\n\n" + crayon.underline(url) + "\n");
+  log('Your URL is\n\n' + crayon.underline(url) + '\n');
   log.raw(url);
 
   let shouldQuit = false;
-  if (await urlOpts.handleMobileOptsAsync(projectDir, options)) { shouldQuit = true; }
+  if (await urlOpts.handleMobileOptsAsync(projectDir, options)) {
+    shouldQuit = true;
+  }
 
   if (shouldQuit) {
     return;
   }
 
   var recipient;
-  if (typeof(options.sendTo) !== 'boolean') {
+  if (typeof options.sendTo !== 'boolean') {
     recipient = options.sendTo;
   } else {
     recipient = await UserSettings.getAsync('sendTo', null);
@@ -48,12 +47,17 @@ async function action(projectDir, options) {
   process.exit();
 }
 
-export default (program) => {
+export default program => {
   program
     .command('send [project-dir]')
-    .description("Sends a link to your project to a phone number or e-mail address")
+    .description(
+      'Sends a link to your project to a phone number or e-mail address'
+    )
     //.help('You must have the server running for this command to work')
-    .option('-s, --send-to  [dest]', 'Specifies the mobile number or e-mail address to send this URL to')
+    .option(
+      '-s, --send-to  [dest]',
+      'Specifies the mobile number or e-mail address to send this URL to'
+    )
     .urlOpts()
     .allowNonInteractive()
     .asyncActionProjectDir(action);

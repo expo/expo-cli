@@ -1,8 +1,6 @@
 import inquirerAsync from 'inquirer-async';
 
-import {
-  Exp,
-} from 'xdl';
+import { Exp } from 'xdl';
 
 import log from '../log';
 
@@ -17,7 +15,9 @@ async function action(projectDir, options) {
   let { confirmed } = await inquirerAsync.promptAsync(warning);
 
   if (!confirmed) {
-    log(`OK, aborted. You can do this process manually by creating a new project with \`exp init\` and copying in the files that you need.`);
+    log(
+      `OK, aborted. You can do this process manually by creating a new project with \`exp init\` and copying in the files that you need.`
+    );
     return;
   }
 
@@ -27,12 +27,14 @@ async function action(projectDir, options) {
       name: 'gitConfirmed',
       message: `Have you committed any important changes to your project to git, so you can rollback if necessary?\n`,
     },
-  ]
+  ];
 
   let { gitConfirmed } = await inquirerAsync.promptAsync(gitWarning);
 
   if (!gitConfirmed) {
-    log('Well I am glad that we asked! Commit your changes and run `exp convert` again when you are ready.');
+    log(
+      'Well I am glad that we asked! Commit your changes and run `exp convert` again when you are ready.'
+    );
   }
 
   if (!confirmed || !gitConfirmed) {
@@ -64,11 +66,13 @@ async function action(projectDir, options) {
   await Exp.convertProjectAsync(projectDir, answers, log);
 }
 
-export default (program) => {
+export default program => {
   program
     .command('convert [project-dir]')
     .alias('onentize')
-    .description('Initialize Expo project files within an existing React Native project')
+    .description(
+      'Initialize Expo project files within an existing React Native project'
+    )
     .allowNonInteractive()
     .asyncActionProjectDir(action, true); // skip validation because the project dir isn't a valid exp dir yet
 };

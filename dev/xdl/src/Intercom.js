@@ -8,7 +8,7 @@ let _version;
 let _isBooted = false;
 
 function _isWindowDefined() {
-  return typeof(window) !== 'undefined' && window && window.Intercom;
+  return typeof window !== 'undefined' && window && window.Intercom;
 }
 
 export async function update(user_id: ?string, user_hash: ?string) {

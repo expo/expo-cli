@@ -11,8 +11,12 @@ import { FsCache, UserSettings } from 'xdl';
 
 const UpdateCacher = new FsCache.Cacher(
   async () => {
-    const packageName = await new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('name');
-    const [ version_, _ ] = await child_process.exec(`npm view ${packageName} version`);
+    const packageName = await new JsonFile(
+      path.join(__dirname, '..', 'package.json')
+    ).getAsync('name');
+    const [version_, _] = await child_process.exec(
+      `npm view ${packageName} version`
+    );
     const trimmed = version_.trim();
 
     return {
@@ -20,11 +24,13 @@ const UpdateCacher = new FsCache.Cacher(
     };
   },
   'exp-updates.json',
-  24 * 60 * 60 * 1000, // one day
+  24 * 60 * 60 * 1000 // one day
 );
 
 async function currentExpVersionAsync() {
-  return new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('version');
+  return new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync(
+    'version'
+  );
 }
 
 async function checkForExpUpdateAsync() {
@@ -48,7 +54,7 @@ async function checkForExpUpdateAsync() {
       break;
 
     default:
-      throw new Error("Confused about whether exp is up-to-date or not");
+      throw new Error('Confused about whether exp is up-to-date or not');
   }
 
   return {
@@ -56,7 +62,6 @@ async function checkForExpUpdateAsync() {
     current,
     latest,
   };
-
 }
 
 export default {

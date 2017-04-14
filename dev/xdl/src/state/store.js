@@ -2,12 +2,7 @@
  * @flow
  */
 
-import {
-  createStore,
-  applyMiddleware,
-  combineReducers,
-  compose,
-} from 'redux';
+import { createStore, applyMiddleware, combineReducers, compose } from 'redux';
 import createLogger from 'redux-logger';
 
 let _store;
@@ -25,9 +20,7 @@ export function createXDLStore(reducers: any) {
     middleware.push(logger);
   }
 
-  const enhancer = compose(
-    applyMiddleware(...middleware)
-  );
+  const enhancer = compose(applyMiddleware(...middleware));
 
   const store = createStore(reducer, enhancer);
 

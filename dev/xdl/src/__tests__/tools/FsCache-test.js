@@ -10,9 +10,11 @@ import Config from '../../Config';
 describe('Cacher', () => {
   it('works without a bootstrap file', async () => {
     const dateCacher: Cacher<Date> = new Cacher(
-      async () => { return new Date(); },
+      async () => {
+        return new Date();
+      },
       'dateslol',
-      1000,
+      1000
     );
 
     try {
@@ -21,24 +23,28 @@ describe('Cacher', () => {
       // this is ok
     }
 
-    const date1 = new Date(await dateCacher.getAsync());
+    const date1 = new Date((await dateCacher.getAsync()));
 
     // should be well within the TTL, should be identical value
-    expect(date1).toEqual(new Date(await dateCacher.getAsync()));
+    expect(date1).toEqual(new Date((await dateCacher.getAsync())));
 
     // should be outside of the TTL -- just making sure that sufficient delay will change the value
     setTimeout(() => {
-      dateCacher.getAsync().then((d) => {
+      dateCacher.getAsync().then(d => {
         expect(date1).not.toEqual(new Date(d));
       });
     }, 3000);
   });
 
   it('works with a bootstrap file', async () => {
-    const expected = JSON.parse(await fsp.readFile(path.join(__dirname, '../../../package.json')));
+    const expected = JSON.parse(
+      await fsp.readFile(path.join(__dirname, '../../../package.json'))
+    );
 
     const failCacher = new Cacher(
-      () => { throw new Error('lol this never succeeds'); },
+      () => {
+        throw new Error('lol this never succeeds');
+      },
       'bootstrap',
       1000,
       path.join(__dirname, '../../../package.json')

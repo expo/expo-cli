@@ -24,9 +24,13 @@ function validateConfigArguments(manifest, cmdArgs, configFilePath) {
   if (!configFilePath) {
     throw new Error('No path to config files provided');
   }
-  let bundleIdentifierFromManifest = (manifest.ios) ? manifest.ios.bundleIdentifier : null;
+  let bundleIdentifierFromManifest = manifest.ios
+    ? manifest.ios.bundleIdentifier
+    : null;
   if (!bundleIdentifierFromManifest && !cmdArgs.bundleIdentifier) {
-    throw new Error('No bundle identifier found in either the manifest or argv');
+    throw new Error(
+      'No bundle identifier found in either the manifest or argv'
+    );
   }
   if (!manifest.name) {
     throw new Error('Manifest does not have a name');
@@ -47,7 +51,10 @@ async function configureShellAppSecretsAsync(args, iosDir) {
     return;
   }
 
-  spawnAsyncThrowError('/bin/cp', [args.privateConfigFile, path.join(iosDir, 'private-shell-app-config.json')]);
+  spawnAsyncThrowError('/bin/cp', [
+    args.privateConfigFile,
+    path.join(iosDir, 'private-shell-app-config.json'),
+  ]);
 }
 
 /**
@@ -57,93 +64,125 @@ async function configureShellAppSecretsAsync(args, iosDir) {
  * @param privateConfig optional config with the app's private keys
  * @param bundleIdentifier optional bundle id if the manifest doesn't contain one already
  */
-async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, privateConfig = null, bundleIdentifier = null) {
-  let result = await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
-
-    // make sure this happens first:
-    // apply any custom information from ios.infoPlist prior to all other exponent config
-    if (manifest.ios && manifest.ios.infoPlist) {
-      let extraConfig = manifest.ios.infoPlist;
-      for (let key in extraConfig) {
-        if (extraConfig.hasOwnProperty(key)) {
-          config[key] = extraConfig[key];
+async function configureStandaloneIOSInfoPlistAsync(
+  configFilePath,
+  manifest,
+  privateConfig = null,
+  bundleIdentifier = null
+) {
+  let result = await modifyIOSPropertyListAsync(
+    configFilePath,
+    'Info',
+    config => {
+      // make sure this happens first:
+      // apply any custom information from ios.infoPlist prior to all other exponent config
+      if (manifest.ios && manifest.ios.infoPlist) {
+        let extraConfig = manifest.ios.infoPlist;
+        for (let key in extraConfig) {
+          if (extraConfig.hasOwnProperty(key)) {
+            config[key] = extraConfig[key];
+          }
         }
       }
-    }
 
-    // bundle id
-    config.CFBundleIdentifier = (manifest.ios && manifest.ios.bundleIdentifier) ? manifest.ios.bundleIdentifier : bundleIdentifier;
-    if (!config.CFBundleIdentifier) {
-      throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
-    }
-
-    // app name
-    config.CFBundleName = manifest.name;
-
-    // determine app linking schemes
-    let linkingSchemes = (manifest.scheme) ? [manifest.scheme] : [];
-    if (manifest.facebookScheme && manifest.facebookScheme.startsWith('fb')) {
-      linkingSchemes.push(manifest.facebookScheme);
-    }
-    if (privateConfig && privateConfig.googleSignIn &&
-        privateConfig.googleSignIn.reservedClientId) {
-      linkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
-    }
-
-    // remove exp scheme, add app scheme(s)
-    config.CFBundleURLTypes = [{
-      CFBundleURLSchemes: linkingSchemes,
-    }, {
-      // Add the generic oauth redirect, it's important that it has the name
-      // 'OAuthRedirect' so we can find it in app code.
-      CFBundleURLName: 'OAuthRedirect',
-      CFBundleURLSchemes: [config.CFBundleIdentifier],
-    }];
-
-    // set ITSAppUsesNonExemptEncryption to let people skip manually
-    // entering it in iTunes Connect
-    if (privateConfig &&
-        privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
-        privateConfig.usesNonExemptEncryption === false) {
-      config.ITSAppUsesNonExemptEncryption = false;
-    }
-
-    // google maps api key
-    if (privateConfig && privateConfig.googleMapsApiKey) {
-      config.GMSApiKey = privateConfig.googleMapsApiKey;
-    }
-
-    // permanently save the exponent client version at time of configuration
-    config.EXClientVersion = config.CFBundleVersion;
-
-    // use version from manifest
-    let version = (manifest.version) ? manifest.version : '0.0.0';
-    let buildNumber = (manifest.ios && manifest.ios.buildNumber) ?
-      manifest.ios.buildNumber :
-      '1';
-    config.CFBundleShortVersionString = version;
-    config.CFBundleVersion = buildNumber;
-
-    config.Fabric = {
-      APIKey: (privateConfig && privateConfig.fabric && privateConfig.fabric.apiKey) || DEFAULT_FABRIC_KEY,
-      Kits: [{
-        KitInfo: {},
-        KitName: 'Crashlytics',
-      }],
-    };
-
-    let permissionsAppName = (manifest.name) ? manifest.name : 'this app';
-    for (let key in config) {
-      if (config.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1) {
-        config[key] = config[key].replace('Expo experiences', permissionsAppName);
+      // bundle id
+      config.CFBundleIdentifier = manifest.ios && manifest.ios.bundleIdentifier
+        ? manifest.ios.bundleIdentifier
+        : bundleIdentifier;
+      if (!config.CFBundleIdentifier) {
+        throw new Error(
+          `Cannot configure an iOS app with no bundle identifier.`
+        );
       }
+
+      // app name
+      config.CFBundleName = manifest.name;
+
+      // determine app linking schemes
+      let linkingSchemes = manifest.scheme ? [manifest.scheme] : [];
+      if (manifest.facebookScheme && manifest.facebookScheme.startsWith('fb')) {
+        linkingSchemes.push(manifest.facebookScheme);
+      }
+      if (
+        privateConfig &&
+        privateConfig.googleSignIn &&
+        privateConfig.googleSignIn.reservedClientId
+      ) {
+        linkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
+      }
+
+      // remove exp scheme, add app scheme(s)
+      config.CFBundleURLTypes = [
+        {
+          CFBundleURLSchemes: linkingSchemes,
+        },
+        {
+          // Add the generic oauth redirect, it's important that it has the name
+          // 'OAuthRedirect' so we can find it in app code.
+          CFBundleURLName: 'OAuthRedirect',
+          CFBundleURLSchemes: [config.CFBundleIdentifier],
+        },
+      ];
+
+      // set ITSAppUsesNonExemptEncryption to let people skip manually
+      // entering it in iTunes Connect
+      if (
+        privateConfig &&
+        privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
+        privateConfig.usesNonExemptEncryption === false
+      ) {
+        config.ITSAppUsesNonExemptEncryption = false;
+      }
+
+      // google maps api key
+      if (privateConfig && privateConfig.googleMapsApiKey) {
+        config.GMSApiKey = privateConfig.googleMapsApiKey;
+      }
+
+      // permanently save the exponent client version at time of configuration
+      config.EXClientVersion = config.CFBundleVersion;
+
+      // use version from manifest
+      let version = manifest.version ? manifest.version : '0.0.0';
+      let buildNumber = manifest.ios && manifest.ios.buildNumber
+        ? manifest.ios.buildNumber
+        : '1';
+      config.CFBundleShortVersionString = version;
+      config.CFBundleVersion = buildNumber;
+
+      config.Fabric = {
+        APIKey: (privateConfig &&
+          privateConfig.fabric &&
+          privateConfig.fabric.apiKey) ||
+          DEFAULT_FABRIC_KEY,
+        Kits: [
+          {
+            KitInfo: {},
+            KitName: 'Crashlytics',
+          },
+        ],
+      };
+
+      let permissionsAppName = manifest.name ? manifest.name : 'this app';
+      for (let key in config) {
+        if (
+          config.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1
+        ) {
+          config[key] = config[key].replace(
+            'Expo experiences',
+            permissionsAppName
+          );
+        }
+      }
+
+      // 1 is iPhone, 2 is iPad
+      config.UIDeviceFamily = manifest.ios && manifest.ios.supportsTablet
+        ? [1, 2]
+        : [1];
+
+      return config;
     }
-
-    // 1 is iPhone, 2 is iPad
-    config.UIDeviceFamily = (manifest.ios && manifest.ios.supportsTablet) ? [1, 2] : [1];
-
-    return config;
-  });
+  );
   return result;
 }
 
@@ -153,8 +192,12 @@ async function configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, pr
  * @param manifest the app's manifest
  * @param manifestUrl the app's manifest url
  */
-async function configureStandaloneIOSShellPlistAsync(configFilePath, manifest, manifestUrl) {
-  await modifyIOSPropertyListAsync(configFilePath, 'EXShell', (shellConfig) => {
+async function configureStandaloneIOSShellPlistAsync(
+  configFilePath,
+  manifest,
+  manifestUrl
+) {
+  await modifyIOSPropertyListAsync(configFilePath, 'EXShell', shellConfig => {
     shellConfig.isShell = true;
     shellConfig.manifestUrl = manifestUrl;
     if (manifest.ios && manifest.ios.permissions) {
@@ -180,28 +223,38 @@ async function configurePropertyListsAsync(manifest, args, configFilePath) {
   validateConfigArguments(manifest, args, configFilePath);
   console.log(`Modifying config files under ${configFilePath}...`);
 
-  let {
-    privateConfigFile,
-  } = args;
+  let { privateConfigFile } = args;
 
   let privateConfig;
   if (privateConfigFile) {
-    let privateConfigContents = await fs.promise.readFile(privateConfigFile, 'utf8');
+    let privateConfigContents = await fs.promise.readFile(
+      privateConfigFile,
+      'utf8'
+    );
     privateConfig = JSON.parse(privateConfigContents);
   }
 
   // generate new shell config
-  await configureStandaloneIOSShellPlistAsync(configFilePath, manifest, args.url);
+  await configureStandaloneIOSShellPlistAsync(
+    configFilePath,
+    manifest,
+    args.url
+  );
 
   // Info.plist changes specific to turtle
-  await modifyIOSPropertyListAsync(configFilePath, 'Info', (config) => {
+  await modifyIOSPropertyListAsync(configFilePath, 'Info', config => {
     // use shell-specific launch screen
     config.UILaunchStoryboardName = 'LaunchScreenShell';
     return config;
   });
 
   // common standalone Info.plist config changes
-  await configureStandaloneIOSInfoPlistAsync(configFilePath, manifest, privateConfig, args.bundleIdentifier);
+  await configureStandaloneIOSInfoPlistAsync(
+    configFilePath,
+    manifest,
+    privateConfig,
+    args.bundleIdentifier
+  );
 }
 
 /**
@@ -209,15 +262,26 @@ async function configurePropertyListsAsync(manifest, args, configFilePath) {
  */
 async function preloadManifestAndBundleAsync(manifest, args, configFilePath) {
   let bundleUrl = manifest.bundleUrl;
-  await fs.promise.writeFile(`${configFilePath}/shell-app-manifest.json`, JSON.stringify(manifest));
+  await fs.promise.writeFile(
+    `${configFilePath}/shell-app-manifest.json`,
+    JSON.stringify(manifest)
+  );
   await saveUrlToPathAsync(bundleUrl, `${configFilePath}/shell-app.bundle`);
   return;
 }
 
 async function cleanPropertyListBackupsAsync(configFilePath, restoreOriginals) {
   console.log('Cleaning up...');
-  await cleanIOSPropertyListBackupAsync(configFilePath, 'EXShell', restoreOriginals);
-  await cleanIOSPropertyListBackupAsync(configFilePath, 'Info', restoreOriginals);
+  await cleanIOSPropertyListBackupAsync(
+    configFilePath,
+    'EXShell',
+    restoreOriginals
+  );
+  await cleanIOSPropertyListBackupAsync(
+    configFilePath,
+    'Info',
+    restoreOriginals
+  );
 }
 
 /**
@@ -239,15 +303,14 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
   }
 
   if (buildCmd) {
-    console.log(`Building shell app under ${iOSRootPath}/${relativeBuildDestination}`);
+    console.log(
+      `Building shell app under ${iOSRootPath}/${relativeBuildDestination}`
+    );
     console.log(`  (action: ${action}, configuration: ${configuration})...`);
     console.log(buildCmd);
     await spawnAsyncThrowError(buildCmd, null, {
-      stdio: (
-        (verbose) ?
-        'inherit' :
-        ['ignore', 'ignore', 'inherit'] // only stderr
-      ),
+      // only stderr
+      stdio: verbose ? 'inherit' : ['ignore', 'ignore', 'inherit'],
       cwd: iOSRootPath,
       shell: true,
     });
@@ -257,11 +320,18 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
     await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactLocation]);
 
     if (type === 'archive') {
-      await spawnAsyncThrowError('/bin/cp', ['-R', `${buildDest}/Exponent.xcarchive`, artifactLocation]);
+      await spawnAsyncThrowError('/bin/cp', [
+        '-R',
+        `${buildDest}/Exponent.xcarchive`,
+        artifactLocation,
+      ]);
     } else if (type === 'simulator') {
-      await spawnAsyncThrowError('/bin/cp', ['-R', pathToApp, artifactLocation]);
+      await spawnAsyncThrowError('/bin/cp', [
+        '-R',
+        pathToApp,
+        artifactLocation,
+      ]);
     }
-
   }
   return pathToApp;
 }
@@ -274,13 +344,17 @@ function validateArgs(args) {
   switch (args.type) {
     case 'simulator': {
       if (args.configuration !== 'Debug' && args.configuration !== 'Release') {
-        throw new Error(`Unsupported build configuration ${args.configuration}`);
+        throw new Error(
+          `Unsupported build configuration ${args.configuration}`
+        );
       }
       break;
     }
     case 'archive': {
       if (args.configuration !== 'Release') {
-        throw new Error('Release is the only supported configuration when archiving');
+        throw new Error(
+          'Release is the only supported configuration when archiving'
+        );
       }
       break;
     }
@@ -298,7 +372,9 @@ function validateArgs(args) {
         throw new Error('Must run with `--sdkVersion SDK_VERSION`');
       }
       if (!args.archivePath) {
-        throw new Error('Need to provide --archivePath <path to existing archive for configuration>');
+        throw new Error(
+          'Need to provide --archivePath <path to existing archive for configuration>'
+        );
       }
       break;
     }
@@ -335,12 +411,7 @@ async function createIOSShellAppAsync(args) {
     await configureShellAppSecretsAsync(args, '../ios');
     configFilePath = await buildAsync(args, '../ios', '../shellAppBase');
   } else {
-    let {
-      url,
-      sdkVersion,
-      output,
-      type,
-    } = args;
+    let { url, sdkVersion, output, type } = args;
 
     // fetch manifest
     let manifest = await getManifestAsync(url, {
@@ -358,11 +429,15 @@ async function createIOSShellAppAsync(args) {
 
     let archiveName = manifest.name.replace(/\s+/g, '');
     if (type === 'simulator') {
-      await spawnAsync(`mv Exponent.app ${archiveName}.app && tar cvf ${output} ${archiveName}.app`, null, {
-        stdio: 'inherit',
-        cwd: `${configFilePath}/..`,
-        shell: true,
-      });
+      await spawnAsync(
+        `mv Exponent.app ${archiveName}.app && tar cvf ${output} ${archiveName}.app`,
+        null,
+        {
+          stdio: 'inherit',
+          cwd: `${configFilePath}/..`,
+          shell: true,
+        }
+      );
     } else if (type === 'archive') {
       await spawnAsync('/bin/mv', ['Exponent.xcarchive', output], {
         stdio: 'inherit',

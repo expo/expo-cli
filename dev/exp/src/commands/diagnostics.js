@@ -1,6 +1,4 @@
-import {
-  Diagnostics,
-} from 'xdl';
+import { Diagnostics } from 'xdl';
 
 import simpleSpinner from '@exponent/simple-spinner';
 
@@ -19,9 +17,11 @@ async function action(options) {
   log.raw(url);
 }
 
-export default (program) => {
+export default program => {
   program
     .command('diagnostics [project-dir]')
-    .description('Uploads diagnostics information and returns a url to share with the Expo team.')
+    .description(
+      'Uploads diagnostics information and returns a url to share with the Expo team.'
+    )
     .asyncAction(action);
 };

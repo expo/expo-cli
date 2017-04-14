@@ -23,7 +23,7 @@ import UserSettings from './UserSettings';
 import * as Utils from './Utils';
 import * as Watchman from './Watchman';
 
-async function _uploadLogsAsync(info: any): Promise<boolean|string> {
+async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   let user = await UserManager.getCurrentUserAsync();
   let username = user ? user.username : 'anonymous';
 
@@ -36,8 +36,13 @@ async function _uploadLogsAsync(info: any): Promise<boolean|string> {
   let tempDir = path.join(Env.home(), `${username}-diagnostics`);
   let archivePath = path.join(expoHome, 'diagnostics.tar.gz');
   await Utils.ncpAsync(expoHome, tempDir, {
-    filter: (filename) => {
-      if (filename.includes('diagnostics') || filename.includes('starter-app-cache') || filename.includes('android-apk-cache') || filename.includes('ios-simulator-app-cache')) {
+    filter: filename => {
+      if (
+        filename.includes('diagnostics') ||
+        filename.includes('starter-app-cache') ||
+        filename.includes('android-apk-cache') ||
+        filename.includes('ios-simulator-app-cache')
+      ) {
         return false;
       } else {
         return true;
@@ -47,7 +52,9 @@ async function _uploadLogsAsync(info: any): Promise<boolean|string> {
 
   // remove access token
   try {
-    let settingsJsonFile = new JsonFile(path.join(tempDir, UserSettings.SETTINGS_FILE_NAME));
+    let settingsJsonFile = new JsonFile(
+      path.join(tempDir, UserSettings.SETTINGS_FILE_NAME)
+    );
     let settingsJson = await settingsJsonFile.readAsync();
     settingsJson.accessToken = 'redacted';
     await settingsJsonFile.writeAsync(settingsJson);
@@ -65,19 +72,32 @@ async function _uploadLogsAsync(info: any): Promise<boolean|string> {
     archive: file,
   };
 
-  let response = await Api.callMethodAsync('uploadDiagnostics', [{}], 'put', null, {formData});
+  let response = await Api.callMethodAsync(
+    'uploadDiagnostics',
+    [{}],
+    'put',
+    null,
+    { formData }
+  );
   return response.url;
 }
 
 /* eslint-disable prefer-template */
 // From http://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
 function _formatBytes(bytes: number): string {
-  if (bytes >= 1000000000) { return (bytes / 1000000000).toFixed(2) + ' GB'; }
-  else if (bytes >= 1000000) { return (bytes / 1000000).toFixed(2) + ' MB'; }
-  else if (bytes >= 1000) { return (bytes / 1000).toFixed(2) + ' KB'; }
-  else if (bytes > 1) { return bytes + ' bytes'; }
-  else if (bytes === 1) { return bytes + '${bytes} byte'; }
-  else { return '0 bytes'; }
+  if (bytes >= 1000000000) {
+    return (bytes / 1000000000).toFixed(2) + ' GB';
+  } else if (bytes >= 1000000) {
+    return (bytes / 1000000).toFixed(2) + ' MB';
+  } else if (bytes >= 1000) {
+    return (bytes / 1000).toFixed(2) + ' KB';
+  } else if (bytes > 1) {
+    return bytes + ' bytes';
+  } else if (bytes === 1) {
+    return bytes + '${bytes} byte';
+  } else {
+    return '0 bytes';
+  }
 }
 /* eslint-enable prefer-template */
 
@@ -85,7 +105,7 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   let info = {};
 
   await Binaries.sourceBashLoginScriptsAsync();
-  let whichCommand = (process.platform === 'win32') ? 'where' : 'which';
+  let whichCommand = process.platform === 'win32' ? 'where' : 'which';
 
   try {
     let result = await spawnAsync('node', ['--version']);
@@ -138,29 +158,42 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   info.hostname = os.hostname();
 
   // TODO: fix these commands on linux
-  if (process.platform === 'darwin') { // || process.platform === 'linux') {
+  if (process.platform === 'darwin') {
+    // || process.platform === 'linux') {
     try {
-      info.xdeProcesses = _.trim(child_process.execSync('pgrep XDE | xargs ps -p').toString());
+      info.xdeProcesses = _.trim(
+        child_process.execSync('pgrep XDE | xargs ps -p').toString()
+      );
     } catch (e) {}
 
     try {
-      info.numXdeProcesses = _.trim(child_process.execSync('pgrep XDE | wc -l').toString());
+      info.numXdeProcesses = _.trim(
+        child_process.execSync('pgrep XDE | wc -l').toString()
+      );
     } catch (e) {}
 
     try {
-      info.watchmanProcesses = _.trim(child_process.execSync('pgrep watchman | xargs ps -p').toString());
+      info.watchmanProcesses = _.trim(
+        child_process.execSync('pgrep watchman | xargs ps -p').toString()
+      );
     } catch (e) {}
 
     try {
-      info.numWatchmanProcesses = _.trim(child_process.execSync('pgrep watchman | wc -l').toString());
+      info.numWatchmanProcesses = _.trim(
+        child_process.execSync('pgrep watchman | wc -l').toString()
+      );
     } catch (e) {}
 
     try {
-      info.ngrokProcesses = _.trim(child_process.execSync('pgrep ngrok | xargs ps -p').toString());
+      info.ngrokProcesses = _.trim(
+        child_process.execSync('pgrep ngrok | xargs ps -p').toString()
+      );
     } catch (e) {}
 
     try {
-      info.numNgrokProcesses = _.trim(child_process.execSync('pgrep ngrok | wc -l').toString());
+      info.numNgrokProcesses = _.trim(
+        child_process.execSync('pgrep ngrok | wc -l').toString()
+      );
     } catch (e) {}
   }
 
@@ -190,7 +223,7 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   }
 
   if (options.limitLengthForIntercom) {
-    info = _.mapValues(info, (value) => {
+    info = _.mapValues(info, value => {
       if (value && value.length > 100 && !value.startsWith('http')) {
         return value.substring(0, 100);
       } else {

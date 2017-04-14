@@ -84,7 +84,13 @@ async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
   let configFilename = path.join(plistPath, `${plistName}.json`);
 
   // grab original plist as json object
-  await spawnAsyncThrowError('plutil', ['-convert', 'json', configPlistName, '-o', configFilename]);
+  await spawnAsyncThrowError('plutil', [
+    '-convert',
+    'json',
+    configPlistName,
+    '-o',
+    configFilename,
+  ]);
   let configContents = await fs.promise.readFile(configFilename, 'utf8');
   let config;
 
@@ -100,18 +106,34 @@ async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
   config = transform(config);
 
   // back up old plist and swap in modified one
-  await spawnAsyncThrowError('/bin/cp', [configPlistName, `${configPlistName}.bak`]);
+  await spawnAsyncThrowError('/bin/cp', [
+    configPlistName,
+    `${configPlistName}.bak`,
+  ]);
   await fs.promise.writeFile(configFilename, JSON.stringify(config));
-  await spawnAsyncThrowError('plutil', ['-convert', 'xml1', configFilename, '-o', configPlistName]);
+  await spawnAsyncThrowError('plutil', [
+    '-convert',
+    'xml1',
+    configFilename,
+    '-o',
+    configPlistName,
+  ]);
   return config;
 }
 
-async function cleanIOSPropertyListBackupAsync(plistPath, plistName, restoreOriginal = true) {
+async function cleanIOSPropertyListBackupAsync(
+  plistPath,
+  plistName,
+  restoreOriginal = true
+) {
   let configPlistName = path.join(plistPath, `${plistName}.plist`);
   let configFilename = path.join(plistPath, `${plistName}.json`);
 
   if (restoreOriginal) {
-    await spawnAsyncThrowError('/bin/cp', [`${configPlistName}.bak`, configPlistName]);
+    await spawnAsyncThrowError('/bin/cp', [
+      `${configPlistName}.bak`,
+      configPlistName,
+    ]);
   }
 
   await spawnAsyncThrowError('/bin/rm', [`${configPlistName}.bak`]);
@@ -141,14 +163,25 @@ function getAppleIconQualifier(iconSize, iconResolution) {
  *
  * This only works on MacOS (as far as I know) because it uses the sips utility.
  */
-async function configureIOSIconsAsync(manifest, destinationIconPath, projectRoot) {
+async function configureIOSIconsAsync(
+  manifest,
+  destinationIconPath,
+  projectRoot
+) {
   let defaultIconFilename;
   if (manifest.iconUrl) {
     defaultIconFilename = 'exp-icon.png';
-    await saveUrlToPathAsync(manifest.iconUrl, `${destinationIconPath}/${defaultIconFilename}`);
+    await saveUrlToPathAsync(
+      manifest.iconUrl,
+      `${destinationIconPath}/${defaultIconFilename}`
+    );
   } else if (projectRoot && manifest.icon) {
     defaultIconFilename = 'exp-icon.png';
-    await saveIconToPathAsync(projectRoot, manifest.icon, `${destinationIconPath}/${defaultIconFilename}`);
+    await saveIconToPathAsync(
+      projectRoot,
+      manifest.icon,
+      `${destinationIconPath}/${defaultIconFilename}`
+    );
   }
 
   let iconSizes = [29, 40, 60, 76, 83.5];
@@ -160,7 +193,7 @@ async function configureIOSIconsAsync(manifest, destinationIconPath, projectRoot
     } else {
       iconResolutions = [2, 3];
     }
-    iconResolutions.forEach(async (iconResolution) => {
+    iconResolutions.forEach(async iconResolution => {
       let iconQualifier = getAppleIconQualifier(iconSize, iconResolution);
       // TODO(nikki): Support local paths for these icons
       let iconKey = `iconUrl${iconQualifier}`;
@@ -169,14 +202,19 @@ async function configureIOSIconsAsync(manifest, destinationIconPath, projectRoot
       if (manifest.ios && manifest.ios.hasOwnProperty(iconKey)) {
         // manifest specifies an image just for this size/resolution, use that
         rawIconFilename = `exp-icon${iconQualifier}.png`;
-        await saveUrlToPathAsync(manifest.ios[iconKey], `${destinationIconPath}/${rawIconFilename}`);
+        await saveUrlToPathAsync(
+          manifest.ios[iconKey],
+          `${destinationIconPath}/${rawIconFilename}`
+        );
       } else {
         // use default manifest.iconUrl
         usesDefault = true;
         if (defaultIconFilename) {
           rawIconFilename = defaultIconFilename;
         } else {
-          console.warn(`Manifest does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`);
+          console.warn(
+            `Manifest does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`
+          );
           return;
         }
       }
@@ -187,19 +225,23 @@ async function configureIOSIconsAsync(manifest, destinationIconPath, projectRoot
         cwd: destinationIconPath,
       });
       await spawnAsyncThrowError('sips', ['-Z', iconSizePx, iconFilename], {
-        stdio: ['ignore', 'ignore', 'inherit' ], // only stderr
+        stdio: ['ignore', 'ignore', 'inherit'], // only stderr
         cwd: destinationIconPath,
       });
       if (!usesDefault) {
         // non-default icon used, clean up the downloaded version
-        await spawnAsyncThrowError('/bin/rm', [path.join(destinationIconPath, rawIconFilename)]);
+        await spawnAsyncThrowError('/bin/rm', [
+          path.join(destinationIconPath, rawIconFilename),
+        ]);
       }
     });
   });
 
   // clean up default icon
   if (defaultIconFilename) {
-    await spawnAsyncThrowError('/bin/rm', [path.join(destinationIconPath, defaultIconFilename)]);
+    await spawnAsyncThrowError('/bin/rm', [
+      path.join(destinationIconPath, defaultIconFilename),
+    ]);
   }
   return;
 }

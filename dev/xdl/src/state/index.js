@@ -22,7 +22,12 @@ export const actions = {
   projects: projects.actions,
 };
 
-export const connect = (mapStateToProps: any, mapDispatchToProps: any, mergeProps: any, options: any = {}) => {
+export const connect = (
+  mapStateToProps: any,
+  mapDispatchToProps: any,
+  mergeProps: any,
+  options: any = {}
+) => {
   return reduxConnect(mapStateToProps, mapDispatchToProps, mergeProps, {
     storeKey: 'xdlStore',
     ...options,

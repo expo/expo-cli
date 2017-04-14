@@ -53,7 +53,9 @@ function _selectPane(state: any, action: any, pane: number) {
 
   let projectObject = state[projectRoot] || INITIAL_PROJECT_STATE;
   if (pane === TOGGLE) {
-    pane = projectObject.selectedLeftPane === PACKAGER_PANE ? NOTIFICATIONS_PANE : PACKAGER_PANE;
+    pane = projectObject.selectedLeftPane === PACKAGER_PANE
+      ? NOTIFICATIONS_PANE
+      : PACKAGER_PANE;
   }
 
   projectObject.selectedLeftPane = pane;

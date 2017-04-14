@@ -6,7 +6,7 @@ import ncp from 'ncp';
 
 export function ncpAsync(source: string, dest: string, options: any = {}) {
   return new Promise((resolve, reject) => {
-    ncp(source, dest, options, (err) => {
+    ncp(source, dest, options, err => {
       if (err) {
         reject();
       } else {
@@ -35,7 +35,9 @@ export class Semaphore {
     this.available += 1;
 
     if (this.available > 1 && this.queue.length > 0) {
-      throw new Error('this.available should never be > 0 when there is someone waiting.');
+      throw new Error(
+        'this.available should never be > 0 when there is someone waiting.'
+      );
     } else if (this.available === 1 && this.queue.length > 0) {
       // If there is someone else waiting, immediately consume the permit that was released
       // at the beginning of this function and let the waiting function resume.

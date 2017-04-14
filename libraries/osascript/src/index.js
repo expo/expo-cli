@@ -20,11 +20,14 @@ function osascriptArgs(script) {
   }
 
   return args;
-
 }
 
 async function osascriptExecAsync(script, opts) {
-  return await execAsync('osascript', osascriptArgs(script), Object.assign({stdio: 'inherit'}, opts));
+  return await execAsync(
+    'osascript',
+    osascriptArgs(script),
+    Object.assign({ stdio: 'inherit' }, opts)
+  );
 }
 
 async function osascriptSpawnAsync(script, opts) {
@@ -32,13 +35,18 @@ async function osascriptSpawnAsync(script, opts) {
 }
 
 async function isAppRunningAsync(appName) {
-  let zeroMeansNo = (await osascriptExecAsync('tell app "System Events" to count processes whose name is ' + JSON.stringify(appName))).trim();
-  return (zeroMeansNo !== '0');
+  let zeroMeansNo = (await osascriptExecAsync(
+    'tell app "System Events" to count processes whose name is ' +
+      JSON.stringify(appName)
+  )).trim();
+  return zeroMeansNo !== '0';
 }
 
 async function safeIdOfAppAsync(appName) {
   try {
-    return (await osascriptExecAsync('id of app ' + JSON.stringify(appName))).trim();
+    return (await osascriptExecAsync(
+      'id of app ' + JSON.stringify(appName)
+    )).trim();
   } catch (e) {
     return null;
   }
@@ -46,19 +54,25 @@ async function safeIdOfAppAsync(appName) {
 
 async function openFinderToFolderAsync(dir, activate = true) {
   await osascriptSpawnAsync([
-      'tell application "Finder"',
-      'open POSIX file ' + JSON.stringify(dir),
-      (activate && 'activate' || ''),
-      'end tell',
+    'tell application "Finder"',
+    'open POSIX file ' + JSON.stringify(dir),
+    (activate && 'activate') || '',
+    'end tell',
   ]);
 }
 
 async function activateApp(appName) {
-  return await osascriptSpawnAsync('tell app ' + JSON.stringify(appName) + ' to activate');
+  return await osascriptSpawnAsync(
+    'tell app ' + JSON.stringify(appName) + ' to activate'
+  );
 }
 
 async function openInAppAsync(appName, pth) {
-  let cmd = 'tell app ' + JSON.stringify(appName) + ' to open ' + JSON.stringify(path.resolve(pth));
+  let cmd =
+    'tell app ' +
+    JSON.stringify(appName) +
+    ' to open ' +
+    JSON.stringify(path.resolve(pth));
   // console.log("cmd=", cmd);
   return await osascriptSpawnAsync(cmd);
 }
@@ -87,18 +101,18 @@ async function chooseAppAsync(listOfAppNames) {
   }
 
   return null;
-
 }
 
 async function chooseEditorAppAsync(preferredEditor) {
-
   if (preferredEditor) {
     // Make sure this editor exists
     let appId = await safeIdOfAppAsync(preferredEditor);
     if (appId) {
       return preferredEditor;
     } else {
-      console.warn(`Your preferred editor (${preferredEditor}) isn't installed on this computer.`);
+      console.warn(
+        `Your preferred editor (${preferredEditor}) isn't installed on this computer.`
+      );
     }
   }
 
@@ -137,7 +151,7 @@ async function chooseTerminalAppAsync() {
 
 async function openInEditorAsync(pth, preferredEditor) {
   let appName = await chooseEditorAppAsync(preferredEditor);
-  console.log("Will open in " + appName + " -- " + pth);
+  console.log('Will open in ' + appName + ' -- ' + pth);
   return await openInAppAsync(appName, pth);
 }
 
@@ -156,27 +170,26 @@ async function openItermToSpecificFolderAsync(dir) {
     'end tell',
   ]);
   // exec("osascript -e 'tell application \"iTerm\"' -e 'make new terminal' -e 'tell the first terminal' -e 'activate current session' -e 'launch session \"Default Session\"' -e 'tell the last session' -e 'write text \"cd #{value}\"' -e 'write text \"clear\"' -e 'end tell' -e 'end tell' -e 'end tell' > /dev/null 2>&1")
-
 }
 
 async function openTerminalToSpecificFolderAsync(dir, inTab = false) {
-
   if (inTab) {
     return await osascriptSpawnAsync([
-        'tell application "terminal"',
-        'tell application "System Events" to tell process "terminal" to keystroke "t" using command down',
-        'do script with command "cd ' + util.inspect(dir) + ' && clear" in selected tab of the front window',
-        'end tell',
+      'tell application "terminal"',
+      'tell application "System Events" to tell process "terminal" to keystroke "t" using command down',
+      'do script with command "cd ' +
+        util.inspect(dir) +
+        ' && clear" in selected tab of the front window',
+      'end tell',
     ]);
   } else {
     return await osascriptSpawnAsync([
-        'tell application "terminal"',
-        'do script "cd ' + util.inspect(dir) + ' && clear"',
-        'end tell',
-        'tell application "terminal" to activate',
+      'tell application "terminal"',
+      'do script "cd ' + util.inspect(dir) + ' && clear"',
+      'end tell',
+      'tell application "terminal" to activate',
     ]);
   }
-
 }
 
 async function openFolderInTerminalAppAsync(dir, inTab = false) {
@@ -191,11 +204,8 @@ async function openFolderInTerminalAppAsync(dir, inTab = false) {
     default:
       return await openTerminalToSpecificFolderAsync(dir, inTab);
       break;
-
   }
 }
-
-
 
 module.exports = {
   activateApp,
@@ -212,5 +222,4 @@ module.exports = {
   openTerminalToSpecificFolderAsync,
   safeIdOfAppAsync,
   spawnAsync: osascriptSpawnAsync,
-
 };

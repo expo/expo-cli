@@ -31,11 +31,13 @@ function userSettingsFile() {
 }
 
 function userSettingsJsonFile() {
-  return new JsonFile(userSettingsFile(), {cantReadFileDefault:{}});
+  return new JsonFile(userSettingsFile(), { cantReadFileDefault: {} });
 }
 
 function recentExpsJsonFile() {
-  return new JsonFile(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'));
+  return new JsonFile(
+    path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json')
+  );
 }
 
 var mkdirped = false;
@@ -46,7 +48,9 @@ function dotExpoHomeDirectory() {
   } else {
     const home = Env.home();
     if (!home) {
-      throw new Error("Can't determine your home directory; make sure your $HOME environment variable is set.");
+      throw new Error(
+        "Can't determine your home directory; make sure your $HOME environment variable is set."
+      );
     }
     dirPath = path.join(home, '.expo');
 

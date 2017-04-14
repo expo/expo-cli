@@ -14,8 +14,10 @@ function postinstall(done) {
   }
 
   // Find the package directory path
-  while (dtraceProviderPath !== path.dirname(dtraceProviderPath) &&
-      !path.dirname(dtraceProviderPath).endsWith(`${path.sep}node_modules`)) {
+  while (
+    dtraceProviderPath !== path.dirname(dtraceProviderPath) &&
+    !path.dirname(dtraceProviderPath).endsWith(`${path.sep}node_modules`)
+  ) {
     dtraceProviderPath = path.dirname(dtraceProviderPath);
   }
 
@@ -24,7 +26,7 @@ function postinstall(done) {
 }
 
 if (module === require.main) {
-  postinstall((error) => {
+  postinstall(error => {
     if (error) {
       console.error(`Something went wrong with XDL's postinstall script:`);
       console.error(error);

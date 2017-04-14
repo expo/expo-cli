@@ -2,9 +2,7 @@
  * @flow
  */
 
-import {
-  User,
-} from 'xdl';
+import { User } from 'xdl';
 
 import log from '../log';
 
@@ -19,10 +17,12 @@ async function action(options) {
   }
 }
 
-export default (program) => {
+export default program => {
   program
     .command('whoami')
     .alias('w')
-    .description('Checks with the server and then says who you are logged in as')
+    .description(
+      'Checks with the server and then says who you are logged in as'
+    )
     .asyncAction(action);
 };

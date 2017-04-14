@@ -20,14 +20,23 @@ let _projectRootToLogger = {};
 function _getLogger(projectRoot: string) {
   let logger = _projectRootToLogger[projectRoot];
   if (!logger) {
-    logger = Logger.child({type: 'project', project: path.resolve(projectRoot)});
+    logger = Logger.child({
+      type: 'project',
+      project: path.resolve(projectRoot),
+    });
     _projectRootToLogger[projectRoot] = logger;
   }
 
   return logger;
 }
 
-export function logWithLevel(projectRoot: string, level: string, object: any, msg: string, id: ?string) {
+export function logWithLevel(
+  projectRoot: string,
+  level: string,
+  object: any,
+  msg: string,
+  id: ?string
+) {
   let useRedux = id && Config.useReduxNotifications;
 
   let logger = _getLogger(projectRoot);
@@ -54,27 +63,48 @@ export function logWithLevel(projectRoot: string, level: string, object: any, ms
   }
 
   if (useRedux && (level === 'warn' || level === 'error')) {
-    state.store.dispatch(state.actions.notifications.add(projectRoot, id, msg, projectRoot, level));
+    state.store.dispatch(
+      state.actions.notifications.add(projectRoot, id, msg, projectRoot, level)
+    );
   }
 }
 
-export function logDebug(projectRoot: string, tag: string, message: string, id: ?string) {
-  _getLogger(projectRoot).debug({tag}, message.toString());
+export function logDebug(
+  projectRoot: string,
+  tag: string,
+  message: string,
+  id: ?string
+) {
+  _getLogger(projectRoot).debug({ tag }, message.toString());
 }
 
-export function logInfo(projectRoot: string, tag: string, message: string, id: ?string) {
+export function logInfo(
+  projectRoot: string,
+  tag: string,
+  message: string,
+  id: ?string
+) {
   if (id && Config.useReduxNotifications) {
-    state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'info'));
+    state.store.dispatch(
+      state.actions.notifications.add(projectRoot, id, message, tag, 'info')
+    );
   } else {
-    _getLogger(projectRoot).info({tag}, message.toString());
+    _getLogger(projectRoot).info({ tag }, message.toString());
   }
 }
 
-export function logError(projectRoot: string, tag: string, message: string, id: ?string) {
+export function logError(
+  projectRoot: string,
+  tag: string,
+  message: string,
+  id: ?string
+) {
   if (id && Config.useReduxNotifications) {
-    state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'error'));
+    state.store.dispatch(
+      state.actions.notifications.add(projectRoot, id, message, tag, 'error')
+    );
   } else {
-    _getLogger(projectRoot).error({tag}, message.toString());
+    _getLogger(projectRoot).error({ tag }, message.toString());
   }
 
   let truncatedMessage = message.toString();
@@ -88,11 +118,18 @@ export function logError(projectRoot: string, tag: string, message: string, id: 
   });
 }
 
-export function logWarning(projectRoot: string, tag: string, message: string, id: ?string) {
+export function logWarning(
+  projectRoot: string,
+  tag: string,
+  message: string,
+  id: ?string
+) {
   if (id && Config.useReduxNotifications) {
-    state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'warn'));
+    state.store.dispatch(
+      state.actions.notifications.add(projectRoot, id, message, tag, 'warn')
+    );
   } else {
-    _getLogger(projectRoot).warn({tag}, message.toString());
+    _getLogger(projectRoot).warn({ tag }, message.toString());
   }
 
   let truncatedMessage = message.toString();
@@ -124,10 +161,16 @@ export async function fileExistsAsync(file: string): Promise<boolean> {
   }
 }
 
-export async function configFilenameAsync(projectRoot: string): Promise<string> {
+export async function configFilenameAsync(
+  projectRoot: string
+): Promise<string> {
   // we should always default to exp.json, and only use app.json if it exists
-  const appJsonExists = await fileExistsAsync(path.join(projectRoot, 'app.json'));
-  const expJsonExists = await fileExistsAsync(path.join(projectRoot, 'exp.json'));
+  const appJsonExists = await fileExistsAsync(
+    path.join(projectRoot, 'app.json')
+  );
+  const expJsonExists = await fileExistsAsync(
+    path.join(projectRoot, 'exp.json')
+  );
 
   if (appJsonExists) {
     return 'app.json';
@@ -146,7 +189,7 @@ export async function readExpRcAsync(projectRoot: string): Promise<any> {
   }
 
   try {
-    return await (new JsonFile(expRcPath, {json5: true})).readAsync();
+    return await new JsonFile(expRcPath, { json5: true }).readAsync();
   } catch (e) {
     logError(projectRoot, 'expo', `Error parsing JSON file: ${e.toString()}`);
     return {};
@@ -161,7 +204,7 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   const configPath = path.join(projectRoot, configName);
 
   try {
-    exp = await (new JsonFile(configPath, {json5: true})).readAsync();
+    exp = await new JsonFile(configPath, { json5: true }).readAsync();
 
     if (configName === 'app.json') {
       // if we're not using exp.json, then we've stashed everything under an expo key
@@ -172,7 +215,11 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
     if (e.isJsonFileError) {
       // TODO: add error codes to json-file
       if (e.message.startsWith('Error parsing JSON file')) {
-        logError(projectRoot, 'expo', `Error parsing JSON file: ${e.cause.toString()}`);
+        logError(
+          projectRoot,
+          'expo',
+          `Error parsing JSON file: ${e.cause.toString()}`
+        );
         return { exp: null, pkg: null };
       }
     }
@@ -181,13 +228,22 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   }
 
   try {
-    const packageJsonPath = exp && exp.nodeModulesPath ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json') : path.join(projectRoot, 'package.json');
-    pkg = await (new JsonFile(packageJsonPath)).readAsync();
+    const packageJsonPath = exp && exp.nodeModulesPath
+      ? path.join(
+          path.resolve(projectRoot, exp.nodeModulesPath),
+          'package.json'
+        )
+      : path.join(projectRoot, 'package.json');
+    pkg = await new JsonFile(packageJsonPath).readAsync();
   } catch (e) {
     if (e.isJsonFileError) {
       // TODO: add error codes to json-file
       if (e.message.startsWith('Error parsing JSON file')) {
-        logError(projectRoot, 'expo', `Error parsing JSON file: ${e.cause.toString()}`);
+        logError(
+          projectRoot,
+          'expo',
+          `Error parsing JSON file: ${e.cause.toString()}`
+        );
         return { exp: null, pkg: null };
       }
     }
@@ -204,9 +260,17 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   // Grab our exp config from package.json (legacy) or exp.json
   if (!exp && pkg.exp) {
     exp = pkg.exp;
-    logError(projectRoot, 'expo', `Error: Move your "exp" config from package.json to exp.json.`);
+    logError(
+      projectRoot,
+      'expo',
+      `Error: Move your "exp" config from package.json to exp.json.`
+    );
   } else if (!exp && !pkg.exp) {
-    logError(projectRoot, 'expo', `Error: Missing ${configName}. See https://docs.expo.io/`);
+    logError(
+      projectRoot,
+      'expo',
+      `Error: Missing ${configName}. See https://docs.expo.io/`
+    );
     return { exp: null, pkg: null };
   }
 

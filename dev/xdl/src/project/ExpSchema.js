@@ -23,8 +23,12 @@ export async function getAssetSchemasAsync(sdkVersion: string) {
     }
     const properties = node.properties;
     if (properties) {
-      Object.keys(properties).forEach((property) =>
-        visit(properties[property], `${fieldPath}${fieldPath.length > 0 ? '.' : ''}${property}`));
+      Object.keys(properties).forEach(property =>
+        visit(
+          properties[property],
+          `${fieldPath}${fieldPath.length > 0 ? '.' : ''}${property}`
+        )
+      );
     }
   };
   visit(schema, '');

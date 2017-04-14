@@ -5,15 +5,9 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 
-import {
-  User as UserManager,
-} from 'xdl';
+import { User as UserManager } from 'xdl';
 
-import type {
-  LoginType,
-  User,
-  UserOrLegacyUser,
-} from 'xdl/build/User';
+import type { LoginType, User, UserOrLegacyUser } from 'xdl/build/User';
 
 // const EXP_CLIENT_ID = 'Zso9S1J7xpRYzT4QNlanGYLL5aBrqy1l';
 UserManager.initialize();
@@ -71,24 +65,27 @@ export async function loginOrRegisterIfLoggedOut() {
 }
 
 export async function login(options: CommandOptions) {
-  if (options.facebook) { // handle fb login
+  if (options.facebook) {
+    // handle fb login
     return await _socialAuth('facebook');
-  } else if (options.google) { // handle google login
+  } else if (options.google) {
+    // handle google login
     return await _socialAuth('google');
-  } else if (options.github) { // handle github login
+  } else if (options.github) {
+    // handle github login
     return await _socialAuth('github');
-  } else if (options.token) { // handle token login
+  } else if (options.token) {
+    // handle token login
     return await _tokenAuth(options.token);
-  } else { // handle username/password auth
-    return await _usernamePasswordAuth(
-      options.username,
-      options.password,
-    );
+  } else {
+    // handle username/password auth
+    return await _usernamePasswordAuth(options.username, options.password);
   }
 }
 
 export async function register(options: CommandOptions) {
-  if (options.github) { // handle github login
+  if (options.github) {
+    // handle github login
     await _socialAuth('github');
     console.log('\nThanks for signing up!');
   } else {
@@ -109,7 +106,7 @@ async function _socialAuth(provider: LoginType) {
       return user;
     }
   } else {
-    throw new Error("Unexpected Error: No user returned from the API");
+    throw new Error('Unexpected Error: No user returned from the API');
   }
 }
 
@@ -120,7 +117,7 @@ async function _tokenAuth(token: string) {
 
 async function _usernamePasswordAuth(
   username?: string,
-  password?: string,
+  password?: string
 ): Promise<User> {
   const questions = [];
   if (!username) {
@@ -170,51 +167,72 @@ async function _usernamePasswordAuth(
       return user;
     }
   } else {
-    throw new Error("Unexpected Error: No user returned from the API");
+    throw new Error('Unexpected Error: No user returned from the API');
   }
 }
 
-async function _onboardUser(user?: UserOrLegacyUser, usernamePass?: { username: string, password: string }): Promise<User> {
+async function _onboardUser(
+  user?: UserOrLegacyUser,
+  usernamePass?: { username: string, password: string }
+): Promise<User> {
   console.log('');
 
-  const legacyMigration = (user && user.kind === 'legacyUser') ||
-    (user && user.kind === 'user' && user.currentConnection === 'Username-Password-Authentication');
+  const legacyMigration =
+    (user && user.kind === 'legacyUser') ||
+    (user &&
+      user.kind === 'user' &&
+      user.currentConnection === 'Username-Password-Authentication');
 
   if (user && legacyMigration) {
-    console.log(`Signed in as: @${user.username}
+    console.log(
+      `Signed in as: @${user.username}
 Hi there! We don't currently have any way to identify you if you were to lose
-your password. Please provide us with your name and e-mail address.`);
+your password. Please provide us with your name and e-mail address.`
+    );
   } else {
-    console.log(`Thanks for signing up for Expo!
-Just a few questions:`);
+    console.log(
+      `Thanks for signing up for Expo!
+Just a few questions:`
+    );
   }
 
   console.log('');
 
   const questions = [];
-  questions.push({
-    type: 'input',
-    name: 'givenName',
-    message: 'First Name:',
-    default: ((!legacyMigration && user && user.kind === 'user') && user.givenName) || null,
-    validate(val) {
-      if (val.trim() === '') {
-        return false;
-      }
-      return true;
+  questions.push(
+    {
+      type: 'input',
+      name: 'givenName',
+      message: 'First Name:',
+      default: (!legacyMigration &&
+        user &&
+        user.kind === 'user' &&
+        user.givenName) ||
+        null,
+      validate(val) {
+        if (val.trim() === '') {
+          return false;
+        }
+        return true;
+      },
     },
-  }, {
-    type: 'input',
-    name: 'familyName',
-    message: 'Last Name:',
-    default: ((!legacyMigration && user && user.kind === 'user') && user.familyName) || null,
-    validate(val) {
-      if (val.trim() === '') {
-        return false;
-      }
-      return true;
-    },
-  });
+    {
+      type: 'input',
+      name: 'familyName',
+      message: 'Last Name:',
+      default: (!legacyMigration &&
+        user &&
+        user.kind === 'user' &&
+        user.familyName) ||
+        null,
+      validate(val) {
+        if (val.trim() === '') {
+          return false;
+        }
+        return true;
+      },
+    }
+  );
 
   if (!legacyMigration) {
     // needs a username
@@ -222,7 +240,10 @@ Just a few questions:`);
       type: 'input',
       name: 'username',
       message: 'Username:',
-      default: ((user && user.kind === 'user') && (user.username || user.nickname)) || null,
+      default: (user &&
+        user.kind === 'user' &&
+        (user.username || user.nickname)) ||
+        null,
       validate(val, answers) {
         if (val.trim() === '') {
           return false;
@@ -236,7 +257,8 @@ Just a few questions:`);
     type: 'input',
     name: 'email',
     message: 'Email Address:',
-    default: ((!legacyMigration && user && user.kind === 'user') && user.email) || null,
+    default: (!legacyMigration && user && user.kind === 'user' && user.email) ||
+      null,
     validate(val) {
       if (val.trim() === '') {
         return false;
@@ -279,12 +301,17 @@ Just a few questions:`);
   const answers = await inquirer.prompt(questions);
 
   // Don't send user data (username/password) if
-  const shouldUpdateUsernamePassword = !(user && user.kind === 'user' && user.userMetadata.legacy);
+  const shouldUpdateUsernamePassword = !(user &&
+    user.kind === 'user' &&
+    user.userMetadata.legacy);
 
-  const registeredUser = await UserManager.registerAsync({
-    ...(shouldUpdateUsernamePassword && usernamePass ? usernamePass : {}),
-    ...answers,
-  }, user);
+  const registeredUser = await UserManager.registerAsync(
+    {
+      ...(shouldUpdateUsernamePassword && usernamePass ? usernamePass : {}),
+      ...answers,
+    },
+    user
+  );
 
   return registeredUser;
 }

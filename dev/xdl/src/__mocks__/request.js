@@ -16,9 +16,9 @@ function initParams(uri, options, callback) {
 
   var params = {};
   if (typeof options === 'object') {
-    extend(params, options, {uri});
+    extend(params, options, { uri });
   } else if (typeof uri === 'string') {
-    extend(params, {uri});
+    extend(params, { uri });
   } else {
     extend(params, uri);
   }
@@ -38,6 +38,6 @@ function request(uri, options, callback) {
 }
 
 let currentResponse;
-request.__setMockResponse = (object) => currentResponse = object;
+request.__setMockResponse = object => currentResponse = object;
 
 module.exports = request;

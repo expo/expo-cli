@@ -1,9 +1,6 @@
 import simpleSpinner from '@exponent/simple-spinner';
 
-import {
-  Exp,
-  UserSettings,
-} from 'xdl';
+import { Exp, UserSettings } from 'xdl';
 
 import askUser from './askUser';
 import log from './log';
@@ -11,7 +8,7 @@ import log from './log';
 async function getRecipient(sendTo) {
   let recipient;
   if (sendTo) {
-    if (typeof(sendTo) !== 'boolean') {
+    if (typeof sendTo !== 'boolean') {
       recipient = sendTo;
     } else {
       recipient = await UserSettings.getAsync('sendTo', null);
@@ -26,14 +23,14 @@ async function getRecipient(sendTo) {
 }
 
 async function sendUrlAsync(url, recipient) {
-  log("Sending URL to", recipient);
+  log('Sending URL to', recipient);
   simpleSpinner.start();
   try {
     var result = await Exp.sendAsync(recipient, url);
   } finally {
     simpleSpinner.stop();
   }
-  log("Sent.");
+  log('Sent.');
   return result;
 }
 

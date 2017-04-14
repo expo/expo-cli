@@ -36,7 +36,10 @@ export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
   try {
     return semver.gte(expJson.sdkVersion, sdkVersion);
   } catch (e) {
-    throw new XDLError(ErrorCode.INVALID_VERSION, `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`);
+    throw new XDLError(
+      ErrorCode.INVALID_VERSION,
+      `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
+    );
   }
 }
 
@@ -62,11 +65,13 @@ export async function newestSdkVersionAsync() {
   return result;
 }
 
-export async function facebookReactNativeVersionsAsync(): Promise<Array<string>> {
+export async function facebookReactNativeVersionsAsync(): Promise<
+  Array<string>
+> {
   let sdkVersions = await Api.sdkVersionsAsync();
   let facebookReactNativeVersions = new Set();
 
-  _.forEach(sdkVersions, (value) => {
+  _.forEach(sdkVersions, value => {
     if (value.facebookReactNativeVersion) {
       facebookReactNativeVersions.add(value.facebookReactNativeVersion);
     }
@@ -75,18 +80,27 @@ export async function facebookReactNativeVersionsAsync(): Promise<Array<string>>
   return Array.from(facebookReactNativeVersions);
 }
 
-export async function facebookReactNativeVersionToExpoVersionAsync(facebookReactNativeVersion: string): Promise<? string> {
+export async function facebookReactNativeVersionToExpoVersionAsync(
+  facebookReactNativeVersion: string
+): Promise<?string> {
   if (!semver.valid(facebookReactNativeVersion)) {
-    throw new XDLError(ErrorCode.INVALID_VERSION, `${facebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`);
+    throw new XDLError(
+      ErrorCode.INVALID_VERSION,
+      `${facebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`
+    );
   }
 
   let sdkVersions = await Api.sdkVersionsAsync();
   let currentSdkVersion = null;
 
   _.forEach(sdkVersions, (value, key) => {
-    if (semver.major(value.facebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
-        semver.minor(value.facebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
-        (!currentSdkVersion || semver.gt(key, currentSdkVersion))) {
+    if (
+      semver.major(value.facebookReactNativeVersion) ===
+        semver.major(facebookReactNativeVersion) &&
+      semver.minor(value.facebookReactNativeVersion) ===
+        semver.minor(facebookReactNativeVersion) &&
+      (!currentSdkVersion || semver.gt(key, currentSdkVersion))
+    ) {
       currentSdkVersion = key;
     }
   });

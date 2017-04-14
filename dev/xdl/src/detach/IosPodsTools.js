@@ -15,7 +15,12 @@ import path from 'path';
  *  @param moreSubstitutions dictionary of additional substitution keys and values to replace
  *         in the template, such as: TARGET_NAME, EXPONENT_ROOT_PATH, REACT_NATIVE_PATH
  */
-async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitutions, sdkVersion = 'UNVERSIONED') {
+async function renderPodfileAsync(
+  pathToTemplate,
+  pathToOutput,
+  moreSubstitutions,
+  sdkVersion = 'UNVERSIONED'
+) {
   if (!moreSubstitutions) {
     moreSubstitutions = {};
   }
@@ -30,8 +35,12 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
     rnDependencyOptions = {};
   }
 
-  let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(templatesDirectory);
-  let versionedPostinstalls = await renderVersionedReactNativePostinstallsAsync(templatesDirectory);
+  let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(
+    templatesDirectory
+  );
+  let versionedPostinstalls = await renderVersionedReactNativePostinstallsAsync(
+    templatesDirectory
+  );
   let podDependencies = await renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
     { isPodfile: true }
@@ -39,7 +48,10 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
 
   let substitutions = {
     EXPONENT_CLIENT_DEPS: podDependencies,
-    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(rnDependencyOptions, sdkVersion),
+    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(
+      rnDependencyOptions,
+      sdkVersion
+    ),
     PODFILE_UNVERSIONED_POSTINSTALL: renderUnversionedPostinstall(),
     PODFILE_DETACHED_POSTINSTALL: renderDetachedPostinstall(sdkVersion),
     PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
@@ -52,23 +64,36 @@ async function renderPodfileAsync(pathToTemplate, pathToOutput, moreSubstitution
   for (let key in substitutions) {
     if (substitutions.hasOwnProperty(key)) {
       let replacement = substitutions[key];
-      result = result.replace(new RegExp(`\\\$\\\{${key}\\\}`, 'g'), replacement);
+      result = result.replace(
+        new RegExp(`\\\$\\\{${key}\\\}`, 'g'),
+        replacement
+      );
     }
   }
 
   await fs.promise.writeFile(pathToOutput, result);
 }
 
-async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
+async function renderExponentViewPodspecAsync(
+  pathToTemplate,
+  pathToOutput,
+  moreSubstitutions
+) {
   let templatesDirectory = path.dirname(pathToTemplate);
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
   let dependencies = await renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
     { isPodfile: false }
   );
-  let result = templateString.replace(/\$\{IOS_EXPONENT_VIEW_DEPS\}/g, dependencies);
+  let result = templateString.replace(
+    /\$\{IOS_EXPONENT_VIEW_DEPS\}/g,
+    dependencies
+  );
   if (moreSubstitutions && moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION) {
-    result = result.replace(/\$\{IOS_EXPONENT_CLIENT_VERSION\}/g, moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION);
+    result = result.replace(
+      /\$\{IOS_EXPONENT_CLIENT_VERSION\}/g,
+      moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION
+    );
   }
 
   await fs.promise.writeFile(pathToOutput, result);
@@ -76,14 +101,20 @@ async function renderExponentViewPodspecAsync(pathToTemplate, pathToOutput, more
 
 function renderUnversionedReactNativeDependency(options, sdkVersion) {
   if (sdkVersion === '14.0.0') {
-    return indentString(`
+    return indentString(
+      `
 ${renderUnversionedReactDependency(options)}
-`, 2);
+`,
+      2
+    );
   } else {
-    return indentString(`
+    return indentString(
+      `
 ${renderUnversionedReactDependency(options)}
 ${renderUnversionedYogaDependency(options)}
-`, 2);
+`,
+      2
+    );
   }
 }
 
@@ -140,30 +171,36 @@ function renderDependencyAttributes(attributes) {
 
 async function renderVersionedReactNativeDependenciesAsync(templatesDirectory) {
   // TODO: write these files with versioning script
-  return concatTemplateFilesInDirectoryAsync(path.join(templatesDirectory, 'versioned-react-native', 'dependencies'));
+  return concatTemplateFilesInDirectoryAsync(
+    path.join(templatesDirectory, 'versioned-react-native', 'dependencies')
+  );
 }
 
 async function renderVersionedReactNativePostinstallsAsync(templatesDirectory) {
   // TODO: write these files with versioning script
-  return concatTemplateFilesInDirectoryAsync(path.join(templatesDirectory, 'versioned-react-native', 'postinstalls'));
+  return concatTemplateFilesInDirectoryAsync(
+    path.join(templatesDirectory, 'versioned-react-native', 'postinstalls')
+  );
 }
 
 async function concatTemplateFilesInDirectoryAsync(directory) {
   let templateFilenames = await glob.promise(path.join(directory, '*.rb'));
   let templateStrings = [];
-  await Promise.all(templateFilenames.map(async (filename) => {
-    let templateString = await fs.promise.readFile(filename, 'utf8');
-    if (templateString) {
-      templateStrings.push(templateString);
-    }
-  }));
+  await Promise.all(
+    templateFilenames.map(async filename => {
+      let templateString = await fs.promise.readFile(filename, 'utf8');
+      if (templateString) {
+        templateStrings.push(templateString);
+      }
+    })
+  );
   return templateStrings.join('\n');
 }
 
 function renderDetachedPostinstall(sdkVersion) {
   let podName = sdkVersion === '14.0.0' ? 'ExponentView' : 'ExpoKit';
 
-  let podsRootSub = "${PODS_ROOT}";
+  let podsRootSub = '${PODS_ROOT}';
   return `
     if target.pod_name == '${podName}'
       target.native_target.build_configurations.each do |config|
@@ -201,12 +238,11 @@ function renderPodfileTestTarget(reactNativePath) {
 
 async function renderPodDependenciesAsync(dependenciesConfigPath, options) {
   let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
-  let type = (options.isPodfile) ? 'pod' : 's.dependency';
-  let depsStrings = dependencies.map((dependency) => `  ${type} '${dependency.name}', '${dependency.version}'`);
+  let type = options.isPodfile ? 'pod' : 's.dependency';
+  let depsStrings = dependencies.map(
+    dependency => `  ${type} '${dependency.name}', '${dependency.version}'`
+  );
   return depsStrings.join('\n');
 }
 
-export {
-  renderExponentViewPodspecAsync,
-  renderPodfileAsync,
-};
+export { renderExponentViewPodspecAsync, renderPodfileAsync };

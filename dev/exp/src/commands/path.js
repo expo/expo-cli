@@ -6,9 +6,6 @@ async function action(options) {
   log(`Set XDE path to ${process.env.PATH}`);
 }
 
-export default (program) => {
-  program
-    .command('path')
-    .description('Sets PATH for XDE')
-    .asyncAction(action);
+export default program => {
+  program.command('path').description('Sets PATH for XDE').asyncAction(action);
 };

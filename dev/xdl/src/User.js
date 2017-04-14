@@ -62,13 +62,17 @@ export type LegacyUser = {
   username: string,
   userMetadata: {
     legacy: boolean,
-    needsPasswordMigration: boolean
-  }
+    needsPasswordMigration: boolean,
+  },
 };
 
 export type UserOrLegacyUser = User | LegacyUser;
 
-type ConnectionType = 'Username-Password-Authentication' | 'facebook' | 'google-oauth2' | 'github';
+type ConnectionType =
+  | 'Username-Password-Authentication'
+  | 'facebook'
+  | 'google-oauth2'
+  | 'github';
 
 type LoginOptions = {
   connection: ConnectionType,
@@ -82,7 +86,7 @@ export type RegistrationData = {
   password: string,
   email?: string,
   givenName?: string,
-  familyName?: string
+  familyName?: string,
 };
 
 type Auth0Options = {
@@ -142,7 +146,9 @@ export class UserManagerInstance {
 
     if (loginType === 'user-pass') {
       if (!loginArgs) {
-        throw new Error(`The 'user-pass' login type requires a username and password.`);
+        throw new Error(
+          `The 'user-pass' login type requires a username and password.`
+        );
       }
       loginOptions = {
         connection: 'Username-Password-Authentication',
@@ -164,7 +170,9 @@ export class UserManagerInstance {
         connection: 'github',
       };
     } else {
-      throw new Error(`Invalid login type provided. Must be one of 'user-pass', 'facebook', 'google', or 'github'.`);
+      throw new Error(
+        `Invalid login type provided. Must be one of 'user-pass', 'facebook', 'google', or 'github'.`
+      );
     }
 
     loginOptions = {
@@ -182,7 +190,10 @@ export class UserManagerInstance {
 
     if (loginType === 'user-pass') {
       try {
-        const loginResp = await this._auth0LoginAsync(auth0Options, loginOptions);
+        const loginResp = await this._auth0LoginAsync(
+          auth0Options,
+          loginOptions
+        );
         return await this._getProfileAsync({
           currentConnection: loginOptions.connection,
           accessToken: loginResp.access_token,
@@ -196,7 +207,11 @@ export class UserManagerInstance {
     }
 
     // Doing a social login, so start a server
-    const { server, callbackURL, getTokenInfoAsync } = await _startLoginServerAsync();
+    const {
+      server,
+      callbackURL,
+      getTokenInfoAsync,
+    } = await _startLoginServerAsync();
 
     // Kill server after 5 minutes if it hasn't already been closed
     setTimeout(() => {
@@ -230,12 +245,20 @@ export class UserManagerInstance {
     return profile;
   }
 
-  async registerAsync(userData: RegistrationData, user: ?UserOrLegacyUser): Promise<User> {
+  async registerAsync(
+    userData: RegistrationData,
+    user: ?UserOrLegacyUser
+  ): Promise<User> {
     if (!user) {
       user = await this.getCurrentUserAsync();
     }
 
-    if (user && user.kind === 'user' && user.userMetadata && user.userMetadata.onboarded) {
+    if (
+      user &&
+      user.kind === 'user' &&
+      user.userMetadata &&
+      user.userMetadata.onboarded
+    ) {
       await this.logoutAsync();
       user = null;
     }
@@ -253,7 +276,8 @@ export class UserManagerInstance {
 
     const currentUser: ?User = (user: any);
 
-    const shouldLinkAccount = currentUser &&
+    const shouldLinkAccount =
+      currentUser &&
       currentUser.currentConnection !== 'Username-Password-Authentication';
 
     try {
@@ -266,21 +290,31 @@ export class UserManagerInstance {
           givenName: userData.givenName,
           familyName: userData.familyName,
         },
-        ...(shouldUpdateUsernamePassword ? { username: userData.username } : {}),
+        ...(shouldUpdateUsernamePassword
+          ? { username: userData.username }
+          : {}),
         ...(shouldLinkAccount ? { emailVerified: true } : {}),
-        ...(shouldUpdateUsernamePassword ? { password: userData.password } : {}),
-        ...(currentUser && shouldLinkAccount ? {
-          forceCreate: true,
-          linkedAccountId: currentUser.userId,
-          linkedAccountConnection: currentUser.currentConnection,
-        } : {}),
+        ...(shouldUpdateUsernamePassword
+          ? { password: userData.password }
+          : {}),
+        ...(currentUser && shouldLinkAccount
+          ? {
+              forceCreate: true,
+              linkedAccountId: currentUser.userId,
+              linkedAccountConnection: currentUser.currentConnection,
+            }
+          : {}),
       });
 
       // if it's a new registration, or if they signed up with a social account,
       // we need to re-log them in with their username/pass. Otherwise, they're
       // already logged in.
-      if (shouldLinkAccount || (
-          registeredUser && (!registeredUser.loginsCount || (registeredUser.loginsCount && registeredUser.loginsCount < 1)))) {
+      if (
+        shouldLinkAccount ||
+        (registeredUser &&
+          (!registeredUser.loginsCount ||
+            (registeredUser.loginsCount && registeredUser.loginsCount < 1)))
+      ) {
         // this is a new registration, log them in
         registeredUser = await this.loginAsync('user-pass', {
           username: userData.username,
@@ -290,7 +324,10 @@ export class UserManagerInstance {
 
       return registeredUser;
     } catch (e) {
-      throw new XDLError(ErrorCode.REGISTRATION_ERROR, 'Error registering user: ' + e.message);
+      throw new XDLError(
+        ErrorCode.REGISTRATION_ERROR,
+        'Error registering user: ' + e.message
+      );
     }
   }
 
@@ -307,7 +344,10 @@ export class UserManagerInstance {
     const user = await this.getCurrentUserAsync();
     if (!user) {
       if (await this.getLegacyUserData()) {
-        throw new XDLError(ErrorCode.LEGACY_ACCOUNT_ERROR, `We've updated our account system! Please login again by running \`exp login\`. Sorry for the inconvenience!`);
+        throw new XDLError(
+          ErrorCode.LEGACY_ACCOUNT_ERROR,
+          `We've updated our account system! Please login again by running \`exp login\`. Sorry for the inconvenience!`
+        );
       }
       throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
     }
@@ -324,7 +364,9 @@ export class UserManagerInstance {
     try {
       // If user is cached and token isn't expired
       // return the user
-      if (this._currentUser && !this._isTokenExpired(this._currentUser.idToken)) {
+      if (
+        this._currentUser && !this._isTokenExpired(this._currentUser.idToken)
+      ) {
         return this._currentUser;
       }
 
@@ -391,7 +433,9 @@ export class UserManagerInstance {
     try {
       const api = ApiV2Client.clientForUser(this._currentUser);
 
-      const { user: updatedUser } = await api.postAsync('auth/createOrUpdateUser', {
+      const {
+        user: updatedUser,
+      } = await api.postAsync('auth/createOrUpdateUser', {
         userData: _prepareAuth0Profile(userData),
       });
 
@@ -455,10 +499,19 @@ export class UserManagerInstance {
    *
    * @private
    */
-  async _getProfileAsync(
-    { currentConnection, accessToken, idToken, refreshToken, refreshTokenClientId }:
-    { currentConnection: ConnectionType, accessToken: string, idToken: string, refreshToken: string, refreshTokenClientId?: string }
-  ): Promise<User> {
+  async _getProfileAsync({
+    currentConnection,
+    accessToken,
+    idToken,
+    refreshToken,
+    refreshTokenClientId,
+  }: {
+    currentConnection: ConnectionType,
+    accessToken: string,
+    idToken: string,
+    refreshToken: string,
+    refreshTokenClientId?: string,
+  }): Promise<User> {
     // Attempt to grab profile from Auth0.
     // If token is expired / getting the profile fails, use refresh token to
     let user;
@@ -481,30 +534,47 @@ export class UserManagerInstance {
       }
 
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESH_TOKEN_CLIENT_ID', refreshTokenClientId); }
-      // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('DECODED TOKEN', dtoken); }
-
-      if (this._isTokenExpired(idToken)) { // if there's less than the refresh session threshold left on the token, refresh it
-        // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESHING ID TOKEN'); }
-        // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') { Logger.global.debug('REFRESH TOKEN', refreshToken); }
-        const delegationResult = await this._auth0RefreshToken(
-          refreshTokenClientId, // client id that's associated with the refresh token
-          refreshToken, // refresh token to use
-        );
-        // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') { Logger.global.debug('SUCCESSFULLY GOT NEW ID TOKEN'); }
-        idToken = delegationResult.id_token;
-        // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') { Logger.global.debug('NEW ID TOKEN', idToken); }
+      if (process.env.NODE_ENV !== 'production') {
+        Logger.global.debug('REFRESH_TOKEN_CLIENT_ID', refreshTokenClientId);
       }
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('ID TOKEN FOR PROFILE', idToken); }
+      if (process.env.NODE_ENV !== 'production') {
+        Logger.global.debug('DECODED TOKEN', dtoken);
+      }
+
+      if (this._isTokenExpired(idToken)) {
+        // if there's less than the refresh session threshold left on the token, refresh it
+        // TODO(@skevy): remove
+        if (process.env.NODE_ENV !== 'production') {
+          Logger.global.debug('REFRESHING ID TOKEN');
+        }
+        // TODO(@skevy): remove
+        if (process.env.NODE_ENV !== 'production') {
+          Logger.global.debug('REFRESH TOKEN', refreshToken);
+        }
+        const delegationResult = await this._auth0RefreshToken(
+          refreshTokenClientId, // client id that's associated with the refresh token
+          refreshToken // refresh token to use
+        );
+        // TODO(@skevy): remove
+        if (process.env.NODE_ENV !== 'production') {
+          Logger.global.debug('SUCCESSFULLY GOT NEW ID TOKEN');
+        }
+        idToken = delegationResult.id_token;
+        // TODO(@skevy): remove
+        if (process.env.NODE_ENV !== 'production') {
+          Logger.global.debug('NEW ID TOKEN', idToken);
+        }
+      }
+      // TODO(@skevy): remove
+      if (process.env.NODE_ENV !== 'production') {
+        Logger.global.debug('ID TOKEN FOR PROFILE', idToken);
+      }
       user = await this._auth0GetProfileAsync(idToken);
       // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') { Logger.global.debug('USER DATA', user); }
+      if (process.env.NODE_ENV !== 'production') {
+        Logger.global.debug('USER DATA', user);
+      }
       if (!user) {
         throw new Error('No user profile associated with this token');
       }
@@ -541,9 +611,11 @@ export class UserManagerInstance {
 
     // If no currentUser, or currentUser.id differs from profiles
     // user id, that means we have a new login
-    if ((!this._currentUser || this._currentUser.userId !== user.userId) &&
-        user.username &&
-        user.username !== '') {
+    if (
+      (!this._currentUser || this._currentUser.userId !== user.userId) &&
+      user.username &&
+      user.username !== ''
+    ) {
       Analytics.logEvent('Login', {
         userId: user.userId,
         currentConnection: user.currentConnection,
@@ -572,14 +644,21 @@ export class UserManagerInstance {
     const dtoken = jwt.decode(idToken, { complete: true });
     const { exp } = dtoken.payload;
     // TODO(@skevy): remove
-    if (process.env.NODE_ENV !== 'production') { Logger.global.debug('TOKEN EXPIRATION', exp); }
+    if (process.env.NODE_ENV !== 'production') {
+      Logger.global.debug('TOKEN EXPIRATION', exp);
+    }
     // TODO(@skevy): remove
-    if (process.env.NODE_ENV !== 'production') { Logger.global.debug('TOKEN TIME LEFT', exp - (Date.now() / 1000)); }
+    if (process.env.NODE_ENV !== 'production') {
+      Logger.global.debug('TOKEN TIME LEFT', exp - Date.now() / 1000);
+    }
 
-    return exp - (Date.now() / 1000) <= this.refreshSessionThreshold;
+    return exp - Date.now() / 1000 <= this.refreshSessionThreshold;
   }
 
-  async _auth0LoginAsync(auth0Options: Auth0Options, loginOptions: LoginOptions): Promise<*> {
+  async _auth0LoginAsync(
+    auth0Options: Auth0Options,
+    loginOptions: LoginOptions
+  ): Promise<*> {
     if (typeof window !== 'undefined' && window) {
       const Auth0JS = _auth0JSInstanceWithOptions(auth0Options);
       const resp = await Auth0JS.loginAsync(loginOptions);
@@ -598,13 +677,19 @@ export class UserManagerInstance {
       } catch (e) {
         const err = _formatAuth0NodeError(e);
         if (err.message === 'invalid_user_password') {
-          throw new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, 'Invalid username or password');
+          throw new XDLError(
+            ErrorCode.INVALID_USERNAME_PASSWORD,
+            'Invalid username or password'
+          );
         } else {
           throw err;
         }
       }
-    } else { // social
-      opn(_buildAuth0SocialLoginUrl(auth0Options, loginOptions), { wait: false });
+    } else {
+      // social
+      opn(_buildAuth0SocialLoginUrl(auth0Options, loginOptions), {
+        wait: false,
+      });
       return {};
     }
   }
@@ -615,7 +700,9 @@ export class UserManagerInstance {
       return await Auth0JS.getProfileAsync(idToken);
     }
 
-    const Auth0Node = _nodeAuth0InstanceWithOptions({ clientID: this.clientID });
+    const Auth0Node = _nodeAuth0InstanceWithOptions({
+      clientID: this.clientID,
+    });
 
     const profile = await Auth0Node.tokens.getInfo(idToken);
     return profile;
@@ -640,7 +727,9 @@ export class UserManagerInstance {
       });
     }
 
-    const Auth0Node = _nodeAuth0InstanceWithOptions({ clientID: this.clientID });
+    const Auth0Node = _nodeAuth0InstanceWithOptions({
+      clientID: this.clientID,
+    });
 
     const delegationResult = await Auth0Node.tokens.getDelegationToken({
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
@@ -659,7 +748,9 @@ export class UserManagerInstance {
       });
     }
 
-    const Auth0Node = _nodeAuth0InstanceWithOptions({ clientID: this.clientID });
+    const Auth0Node = _nodeAuth0InstanceWithOptions({
+      clientID: this.clientID,
+    });
 
     return await Auth0Node.database.changePassword({
       connection: 'Username-Password-Authentication',
@@ -693,7 +784,10 @@ function _formatAuth0NodeError(e: APIError) {
   }
 }
 
-function _buildAuth0SocialLoginUrl(auth0Options: Auth0Options, loginOptions: LoginOptions) {
+function _buildAuth0SocialLoginUrl(
+  auth0Options: Auth0Options,
+  loginOptions: LoginOptions
+) {
   const qsData = {
     scope: 'openid offline_access username nickname',
     response_type: loginOptions.responseType,
@@ -718,9 +812,7 @@ function _auth0JSInstanceWithOptions(options: Object = {}): any {
     ...options,
   };
 
-  const Auth0Instance = Bluebird.promisifyAll(
-    new Auth0(auth0Options)
-  );
+  const Auth0Instance = Bluebird.promisifyAll(new Auth0(auth0Options));
 
   return Auth0Instance;
 }
@@ -796,13 +888,12 @@ type ServerWithDestroy = {
 async function _startLoginServerAsync(): Promise<{
   server: ServerWithDestroy,
   callbackURL: string,
-  getTokenInfoAsync: () => Promise<TokenInfo>
+  getTokenInfoAsync: () => Promise<TokenInfo>,
 }> {
   let dfd = new Deferred();
 
   const server: ServerWithDestroy = ((http.createServer((req, res) => {
-    if (req.method === 'POST' &&
-        req.url === '/callback') {
+    if (req.method === 'POST' && req.url === '/callback') {
       let body = '';
       req.on('data', function(data) {
         body += data;
@@ -810,7 +901,8 @@ async function _startLoginServerAsync(): Promise<{
       req.on('end', function() {
         dfd.resolve(qs.parse(body));
         res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(`
+        res.end(
+          `
           <html>
           <head>
             <script>
@@ -821,20 +913,24 @@ async function _startLoginServerAsync(): Promise<{
             Authenticated successfully! You can close this window.
           </body>
           </html>
-        `);
+        `
+        );
       });
     } else {
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(`
+      res.end(
+        `
         <html>
         <head></head>
         <body></body>
         </html>
-      `);
+      `
+      );
     }
   }): any): ServerWithDestroy);
 
-  server.on('clientError', (err, socket) => { //eslint-disable-line
+  server.on('clientError', (err, socket) => {
+    //eslint-disable-line
     socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
   });
 
@@ -850,8 +946,9 @@ async function _startLoginServerAsync(): Promise<{
 
   server.destroy = function(cb) {
     server.close(cb);
-    for (let key in connections)
-      { connections[key].destroy(); }
+    for (let key in connections) {
+      connections[key].destroy();
+    }
   };
 
   const port = await freeportAsync(11000);

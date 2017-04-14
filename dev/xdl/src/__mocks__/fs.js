@@ -2,7 +2,7 @@ const mockfs = require('mock-fs');
 
 const container = {
   __internalFs: null,
-  __configureFs: (conf) => {
+  __configureFs: conf => {
     container.__internalFs = mockfs.fs(conf);
   },
   __mockFile: mockfs.file,
@@ -11,7 +11,7 @@ const container = {
 };
 
 const proxyfs = new Proxy(container, {
-  get: function (target, property, receiver) {
+  get: function(target, property, receiver) {
     if (target.hasOwnProperty(property)) {
       return target[property];
     } else {
@@ -21,7 +21,7 @@ const proxyfs = new Proxy(container, {
 
       return target.__internalFs[property];
     }
-  }
+  },
 });
 
 module.exports = proxyfs;

@@ -11,9 +11,9 @@ let _segmentWebInstance;
 let _userId;
 let _version;
 const PLATFORM_TO_ANALYTICS_PLATFORM = {
-  'darwin': 'Mac',
-  'win32': 'Windows',
-  'linux': 'Linux',
+  darwin: 'Mac',
+  win32: 'Windows',
+  linux: 'Linux',
 };
 
 export function setSegmentNodeKey(key: string) {
@@ -48,7 +48,12 @@ export function setUserProperties(userId: string, traits: any) {
 export function setVersionName(version: string) {
   _version = version;
 
-  if (_segmentWebInstance && window.amplitude && window.amplitude.getInstance && window.amplitude.getInstance()) {
+  if (
+    _segmentWebInstance &&
+    window.amplitude &&
+    window.amplitude.getInstance &&
+    window.amplitude.getInstance()
+  ) {
     // Segment injects amplitude into the window. Call this manually because Segment isn't passing it along.
     window.amplitude.getInstance().setVersionName(version);
   }

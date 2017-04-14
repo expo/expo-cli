@@ -6,7 +6,7 @@ function CommandError(code, message) {
 }
 
 CommandError.isCommandError = function(err) {
-  return (err && !!err._isCommandError);
+  return err && !!err._isCommandError;
 };
 
 export default CommandError;

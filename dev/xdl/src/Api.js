@@ -38,9 +38,14 @@ if (Config.api.port) {
 }
 let API_BASE_URL = ROOT_BASE_URL + '/--/api/';
 
-async function _callMethodAsync(url, method, requestBody, requestOptions): Promise<any> {
+async function _callMethodAsync(
+  url,
+  method,
+  requestBody,
+  requestOptions
+): Promise<any> {
   const clientId = await Session.clientIdAsync();
-  const user = await UserManager.getCurrentUserAsync() || {};
+  const user = (await UserManager.getCurrentUserAsync()) || {};
 
   const { idToken, accessToken } = user;
 
@@ -84,13 +89,22 @@ async function _callMethodAsync(url, method, requestBody, requestOptions): Promi
     try {
       responseObj = JSON.parse(responseBody);
     } catch (e) {
-      throw new XDLError(ErrorCode.INVALID_JSON, "Invalid JSON returned from API: " + e + ". Response body: " + responseBody);
+      throw new XDLError(
+        ErrorCode.INVALID_JSON,
+        'Invalid JSON returned from API: ' +
+          e +
+          '. Response body: ' +
+          responseBody
+      );
     }
   } else {
     responseObj = responseBody;
   }
   if (responseObj.err) {
-    let err = ApiError(responseObj.code || 'API_ERROR', "API Response Error: " + responseObj.err);
+    let err = ApiError(
+      responseObj.code || 'API_ERROR',
+      'API Response Error: ' + responseObj.err
+    );
     // $FlowFixMe can't add arbitrary properties to error
     err.serverError = responseObj.err;
     throw err;
@@ -102,45 +116,45 @@ async function _callMethodAsync(url, method, requestBody, requestOptions): Promi
 async function _downloadAsync(url, path, progressFunction, retryFunction) {
   let promptShown = false;
   let currentProgress = 0;
-  let warningTimer = setTimeout(
-      () => {
-        if (retryFunction) {
-          retryFunction();
-        }
-        promptShown = true;
-      },
-    TIMER_DURATION
-  );
+  let warningTimer = setTimeout(() => {
+    if (retryFunction) {
+      retryFunction();
+    }
+    promptShown = true;
+  }, TIMER_DURATION);
 
   return new Promise((resolve, reject) => {
     try {
-      progress(request(url, {timeout: TIMEOUT}, (err) => {
-        if (err !== null) {
-          if (err.code === 'ETIMEDOUT') {
-            reject(Error("Server timeout."));
-          } else {
-            reject(Error("Couldn't connect to the server, check your internet connection."));
+      progress(
+        request(url, { timeout: TIMEOUT }, err => {
+          if (err !== null) {
+            if (err.code === 'ETIMEDOUT') {
+              reject(Error('Server timeout.'));
+            } else {
+              reject(
+                Error(
+                  "Couldn't connect to the server, check your internet connection."
+                )
+              );
+            }
           }
-        }
-      }))
-        .on('progress', (progress) => {
+        })
+      )
+        .on('progress', progress => {
           const roundedProgress = Math.round(progress.percent * 100);
           if (currentProgress !== roundedProgress) {
             currentProgress = roundedProgress;
             clearTimeout(warningTimer);
             if (!promptShown) {
-              warningTimer = setTimeout(
-                  () => {
-                    if (retryFunction) {
-                      retryFunction();
-                    }
-                    promptShown = true;
-                  },
-                TIMER_DURATION
-              );
+              warningTimer = setTimeout(() => {
+                if (retryFunction) {
+                  retryFunction();
+                }
+                promptShown = true;
+              }, TIMER_DURATION);
             }
           }
-          let percent = ((progress.percent !== undefined) ? progress.percent : 0);
+          let percent = progress.percent !== undefined ? progress.percent : 0;
           if (progressFunction) {
             progressFunction(percent);
           }
@@ -167,21 +181,37 @@ export default class ApiClient {
   static port: number = Config.api.port || 80;
 
   static _versionCache = new Cacher(
-    async () => { return await ApiClient.callPathAsync('/--/versions'); },
+    async () => {
+      return await ApiClient.callPathAsync('/--/versions');
+    },
     'versions.json',
     0,
-    path.join(__dirname, '../caches/versions.json'),
+    path.join(__dirname, '../caches/versions.json')
   );
 
   static _schemaCaches = {};
 
-  static async callMethodAsync(methodName: string, args: Array<*>, method: string, requestBody: ?Object, requestOptions: ?Object = {}): Promise<any> {
-    let url = API_BASE_URL + encodeURIComponent(methodName) + '/' +
+  static async callMethodAsync(
+    methodName: string,
+    args: Array<*>,
+    method: string,
+    requestBody: ?Object,
+    requestOptions: ?Object = {}
+  ): Promise<any> {
+    let url =
+      API_BASE_URL +
+      encodeURIComponent(methodName) +
+      '/' +
       encodeURIComponent(JSON.stringify(args));
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
-  static async callPathAsync(path, method, requestBody, requestOptions: ?Object = {}) {
+  static async callPathAsync(
+    path,
+    method,
+    requestBody,
+    requestOptions: ?Object = {}
+  ) {
     let url = ROOT_BASE_URL + path;
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
@@ -193,10 +223,12 @@ export default class ApiClient {
   static async xdlSchemaAsync(sdkVersion) {
     if (!ApiClient._schemaCaches.hasOwnProperty(sdkVersion)) {
       ApiClient._schemaCaches[sdkVersion] = new Cacher(
-        async () => { return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`); },
+        async () => {
+          return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`);
+        },
         `schema-${sdkVersion}.json`,
         0,
-        path.join(__dirname, `../caches/schema-${sdkVersion}.json`),
+        path.join(__dirname, `../caches/schema-${sdkVersion}.json`)
       );
     }
 
@@ -208,7 +240,13 @@ export default class ApiClient {
     return versions.sdkVersions;
   }
 
-  static async downloadAsync(url, outputPath, options = {}, progressFunction, retryFunction) {
+  static async downloadAsync(
+    url,
+    outputPath,
+    options = {},
+    progressFunction,
+    retryFunction
+  ) {
     if (options.extract) {
       let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
       let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');

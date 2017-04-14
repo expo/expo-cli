@@ -9,12 +9,12 @@ import type { ErrorCodes } from './ErrorCode';
 
 export default class XDLError extends Error {
   code: string;
-  isXDLError: bool;
+  isXDLError: boolean;
 
   constructor(
     code: $Keys<ErrorCodes>,
     message: string,
-    options: { noTrack: bool } = { noTrack: false }
+    options: { noTrack: boolean } = { noTrack: false }
   ) {
     super(message);
 

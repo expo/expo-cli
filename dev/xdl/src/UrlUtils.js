@@ -17,45 +17,95 @@ import * as ProjectUtils from './project/ProjectUtils';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 
-export async function constructBundleUrlAsync(projectRoot: string, opts: any, requestHostname?: string) {
+export async function constructBundleUrlAsync(
+  projectRoot: string,
+  opts: any,
+  requestHostname?: string
+) {
   return constructUrlAsync(projectRoot, opts, true, requestHostname);
 }
 
-export async function constructManifestUrlAsync(projectRoot: string, opts: any, requestHostname?: string) {
+export async function constructManifestUrlAsync(
+  projectRoot: string,
+  opts: any,
+  requestHostname?: string
+) {
   return constructUrlAsync(projectRoot, opts, false, requestHostname);
 }
 
-export async function constructUrlWithExtensionAsync(projectRoot: string, entryPoint: string, ext: string, requestHostname?: string) {
-  let bundleUrl = await constructBundleUrlAsync(projectRoot, {
-    hostType: 'localhost',
-    urlType: 'http',
-  }, requestHostname);
+export async function constructUrlWithExtensionAsync(
+  projectRoot: string,
+  entryPoint: string,
+  ext: string,
+  requestHostname?: string
+) {
+  let bundleUrl = await constructBundleUrlAsync(
+    projectRoot,
+    {
+      hostType: 'localhost',
+      urlType: 'http',
+    },
+    requestHostname
+  );
 
   let mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
-  let queryParams = await constructBundleQueryParamsAsync(projectRoot, {
-    dev: false,
-    minify: true,
-  }, requestHostname);
+  let queryParams = await constructBundleQueryParamsAsync(
+    projectRoot,
+    {
+      dev: false,
+      minify: true,
+    },
+    requestHostname
+  );
   return `${bundleUrl}?${queryParams}`;
 }
 
-export async function constructPublishUrlAsync(projectRoot: string, entryPoint: string, requestHostname?: string) {
-  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'bundle', requestHostname);
+export async function constructPublishUrlAsync(
+  projectRoot: string,
+  entryPoint: string,
+  requestHostname?: string
+) {
+  return await constructUrlWithExtensionAsync(
+    projectRoot,
+    entryPoint,
+    'bundle',
+    requestHostname
+  );
 }
 
-export async function constructAssetsUrlAsync(projectRoot: string, entryPoint: string, requestHostname?: string) {
-  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'assets', requestHostname);
+export async function constructAssetsUrlAsync(
+  projectRoot: string,
+  entryPoint: string,
+  requestHostname?: string
+) {
+  return await constructUrlWithExtensionAsync(
+    projectRoot,
+    entryPoint,
+    'assets',
+    requestHostname
+  );
 }
 
-export async function constructDebuggerHostAsync(projectRoot: string, requestHostname?: string) {
-  return constructUrlAsync(projectRoot, {
-    urlType: 'no-protocol',
-  }, true, requestHostname);
+export async function constructDebuggerHostAsync(
+  projectRoot: string,
+  requestHostname?: string
+) {
+  return constructUrlAsync(
+    projectRoot,
+    {
+      urlType: 'no-protocol',
+    },
+    true,
+    requestHostname
+  );
 }
 
-export async function constructBundleQueryParamsAsync(projectRoot: string, opts: any) {
+export async function constructBundleQueryParamsAsync(
+  projectRoot: string,
+  opts: any
+) {
   let queryParams = `dev=${encodeURIComponent(!!opts.dev)}`;
 
   if (opts.hasOwnProperty('strict')) {
@@ -86,9 +136,13 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
-export async function constructUrlAsync(projectRoot: string, opts: any, isPackager: bool, requestHostname?: string) {
+export async function constructUrlAsync(
+  projectRoot: string,
+  opts: any,
+  isPackager: boolean,
+  requestHostname?: string
+) {
   if (opts) {
-
     // the randomness is only important if we're online and can build a tunnel
     let urlRandomnessSchema;
     if (Config.offline) {
@@ -160,11 +214,15 @@ export async function constructUrlAsync(projectRoot: string, opts: any, isPackag
     }
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else {
-    let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
+    let ngrokUrl = isPackager
+      ? packagerInfo.packagerNgrokUrl
+      : packagerInfo.expoServerNgrokUrl;
     if (!ngrokUrl) {
       // use localhost
       hostname = 'localhost';
-      port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
+      port = isPackager
+        ? packagerInfo.packagerPort
+        : packagerInfo.expoServerPort;
 
       // TODO report a warning when this is for a currently served project, suppress for status checks
     } else {
@@ -227,7 +285,11 @@ export function someRandomness() {
 }
 
 export function domainify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+/, '').replace(/-+$/, '');
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 }
 
 export function getPlatformSpecificBundleUrl(url: string, platform: string) {

@@ -7,34 +7,50 @@ import * as Exp from '../Exp';
 
 describe('determineEntryPointAsync', () => {
   beforeEach(() => {
-    const packageJson = JSON.stringify({
-      name: 'testing123',
-      version: '0.1.0',
-      main: 'index.js',
-    }, null, 2);
+    const packageJson = JSON.stringify(
+      {
+        name: 'testing123',
+        version: '0.1.0',
+        main: 'index.js',
+      },
+      null,
+      2
+    );
 
-    const packageJsonAndroid = JSON.stringify({
-      name: 'testing123android',
-      version: '0.1.0',
-      main: 'index.android.js',
-    }, null, 2);
+    const packageJsonAndroid = JSON.stringify(
+      {
+        name: 'testing123android',
+        version: '0.1.0',
+        main: 'index.android.js',
+      },
+      null,
+      2
+    );
 
-    const packageJsonIos = JSON.stringify({
-      name: 'testing123ios',
-      version: '0.1.0',
-      main: 'index.ios.js',
-    }, null, 2);
+    const packageJsonIos = JSON.stringify(
+      {
+        name: 'testing123ios',
+        version: '0.1.0',
+        main: 'index.ios.js',
+      },
+      null,
+      2
+    );
 
     const packageJsonNoMain = JSON.stringify({
       name: 'testing456',
       version: '0.2.0',
     });
 
-    const expJson = JSON.stringify({
-      name: 'testing 123',
-      version: '0.1.0',
-      slug: 'testing-123',
-    }, null, 2);
+    const expJson = JSON.stringify(
+      {
+        name: 'testing 123',
+        version: '0.1.0',
+        slug: 'testing-123',
+      },
+      null,
+      2
+    );
 
     const expJsonWithEntry = JSON.stringify({
       name: 'testing567',
@@ -70,12 +86,16 @@ describe('determineEntryPointAsync', () => {
   });
 
   it('exists-no-platform', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync('/exists-no-platform');
+    const entryPoint = await Exp.determineEntryPointAsync(
+      '/exists-no-platform'
+    );
     expect(entryPoint).toBe('index.js');
   });
 
   it('exists-no-platform-no-main', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync('/exists-no-platform-no-main');
+    const entryPoint = await Exp.determineEntryPointAsync(
+      '/exists-no-platform-no-main'
+    );
     expect(entryPoint).toBe('index.js');
   });
 

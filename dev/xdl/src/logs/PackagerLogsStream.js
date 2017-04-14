@@ -30,23 +30,21 @@ export default class PackagerLogsStream {
     this._chunkID = 0;
   };
 
-  constructor(
-    {
-      projectRoot,
-      getCurrentOpenProjectId,
-      updateLogs,
-      onStartBuildBundle,
-      onProgressBuildBundle,
-      onFinishBuildBundle,
-    }: {
-      projectRoot: string,
-      getCurrentOpenProjectId?: () => any,
-      updateLogs: (updater: LogUpdater) => void,
-      onStartBuildBundle?: () => void,
-      onProgressBuildBundle?: (progress: number) => void,
-      onFinishBuildBundle?: () => void,
-    }
-  ) {
+  constructor({
+    projectRoot,
+    getCurrentOpenProjectId,
+    updateLogs,
+    onStartBuildBundle,
+    onProgressBuildBundle,
+    onFinishBuildBundle,
+  }: {
+    projectRoot: string,
+    getCurrentOpenProjectId?: () => any,
+    updateLogs: (updater: LogUpdater) => void,
+    onStartBuildBundle?: () => void,
+    onProgressBuildBundle?: (progress: number) => void,
+    onFinishBuildBundle?: () => void,
+  }) {
     this._resetState();
     this._projectRoot = projectRoot;
     this._getCurrentOpenProjectId = getCurrentOpenProjectId || (() => 1);
@@ -109,7 +107,8 @@ export default class PackagerLogsStream {
     } else if (msg.type == 'dep_graph_loaded') {
       chunk.msg = 'Dependency graph loaded.'; // doesn't seem important to log this
     } else if (msg.type === 'transform_cache_reset') {
-      chunk.msg = 'Your JavaScript transform cache is empty, rebuilding (this may take a minute).';
+      chunk.msg =
+        'Your JavaScript transform cache is empty, rebuilding (this may take a minute).';
     } else if (msg.type === 'initialize_packager_started') {
       chunk.msg = `Running packager on port ${msg.port}.`;
     } else {
@@ -184,7 +183,12 @@ export default class PackagerLogsStream {
       this._onProgressBuildBundle(percentProgress);
 
       if (bundleComplete) {
-        this._onFinishBuildBundle && this._onFinishBuildBundle(bundleError, this._bundleBuildStart, bundleBuildEnd);
+        this._onFinishBuildBundle &&
+          this._onFinishBuildBundle(
+            bundleError,
+            this._bundleBuildStart,
+            bundleBuildEnd
+          );
         this._bundleBuildStart = null;
         this._bundleBuildChunkID = null;
       }

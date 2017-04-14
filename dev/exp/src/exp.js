@@ -91,124 +91,121 @@ Command.prototype.asyncActionProjectDir = function(
   skipProjectValidation,
   skipAuthCheck
 ) {
-  return this.asyncAction(
-    async (projectDir, ...args) => {
-      try {
-        await checkForUpdateAsync();
-      } catch (e) {}
+  return this.asyncAction(async (projectDir, ...args) => {
+    try {
+      await checkForUpdateAsync();
+    } catch (e) {}
 
-      const opts = args[0];
-      if (!skipAuthCheck && !opts.nonInteractive && !opts.offline) {
-        await loginOrRegisterIfLoggedOut();
+    const opts = args[0];
+    if (!skipAuthCheck && !opts.nonInteractive && !opts.offline) {
+      await loginOrRegisterIfLoggedOut();
+    }
+
+    if (!skipAuthCheck) {
+      await UserManager.ensureLoggedInAsync();
+    }
+
+    if (!projectDir) {
+      projectDir = process.cwd();
+    } else {
+      projectDir = path.resolve(process.cwd(), projectDir);
+    }
+
+    const logLines = (msg, logFn) => {
+      for (let line of msg.split('\n')) {
+        logFn(line);
       }
+    };
 
-      if (!skipAuthCheck) {
-        await UserManager.ensureLoggedInAsync();
+    const logWithLevel = chunk => {
+      if (!chunk.msg) {
+        return;
       }
-
-      if (!projectDir) {
-        projectDir = process.cwd();
+      if (chunk.level <= bunyan.INFO) {
+        logLines(chunk.msg, log);
+      } else if (chunk.level === bunyan.WARN) {
+        logLines(chunk.msg, log.warn);
       } else {
-        projectDir = path.resolve(process.cwd(), projectDir);
+        logLines(chunk.msg, log.error);
       }
+    };
 
-      const logLines = (msg, logFn) => {
-        for (let line of msg.split('\n')) {
-          logFn(line);
+    let bar;
+    let packagerLogsStream = new PackagerLogsStream({
+      projectRoot: projectDir,
+      onStartBuildBundle: () => {
+        bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
+          total: 100,
+          clear: true,
+          complete: '=',
+          incomplete: ' ',
+        });
+
+        log.setBundleProgressBar(bar);
+      },
+      onProgressBuildBundle: percent => {
+        if (!bar || bar.complete) return;
+        let ticks = percent - bar.curr;
+        ticks > 0 && bar.tick(ticks);
+      },
+      onFinishBuildBundle: (err, startTime: Date, endTime: Date) => {
+        if (bar && !bar.complete) {
+          bar.tick(100 - bar.curr);
         }
-      };
 
-      const logWithLevel = chunk => {
-        if (!chunk.msg) {
-          return;
-        }
-        if (chunk.level <= bunyan.INFO) {
-          logLines(chunk.msg, log);
-        } else if (chunk.level === bunyan.WARN) {
-          logLines(chunk.msg, log.warn);
-        } else {
-          logLines(chunk.msg, log.error);
-        }
-      };
+        if (bar) {
+          log.setBundleProgressBar(null);
+          bar = null;
 
-      let bar;
-      let packagerLogsStream = new PackagerLogsStream({
-        projectRoot: projectDir,
-        onStartBuildBundle: () => {
-          bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {
-            total: 100,
-            clear: true,
-            complete: '=',
-            incomplete: ' ',
-          });
-
-          log.setBundleProgressBar(bar);
-        },
-        onProgressBuildBundle: percent => {
-          if (!bar || bar.complete) return;
-          let ticks = percent - bar.curr;
-          ticks > 0 && bar.tick(ticks);
-        },
-        onFinishBuildBundle: (err, startTime: Date, endTime: Date) => {
-          if (bar && !bar.complete) {
-            bar.tick(100 - bar.curr);
+          if (err) {
+            log(crayon.red('Failed building JavaScript bundle.'));
+          } else {
+            log(
+              crayon.green(
+                `Finished building JavaScript bundle in ${endTime - startTime}ms.`
+              )
+            );
           }
+        }
+      },
+      updateLogs: updater => {
+        let newLogChunks = updater([]);
+        newLogChunks.forEach(newLogChunk => {
+          logWithLevel(newLogChunk);
+        });
+      },
+    });
 
-          if (bar) {
-            log.setBundleProgressBar(null);
-            bar = null;
-
-            if (err) {
-              log(crayon.red('Failed building JavaScript bundle.'));
-            } else {
-              log(
-                crayon.green(
-                  `Finished building JavaScript bundle in ${endTime - startTime}ms.`
-                )
-              );
-            }
+    // needed for validation logging to function
+    ProjectUtils.attachLoggerStream(projectDir, {
+      stream: {
+        write: chunk => {
+          if (chunk.tag === 'device') {
+            logWithLevel(chunk);
           }
         },
-        updateLogs: updater => {
-          let newLogChunks = updater([]);
-          newLogChunks.forEach(newLogChunk => {
-            logWithLevel(newLogChunk);
-          });
-        },
-      });
+      },
+      type: 'raw',
+    });
 
-      // needed for validation logging to function
-      ProjectUtils.attachLoggerStream(projectDir, {
-        stream: {
-          write: chunk => {
-            if (chunk.tag === 'device') {
-              logWithLevel(chunk);
-            }
-          },
-        },
-        type: 'raw',
-      });
-
-      // the existing CLI modules only pass one argument to this function, so skipProjectValidation
-      // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
-      if (!skipProjectValidation) {
-        log('Making sure project is set up correctly...');
-        simpleSpinner.start();
-        // validate that this is a good projectDir before we try anything else
-        let status = await Doctor.validateLowLatencyAsync(projectDir);
-        if (status === Doctor.FATAL) {
-          throw new Error(
-            `Invalid project directory. See above logs for information.`
-          );
-        }
-        simpleSpinner.stop();
-        log('Your project looks good!');
+    // the existing CLI modules only pass one argument to this function, so skipProjectValidation
+    // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
+    if (!skipProjectValidation) {
+      log('Making sure project is set up correctly...');
+      simpleSpinner.start();
+      // validate that this is a good projectDir before we try anything else
+      let status = await Doctor.validateLowLatencyAsync(projectDir);
+      if (status === Doctor.FATAL) {
+        throw new Error(
+          `Invalid project directory. See above logs for information.`
+        );
       }
+      simpleSpinner.stop();
+      log('Your project looks good!');
+    }
 
-      return asyncFn(projectDir, ...args);
-    },
-    true
-  );
+    return asyncFn(projectDir, ...args);
+  }, true);
 };
 
 function runAsync() {

@@ -29,7 +29,8 @@ import * as UrlUtils from './UrlUtils';
 let _lastUrl = null;
 
 const SUGGESTED_XCODE_VERSION = `8.2.0`;
-const XCODE_NOT_INSTALLED_ERROR = "Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.";
+const XCODE_NOT_INSTALLED_ERROR =
+  'Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.';
 
 export function isPlatformSupported() {
   return process.platform === 'darwin';
@@ -49,9 +50,14 @@ async function _xcrunAsync(args) {
     return await spawnAsync('xcrun', args);
   } catch (e) {
     if (_isLicenseOutOfDate(e.stdout) || _isLicenseOutOfDate(e.stderr)) {
-      throw new XDLError(ErrorCode.XCODE_LICENSE_NOT_ACCEPTED, 'Xcode license is not accepted. Please run `sudo xcodebuild -license`.');
+      throw new XDLError(
+        ErrorCode.XCODE_LICENSE_NOT_ACCEPTED,
+        'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
+      );
     } else {
-      Logger.global.error(`Error running \`xcrun ${args.join(' ')}\`: ${e.stderr}`);
+      Logger.global.error(
+        `Error running \`xcrun ${args.join(' ')}\`: ${e.stderr}`
+      );
       throw e;
     }
   }
@@ -63,12 +69,19 @@ export async function _isSimulatorInstalledAsync() {
   try {
     result = (await osascript.execAsync('id of app "Simulator"')).trim();
   } catch (e) {
-    console.error("Can't determine id of Simulator app; the Simulator is most likely not installed on this machine", e);
+    console.error(
+      "Can't determine id of Simulator app; the Simulator is most likely not installed on this machine",
+      e
+    );
     Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
   if (result !== 'com.apple.iphonesimulator') {
-    console.warn("Simulator is installed but is identified as '" + result + "'; don't know what that is.");
+    console.warn(
+      "Simulator is installed but is identified as '" +
+        result +
+        "'; don't know what that is."
+    );
     Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
@@ -82,7 +95,9 @@ export async function _isSimulatorInstalledAsync() {
     if (matches.length === 0) {
       // very unlikely
       console.error('No version number found from `xcodebuild -version`.');
-      Logger.global.error('Unable to check Xcode version. Command ran successfully but no version number was found.');
+      Logger.global.error(
+        'Unable to check Xcode version. Command ran successfully but no version number was found.'
+      );
       return false;
     }
 
@@ -95,9 +110,10 @@ export async function _isSimulatorInstalledAsync() {
     }
 
     if (semver.lt(version, SUGGESTED_XCODE_VERSION)) {
-      console.warn(`Found Xcode ${version}, which is older than the recommended Xcode ${SUGGESTED_XCODE_VERSION}.`);
+      console.warn(
+        `Found Xcode ${version}, which is older than the recommended Xcode ${SUGGESTED_XCODE_VERSION}.`
+      );
     }
-
   } catch (e) {
     // how would this happen? presumably if Simulator id is found then xcodebuild is installed
     console.error(`Unable to check Xcode version: ${e}`);
@@ -113,7 +129,9 @@ export async function _isSimulatorInstalledAsync() {
       Logger.global.error(e.toString());
     } else {
       console.warn(`Unable to run simctl: ${e.toString()}`);
-      Logger.global.error('xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.');
+      Logger.global.error(
+        'xcrun may not be configured correctly. Try running `sudo xcode-select --reset` and running this again.'
+      );
     }
     return false;
   }
@@ -123,15 +141,17 @@ export async function _isSimulatorInstalledAsync() {
 
 // Simulator opened
 export async function _openSimulatorAsync() {
-  if (!(await _isSimulatorRunningAsync())) {
-    Logger.global.info("Opening iOS simulator");
+  if (!await _isSimulatorRunningAsync()) {
+    Logger.global.info('Opening iOS simulator');
     await spawnAsync('open', ['-a', 'Simulator']);
     await _waitForSimulatorRunningAsync();
   }
 }
 
 export async function _isSimulatorRunningAsync() {
-  let zeroMeansNo = (await osascript.execAsync('tell app "System Events" to count processes whose name is "Simulator"')).trim();
+  let zeroMeansNo = (await osascript.execAsync(
+    'tell app "System Events" to count processes whose name is "Simulator"'
+  )).trim();
   if (zeroMeansNo === '0') {
     return false;
   }
@@ -170,7 +190,11 @@ async function _bootedSimulatorDeviceAsync() {
 }
 
 export function _dirForSimulatorDevice(udid: string) {
-  return path.resolve(homeDir(), 'Library/Developer/CoreSimulator/Devices', udid);
+  return path.resolve(
+    homeDir(),
+    'Library/Developer/CoreSimulator/Devices',
+    udid
+  );
 }
 
 export async function _quitSimulatorAsync() {
@@ -184,9 +208,12 @@ export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
     return false;
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob.promise('./data/Containers/Data/Application/*/Library/Caches/Snapshots/host.exp.Exponent', {cwd: simDir});
+  let matches = await glob.promise(
+    './data/Containers/Data/Application/*/Library/Caches/Snapshots/host.exp.Exponent',
+    { cwd: simDir }
+  );
 
-  return (matches.length > 0);
+  return matches.length > 0;
 }
 
 export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync() {
@@ -204,7 +231,10 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
     return null;
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob.promise('./data/Containers/Bundle/Application/*/Exponent-*.app', {cwd: simDir});
+  let matches = await glob.promise(
+    './data/Containers/Bundle/Application/*/Exponent-*.app',
+    { cwd: simDir }
+  );
 
   if (matches.length === 0) {
     return null;
@@ -224,7 +254,10 @@ export async function _checkExpoUpToDateAsync() {
   let installedVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
 
   if (!installedVersion || semver.lt(installedVersion, versions.iosVersion)) {
-    Logger.notifications.warn({code: NotificationCode.OLD_IOS_APP_VERSION}, 'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.');
+    Logger.notifications.warn(
+      { code: NotificationCode.OLD_IOS_APP_VERSION },
+      'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.'
+    );
   }
 }
 
@@ -237,7 +270,10 @@ export async function _downloadSimulatorAppAsync(url) {
   }
 
   let versions = await Api.versionsAsync();
-  let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
+  let dir = path.join(
+    _simulatorCacheDirectory(),
+    `Exponent-${versions.iosVersion}.app`
+  );
 
   if (await existsAsync(dir)) {
     let filesInDir = await fs.promise.readdir(dir);
@@ -250,7 +286,7 @@ export async function _downloadSimulatorAppAsync(url) {
 
   mkdirp.sync(dir);
   try {
-    await Api.downloadAsync(versions.iosUrl, dir, {extract: true});
+    await Api.downloadAsync(versions.iosUrl, dir, { extract: true });
   } catch (e) {
     rimraf.sync(dir);
     throw e;
@@ -262,11 +298,11 @@ export async function _downloadSimulatorAppAsync(url) {
 // url: Optional URL of Exponent.app tarball to download
 export async function _installExpoOnSimulatorAsync(url) {
   Logger.global.info(`Downloading latest version of Expo`);
-  Logger.notifications.info({code: NotificationCode.START_LOADING});
+  Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let dir = await _downloadSimulatorAppAsync(url);
-  Logger.global.info("Installing Expo on iOS simulator");
+  Logger.global.info('Installing Expo on iOS simulator');
   let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
-  Logger.notifications.info({code: NotificationCode.STOP_LOADING});
+  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   return result;
 }
 
@@ -292,7 +328,7 @@ export function _simulatorCacheDirectory() {
 }
 
 export async function upgradeExpoAsync() {
-  if (!(await _isSimulatorInstalledAsync())) {
+  if (!await _isSimulatorInstalledAsync()) {
     return;
   }
 
@@ -313,8 +349,11 @@ export async function _openUrlInSimulatorAsync(url: string) {
   return await _xcrunAsync(['simctl', 'openurl', 'booted', url]);
 }
 
-export async function openUrlInSimulatorSafeAsync(url: string, isDetached: boolean = false) {
-  if (!(await _isSimulatorInstalledAsync())) {
+export async function openUrlInSimulatorSafeAsync(
+  url: string,
+  isDetached: boolean = false
+) {
+  if (!await _isSimulatorInstalledAsync()) {
     return {
       success: false,
       msg: 'Unable to verify Xcode and Simulator installation.',
@@ -324,7 +363,9 @@ export async function openUrlInSimulatorSafeAsync(url: string, isDetached: boole
   try {
     await _openSimulatorAsync();
 
-    if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
+    if (
+      !isDetached && !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()
+    ) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
     }
@@ -348,7 +389,9 @@ export async function openUrlInSimulatorSafeAsync(url: string, isDetached: boole
     }
 
     if (isDetached) {
-      Logger.global.error(`Error running app. Have you installed the app already using Xcode? Since you are detached you must build manually. ${e.toString()}`);
+      Logger.global.error(
+        `Error running app. Have you installed the app already using Xcode? Since you are detached you must build manually. ${e.toString()}`
+      );
     } else {
       Logger.global.error(`Error installing or running app. ${e.toString()}`);
     }

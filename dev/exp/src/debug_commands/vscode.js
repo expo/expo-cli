@@ -1,6 +1,4 @@
-import {
-  Project,
-} from 'xdl';
+import { Project } from 'xdl';
 
 import delayAsync from 'delay-async';
 
@@ -14,10 +12,12 @@ async function action(projectDir, options) {
   await delayAsync(1000 * 60 * 60);
 }
 
-export default (program) => {
+export default program => {
   program
     .command('vscode [project-dir]')
-    .description('Runs Expo on top of an existing packager. Run `react-native start` before calling this command.')
+    .description(
+      'Runs Expo on top of an existing packager. Run `react-native start` before calling this command.'
+    )
     .option('-p, --port [number]', 'Port of existing packager')
     .allowNonInteractive()
     .asyncActionProjectDir(action);

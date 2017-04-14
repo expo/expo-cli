@@ -12,7 +12,9 @@ export default (program: any) => {
     .command('build:ios [project-dir]')
     .alias('bi')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
-    .description('Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.')
+    .description(
+      'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
+    )
     .allowNonInteractive()
     .asyncActionProjectDir((projectDir, options) => {
       const iosBuilder = new IOSBuilder(projectDir, options);
@@ -25,7 +27,9 @@ export default (program: any) => {
     // TODO: add this option back once we have a better way to download credentials.
     // For now, just handle this manually for people.
     //.option('-c, --clear-credentials', 'Clear stored credentials.')
-    .description('Build a standalone APK for your project, signed and ready for submission to the Google Play Store.')
+    .description(
+      'Build a standalone APK for your project, signed and ready for submission to the Google Play Store.'
+    )
     .allowNonInteractive()
     .asyncActionProjectDir((projectDir, options) => {
       const androidBuilder = new AndroidBuilder(projectDir, options);
@@ -35,7 +39,9 @@ export default (program: any) => {
   program
     .command('build:status [project-dir]')
     .alias('bs')
-    .description(`Gets the status of a current (or most recently finished) build for your project.`)
+    .description(
+      `Gets the status of a current (or most recently finished) build for your project.`
+    )
     .allowNonInteractive()
     .asyncActionProjectDir(async (projectDir, options) => {
       const builder = new BaseBuilder(projectDir, options);

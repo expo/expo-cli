@@ -37,7 +37,7 @@ class Cacher<T> {
     refresher: () => Promise<T>,
     filename: string,
     ttlMilliseconds: ?number,
-    bootstrapFile: ?string,
+    bootstrapFile: ?string
   ) {
     this.refresher = refresher;
     this.filename = path.join(getCacheDir(), filename);
@@ -53,10 +53,11 @@ class Cacher<T> {
       const stats = await fsp.stat(this.filename);
       mtime = stats.mtime;
     } catch (e) {
-
       if (this.bootstrapFile) {
         try {
-          const bootstrapContents = (await fsp.readFile(this.bootstrapFile)).toString();
+          const bootstrapContents = (await fsp.readFile(
+            this.bootstrapFile
+          )).toString();
           await fsp.writeFile(this.filename, bootstrapContents, 'utf8');
         } catch (e) {
           // intentional no-op
@@ -96,9 +97,13 @@ class Cacher<T> {
       return fromCache;
     } else {
       if (failedRefresh) {
-        throw new Error(`Unable to perform cache refresh for ${this.filename}: ${failedRefresh}`);
+        throw new Error(
+          `Unable to perform cache refresh for ${this.filename}: ${failedRefresh}`
+        );
       } else {
-        throw new Error(`Unable to read ${this.filename}. ${this.readError || ''}`);
+        throw new Error(
+          `Unable to read ${this.filename}. ${this.readError || ''}`
+        );
       }
     }
   }

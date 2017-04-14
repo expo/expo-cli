@@ -38,7 +38,7 @@ type RequestOptions = {
   body?: ?Object,
 };
 
-type QueryParameters = {[key: string]: ?(string | number | boolean)};
+type QueryParameters = { [key: string]: ?(string | number | boolean) };
 
 type ErrorWithResponseBody = Error & {
   responseBody?: any,
@@ -47,7 +47,7 @@ type ErrorWithResponseBody = Error & {
 type APIV2ClientOptions = {
   idToken?: string,
   accessToken?: string,
-}
+};
 
 export default class ApiV2Client {
   idToken: ?string = null;
@@ -74,25 +74,49 @@ export default class ApiV2Client {
     }
   }
 
-  async getAsync(methodName: string, args: QueryParameters = {}, extraOptions: Object = {}): Promise<*> {
-    return this._requestAsync(methodName, {
-      httpMethod: 'get',
-      queryParameters: args,
-    }, extraOptions);
+  async getAsync(
+    methodName: string,
+    args: QueryParameters = {},
+    extraOptions: Object = {}
+  ): Promise<*> {
+    return this._requestAsync(
+      methodName,
+      {
+        httpMethod: 'get',
+        queryParameters: args,
+      },
+      extraOptions
+    );
   }
 
-  async postAsync(methodName: string, data: Object = {}, extraOptions: Object = {}): Promise<*> {
-    return this._requestAsync(methodName, {
-      httpMethod: 'post',
-      body: data,
-    }, extraOptions);
+  async postAsync(
+    methodName: string,
+    data: Object = {},
+    extraOptions: Object = {}
+  ): Promise<*> {
+    return this._requestAsync(
+      methodName,
+      {
+        httpMethod: 'post',
+        body: data,
+      },
+      extraOptions
+    );
   }
 
-  async putAsync(methodName: string, data: Object = {}, extraOptions: Object = {}): Promise<*> {
-    return this._requestAsync(methodName, {
-      httpMethod: 'put',
-      body: data,
-    }, extraOptions);
+  async putAsync(
+    methodName: string,
+    data: Object = {},
+    extraOptions: Object = {}
+  ): Promise<*> {
+    return this._requestAsync(
+      methodName,
+      {
+        httpMethod: 'put',
+        body: data,
+      },
+      extraOptions
+    );
   }
 
   async _requestAsync(
@@ -137,14 +161,18 @@ export default class ApiV2Client {
       response = await request.promise(reqOptions);
       result = response.body;
     } catch (e) {
-      const error: ErrorWithResponseBody = new Error(`There was a problem understanding the server. Please try again.`);
+      const error: ErrorWithResponseBody = new Error(
+        `There was a problem understanding the server. Please try again.`
+      );
       error.responseBody = result;
       logger.error(error);
       throw error;
     }
 
     if (!result || typeof result !== 'object') {
-      let error: ErrorWithResponseBody = new Error(`There was a problem understanding the server.`);
+      let error: ErrorWithResponseBody = new Error(
+        `There was a problem understanding the server.`
+      );
       error.responseBody = result;
       throw error;
     }

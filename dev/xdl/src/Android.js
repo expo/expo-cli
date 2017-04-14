@@ -23,10 +23,15 @@ import * as UrlUtils from './UrlUtils';
 
 let _lastUrl = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
-const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
+const CANT_START_ACTIVITY_ERROR =
+  'Activity not started, unable to resolve Intent';
 
 export function isPlatformSupported() {
-  return process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux';
+  return (
+    process.platform === 'darwin' ||
+    process.platform === 'win32' ||
+    process.platform === 'linux'
+  );
 }
 
 async function _getAdbOutputAsync(args) {
@@ -38,7 +43,9 @@ async function _getAdbOutputAsync(args) {
   } catch (e) {
     let errorMessage = _.trim(e.stderr);
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
-      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
+      errorMessage = errorMessage.substring(
+        BEGINNING_OF_ADB_ERROR_MESSAGE.length
+      );
     }
     throw new Error(errorMessage);
   }
@@ -64,7 +71,13 @@ async function _isDeviceAuthorizedAsync() {
 
 // Expo installed
 async function _isExpoInstalledAsync() {
-  let packages = await _getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
+  let packages = await _getAdbOutputAsync([
+    'shell',
+    'pm',
+    'list',
+    'packages',
+    '-f',
+  ]);
   let lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
@@ -81,7 +94,12 @@ async function _isExpoInstalledAsync() {
 }
 
 async function _expoVersionAsync() {
-  let info = await _getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
+  let info = await _getAdbOutputAsync([
+    'shell',
+    'dumpsys',
+    'package',
+    'host.exp.exponent',
+  ]);
 
   let regex = /versionName\=([0-9\.]+)/;
   let regexMatch = regex.exec(info);
@@ -96,8 +114,13 @@ async function _checkExpoUpToDateAsync() {
   let versions = await Api.versionsAsync();
   let installedVersion = await _expoVersionAsync();
 
-  if (!installedVersion || semver.lt(installedVersion, versions.androidVersion)) {
-    Logger.notifications.warn({code: NotificationCode.OLD_ANDROID_APP_VERSION}, 'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.');
+  if (
+    !installedVersion || semver.lt(installedVersion, versions.androidVersion)
+  ) {
+    Logger.notifications.warn(
+      { code: NotificationCode.OLD_ANDROID_APP_VERSION },
+      'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.'
+    );
   }
 }
 
@@ -110,23 +133,29 @@ function _apkCacheDirectory() {
 
 async function _downloadApkAsync() {
   let versions = await Api.versionsAsync();
-  let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
+  let apkPath = path.join(
+    _apkCacheDirectory(),
+    `Exponent-${versions.androidVersion}.apk`
+  );
 
   if (await existsAsync(apkPath)) {
     return apkPath;
   }
 
-  await Api.downloadAsync(versions.androidUrl, path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`));
+  await Api.downloadAsync(
+    versions.androidUrl,
+    path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`)
+  );
   return apkPath;
 }
 
 async function _installExpoAsync() {
   Logger.global.info(`Downloading latest version of Expo`);
-  Logger.notifications.info({code: NotificationCode.START_LOADING});
+  Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let path = await _downloadApkAsync();
   Logger.global.info(`Installing Expo on device`);
   let result = await _getAdbOutputAsync(['install', path]);
-  Logger.notifications.info({code: NotificationCode.STOP_LOADING});
+  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   return result;
 }
 
@@ -144,7 +173,15 @@ export async function upgradeExpoAsync() {
 
     if (_lastUrl) {
       Logger.global.info(`Opening ${_lastUrl} in Expo.`);
-      await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', _lastUrl]);
+      await _getAdbOutputAsync([
+        'shell',
+        'am',
+        'start',
+        '-a',
+        'android.intent.action.VIEW',
+        '-d',
+        _lastUrl,
+      ]);
       _lastUrl = null;
     }
   } catch (e) {
@@ -156,17 +193,29 @@ export async function upgradeExpoAsync() {
 async function _assertDeviceReadyAsync() {
   const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
-  if (!(await _isDeviceAttachedAsync())) {
-    throw new Error(`No Android device found. Please connect a device and follow the instructions here to enable USB debugging:\n${genymotionMessage}`);
+  if (!await _isDeviceAttachedAsync()) {
+    throw new Error(
+      `No Android device found. Please connect a device and follow the instructions here to enable USB debugging:\n${genymotionMessage}`
+    );
   }
 
-  if (!(await _isDeviceAuthorizedAsync())) {
-    throw new Error(`This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`);
+  if (!await _isDeviceAuthorizedAsync()) {
+    throw new Error(
+      `This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`
+    );
   }
 }
 
 async function _openUrlAsync(url: string) {
-  let output = await _getAdbOutputAsync(['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', url]);
+  let output = await _getAdbOutputAsync([
+    'shell',
+    'am',
+    'start',
+    '-a',
+    'android.intent.action.VIEW',
+    '-d',
+    url,
+  ]);
   if (output.includes(CANT_START_ACTIVITY_ERROR)) {
     throw new Error(output.substring(output.indexOf('Error: ')));
   }
@@ -179,7 +228,7 @@ async function openUrlAsync(url: string, isDetached: boolean = false) {
     await _assertDeviceReadyAsync();
 
     let installedExpo = false;
-    if (!isDetached && !(await _isExpoInstalledAsync())) {
+    if (!isDetached && !await _isExpoInstalledAsync()) {
       await _installExpoAsync();
       installedExpo = true;
     }
@@ -240,7 +289,7 @@ export async function startAdbReverseAsync(projectRoot: string) {
   ];
 
   for (let port of adbReversePorts) {
-    if (!(await adbReverse(packagerInfo.packagerPort))) {
+    if (!await adbReverse(packagerInfo.packagerPort)) {
       return false;
     }
   }
