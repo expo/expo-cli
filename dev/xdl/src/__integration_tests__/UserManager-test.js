@@ -12,9 +12,6 @@ const XDL_TEST_CLIENT_ID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y';
 
 import type { User } from '../User';
 
-// jest.unmock('Env');
-// jest.unmock('request');
-
 describe('UserManager', () => {
   let userForTest;
   let userForTestPassword;
