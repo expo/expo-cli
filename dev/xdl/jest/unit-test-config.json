@@ -1,8 +1,12 @@
 {
   "testEnvironment": "node",
-  "testPathDirs": [
+  "roots": [
+    "__mocks__",
     "src"
   ],
+  "transform": {
+    ".*\\.js$": "<rootDir>/jest/preprocessor.js"
+  },
   "moduleFileExtensions": [
     "js",
     "json"

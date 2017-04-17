@@ -87,7 +87,7 @@
   "devDependencies": {
     "babel-cli": "^6.14.0",
     "babel-eslint": "^7.1.0",
-    "babel-jest": "^18.0.0",
+    "babel-jest": "^19.0.0",
     "babel-plugin-module-resolver": "^2.4.0",
     "babel-plugin-transform-flow-strip-types": "^6.21.0",
     "babel-plugin-transform-inline-imports-commonjs": "^1.2.0",
@@ -114,7 +114,7 @@
     "gulp-shell": "^0.5.2",
     "gulp-sourcemaps": "^1.6.0",
     "gulplog": "^1.0.0",
-    "jest": "^18.1.0",
+    "jest": "^19.0.2",
     "mock-fs": "^3.12.1",
     "promise-print": "^2.3.0",
     "rimraf": "^2.5.4"

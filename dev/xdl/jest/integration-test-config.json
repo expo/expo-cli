@@ -1,7 +1,6 @@
 {
-  "watchman": false,
   "testEnvironment": "node",
-  "testPathDirs": [
+  "roots": [
     "src"
   ],
   "transform": {
@@ -13,6 +12,5 @@
     "json",
     "node"
   ],
-  "testRegex": "__integration_tests__/.*\\.js$",
-  "mocksPattern": "__disabled__"
+  "testRegex": "__integration_tests__/.*\\.js$"
 }
