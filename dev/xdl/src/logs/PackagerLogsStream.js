@@ -201,8 +201,12 @@ export default class PackagerLogsStream {
         logs.forEach(log => {
           if (log._id === this._bundleBuildChunkID) {
             if (percentProgress === 100) {
+              let duration;
               if (this._bundleBuildStart) {
-                let duration = bundleBuildEnd - this._bundleBuildStart;
+                duration = bundleBuildEnd - this._bundleBuildStart;
+              }
+
+              if (duration) {
                 log.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
               } else {
                 log.msg = `Building JavaScript bundle: finished.`;
