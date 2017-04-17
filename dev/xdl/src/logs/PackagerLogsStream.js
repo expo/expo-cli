@@ -199,9 +199,14 @@ export default class PackagerLogsStream {
         }
 
         logs.forEach(log => {
-          if (log._id == this._bundleBuildChunkID) {
+          if (log._id === this._bundleBuildChunkID) {
             if (percentProgress === 100) {
-              log.msg = `Building JavaScript bundle: done`;
+              if (this._bundleBuildStart) {
+                let duration = bundleBuildEnd - this._bundleBuildStart;
+                log.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
+              } else {
+                log.msg = `Building JavaScript bundle: finished.`;
+              }
             } else if (percentProgress === -1) {
               log.msg = `Building JavaScript bundle: error\n${msg.error}`;
             } else {
