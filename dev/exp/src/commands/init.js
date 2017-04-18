@@ -10,22 +10,18 @@ let _downloadIsSlowPrompt = false;
 let _retryObject = {};
 
 async function action(projectDir, options) {
+  const givenPath = projectDir.split('/');
   let validatedOptions = {};
   let templateType;
   let questions = [];
+  let insertPath = undefined;
 
-  if (options.projectName) {
-    validatedOptions.name = options.projectName;
-  } else {
-    questions.push({
-      type: 'input',
-      name: 'name',
-      message: 'Project name',
-      validate(val) {
-        // TODO: Validate
-        return val.length > 0;
-      },
-    });
+  if (givenPath.length > 1) {
+    insertPath = givenPath.slice(0, givenPath.length - 1).join('/');
+  }
+
+  if (givenPath.length) {
+    validatedOptions.name = givenPath[givenPath.length - 1];
   }
 
   if (options.projectType) {
@@ -58,7 +54,11 @@ async function action(projectDir, options) {
       templateType = answers.type;
     }
   }
-  downloadAndExtractTemplate(templateType, projectDir, validatedOptions);
+
+  // TODO(jim): We will need to update this method later to not force
+  // us to strip out the <name> from /path/to/<name> if we don't want
+  // to duplicate the folder at creation time. (example: test => test/test)
+  downloadAndExtractTemplate(templateType, insertPath, validatedOptions);
 }
 
 async function downloadAndExtractTemplate(
@@ -141,16 +141,15 @@ async function triggerRetryPrompt() {
 
 export default program => {
   program
-    .command('init [parent-of-project-dir]')
+    .command('init <project-directory>')
     .alias('i')
     .description(
       'Initializes a directory with an example project. Run it without any options and you will be prompted for the name and type.'
     )
-    .option('-n, --projectName [name]', 'Specify a name for the new project')
     .option(
       '-t, --projectType [type]',
       'Specify what type of template to use. Run without this option to see all choices.'
     )
     .allowNonInteractive()
-    .asyncActionProjectDir(action, true); // pass true to skip validation
+    .asyncActionProjectDir(action, true /* skipProjectValidation */);
 };
