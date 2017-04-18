@@ -8,7 +8,7 @@ import path from 'path';
 import spawnAsync from '@exponent/spawn-async';
 import mkdirp from 'mkdirp';
 import rimraf from 'rimraf';
-import uuid from 'node-uuid';
+import uuid from 'uuid';
 
 import * as Binaries from './Binaries';
 import UserSettings from './UserSettings';

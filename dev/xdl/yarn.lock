@@ -4184,11 +4184,7 @@ node-pre-gyp@^0.6.29:
     tar "^2.2.1"
     tar-pack "^3.4.0"
 
-node-uuid@^1.4.7:
-  version "1.4.8"
-  resolved node-uuid-1.4.8.tgz#b040eb0923968afabf8d32fb1f17f1167fdab907
-
-nopt@^3.0.1:
+nopt@^3.0.1, nopt@~3.0.6:
   version "3.0.6"
   resolved nopt-3.0.6.tgz#c6465dbf08abcd4db359317f79ac68a646b28ff9
   dependencies:
@@ -5776,7 +5772,7 @@ uuid@^2.0.1:
   version "2.0.3"
   resolved uuid-2.0.3.tgz#67e2e863797215530dff318e5bf9dcebfd47b21a
 
-uuid@^3.0.0:
+uuid@^3.0.0, uuid@^3.0.1:
   version "3.0.1"
   resolved uuid-3.0.1.tgz#6544bba2dfda8c1cf17e629a3a305e2bb1fee6c1
 

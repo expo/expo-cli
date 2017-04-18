@@ -12,7 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import rimraf from 'rimraf';
 import glob from 'glob';
-import uuid from 'node-uuid';
+import uuid from 'uuid';
 import yesno from 'yesno';
 
 import {
