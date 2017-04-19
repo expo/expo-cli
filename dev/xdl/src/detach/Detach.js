@@ -5,6 +5,8 @@
 
 'use strict';
 
+// Set EXPO_VIEW_DIR to universe/exponent to test locally
+
 import 'instapromise';
 
 import mkdirp from 'mkdirp';
