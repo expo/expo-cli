@@ -332,6 +332,7 @@ export default class PackagerLogsStream {
     }
 
     chunk.msg = chunk.msg.replace(/\[\w{2}m/g, '');
+    chunk.msg = chunk.msg.replace(/\[2K/g, '');
     chunk.msg = trim(chunk.msg);
     return chunk;
   }
