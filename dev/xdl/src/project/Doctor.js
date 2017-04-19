@@ -446,7 +446,9 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
       let errorStrings = [];
       _.forEach(pkg.dependencies, (versionRequired, dependency) => {
         let installedDependency = npmlsDependencies[dependency];
-        if (!installedDependency || !installedDependency.version) {
+        if (dependency === 'react' && versionRequired.match(/alpha/)) {
+          // ignore alpha dependencies on react
+        } else if (!installedDependency || !installedDependency.version) {
           if (installedDependency && installedDependency.peerMissing) {
             errorStrings.push(
               `Warning: '${dependency}' peer depencency missing. Run \`npm ls\` in ${nodeModulesPath} to see full warning.`
