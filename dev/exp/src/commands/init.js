@@ -5,23 +5,20 @@ import { Api, Exp, Logger, NotificationCode, MessageCode } from 'xdl';
 import _ from 'lodash';
 import log from '../log';
 
+import path from 'path';
+
 let _currentRequestID = 0;
 let _downloadIsSlowPrompt = false;
 let _retryObject = {};
 
 async function action(projectDir, options) {
-  const givenPath = projectDir.split('/');
-  let validatedOptions = {};
   let templateType;
   let questions = [];
-  let insertPath = undefined;
+  let insertPath = path.dirname(projectDir);
+  let name = path.basename(projectDir);
 
-  if (givenPath.length > 1) {
-    insertPath = givenPath.slice(0, givenPath.length - 1).join('/');
-  }
-
-  if (givenPath.length) {
-    validatedOptions.name = givenPath[givenPath.length - 1];
+  if (!insertPath || !name) {
+    throw new Error(`Couldn't determine path for new project.`);
   }
 
   if (options.projectType) {
@@ -47,9 +44,6 @@ async function action(projectDir, options) {
 
   if (questions.length > 0) {
     var answers = await inquirerAsync.promptAsync(questions);
-    if (answers.name) {
-      validatedOptions.name = answers.name;
-    }
     if (answers.type) {
       templateType = answers.type;
     }
@@ -58,7 +52,9 @@ async function action(projectDir, options) {
   // TODO(jim): We will need to update this method later to not force
   // us to strip out the <name> from /path/to/<name> if we don't want
   // to duplicate the folder at creation time. (example: test => test/test)
-  downloadAndExtractTemplate(templateType, insertPath, validatedOptions);
+  downloadAndExtractTemplate(templateType, insertPath, {
+    name,
+  });
 }
 
 async function downloadAndExtractTemplate(
