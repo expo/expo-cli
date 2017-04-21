@@ -232,6 +232,16 @@ function getIosPaths(projectRoot, manifest) {
   };
 }
 
+function rimrafDontThrow(directory) {
+  try {
+    rimraf.sync(directory);
+  } catch (e) {
+    console.warn(
+      `There was an issue cleaning up, but your project should still work. You may need to manually remove ${directory}. (${e})`
+    );
+  }
+}
+
 /**
  *  Delete xcodeproj|xcworkspace under searchPath.
  *  Needed because extraneous xcode files will interfere with `react-native link`.
@@ -460,7 +470,7 @@ export async function detachIOSAsync(
   await cleanXCodeProjectsAsync(path.join(expoDirectory, 'ios'));
 
   if (!process.env.EXPO_VIEW_DIR) {
-    rimraf.sync(tmpExpoDirectory);
+    rimrafDontThrow(tmpExpoDirectory);
   }
 
   // These files cause @providesModule naming collisions
@@ -675,7 +685,7 @@ async function detachAndroidAsync(
   // Clean up
   console.log('Cleaning up Android...');
   if (!process.env.EXPO_VIEW_DIR) {
-    rimraf.sync(tmpExpoDirectory);
+    rimrafDontThrow(tmpExpoDirectory);
   }
   console.log('Android detach is complete!\n');
 }
