@@ -180,6 +180,11 @@ async function configureStandaloneIOSInfoPlistAsync(
         ? [1, 2]
         : [1];
 
+      // allow iPad-only
+      if (manifest.ios && manifest.ios.isTabletOnly) {
+        config.UIDeviceFamily = [2];
+      }
+
       return config;
     }
   );
