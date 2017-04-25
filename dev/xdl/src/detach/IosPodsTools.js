@@ -99,6 +99,11 @@ async function renderExponentViewPodspecAsync(
   await fs.promise.writeFile(pathToOutput, result);
 }
 
+/**
+ * @param sdkVersion if specified, indicates which sdkVersion this project uses
+ *  as 'UNVERSIONED', e.g. if we are detaching a sdk15 project, we render
+ *  an unversioned dependency pointing at RN#sdk-15.
+ */
 function renderUnversionedReactNativeDependency(options, sdkVersion) {
   if (sdkVersion === '14.0.0') {
     return indentString(
@@ -110,7 +115,7 @@ ${renderUnversionedReactDependency(options)}
   } else {
     return indentString(
       `
-${renderUnversionedReactDependency(options)}
+${renderUnversionedReactDependency(options, sdkVersion)}
 ${renderUnversionedYogaDependency(options)}
 `,
       2
@@ -118,7 +123,7 @@ ${renderUnversionedYogaDependency(options)}
   }
 }
 
-function renderUnversionedReactDependency(options) {
+function renderUnversionedReactDependency(options, sdkVersion) {
   let attributes;
   if (options.reactNativePath) {
     attributes = {
@@ -131,7 +136,6 @@ function renderUnversionedReactDependency(options) {
   attributes.subspecs = [
     'Core',
     'ART',
-    'DevSupport',
     'RCTActionSheet',
     'RCTAnimation',
     'RCTCameraRoll',
@@ -142,6 +146,18 @@ function renderUnversionedReactDependency(options) {
     'RCTVibration',
     'RCTWebSocket',
   ];
+
+  let sdkMajorVersion = 0;
+  try {
+    let versionComponents = sdkVersion
+      .split('.')
+      .map(number => parseInt(number, 10));
+    sdkMajorVersion = versionComponents[0];
+  } catch (_) {}
+
+  if (!(sdkMajorVersion < 16)) {
+    attributes.subspecs.push('DevSupport');
+  }
 
   return `pod 'React',
 ${indentString(renderDependencyAttributes(attributes), 2)}`;
