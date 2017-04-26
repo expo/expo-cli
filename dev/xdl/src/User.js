@@ -267,10 +267,12 @@ export class UserManagerInstance {
     if (user && user.kind === 'legacyUser') {
       // we're upgrading from an older client,
       // so login with username/pass
-      user = await this.loginAsync('user-pass', {
-        username: userData.username,
-        password: userData.password,
-      });
+      if (userData.username && userData.password) {
+        user = await this.loginAsync('user-pass', {
+          username: userData.username,
+          password: userData.password,
+        });
+      }
       shouldUpdateUsernamePassword = false;
     }
 
@@ -445,7 +447,7 @@ export class UserManagerInstance {
       };
       return {
         kind: 'user',
-        ...updatedUser,
+        ...this._currentUser,
       };
     } catch (e) {
       const err: ApiV2Error = (e: any);
