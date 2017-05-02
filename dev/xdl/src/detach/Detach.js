@@ -172,12 +172,8 @@ export async function detachAsync(projectRoot: string) {
 
   // iOS
   if (process.platform === 'darwin' && !hasIosDirectory) {
-    let iosDirectory = path.join(expoDirectory, 'ios');
-    rimraf.sync(iosDirectory);
-    mkdirp.sync(iosDirectory);
     await detachIOSAsync(
       projectRoot,
-      iosDirectory,
       exp.sdkVersion,
       experienceUrl,
       exp,
@@ -242,44 +238,6 @@ function rimrafDontThrow(directory) {
   }
 }
 
-/**
- *  Delete xcodeproj|xcworkspace under searchPath.
- *  Needed because extraneous xcode files will interfere with `react-native link`.
- */
-async function cleanXCodeProjectsAsync(searchPath) {
-  let xcodeFilesToDelete = await glob.promise(
-    searchPath + '/**/*.@(xcodeproj|xcworkspace)'
-  );
-  if (xcodeFilesToDelete) {
-    for (let ii = 0; ii < xcodeFilesToDelete.length; ii++) {
-      let toRemove = xcodeFilesToDelete[ii];
-      if (fs.existsSync(toRemove)) {
-        // needed because we may have recursively removed in past iteration
-        if (_isDirectory(toRemove)) {
-          rimraf.sync(toRemove);
-        } else {
-          await fs.promise.unlink(toRemove);
-        }
-      }
-    }
-  }
-  return;
-}
-
-async function cleanVersionedReactNativeAsync(searchPath) {
-  // TODO: make it possible to allow a version for the kernel
-  let versionsToDelete = await glob.promise(searchPath + '/ABI*');
-  if (versionsToDelete) {
-    for (let ii = 0; ii < versionsToDelete.length; ii++) {
-      let toRemove = versionsToDelete[ii];
-      if (_isDirectory(toRemove)) {
-        rimraf.sync(toRemove);
-      }
-    }
-  }
-  return;
-}
-
 async function configureDetachedVersionsPlistAsync(
   configFilePath,
   detachedSDKVersion,
@@ -337,50 +295,40 @@ async function cleanPropertyListBackupsAsync(configFilePath) {
  */
 export async function detachIOSAsync(
   projectRoot: string,
-  expoDirectory: string,
   sdkVersion: string,
   experienceUrl: string,
   manifest: any,
-  expoViewUrl: string
+  templateProjUrl: string
 ) {
   let { iosProjectDirectory, projectName } = getIosPaths(projectRoot, manifest);
 
-  let tmpExpoDirectory;
+  // TODO: BEN, in expoTemplateDirectory we are using:
+  // /exponent-view-template/ios  (for xcode proj)
+  // /template-files/ios          (for Podfile)
+
+  let expoTemplateDirectory;
   if (process.env.EXPO_VIEW_DIR) {
     // Only for testing
-    tmpExpoDirectory = process.env.EXPO_VIEW_DIR;
+    expoTemplateDirectory = process.env.EXPO_VIEW_DIR;
   } else {
-    tmpExpoDirectory = path.join(projectRoot, 'temp-ios-directory');
-    mkdirp.sync(tmpExpoDirectory);
+    expoTemplateDirectory = path.join(projectRoot, 'temp-ios-directory');
+    mkdirp.sync(expoTemplateDirectory);
     console.log('Downloading iOS code...');
-    await Api.downloadAsync(expoViewUrl, tmpExpoDirectory, { extract: true });
+    await Api.downloadAsync(templateProjUrl, expoTemplateDirectory, {
+      extract: true,
+    });
   }
 
-  console.log('Moving iOS project files...');
+  // copy downloaded template xcodeproj into the user's project.
   // HEY: if you need other paths into the extracted archive, be sure and include them
   // when the archive is generated in `ios/pipeline.js`
+  console.log('Moving iOS project files...');
   await Utils.ncpAsync(
-    path.join(tmpExpoDirectory, 'ios'),
-    `${expoDirectory}/ios`
-  );
-  await Utils.ncpAsync(
-    path.join(tmpExpoDirectory, 'cpp'),
-    `${expoDirectory}/cpp`
-  );
-  await Utils.ncpAsync(
-    path.join(tmpExpoDirectory, 'exponent-view-template', 'ios'),
+    path.join(expoTemplateDirectory, 'exponent-view-template', 'ios'),
     iosProjectDirectory
   );
-  // make sure generated stub exists
-  let generatedExpoDir = path.join(
-    expoDirectory,
-    'ios',
-    'Exponent',
-    'Generated'
-  );
-  mkdirp.sync(generatedExpoDir);
-  fs.closeSync(fs.openSync(path.join(generatedExpoDir, 'EXKeys.h'), 'w'));
 
+  // rename the xcodeproj (and various other things) to the detached project name.
   console.log('Naming iOS project...');
   await spawnAsyncThrowError('sed', [
     '-i',
@@ -419,6 +367,9 @@ export async function detachIOSAsync(
     `${iosProjectDirectory}/${projectName}.xcworkspace`,
   ]);
 
+  // use the detached project manifest to configure corresponding native parts
+  // of the detached xcodeproj. this is mostly the same configuration used for
+  // shell apps.
   console.log('Configuring iOS project...');
   let infoPlistPath = `${iosProjectDirectory}/${projectName}/Supporting`;
   let iconPath = `${iosProjectDirectory}/${projectName}/Assets.xcassets/AppIcon.appiconset`;
@@ -441,48 +392,40 @@ export async function detachIOSAsync(
   await configureIOSIconsAsync(manifest, iconPath, projectRoot);
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
+  // render Podfile in new project
   console.log('Configuring iOS dependencies...');
+
   let podName = sdkVersion === '14.0.0' ? 'ExponentView' : 'ExpoKit';
-  await renderExponentViewPodspecAsync(
-    path.join(tmpExpoDirectory, 'template-files', 'ios', `${podName}.podspec`),
-    path.join(expoDirectory, `${podName}.podspec`),
-    { IOS_EXPONENT_CLIENT_VERSION: infoPlist.EXClientVersion }
-  );
+  let podfileSubstitutions = {
+    TARGET_NAME: projectName,
+    REACT_NATIVE_PATH: path.relative(
+      iosProjectDirectory,
+      path.join(projectRoot, 'node_modules', 'react-native')
+    ),
+  };
+  if (process.env.EXPO_VIEW_DIR) {
+    podfileSubstitutions.EXPOKIT_PATH = path.relative(
+      iosProjectDirectory,
+      process.env.EXPO_VIEW_DIR
+    );
+  }
   await renderPodfileAsync(
-    path.join(tmpExpoDirectory, 'template-files', 'ios', `${podName}-Podfile`),
+    path.join(
+      expoTemplateDirectory,
+      'template-files',
+      'ios',
+      `${podName}-Podfile`
+    ),
     path.join(iosProjectDirectory, 'Podfile'),
-    {
-      TARGET_NAME: projectName,
-      EXPONENT_ROOT_PATH: path.relative(iosProjectDirectory, expoDirectory),
-      REACT_NATIVE_PATH: path.relative(
-        iosProjectDirectory,
-        path.join(projectRoot, 'node_modules', 'react-native')
-      ),
-    },
+    podfileSubstitutions,
     sdkVersion
   );
 
   console.log('Cleaning up iOS...');
   await cleanPropertyListBackupsAsync(infoPlistPath);
-  await cleanVersionedReactNativeAsync(
-    path.join(expoDirectory, 'ios', 'versioned-react-native')
-  );
-  await cleanXCodeProjectsAsync(path.join(expoDirectory, 'ios'));
 
   if (!process.env.EXPO_VIEW_DIR) {
-    rimrafDontThrow(tmpExpoDirectory);
-  }
-
-  // These files cause @providesModule naming collisions
-  if (process.platform === 'darwin') {
-    let rnFilesToDelete = await glob.promise(
-      path.join(expoDirectory, 'ios') + '/**/*.@(js|json)'
-    );
-    if (rnFilesToDelete) {
-      for (let i = 0; i < rnFilesToDelete.length; i++) {
-        await fs.promise.unlink(rnFilesToDelete[i]);
-      }
-    }
+    rimrafDontThrow(expoTemplateDirectory);
   }
 
   const podsInstructions = sdkVersion === '14.0.0'

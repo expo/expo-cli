@@ -13,7 +13,7 @@ import path from 'path';
  *  @param pathToTemplate path to template Podfile
  *  @param pathToOutput path to render final Podfile
  *  @param moreSubstitutions dictionary of additional substitution keys and values to replace
- *         in the template, such as: TARGET_NAME, EXPONENT_ROOT_PATH, REACT_NATIVE_PATH
+ *         in the template, such as: TARGET_NAME, REACT_NATIVE_PATH
  */
 async function renderPodfileAsync(
   pathToTemplate,
@@ -35,6 +35,9 @@ async function renderPodfileAsync(
     rnDependencyOptions = {};
   }
 
+  let expoKitPath = moreSubstitutions.EXPOKIT_PATH;
+  let expoKitDependencyOptions = expoKitPath ? { expoKitPath } : {};
+
   let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(
     templatesDirectory
   );
@@ -48,6 +51,7 @@ async function renderPodfileAsync(
 
   let substitutions = {
     EXPONENT_CLIENT_DEPS: podDependencies,
+    EXPOKIT_DEPENDENCY: renderExpoKitDependency(expoKitDependencyOptions),
     PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(
       rnDependencyOptions,
       sdkVersion
@@ -97,6 +101,27 @@ async function renderExponentViewPodspecAsync(
   }
 
   await fs.promise.writeFile(pathToOutput, result);
+}
+
+function renderExpoKitDependency(options) {
+  let attributes;
+  if (options.expoKitPath) {
+    attributes = {
+      path: options.expoKitPath,
+    };
+  } else {
+    // TODO: correct release tag/branch
+    attributes = {
+      git: 'http://github.com/expo/expo.git',
+      branch: '@terribleben/test-expokit-pod',
+    };
+  }
+  attributes.subspecs = ['Core', 'CPP'];
+
+  let dependency = `pod 'ExpoKit',
+${indentString(renderDependencyAttributes(attributes), 2)}`;
+
+  return indentString(dependency, 2);
 }
 
 /**
