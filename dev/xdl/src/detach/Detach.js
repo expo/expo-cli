@@ -395,7 +395,6 @@ export async function detachIOSAsync(
   // render Podfile in new project
   console.log('Configuring iOS dependencies...');
 
-  let podName = sdkVersion === '14.0.0' ? 'ExponentView' : 'ExpoKit';
   let podfileSubstitutions = {
     TARGET_NAME: projectName,
     REACT_NATIVE_PATH: path.relative(
@@ -414,7 +413,7 @@ export async function detachIOSAsync(
       expoTemplateDirectory,
       'template-files',
       'ios',
-      `${podName}-Podfile`
+      'ExpoKit-Podfile'
     ),
     path.join(iosProjectDirectory, 'Podfile'),
     podfileSubstitutions,
@@ -428,11 +427,8 @@ export async function detachIOSAsync(
     rimrafDontThrow(expoTemplateDirectory);
   }
 
-  const podsInstructions = sdkVersion === '14.0.0'
-    ? '`cd ios && ./pod-install-exponent.sh`'
-    : '`cd ios && pod install`';
   console.log(
-    `iOS detach is complete! To configure iOS native dependencies, make sure you have the Cocoapods gem, then ${podsInstructions}\n`
+    `iOS detach is complete! Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.`
   );
   return;
 }

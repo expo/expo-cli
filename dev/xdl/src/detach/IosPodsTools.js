@@ -239,11 +239,9 @@ async function concatTemplateFilesInDirectoryAsync(directory) {
 }
 
 function renderDetachedPostinstall(sdkVersion) {
-  let podName = sdkVersion === '14.0.0' ? 'ExponentView' : 'ExpoKit';
-
   let podsRootSub = '${PODS_ROOT}';
   return `
-    if target.pod_name == '${podName}'
+    if target.pod_name == 'ExpoKit'
       target.native_target.build_configurations.each do |config|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'
