@@ -3860,6 +3860,10 @@ progress@^1.1.8:
   version "1.1.8"
   resolved progress-1.1.8.tgz#e260c78f6161cdd9b0e56cc3e0a85de17c7a57be
 
+progress@^2.0.0:
+  version "2.0.0"
+  resolved progress-2.0.0.tgz#8a1be366bf8fc23db2bd23f10c6fe920b4389d1f
+
 promise-props@^1.0.0:
   version "1.0.0"
   resolved promise-props-1.0.0.tgz#e4c673e65a9b0339ded85b1c5ad47e34349c5a1c
@@ -4177,7 +4181,7 @@ request-progress@^3.0.0:
   dependencies:
     throttleit "^1.0.0"
 
-request@^2.74.0, request@^2.79.0:
+request@^2.74.0:
   version "2.80.0"
   resolved request-2.80.0.tgz#8cc162d76d79381cdefdd3505d76b80b60589bd0
   dependencies:
@@ -4203,7 +4207,7 @@ request@^2.74.0, request@^2.79.0:
     tunnel-agent "~0.4.1"
     uuid "^3.0.0"
 
-request@^2.75.0, request@^2.81.0:
+request@^2.75.0, request@^2.79.0, request@^2.81.0:
   version "2.81.0"
   resolved request-2.81.0.tgz#c6928946a0e06c5f8d6f8a9333469ffda46298a0
   dependencies:
