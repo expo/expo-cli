@@ -110,10 +110,10 @@ function renderExpoKitDependency(options) {
       path: options.expoKitPath,
     };
   } else {
-    // TODO: correct release tag/branch
+    // TODO: point at `ios/latest-client-version` from versions api endpoint
     attributes = {
       git: 'http://github.com/expo/expo.git',
-      branch: '@terribleben/test-expokit-pod',
+      branch: 'master',
     };
   }
   attributes.subspecs = ['Core', 'CPP'];
