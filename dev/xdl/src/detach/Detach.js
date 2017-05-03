@@ -29,10 +29,7 @@ import {
   configureStandaloneIOSInfoPlistAsync,
   configureStandaloneIOSShellPlistAsync,
 } from './IosShellApp';
-import {
-  renderExponentViewPodspecAsync,
-  renderPodfileAsync,
-} from './IosPodsTools.js';
+import { renderPodfileAsync } from './IosPodsTools.js';
 
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';

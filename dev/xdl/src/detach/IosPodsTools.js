@@ -78,7 +78,7 @@ async function renderPodfileAsync(
   await fs.promise.writeFile(pathToOutput, result);
 }
 
-async function renderExponentViewPodspecAsync(
+async function renderExpoKitPodspecAsync(
   pathToTemplate,
   pathToOutput,
   moreSubstitutions
@@ -90,8 +90,8 @@ async function renderExponentViewPodspecAsync(
     { isPodfile: false }
   );
   let result = templateString.replace(
-    /\$\{IOS_EXPONENT_VIEW_DEPS\}/g,
-    dependencies
+    /\$\{IOS_EXPOKIT_DEPS\}/g,
+    indentString(dependencies, 2)
   );
   if (moreSubstitutions && moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION) {
     result = result.replace(
@@ -277,11 +277,11 @@ function renderPodfileTestTarget(reactNativePath) {
 
 async function renderPodDependenciesAsync(dependenciesConfigPath, options) {
   let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
-  let type = options.isPodfile ? 'pod' : 's.dependency';
+  let type = options.isPodfile ? 'pod' : 'ss.dependency';
   let depsStrings = dependencies.map(
     dependency => `  ${type} '${dependency.name}', '${dependency.version}'`
   );
   return depsStrings.join('\n');
 }
 
-export { renderExponentViewPodspecAsync, renderPodfileAsync };
+export { renderExpoKitPodspecAsync, renderPodfileAsync };
