@@ -215,10 +215,15 @@ export async function detachAsync(projectRoot: string) {
 
 function getIosPaths(projectRoot, manifest) {
   let iosProjectDirectory = path.join(projectRoot, 'ios');
-  let projectNameLabel = manifest.name;
-  let projectName = projectNameLabel
-    .replace(/[^a-z0-9_\-]/gi, '-')
-    .toLowerCase();
+  let projectName;
+  if (manifest && manifest.name) {
+    let projectNameLabel = manifest.name;
+    projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
+  } else {
+    throw new Error(
+      'Cannot configure an ExpoKit app with no name. Are you missing `exp.json`?'
+    );
+  }
   return {
     iosProjectDirectory,
     projectName,
