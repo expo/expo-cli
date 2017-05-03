@@ -302,10 +302,6 @@ export async function detachIOSAsync(
 ) {
   let { iosProjectDirectory, projectName } = getIosPaths(projectRoot, manifest);
 
-  // TODO: BEN, in expoTemplateDirectory we are using:
-  // /exponent-view-template/ios  (for xcode proj)
-  // /template-files/ios          (for Podfile)
-
   let expoTemplateDirectory;
   if (process.env.EXPO_VIEW_DIR) {
     // Only for testing
