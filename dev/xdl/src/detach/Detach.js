@@ -212,7 +212,7 @@ export async function detachAsync(projectRoot: string) {
   );
 
   console.log(
-    'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects.'
+    'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.\n'
   );
   return true;
 }
@@ -406,7 +406,11 @@ export async function detachIOSAsync(
     ),
     EXPOKIT_TAG: `ios/${iosClientVersion}`,
   };
-  if (process.env.EXPO_VIEW_DIR) {
+  if (process.env.EXPOKIT_TAG_IOS) {
+    console.log(`EXPOKIT_TAG_IOS: Using custom ExpoKit iOS tag...`);
+    podfileSubstitutions.EXPOKIT_TAG = process.env.EXPOKIT_TAG_IOS;
+  } else if (process.env.EXPO_VIEW_DIR) {
+    console.log('EXPO_VIEW_DIR: Using local ExpoKit source for iOS...');
     podfileSubstitutions.EXPOKIT_PATH = path.relative(
       iosProjectDirectory,
       process.env.EXPO_VIEW_DIR
@@ -431,9 +435,7 @@ export async function detachIOSAsync(
     rimrafDontThrow(expoTemplateDirectory);
   }
 
-  console.log(
-    `iOS detach is complete! Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.`
-  );
+  console.log(`iOS detach is complete!`);
   return;
 }
 
