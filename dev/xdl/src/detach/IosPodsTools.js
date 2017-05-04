@@ -9,6 +9,8 @@ import 'instapromise';
 import JsonFile from '@exponent/json-file';
 import path from 'path';
 
+import { parseSdkMajorVersion } from './ExponentTools';
+
 /**
  *  @param pathToTemplate path to template Podfile
  *  @param pathToOutput path to render final Podfile
@@ -182,14 +184,7 @@ function renderUnversionedReactDependency(options, sdkVersion) {
     'RCTWebSocket',
   ];
 
-  let sdkMajorVersion = 0;
-  try {
-    let versionComponents = sdkVersion
-      .split('.')
-      .map(number => parseInt(number, 10));
-    sdkMajorVersion = versionComponents[0];
-  } catch (_) {}
-
+  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
   if (!(sdkMajorVersion < 16)) {
     attributes.subspecs.push('DevSupport');
   }

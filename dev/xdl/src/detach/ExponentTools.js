@@ -7,6 +7,17 @@ import path from 'path';
 import request from 'request';
 import spawnAsyncQuiet from '@exponent/spawn-async';
 
+function parseSdkMajorVersion(expSdkVersion) {
+  let sdkMajorVersion = 0;
+  try {
+    let versionComponents = expSdkVersion
+      .split('.')
+      .map(number => parseInt(number, 10));
+    sdkMajorVersion = versionComponents[0];
+  } catch (_) {}
+  return sdkMajorVersion;
+}
+
 function saveUrlToPathAsync(url, path) {
   return new Promise(function(resolve, reject) {
     let stream = fs.createWriteStream(path);
@@ -247,6 +258,7 @@ async function configureIOSIconsAsync(
 }
 
 export {
+  parseSdkMajorVersion,
   saveUrlToPathAsync,
   saveIconToPathAsync,
   getManifestAsync,

@@ -18,6 +18,7 @@ import uuid from 'uuid';
 import yesno from 'yesno';
 
 import {
+  parseSdkMajorVersion,
   saveIconToPathAsync,
   spawnAsyncThrowError,
   spawnAsync,
@@ -123,6 +124,14 @@ export async function detachAsync(projectRoot: string) {
   if (!exp.sdkVersion) {
     throw new Error(`${configName} is missing \`sdkVersion\``);
   }
+
+  let majorSdkVersion = parseSdkMajorVersion(exp.sdkVersion);
+  if (majorSdkVersion < 16) {
+    throw new Error(
+      `${configName} must be updated to SDK 16.0.0 or newer to be detached.`
+    );
+  }
+
   const versions = await Versions.versionsAsync();
   let sdkVersionConfig = versions.sdkVersions[exp.sdkVersion];
   if (
