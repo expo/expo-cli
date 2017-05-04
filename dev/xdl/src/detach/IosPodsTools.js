@@ -35,8 +35,14 @@ async function renderPodfileAsync(
     rnDependencyOptions = {};
   }
 
-  let expoKitPath = moreSubstitutions.EXPOKIT_PATH;
-  let expoKitDependencyOptions = expoKitPath ? { expoKitPath } : {};
+  const expoKitPath = moreSubstitutions.EXPOKIT_PATH;
+  const expoKitTag = moreSubstitutions.EXPOKIT_TAG;
+  let expoKitDependencyOptions = {};
+  if (expoKitPath) {
+    expoKitDependencyOptions = { expoKitPath };
+  } else if (expoKitTag) {
+    expoKitDependencyOptions = { expoKitTag };
+  }
 
   let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(
     templatesDirectory
@@ -109,8 +115,12 @@ function renderExpoKitDependency(options) {
     attributes = {
       path: options.expoKitPath,
     };
+  } else if (options.expoKitTag) {
+    attributes = {
+      git: 'http://github.com/expo/expo.git',
+      tag: options.expoKitTag,
+    };
   } else {
-    // TODO: point at `ios/latest-client-version` from versions api endpoint
     attributes = {
       git: 'http://github.com/expo/expo.git',
       branch: 'master',

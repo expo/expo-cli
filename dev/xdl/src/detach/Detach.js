@@ -169,12 +169,16 @@ export async function detachAsync(projectRoot: string) {
 
   // iOS
   if (process.platform === 'darwin' && !hasIosDirectory) {
+    const iosClientVersion = sdkVersionConfig.iosVersion
+      ? sdkVersionConfig.iosVersion
+      : versions.iosVersion;
     await detachIOSAsync(
       projectRoot,
       exp.sdkVersion,
       experienceUrl,
       exp,
-      sdkVersionConfig.iosExpoViewUrl
+      sdkVersionConfig.iosExpoViewUrl,
+      iosClientVersion
     );
     exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
   }
@@ -300,7 +304,8 @@ export async function detachIOSAsync(
   sdkVersion: string,
   experienceUrl: string,
   manifest: any,
-  templateProjUrl: string
+  templateProjUrl: string,
+  iosClientVersion: string
 ) {
   let { iosProjectDirectory, projectName } = getIosPaths(projectRoot, manifest);
 
@@ -399,6 +404,7 @@ export async function detachIOSAsync(
       iosProjectDirectory,
       path.join(projectRoot, 'node_modules', 'react-native')
     ),
+    EXPOKIT_TAG: `ios/${iosClientVersion}`,
   };
   if (process.env.EXPO_VIEW_DIR) {
     podfileSubstitutions.EXPOKIT_PATH = path.relative(
