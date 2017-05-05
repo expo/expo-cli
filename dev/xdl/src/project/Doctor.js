@@ -62,6 +62,40 @@ async function _checkWatchmanVersionAsync(projectRoot) {
   }
 }
 
+export async function validateWithSchemaFileAsync(
+  projectRoot: string,
+  schemaPath: string
+): Promise<{ errorMessage?: string }> {
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let schema = JSON.parse(await fs.readFile.promise(schemaPath, 'utf8'));
+  return validateWithSchema(exp, schema.schema, 'exp.json', 'UNVERSIONED');
+}
+
+export function validateWithSchema(
+  exp: any,
+  schema: any,
+  configName: string,
+  sdkVersion: string
+): { errorMessage?: string } {
+  let validator = new jsonschema.Validator();
+  let validationResult = validator.validate(exp, schema);
+
+  let fullMessage;
+  if (validationResult.errors && validationResult.errors.length > 0) {
+    fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
+    for (let error of validationResult.errors) {
+      // Formate the message nicely
+      let message = error.stack
+        .replace(/instance\./g, '')
+        .replace(/exists in instance/g, `exists in ${configName}`)
+        .replace('instance additionalProperty', 'additional property');
+      fullMessage += `\n  - ${message}.`;
+    }
+  }
+
+  return { errorMessage: fullMessage };
+}
+
 async function _validateAssetFieldsAsync(projectRoot, exp) {
   try {
     const assetSchemas = await ExpSchema.getAssetSchemasAsync(exp.sdkVersion);
@@ -162,24 +196,18 @@ async function _validatePackageJsonAndExpJsonAsync(
   try {
     // TODO(perry) figure out a way to tell the schema validator whether this is exp.json or app.json
     let schema = await ExpSchema.getSchemaAsync(sdkVersion);
-    let validator = new jsonschema.Validator();
-    let validationResult = validator.validate(exp, schema);
-    if (validationResult.errors && validationResult.errors.length > 0) {
-      let fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
+    let { errorMessage } = validateWithSchema(
+      exp,
+      schema,
+      configName,
+      sdkVersion
+    );
 
-      for (let error of validationResult.errors) {
-        // Formate the message nicely
-        let message = error.stack
-          .replace(/instance\./g, '')
-          .replace(/exists in instance/g, `exists in ${configName}`)
-          .replace('instance additionalProperty', 'additional property');
-        fullMessage += `\n  - ${message}.`;
-      }
-
+    if (errorMessage) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        fullMessage,
+        errorMessage,
         'doctor-schema-validation'
       );
       return WARNING;

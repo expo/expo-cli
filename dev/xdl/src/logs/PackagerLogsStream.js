@@ -146,6 +146,10 @@ export default class PackagerLogsStream {
   };
 
   _handleNewBundleTransformStarted = (chunk: any) => {
+    if (this._bundleBuildChunkID) {
+      return;
+    }
+
     this._bundleBuildChunkID = chunk._id;
     this._bundleBuildStart = new Date();
     chunk.msg = 'Building JavaScript bundle';
@@ -153,7 +157,7 @@ export default class PackagerLogsStream {
     if (this._onStartBuildBundle) {
       this._onStartBuildBundle();
     } else {
-      this._immediatelyAppendLogChunk(chunk);
+      this._enqueueAppendLogChunk(chunk);
     }
   };
 
@@ -200,21 +204,23 @@ export default class PackagerLogsStream {
 
         logs.forEach(log => {
           if (log._id === this._bundleBuildChunkID) {
-            if (percentProgress === 100) {
-              let duration;
-              if (this._bundleBuildStart) {
-                duration = bundleBuildEnd - this._bundleBuildStart;
-              }
-
-              if (duration) {
-                log.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
-              } else {
-                log.msg = `Building JavaScript bundle: finished.`;
-              }
-            } else if (percentProgress === -1) {
-              log.msg = `Building JavaScript bundle: error\n${msg.error}`;
+            if (percentProgress === -1) {
+              log.msg = `Building JavaScript bundle: error\n${msg.error.description || msg.error.message}`;
             } else {
-              log.msg = `Building JavaScript bundle: ${percentProgress}%`;
+              if (bundleComplete) {
+                let duration;
+                if (this._bundleBuildStart) {
+                  duration = bundleBuildEnd - this._bundleBuildStart;
+                }
+
+                if (duration) {
+                  log.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
+                } else {
+                  log.msg = `Building JavaScript bundle: finished.`;
+                }
+              } else {
+                log.msg = `Building JavaScript bundle: ${percentProgress}%`;
+              }
             }
           }
         });
@@ -228,13 +234,6 @@ export default class PackagerLogsStream {
     }
   };
 
-  _immediatelyAppendLogChunk(chunk: ChunkT) {
-    this._updateLogs(logs => {
-      let nextLogs = logs.concat(chunk);
-      return nextLogs;
-    });
-  }
-
   _enqueueAppendLogChunk(chunk: ChunkT) {
     if (chunk.shouldHide) {
       return;
@@ -245,11 +244,7 @@ export default class PackagerLogsStream {
   }
 
   _enqueueFlushLogsToAdd = () => {
-    const wait = typeof requestAnimationFrame === 'function'
-      ? requestAnimationFrame
-      : setImmediate;
-
-    wait(() => {
+    setImmediate(() => {
       this._updateLogs(logs => {
         if (this._logsToAdd.length === 0) {
           return logs;

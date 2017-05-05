@@ -39,6 +39,7 @@
     "bluebird": "^3.4.7",
     "body-parser": "^1.15.2",
     "bunyan": "^1.8.4",
+    "decache": "^4.1.0",
     "delay-async": "^1.0.0",
     "es6-error": "^4.0.0",
     "exec-async": "^2.2.0",

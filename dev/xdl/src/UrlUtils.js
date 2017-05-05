@@ -75,6 +75,19 @@ export async function constructPublishUrlAsync(
   );
 }
 
+export async function constructSourceMapUrlAsync(
+  projectRoot: string,
+  entryPoint: string,
+  requestHostname?: string
+) {
+  return await constructUrlWithExtensionAsync(
+    projectRoot,
+    entryPoint,
+    'map',
+    requestHostname
+  );
+}
+
 export async function constructAssetsUrlAsync(
   projectRoot: string,
   entryPoint: string,

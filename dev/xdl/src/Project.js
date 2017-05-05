@@ -7,6 +7,7 @@ import 'instapromise';
 import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import delayAsync from 'delay-async';
+import decache from 'decache';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs';
@@ -26,6 +27,7 @@ import Api from './Api';
 import Config from './Config';
 import * as Doctor from './project/Doctor';
 import ErrorCode from './ErrorCode';
+import logger from './Logger';
 import * as ExponentTools from './detach/ExponentTools';
 import * as Exp from './Exp';
 import * as ExpSchema from './project/ExpSchema';
@@ -173,119 +175,172 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver) {
   }
 }
 
-export async function publishAsync(projectRoot: string, options: Object = {}) {
-  const user = await UserManager.ensureLoggedInAsync();
-  _assertValidProjectRoot(projectRoot);
+function _requireFromProject(modulePath, projectRoot) {
+  try {
+    if (modulePath.indexOf('.') === 0) {
+      let fullPath = path.resolve(projectRoot, modulePath);
 
-  Analytics.logEvent('Publish', {
-    projectRoot,
+      // Clear the require cache for this module so get a fresh version of it
+      // without requiring the user to restart XDE
+      decache(fullPath);
+
+      // $FlowIssue: doesn't work with dynamic requires
+      return require(fullPath);
+    } else {
+      let fullPath = path.resolve(
+        path.join(projectRoot, 'node_modules'),
+        modulePath
+      );
+
+      // Clear the require cache for this module so get a fresh version of it
+      // without requiring the user to restart XDE
+      decache(fullPath);
+
+      // $FlowIssue: doesn't work with dynamic requires
+      return require(fullPath);
+    }
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function publishAsync(
+  projectRoot: string,
+  options: Object = {}
+): Promise<{ url: string }> {
+  const user = await UserManager.ensureLoggedInAsync();
+  await _validatePackagerReadyAsync(projectRoot);
+  Analytics.logEvent('Publish', { projectRoot });
+
+  // Get project config
+  let exp = await _getPublishExpConfigAsync(projectRoot, options);
+
+  // TODO: refactor this out to a function, throw error if length doesn't match
+  let { hooks } = exp;
+  delete exp.hooks;
+  let validPostPublishHooks = [];
+  if (hooks && hooks.postPublish) {
+    hooks.postPublish.forEach(hook => {
+      let { file, config } = hook;
+      let fn = _requireFromProject(file, projectRoot);
+      if (fn === null) {
+        logger.global.error(`Unable to load postPublishHook: '${file}'`);
+      } else {
+        hook._fn = fn;
+        validPostPublishHooks.push(hook);
+      }
+    });
+
+    if (validPostPublishHooks.length !== hooks.postPublish.length) {
+      logger.global.error();
+
+      throw new XDLError(
+        ErrorCode.HOOK_INITIALIZATION_ERROR,
+        'Please fix your postPublish hook configuration.'
+      );
+    }
+  }
+
+  let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(
+    projectRoot
+  );
+
+  await _fetchAndUploadAssetsAsync(projectRoot, exp);
+
+  let {
+    iosSourceMap,
+    androidSourceMap,
+  } = await _maybeBuildSourceMapsAsync(projectRoot, exp, {
+    force: validPostPublishHooks.length,
   });
 
-  let schema = joi.object().keys(
-    {
-      // empty
-    }
-  );
-
-  try {
-    await joi.promise.validate(options, schema);
-  } catch (e) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
-  }
-
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.packagerPort) {
-    throw new XDLError(
-      ErrorCode.NO_PACKAGER_PORT,
-      `No packager found for project at ${projectRoot}.`
-    );
-  }
-
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-
-  if (!exp || !pkg) {
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-    throw new XDLError(
-      ErrorCode.NO_PACKAGE_JSON,
-      `Couldn't read ${configName} file in project at ${projectRoot}`
-    );
-  }
-
-  // Support version and name being specified in package.json for legacy
-  // support pre: exp.json
-  if (!exp.version && pkg.version) {
-    exp.version = pkg.version;
-  }
-  if (!exp.slug && pkg.name) {
-    exp.slug = pkg.name;
-  }
-
-  if (exp.android && exp.android.config) {
-    delete exp.android.config;
-  }
-
-  if (exp.ios && exp.ios.config) {
-    delete exp.ios.config;
-  }
-
-  // Only allow test-suite to be published with UNVERSIONED
-  if (exp.sdkVersion === 'UNVERSIONED' && !exp.slug.includes('test-suite')) {
-    throw new XDLError(
-      ErrorCode.INVALID_OPTIONS,
-      'Cannot publish with sdkVersion UNVERSIONED.'
-    );
-  }
-
-  let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-  let publishUrl = await UrlUtils.constructPublishUrlAsync(
-    projectRoot,
-    entryPoint
-  );
-  let assetsUrl = await UrlUtils.constructAssetsUrlAsync(
-    projectRoot,
-    entryPoint
-  );
-  let [
+  let response = await _uploadArtifactsAsync({
+    exp,
     iosBundle,
     androidBundle,
-    iosAssetsJson,
-    androidAssetsJson,
-  ] = await Promise.all([
-    _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
-      errorCode: ErrorCode.INVALID_BUNDLE,
-      minLength: MINIMUM_BUNDLE_SIZE,
-    }),
-    _getForPlatformAsync(projectRoot, publishUrl, 'android', {
-      errorCode: ErrorCode.INVALID_BUNDLE,
-      minLength: MINIMUM_BUNDLE_SIZE,
-    }),
-    _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
-      errorCode: ErrorCode.INVALID_ASSETS,
-    }),
-    _getForPlatformAsync(projectRoot, assetsUrl, 'android', {
-      errorCode: ErrorCode.INVALID_ASSETS,
-    }),
-  ]);
-
-  // Resolve manifest assets to their S3 URL and add them to the list of assets to
-  // be uploaded
-  const manifestAssets = [];
-  await _resolveManifestAssets(projectRoot, exp, async assetPath => {
-    const absolutePath = path.resolve(projectRoot, assetPath);
-    const contents = await fs.promise.readFile(absolutePath);
-    const hash = md5hex(contents);
-    manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
-    return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
+    options,
   });
 
-  // Upload asset files
-  const iosAssets = JSON.parse(iosAssetsJson);
-  const androidAssets = JSON.parse(androidAssetsJson);
-  const assets = iosAssets.concat(androidAssets).concat(manifestAssets);
-  if (assets.length > 0 && assets[0].fileHashes) {
-    await uploadAssetsAsync(projectRoot, assets);
+  await _maybeWriteArtifactsToDiskAsync({
+    exp,
+    projectRoot,
+    iosBundle,
+    androidBundle,
+    iosSourceMap,
+    androidSourceMap,
+  });
+
+  if (validPostPublishHooks.length) {
+    let [androidManifest, iosManifest] = await Promise.all([
+      ExponentTools.getManifestAsync(response.url, {
+        'Exponent-SDK-Version': exp.sdkVersion,
+        'Exponent-Platform': 'android',
+      }),
+      ExponentTools.getManifestAsync(response.url, {
+        'Exponent-SDK-Version': exp.sdkVersion,
+        'Exponent-Platform': 'ios',
+      }),
+    ]);
+
+    const hookOptions = {
+      url: response.url,
+      exp,
+      iosBundle,
+      iosSourceMap,
+      iosManifest,
+      androidBundle,
+      androidSourceMap,
+      androidManifest,
+      projectRoot,
+      log: msg => {
+        logger.global.info({ quiet: true }, msg);
+      },
+    };
+
+    for (let hook of validPostPublishHooks) {
+      logger.global.info(`Running postPublish hook: ${hook.file}`);
+      try {
+        let result = hook._fn({
+          config: hook.config,
+          ...hookOptions,
+        });
+
+        // If it's a promise, wait for it to resolve
+        if (result && result.then) {
+          result = await result;
+        }
+
+        if (result) {
+          logger.global.info({ quiet: true }, result);
+        }
+      } catch (e) {
+        logger.global.warn(
+          `Warning: postPublish hook '${hook.file}' failed: ${e.stack}`
+        );
+      }
+    }
   }
 
+  // TODO: move to postPublish hook
+  if (exp.isKernel) {
+    await _handleKernelPublishedAsync({
+      user,
+      exp,
+      projectRoot,
+      url: response.url,
+    });
+  }
+
+  return response;
+}
+
+async function _uploadArtifactsAsync({
+  exp,
+  iosBundle,
+  androidBundle,
+  options,
+}) {
+  logger.global.info('Uploading JavaScript bundles');
   let formData = {
     expJson: JSON.stringify(exp),
     iosBundle: {
@@ -306,6 +361,202 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
     formData,
   });
 
+  return response;
+}
+
+async function _validatePackagerReadyAsync(projectRoot) {
+  _assertValidProjectRoot(projectRoot);
+
+  // Ensure the packager is started
+  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  if (!packagerInfo.packagerPort) {
+    throw new XDLError(
+      ErrorCode.NO_PACKAGER_PORT,
+      `No packager found for project at ${projectRoot}.`
+    );
+  }
+}
+
+async function _getPublishExpConfigAsync(projectRoot, options) {
+  let schema = joi.object().keys(
+    {
+      // empty
+    }
+  );
+
+  // Validate schema
+  try {
+    await joi.promise.validate(options, schema);
+  } catch (e) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
+  }
+
+  // Verify that exp/app.json and package.json exist
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  if (!exp || !pkg) {
+    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    throw new XDLError(
+      ErrorCode.NO_PACKAGE_JSON,
+      `Couldn't read ${configName} file in project at ${projectRoot}`
+    );
+  }
+
+  // Support version and name being specified in package.json for legacy
+  // support pre: exp.json
+  if (!exp.version && pkg.version) {
+    exp.version = pkg.version;
+  }
+
+  if (!exp.slug && pkg.name) {
+    exp.slug = pkg.name;
+  }
+
+  if (exp.android && exp.android.config) {
+    delete exp.android.config;
+  }
+
+  if (exp.ios && exp.ios.config) {
+    delete exp.ios.config;
+  }
+
+  // Only allow test-suite to be published with UNVERSIONED
+  if (exp.sdkVersion === 'UNVERSIONED' && !exp.slug.includes('test-suite')) {
+    throw new XDLError(
+      ErrorCode.INVALID_OPTIONS,
+      'Cannot publish with sdkVersion UNVERSIONED.'
+    );
+  }
+
+  return exp;
+}
+
+// Fetch iOS and Android bundles for publishing
+async function _buildPublishBundlesAsync(projectRoot) {
+  let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
+  let publishUrl = await UrlUtils.constructPublishUrlAsync(
+    projectRoot,
+    entryPoint
+  );
+
+  logger.global.info('Building iOS bundle');
+  let iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
+    errorCode: ErrorCode.INVALID_BUNDLE,
+    minLength: MINIMUM_BUNDLE_SIZE,
+  });
+
+  logger.global.info('Building Android bundle');
+  let androidBundle = await _getForPlatformAsync(
+    projectRoot,
+    publishUrl,
+    'android',
+    {
+      errorCode: ErrorCode.INVALID_BUNDLE,
+      minLength: MINIMUM_BUNDLE_SIZE,
+    }
+  );
+
+  return { iosBundle, androidBundle };
+}
+
+// note(brentvatne): currently we build source map anytime there is a
+// postPublish hook -- we may have an option in the future to manually
+// enable sourcemap building, but for now it's very fast, most apps in
+// production should use sourcemaps for error reporting, and in the worst
+// case, adding a few seconds to a postPublish hook isn't too annoying
+async function _maybeBuildSourceMapsAsync(projectRoot, exp, options = {}) {
+  if (!options.force) {
+    return { iosSourceMap: null, androidSourceMap: null };
+  }
+
+  let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
+  let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(
+    projectRoot,
+    entryPoint
+  );
+
+  logger.global.info('Building sourcemaps');
+  let iosSourceMap = await _getForPlatformAsync(
+    projectRoot,
+    sourceMapUrl,
+    'ios',
+    {
+      errorCode: ErrorCode.INVALID_BUNDLE,
+      minLength: MINIMUM_BUNDLE_SIZE,
+    }
+  );
+
+  let androidSourceMap = await _getForPlatformAsync(
+    projectRoot,
+    sourceMapUrl,
+    'android',
+    {
+      errorCode: ErrorCode.INVALID_BUNDLE,
+      minLength: MINIMUM_BUNDLE_SIZE,
+    }
+  );
+
+  return { iosSourceMap, androidSourceMap };
+}
+
+async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
+  logger.global.info('Analyzing assets');
+
+  let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
+  let assetsUrl = await UrlUtils.constructAssetsUrlAsync(
+    projectRoot,
+    entryPoint
+  );
+
+  let iosAssetsJson = await _getForPlatformAsync(
+    projectRoot,
+    assetsUrl,
+    'ios',
+    {
+      errorCode: ErrorCode.INVALID_ASSETS,
+    }
+  );
+
+  let androidAssetsJson = await _getForPlatformAsync(
+    projectRoot,
+    assetsUrl,
+    'android',
+    {
+      errorCode: ErrorCode.INVALID_ASSETS,
+    }
+  );
+
+  // Resolve manifest assets to their S3 URL and add them to the list of assets to
+  // be uploaded
+  const manifestAssets = [];
+  await _resolveManifestAssets(projectRoot, exp, async assetPath => {
+    const absolutePath = path.resolve(projectRoot, assetPath);
+    const contents = await fs.promise.readFile(absolutePath);
+    const hash = md5hex(contents);
+    manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
+    return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
+  });
+
+  logger.global.info('Uploading assets');
+
+  // Upload asset files
+  const iosAssets = JSON.parse(iosAssetsJson);
+  const androidAssets = JSON.parse(androidAssetsJson);
+  const assets = iosAssets.concat(androidAssets).concat(manifestAssets);
+  if (assets.length > 0 && assets[0].fileHashes) {
+    await uploadAssetsAsync(projectRoot, assets);
+  } else {
+    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
+  }
+}
+
+async function _maybeWriteArtifactsToDiskAsync({
+  exp,
+  projectRoot,
+  iosBundle,
+  androidBundle,
+  iosSourceMap,
+  androidSourceMap,
+}) {
   if (exp.android && exp.android.publishBundlePath) {
     await fs.promise.writeFile(
       path.resolve(projectRoot, exp.android.publishBundlePath),
@@ -320,41 +571,53 @@ export async function publishAsync(projectRoot: string, options: Object = {}) {
     );
   }
 
-  if (exp.isKernel) {
-    let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
-    if (Config.api.port) {
-      kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
-    }
-    kernelBundleUrl = `${kernelBundleUrl}/@${user.username}/${exp.slug}/bundle`;
-
-    if (exp.kernel.androidManifestPath) {
-      let manifest = await ExponentTools.getManifestAsync(response.url, {
-        'Exponent-SDK-Version': exp.sdkVersion,
-        'Exponent-Platform': 'android',
-      });
-      manifest.bundleUrl = kernelBundleUrl;
-      manifest.sdkVersion = 'UNVERSIONED';
-      await fs.promise.writeFile(
-        path.resolve(projectRoot, exp.kernel.androidManifestPath),
-        JSON.stringify(manifest)
-      );
-    }
-
-    if (exp.kernel.iosManifestPath) {
-      let manifest = await ExponentTools.getManifestAsync(response.url, {
-        'Exponent-SDK-Version': exp.sdkVersion,
-        'Exponent-Platform': 'ios',
-      });
-      manifest.bundleUrl = kernelBundleUrl;
-      manifest.sdkVersion = 'UNVERSIONED';
-      await fs.promise.writeFile(
-        path.resolve(projectRoot, exp.kernel.iosManifestPath),
-        JSON.stringify(manifest)
-      );
-    }
+  if (exp.android && exp.android.publishSourceMapPath) {
+    await fs.promise.writeFile(
+      path.resolve(projectRoot, exp.android.publishSourceMapPath),
+      androidSourceMap
+    );
   }
 
-  return response;
+  if (exp.ios && exp.ios.publishSourceMapPath) {
+    await fs.promise.writeFile(
+      path.resolve(projectRoot, exp.ios.publishSourceMapPath),
+      iosSourceMap
+    );
+  }
+}
+
+async function _handleKernelPublishedAsync({ projectRoot, user, exp, url }) {
+  let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
+  if (Config.api.port) {
+    kernelBundleUrl = `${kernelBundleUrl}:${Config.api.port}`;
+  }
+  kernelBundleUrl = `${kernelBundleUrl}/@${user.username}/${exp.slug}/bundle`;
+
+  if (exp.kernel.androidManifestPath) {
+    let manifest = await ExponentTools.getManifestAsync(url, {
+      'Exponent-SDK-Version': exp.sdkVersion,
+      'Exponent-Platform': 'android',
+    });
+    manifest.bundleUrl = kernelBundleUrl;
+    manifest.sdkVersion = 'UNVERSIONED';
+    await fs.promise.writeFile(
+      path.resolve(projectRoot, exp.kernel.androidManifestPath),
+      JSON.stringify(manifest)
+    );
+  }
+
+  if (exp.kernel.iosManifestPath) {
+    let manifest = await ExponentTools.getManifestAsync(url, {
+      'Exponent-SDK-Version': exp.sdkVersion,
+      'Exponent-Platform': 'ios',
+    });
+    manifest.bundleUrl = kernelBundleUrl;
+    manifest.sdkVersion = 'UNVERSIONED';
+    await fs.promise.writeFile(
+      path.resolve(projectRoot, exp.kernel.iosManifestPath),
+      JSON.stringify(manifest)
+    );
+  }
 }
 
 // TODO(jesse): Add analytics for upload
@@ -373,12 +636,20 @@ async function uploadAssetsAsync(projectRoot, assets) {
   })).metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
 
+  if (missing.length === 0) {
+    logger.global.info({ quiet: true }, `No assets changed, skipped.`);
+  }
+
   // Upload them!
   await Promise.all(
     _.chunk(missing, 5).map(async keys => {
       let formData = {};
       keys.forEach(key => {
         ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
+
+        let relativePath = paths[key].replace(projectRoot, '');
+        logger.global.info({ quiet: true }, `Uploading ${relativePath}`);
+
         formData[key] = {
           value: fs.createReadStream(paths[key]),
           options: {
@@ -781,16 +1052,13 @@ export async function startExpoServerAsync(projectRoot: string) {
       let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(
         projectRoot
       );
-
       if (!manifest) {
         const configName = await ProjectUtils.configFilenameAsync(projectRoot);
         throw new Error(`No ${configName} file found`);
       } // Get packager opts and then copy into bundleUrlPackagerOpts
-
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(
         projectRoot
       );
-
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
       if (bundleUrlPackagerOpts.hostType === 'redirect') {
@@ -800,7 +1068,6 @@ export async function startExpoServerAsync(projectRoot: string) {
       manifest.developer = {
         tool: Config.developerTool,
       };
-
       manifest.packagerOpts = packagerOpts;
       manifest.env = {};
       for (let key of Object.keys(process.env)) {
@@ -808,7 +1075,6 @@ export async function startExpoServerAsync(projectRoot: string) {
           manifest.env[key] = process.env[key];
         }
       }
-
       let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
       let platform = req.headers['exponent-platform'] || 'ios';
       entryPoint = UrlUtils.getPlatformSpecificBundleUrl(entryPoint, platform);
