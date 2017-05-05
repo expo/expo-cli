@@ -187,10 +187,7 @@ function _requireFromProject(modulePath, projectRoot) {
       // $FlowIssue: doesn't work with dynamic requires
       return require(fullPath);
     } else {
-      let fullPath = path.resolve(
-        path.join(projectRoot, 'node_modules'),
-        modulePath
-      );
+      let fullPath = path.resolve(projectRoot, 'node_modules', modulePath);
 
       // Clear the require cache for this module so get a fresh version of it
       // without requiring the user to restart XDE
