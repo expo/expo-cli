@@ -8,7 +8,7 @@ import inquirer from 'inquirer';
 import untildify from 'untildify';
 import { Exp, Credentials, XDLError, ErrorCode } from 'xdl';
 
-import type { IOSCredentials, CredentialMetadata } from 'XDLCredentials';
+import type { IOSCredentials, CredentialMetadata } from 'xdl/src/Credentials';
 import BaseBuilder from './BaseBuilder';
 import log from '../../log';
 
@@ -236,7 +236,8 @@ export default class IOSBuilder extends BaseBuilder {
       {
         type: 'password',
         name: 'certPassword',
-        message: 'Certificate P12 password (empty is OK):',
+        message: 'Certificate P12 password:',
+        validate: password => password.length > 0,
         when: answers => !answers.manageCertificates,
       },
     ];
