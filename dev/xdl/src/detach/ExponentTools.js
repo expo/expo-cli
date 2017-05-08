@@ -90,8 +90,17 @@ async function spawnAsync(...args) {
   }
 }
 
+/**
+ *  @param plistName base filename of property list. if no extension, assumes .plist
+ */
 async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
-  let configPlistName = path.join(plistPath, `${plistName}.plist`);
+  let plistFilename;
+  if (plistName.indexOf('.') !== -1) {
+    plistFilename = plistName;
+  } else {
+    plistFilename = `${plistName}.plist`;
+  }
+  let configPlistName = path.join(plistPath, plistFilename);
   let configFilename = path.join(plistPath, `${plistName}.json`);
 
   // grab original plist as json object
@@ -137,7 +146,13 @@ async function cleanIOSPropertyListBackupAsync(
   plistName,
   restoreOriginal = true
 ) {
-  let configPlistName = path.join(plistPath, `${plistName}.plist`);
+  let plistFilename;
+  if (plistName.indexOf('.') !== -1) {
+    plistFilename = plistName;
+  } else {
+    plistFilename = `${plistName}.plist`;
+  }
+  let configPlistName = path.join(plistPath, plistFilename);
   let configFilename = path.join(plistPath, `${plistName}.json`);
 
   if (restoreOriginal) {

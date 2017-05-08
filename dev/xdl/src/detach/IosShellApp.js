@@ -58,8 +58,51 @@ async function configureShellAppSecretsAsync(args, iosDir) {
 }
 
 /**
+ * Configure a standalone entitlements file.
+ * @param entitlementsFilePath Path to directory containing entitlements file
+ * @param buildConfiguration Debug or Release
+ */
+async function configureStandaloneIOSEntitlementsAsync(
+  entitlementsFilePath,
+  buildConfiguration
+) {
+  const result = modifyIOSPropertyListAsync(
+    entitlementsFilePath,
+    'Exponent.entitlements',
+    config => {
+      // push notif entitlement changes based on build configuration
+      config['aps-environment'] = buildConfiguration === 'Release'
+        ? 'production'
+        : 'development';
+
+      // remove iCloud-specific entitlements and allow the developer to configure
+      // this themselves.
+      let iCloudKeys = [
+        'com.apple.developer.icloud-container-identifiers',
+        'com.apple.developer.icloud-services',
+        'com.apple.developer.ubiquity-container-identifiers',
+        'com.apple.developer.ubiquity-kvstore-identifier',
+      ];
+      iCloudKeys.forEach(key => {
+        if (config.hasOwnProperty(key)) {
+          delete config[key];
+        }
+      });
+
+      // remove exp-specific associated domain
+      if (config.hasOwnProperty('com.apple.developer.associated-domains')) {
+        delete config['com.apple.developer.associated-domains'];
+      }
+
+      return config;
+    }
+  );
+  return result;
+}
+
+/**
  * Configure an iOS Info.plist for a standalone app given its exponent configuration.
- * @param configFilePath Path to Info.plist
+ * @param configFilePath Path to directory containing Info.plist
  * @param manifest the app's manifest
  * @param privateConfig optional config with the app's private keys
  * @param bundleIdentifier optional bundle id if the manifest doesn't contain one already
@@ -246,6 +289,12 @@ async function configurePropertyListsAsync(manifest, args, configFilePath) {
     args.url
   );
 
+  // entitlements changes
+  await configureStandaloneIOSEntitlementsAsync(
+    configFilePath,
+    args.configuration
+  );
+
   // Info.plist changes specific to turtle
   await modifyIOSPropertyListAsync(configFilePath, 'Info', config => {
     // use shell-specific launch screen
@@ -280,6 +329,11 @@ async function cleanPropertyListBackupsAsync(configFilePath, restoreOriginals) {
   await cleanIOSPropertyListBackupAsync(
     configFilePath,
     'EXShell',
+    restoreOriginals
+  );
+  await cleanIOSPropertyListBackupAsync(
+    configFilePath,
+    'Exponent.entitlements',
     restoreOriginals
   );
   await cleanIOSPropertyListBackupAsync(
