@@ -61,10 +61,12 @@ async function configureShellAppSecretsAsync(args, iosDir) {
  * Configure a standalone entitlements file.
  * @param entitlementsFilePath Path to directory containing entitlements file
  * @param buildConfiguration Debug or Release
+ * @param manifest The app manifest
  */
 async function configureStandaloneIOSEntitlementsAsync(
   entitlementsFilePath,
-  buildConfiguration
+  buildConfiguration,
+  manifest
 ) {
   const result = modifyIOSPropertyListAsync(
     entitlementsFilePath,
@@ -89,8 +91,13 @@ async function configureStandaloneIOSEntitlementsAsync(
         }
       });
 
-      // remove exp-specific associated domain
-      if (config.hasOwnProperty('com.apple.developer.associated-domains')) {
+      // Add app associated domains remove exp-specific ones.
+      if (manifest.ios && manifest.ios.associatedDomains) {
+        config['com.apple.developer.associated-domains'] =
+          manifest.ios.associatedDomains;
+      } else if (
+        config.hasOwnProperty('com.apple.developer.associated-domains')
+      ) {
         delete config['com.apple.developer.associated-domains'];
       }
 
@@ -206,6 +213,12 @@ async function configureStandaloneIOSInfoPlistAsync(
         ],
       };
 
+      if (privateConfig && privateConfig.branch) {
+        config.branch_key = {
+          live: privateConfig.branch.apiKey,
+        };
+      }
+
       let permissionsAppName = manifest.name ? manifest.name : 'this app';
       for (let key in config) {
         if (
@@ -292,7 +305,8 @@ async function configurePropertyListsAsync(manifest, args, configFilePath) {
   // entitlements changes
   await configureStandaloneIOSEntitlementsAsync(
     configFilePath,
-    args.configuration
+    args.configuration,
+    manifest
   );
 
   // Info.plist changes specific to turtle
