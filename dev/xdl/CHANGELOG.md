@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [41.0.0] - 2017-05-12
+* Post-publish hook.
+
+### Added
+* Better log reporting
+* Fix Android HMR bug by adding `:80` to url.
+
 ## [39.0.0] - 2017-04-06
 
 ### Added
