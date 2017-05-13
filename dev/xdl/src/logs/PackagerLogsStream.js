@@ -97,7 +97,9 @@ export default class PackagerLogsStream {
   _handlePackagerEvent = (chunk: any) => {
     let { msg } = chunk;
 
-    if (msg.type.match(/^bundle_/)) {
+    if (!msg.type) {
+      return;
+    } else if (msg.type && msg.type.match(/^bundle_/)) {
       this._handleBundleTransformEvent(chunk);
       return;
     }
