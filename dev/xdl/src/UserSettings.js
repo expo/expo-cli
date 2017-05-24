@@ -36,7 +36,11 @@ function userSettingsJsonFile() {
 
 function recentExpsJsonFile() {
   return new JsonFile(
-    path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json')
+    path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'),
+    {
+      jsonParseErrorDefault: [],
+      cantReadFileDefault: [],
+    }
   );
 }
 

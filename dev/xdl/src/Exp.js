@@ -253,9 +253,7 @@ export async function saveRecentExpRootAsync(root: string) {
 
   // Write the recent Exps JSON file
   let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
-  let recentExps = await recentExpsJsonFile.readAsync({
-    cantReadFileDefault: [],
-  });
+  let recentExps = await recentExpsJsonFile.readAsync();
   // Filter out copies of this so we don't get dupes in this list
   recentExps = recentExps.filter(function(x) {
     return x !== root;
@@ -368,9 +366,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
 export async function recentValidExpsAsync() {
   let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
-  let recentExps = await recentExpsJsonFile.readAsync({
-    cantReadFileDefault: [],
-  });
+  let recentExps = await recentExpsJsonFile.readAsync();
 
   let results = await Promise.all(recentExps.map(expInfoSafeAsync));
   let filteredResults = results.filter(result => result);
