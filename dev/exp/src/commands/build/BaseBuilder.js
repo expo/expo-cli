@@ -92,7 +92,8 @@ export default class BaseBuilder {
             status = 'Build finished.';
             break;
           case 'errored':
-            status = 'There was an error with this build. Please try again.';
+            status = `There was an error with this build. Please try again.
+If you see this error multiple times please ping @ap on the Expo slack (https://slack.expo.io).`;
             break;
           default:
             status = '';
