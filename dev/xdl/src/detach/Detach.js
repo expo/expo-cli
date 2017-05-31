@@ -439,22 +439,29 @@ async function _renameAndMoveIOSFilesAsync(projectDirectory, projectName) {
     })
   );
 
-  await spawnAsync('/bin/mv', [
-    `${projectDirectory}/exponent-view-template`,
-    `${projectDirectory}/${projectName}`,
-  ]);
-  await spawnAsync('/bin/mv', [
-    `${projectDirectory}/exponent-view-template.xcodeproj/xcshareddata/xcschemes/exponent-view-template.xcscheme`,
-    `${projectDirectory}/exponent-view-template.xcodeproj/xcshareddata/xcschemes/${projectName}.xcscheme`,
-  ]);
-  await spawnAsync('/bin/mv', [
-    `${projectDirectory}/exponent-view-template.xcodeproj`,
-    `${projectDirectory}/${projectName}.xcodeproj`,
-  ]);
-  await spawnAsync('/bin/mv', [
-    `${projectDirectory}/exponent-view-template.xcworkspace`,
-    `${projectDirectory}/${projectName}.xcworkspace`,
-  ]);
+  // order of this array matters
+  const filesToMove = [
+    'exponent-view-template',
+    path.join(
+      'exponent-view-template.xcodeproj',
+      'xcshareddata',
+      'xcschemes',
+      'exponent-view-template.xcscheme'
+    ),
+    'exponent-view-template.xcodeproj',
+    'exponent-view-template.xcworkspace',
+  ];
+
+  filesToMove.forEach(async fileName => {
+    let destFileName = path.join(
+      path.dirname(fileName),
+      `${projectName}${path.extname(fileName)}`
+    );
+    await spawnAsync('/bin/mv', [
+      path.join(projectDirectory, fileName),
+      path.join(projectDirectory, destFileName),
+    ]);
+  });
 
   return;
 }
