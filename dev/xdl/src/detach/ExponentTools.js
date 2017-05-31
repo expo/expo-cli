@@ -90,6 +90,15 @@ async function spawnAsync(...args) {
   }
 }
 
+async function transformFileContentsAsync(filename, transform) {
+  let fileString = await fs.promise.readFile(filename, 'utf8');
+  let newFileString = transform(fileString);
+  if (newFileString !== null) {
+    await fs.promise.writeFile(filename, newFileString);
+  }
+  return;
+}
+
 /**
  *  @param plistName base filename of property list. if no extension, assumes .plist
  */
@@ -279,6 +288,7 @@ export {
   getManifestAsync,
   spawnAsyncThrowError,
   spawnAsync,
+  transformFileContentsAsync,
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
   configureIOSIconsAsync,

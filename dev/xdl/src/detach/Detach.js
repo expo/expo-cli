@@ -22,6 +22,7 @@ import {
   saveIconToPathAsync,
   spawnAsyncThrowError,
   spawnAsync,
+  transformFileContentsAsync,
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
   configureIOSIconsAsync,
@@ -344,42 +345,7 @@ export async function detachIOSAsync(
 
   // rename the xcodeproj (and various other things) to the detached project name.
   console.log('Naming iOS project...');
-  await spawnAsyncThrowError('sed', [
-    '-i',
-    `''`,
-    '--',
-    `s/exponent-view-template/${projectName}/g`,
-    `${iosProjectDirectory}/exponent-view-template.xcodeproj/project.pbxproj`,
-  ]);
-  await spawnAsyncThrowError('sed', [
-    '-i',
-    `''`,
-    '--',
-    `s/exponent-view-template/${projectName}/g`,
-    `${iosProjectDirectory}/exponent-view-template.xcworkspace/contents.xcworkspacedata`,
-  ]);
-  await spawnAsyncThrowError('sed', [
-    '-i',
-    `''`,
-    `s/exponent-view-template/${projectName}/g`,
-    `${iosProjectDirectory}/exponent-view-template.xcodeproj/xcshareddata/xcschemes/exponent-view-template.xcscheme`,
-  ]);
-  await spawnAsync('/bin/mv', [
-    `${iosProjectDirectory}/exponent-view-template`,
-    `${iosProjectDirectory}/${projectName}`,
-  ]);
-  await spawnAsync('/bin/mv', [
-    `${iosProjectDirectory}/exponent-view-template.xcodeproj/xcshareddata/xcschemes/exponent-view-template.xcscheme`,
-    `${iosProjectDirectory}/exponent-view-template.xcodeproj/xcshareddata/xcschemes/${projectName}.xcscheme`,
-  ]);
-  await spawnAsync('/bin/mv', [
-    `${iosProjectDirectory}/exponent-view-template.xcodeproj`,
-    `${iosProjectDirectory}/${projectName}.xcodeproj`,
-  ]);
-  await spawnAsync('/bin/mv', [
-    `${iosProjectDirectory}/exponent-view-template.xcworkspace`,
-    `${iosProjectDirectory}/${projectName}.xcworkspace`,
-  ]);
+  await _renameAndMoveIOSFilesAsync(iosProjectDirectory, projectName);
 
   // use the detached project manifest to configure corresponding native parts
   // of the detached xcodeproj. this is mostly the same configuration used for
@@ -447,6 +413,49 @@ export async function detachIOSAsync(
   }
 
   console.log(`iOS detach is complete!`);
+  return;
+}
+
+async function _renameAndMoveIOSFilesAsync(projectDirectory, projectName) {
+  const filesToTransform = [
+    path.join('exponent-view-template.xcodeproj', 'project.pbxproj'),
+    path.join('exponent-view-template.xcworkspace', 'contents.xcworkspacedata'),
+    path.join(
+      'exponent-view-template.xcodeproj',
+      'xcshareddata',
+      'xcschemes',
+      'exponent-view-template.xcscheme'
+    ),
+  ];
+
+  await Promise.all(
+    filesToTransform.map(async fileName => {
+      return transformFileContentsAsync(
+        path.join(projectDirectory, fileName),
+        fileString => {
+          return fileString.replace(/exponent-view-template/g, projectName);
+        }
+      );
+    })
+  );
+
+  await spawnAsync('/bin/mv', [
+    `${projectDirectory}/exponent-view-template`,
+    `${projectDirectory}/${projectName}`,
+  ]);
+  await spawnAsync('/bin/mv', [
+    `${projectDirectory}/exponent-view-template.xcodeproj/xcshareddata/xcschemes/exponent-view-template.xcscheme`,
+    `${projectDirectory}/exponent-view-template.xcodeproj/xcshareddata/xcschemes/${projectName}.xcscheme`,
+  ]);
+  await spawnAsync('/bin/mv', [
+    `${projectDirectory}/exponent-view-template.xcodeproj`,
+    `${projectDirectory}/${projectName}.xcodeproj`,
+  ]);
+  await spawnAsync('/bin/mv', [
+    `${projectDirectory}/exponent-view-template.xcworkspace`,
+    `${projectDirectory}/${projectName}.xcworkspace`,
+  ]);
+
   return;
 }
 
