@@ -92,7 +92,9 @@ export async function detachAsync(projectRoot: string) {
 
   // Project was already detached on Windows or Linux
   if (
-    !hasIosDirectory && hasAndroidDirectory && process.platform === 'darwin'
+    !hasIosDirectory &&
+    hasAndroidDirectory &&
+    process.platform === 'darwin'
   ) {
     let response = await yesnoAsync(
       `This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`
@@ -678,12 +680,22 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
         projectName,
         'Supporting'
       );
+
+      // EXBuildConstants is included in newer ExpoKit projects,
+      // but in the case of older ones, modify the deprecated file instead
+      // (there will be a deprecation warning when they run the project).
+      const doesBuildConstantsExist = fs.existsSync(
+        path.join(configFilePath, 'EXBuildConstants.plist')
+      );
+      const fileToModify = doesBuildConstantsExist
+        ? 'EXBuildConstants'
+        : 'EXShell';
       await modifyIOSPropertyListAsync(
         configFilePath,
-        'EXShell',
-        shellConfig => {
-          shellConfig.developmentUrl = devUrl;
-          return shellConfig;
+        fileToModify,
+        constantsConfig => {
+          constantsConfig.developmentUrl = devUrl;
+          return constantsConfig;
         }
       );
     }
