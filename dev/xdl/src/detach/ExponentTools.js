@@ -245,7 +245,7 @@ async function configureIOSIconsAsync(
     );
   }
 
-  let iconSizes = [29, 40, 60, 76, 83.5];
+  let iconSizes = [20, 29, 40, 60, 76, 83.5];
   iconSizes.forEach(iconSize => {
     let iconResolutions;
     if (iconSize === 76) {
