@@ -192,6 +192,29 @@ function getAppleIconQualifier(iconSize, iconResolution) {
 }
 
 /**
+ *  @return array [ width, height ] or nil if that fails for some reason.
+ */
+async function getImageDimensionsAsync(dirname, basename) {
+  if (process.platform !== 'darwin') {
+    console.warn('`sips` utility may or may not work outside of macOS');
+  }
+  let childProcess = await spawnAsyncThrowError(
+    'sips',
+    ['-g', 'pixelWidth', '-g', 'pixelHeight', basename],
+    {
+      cwd: dirname,
+    }
+  );
+  let dimensions;
+  try {
+    // stdout looks something like 'pixelWidth: 1200\n pixelHeight: 800'
+    const components = childProcess.stdout.split(/(\s+)/);
+    dimensions = components.map(c => parseInt(c, 10)).filter(n => !isNaN(n));
+  } catch (_) {}
+  return dimensions;
+}
+
+/**
  * Based on keys in the given manifest,
  * ensure that the proper iOS icon images exist -- assuming Info.plist already
  * points at them under CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles.
@@ -203,6 +226,9 @@ async function configureIOSIconsAsync(
   destinationIconPath,
   projectRoot
 ) {
+  if (process.platform !== 'darwin') {
+    console.warn('`sips` utility may or may not work outside of macOS');
+  }
   let defaultIconFilename;
   if (manifest.iconUrl) {
     defaultIconFilename = 'exp-icon.png';
@@ -253,6 +279,7 @@ async function configureIOSIconsAsync(
           return;
         }
       }
+
       let iconFilename = `AppIcon${iconQualifier}.png`;
       let iconSizePx = iconSize * iconResolution;
       await spawnAsyncThrowError('/bin/cp', [rawIconFilename, iconFilename], {
@@ -263,6 +290,18 @@ async function configureIOSIconsAsync(
         stdio: ['ignore', 'ignore', 'inherit'], // only stderr
         cwd: destinationIconPath,
       });
+
+      // reject non-square icons (because Apple will if we don't)
+      const dims = await getImageDimensionsAsync(
+        destinationIconPath,
+        iconFilename
+      );
+      if (!dims || dims.length < 2 || dims[0] !== dims[1]) {
+        throw new Error(
+          `iOS icons must be square, the dimensions of ${iconFilename} are ${dims}`
+        );
+      }
+
       if (!usesDefault) {
         // non-default icon used, clean up the downloaded version
         await spawnAsyncThrowError('/bin/rm', [
@@ -286,6 +325,7 @@ export {
   saveUrlToPathAsync,
   saveIconToPathAsync,
   getManifestAsync,
+  getImageDimensionsAsync,
   spawnAsyncThrowError,
   spawnAsync,
   transformFileContentsAsync,
