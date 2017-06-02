@@ -2676,9 +2676,9 @@ gulp-util@^3, gulp-util@^3.0.0, gulp-util@^3.0.7:
     through2 "^2.0.0"
     vinyl "^0.5.0"
 
-"gulp@git+https://github.com/gulpjs/gulp#4.0":
+"gulp@github:gulpjs/gulp#4.0":
   version "4.0.0-alpha.2"
-  resolved "git+https://github.com/gulpjs/gulp#38246c3f8b6dbb8d4ef657183e92d90c8299e22f"
+  resolved "https://codeload.github.com/gulpjs/gulp/tar.gz/38246c3f8b6dbb8d4ef657183e92d90c8299e22f"
   dependencies:
     glob-watcher "^3.0.0"
     gulp-cli "^1.0.0"
