@@ -889,6 +889,16 @@ export async function startReactNativeServerAsync(
   }
   const userPackagerOpts = _.get(exp, 'packagerOpts');
   if (userPackagerOpts) {
+    // The RN CLI expects rn-cli.config.js's path to be absolute. We use the
+    // project root to resolve relative paths since that was the original
+    // behavior of the RN CLI.
+    if (userPackagerOpts.config) {
+      userPackagerOpts.config = path.resolve(
+        projectRoot,
+        userPackagerOpts.config
+      );
+    }
+
     packagerOpts = {
       ...packagerOpts,
       ...userPackagerOpts,
