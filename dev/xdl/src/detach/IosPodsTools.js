@@ -172,6 +172,7 @@ function renderUnversionedReactDependency(options, sdkVersion) {
 
   attributes.subspecs = [
     'Core',
+    'BatchedBridge',
     'ART',
     'RCTActionSheet',
     'RCTAnimation',
