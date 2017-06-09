@@ -12,7 +12,6 @@ import log from '../log';
 export default (program: any) => {
   program
     .command('fetch:android:keystore [project-dir]')
-    .alias('fca')
     .description(
       "Fetch this project's Android keystore. Writes keystore to PROJECT_DIR/PROJECT_NAME.jks and prints passwords to stdout."
     )
