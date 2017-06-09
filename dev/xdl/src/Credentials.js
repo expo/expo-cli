@@ -31,24 +31,32 @@ export type CredentialMetadata = {
   platform: string,
 };
 
-export async function credentialsExistForPlatformAsync({
-  username,
-  experienceName,
-  bundleIdentifier,
-  platform,
-}: CredentialMetadata): Promise<?Credentials> {
-  const { err, credentials } = await Api.callMethodAsync(
-    'getCredentials',
-    [],
-    'post',
-    {
-      username,
-      experienceName,
-      bundleIdentifier,
-      platform,
-      decrypt: false,
-    }
-  );
+export async function credentialsExistForPlatformAsync(
+  metadata: CredentialMetadata
+): Promise<?Credentials> {
+  return fetchCredentials(metadata, false);
+}
+
+export async function getCredentialsForPlatform(
+  metadata: CredentialMetadata
+): Promise<?Credentials> {
+  return fetchCredentials(metadata, true);
+}
+
+async function fetchCredentials(
+  { username, experienceName, bundleIdentifier, platform }: CredentialMetadata,
+  decrypt: boolean
+): Promise<?Credentials> {
+  const {
+    err,
+    credentials,
+  } = await Api.callMethodAsync('getCredentials', [], 'post', {
+    username,
+    experienceName,
+    bundleIdentifier,
+    platform,
+    decrypt,
+  });
 
   if (err) {
     throw new Error('Error fetching credentials.');
@@ -62,16 +70,14 @@ export async function updateCredentialsForPlatform(
   newCredentials: Credentials,
   metadata: CredentialMetadata
 ): Promise<void> {
-  const { err, credentials } = await Api.callMethodAsync(
-    'updateCredentials',
-    [],
-    'post',
-    {
-      credentials: newCredentials,
-      platform,
-      ...metadata,
-    }
-  );
+  const {
+    err,
+    credentials,
+  } = await Api.callMethodAsync('updateCredentials', [], 'post', {
+    credentials: newCredentials,
+    platform,
+    ...metadata,
+  });
 
   if (err || !credentials) {
     throw new Error('Error updating credentials.');
