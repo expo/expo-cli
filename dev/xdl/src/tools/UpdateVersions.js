@@ -10,13 +10,15 @@ import * as Versions from '../Versions';
 export async function updateSdkVersionsAsync(
   sdkVersion: string,
   reactNativeTag: string,
-  facebookRNVersion: string
+  facebookRNVersion: string,
+  facebookReactVersion: string
 ) {
   let versions = await Versions.versionsAsync();
   versions.sdkVersions[sdkVersion] = {
     ...versions.sdkVersions[sdkVersion],
     expoReactNativeTag: reactNativeTag,
     facebookReactNativeVersion: facebookRNVersion,
+    facebookReactVersion,
   };
   await Versions.setVersionsAsync(versions);
 }
