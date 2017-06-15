@@ -172,7 +172,6 @@ function renderUnversionedReactDependency(options, sdkVersion) {
 
   attributes.subspecs = [
     'Core',
-    'BatchedBridge',
     'ART',
     'RCTActionSheet',
     'RCTAnimation',
@@ -188,6 +187,9 @@ function renderUnversionedReactDependency(options, sdkVersion) {
   let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
   if (!(sdkMajorVersion < 16)) {
     attributes.subspecs.push('DevSupport');
+  }
+  if (!(sdkMajorVersion < 18)) {
+    attributes.subspecs.push('BatchedBridge');
   }
 
   return `pod 'React',
