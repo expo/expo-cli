@@ -16,8 +16,14 @@ const PLATFORM_TO_ANALYTICS_PLATFORM = {
   linux: 'Linux',
 };
 
+export function flush(cb) {
+  if (_segmentWebInstance) _segmentWebInstance.flush(cb);
+  if (_segmentNodeInstance) _segmentNodeInstance.flush(cb);
+}
+
 export function setSegmentNodeKey(key: string) {
-  _segmentNodeInstance = new Segment(key);
+  // Do not wait before flushing, we want node to close immediately if the programs ends
+  _segmentNodeInstance = new Segment(key, { flushAfter: 1 });
 }
 
 export function setSegmentWebInstance(instance: any) {

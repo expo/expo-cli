@@ -70,6 +70,8 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
         Config.offline = true;
       }
       await asyncFn(...args);
+      // After the action runs, flush the analytics queue and so the program will not have any active timers, thus terminating immediately
+      Analytics.flush();
     } catch (err) {
       if (err._isCommandError) {
         log.error(err.message);
@@ -162,7 +164,8 @@ Command.prototype.asyncActionProjectDir = function(
           } else {
             log(
               crayon.green(
-                `Finished building JavaScript bundle in ${endTime - startTime}ms.`
+                `Finished building JavaScript bundle in ${endTime -
+                  startTime}ms.`
               )
             );
           }
