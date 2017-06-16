@@ -230,7 +230,13 @@ async function configureIOSIconsAsync(
     console.warn('`sips` utility may or may not work outside of macOS');
   }
   let defaultIconFilename;
-  if (manifest.iconUrl) {
+  if (manifest.ios && manifest.ios.iconUrl) {
+    defaultIconFilename = 'exp-icon.png';
+    await saveUrlToPathAsync(
+      manifest.ios.iconUrl,
+      `${destinationIconPath}/${defaultIconFilename}`
+    );
+  } else if (manifest.iconUrl) {
     defaultIconFilename = 'exp-icon.png';
     await saveUrlToPathAsync(
       manifest.iconUrl,

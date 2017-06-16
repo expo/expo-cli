@@ -613,7 +613,7 @@ async function detachAndroidAsync(
   );
   if (packageNameMatches) {
     let oldPkgRegex = new RegExp(
-      `${ANDROID_TEMPLATE_PKG.replace(/\./g, '\\\.')}`,
+      `${ANDROID_TEMPLATE_PKG.replace(/\./g, '\\.')}`,
       'g'
     );
     for (let i = 0; i < packageNameMatches.length; i++) {
@@ -639,7 +639,9 @@ async function detachAndroidAsync(
   );
 
   // Fix image
-  let icon = manifest.icon;
+  let icon = manifest.android && manifest.android.icon
+    ? manifest.android.icon
+    : manifest.icon;
   if (icon) {
     let iconMatches = await glob.promise(
       path.join(androidProjectDirectory, 'app', 'src', 'main', 'res') +
