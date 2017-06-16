@@ -4906,9 +4906,9 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@41.0.0:
-  version "41.0.0"
-  resolved "https://registry.yarnpkg.com/xdl/-/xdl-41.0.0.tgz#b52c5583c3fed081ed510ad4d892a679ca4d980c"
+xdl@41.1.0:
+  version "41.1.0"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-41.1.0.tgz#6705697965ffeb9fbe2d2cff755781bff7f02707"
   dependencies:
     "@ccheever/crayon" "^5.0.0"
     "@exponent/json-file" "^5.3.0"

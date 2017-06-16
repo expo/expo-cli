@@ -9,18 +9,16 @@ import path from 'path';
 
 let _currentRequestID = 0;
 let _downloadIsSlowPrompt = false;
-let _retryObject = {};
-let _bar = new ProgressBar('[:bar] :percent', {
-  total: 100,
-  complete: '=',
-  incomplete: ' ',
-});
 
 async function action(projectDir, options) {
   let templateType;
   let questions = [];
   let insertPath = path.dirname(projectDir);
   let name = path.basename(projectDir);
+
+  if (options.clearCache) {
+    await Exp.clearXDLCacheAsync();
+  }
 
   if (!insertPath || !name) {
     throw new Error(`Couldn't determine path for new project.`);
@@ -66,28 +64,39 @@ async function downloadAndExtractTemplate(
   projectDir,
   validatedOptions
 ) {
-  _retryObject = { templateType, projectDir, validatedOptions };
   const requestID = _currentRequestID + 1;
   _currentRequestID = requestID;
+  let _progressBar = null;
 
   let templateDownload = await Exp.downloadTemplateApp(
     templateType,
     projectDir,
     {
       ...validatedOptions,
-      progressFunction: progress => {
+      progressFunction: (percentage, chunkLength, totalSize) => {
         if (_currentRequestID === requestID) {
+          if (!_progressBar) {
+            _progressBar = new ProgressBar('[:bar] :percent :etas', {
+              width: 50,
+              total: totalSize,
+              complete: '=',
+              incomplete: ' ',
+            });
+          }
+
           Logger.notifications.info(
             { code: NotificationCode.DOWNLOAD_CLI_PROGRESS },
-            progress + '%'
+            percentage + '%'
           );
           if (!_downloadIsSlowPrompt) {
-            _bar.tick();
+            _progressBar.tick(chunkLength);
           }
         }
       },
       retryFunction: () => {
-        triggerRetryPrompt();
+        if (_progressBar) {
+          _progressBar.interrupt(MessageCode.TEMPLATE_DOWNLOAD_IS_SLOW_EXP);
+        }
       },
     }
   );
@@ -107,33 +116,6 @@ async function downloadAndExtractTemplate(
   process.exit();
 }
 
-async function triggerRetryPrompt() {
-  _downloadIsSlowPrompt = true;
-  var answer = await inquirerAsync.promptAsync({
-    type: 'input',
-    name: 'retry',
-    message: '\n' + MessageCode.DOWNLOAD_IS_SLOW + '(y/n)',
-    validate(val) {
-      if (val !== 'y' && val !== 'n') {
-        return false;
-      }
-      return true;
-    },
-  });
-
-  if (answer.retry === 'n') {
-    _downloadIsSlowPrompt = false;
-  } else {
-    Exp.clearXDLCacheAsync();
-    _downloadIsSlowPrompt = false;
-    downloadAndExtractTemplate(
-      _retryObject.templateType,
-      _retryObject.projectDir,
-      _retryObject.validatedOptions
-    );
-  }
-}
-
 export default program => {
   program
     .command('init [project-dir]')
@@ -145,6 +127,7 @@ export default program => {
       '-t, --projectType [type]',
       'Specify what type of template to use. Run without this option to see all choices.'
     )
+    .option('-c, --clearCache', 'Clears the starter project cache.')
     .allowNonInteractive()
     .asyncActionProjectDir(action, true /* skipProjectValidation */);
 };
