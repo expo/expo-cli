@@ -70,7 +70,8 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
         Config.offline = true;
       }
       await asyncFn(...args);
-      // After the action runs, flush the analytics queue and so the program will not have any active timers, thus terminating immediately
+      // After a command, flush the analytics queue so the program will not have any active timers
+      // This allows node js to exit immediately
       Analytics.flush();
     } catch (err) {
       if (err._isCommandError) {

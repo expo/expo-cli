@@ -23,7 +23,7 @@ export function flush(cb) {
 
 export function setSegmentNodeKey(key: string) {
   // Do not wait before flushing, we want node to close immediately if the programs ends
-  _segmentNodeInstance = new Segment(key, { flushAfter: 1 });
+  _segmentNodeInstance = new Segment(key, { flushAfter: 300 });
 }
 
 export function setSegmentWebInstance(instance: any) {
