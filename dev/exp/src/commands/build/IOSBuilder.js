@@ -206,7 +206,7 @@ export default class IOSBuilder extends BaseBuilder {
         name: 'manageCertificates',
         message: `Do you already have a distribution certificate you'd like us to use,\nor do you want us to manage your certificates for you?`,
         choices: [
-          { name: 'Let Exponent handle the process!', value: true },
+          { name: 'Let Expo handle the process!', value: true },
           { name: 'I want to upload my own certificate!', value: false },
         ],
       },
@@ -282,7 +282,7 @@ export default class IOSBuilder extends BaseBuilder {
         name: 'managePushCertificates',
         message: `Do you already have a push notification certificate you'd like us to use,\nor do you want us to manage your push certificates for you?`,
         choices: [
-          { name: 'Let Exponent handle the process!', value: true },
+          { name: 'Let Expo handle the process!', value: true },
           { name: 'I want to upload my own certificate!', value: false },
         ],
       },
