@@ -374,6 +374,10 @@ export class UserManagerInstance {
         return this._currentUser;
       }
 
+      if (Config.offline) {
+        return null;
+      }
+
       // Not cached, check for token
       let {
         currentConnection,
@@ -396,8 +400,9 @@ export class UserManagerInstance {
         });
       } catch (e) {
         Logger.global.error(e);
-        // log us out if theres a fatal error when getting the profile with
+        // This logs us out if theres a fatal error when getting the profile with
         // current access token
+        // However, this also logs us out if there is a network error
         await this.logoutAsync();
         return null;
       }
@@ -778,6 +783,11 @@ type ErrorWithDescription = Error & {
 };
 
 function _formatAuth0NodeError(e: APIError) {
+  // TODO: Fix the Auth0 js library to throw better error messages when the network fails.
+  // Auth0 returns an error object whenver Auth0 fails to make an API request.
+  // These error messages are usually well-formed when you have an invalid login or too many attempts,
+  // but when the network is down it does not give any meaningful messages.
+  // Network failures log the user out in _getCurrentUserAsync() when it uses Auth0.
   if (e.name !== 'APIError') {
     return e;
   } else {
