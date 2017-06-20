@@ -71,7 +71,6 @@
     "opn": "^4.0.2",
     "promise-props": "^1.0.0",
     "querystring": "^0.2.0",
-    "react": "^15.4.2",
     "react-redux": "^5.0.2",
     "read-chunk": "^2.0.0",
     "redux": "^3.6.0",
@@ -122,6 +121,10 @@
     "jest": "^19.0.2",
     "mock-fs": "^3.12.1",
     "promise-print": "^2.3.0",
+    "react": "16.0.0-alpha.12",
     "rimraf": "^2.5.4"
+  },
+  "peerDependencies": {
+    "react": "16.0.0-alpha.12"
   }
 }
