@@ -214,7 +214,7 @@ export class UserManagerInstance {
     } = await _startLoginServerAsync();
 
     // Kill server after 5 minutes if it hasn't already been closed
-    setTimeout(() => {
+    const destroyServerTimer = setTimeout(() => {
       if (server.listening) {
         server.destroy();
       }
@@ -233,6 +233,7 @@ export class UserManagerInstance {
     const tokenInfo = await getTokenInfoAsync();
 
     server.destroy();
+    clearTimeout(destroyServerTimer);
 
     const profile = await this._getProfileAsync({
       currentConnection: loginOptions.connection,
@@ -367,7 +368,8 @@ export class UserManagerInstance {
       // If user is cached and token isn't expired
       // return the user
       if (
-        this._currentUser && !this._isTokenExpired(this._currentUser.idToken)
+        this._currentUser &&
+        !this._isTokenExpired(this._currentUser.idToken)
       ) {
         return this._currentUser;
       }
