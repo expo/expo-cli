@@ -201,7 +201,7 @@ Command.prototype.asyncActionProjectDir = function(
       let status = await Doctor.validateLowLatencyAsync(projectDir);
       if (status === Doctor.FATAL) {
         throw new Error(
-          `Invalid project directory. See above logs for information.`
+          `There is an error with your project. See above logs for information.`
         );
       }
       simpleSpinner.stop();

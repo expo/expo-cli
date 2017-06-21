@@ -27,6 +27,36 @@ export const WARNING = 1;
 export const FATAL = 2;
 
 const MIN_WATCHMAN_VERSION = '4.6.0';
+const MIN_NPM_VERSION = '3.0.0';
+const BAD_NPM_VERSION = '5.0.0';
+
+async function _checkNpmVersionAsync(projectRoot) {
+  try {
+    let npmVersionResponse = await spawnAsync('npm', ['--version']);
+    let npmVersion = _.trim(npmVersionResponse.stdout);
+    if (semver.lt(npmVersion, MIN_NPM_VERSION) || semver.gte(npmVersion, BAD_NPM_VERSION)) {
+      ProjectUtils.logError(
+        projectRoot,
+        'expo',
+        `Error: You are using npm version ${npmVersion}. Please use an npm version that is >= ${MIN_NPM_VERSION} and < ${BAD_NPM_VERSION}.`,
+        'doctor-npm-version'
+      );
+      return FATAL;
+    } else {
+      ProjectUtils.clearNotification(projectRoot, 'doctor-npm-version');
+    }
+  } catch (e) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `Warning: Could not determine npm version. Make sure your version is >= ${MIN_NPM_VERSION} and < ${BAD_NPM_VERSION}.`,
+      'doctor-npm-version'
+    );
+    return WARNING;
+  }
+
+  return NO_ISSUES;
+}
 
 async function _checkWatchmanVersionAsync(projectRoot) {
   // There's no point in checking any of this stuff if watchman isn't supported on this platform
@@ -540,7 +570,16 @@ async function validateAsync(
   allowNetwork: boolean
 ): Promise<number> {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  let status = await _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot);
+
+  let status = await _checkNpmVersionAsync(projectRoot);
+  if (status === FATAL) {
+    return status;
+  }
+
+  let newStatus = await _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot);
+  if (newStatus > status) {
+    status = newStatus;
+  }
 
   // Don't block this! It has to make network requests so it's slow.
   if (allowNetwork) {

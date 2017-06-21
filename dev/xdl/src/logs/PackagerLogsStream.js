@@ -2,6 +2,7 @@
 
 import * as ProjectUtils from '../project/ProjectUtils';
 import { trim } from 'lodash';
+import { isNode } from '../tools/EnvironmentHelper';
 
 type ChunkT = {
   _id: ?number,
@@ -246,7 +247,7 @@ export default class PackagerLogsStream {
   }
 
   _enqueueFlushLogsToAdd = () => {
-    setImmediate(() => {
+    let func = () => {
       this._updateLogs(logs => {
         if (this._logsToAdd.length === 0) {
           return logs;
@@ -256,7 +257,13 @@ export default class PackagerLogsStream {
         this._logsToAdd = [];
         return nextLogs;
       });
-    });
+    };
+
+    if (isNode()) {
+      func();
+    } else {
+      setImmediate(func);
+    }
   };
 
   _attachChunkID(chunk: any) {
