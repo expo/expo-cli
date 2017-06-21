@@ -65,6 +65,23 @@ export async function loginOrRegisterIfLoggedOut() {
 }
 
 export async function login(options: CommandOptions) {
+  let user = await UserManager.getCurrentUserAsync();
+  if (user) {
+    const question = [
+      {
+        type: 'confirm',
+        name: 'action',
+        message: `You are already logged in as ${user.username}. Log in as new user?`,
+      },
+    ];
+
+    const { action } = await inquirer.prompt(question);
+    if (!action) {
+      // If user chooses to stay logged in, return
+      return;
+    }
+  }
+
   if (options.facebook) {
     // handle fb login
     return await _socialAuth('facebook');
@@ -204,11 +221,9 @@ Just a few questions:`
       type: 'input',
       name: 'givenName',
       message: 'First Name:',
-      default: (!legacyMigration &&
-        user &&
-        user.kind === 'user' &&
-        user.givenName) ||
-        null,
+      default:
+        (!legacyMigration && user && user.kind === 'user' && user.givenName) ||
+          null,
       validate(val) {
         if (val.trim() === '') {
           return false;
@@ -220,11 +235,9 @@ Just a few questions:`
       type: 'input',
       name: 'familyName',
       message: 'Last Name:',
-      default: (!legacyMigration &&
-        user &&
-        user.kind === 'user' &&
-        user.familyName) ||
-        null,
+      default:
+        (!legacyMigration && user && user.kind === 'user' && user.familyName) ||
+          null,
       validate(val) {
         if (val.trim() === '') {
           return false;
@@ -240,10 +253,9 @@ Just a few questions:`
       type: 'input',
       name: 'username',
       message: 'Username:',
-      default: (user &&
-        user.kind === 'user' &&
-        (user.username || user.nickname)) ||
-        null,
+      default:
+        (user && user.kind === 'user' && (user.username || user.nickname)) ||
+          null,
       validate(val, answers) {
         if (val.trim() === '') {
           return false;
@@ -257,8 +269,8 @@ Just a few questions:`
     type: 'input',
     name: 'email',
     message: 'Email Address:',
-    default: (!legacyMigration && user && user.kind === 'user' && user.email) ||
-      null,
+    default:
+      (!legacyMigration && user && user.kind === 'user' && user.email) || null,
     validate(val) {
       if (val.trim() === '') {
         return false;
@@ -301,9 +313,11 @@ Just a few questions:`
   const answers = await inquirer.prompt(questions);
 
   // Don't send user data (username/password) if
-  const shouldUpdateUsernamePassword = !(user &&
+  const shouldUpdateUsernamePassword = !(
+    user &&
     user.kind === 'user' &&
-    user.userMetadata.legacy);
+    user.userMetadata.legacy
+  );
 
   const registeredUser = await UserManager.registerAsync(
     {
