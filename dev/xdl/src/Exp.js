@@ -194,19 +194,14 @@ export async function extractTemplateApp(
 
   await packageJsonFile.writeAsync(data);
 
-  // Custom code for replacing __NAME__ in main.js
-  let mainJs = await fs.readFile.promise(path.join(root, 'main.js'), 'utf8');
-  let customMainJs = mainJs.replace(/__NAME__/g, data.name);
-  await fs.writeFile.promise(path.join(root, 'main.js'), customMainJs, 'utf8');
-
-  // Update exp.json
-  let expJson = await fs.readFile.promise(path.join(root, 'exp.json'), 'utf8');
-  let customExpJson = expJson
+  // Update app.json
+  let appJson = await fs.readFile.promise(path.join(root, 'app.json'), 'utf8');
+  let customAppJson = appJson
     .replace(/\"My New Project\"/, `"${data.name}"`)
     .replace(/\"my-new-project\"/, `"${data.name}"`);
   await fs.writeFile.promise(
-    path.join(root, 'exp.json'),
-    customExpJson,
+    path.join(root, 'app.json'),
+    customAppJson,
     'utf8'
   );
 
