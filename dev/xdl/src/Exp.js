@@ -70,9 +70,9 @@ async function _downloadStarterAppAsync(
 ) {
   let versions = await Api.versionsAsync();
   let templateApp = null;
-  for (let i = 0; i < versions.templates.length; i++) {
-    if (templateId === versions.templates[i].id) {
-      templateApp = versions.templates[i];
+  for (let i = 0; i < versions.templatesv2.length; i++) {
+    if (templateId === versions.templatesv2[i].id) {
+      templateApp = versions.templatesv2[i];
     }
   }
 

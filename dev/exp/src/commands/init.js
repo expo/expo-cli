@@ -28,14 +28,17 @@ async function action(projectDir, options) {
     templateType = options.projectType;
   } else {
     let versions = await Api.versionsAsync();
-    let templateIds = _.map(versions.templates, template => `"${template.id}"`);
+    let templateIds = _.map(
+      versions.templatesv2,
+      template => `"${template.id}"`
+    );
     questions.push({
       type: 'input',
       name: 'type',
       message: `Project type. Options are: ${templateIds.join(', ')}`,
       validate(val) {
-        for (let i = 0; i < versions.templates.length; i++) {
-          if (versions.templates[i].id === val) {
+        for (let i = 0; i < versions.templatesv2.length; i++) {
+          if (versions.templatesv2[i].id === val) {
             return true;
           }
         }
