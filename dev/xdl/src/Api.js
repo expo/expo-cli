@@ -162,7 +162,6 @@ async function _downloadAsync(url, path, options) {
   if (!isNode()) {
     let lastAmountLoaded = 0;
     config = {
-      timeout: TIMEOUT,
       responseType: 'blob',
       onDownloadProgress: progressEvent => {
         const roundedProgress = Math.floor(
@@ -194,10 +193,12 @@ async function _downloadAsync(url, path, options) {
       clearTimeout(warningTimer);
     } catch (e) {
       console.log(e.message);
+      throw new Error(
+        `Template project download failed, try downloading it from http://expo.io/--/api/v2/versions/download-template/blank`
+      );
     }
   } else {
     config = {
-      timeout: TIMEOUT,
       responseType: 'stream',
     };
     try {
@@ -239,6 +240,9 @@ async function _downloadAsync(url, path, options) {
       });
     } catch (e) {
       console.log(e.message);
+      throw new Error(
+        `Template project download failed, try downloading it from http://expo.io/--/api/v2/versions/download-template/blank`
+      );
     }
   }
 }
