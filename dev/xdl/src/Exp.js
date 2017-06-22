@@ -239,7 +239,6 @@ async function initGitRepo(root: string) {
       await spawnAsync('git', ['init'], { cwd: root });
     } catch (e) {
       // no-op -- this is just a convenience and we don't care if it fails
-      Logger.global.warn(`Unable to initialize git repo: ${e.stderr}`);
     }
   }
 }
