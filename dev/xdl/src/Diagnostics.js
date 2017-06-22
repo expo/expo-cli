@@ -22,6 +22,7 @@ import UserManager from './User';
 import UserSettings from './UserSettings';
 import * as Utils from './Utils';
 import * as Watchman from './Watchman';
+import FormData, { append } from './tools/FormData';
 
 async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   let user = await UserManager.getCurrentUserAsync();
@@ -41,7 +42,8 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
         filename.includes('diagnostics') ||
         filename.includes('starter-app-cache') ||
         filename.includes('android-apk-cache') ||
-        filename.includes('ios-simulator-app-cache')
+        filename.includes('ios-simulator-app-cache') ||
+        filename.includes('state.json~')
       ) {
         return false;
       } else {
@@ -57,6 +59,7 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
     );
     let settingsJson = await settingsJsonFile.readAsync();
     settingsJson.accessToken = 'redacted';
+    settingsJson.auth = 'redacted';
     await settingsJsonFile.writeAsync(settingsJson);
   } catch (e) {
     console.error(e);
@@ -68,9 +71,9 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
 
   // upload
   let file = fs.createReadStream(archivePath);
-  let formData = {
-    archive: file,
-  };
+
+  let formData = new FormData();
+  append(formData, 'archive', file);
 
   let response = await Api.callMethodAsync(
     'uploadDiagnostics',
