@@ -10,6 +10,14 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [42.0.0] - 2017-06-22
+
+### Changed
+
+* Update `xdl` to v42.0.0.
+* Remove lag at end of commands.
+* Add command for downloading iOS/Android shell app credentials.
+
 ## [39.0.0] - 2017-04-06
 
 ### Changed

@@ -10,6 +10,10 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [42.0.0] - 2017-06-22
+* Move network requests to Axios.
+* Warn if using an unsupported npm version.
+
 ## [41.0.0] - 2017-05-12
 * Post-publish hook.
 
