@@ -32,6 +32,7 @@ const BAD_NPM_VERSION = '5.0.0';
 
 async function _checkNpmVersionAsync(projectRoot) {
   try {
+    await Binaries.sourceBashLoginScriptsAsync();
     let npmVersionResponse = await spawnAsync('npm', ['--version']);
     let npmVersion = _.trim(npmVersionResponse.stdout);
     if (semver.lt(npmVersion, MIN_NPM_VERSION) || semver.gte(npmVersion, BAD_NPM_VERSION)) {
