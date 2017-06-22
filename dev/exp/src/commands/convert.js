@@ -5,6 +5,16 @@ import { Exp } from 'xdl';
 import log from '../log';
 
 async function action(projectDir, options) {
+  console.error(
+    `'exp convert' is temporarily under maintenance and not available`
+  );
+  console.error(
+    `The easiest way to convert a project at the moment is to create a new project with 'exp init' and copy your project files into it.`
+  );
+  return;
+}
+
+async function __unused_action(projectDir, options) {
   let warning = [
     {
       type: 'confirm',
@@ -53,12 +63,14 @@ async function action(projectDir, options) {
     {
       type: 'input',
       name: 'projectDescription',
-      message: 'Please provide a short description of your project (optional, used for your landing page, eg: Finally your cat can post selfies in a welcoming community of other cats, no dogs allowed)\n',
+      message:
+        'Please provide a short description of your project (optional, used for your landing page, eg: Finally your cat can post selfies in a welcoming community of other cats, no dogs allowed)\n',
     },
     {
       type: 'input',
       name: 'projectEntryPoint',
-      message: 'Which file is the main entry point to your project? (if it is the standard index.android.js / index.ios.js, just press enter)\n',
+      message:
+        'Which file is the main entry point to your project? (if it is the standard index.android.js / index.ios.js, just press enter)\n',
     },
   ];
 
