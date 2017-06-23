@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, UrlUtils } from 'xdl';
+import { ProjectUtils, Project, UrlUtils } from 'xdl';
 
 import crayon from '@ccheever/crayon';
 import path from 'path';
@@ -42,8 +42,12 @@ async function action(projectDir, options) {
 
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
-  log('You can scan this QR code:\n');
-  urlOpts.printQRCode(url);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+
+  if (!exp.isDetached) {
+    log('You can scan this QR code:\n');
+    urlOpts.printQRCode(url);
+  }
 
   log('Your URL is\n\n' + crayon.underline(url) + '\n');
   log.raw(url);
