@@ -22,7 +22,7 @@ import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 import FormData from './tools/FormData';
 
-const TIMER_DURATION = 10000;
+const TIMER_DURATION = 30000;
 const TIMEOUT = 60000;
 
 function ApiError(code, message) {
@@ -136,6 +136,10 @@ async function _convertFormDataToBuffer(formData) {
   });
 }
 
+async function _writeToExpoCache(path: string, buffer) {
+  await fs.promise.writeFile(path, buffer, {});
+}
+
 async function _createAndReadBuffer(data) {
   return new Promise(resolve => {
     let reader = new FileReader();
@@ -147,12 +151,13 @@ async function _createAndReadBuffer(data) {
   });
 }
 
-async function _downloadAsync(url, path, options) {
+async function _downloadAsync(url, path, progressFunction, retryFunction) {
   let promptShown = false;
+  let currentProgress = 0;
 
   let warningTimer = setTimeout(() => {
-    if (options.retryFunction) {
-      options.retryFunction();
+    if (retryFunction) {
+      retryFunction();
     }
     promptShown = true;
   }, TIMER_DURATION);
@@ -160,7 +165,6 @@ async function _downloadAsync(url, path, options) {
   let config;
   // Checks if the call is being made in XDE or exp. (If XDE = XHR, if exp = HTTP);
   if (!isNode()) {
-    let lastAmountLoaded = 0;
     config = {
       timeout: TIMEOUT,
       responseType: 'blob',
@@ -168,29 +172,27 @@ async function _downloadAsync(url, path, options) {
         const roundedProgress = Math.floor(
           progressEvent.loaded / progressEvent.total * 100
         );
-        clearTimeout(warningTimer);
-        if (!promptShown) {
-          warningTimer = setTimeout(() => {
-            if (options.retryFunction) {
-              options.retryFunction();
-            }
-            promptShown = true;
-          }, TIMER_DURATION);
+        if (currentProgress !== roundedProgress) {
+          currentProgress = roundedProgress;
+          clearTimeout(warningTimer);
+          if (!promptShown) {
+            warningTimer = setTimeout(() => {
+              if (retryFunction) {
+                retryFunction();
+              }
+              promptShown = true;
+            }, TIMER_DURATION);
+          }
         }
-        if (options.progressFunction) {
-          options.progressFunction(
-            roundedProgress,
-            progressEvent.loaded - lastAmountLoaded,
-            progressEvent.total
-          );
+        if (progressFunction) {
+          progressFunction(roundedProgress);
         }
-        lastAmountLoaded = progressEvent.loaded;
       },
     };
     try {
       let response = await axios(url, config);
       let buffer = await _createAndReadBuffer(response.data);
-      await fs.promise.writeFile(path, buffer, {});
+      await _writeToExpoCache(path, buffer);
       clearTimeout(warningTimer);
     } catch (e) {
       console.log(e.message);
@@ -203,10 +205,7 @@ async function _downloadAsync(url, path, options) {
     try {
       return new Promise(async resolve => {
         let response = await axios(url, config);
-        let totalDownloadSize = parseInt(
-          response.data.headers['content-length'],
-          10
-        );
+        let totalDownloadSize = response.data.headers['content-length'];
         let downloadProgress = 0;
         response.data
           .on('data', chunk => {
@@ -214,21 +213,20 @@ async function _downloadAsync(url, path, options) {
             const roundedProgress = Math.floor(
               downloadProgress / totalDownloadSize * 100
             );
-            clearTimeout(warningTimer);
-            if (!promptShown) {
-              warningTimer = setTimeout(() => {
-                if (options.retryFunction) {
-                  options.retryFunction();
-                }
-                promptShown = true;
-              }, TIMER_DURATION);
-            }
-            if (options.progressFunction) {
-              options.progressFunction(
-                roundedProgress,
-                chunk.length,
-                totalDownloadSize
-              );
+            if (currentProgress !== roundedProgress) {
+              currentProgress = roundedProgress;
+              clearTimeout(warningTimer);
+              if (!promptShown) {
+                warningTimer = setTimeout(() => {
+                  if (retryFunction) {
+                    retryFunction();
+                  }
+                  promptShown = true;
+                }, TIMER_DURATION);
+              }
+              if (progressFunction) {
+                progressFunction(roundedProgress);
+              }
             }
           })
           .on('end', () => {
@@ -307,15 +305,21 @@ export default class ApiClient {
     return versions.sdkVersions;
   }
 
-  static async downloadAsync(url, outputPath, options = {}) {
+  static async downloadAsync(
+    url,
+    outputPath,
+    options = {},
+    progressFunction,
+    retryFunction
+  ) {
     if (options.extract) {
       let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
       let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
-      await _downloadAsync(url, tmpPath, options);
+      await _downloadAsync(url, tmpPath);
       await Extract.extractAsync(tmpPath, outputPath);
       rimraf.sync(tmpPath);
     } else {
-      await _downloadAsync(url, outputPath, options);
+      await _downloadAsync(url, outputPath, progressFunction, retryFunction);
     }
   }
 }

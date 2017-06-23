@@ -99,10 +99,9 @@ async function _downloadStarterAppAsync(
   await Api.downloadAsync(
     url,
     path.join(_starterAppCacheDirectory(), filename),
-    {
-      progressFunction,
-      retryFunction,
-    }
+    {},
+    progressFunction,
+    retryFunction
   );
   return {
     starterAppPath,
