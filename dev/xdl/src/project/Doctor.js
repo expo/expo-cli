@@ -29,6 +29,7 @@ export const FATAL = 2;
 const MIN_WATCHMAN_VERSION = '4.6.0';
 const MIN_NPM_VERSION = '3.0.0';
 const BAD_NPM_VERSION = '5.0.0';
+const CORRECT_NPM_VERSION = '4.6.1';
 
 async function _checkNpmVersionAsync(projectRoot) {
   try {
@@ -39,7 +40,7 @@ async function _checkNpmVersionAsync(projectRoot) {
       ProjectUtils.logError(
         projectRoot,
         'expo',
-        `Error: You are using npm version ${npmVersion}. Please use an npm version that is >= ${MIN_NPM_VERSION} and < ${BAD_NPM_VERSION}.`,
+        `Error: You are using npm version ${npmVersion}. Please use an npm version that is >= ${MIN_NPM_VERSION} and < ${BAD_NPM_VERSION}. Run 'npm i -g npm@${CORRECT_NPM_VERSION}' to resolve.`,
         'doctor-npm-version'
       );
       return FATAL;
