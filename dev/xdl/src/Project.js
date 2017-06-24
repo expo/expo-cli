@@ -810,6 +810,12 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   // Temporarily hide warnings about duplicate providesModule declarations
   // under react-native
   if (_isIgnorableDuplicateModuleWarning(projectRoot, level, output)) {
+    ProjectUtils.logDebug(
+      projectRoot,
+      'expo',
+      `Suppressing @providesModule warning: ${output}`,
+      'project-suppress-providesmodule-warning'
+    );
     return;
   }
   let lines = output.split(/\r?\n/);
