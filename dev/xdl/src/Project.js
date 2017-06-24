@@ -807,6 +807,12 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
     _restartWatchmanAsync(projectRoot);
     return;
   }
+  // Temporarily hide warnings about duplicate providesModule declarations
+  // under react-native
+  if (_isIgnorableDuplicateModuleWarning(projectRoot, level, output)) {
+    console.warn('Suppressing @providesModule warning:', output);
+    return;
+  }
   let lines = output.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     lines[i] = _processPackagerLine(lines[i]);
@@ -818,6 +824,34 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
     ProjectUtils.logError(projectRoot, 'packager', output);
   }
 }
+
+function _isIgnorableDuplicateModuleWarning(
+  projectRoot: string,
+  level: string,
+  output: string
+): boolean {
+  if (
+    level !== 'error' ||
+    !output.startsWith('jest-haste-map: @providesModule naming collision:')
+  ) {
+    return false;
+  }
+
+  let reactNativeNodeModulesPath = path.join(
+    projectRoot,
+    'node_modules',
+    'react-native',
+    'node_modules'
+  );
+  let reactNativeNodeModulesPattern = _.escapeRegExp(
+    reactNativeNodeModulesPath
+  );
+  let reactNativeNodeModulesCollisionRegex = new RegExp(
+    `Paths: ${reactNativeNodeModulesPattern}.+ collides with ${reactNativeNodeModulesPattern}.+`
+  );
+  return reactNativeNodeModulesCollisionRegex.test(output);
+}
+
 function _handleDeviceLogs(
   projectRoot: string,
   deviceId: string,
@@ -1103,7 +1137,11 @@ export async function startExpoServerAsync(projectRoot: string) {
         req.hostname
       );
       manifest.mainModuleName = mainModuleName;
-      manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(projectRoot, { urlType: 'http' }, req.hostname)}/logs`; // Resolve manifest assets to their packager URL
+      manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(
+        projectRoot,
+        { urlType: 'http' },
+        req.hostname
+      )}/logs`; // Resolve manifest assets to their packager URL
       await _resolveManifestAssets(
         projectRoot,
         manifest,
