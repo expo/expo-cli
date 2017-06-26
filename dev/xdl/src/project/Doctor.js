@@ -43,7 +43,7 @@ async function _checkNpmVersionAsync(projectRoot) {
         `Error: You are using npm version ${npmVersion}. Please use an npm version that is >= ${MIN_NPM_VERSION} and < ${BAD_NPM_VERSION}. Run 'npm i -g npm@${CORRECT_NPM_VERSION}' to resolve.`,
         'doctor-npm-version'
       );
-      return FATAL;
+      return WARNING;
     } else {
       ProjectUtils.clearNotification(projectRoot, 'doctor-npm-version');
     }
