@@ -71,7 +71,9 @@ export async function login(options: CommandOptions) {
       {
         type: 'confirm',
         name: 'action',
-        message: `You are already logged in as ${user.username}. Log in as new user?`,
+        message: `You are already logged in as ${chalk.green(
+          user.username
+        )}. Log in as new user?`,
       },
     ];
 
@@ -115,11 +117,15 @@ async function _socialAuth(provider: LoginType) {
   let user = await UserManager.loginAsync(provider);
   if (user) {
     if (user.userMetadata.onboarded) {
-      console.log('\nSuccess.');
+      console.log(
+        `\nSuccess. You are now logged in as ${chalk.green(user.username)}.`
+      );
       return user;
     } else {
       user = await _onboardUser(user);
-      console.log('\nSuccess.');
+      console.log(
+        `\nSuccess. You are now logged in as ${chalk.green(user.username)}.`
+      );
       return user;
     }
   } else {
@@ -176,11 +182,15 @@ async function _usernamePasswordAuth(
 
   if (user) {
     if (user.userMetadata.onboarded) {
-      console.log('\nSuccess.');
+      console.log(
+        `\nSuccess. You are now logged in as ${chalk.green(user.username)}.`
+      );
       return user;
     } else {
       user = await _onboardUser(user, data);
-      console.log('\nSuccess.');
+      console.log(
+        `\nSuccess. You are now logged in as ${chalk.green(user.username)}.`
+      );
       return user;
     }
   } else {
@@ -202,7 +212,7 @@ async function _onboardUser(
 
   if (user && legacyMigration) {
     console.log(
-      `Signed in as: @${user.username}
+      `Signed in as: @${chalk.green(user.username)}
 Hi there! We don't currently have any way to identify you if you were to lose
 your password. Please provide us with your name and e-mail address.`
     );

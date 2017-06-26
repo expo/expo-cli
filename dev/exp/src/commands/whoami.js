@@ -5,11 +5,12 @@
 import { User } from 'xdl';
 
 import log from '../log';
+import crayon from '@ccheever/crayon';
 
 async function action(options) {
   const user = await User.ensureLoggedInAsync();
   if (user && user.username) {
-    log(`Logged in as ${user.username}`);
+    log(`Logged in as ${crayon.green(user.username)}`);
     log.raw(user.username);
     return user;
   } else {
