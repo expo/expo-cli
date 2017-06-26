@@ -35,6 +35,8 @@ if (process.env.NODE_ENV === 'development') {
   require('source-map-support').install();
 }
 
+// The following prototyped functions are not used here, but within in each file found in `./commands`
+// Extending commander to easily add more options to certain command line arguments
 Command.prototype.urlOpts = function() {
   urlOpts.addOptions(this);
   return this;
@@ -53,6 +55,8 @@ Command.prototype.allowNonInteractive = function() {
   return this;
 };
 
+// asyncAction is a wrapper for all commands/actions to be executed after commander is done
+// parsing the standard input
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
   return this.action(async (...args) => {
     if (!skipUpdateCheck) {
@@ -82,13 +86,26 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
         log.error(err.message);
       } else {
         log.error(err.message);
-        crayon.gray.error(err.stack);
+        //TODO: Make it an option for the stack trace to display for end users
+        if (process.env.EXPO_DEBUG) {
+          crayon.gray.error(err.stack);
+        }
       }
       process.exit(1);
     }
   });
 };
 
+// asyncActionProjectDir captures the projectDirectory from the command line,
+// setting it to cwd if it is not provided.
+// Commands such as `exp start` and `exp publish` use this.
+// It does several things:
+// - Everything in asyncAction
+// - Checks if the user is logged in or out
+// - Checks for updates
+// - Attaches the bundling logger
+// - Checks if the project directory is valid or not
+// - Runs AsyncAction with the projectDir as an argument
 Command.prototype.asyncActionProjectDir = function(
   asyncFn,
   skipProjectValidation,
@@ -214,6 +231,7 @@ Command.prototype.asyncActionProjectDir = function(
 
 function runAsync() {
   try {
+    // Setup analytics
     Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
     Analytics.setVersionName(require('../package.json').version);
     _registerLogs();
@@ -230,10 +248,13 @@ function runAsync() {
 
     Config.developerTool = 'exp';
 
+    // Setup our commander instance
     program.name = 'exp';
     program
       .version(require('../package.json').version)
       .option('-o, --output [format]', 'Output format. pretty (default), raw');
+
+    // Load each module found in ./commands by 'registering' it with our commander instance
     glob
       .sync('commands/*.js', {
         cwd: __dirname,
@@ -259,6 +280,7 @@ function runAsync() {
         });
     }
 
+    // Commander will now parse our stdin and find a callback
     program.parse(process.argv);
 
     let subCommand = process.argv[2];
@@ -351,6 +373,7 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
+// This is the entry point of the CLI
 export function run() {
   (async function() {
     await Promise.all([writePathAsync(), runAsync()]);
