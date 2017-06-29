@@ -25,23 +25,13 @@ async function action(projectDir, options) {
     templateType = options.projectType;
   } else {
     let versions = await Api.versionsAsync();
-    let templateIds = _.map(
-      versions.templatesv2,
-      template => `"${template.id}"`
-    );
+    let templateIds = _.map(versions.templatesv2, template => template.id);
 
     questions.push({
-      type: 'input',
+      type: 'list',
       name: 'type',
-      message: `Project type. Options are: ${templateIds.join(', ')}`,
-      validate(val) {
-        for (let i = 0; i < versions.templatesv2.length; i++) {
-          if (versions.templatesv2[i].id === val) {
-            return true;
-          }
-        }
-        return false;
-      },
+      message: 'Choose a template type:',
+      choices: templateIds,
     });
   }
 
@@ -55,7 +45,7 @@ async function action(projectDir, options) {
   // TODO(jim): We will need to update this method later to not force
   // us to strip out the <name> from /path/to/<name> if we don't want
   // to duplicate the folder at creation time. (example: test => test/test)
-  downloadAndExtractTemplate(templateType, insertPath, {
+  await downloadAndExtractTemplate(templateType, insertPath, {
     name,
   });
 }
