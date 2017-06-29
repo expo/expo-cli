@@ -56,7 +56,7 @@ Command.prototype.allowNonInteractive = function() {
 };
 
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
-// parsing the standard input
+// parsing the command input
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
   return this.action(async (...args) => {
     if (!skipUpdateCheck) {
@@ -78,6 +78,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
       // This allows node js to exit immediately
       Analytics.flush();
     } catch (err) {
+      // TODO: Find better ways to consolidate error messages
       if (err._isCommandError) {
         log.error(err.message);
       } else if (err._isApiError) {
@@ -86,11 +87,18 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
         log.error(err.message);
       } else {
         log.error(err.message);
-        //TODO: Make it an option for the stack trace to display for end users
+        // TODO: Is there a better way to do this? EXPO_DEBUG needs to be set to view the stack trace
         if (process.env.EXPO_DEBUG) {
           crayon.gray.error(err.stack);
+        } else {
+          log.error(
+            crayon.grey(
+              'Set EXPO_DEBUG=true in your env to view the stack trace.'
+            )
+          );
         }
       }
+
       process.exit(1);
     }
   });
@@ -280,9 +288,10 @@ function runAsync() {
         });
     }
 
-    // Commander will now parse our stdin and find a callback
+    // Commander will now parse argv/argc
     program.parse(process.argv);
 
+    // Display a message if the user does not input a valid command
     let subCommand = process.argv[2];
     if (subCommand) {
       let commands = [];

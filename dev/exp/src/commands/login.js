@@ -13,5 +13,6 @@ export default (program: any) => {
     .option('-p, --password [string]', 'Password')
     .option('-t, --token [string]', 'Token')
     .option('--github', 'Login with Github')
+    .allowNonInteractive()
     .asyncAction(login);
 };

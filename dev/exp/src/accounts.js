@@ -6,6 +6,7 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 
 import { User as UserManager } from 'xdl';
+import CommandError from './CommandError';
 
 import type { LoginType, User, UserOrLegacyUser } from 'xdl/build/User';
 
@@ -60,45 +61,54 @@ export async function loginOrRegisterIfLoggedOut() {
   } else if (action === 'existingUser') {
     await login({});
   } else {
-    throw new Error('Not logged in.');
+    throw new CommandError('BAD_CHOICE', 'Not logged in.');
   }
 }
 
 export async function login(options: CommandOptions) {
-  let user = await UserManager.getCurrentUserAsync();
-  if (user) {
-    const question = [
-      {
-        type: 'confirm',
-        name: 'action',
-        message: `You are already logged in as ${chalk.green(
-          user.username
-        )}. Log in as new user?`,
-      },
-    ];
+  const user = await UserManager.getCurrentUserAsync();
+  if (!options.nonInteractive) {
+    if (user) {
+      const question = [
+        {
+          type: 'confirm',
+          name: 'action',
+          message: `You are already logged in as ${chalk.green(
+            user.username
+          )}. Log in as new user?`,
+        },
+      ];
 
-    const { action } = await inquirer.prompt(question);
-    if (!action) {
-      // If user chooses to stay logged in, return
-      return;
+      const { action } = await inquirer.prompt(question);
+      if (!action) {
+        // If user chooses to stay logged in, return
+        return;
+      }
     }
-  }
 
-  if (options.facebook) {
-    // handle fb login
-    return await _socialAuth('facebook');
-  } else if (options.google) {
-    // handle google login
-    return await _socialAuth('google');
-  } else if (options.github) {
-    // handle github login
-    return await _socialAuth('github');
-  } else if (options.token) {
-    // handle token login
-    return await _tokenAuth(options.token);
-  } else {
-    // handle username/password auth
+    if (options.facebook) {
+      // handle fb login
+      return await _socialAuth('facebook');
+    } else if (options.google) {
+      // handle google login
+      return await _socialAuth('google');
+    } else if (options.github) {
+      // handle github login
+      return await _socialAuth('github');
+    } else if (options.token) {
+      // handle token login
+      return await _tokenAuth(options.token);
+    } else {
+      // handle username/password auth
+      return await _usernamePasswordAuth(options.username, options.password);
+    }
+  } else if (options.username && options.password) {
     return await _usernamePasswordAuth(options.username, options.password);
+  } else {
+    throw new CommandError(
+      'NON_INTERACTIVE',
+      'Username and password not provided in non-interactive mode.'
+    );
   }
 }
 
