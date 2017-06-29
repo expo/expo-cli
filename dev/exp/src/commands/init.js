@@ -4,6 +4,7 @@ import { Api, Exp, Logger, NotificationCode, MessageCode } from 'xdl';
 
 import _ from 'lodash';
 import log from '../log';
+import CommandError from '../CommandError';
 
 import path from 'path';
 
@@ -14,11 +15,19 @@ let _retryObject = {};
 async function action(projectDir, options) {
   let templateType;
   let questions = [];
+
   let insertPath = path.dirname(projectDir);
   let name = path.basename(projectDir);
 
-  if (!insertPath || !name) {
-    throw new Error(`Couldn't determine path for new project.`);
+  // If the user does not supply a project name, exp prompts the user
+  if (projectDir === process.cwd()) {
+    questions.push({
+      name: 'name',
+      message: 'Choose a project name:',
+      validate(input) {
+        return /^[a-z0-9@.' '\-\_]*$/i.test(input) && input.length > 0;
+      },
+    });
   }
 
   if (options.projectType) {
@@ -37,9 +46,21 @@ async function action(projectDir, options) {
 
   if (questions.length > 0) {
     var answers = await inquirerAsync.promptAsync(questions);
+    if (answers.name) {
+      // If the user supplies a project name, change the insertPath and name
+      insertPath = projectDir;
+      name = answers.name;
+    }
     if (answers.type) {
       templateType = answers.type;
     }
+  }
+
+  if (!insertPath || !name) {
+    throw new CommandError(
+      'PATH_ERROR',
+      `Couldn't determine path for new project.`
+    );
   }
 
   // TODO(jim): We will need to update this method later to not force
