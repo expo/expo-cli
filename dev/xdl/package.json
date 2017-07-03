@@ -29,10 +29,10 @@
   "homepage": "https://github.com/exponent/xdl#readme",
   "dependencies": {
     "@ccheever/crayon": "^5.0.0",
+    "@expo/spawn-async": "^1.2.8",
     "@exponent/json-file": "^5.3.0",
     "@exponent/node-auth0": "^2.6.0",
     "@exponent/osascript": "^1.6.4",
-    "@exponent/spawn-async": "^1.2.8",
     "analytics-node": "^2.1.0",
     "auth0-js": "^7.4.0",
     "bluebird": "^3.4.7",
@@ -121,8 +121,5 @@
     "promise-print": "^2.3.0",
     "react": "16.0.0-alpha.12",
     "rimraf": "^2.5.4"
-  },
-  "peerDependencies": {
-    "react": "16.0.0-alpha.12"
   }
 }
