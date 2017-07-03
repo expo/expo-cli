@@ -59,6 +59,7 @@
     "@exponent/json-file": "^5.2.0",
     "@exponent/md5hex": "^1.0.0",
     "@exponent/simple-spinner": "^1.0.2",
+    "@exponent/ngrok": "2.2.7",
     "babel-runtime": "^6.9.2",
     "bunyan": "^1.8.1",
     "chalk": "^1.1.3",
