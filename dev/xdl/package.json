@@ -115,6 +115,7 @@
     "gulp-shell": "^0.5.2",
     "gulp-sourcemaps": "^1.6.0",
     "gulplog": "^1.0.0",
+    "hashids": "^1.1.1",
     "jest": "^19.0.2",
     "mock-fs": "^3.12.1",
     "promise-print": "^2.3.0",

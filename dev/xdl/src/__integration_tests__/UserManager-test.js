@@ -4,6 +4,7 @@
 
 import fs from 'fs-extra';
 import path from 'path';
+import HashIds from 'hashids';
 import uuid from 'uuid';
 import ApiV2Client from '../ApiV2';
 import { UserManagerInstance } from '../User';
@@ -11,6 +12,11 @@ import { UserManagerInstance } from '../User';
 const XDL_TEST_CLIENT_ID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y';
 
 import type { User } from '../User';
+
+const _makeShortId = (salt: string, minLength: number = 10): string => {
+  const hashIds = new HashIds(salt, minLength);
+  return hashIds.encode(Date.now());
+};
 
 describe('UserManager', () => {
   let userForTest;
@@ -20,12 +26,12 @@ describe('UserManager', () => {
     process.env.__UNSAFE_EXPO_HOME_DIRECTORY = path.join(
       '/',
       'tmp',
-      `.expo-${uuid.v1()}`
+      `.expo-${_makeShortId(uuid.v1())}`
     );
 
     const UserManager = _newTestUserManager();
 
-    const username = `xdl-test-${uuid.v1()}`;
+    const username = `xdl-test-${_makeShortId(uuid.v1())}`;
     const password = uuid.v1();
 
     // Register a new user that we can use for this test run
