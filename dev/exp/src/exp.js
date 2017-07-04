@@ -6,7 +6,7 @@ import 'instapromise';
 
 import ProgressBar from 'progress';
 import _ from 'lodash-node';
-import bunyan from 'bunyan';
+import bunyan from '@expo/bunyan';
 import crayon from '@ccheever/crayon';
 import glob from 'glob';
 import path from 'path';
