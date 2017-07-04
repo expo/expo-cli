@@ -1,11 +1,11 @@
 /**
  * Utilities for working with `osascript` which runs AppleScript on Macs
- *
  */
+'use strict';
 
 import execAsync from 'exec-async';
 import path from 'path';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import util from 'util';
 
 function osascriptArgs(script) {
@@ -59,12 +59,6 @@ async function openFinderToFolderAsync(dir, activate = true) {
     (activate && 'activate') || '',
     'end tell',
   ]);
-}
-
-async function activateApp(appName) {
-  return await osascriptSpawnAsync(
-    'tell app ' + JSON.stringify(appName) + ' to activate'
-  );
 }
 
 async function openInAppAsync(appName, pth) {
@@ -208,7 +202,6 @@ async function openFolderInTerminalAppAsync(dir, inTab = false) {
 }
 
 module.exports = {
-  activateApp,
   chooseAppAsync,
   chooseEditorAppAsync,
   chooseTerminalAppAsync,
