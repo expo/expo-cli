@@ -3,7 +3,7 @@
  */
 
 import crayon from '@ccheever/crayon';
-import simpleSpinner from '@exponent/simple-spinner';
+import simpleSpinner from '@expo/simple-spinner';
 
 import { Project } from 'xdl';
 

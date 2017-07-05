@@ -6,7 +6,7 @@ import fs from 'fs';
 import fsp from 'mz/fs';
 import path from 'path';
 
-import JsonFile from '@exponent/json-file';
+import JsonFile from '@expo/json-file';
 import slug from 'slugify';
 
 import * as Analytics from '../Analytics';

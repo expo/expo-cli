@@ -8,8 +8,8 @@ import existsAsync from 'exists-async';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
-import spawnAsync from '@exponent/spawn-async';
-import JsonFile from '@exponent/json-file';
+import spawnAsync from '@expo/spawn-async';
+import JsonFile from '@expo/json-file';
 import joi from 'joi';
 import rimraf from 'rimraf';
 

@@ -10,7 +10,7 @@ import bunyan from '@expo/bunyan';
 import crayon from '@ccheever/crayon';
 import glob from 'glob';
 import path from 'path';
-import simpleSpinner from '@exponent/simple-spinner';
+import simpleSpinner from '@expo/simple-spinner';
 import url from 'url';
 
 import program, { Command } from 'commander';

@@ -10,7 +10,7 @@ import fs from 'fs';
 import jsonschema from 'jsonschema';
 import path from 'path';
 import request from 'request';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import readChunk from 'read-chunk';
 import fileType from 'file-type';
 

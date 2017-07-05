@@ -3,7 +3,7 @@
  */
 
 import child_process from 'child_process';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 
 import * as Binaries from './Binaries';
 import ErrorCode from './ErrorCode';
@@ -11,7 +11,7 @@ import XDLError from './XDLError';
 
 let osascript;
 if (process.platform === 'darwin') {
-  osascript = require('@exponent/osascript');
+  osascript = require('@expo/osascript');
 }
 
 export function openFolderName() {

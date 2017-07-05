@@ -6,7 +6,7 @@ import 'instapromise';
 
 import fs from 'fs';
 import uuid from 'uuid';
-import JsonFile from '@exponent/json-file';
+import JsonFile from '@expo/json-file';
 
 import mkdirp from 'mkdirp';
 import path from 'path';

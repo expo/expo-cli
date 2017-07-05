@@ -1,4 +1,4 @@
-import simpleSpinner from '@exponent/simple-spinner';
+import simpleSpinner from '@expo/simple-spinner';
 
 import { Exp, UserSettings } from 'xdl';
 

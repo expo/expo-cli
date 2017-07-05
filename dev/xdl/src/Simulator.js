@@ -9,10 +9,10 @@ import existsAsync from 'exists-async';
 import glob from 'glob';
 import homeDir from 'home-dir';
 import mkdirp from 'mkdirp';
-import osascript from '@exponent/osascript';
+import osascript from '@expo/osascript';
 import path from 'path';
 import semver from 'semver';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import rimraf from 'rimraf';
 import fs from 'fs';
 
@@ -364,7 +364,8 @@ export async function openUrlInSimulatorSafeAsync(
     await _openSimulatorAsync();
 
     if (
-      !isDetached && !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()
+      !isDetached &&
+      !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()
     ) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();

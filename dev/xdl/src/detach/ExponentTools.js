@@ -5,7 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 import request from 'request';
-import spawnAsyncQuiet from '@exponent/spawn-async';
+import spawnAsyncQuiet from '@expo/spawn-async';
 
 function parseSdkMajorVersion(expSdkVersion) {
   let sdkMajorVersion = 0;

@@ -5,7 +5,7 @@
 import 'instapromise';
 
 import _ from 'lodash';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import existsAsync from 'exists-async';
 import mkdirp from 'mkdirp';
 import path from 'path';
@@ -115,7 +115,8 @@ async function _checkExpoUpToDateAsync() {
   let installedVersion = await _expoVersionAsync();
 
   if (
-    !installedVersion || semver.lt(installedVersion, versions.androidVersion)
+    !installedVersion ||
+    semver.lt(installedVersion, versions.androidVersion)
   ) {
     Logger.notifications.warn(
       { code: NotificationCode.OLD_ANDROID_APP_VERSION },

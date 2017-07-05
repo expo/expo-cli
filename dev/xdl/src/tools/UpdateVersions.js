@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import * as Versions from '../Versions';
 
 export async function updateSdkVersionsAsync(

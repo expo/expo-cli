@@ -6,7 +6,7 @@ import 'instapromise';
 
 import fs from 'fs';
 import hasbin from 'hasbin';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 
 import Config from './Config';

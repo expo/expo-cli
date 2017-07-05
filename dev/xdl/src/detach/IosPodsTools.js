@@ -6,7 +6,7 @@ import fs from 'fs';
 import glob from 'glob';
 import indentString from 'indent-string';
 import 'instapromise';
-import JsonFile from '@exponent/json-file';
+import JsonFile from '@expo/json-file';
 import path from 'path';
 
 import { parseSdkMajorVersion } from './ExponentTools';

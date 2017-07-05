@@ -13,11 +13,11 @@ import freeportAsync from 'freeport-async';
 import fs from 'fs';
 import joi from 'joi';
 import _ from 'lodash';
-import ngrok from '@exponent/ngrok';
+import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
 import request from 'request';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
 

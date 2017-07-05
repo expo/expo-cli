@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/exponent/exp.git"
+    "url": "git+https://github.com/expo/exp.git"
   },
   "keywords": [
     "expo",
@@ -27,9 +27,9 @@
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/exponent/exp/issues"
+    "url": "https://github.com/expo/exp/issues"
   },
-  "homepage": "https://github.com/exponent/exp#readme",
+  "homepage": "https://github.com/expo/exp#readme",
   "engines": {
     "node": ">=6.9.1"
   },
@@ -42,7 +42,7 @@
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-stage-1": "^6.5.0",
     "eslint": "^3.9.1",
-    "eslint-config-exponent": "^5.0.1",
+    "eslint-config-expo": "^5.0.1",
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-flowtype": "^2.25.0",
     "eslint-plugin-import": "^2.2.0",
@@ -56,11 +56,10 @@
   },
   "dependencies": {
     "@ccheever/crayon": "^5.0.0",
-    "@exponent/json-file": "^5.2.0",
-    "@exponent/md5hex": "^1.0.0",
-    "@exponent/simple-spinner": "^1.0.2",
-    "@exponent/ngrok": "2.2.7",
     "@expo/bunyan": "^1.8.10",
+    "@expo/json-file": "^5.2.0",
+    "@expo/ngrok": "2.2.7",
+    "@expo/simple-spinner": "^1.0.2",
     "babel-runtime": "^6.9.2",
     "chalk": "^1.1.3",
     "commander": "^2.9.0",
@@ -73,6 +72,7 @@
     "inquirer-async": "^1.1.0",
     "instapromise": "2.0.7-rc.1",
     "lodash-node": "^3.10.0",
+    "md5hex": "^1.0.0",
     "mz": "^2.6.0",
     "progress": "^2.0.0",
     "qrcode-terminal": "^0.11.0",

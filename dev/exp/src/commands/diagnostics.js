@@ -1,6 +1,6 @@
 import { Diagnostics } from 'xdl';
 
-import simpleSpinner from '@exponent/simple-spinner';
+import simpleSpinner from '@expo/simple-spinner';
 
 import log from '../log';
 

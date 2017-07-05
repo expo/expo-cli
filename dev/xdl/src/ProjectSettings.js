@@ -5,7 +5,7 @@
 import 'instapromise';
 
 import _ from 'lodash';
-import JsonFile from '@exponent/json-file';
+import JsonFile from '@expo/json-file';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';

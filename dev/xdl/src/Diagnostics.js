@@ -8,11 +8,11 @@ import _ from 'lodash';
 import child_process from 'child_process';
 import fs from 'fs';
 import ip from 'ip';
-import JsonFile from '@exponent/json-file';
+import JsonFile from '@expo/json-file';
 import os from 'os';
 import path from 'path';
 import rimraf from 'rimraf';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import targz from 'tar.gz';
 
 import Api from './Api';

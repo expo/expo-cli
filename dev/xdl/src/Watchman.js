@@ -3,7 +3,7 @@
  */
 
 import _ from 'lodash';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import delayAsync from 'delay-async';
 import rimraf from 'rimraf';
 import path from 'path';

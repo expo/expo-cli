@@ -2,7 +2,7 @@ import inquirerAsync from 'inquirer-async';
 import ProgressBar from 'progress';
 import { Api, Exp, Logger, NotificationCode, MessageCode } from 'xdl';
 
-import _ from 'lodash';
+import _ from 'lodash-node';
 import log from '../log';
 import CommandError from '../CommandError';
 

@@ -3,7 +3,7 @@
  */
 
 import child_process from 'mz/child_process';
-import JsonFile from '@exponent/json-file';
+import JsonFile from '@expo/json-file';
 import path from 'path';
 import semver from 'semver';
 

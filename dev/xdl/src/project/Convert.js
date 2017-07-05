@@ -7,7 +7,7 @@ import slug from 'slugify';
 import path from 'path';
 import jsonfile from 'jsonfile';
 import fse from 'fs-extra';
-import spawnAsync from '@exponent/spawn-async';
+import spawnAsync from '@expo/spawn-async';
 import expJsonTemplate from './templates/exp';
 import babelRcTemplate from './templates/babelrc';
 
