@@ -28,22 +28,37 @@ export const FATAL = 2;
 
 const MIN_WATCHMAN_VERSION = '4.6.0';
 const MIN_NPM_VERSION = '3.0.0';
-const BAD_NPM_VERSION = '5.0.0';
 const CORRECT_NPM_VERSION = '4.6.1';
+const WARN_NPM_VERSION_RANGES = ['>= 5.0.0'];
+const BAD_NPM_VERSION_RANGES = ['>= 5.0.0 <= 5.0.3'];
+
+function _isNpmVersionWithinRanges(npmVersion, ranges) {
+  return _.some(ranges, range => semver.satisfies(npmVersion, range));
+}
 
 async function _checkNpmVersionAsync(projectRoot) {
   try {
     await Binaries.sourceBashLoginScriptsAsync();
     let npmVersionResponse = await spawnAsync('npm', ['--version']);
     let npmVersion = _.trim(npmVersionResponse.stdout);
-    if (semver.lt(npmVersion, MIN_NPM_VERSION) || semver.gte(npmVersion, BAD_NPM_VERSION)) {
+    if (
+      semver.lt(npmVersion, MIN_NPM_VERSION) ||
+      _isNpmVersionWithinRanges(npmVersion, BAD_NPM_VERSION_RANGES)
+    ) {
       ProjectUtils.logError(
         projectRoot,
         'expo',
-        `Error: You are using npm version ${npmVersion}. Please use an npm version that is >= ${MIN_NPM_VERSION} and < ${BAD_NPM_VERSION}. Run 'npm i -g npm@${CORRECT_NPM_VERSION}' to resolve.`,
+        `Error: You are using npm version ${npmVersion}. We recommend version ${CORRECT_NPM_VERSION}. To install it, run 'npm i -g npm@${CORRECT_NPM_VERSION}'.`,
         'doctor-npm-version'
       );
       return WARNING;
+    } else if (_isNpmVersionWithinRanges(npmVersion, WARN_NPM_VERSION_RANGES)) {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `Warning: You are using npm version ${npmVersion}. There may be bugs in this version, use it at your own risk. We recommend version ${CORRECT_NPM_VERSION}.`,
+        'doctor-npm-version'
+      );
     } else {
       ProjectUtils.clearNotification(projectRoot, 'doctor-npm-version');
     }
@@ -51,7 +66,7 @@ async function _checkNpmVersionAsync(projectRoot) {
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
-      `Warning: Could not determine npm version. Make sure your version is >= ${MIN_NPM_VERSION} and < ${BAD_NPM_VERSION}.`,
+      `Warning: Could not determine npm version. Make sure your version is >= ${MIN_NPM_VERSION} - we recommend ${CORRECT_NPM_VERSION}.`,
       'doctor-npm-version'
     );
     return WARNING;
@@ -114,7 +129,9 @@ export function validateWithSchema(
 
   let fullMessage;
   if (validationResult.errors && validationResult.errors.length > 0) {
-    fullMessage = `Warning: Problem${validationResult.errors.length > 1 ? 's' : ''} in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
+    fullMessage = `Warning: Problem${validationResult.errors.length > 1
+      ? 's'
+      : ''} in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
     for (let error of validationResult.errors) {
       // Formate the message nicely
       let message = error.stack
@@ -132,41 +149,43 @@ async function _validateAssetFieldsAsync(projectRoot, exp) {
   try {
     const assetSchemas = await ExpSchema.getAssetSchemasAsync(exp.sdkVersion);
     await Promise.all(
-      assetSchemas.map(async ({
-        fieldPath,
-        schema: { meta: { asset, contentTypePattern, contentTypeHuman } },
-      }) => {
-        const value = _.get(exp, fieldPath);
-        if (asset && value) {
-          if (contentTypePattern) {
-            // NOTE(nikki): The '4100' below should be enough for most file types, though we
-            //              could probably go shorter....
-            //              http://www.garykessler.net/library/file_sigs.html
-            const filePath = path.resolve(projectRoot, value);
-            const contentType = fs.existsSync(filePath)
-              ? fileType(await readChunk(filePath, 0, 4100)).mime
-              : (await request.promise.head({ url: value })).headers[
-                  'content-type'
-                ];
-            if (!contentType.match(new RegExp(contentTypePattern))) {
-              const configName = await ProjectUtils.configFilenameAsync(
-                projectRoot
-              );
-              ProjectUtils.logWarning(
-                projectRoot,
-                'expo',
-                `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`,
-                `doctor-validate-asset-fields-${fieldPath}`
-              );
-            } else {
-              ProjectUtils.clearNotification(
-                projectRoot,
-                `doctor-validate-asset-fields-${fieldPath}`
-              );
+      assetSchemas.map(
+        async ({
+          fieldPath,
+          schema: { meta: { asset, contentTypePattern, contentTypeHuman } },
+        }) => {
+          const value = _.get(exp, fieldPath);
+          if (asset && value) {
+            if (contentTypePattern) {
+              // NOTE(nikki): The '4100' below should be enough for most file types, though we
+              //              could probably go shorter....
+              //              http://www.garykessler.net/library/file_sigs.html
+              const filePath = path.resolve(projectRoot, value);
+              const contentType = fs.existsSync(filePath)
+                ? fileType(await readChunk(filePath, 0, 4100)).mime
+                : (await request.promise.head({ url: value })).headers[
+                    'content-type'
+                  ];
+              if (!contentType.match(new RegExp(contentTypePattern))) {
+                const configName = await ProjectUtils.configFilenameAsync(
+                  projectRoot
+                );
+                ProjectUtils.logWarning(
+                  projectRoot,
+                  'expo',
+                  `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`,
+                  `doctor-validate-asset-fields-${fieldPath}`
+                );
+              } else {
+                ProjectUtils.clearNotification(
+                  projectRoot,
+                  `doctor-validate-asset-fields-${fieldPath}`
+                );
+              }
             }
           }
         }
-      })
+      )
     );
 
     ProjectUtils.clearNotification(projectRoot, 'doctor-validate-asset-fields');
@@ -307,7 +326,9 @@ async function _validatePackageJsonAndExpJsonAsync(
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
-      `Warning: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`,
+      `Warning: Invalid sdkVersion. Valid options are ${_.keys(
+        sdkVersions
+      ).join(', ')}`,
       'doctor-invalid-sdk-version'
     );
     return WARNING;
@@ -346,7 +367,9 @@ async function _validatePackageJsonAndExpJsonAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject['expoReactNativeTag']}`,
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject[
+            'expoReactNativeTag'
+          ]}`,
           'doctor-invalid-version-of-react-native'
         );
         return WARNING;
@@ -578,7 +601,11 @@ async function validateAsync(
     return status;
   }
 
-  let newStatus = await _validatePackageJsonAndExpJsonAsync(exp, pkg, projectRoot);
+  let newStatus = await _validatePackageJsonAndExpJsonAsync(
+    exp,
+    pkg,
+    projectRoot
+  );
   if (newStatus > status) {
     status = newStatus;
   }
