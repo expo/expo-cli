@@ -31,7 +31,10 @@ function userSettingsFile() {
 }
 
 function userSettingsJsonFile() {
-  return new JsonFile(userSettingsFile(), { cantReadFileDefault: {} });
+  return new JsonFile(userSettingsFile(), {
+    jsonParseErrorDefault: {},
+    cantReadFileDefault: {},
+  });
 }
 
 function recentExpsJsonFile() {
