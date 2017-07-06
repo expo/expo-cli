@@ -47,6 +47,7 @@ async function fetchCredentials(
   { username, experienceName, bundleIdentifier, platform }: CredentialMetadata,
   decrypt: boolean
 ): Promise<?Credentials> {
+  // this doesn't hit our mac rpc channel, so it needs significantly less debugging
   const {
     err,
     credentials,
@@ -70,6 +71,7 @@ export async function updateCredentialsForPlatform(
   newCredentials: Credentials,
   metadata: CredentialMetadata
 ): Promise<void> {
+  // this doesn't go through the mac rpc, no request id needed
   const {
     err,
     credentials,
@@ -90,6 +92,7 @@ export async function removeCredentialsForPlatform(
   platform: string,
   metadata: CredentialMetadata
 ): Promise<void> {
+  // doesn't go through mac rpc, no request id needed
   const { err } = await Api.callMethodAsync('deleteCredentials', [], 'post', {
     platform,
     ...metadata,
@@ -109,6 +112,7 @@ export async function validateCredentialsForPlatform(
   metadata: CredentialMetadata
 ): Promise<void> {
   const {
+    requestId,
     isValid,
     error,
     errorCode,
@@ -123,7 +127,7 @@ export async function validateCredentialsForPlatform(
   if (!isValid || error) {
     throw new XDLError(
       errorCode,
-      `Unable to validate credentials: ${errorMessage}`
+      `Unable to validate credentials. Request ID ${requestId}, message: ${errorMessage}`
     );
   }
 
@@ -134,6 +138,7 @@ export async function fetchAppleCertificates(
   metadata: CredentialMetadata
 ): Promise<void> {
   const {
+    requestId,
     err,
     success,
     error,
@@ -146,7 +151,7 @@ export async function fetchAppleCertificates(
   if (err || !success || error) {
     throw new XDLError(
       errorCode,
-      `Unable to fetch distribution certificate: ${errorMessage}`
+      `Unable to fetch distribution certificate. Request ID ${requestId}, message: ${errorMessage}`
     );
   }
 
@@ -155,6 +160,7 @@ export async function fetchAppleCertificates(
 
 export async function ensureAppId(metadata: CredentialMetadata): Promise<void> {
   const {
+    requestId,
     err,
     success,
     errorCode,
@@ -164,7 +170,10 @@ export async function ensureAppId(metadata: CredentialMetadata): Promise<void> {
   });
 
   if (err || !success) {
-    throw new XDLError(errorCode, `Unable to create app id: ${errorMessage}`);
+    throw new XDLError(
+      errorCode,
+      `Unable to create app id. Request ID ${requestId}, message: ${errorMessage}`
+    );
   }
 
   return success;
@@ -185,7 +194,7 @@ export async function fetchPushCertificates(
   if (result.err || !result.success) {
     throw new XDLError(
       result.errorCode,
-      `Unable to fetch push certificate: ${result.errorMessage}`
+      `Unable to fetch push certificate. Request ID ${result.requestId}, message: ${result.errorMessage}`
     );
   }
 

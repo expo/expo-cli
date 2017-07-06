@@ -92,7 +92,12 @@ export default class BaseBuilder {
             status = 'Build finished.';
             break;
           case 'errored':
-            status = `There was an error with this build. Please try again.`;
+            status = `There was an error with this build.
+
+When requesting support, please provide this build ID:
+
+${buildStatus.id}
+`;
             break;
           default:
             status = '';
@@ -165,6 +170,7 @@ export default class BaseBuilder {
     if (this.options.wait) {
       const { ipaUrl, apkUrl, buildErr } = buildResp;
       // do some stuff here
+      // FIXME(perry) this is duplicate code to the checkStatus function
       if (buildErr) {
         throw new BuildError(`Build failed with error.\n${buildErr}`);
       } else if (!ipaUrl || ipaUrl === '' || !apkUrl || apkUrl === '') {
@@ -178,9 +184,13 @@ export default class BaseBuilder {
 
       log('Successfully built standalone app!');
     } else {
-      log(
-        'Build successfully started, it may take a few minutes to complete. Run "exp build:status" to monitor it.'
-      );
+      log('Build started, it may take a few minutes to complete.');
+
+      if (buildResp.id) {
+        log(`Build ID: ${buildResp.id}`);
+      }
+
+      log('Run `exp build:status` to monitor it.');
     }
   }
 }
