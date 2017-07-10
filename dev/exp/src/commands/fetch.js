@@ -22,10 +22,16 @@ export default (program: any) => {
           remotePackageName,
           remoteFullPackageName: experienceName,
         },
-      } = await Exp.getPublishInfoAsync(process.cwd());
+      } = await Exp.getPublishInfoAsync(projectDir);
 
-      let distOutputFile = path.resolve(`${remotePackageName}_dist.p12`);
-      let pushOutputFile = path.resolve(`${remotePackageName}_push.p12`);
+      let distOutputFile = path.resolve(
+        projectDir,
+        `${remotePackageName}_dist.p12`
+      );
+      let pushOutputFile = path.resolve(
+        projectDir,
+        `${remotePackageName}_push.p12`
+      );
 
       const credentialMetadata = {
         username,
@@ -77,9 +83,9 @@ Push p12 password:         ${chalk.bold(pushPassword)}
           remotePackageName,
           remoteFullPackageName: experienceName,
         },
-      } = await Exp.getPublishInfoAsync(process.cwd());
+      } = await Exp.getPublishInfoAsync(projectDir);
 
-      let outputFile = path.resolve(`${remotePackageName}.jks`);
+      let outputFile = path.resolve(projectDir, `${remotePackageName}.jks`);
 
       const credentialMetadata = {
         username,

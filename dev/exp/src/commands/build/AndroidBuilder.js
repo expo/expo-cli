@@ -7,6 +7,8 @@ import path from 'path';
 import inquirer from 'inquirer';
 import untildify from 'untildify';
 import { Exp, Credentials } from 'xdl';
+import crayon from '@ccheever/crayon';
+import log from '../../log';
 
 import BaseBuilder from './BaseBuilder';
 
@@ -22,6 +24,66 @@ export default class AndroidBuilder extends BaseBuilder {
     const publishedExpIds = await this.publish();
     // Initiate a build
     await this.build(publishedExpIds, 'android');
+  }
+
+  async _clearCredentials() {
+    const {
+      args: {
+        username,
+        remotePackageName,
+        remoteFullPackageName: experienceName,
+      },
+    } = await Exp.getPublishInfoAsync(this.projectDir);
+
+    const credentialMetadata = {
+      username,
+      experienceName,
+      platform: 'android',
+    };
+
+    const localKeystorePath = path.resolve(`${remotePackageName}.jks`);
+    const localKeystoreExists = fs.existsSync(localKeystorePath);
+    if (localKeystoreExists) {
+      log.warn(
+        'Detected a local copy of an Android keystore. Please double check that the keystore is up to date so it can be used as a backup.'
+      );
+    } else {
+      log.warn(
+        'Cannot find a local keystore in the current project directory.'
+      );
+      log.warn('Can you make sure you have a local backup of your keystore?');
+      log.warn(
+        'You can fetch an updated version from our servers by using `exp fetch:android:keystore [project-dir]`'
+      );
+    }
+    log.warn(
+      `Clearing your Android build credentials from our build servers is a ${crayon.red(
+        'PERMANENT and IRREVERSIBLE action.'
+      )}`
+    );
+    log.warn(
+      'Android keystores must be identical to the one previously used to submit your app to the Google Play Store.'
+    );
+    log.warn(
+      'Please read https://docs.expo.io/versions/latest/guides/building-standalone-apps.html#if-you-choose-to-build-for-android for more info before proceeding.'
+    );
+    let questions = [
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message:
+          'Permanently delete the Android build credentials from our servers?',
+      },
+    ];
+
+    const answers = await inquirer.prompt(questions);
+
+    if (answers.confirm) {
+      await Credentials.removeCredentialsForPlatform(
+        'android',
+        credentialMetadata
+      );
+    }
   }
 
   async collectAndValidateCredentials() {
@@ -107,10 +169,7 @@ export default class AndroidBuilder extends BaseBuilder {
 
       if (!answers.uploadKeystore) {
         if (this.options.clearCredentials) {
-          await Credentials.removeCredentialsForPlatform(
-            'android',
-            credentialMetadata
-          );
+          await this._clearCredentials();
         }
         return; // just continue
       } else {
