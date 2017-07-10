@@ -10,6 +10,20 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [42.2.0] - 2017-07-10
+* Provide ngrok in exp install, since xdl no longer provides it.
+* `exp login` prompts to confirm you want to log out if you already have a session.
+* No longer display QR code if running a detached app, to encourage using the built-in URL that comes from building the ExpoKit app from source.
+* `exp login` and `exp whoami` are easier to read.
+* Only display error stacktraces if `EXPO_DEBUG` environment variable is set.
+* Support non-interactive logins properly.
+* Cleaned up `exp init` UI.
+* `exp init` prompts for a project name if it's not provided on the command line.
+* Move to a fork of bunyan to prevent DTraceProviderBindings errors never show up.
+* Removed deprecated package warnings.
+* Display standalone build IDs if they fail, should make support requests much easier.
+* Support clearing standalone Android keystores again. This will prompt you to make sure your keystore is backed up.
+
 ## [42.0.0] - 2017-06-22
 
 ### Changed
