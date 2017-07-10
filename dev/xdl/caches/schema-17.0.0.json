@@ -313,7 +313,7 @@
             "additionalProperties": true
           },
           "associatedDomains": {
-            "description": "Associated Domains for the standalone app.",
+            "description": "An array that contains Associated Domains for the standalone app.",
             "type": "array"
           }
         },

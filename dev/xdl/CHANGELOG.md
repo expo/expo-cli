@@ -10,12 +10,33 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [42.4.0] - 2017-07-10
+* Make ngrok a dev dependency of xdl, needs to be provided by xdl consumers that expect to create tunnels. (Yay for drastically smaller CRNA installs!)
+* Remove react peer dependency and associated warnings -- xdl consumers should provide react.
+* Setting offline mode will no longer automatically log a user out.
+* Validate npm against a version range, not just any 5.x.x release.
+* Use a fork of bunyan without DTraceProviderBindings issues.
+* Remove deprecation warnings about @exponent/* packages.
+* Display standalone build IDs in error messages so users can get help much faster on failed builds.
+
+## [42.3.0] - 2017-07-07
+* Convert wrong npm version to warning, was error.
+* Log debug log messages to file, skip terminal.
+
+## [42.2.0]
+* Suppress some spurious @providesModule warnings that come from RN itself.
+
+## [42.1.0] - 2017-06-23
+* Fixed a couple of issues with checking npm version.
+* Backed out Axios network requests.
+
 ## [42.0.0] - 2017-06-22
 * Move network requests to Axios.
 * Warn if using an unsupported npm version.
+* Provide cached schema for validating SDK 18 projects.
 
 ## [41.0.0] - 2017-05-12
-* Post-publish hook.
+* Post-publish hooks.
 
 ### Added
 * Better log reporting

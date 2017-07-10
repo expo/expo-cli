@@ -308,7 +308,7 @@
             "additionalProperties": false
           },
           "isRemoteJSEnabled": {
-            "description": "If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through Apple review. Defaults to true.",
+            "description": "If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through Apple review. Defaults to true. (Note that this will not work out of the box with ExpoKit projects)",
             "type": "boolean"
           },
           "supportsTablet": {
@@ -326,7 +326,7 @@
             "additionalProperties": true
           },
           "associatedDomains": {
-            "description": "Associated Domains for the standalone app.",
+            "description": "An array that contains Associated Domains for the standalone app.",
             "type": "array"
           }
         },
