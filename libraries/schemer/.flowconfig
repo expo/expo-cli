@@ -1,0 +1,5 @@
+[ignore]
+<ROOT_DIR>/build
+[options]
+unsafe.enable_getters_and_setters=true
+

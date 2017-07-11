@@ -1,0 +1,31 @@
+{
+  "name": "@expo/schemer",
+  "version": "1.0.22",
+  "description": "Centralized scheme validation library for Expo",
+  "main": "./build/index.js",
+  "scripts": {
+    "test": "jest",
+    "watch": "babel -w src -d build",
+    "build": "babel src -d build",
+    "prepublish": "npm run build",
+    "testWatch": "npm run buildbg; jest --watch",
+    "buildbg": "babel -w src -d build &"
+  },
+  "author": "Wilson Zhao wilson.in@expo.io",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-jest": "^20.0.3",
+    "babel-preset-env": "^1.6.0",
+    "jest": "^20.0.4"
+  },
+  "dependencies": {
+    "ajv": "^5.2.2",
+    "babel-polyfill": "^6.23.0",
+    "file-type": "^5.2.0",
+    "instapromise": "^2.0.7",
+    "lodash": "^4.17.4",
+    "probe-image-size": "^3.1.0",
+    "read-chunk": "^2.0.0"
+  }
+}
