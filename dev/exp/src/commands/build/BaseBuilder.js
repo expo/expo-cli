@@ -92,12 +92,13 @@ export default class BaseBuilder {
             status = 'Build finished.';
             break;
           case 'errored':
-            status = `There was an error with this build.
-
-When requesting support, please provide this build ID:
+            status = 'There was an error with this build.';
+            if (buildStatus.id) {
+              status += `When requesting support, please provide this build ID:
 
 ${buildStatus.id}
 `;
+            }
             break;
           default:
             status = '';
