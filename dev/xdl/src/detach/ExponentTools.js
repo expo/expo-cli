@@ -99,16 +99,43 @@ async function transformFileContentsAsync(filename, transform) {
   return;
 }
 
-/**
- *  @param plistName base filename of property list. if no extension, assumes .plist
- */
-async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
+function getNormalizedPlistFilename(plistName) {
   let plistFilename;
   if (plistName.indexOf('.') !== -1) {
     plistFilename = plistName;
   } else {
     plistFilename = `${plistName}.plist`;
   }
+  return plistFilename;
+}
+
+async function createBlankIOSPropertyListAsync(plistPath, plistName) {
+  // write empty json file
+  const emptyConfig = {};
+  const tmpConfigFile = path.join(plistPath, `${plistName}.json`);
+  await fs.promise.writeFile(tmpConfigFile, JSON.stringify(emptyConfig));
+
+  // convert to plist
+  let plistFilename = getNormalizedPlistFilename(plistName);
+  let configPlistName = path.join(plistPath, plistFilename);
+  await spawnAsyncThrowError('plutil', [
+    '-convert',
+    'xml1',
+    tmpConfigFile,
+    '-o',
+    configPlistName,
+  ]);
+
+  // remove tmp json file
+  await spawnAsyncThrowError('/bin/rm', [tmpConfigFile]);
+  return;
+}
+
+/**
+ *  @param plistName base filename of property list. if no extension, assumes .plist
+ */
+async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
+  let plistFilename = getNormalizedPlistFilename(plistName);
   let configPlistName = path.join(plistPath, plistFilename);
   let configFilename = path.join(plistPath, `${plistName}.json`);
 
@@ -155,12 +182,7 @@ async function cleanIOSPropertyListBackupAsync(
   plistName,
   restoreOriginal = true
 ) {
-  let plistFilename;
-  if (plistName.indexOf('.') !== -1) {
-    plistFilename = plistName;
-  } else {
-    plistFilename = `${plistName}.plist`;
-  }
+  let plistFilename = getNormalizedPlistFilename(plistName);
   let configPlistName = path.join(plistPath, plistFilename);
   let configFilename = path.join(plistPath, `${plistName}.json`);
 
@@ -338,4 +360,5 @@ export {
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
   configureIOSIconsAsync,
+  createBlankIOSPropertyListAsync,
 };

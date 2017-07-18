@@ -18,6 +18,7 @@ import uuid from 'uuid';
 import yesno from 'yesno';
 
 import {
+  createBlankIOSPropertyListAsync,
   parseSdkMajorVersion,
   saveIconToPathAsync,
   spawnAsyncThrowError,
@@ -664,6 +665,21 @@ async function detachAndroidAsync(
   console.log('Android detach is complete!\n');
 }
 
+async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
+  // EXBuildConstants is included in newer ExpoKit projects.
+  // create it if it doesn't exist.
+  const doesBuildConstantsExist = fs.existsSync(
+    path.join(configFilePath, 'EXBuildConstants.plist')
+  );
+  if (!doesBuildConstantsExist) {
+    await createBlankIOSPropertyListAsync(configFilePath, 'EXBuildConstants');
+    console.log(
+      'Created `EXBuildConstants.plist` because it did not exist yet'
+    );
+  }
+  return;
+}
+
 export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
@@ -699,18 +715,10 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
         'Supporting'
       );
 
-      // EXBuildConstants is included in newer ExpoKit projects,
-      // but in the case of older ones, modify the deprecated file instead
-      // (there will be a deprecation warning when they run the project).
-      const doesBuildConstantsExist = fs.existsSync(
-        path.join(configFilePath, 'EXBuildConstants.plist')
-      );
-      const fileToModify = doesBuildConstantsExist
-        ? 'EXBuildConstants'
-        : 'EXShell';
+      await ensureBuildConstantsExistsIOSAsync(configFilePath);
       await modifyIOSPropertyListAsync(
         configFilePath,
-        fileToModify,
+        'EXBuildConstants',
         constantsConfig => {
           constantsConfig.developmentUrl = devUrl;
           return constantsConfig;
