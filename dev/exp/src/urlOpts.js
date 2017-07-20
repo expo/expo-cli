@@ -1,5 +1,5 @@
 import indentString from 'indent-string';
-import _ from 'lodash-node';
+import _ from 'lodash';
 import qrcodeTerminal from 'qrcode-terminal';
 
 import { Android, ProjectSettings, Simulator } from 'xdl';
@@ -57,7 +57,8 @@ async function optsAsync(projectDir, options) {
   var opts = await ProjectSettings.readAsync(projectDir);
 
   if (
-    !!options.host + !!options.lan + !!options.localhost + !!options.tunnel > 1
+    !!options.host + !!options.lan + !!options.localhost + !!options.tunnel >
+    1
   ) {
     throw CommandError(
       'BAD_ARGS',
@@ -66,7 +67,8 @@ async function optsAsync(projectDir, options) {
   }
 
   if (
-    !!options.protocol + !!options.exp + !!options.http + !!options.redirect > 1
+    !!options.protocol + !!options.exp + !!options.http + !!options.redirect >
+    1
   ) {
     throw CommandError(
       'BAD_ARGS',

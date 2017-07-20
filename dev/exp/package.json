@@ -71,7 +71,7 @@
     "inquirer": "^2.0.0",
     "inquirer-async": "^1.1.0",
     "instapromise": "2.0.7-rc.1",
-    "lodash-node": "^3.10.0",
+    "lodash": "^4.17.4",
     "md5hex": "^1.0.0",
     "mz": "^2.6.0",
     "progress": "^2.0.0",
