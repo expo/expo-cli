@@ -335,19 +335,51 @@ async function _validatePackageJsonAndExpJsonAsync(
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-sdk-version');
 
+  const reactNativeIssue = await _validateReactNativeVersionAsync(
+    exp,
+    pkg,
+    projectRoot,
+    sdkVersions,
+    sdkVersion
+  );
+
+  if (reactNativeIssue !== NO_ISSUES) {
+    return reactNativeIssue;
+  }
+
+  // TODO: Check any native module versions here
+
+  return NO_ISSUES;
+}
+
+async function _validateReactNativeVersionAsync(
+  exp,
+  pkg,
+  projectRoot,
+  sdkVersions,
+  sdkVersion
+): Promise<number> {
   if (Config.validation.reactNativeVersionWarnings) {
     let reactNative = pkg.dependencies['react-native'];
 
-    // Expo fork of react-native is required
     // TODO(2016-12-20): Remove the check for our old "exponentjs" org eventually
     if (!reactNative.match(/(exponent(?:js)?|expo)\/react-native/)) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`,
-        'doctor-not-using-expo-fork'
-      );
-      return WARNING;
+      return NO_ISSUES;
+
+      // (TODO-2017-07-20): Validate the react-native version if it uses
+      // officially published package rather than Expo fork. Expo fork of
+      // react-native was required before CRNA. We now only run the react-native
+      // validation of the version if we are using the fork. We should probably
+      // validate the version here as well such that it matches with the
+      // react-native version compatible with the selected SDK.
+      //
+      // ProjectUtils.logWarning(
+      //   projectRoot,
+      //   'expo',
+      //   `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`,
+      //   'doctor-not-using-expo-fork'
+      // );
+      // return WARNING;
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
 
@@ -367,7 +399,7 @@ async function _validatePackageJsonAndExpJsonAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject[
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject[
             'expoReactNativeTag'
           ]}`,
           'doctor-invalid-version-of-react-native'
@@ -393,8 +425,6 @@ async function _validatePackageJsonAndExpJsonAsync(
       return WARNING;
     }
   }
-
-  // TODO: Check any native module versions here
 
   return NO_ISSUES;
 }
