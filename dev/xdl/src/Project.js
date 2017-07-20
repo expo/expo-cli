@@ -125,14 +125,24 @@ async function _getForPlatformAsync(
 
   if (response.statusCode !== 200) {
     if (response.body) {
-      let body = JSON.parse(response.body);
-      if (body && body.message) {
-        ProjectUtils.logError(projectRoot, 'expo', body.message);
+      let body;
+      try {
+        body = JSON.parse(response.body);
+      } catch (e) {
+        ProjectUtils.logError(projectRoot, 'expo', response.body);
+      }
+
+      if (body !== undefined) {
+        if (body.message) {
+          ProjectUtils.logError(projectRoot, 'expo', body.message);
+        } else {
+          ProjectUtils.logError(projectRoot, 'expo', response.body);
+        }
       }
     }
     throw new XDLError(
       errorCode,
-      `Packager url ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
+      `Packager URL ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
     );
   }
 
