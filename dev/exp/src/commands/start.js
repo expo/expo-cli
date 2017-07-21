@@ -5,6 +5,7 @@
 import { ProjectUtils, Project, UrlUtils } from 'xdl';
 
 import crayon from '@ccheever/crayon';
+import simpleSpinner from '@expo/simple-spinner';
 import path from 'path';
 
 import log from '../log';
@@ -81,5 +82,5 @@ export default (program: any) => {
     .urlOpts()
     .allowNonInteractive()
     .allowOffline()
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(action, true);
 };

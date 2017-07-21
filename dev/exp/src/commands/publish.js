@@ -71,5 +71,5 @@ export default (program: any) => {
       'A phone number or e-mail address to send a link to'
     )
     .allowNonInteractive()
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(action, true);
 };

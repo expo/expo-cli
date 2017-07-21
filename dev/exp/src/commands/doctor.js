@@ -16,5 +16,5 @@ export default program => {
     .command('doctor [project-dir]')
     .description('Diagnoses issues with your Expo project.')
     .allowNonInteractive()
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(action, true);
 };

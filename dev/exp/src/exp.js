@@ -22,6 +22,7 @@ import {
   Logger,
   PackagerLogsStream,
   NotificationCode,
+  Project,
   ProjectUtils,
   User as UserManager,
 } from 'xdl';
@@ -217,12 +218,21 @@ Command.prototype.asyncActionProjectDir = function(
       type: 'raw',
     });
 
-    // the existing CLI modules only pass one argument to this function, so skipProjectValidation
-    // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
-    if (!skipProjectValidation) {
+    // The existing CLI modules only pass one argument to this function, so skipProjectValidation
+    // will be undefined in most cases. we can explicitly pass a truthy value here to avoid
+    // validation (eg for init)
+    //
+    // If the packager/manifest server is running and healthy, there is no need 
+    // to rerun Doctor because the directory was already checked previously
+    // This is relevant for command such as `exp send`
+    if (
+      !skipProjectValidation &&
+      (await Project.currentStatus(projectDir)) !== 'running'
+    ) {
       log('Making sure project is set up correctly...');
       simpleSpinner.start();
       // validate that this is a good projectDir before we try anything else
+
       let status = await Doctor.validateLowLatencyAsync(projectDir);
       if (status === Doctor.FATAL) {
         throw new Error(
