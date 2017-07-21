@@ -10,7 +10,16 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [43.0.0] - 2017-07-21
+
+### Changed
+
+* Update `xdl` to v43.0.0.
+
 ## [42.2.0] - 2017-07-10
+
+### Changed
+
 * Provide ngrok in exp install, since xdl no longer provides it.
 * `exp login` prompts to confirm you want to log out if you already have a session.
 * No longer display QR code if running a detached app, to encourage using the built-in URL that comes from building the ExpoKit app from source.

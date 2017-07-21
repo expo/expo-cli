@@ -10,41 +10,69 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [43.0.0] - 2017-07-21
+
+### Changed
+
+* Catch errors in state.json parsing
+* Detach updates for SDK 19
+* Don't validate React Native version when not using our fork
+
 ## [42.4.0] - 2017-07-10
+
+### Changed
+
 * Make ngrok a dev dependency of xdl, needs to be provided by xdl consumers that expect to create tunnels. (Yay for drastically smaller CRNA installs!)
 * Remove react peer dependency and associated warnings -- xdl consumers should provide react.
 * Setting offline mode will no longer automatically log a user out.
 * Validate npm against a version range, not just any 5.x.x release.
 * Use a fork of bunyan without DTraceProviderBindings issues.
 * Remove deprecation warnings about @exponent/* packages.
+
+### Added
+
 * Display standalone build IDs in error messages so users can get help much faster on failed builds.
 
 ## [42.3.0] - 2017-07-07
+
+### Changed
+
 * Convert wrong npm version to warning, was error.
 * Log debug log messages to file, skip terminal.
 
 ## [42.2.0]
+
+### Changed
+
 * Suppress some spurious @providesModule warnings that come from RN itself.
 
 ## [42.1.0] - 2017-06-23
+
+### Changed
+
 * Fixed a couple of issues with checking npm version.
 * Backed out Axios network requests.
 
 ## [42.0.0] - 2017-06-22
+
+### Changed
+
 * Move network requests to Axios.
 * Warn if using an unsupported npm version.
 * Provide cached schema for validating SDK 18 projects.
 
 ## [41.0.0] - 2017-05-12
-* Post-publish hooks.
 
 ### Added
+
+* Post-publish hooks.
 * Better log reporting
 * Fix Android HMR bug by adding `:80` to url.
 
 ## [39.0.0] - 2017-04-06
 
 ### Added
+
 * Better log reporting
 * Fix Android HMR bug by adding `:80` to url.
 
