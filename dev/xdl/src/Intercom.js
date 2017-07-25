@@ -2,7 +2,10 @@
  * @flow
  */
 
+import ApiV2Client from './ApiV2';
 import * as Diagnostics from './Diagnostics';
+
+import type { User } from './User';
 
 let _version;
 let _isBooted = false;
@@ -11,7 +14,7 @@ function _isWindowDefined() {
   return typeof window !== 'undefined' && window && window.Intercom;
 }
 
-export async function update(user_id: ?string, user_hash: ?string) {
+export async function update(user: ?User) {
   try {
     if (_isWindowDefined()) {
       let deviceInfo = {};
@@ -24,10 +27,19 @@ export async function update(user_id: ?string, user_hash: ?string) {
         console.error(e);
       }
 
+      // Fetch intercomUserHash from www in order to make sure it's
+      // always fresh and generated from the correct Intercom secret.
+      const username = user ? user.username : null;
+      let intercomUserHash = null;
+      if (user) {
+        const api = ApiV2Client.clientForUser(user);
+        ({ intercomUserHash } = await api.getAsync('auth/intercomUserHash'));
+      }
+
       let data = {
         app_id: 'beew3st8',
-        user_id,
-        user_hash,
+        user_id: username,
+        user_hash: intercomUserHash,
         ...deviceInfo,
       };
 
@@ -39,7 +51,7 @@ export async function update(user_id: ?string, user_hash: ?string) {
       }
 
       if (_isBooted) {
-        if (user_id) {
+        if (username) {
           // Call update so that any conversations carry over from the logged out to
           // the logged in user.
           window.Intercom('update', data);

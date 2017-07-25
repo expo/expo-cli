@@ -483,7 +483,7 @@ export class UserManagerInstance {
     await UserSettings.deleteKeyAsync('username');
 
     // Logout of Intercom
-    Intercom.update(null, null);
+    Intercom.update(null);
   }
 
   /**
@@ -638,10 +638,10 @@ export class UserManagerInstance {
       });
 
       if (user.intercomUserHash) {
-        Intercom.update(user.username, user.intercomUserHash);
+        Intercom.update(user);
       }
     } else {
-      Intercom.update(null, null);
+      Intercom.update(null);
     }
 
     this._currentUser = user;

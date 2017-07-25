@@ -36,6 +36,7 @@ type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put',
   queryParameters?: ?QueryParameters,
   body?: ?Object,
+  json?: boolean,
 };
 
 type QueryParameters = { [key: string]: ?(string | number | boolean) };
@@ -84,6 +85,7 @@ export default class ApiV2Client {
       {
         httpMethod: 'get',
         queryParameters: args,
+        json: true,
       },
       extraOptions
     );
@@ -132,6 +134,7 @@ export default class ApiV2Client {
       headers: {
         'Exponent-Client': 'xdl',
       },
+      json: typeof options.json !== 'undefined' ? options.json : false,
     };
 
     if (this.idToken) {
