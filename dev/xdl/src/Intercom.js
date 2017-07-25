@@ -25,7 +25,7 @@ export async function update(user_id: ?string, user_hash: ?string) {
       }
 
       let data = {
-        app_id: 'fhlr5ht1',
+        app_id: 'beew3st8',
         user_id,
         user_hash,
         ...deviceInfo,
