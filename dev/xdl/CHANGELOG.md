@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [43.0.1] - 2017-07-25
+
+### Added
+
+* Re-enable intercom
+
 ## [43.0.0] - 2017-07-21
 
 ### Changed
