@@ -1,6 +1,6 @@
 {
   "name": "@expo/schemer",
-  "version": "1.0.27",
+  "version": "1.0.28",
   "description": "Centralized scheme validation library for Expo",
   "main": "./build/index.js",
   "scripts": {
@@ -17,7 +17,7 @@
     "babel-cli": "^6.24.1",
     "babel-jest": "^20.0.3",
     "babel-preset-env": "^1.6.0",
-    "flow-bin": "^0.51.0",
+    "flow-bin": "^0.51.1",
     "jest": "^20.0.4"
   },
   "dependencies": {

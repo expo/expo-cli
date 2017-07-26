@@ -20,6 +20,7 @@ import {
 
 type Options = {
   allErrors?: boolean,
+  rootDir?: string,
   verbose?: boolean,
   format?: 'full' | 'empty', //figure out later
   metaValidation?: boolean,

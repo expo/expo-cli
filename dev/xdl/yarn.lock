@@ -43,9 +43,9 @@
     babel-runtime "^6.23.0"
     exec-async "^2.2.0"
 
-"@expo/schemer@^1.0.27":
-  version "1.0.27"
-  resolved "https://registry.yarnpkg.com/@expo/schemer/-/schemer-1.0.27.tgz#34d4ed330ddde5e2224be70691ac3ea4b861135b"
+"@expo/schemer@^1.0.28":
+  version "1.0.28"
+  resolved "https://registry.yarnpkg.com/@expo/schemer/-/schemer-1.0.28.tgz#07b4d16e4efb9716e3ca953e0d0cc68c685f529a"
   dependencies:
     ajv "^5.2.2"
     babel-polyfill "^6.23.0"

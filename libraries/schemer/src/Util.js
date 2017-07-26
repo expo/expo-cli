@@ -8,7 +8,7 @@ export const fieldPathToSchemaPath = (fieldPath: string) => {
     _.fill(fieldPath.split('.'), 'properties'),
     fieldPath.split('.')
   );
-  return _.flatten(newPath).join('.');
+  return _.flatten(((newPath: any): Array<Array<string>>)).join('.');
 };
 // Assumption: used only for jsonPointer returned from traverse
 export const schemaPointerToFieldPath = (jsonPointer: string) => {
