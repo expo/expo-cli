@@ -51,6 +51,9 @@ module.exports = {
   get Exp() {
     return require('./Exp');
   },
+  get ExpSchema() {
+    return require('./project/ExpSchema');
+  },
   get FileSystem() {
     return require('./FileSystem');
   },
