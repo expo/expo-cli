@@ -11,7 +11,7 @@ import fs from 'fs';
 import traverse from 'json-schema-traverse';
 import readChunk from 'read-chunk';
 import imageProbe from 'probe-image-size';
-import { ValidationError, ErrorCodes } from './ValidationError';
+import { SchemerError, ValidationError, ErrorCodes } from './Error';
 import {
   fieldPathToSchemaPath,
   schemaPointerToFieldPath,
@@ -33,6 +33,7 @@ type Meta = {
   contentTypeHuman: string,
 };
 
+export { SchemerError, ValidationError, ErrorCodes } from './Error';
 export default class Schemer {
   options: Options;
   ajv: Object;
@@ -116,11 +117,10 @@ export default class Schemer {
     }
   }
 
-  get errors(): Array<ValidationError> {
+  getErrors(): Array<ValidationError> {
     // Convert AJV JSONSchema errors to our ValidationErrors
     let valErrors = [];
     if (this.ajv.errors) {
-      console.log(this.ajv.errors);
       valErrors = this.ajv.errors.map(e => this._formatAjvErrorMessage(e));
     }
     const bothErrors = _.concat(valErrors, this.manualValidationErrors);
@@ -129,11 +129,11 @@ export default class Schemer {
 
   _throwOnErrors() {
     // Clean error state after each validation
-    const errors = this.errors;
+    const errors = this.getErrors();
     if (errors.length > 0) {
       this.manualValidationErrors = [];
       this.ajv.errors = [];
-      throw errors;
+      throw new SchemerError(errors);
     }
   }
 
@@ -141,19 +141,16 @@ export default class Schemer {
     await this._validateSchemaAsync(data);
     await this._validateAssetsAsync(data);
     this._throwOnErrors();
-    return true;
   }
 
   async validateAssetsAsync(data: any) {
     await this._validateAssetsAsync(data);
     this._throwOnErrors();
-    return true;
   }
 
   async validateSchemaAsync(data: any) {
     await this._validateSchemaAsync(data);
     this._throwOnErrors();
-    return true;
   }
 
   _validateSchemaAsync(data: any) {
@@ -262,18 +259,16 @@ export default class Schemer {
         );
       }
     }
-    return true;
   }
 
   async validateProperty(fieldPath: string, data: any) {
     const subSchema = fieldPathToSchema(this.schema, fieldPath);
-    const pass = this.ajv.validate(subSchema, data);
+    this.ajv.validate(subSchema, data);
 
     if (subSchema.meta && subSchema.meta.asset) {
       await this._validateAssetAsync({ fieldPath, data, meta: subSchema.meta });
-      this._throwOnErrors();
     }
-    return pass;
+    this._throwOnErrors();
   }
 
   validateName(name: string) {

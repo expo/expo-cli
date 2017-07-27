@@ -4,7 +4,7 @@ import {
   pathToSchemaPath,
   schemaPointerToPath,
 } from '../src/Util';
-import { ValidationError, ErrorCodes } from '../src/ValidationError.js';
+import { SchemerError, ValidationError, ErrorCodes } from '../src/Error.js';
 
 describe('Sanity Tests', () => {
   it('is a class', () => {
@@ -28,11 +28,11 @@ const bad = require('./files/bad.json');
 
 describe('Holistic Unit Test', () => {
   it('good example app.json all', async () => {
-    await expect(S.validateAll(good)).resolves.toBe(true);
+    await expect(S.validateAll(good)).resolves;
   });
 
   it('good example app.json schema', async () => {
-    await expect(S.validateSchemaAsync(good)).resolves.toBe(true);
+    await expect(S.validateSchemaAsync(good)).resolves;
   });
 
   it('bad example app.json schema', async () => {
@@ -41,7 +41,7 @@ describe('Holistic Unit Test', () => {
     } catch (e) {
       console.log(e);
       expect(e).toBeTruthy();
-      expect(e.length).toBe(5);
+      expect(e.errors.length).toBe(5);
     }
   });
 
@@ -50,14 +50,14 @@ describe('Holistic Unit Test', () => {
       await S.validateAll(bad);
     } catch (e) {
       expect(e).toBeTruthy();
-      expect(e.length).toBe(6);
+      expect(e.errors.length).toBe(6);
     }
   });
 });
 
 describe('Manual Validation Individual Unit Tests', () => {
   it('Local Icon', async () => {
-    await expect(S.validateIcon('./files/check.png')).resolves.toBe(true);
+    await expect(S.validateIcon('./files/check.png')).resolves;
   });
 
   it('Remote Icon', async () => {
@@ -65,7 +65,7 @@ describe('Manual Validation Individual Unit Tests', () => {
       S.validateIcon(
         'https://upload.wikimedia.org/wikipedia/commons/0/0f/Icon_Pinguin_2_512x512.png'
       )
-    ).resolves.toBe(true);
+    ).resolves;
   });
 
   it('Local Square Icon correct', async () => {
@@ -73,7 +73,7 @@ describe('Manual Validation Individual Unit Tests', () => {
       { properties: { icon: { meta: { asset: true, square: true } } } },
       { rootDir: './__tests__' }
     );
-    await expect(S.validateIcon('./files/check.png')).resolves.toBe(true);
+    await expect(S.validateIcon('./files/check.png')).resolves;
   });
   it('Remote icon dimensions correct', async () => {
     const S = new Schemer({
@@ -83,9 +83,7 @@ describe('Manual Validation Individual Unit Tests', () => {
         },
       },
     });
-    await expect(S.validateIcon('https://httpbin.org/image/png')).resolves.toBe(
-      true
-    );
+    await expect(S.validateIcon('https://httpbin.org/image/png')).resolves;
   });
 
   it('Local icon dimensions wrong', async () => {
@@ -100,7 +98,7 @@ describe('Manual Validation Individual Unit Tests', () => {
       await S.validateIcon('./files/check.png');
     } catch (e) {
       expect(e).toBeTruthy();
-      expect(e.length).toBe(1);
+      expect(e.errors.length).toBe(1);
     }
   });
 
@@ -119,7 +117,7 @@ describe('Manual Validation Individual Unit Tests', () => {
       await S.validateIcon('https://httpbin.org/image/png');
     } catch (e) {
       expect(e).toBeTruthy();
-      expect(e.length).toBe(1);
+      expect(e.errors.length).toBe(1);
     }
   });
 });
@@ -135,8 +133,10 @@ describe('Individual Unit Tests', async () => {
     try {
       await S.validateAll({ noName: '' });
     } catch (e) {
-      expect(e.length).toBe(1);
-      expect(e[0].errorCode).toBe(ErrorCodes.SCHEMA_MISSING_REQUIRED_PROPERTY);
+      expect(e.errors.length).toBe(1);
+      expect(e.errors[0].errorCode).toBe(
+        ErrorCodes.SCHEMA_MISSING_REQUIRED_PROPERTY
+      );
     }
   });
 
@@ -145,39 +145,38 @@ describe('Individual Unit Tests', async () => {
     try {
       await S.validateAll({ extraProperty: 'extra' });
     } catch (e) {
-      expect(e.length).toBe(1);
-      expect(e[0].errorCode).toBe(ErrorCodes.SCHEMA_ADDITIONAL_PROPERTY);
+      expect(e.errors.length).toBe(1);
+      expect(e.errors[0].errorCode).toBe(ErrorCodes.SCHEMA_ADDITIONAL_PROPERTY);
     }
   });
 
   it('Name', async () => {
-    await expect(S.validateName('wilson')).resolves.toBe(true);
-    await expect(S.validateName([1, 2, 3, 4])).resolves.toBe(false);
-    await expect(S.validateName(23.232332)).resolves.toBe(false);
-    await expect(S.validateName(/regex.*/)).resolves.toBe(false);
+    await expect(S.validateName('wilson')).resolves;
+    await expect(S.validateName([1, 2, 3, 4])).rejects.toBeDefined();
+    await expect(S.validateName(23.232332)).rejects.toBeDefined();
+    await expect(S.validateName(/regex.*/)).rejects.toBeDefined();
   });
 
-  it('Slug', async () => {
-    await expect(S.validateSlug('wilson')).resolves.toBe(true);
-    await expect(S.validateSlug(12312123123)).resolves.toBe(false);
-    await expect(S.validateSlug([1, 23])).resolves.toBe(false);
+  xit('Slug', async () => {
+    await expect(S.validateSlug('wilson')).resolves;
+    await expect(S.validateSlug(12312123123)).rejects.toBeDefined();
+    await expect(S.validateSlug([1, 23])).rejects.toBeDefined();
 
-    await expect(S.validateSlug('wilson123')).resolves.toBe(true);
-    await expect(S.validateSlug('wilson-123')).resolves.toBe(true);
-    await expect(S.validateSlug('wilson/test')).resolves.toBe(false);
-    await expect(S.validateSlug('wilson-test%')).resolves.toBe(false);
-    await expect(
-      S.validateSlug('wilson-test-zhao--javascript-is-super-funky')
-    ).resolves.toBe(true);
+    await expect(S.validateSlug('wilson123')).resolves;
+    await expect(S.validateSlug('wilson-123')).resolves;
+    await expect(S.validateSlug('wilson/test')).rejects.toBeDefined();
+    await expect(S.validateSlug('wilson-test%')).rejects.toBeDefined();
+    await expect(S.validateSlug('wilson-test-zhao--javascript-is-super-funky'))
+      .resolves;
   });
 
-  it('SDK Version', async () => {
-    await expect(S.validateSdkVersion('1.0.0')).resolves.toBe(true);
+  xit('SDK Version', async () => {
+    await expect(S.validateSdkVersion('1.0.0')).resolves;
     // TODO: is the following allowed?
-    await expect(S.validateSdkVersion('2.0.0.0.1')).resolves.toBe(false);
-    await expect(S.validateSdkVersion('UNVERSIONED')).resolves.toBe(true);
-    await expect(S.validateSdkVersion('12.2a.3')).resolves.toBe(false);
-    await expect(S.validateSdkVersion('9,9,9')).resolves.toBe(false);
-    await expect(S.validateSdkVersion('1.2')).resolves.toBe(false);
+    await expect(S.validateSdkVersion('2.0.0.0.1')).rejects.toBeDefined();
+    await expect(S.validateSdkVersion('UNVERSIONED')).resolves;
+    await expect(S.validateSdkVersion('12.2a.3')).rejects.toBeDefined();
+    await expect(S.validateSdkVersion('9,9,9')).rejects.toBeDefined();
+    await expect(S.validateSdkVersion('1.2')).rejects.toBeDefined();
   });
 });

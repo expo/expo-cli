@@ -14,7 +14,7 @@ import spawnAsync from '@expo/spawn-async';
 import readChunk from 'read-chunk';
 import fileType from 'file-type';
 
-import Schemer from '@expo/schemer';
+import Schemer, { SchemerError } from '@expo/schemer';
 
 import * as ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
@@ -142,24 +142,24 @@ export async function validateWithSchema(
   // Validate the schema itself
   try {
     await validator.validateSchemaAsync(exp);
-  } catch (errors) {
-    if (errors && errors.length > 0) {
-      schemaErrorMessage = `Warning: Problem${errors.length > 1
+  } catch (e) {
+    if (e instanceof SchemerError) {
+      schemaErrorMessage = `Warning: Problem${e.errors.length > 1
         ? 's'
         : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
-      schemaErrorMessage += errors.map(formatValidationError).join('');
+      schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
 
   if (validateAssets) {
     try {
       await validator.validateAssetsAsync(exp);
-    } catch (errors) {
-      if (errors && errors.length > 0) {
-        assetsErrorMessage = `Warning: Problem${errors.length > 1
+    } catch (e) {
+      if (e instanceof SchemerError) {
+        assetsErrorMessage = `Warning: Problem${e.errors.length > 1
           ? ''
           : 's'} validating asset fields in ${configName}. See ${Config.helpUrl}`;
-        assetsErrorMessage += errors.map(formatValidationError).join('');
+        assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
   }

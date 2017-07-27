@@ -4,14 +4,17 @@
 
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';
+import * as ProjectUtils from './ProjectUtils';
+
 import Schemer from '@expo/schemer';
 
-export async function validatorFromProjectRoot(projectRoot) {
-  let validator;
+let _xdlSchemaJson = {};
+
+export async function validatorFromProjectRoot(projectRoot: string): Schemer {
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp) throw new Error(`Couldn't read local manifest`);
   const schema = await getSchemaAsync(exp.sdkVersion);
-  validator = new Schemer(schema);
+  const validator = new Schemer(schema);
   return validator;
 }
 

@@ -32,7 +32,7 @@
     "@expo/bunyan": "^1.8.10",
     "@expo/json-file": "^5.3.0",
     "@expo/osascript": "^1.8.0",
-    "@expo/schemer": "^1.0.22",
+    "@expo/schemer": "^1.0.27",
     "@expo/spawn-async": "^1.2.8",
     "analytics-node": "^2.1.0",
     "auth0": "^2.7.0",
