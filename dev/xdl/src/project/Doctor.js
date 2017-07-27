@@ -14,8 +14,6 @@ import spawnAsync from '@expo/spawn-async';
 import readChunk from 'read-chunk';
 import fileType from 'file-type';
 
-import Schemer from '@expo/schemer';
-
 import * as ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
 import Api from '../Api';
@@ -117,133 +115,94 @@ export async function validateWithSchemaFileAsync(
 ): Promise<{ errorMessage?: string }> {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let schema = JSON.parse(await fs.readFile.promise(schemaPath, 'utf8'));
-  return validateWithSchema(
-    projectRoot,
-    exp,
-    schema.schema,
-    'exp.json',
-    'UNVERSIONED',
-    true
-  );
+  return validateWithSchema(exp, schema.schema, 'exp.json', 'UNVERSIONED');
 }
 
-export async function validateWithSchema(
-  projectRoot: string,
+export function validateWithSchema(
   exp: any,
   schema: any,
   configName: string,
-  sdkVersion: string,
-  validateAssets: boolean
+  sdkVersion: string
 ): { errorMessage?: string } {
-  let schemaErrorMessage;
-  let assetsErrorMessage;
-  let validator = new Schemer(schema, { rootDir: projectRoot });
+  let validator = new jsonschema.Validator();
+  let validationResult = validator.validate(exp, schema);
 
-  // Validate the schema itself
+  let fullMessage;
+  if (validationResult.errors && validationResult.errors.length > 0) {
+    fullMessage = `Warning: Problem${validationResult.errors.length > 1
+      ? 's'
+      : ''} in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
+    for (let error of validationResult.errors) {
+      // Formate the message nicely
+      let message = error.stack
+        .replace(/instance\./g, '')
+        .replace(/exists in instance/g, `exists in ${configName}`)
+        .replace('instance additionalProperty', 'additional property');
+      fullMessage += `\n  - ${message}.`;
+    }
+  }
+
+  return { errorMessage: fullMessage };
+}
+
+async function _validateAssetFieldsAsync(projectRoot, exp) {
   try {
-    await validator.validateSchemaAsync(exp);
-  } catch (errors) {
-    if (errors && errors.length > 0) {
-      schemaErrorMessage = `Warning: Problem${errors.length > 1
-        ? 's'
-        : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
-      schemaErrorMessage += errors.map(formatValidationError).join('');
-    }
-  }
+    const assetSchemas = await ExpSchema.getAssetSchemasAsync(exp.sdkVersion);
+    await Promise.all(
+      assetSchemas.map(
+        async ({
+          fieldPath,
+          schema: { meta: { asset, contentTypePattern, contentTypeHuman } },
+        }) => {
+          const value = _.get(exp, fieldPath);
+          if (asset && value) {
+            if (contentTypePattern) {
+              // NOTE(nikki): The '4100' below should be enough for most file types, though we
+              //              could probably go shorter....
+              //              http://www.garykessler.net/library/file_sigs.html
+              const filePath = path.resolve(projectRoot, value);
+              const contentType = fs.existsSync(filePath)
+                ? fileType(await readChunk(filePath, 0, 4100)).mime
+                : (await request.promise.head({ url: value })).headers[
+                    'content-type'
+                  ];
+              if (!contentType.match(new RegExp(contentTypePattern))) {
+                const configName = await ProjectUtils.configFilenameAsync(
+                  projectRoot
+                );
+                ProjectUtils.logWarning(
+                  projectRoot,
+                  'expo',
+                  `Warning: Problem in ${configName}. Field '${fieldPath}' should point to a ${contentTypeHuman}, but the file at '${value}' has type '${contentType}'. See ${Config.helpUrl}`,
+                  `doctor-validate-asset-fields-${fieldPath}`
+                );
+              } else {
+                ProjectUtils.clearNotification(
+                  projectRoot,
+                  `doctor-validate-asset-fields-${fieldPath}`
+                );
+              }
+            }
+          }
+        }
+      )
+    );
 
-  if (validateAssets) {
-    try {
-      await validator.validateAssetsAsync(exp);
-    } catch (errors) {
-      if (errors && errors.length > 0) {
-        assetsErrorMessage = `Warning: Problem${errors.length > 1
-          ? ''
-          : 's'} validating asset fields in ${configName}. See ${Config.helpUrl}`;
-        assetsErrorMessage += errors.map(formatValidationError).join('');
-      }
-    }
+    ProjectUtils.clearNotification(projectRoot, 'doctor-validate-asset-fields');
+  } catch (e) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expon',
+      `Warning: Problem validating asset fields: ${e.message}.`,
+      'doctor-validate-asset-fields'
+    );
   }
-  return { schemaErrorMessage, assetsErrorMessage };
 }
 
-function formatValidationError(validationError) {
-  return `\n • ${validationError.message}.`;
-}
-
-async function _validatePackageJsonAsync(
+async function _validatePackageJsonAndExpJsonAsync(
   exp,
   pkg,
   projectRoot
-): Promise<number> {
-  // TODO: Check any native module versions here
-  if (Config.validation.reactNativeVersionWarnings) {
-    let reactNative = pkg.dependencies['react-native'];
-
-    // Expo fork of react-native is required
-    // TODO(2016-12-20): Remove the check for our old "exponentjs" org eventually
-    if (!reactNative.match(/(exponent(?:js)?|expo)\/react-native/)) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`,
-        'doctor-not-using-expo-fork'
-      );
-      return WARNING;
-    }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
-
-    let sdkVersions = await Api.sdkVersionsAsync();
-    let sdkVersion = exp.sdkVersion;
-    try {
-      let reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
-      let sdkVersionObject = sdkVersions[sdkVersion];
-
-      // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
-      if (
-        semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(
-          Versions.parseSdkVersionFromTag(
-            sdkVersionObject['expoReactNativeTag']
-          )
-        )
-      ) {
-        ProjectUtils.logWarning(
-          projectRoot,
-          'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject[
-            'expoReactNativeTag'
-          ]}`,
-          'doctor-invalid-version-of-react-native'
-        );
-        return WARNING;
-      }
-      ProjectUtils.clearNotification(
-        projectRoot,
-        'doctor-invalid-version-of-react-native'
-      );
-
-      ProjectUtils.clearNotification(
-        projectRoot,
-        'doctor-malformed-version-of-react-native'
-      );
-    } catch (e) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`,
-        'doctor-malformed-version-of-react-native'
-      );
-      return WARNING;
-    }
-  }
-  return NO_ISSUES;
-}
-
-async function _validateExpJsonAsync(
-  exp,
-  pkg,
-  projectRoot,
-  allowNetwork
 ): Promise<number> {
   if (!exp || !pkg) {
     // readConfigJsonAsync already logged an error
@@ -288,43 +247,29 @@ async function _validateExpJsonAsync(
   try {
     // TODO(perry) figure out a way to tell the schema validator whether this is exp.json or app.json
     let schema = await ExpSchema.getSchemaAsync(sdkVersion);
-    let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
-      projectRoot,
+    let { errorMessage } = validateWithSchema(
       exp,
       schema,
       configName,
-      sdkVersion,
-      allowNetwork
+      sdkVersion
     );
 
-    if (schemaErrorMessage) {
+    if (errorMessage) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
-        schemaErrorMessage,
+        errorMessage,
         'doctor-schema-validation'
       );
+      return WARNING;
     } else {
       ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation');
     }
-    if (assetsErrorMessage) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        assetsErrorMessage,
-        `doctor-validate-asset-fields`
-      );
-    } else {
-      ProjectUtils.clearNotification(
-        projectRoot,
-        `doctor-validate-asset-fields`
-      );
-    }
+
     ProjectUtils.clearNotification(
       projectRoot,
       'doctor-schema-validation-exception'
     );
-    if (schemaErrorMessage || assetsErrorMessage) return WARNING;
   } catch (e) {
     ProjectUtils.logWarning(
       projectRoot,
@@ -686,20 +631,19 @@ async function validateAsync(
     return status;
   }
 
-  const expStatus = await _validateExpJsonAsync(
+  let newStatus = await _validatePackageJsonAndExpJsonAsync(
     exp,
     pkg,
-    projectRoot,
-    allowNetwork
+    projectRoot
   );
-  if (expStatus === FATAL) {
-    return expStatus;
+  if (newStatus > status) {
+    status = newStatus;
   }
 
-  const packageStatus = await _validatePackageJsonAsync(exp, pkg, projectRoot);
-
-  status = Math.max(status, expStatus, packageStatus);
-  if (status === FATAL) return status;
+  // Don't block this! It has to make network requests so it's slow.
+  if (allowNetwork) {
+    _validateAssetFieldsAsync(projectRoot, exp);
+  }
 
   // TODO: this broke once we started using yarn because `npm ls` doesn't
   // work on a yarn install. Use `yarn check` in the future.

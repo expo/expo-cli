@@ -140,7 +140,6 @@ Command.prototype.asyncActionProjectDir = function(
       projectDir = path.resolve(process.cwd(), projectDir);
     }
 
-
     const logLines = (msg, logFn) => {
       for (let line of msg.split('\n')) {
         logFn(line);
@@ -243,9 +242,6 @@ Command.prototype.asyncActionProjectDir = function(
       simpleSpinner.stop();
       log('Your project looks good!');
     }
-
-    // the existing CLI modules only pass one argument to this function, so skipProjectValidation
-    // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
 
     return asyncFn(projectDir, ...args);
   }, true);
