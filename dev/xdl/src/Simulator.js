@@ -300,7 +300,9 @@ export async function _installExpoOnSimulatorAsync(url) {
   Logger.global.info(`Downloading latest version of Expo`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let dir = await _downloadSimulatorAppAsync(url);
+  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   Logger.global.info('Installing Expo on iOS simulator');
+  Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   return result;
@@ -327,21 +329,25 @@ export function _simulatorCacheDirectory() {
   return dir;
 }
 
-export async function upgradeExpoAsync() {
+export async function upgradeExpoAsync(): Promise<boolean> {
   if (!await _isSimulatorInstalledAsync()) {
-    return;
+    return false;
   }
 
   await _openSimulatorAsync();
-
   await _uninstallExpoAppFromSimulatorAsync();
-  await _installExpoOnSimulatorAsync();
+  let installResult = await _installExpoOnSimulatorAsync();
+  if (installResult.status !== 0) {
+    return false;
+  }
 
   if (_lastUrl) {
     Logger.global.info(`Opening ${_lastUrl} in Expo.`);
     await _xcrunAsync(['simctl', 'openurl', 'booted', _lastUrl]);
     _lastUrl = null;
   }
+
+  return true;
 }
 
 // Open Url

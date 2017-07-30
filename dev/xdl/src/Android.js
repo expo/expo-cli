@@ -154,7 +154,9 @@ async function _installExpoAsync() {
   Logger.global.info(`Downloading latest version of Expo`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let path = await _downloadApkAsync();
+  Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   Logger.global.info(`Installing Expo on device`);
+  Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let result = await _getAdbOutputAsync(['install', path]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   return result;
@@ -165,12 +167,15 @@ async function _uninstallExpoAsync() {
   return await _getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
 }
 
-export async function upgradeExpoAsync() {
+export async function upgradeExpoAsync(): Promise<boolean> {
   try {
     await _assertDeviceReadyAsync();
 
     await _uninstallExpoAsync();
-    await _installExpoAsync();
+    let installResult = await _installExpoAsync();
+    if (installResult.status !== 0) {
+      return false;
+    }
 
     if (_lastUrl) {
       Logger.global.info(`Opening ${_lastUrl} in Expo.`);
@@ -185,8 +190,11 @@ export async function upgradeExpoAsync() {
       ]);
       _lastUrl = null;
     }
+
+    return true;
   } catch (e) {
     Logger.global.error(e.message);
+    return false;
   }
 }
 

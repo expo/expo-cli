@@ -12,8 +12,9 @@ export default (program: any) => {
       'Install the latest version of Expo Client for iOS on the simulator'
     )
     .asyncAction(async () => {
-      await Simulator.upgradeExpoAsync();
-      log('Done!');
+      if (await Simulator.upgradeExpoAsync()) {
+        log('Done!');
+      }
     }, true);
 
   program
@@ -22,7 +23,8 @@ export default (program: any) => {
       'Install the latest version of Expo Client for Android on a connected device or emulator'
     )
     .asyncAction(async () => {
-      await Android.upgradeExpoAsync();
-      log('Done!');
+      if (await Android.upgradeExpoAsync()) {
+        log('Done!');
+      }
     }, true);
 };
