@@ -1,4 +1,4 @@
-import inquirerAsync from 'inquirer-async';
+import inquirer from 'inquirer';
 
 import { UserSettings } from 'xdl';
 
@@ -7,13 +7,14 @@ async function askForSendToAsync() {
   console.log(
     "Enter a mobile number or e-mail and we'll send a link to your phone."
   );
-  var answers = await inquirerAsync.promptAsync([
+  var answers = await inquirer.prompt([
     {
       type: 'input',
       name: 'sendTo',
-      message: 'Your mobile number or e-mail' +
-        (sendToFromSettings ? ' (space to not send anything)' : '') +
-        ':',
+      message:
+        'Your mobile number or e-mail' +
+          (sendToFromSettings ? ' (space to not send anything)' : '') +
+          ':',
       default: sendToFromSettings,
     },
   ]);

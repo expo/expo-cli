@@ -1,4 +1,4 @@
-import inquirerAsync from 'inquirer-async';
+import inquirer from 'inquirer';
 
 import { Exp } from 'xdl';
 
@@ -22,7 +22,7 @@ async function __unused_action(projectDir, options) {
       message: `Warning: we are going to modify your package.json, delete your node_modules directory, and modify your .babelrc file (or create if you do not have one). Are you OK with this?\n`,
     },
   ];
-  let { confirmed } = await inquirerAsync.promptAsync(warning);
+  let { confirmed } = await inquirer.prompt(warning);
 
   if (!confirmed) {
     log(
@@ -39,7 +39,7 @@ async function __unused_action(projectDir, options) {
     },
   ];
 
-  let { gitConfirmed } = await inquirerAsync.promptAsync(gitWarning);
+  let { gitConfirmed } = await inquirer.prompt(gitWarning);
 
   if (!gitConfirmed) {
     log(
@@ -74,7 +74,7 @@ async function __unused_action(projectDir, options) {
     },
   ];
 
-  let answers = await inquirerAsync.promptAsync(questions);
+  let answers = await inquirer.prompt(questions);
   await Exp.convertProjectAsync(projectDir, answers, log);
 }
 

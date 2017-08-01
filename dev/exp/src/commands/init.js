@@ -1,4 +1,4 @@
-import inquirerAsync from 'inquirer-async';
+import inquirer from 'inquirer';
 import ProgressBar from 'progress';
 import { Api, Exp, Logger, NotificationCode, MessageCode } from 'xdl';
 
@@ -45,7 +45,7 @@ async function action(projectDir, options) {
   }
 
   if (questions.length > 0) {
-    var answers = await inquirerAsync.promptAsync(questions);
+    var answers = await inquirer.prompt(questions);
     if (answers.name) {
       // If the user supplies a project name, change the insertPath and name
       insertPath = projectDir;
@@ -124,7 +124,7 @@ async function downloadAndExtractTemplate(
 
 async function triggerRetryPrompt() {
   _downloadIsSlowPrompt = true;
-  var answer = await inquirerAsync.promptAsync({
+  var answer = await inquirer({
     type: 'input',
     name: 'retry',
     message: '\n' + MessageCode.DOWNLOAD_IS_SLOW + '(y/n)',
