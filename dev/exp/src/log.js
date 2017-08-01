@@ -1,4 +1,4 @@
-import crayon from '@ccheever/crayon';
+import chalk from 'chalk';
 
 let _bundleProgressBar;
 
@@ -17,7 +17,7 @@ function log() {
   if (log.config.raw) {
     return;
   }
-  var prefix = crayon.gray('[') + crayon.gray('exp') + crayon.gray(']');
+  var prefix = chalk.gray('[') + chalk.gray('exp') + chalk.gray(']');
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0));
 
   respectProgressBars(() => {
@@ -33,9 +33,9 @@ log.error = function error() {
   if (log.config.raw) {
     return;
   }
-  var prefix = crayon.red('[') + crayon.gray('exp') + crayon.red(']');
+  var prefix = chalk.red('[') + chalk.gray('exp') + chalk.red(']');
   var args = [prefix].concat(
-    Array.prototype.slice.call(arguments, 0).map(x => crayon.red(x))
+    Array.prototype.slice.call(arguments, 0).map(x => chalk.red(x))
   );
 
   respectProgressBars(() => {
@@ -47,9 +47,9 @@ log.warn = function warn() {
   if (log.config.raw) {
     return;
   }
-  var prefix = crayon.yellow('[') + crayon.gray('exp') + crayon.yellow(']');
+  var prefix = chalk.yellow('[') + chalk.gray('exp') + chalk.yellow(']');
   var args = [prefix].concat(
-    Array.prototype.slice.call(arguments, 0).map(x => crayon.yellow(x))
+    Array.prototype.slice.call(arguments, 0).map(x => chalk.yellow(x))
   );
 
   respectProgressBars(() => {
@@ -65,7 +65,7 @@ log.gray = function() {
   var args = [prefix].concat(Array.prototype.slice.call(arguments, 0));
 
   respectProgressBars(() => {
-    crayon.gray.error(...args);
+    console.error(chalk.gray(...args));
   });
 };
 
@@ -79,7 +79,7 @@ log.raw = function(...args) {
   });
 };
 
-log.crayon = crayon;
+log.chalk = chalk;
 
 log.config = {
   raw: false,

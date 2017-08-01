@@ -4,7 +4,7 @@
 
 import { ProjectUtils, Project, UrlUtils } from 'xdl';
 
-import crayon from '@ccheever/crayon';
+import chalk from 'chalk';
 import simpleSpinner from '@expo/simple-spinner';
 import path from 'path';
 
@@ -29,7 +29,7 @@ async function action(projectDir, options) {
 
   await urlOpts.optsAsync(projectDir, options);
 
-  log(crayon.gray('Using project at', projectDir));
+  log(chalk.gray('Using project at', projectDir));
 
   let root = path.resolve(projectDir);
   let startOpts = {};
@@ -50,7 +50,7 @@ async function action(projectDir, options) {
     urlOpts.printQRCode(url);
   }
 
-  log('Your URL is\n\n' + crayon.underline(url) + '\n');
+  log('Your URL is\n\n' + chalk.underline(url) + '\n');
   log.raw(url);
 
   const recipient = await sendTo.getRecipient(options.sendTo);
@@ -61,7 +61,7 @@ async function action(projectDir, options) {
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
   log(
-    crayon.green(
+    chalk.green(
       'Logs for your project will appear below. Press Ctrl+C to exit.'
     )
   );

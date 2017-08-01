@@ -7,7 +7,7 @@ import path from 'path';
 import inquirer from 'inquirer';
 import untildify from 'untildify';
 import { Exp, Credentials } from 'xdl';
-import crayon from '@ccheever/crayon';
+import chalk from 'chalk';
 import log from '../../log';
 
 import BaseBuilder from './BaseBuilder';
@@ -57,7 +57,7 @@ export default class AndroidBuilder extends BaseBuilder {
       );
     }
     log.warn(
-      `Clearing your Android build credentials from our build servers is a ${crayon.red(
+      `Clearing your Android build credentials from our build servers is a ${chalk.red(
         'PERMANENT and IRREVERSIBLE action.'
       )}`
     );

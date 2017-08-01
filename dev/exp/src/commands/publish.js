@@ -2,7 +2,7 @@
  * @flow
  */
 
-import crayon from '@ccheever/crayon';
+import chalk from 'chalk';
 import simpleSpinner from '@expo/simple-spinner';
 
 import { Project } from 'xdl';
@@ -43,7 +43,7 @@ export async function action(projectDir: string, options: Options = {}) {
   }
 
   log('Published');
-  log('Your URL is\n\n' + crayon.underline(result.url) + '\n');
+  log('Your URL is\n\n' + chalk.underline(result.url) + '\n');
   log.raw(result.url);
 
   if (recipient) {

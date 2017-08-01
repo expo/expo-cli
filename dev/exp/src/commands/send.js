@@ -1,4 +1,4 @@
-import crayon from '@ccheever/crayon';
+import chalk from 'chalk';
 
 import { UserSettings, UrlUtils } from 'xdl';
 
@@ -15,7 +15,7 @@ async function action(projectDir, options) {
   log('You can scan this QR code:\n');
   urlOpts.printQRCode(url);
 
-  log('Your URL is\n\n' + crayon.underline(url) + '\n');
+  log('Your URL is\n\n' + chalk.underline(url) + '\n');
   log.raw(url);
 
   let shouldQuit = false;

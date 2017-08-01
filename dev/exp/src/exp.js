@@ -7,7 +7,7 @@ import 'instapromise';
 import ProgressBar from 'progress';
 import _ from 'lodash';
 import bunyan from '@expo/bunyan';
-import crayon from '@ccheever/crayon';
+import chalk from 'chalk';
 import glob from 'glob';
 import path from 'path';
 import simpleSpinner from '@expo/simple-spinner';
@@ -83,17 +83,17 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
       if (err._isCommandError) {
         log.error(err.message);
       } else if (err._isApiError) {
-        log.error(crayon.red(err.message));
+        log.error(chalk.red(err.message));
       } else if (err.isXDLError) {
         log.error(err.message);
       } else {
         log.error(err.message);
         // TODO: Is there a better way to do this? EXPO_DEBUG needs to be set to view the stack trace
         if (process.env.EXPO_DEBUG) {
-          crayon.gray.error(err.stack);
+          log.error(chalk.gray(err.stack));
         } else {
           log.error(
-            crayon.grey(
+            chalk.grey(
               'Set EXPO_DEBUG=true in your env to view the stack trace.'
             )
           );
@@ -139,7 +139,6 @@ Command.prototype.asyncActionProjectDir = function(
     } else {
       projectDir = path.resolve(process.cwd(), projectDir);
     }
-
 
     const logLines = (msg, logFn) => {
       for (let line of msg.split('\n')) {
@@ -188,10 +187,10 @@ Command.prototype.asyncActionProjectDir = function(
           bar = null;
 
           if (err) {
-            log(crayon.red('Failed building JavaScript bundle.'));
+            log(chalk.red('Failed building JavaScript bundle.'));
           } else {
             log(
-              crayon.green(
+              chalk.green(
                 `Finished building JavaScript bundle in ${endTime -
                   startTime}ms.`
               )
@@ -223,7 +222,7 @@ Command.prototype.asyncActionProjectDir = function(
     // will be undefined in most cases. we can explicitly pass a truthy value here to avoid
     // validation (eg for init)
     //
-    // If the packager/manifest server is running and healthy, there is no need 
+    // If the packager/manifest server is running and healthy, there is no need
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `exp send`
     if (
@@ -341,7 +340,7 @@ async function checkForUpdateAsync() {
       message = `There is a new version of exp available (${latest}).
 You are currently using exp ${current}
 Run \`npm install -g exp\` to get the latest version`;
-      crayon.green.error(message);
+      log.error(chalk.green(message));
       break;
 
     case 'ahead-of-published':
