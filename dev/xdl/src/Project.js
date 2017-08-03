@@ -964,7 +964,11 @@ export async function startReactNativeServerAsync(
   let cliOpts = _.reduce(
     packagerOpts,
     (opts, val, key) => {
-      if (val && val !== '') {
+      // If the packager opt value is boolean, don't set
+      // --[opt] [value], just set '--opt'
+      if (typeof val === 'boolean') {
+        opts.push(`--${key}`);
+      } else if (val && val !== '') {
         opts.push(`--${key}`, val);
       }
       return opts;
