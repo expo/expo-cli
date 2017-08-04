@@ -1,4 +1,4 @@
-import simpleSpinner from '@expo/simple-spinner';
+import ora from 'ora';
 
 import { Exp, UserSettings } from 'xdl';
 
@@ -23,12 +23,11 @@ async function getRecipient(sendTo) {
 }
 
 async function sendUrlAsync(url, recipient) {
-  log('Sending URL to', recipient);
-  simpleSpinner.start();
+  const spinner = ora(`Sending URL to ${recipient}`).start();
   try {
     var result = await Exp.sendAsync(recipient, url);
   } finally {
-    simpleSpinner.stop();
+    spinner.stop();
   }
   log('Sent.');
   return result;

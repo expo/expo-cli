@@ -5,7 +5,6 @@
 import { ProjectUtils, Project, UrlUtils } from 'xdl';
 
 import chalk from 'chalk';
-import simpleSpinner from '@expo/simple-spinner';
 import path from 'path';
 
 import log from '../log';
