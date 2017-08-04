@@ -7,6 +7,8 @@ import * as Intercom from './Intercom';
 
 import type { ErrorCodes } from './ErrorCode';
 
+import * as Sentry from './Sentry';
+
 export default class XDLError extends Error {
   code: string;
   isXDLError: boolean;
@@ -22,9 +24,9 @@ export default class XDLError extends Error {
     this.isXDLError = true;
 
     if (options && !options.noTrack) {
-      Analytics.logEvent('XDL Error', {
-        code,
-        message,
+      // send error to Sentry
+      Sentry.logError(message, {
+        tags: { code, type: 'XDL Error' },
       });
 
       Intercom.trackEvent('error', {

@@ -69,6 +69,8 @@
     "opn": "^4.0.2",
     "promise-props": "^1.0.0",
     "querystring": "^0.2.0",
+    "raven": "^2.1.1",
+    "raven-js": "^3.17.0",
     "react-redux": "^5.0.2",
     "read-chunk": "^2.0.0",
     "redux": "^3.6.0",

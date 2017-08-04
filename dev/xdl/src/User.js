@@ -339,7 +339,9 @@ export class UserManagerInstance {
    *
    * If there are any issues with the login, this method throws.
    */
-  async ensureLoggedInAsync(): Promise<?User> {
+  async ensureLoggedInAsync(
+    options: { noTrackError: boolean } = { noTrackError: false }
+  ): Promise<?User> {
     if (Config.offline) {
       return null;
     }
@@ -349,10 +351,13 @@ export class UserManagerInstance {
       if (await this.getLegacyUserData()) {
         throw new XDLError(
           ErrorCode.LEGACY_ACCOUNT_ERROR,
-          `We've updated our account system! Please login again by running \`exp login\`. Sorry for the inconvenience!`
+          `We've updated our account system! Please login again by running \`exp login\`. Sorry for the inconvenience!`,
+          { noTrack: options.noTrackError }
         );
       }
-      throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
+      throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in', {
+        noTrack: options.noTrackError,
+      });
     }
     return user;
   }

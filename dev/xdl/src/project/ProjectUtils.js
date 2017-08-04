@@ -14,6 +14,8 @@ import Config from '../Config';
 import Logger from '../Logger';
 import * as state from '../state';
 
+import * as Sentry from '../Sentry';
+
 const MAX_MESSAGE_LENGTH = 200;
 let _projectRootToLogger = {};
 
@@ -111,10 +113,10 @@ export function logError(
   if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
     truncatedMessage = truncatedMessage.substring(0, MAX_MESSAGE_LENGTH);
   }
-  Analytics.logEvent('Project Error', {
-    projectRoot,
-    tag,
-    message: truncatedMessage,
+
+  // send error to Sentry
+  Sentry.logError(message.toString(), {
+    tags: { tag },
   });
 }
 

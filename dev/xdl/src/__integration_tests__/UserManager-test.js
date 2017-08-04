@@ -71,7 +71,7 @@ describe('UserManager', () => {
   it('should not have a currently logged in user', async () => {
     const UserManager = _newTestUserManager();
     try {
-      await UserManager.ensureLoggedInAsync();
+      await UserManager.ensureLoggedInAsync({ noTrackError: true });
     } catch (e) {
       expect(e.message).toEqual('Not logged in');
     }
