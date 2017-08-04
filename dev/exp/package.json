@@ -11,7 +11,8 @@
   "scripts": {
     "start": "yarn run build && yarn run watch",
     "build": "gulp clean && gulp babel",
-    "watch": "gulp watch"
+    "watch": "gulp watch",
+    "pkg": "pkg ."
   },
   "bin": {
     "exp": "./bin/exp.js"
@@ -33,6 +34,9 @@
   "engines": {
     "node": ">=6.9.1"
   },
+  "pkg": {
+    "scripts": "build/**/*.js"
+  },
   "devDependencies": {
     "babel-eslint": "^7.1.0",
     "babel-plugin-add-module-exports": "^0.2.1",
@@ -52,6 +56,7 @@
     "gulp-changed": "^1.3.0",
     "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^1.6.0",
+    "pkg": "^4.2.1",
     "rimraf": "^2.5.2"
   },
   "dependencies": {
