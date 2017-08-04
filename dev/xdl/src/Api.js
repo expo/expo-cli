@@ -48,10 +48,16 @@ async function _callMethodAsync(
   const user = (await UserManager.getCurrentUserAsync()) || {};
 
   const { idToken, accessToken } = user;
+  const skipValidationToken =
+    process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'];
 
   let headers: any = {
     'Exp-ClientId': clientId,
   };
+
+  if (skipValidationToken) {
+    headers['Exp-Skip-Manifest-Validation-Token'] = skipValidationToken;
+  }
 
   if (idToken) {
     headers['Authorization'] = `Bearer ${idToken}`;
