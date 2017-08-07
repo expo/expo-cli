@@ -2,6 +2,8 @@
  * @flow
  */
 
+import fs from 'fs';
+import path from 'path';
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from './ProjectUtils';
@@ -47,6 +49,28 @@ export async function getAssetSchemasAsync(sdkVersion: string) {
 }
 
 async function _getSchemaJSONAsync(sdkVersion) {
+  if (process.env.LOCAL_XDL_SCHEMA) {
+    if (process.env.EXPONENT_UNIVERSE_DIR) {
+      return JSON.parse(
+        fs
+          .readFileSync(
+            path.join(
+              process.env.EXPONENT_UNIVERSE_DIR,
+              'server',
+              'www',
+              'xdl-schemas',
+              'UNVERSIONED-schema.json'
+            )
+          )
+          .toString()
+      );
+    } else {
+      throw new Error(
+        `LOCAL_XDL_SCHEMA is set but EXPONENT_UNIVERSE_DIR is not.`
+      );
+    }
+  }
+
   if (!_xdlSchemaJson[sdkVersion]) {
     try {
       _xdlSchemaJson[sdkVersion] = await Api.xdlSchemaAsync(sdkVersion);
