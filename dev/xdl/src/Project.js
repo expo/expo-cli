@@ -43,6 +43,7 @@ import XDLError from './XDLError';
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
 const MINIMUM_BUNDLE_SIZE = 500;
+const TUNNEL_TIMEOUT = 10 * 1000;
 
 type CachedSignedManifest = {
   manifestString: ?string,
@@ -1347,6 +1348,7 @@ async function _connectToNgrokAsync(
     );
   }
 }
+
 export async function startTunnelsAsync(projectRoot: string) {
   const user = await UserManager.ensureLoggedInAsync();
   if (!user) {
@@ -1381,52 +1383,68 @@ export async function startTunnelsAsync(projectRoot: string) {
   let packageShortName = path.parse(projectRoot).base;
   let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
   try {
-    let expoServerNgrokUrl = await _connectToNgrokAsync(
-      projectRoot,
-      {
-        authtoken: Config.ngrok.authToken,
-        port: packagerInfo.expoServerPort,
-        proto: 'http',
-      },
-      async () => {
-        let randomness = expRc.manifestTunnelRandomness
-          ? expRc.manifestTunnelRandomness
-          : await Exp.getProjectRandomnessAsync(projectRoot);
-        return [
-          randomness,
-          UrlUtils.domainify(username),
-          UrlUtils.domainify(packageShortName),
-          Config.ngrok.domain,
-        ].join('.');
-      },
-      packagerInfo.ngrokPid
-    );
-    let packagerNgrokUrl = await _connectToNgrokAsync(
-      projectRoot,
-      {
-        authtoken: Config.ngrok.authToken,
-        port: packagerInfo.packagerPort,
-        proto: 'http',
-      },
-      async () => {
-        let randomness = expRc.manifestTunnelRandomness
-          ? expRc.manifestTunnelRandomness
-          : await Exp.getProjectRandomnessAsync(projectRoot);
-        return [
-          'packager',
-          randomness,
-          UrlUtils.domainify(username),
-          UrlUtils.domainify(packageShortName),
-          Config.ngrok.domain,
-        ].join('.');
-      },
-      packagerInfo.ngrokPid
-    );
-    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-      expoServerNgrokUrl,
-      packagerNgrokUrl,
-      ngrokPid: ngrok.process().pid,
-    });
+    let startedTunnelsSuccessfully = false;
+
+    // Some issues with ngrok cause it to hang indefinitely. After
+    // TUNNEL_TIMEOUTms we just throw an error.
+    await Promise.race([
+      (async () => {
+        await delayAsync(TUNNEL_TIMEOUT);
+        if (!startedTunnelsSuccessfully) {
+          throw new Error('Starting tunnels timed out');
+        }
+      })(),
+      (async () => {
+        let expoServerNgrokUrl = await _connectToNgrokAsync(
+          projectRoot,
+          {
+            authtoken: Config.ngrok.authToken,
+            port: packagerInfo.expoServerPort,
+            proto: 'http',
+          },
+          async () => {
+            let randomness = expRc.manifestTunnelRandomness
+              ? expRc.manifestTunnelRandomness
+              : await Exp.getProjectRandomnessAsync(projectRoot);
+            return [
+              randomness,
+              UrlUtils.domainify(username),
+              UrlUtils.domainify(packageShortName),
+              Config.ngrok.domain,
+            ].join('.');
+          },
+          packagerInfo.ngrokPid
+        );
+        let packagerNgrokUrl = await _connectToNgrokAsync(
+          projectRoot,
+          {
+            authtoken: Config.ngrok.authToken,
+            port: packagerInfo.packagerPort,
+            proto: 'http',
+          },
+          async () => {
+            let randomness = expRc.manifestTunnelRandomness
+              ? expRc.manifestTunnelRandomness
+              : await Exp.getProjectRandomnessAsync(projectRoot);
+            return [
+              'packager',
+              randomness,
+              UrlUtils.domainify(username),
+              UrlUtils.domainify(packageShortName),
+              Config.ngrok.domain,
+            ].join('.');
+          },
+          packagerInfo.ngrokPid
+        );
+        await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+          expoServerNgrokUrl,
+          packagerNgrokUrl,
+          ngrokPid: ngrok.process().pid,
+        });
+
+        startedTunnelsSuccessfully = true;
+      })(),
+    ]);
   } catch (e) {
     ProjectUtils.logError(
       projectRoot,

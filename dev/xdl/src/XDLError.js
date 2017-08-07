@@ -6,8 +6,9 @@ import * as Analytics from './Analytics';
 import * as Intercom from './Intercom';
 
 import type { ErrorCodes } from './ErrorCode';
-
 import * as Sentry from './Sentry';
+
+const ERROR_PREFIX = 'Error: ';
 
 export default class XDLError extends Error {
   code: string;
@@ -18,6 +19,12 @@ export default class XDLError extends Error {
     message: string,
     options: { noTrack: boolean } = { noTrack: false }
   ) {
+    // If e.toString() was called to get `message` we don't want it to look
+    // like "Error: Error:".
+    if (message.startsWith(ERROR_PREFIX)) {
+      message = message.substring(ERROR_PREFIX.length);
+    }
+
     super(message);
 
     this.code = code;
