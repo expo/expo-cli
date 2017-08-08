@@ -616,6 +616,14 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
         let installedDependency = npmlsDependencies[dependency];
         if (dependency === 'react' && versionRequired.match(/alpha/)) {
           // ignore alpha dependencies on react
+        } else if (
+          dependency === 'expo' &&
+          installedDependency !== exp.sdkVersion
+        ) {
+          // Warn user if versions are not aligned
+          errorStrings.push(
+            'Warning: Expo version in package.json does not match sdkVersion in manifest.'
+          );
         } else if (!installedDependency || !installedDependency.version) {
           if (installedDependency && installedDependency.peerMissing) {
             errorStrings.push(
