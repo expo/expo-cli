@@ -101,6 +101,13 @@ async function configureStandaloneIOSEntitlementsAsync(
         delete config['com.apple.developer.associated-domains'];
       }
 
+      // Add Apple Pay Merchant ID or remove Merchant ID if unused.
+      if (manifest.ios && manifest.ios.merchantId) {
+        config['com.apple.developer.in-app-payments'] = manifest.ios.merchantId;
+      } else {
+        delete config['com.apple.developer.in-app-payments'];
+      }
+
       return config;
     }
   );
