@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import request from 'request';
 import spawnAsyncQuiet from '@expo/spawn-async';
+import { DOMParser, XMLSerializer } from 'xmldom';
 
 function parseSdkMajorVersion(expSdkVersion) {
   let sdkMajorVersion = 0;
@@ -32,7 +33,7 @@ function saveUrlToPathAsync(url, path) {
   });
 }
 
-function saveIconToPathAsync(projectRoot, pathOrURL, outPath) {
+function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
   const localPath = path.resolve(projectRoot, pathOrURL);
   return new Promise(function(resolve, reject) {
     let stream = fs.createWriteStream(outPath);
@@ -236,6 +237,131 @@ async function getImageDimensionsAsync(dirname, basename) {
   return dimensions;
 }
 
+function backgroundColorFromHexString(hexColor) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
+  if (result.length < 4) {
+    // Default to white if we can't parse the color. We should have 3 matches.
+    console.warn('Unable to parse color: ', hexColor, ' result:', result);
+    return { r: 1, g: 1, b: 1 };
+  }
+
+  var r = parseInt(result[1], 16) / 255;
+  var g = parseInt(result[2], 16) / 255;
+  var b = parseInt(result[3], 16) / 255;
+  return { r, g, b };
+}
+
+async function configureIOSLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
+  if (!(manifest.loading && manifest.loading.splash)) {
+    // Don't do loading xib customizations if `loading.splash` key doesn't exist
+    return;
+  }
+
+  console.log('Configuring iOS Launch Screen');
+  let splashXibFilename = path.join(
+    srcRoot,
+    'Exponent',
+    'Base.lproj',
+    'LaunchScreenShell.xib'
+  );
+  let splashOutputFilename = path.join(
+    projectRoot,
+    'Base.lproj',
+    'LaunchScreenShell.nib'
+  );
+
+  await transformFileContentsAsync(splashXibFilename, fileString => {
+    var parser = new DOMParser();
+    var serializer = new XMLSerializer();
+    var dom = parser.parseFromString(fileString);
+
+    setBackgroundColor(manifest, dom);
+
+    var fileString = serializer.serializeToString(dom);
+    return fileString;
+  });
+
+  await setBackgroundImage(manifest, projectRoot);
+
+  await spawnAsyncThrowError('ibtool', [
+    '--compile',
+    splashOutputFilename,
+    splashXibFilename,
+  ]);
+
+  console.log('DONE Configuring iOS Launch Screen');
+}
+
+async function setBackgroundImage(manifest, projectRoot) {
+  var backgroundImageOutputPath = path.join(
+    projectRoot,
+    'launch_background_image.png'
+  );
+
+  var backgroundImageUrl;
+  if (
+    manifest.loading &&
+    manifest.loading.splash &&
+    manifest.loading.splash.image &&
+    manifest.loading.splash.image.ios &&
+    manifest.loading.splash.image.ios.backgroundImageUrl
+  ) {
+    backgroundImageUrl = manifest.loading.splash.image.ios.backgroundImageUrl;
+  }
+
+  if (!backgroundImageUrl) {
+    return;
+  }
+
+  if (backgroundImageUrl) {
+    await saveImageToPathAsync(
+      projectRoot,
+      backgroundImageUrl,
+      backgroundImageOutputPath
+    );
+  }
+}
+
+function setBackgroundColor(manifest, dom) {
+  let backgroundViewID = 'OfY-5Y-tS4';
+  var backgroundColorString;
+  if (
+    manifest.loading &&
+    manifest.loading.splash &&
+    manifest.loading.splash.backgroundColor
+  ) {
+    backgroundColorString = manifest.loading.splash.backgroundColor;
+  }
+
+  if (!backgroundColorString) {
+    backgroundColorString = manifest.loading.backgroundColor;
+  }
+
+  const { r, g, b } = backgroundColorFromHexString(backgroundColorString);
+  var backgroundViewNode = dom.getElementById(backgroundViewID);
+  var backgroundViewColorNodes = backgroundViewNode.getElementsByTagName(
+    'color'
+  );
+  var backgroundColorNode;
+  for (var i = 0; i < backgroundViewColorNodes.length; i++) {
+    var node = backgroundViewColorNodes[i];
+    if (node.parentNode.getAttribute('id') !== backgroundViewID) {
+      continue;
+    }
+
+    if (node.getAttribute('key') === 'backgroundColor') {
+      backgroundColorNode = node;
+      break;
+    }
+  }
+
+  if (backgroundColorNode) {
+    backgroundColorNode.setAttribute('red', r);
+    backgroundColorNode.setAttribute('green', g);
+    backgroundColorNode.setAttribute('blue', b);
+  }
+}
+
 /**
  * Based on keys in the given manifest,
  * ensure that the proper iOS icon images exist -- assuming Info.plist already
@@ -266,7 +392,7 @@ async function configureIOSIconsAsync(
     );
   } else if (projectRoot && manifest.icon) {
     defaultIconFilename = 'exp-icon.png';
-    await saveIconToPathAsync(
+    await saveImageToPathAsync(
       projectRoot,
       manifest.icon,
       `${destinationIconPath}/${defaultIconFilename}`
@@ -351,7 +477,7 @@ async function configureIOSIconsAsync(
 export {
   parseSdkMajorVersion,
   saveUrlToPathAsync,
-  saveIconToPathAsync,
+  saveImageToPathAsync,
   getManifestAsync,
   getImageDimensionsAsync,
   spawnAsyncThrowError,
@@ -360,5 +486,6 @@ export {
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
   configureIOSIconsAsync,
+  configureIOSLaunchAssetsAsync,
   createBlankIOSPropertyListAsync,
 };
