@@ -278,7 +278,7 @@ export async function publishAsync(
     androidSourceMap,
   });
 
-  if (validPostPublishHooks.length) {
+  if (validPostPublishHooks.length || (exp.ios && exp.ios.publishManifestPath) || (exp.android && exp.android.publishManifestPath)) {
     let [androidManifest, iosManifest] = await Promise.all([
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
@@ -326,6 +326,20 @@ export async function publishAsync(
           `Warning: postPublish hook '${hook.file}' failed: ${e.stack}`
         );
       }
+    }
+
+    if (exp.ios && exp.ios.publishManifestPath) {
+      await fs.promise.writeFile(
+        path.resolve(projectRoot, exp.ios.publishManifestPath),
+        JSON.stringify(iosManifest)
+      );
+    }
+
+    if (exp.android && exp.android.publishManifestPath) {
+      await fs.promise.writeFile(
+        path.resolve(projectRoot, exp.android.publishManifestPath),
+        JSON.stringify(androidManifest)
+      );
     }
   }
 
