@@ -193,7 +193,16 @@ export async function detachAsync(projectRoot: string) {
       sdkVersionConfig.iosExpoViewUrl,
       iosClientVersion
     );
+    const { supportingDirectory } = getIosPaths(projectRoot, exp);
     exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
+    exp.ios.publishBundlePath = path.relative(
+      projectRoot,
+      path.join(supportingDirectory, 'shell-app.bundle')
+    );
+    exp.ios.publishManifestPath = path.relative(
+      projectRoot,
+      path.join(supportingDirectory, 'shell-app-manifest.json')
+    );
   }
 
   // Android
@@ -233,9 +242,15 @@ export async function detachAsync(projectRoot: string) {
 function getIosPaths(projectRoot, manifest) {
   let iosProjectDirectory = path.join(projectRoot, 'ios');
   let projectName;
+  let supportingDirectory;
   if (manifest && manifest.name) {
     let projectNameLabel = manifest.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
+    supportingDirectory = path.join(
+      iosProjectDirectory,
+      projectName,
+      'Supporting'
+    );
   } else {
     throw new Error(
       'Cannot configure an ExpoKit app with no name. Are you missing `exp.json`?'
@@ -244,6 +259,7 @@ function getIosPaths(projectRoot, manifest) {
   return {
     iosProjectDirectory,
     projectName,
+    supportingDirectory,
   };
 }
 
@@ -320,7 +336,10 @@ export async function detachIOSAsync(
   templateProjUrl: string,
   iosClientVersion: string
 ) {
-  let { iosProjectDirectory, projectName } = getIosPaths(projectRoot, manifest);
+  let { iosProjectDirectory, projectName, supportingDirectory } = getIosPaths(
+    projectRoot,
+    manifest
+  );
 
   let expoTemplateDirectory;
   if (process.env.EXPO_VIEW_DIR) {
@@ -352,21 +371,20 @@ export async function detachIOSAsync(
   // of the detached xcodeproj. this is mostly the same configuration used for
   // shell apps.
   console.log('Configuring iOS project...');
-  let infoPlistPath = `${iosProjectDirectory}/${projectName}/Supporting`;
   let iconPath = `${iosProjectDirectory}/${projectName}/Assets.xcassets/AppIcon.appiconset`;
-  await configureStandaloneIOSInfoPlistAsync(infoPlistPath, manifest);
+  await configureStandaloneIOSInfoPlistAsync(supportingDirectory, manifest);
   let infoPlist = await configureDetachedIOSInfoPlistAsync(
-    infoPlistPath,
+    supportingDirectory,
     manifest
   );
   await configureStandaloneIOSShellPlistAsync(
-    infoPlistPath,
+    supportingDirectory,
     manifest,
     experienceUrl
   );
   // TODO: logic for when kernel sdk version is different from detached sdk version
   await configureDetachedVersionsPlistAsync(
-    infoPlistPath,
+    supportingDirectory,
     sdkVersion,
     sdkVersion
   );
@@ -407,7 +425,7 @@ export async function detachIOSAsync(
   );
 
   console.log('Cleaning up iOS...');
-  await cleanPropertyListBackupsAsync(infoPlistPath);
+  await cleanPropertyListBackupsAsync(supportingDirectory);
 
   if (!process.env.EXPO_VIEW_DIR) {
     rimrafDontThrow(expoTemplateDirectory);
@@ -684,7 +702,10 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
   if (args.platform === 'ios') {
-    let { iosProjectDirectory, projectName } = getIosPaths(projectDir, exp);
+    let { iosProjectDirectory, projectName, supportingDirectory } = getIosPaths(
+      projectDir,
+      exp
+    );
 
     console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
     // These files cause @providesModule naming collisions
@@ -709,15 +730,9 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
     // insert expo development url into iOS config
     if (!args.skipXcodeConfig) {
       let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
-      let configFilePath = path.join(
-        iosProjectDirectory,
-        projectName,
-        'Supporting'
-      );
-
-      await ensureBuildConstantsExistsIOSAsync(configFilePath);
+      await ensureBuildConstantsExistsIOSAsync(supportingDirectory);
       await modifyIOSPropertyListAsync(
-        configFilePath,
+        supportingDirectory,
         'EXBuildConstants',
         constantsConfig => {
           constantsConfig.developmentUrl = devUrl;
