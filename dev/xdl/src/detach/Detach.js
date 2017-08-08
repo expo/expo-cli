@@ -365,7 +365,7 @@ export async function detachIOSAsync(
 
   // rename the xcodeproj (and various other things) to the detached project name.
   console.log('Naming iOS project...');
-  await _renameAndMoveIOSFilesAsync(iosProjectDirectory, projectName);
+  await _renameAndMoveIOSFilesAsync(iosProjectDirectory, projectName, manifest);
 
   // use the detached project manifest to configure corresponding native parts
   // of the detached xcodeproj. this is mostly the same configuration used for
@@ -435,7 +435,11 @@ export async function detachIOSAsync(
   return;
 }
 
-async function _renameAndMoveIOSFilesAsync(projectDirectory, projectName) {
+async function _renameAndMoveIOSFilesAsync(
+  projectDirectory,
+  projectName,
+  manifest
+) {
   const filesToTransform = [
     path.join('exponent-view-template.xcodeproj', 'project.pbxproj'),
     path.join('exponent-view-template.xcworkspace', 'contents.xcworkspacedata'),
@@ -447,12 +451,21 @@ async function _renameAndMoveIOSFilesAsync(projectDirectory, projectName) {
     ),
   ];
 
+  const bundleIdentifier = manifest.ios && manifest.ios.bundleIdentifier
+    ? manifest.ios.bundleIdentifier
+    : '';
+
   await Promise.all(
     filesToTransform.map(async fileName => {
       return transformFileContentsAsync(
         path.join(projectDirectory, fileName),
         fileString => {
-          return fileString.replace(/exponent-view-template/g, projectName);
+          return fileString
+            .replace(
+              /com.getexponent.exponent-view-template/g,
+              bundleIdentifier
+            )
+            .replace(/exponent-view-template/g, projectName);
         }
       );
     })
