@@ -81,7 +81,7 @@ export default class Schemer {
         return new ValidationError({
           errorCode: ErrorCodes.SCHEMA_ADDITIONAL_PROPERTY,
           fieldPath: dataPath,
-          message: `should NOT have additional property '${params.additionalProperty}'`,
+          message: `${dataPath} should NOT have additional property '${params.additionalProperty}'`,
           data: data,
           meta: parentSchema.meta,
         });
