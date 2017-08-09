@@ -2,8 +2,6 @@
  * @flow
  */
 
-import 'instapromise';
-
 import ProgressBar from 'progress';
 import _ from 'lodash';
 import bunyan from '@expo/bunyan';

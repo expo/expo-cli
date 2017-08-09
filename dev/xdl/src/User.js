@@ -689,15 +689,7 @@ export class UserManagerInstance {
       try {
         return await Auth0Node.oauth.signIn(loginOptions);
       } catch (e) {
-        const err = _formatAuth0NodeError(e);
-        if (err.message === 'invalid_user_password') {
-          throw new XDLError(
-            ErrorCode.INVALID_USERNAME_PASSWORD,
-            'Invalid username or password'
-          );
-        } else {
-          throw err;
-        }
+        throw _formatAuth0NodeError(e);
       }
     } else {
       // social
@@ -793,14 +785,22 @@ function _formatAuth0NodeError(e: APIError) {
   // These error messages are usually well-formed when you have an invalid login or too many attempts,
   // but when the network is down it does not give any meaningful messages.
   // Network failures log the user out in _getCurrentUserAsync() when it uses Auth0.
-  if (e.name !== 'APIError') {
-    return e;
-  } else {
-    const errData = JSON.parse(e.message);
-    const err: ErrorWithDescription = new Error(errData.error);
-    err.description = errData.error_description;
-    return err;
+  const errData = e.message;
+  switch (errData.error) {
+    case 'invalid_user_password':
+      return new XDLError(
+        ErrorCode.INVALID_USERNAME_PASSWORD,
+        'Invalid username or password'
+      );
+    case 'too_many_attempts':
+      return new XDLError(
+        ErrorCode.TOO_MANY_ATTEMPTS,
+        errData.error_description
+      );
+    default:
+      return new Error(errData.error_description);
   }
+  return e;
 }
 
 function _buildAuth0SocialLoginUrl(

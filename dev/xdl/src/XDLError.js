@@ -2,6 +2,8 @@
  * @flow
  */
 
+import ExtendableError from 'es6-error';
+
 import * as Analytics from './Analytics';
 import * as Intercom from './Intercom';
 
@@ -10,7 +12,7 @@ import * as Sentry from './Sentry';
 
 const ERROR_PREFIX = 'Error: ';
 
-export default class XDLError extends Error {
+export default class XDLError extends ExtendableError {
   code: string;
   isXDLError: boolean;
 
