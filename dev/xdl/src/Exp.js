@@ -364,7 +364,7 @@ export async function recentValidExpsAsync() {
 
   let results = await Promise.all(recentExps.map(expInfoSafeAsync));
   let filteredResults = results.filter(result => result);
-  return filteredResults.slice(0, 5);
+  return filteredResults;
 }
 
 export async function sendAsync(recipient: string, url_: string) {
