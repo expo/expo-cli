@@ -11,7 +11,7 @@ import BuildError from './BuildError';
 
 type BuilderOptions = {
   wait: boolean,
-  clearCredentials: boolean,
+  clearCredentials: boolean, // TODO: should the buildtype flag be here too - since this gets passed to android?
 };
 
 export default class BaseBuilder {
@@ -164,8 +164,15 @@ ${buildStatus.id}
     let opts = {
       mode: 'create',
       expIds,
-      platform,
+      platform
     };
+
+    if (platform === "ios"){
+      opts = {
+        ...opts, 
+        buildType: this.options.buildType
+      };
+    }
 
     // call out to build api here with url
     const buildResp = await Project.buildAsync(this.projectDir, opts);

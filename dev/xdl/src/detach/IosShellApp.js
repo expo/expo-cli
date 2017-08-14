@@ -514,7 +514,7 @@ async function createIOSShellAppAsync(args) {
     let archiveName = manifest.name.replace(/\s+/g, '');
     if (type === 'simulator') {
       await spawnAsync(
-        `mv Exponent.app ${archiveName}.app && tar cvf ${output} ${archiveName}.app`,
+        `mv Exponent.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
         null,
         {
           stdio: 'inherit',

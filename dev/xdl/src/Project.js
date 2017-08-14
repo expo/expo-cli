@@ -698,6 +698,7 @@ export async function buildAsync(
     mode?: string,
     platform?: string,
     expIds?: Array<string>,
+    buildType?: string,
   } = {}
 ) {
   await UserManager.ensureLoggedInAsync();
@@ -712,6 +713,7 @@ export async function buildAsync(
     mode: joi.string(),
     platform: joi.any().valid('ios', 'android', 'all'),
     expIds: joi.array(),
+    buildType: joi.any().valid('archive', 'simulator'),
   });
 
   try {

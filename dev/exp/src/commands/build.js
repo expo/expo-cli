@@ -12,6 +12,7 @@ export default (program: any) => {
     .command('build:ios [project-dir]')
     .alias('bi')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
+    .option('-t --build-type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i, 'archive')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
