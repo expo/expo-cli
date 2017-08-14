@@ -285,53 +285,57 @@ async function _validateExpJsonAsync(
 
   let sdkVersion = exp.sdkVersion;
   const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-  try {
-    // TODO(perry) figure out a way to tell the schema validator whether this is exp.json or app.json
-    let schema = await ExpSchema.getSchemaAsync(sdkVersion);
-    let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
-      projectRoot,
-      exp,
-      schema,
-      configName,
-      sdkVersion,
-      allowNetwork
-    );
 
-    if (schemaErrorMessage) {
-      ProjectUtils.logWarning(
+  // Skip validation if the correct token is set in env
+  if (!process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']) {
+    try {
+      // TODO(perry) figure out a way to tell the schema validator whether this is exp.json or app.json
+      let schema = await ExpSchema.getSchemaAsync(sdkVersion);
+      let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
         projectRoot,
-        'expo',
-        schemaErrorMessage,
-        'doctor-schema-validation'
+        exp,
+        schema,
+        configName,
+        sdkVersion,
+        allowNetwork
       );
-    } else {
-      ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation');
-    }
-    if (assetsErrorMessage) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        assetsErrorMessage,
-        `doctor-validate-asset-fields`
-      );
-    } else {
+
+      if (schemaErrorMessage) {
+        ProjectUtils.logWarning(
+          projectRoot,
+          'expo',
+          schemaErrorMessage,
+          'doctor-schema-validation'
+        );
+      } else {
+        ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation');
+      }
+      if (assetsErrorMessage) {
+        ProjectUtils.logWarning(
+          projectRoot,
+          'expo',
+          assetsErrorMessage,
+          `doctor-validate-asset-fields`
+        );
+      } else {
+        ProjectUtils.clearNotification(
+          projectRoot,
+          `doctor-validate-asset-fields`
+        );
+      }
       ProjectUtils.clearNotification(
         projectRoot,
-        `doctor-validate-asset-fields`
+        'doctor-schema-validation-exception'
+      );
+      if (schemaErrorMessage || assetsErrorMessage) return WARNING;
+    } catch (e) {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `Warning: Problem validating ${configName}: ${e.message}.`,
+        'doctor-schema-validation-exception'
       );
     }
-    ProjectUtils.clearNotification(
-      projectRoot,
-      'doctor-schema-validation-exception'
-    );
-    if (schemaErrorMessage || assetsErrorMessage) return WARNING;
-  } catch (e) {
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      `Warning: Problem validating ${configName}: ${e.message}.`,
-      'doctor-schema-validation-exception'
-    );
   }
 
   // Warn if sdkVersion is UNVERSIONED

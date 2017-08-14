@@ -278,7 +278,11 @@ export async function publishAsync(
     androidSourceMap,
   });
 
-  if (validPostPublishHooks.length || (exp.ios && exp.ios.publishManifestPath) || (exp.android && exp.android.publishManifestPath)) {
+  if (
+    validPostPublishHooks.length ||
+    (exp.ios && exp.ios.publishManifestPath) ||
+    (exp.android && exp.android.publishManifestPath)
+  ) {
     let [androidManifest, iosManifest] = await Promise.all([
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
@@ -441,8 +445,11 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
     delete exp.ios.config;
   }
 
-  // Only allow test-suite to be published with UNVERSIONED
-  if (exp.sdkVersion === 'UNVERSIONED' && !exp.slug.includes('test-suite')) {
+  // Only allow projects to be published with UNVERSIONED if a correct token is set in env
+  if (
+    exp.sdkVersion === 'UNVERSIONED' &&
+    !process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']
+  ) {
     throw new XDLError(
       ErrorCode.INVALID_OPTIONS,
       'Cannot publish with sdkVersion UNVERSIONED.'
