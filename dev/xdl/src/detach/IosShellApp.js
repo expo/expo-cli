@@ -484,6 +484,7 @@ function validateArgs(args) {
 *  @param privateConfigFile path to a private config file containing, e.g., private api keys
 *  @param bundleIdentifier iOS CFBundleIdentifier to use in the bundle config
 *  @param verbose show all xcodebuild output (default false)
+*  @param output specify the output path of built project (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
 */
 async function createIOSShellAppAsync(args) {
   let configFilePath;

@@ -6,18 +6,31 @@ import BaseBuilder from './build/BaseBuilder';
 import IOSBuilder from './build/IOSBuilder';
 import AndroidBuilder from './build/AndroidBuilder';
 import BuildError from './build/BuildError';
+import log from '../log';
 
 export default (program: any) => {
   program
     .command('build:ios [project-dir]')
     .alias('bi')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
-    .option('-t --build-type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i, 'archive')
+    .option(
+      '-t --type <build>',
+      'Type of build: [archive|simulator].',
+      /^(archive|simulator)$/i
+    )
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
     .allowNonInteractive()
     .asyncActionProjectDir((projectDir, options) => {
+      if (
+        options.type !== undefined &&
+        options.type !== 'archive' &&
+        options.type !== 'simulator'
+      ) {
+        log.error('Build type must be one of {archive, simulator}');
+        process.exit(1);
+      }
       const iosBuilder = new IOSBuilder(projectDir, options);
       return iosBuilder.command();
     });

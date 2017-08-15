@@ -11,7 +11,8 @@ import BuildError from './BuildError';
 
 type BuilderOptions = {
   wait: boolean,
-  clearCredentials: boolean, // TODO: should the buildtype flag be here too - since this gets passed to android?
+  clearCredentials: boolean,
+  type?: string,
 };
 
 export default class BaseBuilder {
@@ -164,13 +165,13 @@ ${buildStatus.id}
     let opts = {
       mode: 'create',
       expIds,
-      platform
+      platform,
     };
 
-    if (platform === "ios"){
+    if (platform === 'ios') {
       opts = {
-        ...opts, 
-        buildType: this.options.buildType
+        ...opts,
+        type: this.options.type,
       };
     }
 
