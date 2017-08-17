@@ -20,7 +20,7 @@ import yesno from 'yesno';
 import {
   createBlankIOSPropertyListAsync,
   parseSdkMajorVersion,
-  saveIconToPathAsync,
+  saveImageToPathAsync,
   spawnAsyncThrowError,
   spawnAsync,
   transformFileContentsAsync,
@@ -683,7 +683,7 @@ async function detachAndroidAsync(
       for (let i = 0; i < iconMatches.length; i++) {
         await fs.promise.unlink(iconMatches[i]);
         // TODO: make more efficient
-        await saveIconToPathAsync(projectRoot, icon, iconMatches[i]);
+        await saveImageToPathAsync(projectRoot, icon, iconMatches[i]);
       }
     }
   }
