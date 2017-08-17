@@ -52,17 +52,19 @@ export default class IOSBuilder extends BaseBuilder {
     // Check the status of any current builds
     await this.checkStatus();
     // Check for existing credentials, collect any missing credentials, and validate them
-    try {
-      await this.collectAndValidateCredentials(
-        username,
-        experienceName,
-        bundleIdentifier
-      );
-    } catch (e) {
-      log.error(
-        'Error validating credentials. You may need to clear them (with `-c`) and try again.'
-      );
-      throw e;
+    if (this.options.type !== 'simulator') {
+      try {
+        await this.collectAndValidateCredentials(
+          username,
+          experienceName,
+          bundleIdentifier
+        );
+      } catch (e) {
+        log.error(
+          'Error validating credentials. You may need to clear them (with `-c`) and try again.'
+        );
+        throw e;
+      }
     }
     // Publish the experience
     const publishedExpIds = await this.publish();
