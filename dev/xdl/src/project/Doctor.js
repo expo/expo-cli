@@ -618,10 +618,14 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
       let errorStrings = [];
       _.forEach(pkg.dependencies, (versionRequired, dependency) => {
         let installedDependency = npmlsDependencies[dependency];
-        if (dependency === 'react' && versionRequired.match(/alpha/)) {
-          // ignore alpha dependencies on react
+        if (
+          dependency === 'react' &&
+          versionRequired.match(/-(alpha|beta|rc)/)
+        ) {
+          // ignore prerelease dependencies on react
         } else if (
           dependency === 'expo' &&
+          exp.sdkVersion !== 'UNVERSIONED' &&
           semver.major(installedDependency.version) !==
             semver.major(exp.sdkVersion)
         ) {
@@ -645,8 +649,8 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
           !versionRequired.includes(installedDependency.from)
         ) {
           // TODO: also check react-native
-          // For react native, `from` field looks like "exponent/react-native#sdk-8.0.1" and
-          // versionRequired looks like "github:exponent/react-native#sdk-8.0.0"
+          // For react native, `from` field looks like "expo/react-native#sdk-8.0.1" and
+          // versionRequired looks like "github:expo/react-native#sdk-8.0.0"
           errorStrings.push(
             `Warning: Installed version ${installedDependency.version} of '${dependency}' does not satisfy required version ${versionRequired}`
           );
