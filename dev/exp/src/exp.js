@@ -8,7 +8,7 @@ import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
 import glob from 'glob';
 import path from 'path';
-import ora from 'ora';
+import simpleSpinner from '@expo/simple-spinner';
 import url from 'url';
 
 import program, { Command } from 'commander';
@@ -228,7 +228,7 @@ Command.prototype.asyncActionProjectDir = function(
       (await Project.currentStatus(projectDir)) !== 'running'
     ) {
       log('Making sure project is set up correctly...');
-      const spinner = ora().start();
+      simpleSpinner.start();
       // validate that this is a good projectDir before we try anything else
 
       let status = await Doctor.validateLowLatencyAsync(projectDir);
@@ -237,7 +237,7 @@ Command.prototype.asyncActionProjectDir = function(
           `There is an error with your project. See above logs for information.`
         );
       }
-      spinner.stop();
+      simpleSpinner.stop();
       log('Your project looks good!');
     }
 
@@ -355,13 +355,12 @@ function _registerLogs() {
     stream: {
       write: chunk => {
         if (chunk.code) {
-          const spinner = ora();
           switch (chunk.code) {
             case NotificationCode.START_LOADING:
-              spinner.start();
+              simpleSpinner.start();
               return;
             case NotificationCode.STOP_LOADING:
-              spinner.stop();
+              simpleSpinner.stop();
               return;
             case NotificationCode.DOWNLOAD_CLI_PROGRESS:
               return;

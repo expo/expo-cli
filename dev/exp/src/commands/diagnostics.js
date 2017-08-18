@@ -1,19 +1,18 @@
 import { Diagnostics } from 'xdl';
 
-import ora from 'ora';
-import chalk from 'chalk';
+import simpleSpinner from '@expo/simple-spinner';
 
 import log from '../log';
 
 async function action(options) {
-  // Couples the spinner with the text; text will disappear once spinner stops
-  const spinner = ora(' Generating diagnostics report...').start();
+  log('Generating diagnostics report...');
+  simpleSpinner.start();
   let { url } = await Diagnostics.getDeviceInfoAsync({
     uploadLogs: true,
   });
-  spinner.stop();
+  simpleSpinner.stop();
 
-  log(`Please share this URL with the Expo team: ${chalk.yellow(url)}.`);
+  log(`Please share this URL with the Expo team: ${url}.`);
   log('You can join our slack here: https://slack.expo.io/.');
   log.raw(url);
 }

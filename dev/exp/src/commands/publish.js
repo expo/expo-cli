@@ -3,7 +3,7 @@
  */
 
 import chalk from 'chalk';
-import ora from 'ora';
+import simpleSpinner from '@expo/simple-spinner';
 
 import { Project } from 'xdl';
 
@@ -31,16 +31,15 @@ export async function action(projectDir: string, options: Options = {}) {
 
   let recipient = await sendTo.getRecipient(options.sendTo);
   log('Publishing...');
-  const spinner = ora();
 
   if (options.quiet) {
-    spinner.start();
+    simpleSpinner.start();
   }
 
   let result = await Project.publishAsync(projectDir);
 
   if (options.quiet) {
-    spinner.stop();
+    simpleSpinner.stop();
   }
 
   log('Published');
