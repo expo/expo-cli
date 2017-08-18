@@ -210,7 +210,7 @@ async function _validatePackageJsonAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:exponent/react-native#${sdkVersionObject[
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject[
             'expoReactNativeTag'
           ]}`,
           'doctor-invalid-version-of-react-native'
@@ -622,7 +622,8 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
           // ignore alpha dependencies on react
         } else if (
           dependency === 'expo' &&
-          installedDependency !== exp.sdkVersion
+          semver.major(installedDependency.version) !==
+            semver.major(exp.sdkVersion)
         ) {
           // Warn user if versions are not aligned
           errorStrings.push(
