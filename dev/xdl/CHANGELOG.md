@@ -10,6 +10,22 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [44.0.0] - 2017-08-18
+
+### Added
+
+* Add missing push notification permission
+* New schema validation library
+* Allow boolean packagerOpts
+* Sentry integration for error reporting
+* Test ngrok tunnels and use fallback
+
+### Changed
+
+* iOS Pod tools generate Podfile with c++ bridge and 3rd party dependencies
+* exp install handles errors better
+* Better authentication errors
+
 ## [43.0.1] - 2017-07-25
 
 ### Added

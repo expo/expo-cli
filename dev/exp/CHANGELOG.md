@@ -10,6 +10,20 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [44.0.0] - 2017-08-17
+
+### Added
+
+* exp install:ios and exp install:android
+
+### Changed
+
+* Build using pkg
+
+### Removed
+
+* Remove redundant doctor checks
+
 ## [43.0.0] - 2017-07-21
 
 ### Changed
