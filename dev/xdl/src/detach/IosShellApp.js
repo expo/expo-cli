@@ -512,14 +512,15 @@ async function createIOSShellAppAsync(args) {
     await preloadManifestAndBundleAsync(manifest, args, configFilePath);
     await cleanPropertyListBackupsAsync(configFilePath, false);
 
-    let archiveName = manifest.name.replace(/\s+/g, '');
+    let archiveName = manifest.name.replace(/[^0-9a-z_\-\.]/gi, '_');
+    const appReleasePath = path.resolve(path.join(`${configFilePath}`, '..'));
     if (type === 'simulator') {
       await spawnAsync(
         `mv Exponent.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
         null,
         {
           stdio: 'inherit',
-          cwd: `${configFilePath}/..`,
+          cwd: appReleasePath,
           shell: true,
         }
       );
