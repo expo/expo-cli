@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [44.0.2] - 2017-08-24
+
+### Changed
+
+* @expo/schemer updated to fix issue running in XDE
+* fixes XDE 20 errors and code being skipped in local testing because of env var
+
 ## [44.0.0] - 2017-08-18
 
 ### Added

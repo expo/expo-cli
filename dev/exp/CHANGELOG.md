@@ -8,6 +8,8 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Changed
 
+* new version of XDL with new @expo/schemer
+
 ### Removed
 
 ## [44.0.0] - 2017-08-17
