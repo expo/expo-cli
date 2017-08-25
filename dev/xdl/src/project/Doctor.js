@@ -287,7 +287,12 @@ async function _validateExpJsonAsync(
   const configName = await ProjectUtils.configFilenameAsync(projectRoot);
 
   // Skip validation if the correct token is set in env
-  if (!process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']) {
+  if (
+    !(
+      sdkVersion === 'UNVERSIONED' &&
+      process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']
+    )
+  ) {
     try {
       // TODO(perry) figure out a way to tell the schema validator whether this is exp.json or app.json
       let schema = await ExpSchema.getSchemaAsync(sdkVersion);
