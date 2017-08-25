@@ -206,7 +206,7 @@ export default class Schemer {
         //  This cases on whether filePath is a remote URL or located on the machine
         const probeResult = fs.existsSync(filePath)
           ? imageProbe.sync(await readChunk(filePath, 0, 4100))
-          : await imageProbe(data);
+          : await imageProbe(data, { useElectronNet: false });
 
         const { width, height, type, mime, wUnits, hUnits } = probeResult;
 
