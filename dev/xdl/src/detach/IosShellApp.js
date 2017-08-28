@@ -374,11 +374,11 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
   let buildCmd, buildDest, pathToApp;
   if (type === 'simulator') {
     buildDest = `${iOSRootPath}/${relativeBuildDestination}-simulator`;
-    buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphonesimulator -configuration ${configuration} -derivedDataPath ${buildDest} CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO SKIP_INSTALL=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
+    buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphonesimulator -configuration ${configuration} -derivedDataPath ${buildDest} CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
     pathToApp = `${buildDest}/Build/Products/${configuration}-iphonesimulator/Exponent.app`;
   } else if (type === 'archive') {
     buildDest = `${iOSRootPath}/${relativeBuildDestination}-archive`;
-    buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent archive -configuration ${configuration} -derivedDataPath ${buildDest} -archivePath ${buildDest}/Exponent.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO SKIP_INSTALL=NO | xcpretty`;
+    buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphoneos -destination generic/platform=iOS -configuration ${configuration} archive -derivedDataPath ${buildDest} -archivePath ${buildDest}/Exponent.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty`;
     pathToApp = `${buildDest}/Exponent.xcarchive/Products/Applications/Exponent.app`;
   }
 
