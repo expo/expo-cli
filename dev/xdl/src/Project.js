@@ -836,10 +836,6 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   }
   if (!output) {
     return;
-  } // Fix watchman if it's being dumb
-  if (Watchman.isPlatformSupported() && output.includes('watchman watch-del')) {
-    _restartWatchmanAsync(projectRoot);
-    return;
   }
   // Temporarily hide warnings about duplicate providesModule declarations
   // under react-native
