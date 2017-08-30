@@ -74,8 +74,9 @@ async function configureStandaloneIOSEntitlementsAsync(
     'Exponent.entitlements',
     config => {
       // push notif entitlement changes based on build configuration
-      config['aps-environment'] =
-        buildConfiguration === 'Release' ? 'production' : 'development';
+      config['aps-environment'] = buildConfiguration === 'Release'
+        ? 'production'
+        : 'development';
 
       // remove iCloud-specific entitlements and allow the developer to configure
       // this themselves.
@@ -101,12 +102,9 @@ async function configureStandaloneIOSEntitlementsAsync(
         delete config['com.apple.developer.associated-domains'];
       }
 
-      // Add Apple Pay Merchant ID or remove Merchant ID if unused.
-      if (manifest.ios && manifest.ios.merchantId) {
-        config['com.apple.developer.in-app-payments'] = manifest.ios.merchantId;
-      } else {
-        delete config['com.apple.developer.in-app-payments'];
-      }
+      // for now, remove any merchant ID in shell apps
+      // (TODO: better plan for payments)
+      delete config['com.apple.developer.in-app-payments'];
 
       return config;
     }
@@ -143,10 +141,9 @@ async function configureStandaloneIOSInfoPlistAsync(
       }
 
       // bundle id
-      config.CFBundleIdentifier =
-        manifest.ios && manifest.ios.bundleIdentifier
-          ? manifest.ios.bundleIdentifier
-          : bundleIdentifier;
+      config.CFBundleIdentifier = manifest.ios && manifest.ios.bundleIdentifier
+        ? manifest.ios.bundleIdentifier
+        : bundleIdentifier;
       if (!config.CFBundleIdentifier) {
         throw new Error(
           `Cannot configure an iOS app with no bundle identifier.`
@@ -202,10 +199,9 @@ async function configureStandaloneIOSInfoPlistAsync(
 
       // use version from manifest
       let version = manifest.version ? manifest.version : '0.0.0';
-      let buildNumber =
-        manifest.ios && manifest.ios.buildNumber
-          ? manifest.ios.buildNumber
-          : '1';
+      let buildNumber = manifest.ios && manifest.ios.buildNumber
+        ? manifest.ios.buildNumber
+        : '1';
       config.CFBundleShortVersionString = version;
       config.CFBundleVersion = buildNumber;
 
@@ -214,7 +210,7 @@ async function configureStandaloneIOSInfoPlistAsync(
           (privateConfig &&
             privateConfig.fabric &&
             privateConfig.fabric.apiKey) ||
-          DEFAULT_FABRIC_KEY,
+            DEFAULT_FABRIC_KEY,
         Kits: [
           {
             KitInfo: {},
@@ -243,8 +239,9 @@ async function configureStandaloneIOSInfoPlistAsync(
       }
 
       // 1 is iPhone, 2 is iPad
-      config.UIDeviceFamily =
-        manifest.ios && manifest.ios.supportsTablet ? [1, 2] : [1];
+      config.UIDeviceFamily = manifest.ios && manifest.ios.supportsTablet
+        ? [1, 2]
+        : [1];
 
       // allow iPad-only
       if (manifest.ios && manifest.ios.isTabletOnly) {
