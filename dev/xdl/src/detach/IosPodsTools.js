@@ -142,10 +142,19 @@ ${indentString(renderDependencyAttributes(attributes), 2)}`;
  *  an unversioned dependency pointing at RN#sdk-15.
  */
 function renderUnversionedReactNativeDependency(options, sdkVersion) {
-  if (sdkVersion === '14.0.0') {
+  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+  if (sdkMajorVersion === 14) {
     return indentString(
       `
 ${renderUnversionedReactDependency(options)}
+`,
+      2
+    );
+  } else if (sdkMajorVersion < 21) {
+    return indentString(
+      `
+${renderUnversionedReactDependency(options, sdkVersion)}
+${renderUnversionedYogaDependency(options)}
 `,
       2
     );
@@ -154,6 +163,21 @@ ${renderUnversionedReactDependency(options)}
       `
 ${renderUnversionedReactDependency(options, sdkVersion)}
 ${renderUnversionedYogaDependency(options)}
+${renderUnversionedThirdPartyDependency(
+        'DoubleConversion',
+        path.join('third-party-podspecs', 'DoubleConversion.podspec'),
+        options
+      )}
+${renderUnversionedThirdPartyDependency(
+        'Folly',
+        path.join('third-party-podspecs', 'Folly.podspec'),
+        options
+      )}
+${renderUnversionedThirdPartyDependency(
+        'GLog',
+        path.join('third-party-podspecs', 'GLog.podspec'),
+        options
+      )}
 `,
       2
     );
@@ -188,7 +212,9 @@ function renderUnversionedReactDependency(options, sdkVersion) {
   if (!(sdkMajorVersion < 16)) {
     attributes.subspecs.push('DevSupport');
   }
-  if (!(sdkMajorVersion < 18)) {
+  if (!(sdkMajorVersion < 21)) {
+    attributes.subspecs.push('CxxBridge');
+  } else if (!(sdkMajorVersion < 18)) {
     attributes.subspecs.push('BatchedBridge');
   }
 
@@ -206,6 +232,26 @@ function renderUnversionedYogaDependency(options) {
     throw new Error(`Unsupported options for Yoga dependency: ${options}`);
   }
   return `pod 'Yoga',
+${indentString(renderDependencyAttributes(attributes), 2)}`;
+}
+
+function renderUnversionedThirdPartyDependency(
+  podName,
+  podspecRelativePath,
+  options
+) {
+  let attributes;
+  if (options.reactNativePath) {
+    attributes = {
+      podspec: path.join(options.reactNativePath, podspecRelativePath),
+      inhibit_warnings: true,
+    };
+  } else {
+    throw new Error(
+      `Unsupported options for ${podName} dependency: ${options}`
+    );
+  }
+  return `pod '${podName}',
 ${indentString(renderDependencyAttributes(attributes), 2)}`;
 }
 
