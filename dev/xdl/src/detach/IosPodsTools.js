@@ -321,10 +321,8 @@ function renderUnversionedPostinstall() {
 
 function renderPodfileTestTarget(reactNativePath) {
   return `
-  # if you run into problems pre-downloading this, rm Pods/Local\ Podspecs/RCTTest.podspec.json
   target 'ExponentIntegrationTests' do
     inherit! :search_paths
-    pod 'RCTTest', :podspec => './RCTTest.podspec', :path => '${reactNativePath}'
   end
 `;
 }
