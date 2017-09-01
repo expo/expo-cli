@@ -373,20 +373,23 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
 
   let buildCmd, buildDest, pathToApp;
   if (type === 'simulator') {
-    buildDest = `${iOSRootPath}/${relativeBuildDestination}-simulator`;
+    buildDest = path.relative(
+      iOSRootPath,
+      `${relativeBuildDestination}-simulator`
+    );
     buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphonesimulator -configuration ${configuration} -derivedDataPath ${buildDest} CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
     pathToApp = `${buildDest}/Build/Products/${configuration}-iphonesimulator/Exponent.app`;
   } else if (type === 'archive') {
-    buildDest = `${iOSRootPath}/${relativeBuildDestination}-archive`;
+    buildDest = path.relative(
+      iOSRootPath,
+      `${relativeBuildDestination}-archive`
+    );
     buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphoneos -destination generic/platform=iOS -configuration ${configuration} archive -derivedDataPath ${buildDest} -archivePath ${buildDest}/Exponent.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty`;
     pathToApp = `${buildDest}/Exponent.xcarchive/Products/Applications/Exponent.app`;
   }
 
   if (buildCmd) {
-    console.log(
-      `Building shell app under ${iOSRootPath}/${relativeBuildDestination}`
-    );
-    console.log(`  (action: ${action}, configuration: ${configuration})...`);
+    console.log(`Building shell app under ${buildDest}...\n`);
     console.log(buildCmd);
     await spawnAsyncThrowError(buildCmd, null, {
       // only stderr
@@ -395,10 +398,18 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
       shell: true,
     });
 
-    let artifactLocation = `${iOSRootPath}/../shellAppBase-builds/${type}/${configuration}/`;
+    const artifactLocation = path.join(
+      iOSRootPath,
+      '../shellAppBase-builds',
+      type,
+      configuration
+    );
     await spawnAsyncThrowError('/bin/rm', ['-rf', artifactLocation]);
     await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactLocation]);
 
+    console.log(
+      `\nFinished building, copying artifact to ${artifactLocation}...`
+    );
     if (type === 'archive') {
       await spawnAsyncThrowError('/bin/cp', [
         '-R',
