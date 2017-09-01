@@ -921,6 +921,7 @@ function _handleDeviceLogs(
     let level = log.level;
     let groupDepth = log.groupDepth;
     let shouldHide = log.shouldHide;
+    let includesStack = log.includesStack;
     ProjectUtils.logWithLevel(
       projectRoot,
       level,
@@ -930,6 +931,7 @@ function _handleDeviceLogs(
         deviceName,
         groupDepth,
         shouldHide,
+        includesStack,
       },
       string
     );
@@ -1147,6 +1149,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       manifest.xde = true; // deprecated
       manifest.developer = {
         tool: Config.developerTool,
+        projectRoot,
       };
       manifest.packagerOpts = packagerOpts;
       manifest.env = {};

@@ -144,16 +144,50 @@ Command.prototype.asyncActionProjectDir = function(
       }
     };
 
+    const logStackTrace = (chunk, logFn, nestedLogFn) => {
+      let traceInfo;
+      try {
+        traceInfo = JSON.parse(chunk.msg);
+      } catch (e) {
+        return logFn(chunk.msg);
+      }
+
+      let { message, stack } = traceInfo;
+      log.addNewLineIfNone();
+      logFn(chalk.bold(message));
+
+      for (let line of stack.split('\n')) {
+        if (line && line.startsWith('node_modules')) {
+          nestedLogFn('- ' + line);
+        } else {
+          nestedLogFn('* ' + line);
+        }
+      }
+      log.printNewLineBeforeNextLog();
+    };
+
     const logWithLevel = chunk => {
       if (!chunk.msg) {
         return;
       }
       if (chunk.level <= bunyan.INFO) {
-        logLines(chunk.msg, log);
+        if (chunk.includesStack) {
+          logStackTrace(chunk, log, log.nested);
+        } else {
+          logLines(chunk.msg, log);
+        }
       } else if (chunk.level === bunyan.WARN) {
-        logLines(chunk.msg, log.warn);
+        if (chunk.includesStack) {
+          logStackTrace(chunk, log.warn, log.nestedWarn);
+        } else {
+          logLines(chunk.msg, log.warn);
+        }
       } else {
-        logLines(chunk.msg, log.error);
+        if (chunk.includesStack) {
+          logStackTrace(chunk, log.error, log.nestedError);
+        } else {
+          logLines(chunk.msg, log.error);
+        }
       }
     };
 

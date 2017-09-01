@@ -46,12 +46,12 @@ async function action(projectDir, options) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
   if (!exp.isDetached) {
-    log('You can scan this QR code:\n');
+    log('You can scan this QR code:');
+    log.newLine();
     urlOpts.printQRCode(url);
   }
 
-  log('Your URL is\n\n' + chalk.underline(url) + '\n');
-  log.raw(url);
+  log('Your URL is: ' + chalk.underline(url));
 
   const recipient = await sendTo.getRecipient(options.sendTo);
   if (recipient) {

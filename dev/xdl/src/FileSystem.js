@@ -46,6 +46,20 @@ export async function openConsoleAsync(dir: string) {
   }
 }
 
+export async function openFileInEditorAsync(path: string) {
+  if (process.platform === 'darwin') {
+    // This will use the ENV var $EXPO_EDITOR if set, or else will try various
+    // popular editors, looking for one that is open, or if none are, one that is installed
+    await Binaries.sourceBashLoginScriptsAsync();
+    return await osascript.openInEditorAsync(path, process.env.EXPO_EDITOR);
+  } else if (process.platform === 'win32') {
+    throw new XDLError(
+      ErrorCode.PLATFORM_NOT_SUPPORTED,
+      'openFileInEditorAsync not supported'
+    );
+  }
+}
+
 export async function openProjectInEditorAsync(dir: string) {
   if (process.platform === 'darwin') {
     // This will use the ENV var $EXPO_EDITOR if set, or else will try various

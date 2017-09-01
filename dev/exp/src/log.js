@@ -2,6 +2,52 @@ import chalk from 'chalk';
 
 let _bundleProgressBar;
 
+let _printNewLineBeforeNextLog = false;
+let _isLastLineNewLine = false;
+function _updateIsLastLineNewLine(args) {
+  if (args.length === 0) {
+    _isLastLineNewLine = true;
+  } else {
+    let lastArg = args[args.length - 1];
+    if (
+      typeof lastArg === 'string' &&
+      (lastArg === '' || lastArg.match(/[\r\n]$/))
+    ) {
+      _isLastLineNewLine = true;
+    } else {
+      _isLastLineNewLine = false;
+    }
+  }
+}
+
+function _maybePrintNewLine() {
+  if (_printNewLineBeforeNextLog) {
+    _printNewLineBeforeNextLog = false;
+    console.log();
+  }
+}
+
+function consoleLog(...args) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.log(...args);
+}
+
+function consoleWarn(...args) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.warn(...args);
+}
+
+function consoleError(...args) {
+  _maybePrintNewLine();
+  _updateIsLastLineNewLine(args);
+
+  console.error(...args);
+}
+
 function respectProgressBars(commitLogs) {
   if (_bundleProgressBar) {
     _bundleProgressBar.terminate();
@@ -13,59 +59,93 @@ function respectProgressBars(commitLogs) {
   }
 }
 
-function log() {
+function getPrefix(chalkColor) {
+  return chalkColor('[') + chalk.gray('exp') + chalkColor(']');
+}
+
+function withPrefixAndTextColor(args, chalkColor = chalk.gray) {
+  return [getPrefix(chalkColor), ...args.map(arg => chalkColor(arg))];
+}
+
+function withPrefix(args, chalkColor = chalk.gray) {
+  return [getPrefix(chalkColor), ...args];
+}
+
+function log(...args) {
   if (log.config.raw) {
     return;
   }
-  var prefix = chalk.gray('[') + chalk.gray('exp') + chalk.gray(']');
-  var args = [prefix].concat(Array.prototype.slice.call(arguments, 0));
 
   respectProgressBars(() => {
-    console.log(...args);
+    consoleLog(...withPrefix(args));
   });
 }
+
+log.nested = function(message) {
+  respectProgressBars(() => {
+    consoleLog(message);
+  });
+};
+
+log.newLine = function newLine() {
+  respectProgressBars(() => {
+    consoleLog();
+  });
+};
+
+log.addNewLineIfNone = function addNewLineIfNone() {
+  if (!_isLastLineNewLine && !_printNewLineBeforeNextLog) {
+    log.newLine();
+  }
+};
+
+log.printNewLineBeforeNextLog = function printNewLineBeforeNextLog() {
+  _printNewLineBeforeNextLog = true;
+};
 
 log.setBundleProgressBar = function setBundleProgressBar(bar) {
   _bundleProgressBar = bar;
 };
 
-log.error = function error() {
+log.error = function error(...args) {
   if (log.config.raw) {
     return;
   }
-  var prefix = chalk.red('[') + chalk.gray('exp') + chalk.red(']');
-  var args = [prefix].concat(
-    Array.prototype.slice.call(arguments, 0).map(x => chalk.red(x))
-  );
 
   respectProgressBars(() => {
-    console.error(...args);
+    consoleError(...withPrefixAndTextColor(args, chalk.red));
   });
 };
 
-log.warn = function warn() {
-  if (log.config.raw) {
-    return;
-  }
-  var prefix = chalk.yellow('[') + chalk.gray('exp') + chalk.yellow(']');
-  var args = [prefix].concat(
-    Array.prototype.slice.call(arguments, 0).map(x => chalk.yellow(x))
-  );
-
+log.nestedError = function(message) {
   respectProgressBars(() => {
-    console.warn(...args);
+    consoleError(chalk.red(message));
   });
 };
 
-log.gray = function() {
+log.warn = function warn(...args) {
   if (log.config.raw) {
     return;
   }
-  var prefix = '[exp]';
-  var args = [prefix].concat(Array.prototype.slice.call(arguments, 0));
 
   respectProgressBars(() => {
-    console.error(chalk.gray(...args));
+    consoleWarn(...withPrefixAndTextColor(args, chalk.yellow));
+  });
+};
+
+log.nestedWarn = function(message) {
+  respectProgressBars(() => {
+    consoleWarn(chalk.yellow(message));
+  });
+};
+
+log.gray = function(...args) {
+  if (log.config.raw) {
+    return;
+  }
+
+  respectProgressBars(() => {
+    consoleLog(...withPrefixAndTextColor(args));
   });
 };
 
@@ -75,7 +155,7 @@ log.raw = function(...args) {
   }
 
   respectProgressBars(() => {
-    console.log(...args);
+    consoleLog(...args);
   });
 };
 
