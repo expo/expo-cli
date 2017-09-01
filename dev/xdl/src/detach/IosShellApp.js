@@ -469,6 +469,41 @@ function validateArgs(args) {
   return args;
 }
 
+async function configureIOSShellAppAsync(args, manifest) {
+  let { url, sdkVersion, output, type } = args;
+
+  const configFilePath = args.archivePath;
+
+  await configurePropertyListsAsync(manifest, args, configFilePath);
+  await configureIOSIconsAsync(manifest, configFilePath);
+  await configureIOSLaunchAssetsAsync(manifest, configFilePath, '../ios');
+  await preloadManifestAndBundleAsync(manifest, args, configFilePath);
+  await cleanPropertyListBackupsAsync(configFilePath, false);
+}
+
+async function moveShellAppArchiveAsync(args, manifest) {
+  const { archivePath, output, type } = args;
+  const archiveName = manifest.name.replace(/[^0-9a-z_\-\.]/gi, '_');
+  const appReleasePath = path.resolve(path.join(`${archivePath}`, '..'));
+  if (type === 'simulator') {
+    await spawnAsync(
+      `mv Exponent.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+      null,
+      {
+        stdio: 'inherit',
+        cwd: appReleasePath,
+        shell: true,
+      }
+    );
+  } else if (type === 'archive') {
+    await spawnAsync('/bin/mv', ['Exponent.xcarchive', output], {
+      stdio: 'inherit',
+      cwd: `${archivePath}/../../../..`,
+    });
+  }
+  return;
+}
+
 /**
 *  @param url manifest url for shell experience
 *  @param sdkVersion sdk to use when requesting the manifest
@@ -484,48 +519,20 @@ function validateArgs(args) {
 *  @param output specify the output path of built project (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
 */
 async function createIOSShellAppAsync(args) {
-  let configFilePath;
   args = validateArgs(args);
 
-  if (args.action !== 'configure') {
-    // build the app before configuring
+  if (args.action === 'build') {
     await configureShellAppSecretsAsync(args, '../ios');
-    configFilePath = await buildAsync(args, '../ios', '../shellAppBase');
-  } else {
-    let { url, sdkVersion, output, type } = args;
-
-    // fetch manifest
+    await buildAsync(args, '../ios', '../shellAppBase');
+  } else if (args.action === 'configure') {
+    let { url, sdkVersion } = args;
     let manifest = await getManifestAsync(url, {
       'Exponent-SDK-Version': sdkVersion,
       'Exponent-Platform': 'ios',
     });
-
-    // action === 'configure'
-    configFilePath = args.archivePath;
-    // just configure, don't build anything
-    await configurePropertyListsAsync(manifest, args, configFilePath);
-    await configureIOSIconsAsync(manifest, configFilePath);
-    await configureIOSLaunchAssetsAsync(manifest, configFilePath, '../ios');
-    await preloadManifestAndBundleAsync(manifest, args, configFilePath);
-    await cleanPropertyListBackupsAsync(configFilePath, false);
-
-    let archiveName = manifest.name.replace(/[^0-9a-z_\-\.]/gi, '_');
-    const appReleasePath = path.resolve(path.join(`${configFilePath}`, '..'));
-    if (type === 'simulator') {
-      await spawnAsync(
-        `mv Exponent.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
-        null,
-        {
-          stdio: 'inherit',
-          cwd: appReleasePath,
-          shell: true,
-        }
-      );
-    } else if (type === 'archive') {
-      await spawnAsync('/bin/mv', ['Exponent.xcarchive', output], {
-        stdio: 'inherit',
-        cwd: `${configFilePath}/../../../..`,
-      });
+    await configureIOSShellAppAsync(args, manifest);
+    if (args.output) {
+      await moveShellAppArchiveAsync(args, manifest);
     }
   }
 
