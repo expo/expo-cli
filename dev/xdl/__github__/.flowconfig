@@ -1,6 +1,8 @@
 [ignore]
 <PROJECT_ROOT>/build/.*
 
+.*/node_modules/reqwest/tests/.*
+
 [options]
 esproposal.decorators=ignore
 esproposal.class_static_fields=enable
