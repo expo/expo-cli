@@ -337,6 +337,10 @@ function setBackgroundColor(manifest, dom) {
     backgroundColorString = manifest.loading.backgroundColor;
   }
 
+  if (!backgroundColorString) {
+    return;
+  }
+
   const { r, g, b } = backgroundColorFromHexString(backgroundColorString);
   var backgroundViewNode = dom.getElementById(backgroundViewID);
   var backgroundViewColorNodes = backgroundViewNode.getElementsByTagName(
