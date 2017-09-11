@@ -8,6 +8,12 @@ import request from 'request';
 import spawnAsyncQuiet from '@expo/spawn-async';
 import { DOMParser, XMLSerializer } from 'xmldom';
 
+const ASPECT_FILL = 'scaleAspectFill';
+const ASPECT_FIT = 'scaleAspectFit';
+
+const backgroundImageViewID = 'Bsh-cT-K4l';
+const backgroundViewID = 'OfY-5Y-tS4';
+
 function parseSdkMajorVersion(expSdkVersion) {
   let sdkMajorVersion = 0;
   try {
@@ -252,8 +258,14 @@ function backgroundColorFromHexString(hexColor) {
 }
 
 async function configureIOSLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
-  if (!(manifest.loading && manifest.loading.splash)) {
-    // Don't do loading xib customizations if `loading.splash` key doesn't exist
+  if (
+    !(
+      manifest.splash ||
+      (manifest.ios && manifest.ios.splash) ||
+      (manifest.android && manifest.android.splash)
+    )
+  ) {
+    // Don't do loading xib customizations if `splash` keys don't exist
     return;
   }
 
@@ -276,6 +288,7 @@ async function configureIOSLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
     var dom = parser.parseFromString(fileString);
 
     setBackgroundColor(manifest, dom);
+    setBackgroundImageResizeMode(manifest, dom);
 
     var fileString = serializer.serializeToString(dom);
     return fileString;
@@ -293,52 +306,89 @@ async function configureIOSLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
 }
 
 async function setBackgroundImage(manifest, projectRoot) {
-  var backgroundImageOutputPath = path.join(
-    projectRoot,
-    'launch_background_image.png'
-  );
+  let tabletImage;
+  let phoneImage;
 
-  var backgroundImageUrl;
-  if (
-    manifest.loading &&
-    manifest.loading.splash &&
-    manifest.loading.splash.image &&
-    manifest.loading.splash.image.ios &&
-    manifest.loading.splash.image.ios.backgroundImageUrl
-  ) {
-    backgroundImageUrl = manifest.loading.splash.image.ios.backgroundImageUrl;
+  if (manifest.ios && manifest.ios.splash && manifest.ios.splash.imageUrl) {
+    phoneImage = manifest.ios.splash.imageUrl;
+
+    if (manifest.ios.splash.tabletImageUrl) {
+      tabletImage = manifest.ios.splash.tabletImageUrl;
+    }
+  } else if (manifest.splash && manifest.splash.imageUrl) {
+    phoneImage = manifest.ios.splash.imageUrl;
   }
 
-  if (!backgroundImageUrl) {
+  if (!phoneImage) {
     return;
   }
 
-  if (backgroundImageUrl) {
-    await saveImageToPathAsync(
-      projectRoot,
-      backgroundImageUrl,
-      backgroundImageOutputPath
-    );
+  var outputs = [];
+  if (!tabletImage) {
+    outputs.push({
+      url: phoneImage,
+      path: path.join(projectRoot, 'launch_background_image.png'),
+    });
+  } else {
+    outputs.push({
+      url: phoneImage,
+      path: path.join(projectRoot, 'launch_background_image~iphone.png'),
+    });
+    outputs.push({
+      url: tabletImage,
+      path: path.join(projectRoot, 'launch_background_image.png'),
+    });
+  }
+
+  outputs.forEach(async output => {
+    let { url, path } = output;
+    console.log(url, path, output);
+    await saveImageToPathAsync(projectRoot, url, path);
+  });
+}
+
+function setBackgroundImageResizeMode(manifest, dom) {
+  let backgroundViewMode = (() => {
+    let mode;
+    if (!manifest) {
+      return ASPECT_FIT;
+    }
+
+    if (manifest.ios && manifest.ios.splash && manifest.ios.splash.resizeMode) {
+      mode = manifest.ios.splash.resizeMode;
+    } else if (manifest.splash.resizeMode) {
+      mode = manifest.splash.resizeMode;
+    }
+
+    return mode === 'cover' ? ASPECT_FILL : ASPECT_FIT;
+  })();
+
+  var backgroundImageViewNode = dom.getElementById(backgroundImageViewID);
+  if (backgroundImageViewNode) {
+    backgroundImageViewNode.setAttribute('contentMode', backgroundViewMode);
   }
 }
 
 function setBackgroundColor(manifest, dom) {
-  let backgroundViewID = 'OfY-5Y-tS4';
   var backgroundColorString;
   if (
-    manifest.loading &&
-    manifest.loading.splash &&
-    manifest.loading.splash.backgroundColor
+    manifest.ios &&
+    manifest.ios.splash &&
+    manifest.ios.splash.backgroundColor
   ) {
-    backgroundColorString = manifest.loading.splash.backgroundColor;
+    backgroundColorString = manifest.ios.splash.backgroundColor;
+  } else if (manifest.splash && manifest.splash.backgroundColor) {
+    backgroundColorString = manifest.splash.backgroundColor;
   }
 
+  // Fallback to old version
   if (!backgroundColorString) {
     backgroundColorString = manifest.loading.backgroundColor;
   }
 
+  // Default to white
   if (!backgroundColorString) {
-    return;
+    backgroundColorString = '#FFFFFF';
   }
 
   const { r, g, b } = backgroundColorFromHexString(backgroundColorString);
