@@ -3,6 +3,7 @@
 'use strict';
 
 import fs from 'fs';
+import 'instapromise';
 import path from 'path';
 import request from 'request';
 import spawnAsyncQuiet from '@expo/spawn-async';
