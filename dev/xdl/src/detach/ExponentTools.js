@@ -317,7 +317,7 @@ async function setBackgroundImage(manifest, projectRoot) {
       tabletImage = manifest.ios.splash.tabletImageUrl;
     }
   } else if (manifest.splash && manifest.splash.imageUrl) {
-    phoneImage = manifest.ios.splash.imageUrl;
+    phoneImage = manifest.splash.imageUrl;
   }
 
   if (!phoneImage) {
