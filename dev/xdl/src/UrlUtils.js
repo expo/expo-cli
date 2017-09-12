@@ -4,7 +4,7 @@
 
 import 'instapromise';
 
-import ip from 'ip';
+import ip from './ip';
 import joi from 'joi';
 import os from 'os';
 import url from 'url';
