@@ -156,13 +156,47 @@ Command.prototype.asyncActionProjectDir = function(
       log.addNewLineIfNone();
       logFn(chalk.bold(message));
 
-      for (let line of stack.split('\n')) {
-        if (line && line.startsWith('node_modules')) {
+      const isLibraryFrame = line => {
+        return line.startsWith('node_modules');
+      };
+
+      let stackFrames = _.compact(stack.split('\n'));
+      let lastAppCodeFrameIndex = _.findLastIndex(stackFrames, line => {
+        return !isLibraryFrame(line);
+      });
+      let lastFrameIndexToLog = Math.min(
+        stackFrames.length - 1,
+        lastAppCodeFrameIndex + 2 // show max two more frames after last app code frame
+      );
+      let unloggedFrames = stackFrames.length - lastFrameIndexToLog;
+
+      // If we're only going to exclude one frame, just log them all
+      if (unloggedFrames === 1) {
+        lastFrameIndexToLog = stackFrames.length - 1;
+        unloggedFrames = 0;
+      }
+
+      for (let i = 0; i <= lastFrameIndexToLog; i++) {
+        let line = stackFrames[i];
+        if (!line) {
+          continue;
+        } else if (line.match(/react-native\/.*YellowBox.js/)) {
+          continue;
+        }
+
+        if (line.startsWith('node_modules')) {
           nestedLogFn('- ' + line);
         } else {
           nestedLogFn('* ' + line);
         }
       }
+
+      if (unloggedFrames > 0) {
+        nestedLogFn(
+          `- ... ${unloggedFrames} more stack frames from framework internals`
+        );
+      }
+
       log.printNewLineBeforeNextLog();
     };
 
