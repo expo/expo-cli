@@ -825,6 +825,89 @@ async function _restartWatchmanAsync(projectRoot: string) {
   );
 }
 
+function _parseModuleResolutionError(
+  projectRoot: string,
+  errorMessage: string
+) {
+  let parts = errorMessage.split(' from ');
+  let moduleName = parts[0]
+    .replace(/.*?Unable to resolve module /, '')
+    .replace(/`/g, '')
+    .trim();
+  let path = parts[1].replace(/`: Module .*/, '').replace(/`/, '').trim();
+  let relativePath = path.replace(projectRoot, '').trim();
+
+  return {
+    moduleName,
+    relativePath,
+    path,
+  };
+}
+
+const NODE_STDLIB_MODULES = [
+  'assert',
+  'async_hooks',
+  'buffer',
+  'child_process',
+  'cluster',
+  'crypto',
+  'dgram',
+  'dns',
+  'domain',
+  'events',
+  'fs',
+  'http',
+  'https',
+  'net',
+  'os',
+  'path',
+  'punycode',
+  'querystring',
+  'readline',
+  'repl',
+  'stream',
+  'string_decoder',
+  'tls',
+  'tty',
+  'url',
+  'util',
+  'v8',
+  'vm',
+  'zlib',
+];
+
+function _logModuleResolutionError(projectRoot: string, errorMessage: string) {
+  let { moduleName, relativePath, path } = _parseModuleResolutionError(
+    projectRoot,
+    errorMessage
+  );
+
+  const DOCS_PAGE_URL =
+    'https://docs.expo.io/versions/latest/introduction/faq.html#can-i-use-nodejs-packages-with-expo';
+
+  if (NODE_STDLIB_MODULES.includes(moduleName)) {
+    if (path.includes('node_modules')) {
+      ProjectUtils.logError(
+        projectRoot,
+        'packager',
+        `The package at ".${relativePath}" attempted to import the Node standard library module "${moduleName}". It failed because React Native does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`
+      );
+    } else {
+      ProjectUtils.logError(
+        projectRoot,
+        'packager',
+        `You attempted attempted to import the Node standard library module "${moduleName}" from ".${relativePath}". It failed because React Native does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`
+      );
+    }
+  } else {
+    ProjectUtils.logError(
+      projectRoot,
+      'packager',
+      `Unable to resolve ${moduleName}" from "./${relativePath}"`
+    );
+  }
+}
+
 function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   let output = data.toString();
   if (output.includes('─────')) {
@@ -837,6 +920,11 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   if (!output) {
     return;
   }
+
+  if (output.includes('Unable to resolve module')) {
+    _logModuleResolutionError(projectRoot, output);
+  }
+
   // Temporarily hide warnings about duplicate providesModule declarations
   // under react-native
   if (_isIgnorableDuplicateModuleWarning(projectRoot, level, output)) {
@@ -922,6 +1010,7 @@ function _handleDeviceLogs(
     let groupDepth = log.groupDepth;
     let shouldHide = log.shouldHide;
     let includesStack = log.includesStack;
+
     ProjectUtils.logWithLevel(
       projectRoot,
       level,
