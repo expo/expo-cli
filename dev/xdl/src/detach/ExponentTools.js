@@ -454,12 +454,15 @@ async function configureIOSIconsAsync(
     );
   }
 
-  let iconSizes = [20, 29, 40, 60, 76, 83.5];
+  let iconSizes = [20, 29, 40, 60, 76, 83.5, 1024];
   iconSizes.forEach(iconSize => {
     let iconResolutions;
     if (iconSize === 76) {
       // iPad has 1x and 2x icons for this size only
       iconResolutions = [1, 2];
+    } else if (iconSize == 1024) {
+      // marketing icon is weird
+      iconResolutions = [1];
     } else {
       iconResolutions = [2, 3];
     }
