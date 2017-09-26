@@ -74,7 +74,12 @@ async function getManifestAsync(url, headers) {
   let response = await request.promise(requestOptions);
   let responseBody = response.body;
   console.log('Using manifest:', responseBody);
-  let manifest = JSON.parse(responseBody);
+  let manifest;
+  try {
+    manifest = JSON.parse(responseBody);
+  } catch (e) {
+    throw new Error(`Unable to parse manifest: ${e}`);
+  }
 
   return manifest;
 }
