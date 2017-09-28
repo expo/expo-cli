@@ -1,0 +1,51 @@
+{
+  "name": "@expo/json-file",
+  "version": "6.0.0",
+  "description": "A module for reading, writing, and manipulating JSON files",
+  "main": "build/JsonFile.js",
+  "scripts": {
+    "lint": "eslint .",
+    "watch": "concurrently 'babel src -d build -w' 'flow-copy-source -w src build'",
+    "build": "babel src -d build && flow-copy-source src build",
+    "prepublish": "yarn build",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/expo/json-file.git"
+  },
+  "keywords": [
+    "json"
+  ],
+  "author": "support@expo.io",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/expo/json-file/issues"
+  },
+  "homepage": "https://github.com/expo/json-file#readme",
+  "dependencies": {
+    "json5": "^0.5.0",
+    "lockfile": "^1.0.3",
+    "lodash": "^4.6.1",
+    "mz": "^2.6.0",
+    "util.promisify": "^1.0.0",
+    "write-file-atomic": "^2.1.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-jest": "^21.0.2",
+    "babel-plugin-transform-flow-comments": "^6.22.0",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-stage-1": "^6.24.1",
+    "concurrently": "^3.5.0",
+    "eslint": "^4.7.2",
+    "eslint-config-universe": "^1.0.5",
+    "flow-bin": "^0.55.0",
+    "flow-copy-source": "^1.2.1",
+    "jest": "^21.1.0",
+    "memfs": "^2.5.6",
+    "mock-fs": "^4.4.1",
+    "prettier": "^1.7.0"
+  }
+}
