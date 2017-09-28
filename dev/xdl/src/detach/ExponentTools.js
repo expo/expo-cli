@@ -4,6 +4,7 @@
 
 import fs from 'fs';
 import 'instapromise';
+import mkdirp from 'mkdirp';
 import path from 'path';
 import request from 'request';
 import spawnAsyncQuiet from '@expo/spawn-async';
@@ -423,13 +424,69 @@ function setBackgroundColor(manifest, dom) {
 }
 
 /**
+ *  Compile a .car file from the icons in a manifest.
+ */
+async function buildIOSAssetArchive(
+  manifest,
+  destinationCARPath,
+  expoSourceRoot,
+  intermediatesDirectory
+) {
+  mkdirp.sync(intermediatesDirectory);
+
+  // copy expoSourceRoot/.../Images.xcassets into intermediates
+  await spawnAsyncThrowError(
+    '/bin/cp',
+    [
+      '-R',
+      path.join(expoSourceRoot, 'Exponent', 'Images.xcassets'),
+      path.join(intermediatesDirectory, 'Images.xcassets'),
+    ],
+    {
+      stdio: 'inherit',
+    }
+  );
+
+  // make the new xcassets contain the project's icon
+  await createAndWriteIOSIconsToPathAsync(
+    manifest,
+    path.join(intermediatesDirectory, 'Images.xcassets', 'AppIcon.appiconset')
+  );
+
+  // compile asset archive
+  let xcrunargs = [].concat(
+    ['actool'],
+    ['--minimum-deployment-target', '9.0'],
+    ['--platform', 'iphoneos'],
+    ['--app-icon', 'AppIcon'],
+    [
+      '--output-partial-info-plist',
+      path.join(intermediatesDirectory, 'assetcatalog_generated_info.plist'),
+    ],
+    ['--compress-pngs'],
+    ['--enable-on-demand-resources', 'YES'],
+    ['--product-type', 'com.apple.product-type.application'],
+    ['--target-device', 'iphone'],
+    ['--target-device', 'ipad'],
+    ['--compile', path.relative(intermediatesDirectory, destinationCARPath)],
+    ['Images.xcassets']
+  );
+  await spawnAsyncThrowError('xcrun', xcrunargs, {
+    stdio: ['ignore', 'ignore', 'inherit'], // only stderr
+    cwd: intermediatesDirectory,
+  });
+
+  return;
+}
+
+/**
  * Based on keys in the given manifest,
  * ensure that the proper iOS icon images exist -- assuming Info.plist already
  * points at them under CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles.
  *
  * This only works on MacOS (as far as I know) because it uses the sips utility.
  */
-async function configureIOSIconsAsync(
+async function createAndWriteIOSIconsToPathAsync(
   manifest,
   destinationIconPath,
   projectRoot
@@ -538,6 +595,7 @@ async function configureIOSIconsAsync(
 }
 
 export {
+  buildIOSAssetArchive,
   parseSdkMajorVersion,
   saveUrlToPathAsync,
   saveImageToPathAsync,
@@ -548,7 +606,7 @@ export {
   transformFileContentsAsync,
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
-  configureIOSIconsAsync,
+  createAndWriteIOSIconsToPathAsync,
   configureIOSLaunchAssetsAsync,
   createBlankIOSPropertyListAsync,
 };

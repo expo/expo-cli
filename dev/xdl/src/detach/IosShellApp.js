@@ -6,14 +6,16 @@ import 'instapromise';
 
 import fs from 'fs';
 import path from 'path';
+import rimraf from 'rimraf';
 import {
+  buildIOSAssetArchive,
   getManifestAsync,
   saveUrlToPathAsync,
   spawnAsync,
   spawnAsyncThrowError,
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
-  configureIOSIconsAsync,
+  createAndWriteIOSIconsToPathAsync,
   configureIOSLaunchAssetsAsync,
 } from './ExponentTools';
 
@@ -346,7 +348,6 @@ async function preloadManifestAndBundleAsync(manifest, args, configFilePath) {
 }
 
 async function cleanPropertyListBackupsAsync(configFilePath, restoreOriginals) {
-  console.log('Cleaning up...');
   await cleanIOSPropertyListBackupAsync(
     configFilePath,
     'EXShell',
@@ -484,12 +485,22 @@ async function configureIOSShellAppAsync(args, manifest) {
   let { url, sdkVersion, output, type } = args;
 
   const configFilePath = args.archivePath;
+  const expoSourceRoot = '../ios';
+  const intermediatesDir = '../shellAppIntermediates';
 
+  console.log('Configuring plists...');
   await configurePropertyListsAsync(manifest, args, configFilePath);
-  await configureIOSIconsAsync(manifest, configFilePath);
-  await configureIOSLaunchAssetsAsync(manifest, configFilePath, '../ios');
+  console.log('Compiling resources...');
+  await buildIOSAssetArchive(manifest, configFilePath, expoSourceRoot, intermediatesDir);
+  await configureIOSLaunchAssetsAsync(manifest, configFilePath, expoSourceRoot);
   await preloadManifestAndBundleAsync(manifest, args, configFilePath);
+  console.log('Cleaning up...');
   await cleanPropertyListBackupsAsync(configFilePath, false);
+
+  // maybe clean intermediates
+  if (fs.existsSync(intermediatesDir)) {
+    rimraf.sync(intermediatesDir);
+  }
 }
 
 async function moveShellAppArchiveAsync(args, manifest) {
@@ -521,7 +532,7 @@ async function moveShellAppArchiveAsync(args, manifest) {
 *  @param action
 *    build - build a binary
 *    configure - don't build anything, just configure the files in an existing .app bundle
-*  @param type simulator or archive, for action == build
+*  @param type simulator or archive
 *  @param configuration Debug or Release, for type == simulator (default Release)
 *  @param archivePath path to existing bundle, for action == configure
 *  @param privateConfigFile path to a private config file containing, e.g., private api keys

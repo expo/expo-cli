@@ -26,7 +26,7 @@ import {
   transformFileContentsAsync,
   modifyIOSPropertyListAsync,
   cleanIOSPropertyListBackupAsync,
-  configureIOSIconsAsync,
+  createAndWriteIOSIconsToPathAsync,
 } from './ExponentTools';
 import {
   configureStandaloneIOSInfoPlistAsync,
@@ -388,7 +388,7 @@ export async function detachIOSAsync(
     sdkVersion,
     sdkVersion
   );
-  await configureIOSIconsAsync(manifest, iconPath, projectRoot);
+  await createAndWriteIOSIconsToPathAsync(manifest, iconPath, projectRoot);
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
   // render Podfile in new project
