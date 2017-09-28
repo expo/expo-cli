@@ -363,7 +363,7 @@ function setBackgroundImageResizeMode(manifest, dom) {
 
     if (manifest.ios && manifest.ios.splash && manifest.ios.splash.resizeMode) {
       mode = manifest.ios.splash.resizeMode;
-    } else if (manifest.splash.resizeMode) {
+    } else if (manifest.splash && manifest.splash.resizeMode) {
       mode = manifest.splash.resizeMode;
     }
 
