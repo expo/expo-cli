@@ -1,3 +1,9 @@
 module.exports = {
-  extends: 'universe',
+  extends: ['universe/node'],
+  env: {
+    jest: true,
+  },
+  globals: {
+    jasmine: true,
+  },
 };
