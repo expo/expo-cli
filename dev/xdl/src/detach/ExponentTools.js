@@ -390,7 +390,9 @@ function setBackgroundColor(manifest, dom) {
 
   // Fallback to old version
   if (!backgroundColorString) {
-    backgroundColorString = manifest.loading.backgroundColor;
+    if (manifest.loading && manifest.loading.backgroundColor) {
+      backgroundColorString = manifest.loading.backgroundColor;
+    }
   }
 
   // Default to white
