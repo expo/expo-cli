@@ -231,7 +231,7 @@ function renderUnversionedYogaDependency(options) {
   } else {
     throw new Error(`Unsupported options for Yoga dependency: ${options}`);
   }
-  return `pod 'Yoga',
+  return `pod 'yoga',
 ${indentString(renderDependencyAttributes(attributes), 2)}`;
 }
 
