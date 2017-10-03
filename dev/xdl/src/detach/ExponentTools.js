@@ -252,7 +252,7 @@ async function getImageDimensionsAsync(dirname, basename) {
 
 function backgroundColorFromHexString(hexColor) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
-  if (result.length < 4) {
+  if (!result || result.length < 4) {
     // Default to white if we can't parse the color. We should have 3 matches.
     console.warn('Unable to parse color: ', hexColor, ' result:', result);
     return { r: 1, g: 1, b: 1 };
