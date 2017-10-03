@@ -154,7 +154,12 @@ async function _getForPlatformAsync(
   return response.body;
 }
 
-async function _resolveManifestAssets(projectRoot, manifest, resolver) {
+async function _resolveManifestAssets(
+  projectRoot,
+  manifest,
+  resolver,
+  strict = false
+) {
   try {
     // Asset fields that the user has set
     const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
@@ -165,10 +170,18 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver) {
     const urls = await Promise.all(
       assetSchemas.map(async ({ fieldPath }) => {
         const pathOrURL = _.get(manifest, fieldPath);
-        if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
+        if (pathOrURL.match(/^https?:\/\/(.*)$/)) {
+          // It's a remote URL
+          return pathOrURL;
+        } else if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
           return await resolver(pathOrURL);
         } else {
-          return pathOrURL; // Assume already a URL
+          const err = new Error('Could not resolve local asset.');
+          // $FlowFixMe
+          err.localAssetPath = pathOrURL;
+          // $FlowFixMe
+          err.manifestField = fieldPath;
+          throw err;
         }
       })
     );
@@ -178,11 +191,27 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver) {
       _.set(manifest, fieldPath + 'Url', urls[index])
     );
   } catch (e) {
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      `Warning: Unable to resolve manifest assets. Icons might not work. ${e.message}.`
-    );
+    let logMethod = ProjectUtils.logWarning;
+    if (strict) {
+      logMethod = ProjectUtils.logError;
+    }
+    if (e.localAssetPath) {
+      logMethod(
+        projectRoot,
+        'expo',
+        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
+      );
+    } else {
+      logMethod(
+        projectRoot,
+        'expo',
+        `Warning: Unable to resolve manifest assets. Icons might not work. ${e.message}.`
+      );
+    }
+
+    if (strict) {
+      throw new Error('Resolving assets failed.');
+    }
   }
 }
 
@@ -262,12 +291,24 @@ export async function publishAsync(
     force: validPostPublishHooks.length,
   });
 
-  let response = await _uploadArtifactsAsync({
-    exp,
-    iosBundle,
-    androidBundle,
-    options,
-  });
+  let response;
+  try {
+    response = await _uploadArtifactsAsync({
+      exp,
+      iosBundle,
+      androidBundle,
+      options,
+    });
+  } catch (e) {
+    if (e.serverError === 'SCHEMA_VALIDATION_ERROR') {
+      throw new Error(
+        `There was an error validating your project schema. Check for any warnings about the contents of your app/exp.json.`
+      );
+    }
+    throw new Error(
+      `There was an error publishing your project. Please check for any warnings.`
+    );
+  }
 
   await _maybeWriteArtifactsToDiskAsync({
     exp,
@@ -557,13 +598,18 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
   // Resolve manifest assets to their S3 URL and add them to the list of assets to
   // be uploaded
   const manifestAssets = [];
-  await _resolveManifestAssets(projectRoot, exp, async assetPath => {
-    const absolutePath = path.resolve(projectRoot, assetPath);
-    const contents = await fs.promise.readFile(absolutePath);
-    const hash = md5hex(contents);
-    manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
-    return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
-  });
+  await _resolveManifestAssets(
+    projectRoot,
+    exp,
+    async assetPath => {
+      const absolutePath = path.resolve(projectRoot, assetPath);
+      const contents = await fs.promise.readFile(absolutePath);
+      const hash = md5hex(contents);
+      manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
+      return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
+    },
+    true
+  );
 
   logger.global.info('Uploading assets');
 
@@ -576,6 +622,8 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
   } else {
     logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
   }
+
+  return exp;
 }
 
 async function _maybeWriteArtifactsToDiskAsync({

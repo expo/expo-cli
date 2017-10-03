@@ -176,7 +176,9 @@ export async function validateWithSchema(
 }
 
 function formatValidationError(validationError) {
-  return `\n • ${validationError.message}.`;
+  return `\n • ${validationError.fieldPath
+    ? 'Field: ' + validationError.fieldPath + ' - '
+    : ''}${validationError.message}.`;
 }
 
 async function _validatePackageJsonAsync(
@@ -303,7 +305,6 @@ async function _validateExpJsonAsync(
     )
   ) {
     try {
-      // TODO(perry) figure out a way to tell the schema validator whether this is exp.json or app.json
       let schema = await ExpSchema.getSchemaAsync(sdkVersion);
       let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
         projectRoot,
@@ -708,7 +709,8 @@ export async function validateWithNetworkAsync(
 
 async function validateAsync(
   projectRoot: string,
-  allowNetwork: boolean
+  allowNetwork: boolean,
+  strict: boolean
 ): Promise<number> {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 

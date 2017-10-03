@@ -12,11 +12,7 @@ import traverse from 'json-schema-traverse';
 import readChunk from 'read-chunk';
 import imageProbe from 'probe-image-size';
 import { SchemerError, ValidationError, ErrorCodes } from './Error';
-import {
-  fieldPathToSchemaPath,
-  schemaPointerToFieldPath,
-  fieldPathToSchema,
-} from './Util';
+import { schemaPointerToFieldPath, fieldPathToSchema } from './Util';
 
 type Options = {
   allErrors?: boolean,
@@ -81,7 +77,7 @@ export default class Schemer {
         return new ValidationError({
           errorCode: ErrorCodes.SCHEMA_ADDITIONAL_PROPERTY,
           fieldPath: dataPath,
-          message: `${dataPath} should NOT have additional property '${params.additionalProperty}'`,
+          message: `should NOT have additional property '${params.additionalProperty}'`,
           data: data,
           meta: parentSchema.meta,
         });
@@ -155,7 +151,7 @@ export default class Schemer {
   }
 
   _validateSchemaAsync(data: any) {
-    const passing = this.ajv.validate(this.schema, data);
+    this.ajv.validate(this.schema, data);
   }
 
   async _validateAssetsAsync(data: any) {
@@ -242,7 +238,7 @@ export default class Schemer {
             new ValidationError({
               errorCode: ErrorCodes.NOT_SQUARE,
               fieldPath: fieldPath,
-              message: `'${fieldPath}' should be square, but the file at '${data}' has dimensions ${width}x${height}`,
+              message: `image should be square, but the file at '${data}' has dimensions ${width}x${height}`,
               data,
               meta,
             })
@@ -253,7 +249,7 @@ export default class Schemer {
           new ValidationError({
             errorCode: ErrorCodes.INVALID_ASSET_URI,
             fieldPath: fieldPath,
-            message: `cannot access file at '${data}' for field '${fieldPath}'`,
+            message: `cannot access file at '${data}'`,
             data,
             meta,
           })
