@@ -17,6 +17,7 @@ import {
   cleanIOSPropertyListBackupAsync,
   createAndWriteIOSIconsToPathAsync,
   configureIOSLaunchAssetsAsync,
+  manifestUsesSplashApi,
 } from './ExponentTools';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
@@ -281,6 +282,11 @@ async function configureStandaloneIOSShellPlistAsync(
     if (manifest.ios && manifest.ios.hasOwnProperty('isRemoteJSEnabled')) {
       // enable/disable code push if the developer provided specific behavior
       shellConfig.isRemoteJSEnabled = manifest.ios.isRemoteJSEnabled;
+    }
+    if (!manifestUsesSplashApi(manifest, 'ios')) {
+      // for people still using the old loading api, hide the native splash screen.
+      // we can remove this code eventually.
+      shellConfig.isSplashScreenDisabled = true;
     }
 
     console.log('Using shell config:', shellConfig);

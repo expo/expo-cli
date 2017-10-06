@@ -238,8 +238,18 @@ function backgroundColorFromHexString(hexColor) {
   return { r, g, b };
 }
 
+function manifestUsesSplashApi(manifest, platform) {
+  if (platform === 'ios') {
+    return (manifest.splash || (manifest.ios && manifest.ios.splash));
+  }
+  if (platform === 'android') {
+    return (manifest.splash || (manifest.android && manifest.android.splash));
+  }
+  return false;
+}
+
 async function configureIOSLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
-  if (!(manifest.splash || (manifest.ios && manifest.ios.splash))) {
+  if (!manifestUsesSplashApi(manifest, 'ios')) {
     // Don't do loading xib customizations if `splash` keys don't exist
     return;
   }
@@ -570,4 +580,5 @@ export {
   createAndWriteIOSIconsToPathAsync,
   configureIOSLaunchAssetsAsync,
   createBlankIOSPropertyListAsync,
+  manifestUsesSplashApi,
 };
