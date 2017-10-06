@@ -105,7 +105,7 @@ class JsonFile<JSONObject: JSONT> {
     );
   }
 
-  async updateAsync(key: string, value: string, options?: Options<JSONObject>) {
+  async updateAsync(key: string, value: mixed, options?: Options<JSONObject>) {
     return callWithLock(this.file, () =>
       updateAsync(this.file, key, value, this._getOptions(options))
     );
