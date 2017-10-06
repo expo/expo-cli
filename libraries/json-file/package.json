@@ -7,7 +7,7 @@
     "lint": "eslint .",
     "watch": "concurrently 'babel src -d build -w' 'flow-copy-source -w src build'",
     "build": "babel src -d build && flow-copy-source src build",
-    "prepublish": "yarn build",
+    "prepare": "yarn build",
     "test": "jest"
   },
   "repository": {
