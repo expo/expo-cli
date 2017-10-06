@@ -1091,8 +1091,13 @@ export async function startReactNativeServerAsync(
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
   let packagerOpts = {
     port: packagerPort,
-    projectRoots: projectRoot,
-    customLogReporterPath: 'expo/tools/LogReporter',
+    customLogReporterPath: path.join(
+      projectRoot,
+      'node_modules',
+      'expo',
+      'tools',
+      'LogReporter'
+    ),
     assetExts: ['ttf'],
   };
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
@@ -1164,6 +1169,7 @@ export async function startReactNativeServerAsync(
     cwd: projectRoot,
     env: {
       ...process.env,
+      REACT_NATIVE_APP_ROOT: projectRoot,
       NODE_PATH: nodePath,
       ELECTRON_RUN_AS_NODE: 1,
     },

@@ -7,6 +7,7 @@ import _ from 'lodash';
 import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
 import glob from 'glob';
+import fs from 'fs';
 import path from 'path';
 import simpleSpinner from '@expo/simple-spinner';
 import url from 'url';
@@ -29,6 +30,7 @@ import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
+import addCommonOptions from './commonOptions';
 
 if (process.env.NODE_ENV === 'development') {
   require('source-map-support').install();
@@ -57,6 +59,7 @@ Command.prototype.allowNonInteractive = function() {
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
+  addCommonOptions(this);
   return this.action(async (...args) => {
     if (!skipUpdateCheck) {
       try {
@@ -136,6 +139,16 @@ Command.prototype.asyncActionProjectDir = function(
       projectDir = process.cwd();
     } else {
       projectDir = path.resolve(process.cwd(), projectDir);
+    }
+
+    if (opts.config) {
+      const pathToConfig = path.resolve(process.cwd(), opts.config);
+      if (!fs.existsSync(pathToConfig)) {
+        throw new Error(
+          `File at provide config path does not exist: ${pathToConfig}`
+        );
+      }
+      ProjectUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
 
     const logLines = (msg, logFn) => {

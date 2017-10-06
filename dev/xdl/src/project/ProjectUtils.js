@@ -199,12 +199,27 @@ export async function readExpRcAsync(projectRoot: string): Promise<any> {
   }
 }
 
+let customConfigPaths = {};
+
+export async function setCustomConfigPath(
+  projectRoot: string,
+  configPath: string
+) {
+  customConfigPaths[projectRoot] = configPath;
+}
+
 export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   let exp;
   let pkg;
 
-  const configName = await configFilenameAsync(projectRoot);
-  const configPath = path.join(projectRoot, configName);
+  let configPath, configName;
+  if (customConfigPaths[projectRoot]) {
+    configPath = customConfigPaths[projectRoot];
+    configName = path.basename(configPath);
+  } else {
+    configName = await configFilenameAsync(projectRoot);
+    configPath = path.join(projectRoot, configName);
+  }
 
   try {
     exp = await new JsonFile(configPath, { json5: true }).readAsync();

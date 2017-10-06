@@ -7,12 +7,9 @@ import 'instapromise';
 import _ from 'lodash';
 import semver from 'semver';
 import fs from 'fs';
-import jsonschema from 'jsonschema';
+import getenv from 'getenv';
 import path from 'path';
-import request from 'request';
 import spawnAsync from '@expo/spawn-async';
-import readChunk from 'read-chunk';
-import fileType from 'file-type';
 
 import Schemer, { SchemerError } from '@expo/schemer';
 
@@ -712,6 +709,10 @@ async function validateAsync(
   allowNetwork: boolean,
   strict: boolean
 ): Promise<number> {
+  if (getenv.boolish('EXPO_NO_DOCTOR', false)) {
+    return NO_ISSUES;
+  }
+
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
   let status = await _checkNpmVersionAsync(projectRoot);

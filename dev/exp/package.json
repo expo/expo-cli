@@ -12,6 +12,7 @@
     "start": "yarn run build && yarn run watch",
     "build": "gulp clean && gulp babel",
     "watch": "gulp watch",
+    "prepare": "yarn build",
     "pkg": "pkg ."
   },
   "bin": {
