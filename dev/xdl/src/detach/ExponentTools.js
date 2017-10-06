@@ -9,6 +9,7 @@ import path from 'path';
 import request from 'request';
 import spawnAsyncQuiet from '@expo/spawn-async';
 import { DOMParser, XMLSerializer } from 'xmldom';
+import plist from 'plist';
 
 const ASPECT_FILL = 'scaleAspectFill';
 const ASPECT_FIT = 'scaleAspectFit';
@@ -132,13 +133,7 @@ async function createBlankIOSPropertyListAsync(plistPath, plistName) {
   // convert to plist
   let plistFilename = getNormalizedPlistFilename(plistName);
   let configPlistName = path.join(plistPath, plistFilename);
-  await spawnAsyncThrowError('plutil', [
-    '-convert',
-    'xml1',
-    tmpConfigFile,
-    '-o',
-    configPlistName,
-  ]);
+  await fs.promise.writeFile(configPlistName, JSON.stringify(plist.build(emptyConfig)));
 
   // remove tmp json file
   await spawnAsyncThrowError('/bin/rm', [tmpConfigFile]);
@@ -154,23 +149,7 @@ async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
   let configFilename = path.join(plistPath, `${plistName}.json`);
 
   // grab original plist as json object
-  await spawnAsyncThrowError('plutil', [
-    '-convert',
-    'json',
-    configPlistName,
-    '-o',
-    configFilename,
-  ]);
-  let configContents = await fs.promise.readFile(configFilename, 'utf8');
-  let config;
-
-  try {
-    config = JSON.parse(configContents);
-  } catch (e) {
-    console.log(`Error parsing ${configFilename}`, e);
-    console.log('The erroneous file contents was:', configContents);
-    config = {};
-  }
+  let config = plist.parse(fs.readFileSync(configPlistName, 'utf8'));
 
   // apply transformation
   config = transform(config);
@@ -181,13 +160,8 @@ async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
     `${configPlistName}.bak`,
   ]);
   await fs.promise.writeFile(configFilename, JSON.stringify(config));
-  await spawnAsyncThrowError('plutil', [
-    '-convert',
-    'xml1',
-    configFilename,
-    '-o',
-    configPlistName,
-  ]);
+  await fs.promise.writeFile(configPlistName, plist.build(config));
+
   return config;
 }
 

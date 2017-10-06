@@ -156,13 +156,9 @@ export async function detachAsync(projectRoot: string) {
   }
 
   if (process.platform !== 'darwin') {
-    let response = await yesnoAsync(
-      `Can't create an iOS project since you are not on macOS. You can rerun this command on macOS in the future to add an iOS project. Enter 'yes' to continue and just create an Android project:`
+    console.warn(
+      `It appears you are trying to detach outside of macOS. You will require Xcode to build the resulting artefact.`
     );
-    if (!response) {
-      console.log('Exiting...');
-      return false;
-    }
   }
 
   // Modify exp.json
@@ -181,7 +177,7 @@ export async function detachAsync(projectRoot: string) {
   mkdirp.sync(expoDirectory);
 
   // iOS
-  if (process.platform === 'darwin' && !hasIosDirectory) {
+  if (!hasIosDirectory) {
     const iosClientVersion = sdkVersionConfig.iosVersion
       ? sdkVersionConfig.iosVersion
       : versions.iosVersion;
