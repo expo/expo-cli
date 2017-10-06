@@ -225,27 +225,21 @@ async function getImageDimensionsAsync(dirname, basename) {
 }
 
 function backgroundColorFromHexString(hexColor) {
-  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
   if (!result || result.length < 4) {
     // Default to white if we can't parse the color. We should have 3 matches.
     console.warn('Unable to parse color: ', hexColor, ' result:', result);
     return { r: 1, g: 1, b: 1 };
   }
 
-  var r = parseInt(result[1], 16) / 255;
-  var g = parseInt(result[2], 16) / 255;
-  var b = parseInt(result[3], 16) / 255;
+  const r = parseInt(result[1], 16) / 255;
+  const g = parseInt(result[2], 16) / 255;
+  const b = parseInt(result[3], 16) / 255;
   return { r, g, b };
 }
 
 async function configureIOSLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
-  if (
-    !(
-      manifest.splash ||
-      (manifest.ios && manifest.ios.splash) ||
-      (manifest.android && manifest.android.splash)
-    )
-  ) {
+  if (!(manifest.splash || (manifest.ios && manifest.ios.splash))) {
     // Don't do loading xib customizations if `splash` keys don't exist
     return;
   }
@@ -264,15 +258,14 @@ async function configureIOSLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
   );
 
   await transformFileContentsAsync(splashXibFilename, fileString => {
-    var parser = new DOMParser();
-    var serializer = new XMLSerializer();
-    var dom = parser.parseFromString(fileString);
+    const parser = new DOMParser();
+    const serializer = new XMLSerializer();
+    const dom = parser.parseFromString(fileString);
 
     setBackgroundColor(manifest, dom);
     setBackgroundImageResizeMode(manifest, dom);
 
-    var fileString = serializer.serializeToString(dom);
-    return fileString;
+    return serializer.serializeToString(dom);
   });
 
   await setBackgroundImage(manifest, projectRoot);
@@ -304,7 +297,7 @@ async function setBackgroundImage(manifest, projectRoot) {
     return;
   }
 
-  var outputs = [];
+  const outputs = [];
   if (!tabletImage) {
     outputs.push({
       url: phoneImage,
@@ -323,7 +316,6 @@ async function setBackgroundImage(manifest, projectRoot) {
 
   outputs.forEach(async output => {
     let { url, path } = output;
-    console.log(url, path, output);
     await saveImageToPathAsync(projectRoot, url, path);
   });
 }
@@ -344,14 +336,14 @@ function setBackgroundImageResizeMode(manifest, dom) {
     return mode === 'cover' ? ASPECT_FILL : ASPECT_FIT;
   })();
 
-  var backgroundImageViewNode = dom.getElementById(backgroundImageViewID);
+  const backgroundImageViewNode = dom.getElementById(backgroundImageViewID);
   if (backgroundImageViewNode) {
     backgroundImageViewNode.setAttribute('contentMode', backgroundViewMode);
   }
 }
 
 function setBackgroundColor(manifest, dom) {
-  var backgroundColorString;
+  let backgroundColorString;
   if (
     manifest.ios &&
     manifest.ios.splash &&
@@ -362,26 +354,19 @@ function setBackgroundColor(manifest, dom) {
     backgroundColorString = manifest.splash.backgroundColor;
   }
 
-  // Fallback to old version
-  if (!backgroundColorString) {
-    if (manifest.loading && manifest.loading.backgroundColor) {
-      backgroundColorString = manifest.loading.backgroundColor;
-    }
-  }
-
   // Default to white
   if (!backgroundColorString) {
     backgroundColorString = '#FFFFFF';
   }
 
   const { r, g, b } = backgroundColorFromHexString(backgroundColorString);
-  var backgroundViewNode = dom.getElementById(backgroundViewID);
-  var backgroundViewColorNodes = backgroundViewNode.getElementsByTagName(
+  const backgroundViewNode = dom.getElementById(backgroundViewID);
+  const backgroundViewColorNodes = backgroundViewNode.getElementsByTagName(
     'color'
   );
-  var backgroundColorNode;
-  for (var i = 0; i < backgroundViewColorNodes.length; i++) {
-    var node = backgroundViewColorNodes[i];
+  let backgroundColorNode;
+  for (let i = 0; i < backgroundViewColorNodes.length; i++) {
+    const node = backgroundViewColorNodes[i];
     if (node.parentNode.getAttribute('id') !== backgroundViewID) {
       continue;
     }
