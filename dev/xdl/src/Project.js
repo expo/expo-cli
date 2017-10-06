@@ -1088,19 +1088,24 @@ export async function startReactNativeServerAsync(
   await stopReactNativeServerAsync(projectRoot);
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
+
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
+  let nodeModulesPath = exp.nodeModulesPath
+    ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'node_modules')
+    : path.join(projectRoot, 'node_modules');
   let packagerOpts = {
     port: packagerPort,
     customLogReporterPath: path.join(
-      projectRoot,
-      'node_modules',
+      nodeModulesPath,
       'expo',
       'tools',
       'LogReporter'
     ),
     assetExts: ['ttf'],
   };
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
   if (!Versions.gteSdkVersion(exp, '16.0.0')) {
     delete packagerOpts.customLogReporterPath;
   }

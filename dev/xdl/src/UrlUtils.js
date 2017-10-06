@@ -138,9 +138,11 @@ export async function constructBundleQueryParamsAsync(
   // to the `expo` sdk package.
   let sdkPkg = pkg.dependencies['expo'] ? 'expo' : 'exponent';
   // Use an absolute path here so that we can not worry about symlinks/relative requires
+  let nodeModulesPath = exp.nodeModulesPath
+    ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'node_modules')
+    : path.join(projectRoot, 'node_modules');
   let pluginModule = path.join(
-    projectRoot,
-    'node_modules',
+    nodeModulesPath,
     sdkPkg,
     'tools',
     'hashAssetFiles'
@@ -167,10 +169,7 @@ export async function constructUrlAsync(
     // the randomness is only important if we're online and can build a tunnel
     let urlRandomnessSchema;
     if (Config.offline) {
-      urlRandomnessSchema = joi
-        .string()
-        .optional()
-        .allow(null);
+      urlRandomnessSchema = joi.string().optional().allow(null);
     } else {
       urlRandomnessSchema = joi.string();
     }
