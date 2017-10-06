@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "watch": "babel -w src -d build",
-    "build": "mkdir -p build; babel src -d build",
+    "build": "babel src -d build",
     "prepare": "npm run build",
     "testWatch": "npm run buildbg; jest --watch",
     "buildbg": "babel -w src -d build &"
