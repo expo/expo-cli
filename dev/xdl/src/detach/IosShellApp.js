@@ -8,17 +8,17 @@ import fs from 'fs';
 import path from 'path';
 import rimraf from 'rimraf';
 import {
-  buildIOSAssetArchive,
   getManifestAsync,
   saveUrlToPathAsync,
   spawnAsync,
   spawnAsyncThrowError,
-  modifyIOSPropertyListAsync,
-  cleanIOSPropertyListBackupAsync,
-  createAndWriteIOSIconsToPathAsync,
-  configureIOSLaunchAssetsAsync,
   manifestUsesSplashApi,
 } from './ExponentTools';
+
+import * as IosIcons from './IosIcons';
+import * as IosAssetArchive from './IosAssetArchive';
+import * as IosLaunchScreen from './IosLaunchScreen';
+import * as IosPlist from './IosPlist';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -72,7 +72,7 @@ async function configureStandaloneIOSEntitlementsAsync(
   buildConfiguration,
   manifest
 ) {
-  const result = modifyIOSPropertyListAsync(
+  const result = IosPlist.modifyAsync(
     entitlementsFilePath,
     'Exponent.entitlements',
     config => {
@@ -128,7 +128,7 @@ async function configureStandaloneIOSInfoPlistAsync(
   privateConfig = null,
   bundleIdentifier = null
 ) {
-  let result = await modifyIOSPropertyListAsync(
+  let result = await IosPlist.modifyAsync(
     configFilePath,
     'Info',
     config => {
@@ -268,7 +268,7 @@ async function configureStandaloneIOSShellPlistAsync(
   manifest,
   manifestUrl
 ) {
-  await modifyIOSPropertyListAsync(configFilePath, 'EXShell', shellConfig => {
+  await IosPlist.modifyAsync(configFilePath, 'EXShell', shellConfig => {
     shellConfig.isShell = true;
     shellConfig.manifestUrl = manifestUrl;
     if (manifest.ios && manifest.ios.permissions) {
@@ -325,7 +325,7 @@ async function configurePropertyListsAsync(manifest, args, configFilePath) {
   );
 
   // Info.plist changes specific to turtle
-  await modifyIOSPropertyListAsync(configFilePath, 'Info', config => {
+  await IosPlist.modifyAsync(configFilePath, 'Info', config => {
     // use shell-specific launch screen
     config.UILaunchStoryboardName = 'LaunchScreenShell';
     return config;
@@ -354,17 +354,17 @@ async function preloadManifestAndBundleAsync(manifest, args, configFilePath) {
 }
 
 async function cleanPropertyListBackupsAsync(configFilePath, restoreOriginals) {
-  await cleanIOSPropertyListBackupAsync(
+  await IosPlist.cleanBackupAsync(
     configFilePath,
     'EXShell',
     restoreOriginals
   );
-  await cleanIOSPropertyListBackupAsync(
+  await IosPlist.cleanBackupAsync(
     configFilePath,
     'Exponent.entitlements',
     restoreOriginals
   );
-  await cleanIOSPropertyListBackupAsync(
+  await IosPlist.cleanBackupAsync(
     configFilePath,
     'Info',
     restoreOriginals
@@ -497,8 +497,8 @@ async function configureIOSShellAppAsync(args, manifest) {
   console.log('Configuring plists...');
   await configurePropertyListsAsync(manifest, args, configFilePath);
   console.log('Compiling resources...');
-  await buildIOSAssetArchive(manifest, configFilePath, expoSourceRoot, intermediatesDir);
-  await configureIOSLaunchAssetsAsync(manifest, configFilePath, expoSourceRoot);
+  await IosAssetArchive.buildAssetArchiveAsync(manifest, configFilePath, expoSourceRoot, intermediatesDir);
+  await IosLaunchScreen.configureLaunchAssetsAsync(manifest, configFilePath, expoSourceRoot);
   await preloadManifestAndBundleAsync(manifest, args, configFilePath);
   console.log('Cleaning up...');
   await cleanPropertyListBackupsAsync(configFilePath, false);

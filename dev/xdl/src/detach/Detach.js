@@ -18,21 +18,20 @@ import uuid from 'uuid';
 import yesno from 'yesno';
 
 import {
-  createBlankIOSPropertyListAsync,
   parseSdkMajorVersion,
   saveImageToPathAsync,
   spawnAsyncThrowError,
   spawnAsync,
   transformFileContentsAsync,
-  modifyIOSPropertyListAsync,
-  cleanIOSPropertyListBackupAsync,
-  createAndWriteIOSIconsToPathAsync,
 } from './ExponentTools';
 import {
   configureStandaloneIOSInfoPlistAsync,
   configureStandaloneIOSShellPlistAsync,
 } from './IosShellApp';
 import { renderPodfileAsync } from './IosPodsTools.js';
+
+import * as IosIcons from './IosIcons';
+import * as IosPlist from './IosPlist';
 
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';
@@ -274,7 +273,7 @@ async function configureDetachedVersionsPlistAsync(
   detachedSDKVersion,
   kernelSDKVersion
 ) {
-  await modifyIOSPropertyListAsync(
+  await IosPlist.modifyAsync(
     configFilePath,
     'EXSDKVersions',
     versionConfig => {
@@ -289,7 +288,7 @@ async function configureDetachedVersionsPlistAsync(
 }
 
 async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
-  let result = await modifyIOSPropertyListAsync(
+  let result = await IosPlist.modifyAsync(
     configFilePath,
     'Info',
     config => {
@@ -316,9 +315,9 @@ async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
 }
 
 async function cleanPropertyListBackupsAsync(configFilePath) {
-  await cleanIOSPropertyListBackupAsync(configFilePath, 'EXShell', false);
-  await cleanIOSPropertyListBackupAsync(configFilePath, 'Info', false);
-  await cleanIOSPropertyListBackupAsync(configFilePath, 'EXSDKVersions', false);
+  await IosPlist.cleanBackupAsync(configFilePath, 'EXShell', false);
+  await IosPlist.cleanBackupAsync(configFilePath, 'Info', false);
+  await IosPlist.cleanBackupAsync(configFilePath, 'EXSDKVersions', false);
 }
 
 /**
@@ -384,7 +383,7 @@ export async function detachIOSAsync(
     sdkVersion,
     sdkVersion
   );
-  await createAndWriteIOSIconsToPathAsync(manifest, iconPath, projectRoot);
+  await IosIcons.createAndWriteIconsToPathAsync(manifest, iconPath, projectRoot);
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
   // render Podfile in new project
@@ -699,7 +698,7 @@ async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
     path.join(configFilePath, 'EXBuildConstants.plist')
   );
   if (!doesBuildConstantsExist) {
-    await createBlankIOSPropertyListAsync(configFilePath, 'EXBuildConstants');
+    await IosPlist.createBlankAsync(configFilePath, 'EXBuildConstants');
     console.log(
       'Created `EXBuildConstants.plist` because it did not exist yet'
     );
@@ -740,7 +739,7 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
     if (!args.skipXcodeConfig) {
       let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
       await ensureBuildConstantsExistsIOSAsync(supportingDirectory);
-      await modifyIOSPropertyListAsync(
+      await IosPlist.modifyAsync(
         supportingDirectory,
         'EXBuildConstants',
         constantsConfig => {

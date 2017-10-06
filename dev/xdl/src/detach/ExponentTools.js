@@ -4,18 +4,15 @@
 
 import fs from 'fs';
 import 'instapromise';
-import mkdirp from 'mkdirp';
 import path from 'path';
 import request from 'request';
 import spawnAsyncQuiet from '@expo/spawn-async';
-import { DOMParser, XMLSerializer } from 'xmldom';
-import plist from 'plist';
 
-const ASPECT_FILL = 'scaleAspectFill';
-const ASPECT_FIT = 'scaleAspectFit';
-
-const backgroundImageViewID = 'Bsh-cT-K4l';
-const backgroundViewID = 'OfY-5Y-tS4';
+function _getFilesizeInBytes(path) {
+  let stats = fs.statSync(path);
+  let fileSizeInBytes = stats['size'];
+  return fileSizeInBytes;
+}
 
 function parseSdkMajorVersion(expSdkVersion) {
   let sdkMajorVersion = 0;
@@ -32,7 +29,7 @@ function saveUrlToPathAsync(url, path) {
   return new Promise(function(resolve, reject) {
     let stream = fs.createWriteStream(path);
     stream.on('close', () => {
-      if (getFilesizeInBytes(path) < 10) {
+      if (_getFilesizeInBytes(path) < 10) {
         throw new Error(`{filename} is too small`);
       }
       resolve();
@@ -47,7 +44,7 @@ function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
   return new Promise(function(resolve, reject) {
     let stream = fs.createWriteStream(outPath);
     stream.on('close', () => {
-      if (getFilesizeInBytes(outPath) < 10) {
+      if (_getFilesizeInBytes(outPath) < 10) {
         throw new Error(`{filename} is too small`);
       }
       resolve();
@@ -59,12 +56,6 @@ function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
       request(pathOrURL).pipe(stream);
     }
   });
-}
-
-function getFilesizeInBytes(path) {
-  let stats = fs.statSync(path);
-  let fileSizeInBytes = stats['size'];
-  return fileSizeInBytes;
 }
 
 async function getManifestAsync(url, headers) {
@@ -114,130 +105,6 @@ async function transformFileContentsAsync(filename, transform) {
   return;
 }
 
-function getNormalizedPlistFilename(plistName) {
-  let plistFilename;
-  if (plistName.indexOf('.') !== -1) {
-    plistFilename = plistName;
-  } else {
-    plistFilename = `${plistName}.plist`;
-  }
-  return plistFilename;
-}
-
-async function createBlankIOSPropertyListAsync(plistPath, plistName) {
-  // write empty json file
-  const emptyConfig = {};
-  const tmpConfigFile = path.join(plistPath, `${plistName}.json`);
-  await fs.promise.writeFile(tmpConfigFile, JSON.stringify(emptyConfig));
-
-  // convert to plist
-  let plistFilename = getNormalizedPlistFilename(plistName);
-  let configPlistName = path.join(plistPath, plistFilename);
-  await fs.promise.writeFile(configPlistName, JSON.stringify(plist.build(emptyConfig)));
-
-  // remove tmp json file
-  await spawnAsyncThrowError('/bin/rm', [tmpConfigFile]);
-  return;
-}
-
-/**
- *  @param plistName base filename of property list. if no extension, assumes .plist
- */
-async function modifyIOSPropertyListAsync(plistPath, plistName, transform) {
-  let plistFilename = getNormalizedPlistFilename(plistName);
-  let configPlistName = path.join(plistPath, plistFilename);
-  let configFilename = path.join(plistPath, `${plistName}.json`);
-
-  // grab original plist as json object
-  let config = plist.parse(fs.readFileSync(configPlistName, 'utf8'));
-
-  // apply transformation
-  config = transform(config);
-
-  // back up old plist and swap in modified one
-  await spawnAsyncThrowError('/bin/cp', [
-    configPlistName,
-    `${configPlistName}.bak`,
-  ]);
-  await fs.promise.writeFile(configFilename, JSON.stringify(config));
-  await fs.promise.writeFile(configPlistName, plist.build(config));
-
-  return config;
-}
-
-async function cleanIOSPropertyListBackupAsync(
-  plistPath,
-  plistName,
-  restoreOriginal = true
-) {
-  let plistFilename = getNormalizedPlistFilename(plistName);
-  let configPlistName = path.join(plistPath, plistFilename);
-  let configFilename = path.join(plistPath, `${plistName}.json`);
-
-  if (restoreOriginal) {
-    await spawnAsyncThrowError('/bin/cp', [
-      `${configPlistName}.bak`,
-      configPlistName,
-    ]);
-  }
-
-  await spawnAsyncThrowError('/bin/rm', [`${configPlistName}.bak`]);
-  await spawnAsyncThrowError('/bin/rm', [configFilename]);
-  return;
-}
-
-function getAppleIconQualifier(iconSize, iconResolution) {
-  let iconQualifier;
-  if (iconResolution !== 1) {
-    // e.g. "29x29@3x"
-    iconQualifier = `${iconSize}x${iconSize}@${iconResolution}x`;
-  } else {
-    iconQualifier = `${iconSize}x${iconSize}`;
-  }
-  if (iconSize === 76 || iconSize === 83.5) {
-    // ipad sizes require ~ipad at the end
-    iconQualifier = `${iconQualifier}~ipad`;
-  }
-  return iconQualifier;
-}
-
-/**
- *  @return array [ width, height ] or nil if that fails for some reason.
- */
-async function getImageDimensionsAsync(dirname, basename) {
-  if (process.platform !== 'darwin') {
-    console.warn('`sips` utility may or may not work outside of macOS');
-  }
-  let childProcess = await spawnAsyncThrowError(
-    'sips',
-    ['-g', 'pixelWidth', '-g', 'pixelHeight', basename],
-    {
-      cwd: dirname,
-    }
-  );
-  let dimensions;
-  try {
-    // stdout looks something like 'pixelWidth: 1200\n pixelHeight: 800'
-    const components = childProcess.stdout.split(/(\s+)/);
-    dimensions = components.map(c => parseInt(c, 10)).filter(n => !isNaN(n));
-  } catch (_) {}
-  return dimensions;
-}
-
-function backgroundColorFromHexString(hexColor) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
-  if (!result || result.length < 4) {
-    // Default to white if we can't parse the color. We should have 3 matches.
-    console.warn('Unable to parse color: ', hexColor, ' result:', result);
-    return { r: 1, g: 1, b: 1 };
-  }
-
-  const r = parseInt(result[1], 16) / 255;
-  const g = parseInt(result[2], 16) / 255;
-  const b = parseInt(result[3], 16) / 255;
-  return { r, g, b };
-}
-
 function manifestUsesSplashApi(manifest, platform) {
   if (platform === 'ios') {
     return (manifest.splash || (manifest.ios && manifest.ios.splash));
@@ -248,337 +115,13 @@ function manifestUsesSplashApi(manifest, platform) {
   return false;
 }
 
-async function configureIOSLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
-  if (!manifestUsesSplashApi(manifest, 'ios')) {
-    // Don't do loading xib customizations if `splash` keys don't exist
-    return;
-  }
-
-  console.log('Configuring iOS Launch Screen');
-  let splashXibFilename = path.join(
-    srcRoot,
-    'Exponent',
-    'Base.lproj',
-    'LaunchScreenShell.xib'
-  );
-  let splashOutputFilename = path.join(
-    projectRoot,
-    'Base.lproj',
-    'LaunchScreenShell.nib'
-  );
-
-  await transformFileContentsAsync(splashXibFilename, fileString => {
-    const parser = new DOMParser();
-    const serializer = new XMLSerializer();
-    const dom = parser.parseFromString(fileString);
-
-    setBackgroundColor(manifest, dom);
-    setBackgroundImageResizeMode(manifest, dom);
-
-    return serializer.serializeToString(dom);
-  });
-
-  await setBackgroundImage(manifest, projectRoot);
-
-  await spawnAsyncThrowError('ibtool', [
-    '--compile',
-    splashOutputFilename,
-    splashXibFilename,
-  ]);
-
-  console.log('DONE Configuring iOS Launch Screen');
-}
-
-async function setBackgroundImage(manifest, projectRoot) {
-  let tabletImage;
-  let phoneImage;
-
-  if (manifest.ios && manifest.ios.splash && manifest.ios.splash.imageUrl) {
-    phoneImage = manifest.ios.splash.imageUrl;
-
-    if (manifest.ios.splash.tabletImageUrl) {
-      tabletImage = manifest.ios.splash.tabletImageUrl;
-    }
-  } else if (manifest.splash && manifest.splash.imageUrl) {
-    phoneImage = manifest.splash.imageUrl;
-  }
-
-  if (!phoneImage) {
-    return;
-  }
-
-  const outputs = [];
-  if (!tabletImage) {
-    outputs.push({
-      url: phoneImage,
-      path: path.join(projectRoot, 'launch_background_image.png'),
-    });
-  } else {
-    outputs.push({
-      url: phoneImage,
-      path: path.join(projectRoot, 'launch_background_image~iphone.png'),
-    });
-    outputs.push({
-      url: tabletImage,
-      path: path.join(projectRoot, 'launch_background_image.png'),
-    });
-  }
-
-  outputs.forEach(async output => {
-    let { url, path } = output;
-    await saveImageToPathAsync(projectRoot, url, path);
-  });
-}
-
-function setBackgroundImageResizeMode(manifest, dom) {
-  let backgroundViewMode = (() => {
-    let mode;
-    if (!manifest) {
-      return ASPECT_FIT;
-    }
-
-    if (manifest.ios && manifest.ios.splash && manifest.ios.splash.resizeMode) {
-      mode = manifest.ios.splash.resizeMode;
-    } else if (manifest.splash && manifest.splash.resizeMode) {
-      mode = manifest.splash.resizeMode;
-    }
-
-    return mode === 'cover' ? ASPECT_FILL : ASPECT_FIT;
-  })();
-
-  const backgroundImageViewNode = dom.getElementById(backgroundImageViewID);
-  if (backgroundImageViewNode) {
-    backgroundImageViewNode.setAttribute('contentMode', backgroundViewMode);
-  }
-}
-
-function setBackgroundColor(manifest, dom) {
-  let backgroundColorString;
-  if (
-    manifest.ios &&
-    manifest.ios.splash &&
-    manifest.ios.splash.backgroundColor
-  ) {
-    backgroundColorString = manifest.ios.splash.backgroundColor;
-  } else if (manifest.splash && manifest.splash.backgroundColor) {
-    backgroundColorString = manifest.splash.backgroundColor;
-  }
-
-  // Default to white
-  if (!backgroundColorString) {
-    backgroundColorString = '#FFFFFF';
-  }
-
-  const { r, g, b } = backgroundColorFromHexString(backgroundColorString);
-  const backgroundViewNode = dom.getElementById(backgroundViewID);
-  const backgroundViewColorNodes = backgroundViewNode.getElementsByTagName(
-    'color'
-  );
-  let backgroundColorNode;
-  for (let i = 0; i < backgroundViewColorNodes.length; i++) {
-    const node = backgroundViewColorNodes[i];
-    if (node.parentNode.getAttribute('id') !== backgroundViewID) {
-      continue;
-    }
-
-    if (node.getAttribute('key') === 'backgroundColor') {
-      backgroundColorNode = node;
-      break;
-    }
-  }
-
-  if (backgroundColorNode) {
-    backgroundColorNode.setAttribute('red', r);
-    backgroundColorNode.setAttribute('green', g);
-    backgroundColorNode.setAttribute('blue', b);
-  }
-}
-
-/**
- *  Compile a .car file from the icons in a manifest.
- */
-async function buildIOSAssetArchive(
-  manifest,
-  destinationCARPath,
-  expoSourceRoot,
-  intermediatesDirectory
-) {
-  mkdirp.sync(intermediatesDirectory);
-
-  // copy expoSourceRoot/.../Images.xcassets into intermediates
-  await spawnAsyncThrowError(
-    '/bin/cp',
-    [
-      '-R',
-      path.join(expoSourceRoot, 'Exponent', 'Images.xcassets'),
-      path.join(intermediatesDirectory, 'Images.xcassets'),
-    ],
-    {
-      stdio: 'inherit',
-    }
-  );
-
-  // make the new xcassets contain the project's icon
-  await createAndWriteIOSIconsToPathAsync(
-    manifest,
-    path.join(intermediatesDirectory, 'Images.xcassets', 'AppIcon.appiconset')
-  );
-
-  // compile asset archive
-  let xcrunargs = [].concat(
-    ['actool'],
-    ['--minimum-deployment-target', '9.0'],
-    ['--platform', 'iphoneos'],
-    ['--app-icon', 'AppIcon'],
-    [
-      '--output-partial-info-plist',
-      path.join(intermediatesDirectory, 'assetcatalog_generated_info.plist'),
-    ],
-    ['--compress-pngs'],
-    ['--enable-on-demand-resources', 'YES'],
-    ['--product-type', 'com.apple.product-type.application'],
-    ['--target-device', 'iphone'],
-    ['--target-device', 'ipad'],
-    ['--compile', path.relative(intermediatesDirectory, destinationCARPath)],
-    ['Images.xcassets']
-  );
-  await spawnAsyncThrowError('xcrun', xcrunargs, {
-    stdio: ['ignore', 'ignore', 'inherit'], // only stderr
-    cwd: intermediatesDirectory,
-  });
-
-  return;
-}
-
-/**
- * Based on keys in the given manifest,
- * ensure that the proper iOS icon images exist -- assuming Info.plist already
- * points at them under CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles.
- *
- * This only works on MacOS (as far as I know) because it uses the sips utility.
- */
-async function createAndWriteIOSIconsToPathAsync(
-  manifest,
-  destinationIconPath,
-  projectRoot
-) {
-  if (process.platform !== 'darwin') {
-    console.warn('`sips` utility may or may not work outside of macOS');
-  }
-  let defaultIconFilename;
-  if (manifest.ios && manifest.ios.iconUrl) {
-    defaultIconFilename = 'exp-icon.png';
-    await saveUrlToPathAsync(
-      manifest.ios.iconUrl,
-      `${destinationIconPath}/${defaultIconFilename}`
-    );
-  } else if (manifest.iconUrl) {
-    defaultIconFilename = 'exp-icon.png';
-    await saveUrlToPathAsync(
-      manifest.iconUrl,
-      `${destinationIconPath}/${defaultIconFilename}`
-    );
-  } else if (projectRoot && manifest.icon) {
-    defaultIconFilename = 'exp-icon.png';
-    await saveImageToPathAsync(
-      projectRoot,
-      manifest.icon,
-      `${destinationIconPath}/${defaultIconFilename}`
-    );
-  }
-
-  let iconSizes = [20, 29, 40, 60, 76, 83.5, 1024];
-  iconSizes.forEach(iconSize => {
-    let iconResolutions;
-    if (iconSize === 76) {
-      // iPad has 1x and 2x icons for this size only
-      iconResolutions = [1, 2];
-    } else if (iconSize == 1024) {
-      // marketing icon is weird
-      iconResolutions = [1];
-    } else {
-      iconResolutions = [2, 3];
-    }
-    iconResolutions.forEach(async iconResolution => {
-      let iconQualifier = getAppleIconQualifier(iconSize, iconResolution);
-      // TODO(nikki): Support local paths for these icons
-      let iconKey = `iconUrl${iconQualifier}`;
-      let rawIconFilename;
-      let usesDefault = false;
-      if (manifest.ios && manifest.ios.hasOwnProperty(iconKey)) {
-        // manifest specifies an image just for this size/resolution, use that
-        rawIconFilename = `exp-icon${iconQualifier}.png`;
-        await saveUrlToPathAsync(
-          manifest.ios[iconKey],
-          `${destinationIconPath}/${rawIconFilename}`
-        );
-      } else {
-        // use default manifest.iconUrl
-        usesDefault = true;
-        if (defaultIconFilename) {
-          rawIconFilename = defaultIconFilename;
-        } else {
-          console.warn(
-            `Manifest does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`
-          );
-          return;
-        }
-      }
-
-      let iconFilename = `AppIcon${iconQualifier}.png`;
-      let iconSizePx = iconSize * iconResolution;
-      await spawnAsyncThrowError('/bin/cp', [rawIconFilename, iconFilename], {
-        stdio: 'inherit',
-        cwd: destinationIconPath,
-      });
-      await spawnAsyncThrowError('sips', ['-Z', iconSizePx, iconFilename], {
-        stdio: ['ignore', 'ignore', 'inherit'], // only stderr
-        cwd: destinationIconPath,
-      });
-
-      // reject non-square icons (because Apple will if we don't)
-      const dims = await getImageDimensionsAsync(
-        destinationIconPath,
-        iconFilename
-      );
-      if (!dims || dims.length < 2 || dims[0] !== dims[1]) {
-        throw new Error(
-          `iOS icons must be square, the dimensions of ${iconFilename} are ${dims}`
-        );
-      }
-
-      if (!usesDefault) {
-        // non-default icon used, clean up the downloaded version
-        await spawnAsyncThrowError('/bin/rm', [
-          path.join(destinationIconPath, rawIconFilename),
-        ]);
-      }
-    });
-  });
-
-  // clean up default icon
-  if (defaultIconFilename) {
-    await spawnAsyncThrowError('/bin/rm', [
-      path.join(destinationIconPath, defaultIconFilename),
-    ]);
-  }
-  return;
-}
-
 export {
-  buildIOSAssetArchive,
   parseSdkMajorVersion,
   saveUrlToPathAsync,
   saveImageToPathAsync,
   getManifestAsync,
-  getImageDimensionsAsync,
   spawnAsyncThrowError,
   spawnAsync,
   transformFileContentsAsync,
-  modifyIOSPropertyListAsync,
-  cleanIOSPropertyListBackupAsync,
-  createAndWriteIOSIconsToPathAsync,
-  configureIOSLaunchAssetsAsync,
-  createBlankIOSPropertyListAsync,
   manifestUsesSplashApi,
 };
