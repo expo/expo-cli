@@ -33,10 +33,11 @@ export default class XDLError extends ExtendableError {
     this.isXDLError = true;
 
     if (options && !options.noTrack) {
+      // temporarily remove sentry until we can trim events
       // send error to Sentry
-      Sentry.logError(message, {
-        tags: { code, type: 'XDL Error' },
-      });
+      // Sentry.logError(message, {
+      //   tags: { code, type: 'XDL Error' },
+      // });
 
       Intercom.trackEvent('error', {
         code,

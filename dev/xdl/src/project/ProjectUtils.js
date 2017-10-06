@@ -114,10 +114,11 @@ export function logError(
     truncatedMessage = truncatedMessage.substring(0, MAX_MESSAGE_LENGTH);
   }
 
+  // temporarily remove sentry until we can trim events
   // send error to Sentry
-  Sentry.logError(message.toString(), {
-    tags: { tag },
-  });
+  // Sentry.logError(message.toString(), {
+  //   tags: { tag },
+  // });
 }
 
 export function logWarning(
@@ -230,12 +231,13 @@ export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
   }
 
   try {
-    const packageJsonPath = exp && exp.nodeModulesPath
-      ? path.join(
-          path.resolve(projectRoot, exp.nodeModulesPath),
-          'package.json'
-        )
-      : path.join(projectRoot, 'package.json');
+    const packageJsonPath =
+      exp && exp.nodeModulesPath
+        ? path.join(
+            path.resolve(projectRoot, exp.nodeModulesPath),
+            'package.json'
+          )
+        : path.join(projectRoot, 'package.json');
     pkg = await new JsonFile(packageJsonPath).readAsync();
   } catch (e) {
     if (e.isJsonFileError) {
