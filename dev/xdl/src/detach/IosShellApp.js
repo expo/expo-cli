@@ -396,8 +396,11 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
   }
 
   if (buildCmd) {
-    console.log(`Building shell app under ${buildDest}...\n`);
+    console.log(`Building shell app under ${buildDest}:\n`);
     console.log(buildCmd);
+    if (!verbose) {
+      console.log('\nxcodebuild is running. Logging errors only. To see full output, use --verbose 1...');
+    }
     await spawnAsyncThrowError(buildCmd, null, {
       // only stderr
       stdio: verbose ? 'inherit' : ['ignore', 'ignore', 'inherit'],
