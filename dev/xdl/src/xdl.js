@@ -63,6 +63,9 @@ module.exports = {
   get Intercom() {
     return require('./Intercom');
   },
+  get IosPlist() {
+    return require('./detach/IosPlist');
+  },
   get IosPodsTools() {
     return require('./detach/IosPodsTools');
   },
