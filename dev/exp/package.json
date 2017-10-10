@@ -39,7 +39,10 @@
     "scripts": "build/**/*.js"
   },
   "powertools": {
-    "group": "dev-tools"
+    "group": [
+      "dev-tools",
+      "exp"
+    ]
   },
   "devDependencies": {
     "babel-eslint": "^7.1.0",
