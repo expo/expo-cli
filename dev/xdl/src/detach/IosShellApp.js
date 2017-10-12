@@ -77,23 +77,23 @@ async function configureStandaloneIOSEntitlementsAsync(
     'Exponent.entitlements',
     config => {
       // push notif entitlement changes based on build configuration
-      config['aps-environment'] = buildConfiguration === 'Release'
-        ? 'production'
-        : 'development';
+      config['aps-environment'] =
+        buildConfiguration === 'Release' ? 'production' : 'development';
 
-      // remove iCloud-specific entitlements and allow the developer to configure
-      // this themselves.
-      let iCloudKeys = [
-        'com.apple.developer.icloud-container-identifiers',
-        'com.apple.developer.icloud-services',
-        'com.apple.developer.ubiquity-container-identifiers',
-        'com.apple.developer.ubiquity-kvstore-identifier',
-      ];
-      iCloudKeys.forEach(key => {
-        if (config.hasOwnProperty(key)) {
-          delete config[key];
-        }
-      });
+      // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
+      if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
+        let iCloudKeys = [
+          'com.apple.developer.icloud-container-identifiers',
+          'com.apple.developer.icloud-services',
+          'com.apple.developer.ubiquity-container-identifiers',
+          'com.apple.developer.ubiquity-kvstore-identifier',
+        ];
+        iCloudKeys.forEach(key => {
+          if (config.hasOwnProperty(key)) {
+            delete config[key];
+          }
+        });
+      }
 
       // Add app associated domains remove exp-specific ones.
       if (manifest.ios && manifest.ios.associatedDomains) {
@@ -144,9 +144,10 @@ async function configureStandaloneIOSInfoPlistAsync(
       }
 
       // bundle id
-      config.CFBundleIdentifier = manifest.ios && manifest.ios.bundleIdentifier
-        ? manifest.ios.bundleIdentifier
-        : bundleIdentifier;
+      config.CFBundleIdentifier =
+        manifest.ios && manifest.ios.bundleIdentifier
+          ? manifest.ios.bundleIdentifier
+          : bundleIdentifier;
       if (!config.CFBundleIdentifier) {
         throw new Error(
           `Cannot configure an iOS app with no bundle identifier.`
@@ -202,9 +203,10 @@ async function configureStandaloneIOSInfoPlistAsync(
 
       // use version from manifest
       let version = manifest.version ? manifest.version : '0.0.0';
-      let buildNumber = manifest.ios && manifest.ios.buildNumber
-        ? manifest.ios.buildNumber
-        : '1';
+      let buildNumber =
+        manifest.ios && manifest.ios.buildNumber
+          ? manifest.ios.buildNumber
+          : '1';
       config.CFBundleShortVersionString = version;
       config.CFBundleVersion = buildNumber;
 
@@ -213,7 +215,7 @@ async function configureStandaloneIOSInfoPlistAsync(
           (privateConfig &&
             privateConfig.fabric &&
             privateConfig.fabric.apiKey) ||
-            DEFAULT_FABRIC_KEY,
+          DEFAULT_FABRIC_KEY,
         Kits: [
           {
             KitInfo: {},
@@ -242,9 +244,8 @@ async function configureStandaloneIOSInfoPlistAsync(
       }
 
       // 1 is iPhone, 2 is iPad
-      config.UIDeviceFamily = manifest.ios && manifest.ios.supportsTablet
-        ? [1, 2]
-        : [1];
+      config.UIDeviceFamily =
+        manifest.ios && manifest.ios.supportsTablet ? [1, 2] : [1];
 
       // allow iPad-only
       if (manifest.ios && manifest.ios.isTabletOnly) {
