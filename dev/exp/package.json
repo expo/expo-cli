@@ -69,7 +69,7 @@
   "dependencies": {
     "@expo/bunyan": "^1.8.10",
     "@expo/json-file": "^5.2.0",
-    "@expo/ngrok": "2.2.8",
+    "@expo/ngrok": "2.2.9",
     "@expo/simple-spinner": "^1.0.2",
     "babel-runtime": "^6.9.2",
     "chalk": "^2.0.1",

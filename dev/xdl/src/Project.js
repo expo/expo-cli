@@ -69,9 +69,13 @@ export async function currentStatus(
 
   let packagerRunning = false;
   try {
-    const res = await request.promise(`${packagerUrl}/debug`);
+    const res = await request.promise(`${packagerUrl}/status`);
 
-    if (res.statusCode < 400) {
+    if (
+      res.statusCode < 400 &&
+      res.body &&
+      res.body.includes('packager-status:running')
+    ) {
       packagerRunning = true;
     }
   } catch (e) {}
@@ -90,6 +94,37 @@ export async function currentStatus(
     return 'ill';
   } else {
     return 'exited';
+  }
+}
+
+async function _areTunnelsHealthy(projectRoot: string) {
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  if (!packagerInfo.packagerNgrokUrl || !packagerInfo.expoServerNgrokUrl) {
+    return false;
+  }
+  const status = await currentStatus(projectRoot);
+  return status === 'running';
+}
+
+export async function getManifestUrlWithFallbackAsync(projectRoot: string) {
+  const projectSettings = await ProjectSettings.readAsync(projectRoot);
+  if (
+    projectSettings.hostType === 'tunnel' &&
+    !Config.offline &&
+    !await _areTunnelsHealthy(projectRoot)
+  ) {
+    // Fall back to LAN URL if tunnels are not available.
+    return {
+      url: await UrlUtils.constructManifestUrlAsync(projectRoot, {
+        hostType: 'lan',
+      }),
+      isUrlFallback: true,
+    };
+  } else {
+    return {
+      url: await UrlUtils.constructManifestUrlAsync(projectRoot),
+      isUrlFallback: false,
+    };
   }
 }
 
@@ -826,7 +861,7 @@ async function _waitForRunningAsync(url) {
       response.statusCode >= 200 &&
       response.statusCode < 300 &&
       response.body &&
-      response.body.includes('Cached Bundles')
+      response.body.includes('packager-status:running')
     ) {
       return true;
     }
@@ -1210,7 +1245,7 @@ export async function startReactNativeServerAsync(
     urlType: 'http',
     hostType: 'localhost',
   });
-  await _waitForRunningAsync(`${packagerUrl}/debug`);
+  await _waitForRunningAsync(`${packagerUrl}/status`);
 } // Simulate the node_modules resolution // If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns // "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
   let paths = [];

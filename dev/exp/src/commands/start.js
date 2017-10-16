@@ -41,7 +41,9 @@ async function action(projectDir, options) {
 
   log('Expo is ready.');
 
-  let url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  let { url, isUrlFallback } = await Project.getManifestUrlWithFallbackAsync(
+    projectDir
+  );
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
@@ -52,6 +54,14 @@ async function action(projectDir, options) {
   }
 
   log('Your URL is: ' + chalk.underline(url));
+  log.raw(url);
+  if (isUrlFallback) {
+    log.warn(
+      'Switched to a LAN URL because the tunnel appears to be down. ' +
+        'Only devices in the same network can access the app. ' +
+        'Restart with `exp start` to try reconnecting.'
+    );
+  }
 
   const recipient = await sendTo.getRecipient(options.sendTo);
   if (recipient) {
