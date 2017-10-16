@@ -435,6 +435,14 @@ async function _renameAndMoveIOSFilesAsync(
   projectName,
   manifest
 ) {
+  // remove .gitignore, as this actually pertains to internal expo template management
+  try {
+    const gitIgnorePath = path.join(projectDirectory, '.gitignore');
+    if (fs.existsSync(gitIgnorePath)) {
+      rimraf.sync(gitIgnorePath);
+    }
+  } catch (e) {}
+  
   const filesToTransform = [
     path.join('exponent-view-template.xcodeproj', 'project.pbxproj'),
     path.join('exponent-view-template.xcworkspace', 'contents.xcworkspacedata'),
