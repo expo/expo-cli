@@ -308,6 +308,27 @@ async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
       if (config.UIDeviceFamily) {
         delete config.UIDeviceFamily;
       }
+      // configure *UsageDescription
+      let usageKeysConfigured = [];
+      for (let key in config) {
+        if (
+          config.hasOwnProperty(key) &&
+            key.indexOf('UsageDescription') !== -1
+        ) {
+          config[key] = config[key].replace(
+            'Expo experiences',
+            'this app'
+          );
+          usageKeysConfigured.push(key);
+        }
+      }
+      if (usageKeysConfigured.length) {
+        console.log('We added some permissions keys to `Info.plist` in your detached iOS project:');
+        usageKeysConfigured.forEach(key => {
+          console.log(`  ${key}`);
+        });
+        console.log('You may want to revise them to include language appropriate to your project. You can also remove them if your app will never use the corresponding API. See the Apple docs for these keys.');
+      }
       return config;
     }
   );
