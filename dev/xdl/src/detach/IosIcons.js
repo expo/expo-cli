@@ -112,7 +112,7 @@ async function createAndWriteIconsToPathAsync(
           rawIconFilename,
         ],
         {
-          stdio: 'inherit',
+          stdio: ['ignore', 'ignore', 'inherit'], // only stderr
           cwd: destinationIconPath,
         }
       );
