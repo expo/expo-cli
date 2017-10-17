@@ -11,6 +11,11 @@ import path from 'path';
 let _currentRequestID = 0;
 let _downloadIsSlowPrompt = false;
 let _retryObject = {};
+let _bar = new ProgressBar('[:bar] :percent', {
+  total: 100,
+  complete: '=',
+  incomplete: ' ',
+});
 
 async function action(projectDir, options) {
   let templateType;
@@ -79,25 +84,20 @@ async function downloadAndExtractTemplate(
   _retryObject = { templateType, projectDir, validatedOptions };
   const requestID = _currentRequestID + 1;
   _currentRequestID = requestID;
+
   let templateDownload = await Exp.downloadTemplateApp(
     templateType,
     projectDir,
     {
       ...validatedOptions,
       progressFunction: progress => {
-        const percent = Math.round(progress * 100);
         if (_currentRequestID === requestID) {
           Logger.notifications.info(
             { code: NotificationCode.DOWNLOAD_CLI_PROGRESS },
-            percent + '%'
+            progress + '%'
           );
-          const bar = new ProgressBar('[:bar] :percent', {
-            total: 100,
-            complete: '=',
-            incomplete: ' ',
-          });
           if (!_downloadIsSlowPrompt) {
-            bar.tick(percent);
+            _bar.tick();
           }
         }
       },
