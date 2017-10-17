@@ -154,7 +154,7 @@ ${renderUnversionedReactDependency(options)}
     return indentString(
       `
 ${renderUnversionedReactDependency(options, sdkVersion)}
-${renderUnversionedYogaDependency(options)}
+${renderUnversionedYogaDependency(options, sdkVersion)}
 `,
       2
     );
@@ -162,7 +162,7 @@ ${renderUnversionedYogaDependency(options)}
     return indentString(
       `
 ${renderUnversionedReactDependency(options, sdkVersion)}
-${renderUnversionedYogaDependency(options)}
+${renderUnversionedYogaDependency(options, sdkVersion)}
 ${renderUnversionedThirdPartyDependency(
         'DoubleConversion',
         path.join('third-party-podspecs', 'DoubleConversion.podspec'),
@@ -222,16 +222,21 @@ function renderUnversionedReactDependency(options, sdkVersion) {
 ${indentString(renderDependencyAttributes(attributes), 2)}`;
 }
 
-function renderUnversionedYogaDependency(options) {
+function renderUnversionedYogaDependency(options, sdkVersion) {
   let attributes;
+  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
   if (options.reactNativePath) {
     attributes = {
-      path: path.join(options.reactNativePath, 'ReactCommon', 'yoga'),
+      path: path.join(
+        options.reactNativePath,
+        'ReactCommon',
+        sdkMajorVersion < 22 ? 'Yoga' : 'yoga'
+      ),
     };
   } else {
     throw new Error(`Unsupported options for Yoga dependency: ${options}`);
   }
-  return `pod 'yoga',
+  return `pod '${sdkMajorVersion < 22 ? 'Yoga' : 'yoga'}',
 ${indentString(renderDependencyAttributes(attributes), 2)}`;
 }
 
