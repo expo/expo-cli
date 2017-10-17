@@ -5,15 +5,14 @@
 import 'instapromise';
 
 import _ from 'lodash';
-import fs from 'fs-extra';
+import request from 'request';
+import progress from 'request-progress';
+import fs from 'fs';
 import rimraf from 'rimraf';
 import path from 'path';
-import axios from 'axios';
-import concat from 'concat-stream';
 
 import { Cacher } from './tools/FsCache';
 import Config from './Config';
-import { isNode } from './tools/EnvironmentHelper';
 import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import * as Session from './Session';
@@ -74,36 +73,23 @@ async function _callMethodAsync(
     headers,
   };
 
-  if (requestBody) {
+  if (requestOptions) {
     options = {
       ...options,
-      data: requestBody,
+      ...requestOptions,
     };
   }
 
-  if (requestOptions) {
-    if (requestOptions.formData) {
-      let data = requestOptions.formData;
-      if (isNode()) {
-        let convertedFormData = await _convertFormDataToBuffer(
-          requestOptions.formData
-        );
-        data = convertedFormData.data;
-        options.headers = {
-          ...options.headers,
-          ...requestOptions.formData.getHeaders(),
-        };
-      }
-      options = { ...options, data };
-    } else {
-      options = { ...options, ...requestOptions };
-    }
+  if (requestBody) {
+    options = {
+      ...options,
+      body: requestBody,
+      json: true,
+    };
   }
-  let response = await axios.request(options);
-  if (!response) {
-    throw new Error('Unexpected error: Request failed.');
-  }
-  let responseBody = response.data;
+
+  let response = await request.promise(options);
+  let responseBody = response.body;
   var responseObj;
   if (_.isString(responseBody)) {
     try {
@@ -133,16 +119,9 @@ async function _callMethodAsync(
   }
 }
 
-async function _convertFormDataToBuffer(formData) {
-  return new Promise(resolve => {
-    formData.pipe(concat({ encoding: 'buffer' }, data => resolve({ data })));
-  });
-}
-
 async function _downloadAsync(url, path, progressFunction, retryFunction) {
   let promptShown = false;
   let currentProgress = 0;
-
   let warningTimer = setTimeout(() => {
     if (retryFunction) {
       retryFunction();
@@ -150,51 +129,25 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
     promptShown = true;
   }, TIMER_DURATION);
 
-  let config;
-  // Checks if the call is being made in XDE or exp. (If XDE = XHR, if exp = HTTP);
-  if (!isNode()) {
-    config = {
-      timeout: TIMEOUT,
-      responseType: 'arraybuffer',
-      onDownloadProgress: progressEvent => {
-        const roundedProgress = Math.floor(
-          progressEvent.loaded / progressEvent.total * 100
-        );
-        if (currentProgress !== roundedProgress) {
-          currentProgress = roundedProgress;
-          clearTimeout(warningTimer);
-          if (!promptShown) {
-            warningTimer = setTimeout(() => {
-              if (retryFunction) {
-                retryFunction();
-              }
-              promptShown = true;
-            }, TIMER_DURATION);
+  return new Promise((resolve, reject) => {
+    try {
+      progress(
+        request(url, { timeout: TIMEOUT }, err => {
+          if (err !== null) {
+            if (err.code === 'ETIMEDOUT') {
+              reject(Error('Server timeout.'));
+            } else {
+              reject(
+                Error(
+                  "Couldn't connect to the server, check your internet connection."
+                )
+              );
+            }
           }
-        }
-        if (progressFunction) {
-          progressFunction(roundedProgress);
-        }
-      },
-    };
-    let response = await axios(url, config);
-    await fs.promise.writeFile(path, Buffer.from(response.data));
-    clearTimeout(warningTimer);
-  } else {
-    config = {
-      timeout: TIMEOUT,
-      responseType: 'stream',
-    };
-    let response = await axios(url, config);
-    return new Promise(resolve => {
-      let totalDownloadSize = response.data.headers['content-length'];
-      let downloadProgress = 0;
-      response.data
-        .on('data', chunk => {
-          downloadProgress += chunk.length;
-          const roundedProgress = Math.floor(
-            downloadProgress / totalDownloadSize * 100
-          );
+        })
+      )
+        .on('progress', progress => {
+          const roundedProgress = Math.round(progress.percent * 100);
           if (currentProgress !== roundedProgress) {
             currentProgress = roundedProgress;
             clearTimeout(warningTimer);
@@ -206,18 +159,27 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
                 promptShown = true;
               }, TIMER_DURATION);
             }
-            if (progressFunction) {
-              progressFunction(roundedProgress);
-            }
+          }
+          let percent = progress.percent !== undefined ? progress.percent : 0;
+          if (progressFunction) {
+            progressFunction(percent);
           }
         })
-        .on('end', () => {
+        .pipe(fs.createWriteStream(path))
+        .on('finish', () => {
+          // Since on('finish') overrides on('progress'), loading bar will never get to 100%
+          // this line fixes it.
+          if (progressFunction) {
+            progressFunction(100);
+          }
           clearTimeout(warningTimer);
           resolve();
         })
-        .pipe(fs.createWriteStream(path));
-    });
-  }
+        .on('error', reject);
+    } catch (e) {
+      reject(e);
+    }
+  });
 }
 
 export default class ApiClient {

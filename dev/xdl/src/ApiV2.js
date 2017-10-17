@@ -6,8 +6,7 @@ import 'instapromise';
 
 import _ from 'lodash';
 import ExtendableError from 'es6-error';
-import QueryString from 'querystring';
-import axios from 'axios';
+import request from 'request';
 
 import Config from './Config';
 
@@ -128,6 +127,7 @@ export default class ApiV2Client {
     extraRequestOptions: Object
   ): Promise<*> {
     const url = `${API_BASE_URL}/${methodName}`;
+
     let reqOptions: Object = {
       url,
       method: options.httpMethod,
@@ -147,21 +147,22 @@ export default class ApiV2Client {
 
     // Handle qs
     if (options.queryParameters) {
-      reqOptions.params = options.queryParameters;
-      reqOptions.paramsSerializer = QueryString.stringify;
+      reqOptions.qs = options.queryParameters;
     }
 
     // Handle body
     if (options.body) {
-      reqOptions.data = options.body;
+      reqOptions.body = options.body;
+      reqOptions.json = true;
     }
 
     reqOptions = _.merge({}, reqOptions, extraRequestOptions);
+
     let response;
     let result;
     try {
-      response = await axios.request(reqOptions);
-      result = response.data;
+      response = await request.promise(reqOptions);
+      result = response.body;
     } catch (e) {
       const error: ErrorWithResponseBody = new Error(
         `There was a problem understanding the server. Please try again.`
