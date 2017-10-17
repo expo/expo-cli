@@ -300,6 +300,11 @@ async function concatTemplateFilesInDirectoryAsync(directory) {
 function renderDetachedPostinstall(sdkVersion) {
   let podsRootSub = '${PODS_ROOT}';
   return `
+    if target.pod_name == 'AppAuth'
+      target.native_target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
+      end
+    end
     if target.pod_name == 'ExpoKit'
       target.native_target.build_configurations.each do |config|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
