@@ -273,65 +273,58 @@ async function configureDetachedVersionsPlistAsync(
   detachedSDKVersion,
   kernelSDKVersion
 ) {
-  await IosPlist.modifyAsync(
-    configFilePath,
-    'EXSDKVersions',
-    versionConfig => {
-      versionConfig.sdkVersions = [detachedSDKVersion];
-      versionConfig.detachedNativeVersions = {
-        shell: detachedSDKVersion,
-        kernel: kernelSDKVersion,
-      };
-      return versionConfig;
-    }
-  );
+  await IosPlist.modifyAsync(configFilePath, 'EXSDKVersions', versionConfig => {
+    versionConfig.sdkVersions = [detachedSDKVersion];
+    versionConfig.detachedNativeVersions = {
+      shell: detachedSDKVersion,
+      kernel: kernelSDKVersion,
+    };
+    return versionConfig;
+  });
 }
 
 async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
-  let result = await IosPlist.modifyAsync(
-    configFilePath,
-    'Info',
-    config => {
-      // add detached scheme
-      if (manifest.isDetached && manifest.detach.scheme) {
-        if (!config.CFBundleURLTypes) {
-          config.CFBundleURLTypes = [
-            {
-              CFBundleURLSchemes: [],
-            },
-          ];
-        }
-        config.CFBundleURLTypes[0].CFBundleURLSchemes.push(
-          manifest.detach.scheme
-        );
+  let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
+    // add detached scheme
+    if (manifest.isDetached && manifest.detach.scheme) {
+      if (!config.CFBundleURLTypes) {
+        config.CFBundleURLTypes = [
+          {
+            CFBundleURLSchemes: [],
+          },
+        ];
       }
-      if (config.UIDeviceFamily) {
-        delete config.UIDeviceFamily;
-      }
-      // configure *UsageDescription
-      let usageKeysConfigured = [];
-      for (let key in config) {
-        if (
-          config.hasOwnProperty(key) &&
-            key.indexOf('UsageDescription') !== -1
-        ) {
-          config[key] = config[key].replace(
-            'Expo experiences',
-            'this app'
-          );
-          usageKeysConfigured.push(key);
-        }
-      }
-      if (usageKeysConfigured.length) {
-        console.log('We added some permissions keys to `Info.plist` in your detached iOS project:');
-        usageKeysConfigured.forEach(key => {
-          console.log(`  ${key}`);
-        });
-        console.log('You may want to revise them to include language appropriate to your project. You can also remove them if your app will never use the corresponding API. See the Apple docs for these keys.');
-      }
-      return config;
+      config.CFBundleURLTypes[0].CFBundleURLSchemes.push(
+        manifest.detach.scheme
+      );
     }
-  );
+    if (config.UIDeviceFamily) {
+      delete config.UIDeviceFamily;
+    }
+    // configure *UsageDescription
+    let usageKeysConfigured = [];
+    for (let key in config) {
+      if (
+        config.hasOwnProperty(key) &&
+        key.indexOf('UsageDescription') !== -1
+      ) {
+        config[key] = config[key].replace('Expo experiences', 'this app');
+        usageKeysConfigured.push(key);
+      }
+    }
+    if (usageKeysConfigured.length) {
+      console.log(
+        'We added some permissions keys to `Info.plist` in your detached iOS project:'
+      );
+      usageKeysConfigured.forEach(key => {
+        console.log(`  ${key}`);
+      });
+      console.log(
+        'You may want to revise them to include language appropriate to your project. You can also remove them if your app will never use the corresponding API. See the Apple docs for these keys.'
+      );
+    }
+    return config;
+  });
   return result;
 }
 
@@ -404,7 +397,11 @@ export async function detachIOSAsync(
     sdkVersion,
     sdkVersion
   );
-  await IosIcons.createAndWriteIconsToPathAsync(manifest, iconPath, projectRoot);
+  await IosIcons.createAndWriteIconsToPathAsync(
+    manifest,
+    iconPath,
+    projectRoot
+  );
   // we don't pre-cache JS in this case, TODO: think about whether that's correct
 
   // render Podfile in new project
@@ -463,7 +460,7 @@ async function _renameAndMoveIOSFilesAsync(
       rimraf.sync(gitIgnorePath);
     }
   } catch (e) {}
-  
+
   const filesToTransform = [
     path.join('exponent-view-template.xcodeproj', 'project.pbxproj'),
     path.join('exponent-view-template.xcworkspace', 'contents.xcworkspacedata'),
@@ -475,9 +472,10 @@ async function _renameAndMoveIOSFilesAsync(
     ),
   ];
 
-  const bundleIdentifier = manifest.ios && manifest.ios.bundleIdentifier
-    ? manifest.ios.bundleIdentifier
-    : '';
+  const bundleIdentifier =
+    manifest.ios && manifest.ios.bundleIdentifier
+      ? manifest.ios.bundleIdentifier
+      : '';
 
   await Promise.all(
     filesToTransform.map(async fileName => {
@@ -695,9 +693,10 @@ async function detachAndroidAsync(
   );
 
   // Fix image
-  let icon = manifest.android && manifest.android.icon
-    ? manifest.android.icon
-    : manifest.icon;
+  let icon =
+    manifest.android && manifest.android.icon
+      ? manifest.android.icon
+      : manifest.icon;
   if (icon) {
     let iconMatches = await glob.promise(
       path.join(androidProjectDirectory, 'app', 'src', 'main', 'res') +
