@@ -128,133 +128,125 @@ async function configureStandaloneIOSInfoPlistAsync(
   privateConfig = null,
   bundleIdentifier = null
 ) {
-  let result = await IosPlist.modifyAsync(
-    configFilePath,
-    'Info',
-    config => {
-      // make sure this happens first:
-      // apply any custom information from ios.infoPlist prior to all other exponent config
-      if (manifest.ios && manifest.ios.infoPlist) {
-        let extraConfig = manifest.ios.infoPlist;
-        for (let key in extraConfig) {
-          if (extraConfig.hasOwnProperty(key)) {
-            config[key] = extraConfig[key];
-          }
+  let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
+    // make sure this happens first:
+    // apply any custom information from ios.infoPlist prior to all other exponent config
+    if (manifest.ios && manifest.ios.infoPlist) {
+      let extraConfig = manifest.ios.infoPlist;
+      for (let key in extraConfig) {
+        if (extraConfig.hasOwnProperty(key)) {
+          config[key] = extraConfig[key];
         }
       }
+    }
 
-      // bundle id
-      config.CFBundleIdentifier =
-        manifest.ios && manifest.ios.bundleIdentifier
-          ? manifest.ios.bundleIdentifier
-          : bundleIdentifier;
-      if (!config.CFBundleIdentifier) {
-        throw new Error(
-          `Cannot configure an iOS app with no bundle identifier.`
+    // bundle id
+    config.CFBundleIdentifier =
+      manifest.ios && manifest.ios.bundleIdentifier
+        ? manifest.ios.bundleIdentifier
+        : bundleIdentifier;
+    if (!config.CFBundleIdentifier) {
+      throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
+    }
+
+    // app name
+    config.CFBundleName = manifest.name;
+
+    // determine app linking schemes
+    let linkingSchemes = manifest.scheme ? [manifest.scheme] : [];
+    if (manifest.facebookScheme && manifest.facebookScheme.startsWith('fb')) {
+      linkingSchemes.push(manifest.facebookScheme);
+    }
+    if (
+      privateConfig &&
+      privateConfig.googleSignIn &&
+      privateConfig.googleSignIn.reservedClientId
+    ) {
+      linkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
+    }
+
+    // remove exp scheme, add app scheme(s)
+    config.CFBundleURLTypes = [
+      {
+        CFBundleURLSchemes: linkingSchemes,
+      },
+      {
+        // Add the generic oauth redirect, it's important that it has the name
+        // 'OAuthRedirect' so we can find it in app code.
+        CFBundleURLName: 'OAuthRedirect',
+        CFBundleURLSchemes: [config.CFBundleIdentifier],
+      },
+    ];
+
+    // set ITSAppUsesNonExemptEncryption to let people skip manually
+    // entering it in iTunes Connect
+    if (
+      privateConfig &&
+      privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
+      privateConfig.usesNonExemptEncryption === false
+    ) {
+      config.ITSAppUsesNonExemptEncryption = false;
+    }
+
+    // google maps api key
+    if (privateConfig && privateConfig.googleMapsApiKey) {
+      config.GMSApiKey = privateConfig.googleMapsApiKey;
+    }
+
+    // permanently save the exponent client version at time of configuration
+    config.EXClientVersion = config.CFBundleVersion;
+
+    // use version from manifest
+    let version = manifest.version ? manifest.version : '0.0.0';
+    let buildNumber =
+      manifest.ios && manifest.ios.buildNumber ? manifest.ios.buildNumber : '1';
+    config.CFBundleShortVersionString = version;
+    config.CFBundleVersion = buildNumber;
+
+    config.Fabric = {
+      APIKey:
+        (privateConfig &&
+          privateConfig.fabric &&
+          privateConfig.fabric.apiKey) ||
+        DEFAULT_FABRIC_KEY,
+      Kits: [
+        {
+          KitInfo: {},
+          KitName: 'Crashlytics',
+        },
+      ],
+    };
+
+    if (privateConfig && privateConfig.branch) {
+      config.branch_key = {
+        live: privateConfig.branch.apiKey,
+      };
+    }
+
+    let permissionsAppName = manifest.name ? manifest.name : 'this app';
+    for (let key in config) {
+      if (
+        config.hasOwnProperty(key) &&
+        key.indexOf('UsageDescription') !== -1
+      ) {
+        config[key] = config[key].replace(
+          'Expo experiences',
+          permissionsAppName
         );
       }
-
-      // app name
-      config.CFBundleName = manifest.name;
-
-      // determine app linking schemes
-      let linkingSchemes = manifest.scheme ? [manifest.scheme] : [];
-      if (manifest.facebookScheme && manifest.facebookScheme.startsWith('fb')) {
-        linkingSchemes.push(manifest.facebookScheme);
-      }
-      if (
-        privateConfig &&
-        privateConfig.googleSignIn &&
-        privateConfig.googleSignIn.reservedClientId
-      ) {
-        linkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
-      }
-
-      // remove exp scheme, add app scheme(s)
-      config.CFBundleURLTypes = [
-        {
-          CFBundleURLSchemes: linkingSchemes,
-        },
-        {
-          // Add the generic oauth redirect, it's important that it has the name
-          // 'OAuthRedirect' so we can find it in app code.
-          CFBundleURLName: 'OAuthRedirect',
-          CFBundleURLSchemes: [config.CFBundleIdentifier],
-        },
-      ];
-
-      // set ITSAppUsesNonExemptEncryption to let people skip manually
-      // entering it in iTunes Connect
-      if (
-        privateConfig &&
-        privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
-        privateConfig.usesNonExemptEncryption === false
-      ) {
-        config.ITSAppUsesNonExemptEncryption = false;
-      }
-
-      // google maps api key
-      if (privateConfig && privateConfig.googleMapsApiKey) {
-        config.GMSApiKey = privateConfig.googleMapsApiKey;
-      }
-
-      // permanently save the exponent client version at time of configuration
-      config.EXClientVersion = config.CFBundleVersion;
-
-      // use version from manifest
-      let version = manifest.version ? manifest.version : '0.0.0';
-      let buildNumber =
-        manifest.ios && manifest.ios.buildNumber
-          ? manifest.ios.buildNumber
-          : '1';
-      config.CFBundleShortVersionString = version;
-      config.CFBundleVersion = buildNumber;
-
-      config.Fabric = {
-        APIKey:
-          (privateConfig &&
-            privateConfig.fabric &&
-            privateConfig.fabric.apiKey) ||
-          DEFAULT_FABRIC_KEY,
-        Kits: [
-          {
-            KitInfo: {},
-            KitName: 'Crashlytics',
-          },
-        ],
-      };
-
-      if (privateConfig && privateConfig.branch) {
-        config.branch_key = {
-          live: privateConfig.branch.apiKey,
-        };
-      }
-
-      let permissionsAppName = manifest.name ? manifest.name : 'this app';
-      for (let key in config) {
-        if (
-          config.hasOwnProperty(key) &&
-          key.indexOf('UsageDescription') !== -1
-        ) {
-          config[key] = config[key].replace(
-            'Expo experiences',
-            permissionsAppName
-          );
-        }
-      }
-
-      // 1 is iPhone, 2 is iPad
-      config.UIDeviceFamily =
-        manifest.ios && manifest.ios.supportsTablet ? [1, 2] : [1];
-
-      // allow iPad-only
-      if (manifest.ios && manifest.ios.isTabletOnly) {
-        config.UIDeviceFamily = [2];
-      }
-
-      return config;
     }
-  );
+
+    // 1 is iPhone, 2 is iPad
+    config.UIDeviceFamily =
+      manifest.ios && manifest.ios.supportsTablet ? [1, 2] : [1];
+
+    // allow iPad-only
+    if (manifest.ios && manifest.ios.isTabletOnly) {
+      config.UIDeviceFamily = [2];
+    }
+
+    return config;
+  });
   return result;
 }
 
@@ -355,21 +347,13 @@ async function preloadManifestAndBundleAsync(manifest, args, configFilePath) {
 }
 
 async function cleanPropertyListBackupsAsync(configFilePath, restoreOriginals) {
-  await IosPlist.cleanBackupAsync(
-    configFilePath,
-    'EXShell',
-    restoreOriginals
-  );
+  await IosPlist.cleanBackupAsync(configFilePath, 'EXShell', restoreOriginals);
   await IosPlist.cleanBackupAsync(
     configFilePath,
     'Exponent.entitlements',
     restoreOriginals
   );
-  await IosPlist.cleanBackupAsync(
-    configFilePath,
-    'Info',
-    restoreOriginals
-  );
+  await IosPlist.cleanBackupAsync(configFilePath, 'Info', restoreOriginals);
 }
 
 /**
@@ -400,7 +384,9 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
     console.log(`Building shell app under ${buildDest}:\n`);
     console.log(buildCmd);
     if (!verbose) {
-      console.log('\nxcodebuild is running. Logging errors only. To see full output, use --verbose 1...');
+      console.log(
+        '\nxcodebuild is running. Logging errors only. To see full output, use --verbose 1...'
+      );
     }
     await spawnAsyncThrowError(buildCmd, null, {
       // only stderr
@@ -501,8 +487,17 @@ async function configureIOSShellAppAsync(args, manifest) {
   console.log('Configuring plists...');
   await configurePropertyListsAsync(manifest, args, configFilePath);
   console.log('Compiling resources...');
-  await IosAssetArchive.buildAssetArchiveAsync(manifest, configFilePath, expoSourceRoot, intermediatesDir);
-  await IosLaunchScreen.configureLaunchAssetsAsync(manifest, configFilePath, expoSourceRoot);
+  await IosAssetArchive.buildAssetArchiveAsync(
+    manifest,
+    configFilePath,
+    expoSourceRoot,
+    intermediatesDir
+  );
+  await IosLaunchScreen.configureLaunchAssetsAsync(
+    manifest,
+    configFilePath,
+    expoSourceRoot
+  );
   await preloadManifestAndBundleAsync(manifest, args, configFilePath);
   console.log('Cleaning up...');
   await cleanPropertyListBackupsAsync(configFilePath, false);
