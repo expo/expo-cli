@@ -98,10 +98,24 @@ async function createAndWriteIconsToPathAsync(
 
       let iconFilename = `AppIcon${iconQualifier}.png`;
       let iconSizePx = iconSize * iconResolution;
-      await spawnAsyncThrowError('/bin/cp', [rawIconFilename, iconFilename], {
-        stdio: 'inherit',
-        cwd: destinationIconPath,
-      });
+      // rewrite the color profile of the icon to the system profile
+      // otherwise sips will barf when resizing for some images per
+      // https://stackoverflow.com/questions/40316819/sips-shows-unable-to-render-destination-image
+      // this is supposedly related to 16-bit vs. 8-bit color profiles but w/e
+      await spawnAsyncThrowError(
+        'sips',
+        [
+          '--matchTo',
+          '/System/Library/ColorSync/Profiles/sRGB Profile.icc',
+          '--out',
+          iconFilename,
+          rawIconFilename,
+        ],
+        {
+          stdio: 'inherit',
+          cwd: destinationIconPath,
+        }
+      );
       await spawnAsyncThrowError('sips', ['-Z', iconSizePx, iconFilename], {
         stdio: ['ignore', 'ignore', 'inherit'], // only stderr
         cwd: destinationIconPath,
@@ -159,7 +173,4 @@ async function getImageDimensionsMacOSAsync(dirname, basename) {
   return dimensions;
 }
 
-export {
-  createAndWriteIconsToPathAsync,
-  getImageDimensionsMacOSAsync,
-};
+export { createAndWriteIconsToPathAsync, getImageDimensionsMacOSAsync };
