@@ -734,48 +734,73 @@ async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
   return;
 }
 
+async function prepareDetachedBuildIosAsync(
+  projectDir: string,
+  exp: any,
+  args: any
+) {
+  let { iosProjectDirectory, projectName, supportingDirectory } = getIosPaths(
+    projectDir,
+    exp
+  );
+
+  console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
+  // These files cause @providesModule naming collisions
+  // but are not available until after `pod install` has run.
+  let podsDirectory = path.join(iosProjectDirectory, 'Pods');
+  if (!_isDirectory(podsDirectory)) {
+    throw new Error(
+      `Can't find directory ${podsDirectory}, make sure you've run pod install.`
+    );
+  }
+  let rnPodDirectory = path.join(podsDirectory, 'React');
+  if (_isDirectory(rnPodDirectory)) {
+    let rnFilesToDelete = await glob.promise(
+      rnPodDirectory + '/**/*.@(js|json)'
+    );
+    if (rnFilesToDelete) {
+      for (let i = 0; i < rnFilesToDelete.length; i++) {
+        await fs.promise.unlink(rnFilesToDelete[i]);
+      }
+    }
+  }
+  // insert expo development url into iOS config
+  if (!args.skipXcodeConfig) {
+    // populate EXPO_RUNTIME_VERSION from ExpoKit pod version
+    let expoKitVersion = '';
+    const podfileLockPath = path.join(iosProjectDirectory, 'Podfile.lock');
+    try {
+      const podfileLock = await fs.promise.readFile(podfileLockPath, 'utf8');
+      const expoKitVersionRegex = /ExpoKit\/Core\W?\(([0-9\.]+)\)/gi;
+      let match = expoKitVersionRegex.exec(podfileLock);
+      expoKitVersion = match[1];
+    } catch (e) {
+      throw new Error(
+        `Unable to read ExpoKit version from Podfile.lock. Make sure your project depends on ExpoKit. (${e})`
+      );
+    }
+
+    // populate development url
+    let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
+
+    await ensureBuildConstantsExistsIOSAsync(supportingDirectory);
+    await IosPlist.modifyAsync(
+      supportingDirectory,
+      'EXBuildConstants',
+      constantsConfig => {
+        constantsConfig.developmentUrl = devUrl;
+        constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
+        return constantsConfig;
+      }
+    );
+  }
+}
+
 export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
   if (args.platform === 'ios') {
-    let { iosProjectDirectory, projectName, supportingDirectory } = getIosPaths(
-      projectDir,
-      exp
-    );
-
-    console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
-    // These files cause @providesModule naming collisions
-    // but are not available until after `pod install` has run.
-    let podsDirectory = path.join(iosProjectDirectory, 'Pods');
-    if (!_isDirectory(podsDirectory)) {
-      throw new Error(
-        `Can't find directory ${podsDirectory}, make sure you've run pod install.`
-      );
-    }
-    let rnPodDirectory = path.join(podsDirectory, 'React');
-    if (_isDirectory(rnPodDirectory)) {
-      let rnFilesToDelete = await glob.promise(
-        rnPodDirectory + '/**/*.@(js|json)'
-      );
-      if (rnFilesToDelete) {
-        for (let i = 0; i < rnFilesToDelete.length; i++) {
-          await fs.promise.unlink(rnFilesToDelete[i]);
-        }
-      }
-    }
-    // insert expo development url into iOS config
-    if (!args.skipXcodeConfig) {
-      let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
-      await ensureBuildConstantsExistsIOSAsync(supportingDirectory);
-      await IosPlist.modifyAsync(
-        supportingDirectory,
-        'EXBuildConstants',
-        constantsConfig => {
-          constantsConfig.developmentUrl = devUrl;
-          return constantsConfig;
-        }
-      );
-    }
+    await prepareDetachedBuildIosAsync(projectDir, exp, args);
   } else {
     let androidProjectDirectory = path.join(projectDir, 'android');
     let expoBuildConstantsMatches = await glob.promise(
