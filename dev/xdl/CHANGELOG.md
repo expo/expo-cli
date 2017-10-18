@@ -6,6 +6,20 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Added
 
+### Changed
+
+### Removed
+
+## [46.0.1] - 2017-10-18
+
+### Added
+
+* Fix weird warnings during detach.
+
+## [46.0.0] - 2017-10-18
+
+### Added
+
 * No npm warnings if yarn exists
 
 ### Changed
@@ -18,7 +32,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 * Remove dependency on macOS to detach
 * Remove sentry event logging temporarily
 
-## [46.0.0] - 2017-10-18
+## [45.0.0] - 2017-09-27
 
 ### Added
 
@@ -27,14 +41,6 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 ### Changed
 
 * Improve sending link via SMS, better message, make sure user is logged in
-
-## [45.0.0] - 2017-09-27
-
-### Added
-
-### Changed
-
-### Removed
 
 ## [44.0.2] - 2017-08-24
 
