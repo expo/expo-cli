@@ -2,10 +2,9 @@
  * @flow
  */
 
-import { ProjectUtils, Project, UrlUtils } from 'xdl';
+import { ProjectUtils, Project } from 'xdl';
 
 import chalk from 'chalk';
-import simpleSpinner from '@expo/simple-spinner';
 import path from 'path';
 
 import log from '../log';
@@ -54,7 +53,6 @@ async function action(projectDir, options) {
   }
 
   log('Your URL is: ' + chalk.underline(url));
-  log.raw(url);
   if (isUrlFallback) {
     log.warn(
       'Switched to a LAN URL because the tunnel appears to be down. ' +
