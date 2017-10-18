@@ -8,7 +8,14 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Changed
 
+### Removed
+
+## [45.0.0] - 2017-10-18
+
+### Changed
+
 * new version of XDL with new @expo/schemer
+* collapse stack traces
 
 ### Removed
 

@@ -6,6 +6,32 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Added
 
+* No npm warnings if yarn exists
+
+### Changed
+
+* Error message improvements
+* Fix schema validation issues
+
+### Removed
+
+* Remove dependency on macOS to detach
+* Remove sentry event logging temporarily
+
+## [46.0.0] - 2017-10-18
+
+### Added
+
+* Powertools updates
+
+### Changed
+
+* Improve sending link via SMS, better message, make sure user is logged in
+
+## [45.0.0] - 2017-09-27
+
+### Added
+
 ### Changed
 
 ### Removed
