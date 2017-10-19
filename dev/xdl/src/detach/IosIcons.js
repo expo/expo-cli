@@ -58,7 +58,7 @@ async function createAndWriteIconsToPathAsync(
     );
   }
 
-  let iconSizes = [20, 29, 40, 60, 76, 83.5, 1024];
+  let iconSizes = [1024, 20, 29, 40, 60, 76, 83.5];
   iconSizes.forEach(iconSize => {
     let iconResolutions;
     if (iconSize === 76) {
@@ -102,10 +102,14 @@ async function createAndWriteIconsToPathAsync(
         stdio: 'inherit',
         cwd: destinationIconPath,
       });
-      await spawnAsyncThrowError('sips', ['-Z', iconSizePx, iconFilename], {
-        stdio: ['ignore', 'ignore', 'inherit'], // only stderr
-        cwd: destinationIconPath,
-      });
+      try {
+        await spawnAsyncThrowError('sips', ['-Z', iconSizePx, iconFilename], {
+          stdio: ['ignore', 'ignore', 'inherit'], // only stderr
+          cwd: destinationIconPath,
+        });
+      } catch (e) {
+        throw new Error(`Failed to resize image: ${iconFilename}. (${e})`);
+      }
 
       // reject non-square icons (because Apple will if we don't)
       const dims = await getImageDimensionsMacOSAsync(
@@ -143,15 +147,15 @@ async function getImageDimensionsMacOSAsync(dirname, basename) {
   if (process.platform !== 'darwin') {
     console.warn('`sips` utility may or may not work outside of macOS');
   }
-  let childProcess = await spawnAsyncThrowError(
-    'sips',
-    ['-g', 'pixelWidth', '-g', 'pixelHeight', basename],
-    {
-      cwd: dirname,
-    }
-  );
   let dimensions;
   try {
+    let childProcess = await spawnAsyncThrowError(
+      'sips',
+      ['-g', 'pixelWidth', '-g', 'pixelHeight', basename],
+      {
+        cwd: dirname,
+      }
+    );
     // stdout looks something like 'pixelWidth: 1200\n pixelHeight: 800'
     const components = childProcess.stdout.split(/(\s+)/);
     dimensions = components.map(c => parseInt(c, 10)).filter(n => !isNaN(n));
