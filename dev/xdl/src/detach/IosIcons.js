@@ -98,34 +98,10 @@ async function createAndWriteIconsToPathAsync(
 
       let iconFilename = `AppIcon${iconQualifier}.png`;
       let iconSizePx = iconSize * iconResolution;
-      // rewrite the color profile of the icon to the system profile
-      // otherwise sips will barf when resizing for some images per
-      // https://stackoverflow.com/questions/40316819/sips-shows-unable-to-render-destination-image
-      // this is supposedly related to 16-bit vs. 8-bit color profiles but w/e
-      try {
-        await spawnAsyncThrowError(
-          'sips',
-          [
-            '--matchTo',
-            '/System/Library/ColorSync/Profiles/sRGB Profile.icc',
-            '--out',
-            iconFilename,
-            rawIconFilename,
-          ],
-          {
-            stdio: ['ignore', 'ignore', 'ignore'],
-            cwd: destinationIconPath,
-          }
-        );
-      } catch (_) {
-        // if sips color profile matching failed, still write the original file to
-        // the destination path and try that, since the color thing isn't required
-        // for most images.
-        await spawnAsyncThrowError('/bin/cp', [rawIconFilename, iconFilename], {
-          stdio: 'inherit',
-          cwd: destinationIconPath,
-        });
-      }
+      await spawnAsyncThrowError('/bin/cp', [rawIconFilename, iconFilename], {
+        stdio: 'inherit',
+        cwd: destinationIconPath,
+      });
       await spawnAsyncThrowError('sips', ['-Z', iconSizePx, iconFilename], {
         stdio: ['ignore', 'ignore', 'inherit'], // only stderr
         cwd: destinationIconPath,
