@@ -45,7 +45,7 @@ export default class IOSBuilder extends BaseBuilder {
     if (!bundleIdentifier) {
       throw new XDLError(
         ErrorCode.INVALID_OPTIONS,
-        `Your project must have a bundleIdentifier set in exp.json. See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
+        `Your project must have a bundleIdentifier set in app.json. See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       );
     }
 
