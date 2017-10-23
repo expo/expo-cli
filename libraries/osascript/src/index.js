@@ -111,6 +111,7 @@ async function chooseEditorAppAsync(preferredEditor) {
   }
 
   let editorsToTry = [
+    'Visual Studio Code',
     'Atom',
     'Sublime Text',
     'TextMate',
