@@ -18,8 +18,10 @@ import uuid from 'uuid';
 import yesno from 'yesno';
 
 import {
+  isDirectory,
   parseSdkMajorVersion,
   saveImageToPathAsync,
+  rimrafDontThrow,
   spawnAsyncThrowError,
   spawnAsync,
   transformFileContentsAsync,
@@ -28,10 +30,10 @@ import {
   configureStandaloneIOSInfoPlistAsync,
   configureStandaloneIOSShellPlistAsync,
 } from './IosShellApp';
-import { renderPodfileAsync } from './IosPodsTools.js';
 
 import * as IosIcons from './IosIcons';
 import * as IosPlist from './IosPlist';
+import * as IosWorkspace from './IosWorkspace';
 
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';
@@ -45,18 +47,6 @@ import * as Versions from '../Versions';
 const ANDROID_TEMPLATE_PKG = 'detach.app.template.pkg.name';
 const ANDROID_TEMPLATE_COMPANY = 'detach.app.template.company.domain';
 const ANDROID_TEMPLATE_NAME = 'DetachAppTemplate';
-
-function _isDirectory(dir) {
-  try {
-    if (fs.statSync(dir).isDirectory()) {
-      return true;
-    }
-
-    return false;
-  } catch (e) {
-    return false;
-  }
-}
 
 function yesnoAsync(question) {
   return new Promise(resolve => {
@@ -81,8 +71,8 @@ export async function detachAsync(projectRoot: string, options: any) {
   let experienceUrl = `exp://exp.host/${experienceName}`;
 
   // Check to make sure project isn't fully detached already
-  let hasIosDirectory = _isDirectory(path.join(projectRoot, 'ios'));
-  let hasAndroidDirectory = _isDirectory(path.join(projectRoot, 'android'));
+  let hasIosDirectory = isDirectory(path.join(projectRoot, 'ios'));
+  let hasAndroidDirectory = isDirectory(path.join(projectRoot, 'android'));
 
   if (hasIosDirectory && hasAndroidDirectory) {
     throw new XDLError(
@@ -182,18 +172,8 @@ export async function detachAsync(projectRoot: string, options: any) {
     }
   }
   if (!hasIosDirectory && isIosSupported) {
-    const iosClientVersion = sdkVersionConfig.iosVersion
-      ? sdkVersionConfig.iosVersion
-      : versions.iosVersion;
-    await detachIOSAsync(
-      projectRoot,
-      exp.sdkVersion,
-      experienceUrl,
-      exp,
-      sdkVersionConfig.iosExpoViewUrl,
-      iosClientVersion
-    );
-    const { supportingDirectory } = getIosPaths(projectRoot, exp);
+    await detachIOSAsync(projectRoot, exp.sdkVersion, experienceUrl, exp);
+    const { supportingDirectory } = IosWorkspace.getPaths(projectRoot, exp);
     exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
     exp.ios.publishBundlePath = path.relative(
       projectRoot,
@@ -237,40 +217,6 @@ export async function detachAsync(projectRoot: string, options: any) {
     'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.\n'
   );
   return true;
-}
-
-function getIosPaths(projectRoot, manifest) {
-  let iosProjectDirectory = path.join(projectRoot, 'ios');
-  let projectName;
-  let supportingDirectory;
-  if (manifest && manifest.name) {
-    let projectNameLabel = manifest.name;
-    projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
-    supportingDirectory = path.join(
-      iosProjectDirectory,
-      projectName,
-      'Supporting'
-    );
-  } else {
-    throw new Error(
-      'Cannot configure an ExpoKit app with no name. Are you missing `exp.json`?'
-    );
-  }
-  return {
-    iosProjectDirectory,
-    projectName,
-    supportingDirectory,
-  };
-}
-
-function rimrafDontThrow(directory) {
-  try {
-    rimraf.sync(directory);
-  } catch (e) {
-    console.warn(
-      `There was an issue cleaning up, but your project should still work. You may need to manually remove ${directory}. (${e})`
-    );
-  }
 }
 
 async function configureDetachedVersionsPlistAsync(
@@ -342,44 +288,19 @@ async function cleanPropertyListBackupsAsync(configFilePath) {
 /**
  *  Create a detached Expo iOS app pointing at the given project.
  */
-export async function detachIOSAsync(
+async function detachIOSAsync(
   projectRoot: string,
   sdkVersion: string,
   experienceUrl: string,
-  manifest: any,
-  templateProjUrl: string,
-  iosClientVersion: string
+  manifest: any
 ) {
-  let { iosProjectDirectory, projectName, supportingDirectory } = getIosPaths(
-    projectRoot,
-    manifest
-  );
+  let {
+    iosProjectDirectory,
+    projectName,
+    supportingDirectory,
+  } = IosWorkspace.getPaths(projectRoot, manifest);
 
-  let expoTemplateDirectory;
-  if (process.env.EXPO_VIEW_DIR) {
-    // Only for testing
-    expoTemplateDirectory = process.env.EXPO_VIEW_DIR;
-  } else {
-    expoTemplateDirectory = path.join(projectRoot, 'temp-ios-directory');
-    mkdirp.sync(expoTemplateDirectory);
-    console.log('Downloading iOS code...');
-    await Api.downloadAsync(templateProjUrl, expoTemplateDirectory, {
-      extract: true,
-    });
-  }
-
-  // copy downloaded template xcodeproj into the user's project.
-  // HEY: if you need other paths into the extracted archive, be sure and include them
-  // when the archive is generated in `ios/pipeline.js`
-  console.log('Moving iOS project files...');
-  await Utils.ncpAsync(
-    path.join(expoTemplateDirectory, 'exponent-view-template', 'ios'),
-    iosProjectDirectory
-  );
-
-  // rename the xcodeproj (and various other things) to the detached project name.
-  console.log('Naming iOS project...');
-  await _renameAndMoveIOSFilesAsync(iosProjectDirectory, projectName, manifest);
+  await IosWorkspace.createDetachedAsync(projectRoot, manifest, sdkVersion);
 
   // use the detached project manifest to configure corresponding native parts
   // of the detached xcodeproj. this is mostly the same configuration used for
@@ -407,121 +328,11 @@ export async function detachIOSAsync(
     iconPath,
     projectRoot
   );
-  // we don't pre-cache JS in this case, TODO: think about whether that's correct
-
-  // render Podfile in new project
-  console.log('Configuring iOS dependencies...');
-
-  let podfileSubstitutions = {
-    TARGET_NAME: projectName,
-    REACT_NATIVE_PATH: path.relative(
-      iosProjectDirectory,
-      path.join(projectRoot, 'node_modules', 'react-native')
-    ),
-    EXPOKIT_TAG: `ios/${iosClientVersion}`,
-  };
-  if (process.env.EXPOKIT_TAG_IOS) {
-    console.log(`EXPOKIT_TAG_IOS: Using custom ExpoKit iOS tag...`);
-    podfileSubstitutions.EXPOKIT_TAG = process.env.EXPOKIT_TAG_IOS;
-  } else if (process.env.EXPO_VIEW_DIR) {
-    console.log('EXPO_VIEW_DIR: Using local ExpoKit source for iOS...');
-    podfileSubstitutions.EXPOKIT_PATH = path.relative(
-      iosProjectDirectory,
-      process.env.EXPO_VIEW_DIR
-    );
-  }
-  await renderPodfileAsync(
-    path.join(
-      expoTemplateDirectory,
-      'template-files',
-      'ios',
-      'ExpoKit-Podfile'
-    ),
-    path.join(iosProjectDirectory, 'Podfile'),
-    podfileSubstitutions,
-    sdkVersion
-  );
 
   console.log('Cleaning up iOS...');
   await cleanPropertyListBackupsAsync(supportingDirectory);
 
-  if (!process.env.EXPO_VIEW_DIR) {
-    rimrafDontThrow(expoTemplateDirectory);
-  }
-
   console.log(`iOS detach is complete!`);
-  return;
-}
-
-async function _renameAndMoveIOSFilesAsync(
-  projectDirectory,
-  projectName,
-  manifest
-) {
-  // remove .gitignore, as this actually pertains to internal expo template management
-  try {
-    const gitIgnorePath = path.join(projectDirectory, '.gitignore');
-    if (fs.existsSync(gitIgnorePath)) {
-      rimraf.sync(gitIgnorePath);
-    }
-  } catch (e) {}
-
-  const filesToTransform = [
-    path.join('exponent-view-template.xcodeproj', 'project.pbxproj'),
-    path.join('exponent-view-template.xcworkspace', 'contents.xcworkspacedata'),
-    path.join(
-      'exponent-view-template.xcodeproj',
-      'xcshareddata',
-      'xcschemes',
-      'exponent-view-template.xcscheme'
-    ),
-  ];
-
-  const bundleIdentifier =
-    manifest.ios && manifest.ios.bundleIdentifier
-      ? manifest.ios.bundleIdentifier
-      : '';
-
-  await Promise.all(
-    filesToTransform.map(async fileName => {
-      return transformFileContentsAsync(
-        path.join(projectDirectory, fileName),
-        fileString => {
-          return fileString
-            .replace(
-              /com.getexponent.exponent-view-template/g,
-              bundleIdentifier
-            )
-            .replace(/exponent-view-template/g, projectName);
-        }
-      );
-    })
-  );
-
-  // order of this array matters
-  const filesToMove = [
-    'exponent-view-template',
-    path.join(
-      'exponent-view-template.xcodeproj',
-      'xcshareddata',
-      'xcschemes',
-      'exponent-view-template.xcscheme'
-    ),
-    'exponent-view-template.xcodeproj',
-    'exponent-view-template.xcworkspace',
-  ];
-
-  filesToMove.forEach(async fileName => {
-    let destFileName = path.join(
-      path.dirname(fileName),
-      `${projectName}${path.extname(fileName)}`
-    );
-    await spawnAsync('/bin/mv', [
-      path.join(projectDirectory, fileName),
-      path.join(projectDirectory, destFileName),
-    ]);
-  });
-
   return;
 }
 
@@ -744,22 +555,23 @@ async function prepareDetachedBuildIosAsync(
   exp: any,
   args: any
 ) {
-  let { iosProjectDirectory, projectName, supportingDirectory } = getIosPaths(
-    projectDir,
-    exp
-  );
+  let {
+    iosProjectDirectory,
+    projectName,
+    supportingDirectory,
+  } = IosWorkspace.getPaths(projectDir, exp);
 
   console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.
   let podsDirectory = path.join(iosProjectDirectory, 'Pods');
-  if (!_isDirectory(podsDirectory)) {
+  if (!isDirectory(podsDirectory)) {
     throw new Error(
       `Can't find directory ${podsDirectory}, make sure you've run pod install.`
     );
   }
   let rnPodDirectory = path.join(podsDirectory, 'React');
-  if (_isDirectory(rnPodDirectory)) {
+  if (isDirectory(rnPodDirectory)) {
     let rnFilesToDelete = await glob.promise(
       rnPodDirectory + '/**/*.@(js|json)'
     );

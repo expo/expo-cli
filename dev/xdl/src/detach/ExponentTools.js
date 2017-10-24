@@ -6,6 +6,7 @@ import fs from 'fs';
 import 'instapromise';
 import path from 'path';
 import request from 'request';
+import rimraf from 'rimraf';
 import spawnAsyncQuiet from '@expo/spawn-async';
 
 function _getFilesizeInBytes(path) {
@@ -115,11 +116,35 @@ function manifestUsesSplashApi(manifest, platform) {
   return false;
 }
 
+function rimrafDontThrow(directory) {
+  try {
+    rimraf.sync(directory);
+  } catch (e) {
+    console.warn(
+      `There was an issue cleaning up, but your project should still work. You may need to manually remove ${directory}. (${e})`
+    );
+  }
+}
+
+function isDirectory(dir) {
+  try {
+    if (fs.statSync(dir).isDirectory()) {
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 export {
+  isDirectory,
   parseSdkMajorVersion,
   saveUrlToPathAsync,
   saveImageToPathAsync,
   getManifestAsync,
+  rimrafDontThrow,
   spawnAsyncThrowError,
   spawnAsync,
   transformFileContentsAsync,
