@@ -11,6 +11,7 @@ import {
   transformFileContentsAsync,
 } from './ExponentTools';
 import { renderPodfileAsync } from './IosPodsTools.js';
+import * as IosPlist from './IosPlist';
 import * as Utils from '../Utils';
 import * as Versions from '../Versions';
 
@@ -115,6 +116,24 @@ async function _renameAndMoveProjectFilesAsync(
   return;
 }
 
+// TODO: logic for when kernel sdk version is different from detached sdk version
+// TODO: logic for when we're building a shell app (which may support many versions).
+async function _configureVersionsPlistAsync(
+  configFilePath,
+  detachedSDKVersion,
+  kernelSDKVersion
+) {
+  await IosPlist.modifyAsync(configFilePath, 'EXSDKVersions', versionConfig => {
+    versionConfig.sdkVersions = [detachedSDKVersion];
+    versionConfig.detachedNativeVersions = {
+      shell: detachedSDKVersion,
+      kernel: kernelSDKVersion,
+    };
+    return versionConfig;
+  });
+}
+
+// TODO: logic for builds that support multiple RN versions.
 async function _renderPodfileFromTemplateAsync(
   projectRoot,
   manifest,
@@ -150,7 +169,10 @@ async function _renderPodfileFromTemplateAsync(
 }
 
 async function createDetachedAsync(projectRoot, manifest, sdkVersion) {
-  const { iosProjectDirectory, projectName } = getPaths(projectRoot, manifest);
+  const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(
+    projectRoot,
+    manifest
+  );
   const {
     iosClientVersion,
     iosExpoViewUrl,
@@ -178,6 +200,13 @@ async function createDetachedAsync(projectRoot, manifest, sdkVersion) {
   );
 
   console.log('Configuring iOS dependencies...');
+  // this configuration must happen prior to build time because it affects which
+  // native versions of RN we depend on.
+  await _configureVersionsPlistAsync(
+    supportingDirectory,
+    sdkVersion,
+    sdkVersion
+  );
   const templatePodfilePath = path.join(
     expoTemplateDirectory,
     'template-files',
@@ -194,6 +223,11 @@ async function createDetachedAsync(projectRoot, manifest, sdkVersion) {
 
   if (!process.env.EXPO_VIEW_DIR) {
     rimrafDontThrow(expoTemplateDirectory);
+    await IosPlist.cleanBackupAsync(
+      supportingDirectory,
+      'EXSDKVersions',
+      false
+    );
   }
 
   return;

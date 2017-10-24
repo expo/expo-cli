@@ -219,21 +219,6 @@ export async function detachAsync(projectRoot: string, options: any) {
   return true;
 }
 
-async function configureDetachedVersionsPlistAsync(
-  configFilePath,
-  detachedSDKVersion,
-  kernelSDKVersion
-) {
-  await IosPlist.modifyAsync(configFilePath, 'EXSDKVersions', versionConfig => {
-    versionConfig.sdkVersions = [detachedSDKVersion];
-    versionConfig.detachedNativeVersions = {
-      shell: detachedSDKVersion,
-      kernel: kernelSDKVersion,
-    };
-    return versionConfig;
-  });
-}
-
 async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
   let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
     // add detached scheme
@@ -282,7 +267,6 @@ async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
 async function cleanPropertyListBackupsAsync(configFilePath) {
   await IosPlist.cleanBackupAsync(configFilePath, 'EXShell', false);
   await IosPlist.cleanBackupAsync(configFilePath, 'Info', false);
-  await IosPlist.cleanBackupAsync(configFilePath, 'EXSDKVersions', false);
 }
 
 /**
@@ -316,12 +300,6 @@ async function detachIOSAsync(
     supportingDirectory,
     manifest,
     experienceUrl
-  );
-  // TODO: logic for when kernel sdk version is different from detached sdk version
-  await configureDetachedVersionsPlistAsync(
-    supportingDirectory,
-    sdkVersion,
-    sdkVersion
   );
   await IosIcons.createAndWriteIconsToPathAsync(
     manifest,
