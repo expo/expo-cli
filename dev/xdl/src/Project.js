@@ -31,8 +31,6 @@ import logger from './Logger';
 import * as ExponentTools from './detach/ExponentTools';
 import * as Exp from './Exp';
 import * as ExpSchema from './project/ExpSchema';
-import FormData from './tools/FormData';
-import { isNode } from './tools/EnvironmentHelper';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
@@ -445,14 +443,26 @@ async function _uploadArtifactsAsync({
   options,
 }) {
   logger.global.info('Uploading JavaScript bundles');
-  let formData = new FormData();
+  let formData = {
+    expJson: JSON.stringify(exp),
+    iosBundle: {
+      value: iosBundle,
+      options: {
+        filename: 'iosBundle',
+      },
+    },
+    androidBundle: {
+      value: androidBundle,
+      options: {
+        filename: 'androidBundle',
+      },
+    },
+  };
 
-  formData.append('expJson', JSON.stringify(exp));
-  formData.append('iosBundle', _createBlob(iosBundle), 'iosBundle');
-  formData.append('androidBundle', _createBlob(androidBundle), 'androidBundle');
   let response = await Api.callMethodAsync('publish', [options], 'put', null, {
     formData,
   });
+
   return response;
 }
 
@@ -745,36 +755,23 @@ async function uploadAssetsAsync(projectRoot, assets) {
   // Upload them!
   await Promise.all(
     _.chunk(missing, 5).map(async keys => {
-      let formData = new FormData();
-      for (const key of keys) {
+      let formData = {};
+      keys.forEach(key => {
         ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
 
         let relativePath = paths[key].replace(projectRoot, '');
         logger.global.info({ quiet: true }, `Uploading ${relativePath}`);
 
-        formData.append(key, await _readFileForUpload(paths[key]), paths[key]);
-      }
+        formData[key] = {
+          value: fs.createReadStream(paths[key]),
+          options: {
+            filename: paths[key],
+          },
+        };
+      });
       await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
     })
   );
-}
-
-function _createBlob(string) {
-  if (isNode()) {
-    return string;
-  } else {
-    return new Blob([string]);
-  }
-}
-
-async function _readFileForUpload(path) {
-  if (isNode()) {
-    return fs.createReadStream(path);
-  } else {
-    // $FlowFixMe: fs.promise property not found.
-    const data = await fs.promise.readFile(path);
-    return new Blob([data]);
-  }
 }
 
 export async function buildAsync(
