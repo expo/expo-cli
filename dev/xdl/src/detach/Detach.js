@@ -66,7 +66,7 @@ function yesnoAsync(question) {
   });
 }
 
-export async function detachAsync(projectRoot: string) {
+export async function detachAsync(projectRoot: string, options: any) {
   let user = await UserManager.ensureLoggedInAsync();
 
   if (!user) {
@@ -154,12 +154,6 @@ export async function detachAsync(projectRoot: string) {
     }
   }
 
-  if (process.platform !== 'darwin') {
-    console.warn(
-      `It appears you are trying to detach outside of macOS. You will require Xcode to build the resulting artefact.`
-    );
-  }
-
   // Modify exp.json
   exp.isDetached = true;
 
@@ -176,7 +170,18 @@ export async function detachAsync(projectRoot: string) {
   mkdirp.sync(expoDirectory);
 
   // iOS
-  if (!hasIosDirectory) {
+  let isIosSupported = true;
+  if (process.platform !== 'darwin') {
+    if (options && options.force) {
+      console.warn(
+        `You are not running macOS, but have provided the --force option, so we will attempt to generate an iOS project anyway. This might fail.`
+      );
+    } else {
+      console.warn(`Skipping iOS because you are not running macOS.`);
+      isIosSupported = false;
+    }
+  }
+  if (!hasIosDirectory && isIosSupported) {
     const iosClientVersion = sdkVersionConfig.iosVersion
       ? sdkVersionConfig.iosVersion
       : versions.iosVersion;
