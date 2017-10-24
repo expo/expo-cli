@@ -194,7 +194,7 @@ export async function extractTemplateApp(
   await packageJsonFile.writeAsync(data);
 
   // Update app.json
-  let appJson = await fs.readFile.promise(path.join(root, 'app.json'), 'utf8');
+  let appJson = await fs.promise.readFile(path.join(root, 'app.json'), 'utf8');
   let customAppJson = appJson
     .replace(/\"My New Project\"/, `"${data.name}"`)
     .replace(/\"my-new-project\"/, `"${data.name}"`);
