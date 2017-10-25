@@ -2,8 +2,7 @@
  * @flow
  */
 
-import 'instapromise';
-
+import promisify from 'util.promisify';
 import existsAsync from 'exists-async';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
@@ -32,6 +31,11 @@ import MessageCode from './MessageCode';
 export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 
 export { default as convertProjectAsync } from './project/Convert';
+
+const readFileAsync = promisify(fs.readFile);
+const writeFileAsync = promisify(fs.writeFile);
+const validateAsync = promisify(joi.validate);
+const mkdirpAsync = promisify(mkdirp);
 
 function _getPlatformSpecificEntryPoint(entryPoint, platform) {
   if (entryPoint.endsWith('.js')) {
@@ -121,7 +125,7 @@ export async function downloadTemplateApp(
 
   // Should we validate that name is a valid name here?
   try {
-    await joi.promise.validate({ name: opts.name }, schema);
+    await validateAsync({ name: opts.name }, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
@@ -151,7 +155,7 @@ export async function downloadTemplateApp(
   }
 
   // Download files
-  await mkdirp.promise(root);
+  await mkdirpAsync(root);
   Logger.notifications.info(
     { code: NotificationCode.PROGRESS },
     MessageCode.DOWNLOADING
@@ -194,15 +198,11 @@ export async function extractTemplateApp(
   await packageJsonFile.writeAsync(data);
 
   // Update app.json
-  let appJson = await fs.readFile.promise(path.join(root, 'app.json'), 'utf8');
+  let appJson = await readFileAsync(path.join(root, 'app.json'), 'utf8');
   let customAppJson = appJson
     .replace(/\"My New Project\"/, `"${data.name}"`)
     .replace(/\"my-new-project\"/, `"${data.name}"`);
-  await fs.writeFile.promise(
-    path.join(root, 'app.json'),
-    customAppJson,
-    'utf8'
-  );
+  await writeFileAsync(path.join(root, 'app.json'), customAppJson, 'utf8');
 
   await initGitRepo(root);
 
