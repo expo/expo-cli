@@ -1,3 +1,6 @@
+/**
+ * @flow
+ */
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
@@ -13,9 +16,10 @@ import {
 import { renderPodfileAsync } from './IosPodsTools.js';
 import * as IosPlist from './IosPlist';
 import * as Utils from '../Utils';
+import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
 
-async function _getVersionedExpoKitConfigAsync(sdkVersion) {
+async function _getVersionedExpoKitConfigAsync(sdkVersion: string): any {
   const versions = await Versions.versionsAsync();
   let sdkVersionConfig = versions.sdkVersions[sdkVersion];
   const { iosVersion, iosExpoViewUrl } = sdkVersionConfig;
@@ -26,7 +30,10 @@ async function _getVersionedExpoKitConfigAsync(sdkVersion) {
   };
 }
 
-async function _getOrCreateTemplateDirectoryAsync(projectRoot, iosExpoViewUrl) {
+async function _getOrCreateTemplateDirectoryAsync(
+  projectRoot: string,
+  iosExpoViewUrl: string
+) {
   let expoTemplateDirectory;
   if (process.env.EXPO_VIEW_DIR) {
     // Only for testing
@@ -45,9 +52,9 @@ async function _getOrCreateTemplateDirectoryAsync(projectRoot, iosExpoViewUrl) {
 }
 
 async function _renameAndMoveProjectFilesAsync(
-  projectDirectory,
-  projectName,
-  manifest
+  projectDirectory: string,
+  projectName: string,
+  exp: any
 ) {
   // remove .gitignore, as this actually pertains to internal expo template management
   try {
@@ -69,9 +76,7 @@ async function _renameAndMoveProjectFilesAsync(
   ];
 
   const bundleIdentifier =
-    manifest.ios && manifest.ios.bundleIdentifier
-      ? manifest.ios.bundleIdentifier
-      : '';
+    exp.ios && exp.ios.bundleIdentifier ? exp.ios.bundleIdentifier : '';
 
   await Promise.all(
     filesToTransform.map(async fileName => {
@@ -119,9 +124,9 @@ async function _renameAndMoveProjectFilesAsync(
 // TODO: logic for when kernel sdk version is different from detached sdk version
 // TODO: logic for when we're building a shell app (which may support many versions).
 async function _configureVersionsPlistAsync(
-  configFilePath,
-  detachedSDKVersion,
-  kernelSDKVersion
+  configFilePath: string,
+  detachedSDKVersion: string,
+  kernelSDKVersion: string
 ) {
   await IosPlist.modifyAsync(configFilePath, 'EXSDKVersions', versionConfig => {
     versionConfig.sdkVersions = [detachedSDKVersion];
@@ -135,18 +140,17 @@ async function _configureVersionsPlistAsync(
 
 // TODO: logic for builds that support multiple RN versions.
 async function _renderPodfileFromTemplateAsync(
-  projectRoot,
-  manifest,
-  templatePodfilePath,
-  sdkVersion,
-  iosClientVersion
+  context: StandaloneContext,
+  templatePodfilePath: string,
+  sdkVersion: string,
+  iosClientVersion: string
 ) {
-  const { iosProjectDirectory, projectName } = getPaths(projectRoot, manifest);
+  const { iosProjectDirectory, projectName } = getPaths(context);
   let podfileSubstitutions = {
     TARGET_NAME: projectName,
     REACT_NATIVE_PATH: path.relative(
       iosProjectDirectory,
-      path.join(projectRoot, 'node_modules', 'react-native')
+      path.join(context.data.projectPath, 'node_modules', 'react-native')
     ),
     EXPOKIT_TAG: `ios/${iosClientVersion}`,
   };
@@ -168,10 +172,14 @@ async function _renderPodfileFromTemplateAsync(
   );
 }
 
-async function createDetachedAsync(projectRoot, manifest, sdkVersion) {
+async function createDetachedAsync(context: StandaloneContext) {
+  // TODO: support both types of context
+  if (context.type !== 'user') {
+    throw new Error(`IosWorkspace only supports user standalone contexts`);
+  }
+  const sdkVersion = context.config.sdkVersion;
   const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(
-    projectRoot,
-    manifest
+    context
   );
   const {
     iosClientVersion,
@@ -179,7 +187,7 @@ async function createDetachedAsync(projectRoot, manifest, sdkVersion) {
   } = await _getVersionedExpoKitConfigAsync(sdkVersion);
 
   const expoTemplateDirectory = await _getOrCreateTemplateDirectoryAsync(
-    projectRoot,
+    context.data.projectPath,
     iosExpoViewUrl
   );
 
@@ -196,7 +204,7 @@ async function createDetachedAsync(projectRoot, manifest, sdkVersion) {
   await _renameAndMoveProjectFilesAsync(
     iosProjectDirectory,
     projectName,
-    manifest
+    context.data.exp
   );
 
   console.log('Configuring iOS dependencies...');
@@ -214,8 +222,7 @@ async function createDetachedAsync(projectRoot, manifest, sdkVersion) {
     'ExpoKit-Podfile'
   );
   await _renderPodfileFromTemplateAsync(
-    projectRoot,
-    manifest,
+    context,
     templatePodfilePath,
     sdkVersion,
     iosClientVersion
@@ -233,12 +240,16 @@ async function createDetachedAsync(projectRoot, manifest, sdkVersion) {
   return;
 }
 
-function getPaths(projectRoot, manifest) {
-  let iosProjectDirectory = path.join(projectRoot, 'ios');
+function getPaths(context: StandaloneContext) {
+  // TODO: support both types of context
+  if (context.type !== 'user') {
+    throw new Error(`IosWorkspace only supports user standalone contexts`);
+  }
+  let iosProjectDirectory = path.join(context.data.projectPath, 'ios');
   let projectName;
   let supportingDirectory;
-  if (manifest && manifest.name) {
-    let projectNameLabel = manifest.name;
+  if (context.config && context.config.name) {
+    let projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
     supportingDirectory = path.join(
       iosProjectDirectory,

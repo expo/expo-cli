@@ -40,6 +40,7 @@ import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
 import UserManager from '../User';
 import XDLError from '../XDLError';
+import StandaloneContext from './StandaloneContext';
 import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
 import * as Versions from '../Versions';
@@ -172,8 +173,9 @@ export async function detachAsync(projectRoot: string, options: any) {
     }
   }
   if (!hasIosDirectory && isIosSupported) {
-    await detachIOSAsync(projectRoot, exp.sdkVersion, experienceUrl, exp);
-    const { supportingDirectory } = IosWorkspace.getPaths(projectRoot, exp);
+    const context = StandaloneContext.createUserContext(projectRoot, exp);
+    await detachIOSAsync(context, experienceUrl);
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
     exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
     exp.ios.publishBundlePath = path.relative(
       projectRoot,
@@ -273,38 +275,39 @@ async function cleanPropertyListBackupsAsync(configFilePath) {
  *  Create a detached Expo iOS app pointing at the given project.
  */
 async function detachIOSAsync(
-  projectRoot: string,
-  sdkVersion: string,
-  experienceUrl: string,
-  manifest: any
+  context: StandaloneContext,
+  experienceUrl: string
 ) {
   let {
     iosProjectDirectory,
     projectName,
     supportingDirectory,
-  } = IosWorkspace.getPaths(projectRoot, manifest);
+  } = IosWorkspace.getPaths(context);
 
-  await IosWorkspace.createDetachedAsync(projectRoot, manifest, sdkVersion);
+  await IosWorkspace.createDetachedAsync(context);
 
   // use the detached project manifest to configure corresponding native parts
   // of the detached xcodeproj. this is mostly the same configuration used for
   // shell apps.
   console.log('Configuring iOS project...');
   let iconPath = `${iosProjectDirectory}/${projectName}/Assets.xcassets/AppIcon.appiconset`;
-  await configureStandaloneIOSInfoPlistAsync(supportingDirectory, manifest);
-  let infoPlist = await configureDetachedIOSInfoPlistAsync(
+  await configureStandaloneIOSInfoPlistAsync(
     supportingDirectory,
-    manifest
+    context.data.exp
+  );
+  await configureDetachedIOSInfoPlistAsync(
+    supportingDirectory,
+    context.data.exp
   );
   await configureStandaloneIOSShellPlistAsync(
     supportingDirectory,
-    manifest,
+    context.data.exp,
     experienceUrl
   );
   await IosIcons.createAndWriteIconsToPathAsync(
-    manifest,
+    context.data.exp,
     iconPath,
-    projectRoot
+    context.data.projectPath
   );
 
   console.log('Cleaning up iOS...');
@@ -533,11 +536,12 @@ async function prepareDetachedBuildIosAsync(
   exp: any,
   args: any
 ) {
+  const context = StandaloneContext.createUserContext(projectDir, exp);
   let {
     iosProjectDirectory,
     projectName,
     supportingDirectory,
-  } = IosWorkspace.getPaths(projectDir, exp);
+  } = IosWorkspace.getPaths(context);
 
   console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions
