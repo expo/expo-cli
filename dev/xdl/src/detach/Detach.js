@@ -26,13 +26,9 @@ import {
   spawnAsync,
   transformFileContentsAsync,
 } from './ExponentTools';
-import {
-  configureStandaloneIOSInfoPlistAsync,
-  configureStandaloneIOSShellPlistAsync,
-} from './IosShellApp';
 
-import * as IosIcons from './IosIcons';
 import * as IosPlist from './IosPlist';
+import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
 
 import Api from '../Api';
@@ -221,56 +217,6 @@ export async function detachAsync(projectRoot: string, options: any) {
   return true;
 }
 
-async function configureDetachedIOSInfoPlistAsync(configFilePath, manifest) {
-  let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
-    // add detached scheme
-    if (manifest.isDetached && manifest.detach.scheme) {
-      if (!config.CFBundleURLTypes) {
-        config.CFBundleURLTypes = [
-          {
-            CFBundleURLSchemes: [],
-          },
-        ];
-      }
-      config.CFBundleURLTypes[0].CFBundleURLSchemes.push(
-        manifest.detach.scheme
-      );
-    }
-    if (config.UIDeviceFamily) {
-      delete config.UIDeviceFamily;
-    }
-    // configure *UsageDescription
-    let usageKeysConfigured = [];
-    for (let key in config) {
-      if (
-        config.hasOwnProperty(key) &&
-        key.indexOf('UsageDescription') !== -1
-      ) {
-        config[key] = config[key].replace('Expo experiences', 'this app');
-        usageKeysConfigured.push(key);
-      }
-    }
-    if (usageKeysConfigured.length) {
-      console.log(
-        'We added some permissions keys to `Info.plist` in your detached iOS project:'
-      );
-      usageKeysConfigured.forEach(key => {
-        console.log(`  ${key}`);
-      });
-      console.log(
-        'You may want to revise them to include language appropriate to your project. You can also remove them if your app will never use the corresponding API. See the Apple docs for these keys.'
-      );
-    }
-    return config;
-  });
-  return result;
-}
-
-async function cleanPropertyListBackupsAsync(configFilePath) {
-  await IosPlist.cleanBackupAsync(configFilePath, 'EXShell', false);
-  await IosPlist.cleanBackupAsync(configFilePath, 'Info', false);
-}
-
 /**
  *  Create a detached Expo iOS app pointing at the given project.
  */
@@ -278,40 +224,10 @@ async function detachIOSAsync(
   context: StandaloneContext,
   experienceUrl: string
 ) {
-  let {
-    iosProjectDirectory,
-    projectName,
-    supportingDirectory,
-  } = IosWorkspace.getPaths(context);
-
   await IosWorkspace.createDetachedAsync(context);
 
-  // use the detached project manifest to configure corresponding native parts
-  // of the detached xcodeproj. this is mostly the same configuration used for
-  // shell apps.
   console.log('Configuring iOS project...');
-  let iconPath = `${iosProjectDirectory}/${projectName}/Assets.xcassets/AppIcon.appiconset`;
-  await configureStandaloneIOSInfoPlistAsync(
-    supportingDirectory,
-    context.data.exp
-  );
-  await configureDetachedIOSInfoPlistAsync(
-    supportingDirectory,
-    context.data.exp
-  );
-  await configureStandaloneIOSShellPlistAsync(
-    supportingDirectory,
-    context.data.exp,
-    experienceUrl
-  );
-  await IosIcons.createAndWriteIconsToPathAsync(
-    context.data.exp,
-    iconPath,
-    context.data.projectPath
-  );
-
-  console.log('Cleaning up iOS...');
-  await cleanPropertyListBackupsAsync(supportingDirectory);
+  await IosNSBundle.configureAsync(context, experienceUrl);
 
   console.log(`iOS detach is complete!`);
   return;
