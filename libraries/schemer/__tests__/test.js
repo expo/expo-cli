@@ -1,9 +1,5 @@
 import Schemer from '../src/index';
-import {
-  pathToSchema,
-  pathToSchemaPath,
-  schemaPointerToPath,
-} from '../src/Util';
+import { pathToSchema, pathToSchemaPath, schemaPointerToPath } from '../src/Util';
 import { SchemerError, ValidationError, ErrorCodes } from '../src/Error.js';
 
 describe('Sanity Tests', () => {
@@ -134,9 +130,7 @@ describe('Individual Unit Tests', async () => {
       await S.validateAll({ noName: '' });
     } catch (e) {
       expect(e.errors.length).toBe(1);
-      expect(e.errors[0].errorCode).toBe(
-        ErrorCodes.SCHEMA_MISSING_REQUIRED_PROPERTY
-      );
+      expect(e.errors[0].errorCode).toBe(ErrorCodes.SCHEMA_MISSING_REQUIRED_PROPERTY);
     }
   });
 
@@ -166,8 +160,7 @@ describe('Individual Unit Tests', async () => {
     await expect(S.validateSlug('wilson-123')).resolves;
     await expect(S.validateSlug('wilson/test')).rejects.toBeDefined();
     await expect(S.validateSlug('wilson-test%')).rejects.toBeDefined();
-    await expect(S.validateSlug('wilson-test-zhao--javascript-is-super-funky'))
-      .resolves;
+    await expect(S.validateSlug('wilson-test-zhao--javascript-is-super-funky')).resolves;
   });
 
   xit('SDK Version', async () => {

@@ -93,8 +93,7 @@ export default class Schemer {
         //@TODO Parse the message in a less hacky way. Perhaps for regex validation errors, embed the error message under the meta tag?
         const regexHuman = _.get(parentSchema, 'meta.regexHuman');
         const regexErrorMessage = regexHuman
-          ? `'${dataPath}' should be a ${regexHuman[0].toLowerCase() +
-              regexHuman.slice(1)}`
+          ? `'${dataPath}' should be a ${regexHuman[0].toLowerCase() + regexHuman.slice(1)}`
           : `'${dataPath}' ${message}`;
         return new ValidationError({
           errorCode: ErrorCodes.SCHEMA_INVALID_PATTERN,
@@ -156,20 +155,16 @@ export default class Schemer {
 
   async _validateAssetsAsync(data: any) {
     let assets = [];
-    traverse(
-      this.schema,
-      { allKeys: true },
-      (subSchema, jsonPointer, a, b, c, d, property) => {
-        if (property && subSchema.meta && subSchema.meta.asset) {
-          const fieldPath = schemaPointerToFieldPath(jsonPointer);
-          assets.push({
-            fieldPath,
-            data: _.get(data, fieldPath),
-            meta: subSchema.meta,
-          });
-        }
+    traverse(this.schema, { allKeys: true }, (subSchema, jsonPointer, a, b, c, d, property) => {
+      if (property && subSchema.meta && subSchema.meta.asset) {
+        const fieldPath = schemaPointerToFieldPath(jsonPointer);
+        assets.push({
+          fieldPath,
+          data: _.get(data, fieldPath),
+          meta: subSchema.meta,
+        });
       }
-    );
+    });
     await Promise.all(assets.map(this._validateAssetAsync.bind(this)));
   }
 
@@ -183,13 +178,7 @@ export default class Schemer {
     meta: Meta,
   }) {
     if (meta && meta.asset && data) {
-      const {
-        asset,
-        dimensions,
-        square,
-        contentTypePattern,
-        contentTypeHuman,
-      }: Meta = meta;
+      const { asset, dimensions, square, contentTypePattern, contentTypeHuman }: Meta = meta;
       // filePath could be an URL
       const filePath = path.resolve(this.rootDir, data);
       try {
@@ -218,10 +207,7 @@ export default class Schemer {
           );
         }
 
-        if (
-          dimensions &&
-          (dimensions.height !== height || dimensions.width != width)
-        ) {
+        if (dimensions && (dimensions.height !== height || dimensions.width != width)) {
           this.manualValidationErrors.push(
             new ValidationError({
               errorCode: ErrorCodes.INVALID_DIMENSIONS,

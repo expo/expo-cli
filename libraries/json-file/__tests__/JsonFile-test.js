@@ -26,9 +26,7 @@ describe('JsonFile Basic Tests', () => {
   });
 
   it(`reads JSON statically from a file`, async () => {
-    let object = await JsonFile.readAsync(
-      path.join(__dirname, '../package.json')
-    );
+    let object = await JsonFile.readAsync(path.join(__dirname, '../package.json'));
     expect(object.version).toBeDefined();
   });
 
@@ -123,24 +121,21 @@ describe('JsonFile mockjs race condition integration test', () => {
   });
 
   // The following test is not possible beacuse child processes do not inherit a mocked file system
-  xit(
-    'Multiple updates to the same file from different processes are atomic',
-    async () => {
-      let file = new JsonFile('/atomic-test.json', { json5: true });
-      let baseObj = {};
-      for (var i = 0; i < 20; i++) {
-        const k = i.toString();
-        const v = i.toString();
-        baseObj = _.extend(baseObj, { [k]: v });
-        cp.fork('./worker-test.js', ['./atomic-test.json', k, v]);
-      }
-      // The following worker does a setAsync
-      //cp.fork('./JsonFileWorker', [filename, key, value])
-      const json = await file.readAsync();
-      console.log(json);
-      expect(json).toEqual(baseObj);
+  xit('Multiple updates to the same file from different processes are atomic', async () => {
+    let file = new JsonFile('/atomic-test.json', { json5: true });
+    let baseObj = {};
+    for (var i = 0; i < 20; i++) {
+      const k = i.toString();
+      const v = i.toString();
+      baseObj = _.extend(baseObj, { [k]: v });
+      cp.fork('./worker-test.js', ['./atomic-test.json', k, v]);
     }
-  );
+    // The following worker does a setAsync
+    //cp.fork('./JsonFileWorker', [filename, key, value])
+    const json = await file.readAsync();
+    console.log(json);
+    expect(json).toEqual(baseObj);
+  });
 
   // This fails when i is high, around 200. However, no realistic use case would have the user
   // constantly update a file that often

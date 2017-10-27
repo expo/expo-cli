@@ -4,10 +4,7 @@
 
 import _ from 'lodash';
 export const fieldPathToSchemaPath = (fieldPath: string) => {
-  let newPath = _.zip(
-    _.fill(fieldPath.split('.'), 'properties'),
-    fieldPath.split('.')
-  );
+  let newPath = _.zip(_.fill(fieldPath.split('.'), 'properties'), fieldPath.split('.'));
   return _.flatten(((newPath: any): Array<Array<string>>)).join('.');
 };
 // Assumption: used only for jsonPointer returned from traverse

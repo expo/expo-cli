@@ -1,8 +1,4 @@
-import {
-  fieldPathToSchema,
-  fieldPathToSchemaPath,
-  schemaPointerToFieldPath,
-} from '../src/Util.js';
+import { fieldPathToSchema, fieldPathToSchemaPath, schemaPointerToFieldPath } from '../src/Util.js';
 
 describe('Helper function unit tests', () => {
   it('fieldPathToSchemaPath short path', () => {
@@ -20,8 +16,8 @@ describe('Helper function unit tests', () => {
   });
 
   it('schemaPointerToFieldPath', () => {
-    expect(
-      schemaPointerToFieldPath('/properties/loading/properties/backgroundImage')
-    ).toBe('loading.backgroundImage');
+    expect(schemaPointerToFieldPath('/properties/loading/properties/backgroundImage')).toBe(
+      'loading.backgroundImage'
+    );
   });
 });

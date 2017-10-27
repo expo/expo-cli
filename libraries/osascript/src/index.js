@@ -36,17 +36,14 @@ async function osascriptSpawnAsync(script, opts) {
 
 async function isAppRunningAsync(appName) {
   let zeroMeansNo = (await osascriptExecAsync(
-    'tell app "System Events" to count processes whose name is ' +
-      JSON.stringify(appName)
+    'tell app "System Events" to count processes whose name is ' + JSON.stringify(appName)
   )).trim();
   return zeroMeansNo !== '0';
 }
 
 async function safeIdOfAppAsync(appName) {
   try {
-    return (await osascriptExecAsync(
-      'id of app ' + JSON.stringify(appName)
-    )).trim();
+    return (await osascriptExecAsync('id of app ' + JSON.stringify(appName))).trim();
   } catch (e) {
     return null;
   }
@@ -62,11 +59,7 @@ async function openFinderToFolderAsync(dir, activate = true) {
 }
 
 async function openInAppAsync(appName, pth) {
-  let cmd =
-    'tell app ' +
-    JSON.stringify(appName) +
-    ' to open ' +
-    JSON.stringify(path.resolve(pth));
+  let cmd = 'tell app ' + JSON.stringify(appName) + ' to open ' + JSON.stringify(path.resolve(pth));
   // console.log("cmd=", cmd);
   return await osascriptSpawnAsync(cmd);
 }
@@ -104,9 +97,7 @@ async function chooseEditorAppAsync(preferredEditor) {
     if (appId) {
       return preferredEditor;
     } else {
-      console.warn(
-        `Your preferred editor (${preferredEditor}) isn't installed on this computer.`
-      );
+      console.warn(`Your preferred editor (${preferredEditor}) isn't installed on this computer.`);
     }
   }
 

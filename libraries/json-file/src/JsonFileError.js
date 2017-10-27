@@ -5,9 +5,7 @@
  */
 class JsonFileError extends Error {
   constructor(message, cause) {
-    let fullMessage = cause
-      ? `${message}\n└─ Cause: ${cause.name}: ${cause.message}`
-      : message;
+    let fullMessage = cause ? `${message}\n└─ Cause: ${cause.name}: ${cause.message}` : message;
     super(fullMessage);
     this.name = this.constructor.name;
     this.cause = cause;
