@@ -36,10 +36,7 @@ export function getBinariesPath(): string {
   } else if (process.platform === 'linux') {
     return path.join(__dirname, '..', 'binaries', 'linux');
   } else {
-    throw new XDLError(
-      ErrorCode.PLATFORM_NOT_SUPPORTED,
-      'Platform not supported.'
-    );
+    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
   }
 }
 
@@ -51,10 +48,7 @@ export async function addToPathAsync(name: string) {
   }
 
   // Users can set {ignoreBundledBinaries: ["watchman"]} to tell us to never use our version
-  let ignoreBundledBinaries = await UserSettings.getAsync(
-    'ignoreBundledBinaries',
-    []
-  );
+  let ignoreBundledBinaries = await UserSettings.getAsync('ignoreBundledBinaries', []);
   if (ignoreBundledBinaries.includes(name)) {
     return;
   }
@@ -65,9 +59,7 @@ export async function addToPathAsync(name: string) {
 
 function _expoRCFileExists() {
   try {
-    return fs
-      .statSync(path.join(UserSettings.dotExpoHomeDirectory(), 'bashrc'))
-      .isFile();
+    return fs.statSync(path.join(UserSettings.dotExpoHomeDirectory(), 'bashrc')).isFile();
   } catch (e) {
     return false;
   }
@@ -101,19 +93,14 @@ export async function sourceBashLoginScriptsAsync() {
   } else if (_expoRCFileExists()) {
     try {
       // User has a ~/.expo/bashrc. Run that and grab PATH.
-      let result = await spawnAsync(
-        path.join(getBinariesPath(), `get-path-bash`),
-        {
-          env: {
-            PATH: '',
-          },
-        }
-      );
+      let result = await spawnAsync(path.join(getBinariesPath(), `get-path-bash`), {
+        env: {
+          PATH: '',
+        },
+      });
 
       if (result.stderr) {
-        Logger.global.warn(
-          `Error sourcing ~/.expo/bashrc script: ${result.stderr}`
-        );
+        Logger.global.warn(`Error sourcing ~/.expo/bashrc script: ${result.stderr}`);
       }
 
       if (result.stdout) {
@@ -160,9 +147,7 @@ export async function sourceBashLoginScriptsAsync() {
         }
       }
     } catch (e) {
-      Logger.global.warn(
-        `Error sourcing shell startup scripts: ${e.stderr}.${ERROR_MESSAGE}`
-      );
+      Logger.global.warn(`Error sourcing shell startup scripts: ${e.stderr}.${ERROR_MESSAGE}`);
     }
   }
 }

@@ -81,9 +81,7 @@ export default class PackagerLogsStream {
 
           if (typeof chunk.msg === 'object' || chunk.type === 'packager') {
             this._handlePackagerEvent(chunk);
-          } else if (
-            !chunk.msg.match(/\w/) || !chunk.msg || chunk.msg[0] === '{'
-          ) {
+          } else if (!chunk.msg.match(/\w/) || !chunk.msg || chunk.msg[0] === '{') {
             return;
           } else {
             this._enqueueAppendLogChunk(chunk);
@@ -110,8 +108,7 @@ export default class PackagerLogsStream {
     } else if (msg.type == 'dep_graph_loaded') {
       chunk.msg = 'Dependency graph loaded.'; // doesn't seem important to log this
     } else if (msg.type === 'transform_cache_reset') {
-      chunk.msg =
-        'Your JavaScript transform cache is empty, rebuilding (this may take a minute).';
+      chunk.msg = 'Your JavaScript transform cache is empty, rebuilding (this may take a minute).';
     } else if (msg.type === 'initialize_packager_started') {
       chunk.msg = `Running packager on port ${msg.port}.`;
     } else {
@@ -181,9 +178,7 @@ export default class PackagerLogsStream {
       bundleError = new Error('Failed to build bundle');
       bundleBuildEnd = new Date();
     } else {
-      percentProgress = Math.floor(
-        msg.transformedFileCount / msg.totalFileCount * 100
-      );
+      percentProgress = Math.floor(msg.transformedFileCount / msg.totalFileCount * 100);
     }
 
     if (this._onProgressBuildBundle) {
@@ -191,11 +186,7 @@ export default class PackagerLogsStream {
 
       if (bundleComplete) {
         this._onFinishBuildBundle &&
-          this._onFinishBuildBundle(
-            bundleError,
-            this._bundleBuildStart,
-            bundleBuildEnd
-          );
+          this._onFinishBuildBundle(bundleError, this._bundleBuildStart, bundleBuildEnd);
         this._bundleBuildStart = null;
         this._bundleBuildChunkID = null;
       }
@@ -208,7 +199,8 @@ export default class PackagerLogsStream {
         logs.forEach(log => {
           if (log._id === this._bundleBuildChunkID) {
             if (percentProgress === -1) {
-              log.msg = `Building JavaScript bundle: error\n${msg.error.description || msg.error.message}`;
+              log.msg = `Building JavaScript bundle: error\n${msg.error.description ||
+                msg.error.message}`;
             } else {
               if (bundleComplete) {
                 let duration;

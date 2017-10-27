@@ -21,19 +21,19 @@ declare interface XDLConfig {
     scheme: string,
     host: string,
     port: ?number,
-  },
+  };
   ngrok: {
     authToken: string,
     authTokenPublicId: string,
     domain: string,
-  },
-  developerTool: ?string,
+  };
+  developerTool: ?string;
   validation: {
     reactNativeVersionWarnings: boolean,
-  },
-  helpUrl: string,
-  offline: boolean,
-  useReduxNotifications: boolean,
+  };
+  helpUrl: string;
+  offline: boolean;
+  useReduxNotifications: boolean;
 }
 
 const config: XDLConfig = {

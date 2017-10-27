@@ -38,30 +38,22 @@ describe('facebookReactNativeVersionsAsync', () => {
 
 describe('facebookReactNativeVersionToExpoVersionAsync', () => {
   it('returns expo version when available', async () => {
-    let expoVersion = await Versions.facebookReactNativeVersionToExpoVersionAsync(
-      '0.24.0'
-    );
+    let expoVersion = await Versions.facebookReactNativeVersionToExpoVersionAsync('0.24.0');
     expect(expoVersion).toEqual('5.0.0');
   });
 
   it('returns newest expo version when multiple versions exist', async () => {
-    let expoVersion = await Versions.facebookReactNativeVersionToExpoVersionAsync(
-      '0.27.0'
-    );
+    let expoVersion = await Versions.facebookReactNativeVersionToExpoVersionAsync('0.27.0');
     expect(expoVersion).toEqual('7.0.0');
   });
 
   it('ignores patch version', async () => {
-    let expoVersion = await Versions.facebookReactNativeVersionToExpoVersionAsync(
-      '0.27.3'
-    );
+    let expoVersion = await Versions.facebookReactNativeVersionToExpoVersionAsync('0.27.3');
     expect(expoVersion).toEqual('7.0.0');
   });
 
   it('returns null when no matching version exists', async () => {
-    let expoVersion = await Versions.facebookReactNativeVersionToExpoVersionAsync(
-      '0.23.0'
-    );
+    let expoVersion = await Versions.facebookReactNativeVersionToExpoVersionAsync('0.23.0');
     expect(expoVersion).toEqual(null);
   });
 });

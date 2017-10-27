@@ -57,9 +57,7 @@ let _cachedSignedManifest: CachedSignedManifest = {
 
 export type ProjectStatus = 'running' | 'ill' | 'exited';
 
-export async function currentStatus(
-  projectDir: string
-): Promise<ProjectStatus> {
+export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
   const manifestUrl = await UrlUtils.constructManifestUrlAsync(projectDir, {
     urlType: 'http',
   });
@@ -71,11 +69,7 @@ export async function currentStatus(
   try {
     const res = await request.promise(`${packagerUrl}/status`);
 
-    if (
-      res.statusCode < 400 &&
-      res.body &&
-      res.body.includes('packager-status:running')
-    ) {
+    if (res.statusCode < 400 && res.body && res.body.includes('packager-status:running')) {
       packagerRunning = true;
     }
   } catch (e) {}
@@ -143,12 +137,7 @@ async function _getFreePortAsync(rangeStart) {
   return port;
 }
 
-async function _getForPlatformAsync(
-  projectRoot,
-  url,
-  platform,
-  { errorCode, minLength }
-) {
+async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, minLength }) {
   url = UrlUtils.getPlatformSpecificBundleUrl(url, platform);
 
   let fullUrl = `${url}&platform=${platform}`;
@@ -189,12 +178,7 @@ async function _getForPlatformAsync(
   return response.body;
 }
 
-async function _resolveManifestAssets(
-  projectRoot,
-  manifest,
-  resolver,
-  strict = false
-) {
+async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
     const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
@@ -222,9 +206,7 @@ async function _resolveManifestAssets(
     );
 
     // Set the corresponding URL fields
-    assetSchemas.forEach(({ fieldPath }, index) =>
-      _.set(manifest, fieldPath + 'Url', urls[index])
-    );
+    assetSchemas.forEach(({ fieldPath }, index) => _.set(manifest, fieldPath + 'Url', urls[index]));
   } catch (e) {
     let logMethod = ProjectUtils.logWarning;
     if (strict) {
@@ -313,16 +295,11 @@ export async function publishAsync(
     }
   }
 
-  let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(
-    projectRoot
-  );
+  let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot);
 
   await _fetchAndUploadAssetsAsync(projectRoot, exp);
 
-  let {
-    iosSourceMap,
-    androidSourceMap,
-  } = await _maybeBuildSourceMapsAsync(projectRoot, exp, {
+  let { iosSourceMap, androidSourceMap } = await _maybeBuildSourceMapsAsync(projectRoot, exp, {
     force: validPostPublishHooks.length,
   });
 
@@ -340,9 +317,7 @@ export async function publishAsync(
         `There was an error validating your project schema. Check for any warnings about the contents of your app/exp.json.`
       );
     }
-    throw new Error(
-      `There was an error publishing your project. Please check for any warnings.`
-    );
+    throw new Error(`There was an error publishing your project. Please check for any warnings.`);
   }
 
   await _maybeWriteArtifactsToDiskAsync({
@@ -402,9 +377,7 @@ export async function publishAsync(
           logger.global.info({ quiet: true }, result);
         }
       } catch (e) {
-        logger.global.warn(
-          `Warning: postPublish hook '${hook.file}' failed: ${e.stack}`
-        );
+        logger.global.warn(`Warning: postPublish hook '${hook.file}' failed: ${e.stack}`);
       }
     }
 
@@ -436,12 +409,7 @@ export async function publishAsync(
   return response;
 }
 
-async function _uploadArtifactsAsync({
-  exp,
-  iosBundle,
-  androidBundle,
-  options,
-}) {
+async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options }) {
   logger.global.info('Uploading JavaScript bundles');
   let formData = {
     expJson: JSON.stringify(exp),
@@ -480,11 +448,9 @@ async function _validatePackagerReadyAsync(projectRoot) {
 }
 
 async function _getPublishExpConfigAsync(projectRoot, options) {
-  let schema = joi.object().keys(
-    {
-      // empty
-    }
-  );
+  let schema = joi.object().keys({
+    // empty
+  });
 
   // Validate schema
   try {
@@ -522,14 +488,8 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
   }
 
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
-  if (
-    exp.sdkVersion === 'UNVERSIONED' &&
-    !process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']
-  ) {
-    throw new XDLError(
-      ErrorCode.INVALID_OPTIONS,
-      'Cannot publish with sdkVersion UNVERSIONED.'
-    );
+  if (exp.sdkVersion === 'UNVERSIONED' && !process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, 'Cannot publish with sdkVersion UNVERSIONED.');
   }
 
   return exp;
@@ -538,10 +498,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
 // Fetch iOS and Android bundles for publishing
 async function _buildPublishBundlesAsync(projectRoot) {
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-  let publishUrl = await UrlUtils.constructPublishUrlAsync(
-    projectRoot,
-    entryPoint
-  );
+  let publishUrl = await UrlUtils.constructPublishUrlAsync(projectRoot, entryPoint);
 
   logger.global.info('Building iOS bundle');
   let iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
@@ -550,15 +507,10 @@ async function _buildPublishBundlesAsync(projectRoot) {
   });
 
   logger.global.info('Building Android bundle');
-  let androidBundle = await _getForPlatformAsync(
-    projectRoot,
-    publishUrl,
-    'android',
-    {
-      errorCode: ErrorCode.INVALID_BUNDLE,
-      minLength: MINIMUM_BUNDLE_SIZE,
-    }
-  );
+  let androidBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'android', {
+    errorCode: ErrorCode.INVALID_BUNDLE,
+    minLength: MINIMUM_BUNDLE_SIZE,
+  });
 
   return { iosBundle, androidBundle };
 }
@@ -574,31 +526,18 @@ async function _maybeBuildSourceMapsAsync(projectRoot, exp, options = {}) {
   }
 
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-  let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(
-    projectRoot,
-    entryPoint
-  );
+  let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
 
   logger.global.info('Building sourcemaps');
-  let iosSourceMap = await _getForPlatformAsync(
-    projectRoot,
-    sourceMapUrl,
-    'ios',
-    {
-      errorCode: ErrorCode.INVALID_BUNDLE,
-      minLength: MINIMUM_BUNDLE_SIZE,
-    }
-  );
+  let iosSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'ios', {
+    errorCode: ErrorCode.INVALID_BUNDLE,
+    minLength: MINIMUM_BUNDLE_SIZE,
+  });
 
-  let androidSourceMap = await _getForPlatformAsync(
-    projectRoot,
-    sourceMapUrl,
-    'android',
-    {
-      errorCode: ErrorCode.INVALID_BUNDLE,
-      minLength: MINIMUM_BUNDLE_SIZE,
-    }
-  );
+  let androidSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'android', {
+    errorCode: ErrorCode.INVALID_BUNDLE,
+    minLength: MINIMUM_BUNDLE_SIZE,
+  });
 
   return { iosSourceMap, androidSourceMap };
 }
@@ -607,28 +546,15 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
   logger.global.info('Analyzing assets');
 
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-  let assetsUrl = await UrlUtils.constructAssetsUrlAsync(
-    projectRoot,
-    entryPoint
-  );
+  let assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
 
-  let iosAssetsJson = await _getForPlatformAsync(
-    projectRoot,
-    assetsUrl,
-    'ios',
-    {
-      errorCode: ErrorCode.INVALID_ASSETS,
-    }
-  );
+  let iosAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
+    errorCode: ErrorCode.INVALID_ASSETS,
+  });
 
-  let androidAssetsJson = await _getForPlatformAsync(
-    projectRoot,
-    assetsUrl,
-    'android',
-    {
-      errorCode: ErrorCode.INVALID_ASSETS,
-    }
-  );
+  let androidAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'android', {
+    errorCode: ErrorCode.INVALID_ASSETS,
+  });
 
   // Resolve manifest assets to their S3 URL and add them to the list of assets to
   // be uploaded
@@ -677,10 +603,7 @@ async function _maybeWriteArtifactsToDiskAsync({
   }
 
   if (exp.ios && exp.ios.publishBundlePath) {
-    await fs.promise.writeFile(
-      path.resolve(projectRoot, exp.ios.publishBundlePath),
-      iosBundle
-    );
+    await fs.promise.writeFile(path.resolve(projectRoot, exp.ios.publishBundlePath), iosBundle);
   }
 
   if (exp.android && exp.android.publishSourceMapPath) {
@@ -908,16 +831,16 @@ async function _restartWatchmanAsync(projectRoot: string) {
   );
 }
 
-function _parseModuleResolutionError(
-  projectRoot: string,
-  errorMessage: string
-) {
+function _parseModuleResolutionError(projectRoot: string, errorMessage: string) {
   let parts = errorMessage.split(' from ');
   let moduleName = parts[0]
     .replace(/.*?Unable to resolve module /, '')
     .replace(/`/g, '')
     .trim();
-  let path = parts[1].replace(/`: Module .*/, '').replace(/`/, '').trim();
+  let path = parts[1]
+    .replace(/`: Module .*/, '')
+    .replace(/`/, '')
+    .trim();
   let relativePath = path.replace(projectRoot, '').trim();
 
   return {
@@ -960,10 +883,7 @@ const NODE_STDLIB_MODULES = [
 ];
 
 function _logModuleResolutionError(projectRoot: string, errorMessage: string) {
-  let { moduleName, relativePath, path } = _parseModuleResolutionError(
-    projectRoot,
-    errorMessage
-  );
+  let { moduleName, relativePath, path } = _parseModuleResolutionError(projectRoot, errorMessage);
 
   const DOCS_PAGE_URL =
     'https://docs.expo.io/versions/latest/introduction/faq.html#can-i-use-nodejs-packages-with-expo';
@@ -1053,21 +973,14 @@ function _isIgnorableDuplicateModuleWarning(
     'react-native',
     'node_modules'
   );
-  let reactNativeNodeModulesPattern = _.escapeRegExp(
-    reactNativeNodeModulesPath
-  );
+  let reactNativeNodeModulesPattern = _.escapeRegExp(reactNativeNodeModulesPath);
   let reactNativeNodeModulesCollisionRegex = new RegExp(
     `Paths: ${reactNativeNodeModulesPattern}.+ collides with ${reactNativeNodeModulesPattern}.+`
   );
   return reactNativeNodeModulesCollisionRegex.test(output);
 }
 
-function _handleDeviceLogs(
-  projectRoot: string,
-  deviceId: string,
-  deviceName: string,
-  logs: any
-) {
+function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
   for (let i = 0; i < logs.length; i++) {
     let log = logs[i];
     let body = typeof log.body === 'string' ? [log.body] : log.body;
@@ -1079,11 +992,7 @@ function _handleDeviceLogs(
         if (obj === 'null') {
           return 'null';
         }
-        if (
-          typeof obj === 'string' ||
-          typeof obj === 'number' ||
-          typeof obj === 'boolean'
-        ) {
+        if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
           return obj;
         }
         try {
@@ -1132,12 +1041,7 @@ export async function startReactNativeServerAsync(
     : path.join(projectRoot, 'node_modules');
   let packagerOpts = {
     port: packagerPort,
-    customLogReporterPath: path.join(
-      nodeModulesPath,
-      'expo',
-      'tools',
-      'LogReporter'
-    ),
+    customLogReporterPath: path.join(nodeModulesPath, 'expo', 'tools', 'LogReporter'),
     assetExts: ['ttf'],
   };
 
@@ -1150,10 +1054,7 @@ export async function startReactNativeServerAsync(
     // project root to resolve relative paths since that was the original
     // behavior of the RN CLI.
     if (userPackagerOpts.config) {
-      userPackagerOpts.config = path.resolve(
-        projectRoot,
-        userPackagerOpts.config
-      );
+      userPackagerOpts.config = path.resolve(projectRoot, userPackagerOpts.config);
     }
 
     packagerOpts = {
@@ -1161,10 +1062,7 @@ export async function startReactNativeServerAsync(
       ...userPackagerOpts,
       ...(userPackagerOpts.assetExts
         ? {
-            assetExts: _.uniq([
-              ...packagerOpts.assetExts,
-              ...userPackagerOpts.assetExts,
-            ]),
+            assetExts: _.uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]),
           }
         : {}),
     };
@@ -1200,11 +1098,7 @@ export async function startReactNativeServerAsync(
   } else {
     nodePath = null;
   }
-  ProjectUtils.logInfo(
-    projectRoot,
-    'expo',
-    'Starting React Native packager...'
-  ); // Run the copy of Node that's embedded in Electron by setting the // ELECTRON_RUN_AS_NODE environment variable // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the // child process
+  ProjectUtils.logInfo(projectRoot, 'expo', 'Starting React Native packager...'); // Run the copy of Node that's embedded in Electron by setting the // ELECTRON_RUN_AS_NODE environment variable // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the // child process
   let packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
@@ -1235,11 +1129,7 @@ export async function startReactNativeServerAsync(
     }
   });
   packagerProcess.on('exit', async code => {
-    ProjectUtils.logDebug(
-      projectRoot,
-      'expo',
-      `packager process exited with code ${code}`
-    );
+    ProjectUtils.logDebug(projectRoot, 'expo', `packager process exited with code ${code}`);
   });
   let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
     urlType: 'http',
@@ -1265,11 +1155,7 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort || !packagerInfo.packagerPid) {
-    ProjectUtils.logDebug(
-      projectRoot,
-      'expo',
-      `No packager found for project at ${projectRoot}.`
-    );
+    ProjectUtils.logDebug(projectRoot, 'expo', `No packager found for project at ${projectRoot}.`);
     return;
   }
   ProjectUtils.logDebug(
@@ -1280,11 +1166,7 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
   try {
     await treekill.promise(packagerInfo.packagerPid, 'SIGKILL');
   } catch (e) {
-    ProjectUtils.logDebug(
-      projectRoot,
-      'expo',
-      `Error stopping packager process: ${e.toString()}`
-    );
+    ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping packager process: ${e.toString()}`);
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     packagerPort: null,
@@ -1308,9 +1190,7 @@ export async function startExpoServerAsync(projectRoot: string) {
     })
   );
   if ((await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL) {
-    throw new Error(
-      `Couldn't start project. Please fix the errors and restart the project.`
-    );
+    throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
   } // Serve the manifest.
   let manifestHandler = async (req, res) => {
     try {
@@ -1318,16 +1198,12 @@ export async function startExpoServerAsync(projectRoot: string) {
       // if there is a potential error in the package.json and don't want to slow
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
-      let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(
-        projectRoot
-      );
+      let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(projectRoot);
       if (!manifest) {
         const configName = await ProjectUtils.configFilenameAsync(projectRoot);
         throw new Error(`No ${configName} file found`);
       } // Get packager opts and then copy into bundleUrlPackagerOpts
-      let packagerOpts = await ProjectSettings.getPackagerOptsAsync(
-        projectRoot
-      );
+      let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
       if (bundleUrlPackagerOpts.hostType === 'redirect') {
@@ -1356,15 +1232,9 @@ export async function startExpoServerAsync(projectRoot: string) {
       );
       let path = `/${mainModuleName}.bundle?platform=${platform}&${queryParams}`;
       manifest.bundleUrl =
-        (await UrlUtils.constructBundleUrlAsync(
-          projectRoot,
-          bundleUrlPackagerOpts,
-          req.hostname
-        )) + path;
-      manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(
-        projectRoot,
-        req.hostname
-      );
+        (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, req.hostname)) +
+        path;
+      manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, req.hostname);
       manifest.mainModuleName = mainModuleName;
       manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(
         projectRoot,
@@ -1374,8 +1244,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       await _resolveManifestAssets(
         projectRoot,
         manifest,
-        async path =>
-          manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path
+        async path => manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path
       ); // the server normally inserts this but if we're offline we'll do it here
       const hostUUID = await UserSettings.anonymousIdentifier();
       if (Config.offline) {
@@ -1386,10 +1255,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       if (!Config.offline) {
         currentUser = await UserManager.getCurrentUserAsync();
       }
-      if (
-        req.headers['exponent-accept-signature'] &&
-        (currentUser || Config.offline)
-      ) {
+      if (req.headers['exponent-accept-signature'] && (currentUser || Config.offline)) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
         } else {
@@ -1429,11 +1295,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         projectRoot,
       });
     } catch (e) {
-      ProjectUtils.logDebug(
-        projectRoot,
-        'expo',
-        `Error in manifestHandler: ${e} ${e.stack}`
-      ); // 5xx = Server Error HTTP code
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`); // 5xx = Server Error HTTP code
       res.status(520).send({
         error: e.toString(),
       });
@@ -1450,11 +1312,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
       }
     } catch (e) {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        `Error getting device logs: ${e} ${e.stack}`
-      );
+      ProjectUtils.logError(projectRoot, 'expo', `Error getting device logs: ${e} ${e.stack}`);
     }
     res.send('Success');
   });
@@ -1463,20 +1321,14 @@ export async function startExpoServerAsync(projectRoot: string) {
     res.send('Success');
   });
   let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
-  let expoServerPort = expRc.manifestPort
-    ? expRc.manifestPort
-    : await _getFreePortAsync(19000);
+  let expoServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort,
   });
   let server = app.listen(expoServerPort, () => {
     let host = server.address().address;
     let port = server.address().port;
-    ProjectUtils.logDebug(
-      projectRoot,
-      'expo',
-      `Local server listening at http://${host}:${port}`
-    );
+    ProjectUtils.logDebug(projectRoot, 'expo', `Local server listening at http://${host}:${port}`);
   });
   await Exp.saveRecentExpRootAsync(projectRoot);
 }
@@ -1486,9 +1338,7 @@ export async function stopExpoServerAsync(projectRoot: string) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
     try {
-      await request.post.promise(
-        `http://localhost:${packagerInfo.expoServerPort}/shutdown`
-      );
+      await request.post.promise(`http://localhost:${packagerInfo.expoServerPort}/shutdown`);
     } catch (e) {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -1503,10 +1353,7 @@ async function _connectToNgrokAsync(
   attempts: number = 0
 ) {
   try {
-    let configPath = path.join(
-      UserSettings.dotExpoHomeDirectory(),
-      'ngrok.yml'
-    );
+    let configPath = path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
     let hostname = await hostnameAsync();
     let url = await ngrok.promise.connect({
       hostname,
@@ -1533,11 +1380,7 @@ async function _connectToNgrokAsync(
           try {
             process.kill(ngrokPid, 'SIGKILL');
           } catch (e) {
-            ProjectUtils.logDebug(
-              projectRoot,
-              'expo',
-              `Couldn't kill ngrok with PID ${ngrokPid}`
-            );
+            ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
           }
         } else {
           await ngrok.promise.kill();
@@ -1548,13 +1391,7 @@ async function _connectToNgrokAsync(
       }
     } // Wait 100ms and then try again
     await delayAsync(100);
-    return _connectToNgrokAsync(
-      projectRoot,
-      args,
-      hostnameAsync,
-      null,
-      attempts + 1
-    );
+    return _connectToNgrokAsync(projectRoot, args, hostnameAsync, null, attempts + 1);
   }
 }
 
@@ -1655,11 +1492,7 @@ export async function startTunnelsAsync(projectRoot: string) {
       })(),
     ]);
   } catch (e) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error starting tunnel: ${e.toString()}`
-    );
+    ProjectUtils.logError(projectRoot, 'expo', `Error starting tunnel: ${e.toString()}`);
     throw e;
   }
 }
@@ -1730,11 +1563,7 @@ export async function startAsync(
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e) {
-      ProjectUtils.logDebug(
-        projectRoot,
-        'expo',
-        `Error starting ngrok ${e.message}`
-      );
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error starting ngrok ${e.message}`);
     }
   }
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
@@ -1747,11 +1576,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
     try {
       await stopTunnelsAsync(projectRoot);
     } catch (e) {
-      ProjectUtils.logDebug(
-        projectRoot,
-        'expo',
-        `Error stopping ngrok ${e.message}`
-      );
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
     }
   }
 }
@@ -1762,10 +1587,7 @@ export async function stopAsync(projectDir: string): Promise<void> {
   ]);
   if (result === 'stopFailed') {
     // find RN packager and ngrok pids, attempt to kill them manually
-    const {
-      packagerPid,
-      ngrokPid,
-    } = await ProjectSettings.readPackagerInfoAsync(projectDir);
+    const { packagerPid, ngrokPid } = await ProjectSettings.readPackagerInfoAsync(projectDir);
     if (packagerPid) {
       try {
         process.kill(packagerPid);

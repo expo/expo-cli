@@ -141,7 +141,5 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
 `;
   console.log(nextStepMessage);
   fse.outputFileSync(nextStepMessagePath, nextStepMessage);
-  console.log(
-    '(This message has been saved to expo-next-steps.txt for your convenience)'
-  );
+  console.log('(This message has been saved to expo-next-steps.txt for your convenience)');
 }

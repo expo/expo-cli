@@ -38,13 +38,10 @@ function userSettingsJsonFile() {
 }
 
 function recentExpsJsonFile() {
-  return new JsonFile(
-    path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'),
-    {
-      jsonParseErrorDefault: [],
-      cantReadFileDefault: [],
-    }
-  );
+  return new JsonFile(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'), {
+    jsonParseErrorDefault: [],
+    cantReadFileDefault: [],
+  });
 }
 
 var mkdirped = false;

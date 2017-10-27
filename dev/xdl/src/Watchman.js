@@ -60,9 +60,7 @@ async function _unblockAndVersionAsync(projectRoot?: string) {
       _versionAsync(),
       async () => {
         await delayAsync(WAIT_FOR_WATCHMAN_VERSION_MS);
-        throw new Error(
-          `\`watchman version\` failed even after \`launchctl unload\``
-        );
+        throw new Error(`\`watchman version\` failed even after \`launchctl unload\``);
       },
     ]);
     Analytics.logEvent('version after launchctl unload');

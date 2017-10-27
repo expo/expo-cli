@@ -16,13 +16,7 @@ const GLOBAL = 'global';
 
 export const actions = {
   // logLevel = 'warning', 'error', or 'info'
-  add: (
-    projectRoot: string,
-    id: string,
-    message: string,
-    tag: string,
-    logLevel: string
-  ) => {
+  add: (projectRoot: string, id: string, message: string, tag: string, logLevel: string) => {
     return {
       type: 'ADD_NOTIFICATION',
       projectRoot,
@@ -141,9 +135,7 @@ function _setCount(projectObject: any) {
   if (projectObject.count === 0) {
     projectObject.color = '#595C68';
   } else {
-    projectObject.color = projectObject.error.length > 0
-      ? '#F6345D'
-      : '#FF8C00';
+    projectObject.color = projectObject.error.length > 0 ? '#F6345D' : '#FF8C00';
   }
 
   return projectObject;

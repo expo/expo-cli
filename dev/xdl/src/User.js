@@ -68,11 +68,7 @@ export type LegacyUser = {
 
 export type UserOrLegacyUser = User | LegacyUser;
 
-type ConnectionType =
-  | 'Username-Password-Authentication'
-  | 'facebook'
-  | 'google-oauth2'
-  | 'github';
+type ConnectionType = 'Username-Password-Authentication' | 'facebook' | 'google-oauth2' | 'github';
 
 type LoginOptions = {
   connection: ConnectionType,
@@ -146,9 +142,7 @@ export class UserManagerInstance {
 
     if (loginType === 'user-pass') {
       if (!loginArgs) {
-        throw new Error(
-          `The 'user-pass' login type requires a username and password.`
-        );
+        throw new Error(`The 'user-pass' login type requires a username and password.`);
       }
       loginOptions = {
         connection: 'Username-Password-Authentication',
@@ -190,10 +184,7 @@ export class UserManagerInstance {
 
     if (loginType === 'user-pass') {
       try {
-        const loginResp = await this._auth0LoginAsync(
-          auth0Options,
-          loginOptions
-        );
+        const loginResp = await this._auth0LoginAsync(auth0Options, loginOptions);
         return await this._getProfileAsync({
           currentConnection: loginOptions.connection,
           accessToken: loginResp.access_token,
@@ -207,11 +198,7 @@ export class UserManagerInstance {
     }
 
     // Doing a social login, so start a server
-    const {
-      server,
-      callbackURL,
-      getTokenInfoAsync,
-    } = await _startLoginServerAsync();
+    const { server, callbackURL, getTokenInfoAsync } = await _startLoginServerAsync();
 
     // Kill server after 5 minutes if it hasn't already been closed
     const destroyServerTimer = setTimeout(() => {
@@ -246,20 +233,12 @@ export class UserManagerInstance {
     return profile;
   }
 
-  async registerAsync(
-    userData: RegistrationData,
-    user: ?UserOrLegacyUser
-  ): Promise<User> {
+  async registerAsync(userData: RegistrationData, user: ?UserOrLegacyUser): Promise<User> {
     if (!user) {
       user = await this.getCurrentUserAsync();
     }
 
-    if (
-      user &&
-      user.kind === 'user' &&
-      user.userMetadata &&
-      user.userMetadata.onboarded
-    ) {
+    if (user && user.kind === 'user' && user.userMetadata && user.userMetadata.onboarded) {
       await this.logoutAsync();
       user = null;
     }
@@ -280,8 +259,7 @@ export class UserManagerInstance {
     const currentUser: ?User = (user: any);
 
     const shouldLinkAccount =
-      currentUser &&
-      currentUser.currentConnection !== 'Username-Password-Authentication';
+      currentUser && currentUser.currentConnection !== 'Username-Password-Authentication';
 
     try {
       // Create or update the profile
@@ -293,13 +271,9 @@ export class UserManagerInstance {
           givenName: userData.givenName,
           familyName: userData.familyName,
         },
-        ...(shouldUpdateUsernamePassword
-          ? { username: userData.username }
-          : {}),
+        ...(shouldUpdateUsernamePassword ? { username: userData.username } : {}),
         ...(shouldLinkAccount ? { emailVerified: true } : {}),
-        ...(shouldUpdateUsernamePassword
-          ? { password: userData.password }
-          : {}),
+        ...(shouldUpdateUsernamePassword ? { password: userData.password } : {}),
         ...(currentUser && shouldLinkAccount
           ? {
               forceCreate: true,
@@ -327,10 +301,7 @@ export class UserManagerInstance {
 
       return registeredUser;
     } catch (e) {
-      throw new XDLError(
-        ErrorCode.REGISTRATION_ERROR,
-        'Error registering user: ' + e.message
-      );
+      throw new XDLError(ErrorCode.REGISTRATION_ERROR, 'Error registering user: ' + e.message);
     }
   }
 
@@ -372,10 +343,7 @@ export class UserManagerInstance {
     try {
       // If user is cached and token isn't expired
       // return the user
-      if (
-        this._currentUser &&
-        !this._isTokenExpired(this._currentUser.idToken)
-      ) {
+      if (this._currentUser && !this._isTokenExpired(this._currentUser.idToken)) {
         return this._currentUser;
       }
 
@@ -384,12 +352,10 @@ export class UserManagerInstance {
       }
 
       // Not cached, check for token
-      let {
-        currentConnection,
-        idToken,
-        accessToken,
-        refreshToken,
-      } = await UserSettings.getAsync('auth', {});
+      let { currentConnection, idToken, accessToken, refreshToken } = await UserSettings.getAsync(
+        'auth',
+        {}
+      );
 
       // No tokens, no current user. Need to login
       if (!currentConnection || !idToken || !accessToken || !refreshToken) {
@@ -447,9 +413,7 @@ export class UserManagerInstance {
     try {
       const api = ApiV2Client.clientForUser(this._currentUser);
 
-      const {
-        user: updatedUser,
-      } = await api.postAsync('auth/createOrUpdateUser', {
+      const { user: updatedUser } = await api.postAsync('auth/createOrUpdateUser', {
         userData: _prepareAuth0Profile(userData),
       });
 
@@ -537,9 +501,10 @@ export class UserManagerInstance {
       // In this case, try to get the currentRefreshTokenClientId from UserSettings,
       // otherwise, default back to the audience of the current id_token
       if (!refreshTokenClientId) {
-        const {
-          refreshTokenClientId: currentRefreshTokenClientId,
-        } = await UserSettings.getAsync('auth', {});
+        const { refreshTokenClientId: currentRefreshTokenClientId } = await UserSettings.getAsync(
+          'auth',
+          {}
+        );
         if (!currentRefreshTokenClientId) {
           refreshTokenClientId = aud; // set it to the "aud" property of the existing token
         } else {
@@ -669,10 +634,7 @@ export class UserManagerInstance {
     return exp - Date.now() / 1000 <= this.refreshSessionThreshold;
   }
 
-  async _auth0LoginAsync(
-    auth0Options: Auth0Options,
-    loginOptions: LoginOptions
-  ): Promise<*> {
+  async _auth0LoginAsync(auth0Options: Auth0Options, loginOptions: LoginOptions): Promise<*> {
     if (typeof window !== 'undefined' && window) {
       const Auth0JS = _auth0JSInstanceWithOptions(auth0Options);
       const resp = await Auth0JS.loginAsync(loginOptions);
@@ -788,25 +750,16 @@ function _formatAuth0NodeError(e: APIError) {
   const errData = e.message;
   switch (errData.error) {
     case 'invalid_user_password':
-      return new XDLError(
-        ErrorCode.INVALID_USERNAME_PASSWORD,
-        'Invalid username or password'
-      );
+      return new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, 'Invalid username or password');
     case 'too_many_attempts':
-      return new XDLError(
-        ErrorCode.TOO_MANY_ATTEMPTS,
-        errData.error_description
-      );
+      return new XDLError(ErrorCode.TOO_MANY_ATTEMPTS, errData.error_description);
     default:
       return new Error(errData.error_description);
   }
   return e;
 }
 
-function _buildAuth0SocialLoginUrl(
-  auth0Options: Auth0Options,
-  loginOptions: LoginOptions
-) {
+function _buildAuth0SocialLoginUrl(auth0Options: Auth0Options, loginOptions: LoginOptions) {
   const qsData = {
     scope: 'openid offline_access username nickname',
     response_type: loginOptions.responseType,

@@ -131,9 +131,7 @@ ${buildStatus.id}
         }
       });
 
-      throw new BuildError(
-        'Cannot start new build, as there is a build in progress.'
-      );
+      throw new BuildError('Cannot start new build, as there is a build in progress.');
     }
 
     log('No currently active or previous builds for this project.');
@@ -147,13 +145,9 @@ ${buildStatus.id}
     const { ids: expIds, url, err } = await publishAction(this.projectDir);
 
     if (err) {
-      throw new BuildError(
-        `No url was returned from publish. Please try again.\n${err}`
-      );
+      throw new BuildError(`No url was returned from publish. Please try again.\n${err}`);
     } else if (!url || url === '') {
-      throw new BuildError(
-        'No url was returned from publish. Please try again.'
-      );
+      throw new BuildError('No url was returned from publish. Please try again.');
     }
 
     return expIds;
@@ -185,9 +179,7 @@ ${buildStatus.id}
       if (buildErr) {
         throw new BuildError(`Build failed with error.\n${buildErr}`);
       } else if (!ipaUrl || ipaUrl === '' || !apkUrl || apkUrl === '') {
-        throw new BuildError(
-          'No url was returned from the build process. Please try again.'
-        );
+        throw new BuildError('No url was returned from the build process. Please try again.');
       }
 
       log(`IPA Url: ${ipaUrl}`);

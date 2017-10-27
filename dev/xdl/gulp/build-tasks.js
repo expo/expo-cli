@@ -64,21 +64,16 @@ const tasks = {
       });
 
       for (let version of Object.keys(response.sdkVersions)) {
-        request(
-          `https://exp.host/--/xdl-schema/${version}`,
-          (error, result, body) => {
-            if (error) {
-              throw error;
-            }
-
-            JSON.parse(body);
-            fs.writeFileSync(
-              path.join(paths.caches, `schema-${version}.json`),
-              body,
-              { encoding: 'utf8' }
-            );
+        request(`https://exp.host/--/xdl-schema/${version}`, (error, result, body) => {
+          if (error) {
+            throw error;
           }
-        );
+
+          JSON.parse(body);
+          fs.writeFileSync(path.join(paths.caches, `schema-${version}.json`), body, {
+            encoding: 'utf8',
+          });
+        });
       }
 
       done();

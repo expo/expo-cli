@@ -67,11 +67,7 @@ function _starterAppCacheDirectory() {
   return dir;
 }
 
-async function _downloadStarterAppAsync(
-  templateId,
-  progressFunction,
-  retryFunction
-) {
+async function _downloadStarterAppAsync(templateId, progressFunction, retryFunction) {
   let versions = await Api.versionsAsync();
   let templateApp = null;
   for (let i = 0; i < versions.templatesv2.length; i++) {
@@ -81,10 +77,7 @@ async function _downloadStarterAppAsync(
   }
 
   if (!templateApp) {
-    throw new XDLError(
-      ErrorCode.INVALID_OPTIONS,
-      `No template app with id ${templateId}.`
-    );
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, `No template app with id ${templateId}.`);
   }
 
   let starterAppVersion = templateApp.version;
@@ -113,11 +106,7 @@ async function _downloadStarterAppAsync(
   };
 }
 
-export async function downloadTemplateApp(
-  templateId: string,
-  selectedDir: string,
-  opts: any
-) {
+export async function downloadTemplateApp(templateId: string, selectedDir: string, opts: any) {
   // Validate
   let schema = joi.object().keys({
     name: joi.string().required(),
@@ -156,10 +145,7 @@ export async function downloadTemplateApp(
 
   // Download files
   await mkdirpAsync(root);
-  Logger.notifications.info(
-    { code: NotificationCode.PROGRESS },
-    MessageCode.DOWNLOADING
-  );
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.DOWNLOADING);
   let { starterAppPath } = await _downloadStarterAppAsync(
     templateId,
     opts.progressFunction,
@@ -168,22 +154,12 @@ export async function downloadTemplateApp(
   return { starterAppPath, name, root };
 }
 
-export async function extractTemplateApp(
-  starterAppPath: string,
-  name: string,
-  root: string
-) {
-  Logger.notifications.info(
-    { code: NotificationCode.PROGRESS },
-    MessageCode.EXTRACTING
-  );
+export async function extractTemplateApp(starterAppPath: string, name: string, root: string) {
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
   await Extract.extractAsync(starterAppPath, root);
 
   // Update files
-  Logger.notifications.info(
-    { code: NotificationCode.PROGRESS },
-    MessageCode.CUSTOMIZING
-  );
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
 
   let author = await UserSettings.getAsync('email', null);
   let packageJsonFile = new JsonFile(path.join(root, 'package.json'));
@@ -206,10 +182,7 @@ export async function extractTemplateApp(
 
   await initGitRepo(root);
 
-  Logger.notifications.info(
-    { code: NotificationCode.PROGRESS },
-    'Starting project...'
-  );
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Starting project...');
 
   return root;
 }
@@ -226,9 +199,7 @@ async function initGitRepo(root: string) {
     await spawnAsync('git', ['rev-parse', '--is-inside-work-tree'], {
       cwd: root,
     });
-    Logger.global.debug(
-      'New project is already inside of a git repo, skipping git init.'
-    );
+    Logger.global.debug('New project is already inside of a git repo, skipping git init.');
   } catch (e) {
     insideGit = false;
   }
@@ -257,9 +228,7 @@ export async function saveRecentExpRootAsync(root: string) {
 }
 
 function getHomeDir(): string {
-  return (
-    process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || ''
-  );
+  return process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || '';
 }
 
 function makePathReadable(pth) {
@@ -273,13 +242,11 @@ function makePathReadable(pth) {
 
 export async function expInfoSafeAsync(root: string) {
   try {
-    let {
-      exp: { name, description, icon, iconUrl },
-    } = await ProjectUtils.readConfigJsonAsync(root);
+    let { exp: { name, description, icon, iconUrl } } = await ProjectUtils.readConfigJsonAsync(
+      root
+    );
     let pathOrUrl =
-      icon ||
-      iconUrl ||
-      'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
+      icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
     let resolvedPath = path.resolve(root, pathOrUrl);
     if (fs.existsSync(resolvedPath)) {
       icon = `file://${resolvedPath}`;

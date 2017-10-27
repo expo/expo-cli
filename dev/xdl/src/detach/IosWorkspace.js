@@ -30,10 +30,7 @@ async function _getVersionedExpoKitConfigAsync(sdkVersion: string): any {
   };
 }
 
-async function _getOrCreateTemplateDirectoryAsync(
-  projectRoot: string,
-  iosExpoViewUrl: string
-) {
+async function _getOrCreateTemplateDirectoryAsync(projectRoot: string, iosExpoViewUrl: string) {
   let expoTemplateDirectory;
   if (process.env.EXPO_VIEW_DIR) {
     // Only for testing
@@ -75,22 +72,15 @@ async function _renameAndMoveProjectFilesAsync(
     ),
   ];
 
-  const bundleIdentifier =
-    exp.ios && exp.ios.bundleIdentifier ? exp.ios.bundleIdentifier : '';
+  const bundleIdentifier = exp.ios && exp.ios.bundleIdentifier ? exp.ios.bundleIdentifier : '';
 
   await Promise.all(
     filesToTransform.map(async fileName => {
-      return transformFileContentsAsync(
-        path.join(projectDirectory, fileName),
-        fileString => {
-          return fileString
-            .replace(
-              /com.getexponent.exponent-view-template/g,
-              bundleIdentifier
-            )
-            .replace(/exponent-view-template/g, projectName);
-        }
-      );
+      return transformFileContentsAsync(path.join(projectDirectory, fileName), fileString => {
+        return fileString
+          .replace(/com.getexponent.exponent-view-template/g, bundleIdentifier)
+          .replace(/exponent-view-template/g, projectName);
+      });
     })
   );
 
@@ -108,10 +98,7 @@ async function _renameAndMoveProjectFilesAsync(
   ];
 
   filesToMove.forEach(async fileName => {
-    let destFileName = path.join(
-      path.dirname(fileName),
-      `${projectName}${path.extname(fileName)}`
-    );
+    let destFileName = path.join(path.dirname(fileName), `${projectName}${path.extname(fileName)}`);
     await spawnAsync('/bin/mv', [
       path.join(projectDirectory, fileName),
       path.join(projectDirectory, destFileName),
@@ -178,13 +165,8 @@ async function createDetachedAsync(context: StandaloneContext) {
     throw new Error(`IosWorkspace only supports user standalone contexts`);
   }
   const sdkVersion = context.config.sdkVersion;
-  const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(
-    context
-  );
-  const {
-    iosClientVersion,
-    iosExpoViewUrl,
-  } = await _getVersionedExpoKitConfigAsync(sdkVersion);
+  const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(context);
+  const { iosClientVersion, iosExpoViewUrl } = await _getVersionedExpoKitConfigAsync(sdkVersion);
 
   const expoTemplateDirectory = await _getOrCreateTemplateDirectoryAsync(
     context.data.projectPath,
@@ -201,40 +183,23 @@ async function createDetachedAsync(context: StandaloneContext) {
   );
 
   console.log('Naming iOS project...');
-  await _renameAndMoveProjectFilesAsync(
-    iosProjectDirectory,
-    projectName,
-    context.data.exp
-  );
+  await _renameAndMoveProjectFilesAsync(iosProjectDirectory, projectName, context.data.exp);
 
   console.log('Configuring iOS dependencies...');
   // this configuration must happen prior to build time because it affects which
   // native versions of RN we depend on.
-  await _configureVersionsPlistAsync(
-    supportingDirectory,
-    sdkVersion,
-    sdkVersion
-  );
+  await _configureVersionsPlistAsync(supportingDirectory, sdkVersion, sdkVersion);
   const templatePodfilePath = path.join(
     expoTemplateDirectory,
     'template-files',
     'ios',
     'ExpoKit-Podfile'
   );
-  await _renderPodfileFromTemplateAsync(
-    context,
-    templatePodfilePath,
-    sdkVersion,
-    iosClientVersion
-  );
+  await _renderPodfileFromTemplateAsync(context, templatePodfilePath, sdkVersion, iosClientVersion);
 
   if (!process.env.EXPO_VIEW_DIR) {
     rimrafDontThrow(expoTemplateDirectory);
-    await IosPlist.cleanBackupAsync(
-      supportingDirectory,
-      'EXSDKVersions',
-      false
-    );
+    await IosPlist.cleanBackupAsync(supportingDirectory, 'EXSDKVersions', false);
   }
 
   return;
@@ -242,9 +207,7 @@ async function createDetachedAsync(context: StandaloneContext) {
 
 function addDetachedConfigToExp(exp: any, context: StandaloneContext): any {
   if (context.type !== 'user') {
-    console.warn(
-      `Tried to modify exp for a non-user StandaloneContext, ignoring`
-    );
+    console.warn(`Tried to modify exp for a non-user StandaloneContext, ignoring`);
     return;
   }
   if (!exp) {
@@ -273,15 +236,9 @@ function getPaths(context: StandaloneContext) {
   if (context.config && context.config.name) {
     let projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
-    supportingDirectory = path.join(
-      iosProjectDirectory,
-      projectName,
-      'Supporting'
-    );
+    supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
   } else {
-    throw new Error(
-      'Cannot configure an ExpoKit app with no name. Are you missing `exp.json`?'
-    );
+    throw new Error('Cannot configure an ExpoKit app with no name. Are you missing `exp.json`?');
   }
   return {
     iosProjectDirectory,

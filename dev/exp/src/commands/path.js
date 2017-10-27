@@ -7,5 +7,8 @@ async function action(options) {
 }
 
 export default program => {
-  program.command('path').description('Sets PATH for XDE').asyncAction(action);
+  program
+    .command('path')
+    .description('Sets PATH for XDE')
+    .asyncAction(action);
 };

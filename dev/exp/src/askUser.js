@@ -4,17 +4,15 @@ import { UserSettings } from 'xdl';
 
 async function askForSendToAsync() {
   var sendToFromSettings = await UserSettings.getAsync('sendTo', null);
-  console.log(
-    "Enter a mobile number or e-mail and we'll send a link to your phone."
-  );
+  console.log("Enter a mobile number or e-mail and we'll send a link to your phone.");
   var answers = await inquirer.prompt([
     {
       type: 'input',
       name: 'sendTo',
       message:
         'Your mobile number or e-mail' +
-          (sendToFromSettings ? ' (space to not send anything)' : '') +
-          ':',
+        (sendToFromSettings ? ' (space to not send anything)' : '') +
+        ':',
       default: sendToFromSettings,
     },
   ]);

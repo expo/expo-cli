@@ -57,10 +57,7 @@ async function action(projectDir, options) {
   }
 
   if (!insertPath || !name) {
-    throw new CommandError(
-      'PATH_ERROR',
-      `Couldn't determine path for new project.`
-    );
+    throw new CommandError('PATH_ERROR', `Couldn't determine path for new project.`);
   }
 
   // TODO(jim): We will need to update this method later to not force
@@ -71,41 +68,30 @@ async function action(projectDir, options) {
   });
 }
 
-async function downloadAndExtractTemplate(
-  templateType,
-  projectDir,
-  validatedOptions
-) {
+async function downloadAndExtractTemplate(templateType, projectDir, validatedOptions) {
   _retryObject = { templateType, projectDir, validatedOptions };
   const requestID = _currentRequestID + 1;
   _currentRequestID = requestID;
-  let templateDownload = await Exp.downloadTemplateApp(
-    templateType,
-    projectDir,
-    {
-      ...validatedOptions,
-      progressFunction: progress => {
-        const percent = Math.round(progress * 100);
-        if (_currentRequestID === requestID) {
-          Logger.notifications.info(
-            { code: NotificationCode.DOWNLOAD_CLI_PROGRESS },
-            percent + '%'
-          );
-          const bar = new ProgressBar('[:bar] :percent', {
-            total: 100,
-            complete: '=',
-            incomplete: ' ',
-          });
-          if (!_downloadIsSlowPrompt) {
-            bar.tick(percent);
-          }
+  let templateDownload = await Exp.downloadTemplateApp(templateType, projectDir, {
+    ...validatedOptions,
+    progressFunction: progress => {
+      const percent = Math.round(progress * 100);
+      if (_currentRequestID === requestID) {
+        Logger.notifications.info({ code: NotificationCode.DOWNLOAD_CLI_PROGRESS }, percent + '%');
+        const bar = new ProgressBar('[:bar] :percent', {
+          total: 100,
+          complete: '=',
+          incomplete: ' ',
+        });
+        if (!_downloadIsSlowPrompt) {
+          bar.tick(percent);
         }
-      },
-      retryFunction: () => {
-        triggerRetryPrompt();
-      },
-    }
-  );
+      }
+    },
+    retryFunction: () => {
+      triggerRetryPrompt();
+    },
+  });
 
   // Since we cannot cancel the download request, we need a way to ignore all of the requests made except the last one when retrying.
   if (_currentRequestID !== requestID) {
@@ -116,9 +102,7 @@ async function downloadAndExtractTemplate(
     templateDownload.name,
     templateDownload.root
   );
-  log(
-    `Your project is ready at ${root}. Use "exp start ${root}" to get started.`
-  );
+  log(`Your project is ready at ${root}. Use "exp start ${root}" to get started.`);
   process.exit();
 }
 

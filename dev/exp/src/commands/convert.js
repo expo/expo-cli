@@ -5,9 +5,7 @@ import { Exp } from 'xdl';
 import log from '../log';
 
 async function action(projectDir, options) {
-  console.error(
-    `'exp convert' is temporarily under maintenance and not available`
-  );
+  console.error(`'exp convert' is temporarily under maintenance and not available`);
   console.error(
     `The easiest way to convert a project at the moment is to create a new project with 'exp init' and copy your project files into it.`
   );
@@ -82,9 +80,7 @@ export default program => {
   program
     .command('convert [project-dir]')
     .alias('onentize')
-    .description(
-      'Initialize Expo project files within an existing React Native project'
-    )
+    .description('Initialize Expo project files within an existing React Native project')
     .allowNonInteractive()
     .asyncActionProjectDir(action, true); // skip validation because the project dir isn't a valid exp dir yet
 };

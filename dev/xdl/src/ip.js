@@ -30,9 +30,7 @@ function isPrivate(addr) {
   return (
     /^(::f{4}:)?10\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(addr) ||
     /^(::f{4}:)?192\.168\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(addr) ||
-    /^(::f{4}:)?172\.(1[6-9]|2\d|30|31)\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(
-      addr
-    ) ||
+    /^(::f{4}:)?172\.(1[6-9]|2\d|30|31)\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(addr) ||
     /^(::f{4}:)?127\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(addr) ||
     /^(::f{4}:)?169\.254\.([0-9]{1,3})\.([0-9]{1,3})$/i.test(addr) ||
     /^f[cd][0-9a-f]{2}:/i.test(addr) ||
@@ -100,9 +98,7 @@ function address(name, family) {
           return true;
         }
 
-        return name === 'public'
-          ? isPrivate(details.address)
-          : isPublic(details.address);
+        return name === 'public' ? isPrivate(details.address) : isPublic(details.address);
       });
 
       return addresses.length ? addresses[0].address : undefined;

@@ -1,10 +1,7 @@
-
 import mkdirp from 'mkdirp';
 import path from 'path';
 
-import {
-  spawnAsyncThrowError,
-} from './ExponentTools';
+import { spawnAsyncThrowError } from './ExponentTools';
 
 import * as IosIcons from './IosIcons';
 
@@ -64,6 +61,4 @@ async function buildAssetArchiveAsync(
   return;
 }
 
-export {
-  buildAssetArchiveAsync,
-};
+export { buildAssetArchiveAsync };

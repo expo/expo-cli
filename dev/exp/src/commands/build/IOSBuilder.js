@@ -54,11 +54,7 @@ export default class IOSBuilder extends BaseBuilder {
     // Check for existing credentials, collect any missing credentials, and validate them
     if (this.options.type !== 'simulator') {
       try {
-        await this.collectAndValidateCredentials(
-          username,
-          experienceName,
-          bundleIdentifier
-        );
+        await this.collectAndValidateCredentials(username, experienceName, bundleIdentifier);
       } catch (e) {
         log.error(
           'Error validating credentials. You may need to clear them (with `-c`) and try again.'
@@ -104,12 +100,7 @@ export default class IOSBuilder extends BaseBuilder {
       await this.askForAppleId(credentialMetadata);
     } else {
       log('Validating Apple credentials...');
-      await Credentials.validateCredentialsForPlatform(
-        'ios',
-        'appleId',
-        null,
-        credentialMetadata
-      );
+      await Credentials.validateCredentialsForPlatform('ios', 'appleId', null, credentialMetadata);
     }
     log('Credentials valid.');
 
@@ -117,12 +108,7 @@ export default class IOSBuilder extends BaseBuilder {
       await this.askForCerts(credentialMetadata);
     } else {
       log('Validating distribution certificate...');
-      await Credentials.validateCredentialsForPlatform(
-        'ios',
-        'cert',
-        null,
-        credentialMetadata
-      );
+      await Credentials.validateCredentialsForPlatform('ios', 'cert', null, credentialMetadata);
     }
 
     // ensure that the app id exists or is created
@@ -140,12 +126,7 @@ export default class IOSBuilder extends BaseBuilder {
       await this.askForPushCerts(credentialMetadata);
     } else {
       log('Validating push certificate...');
-      await Credentials.validateCredentialsForPlatform(
-        'ios',
-        'push',
-        null,
-        credentialMetadata
-      );
+      await Credentials.validateCredentialsForPlatform('ios', 'push', null, credentialMetadata);
     }
   }
 
@@ -191,11 +172,7 @@ export default class IOSBuilder extends BaseBuilder {
       credentials,
       credentialMetadata
     );
-    await Credentials.updateCredentialsForPlatform(
-      'ios',
-      credentials,
-      credentialMetadata
-    );
+    await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
   }
 
   async askForCerts(credentialMetadata: CredentialMetadata) {
@@ -266,11 +243,7 @@ export default class IOSBuilder extends BaseBuilder {
         credentials,
         credentialMetadata
       );
-      await Credentials.updateCredentialsForPlatform(
-        'ios',
-        credentials,
-        credentialMetadata
-      );
+      await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
     }
     log('Distribution certificate setup complete.');
   }
@@ -345,11 +318,7 @@ export default class IOSBuilder extends BaseBuilder {
         credentials,
         credentialMetadata
       );
-      await Credentials.updateCredentialsForPlatform(
-        'ios',
-        credentials,
-        credentialMetadata
-      );
+      await Credentials.updateCredentialsForPlatform('ios', credentials, credentialMetadata);
     }
     log('Push certificate setup complete.');
   }

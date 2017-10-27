@@ -23,23 +23,17 @@ let projectSettingsDefaults = {
 let packagerInfoFile = 'packager-info.json';
 
 function projectSettingsJsonFile(projectRoot: string, filename: string) {
-  return new JsonFile(
-    path.join(dotExpoProjectDirectory(projectRoot), filename)
-  );
+  return new JsonFile(path.join(dotExpoProjectDirectory(projectRoot), filename));
 }
 
 export async function readAsync(projectRoot: string) {
   let projectSettings;
   try {
-    projectSettings = await projectSettingsJsonFile(
-      projectRoot,
-      projectSettingsFile
-    ).readAsync();
+    projectSettings = await projectSettingsJsonFile(projectRoot, projectSettingsFile).readAsync();
   } catch (e) {
-    projectSettings = await projectSettingsJsonFile(
-      projectRoot,
-      projectSettingsFile
-    ).writeAsync(projectSettingsDefaults);
+    projectSettings = await projectSettingsJsonFile(projectRoot, projectSettingsFile).writeAsync(
+      projectSettingsDefaults
+    );
   }
 
   if (projectSettings.hostType === 'ngrok') {
@@ -54,43 +48,33 @@ export async function readAsync(projectRoot: string) {
 
 export async function setAsync(projectRoot: string, json: any) {
   try {
-    return await projectSettingsJsonFile(
-      projectRoot,
-      projectSettingsFile
-    ).mergeAsync(json, { cantReadFileDefault: projectSettingsDefaults });
+    return await projectSettingsJsonFile(projectRoot, projectSettingsFile).mergeAsync(json, {
+      cantReadFileDefault: projectSettingsDefaults,
+    });
   } catch (e) {
-    return await projectSettingsJsonFile(
-      projectRoot,
-      projectSettingsFile
-    ).writeAsync(_.defaults(json, projectSettingsDefaults));
+    return await projectSettingsJsonFile(projectRoot, projectSettingsFile).writeAsync(
+      _.defaults(json, projectSettingsDefaults)
+    );
   }
 }
 
 export async function readPackagerInfoAsync(projectRoot: string) {
   try {
-    return await projectSettingsJsonFile(
-      projectRoot,
-      packagerInfoFile
-    ).readAsync({ cantReadFileDefault: {} });
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).readAsync({
+      cantReadFileDefault: {},
+    });
   } catch (e) {
-    return await projectSettingsJsonFile(
-      projectRoot,
-      packagerInfoFile
-    ).writeAsync({});
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).writeAsync({});
   }
 }
 
 export async function setPackagerInfoAsync(projectRoot: string, json: any) {
   try {
-    return await projectSettingsJsonFile(
-      projectRoot,
-      packagerInfoFile
-    ).mergeAsync(json, { cantReadFileDefault: {} });
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).mergeAsync(json, {
+      cantReadFileDefault: {},
+    });
   } catch (e) {
-    return await projectSettingsJsonFile(
-      projectRoot,
-      packagerInfoFile
-    ).writeAsync(json);
+    return await projectSettingsJsonFile(projectRoot, packagerInfoFile).writeAsync(json);
   }
 }
 

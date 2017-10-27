@@ -8,10 +8,7 @@ import CommandError from './CommandError';
 
 function addOptions(program) {
   program
-    .option(
-      '-a, --android',
-      'Opens your app in Expo on a connected Android device'
-    )
+    .option('-a, --android', 'Opens your app in Expo on a connected Android device')
     .option(
       '-i, --ios',
       'Opens your app in Expo in a currently running iOS simulator on your computer'
@@ -39,10 +36,7 @@ function addOptions(program) {
 }
 
 function hasBooleanArg(rawArgs, argName) {
-  return (
-    _.includes(rawArgs, '--' + argName) ||
-    _.includes(rawArgs, '--no-' + argName)
-  );
+  return _.includes(rawArgs, '--' + argName) || _.includes(rawArgs, '--no-' + argName);
 }
 
 function getBooleanArg(rawArgs, argName) {
@@ -56,20 +50,14 @@ function getBooleanArg(rawArgs, argName) {
 async function optsAsync(projectDir, options) {
   var opts = await ProjectSettings.readAsync(projectDir);
 
-  if (
-    !!options.host + !!options.lan + !!options.localhost + !!options.tunnel >
-    1
-  ) {
+  if (!!options.host + !!options.lan + !!options.localhost + !!options.tunnel > 1) {
     throw CommandError(
       'BAD_ARGS',
       'Specify at most one of --host, --tunnel, --lan, and --localhost'
     );
   }
 
-  if (
-    !!options.protocol + !!options.exp + !!options.http + !!options.redirect >
-    1
-  ) {
+  if (!!options.protocol + !!options.exp + !!options.http + !!options.redirect > 1) {
     throw CommandError(
       'BAD_ARGS',
       'Specify at most one of --protocol, --exp, --http, and --redirect'
@@ -119,9 +107,7 @@ async function optsAsync(projectDir, options) {
 }
 
 function printQRCode(url) {
-  qrcodeTerminal.generate(url, code =>
-    console.log(`${indentString(code, 2)}\n`)
-  );
+  qrcodeTerminal.generate(url, code => console.log(`${indentString(code, 2)}\n`));
 }
 
 async function handleMobileOptsAsync(projectDir, options) {

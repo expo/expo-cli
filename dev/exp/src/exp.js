@@ -49,10 +49,7 @@ Command.prototype.allowOffline = function() {
 };
 
 Command.prototype.allowNonInteractive = function() {
-  this.option(
-    '--non-interactive',
-    'Fails if an interactive prompt would be required to continue.'
-  );
+  this.option('--non-interactive', 'Fails if an interactive prompt would be required to continue.');
   return this;
 };
 
@@ -93,11 +90,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
         if (process.env.EXPO_DEBUG) {
           log.error(chalk.gray(err.stack));
         } else {
-          log.error(
-            chalk.grey(
-              'Set EXPO_DEBUG=true in your env to view the stack trace.'
-            )
-          );
+          log.error(chalk.grey('Set EXPO_DEBUG=true in your env to view the stack trace.'));
         }
       }
 
@@ -116,11 +109,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
 // - Attaches the bundling logger
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
-Command.prototype.asyncActionProjectDir = function(
-  asyncFn,
-  skipProjectValidation,
-  skipAuthCheck
-) {
+Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
   return this.asyncAction(async (projectDir, ...args) => {
     try {
       await checkForUpdateAsync();
@@ -144,9 +133,7 @@ Command.prototype.asyncActionProjectDir = function(
     if (opts.config) {
       const pathToConfig = path.resolve(process.cwd(), opts.config);
       if (!fs.existsSync(pathToConfig)) {
-        throw new Error(
-          `File at provide config path does not exist: ${pathToConfig}`
-        );
+        throw new Error(`File at provide config path does not exist: ${pathToConfig}`);
       }
       ProjectUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
@@ -205,9 +192,7 @@ Command.prototype.asyncActionProjectDir = function(
       }
 
       if (unloggedFrames > 0) {
-        nestedLogFn(
-          `- ... ${unloggedFrames} more stack frames from framework internals`
-        );
+        nestedLogFn(`- ... ${unloggedFrames} more stack frames from framework internals`);
       }
 
       log.printNewLineBeforeNextLog();
@@ -268,12 +253,7 @@ Command.prototype.asyncActionProjectDir = function(
           if (err) {
             log(chalk.red('Failed building JavaScript bundle.'));
           } else {
-            log(
-              chalk.green(
-                `Finished building JavaScript bundle in ${endTime -
-                  startTime}ms.`
-              )
-            );
+            log(chalk.green(`Finished building JavaScript bundle in ${endTime - startTime}ms.`));
           }
         }
       },
@@ -304,19 +284,14 @@ Command.prototype.asyncActionProjectDir = function(
     // If the packager/manifest server is running and healthy, there is no need
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `exp send`
-    if (
-      !skipProjectValidation &&
-      (await Project.currentStatus(projectDir)) !== 'running'
-    ) {
+    if (!skipProjectValidation && (await Project.currentStatus(projectDir)) !== 'running') {
       log('Making sure project is set up correctly...');
       simpleSpinner.start();
       // validate that this is a good projectDir before we try anything else
 
       let status = await Doctor.validateLowLatencyAsync(projectDir);
       if (status === Doctor.FATAL) {
-        throw new Error(
-          `There is an error with your project. See above logs for information.`
-        );
+        throw new Error(`There is an error with your project. See above logs for information.`);
       }
       simpleSpinner.stop();
       log('Your project looks good!');

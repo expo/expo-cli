@@ -18,9 +18,7 @@ function _getFilesizeInBytes(path) {
 function parseSdkMajorVersion(expSdkVersion) {
   let sdkMajorVersion = 0;
   try {
-    let versionComponents = expSdkVersion
-      .split('.')
-      .map(number => parseInt(number, 10));
+    let versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));
     sdkMajorVersion = versionComponents[0];
   } catch (_) {}
   return sdkMajorVersion;
@@ -108,10 +106,10 @@ async function transformFileContentsAsync(filename, transform) {
 
 function manifestUsesSplashApi(manifest, platform) {
   if (platform === 'ios') {
-    return (manifest.splash || (manifest.ios && manifest.ios.splash));
+    return manifest.splash || (manifest.ios && manifest.ios.splash);
   }
   if (platform === 'android') {
-    return (manifest.splash || (manifest.android && manifest.android.splash));
+    return manifest.splash || (manifest.android && manifest.android.splash);
   }
   return false;
 }

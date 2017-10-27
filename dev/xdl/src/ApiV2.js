@@ -91,11 +91,7 @@ export default class ApiV2Client {
     );
   }
 
-  async postAsync(
-    methodName: string,
-    data: Object = {},
-    extraOptions: Object = {}
-  ): Promise<*> {
+  async postAsync(methodName: string, data: Object = {}, extraOptions: Object = {}): Promise<*> {
     return this._requestAsync(
       methodName,
       {
@@ -106,11 +102,7 @@ export default class ApiV2Client {
     );
   }
 
-  async putAsync(
-    methodName: string,
-    data: Object = {},
-    extraOptions: Object = {}
-  ): Promise<*> {
+  async putAsync(methodName: string, data: Object = {}, extraOptions: Object = {}): Promise<*> {
     return this._requestAsync(
       methodName,
       {
@@ -173,9 +165,7 @@ export default class ApiV2Client {
     }
 
     if (!result || typeof result !== 'object') {
-      let error: ErrorWithResponseBody = new Error(
-        `There was a problem understanding the server.`
-      );
+      let error: ErrorWithResponseBody = new Error(`There was a problem understanding the server.`);
       error.responseBody = result;
       throw error;
     }

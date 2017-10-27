@@ -6,16 +6,11 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 240000;
 import path from 'path';
 import uuid from 'uuid';
 import rimraf from 'rimraf';
-import {
-  clearXDLCacheAsync,
-  downloadTemplateApp,
-  extractTemplateApp,
-} from '../Exp';
+import { clearXDLCacheAsync, downloadTemplateApp, extractTemplateApp } from '../Exp';
 
 describe('Template Apps', () => {
   it('should download the starter app template and extract it', async () => {
     // This was working locally but failing on the mac ci machine
-
     /*
     process.env.UNSAFE_EXPO_HOME_DIRECTORY = path.join(
       '/',

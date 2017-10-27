@@ -2,9 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import plist from 'plist';
 
-import {
-  spawnAsyncThrowError,
-} from './ExponentTools';
+import { spawnAsyncThrowError } from './ExponentTools';
 
 function _getNormalizedPlistFilename(plistName) {
   let plistFilename;
@@ -35,7 +33,7 @@ async function modifyAsync(plistPath, plistName, transform) {
       configFilename,
     ]);
     let configContents = await fs.promise.readFile(configFilename, 'utf8');
- 
+
     try {
       config = JSON.parse(configContents);
     } catch (e) {
@@ -51,10 +49,7 @@ async function modifyAsync(plistPath, plistName, transform) {
   config = transform(config);
 
   // back up old plist and swap in modified one
-  await spawnAsyncThrowError('/bin/cp', [
-    configPlistName,
-    `${configPlistName}.bak`,
-  ]);
+  await spawnAsyncThrowError('/bin/cp', [configPlistName, `${configPlistName}.bak`]);
   await fs.promise.writeFile(configFilename, JSON.stringify(config));
   if (process.platform === 'darwin') {
     await spawnAsyncThrowError('plutil', [
@@ -97,20 +92,13 @@ async function createBlankAsync(plistPath, plistName) {
   return;
 }
 
-async function cleanBackupAsync(
-  plistPath,
-  plistName,
-  restoreOriginal = true
-) {
+async function cleanBackupAsync(plistPath, plistName, restoreOriginal = true) {
   let plistFilename = _getNormalizedPlistFilename(plistName);
   let configPlistName = path.join(plistPath, plistFilename);
   let configFilename = path.join(plistPath, `${plistName}.json`);
 
   if (restoreOriginal) {
-    await spawnAsyncThrowError('/bin/cp', [
-      `${configPlistName}.bak`,
-      configPlistName,
-    ]);
+    await spawnAsyncThrowError('/bin/cp', [`${configPlistName}.bak`, configPlistName]);
   }
 
   await spawnAsyncThrowError('/bin/rm', [`${configPlistName}.bak`]);
@@ -118,8 +106,4 @@ async function cleanBackupAsync(
   return;
 }
 
-export {
-  modifyAsync,
-  cleanBackupAsync,
-  createBlankAsync,
-};
+export { modifyAsync, cleanBackupAsync, createBlankAsync };

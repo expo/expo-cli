@@ -53,10 +53,7 @@ export async function openFileInEditorAsync(path: string) {
     await Binaries.sourceBashLoginScriptsAsync();
     return await osascript.openInEditorAsync(path, process.env.EXPO_EDITOR);
   } else if (process.platform === 'win32') {
-    throw new XDLError(
-      ErrorCode.PLATFORM_NOT_SUPPORTED,
-      'openFileInEditorAsync not supported'
-    );
+    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'openFileInEditorAsync not supported');
   }
 }
 
@@ -67,9 +64,6 @@ export async function openProjectInEditorAsync(dir: string) {
     await Binaries.sourceBashLoginScriptsAsync();
     return await osascript.openInEditorAsync(dir, process.env.EXPO_EDITOR);
   } else if (process.platform === 'win32') {
-    throw new XDLError(
-      ErrorCode.PLATFORM_NOT_SUPPORTED,
-      'openProjectInEditorAsync not supported'
-    );
+    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'openProjectInEditorAsync not supported');
   }
 }

@@ -11,9 +11,7 @@ if (semver.satisfies(ver, '>=6.0.0')) {
 } else {
   console.log(
     require('chalk').red(
-      'Node version ' +
-        ver +
-        ' is not supported, please use Node.js 6.0 or higher.'
+      'Node version ' + ver + ' is not supported, please use Node.js 6.0 or higher.'
     )
   );
   process.exit(1);

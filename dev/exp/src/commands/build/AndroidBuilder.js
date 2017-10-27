@@ -28,11 +28,7 @@ export default class AndroidBuilder extends BaseBuilder {
 
   async _clearCredentials() {
     const {
-      args: {
-        username,
-        remotePackageName,
-        remoteFullPackageName: experienceName,
-      },
+      args: { username, remotePackageName, remoteFullPackageName: experienceName },
     } = await Exp.getPublishInfoAsync(this.projectDir);
 
     const credentialMetadata = {
@@ -48,9 +44,7 @@ export default class AndroidBuilder extends BaseBuilder {
         'Detected a local copy of an Android keystore. Please double check that the keystore is up to date so it can be used as a backup.'
       );
     } else {
-      log.warn(
-        'Cannot find a local keystore in the current project directory.'
-      );
+      log.warn('Cannot find a local keystore in the current project directory.');
       log.warn('Can you make sure you have a local backup of your keystore?');
       log.warn(
         'You can fetch an updated version from our servers by using `exp fetch:android:keystore [project-dir]`'
@@ -71,18 +65,14 @@ export default class AndroidBuilder extends BaseBuilder {
       {
         type: 'confirm',
         name: 'confirm',
-        message:
-          'Permanently delete the Android build credentials from our servers?',
+        message: 'Permanently delete the Android build credentials from our servers?',
       },
     ];
 
     const answers = await inquirer.prompt(questions);
 
     if (answers.confirm) {
-      await Credentials.removeCredentialsForPlatform(
-        'android',
-        credentialMetadata
-      );
+      await Credentials.removeCredentialsForPlatform('android', credentialMetadata);
     }
   }
 
@@ -173,12 +163,7 @@ export default class AndroidBuilder extends BaseBuilder {
         }
         return; // just continue
       } else {
-        const {
-          keystorePath,
-          keystoreAlias,
-          keystorePassword,
-          keyPassword,
-        } = answers;
+        const { keystorePath, keystoreAlias, keystorePassword, keyPassword } = answers;
 
         // read the keystore
         const keystoreData = await fs.readFile.promise(keystorePath);
@@ -189,11 +174,7 @@ export default class AndroidBuilder extends BaseBuilder {
           keystorePassword,
           keyPassword,
         };
-        await Credentials.updateCredentialsForPlatform(
-          'android',
-          credentials,
-          credentialMetadata
-        );
+        await Credentials.updateCredentialsForPlatform('android', credentials, credentialMetadata);
       }
     }
   }

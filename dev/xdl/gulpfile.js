@@ -12,13 +12,7 @@ gulp.task('clean', tasks.clean);
 
 gulp.task(
   'publish',
-  gulp.series(
-    tasks.clean,
-    tasks.flow,
-    tasks.babel,
-    tasks.caches,
-    shell.task(['npm publish'])
-  )
+  gulp.series(tasks.clean, tasks.flow, tasks.babel, tasks.caches, shell.task(['npm publish']))
 );
 
 gulp.task('default', gulp.series('watch'));

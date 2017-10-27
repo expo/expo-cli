@@ -46,12 +46,8 @@ async function renderPodfileAsync(
     expoKitDependencyOptions = { expoKitTag };
   }
 
-  let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(
-    templatesDirectory
-  );
-  let versionedPostinstalls = await renderVersionedReactNativePostinstallsAsync(
-    templatesDirectory
-  );
+  let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(templatesDirectory);
+  let versionedPostinstalls = await renderVersionedReactNativePostinstallsAsync(templatesDirectory);
   let podDependencies = await renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
     { isPodfile: true }
@@ -76,31 +72,21 @@ async function renderPodfileAsync(
   for (let key in substitutions) {
     if (substitutions.hasOwnProperty(key)) {
       let replacement = substitutions[key];
-      result = result.replace(
-        new RegExp(`\\\$\\\{${key}\\\}`, 'g'),
-        replacement
-      );
+      result = result.replace(new RegExp(`\\\$\\\{${key}\\\}`, 'g'), replacement);
     }
   }
 
   await fs.promise.writeFile(pathToOutput, result);
 }
 
-async function renderExpoKitPodspecAsync(
-  pathToTemplate,
-  pathToOutput,
-  moreSubstitutions
-) {
+async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
   let templatesDirectory = path.dirname(pathToTemplate);
   let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
   let dependencies = await renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
     { isPodfile: false }
   );
-  let result = templateString.replace(
-    /\$\{IOS_EXPOKIT_DEPS\}/g,
-    indentString(dependencies, 2)
-  );
+  let result = templateString.replace(/\$\{IOS_EXPOKIT_DEPS\}/g, indentString(dependencies, 2));
   if (moreSubstitutions && moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION) {
     result = result.replace(
       /\$\{IOS_EXPONENT_CLIENT_VERSION\}/g,
@@ -240,11 +226,7 @@ function renderUnversionedYogaDependency(options, sdkVersion) {
 ${indentString(renderDependencyAttributes(attributes), 2)}`;
 }
 
-function renderUnversionedThirdPartyDependency(
-  podName,
-  podspecRelativePath,
-  options
-) {
+function renderUnversionedThirdPartyDependency(podName, podspecRelativePath, options) {
   let attributes;
   if (options.reactNativePath) {
     attributes = {
@@ -252,9 +234,7 @@ function renderUnversionedThirdPartyDependency(
       inhibit_warnings: true,
     };
   } else {
-    throw new Error(
-      `Unsupported options for ${podName} dependency: ${options}`
-    );
+    throw new Error(`Unsupported options for ${podName} dependency: ${options}`);
   }
   return `pod '${podName}',
 ${indentString(renderDependencyAttributes(attributes), 2)}`;

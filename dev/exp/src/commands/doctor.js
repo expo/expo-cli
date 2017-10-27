@@ -3,9 +3,7 @@ import { Doctor } from 'xdl';
 import log from '../log';
 
 async function action(projectDir) {
-  if (
-    (await Doctor.validateWithNetworkAsync(projectDir)) === Doctor.NO_ISSUES
-  ) {
+  if ((await Doctor.validateWithNetworkAsync(projectDir)) === Doctor.NO_ISSUES) {
     log(`Didn't find any issues with your project!`);
   }
   process.exit();

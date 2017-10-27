@@ -54,9 +54,7 @@ export async function detachAsync(projectRoot: string, options: any) {
   let user = await UserManager.ensureLoggedInAsync();
 
   if (!user) {
-    throw new Error(
-      'Internal error -- somehow detach is being run in offline mode.'
-    );
+    throw new Error('Internal error -- somehow detach is being run in offline mode.');
   }
 
   let username = user.username;
@@ -76,11 +74,7 @@ export async function detachAsync(projectRoot: string, options: any) {
   }
 
   // Project was already detached on Windows or Linux
-  if (
-    !hasIosDirectory &&
-    hasAndroidDirectory &&
-    process.platform === 'darwin'
-  ) {
+  if (!hasIosDirectory && hasAndroidDirectory && process.platform === 'darwin') {
     let response = await yesnoAsync(
       `This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`
     );
@@ -91,9 +85,7 @@ export async function detachAsync(projectRoot: string, options: any) {
   }
 
   if (hasIosDirectory && !hasAndroidDirectory) {
-    throw new Error(
-      '`ios` directory already exists. Please remove it and try again.'
-    );
+    throw new Error('`ios` directory already exists. Please remove it and try again.');
   }
 
   console.log('Validating project manifest...');
@@ -114,9 +106,7 @@ export async function detachAsync(projectRoot: string, options: any) {
 
   let majorSdkVersion = parseSdkMajorVersion(exp.sdkVersion);
   if (majorSdkVersion < 16) {
-    throw new Error(
-      `${configName} must be updated to SDK 16.0.0 or newer to be detached.`
-    );
+    throw new Error(`${configName} must be updated to SDK 16.0.0 or newer to be detached.`);
   }
 
   const versions = await Versions.versionsAsync();
@@ -132,9 +122,7 @@ export async function detachAsync(projectRoot: string, options: any) {
       );
       sdkVersionConfig = {};
     } else {
-      throw new Error(
-        `Detaching is not supported for SDK version ${exp.sdkVersion}`
-      );
+      throw new Error(`Detaching is not supported for SDK version ${exp.sdkVersion}`);
     }
   }
 
@@ -195,10 +183,7 @@ export async function detachAsync(projectRoot: string, options: any) {
   if (nameToWrite === 'app.json') {
     exp = { expo: exp };
   }
-  await fs.promise.writeFile(
-    path.join(projectRoot, nameToWrite),
-    JSON.stringify(exp, null, 2)
-  );
+  await fs.promise.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
 
   console.log(
     'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.\n'
@@ -209,10 +194,7 @@ export async function detachAsync(projectRoot: string, options: any) {
 /**
  *  Create a detached Expo iOS app pointing at the given project.
  */
-async function detachIOSAsync(
-  context: StandaloneContext,
-  experienceUrl: string
-) {
+async function detachIOSAsync(context: StandaloneContext, experienceUrl: string) {
   await IosWorkspace.createDetachedAsync(context);
 
   console.log('Configuring iOS project...');
@@ -232,10 +214,7 @@ async function renamePackageAsync(directory, originalPkg, destPkg) {
   let originalSplitPackage = originalPkg.split('.');
   let originalDeepDirectory = directory;
   for (let i = 0; i < originalSplitPackage.length; i++) {
-    originalDeepDirectory = path.join(
-      originalDeepDirectory,
-      originalSplitPackage[i]
-    );
+    originalDeepDirectory = path.join(originalDeepDirectory, originalSplitPackage[i]);
   }
 
   // copy files into temp directory
@@ -303,17 +282,9 @@ async function detachAndroidAsync(
 
   // Fix up app/build.gradle
   console.log('Configuring Android project...');
-  let appBuildGradle = path.join(
-    androidProjectDirectory,
-    'app',
-    'build.gradle'
-  );
+  let appBuildGradle = path.join(androidProjectDirectory, 'app', 'build.gradle');
   await regexFileAsync(appBuildGradle, /\/\* UNCOMMENT WHEN DISTRIBUTING/g, '');
-  await regexFileAsync(
-    appBuildGradle,
-    /END UNCOMMENT WHEN DISTRIBUTING \*\//g,
-    ''
-  );
+  await regexFileAsync(appBuildGradle, /END UNCOMMENT WHEN DISTRIBUTING \*\//g, '');
   await regexFileAsync(appBuildGradle, `compile project(':expoview')`, '');
 
   // Fix AndroidManifest
@@ -324,11 +295,7 @@ async function detachAndroidAsync(
     'main',
     'AndroidManifest.xml'
   );
-  await regexFileAsync(
-    androidManifest,
-    'PLACEHOLDER_DETACH_SCHEME',
-    manifest.detach.scheme
-  );
+  await regexFileAsync(androidManifest, 'PLACEHOLDER_DETACH_SCHEME', manifest.detach.scheme);
 
   // Fix MainActivity
   let mainActivity = path.join(
@@ -364,14 +331,9 @@ async function detachAndroidAsync(
     packageName
   );
 
-  let packageNameMatches = await glob.promise(
-    androidProjectDirectory + '/**/*.@(java|gradle|xml)'
-  );
+  let packageNameMatches = await glob.promise(androidProjectDirectory + '/**/*.@(java|gradle|xml)');
   if (packageNameMatches) {
-    let oldPkgRegex = new RegExp(
-      `${ANDROID_TEMPLATE_PKG.replace(/\./g, '\\.')}`,
-      'g'
-    );
+    let oldPkgRegex = new RegExp(`${ANDROID_TEMPLATE_PKG.replace(/\./g, '\\.')}`, 'g');
     for (let i = 0; i < packageNameMatches.length; i++) {
       await regexFileAsync(packageNameMatches[i], oldPkgRegex, packageName);
     }
@@ -381,28 +343,16 @@ async function detachAndroidAsync(
   console.log('Naming Android project...');
   let appName = manifest.name;
   await regexFileAsync(
-    path.resolve(
-      androidProjectDirectory,
-      'app',
-      'src',
-      'main',
-      'res',
-      'values',
-      'strings.xml'
-    ),
+    path.resolve(androidProjectDirectory, 'app', 'src', 'main', 'res', 'values', 'strings.xml'),
     ANDROID_TEMPLATE_NAME,
     appName
   );
 
   // Fix image
-  let icon =
-    manifest.android && manifest.android.icon
-      ? manifest.android.icon
-      : manifest.icon;
+  let icon = manifest.android && manifest.android.icon ? manifest.android.icon : manifest.icon;
   if (icon) {
     let iconMatches = await glob.promise(
-      path.join(androidProjectDirectory, 'app', 'src', 'main', 'res') +
-        '/**/ic_launcher.png'
+      path.join(androidProjectDirectory, 'app', 'src', 'main', 'res') + '/**/ic_launcher.png'
     );
     if (iconMatches) {
       for (let i = 0; i < iconMatches.length; i++) {
@@ -429,37 +379,25 @@ async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
   );
   if (!doesBuildConstantsExist) {
     await IosPlist.createBlankAsync(configFilePath, 'EXBuildConstants');
-    console.log(
-      'Created `EXBuildConstants.plist` because it did not exist yet'
-    );
+    console.log('Created `EXBuildConstants.plist` because it did not exist yet');
   }
   return;
 }
 
-async function prepareDetachedBuildIosAsync(
-  projectDir: string,
-  exp: any,
-  args: any
-) {
+async function prepareDetachedBuildIosAsync(projectDir: string, exp: any, args: any) {
   const context = StandaloneContext.createUserContext(projectDir, exp);
-  let { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(
-    context
-  );
+  let { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
 
   console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.
   let podsDirectory = path.join(iosProjectDirectory, 'Pods');
   if (!isDirectory(podsDirectory)) {
-    throw new Error(
-      `Can't find directory ${podsDirectory}, make sure you've run pod install.`
-    );
+    throw new Error(`Can't find directory ${podsDirectory}, make sure you've run pod install.`);
   }
   let rnPodDirectory = path.join(podsDirectory, 'React');
   if (isDirectory(rnPodDirectory)) {
-    let rnFilesToDelete = await glob.promise(
-      rnPodDirectory + '/**/*.@(js|json)'
-    );
+    let rnFilesToDelete = await glob.promise(rnPodDirectory + '/**/*.@(js|json)');
     if (rnFilesToDelete) {
       for (let i = 0; i < rnFilesToDelete.length; i++) {
         await fs.promise.unlink(rnFilesToDelete[i]);
@@ -486,15 +424,11 @@ async function prepareDetachedBuildIosAsync(
     let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
 
     await ensureBuildConstantsExistsIOSAsync(supportingDirectory);
-    await IosPlist.modifyAsync(
-      supportingDirectory,
-      'EXBuildConstants',
-      constantsConfig => {
-        constantsConfig.developmentUrl = devUrl;
-        constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
-        return constantsConfig;
-      }
-    );
+    await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
+      constantsConfig.developmentUrl = devUrl;
+      constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
+      return constantsConfig;
+    });
   }
 }
 

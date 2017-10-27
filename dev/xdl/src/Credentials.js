@@ -48,10 +48,7 @@ async function fetchCredentials(
   decrypt: boolean
 ): Promise<?Credentials> {
   // this doesn't hit our mac rpc channel, so it needs significantly less debugging
-  const {
-    err,
-    credentials,
-  } = await Api.callMethodAsync('getCredentials', [], 'post', {
+  const { err, credentials } = await Api.callMethodAsync('getCredentials', [], 'post', {
     username,
     experienceName,
     bundleIdentifier,
@@ -72,10 +69,7 @@ export async function updateCredentialsForPlatform(
   metadata: CredentialMetadata
 ): Promise<void> {
   // this doesn't go through the mac rpc, no request id needed
-  const {
-    err,
-    credentials,
-  } = await Api.callMethodAsync('updateCredentials', [], 'post', {
+  const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
     credentials: newCredentials,
     platform,
     ...metadata,
@@ -134,9 +128,7 @@ export async function validateCredentialsForPlatform(
   return;
 }
 
-export async function fetchAppleCertificates(
-  metadata: CredentialMetadata
-): Promise<void> {
+export async function fetchAppleCertificates(metadata: CredentialMetadata): Promise<void> {
   const {
     requestId,
     err,
@@ -179,17 +171,10 @@ export async function ensureAppId(metadata: CredentialMetadata): Promise<void> {
   return success;
 }
 
-export async function fetchPushCertificates(
-  metadata: CredentialMetadata
-): Promise<void> {
-  const result = await Api.callMethodAsync(
-    'fetchPushCertificates',
-    [],
-    'post',
-    {
-      ...metadata,
-    }
-  );
+export async function fetchPushCertificates(metadata: CredentialMetadata): Promise<void> {
+  const result = await Api.callMethodAsync('fetchPushCertificates', [], 'post', {
+    ...metadata,
+  });
 
   if (result.err || !result.success) {
     throw new XDLError(

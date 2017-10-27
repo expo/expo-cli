@@ -23,14 +23,11 @@ import * as UrlUtils from './UrlUtils';
 
 let _lastUrl = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
-const CANT_START_ACTIVITY_ERROR =
-  'Activity not started, unable to resolve Intent';
+const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
 
 export function isPlatformSupported() {
   return (
-    process.platform === 'darwin' ||
-    process.platform === 'win32' ||
-    process.platform === 'linux'
+    process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux'
   );
 }
 
@@ -43,9 +40,7 @@ async function _getAdbOutputAsync(args) {
   } catch (e) {
     let errorMessage = _.trim(e.stderr);
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
-      errorMessage = errorMessage.substring(
-        BEGINNING_OF_ADB_ERROR_MESSAGE.length
-      );
+      errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
     throw new Error(errorMessage);
   }
@@ -71,13 +66,7 @@ async function _isDeviceAuthorizedAsync() {
 
 // Expo installed
 async function _isExpoInstalledAsync() {
-  let packages = await _getAdbOutputAsync([
-    'shell',
-    'pm',
-    'list',
-    'packages',
-    '-f',
-  ]);
+  let packages = await _getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
   let lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
@@ -94,12 +83,7 @@ async function _isExpoInstalledAsync() {
 }
 
 async function _expoVersionAsync() {
-  let info = await _getAdbOutputAsync([
-    'shell',
-    'dumpsys',
-    'package',
-    'host.exp.exponent',
-  ]);
+  let info = await _getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
   let regex = /versionName\=([0-9\.]+)/;
   let regexMatch = regex.exec(info);
@@ -114,10 +98,7 @@ async function _checkExpoUpToDateAsync() {
   let versions = await Api.versionsAsync();
   let installedVersion = await _expoVersionAsync();
 
-  if (
-    !installedVersion ||
-    semver.lt(installedVersion, versions.androidVersion)
-  ) {
+  if (!installedVersion || semver.lt(installedVersion, versions.androidVersion)) {
     Logger.notifications.warn(
       { code: NotificationCode.OLD_ANDROID_APP_VERSION },
       'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.'
@@ -134,10 +115,7 @@ function _apkCacheDirectory() {
 
 async function _downloadApkAsync() {
   let versions = await Api.versionsAsync();
-  let apkPath = path.join(
-    _apkCacheDirectory(),
-    `Exponent-${versions.androidVersion}.apk`
-  );
+  let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
   if (await existsAsync(apkPath)) {
     return apkPath;

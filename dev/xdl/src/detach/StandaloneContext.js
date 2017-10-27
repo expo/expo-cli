@@ -18,10 +18,7 @@ class StandaloneContext {
   data: StandaloneContextDataUser | StandaloneContextDataService;
   config: any; // same as underlying exp or manifest
 
-  static createUserContext = (
-    projectPath: string,
-    exp: any
-  ): StandaloneContext => {
+  static createUserContext = (projectPath: string, exp: any): StandaloneContext => {
     let context = new StandaloneContext();
     context.type = 'user';
     context.data = {

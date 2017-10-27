@@ -38,6 +38,6 @@ function request(uri, options, callback) {
 }
 
 let currentResponse;
-request.__setMockResponse = object => currentResponse = object;
+request.__setMockResponse = object => (currentResponse = object);
 
 module.exports = request;

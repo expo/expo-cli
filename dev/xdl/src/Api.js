@@ -38,18 +38,12 @@ if (Config.api.port) {
 }
 let API_BASE_URL = ROOT_BASE_URL + '/--/api/';
 
-async function _callMethodAsync(
-  url,
-  method,
-  requestBody,
-  requestOptions
-): Promise<any> {
+async function _callMethodAsync(url, method, requestBody, requestOptions): Promise<any> {
   const clientId = await Session.clientIdAsync();
   const user = (await UserManager.getCurrentUserAsync()) || {};
 
   const { idToken, accessToken } = user;
-  const skipValidationToken =
-    process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'];
+  const skipValidationToken = process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'];
 
   let headers: any = {
     'Exp-ClientId': clientId,
@@ -97,20 +91,14 @@ async function _callMethodAsync(
     } catch (e) {
       throw new XDLError(
         ErrorCode.INVALID_JSON,
-        'Invalid JSON returned from API: ' +
-          e +
-          '. Response body: ' +
-          responseBody
+        'Invalid JSON returned from API: ' + e + '. Response body: ' + responseBody
       );
     }
   } else {
     responseObj = responseBody;
   }
   if (responseObj.err) {
-    let err = ApiError(
-      responseObj.code || 'API_ERROR',
-      'API Response Error: ' + responseObj.err
-    );
+    let err = ApiError(responseObj.code || 'API_ERROR', 'API Response Error: ' + responseObj.err);
     // $FlowFixMe can't add arbitrary properties to error
     err.serverError = responseObj.err;
     throw err;
@@ -137,11 +125,7 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
             if (err.code === 'ETIMEDOUT') {
               reject(Error('Server timeout.'));
             } else {
-              reject(
-                Error(
-                  "Couldn't connect to the server, check your internet connection."
-                )
-              );
+              reject(Error("Couldn't connect to the server, check your internet connection."));
             }
           }
         })
@@ -212,12 +196,7 @@ export default class ApiClient {
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
-  static async callPathAsync(
-    path,
-    method,
-    requestBody,
-    requestOptions: ?Object = {}
-  ) {
+  static async callPathAsync(path, method, requestBody, requestOptions: ?Object = {}) {
     let url = ROOT_BASE_URL + path;
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
@@ -246,13 +225,7 @@ export default class ApiClient {
     return versions.sdkVersions;
   }
 
-  static async downloadAsync(
-    url,
-    outputPath,
-    options = {},
-    progressFunction,
-    retryFunction
-  ) {
+  static async downloadAsync(url, outputPath, options = {}, progressFunction, retryFunction) {
     if (options.extract) {
       let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
       let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');

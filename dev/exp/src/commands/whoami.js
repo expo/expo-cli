@@ -22,8 +22,6 @@ export default program => {
   program
     .command('whoami')
     .alias('w')
-    .description(
-      'Checks with the server and then says who you are logged in as'
-    )
+    .description('Checks with the server and then says who you are logged in as')
     .asyncAction(action);
 };

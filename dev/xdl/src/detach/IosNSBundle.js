@@ -13,10 +13,7 @@ import {
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
 
-async function _configureInfoPlistForLocalDevelopmentAsync(
-  configFilePath: string,
-  exp: any
-) {
+async function _configureInfoPlistForLocalDevelopmentAsync(configFilePath: string, exp: any) {
   let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
     // add detached scheme
     if (exp.isDetached && exp.detach.scheme) {
@@ -45,17 +42,12 @@ function _logDeveloperInfoForLocalDevelopment(infoPlist: any) {
   // warn about *UsageDescription changes
   let usageKeysConfigured = [];
   for (let key in infoPlist) {
-    if (
-      infoPlist.hasOwnProperty(key) &&
-      key.indexOf('UsageDescription') !== -1
-    ) {
+    if (infoPlist.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1) {
       usageKeysConfigured.push(key);
     }
   }
   if (usageKeysConfigured.length) {
-    console.log(
-      'We added some permissions keys to `Info.plist` in your detached iOS project:'
-    );
+    console.log('We added some permissions keys to `Info.plist` in your detached iOS project:');
     usageKeysConfigured.forEach(key => {
       console.log(`  ${key}`);
     });
@@ -70,25 +62,15 @@ async function _cleanPropertyListBackupsAsync(configFilePath) {
   await IosPlist.cleanBackupAsync(configFilePath, 'Info', false);
 }
 
-async function configureAsync(
-  context: StandaloneContext,
-  experienceUrl: string
-) {
+async function configureAsync(context: StandaloneContext, experienceUrl: string) {
   // TODO: support both types of context
   if (context.type !== 'user') {
     throw new Error(`IosNSBundle only supports user standalone contexts`);
   }
-  let {
-    iosProjectDirectory,
-    projectName,
-    supportingDirectory,
-  } = IosWorkspace.getPaths(context);
+  let { iosProjectDirectory, projectName, supportingDirectory } = IosWorkspace.getPaths(context);
 
   // TODO: move shell app config methods here and make them operate on context only.
-  await configureStandaloneIOSInfoPlistAsync(
-    supportingDirectory,
-    context.data.exp
-  );
+  await configureStandaloneIOSInfoPlistAsync(supportingDirectory, context.data.exp);
   if (context.type === 'user') {
     const infoPlist = await _configureInfoPlistForLocalDevelopmentAsync(
       supportingDirectory,
@@ -96,11 +78,7 @@ async function configureAsync(
     );
     _logDeveloperInfoForLocalDevelopment(infoPlist);
   }
-  await configureStandaloneIOSShellPlistAsync(
-    supportingDirectory,
-    context.data.exp,
-    experienceUrl
-  );
+  await configureStandaloneIOSShellPlistAsync(supportingDirectory, context.data.exp, experienceUrl);
 
   // TODO: change IosIcons to operate on context
   const iconPath = path.join(

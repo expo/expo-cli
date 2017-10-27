@@ -11,12 +11,10 @@ import { FsCache, UserSettings } from 'xdl';
 
 const UpdateCacher = new FsCache.Cacher(
   async () => {
-    const packageName = await new JsonFile(
-      path.join(__dirname, '..', 'package.json')
-    ).getAsync('name');
-    const [version_, _] = await child_process.exec(
-      `npm view ${packageName} version`
+    const packageName = await new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync(
+      'name'
     );
+    const [version_, _] = await child_process.exec(`npm view ${packageName} version`);
     const trimmed = version_.trim();
 
     return {
@@ -28,9 +26,7 @@ const UpdateCacher = new FsCache.Cacher(
 );
 
 async function currentExpVersionAsync() {
-  return new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync(
-    'version'
-  );
+  return new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('version');
 }
 
 async function checkForExpUpdateAsync() {

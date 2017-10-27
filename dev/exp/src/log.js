@@ -9,10 +9,7 @@ function _updateIsLastLineNewLine(args) {
     _isLastLineNewLine = true;
   } else {
     let lastArg = args[args.length - 1];
-    if (
-      typeof lastArg === 'string' &&
-      (lastArg === '' || lastArg.match(/[\r\n]$/))
-    ) {
+    if (typeof lastArg === 'string' && (lastArg === '' || lastArg.match(/[\r\n]$/))) {
       _isLastLineNewLine = true;
     } else {
       _isLastLineNewLine = false;

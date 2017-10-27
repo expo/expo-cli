@@ -127,15 +127,11 @@ async function _socialAuth(provider: LoginType) {
   let user = await UserManager.loginAsync(provider);
   if (user) {
     if (user.userMetadata.onboarded) {
-      console.log(
-        `\nSuccess. You are now logged in as ${chalk.green(user.username)}.`
-      );
+      console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
       return user;
     } else {
       user = await _onboardUser(user);
-      console.log(
-        `\nSuccess. You are now logged in as ${chalk.green(user.username)}.`
-      );
+      console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
       return user;
     }
   } else {
@@ -148,10 +144,7 @@ async function _tokenAuth(token: string) {
   return;
 }
 
-async function _usernamePasswordAuth(
-  username?: string,
-  password?: string
-): Promise<User> {
+async function _usernamePasswordAuth(username?: string, password?: string): Promise<User> {
   const questions = [];
   if (!username) {
     questions.push({
@@ -192,15 +185,11 @@ async function _usernamePasswordAuth(
 
   if (user) {
     if (user.userMetadata.onboarded) {
-      console.log(
-        `\nSuccess. You are now logged in as ${chalk.green(user.username)}.`
-      );
+      console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
       return user;
     } else {
       user = await _onboardUser(user, data);
-      console.log(
-        `\nSuccess. You are now logged in as ${chalk.green(user.username)}.`
-      );
+      console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
       return user;
     }
   } else {
@@ -216,9 +205,7 @@ async function _onboardUser(
 
   const legacyMigration =
     (user && user.kind === 'legacyUser') ||
-    (user &&
-      user.kind === 'user' &&
-      user.currentConnection === 'Username-Password-Authentication');
+    (user && user.kind === 'user' && user.currentConnection === 'Username-Password-Authentication');
 
   if (user && legacyMigration) {
     console.log(
@@ -241,9 +228,7 @@ Just a few questions:`
       type: 'input',
       name: 'givenName',
       message: 'First Name:',
-      default:
-        (!legacyMigration && user && user.kind === 'user' && user.givenName) ||
-          null,
+      default: (!legacyMigration && user && user.kind === 'user' && user.givenName) || null,
       validate(val) {
         if (val.trim() === '') {
           return false;
@@ -255,9 +240,7 @@ Just a few questions:`
       type: 'input',
       name: 'familyName',
       message: 'Last Name:',
-      default:
-        (!legacyMigration && user && user.kind === 'user' && user.familyName) ||
-          null,
+      default: (!legacyMigration && user && user.kind === 'user' && user.familyName) || null,
       validate(val) {
         if (val.trim() === '') {
           return false;
@@ -273,9 +256,7 @@ Just a few questions:`
       type: 'input',
       name: 'username',
       message: 'Username:',
-      default:
-        (user && user.kind === 'user' && (user.username || user.nickname)) ||
-          null,
+      default: (user && user.kind === 'user' && (user.username || user.nickname)) || null,
       validate(val, answers) {
         if (val.trim() === '') {
           return false;
@@ -289,8 +270,7 @@ Just a few questions:`
     type: 'input',
     name: 'email',
     message: 'Email Address:',
-    default:
-      (!legacyMigration && user && user.kind === 'user' && user.email) || null,
+    default: (!legacyMigration && user && user.kind === 'user' && user.email) || null,
     validate(val) {
       if (val.trim() === '') {
         return false;
@@ -333,11 +313,7 @@ Just a few questions:`
   const answers = await inquirer.prompt(questions);
 
   // Don't send user data (username/password) if
-  const shouldUpdateUsernamePassword = !(
-    user &&
-    user.kind === 'user' &&
-    user.userMetadata.legacy
-  );
+  const shouldUpdateUsernamePassword = !(user && user.kind === 'user' && user.userMetadata.legacy);
 
   const registeredUser = await UserManager.registerAsync(
     {

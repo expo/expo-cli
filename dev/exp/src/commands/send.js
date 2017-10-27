@@ -50,9 +50,7 @@ async function action(projectDir, options) {
 export default program => {
   program
     .command('send [project-dir]')
-    .description(
-      'Sends a link to your project to a phone number or e-mail address'
-    )
+    .description('Sends a link to your project to a phone number or e-mail address')
     //.help('You must have the server running for this command to work')
     .option(
       '-s, --send-to  [dest]',

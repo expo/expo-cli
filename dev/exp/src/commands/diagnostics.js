@@ -20,8 +20,6 @@ async function action(options) {
 export default program => {
   program
     .command('diagnostics [project-dir]')
-    .description(
-      'Uploads diagnostics information and returns a url to share with the Expo team.'
-    )
+    .description('Uploads diagnostics information and returns a url to share with the Expo team.')
     .asyncAction(action);
 };

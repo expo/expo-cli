@@ -17,21 +17,11 @@ export default (program: any) => {
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       const {
-        args: {
-          username,
-          remotePackageName,
-          remoteFullPackageName: experienceName,
-        },
+        args: { username, remotePackageName, remoteFullPackageName: experienceName },
       } = await Exp.getPublishInfoAsync(projectDir);
 
-      let distOutputFile = path.resolve(
-        projectDir,
-        `${remotePackageName}_dist.p12`
-      );
-      let pushOutputFile = path.resolve(
-        projectDir,
-        `${remotePackageName}_push.p12`
-      );
+      let distOutputFile = path.resolve(projectDir, `${remotePackageName}_dist.p12`);
+      let pushOutputFile = path.resolve(projectDir, `${remotePackageName}_push.p12`);
 
       const credentialMetadata = {
         username,
@@ -63,9 +53,7 @@ Distribution p12 password: ${chalk.bold(certPassword)}
 Push p12 password:         ${chalk.bold(pushPassword)}
 `);
       } catch (e) {
-        throw new Error(
-          'Unable to fetch credentials for this project. Are you sure they exist?'
-        );
+        throw new Error('Unable to fetch credentials for this project. Are you sure they exist?');
       }
 
       log('All done!');
@@ -78,11 +66,7 @@ Push p12 password:         ${chalk.bold(pushPassword)}
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       const {
-        args: {
-          username,
-          remotePackageName,
-          remoteFullPackageName: experienceName,
-        },
+        args: { username, remotePackageName, remoteFullPackageName: experienceName },
       } = await Exp.getPublishInfoAsync(projectDir);
 
       let outputFile = path.resolve(projectDir, `${remotePackageName}.jks`);
@@ -100,17 +84,10 @@ Push p12 password:         ${chalk.bold(pushPassword)}
       );
 
       if (!credentials) {
-        throw new Error(
-          'Unable to fetch credentials for this project. Are you sure they exist?'
-        );
+        throw new Error('Unable to fetch credentials for this project. Are you sure they exist?');
       }
 
-      const {
-        keystore,
-        keystorePassword,
-        keystoreAlias: keyAlias,
-        keyPassword,
-      } = credentials;
+      const { keystore, keystorePassword, keystoreAlias: keyAlias, keyPassword } = credentials;
 
       const storeBuf = Buffer.from(keystore, 'base64');
 

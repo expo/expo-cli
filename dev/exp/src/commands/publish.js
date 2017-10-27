@@ -21,9 +21,7 @@ export async function action(projectDir: string, options: Options = {}) {
 
   let startedOurOwn = false;
   if (status !== 'running') {
-    log(
-      'Unable to find an existing exp instance for this directory, starting a new one...'
-    );
+    log('Unable to find an existing exp instance for this directory, starting a new one...');
     installExitHooks(projectDir);
     await Project.startAsync(projectDir, {}, !options.quiet);
     startedOurOwn = true;
@@ -62,14 +60,8 @@ export default (program: any) => {
     .command('publish [project-dir]')
     .alias('p')
     .description('Publishes your project to exp.host')
-    .option(
-      '-q, --quiet',
-      'Suppress verbose output from the React Native packager.'
-    )
-    .option(
-      '-s, --send-to [dest]',
-      'A phone number or e-mail address to send a link to'
-    )
+    .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
+    .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .allowNonInteractive()
     .asyncActionProjectDir(action, true);
 };

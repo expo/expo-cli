@@ -55,9 +55,7 @@ async function _xcrunAsync(args) {
         'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
       );
     } else {
-      Logger.global.error(
-        `Error running \`xcrun ${args.join(' ')}\`: ${e.stderr}`
-      );
+      Logger.global.error(`Error running \`xcrun ${args.join(' ')}\`: ${e.stderr}`);
       throw e;
     }
   }
@@ -78,9 +76,7 @@ export async function _isSimulatorInstalledAsync() {
   }
   if (result !== 'com.apple.iphonesimulator') {
     console.warn(
-      "Simulator is installed but is identified as '" +
-        result +
-        "'; don't know what that is."
+      "Simulator is installed but is identified as '" + result + "'; don't know what that is."
     );
     Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
@@ -190,11 +186,7 @@ async function _bootedSimulatorDeviceAsync() {
 }
 
 export function _dirForSimulatorDevice(udid: string) {
-  return path.resolve(
-    homeDir(),
-    'Library/Developer/CoreSimulator/Devices',
-    udid
-  );
+  return path.resolve(homeDir(), 'Library/Developer/CoreSimulator/Devices', udid);
 }
 
 export async function _quitSimulatorAsync() {
@@ -231,10 +223,9 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
     return null;
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob.promise(
-    './data/Containers/Bundle/Application/*/Exponent-*.app',
-    { cwd: simDir }
-  );
+  let matches = await glob.promise('./data/Containers/Bundle/Application/*/Exponent-*.app', {
+    cwd: simDir,
+  });
 
   if (matches.length === 0) {
     return null;
@@ -270,10 +261,7 @@ export async function _downloadSimulatorAppAsync(url) {
   }
 
   let versions = await Api.versionsAsync();
-  let dir = path.join(
-    _simulatorCacheDirectory(),
-    `Exponent-${versions.iosVersion}.app`
-  );
+  let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
   if (await existsAsync(dir)) {
     let filesInDir = await fs.promise.readdir(dir);
@@ -355,10 +343,7 @@ export async function _openUrlInSimulatorAsync(url: string) {
   return await _xcrunAsync(['simctl', 'openurl', 'booted', url]);
 }
 
-export async function openUrlInSimulatorSafeAsync(
-  url: string,
-  isDetached: boolean = false
-) {
+export async function openUrlInSimulatorSafeAsync(url: string, isDetached: boolean = false) {
   if (!await _isSimulatorInstalledAsync()) {
     return {
       success: false,
@@ -369,10 +354,7 @@ export async function openUrlInSimulatorSafeAsync(
   try {
     await _openSimulatorAsync();
 
-    if (
-      !isDetached &&
-      !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()
-    ) {
+    if (!isDetached && !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
     }

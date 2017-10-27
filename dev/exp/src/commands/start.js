@@ -40,9 +40,7 @@ async function action(projectDir, options) {
 
   log('Expo is ready.');
 
-  let { url, isUrlFallback } = await Project.getManifestUrlWithFallbackAsync(
-    projectDir
-  );
+  let { url, isUrlFallback } = await Project.getManifestUrlWithFallbackAsync(projectDir);
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
@@ -68,24 +66,15 @@ async function action(projectDir, options) {
 
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
-  log(
-    chalk.green(
-      'Logs for your project will appear below. Press Ctrl+C to exit.'
-    )
-  );
+  log(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
 }
 
 export default (program: any) => {
   program
     .command('start [project-dir]')
     .alias('r')
-    .description(
-      'Starts or restarts a local server for your app and gives you a URL to it'
-    )
-    .option(
-      '-s, --send-to [dest]',
-      'A phone number or e-mail address to send a link to'
-    )
+    .description('Starts or restarts a local server for your app and gives you a URL to it')
+    .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
     .urlOpts()
     .allowNonInteractive()

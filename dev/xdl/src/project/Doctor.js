@@ -106,12 +106,7 @@ async function _checkWatchmanVersionAsync(projectRoot) {
     if (process.platform === 'darwin') {
       warningMessage += `\n\nIf you are using homebrew, try:\nbrew uninstall watchman; brew install watchman`;
     }
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      warningMessage,
-      'doctor-watchman-version'
-    );
+    ProjectUtils.logWarning(projectRoot, 'expo', warningMessage, 'doctor-watchman-version');
   } else {
     ProjectUtils.clearNotification(projectRoot, 'doctor-watchman-version');
   }
@@ -123,14 +118,7 @@ export async function validateWithSchemaFileAsync(
 ): Promise<{ errorMessage?: string }> {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let schema = JSON.parse(await fs.readFile.promise(schemaPath, 'utf8'));
-  return validateWithSchema(
-    projectRoot,
-    exp,
-    schema.schema,
-    'exp.json',
-    'UNVERSIONED',
-    true
-  );
+  return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
 
 export async function validateWithSchema(
@@ -178,11 +166,7 @@ function formatValidationError(validationError) {
     : ''}${validationError.message}.`;
 }
 
-async function _validatePackageJsonAsync(
-  exp,
-  pkg,
-  projectRoot
-): Promise<number> {
+async function _validatePackageJsonAsync(exp, pkg, projectRoot): Promise<number> {
   // TODO: Check any native module versions here
   if (Config.validation.reactNativeVersionWarnings) {
     let reactNative = pkg.dependencies['react-native'];
@@ -209,11 +193,7 @@ async function _validatePackageJsonAsync(
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (
         semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(
-          Versions.parseSdkVersionFromTag(
-            sdkVersionObject['expoReactNativeTag']
-          )
-        )
+        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
       ) {
         ProjectUtils.logWarning(
           projectRoot,
@@ -225,15 +205,9 @@ async function _validatePackageJsonAsync(
         );
         return WARNING;
       }
-      ProjectUtils.clearNotification(
-        projectRoot,
-        'doctor-invalid-version-of-react-native'
-      );
+      ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
 
-      ProjectUtils.clearNotification(
-        projectRoot,
-        'doctor-malformed-version-of-react-native'
-      );
+      ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
     } catch (e) {
       ProjectUtils.logWarning(
         projectRoot,
@@ -247,12 +221,7 @@ async function _validatePackageJsonAsync(
   return NO_ISSUES;
 }
 
-async function _validateExpJsonAsync(
-  exp,
-  pkg,
-  projectRoot,
-  allowNetwork
-): Promise<number> {
+async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promise<number> {
   if (!exp || !pkg) {
     // readConfigJsonAsync already logged an error
     return FATAL;
@@ -268,17 +237,10 @@ async function _validateExpJsonAsync(
       'doctor-problem-checking-watchman-version'
     );
   }
-  ProjectUtils.clearNotification(
-    projectRoot,
-    'doctor-problem-checking-watchman-version'
-  );
+  ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-watchman-version');
 
-  const expJsonExists = await ProjectUtils.fileExistsAsync(
-    path.join(projectRoot, 'exp.json')
-  );
-  const appJsonExists = await ProjectUtils.fileExistsAsync(
-    path.join(projectRoot, 'app.json')
-  );
+  const expJsonExists = await ProjectUtils.fileExistsAsync(path.join(projectRoot, 'exp.json'));
+  const appJsonExists = await ProjectUtils.fileExistsAsync(path.join(projectRoot, 'app.json'));
 
   if (expJsonExists && appJsonExists) {
     ProjectUtils.logWarning(
@@ -295,12 +257,7 @@ async function _validateExpJsonAsync(
   const configName = await ProjectUtils.configFilenameAsync(projectRoot);
 
   // Skip validation if the correct token is set in env
-  if (
-    !(
-      sdkVersion === 'UNVERSIONED' &&
-      process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']
-    )
-  ) {
+  if (!(sdkVersion === 'UNVERSIONED' && process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'])) {
     try {
       let schema = await ExpSchema.getSchemaAsync(sdkVersion);
       let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
@@ -330,15 +287,9 @@ async function _validateExpJsonAsync(
           `doctor-validate-asset-fields`
         );
       } else {
-        ProjectUtils.clearNotification(
-          projectRoot,
-          `doctor-validate-asset-fields`
-        );
+        ProjectUtils.clearNotification(projectRoot, `doctor-validate-asset-fields`);
       }
-      ProjectUtils.clearNotification(
-        projectRoot,
-        'doctor-schema-validation-exception'
-      );
+      ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation-exception');
       if (schemaErrorMessage || assetsErrorMessage) return WARNING;
     } catch (e) {
       ProjectUtils.logWarning(
@@ -372,10 +323,7 @@ async function _validateExpJsonAsync(
     );
     return WARNING;
   }
-  ProjectUtils.clearNotification(
-    projectRoot,
-    'doctor-no-react-native-in-package-json'
-  );
+  ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
   // TODO(adam) set up caching for this
   let sdkVersions = await Api.sdkVersionsAsync();
@@ -388,18 +336,13 @@ async function _validateExpJsonAsync(
     );
     return WARNING;
   }
-  ProjectUtils.clearNotification(
-    projectRoot,
-    'doctor-versions-endpoint-failed'
-  );
+  ProjectUtils.clearNotification(projectRoot, 'doctor-versions-endpoint-failed');
 
   if (!sdkVersions[sdkVersion]) {
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
-      `Warning: Invalid sdkVersion. Valid options are ${_.keys(
-        sdkVersions
-      ).join(', ')}`,
+      `Warning: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`,
       'doctor-invalid-sdk-version'
     );
     return WARNING;
@@ -461,11 +404,7 @@ async function _validateReactNativeVersionAsync(
       // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
       if (
         semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(
-          Versions.parseSdkVersionFromTag(
-            sdkVersionObject['expoReactNativeTag']
-          )
-        )
+        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
       ) {
         ProjectUtils.logWarning(
           projectRoot,
@@ -477,15 +416,9 @@ async function _validateReactNativeVersionAsync(
         );
         return WARNING;
       }
-      ProjectUtils.clearNotification(
-        projectRoot,
-        'doctor-invalid-version-of-react-native'
-      );
+      ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
 
-      ProjectUtils.clearNotification(
-        projectRoot,
-        'doctor-malformed-version-of-react-native'
-      );
+      ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
     } catch (e) {
       ProjectUtils.logWarning(
         projectRoot,
@@ -535,13 +468,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
   // Check to make sure react native is installed
   try {
     let result = fs.statSync(
-      path.join(
-        nodeModulesPath,
-        'node_modules',
-        'react-native',
-        'local-cli',
-        'cli.js'
-      )
+      path.join(nodeModulesPath, 'node_modules', 'react-native', 'local-cli', 'cli.js')
     );
     if (!result.isFile()) {
       ProjectUtils.logError(
@@ -553,10 +480,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
       return FATAL;
     }
 
-    ProjectUtils.clearNotification(
-      projectRoot,
-      'doctor-react-native-not-installed'
-    );
+    ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
   } catch (e) {
     ProjectUtils.logError(
       projectRoot,
@@ -586,13 +510,9 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
 
     let npmls;
     try {
-      let npmlsCommand = await spawnAsync(
-        'npm',
-        ['ls', '--json', '--depth', '1'],
-        {
-          cwd: nodeModulesPath,
-        }
-      );
+      let npmlsCommand = await spawnAsync('npm', ['ls', '--json', '--depth', '1'], {
+        cwd: nodeModulesPath,
+      });
       npmls = npmlsCommand.stdout;
     } catch (e) {
       npmls = e.stdout; // `npm ls` sometimes returns an error code
@@ -621,25 +541,18 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
       );
       return WARNING;
     }
-    ProjectUtils.clearNotification(
-      projectRoot,
-      'doctor-problem-checking-node-modules'
-    );
+    ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-node-modules');
 
     if (npmlsDependencies) {
       let errorStrings = [];
       _.forEach(pkg.dependencies, (versionRequired, dependency) => {
         let installedDependency = npmlsDependencies[dependency];
-        if (
-          dependency === 'react' &&
-          versionRequired.match(/-(alpha|beta|rc)/)
-        ) {
+        if (dependency === 'react' && versionRequired.match(/-(alpha|beta|rc)/)) {
           // ignore prerelease dependencies on react
         } else if (
           dependency === 'expo' &&
           exp.sdkVersion !== 'UNVERSIONED' &&
-          semver.major(installedDependency.version) !==
-            semver.major(exp.sdkVersion)
+          semver.major(installedDependency.version) !== semver.major(exp.sdkVersion)
         ) {
           // Warn user if versions are not aligned
           errorStrings.push(
@@ -651,9 +564,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
               `Warning: '${dependency}' peer depencency missing. Run \`npm ls\` in ${nodeModulesPath} to see full warning.`
             );
           } else {
-            errorStrings.push(
-              `Warning: '${dependency}' dependency is not installed.`
-            );
+            errorStrings.push(`Warning: '${dependency}' dependency is not installed.`);
           }
         } else if (
           dependency !== 'react-native' &&
@@ -681,10 +592,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
         );
         return WARNING;
       } else {
-        ProjectUtils.clearNotification(
-          projectRoot,
-          'doctor-node-modules-issues'
-        );
+        ProjectUtils.clearNotification(projectRoot, 'doctor-node-modules-issues');
       }
     }
   }
@@ -692,15 +600,11 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
   return NO_ISSUES;
 }
 
-export async function validateLowLatencyAsync(
-  projectRoot: string
-): Promise<number> {
+export async function validateLowLatencyAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, false);
 }
 
-export async function validateWithNetworkAsync(
-  projectRoot: string
-): Promise<number> {
+export async function validateWithNetworkAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, true);
 }
 
@@ -720,12 +624,7 @@ async function validateAsync(
     return status;
   }
 
-  const expStatus = await _validateExpJsonAsync(
-    exp,
-    pkg,
-    projectRoot,
-    allowNetwork
-  );
+  const expStatus = await _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork);
   if (expStatus === FATAL) {
     return expStatus;
   }
@@ -768,10 +667,7 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<number> {
     let mainFile = await fs.readFile.promise(mainFilePath, 'utf8');
 
     // TODO: support separate .ios.js and .android.js files
-    if (
-      mainFile.includes(`from '${sdkPkg}'`) ||
-      mainFile.includes(`require('${sdkPkg}')`)
-    ) {
+    if (mainFile.includes(`from '${sdkPkg}'`) || mainFile.includes(`require('${sdkPkg}')`)) {
       return EXPO_SDK_INSTALLED_AND_IMPORTED;
     } else {
       return EXPO_SDK_NOT_IMPORTED;

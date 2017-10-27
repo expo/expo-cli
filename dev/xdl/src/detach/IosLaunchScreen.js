@@ -1,4 +1,3 @@
-
 import path from 'path';
 
 import {
@@ -32,11 +31,7 @@ function _backgroundColorFromHexString(hexColor) {
 
 function _setBackgroundColor(manifest, dom) {
   let backgroundColorString;
-  if (
-    manifest.ios &&
-    manifest.ios.splash &&
-    manifest.ios.splash.backgroundColor
-  ) {
+  if (manifest.ios && manifest.ios.splash && manifest.ios.splash.backgroundColor) {
     backgroundColorString = manifest.ios.splash.backgroundColor;
   } else if (manifest.splash && manifest.splash.backgroundColor) {
     backgroundColorString = manifest.splash.backgroundColor;
@@ -49,9 +44,7 @@ function _setBackgroundColor(manifest, dom) {
 
   const { r, g, b } = _backgroundColorFromHexString(backgroundColorString);
   const backgroundViewNode = dom.getElementById(backgroundViewID);
-  const backgroundViewColorNodes = backgroundViewNode.getElementsByTagName(
-    'color'
-  );
+  const backgroundViewColorNodes = backgroundViewNode.getElementsByTagName('color');
   let backgroundColorNode;
   for (let i = 0; i < backgroundViewColorNodes.length; i++) {
     const node = backgroundViewColorNodes[i];
@@ -142,17 +135,8 @@ async function configureLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
   }
 
   console.log('Configuring iOS Launch Screen');
-  let splashXibFilename = path.join(
-    srcRoot,
-    'Exponent',
-    'Base.lproj',
-    'LaunchScreenShell.xib'
-  );
-  let splashOutputFilename = path.join(
-    projectRoot,
-    'Base.lproj',
-    'LaunchScreenShell.nib'
-  );
+  let splashXibFilename = path.join(srcRoot, 'Exponent', 'Base.lproj', 'LaunchScreenShell.xib');
+  let splashOutputFilename = path.join(projectRoot, 'Base.lproj', 'LaunchScreenShell.nib');
 
   await transformFileContentsAsync(splashXibFilename, fileString => {
     const parser = new DOMParser();
@@ -167,15 +151,9 @@ async function configureLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
 
   await _setBackgroundImageAsync(manifest, projectRoot);
 
-  await spawnAsyncThrowError('ibtool', [
-    '--compile',
-    splashOutputFilename,
-    splashXibFilename,
-  ]);
+  await spawnAsyncThrowError('ibtool', ['--compile', splashOutputFilename, splashXibFilename]);
 
   console.log('DONE Configuring iOS Launch Screen');
 }
 
-export {
-  configureLaunchAssetsAsync,
-};
+export { configureLaunchAssetsAsync };

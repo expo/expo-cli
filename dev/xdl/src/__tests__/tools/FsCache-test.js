@@ -23,10 +23,10 @@ describe('Cacher', () => {
       // this is ok
     }
 
-    const date1 = new Date((await dateCacher.getAsync()));
+    const date1 = new Date(await dateCacher.getAsync());
 
     // should be well within the TTL, should be identical value
-    expect(date1).toEqual(new Date((await dateCacher.getAsync())));
+    expect(date1).toEqual(new Date(await dateCacher.getAsync()));
 
     // should be outside of the TTL -- just making sure that sufficient delay will change the value
     setTimeout(() => {
@@ -37,9 +37,7 @@ describe('Cacher', () => {
   });
 
   it('works with a bootstrap file', async () => {
-    const expected = JSON.parse(
-      await fsp.readFile(path.join(__dirname, '../../../package.json'))
-    );
+    const expected = JSON.parse(await fsp.readFile(path.join(__dirname, '../../../package.json')));
 
     const failCacher = new Cacher(
       () => {

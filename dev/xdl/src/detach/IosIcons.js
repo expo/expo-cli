@@ -1,10 +1,6 @@
 import path from 'path';
 
-import {
-  saveImageToPathAsync,
-  saveUrlToPathAsync,
-  spawnAsyncThrowError,
-} from './ExponentTools';
+import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
 
 function _getAppleIconQualifier(iconSize, iconResolution) {
   let iconQualifier;
@@ -28,27 +24,17 @@ function _getAppleIconQualifier(iconSize, iconResolution) {
  *
  * This only works on MacOS (as far as I know) because it uses the sips utility.
  */
-async function createAndWriteIconsToPathAsync(
-  manifest,
-  destinationIconPath,
-  projectRoot
-) {
+async function createAndWriteIconsToPathAsync(manifest, destinationIconPath, projectRoot) {
   if (process.platform !== 'darwin') {
     console.warn('`sips` utility may or may not work outside of macOS');
   }
   let defaultIconFilename;
   if (manifest.ios && manifest.ios.iconUrl) {
     defaultIconFilename = 'exp-icon.png';
-    await saveUrlToPathAsync(
-      manifest.ios.iconUrl,
-      `${destinationIconPath}/${defaultIconFilename}`
-    );
+    await saveUrlToPathAsync(manifest.ios.iconUrl, `${destinationIconPath}/${defaultIconFilename}`);
   } else if (manifest.iconUrl) {
     defaultIconFilename = 'exp-icon.png';
-    await saveUrlToPathAsync(
-      manifest.iconUrl,
-      `${destinationIconPath}/${defaultIconFilename}`
-    );
+    await saveUrlToPathAsync(manifest.iconUrl, `${destinationIconPath}/${defaultIconFilename}`);
   } else if (projectRoot && manifest.icon) {
     defaultIconFilename = 'exp-icon.png';
     await saveImageToPathAsync(
@@ -112,30 +98,21 @@ async function createAndWriteIconsToPathAsync(
       }
 
       // reject non-square icons (because Apple will if we don't)
-      const dims = await getImageDimensionsMacOSAsync(
-        destinationIconPath,
-        iconFilename
-      );
+      const dims = await getImageDimensionsMacOSAsync(destinationIconPath, iconFilename);
       if (!dims || dims.length < 2 || dims[0] !== dims[1]) {
-        throw new Error(
-          `iOS icons must be square, the dimensions of ${iconFilename} are ${dims}`
-        );
+        throw new Error(`iOS icons must be square, the dimensions of ${iconFilename} are ${dims}`);
       }
 
       if (!usesDefault) {
         // non-default icon used, clean up the downloaded version
-        await spawnAsyncThrowError('/bin/rm', [
-          path.join(destinationIconPath, rawIconFilename),
-        ]);
+        await spawnAsyncThrowError('/bin/rm', [path.join(destinationIconPath, rawIconFilename)]);
       }
     });
   });
 
   // clean up default icon
   if (defaultIconFilename) {
-    await spawnAsyncThrowError('/bin/rm', [
-      path.join(destinationIconPath, defaultIconFilename),
-    ]);
+    await spawnAsyncThrowError('/bin/rm', [path.join(destinationIconPath, defaultIconFilename)]);
   }
   return;
 }

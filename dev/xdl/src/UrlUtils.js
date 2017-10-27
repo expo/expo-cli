@@ -68,12 +68,7 @@ export async function constructPublishUrlAsync(
   entryPoint: string,
   requestHostname?: string
 ) {
-  return await constructUrlWithExtensionAsync(
-    projectRoot,
-    entryPoint,
-    'bundle',
-    requestHostname
-  );
+  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'bundle', requestHostname);
 }
 
 export async function constructSourceMapUrlAsync(
@@ -81,12 +76,7 @@ export async function constructSourceMapUrlAsync(
   entryPoint: string,
   requestHostname?: string
 ) {
-  return await constructUrlWithExtensionAsync(
-    projectRoot,
-    entryPoint,
-    'map',
-    requestHostname
-  );
+  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'map', requestHostname);
 }
 
 export async function constructAssetsUrlAsync(
@@ -94,18 +84,10 @@ export async function constructAssetsUrlAsync(
   entryPoint: string,
   requestHostname?: string
 ) {
-  return await constructUrlWithExtensionAsync(
-    projectRoot,
-    entryPoint,
-    'assets',
-    requestHostname
-  );
+  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'assets', requestHostname);
 }
 
-export async function constructDebuggerHostAsync(
-  projectRoot: string,
-  requestHostname?: string
-) {
+export async function constructDebuggerHostAsync(projectRoot: string, requestHostname?: string) {
   return constructUrlAsync(
     projectRoot,
     {
@@ -116,10 +98,7 @@ export async function constructDebuggerHostAsync(
   );
 }
 
-export async function constructBundleQueryParamsAsync(
-  projectRoot: string,
-  opts: any
-) {
+export async function constructBundleQueryParamsAsync(projectRoot: string, opts: any) {
   let queryParams = `dev=${encodeURIComponent(!!opts.dev)}`;
 
   if (opts.hasOwnProperty('strict')) {
@@ -141,12 +120,7 @@ export async function constructBundleQueryParamsAsync(
   let nodeModulesPath = exp.nodeModulesPath
     ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'node_modules')
     : path.join(projectRoot, 'node_modules');
-  let pluginModule = path.join(
-    nodeModulesPath,
-    sdkPkg,
-    'tools',
-    'hashAssetFiles'
-  );
+  let pluginModule = path.join(nodeModulesPath, sdkPkg, 'tools', 'hashAssetFiles');
   queryParams += `&assetPlugin=${pluginModule}`;
 
   // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
@@ -169,7 +143,10 @@ export async function constructUrlAsync(
     // the randomness is only important if we're online and can build a tunnel
     let urlRandomnessSchema;
     if (Config.offline) {
-      urlRandomnessSchema = joi.string().optional().allow(null);
+      urlRandomnessSchema = joi
+        .string()
+        .optional()
+        .allow(null);
     } else {
       urlRandomnessSchema = joi.string();
     }
@@ -237,15 +214,11 @@ export async function constructUrlAsync(
     }
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else {
-    let ngrokUrl = isPackager
-      ? packagerInfo.packagerNgrokUrl
-      : packagerInfo.expoServerNgrokUrl;
+    let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
     if (!ngrokUrl) {
       // use localhost
       hostname = 'localhost';
-      port = isPackager
-        ? packagerInfo.packagerPort
-        : packagerInfo.expoServerPort;
+      port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
 
       // TODO report a warning when this is for a currently served project, suppress for status checks
     } else {

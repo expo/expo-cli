@@ -86,16 +86,12 @@ describe('determineEntryPointAsync', () => {
   });
 
   it('exists-no-platform', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync(
-      '/exists-no-platform'
-    );
+    const entryPoint = await Exp.determineEntryPointAsync('/exists-no-platform');
     expect(entryPoint).toBe('index.js');
   });
 
   it('exists-no-platform-no-main', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync(
-      '/exists-no-platform-no-main'
-    );
+    const entryPoint = await Exp.determineEntryPointAsync('/exists-no-platform-no-main');
     expect(entryPoint).toBe('index.js');
   });
 

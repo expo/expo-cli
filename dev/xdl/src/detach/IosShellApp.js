@@ -28,13 +28,9 @@ function validateConfigArguments(manifest, cmdArgs, configFilePath) {
   if (!configFilePath) {
     throw new Error('No path to config files provided');
   }
-  let bundleIdentifierFromManifest = manifest.ios
-    ? manifest.ios.bundleIdentifier
-    : null;
+  let bundleIdentifierFromManifest = manifest.ios ? manifest.ios.bundleIdentifier : null;
   if (!bundleIdentifierFromManifest && !cmdArgs.bundleIdentifier) {
-    throw new Error(
-      'No bundle identifier found in either the manifest or argv'
-    );
+    throw new Error('No bundle identifier found in either the manifest or argv');
   }
   if (!manifest.name) {
     throw new Error('Manifest does not have a name');
@@ -72,46 +68,38 @@ async function configureStandaloneIOSEntitlementsAsync(
   buildConfiguration,
   manifest
 ) {
-  const result = IosPlist.modifyAsync(
-    entitlementsFilePath,
-    'Exponent.entitlements',
-    config => {
-      // push notif entitlement changes based on build configuration
-      config['aps-environment'] =
-        buildConfiguration === 'Release' ? 'production' : 'development';
+  const result = IosPlist.modifyAsync(entitlementsFilePath, 'Exponent.entitlements', config => {
+    // push notif entitlement changes based on build configuration
+    config['aps-environment'] = buildConfiguration === 'Release' ? 'production' : 'development';
 
-      // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-      if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
-        let iCloudKeys = [
-          'com.apple.developer.icloud-container-identifiers',
-          'com.apple.developer.icloud-services',
-          'com.apple.developer.ubiquity-container-identifiers',
-          'com.apple.developer.ubiquity-kvstore-identifier',
-        ];
-        iCloudKeys.forEach(key => {
-          if (config.hasOwnProperty(key)) {
-            delete config[key];
-          }
-        });
-      }
-
-      // Add app associated domains remove exp-specific ones.
-      if (manifest.ios && manifest.ios.associatedDomains) {
-        config['com.apple.developer.associated-domains'] =
-          manifest.ios.associatedDomains;
-      } else if (
-        config.hasOwnProperty('com.apple.developer.associated-domains')
-      ) {
-        delete config['com.apple.developer.associated-domains'];
-      }
-
-      // for now, remove any merchant ID in shell apps
-      // (TODO: better plan for payments)
-      delete config['com.apple.developer.in-app-payments'];
-
-      return config;
+    // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
+    if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
+      let iCloudKeys = [
+        'com.apple.developer.icloud-container-identifiers',
+        'com.apple.developer.icloud-services',
+        'com.apple.developer.ubiquity-container-identifiers',
+        'com.apple.developer.ubiquity-kvstore-identifier',
+      ];
+      iCloudKeys.forEach(key => {
+        if (config.hasOwnProperty(key)) {
+          delete config[key];
+        }
+      });
     }
-  );
+
+    // Add app associated domains remove exp-specific ones.
+    if (manifest.ios && manifest.ios.associatedDomains) {
+      config['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
+    } else if (config.hasOwnProperty('com.apple.developer.associated-domains')) {
+      delete config['com.apple.developer.associated-domains'];
+    }
+
+    // for now, remove any merchant ID in shell apps
+    // (TODO: better plan for payments)
+    delete config['com.apple.developer.in-app-payments'];
+
+    return config;
+  });
   return result;
 }
 
@@ -198,16 +186,13 @@ async function configureStandaloneIOSInfoPlistAsync(
 
     // use version from manifest
     let version = manifest.version ? manifest.version : '0.0.0';
-    let buildNumber =
-      manifest.ios && manifest.ios.buildNumber ? manifest.ios.buildNumber : '1';
+    let buildNumber = manifest.ios && manifest.ios.buildNumber ? manifest.ios.buildNumber : '1';
     config.CFBundleShortVersionString = version;
     config.CFBundleVersion = buildNumber;
 
     config.Fabric = {
       APIKey:
-        (privateConfig &&
-          privateConfig.fabric &&
-          privateConfig.fabric.apiKey) ||
+        (privateConfig && privateConfig.fabric && privateConfig.fabric.apiKey) ||
         DEFAULT_FABRIC_KEY,
       Kits: [
         {
@@ -225,20 +210,13 @@ async function configureStandaloneIOSInfoPlistAsync(
 
     let permissionsAppName = manifest.name ? manifest.name : 'this app';
     for (let key in config) {
-      if (
-        config.hasOwnProperty(key) &&
-        key.indexOf('UsageDescription') !== -1
-      ) {
-        config[key] = config[key].replace(
-          'Expo experiences',
-          permissionsAppName
-        );
+      if (config.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1) {
+        config[key] = config[key].replace('Expo experiences', permissionsAppName);
       }
     }
 
     // 1 is iPhone, 2 is iPad
-    config.UIDeviceFamily =
-      manifest.ios && manifest.ios.supportsTablet ? [1, 2] : [1];
+    config.UIDeviceFamily = manifest.ios && manifest.ios.supportsTablet ? [1, 2] : [1];
 
     // allow iPad-only
     if (manifest.ios && manifest.ios.isTabletOnly) {
@@ -256,11 +234,7 @@ async function configureStandaloneIOSInfoPlistAsync(
  * @param manifest the app's manifest
  * @param manifestUrl the app's manifest url
  */
-async function configureStandaloneIOSShellPlistAsync(
-  configFilePath,
-  manifest,
-  manifestUrl
-) {
+async function configureStandaloneIOSShellPlistAsync(configFilePath, manifest, manifestUrl) {
   await IosPlist.modifyAsync(configFilePath, 'EXShell', shellConfig => {
     shellConfig.isShell = true;
     shellConfig.manifestUrl = manifestUrl;
@@ -296,26 +270,15 @@ async function configurePropertyListsAsync(manifest, args, configFilePath) {
 
   let privateConfig;
   if (privateConfigFile) {
-    let privateConfigContents = await fs.promise.readFile(
-      privateConfigFile,
-      'utf8'
-    );
+    let privateConfigContents = await fs.promise.readFile(privateConfigFile, 'utf8');
     privateConfig = JSON.parse(privateConfigContents);
   }
 
   // generate new shell config
-  await configureStandaloneIOSShellPlistAsync(
-    configFilePath,
-    manifest,
-    args.url
-  );
+  await configureStandaloneIOSShellPlistAsync(configFilePath, manifest, args.url);
 
   // entitlements changes
-  await configureStandaloneIOSEntitlementsAsync(
-    configFilePath,
-    args.configuration,
-    manifest
-  );
+  await configureStandaloneIOSEntitlementsAsync(configFilePath, args.configuration, manifest);
 
   // Info.plist changes specific to turtle
   await IosPlist.modifyAsync(configFilePath, 'Info', config => {
@@ -338,21 +301,14 @@ async function configurePropertyListsAsync(manifest, args, configFilePath) {
  */
 async function preloadManifestAndBundleAsync(manifest, args, configFilePath) {
   let bundleUrl = manifest.bundleUrl;
-  await fs.promise.writeFile(
-    `${configFilePath}/shell-app-manifest.json`,
-    JSON.stringify(manifest)
-  );
+  await fs.promise.writeFile(`${configFilePath}/shell-app-manifest.json`, JSON.stringify(manifest));
   await saveUrlToPathAsync(bundleUrl, `${configFilePath}/shell-app.bundle`);
   return;
 }
 
 async function cleanPropertyListBackupsAsync(configFilePath, restoreOriginals) {
   await IosPlist.cleanBackupAsync(configFilePath, 'EXShell', restoreOriginals);
-  await IosPlist.cleanBackupAsync(
-    configFilePath,
-    'Exponent.entitlements',
-    restoreOriginals
-  );
+  await IosPlist.cleanBackupAsync(configFilePath, 'Exponent.entitlements', restoreOriginals);
   await IosPlist.cleanBackupAsync(configFilePath, 'Info', restoreOriginals);
 }
 
@@ -365,17 +321,11 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
 
   let buildCmd, buildDest, pathToApp;
   if (type === 'simulator') {
-    buildDest = path.relative(
-      iOSRootPath,
-      `${relativeBuildDestination}-simulator`
-    );
+    buildDest = path.relative(iOSRootPath, `${relativeBuildDestination}-simulator`);
     buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphonesimulator -configuration ${configuration} -derivedDataPath ${buildDest} CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
     pathToApp = `${buildDest}/Build/Products/${configuration}-iphonesimulator/Exponent.app`;
   } else if (type === 'archive') {
-    buildDest = path.relative(
-      iOSRootPath,
-      `${relativeBuildDestination}-archive`
-    );
+    buildDest = path.relative(iOSRootPath, `${relativeBuildDestination}-archive`);
     buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphoneos -destination generic/platform=iOS -configuration ${configuration} archive -derivedDataPath ${buildDest} -archivePath ${buildDest}/Exponent.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty`;
     pathToApp = `${buildDest}/Exponent.xcarchive/Products/Applications/Exponent.app`;
   }
@@ -395,18 +345,11 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
       shell: true,
     });
 
-    const artifactLocation = path.join(
-      iOSRootPath,
-      '../shellAppBase-builds',
-      type,
-      configuration
-    );
+    const artifactLocation = path.join(iOSRootPath, '../shellAppBase-builds', type, configuration);
     await spawnAsyncThrowError('/bin/rm', ['-rf', artifactLocation]);
     await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactLocation]);
 
-    console.log(
-      `\nFinished building, copying artifact to ${artifactLocation}...`
-    );
+    console.log(`\nFinished building, copying artifact to ${artifactLocation}...`);
     if (type === 'archive') {
       await spawnAsyncThrowError('/bin/cp', [
         '-R',
@@ -414,11 +357,7 @@ async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
         artifactLocation,
       ]);
     } else if (type === 'simulator') {
-      await spawnAsyncThrowError('/bin/cp', [
-        '-R',
-        pathToApp,
-        artifactLocation,
-      ]);
+      await spawnAsyncThrowError('/bin/cp', ['-R', pathToApp, artifactLocation]);
     }
   }
   return pathToApp;
@@ -432,17 +371,13 @@ function validateArgs(args) {
   switch (args.type) {
     case 'simulator': {
       if (args.configuration !== 'Debug' && args.configuration !== 'Release') {
-        throw new Error(
-          `Unsupported build configuration ${args.configuration}`
-        );
+        throw new Error(`Unsupported build configuration ${args.configuration}`);
       }
       break;
     }
     case 'archive': {
       if (args.configuration !== 'Release') {
-        throw new Error(
-          'Release is the only supported configuration when archiving'
-        );
+        throw new Error('Release is the only supported configuration when archiving');
       }
       break;
     }
@@ -493,11 +428,7 @@ async function configureIOSShellAppAsync(args, manifest) {
     expoSourceRoot,
     intermediatesDir
   );
-  await IosLaunchScreen.configureLaunchAssetsAsync(
-    manifest,
-    configFilePath,
-    expoSourceRoot
-  );
+  await IosLaunchScreen.configureLaunchAssetsAsync(manifest, configFilePath, expoSourceRoot);
   await preloadManifestAndBundleAsync(manifest, args, configFilePath);
   console.log('Cleaning up...');
   await cleanPropertyListBackupsAsync(configFilePath, false);

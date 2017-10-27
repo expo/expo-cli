@@ -53,9 +53,7 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
 
   // remove access token
   try {
-    let settingsJsonFile = new JsonFile(
-      path.join(tempDir, UserSettings.SETTINGS_FILE_NAME)
-    );
+    let settingsJsonFile = new JsonFile(path.join(tempDir, UserSettings.SETTINGS_FILE_NAME));
     let settingsJson = await settingsJsonFile.readAsync();
     settingsJson.accessToken = 'redacted';
     settingsJson.auth = 'redacted';
@@ -74,13 +72,7 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
     archive: file,
   };
 
-  let response = await Api.callMethodAsync(
-    'uploadDiagnostics',
-    [{}],
-    'put',
-    null,
-    { formData }
-  );
+  let response = await Api.callMethodAsync('uploadDiagnostics', [{}], 'put', null, { formData });
   return response.url;
 }
 
@@ -163,15 +155,11 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   if (process.platform === 'darwin') {
     // || process.platform === 'linux') {
     try {
-      info.xdeProcesses = _.trim(
-        child_process.execSync('pgrep XDE | xargs ps -p').toString()
-      );
+      info.xdeProcesses = _.trim(child_process.execSync('pgrep XDE | xargs ps -p').toString());
     } catch (e) {}
 
     try {
-      info.numXdeProcesses = _.trim(
-        child_process.execSync('pgrep XDE | wc -l').toString()
-      );
+      info.numXdeProcesses = _.trim(child_process.execSync('pgrep XDE | wc -l').toString());
     } catch (e) {}
 
     try {
@@ -187,15 +175,11 @@ export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
     } catch (e) {}
 
     try {
-      info.ngrokProcesses = _.trim(
-        child_process.execSync('pgrep ngrok | xargs ps -p').toString()
-      );
+      info.ngrokProcesses = _.trim(child_process.execSync('pgrep ngrok | xargs ps -p').toString());
     } catch (e) {}
 
     try {
-      info.numNgrokProcesses = _.trim(
-        child_process.execSync('pgrep ngrok | wc -l').toString()
-      );
+      info.numNgrokProcesses = _.trim(child_process.execSync('pgrep ngrok | wc -l').toString());
     } catch (e) {}
   }
 

@@ -8,9 +8,7 @@ import log from '../log';
 export default (program: any) => {
   program
     .command('install:ios')
-    .description(
-      'Install the latest version of Expo Client for iOS on the simulator'
-    )
+    .description('Install the latest version of Expo Client for iOS on the simulator')
     .asyncAction(async () => {
       if (await Simulator.upgradeExpoAsync()) {
         log('Done!');

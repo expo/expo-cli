@@ -65,9 +65,7 @@ export async function newestSdkVersionAsync() {
   return result;
 }
 
-export async function facebookReactNativeVersionsAsync(): Promise<
-  Array<string>
-> {
+export async function facebookReactNativeVersionsAsync(): Promise<Array<string>> {
   let sdkVersions = await Api.sdkVersionsAsync();
   let facebookReactNativeVersions = new Set();
 
@@ -95,10 +93,8 @@ export async function facebookReactNativeVersionToExpoVersionAsync(
 
   _.forEach(sdkVersions, (value, key) => {
     if (
-      semver.major(value.facebookReactNativeVersion) ===
-        semver.major(facebookReactNativeVersion) &&
-      semver.minor(value.facebookReactNativeVersion) ===
-        semver.minor(facebookReactNativeVersion) &&
+      semver.major(value.facebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
+      semver.minor(value.facebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
       (!currentSdkVersion || semver.gt(key, currentSdkVersion))
     ) {
       currentSdkVersion = key;

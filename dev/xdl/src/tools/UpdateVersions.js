@@ -52,17 +52,11 @@ export async function updateIOSSimulatorBuild(
 
   let versions = await Versions.versionsAsync();
   versions['iosVersion'] = appVersion;
-  versions[
-    'iosUrl'
-  ] = `https://dpq5q02fu5f55.cloudfront.net/Exponent-${appVersion}.tar.gz`;
+  versions['iosUrl'] = `https://dpq5q02fu5f55.cloudfront.net/Exponent-${appVersion}.tar.gz`;
   await Versions.setVersionsAsync(versions);
 }
 
-export async function updateAndroidApk(
-  s3Client: any,
-  pathToApp: string,
-  appVersion: string
-) {
+export async function updateAndroidApk(s3Client: any, pathToApp: string, appVersion: string) {
   let file = fs.createReadStream(pathToApp);
 
   console.log('Uploading...');
@@ -78,8 +72,6 @@ export async function updateAndroidApk(
 
   let versions = await Versions.versionsAsync();
   versions['androidVersion'] = appVersion;
-  versions[
-    'androidUrl'
-  ] = `https://d1ahtucjixef4r.cloudfront.net/Exponent-${appVersion}.apk`;
+  versions['androidUrl'] = `https://d1ahtucjixef4r.cloudfront.net/Exponent-${appVersion}.apk`;
   await Versions.setVersionsAsync(versions);
 }
