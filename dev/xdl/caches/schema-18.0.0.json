@@ -336,6 +336,10 @@
           "associatedDomains": {
             "description": "An array that contains Associated Domains for the standalone app.",
             "type": "array"
+          },
+          "usesIcloudStorage": {
+            "description": "A boolean indicating if the app uses iCloud Storage for DocumentPicker. See DocumentPicker docs for details.",
+            "type": "boolean"
           }
         },
         "additionalProperties": false

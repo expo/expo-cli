@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [46.1.0] - 2017-10-27
+
+### Changed
+
+* Only detach iOS on macOS or when a --force flag is added
+
 ## [46.0.1] - 2017-10-18
 
 ### Added

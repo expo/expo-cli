@@ -11,7 +11,7 @@
         "type": "string"
       },
       "slug": {
-        "description": "The friendly url name for publishing. eg: `expo.o/@your-username/slug`.",
+        "description": "The friendly url name for publishing. eg: `expo.io/@your-username/slug`.",
         "type": "string",
         "pattern": "^[a-zA-Z0-9\\-]+$"
       },
@@ -354,6 +354,10 @@
           "associatedDomains": {
             "description": "An array that contains Associated Domains for the standalone app.",
             "type": "array"
+          },
+          "usesIcloudStorage": {
+            "description": "A boolean indicating if the app uses iCloud Storage for DocumentPicker. See DocumentPicker docs for details.",
+            "type": "boolean"
           },
           "splash": {
             "description": "**Experimental**: Configuration for loading and splash screen for standalone iOS apps.",
