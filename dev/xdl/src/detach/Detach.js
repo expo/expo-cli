@@ -22,9 +22,6 @@ import {
   parseSdkMajorVersion,
   saveImageToPathAsync,
   rimrafDontThrow,
-  spawnAsyncThrowError,
-  spawnAsync,
-  transformFileContentsAsync,
 } from './ExponentTools';
 
 import * as IosPlist from './IosPlist';
@@ -171,16 +168,8 @@ export async function detachAsync(projectRoot: string, options: any) {
   if (!hasIosDirectory && isIosSupported) {
     const context = StandaloneContext.createUserContext(projectRoot, exp);
     await detachIOSAsync(context, experienceUrl);
-    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    exp = IosWorkspace.addDetachedConfigToExp(exp, context);
     exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
-    exp.ios.publishBundlePath = path.relative(
-      projectRoot,
-      path.join(supportingDirectory, 'shell-app.bundle')
-    );
-    exp.ios.publishManifestPath = path.relative(
-      projectRoot,
-      path.join(supportingDirectory, 'shell-app-manifest.json')
-    );
   }
 
   // Android
@@ -453,11 +442,9 @@ async function prepareDetachedBuildIosAsync(
   args: any
 ) {
   const context = StandaloneContext.createUserContext(projectDir, exp);
-  let {
-    iosProjectDirectory,
-    projectName,
-    supportingDirectory,
-  } = IosWorkspace.getPaths(context);
+  let { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(
+    context
+  );
 
   console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions

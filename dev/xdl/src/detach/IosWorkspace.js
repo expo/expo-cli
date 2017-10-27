@@ -240,6 +240,28 @@ async function createDetachedAsync(context: StandaloneContext) {
   return;
 }
 
+function addDetachedConfigToExp(exp: any, context: StandaloneContext): any {
+  if (context.type !== 'user') {
+    console.warn(
+      `Tried to modify exp for a non-user StandaloneContext, ignoring`
+    );
+    return;
+  }
+  if (!exp) {
+    exp = {};
+  }
+  const { supportingDirectory } = getPaths(context);
+  exp.ios.publishBundlePath = path.relative(
+    context.data.projectPath,
+    path.join(supportingDirectory, 'shell-app.bundle')
+  );
+  exp.ios.publishManifestPath = path.relative(
+    context.data.projectPath,
+    path.join(supportingDirectory, 'shell-app-manifest.json')
+  );
+  return exp;
+}
+
 function getPaths(context: StandaloneContext) {
   // TODO: support both types of context
   if (context.type !== 'user') {
@@ -268,4 +290,4 @@ function getPaths(context: StandaloneContext) {
   };
 }
 
-export { createDetachedAsync, getPaths };
+export { addDetachedConfigToExp, createDetachedAsync, getPaths };
