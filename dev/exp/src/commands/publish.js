@@ -17,6 +17,14 @@ type Options = {
 };
 
 export async function action(projectDir: string, options: Options = {}) {
+  if (
+    options.releaseChannel !== 'default' &&
+    options.releaseChannel !== 'staging' &&
+    options.releaseChannel !== 'production'
+  ) {
+    log.error('Channel type must be one of {default, staging, production}');
+    process.exit(1);
+  }
   const status = await Project.currentStatus(projectDir);
 
   let startedOurOwn = false;
@@ -34,7 +42,9 @@ export async function action(projectDir: string, options: Options = {}) {
     simpleSpinner.start();
   }
 
-  let result = await Project.publishAsync(projectDir);
+  let result = await Project.publishAsync(projectDir, {
+    releaseChannel: options.releaseChannel,
+  });
 
   if (options.quiet) {
     simpleSpinner.stop();
@@ -60,8 +70,20 @@ export default (program: any) => {
     .command('publish [project-dir]')
     .alias('p')
     .description('Publishes your project to exp.host')
-    .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
-    .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
+    .option(
+      '-q, --quiet',
+      'Suppress verbose output from the React Native packager.'
+    )
+    .option(
+      '-s, --send-to [dest]',
+      'A phone number or e-mail address to send a link to'
+    )
+    .option(
+      '-c --release-channel <release channel>',
+      "The release channel to publish to, one of {default, staging, prod}. Default is 'default'.",
+      /^(default|staging|production)$/i,
+      'default'
+    )
     .allowNonInteractive()
     .asyncActionProjectDir(action, true);
 };

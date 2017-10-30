@@ -338,10 +338,12 @@ export async function publishAsync(
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
         'Exponent-Platform': 'android',
+        'Expo-Release-Channel': options.releaseChannel,
       }),
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
         'Exponent-Platform': 'ios',
+        'Expo-Release-Channel': options.releaseChannel,
       }),
     ]);
 
@@ -449,12 +451,13 @@ async function _validatePackagerReadyAsync(projectRoot) {
 
 async function _getPublishExpConfigAsync(projectRoot, options) {
   let schema = joi.object().keys({
-    // empty
+    releaseChannel: joi.string(),
   });
 
   // Validate schema
   try {
     await joi.promise.validate(options, schema);
+    options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
