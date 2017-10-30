@@ -13,6 +13,7 @@ type BuilderOptions = {
   wait: boolean,
   clearCredentials: boolean,
   type?: string,
+  releaseChannel?: string,
 };
 
 export default class BaseBuilder {
@@ -142,7 +143,9 @@ ${buildStatus.id}
     log('Starting build process...');
 
     //run publish -- in future, we should determine whether we NEED to do this
-    const { ids: expIds, url, err } = await publishAction(this.projectDir);
+    const { ids: expIds, url, err } = await publishAction(this.projectDir, {
+      releaseChannel: this.options.channel,
+    });
 
     if (err) {
       throw new BuildError(`No url was returned from publish. Please try again.\n${err}`);
@@ -160,6 +163,7 @@ ${buildStatus.id}
       mode: 'create',
       expIds,
       platform,
+      releaseChannel: this.options.channel,
     };
 
     if (platform === 'ios') {

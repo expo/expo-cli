@@ -234,10 +234,16 @@ async function configureStandaloneIOSInfoPlistAsync(
  * @param manifest the app's manifest
  * @param manifestUrl the app's manifest url
  */
-async function configureStandaloneIOSShellPlistAsync(configFilePath, manifest, manifestUrl) {
+async function configureStandaloneIOSShellPlistAsync(
+  configFilePath,
+  manifest,
+  manifestUrl,
+  releaseChannel
+) {
   await IosPlist.modifyAsync(configFilePath, 'EXShell', shellConfig => {
     shellConfig.isShell = true;
     shellConfig.manifestUrl = manifestUrl;
+    shellConfig.releaseChannel = releaseChannel ? releaseChannel : 'default';
     if (manifest.ios && manifest.ios.permissions) {
       shellConfig.permissions = manifest.ios.permissions;
     }
@@ -275,7 +281,12 @@ async function configurePropertyListsAsync(manifest, args, configFilePath) {
   }
 
   // generate new shell config
-  await configureStandaloneIOSShellPlistAsync(configFilePath, manifest, args.url);
+  await configureStandaloneIOSShellPlistAsync(
+    configFilePath,
+    manifest,
+    args.url,
+    args.releaseChannel
+  );
 
   // entitlements changes
   await configureStandaloneIOSEntitlementsAsync(configFilePath, args.configuration, manifest);
@@ -469,6 +480,7 @@ async function moveShellAppArchiveAsync(args, manifest) {
 *    build - build a binary
 *    configure - don't build anything, just configure the files in an existing .app bundle
 *  @param type simulator or archive
+*  @param releaseChannel default, staging or production
 *  @param configuration Debug or Release, for type == simulator (default Release)
 *  @param archivePath path to existing bundle, for action == configure
 *  @param privateConfigFile path to a private config file containing, e.g., private api keys
@@ -487,6 +499,9 @@ async function createIOSShellAppAsync(args) {
     let manifest = await getManifestAsync(url, {
       'Exponent-SDK-Version': sdkVersion,
       'Exponent-Platform': 'ios',
+      'Expo-Release-Channel': args.releaseChannel
+        ? args.releaseChannel
+        : 'default',
     });
     await configureIOSShellAppAsync(args, manifest);
     if (args.output) {

@@ -708,6 +708,7 @@ export async function buildAsync(
     platform?: string,
     expIds?: Array<string>,
     type?: string,
+    releaseChannel?: string,
   } = {}
 ) {
   await UserManager.ensureLoggedInAsync();
@@ -723,6 +724,7 @@ export async function buildAsync(
     platform: joi.any().valid('ios', 'android', 'all'),
     expIds: joi.array(),
     type: joi.any().valid('archive', 'simulator'),
+    releaseChannel: joi.any().valid('default', 'staging', 'production'),
   });
 
   try {
