@@ -226,19 +226,24 @@ function addDetachedConfigToExp(exp: any, context: StandaloneContext): any {
 }
 
 function getPaths(context: StandaloneContext) {
-  // TODO: support both types of context
-  if (context.type !== 'user') {
-    throw new Error(`IosWorkspace only supports user standalone contexts`);
-  }
-  let iosProjectDirectory = path.join(context.data.projectPath, 'ios');
+  let iosProjectDirectory;
   let projectName;
   let supportingDirectory;
   if (context.config && context.config.name) {
     let projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
-    supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
   } else {
-    throw new Error('Cannot configure an ExpoKit app with no name. Are you missing `exp.json`?');
+    throw new Error('Cannot configure an Expo project with no name.');
+  }
+  if (context.type === 'user') {
+    iosProjectDirectory = path.join(context.data.projectPath, 'ios');
+    supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
+  } else if (context.type === 'service') {
+    // compiled archive has a flat NSBundle
+    supportingDirectory = context.data.archivePath;
+    iosProjectDirectory = context.data.archivePath;
+  } else {
+    throw new Error(`Unsupported StandaloneContext type: ${context.type}`);
   }
   return {
     iosProjectDirectory,

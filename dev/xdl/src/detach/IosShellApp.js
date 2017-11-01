@@ -6,19 +6,16 @@ import 'instapromise';
 
 import fs from 'fs';
 import path from 'path';
-import rimraf from 'rimraf';
 import {
   getManifestAsync,
-  saveUrlToPathAsync,
   spawnAsync,
   spawnAsyncThrowError,
   manifestUsesSplashApi,
 } from './ExponentTools';
 
-import * as IosIcons from './IosIcons';
-import * as IosAssetArchive from './IosAssetArchive';
-import * as IosLaunchScreen from './IosLaunchScreen';
+import * as IosNSBundle from './IosNSBundle';
 import * as IosPlist from './IosPlist';
+import StandaloneContext from './StandaloneContext';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -29,7 +26,7 @@ function validateConfigArguments(manifest, cmdArgs, configFilePath) {
     throw new Error('No path to config files provided');
   }
   let bundleIdentifierFromManifest = manifest.ios ? manifest.ios.bundleIdentifier : null;
-  if (!bundleIdentifierFromManifest && !cmdArgs.bundleIdentifier) {
+  if (!bundleIdentifierFromManifest) {
     throw new Error('No bundle identifier found in either the manifest or argv');
   }
   if (!manifest.name) {
@@ -58,63 +55,15 @@ async function configureShellAppSecretsAsync(args, iosDir) {
 }
 
 /**
- * Configure a standalone entitlements file.
- * @param entitlementsFilePath Path to directory containing entitlements file
- * @param buildConfiguration Debug or Release
- * @param manifest The app manifest
- */
-async function configureStandaloneIOSEntitlementsAsync(
-  entitlementsFilePath,
-  buildConfiguration,
-  manifest
-) {
-  const result = IosPlist.modifyAsync(entitlementsFilePath, 'Exponent.entitlements', config => {
-    // push notif entitlement changes based on build configuration
-    config['aps-environment'] = buildConfiguration === 'Release' ? 'production' : 'development';
-
-    // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-    if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
-      let iCloudKeys = [
-        'com.apple.developer.icloud-container-identifiers',
-        'com.apple.developer.icloud-services',
-        'com.apple.developer.ubiquity-container-identifiers',
-        'com.apple.developer.ubiquity-kvstore-identifier',
-      ];
-      iCloudKeys.forEach(key => {
-        if (config.hasOwnProperty(key)) {
-          delete config[key];
-        }
-      });
-    }
-
-    // Add app associated domains remove exp-specific ones.
-    if (manifest.ios && manifest.ios.associatedDomains) {
-      config['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
-    } else if (config.hasOwnProperty('com.apple.developer.associated-domains')) {
-      delete config['com.apple.developer.associated-domains'];
-    }
-
-    // for now, remove any merchant ID in shell apps
-    // (TODO: better plan for payments)
-    delete config['com.apple.developer.in-app-payments'];
-
-    return config;
-  });
-  return result;
-}
-
-/**
  * Configure an iOS Info.plist for a standalone app given its exponent configuration.
  * @param configFilePath Path to directory containing Info.plist
  * @param manifest the app's manifest
  * @param privateConfig optional config with the app's private keys
- * @param bundleIdentifier optional bundle id if the manifest doesn't contain one already
  */
 async function configureStandaloneIOSInfoPlistAsync(
   configFilePath,
   manifest,
-  privateConfig = null,
-  bundleIdentifier = null
+  privateConfig = null
 ) {
   let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
     // make sure this happens first:
@@ -130,9 +79,7 @@ async function configureStandaloneIOSInfoPlistAsync(
 
     // bundle id
     config.CFBundleIdentifier =
-      manifest.ios && manifest.ios.bundleIdentifier
-        ? manifest.ios.bundleIdentifier
-        : bundleIdentifier;
+      manifest.ios && manifest.ios.bundleIdentifier ? manifest.ios.bundleIdentifier : null;
     if (!config.CFBundleIdentifier) {
       throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
     }
@@ -267,62 +214,6 @@ async function configureStandaloneIOSShellPlistAsync(
   });
 }
 
-async function configurePropertyListsAsync(manifest, args, configFilePath) {
-  // make sure we have all the required info
-  validateConfigArguments(manifest, args, configFilePath);
-  console.log(`Modifying config files under ${configFilePath}...`);
-
-  let { privateConfigFile } = args;
-
-  let privateConfig;
-  if (privateConfigFile) {
-    let privateConfigContents = await fs.promise.readFile(privateConfigFile, 'utf8');
-    privateConfig = JSON.parse(privateConfigContents);
-  }
-
-  // generate new shell config
-  await configureStandaloneIOSShellPlistAsync(
-    configFilePath,
-    manifest,
-    args.url,
-    args.releaseChannel
-  );
-
-  // entitlements changes
-  await configureStandaloneIOSEntitlementsAsync(configFilePath, args.configuration, manifest);
-
-  // Info.plist changes specific to turtle
-  await IosPlist.modifyAsync(configFilePath, 'Info', config => {
-    // use shell-specific launch screen
-    config.UILaunchStoryboardName = 'LaunchScreenShell';
-    return config;
-  });
-
-  // common standalone Info.plist config changes
-  await configureStandaloneIOSInfoPlistAsync(
-    configFilePath,
-    manifest,
-    privateConfig,
-    args.bundleIdentifier
-  );
-}
-
-/**
- * Write the manifest and JS bundle to the iOS NSBundle.
- */
-async function preloadManifestAndBundleAsync(manifest, args, configFilePath) {
-  let bundleUrl = manifest.bundleUrl;
-  await fs.promise.writeFile(`${configFilePath}/shell-app-manifest.json`, JSON.stringify(manifest));
-  await saveUrlToPathAsync(bundleUrl, `${configFilePath}/shell-app.bundle`);
-  return;
-}
-
-async function cleanPropertyListBackupsAsync(configFilePath, restoreOriginals) {
-  await IosPlist.cleanBackupAsync(configFilePath, 'EXShell', restoreOriginals);
-  await IosPlist.cleanBackupAsync(configFilePath, 'Exponent.entitlements', restoreOriginals);
-  await IosPlist.cleanBackupAsync(configFilePath, 'Info', restoreOriginals);
-}
-
 /**
  *  Build the iOS binary from source.
  *  @return the path to the resulting .app
@@ -424,30 +315,27 @@ function validateArgs(args) {
 }
 
 async function configureIOSShellAppAsync(args, manifest) {
-  let { url, sdkVersion, output, type } = args;
+  const expoSourcePath = '../ios';
+  let { privateConfigFile } = args;
 
-  const configFilePath = args.archivePath;
-  const expoSourceRoot = '../ios';
-  const intermediatesDir = '../shellAppIntermediates';
-
-  console.log('Configuring plists...');
-  await configurePropertyListsAsync(manifest, args, configFilePath);
-  console.log('Compiling resources...');
-  await IosAssetArchive.buildAssetArchiveAsync(
-    manifest,
-    configFilePath,
-    expoSourceRoot,
-    intermediatesDir
-  );
-  await IosLaunchScreen.configureLaunchAssetsAsync(manifest, configFilePath, expoSourceRoot);
-  await preloadManifestAndBundleAsync(manifest, args, configFilePath);
-  console.log('Cleaning up...');
-  await cleanPropertyListBackupsAsync(configFilePath, false);
-
-  // maybe clean intermediates
-  if (fs.existsSync(intermediatesDir)) {
-    rimraf.sync(intermediatesDir);
+  let privateConfig;
+  if (privateConfigFile) {
+    let privateConfigContents = await fs.promise.readFile(privateConfigFile, 'utf8');
+    privateConfig = JSON.parse(privateConfigContents);
   }
+
+  // make sure we have all the required info
+  validateConfigArguments(manifest, args, args.archivePath);
+  const context = StandaloneContext.createServiceContext(
+    expoSourcePath,
+    args.archivePath,
+    manifest,
+    privateConfig,
+    args.configuration,
+    args.url,
+    args.releaseChannel
+  );
+  await IosNSBundle.configureAsync(context);
 }
 
 async function moveShellAppArchiveAsync(args, manifest) {
@@ -484,7 +372,6 @@ async function moveShellAppArchiveAsync(args, manifest) {
 *  @param configuration Debug or Release, for type == simulator (default Release)
 *  @param archivePath path to existing bundle, for action == configure
 *  @param privateConfigFile path to a private config file containing, e.g., private api keys
-*  @param bundleIdentifier iOS CFBundleIdentifier to use in the bundle config
 *  @param verbose show all xcodebuild output (default false)
 *  @param output specify the output path of built project (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
 */
@@ -499,9 +386,7 @@ async function createIOSShellAppAsync(args) {
     let manifest = await getManifestAsync(url, {
       'Exponent-SDK-Version': sdkVersion,
       'Exponent-Platform': 'ios',
-      'Expo-Release-Channel': args.releaseChannel
-        ? args.releaseChannel
-        : 'default',
+      'Expo-Release-Channel': args.releaseChannel ? args.releaseChannel : 'default',
     });
     await configureIOSShellAppAsync(args, manifest);
     if (args.output) {

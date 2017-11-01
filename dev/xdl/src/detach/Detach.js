@@ -154,8 +154,8 @@ export async function detachAsync(projectRoot: string, options: any) {
     }
   }
   if (!hasIosDirectory && isIosSupported) {
-    const context = StandaloneContext.createUserContext(projectRoot, exp);
-    await detachIOSAsync(context, experienceUrl);
+    const context = StandaloneContext.createUserContext(projectRoot, exp, experienceUrl);
+    await detachIOSAsync(context);
     exp = IosWorkspace.addDetachedConfigToExp(exp, context);
     exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
   }
@@ -194,11 +194,11 @@ export async function detachAsync(projectRoot: string, options: any) {
 /**
  *  Create a detached Expo iOS app pointing at the given project.
  */
-async function detachIOSAsync(context: StandaloneContext, experienceUrl: string) {
+async function detachIOSAsync(context: StandaloneContext) {
   await IosWorkspace.createDetachedAsync(context);
 
   console.log('Configuring iOS project...');
-  await IosNSBundle.configureAsync(context, experienceUrl);
+  await IosNSBundle.configureAsync(context);
 
   console.log(`iOS detach is complete!`);
   return;
