@@ -6,17 +6,17 @@ import fs from 'fs';
 import path from 'path';
 import rimraf from 'rimraf';
 
-import { saveUrlToPathAsync } from './ExponentTools';
+import { saveUrlToPathAsync, manifestUsesSplashApi } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as IosIcons from './IosIcons';
 import * as IosPlist from './IosPlist';
 import * as IosLaunchScreen from './IosLaunchScreen';
-import {
-  configureStandaloneIOSInfoPlistAsync,
-  configureStandaloneIOSShellPlistAsync,
-} from './IosShellApp';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
+
+// TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
+// but xdl doesn't have access to that.
+const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
 
 async function _configureInfoPlistForLocalDevelopmentAsync(configFilePath: string, exp: any) {
   let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
@@ -126,27 +126,174 @@ async function _configureEntitlementsAsync(entitlementsFilePath, buildConfigurat
   return result;
 }
 
+/**
+ * Configure an iOS Info.plist for a standalone app.
+ */
+async function _configureInfoPlistAsync(context: StandaloneContext) {
+  const { supportingDirectory } = IosWorkspace.getPaths(context);
+  const config = context.config;
+  const privateConfig = context.type === 'service' ? context.data.privateConfig : null;
+
+  let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
+    // make sure this happens first:
+    // apply any custom information from ios.infoPlist prior to all other exponent config
+    if (config.ios && config.ios.infoPlist) {
+      let extraConfig = config.ios.infoPlist;
+      for (let key in extraConfig) {
+        if (extraConfig.hasOwnProperty(key)) {
+          infoPlist[key] = extraConfig[key];
+        }
+      }
+    }
+
+    // bundle id
+    infoPlist.CFBundleIdentifier =
+      config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
+    if (!infoPlist.CFBundleIdentifier) {
+      throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
+    }
+
+    // app name
+    infoPlist.CFBundleName = config.name;
+
+    // determine app linking schemes
+    let linkingSchemes = config.scheme ? [config.scheme] : [];
+    if (config.facebookScheme && config.facebookScheme.startsWith('fb')) {
+      linkingSchemes.push(config.facebookScheme);
+    }
+    // TODO: move privateConfig to other step, use substitute in user context.
+    if (
+      privateConfig &&
+      privateConfig.googleSignIn &&
+      privateConfig.googleSignIn.reservedClientId
+    ) {
+      linkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
+    }
+
+    // remove exp scheme, add app scheme(s)
+    infoPlist.CFBundleURLTypes = [
+      {
+        CFBundleURLSchemes: linkingSchemes,
+      },
+      {
+        // Add the generic oauth redirect, it's important that it has the name
+        // 'OAuthRedirect' so we can find it in app code.
+        CFBundleURLName: 'OAuthRedirect',
+        CFBundleURLSchemes: [infoPlist.CFBundleIdentifier],
+      },
+    ];
+
+    // set ITSAppUsesNonExemptEncryption to let people skip manually
+    // entering it in iTunes Connect
+    if (
+      privateConfig &&
+      privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
+      privateConfig.usesNonExemptEncryption === false
+    ) {
+      infoPlist.ITSAppUsesNonExemptEncryption = false;
+    }
+
+    // google maps api key
+    if (privateConfig && privateConfig.googleMapsApiKey) {
+      infoPlist.GMSApiKey = privateConfig.googleMapsApiKey;
+    }
+
+    // use version from manifest
+    let version = config.version ? config.version : '0.0.0';
+    let buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
+    infoPlist.CFBundleShortVersionString = version;
+    infoPlist.CFBundleVersion = buildNumber;
+
+    infoPlist.Fabric = {
+      APIKey:
+        (privateConfig && privateConfig.fabric && privateConfig.fabric.apiKey) ||
+        DEFAULT_FABRIC_KEY,
+      Kits: [
+        {
+          KitInfo: {},
+          KitName: 'Crashlytics',
+        },
+      ],
+    };
+
+    if (privateConfig && privateConfig.branch) {
+      infoPlist.branch_key = {
+        live: privateConfig.branch.apiKey,
+      };
+    }
+
+    let permissionsAppName = config.name ? config.name : 'this app';
+    for (let key in infoPlist) {
+      if (infoPlist.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1) {
+        infoPlist[key] = infoPlist[key].replace('Expo experiences', permissionsAppName);
+      }
+    }
+
+    // 1 is iPhone, 2 is iPad
+    infoPlist.UIDeviceFamily = config.ios && config.ios.supportsTablet ? [1, 2] : [1];
+
+    // allow iPad-only
+    if (config.ios && config.ios.isTabletOnly) {
+      infoPlist.UIDeviceFamily = [2];
+    }
+
+    return infoPlist;
+  });
+  return result;
+}
+
+/**
+ *  Configure EXShell.plist for a standalone app.
+ */
+async function _configureShellPlistAsync(context: StandaloneContext) {
+  const { supportingDirectory } = IosWorkspace.getPaths(context);
+  const config = context.config;
+
+  await IosPlist.modifyAsync(supportingDirectory, 'EXShell', shellPlist => {
+    shellPlist.isShell = true;
+    shellPlist.manifestUrl = context.published.url;
+    shellPlist.releaseChannel = context.published.releaseChannel;
+    if (config.ios && config.ios.permissions) {
+      shellPlist.permissions = config.ios.permissions;
+    }
+    if (context.type == 'user') {
+      // disable manifest verification on detached apps until
+      // the developer adds the correct entitlements to their bundle id.
+      shellPlist.isManifestVerificationBypassed = true;
+    }
+    if (config.ios && config.ios.hasOwnProperty('isRemoteJSEnabled')) {
+      // enable/disable code push if the developer provided specific behavior
+      shellPlist.isRemoteJSEnabled = config.ios.isRemoteJSEnabled;
+    }
+    if (!manifestUsesSplashApi(config, 'ios')) {
+      // for people still using the old loading api, hide the native splash screen.
+      // we can remove this code eventually.
+      shellPlist.isSplashScreenDisabled = true;
+    }
+
+    console.log('Using shell config:', shellPlist);
+    return shellPlist;
+  });
+}
+
 async function configureAsync(context: StandaloneContext) {
   let { iosProjectDirectory, projectName, supportingDirectory } = IosWorkspace.getPaths(context);
-  // TODO: merge where appropriate
   if (!context.published.url) {
     throw new Error(`Can't configure a NSBundle without a published url.`);
   }
+
+  // common configuration for all contexts
+  // TODO: merge more into this where appropriate
+  await _configureInfoPlistAsync(context);
+  await _configureShellPlistAsync(context);
+
   if (context.type === 'user') {
     // TODO: move shell app config methods here and make them operate on context only.
-    await configureStandaloneIOSInfoPlistAsync(supportingDirectory, context.data.exp);
-    if (context.type === 'user') {
-      const infoPlist = await _configureInfoPlistForLocalDevelopmentAsync(
-        supportingDirectory,
-        context.data.exp
-      );
-      _logDeveloperInfoForLocalDevelopment(infoPlist);
-    }
-    await configureStandaloneIOSShellPlistAsync(
+    const infoPlist = await _configureInfoPlistForLocalDevelopmentAsync(
       supportingDirectory,
-      context.data.exp,
-      context.published.url
+      context.data.exp
     );
+    _logDeveloperInfoForLocalDevelopment(infoPlist);
 
     // TODO: change IosIcons to operate on context
     const iconPath = path.join(
@@ -164,15 +311,6 @@ async function configureAsync(context: StandaloneContext) {
     const intermediatesDir = '../shellAppIntermediates'; // TODO: BEN
     console.log(`Modifying config files under ${supportingDirectory}...`);
 
-    console.log('Configuring plists...');
-    // generate new shell config
-    await configureStandaloneIOSShellPlistAsync(
-      supportingDirectory,
-      context.data.manifest,
-      context.published.url,
-      context.published.releaseChannel
-    );
-
     // entitlements changes
     await _configureEntitlementsAsync(
       supportingDirectory,
@@ -186,13 +324,6 @@ async function configureAsync(context: StandaloneContext) {
       config.UILaunchStoryboardName = 'LaunchScreenShell';
       return config;
     });
-
-    // common standalone Info.plist config changes
-    await configureStandaloneIOSInfoPlistAsync(
-      supportingDirectory,
-      context.data.manifest,
-      context.data.privateConfig
-    );
 
     console.log('Compiling resources...');
     await IosAssetArchive.buildAssetArchiveAsync(

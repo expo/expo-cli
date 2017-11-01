@@ -6,20 +6,10 @@ import 'instapromise';
 
 import fs from 'fs';
 import path from 'path';
-import {
-  getManifestAsync,
-  spawnAsync,
-  spawnAsyncThrowError,
-  manifestUsesSplashApi,
-} from './ExponentTools';
+import { getManifestAsync, spawnAsync, spawnAsyncThrowError } from './ExponentTools';
 
 import * as IosNSBundle from './IosNSBundle';
-import * as IosPlist from './IosPlist';
 import StandaloneContext from './StandaloneContext';
-
-// TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
-// but xdl doesn't have access to that.
-const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
 
 function validateConfigArguments(manifest, cmdArgs, configFilePath) {
   if (!configFilePath) {
@@ -52,166 +42,6 @@ async function configureShellAppSecretsAsync(args, iosDir) {
     args.privateConfigFile,
     path.join(iosDir, 'private-shell-app-config.json'),
   ]);
-}
-
-/**
- * Configure an iOS Info.plist for a standalone app given its exponent configuration.
- * @param configFilePath Path to directory containing Info.plist
- * @param manifest the app's manifest
- * @param privateConfig optional config with the app's private keys
- */
-async function configureStandaloneIOSInfoPlistAsync(
-  configFilePath,
-  manifest,
-  privateConfig = null
-) {
-  let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
-    // make sure this happens first:
-    // apply any custom information from ios.infoPlist prior to all other exponent config
-    if (manifest.ios && manifest.ios.infoPlist) {
-      let extraConfig = manifest.ios.infoPlist;
-      for (let key in extraConfig) {
-        if (extraConfig.hasOwnProperty(key)) {
-          config[key] = extraConfig[key];
-        }
-      }
-    }
-
-    // bundle id
-    config.CFBundleIdentifier =
-      manifest.ios && manifest.ios.bundleIdentifier ? manifest.ios.bundleIdentifier : null;
-    if (!config.CFBundleIdentifier) {
-      throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
-    }
-
-    // app name
-    config.CFBundleName = manifest.name;
-
-    // determine app linking schemes
-    let linkingSchemes = manifest.scheme ? [manifest.scheme] : [];
-    if (manifest.facebookScheme && manifest.facebookScheme.startsWith('fb')) {
-      linkingSchemes.push(manifest.facebookScheme);
-    }
-    if (
-      privateConfig &&
-      privateConfig.googleSignIn &&
-      privateConfig.googleSignIn.reservedClientId
-    ) {
-      linkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
-    }
-
-    // remove exp scheme, add app scheme(s)
-    config.CFBundleURLTypes = [
-      {
-        CFBundleURLSchemes: linkingSchemes,
-      },
-      {
-        // Add the generic oauth redirect, it's important that it has the name
-        // 'OAuthRedirect' so we can find it in app code.
-        CFBundleURLName: 'OAuthRedirect',
-        CFBundleURLSchemes: [config.CFBundleIdentifier],
-      },
-    ];
-
-    // set ITSAppUsesNonExemptEncryption to let people skip manually
-    // entering it in iTunes Connect
-    if (
-      privateConfig &&
-      privateConfig.hasOwnProperty('usesNonExemptEncryption') &&
-      privateConfig.usesNonExemptEncryption === false
-    ) {
-      config.ITSAppUsesNonExemptEncryption = false;
-    }
-
-    // google maps api key
-    if (privateConfig && privateConfig.googleMapsApiKey) {
-      config.GMSApiKey = privateConfig.googleMapsApiKey;
-    }
-
-    // permanently save the exponent client version at time of configuration
-    config.EXClientVersion = config.CFBundleVersion;
-
-    // use version from manifest
-    let version = manifest.version ? manifest.version : '0.0.0';
-    let buildNumber = manifest.ios && manifest.ios.buildNumber ? manifest.ios.buildNumber : '1';
-    config.CFBundleShortVersionString = version;
-    config.CFBundleVersion = buildNumber;
-
-    config.Fabric = {
-      APIKey:
-        (privateConfig && privateConfig.fabric && privateConfig.fabric.apiKey) ||
-        DEFAULT_FABRIC_KEY,
-      Kits: [
-        {
-          KitInfo: {},
-          KitName: 'Crashlytics',
-        },
-      ],
-    };
-
-    if (privateConfig && privateConfig.branch) {
-      config.branch_key = {
-        live: privateConfig.branch.apiKey,
-      };
-    }
-
-    let permissionsAppName = manifest.name ? manifest.name : 'this app';
-    for (let key in config) {
-      if (config.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1) {
-        config[key] = config[key].replace('Expo experiences', permissionsAppName);
-      }
-    }
-
-    // 1 is iPhone, 2 is iPad
-    config.UIDeviceFamily = manifest.ios && manifest.ios.supportsTablet ? [1, 2] : [1];
-
-    // allow iPad-only
-    if (manifest.ios && manifest.ios.isTabletOnly) {
-      config.UIDeviceFamily = [2];
-    }
-
-    return config;
-  });
-  return result;
-}
-
-/**
- * Configure EXShell.plist for a standalone app given its exponent configuration.
- * @param configFilePath Path to Info.plist
- * @param manifest the app's manifest
- * @param manifestUrl the app's manifest url
- */
-async function configureStandaloneIOSShellPlistAsync(
-  configFilePath,
-  manifest,
-  manifestUrl,
-  releaseChannel
-) {
-  await IosPlist.modifyAsync(configFilePath, 'EXShell', shellConfig => {
-    shellConfig.isShell = true;
-    shellConfig.manifestUrl = manifestUrl;
-    shellConfig.releaseChannel = releaseChannel ? releaseChannel : 'default';
-    if (manifest.ios && manifest.ios.permissions) {
-      shellConfig.permissions = manifest.ios.permissions;
-    }
-    if (manifest.isDetached) {
-      // disable manifest verification on detached apps until
-      // the developer adds the correct entitlements to their bundle id.
-      shellConfig.isManifestVerificationBypassed = true;
-    }
-    if (manifest.ios && manifest.ios.hasOwnProperty('isRemoteJSEnabled')) {
-      // enable/disable code push if the developer provided specific behavior
-      shellConfig.isRemoteJSEnabled = manifest.ios.isRemoteJSEnabled;
-    }
-    if (!manifestUsesSplashApi(manifest, 'ios')) {
-      // for people still using the old loading api, hide the native splash screen.
-      // we can remove this code eventually.
-      shellConfig.isSplashScreenDisabled = true;
-    }
-
-    console.log('Using shell config:', shellConfig);
-    return shellConfig;
-  });
 }
 
 /**
@@ -397,8 +227,4 @@ async function createIOSShellAppAsync(args) {
   return;
 }
 
-export {
-  createIOSShellAppAsync,
-  configureStandaloneIOSInfoPlistAsync,
-  configureStandaloneIOSShellPlistAsync,
-};
+export { createIOSShellAppAsync };
