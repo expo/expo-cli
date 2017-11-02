@@ -18,26 +18,23 @@ import StandaloneContext from './StandaloneContext';
 // but xdl doesn't have access to that.
 const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
 
-async function _configureInfoPlistForLocalDevelopmentAsync(configFilePath: string, exp: any) {
-  let result = await IosPlist.modifyAsync(configFilePath, 'Info', config => {
-    // add detached scheme
-    if (exp.isDetached && exp.detach.scheme) {
-      if (!config.CFBundleURLTypes) {
-        config.CFBundleURLTypes = [
-          {
-            CFBundleURLSchemes: [],
-          },
-        ];
-      }
-      config.CFBundleURLTypes[0].CFBundleURLSchemes.push(exp.detach.scheme);
+function _configureInfoPlistForLocalDevelopment(config: any, exp: any) {
+  // add detached scheme
+  if (exp.isDetached && exp.detach.scheme) {
+    if (!config.CFBundleURLTypes) {
+      config.CFBundleURLTypes = [
+        {
+          CFBundleURLSchemes: [],
+        },
+      ];
     }
-    // for local dev, don't specify device family here
-    if (config.UIDeviceFamily) {
-      delete config.UIDeviceFamily;
-    }
-    return config;
-  });
-  return result;
+    config.CFBundleURLTypes[0].CFBundleURLSchemes.push(exp.detach.scheme);
+  }
+  // for local dev, don't specify device family here
+  if (config.UIDeviceFamily) {
+    delete config.UIDeviceFamily;
+  }
+  return config;
 }
 
 /**
@@ -237,6 +234,15 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
       infoPlist.UIDeviceFamily = [2];
     }
 
+    // context-specific plist changes
+    if (context.type === 'user') {
+      infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
+      _logDeveloperInfoForLocalDevelopment(infoPlist);
+    } else if (context.type === 'service') {
+      // use shell-specific launch screen. TODO: do this in detach as well.
+      infoPlist.UILaunchStoryboardName = 'LaunchScreenShell';
+    }
+
     return infoPlist;
   });
   return result;
@@ -283,18 +289,11 @@ async function configureAsync(context: StandaloneContext) {
   }
 
   // common configuration for all contexts
-  // TODO: merge more into this where appropriate
+  // TODO: merge more intgo this where appropriate
   await _configureInfoPlistAsync(context);
   await _configureShellPlistAsync(context);
 
   if (context.type === 'user') {
-    // TODO: move shell app config methods here and make them operate on context only.
-    const infoPlist = await _configureInfoPlistForLocalDevelopmentAsync(
-      supportingDirectory,
-      context.data.exp
-    );
-    _logDeveloperInfoForLocalDevelopment(infoPlist);
-
     // TODO: change IosIcons to operate on context
     const iconPath = path.join(
       iosProjectDirectory,
@@ -317,13 +316,6 @@ async function configureAsync(context: StandaloneContext) {
       context.build.configuration,
       context.data.manifest
     );
-
-    // Info.plist changes specific to turtle
-    await IosPlist.modifyAsync(supportingDirectory, 'Info', config => {
-      // use shell-specific launch screen
-      config.UILaunchStoryboardName = 'LaunchScreenShell';
-      return config;
-    });
 
     console.log('Compiling resources...');
     await IosAssetArchive.buildAssetArchiveAsync(
