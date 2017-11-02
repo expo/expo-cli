@@ -1,4 +1,9 @@
+/**
+ *  @flow
+ */
+import mkdirp from 'mkdirp';
 import path from 'path';
+import { DOMParser, XMLSerializer } from 'xmldom';
 
 import {
   manifestUsesSplashApi,
@@ -6,8 +11,8 @@ import {
   spawnAsyncThrowError,
   transformFileContentsAsync,
 } from './ExponentTools';
-
-import { DOMParser, XMLSerializer } from 'xmldom';
+import * as IosWorkspace from './IosWorkspace';
+import StandaloneContext from './StandaloneContext';
 
 const ASPECT_FILL = 'scaleAspectFill';
 const ASPECT_FIT = 'scaleAspectFit';
@@ -128,32 +133,81 @@ function _setBackgroundImageResizeMode(manifest, dom) {
   }
 }
 
-async function configureLaunchAssetsAsync(manifest, projectRoot, srcRoot) {
-  if (!manifestUsesSplashApi(manifest, 'ios')) {
-    // Don't do loading xib customizations if `splash` keys don't exist
-    return;
+async function _copyIntermediateLaunchScreenAsync(
+  context: StandaloneContext,
+  launchScreenPath: string
+) {
+  let splashTemplateFilename;
+  if (context.type === 'user') {
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    splashTemplateFilename = path.join(supportingDirectory, 'LaunchScreen.xib');
+  } else {
+    // TODO: after shell apps use detached workspaces,
+    // we can just do this with the workspace's copy instead of referencing expoSourcePath.
+    const expoTemplatePath = path.join(
+      context.data.expoSourcePath,
+      '..',
+      'exponent-view-template',
+      'ios'
+    );
+    splashTemplateFilename = path.join(
+      expoTemplatePath,
+      'exponent-view-template',
+      'Supporting',
+      'LaunchScreen.xib'
+    );
+  }
+  await spawnAsyncThrowError('/bin/cp', [splashTemplateFilename, launchScreenPath], {
+    stdio: 'inherit',
+  });
+  return;
+}
+
+async function configureLaunchAssetsAsync(
+  context: StandaloneContext,
+  intermediatesDirectory: string
+) {
+  console.log('Configuring iOS Launch Screen...');
+
+  mkdirp.sync(intermediatesDirectory);
+  const { supportingDirectory } = IosWorkspace.getPaths(context);
+  const config = context.config;
+
+  const splashIntermediateFilename = path.join(intermediatesDirectory, 'LaunchScreen.xib');
+  await _copyIntermediateLaunchScreenAsync(context, splashIntermediateFilename);
+
+  if (manifestUsesSplashApi(config, 'ios')) {
+    await transformFileContentsAsync(splashIntermediateFilename, fileString => {
+      const parser = new DOMParser();
+      const serializer = new XMLSerializer();
+      const dom = parser.parseFromString(fileString);
+
+      _setBackgroundColor(config, dom);
+      _setBackgroundImageResizeMode(config, dom);
+
+      return serializer.serializeToString(dom);
+    });
+
+    await _setBackgroundImageAsync(config, supportingDirectory);
   }
 
-  console.log('Configuring iOS Launch Screen');
-  let splashXibFilename = path.join(srcRoot, 'Exponent', 'Base.lproj', 'LaunchScreenShell.xib');
-  let splashOutputFilename = path.join(projectRoot, 'Base.lproj', 'LaunchScreenShell.nib');
-
-  await transformFileContentsAsync(splashXibFilename, fileString => {
-    const parser = new DOMParser();
-    const serializer = new XMLSerializer();
-    const dom = parser.parseFromString(fileString);
-
-    _setBackgroundColor(manifest, dom);
-    _setBackgroundImageResizeMode(manifest, dom);
-
-    return serializer.serializeToString(dom);
-  });
-
-  await _setBackgroundImageAsync(manifest, projectRoot);
-
-  await spawnAsyncThrowError('ibtool', ['--compile', splashOutputFilename, splashXibFilename]);
-
-  console.log('DONE Configuring iOS Launch Screen');
+  if (context.type === 'user') {
+    await spawnAsyncThrowError(
+      '/bin/cp',
+      [splashIntermediateFilename, path.join(supportingDirectory, 'LaunchScreen.xib')],
+      {
+        stdio: 'inherit',
+      }
+    );
+  } else {
+    const splashOutputFilename = path.join(supportingDirectory, 'Base.lproj', 'LaunchScreen.nib');
+    await spawnAsyncThrowError('ibtool', [
+      '--compile',
+      splashOutputFilename,
+      splashIntermediateFilename,
+    ]);
+  }
+  return;
 }
 
 export { configureLaunchAssetsAsync };

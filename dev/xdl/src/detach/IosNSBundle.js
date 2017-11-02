@@ -265,9 +265,6 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
     if (context.type === 'user') {
       infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
       _logDeveloperInfoForLocalDevelopment(infoPlist);
-    } else if (context.type === 'service') {
-      // use shell-specific launch screen. TODO: do this in detach as well.
-      infoPlist.UILaunchStoryboardName = 'LaunchScreenShell';
     }
 
     return infoPlist;
@@ -310,7 +307,12 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
 }
 
 async function configureAsync(context: StandaloneContext) {
-  let { iosProjectDirectory, projectName, supportingDirectory } = IosWorkspace.getPaths(context);
+  let {
+    intermediatesDirectory,
+    iosProjectDirectory,
+    projectName,
+    supportingDirectory,
+  } = IosWorkspace.getPaths(context);
   if (!context.published.url) {
     throw new Error(`Can't configure a NSBundle without a published url.`);
   }
@@ -320,6 +322,7 @@ async function configureAsync(context: StandaloneContext) {
   await _configureInfoPlistAsync(context);
   await _configureShellPlistAsync(context);
   await _configureEntitlementsAsync(context);
+  await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
 
   if (context.type === 'user') {
     const iconPath = path.join(
@@ -330,24 +333,21 @@ async function configureAsync(context: StandaloneContext) {
     );
     await IosIcons.createAndWriteIconsToPathAsync(context, iconPath);
   } else if (context.type === 'service') {
-    const intermediatesDir = path.join(context.data.expoSourcePath, '..', 'shellAppIntermediates');
     console.log('Compiling resources...');
-    await IosAssetArchive.buildAssetArchiveAsync(context, supportingDirectory, intermediatesDir);
-    await IosLaunchScreen.configureLaunchAssetsAsync(
-      context.data.manifest,
+    await IosAssetArchive.buildAssetArchiveAsync(
+      context,
       supportingDirectory,
-      context.data.expoSourcePath
+      intermediatesDirectory
     );
     await _preloadManifestAndBundleAsync(context.data.manifest, supportingDirectory);
-
-    // maybe clean intermediates
-    if (fs.existsSync(intermediatesDir)) {
-      rimraf.sync(intermediatesDir);
-    }
   }
 
   console.log('Cleaning up iOS...');
   await _cleanPropertyListBackupsAsync(context, supportingDirectory);
+  // maybe clean intermediates
+  if (fs.existsSync(intermediatesDirectory)) {
+    rimraf.sync(intermediatesDirectory);
+  }
   return;
 }
 

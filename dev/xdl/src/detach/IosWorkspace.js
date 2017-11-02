@@ -229,6 +229,7 @@ function getPaths(context: StandaloneContext) {
   let iosProjectDirectory;
   let projectName;
   let supportingDirectory;
+  let intermediatesDirectory;
   if (context.config && context.config.name) {
     let projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
@@ -238,14 +239,17 @@ function getPaths(context: StandaloneContext) {
   if (context.type === 'user') {
     iosProjectDirectory = path.join(context.data.projectPath, 'ios');
     supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
+    intermediatesDirectory = path.join(iosProjectDirectory, 'ExpoKitIntermediates');
   } else if (context.type === 'service') {
     // compiled archive has a flat NSBundle
     supportingDirectory = context.data.archivePath;
     iosProjectDirectory = context.data.archivePath;
+    intermediatesDirectory = path.join(context.data.expoSourcePath, '..', 'shellAppIntermediates');
   } else {
     throw new Error(`Unsupported StandaloneContext type: ${context.type}`);
   }
   return {
+    intermediatesDirectory,
     iosProjectDirectory,
     projectName,
     supportingDirectory,
