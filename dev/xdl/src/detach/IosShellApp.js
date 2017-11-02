@@ -163,7 +163,8 @@ async function configureIOSShellAppAsync(args, manifest) {
     privateConfig,
     args.configuration,
     args.url,
-    args.releaseChannel
+    args.releaseChannel,
+    null
   );
   await IosNSBundle.configureAsync(context);
 }

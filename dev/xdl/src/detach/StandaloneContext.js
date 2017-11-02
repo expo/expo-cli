@@ -4,30 +4,42 @@
 
 type StandaloneContextDataType = 'user' | 'service';
 type StandaloneContextBuildConfiguration = 'Debug' | 'Release';
+type StandaloneContextAndroidBuildConfiguration = {
+  keystore: string,
+  keystorePassword: string,
+  keyAlias: string,
+  keyPassword: string,
+  outputFile: ?string,
+};
 type StandaloneContextDataUser = {
   projectPath: string,
   exp: any,
 };
 type StandaloneContextDataService = {
   expoSourcePath: string,
-  archivePath: string,
+  archivePath: ?string,
   manifest: any,
-  privateConfig: any,
+  privateConfig: ?any,
 };
 
 class StandaloneContext {
   type: StandaloneContextDataType;
   data: StandaloneContextDataUser | StandaloneContextDataService;
-  config: any; // same as underlying exp or manifest
+  config: any; // same as underlying app.json or manifest
   published: {
     url: ?string,
     releaseChannel: string,
-  }
+  };
   build: {
     configuration: StandaloneContextBuildConfiguration,
-  }
+    android: ?StandaloneContextAndroidBuildConfiguration,
+  };
 
-  static createUserContext = (projectPath: string, exp: any, publishedUrl: ?string): StandaloneContext => {
+  static createUserContext = (
+    projectPath: string,
+    exp: any,
+    publishedUrl: ?string
+  ): StandaloneContext => {
     let context = new StandaloneContext();
     context.type = 'user';
     context.data = {
@@ -42,18 +54,20 @@ class StandaloneContext {
     // we never expect user contexts to be pre-built right now
     context.build = {
       configuration: 'Debug',
+      android: null,
     };
     return context;
   };
 
   static createServiceContext = (
     expoSourcePath: string,
-    archivePath: string,
+    archivePath: ?string,
     manifest: any,
-    privateConfig: any,
+    privateConfig: ?any,
     buildConfiguration: StandaloneContextBuildConfiguration,
     publishedUrl: ?string,
     releaseChannel: ?string,
+    androidBuildConfiguration: ?StandaloneContextAndroidBuildConfiguration
   ): StandaloneContext => {
     let context = new StandaloneContext();
     context.type = 'service';
@@ -66,10 +80,11 @@ class StandaloneContext {
     context.config = manifest;
     context.build = {
       configuration: buildConfiguration,
+      android: androidBuildConfiguration,
     };
     context.published = {
       url: publishedUrl,
-      releaseChannel: (releaseChannel) ? releaseChannel : 'default',
+      releaseChannel: releaseChannel ? releaseChannel : 'default',
     };
     return context;
   };

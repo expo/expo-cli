@@ -15,6 +15,9 @@ module.exports = {
   get Android() {
     return require('./Android');
   },
+  get AndroidShellApp() {
+    return require('./detach/AndroidShellApp');
+  },
   get Api() {
     return require('./Api').default;
   },
