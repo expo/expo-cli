@@ -83,44 +83,71 @@ async function _preloadManifestAndBundleAsync(manifest, supportingDirectory) {
 
 /**
  * Configure a standalone entitlements file.
- * @param entitlementsFilePath Path to directory containing entitlements file
- * @param buildConfiguration Debug or Release
- * @param manifest The app manifest
  */
-async function _configureEntitlementsAsync(entitlementsFilePath, buildConfiguration, manifest) {
-  const result = IosPlist.modifyAsync(entitlementsFilePath, 'Exponent.entitlements', config => {
-    // push notif entitlement changes based on build configuration
-    config['aps-environment'] = buildConfiguration === 'Release' ? 'production' : 'development';
-
-    // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-    if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
-      let iCloudKeys = [
-        'com.apple.developer.icloud-container-identifiers',
-        'com.apple.developer.icloud-services',
-        'com.apple.developer.ubiquity-container-identifiers',
-        'com.apple.developer.ubiquity-kvstore-identifier',
-      ];
-      iCloudKeys.forEach(key => {
-        if (config.hasOwnProperty(key)) {
-          delete config[key];
-        }
+async function _configureEntitlementsAsync(context: StandaloneContext) {
+  if (context.type === 'user') {
+    // don't modify .entitlements, print info/instructions
+    const exp = context.data.exp;
+    console.log(
+      'Your iOS ExpoKit project will not contain an .entitlements file by default. If you need specific Apple entitlements, enable them manually via Xcode or the Apple Developer website.'
+    );
+    let keysToFlag = [];
+    if (exp.ios && exp.ios.usesIcloudStorage) {
+      keysToFlag.push('ios.usesIcloudStorage');
+    }
+    if (exp.ios && exp.ios.associatedDomains) {
+      keysToFlag.push('ios.associatedDomains');
+    }
+    if (keysToFlag.length) {
+      console.log('We noticed the following keys in your project which may require entitlements:');
+      keysToFlag.forEach(key => {
+        console.log(`  ${key}`);
       });
     }
+    return {};
+  } else {
+    // modify the .entitlements file
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    const manifest = context.data.manifest;
+    const result = IosPlist.modifyAsync(
+      supportingDirectory,
+      'Exponent.entitlements',
+      entitlements => {
+        // push notif entitlement changes based on build configuration
+        entitlements['aps-environment'] =
+          context.build.configuration === 'Release' ? 'production' : 'development';
 
-    // Add app associated domains remove exp-specific ones.
-    if (manifest.ios && manifest.ios.associatedDomains) {
-      config['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
-    } else if (config.hasOwnProperty('com.apple.developer.associated-domains')) {
-      delete config['com.apple.developer.associated-domains'];
-    }
+        // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
+        if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
+          let iCloudKeys = [
+            'com.apple.developer.icloud-container-identifiers',
+            'com.apple.developer.icloud-services',
+            'com.apple.developer.ubiquity-container-identifiers',
+            'com.apple.developer.ubiquity-kvstore-identifier',
+          ];
+          iCloudKeys.forEach(key => {
+            if (entitlements.hasOwnProperty(key)) {
+              delete entitlements[key];
+            }
+          });
+        }
 
-    // for now, remove any merchant ID in shell apps
-    // (TODO: better plan for payments)
-    delete config['com.apple.developer.in-app-payments'];
+        // Add app associated domains remove exp-specific ones.
+        if (manifest.ios && manifest.ios.associatedDomains) {
+          entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
+        } else if (entitlements.hasOwnProperty('com.apple.developer.associated-domains')) {
+          delete entitlements['com.apple.developer.associated-domains'];
+        }
 
-    return config;
-  });
-  return result;
+        // for now, remove any merchant ID in shell apps
+        // (TODO: better plan for payments)
+        delete entitlements['com.apple.developer.in-app-payments'];
+
+        return entitlements;
+      }
+    );
+    return result;
+  }
 }
 
 /**
@@ -289,9 +316,10 @@ async function configureAsync(context: StandaloneContext) {
   }
 
   // common configuration for all contexts
-  // TODO: merge more intgo this where appropriate
+  console.log(`Modifying NSBundle configuration at ${supportingDirectory}...`);
   await _configureInfoPlistAsync(context);
   await _configureShellPlistAsync(context);
+  await _configureEntitlementsAsync(context);
 
   if (context.type === 'user') {
     // TODO: change IosIcons to operate on context
@@ -308,15 +336,6 @@ async function configureAsync(context: StandaloneContext) {
     );
   } else if (context.type === 'service') {
     const intermediatesDir = '../shellAppIntermediates'; // TODO: BEN
-    console.log(`Modifying config files under ${supportingDirectory}...`);
-
-    // entitlements changes
-    await _configureEntitlementsAsync(
-      supportingDirectory,
-      context.build.configuration,
-      context.data.manifest
-    );
-
     console.log('Compiling resources...');
     await IosAssetArchive.buildAssetArchiveAsync(
       context.data.manifest,
