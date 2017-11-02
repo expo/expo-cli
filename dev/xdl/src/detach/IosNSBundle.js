@@ -322,27 +322,17 @@ async function configureAsync(context: StandaloneContext) {
   await _configureEntitlementsAsync(context);
 
   if (context.type === 'user') {
-    // TODO: change IosIcons to operate on context
     const iconPath = path.join(
       iosProjectDirectory,
       projectName,
       'Assets.xcassets',
       'AppIcon.appiconset'
     );
-    await IosIcons.createAndWriteIconsToPathAsync(
-      context.data.exp,
-      iconPath,
-      context.data.projectPath
-    );
+    await IosIcons.createAndWriteIconsToPathAsync(context, iconPath);
   } else if (context.type === 'service') {
-    const intermediatesDir = '../shellAppIntermediates'; // TODO: BEN
+    const intermediatesDir = path.join(context.data.expoSourcePath, '..', 'shellAppIntermediates');
     console.log('Compiling resources...');
-    await IosAssetArchive.buildAssetArchiveAsync(
-      context.data.manifest,
-      supportingDirectory,
-      context.data.expoSourcePath,
-      intermediatesDir
-    );
+    await IosAssetArchive.buildAssetArchiveAsync(context, supportingDirectory, intermediatesDir);
     await IosLaunchScreen.configureLaunchAssetsAsync(
       context.data.manifest,
       supportingDirectory,

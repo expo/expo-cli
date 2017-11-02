@@ -1,8 +1,12 @@
+/**
+ *  @flow
+ */
 import path from 'path';
 
 import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
+import StandaloneContext from './StandaloneContext';
 
-function _getAppleIconQualifier(iconSize, iconResolution) {
+function _getAppleIconQualifier(iconSize: number, iconResolution: number): string {
   let iconQualifier;
   if (iconResolution !== 1) {
     // e.g. "29x29@3x"
@@ -17,31 +21,45 @@ function _getAppleIconQualifier(iconSize, iconResolution) {
   return iconQualifier;
 }
 
+async function _saveDefaultIconToPathAsync(context: StandaloneContext, path: string) {
+  if (context.type === 'user') {
+    if (context.data.exp.icon) {
+      await saveImageToPathAsync(context.data.projectPath, context.data.exp.icon, path);
+    } else {
+      throw new Error('Cannot save icon because app.json has no exp.icon key.');
+    }
+  } else {
+    if (context.data.manifest.ios && context.data.manifest.ios.iconUrl) {
+      await saveUrlToPathAsync(context.data.manifest.ios.iconUrl, path);
+    } else if (context.data.manifest.iconUrl) {
+      await saveUrlToPathAsync(context.data.manifest.iconUrl, path);
+    } else {
+      throw new Error('Cannot save icon because manifest has no iconUrl or ios.iconUrl key.');
+    }
+  }
+  return;
+}
+
 /**
- * Based on keys in the given manifest,
+ * Based on keys in the given context.config,
  * ensure that the proper iOS icon images exist -- assuming Info.plist already
  * points at them under CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconFiles.
  *
  * This only works on MacOS (as far as I know) because it uses the sips utility.
  */
-async function createAndWriteIconsToPathAsync(manifest, destinationIconPath, projectRoot) {
+async function createAndWriteIconsToPathAsync(
+  context: StandaloneContext,
+  destinationIconPath: string
+) {
   if (process.platform !== 'darwin') {
     console.warn('`sips` utility may or may not work outside of macOS');
   }
-  let defaultIconFilename;
-  if (manifest.ios && manifest.ios.iconUrl) {
-    defaultIconFilename = 'exp-icon.png';
-    await saveUrlToPathAsync(manifest.ios.iconUrl, `${destinationIconPath}/${defaultIconFilename}`);
-  } else if (manifest.iconUrl) {
-    defaultIconFilename = 'exp-icon.png';
-    await saveUrlToPathAsync(manifest.iconUrl, `${destinationIconPath}/${defaultIconFilename}`);
-  } else if (projectRoot && manifest.icon) {
-    defaultIconFilename = 'exp-icon.png';
-    await saveImageToPathAsync(
-      projectRoot,
-      manifest.icon,
-      `${destinationIconPath}/${defaultIconFilename}`
-    );
+  let defaultIconFilename = 'exp-icon.png';
+  try {
+    await _saveDefaultIconToPathAsync(context, path.join(destinationIconPath, defaultIconFilename));
+  } catch (e) {
+    defaultIconFilename = null;
+    console.warn(e.message);
   }
 
   let iconSizes = [1024, 20, 29, 40, 60, 76, 83.5];
@@ -58,25 +76,29 @@ async function createAndWriteIconsToPathAsync(manifest, destinationIconPath, pro
     }
     iconResolutions.forEach(async iconResolution => {
       let iconQualifier = _getAppleIconQualifier(iconSize, iconResolution);
-      // TODO(nikki): Support local paths for these icons
       let iconKey = `iconUrl${iconQualifier}`;
       let rawIconFilename;
       let usesDefault = false;
-      if (manifest.ios && manifest.ios.hasOwnProperty(iconKey)) {
-        // manifest specifies an image just for this size/resolution, use that
-        rawIconFilename = `exp-icon${iconQualifier}.png`;
-        await saveUrlToPathAsync(
-          manifest.ios[iconKey],
-          `${destinationIconPath}/${rawIconFilename}`
-        );
-      } else {
-        // use default manifest.iconUrl
+      if (context.type === 'service') {
+        // TODO(nikki): Support local paths for these icons
+        const manifest = context.data.manifest;
+        if (manifest.ios && manifest.ios.hasOwnProperty(iconKey)) {
+          // manifest specifies an image just for this size/resolution, use that
+          rawIconFilename = `exp-icon${iconQualifier}.png`;
+          await saveUrlToPathAsync(
+            manifest.ios[iconKey],
+            `${destinationIconPath}/${rawIconFilename}`
+          );
+        }
+      }
+      if (!rawIconFilename) {
+        // use default iconUrl
         usesDefault = true;
         if (defaultIconFilename) {
           rawIconFilename = defaultIconFilename;
         } else {
           console.warn(
-            `Manifest does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`
+            `Project does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`
           );
           return;
         }
@@ -120,7 +142,7 @@ async function createAndWriteIconsToPathAsync(manifest, destinationIconPath, pro
 /**
  *  @return array [ width, height ] or nil if that fails for some reason.
  */
-async function getImageDimensionsMacOSAsync(dirname, basename) {
+async function getImageDimensionsMacOSAsync(dirname: string, basename: string) {
   if (process.platform !== 'darwin') {
     console.warn('`sips` utility may or may not work outside of macOS');
   }

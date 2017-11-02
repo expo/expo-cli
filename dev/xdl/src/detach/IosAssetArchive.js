@@ -1,19 +1,25 @@
+/**
+ *  @flow
+ */
+
 import mkdirp from 'mkdirp';
 import path from 'path';
 
 import { spawnAsyncThrowError } from './ExponentTools';
-
 import * as IosIcons from './IosIcons';
+import StandaloneContext from './StandaloneContext';
 
 /**
  *  Compile a .car file from the icons in a manifest.
  */
 async function buildAssetArchiveAsync(
-  manifest,
-  destinationCARPath,
-  expoSourceRoot,
-  intermediatesDirectory
+  context: StandaloneContext,
+  destinationCARPath: string,
+  intermediatesDirectory: string
 ) {
+  if (context.type !== 'service') {
+    throw new Error('buildAssetArchive is only supported for service standalone contexts.');
+  }
   mkdirp.sync(intermediatesDirectory);
 
   // copy expoSourceRoot/.../Images.xcassets into intermediates
@@ -21,7 +27,7 @@ async function buildAssetArchiveAsync(
     '/bin/cp',
     [
       '-R',
-      path.join(expoSourceRoot, 'Exponent', 'Images.xcassets'),
+      path.join(context.data.expoSourcePath, 'Exponent', 'Images.xcassets'),
       path.join(intermediatesDirectory, 'Images.xcassets'),
     ],
     {
@@ -31,7 +37,7 @@ async function buildAssetArchiveAsync(
 
   // make the new xcassets contain the project's icon
   await IosIcons.createAndWriteIconsToPathAsync(
-    manifest,
+    context,
     path.join(intermediatesDirectory, 'Images.xcassets', 'AppIcon.appiconset')
   );
 
