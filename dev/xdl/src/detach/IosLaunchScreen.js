@@ -70,44 +70,62 @@ function _setBackgroundColor(manifest, dom) {
   }
 }
 
-async function _setBackgroundImageAsync(manifest, projectRoot) {
-  let tabletImage;
-  let phoneImage;
+async function _saveImageAssetsAsync(context: StandaloneContext) {
+  let tabletImagePathOrUrl, phoneImagePathOrUrl;
 
-  if (manifest.ios && manifest.ios.splash && manifest.ios.splash.imageUrl) {
-    phoneImage = manifest.ios.splash.imageUrl;
+  if (context.type === 'user') {
+    // copy images from local project
+    const exp = context.data.exp;
+    if (exp.ios && exp.ios.splash && exp.ios.splash.image) {
+      phoneImagePathOrUrl = exp.ios.splash.image;
 
-    if (manifest.ios.splash.tabletImageUrl) {
-      tabletImage = manifest.ios.splash.tabletImageUrl;
+      if (exp.ios.splash.tabletImage) {
+        tabletImagePathOrUrl = exp.ios.splash.tabletImage;
+      }
+    } else if (exp.splash && exp.splash.image) {
+      phoneImagePathOrUrl = exp.splash.image;
     }
-  } else if (manifest.splash && manifest.splash.imageUrl) {
-    phoneImage = manifest.splash.imageUrl;
+  } else {
+    // use uploaded assets from published project
+    const manifest = context.data.manifest;
+    if (manifest.ios && manifest.ios.splash && manifest.ios.splash.imageUrl) {
+      phoneImagePathOrUrl = manifest.ios.splash.imageUrl;
+
+      if (manifest.ios.splash.tabletImageUrl) {
+        tabletImagePathOrUrl = manifest.ios.splash.tabletImageUrl;
+      }
+    } else if (manifest.splash && manifest.splash.imageUrl) {
+      phoneImagePathOrUrl = manifest.splash.imageUrl;
+    }
   }
 
-  if (!phoneImage) {
+  if (!phoneImagePathOrUrl) {
     return;
   }
 
   const outputs = [];
-  if (!tabletImage) {
+  if (!tabletImagePathOrUrl) {
     outputs.push({
-      url: phoneImage,
-      path: path.join(projectRoot, 'launch_background_image.png'),
+      pathOrUrl: phoneImagePathOrUrl,
+      filename: 'launch_background_image.png',
     });
   } else {
     outputs.push({
-      url: phoneImage,
-      path: path.join(projectRoot, 'launch_background_image~iphone.png'),
+      pathOrUrl: phoneImagePathOrUrl,
+      filename: 'launch_background_image~iphone.png',
     });
     outputs.push({
-      url: tabletImage,
-      path: path.join(projectRoot, 'launch_background_image.png'),
+      pathOrUrl: tabletImagePathOrUrl,
+      filename: 'launch_background_image.png',
     });
   }
 
+  const { supportingDirectory } = IosWorkspace.getPaths(context);
+  const projectRoot = context.type === 'user' ? context.data.projectPath : supportingDirectory;
   outputs.forEach(async output => {
-    let { url, path } = output;
-    await saveImageToPathAsync(projectRoot, url, path);
+    const { pathOrUrl, filename } = output;
+    const destinationPath = path.join(supportingDirectory, filename);
+    await saveImageToPathAsync(projectRoot, pathOrUrl, destinationPath);
   });
 }
 
@@ -188,7 +206,7 @@ async function configureLaunchAssetsAsync(
       return serializer.serializeToString(dom);
     });
 
-    await _setBackgroundImageAsync(config, supportingDirectory);
+    await _saveImageAssetsAsync(context);
   }
 
   if (context.type === 'user') {
