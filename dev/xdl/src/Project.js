@@ -384,15 +384,19 @@ export async function publishAsync(
     }
 
     if (exp.ios && exp.ios.publishManifestPath) {
-      await fs.promise.writeFile(
-        path.resolve(projectRoot, exp.ios.publishManifestPath),
+      await _writeArtifactSafelyAsync(
+        projectRoot,
+        'ios.publishManifestPath',
+        exp.ios.publishManifestPath,
         JSON.stringify(iosManifest)
       );
     }
 
     if (exp.android && exp.android.publishManifestPath) {
-      await fs.promise.writeFile(
-        path.resolve(projectRoot, exp.android.publishManifestPath),
+      await _writeArtifactSafelyAsync(
+        projectRoot,
+        'android.publishManifestPath',
+        exp.android.publishManifestPath,
         JSON.stringify(androidManifest)
       );
     }
@@ -590,6 +594,18 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
   return exp;
 }
 
+async function _writeArtifactSafelyAsync(projectRoot, keyName, artifactPath, artifact) {
+  const pathToWrite = path.resolve(projectRoot, artifactPath);
+  if (!fs.existsSync(path.dirname(pathToWrite))) {
+    logger.global.warn(
+      `app.json specifies ${keyName}: ${pathToWrite}, but that directory does not exist.`
+    );
+  } else {
+    await fs.promise.writeFile(pathToWrite, artifact);
+  }
+  return;
+}
+
 async function _maybeWriteArtifactsToDiskAsync({
   exp,
   projectRoot,
@@ -599,26 +615,37 @@ async function _maybeWriteArtifactsToDiskAsync({
   androidSourceMap,
 }) {
   if (exp.android && exp.android.publishBundlePath) {
-    await fs.promise.writeFile(
-      path.resolve(projectRoot, exp.android.publishBundlePath),
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'android.publishBundlePath',
+      exp.android.publishBundlePath,
       androidBundle
     );
   }
 
   if (exp.ios && exp.ios.publishBundlePath) {
-    await fs.promise.writeFile(path.resolve(projectRoot, exp.ios.publishBundlePath), iosBundle);
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'ios.publishBundlePath',
+      exp.ios.publishBundlePath,
+      iosBundle
+    );
   }
 
   if (exp.android && exp.android.publishSourceMapPath) {
-    await fs.promise.writeFile(
-      path.resolve(projectRoot, exp.android.publishSourceMapPath),
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'android.publishSourceMapPath',
+      exp.android.publishSourceMapPath,
       androidSourceMap
     );
   }
 
   if (exp.ios && exp.ios.publishSourceMapPath) {
-    await fs.promise.writeFile(
-      path.resolve(projectRoot, exp.ios.publishSourceMapPath),
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      'ios.publishSourceMapPath',
+      exp.ios.publishSourceMapPath,
       iosSourceMap
     );
   }
