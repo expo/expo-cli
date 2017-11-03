@@ -151,12 +151,30 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
 }
 
 /**
+ *  Resolve the private config for a project.
+ *  For standalone apps, this is copied into a separate context field context.data.privateConfig
+ *  by the turtle builder. For a local project, this is available in app.json under ios.config.
+ */
+function _getPrivateConfig(context: StandaloneContext): any {
+  let privateConfig;
+  if (context.type === 'service') {
+    privateConfig = context.data.privateConfig;
+  } else if (context.type === 'user') {
+    const exp = context.data.exp;
+    if (exp && exp.ios) {
+      privateConfig = exp.ios.config;
+    }
+  }
+  return privateConfig;
+}
+
+/**
  * Configure an iOS Info.plist for a standalone app.
  */
 async function _configureInfoPlistAsync(context: StandaloneContext) {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
-  const privateConfig = context.type === 'service' ? context.data.privateConfig : null;
+  const privateConfig = _getPrivateConfig(context);
 
   let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
@@ -185,7 +203,7 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
     if (config.facebookScheme && config.facebookScheme.startsWith('fb')) {
       linkingSchemes.push(config.facebookScheme);
     }
-    // TODO: move privateConfig to other step, use substitute in user context.
+
     if (
       privateConfig &&
       privateConfig.googleSignIn &&
