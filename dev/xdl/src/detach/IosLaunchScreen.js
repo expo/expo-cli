@@ -7,6 +7,7 @@ import { DOMParser, XMLSerializer } from 'xmldom';
 
 import {
   manifestUsesSplashApi,
+  parseSdkMajorVersion,
   saveImageToPathAsync,
   spawnAsyncThrowError,
   transformFileContentsAsync,
@@ -181,10 +182,29 @@ async function _copyIntermediateLaunchScreenAsync(
   return;
 }
 
+function _maybeAbortForBackwardsCompatibility(context: StandaloneContext) {
+  // before SDK 23, the ExpoKit template project didn't have the code or supporting files
+  // to have a configurable splash screen. so don't try to move nonexistent files around
+  // or edit them.
+  let sdkVersion;
+  try {
+    sdkVersion = parseSdkMajorVersion(context.config.sdkVersion);
+  } catch (_) {
+    sdkVersion = 0; // :thinking_face:
+  }
+  if (sdkVersion < 23 && context.type === 'user' && !process.env.EXPO_VIEW_DIR) {
+    return true;
+  }
+  return false;
+}
+
 async function configureLaunchAssetsAsync(
   context: StandaloneContext,
   intermediatesDirectory: string
 ) {
+  if (_maybeAbortForBackwardsCompatibility(context)) {
+    return;
+  }
   console.log('Configuring iOS Launch Screen...');
 
   mkdirp.sync(intermediatesDirectory);
