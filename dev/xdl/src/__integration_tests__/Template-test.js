@@ -9,7 +9,7 @@ import rimraf from 'rimraf';
 import { clearXDLCacheAsync, downloadTemplateApp, extractTemplateApp } from '../Exp';
 
 describe('Template Apps', () => {
-  it('should download the starter app template and extract it', async () => {
+  xit('should download the starter app template and extract it', async () => {
     // This was working locally but failing on the mac ci machine
     /*
     process.env.UNSAFE_EXPO_HOME_DIRECTORY = path.join(

@@ -37,14 +37,6 @@ const writeFileAsync = promisify(fs.writeFile);
 const validateAsync = promisify(joi.validate);
 const mkdirpAsync = promisify(mkdirp);
 
-function _getPlatformSpecificEntryPoint(entryPoint, platform) {
-  if (entryPoint.endsWith('.js')) {
-    return `${entryPoint.substring(0, entryPoint.length - 3)}.${platform}.js`;
-  } else {
-    return `${entryPoint}.${platform}.js`;
-  }
-}
-
 export async function determineEntryPointAsync(root: string) {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(root);
 
