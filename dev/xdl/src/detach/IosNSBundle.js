@@ -197,6 +197,7 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
 
     // app name
     infoPlist.CFBundleName = config.name;
+    infoPlist.CFBundleDisplayName = config.name;
 
     // determine app linking schemes
     let linkingSchemes = config.scheme ? [config.scheme] : [];
