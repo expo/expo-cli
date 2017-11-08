@@ -25,6 +25,7 @@ import {
 import * as IosPlist from './IosPlist';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
+import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';
@@ -35,10 +36,6 @@ import StandaloneContext from './StandaloneContext';
 import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
 import * as Versions from '../Versions';
-
-const ANDROID_TEMPLATE_PKG = 'detach.app.template.pkg.name';
-const ANDROID_TEMPLATE_COMPANY = 'detach.app.template.company.domain';
-const ANDROID_TEMPLATE_NAME = 'DetachAppTemplate';
 
 function yesnoAsync(question) {
   return new Promise(resolve => {
@@ -139,6 +136,8 @@ export async function detachAsync(projectRoot: string, options: any) {
   let expoDirectory = path.join(projectRoot, '.expo-source');
   mkdirp.sync(expoDirectory);
 
+  const context = StandaloneContext.createUserContext(projectRoot, exp, experienceUrl);
+
   // iOS
   let isIosSupported = true;
   if (process.platform !== 'darwin') {
@@ -152,7 +151,6 @@ export async function detachAsync(projectRoot: string, options: any) {
     }
   }
   if (!hasIosDirectory && isIosSupported) {
-    const context = StandaloneContext.createUserContext(projectRoot, exp, experienceUrl);
     await detachIOSAsync(context);
     exp = IosWorkspace.addDetachedConfigToExp(exp, context);
     exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
@@ -163,14 +161,7 @@ export async function detachAsync(projectRoot: string, options: any) {
     let androidDirectory = path.join(expoDirectory, 'android');
     rimraf.sync(androidDirectory);
     mkdirp.sync(androidDirectory);
-    await detachAndroidAsync(
-      projectRoot,
-      androidDirectory,
-      exp.sdkVersion,
-      experienceUrl,
-      exp,
-      sdkVersionConfig.androidExpoViewUrl
-    );
+    await detachAndroidAsync(context, sdkVersionConfig.androidExpoViewUrl);
     exp.detach.androidExpoViewUrl = sdkVersionConfig.androidExpoViewUrl;
   }
 
@@ -207,158 +198,30 @@ async function regexFileAsync(filename, regex, replace) {
   await fs.writeFile(filename, fileString.replace(regex, replace));
 }
 
-async function renamePackageAsync(directory, originalPkg, destPkg) {
-  let originalSplitPackage = originalPkg.split('.');
-  let originalDeepDirectory = directory;
-  for (let i = 0; i < originalSplitPackage.length; i++) {
-    originalDeepDirectory = path.join(originalDeepDirectory, originalSplitPackage[i]);
+async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: string) {
+  if (context.type !== 'user') {
+    throw new Error(`detachAndroidAsync only supports user standalone contexts`);
   }
 
-  // copy files into temp directory
-  let tmpDirectory = path.join(directory, 'tmp-exponent-directory');
-  mkdirp.sync(tmpDirectory);
-  await Utils.ncpAsync(originalDeepDirectory, tmpDirectory);
-
-  // delete old package
-  rimraf.sync(path.join(directory, originalSplitPackage[0]));
-
-  // make new package
-  let newSplitPackage = destPkg.split('.');
-  let newDeepDirectory = directory;
-  for (let i = 0; i < newSplitPackage.length; i++) {
-    newDeepDirectory = path.join(newDeepDirectory, newSplitPackage[i]);
-    mkdirp.sync(newDeepDirectory);
-  }
-
-  // copy from temp to new package
-  await Utils.ncpAsync(tmpDirectory, newDeepDirectory);
-
-  // delete temp
-  rimraf.sync(tmpDirectory);
-}
-
-async function detachAndroidAsync(
-  projectRoot,
-  expoDirectory,
-  sdkVersion,
-  experienceUrl,
-  manifest,
-  expoViewUrl: string
-) {
+  console.log('Moving Android project files...');
+  let androidProjectDirectory = path.join(context.data.projectPath, 'android');
   let tmpExpoDirectory;
   if (process.env.EXPO_VIEW_DIR) {
     // Only for testing
-    tmpExpoDirectory = process.env.EXPO_VIEW_DIR;
+    await AndroidShellApp.copyInitialShellAppFilesAsync(
+      path.join(process.env.EXPO_VIEW_DIR, 'android'),
+      androidProjectDirectory
+    );
   } else {
-    tmpExpoDirectory = path.join(projectRoot, 'temp-android-directory');
+    tmpExpoDirectory = path.join(context.data.projectPath, 'temp-android-directory');
     mkdirp.sync(tmpExpoDirectory);
     console.log('Downloading Android code...');
     await Api.downloadAsync(expoViewUrl, tmpExpoDirectory, { extract: true });
+    await Utils.ncpAsync(path.join(tmpExpoDirectory, 'android'), androidProjectDirectory);
   }
 
-  let androidProjectDirectory = path.join(projectRoot, 'android');
-
-  console.log('Moving Android project files...');
-
-  await Utils.ncpAsync(
-    path.join(tmpExpoDirectory, 'android', 'maven'),
-    path.join(expoDirectory, 'maven')
-  );
-  await Utils.ncpAsync(
-    path.join(tmpExpoDirectory, 'android', 'detach-scripts'),
-    path.join(expoDirectory, 'detach-scripts')
-  );
-  await Utils.ncpAsync(
-    path.join(tmpExpoDirectory, 'exponent-view-template', 'android'),
-    androidProjectDirectory
-  );
-  if (process.env.EXPO_VIEW_DIR) {
-    rimraf.sync(path.join(androidProjectDirectory, 'build'));
-    rimraf.sync(path.join(androidProjectDirectory, 'app', 'build'));
-  }
-
-  // Fix up app/build.gradle
-  console.log('Configuring Android project...');
-  let appBuildGradle = path.join(androidProjectDirectory, 'app', 'build.gradle');
-  await regexFileAsync(appBuildGradle, /\/\* UNCOMMENT WHEN DISTRIBUTING/g, '');
-  await regexFileAsync(appBuildGradle, /END UNCOMMENT WHEN DISTRIBUTING \*\//g, '');
-  await regexFileAsync(appBuildGradle, `compile project(':expoview')`, '');
-
-  // Fix AndroidManifest
-  let androidManifest = path.join(
-    androidProjectDirectory,
-    'app',
-    'src',
-    'main',
-    'AndroidManifest.xml'
-  );
-  await regexFileAsync(androidManifest, 'PLACEHOLDER_DETACH_SCHEME', manifest.detach.scheme);
-
-  // Fix MainActivity
-  let mainActivity = path.join(
-    androidProjectDirectory,
-    'app',
-    'src',
-    'main',
-    'java',
-    'detach',
-    'app',
-    'template',
-    'pkg',
-    'name',
-    'MainActivity.java'
-  );
-  await regexFileAsync(mainActivity, 'TEMPLATE_INITIAL_URL', experienceUrl);
-
-  // Fix package name
-  let packageName = manifest.android.package;
-  await renamePackageAsync(
-    path.join(androidProjectDirectory, 'app', 'src', 'main', 'java'),
-    ANDROID_TEMPLATE_PKG,
-    packageName
-  );
-  await renamePackageAsync(
-    path.join(androidProjectDirectory, 'app', 'src', 'test', 'java'),
-    ANDROID_TEMPLATE_PKG,
-    packageName
-  );
-  await renamePackageAsync(
-    path.join(androidProjectDirectory, 'app', 'src', 'androidTest', 'java'),
-    ANDROID_TEMPLATE_PKG,
-    packageName
-  );
-
-  let packageNameMatches = await glob(androidProjectDirectory + '/**/*.@(java|gradle|xml)');
-  if (packageNameMatches) {
-    let oldPkgRegex = new RegExp(`${ANDROID_TEMPLATE_PKG.replace(/\./g, '\\.')}`, 'g');
-    for (let i = 0; i < packageNameMatches.length; i++) {
-      await regexFileAsync(packageNameMatches[i], oldPkgRegex, packageName);
-    }
-  }
-
-  // Fix app name
-  console.log('Naming Android project...');
-  let appName = manifest.name;
-  await regexFileAsync(
-    path.resolve(androidProjectDirectory, 'app', 'src', 'main', 'res', 'values', 'strings.xml'),
-    ANDROID_TEMPLATE_NAME,
-    appName
-  );
-
-  // Fix image
-  let icon = manifest.android && manifest.android.icon ? manifest.android.icon : manifest.icon;
-  if (icon) {
-    let iconMatches = await glob(
-      path.join(androidProjectDirectory, 'app', 'src', 'main', 'res') + '/**/ic_launcher.png'
-    );
-    if (iconMatches) {
-      for (let i = 0; i < iconMatches.length; i++) {
-        await fs.unlink(iconMatches[i]);
-        // TODO: make more efficient
-        await saveImageToPathAsync(projectRoot, icon, iconMatches[i]);
-      }
-    }
-  }
+  console.log('Updating Android app...');
+  await AndroidShellApp.runShellAppModificationsAsync(context);
 
   // Clean up
   console.log('Cleaning up Android...');
