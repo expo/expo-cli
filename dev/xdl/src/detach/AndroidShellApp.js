@@ -17,7 +17,9 @@ import StandaloneContext from './StandaloneContext';
 
 const { getManifestAsync, saveUrlToPathAsync, spawnAsyncThrowError, spawnAsync } = ExponentTools;
 
-const EXPONENT_DIRECTORY = path.join(process.env.EXPO_UNIVERSE_DIR, 'exponent');
+function exponentDirectory() {
+  return path.join(process.env.EXPO_UNIVERSE_DIR, 'exponent');
+}
 
 async function regexFileAsync(regex, replace, filename) {
   let file = await fs.promise.readFile(filename);
@@ -80,7 +82,7 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
   let fullManifestUrl = `${url.replace('exp://', 'https://')}/index.exp`;
   let bundleUrl = manifest.bundleUrl;
 
-  let shellPath = path.join(EXPONENT_DIRECTORY, 'android-shell-app');
+  let shellPath = path.join(exponentDirectory(), 'android-shell-app');
 
   await fs.remove(path.join(shellPath, 'app', 'src', 'main', 'assets', 'shell-app-manifest.json'));
   await fs.writeFileSync(
@@ -220,7 +222,7 @@ function shouldShowLoadingView(manifest) {
 export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath) {
   await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
     stdio: 'inherit',
-    cwd: path.join(EXPONENT_DIRECTORY, 'android', 'app'),
+    cwd: path.join(exponentDirectory(), 'android', 'app'),
   }); // populate android template files now since we take out the prebuild step later on
 
   let copyToShellApp = async fileName => {
@@ -255,8 +257,8 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     outputFile,
   } = args;
 
-  let androidSrcPath = path.join(EXPONENT_DIRECTORY, 'android');
-  let shellPath = path.join(EXPONENT_DIRECTORY, 'android-shell-app');
+  let androidSrcPath = path.join(exponentDirectory(), 'android');
+  let shellPath = path.join(exponentDirectory(), 'android-shell-app');
 
   await fs.remove(shellPath);
   await fs.ensureDir(shellPath);
@@ -309,7 +311,7 @@ function shellPathForContext(context: StandaloneContext) {
   if (context.type === 'user') {
     return path.join(context.data.projectPath, 'android');
   } else {
-    return path.join(EXPONENT_DIRECTORY, 'android-shell-app');
+    return path.join(exponentDirectory(), 'android-shell-app');
   }
 }
 
@@ -880,7 +882,7 @@ async function buildShellAppAsync(context: StandaloneContext) {
     ]);
     await fs.copy('shell.apk', androidBuildConfiguration.outputFile || '/tmp/shell-signed.apk');
   } else {
-    let androidSrcPath = path.join(EXPONENT_DIRECTORY, 'android');
+    let androidSrcPath = path.join(exponentDirectory(), 'android');
     await fs.copy(
       path.join(androidSrcPath, 'debug.keystore'),
       path.join(shellPath, 'debug.keystore')
