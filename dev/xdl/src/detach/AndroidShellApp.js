@@ -584,7 +584,6 @@ export async function runShellAppModificationsAsync(context: StandaloneContext) 
       'android.permission.RECORD_AUDIO',
       'android.permission.USE_FINGERPRINT',
       'android.permission.VIBRATE',
-      'android.permission.WAKE_LOCK',
       'android.permission.WRITE_EXTERNAL_STORAGE',
       'com.anddoes.launcher.permission.UPDATE_COUNT',
       'com.android.launcher.permission.INSTALL_SHORTCUT',
