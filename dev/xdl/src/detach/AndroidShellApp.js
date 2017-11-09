@@ -352,6 +352,8 @@ export async function runShellAppModificationsAsync(context: StandaloneContext) 
 
   // Clean build directories
   await fs.remove(path.join(shellPath, 'app', 'build'));
+  await fs.remove(path.join(shellPath, 'ReactAndroid', 'build'));
+  await fs.remove(path.join(shellPath, 'expoview', 'build'));
 
   // Package
   await regexFileAsync(
