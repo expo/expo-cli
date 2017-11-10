@@ -424,7 +424,8 @@ async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options })
   formData.append('expJson', JSON.stringify(exp));
   formData.append('iosBundle', _createBlob(iosBundle), 'iosBundle');
   formData.append('androidBundle', _createBlob(androidBundle), 'androidBundle');
-  let response = await Api.callMethodAsync('publish', [options], 'put', null, {
+  formData.append('options', JSON.stringify(options));
+  let response = await Api.callMethodAsync('publish', null, 'put', null, {
     formData,
   });
   return response;
