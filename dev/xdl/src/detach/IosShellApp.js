@@ -199,7 +199,7 @@ async function moveShellAppArchiveAsync(args, manifest) {
 *    build - build a binary
 *    configure - don't build anything, just configure the files in an existing .app bundle
 *  @param type simulator or archive
-*  @param releaseChannel default, staging or production
+*  @param releaseChannel channel to pull manifests from, default is 'default'
 *  @param configuration Debug or Release, for type == simulator (default Release)
 *  @param archivePath path to existing bundle, for action == configure
 *  @param privateConfigFile path to a private config file containing, e.g., private api keys

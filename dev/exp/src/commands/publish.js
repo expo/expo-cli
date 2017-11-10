@@ -17,14 +17,11 @@ type Options = {
 };
 
 export async function action(projectDir: string, options: Options = {}) {
-  if (
-    options.releaseChannel !== 'default' &&
-    options.releaseChannel !== 'staging' &&
-    options.releaseChannel !== 'production'
-  ) {
-    log.error('Channel type must be one of {default, staging, production}');
-    process.exit(1);
-  }
+  let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+  if (!channelRe.test(options.releaseChannel)) {
+      log.error('Release channel name can only contain lowercase letters, numbers and special characters . _ and -');
+      process.exit(1);
+  } 
   const status = await Project.currentStatus(projectDir);
 
   let startedOurOwn = false;
@@ -70,18 +67,11 @@ export default (program: any) => {
     .command('publish [project-dir]')
     .alias('p')
     .description('Publishes your project to exp.host')
-    .option(
-      '-q, --quiet',
-      'Suppress verbose output from the React Native packager.'
-    )
-    .option(
-      '-s, --send-to [dest]',
-      'A phone number or e-mail address to send a link to'
-    )
+    .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
+    .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option(
       '-c --release-channel <release channel>',
-      "The release channel to publish to, one of {default, staging, prod}. Default is 'default'.",
-      /^(default|staging|production)$/i,
+      "The release channel to publish to. Default is 'default'.",
       'default'
     )
     .allowNonInteractive()

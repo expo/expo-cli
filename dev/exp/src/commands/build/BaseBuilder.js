@@ -144,7 +144,7 @@ ${buildStatus.id}
 
     //run publish -- in future, we should determine whether we NEED to do this
     const { ids: expIds, url, err } = await publishAction(this.projectDir, {
-      releaseChannel: this.options.channel,
+      releaseChannel: this.options.releaseChannel,
     });
 
     if (err) {
@@ -163,7 +163,7 @@ ${buildStatus.id}
       mode: 'create',
       expIds,
       platform,
-      releaseChannel: this.options.channel,
+      releaseChannel: this.options.releaseChannel,
     };
 
     if (platform === 'ios') {
