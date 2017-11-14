@@ -2,8 +2,6 @@
  * @flow
  */
 
-import 'instapromise';
-
 import _ from 'lodash';
 import child_process from 'child_process';
 import fs from 'fs';
@@ -11,17 +9,22 @@ import ip from './ip';
 import JsonFile from '@expo/json-file';
 import os from 'os';
 import path from 'path';
+import promisify from 'util.promisify';
 import rimraf from 'rimraf';
 import spawnAsync from '@expo/spawn-async';
-import targz from 'tar.gz';
+import tar from 'tar';
 
 import Api from './Api';
 import * as Binaries from './Binaries';
 import * as Env from './Env';
+import FormData from './tools/FormData';
+import { isNode } from './tools/EnvironmentHelper';
 import UserManager from './User';
 import UserSettings from './UserSettings';
 import * as Utils from './Utils';
 import * as Watchman from './Watchman';
+
+const readFileAsync = promisify(fs.readFile);
 
 async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   let user = await UserManager.getCurrentUserAsync();
@@ -63,14 +66,20 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   }
 
   // compress
-  await targz().compress(tempDir, archivePath);
+  await tar.create({ file: archivePath, gzip: true, cwd: Env.home() }, [
+    path.relative(Env.home(), tempDir),
+  ]);
   rimraf.sync(tempDir);
 
   // upload
-  let file = fs.createReadStream(archivePath);
-  let formData = {
-    archive: file,
-  };
+  let file;
+  if (isNode()) {
+    file = fs.createReadStream(archivePath);
+  } else {
+    file = new Blob([await readFileAsync(archivePath)]);
+  }
+  let formData = new FormData();
+  formData.append('archive', file);
 
   let response = await Api.callMethodAsync('uploadDiagnostics', [{}], 'put', null, { formData });
   return response.url;

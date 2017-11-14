@@ -3,7 +3,7 @@
  */
 
 import fs from 'fs';
-import targz from 'tar.gz';
+import tar from 'tar';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import mkdirp from 'mkdirp';
@@ -46,9 +46,9 @@ export async function extractAsync(archive: string, dir: string) {
       });
     }
   } catch (e) {
-    // tar.gz node module doesn't work consistently with big files, so only
-    // use it as a backup.
+    // tar node module has previously had problems with big files, and seems to
+    // be slower, so only use it as a backup.
     console.error(e.message);
-    await targz().extract(archive, dir);
+    await tar.extract({ file: archive, cwd: dir });
   }
 }
