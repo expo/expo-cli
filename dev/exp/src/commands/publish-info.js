@@ -4,6 +4,38 @@
 
 import { Api, Project, FormData } from 'xdl';
 import log from '../log';
+import CliTable from 'cli-table';
+
+const HORIZ_CELL_WIDTH_SMALL = 15;
+const HORIZ_CELL_WIDTH_BIG = 40;
+function printTableJsonArray(headers, jsonArray, colWidths) {
+  let table = new CliTable({
+    head: headers,
+    colWidths,
+  });
+
+  jsonArray.forEach(json => {
+    table.push(headers.map(header => (json[header] ? json[header] : '')));
+  });
+
+  return table;
+}
+
+const VERTICAL_CELL_WIDTH = 80;
+function printTableJson(json, table) {
+  Object.entries(json).forEach(([key, value]) => {
+    // check if value is a JSON
+    if (typeof value === 'object') {
+      value = JSON.stringify(value);
+    }
+    // Add newline every 80 chars
+    key = key.replace(new RegExp('(.{' + VERTICAL_CELL_WIDTH + '})', 'g'), '$1\n');
+    value = value.replace(new RegExp('(.{' + VERTICAL_CELL_WIDTH + '})', 'g'), '$1\n');
+    table.push({ [key]: value });
+  });
+
+  return table;
+}
 
 export default (program: any) => {
   program
@@ -40,8 +72,40 @@ export default (program: any) => {
       let result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
         formData,
       });
-      // TODO: pretty print this
-      console.log(result.queryResult);
+
+      if (result.queryResult && result.queryResult.length > 0) {
+        // Print general publication info
+        let sampleItem = result.queryResult[0]; // get a sample item
+        let generalTable = new CliTable();
+        generalTable.push({ 'General Info': '' });
+        printTableJson(
+          {
+            fullName: sampleItem.fullName,
+            ...(sampleItem.channel ? { channel: sampleItem.channel } : null),
+          },
+          generalTable
+        );
+        console.log(generalTable.toString());
+
+        // Print info specific to each publication
+        let headers = ['publicationId', 'appVersion', 'sdkVersion', 'publishedTime', 'platform'];
+        if (options.releaseChannel) {
+          headers.push('channelId');
+        }
+
+        // colWidths contains the cell size of each header
+        let colWidths = [];
+        let bigCells = new Set(['publicationId', 'channelId', 'publishedTime']);
+        headers.forEach(header => {
+          bigCells.has(header)
+            ? colWidths.push(HORIZ_CELL_WIDTH_BIG)
+            : colWidths.push(HORIZ_CELL_WIDTH_SMALL);
+        });
+        let table = printTableJsonArray(headers, result.queryResult, colWidths);
+        console.log(table.toString());
+      } else {
+        log.error('No records found matching your query.');
+      }
     });
   program
     .command('publish:details [project-dir]')
@@ -63,7 +127,25 @@ export default (program: any) => {
       let result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
         formData,
       });
-      // TODO: pretty print this
-      console.log(result.queryResult);
+
+      if (result.queryResult) {
+        let queryResult = result.queryResult;
+        let manifest = queryResult.manifest;
+        delete queryResult.manifest;
+
+        // Print general release info
+        let generalTable = new CliTable();
+        generalTable.push({ 'Release Description': '' });
+        printTableJson(queryResult, generalTable);
+        console.log(generalTable.toString());
+
+        // Print manifest info
+        let manifestTable = new CliTable();
+        manifestTable.push({ 'Manifest Details': '' });
+        printTableJson(manifest, manifestTable);
+        console.log(manifestTable.toString());
+      } else {
+        log.error('No records found matching your query.');
+      }
     });
 };
