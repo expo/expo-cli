@@ -260,6 +260,29 @@ function _requireFromProject(modulePath, projectRoot) {
   }
 }
 
+export async function getSlugAsync(projectRoot: string, options: Object = {}) {
+  // Verify that exp/app.json exist
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  if (!exp || !pkg) {
+    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    throw new XDLError(
+      ErrorCode.NO_PACKAGE_JSON,
+      `Couldn't read ${configName} file in project at ${projectRoot}`
+    );
+  }
+
+  if (!exp.slug && pkg.name) {
+    exp.slug = pkg.name;
+  } else if (!exp.slug) {
+    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    throw new XDLError(
+      ErrorCode.INVALID_MANIFEST,
+      `${configName} in ${projectRoot} must contain the slug field`
+    );
+  }
+  return exp.slug;
+}
+
 export async function publishAsync(
   projectRoot: string,
   options: Object = {}

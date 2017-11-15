@@ -60,6 +60,9 @@ module.exports = {
   get FileSystem() {
     return require('./FileSystem');
   },
+  get FormData() {
+    return require('./tools/FormData').default;
+  },
   get FsCache() {
     return require('./tools/FsCache');
   },
