@@ -75,13 +75,13 @@ async function _renameAndMoveProjectFilesAsync(
   const bundleIdentifier = exp.ios && exp.ios.bundleIdentifier ? exp.ios.bundleIdentifier : '';
 
   await Promise.all(
-    filesToTransform.map(async fileName => {
-      return transformFileContentsAsync(path.join(projectDirectory, fileName), fileString => {
+    filesToTransform.map(fileName =>
+      transformFileContentsAsync(path.join(projectDirectory, fileName), fileString => {
         return fileString
           .replace(/com.getexponent.exponent-view-template/g, bundleIdentifier)
           .replace(/exponent-view-template/g, projectName);
-      });
-    })
+      })
+    )
   );
 
   // order of this array matters
