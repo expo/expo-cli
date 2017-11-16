@@ -11,7 +11,7 @@
         "type": "string"
       },
       "slug": {
-        "description": "The friendly url name for publishing. eg: `expo.o/@your-username/slug`.",
+        "description": "The friendly url name for publishing. eg: `expo.io/@your-username/slug`.",
         "type": "string",
         "pattern": "^[a-zA-Z0-9\\-]+$"
       },
@@ -221,7 +221,7 @@
         "type": "boolean"
       },
       "scheme": {
-        "description": "Url scheme to link into your app. For example, if we set this to `'rnplay'`, then rnplay:// urls would open your app when tapped.",
+        "description": "URL scheme to link into your app. For example, if we set this to `'demo'`, then demo:// URLs would open your app when tapped.",
         "type": "string",
         "meta": {
           "standaloneOnly": true
@@ -286,7 +286,7 @@
             "pattern": "^[A-Za-z0-9\\.]+$"
           },
           "icon": {
-            "description": "Local path or remote url to an image to use for your app's icon on iOS. If specified, this overrides the top-level `icon` key. iOS icons should be square png files with no transparent pixels. This icon will appear on the home screen and within the Expo app.",
+            "description": "Local path or remote URL to an image to use for your app's icon on iOS. If specified, this overrides the top-level `icon` key. iOS icons should be square png files with no transparent pixels. This icon will appear on the home screen and within the Expo app.",
             "type": "string",
             "meta": {
               "asset": true,
@@ -325,7 +325,7 @@
                 "type": "object",
                 "properties": {
                   "reservedClientId": {
-                    "description": "The reserved client id url scheme. Can be found in `GoogeService-Info.plist`.",
+                    "description": "The reserved client ID URL scheme. Can be found in `GoogeService-Info.plist`.",
                     "type": "string"
                   }
                 },
@@ -336,6 +336,10 @@
           },
           "isRemoteJSEnabled": {
             "description": "If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through Apple review. Defaults to true. (Note that this will not work out of the box with ExpoKit projects)",
+            "type": "boolean"
+          },
+          "loadJSInBackgroundExperimental": {
+            "description": "If true, your standalone app will immediately run its cached JS bundle, if one exists, and request a new one in the background.",
             "type": "boolean"
           },
           "supportsTablet": {
@@ -355,6 +359,10 @@
           "associatedDomains": {
             "description": "An array that contains Associated Domains for the standalone app.",
             "type": "array"
+          },
+          "usesIcloudStorage": {
+            "description": "A boolean indicating if the app uses iCloud Storage for DocumentPicker. See DocumentPicker docs for details.",
+            "type": "boolean"
           },
           "splash": {
             "description": "Configuration for loading and splash screen for standalone iOS apps.",
