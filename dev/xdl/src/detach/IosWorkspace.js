@@ -22,6 +22,13 @@ import * as Versions from '../Versions';
 async function _getVersionedExpoKitConfigAsync(sdkVersion: string): any {
   const versions = await Versions.versionsAsync();
   let sdkVersionConfig = versions.sdkVersions[sdkVersion];
+  if (!sdkVersionConfig) {
+    if (process.env.EXPO_VIEW_DIR) {
+      sdkVersionConfig = {};
+    } else {
+      throw new Error(`Unsupported SDK version: ${sdkVersion}`);
+    }
+  }
   const { iosVersion, iosExpoViewUrl } = sdkVersionConfig;
   const iosClientVersion = iosVersion ? iosVersion : versions.iosVersion;
   return {
