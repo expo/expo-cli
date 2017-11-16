@@ -1487,6 +1487,19 @@ export async function startTunnelsAsync(projectRoot: string) {
   const { username } = user;
   let packageShortName = path.parse(projectRoot).base;
   let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+
+  ngrok.addListener('statuschange', status => {
+    if (status === 'reconnecting') {
+      ProjectUtils.logError(
+        projectRoot,
+        'expo',
+        'We noticed your tunnel is having issues. This may be due to intermittent problems with our tunnel provider. If you have trouble connecting to your app, try to Restart the project, or switch Host to LAN.'
+      );
+    } else if (status === 'online') {
+      ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
+    }
+  });
+
   try {
     let startedTunnelsSuccessfully = false;
 
@@ -1561,6 +1574,7 @@ export async function stopTunnelsAsync(projectRoot: string) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   let ngrokProcess = ngrok.process();
   let ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;
+  ngrok.removeAllListeners('statuschange');
   if (packagerInfo.ngrokPid && packagerInfo.ngrokPid !== ngrokProcessPid) {
     // Ngrok is running in some other process. Kill at the os level.
     try {
@@ -1583,6 +1597,7 @@ export async function stopTunnelsAsync(projectRoot: string) {
   });
   await Android.stopAdbReverseAsync(projectRoot);
 }
+
 export async function setOptionsAsync(
   projectRoot: string,
   options: {
@@ -1606,6 +1621,7 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
   _assertValidProjectRoot(projectRoot);
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
+
 export async function startAsync(
   projectRoot: string,
   options: Object = {},
