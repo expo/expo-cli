@@ -10,7 +10,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
-## [46.0.0] - 2017-11-16
+## [46.0.1] - 2017-11-16
 
 ### Added
 
