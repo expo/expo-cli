@@ -153,23 +153,11 @@ export async function extractTemplateApp(starterAppPath: string, name: string, r
   // Update files
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
 
-  let author = await UserSettings.getAsync('email', null);
-  let packageJsonFile = new JsonFile(path.join(root, 'package.json'));
-  let packageJson = await packageJsonFile.readAsync();
-  let data = Object.assign(packageJson, {
-    name,
-    version: '0.0.0',
-    description: 'Hello Expo!',
-    author,
-  });
-
-  await packageJsonFile.writeAsync(data);
-
   // Update app.json
   let appJson = await readFileAsync(path.join(root, 'app.json'), 'utf8');
   let customAppJson = appJson
-    .replace(/\"My New Project\"/, `"${data.name}"`)
-    .replace(/\"my-new-project\"/, `"${data.name}"`);
+    .replace(/\"My New Project\"/, `"${name}"`)
+    .replace(/\"my-new-project\"/, `"${name}"`);
   await writeFileAsync(path.join(root, 'app.json'), customAppJson, 'utf8');
 
   await initGitRepo(root);
