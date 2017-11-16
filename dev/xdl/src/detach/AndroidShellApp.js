@@ -18,7 +18,13 @@ import StandaloneContext from './StandaloneContext';
 const { getManifestAsync, saveUrlToPathAsync, spawnAsyncThrowError, spawnAsync } = ExponentTools;
 
 function exponentDirectory() {
-  return path.join(process.env.EXPO_UNIVERSE_DIR, 'exponent');
+  if (process.env.TURTLE_WORKING_DIR_PATH) {
+    return process.env.TURTLE_WORKING_DIR_PATH;
+  } else if (process.env.EXPO_UNIVERSE_DIR) {
+    return path.join(process.env.EXPO_UNIVERSE_DIR, 'exponent');
+  } else {
+    throw new Error(`Can't determine exponent directory`);
+  }
 }
 
 async function regexFileAsync(regex, replace, filename) {
