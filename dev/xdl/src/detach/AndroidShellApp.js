@@ -232,7 +232,12 @@ export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath) {
   }); // populate android template files now since we take out the prebuild step later on
 
   let copyToShellApp = async fileName => {
-    await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
+    try {
+      await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
+    } catch (e) {
+      // android.iml is only available locally, not on the builders, so don't crash when this happens
+      console.warn(`Warning: Could not copy ${fileName} to shell app directory.`);
+    }
   };
 
   await copyToShellApp('expoview');
