@@ -194,7 +194,7 @@ export async function constructUrlAsync(
   let hostname;
   let port;
 
-  if (opts.hostType === 'localhost') {
+  if (opts.hostType === 'localhost' || requestHostname === 'localhost') {
     hostname = 'localhost';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else if (opts.hostType === 'lan' || Config.offline) {
