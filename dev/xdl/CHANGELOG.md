@@ -10,6 +10,18 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [47.0.0] - 2017-11-16
+
+### Added
+
+* Support for release channels
+
+### Changed
+
+* HTTP requests use Chromium network stack in Electron
+* Detach and Turtle improvements
+* Replaced deprecated tar.gz package
+
 ## [46.1.0] - 2017-10-27
 
 ### Changed
