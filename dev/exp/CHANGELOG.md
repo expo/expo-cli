@@ -10,11 +10,22 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [46.0.0] - 2017-11-16
+
+### Added
+
+* Release channels
+* `publish:history` and `publish:details` commands
+
+### Changed
+
+* Tunnel status: show a message if the tunnel goes down
+
 ## [45.1.0] - 2017-10-27
 
 ### Changed
 
-* Only detach iOS on macOS or when a --force flag is added 
+* Only detach iOS on macOS or when a --force flag is added
 
 ## [45.0.2] - 2017-10-18
 
