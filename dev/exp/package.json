@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "46.0.1",
+  "version": "46.0.2",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -87,6 +87,6 @@
     "semver": "^5.0.1",
     "source-map-support": "^0.4.1",
     "untildify": "^3.0.2",
-    "xdl": "47.0.0"
+    "xdl": "47.0.1"
   }
 }
