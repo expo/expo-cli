@@ -14,14 +14,17 @@ import { installExitHooks } from '../exit';
 type Options = {
   sendTo?: string,
   quiet?: boolean,
+  releaseChannel?: string,
 };
 
 export async function action(projectDir: string, options: Options = {}) {
   let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-  if (!channelRe.test(options.releaseChannel)) {
-      log.error('Release channel name can only contain lowercase letters, numbers and special characters . _ and -');
-      process.exit(1);
-  } 
+  if (options.releaseChannel && !channelRe.test(options.releaseChannel)) {
+    log.error(
+      'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+    );
+    process.exit(1);
+  }
   const status = await Project.currentStatus(projectDir);
 
   let startedOurOwn = false;
@@ -43,16 +46,25 @@ export async function action(projectDir: string, options: Options = {}) {
     releaseChannel: options.releaseChannel,
   });
 
+  let url = result.url;
+
+  // Append the query param for the release channel to the URL.
+  // When we integrate release channels into XDE, we can revisit this and
+  // perhaps push the logic for this into xdl
+  if (options.releaseChannel && options.releaseChannel !== 'default') {
+    url = `${url}?release-channel=${options.releaseChannel}`;
+  }
+
   if (options.quiet) {
     simpleSpinner.stop();
   }
 
   log('Published');
-  log('Your URL is\n\n' + chalk.underline(result.url) + '\n');
+  log('Your URL is\n\n' + chalk.underline(url) + '\n');
   log.raw(result.url);
 
   if (recipient) {
-    await sendTo.sendUrlAsync(result.url, recipient);
+    await sendTo.sendUrlAsync(url, recipient);
   }
 
   if (startedOurOwn) {
