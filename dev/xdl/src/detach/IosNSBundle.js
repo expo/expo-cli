@@ -226,6 +226,18 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
       },
     ];
 
+    // add or remove other facebook config
+    if (config.facebookAppId) {
+      infoPlist.FacebookAppID = config.facebookAppId;
+    } else {
+      delete infoPlist['FacebookAppID'];
+    }
+    if (config.facebookDisplayName) {
+      infoPlist.FacebookDisplayName = config.facebookDisplayName;
+    } else {
+      delete infoPlist['FacebookDisplayName'];
+    }
+
     // set ITSAppUsesNonExemptEncryption to let people skip manually
     // entering it in iTunes Connect
     if (
