@@ -14,13 +14,13 @@ export default (program: any) => {
     .command('publish:history [project-dir]')
     .alias('ph')
     .description('View a log of your published releases.')
-    .option('-c, --release-channel [channel-name]', 'Filter by release channel')
+    .option('-c, --release-channel <channel-name>', 'Filter by release channel')
     .option(
-      '-count, --count [number-of-logs]',
+      '-count, --count <number-of-logs>',
       'Number of logs to view, maximum 100, default 5.',
       parseInt
     )
-    .option('-p, --platform [ios|android]', 'Filter by platform, android or ios.')
+    .option('-p, --platform <ios|android>', 'Filter by platform, android or ios.')
     .allowNonInteractive()
     .asyncActionProjectDir(async (projectDir, options) => {
       if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
@@ -81,7 +81,7 @@ export default (program: any) => {
     .command('publish:details [project-dir]')
     .alias('pd')
     .description('View the details of a published release.')
-    .option('--publish-id [publish-id]', 'Publication id.')
+    .option('--publish-id <publish-id>', 'Publication id.')
     .allowNonInteractive()
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.publishId) {

@@ -12,9 +12,9 @@ export default (program: any) => {
     .command('publish:set [project-dir]')
     .alias('ps')
     .description('Set a published release to be served from a specified channel.')
-    .option('-c, --release-channel [channel-name]', 'The channel to set the published release.')
+    .option('-c, --release-channel <channel-name>', 'The channel to set the published release.')
     .option(
-      '-p, --publish-id [publish-id]',
+      '-p, --publish-id <publish-id>',
       'The id of the published release to serve from the channel.'
     )
     .allowNonInteractive()
