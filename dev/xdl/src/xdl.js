@@ -72,6 +72,9 @@ module.exports = {
   get IosPlist() {
     return require('./detach/IosPlist');
   },
+  get IosIcons() {
+    return require('./detach/IosIcons');
+  },
   get IosPodsTools() {
     return require('./detach/IosPodsTools');
   },
