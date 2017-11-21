@@ -1,6 +1,6 @@
 {
   "name": "xdl",
-  "version": "47.0.1",
+  "version": "47.0.2",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
   "files": [
