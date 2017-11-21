@@ -62,80 +62,89 @@ async function createAndWriteIconsToPathAsync(
     console.warn(e.message);
   }
 
-  let iconSizes = [1024, 20, 29, 40, 60, 76, 83.5];
-  iconSizes.forEach(iconSize => {
-    let iconResolutions;
-    if (iconSize === 76) {
-      // iPad has 1x and 2x icons for this size only
-      iconResolutions = [1, 2];
-    } else if (iconSize == 1024) {
-      // marketing icon is weird
-      iconResolutions = [1];
-    } else if (iconSize === 83.5) {
-      iconResolutions = [2];
-    } else {
-      iconResolutions = [2, 3];
-    }
-    iconResolutions.forEach(async iconResolution => {
-      let iconQualifier = _getAppleIconQualifier(iconSize, iconResolution);
-      let iconKey = `iconUrl${iconQualifier}`;
-      let rawIconFilename;
-      let usesDefault = false;
-      if (context.type === 'service') {
-        // TODO(nikki): Support local paths for these icons
-        const manifest = context.data.manifest;
-        if (manifest.ios && manifest.ios.hasOwnProperty(iconKey)) {
-          // manifest specifies an image just for this size/resolution, use that
-          rawIconFilename = `exp-icon${iconQualifier}.png`;
-          await saveUrlToPathAsync(
-            manifest.ios[iconKey],
-            `${destinationIconPath}/${rawIconFilename}`
-          );
-        }
-      }
-      if (!rawIconFilename) {
-        // use default iconUrl
-        usesDefault = true;
-        if (defaultIconFilename) {
-          rawIconFilename = defaultIconFilename;
-        } else {
-          console.warn(
-            `Project does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`
-          );
-          return;
-        }
+  const iconSizes = [1024, 20, 29, 40, 60, 76, 83.5];
+
+  await Promise.all(
+    iconSizes.map(async iconSize => {
+      let iconResolutions;
+      if (iconSize === 76) {
+        // iPad has 1x and 2x icons for this size only
+        iconResolutions = [1, 2];
+      } else if (iconSize == 1024) {
+        // marketing icon is weird
+        iconResolutions = [1];
+      } else if (iconSize === 83.5) {
+        iconResolutions = [2];
+      } else {
+        iconResolutions = [2, 3];
       }
 
-      let iconFilename = `AppIcon${iconQualifier}.png`;
-      let iconSizePx = iconSize * iconResolution;
-      await spawnAsyncThrowError('/bin/cp', [rawIconFilename, iconFilename], {
-        stdio: 'inherit',
-        cwd: destinationIconPath,
-      });
-      try {
-        await _resizeImageAsync(iconSizePx, iconFilename, destinationIconPath);
-      } catch (e) {
-        throw new Error(`Failed to resize image: ${iconFilename}. (${e})`);
-      }
+      // We need to wait for all of these to finish!
+      await Promise.all(
+        iconResolutions.map(async iconResolution => {
+          let iconQualifier = _getAppleIconQualifier(iconSize, iconResolution);
+          let iconKey = `iconUrl${iconQualifier}`;
+          let rawIconFilename;
+          let usesDefault = false;
+          if (context.type === 'service') {
+            // TODO(nikki): Support local paths for these icons
+            const manifest = context.data.manifest;
+            if (manifest.ios && manifest.ios.hasOwnProperty(iconKey)) {
+              // manifest specifies an image just for this size/resolution, use that
+              rawIconFilename = `exp-icon${iconQualifier}.png`;
+              await saveUrlToPathAsync(
+                manifest.ios[iconKey],
+                `${destinationIconPath}/${rawIconFilename}`
+              );
+            }
+          }
+          if (!rawIconFilename) {
+            // use default iconUrl
+            usesDefault = true;
+            if (defaultIconFilename) {
+              rawIconFilename = defaultIconFilename;
+            } else {
+              console.warn(
+                `Project does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`
+              );
+              return;
+            }
+          }
 
-      // reject non-square icons (because Apple will if we don't)
-      const dims = await getImageDimensionsMacOSAsync(destinationIconPath, iconFilename);
-      if (!dims || dims.length < 2 || dims[0] !== dims[1]) {
-        if (!dims) {
-          throw new Error(`Unable to read the dimensions of ${iconFilename}`);
-        } else {
-          throw new Error(
-            `iOS icons must be square, the dimensions of ${iconFilename} are ${dims}`
-          );
-        }
-      }
+          let iconFilename = `AppIcon${iconQualifier}.png`;
+          let iconSizePx = iconSize * iconResolution;
+          await spawnAsyncThrowError('/bin/cp', [rawIconFilename, iconFilename], {
+            stdio: 'inherit',
+            cwd: destinationIconPath,
+          });
+          try {
+            await _resizeImageAsync(iconSizePx, iconFilename, destinationIconPath);
+          } catch (e) {
+            throw new Error(`Failed to resize image: ${iconFilename}. (${e})`);
+          }
 
-      if (!usesDefault) {
-        // non-default icon used, clean up the downloaded version
-        await spawnAsyncThrowError('/bin/rm', [path.join(destinationIconPath, rawIconFilename)]);
-      }
-    });
-  });
+          // reject non-square icons (because Apple will if we don't)
+          const dims = await getImageDimensionsMacOSAsync(destinationIconPath, iconFilename);
+          if (!dims || dims.length < 2 || dims[0] !== dims[1]) {
+            if (!dims) {
+              throw new Error(`Unable to read the dimensions of ${iconFilename}`);
+            } else {
+              throw new Error(
+                `iOS icons must be square, the dimensions of ${iconFilename} are ${dims}`
+              );
+            }
+          }
+
+          if (!usesDefault) {
+            // non-default icon used, clean up the downloaded version
+            await spawnAsyncThrowError('/bin/rm', [
+              path.join(destinationIconPath, rawIconFilename),
+            ]);
+          }
+        })
+      );
+    })
+  );
 
   // clean up default icon
   if (defaultIconFilename) {
