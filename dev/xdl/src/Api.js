@@ -22,7 +22,7 @@ import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 
 const TIMER_DURATION = 30000;
-const TIMEOUT = 60000;
+const TIMEOUT = 3600000;
 
 function ApiError(code, message) {
   let err = new Error(message);
