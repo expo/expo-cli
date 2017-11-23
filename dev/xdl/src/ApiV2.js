@@ -8,6 +8,7 @@ import _ from 'lodash';
 import ExtendableError from 'es6-error';
 import QueryString from 'querystring';
 import axios from 'axios';
+import idx from 'idx';
 
 import Config from './Config';
 
@@ -155,12 +156,18 @@ export default class ApiV2Client {
       response = await axios.request(reqOptions);
       result = response.data;
     } catch (e) {
-      const error: ErrorWithResponseBody = new Error(
-        `There was a problem understanding the server. Please try again.`
-      );
-      error.responseBody = result;
-      logger.error(error);
-      throw error;
+      // axios errors on 400's, pass this case to better error handling downstream
+      const maybeErrorData = idx(e, _ => _.response.data.errors.length);
+      if (maybeErrorData) {
+        result = e.response.data;
+      } else {
+        const error: ErrorWithResponseBody = new Error(
+          `There was a problem understanding the server. Please try again.`
+        );
+        error.responseBody = result;
+        logger.error(error);
+        throw error;
+      }
     }
 
     if (!result || typeof result !== 'object') {
