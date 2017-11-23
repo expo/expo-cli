@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [47.0.4] - 2017-11-23
+
+### Changed
+
+* Increase template download timeout
+* Improve error handling
+
 ## [47.0.0] - 2017-11-16
 
 ### Added
