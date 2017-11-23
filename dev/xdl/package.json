@@ -3,7 +3,12 @@
   "version": "47.0.4",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
-  "files": ["build", "binaries", "caches", "scripts"],
+  "files": [
+    "build",
+    "binaries",
+    "caches",
+    "scripts"
+  ],
   "scripts": {
     "start": "yarn run build && yarn run watch",
     "build": "cross-env NODE_ENV=production gulp clean && gulp build",
