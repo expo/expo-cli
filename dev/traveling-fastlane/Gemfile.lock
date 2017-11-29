@@ -73,7 +73,7 @@ GEM
       multi_json (~> 1.11)
       os (~> 0.9)
       signet (~> 0.7)
-    highline (1.7.8)
+    highline (1.7.10)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
     httpclient (2.8.3)
@@ -113,7 +113,7 @@ GEM
     terminal-notifier (1.8.0)
     terminal-table (1.8.0)
       unicode-display_width (~> 1.1, >= 1.1.1)
-    tty-screen (0.6.2)
+    tty-screen (0.6.3)
     uber (0.1.0)
     unf (0.1.4)
       unf_ext
