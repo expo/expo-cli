@@ -13,6 +13,7 @@ import freeportAsync from 'freeport-async';
 import fs from 'fs';
 import joi from 'joi';
 import _ from 'lodash';
+import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
@@ -603,6 +604,25 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
     await uploadAssetsAsync(projectRoot, assets);
   } else {
     logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
+  }
+
+  // Convert asset patterns to a list of asset hashes that match them.
+  if (exp.assetBundlePatterns) {
+    const fullPatterns = exp.assetBundlePatterns.map(p => path.join(projectRoot, p));
+    const bundledAssets = [];
+    for (const asset of assets) {
+      const file = asset.files && asset.files[0];
+      if (file && fullPatterns.some(p => minimatch(file, p))) {
+        bundledAssets.push({
+          type: asset.type,
+          hash: asset.hash || asset.fileHashes[0],
+          fileHashes: asset.fileHashes,
+          scales: asset.scales,
+        });
+      }
+    }
+    exp.bundledAssets = bundledAssets;
+    delete exp.assetBundlePatterns;
   }
 
   return exp;

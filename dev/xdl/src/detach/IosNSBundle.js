@@ -5,6 +5,7 @@
 import fs from 'fs';
 import path from 'path';
 import rimraf from 'rimraf';
+import _ from 'lodash';
 
 import { saveUrlToPathAsync, manifestUsesSplashApi } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
@@ -340,6 +341,28 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
   });
 }
 
+async function _downloadAssetsAsync(assets, dest) {
+  const batches = _.chunk(assets, 5);
+  for (const batch of batches) {
+    await Promise.all(
+      batch.map(async asset => {
+        if (!asset.fileHashes) {
+          return;
+        }
+        console.log('Bundling asset:', asset.hash);
+        const downloadTasks = asset.fileHashes.map(async hash => {
+          await saveUrlToPathAsync(
+            'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
+            path.join(dest, hash)
+          );
+        });
+
+        await Promise.all(downloadTasks);
+      })
+    );
+  }
+}
+
 async function configureAsync(context: StandaloneContext) {
   let {
     intermediatesDirectory,
@@ -349,6 +372,11 @@ async function configureAsync(context: StandaloneContext) {
   } = IosWorkspace.getPaths(context);
   if (!context.published.url) {
     throw new Error(`Can't configure a NSBundle without a published url.`);
+  }
+
+  if (context.data.manifest) {
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    await _downloadAssetsAsync(context.data.manifest.bundledAssets, supportingDirectory);
   }
 
   // common configuration for all contexts

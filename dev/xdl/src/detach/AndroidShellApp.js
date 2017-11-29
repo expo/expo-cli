@@ -766,6 +766,13 @@ export async function runShellAppModificationsAsync(context: StandaloneContext) 
     });
   }
 
+  if (manifest.bundledAssets) {
+    await downloadAssetsAsync(
+      manifest.bundledAssets,
+      `${shellPath}/expoview/src/main/res`
+    );
+  }
+
   let certificateHash = '';
   let googleAndroidApiKey = '';
   let privateConfig = context.data.privateConfig;
@@ -910,6 +917,87 @@ async function buildShellAppAsync(context: StandaloneContext) {
     await fs.copy(
       path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'app-devRemoteKernel-debug.apk'),
       `/tmp/shell-debug.apk`
+    );
+  }
+}
+
+// Taken from https://github.com/facebook/react-native/blob/master/local-cli/bundle/assetPathUtils.js
+/**
+ * FIXME: using number to represent discrete scale numbers is fragile in essence because of
+ * floating point numbers imprecision.
+ */
+function getAndroidAssetSuffix(scale) {
+  switch (scale) {
+    case 0.75:
+      return 'ldpi';
+    case 1:
+      return 'mdpi';
+    case 1.5:
+      return 'hdpi';
+    case 2:
+      return 'xhdpi';
+    case 3:
+      return 'xxhdpi';
+    case 4:
+      return 'xxxhdpi';
+  }
+  throw new Error('no such scale');
+}
+
+// See https://developer.android.com/guide/topics/resources/drawable-resource.html
+const drawableFileTypes = new Set([
+  'gif',
+  'jpeg',
+  'jpg',
+  'png',
+  'svg',
+  'webp',
+  'xml',
+]);
+
+function getAndroidResourceFolderName(asset, scale) {
+  if (!drawableFileTypes.has(asset.type)) {
+    return 'raw';
+  }
+  var suffix = getAndroidAssetSuffix(scale);
+  if (!suffix) {
+    throw new Error(
+      "Don't know which android drawable suffix to use for asset: " +
+        JSON.stringify(asset)
+    );
+  }
+  const androidFolder = 'drawable-' + suffix;
+  return androidFolder;
+}
+
+function getAssetDestPathAndroid(asset, scale) {
+  const androidFolder = getAndroidResourceFolderName(asset, scale);
+  return path.join(androidFolder, 'asset_' + asset.hash + '.' + asset.type);
+}
+
+async function downloadAssetsAsync(assets, dest) {
+  await fs.ensureDir(dest + '/raw');
+  const batches = _.chunk(assets, 5);
+  for (const batch of batches) {
+    await Promise.all(
+      batch.map(async asset => {
+        if (!asset.fileHashes || !asset.scales) {
+          return;
+        }
+        const downloadTasks = asset.fileHashes.map(async (hash, idx) => {
+          const assetDestPath = getAssetDestPathAndroid(
+            asset,
+            asset.scales[idx]
+          );
+
+          await saveUrlToPathAsync(
+            'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
+            path.join(dest, assetDestPath)
+          );
+        });
+
+        await Promise.all(downloadTasks);
+      })
     );
   }
 }
