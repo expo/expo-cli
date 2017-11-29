@@ -61,6 +61,14 @@
   dependencies:
     cross-spawn "^5.1.0"
 
+"@expo/traveling-fastlane-darwin@^1.0.11":
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.0.11.tgz#d033540cf48aaf5cdb5381e55dd0b3927a673be8"
+
+"@expo/traveling-fastlane-linux@^1.0.11":
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.0.11.tgz#10a5af912de69f2b3a3ce1242663a577f02797e7"
+
 "@gulp-sourcemaps/map-sources@1.X":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@gulp-sourcemaps/map-sources/-/map-sources-1.0.0.tgz#890ae7c5d8c877f6d384860215ace9d7ec945bda"

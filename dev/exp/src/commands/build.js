@@ -15,6 +15,7 @@ export default (program: any) => {
     .option('-c, --clear-credentials', 'Clear stored credentials.')
     .option('-t --type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i)
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
+    .option('-f, --local-auth', 'Turn on local auth flow')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
@@ -22,9 +23,11 @@ export default (program: any) => {
     .asyncActionProjectDir((projectDir, options) => {
       let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
       if (!channelRe.test(options.releaseChannel)) {
-          log.error('Release channel name can only contain lowercase letters, numbers and special characters . _ and -');
-          process.exit(1);
-      } 
+        log.error(
+          'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+        );
+        process.exit(1);
+      }
       if (
         options.type !== undefined &&
         options.type !== 'archive' &&
@@ -49,8 +52,10 @@ export default (program: any) => {
     .asyncActionProjectDir((projectDir, options) => {
       let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
       if (!channelRe.test(options.releaseChannel)) {
-          log.error('Release channel name can only contain lowercase letters, numbers and special characters . _ and -');
-          process.exit(1);
+        log.error(
+          'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+        );
+        process.exit(1);
       }
       const androidBuilder = new AndroidBuilder(projectDir, options);
       return androidBuilder.command();

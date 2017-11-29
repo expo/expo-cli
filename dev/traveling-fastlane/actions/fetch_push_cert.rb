@@ -1,0 +1,41 @@
+# So that we can require funcs.rb
+$LOAD_PATH.unshift File.expand_path(__dir__, __FILE__)
+
+require 'funcs'
+require 'spaceship'
+require 'json'
+# This provides the ask function which asks enduser for creds
+require 'highline/import'
+require 'base64'
+
+$appleId, $password, $bundleId = ARGV
+
+json_reply = with_captured_stderr{
+  begin
+    Spaceship::Portal.login($appleId, $password)
+    csr, pkey = Spaceship.certificate.create_certificate_signing_request()
+    cert = Spaceship::Portal.certificate.production_push.create!(csr: csr, bundle_id:$bundleId)
+    x509_certificate = cert.download
+    pushP12password = SecureRandom.base64()
+    pushP12 = OpenSSL::PKCS12.create(pushP12password, 'production', pkey, x509_certificate)
+    $stderr.puts(JSON.generate({result:'success',
+                                privateSigningKey:pkey,
+                                pushP12:Base64.encode64(pushP12.to_der),
+                                pushP12password:pushP12password}))
+  rescue Spaceship::Client::UnexpectedResponse => e
+    r = "#{e.error_info['userString']} #{e.error_info['resultString']}"
+    $stderr.puts(JSON.generate({result:'failure',
+                                reason:r,
+                                rawDump:e.error_info}))
+  rescue Spaceship::Client::InvalidUserCredentialsError => invalid_cred
+    $stderr.puts(JSON.generate({result:'failure',
+                                reason:'Invalid credentials',
+                                rawDump:invalid_cred.preferred_error_info}))
+  rescue Exception => e
+    $stderr.puts(JSON.generate({result:'failure',
+                                reason:'Unknown reason',
+                                rawDump:e.message}))
+  end
+}
+
+$stderr.puts json_reply

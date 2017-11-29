@@ -1,0 +1,147 @@
+# For Bundler.with_clean_env
+require 'bundler/setup'
+
+PACKAGE_NAME = "traveling-fastlane"
+VERSION = "1.0.11"
+TRAVELING_RUBY_VERSION = "20150715-2.2.2"
+JSON_VERSION = '1.8.2'
+UNF_VERSION = '0.0.6'
+
+# Be sure to add the name of a script here when you add it to actions
+SCRIPTS = [
+  'fetch_cert',
+  'fetch_push_cert',
+  'fetch_new_provisioning_profile',
+  'app_management',
+  'validate_apple_credentials',
+  'validate_apple_certs',
+  'validate_apple_push_certs',
+  'funcs'
+]
+
+desc "Package your app"
+task :package => ['package:linux:x86_64', 'package:osx']
+
+task :clean do
+  sh "rm -rf #{PACKAGE_NAME}-#{VERSION}-osx #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 *.gz"
+end
+
+namespace :package do
+
+  namespace :linux do
+    desc "Package your app for Linux x86_64"
+    task :x86_64 => [:bundle_install,
+                     "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-linux-x86_64.tar.gz",
+                     "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-linux-x86_64-json-#{JSON_VERSION}.tar.gz",
+                     "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-linux-x86_64-unf_ext-#{UNF_VERSION}.tar.gz"] do
+      create_package("linux-x86_64")
+    end
+  end
+
+
+  desc "Package your app for OS X"
+  task :osx => [:bundle_install,
+                "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-osx.tar.gz",
+                "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-osx-json-#{JSON_VERSION}.tar.gz",
+                "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-osx-unf_ext-#{UNF_VERSION}.tar.gz"] do
+    create_package("osx")
+  end
+
+  desc "Install gems to local directory"
+  # Remember that need to use the same toolchain as what traveling ruby uses
+  task :bundle_install do
+    if RUBY_VERSION !~ /^2\.2\./
+      abort "You can only 'bundle install' using Ruby 2.2, because that's what Traveling Ruby uses."
+    end
+    sh "rm -rf packaging/tmp"
+    sh "mkdir packaging/tmp"
+    sh "cp Gemfile Gemfile.lock packaging/tmp/"
+    Bundler.with_clean_env do
+      sh "cd packaging/tmp && env BUNDLE_IGNORE_CONFIG=1 bundle install --path ../vendor --without development"
+    end
+    sh "rm -rf packaging/tmp"
+    sh "rm -f packaging/vendor/*/*/cache/*"
+    sh "rm -rf packaging/vendor/ruby/*/extensions"
+    sh "find packaging/vendor/ruby/*/gems -name '*.so' | xargs rm -f"
+    sh "find packaging/vendor/ruby/*/gems -name '*.bundle' | xargs rm -f"
+    sh "find packaging/vendor/ruby/*/gems -name '*.o' | xargs rm -f"
+  end
+end
+
+# The Ruby interpreter and runtime itself
+file "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-linux-x86_64.tar.gz" do
+  download_runtime("linux-x86_64")
+end
+
+file "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-osx.tar.gz" do
+  download_runtime("osx")
+end
+
+
+# The two native dependencies Gems, two per platform.
+
+# json
+file "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-linux-x86_64-json-#{JSON_VERSION}.tar.gz" do
+  download_native_extension("linux-x86_64", "json-#{JSON_VERSION}")
+end
+
+file "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-osx-json-#{JSON_VERSION}.tar.gz" do
+  download_native_extension("osx", "json-#{JSON_VERSION}")
+end
+
+
+# unf_ext
+file "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-linux-x86_64-unf_ext-#{UNF_VERSION}.tar.gz" do
+  download_native_extension("linux-x86_64", "unf_ext-#{UNF_VERSION}")
+end
+
+file "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-osx-unf_ext-#{UNF_VERSION}.tar.gz" do
+  download_native_extension("osx", "unf_ext-#{UNF_VERSION}")
+end
+
+def create_package target
+  package_dir = "#{PACKAGE_NAME}-#{VERSION}-#{target}"
+  sh "rm -rf #{package_dir}"
+  sh "mkdir #{package_dir}"
+  sh "mkdir -p #{package_dir}/lib/app"
+  for script in SCRIPTS do
+    sh "cp actions/#{script}.rb #{package_dir}/lib/app/"
+  end
+  sh "mkdir #{package_dir}/lib/ruby"
+  sh "tar -xzf packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}.tar.gz -C #{package_dir}/lib/ruby"
+  for script in SCRIPTS do
+    if script != 'funcs'
+      sh "cp wrappers/#{script}_wrapper.sh #{package_dir}/#{script}"
+    end
+  end
+  sh "cp -pR packaging/vendor #{package_dir}/lib/"
+  sh "cp Gemfile Gemfile.lock #{package_dir}/lib/vendor/"
+  sh "mkdir #{package_dir}/lib/vendor/.bundle"
+  sh "cp packaging/bundler-config #{package_dir}/lib/vendor/.bundle/config"
+
+  # Put in our native dependencies rather than the one provided by bundle
+  for native_lib, version in {'json':JSON_VERSION, 'unf_ext':UNF_VERSION} do
+    pkg = "packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}-#{native_lib}-#{version}.tar.gz"
+    sh "tar -xzf #{pkg} " + "-C #{package_dir}/lib/vendor/ruby"
+  end
+
+  if target == "osx"
+    sh "cp -R #{PACKAGE_NAME}-#{VERSION}-osx publishing/darwin"
+    sh "cd publishing/darwin; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
+    sh "rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
+  else
+    sh "cp -R #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 publishing/linux"
+    sh "cd publishing/linux; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
+    sh "rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
+  end
+end
+
+def download_runtime(target)
+  sh "cd packaging && curl -L -O --fail " +
+     "http://d6r77u77i8pq3.cloudfront.net/releases/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}.tar.gz"
+end
+
+def download_native_extension(target, gem_name_and_version)
+  sh "curl -L --fail -o packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}-#{gem_name_and_version}.tar.gz " +
+     "https://d6r77u77i8pq3.cloudfront.net/releases/traveling-ruby-gems-#{TRAVELING_RUBY_VERSION}-#{target}/#{gem_name_and_version}.tar.gz"
+end

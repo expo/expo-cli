@@ -20,6 +20,8 @@ export type IOSCredentials = {
   certPassword?: string,
   pushP12?: string,
   pushPassword?: string,
+  provisioningProfile?: string,
+  clientExpMadeCerts?: string,
 };
 
 export type Credentials = IOSCredentials & AndroidCredentials;
