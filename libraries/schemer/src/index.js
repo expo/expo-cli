@@ -3,7 +3,6 @@
  **/
 
 import 'babel-polyfill';
-import 'instapromise';
 import _ from 'lodash';
 import Ajv from 'ajv';
 import path from 'path';
@@ -78,7 +77,7 @@ export default class Schemer {
           errorCode: ErrorCodes.SCHEMA_ADDITIONAL_PROPERTY,
           fieldPath: dataPath,
           message: `should NOT have additional property '${params.additionalProperty}'`,
-          data: data,
+          data,
           meta: parentSchema.meta,
         });
       case 'required':
@@ -86,10 +85,10 @@ export default class Schemer {
           errorCode: ErrorCodes.SCHEMA_MISSING_REQUIRED_PROPERTY,
           fieldPath: dataPath,
           message: `is missing required property '${params.missingProperty}'`,
-          data: data,
+          data,
           meta: parentSchema.meta,
         });
-      case 'pattern':
+      case 'pattern': {
         //@TODO Parse the message in a less hacky way. Perhaps for regex validation errors, embed the error message under the meta tag?
         const regexHuman = _.get(parentSchema, 'meta.regexHuman');
         const regexErrorMessage = regexHuman
@@ -99,9 +98,10 @@ export default class Schemer {
           errorCode: ErrorCodes.SCHEMA_INVALID_PATTERN,
           fieldPath: dataPath,
           message: regexErrorMessage,
-          data: data,
+          data,
           meta: parentSchema.meta,
         });
+      }
       default:
         return new ValidationError({
           errorCode: ErrorCodes.SCHEMA_VALIDATION_ERROR,
@@ -199,7 +199,7 @@ export default class Schemer {
           this.manualValidationErrors.push(
             new ValidationError({
               errorCode: ErrorCodes.INVALID_CONTENT_TYPE,
-              fieldPath: fieldPath,
+              fieldPath,
               message: `field '${fieldPath}' should point to ${meta.contentTypeHuman} but the file at '${data}' has type ${type}`,
               data,
               meta,
@@ -211,7 +211,7 @@ export default class Schemer {
           this.manualValidationErrors.push(
             new ValidationError({
               errorCode: ErrorCodes.INVALID_DIMENSIONS,
-              fieldPath: fieldPath,
+              fieldPath,
               message: `'${fieldPath}' should have dimensions ${dimensions.width}x${dimensions.height}, but the file at '${data}' has dimensions ${width}x${height}`,
               data,
               meta,
@@ -223,7 +223,7 @@ export default class Schemer {
           this.manualValidationErrors.push(
             new ValidationError({
               errorCode: ErrorCodes.NOT_SQUARE,
-              fieldPath: fieldPath,
+              fieldPath,
               message: `image should be square, but the file at '${data}' has dimensions ${width}x${height}`,
               data,
               meta,
@@ -234,7 +234,7 @@ export default class Schemer {
         this.manualValidationErrors.push(
           new ValidationError({
             errorCode: ErrorCodes.INVALID_ASSET_URI,
-            fieldPath: fieldPath,
+            fieldPath,
             message: `cannot access file at '${data}'`,
             data,
             meta,
