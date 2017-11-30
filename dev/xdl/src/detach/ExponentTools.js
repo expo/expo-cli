@@ -4,9 +4,13 @@
 
 import fs from 'fs-extra';
 import path from 'path';
-import request from 'request-promise-native';
+import Request from 'request-promise-native';
 import rimraf from 'rimraf';
 import spawnAsyncQuiet from '@expo/spawn-async';
+
+const request = Request.defaults({
+  resolveWithFullResponse: true,
+});
 
 function _getFilesizeInBytes(path) {
   let stats = fs.statSync(path);

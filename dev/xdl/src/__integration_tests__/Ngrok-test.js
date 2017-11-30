@@ -7,7 +7,9 @@
 jest.useRealTimers();
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
-const request = require('request-promise-native');
+const request = require('request-promise-native').defaults({
+  resolveWithFullResponse: true,
+});
 const path = require('path');
 
 const xdl = require('../xdl');

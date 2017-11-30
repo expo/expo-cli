@@ -16,7 +16,7 @@ import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
-import request from 'request-promise-native';
+import Request from 'request-promise-native';
 import spawnAsync from '@expo/spawn-async';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
@@ -51,6 +51,10 @@ const joiValidateAsync = promisify(joi.validate);
 const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
+
+const request = Request.defaults({
+  resolveWithFullResponse: true,
+});
 
 type CachedSignedManifest = {
   manifestString: ?string,
