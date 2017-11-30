@@ -61,7 +61,6 @@
     "home-dir": "^1.0.0",
     "idx": "^2.1.0",
     "indent-string": "^3.1.0",
-    "instapromise": "2.0.7-rc.1",
     "joi": "^10.0.2",
     "jsonfile": "^2.3.1",
     "jsonschema": "^1.1.0",
