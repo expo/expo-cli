@@ -16,36 +16,19 @@ json_reply = with_captured_stderr{
   begin
     Spaceship::Portal.login($appleId, $password)
     Spaceship::Portal.client.team_id = $teamId
-    # First check for it, if it exists, then grab it and use it.
-    filtered_profiles = Spaceship::Portal.provisioning_profile.app_store.find_by_bundle_id(bundle_id:$bundleId)
-    if !filtered_profiles.empty?
-      profile = filtered_profiles.last
-      if profile.valid? && profile.certificate_valid?
-        provisionProfile = profile.download
-        $stderr.puts(JSON.generate({result:'success',
-                                    provisionProfile:Base64.encode64(provisionProfile)}))
-      else
-        r = 'Provisioning profile exists but either it or the associated certificate is invalid'
-        d = "profile.valid?: #{profile.valid?}, profile.certificate_valid?:#{profile.certificate_valid?}"
-        $stderr.puts(JSON.generate({result:'failure',
-                                    reason:r,
-                                    rawDump:d }))
-      end
+    cert = Spaceship::Portal.certificate.production.all.last
+    if cert == nil
+      $stderr.puts(JSON.generate({result:'failure',
+                                  reason:'No cert available to make provision profile against',
+                                  rawDump:'Make sure you were able to make a certificate prior to this step'}))
     else
-      cert = Spaceship::Portal.certificate.production.all.last
-      if cert == nil
-        $stderr.puts(JSON.generate({result:'failure',
-                                    reason:'No cert available to make provision profile against',
-                                    rawDump:''}))
-      else
-        profile = Spaceship::Portal.provisioning_profile.app_store.create!(bundle_id: $bundleId,
-                                                                           certificate: cert)
-        provisionProfile = profile.download
-        $stderr.puts(JSON.generate({result:'success',
-                                    provisioningProfile:Base64.encode64(provisionProfile)}))
-      end
-
+      profile = Spaceship::Portal.provisioning_profile.app_store.create!(bundle_id: $bundleId,
+                                                                         certificate: cert)
+      provisionProfile = profile.download
+      $stderr.puts(JSON.generate({result:'success',
+                                  provisioningProfile:Base64.encode64(provisionProfile)}))
     end
+
   rescue Spaceship::Client::UnexpectedResponse => e
     r = "#{e.error_info['userString']} #{e.error_info['resultString']}"
     $stderr.puts(JSON.generate({result:'failure',
