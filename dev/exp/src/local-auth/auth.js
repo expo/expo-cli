@@ -2,6 +2,9 @@ import child_process from 'child_process';
 import slash from 'slash';
 import spawnAsync from '@expo/spawn-async';
 import { basename } from 'path';
+import inquirer from 'inquirer';
+
+import log from '../log';
 
 const FASTLANE =
   process.platform === 'darwin'
@@ -31,34 +34,61 @@ export function ensureAppIdLocally(creds, metadata, teamId) {
   return appStoreAction(creds, metadata, teamId, 'verify');
 }
 
-export function produceProvisionProfile(credentials, { bundleIdentifier }) {
+export function produceProvisionProfile(credentials, { bundleIdentifier }, teamId) {
   return spawnAndCollectJSONOutputAsync(FASTLANE.fetch_new_provisioning_profile, [
     credentials.appleId,
     credentials.password,
     bundleIdentifier,
+    teamId,
   ]);
 }
 
-export function producePushCerts(credentials, { bundleIdentifier }) {
+export function producePushCerts(credentials, { bundleIdentifier }, teamId) {
   return spawnAndCollectJSONOutputAsync(FASTLANE.fetch_push_cert, [
     credentials.appleId,
     credentials.password,
     bundleIdentifier,
+    teamId,
   ]);
 }
 
-export function produceCerts(credentials) {
+export function produceCerts(credentials, teamId) {
   return spawnAndCollectJSONOutputAsync(FASTLANE.fetch_cert, [
     credentials.appleId,
     credentials.password,
+    teamId,
   ]);
 }
 
-export function validateCredentials(creds, metadata) {
-  return spawnAndCollectJSONOutputAsync(FASTLANE.validate_apple_credentials, [
-    creds.appleId,
-    creds.password,
-  ]);
+export async function validateCredentialsProduceTeamId(creds, metadata) {
+  const getTeamsAttempt = await spawnAndCollectJSONOutputAsync(
+    FASTLANE.validate_apple_credentials,
+    [creds.appleId, creds.password]
+  );
+  if (getTeamsAttempt.result === 'failure') {
+    const { reason, rawDump } = getTeamsAttempt;
+    throw new Error(`Reason:${reason}, raw:${JSON.stringify(rawDump)}`);
+  }
+  const { teams } = getTeamsAttempt;
+  if (teams.length === 0) {
+    throw new Error('You have no team ID associated with your apple account, cannot proceed');
+  }
+  log(`You have ${teams.length} teams`);
+  if (teams.length === 1) {
+    console.log(`Only 1 team associated with your account, using Team ID: ${teams[0].teamId}`);
+    return { teamId: teams[0].teamId };
+  } else {
+    teams.forEach((team, i) => {
+      console.log(`${i + 1}) ${team['teamId']} "${team['name']}" (${team['type']})`);
+    });
+    const answers = await inquirer.prompt({
+      type: 'input',
+      name: 'choice',
+      message: `Which Team ID to use?`,
+      validate: val => !Number.isNaN(parseInt(val, 10)),
+    });
+    return { teamId: teams[+answers.choice - 1].teamId };
+  }
 }
 
 const windowsToWSLPath = p => {

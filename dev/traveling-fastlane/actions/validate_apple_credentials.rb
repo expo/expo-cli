@@ -10,9 +10,8 @@ $appleId, $password = ARGV
 
 json_reply = with_captured_stderr{
   begin
-    Spaceship::Portal.login($appleId, $password)
-    team = Spaceship.select_team
-    $stderr.puts (JSON.generate({result:'success', teamId:team}))
+    account = Spaceship::Portal.login($appleId, $password)
+    $stderr.puts (JSON.generate({result:'success', teams:account.teams}))
   rescue Spaceship::Client::InvalidUserCredentialsError => invalid_cred
     $stderr.puts (JSON.generate({
       result:'failure',

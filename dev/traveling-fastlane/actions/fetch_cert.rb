@@ -8,7 +8,9 @@ require 'json'
 require 'highline/import'
 require 'base64'
 
-$appleId, $password = ARGV
+$appleId, $password, $teamId = ARGV
+
+ENV['FASTLANE_TEAM_ID'] = $teamId
 
 json_reply = with_captured_stderr{
   begin

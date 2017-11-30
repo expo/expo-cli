@@ -61,13 +61,13 @@
   dependencies:
     cross-spawn "^5.1.0"
 
-"@expo/traveling-fastlane-darwin@^1.0.12":
-  version "1.0.12"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.0.12.tgz#c150f7fd7fe82387ebd02b005a478a339ddb6a89"
+"@expo/traveling-fastlane-darwin@^1.0.13":
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.0.13.tgz#ffa2fea06b14a924750d172d17402919296b625a"
 
-"@expo/traveling-fastlane-linux@^1.0.12":
-  version "1.0.12"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.0.12.tgz#077175d56320d4258dcdb9970c2fcba62b517623"
+"@expo/traveling-fastlane-linux@^1.0.13":
+  version "1.0.13"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.0.13.tgz#2f01397eb6ab90bf0b1c7dd3bcb0abb078c00fab"
 
 "@gulp-sourcemaps/map-sources@1.X":
   version "1.0.0"
@@ -2820,6 +2820,10 @@ iconv-lite@^0.4.17:
   version "0.4.19"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.19.tgz#f7468f60135f5e5dad3399c0a81be9a1603a082b"
 
+idx@^2.1.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/idx/-/idx-2.2.0.tgz#8544749f9faba6409822b5d9488ba5bc77b8fbfe"
+
 ignore@^3.3.3:
   version "3.3.7"
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-3.3.7.tgz#612289bfb3c220e186a58118618d5be8c1bab021"
@@ -5491,9 +5495,9 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@47.0.1:
-  version "47.0.1"
-  resolved "https://registry.yarnpkg.com/xdl/-/xdl-47.0.1.tgz#ae322ca562edcc4e9e59e79f14495f8f0aeb73fd"
+xdl@47.0.5:
+  version "47.0.5"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-47.0.5.tgz#5d58a637ab365185cbd056505ab232305a2990a1"
   dependencies:
     "@expo/bunyan" "^1.8.10"
     "@expo/json-file" "^5.3.0"
@@ -5521,6 +5525,7 @@ xdl@47.0.1:
     globby "^6.1.0"
     hasbin "^1.2.3"
     home-dir "^1.0.0"
+    idx "^2.1.0"
     indent-string "^3.1.0"
     instapromise "2.0.7-rc.1"
     joi "^10.0.2"
@@ -5529,6 +5534,7 @@ xdl@47.0.1:
     jsonwebtoken "^7.2.1"
     lodash "^4.14.1"
     md5hex "^1.0.0"
+    minimatch "^3.0.4"
     mkdirp "^0.5.1"
     mkdirp-promise "^5.0.0"
     mv "^2.1.1"

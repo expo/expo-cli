@@ -82,11 +82,11 @@ export default class IOSBuilder extends BaseBuilder {
   async _fullLocalAuthRun(metadata) {
     const creds: IOSCredentials = await this.askForAppleId({ askForTeamId: false });
     log('Validating Credentials...');
-    const checkCredsAttempt = await authFuncs.validateCredentials(creds, metadata);
+    const checkCredsAttempt = await authFuncs.validateCredentialsProduceTeamId(creds, metadata);
     this._throwIfFailureWithReasonDump(checkCredsAttempt);
     const { teamId } = checkCredsAttempt;
     log('Creating Certificates...');
-    const produceCertAttempt = await authFuncs.produceCerts(creds);
+    const produceCertAttempt = await authFuncs.produceCerts(creds, teamId);
     this._throwIfFailureWithReasonDump(produceCertAttempt);
     const { p12password, p12, privateSigningKey } = produceCertAttempt;
     log('Making sure that we have an AppID on the Developer Portal...');
@@ -100,7 +100,7 @@ export default class IOSBuilder extends BaseBuilder {
     this._throwIfFailureWithReasonDump(checkAppExistenceAttempt);
     const { appId, features, enabledFeatures } = checkAppExistenceAttempt;
     log('Creating Push Certificates...');
-    const producePushCertsAttempt = await authFuncs.producePushCerts(creds, metadata);
+    const producePushCertsAttempt = await authFuncs.producePushCerts(creds, metadata, teamId);
     this._throwIfFailureWithReasonDump(producePushCertsAttempt);
     const {
       privateSigningKey: privateSigningKeyPushCert,
@@ -109,7 +109,11 @@ export default class IOSBuilder extends BaseBuilder {
     } = producePushCertsAttempt;
 
     log('Creating Provisioning Profile...');
-    const produceProvisionProfileAttempt = await authFuncs.produceProvisionProfile(creds, metadata);
+    const produceProvisionProfileAttempt = await authFuncs.produceProvisionProfile(
+      creds,
+      metadata,
+      teamId
+    );
     this._throwIfFailureWithReasonDump(produceProvisionProfileAttempt);
     const { provisioningProfile } = produceProvisionProfileAttempt;
     const freshCreds = {
@@ -137,11 +141,11 @@ export default class IOSBuilder extends BaseBuilder {
         return await this._fullLocalAuthRun(metadata);
       } else {
         if (!creds.certP12 || !creds.pushP12 || !creds.provisionProfile) {
-          const userCreds: IOSCredentials = await this.askForAppleId({ askForTeamId: false });
+          const userCreds: IOSCredentials = await this.askForAppleId({ askForTeamId: true });
           let credentials = {};
           if (creds.certP12 === undefined) {
             log('Creating Certificates...');
-            const produceCertAttempt = await authFuncs.produceCerts(userCreds);
+            const produceCertAttempt = await authFuncs.produceCerts(userCreds, userCreds.teamId);
             this._throwIfFailureWithReasonDump(produceCertAttempt);
             const { p12password, p12, privateSigningKey } = produceCertAttempt;
             credentials = {
@@ -151,7 +155,11 @@ export default class IOSBuilder extends BaseBuilder {
             };
           }
           if (creds.pushP12 === undefined) {
-            const producePushCertsAttempt = await authFuncs.producePushCerts(userCreds, metadata);
+            const producePushCertsAttempt = await authFuncs.producePushCerts(
+              userCreds,
+              metadata,
+              userCreds.teamId
+            );
             this._throwIfFailureWithReasonDump(producePushCertsAttempt);
             const {
               privateSigningKey: privateSigningKeyPushCert,
@@ -167,7 +175,8 @@ export default class IOSBuilder extends BaseBuilder {
           if (creds.provisioningProfile === undefined) {
             const produceProvisionProfileAttempt = await authFuncs.produceProvisionProfile(
               userCreds,
-              metadata
+              metadata,
+              userCreds.teamId
             );
             this._throwIfFailureWithReasonDump(produceProvisionProfileAttempt);
             const { provisioningProfile } = produceProvisionProfileAttempt;
