@@ -18,6 +18,7 @@ import os from 'os';
 import path from 'path';
 import Request from 'request-promise-native';
 import spawnAsync from '@expo/spawn-async';
+import split from 'split';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
 
@@ -1203,7 +1204,7 @@ export async function startReactNativeServerAsync(
   });
   packagerProcess.stdout.setEncoding('utf8');
   packagerProcess.stderr.setEncoding('utf8');
-  packagerProcess.stdout.on('data', data => {
+  packagerProcess.stdout.pipe(split()).on('data', data => {
     if (verbose) {
       _logPackagerOutput(projectRoot, 'info', data);
     }
