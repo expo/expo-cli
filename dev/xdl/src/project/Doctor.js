@@ -2,11 +2,9 @@
  * @flow
  */
 
-import 'instapromise';
-
 import _ from 'lodash';
 import semver from 'semver';
-import fs from 'fs';
+import fs from 'fs-extra';
 import getenv from 'getenv';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
@@ -117,7 +115,7 @@ export async function validateWithSchemaFileAsync(
   schemaPath: string
 ): Promise<{ errorMessage?: string }> {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  let schema = JSON.parse(await fs.readFile.promise(schemaPath, 'utf8'));
+  let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
 
@@ -664,7 +662,7 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<number> {
     }
 
     let mainFilePath = path.join(projectRoot, pkg.main);
-    let mainFile = await fs.readFile.promise(mainFilePath, 'utf8');
+    let mainFile = await fs.readFile(mainFilePath, 'utf8');
 
     // TODO: support separate .ios.js and .android.js files
     if (mainFile.includes(`from '${sdkPkg}'`) || mainFile.includes(`require('${sdkPkg}')`)) {

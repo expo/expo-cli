@@ -2,8 +2,6 @@
  * @flow
  */
 
-import 'instapromise';
-
 import _ from 'lodash';
 import fs from 'fs-extra';
 import rimraf from 'rimraf';
@@ -162,7 +160,7 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
       },
     };
     let response = await axios(url, config);
-    await fs.promise.writeFile(path, Buffer.from(response.data));
+    await fs.writeFile(path, Buffer.from(response.data));
     clearTimeout(warningTimer);
   } else {
     config = {

@@ -2,9 +2,7 @@
 
 'use strict';
 
-import 'instapromise';
-
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import { getManifestAsync, spawnAsync, spawnAsyncThrowError } from './ExponentTools';
 
@@ -150,7 +148,7 @@ async function configureIOSShellAppAsync(args, manifest) {
 
   let privateConfig;
   if (privateConfigFile) {
-    let privateConfigContents = await fs.promise.readFile(privateConfigFile, 'utf8');
+    let privateConfigContents = await fs.readFile(privateConfigFile, 'utf8');
     privateConfig = JSON.parse(privateConfigContents);
   }
 
@@ -189,7 +187,6 @@ async function moveShellAppArchiveAsync(args, manifest) {
       cwd: `${archivePath}/../../../..`,
     });
   }
-  return;
 }
 
 /**
@@ -224,8 +221,6 @@ async function createIOSShellAppAsync(args) {
       await moveShellAppArchiveAsync(args, manifest);
     }
   }
-
-  return;
 }
 
 export { createIOSShellAppAsync };

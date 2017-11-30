@@ -2,9 +2,7 @@
  * @flow
  */
 
-import 'instapromise';
-
-import fs from 'fs';
+import fs from 'fs-extra';
 import hasbin from 'hasbin';
 import spawnAsync from '@expo/spawn-async';
 import path from 'path';
@@ -157,7 +155,7 @@ export async function writePathToUserSettingsAsync() {
 
   // Used in detach app
   let pathFile = path.join(UserSettings.dotExpoHomeDirectory(), 'PATH');
-  await fs.promise.writeFile(pathFile, process.env.PATH);
+  await fs.writeFile(pathFile, process.env.PATH);
 }
 
 function _isDirectory(dir) {

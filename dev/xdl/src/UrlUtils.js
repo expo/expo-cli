@@ -2,14 +2,13 @@
  * @flow
  */
 
-import 'instapromise';
-
-import ip from './ip';
 import joi from 'joi';
 import os from 'os';
 import path from 'path';
 import url from 'url';
+import promisify from 'util.promisify';
 
+import ip from './ip';
 import Config from './Config';
 import ErrorCode from './ErrorCode';
 import * as Exp from './Exp';
@@ -17,6 +16,8 @@ import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
+
+const joiValidateAsync = promisify(joi.validate);
 
 export async function constructBundleUrlAsync(
   projectRoot: string,
@@ -162,7 +163,7 @@ export async function constructUrlAsync(
     });
 
     try {
-      await joi.promise.validate(opts, schema);
+      await joiValidateAsync(opts, schema);
     } catch (e) {
       throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
     }

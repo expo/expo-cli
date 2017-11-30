@@ -5,7 +5,6 @@
 import _ from 'lodash';
 import child_process from 'child_process';
 import fs from 'fs';
-import ip from './ip';
 import JsonFile from '@expo/json-file';
 import os from 'os';
 import path from 'path';
@@ -14,6 +13,7 @@ import rimraf from 'rimraf';
 import spawnAsync from '@expo/spawn-async';
 import tar from 'tar';
 
+import ip from './ip';
 import Api from './Api';
 import * as Binaries from './Binaries';
 import * as Env from './Env';

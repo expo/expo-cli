@@ -2,22 +2,21 @@
  * @flow
  */
 
-import 'instapromise';
-
 import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import delayAsync from 'delay-async';
 import decache from 'decache';
 import express from 'express';
 import freeportAsync from 'freeport-async';
-import fs from 'fs';
+import fs from 'fs-extra';
 import joi from 'joi';
+import promisify from 'util.promisify';
 import _ from 'lodash';
 import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
-import request from 'request';
+import request from 'request-promise-native';
 import spawnAsync from '@expo/spawn-async';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
@@ -48,6 +47,11 @@ import type { User as ExpUser } from './User'; //eslint-disable-line
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
 
+const joiValidateAsync = promisify(joi.validate);
+const treekillAsync = promisify(treekill);
+const ngrokConnectAsync = promisify(ngrok.connect);
+const ngrokKillAsync = promisify(ngrok.kill);
+
 type CachedSignedManifest = {
   manifestString: ?string,
   signedManifest: ?string,
@@ -70,7 +74,7 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
 
   let packagerRunning = false;
   try {
-    const res = await request.promise(`${packagerUrl}/status`);
+    const res = await request(`${packagerUrl}/status`);
 
     if (res.statusCode < 400 && res.body && res.body.includes('packager-status:running')) {
       packagerRunning = true;
@@ -79,7 +83,7 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
 
   let manifestServerRunning = false;
   try {
-    const res = await request.promise(manifestUrl);
+    const res = await request(manifestUrl);
     if (res.statusCode < 400) {
       manifestServerRunning = true;
     }
@@ -144,7 +148,7 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
   url = UrlUtils.getPlatformSpecificBundleUrl(url, platform);
 
   let fullUrl = `${url}&platform=${platform}`;
-  let response = await request.promise.get({
+  let response = await request.get({
     url: fullUrl,
     headers: {
       'Exponent-Platform': platform,
@@ -475,7 +479,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
 
   // Validate schema
   try {
-    await joi.promise.validate(options, schema);
+    await joiValidateAsync(options, schema);
     options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
@@ -586,7 +590,7 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
     exp,
     async assetPath => {
       const absolutePath = path.resolve(projectRoot, assetPath);
-      const contents = await fs.promise.readFile(absolutePath);
+      const contents = await fs.readFile(absolutePath);
       const hash = md5hex(contents);
       manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
       return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
@@ -635,9 +639,8 @@ async function _writeArtifactSafelyAsync(projectRoot, keyName, artifactPath, art
       `app.json specifies ${keyName}: ${pathToWrite}, but that directory does not exist.`
     );
   } else {
-    await fs.promise.writeFile(pathToWrite, artifact);
+    await fs.writeFile(pathToWrite, artifact);
   }
-  return;
 }
 
 async function _maybeWriteArtifactsToDiskAsync({
@@ -699,7 +702,7 @@ async function _handleKernelPublishedAsync({ projectRoot, user, exp, url }) {
     });
     manifest.bundleUrl = kernelBundleUrl;
     manifest.sdkVersion = 'UNVERSIONED';
-    await fs.promise.writeFile(
+    await fs.writeFile(
       path.resolve(projectRoot, exp.kernel.androidManifestPath),
       JSON.stringify(manifest)
     );
@@ -712,7 +715,7 @@ async function _handleKernelPublishedAsync({ projectRoot, user, exp, url }) {
     });
     manifest.bundleUrl = kernelBundleUrl;
     manifest.sdkVersion = 'UNVERSIONED';
-    await fs.promise.writeFile(
+    await fs.writeFile(
       path.resolve(projectRoot, exp.kernel.iosManifestPath),
       JSON.stringify(manifest)
     );
@@ -768,8 +771,7 @@ async function _readFileForUpload(path) {
   if (isNode()) {
     return fs.createReadStream(path);
   } else {
-    // $FlowFixMe: fs.promise property not found.
-    const data = await fs.promise.readFile(path);
+    const data = await fs.readFile(path);
     return new Blob([data]);
   }
 }
@@ -802,7 +804,7 @@ export async function buildAsync(
   });
 
   try {
-    await joi.promise.validate(options, schema);
+    await joiValidateAsync(options, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
@@ -855,7 +857,7 @@ export async function buildAsync(
 
 async function _waitForRunningAsync(url) {
   try {
-    let response = await request.promise(url);
+    let response = await request(url);
     // Looking for "Cached Bundles" string is hacky, but unfortunately
     // ngrok returns a 200 when it succeeds but the port it's proxying
     // isn't bound.
@@ -1243,7 +1245,7 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
     `Killing packager process tree: ${packagerInfo.packagerPid}`
   );
   try {
-    await treekill.promise(packagerInfo.packagerPid, 'SIGKILL');
+    await treekillAsync(packagerInfo.packagerPid, 'SIGKILL');
   } catch (e) {
     ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping packager process: ${e.toString()}`);
   }
@@ -1417,7 +1419,7 @@ export async function stopExpoServerAsync(projectRoot: string) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
     try {
-      await request.post.promise(`http://localhost:${packagerInfo.expoServerPort}/shutdown`);
+      await request.post(`http://localhost:${packagerInfo.expoServerPort}/shutdown`);
     } catch (e) {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -1434,7 +1436,7 @@ async function _connectToNgrokAsync(
   try {
     let configPath = path.join(UserSettings.dotExpoHomeDirectory(), 'ngrok.yml');
     let hostname = await hostnameAsync();
-    let url = await ngrok.promise.connect({
+    let url = await ngrokConnectAsync({
       hostname,
       configPath,
       ...args,
@@ -1462,7 +1464,7 @@ async function _connectToNgrokAsync(
             ProjectUtils.logDebug(projectRoot, 'expo', `Couldn't kill ngrok with PID ${ngrokPid}`);
           }
         } else {
-          await ngrok.promise.kill();
+          await ngrokKillAsync();
         }
       } else {
         // Change randomness to avoid conflict if killing ngrok didn't help
@@ -1608,7 +1610,7 @@ export async function stopTunnelsAsync(projectRoot: string) {
     }
   } else {
     // Ngrok is running from the current process. Kill using ngrok api.
-    await ngrok.promise.kill();
+    await ngrokKillAsync();
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerNgrokUrl: null,
@@ -1630,7 +1632,7 @@ export async function setOptionsAsync(
     packagerPort: joi.number().integer(),
   });
   try {
-    await joi.promise.validate(options, schema);
+    await joiValidateAsync(options, schema);
   } catch (e) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }

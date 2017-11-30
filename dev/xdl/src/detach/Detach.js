@@ -7,13 +7,11 @@
 
 // Set EXPO_VIEW_DIR to universe/exponent to test locally
 
-import 'instapromise';
-
 import mkdirp from 'mkdirp';
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
-import glob from 'glob';
+import glob from 'glob-promise';
 import uuid from 'uuid';
 import yesno from 'yesno';
 
@@ -183,7 +181,7 @@ export async function detachAsync(projectRoot: string, options: any) {
   if (nameToWrite === 'app.json') {
     exp = { expo: exp };
   }
-  await fs.promise.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
+  await fs.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
 
   console.log(
     'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.\n'
@@ -201,13 +199,12 @@ async function detachIOSAsync(context: StandaloneContext) {
   await IosNSBundle.configureAsync(context);
 
   console.log(`iOS detach is complete!`);
-  return;
 }
 
 async function regexFileAsync(filename, regex, replace) {
-  let file = await fs.promise.readFile(filename);
+  let file = await fs.readFile(filename);
   let fileString = file.toString();
-  await fs.promise.writeFile(filename, fileString.replace(regex, replace));
+  await fs.writeFile(filename, fileString.replace(regex, replace));
 }
 
 async function renamePackageAsync(directory, originalPkg, destPkg) {
@@ -331,7 +328,7 @@ async function detachAndroidAsync(
     packageName
   );
 
-  let packageNameMatches = await glob.promise(androidProjectDirectory + '/**/*.@(java|gradle|xml)');
+  let packageNameMatches = await glob(androidProjectDirectory + '/**/*.@(java|gradle|xml)');
   if (packageNameMatches) {
     let oldPkgRegex = new RegExp(`${ANDROID_TEMPLATE_PKG.replace(/\./g, '\\.')}`, 'g');
     for (let i = 0; i < packageNameMatches.length; i++) {
@@ -351,12 +348,12 @@ async function detachAndroidAsync(
   // Fix image
   let icon = manifest.android && manifest.android.icon ? manifest.android.icon : manifest.icon;
   if (icon) {
-    let iconMatches = await glob.promise(
+    let iconMatches = await glob(
       path.join(androidProjectDirectory, 'app', 'src', 'main', 'res') + '/**/ic_launcher.png'
     );
     if (iconMatches) {
       for (let i = 0; i < iconMatches.length; i++) {
-        await fs.promise.unlink(iconMatches[i]);
+        await fs.unlink(iconMatches[i]);
         // TODO: make more efficient
         await saveImageToPathAsync(projectRoot, icon, iconMatches[i]);
       }
@@ -381,7 +378,6 @@ async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
     await IosPlist.createBlankAsync(configFilePath, 'EXBuildConstants');
     console.log('Created `EXBuildConstants.plist` because it did not exist yet');
   }
-  return;
 }
 
 async function prepareDetachedBuildIosAsync(projectDir: string, exp: any, args: any) {
@@ -397,10 +393,10 @@ async function prepareDetachedBuildIosAsync(projectDir: string, exp: any, args: 
   }
   let rnPodDirectory = path.join(podsDirectory, 'React');
   if (isDirectory(rnPodDirectory)) {
-    let rnFilesToDelete = await glob.promise(rnPodDirectory + '/**/*.@(js|json)');
+    let rnFilesToDelete = await glob(rnPodDirectory + '/**/*.@(js|json)');
     if (rnFilesToDelete) {
       for (let i = 0; i < rnFilesToDelete.length; i++) {
-        await fs.promise.unlink(rnFilesToDelete[i]);
+        await fs.unlink(rnFilesToDelete[i]);
       }
     }
   }
@@ -410,7 +406,7 @@ async function prepareDetachedBuildIosAsync(projectDir: string, exp: any, args: 
     let expoKitVersion = '';
     const podfileLockPath = path.join(iosProjectDirectory, 'Podfile.lock');
     try {
-      const podfileLock = await fs.promise.readFile(podfileLockPath, 'utf8');
+      const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
       const expoKitVersionRegex = /ExpoKit\/Core\W?\(([0-9\.]+)\)/gi;
       let match = expoKitVersionRegex.exec(podfileLock);
       expoKitVersion = match[1];
@@ -439,7 +435,7 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
     await prepareDetachedBuildIosAsync(projectDir, exp, args);
   } else {
     let androidProjectDirectory = path.join(projectDir, 'android');
-    let expoBuildConstantsMatches = await glob.promise(
+    let expoBuildConstantsMatches = await glob(
       androidProjectDirectory + '/**/ExponentBuildConstants.java'
     );
     if (expoBuildConstantsMatches && expoBuildConstantsMatches.length) {

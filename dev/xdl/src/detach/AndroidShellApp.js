@@ -28,14 +28,14 @@ function exponentDirectory() {
 }
 
 async function regexFileAsync(regex, replace, filename) {
-  let file = await fs.promise.readFile(filename);
+  let file = await fs.readFile(filename);
   let fileString = file.toString();
-  await fs.promise.writeFile(filename, fileString.replace(regex, replace));
+  await fs.writeFile(filename, fileString.replace(regex, replace));
 }
 
 // Matches sed /d behavior
 async function deleteLinesInFileAsync(startRegex, endRegex, filename) {
-  let file = await fs.promise.readFile(filename);
+  let file = await fs.readFile(filename);
   let fileString = file.toString();
   let lines = fileString.split(/\r?\n/);
   let filteredLines = [];
@@ -53,7 +53,7 @@ async function deleteLinesInFileAsync(startRegex, endRegex, filename) {
       inDeleteRange = false;
     }
   }
-  await fs.promise.writeFile(filename, filteredLines.join('\n'));
+  await fs.writeFile(filename, filteredLines.join('\n'));
 }
 
 function xmlWeirdAndroidEscape(original) {
@@ -171,7 +171,7 @@ function backgroundImagesForApp(shellPath, manifest) {
         let url = _.get(splash, `${imageKey}Url`);
         if (url) {
           acc.push({
-            url: url,
+            url,
             path: path.join(basePath, `drawable-${imageKey}`, 'shell_launch_background_image.png'),
           });
         }
@@ -186,7 +186,7 @@ function backgroundImagesForApp(shellPath, manifest) {
     let url = _.get(manifest, 'splash.imageUrl');
     return [
       {
-        url: url,
+        url,
         path: path.join(basePath, 'drawable-xxxhdpi', 'shell_launch_background_image.png'),
       },
     ];
@@ -284,7 +284,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
 
   let privateConfig;
   if (privateConfigFile) {
-    let privateConfigContents = await fs.promise.readFile(privateConfigFile, 'utf8');
+    let privateConfigContents = await fs.readFile(privateConfigFile, 'utf8');
     privateConfig = JSON.parse(privateConfigContents);
   }
 
@@ -862,7 +862,7 @@ async function buildShellAppAsync(context: StandaloneContext) {
       await fs.remove(`shell.apk`);
     } catch (e) {}
     const gradleArgs = [`assembleProdRelease`];
-    if (!!process.env.GRADLE_DAEMON_DISABLED) {
+    if (process.env.GRADLE_DAEMON_DISABLED) {
       gradleArgs.unshift('--no-daemon');
     }
     await spawnAsyncThrowError(`./gradlew`, gradleArgs, {

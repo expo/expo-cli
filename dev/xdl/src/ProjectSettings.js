@@ -2,8 +2,6 @@
  * @flow
  */
 
-import 'instapromise';
-
 import _ from 'lodash';
 import JsonFile from '@expo/json-file';
 import fs from 'fs';

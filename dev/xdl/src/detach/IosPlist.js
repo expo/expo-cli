@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import plist from 'plist';
 
@@ -32,7 +32,7 @@ async function modifyAsync(plistPath, plistName, transform) {
       '-o',
       configFilename,
     ]);
-    let configContents = await fs.promise.readFile(configFilename, 'utf8');
+    let configContents = await fs.readFile(configFilename, 'utf8');
 
     try {
       config = JSON.parse(configContents);
@@ -50,7 +50,7 @@ async function modifyAsync(plistPath, plistName, transform) {
 
   // back up old plist and swap in modified one
   await spawnAsyncThrowError('/bin/cp', [configPlistName, `${configPlistName}.bak`]);
-  await fs.promise.writeFile(configFilename, JSON.stringify(config));
+  await fs.writeFile(configFilename, JSON.stringify(config));
   if (process.platform === 'darwin') {
     await spawnAsyncThrowError('plutil', [
       '-convert',
@@ -60,7 +60,7 @@ async function modifyAsync(plistPath, plistName, transform) {
       configPlistName,
     ]);
   } else {
-    await fs.promise.writeFile(configPlistName, plist.build(config));
+    await fs.writeFile(configPlistName, plist.build(config));
   }
 
   return config;
@@ -70,7 +70,7 @@ async function createBlankAsync(plistPath, plistName) {
   // write empty json file
   const emptyConfig = {};
   const tmpConfigFile = path.join(plistPath, `${plistName}.json`);
-  await fs.promise.writeFile(tmpConfigFile, JSON.stringify(emptyConfig));
+  await fs.writeFile(tmpConfigFile, JSON.stringify(emptyConfig));
 
   // convert to plist
   let plistFilename = _getNormalizedPlistFilename(plistName);
@@ -84,12 +84,11 @@ async function createBlankAsync(plistPath, plistName) {
       configPlistName,
     ]);
   } else {
-    await fs.promise.writeFile(configPlistName, JSON.stringify(plist.build(emptyConfig)));
+    await fs.writeFile(configPlistName, JSON.stringify(plist.build(emptyConfig)));
   }
 
   // remove tmp json file
   await spawnAsyncThrowError('/bin/rm', [tmpConfigFile]);
-  return;
 }
 
 async function cleanBackupAsync(plistPath, plistName, restoreOriginal = true) {
@@ -103,7 +102,6 @@ async function cleanBackupAsync(plistPath, plistName, restoreOriginal = true) {
 
   await spawnAsyncThrowError('/bin/rm', [`${configPlistName}.bak`]);
   await spawnAsyncThrowError('/bin/rm', [configFilename]);
-  return;
 }
 
 export { modifyAsync, cleanBackupAsync, createBlankAsync };

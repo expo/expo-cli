@@ -39,12 +39,14 @@ export async function updateIOSSimulatorBuild(
 
   console.log('Uploading...');
 
-  await s3Client.promise.putObject({
-    Bucket: 'exp-ios-simulator-apps',
-    Key: `Exponent-${appVersion}.tar.gz`,
-    Body: file,
-    ACL: 'public-read',
-  });
+  await s3Client
+    .putObject({
+      Bucket: 'exp-ios-simulator-apps',
+      Key: `Exponent-${appVersion}.tar.gz`,
+      Body: file,
+      ACL: 'public-read',
+    })
+    .promise();
 
   await spawnAsync('rm', [tempAppPath]);
 
@@ -61,12 +63,14 @@ export async function updateAndroidApk(s3Client: any, pathToApp: string, appVers
 
   console.log('Uploading...');
 
-  await s3Client.promise.putObject({
-    Bucket: 'exp-android-apks',
-    Key: `Exponent-${appVersion}.apk`,
-    Body: file,
-    ACL: 'public-read',
-  });
+  await s3Client
+    .putObject({
+      Bucket: 'exp-android-apks',
+      Key: `Exponent-${appVersion}.apk`,
+      Body: file,
+      ACL: 'public-read',
+    })
+    .promise();
 
   console.log('Adding to server config...');
 

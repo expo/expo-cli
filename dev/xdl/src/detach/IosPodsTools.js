@@ -2,10 +2,9 @@
 
 'use strict';
 
-import fs from 'fs';
-import glob from 'glob';
+import fs from 'fs-extra';
+import glob from 'glob-promise';
 import indentString from 'indent-string';
-import 'instapromise';
 import JsonFile from '@expo/json-file';
 import path from 'path';
 
@@ -27,7 +26,7 @@ async function renderPodfileAsync(
     moreSubstitutions = {};
   }
   let templatesDirectory = path.dirname(pathToTemplate);
-  let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
+  let templateString = await fs.readFile(pathToTemplate, 'utf8');
 
   let reactNativePath = moreSubstitutions.REACT_NATIVE_PATH;
   let rnDependencyOptions;
@@ -76,12 +75,12 @@ async function renderPodfileAsync(
     }
   }
 
-  await fs.promise.writeFile(pathToOutput, result);
+  await fs.writeFile(pathToOutput, result);
 }
 
 async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
   let templatesDirectory = path.dirname(pathToTemplate);
-  let templateString = await fs.promise.readFile(pathToTemplate, 'utf8');
+  let templateString = await fs.readFile(pathToTemplate, 'utf8');
   let dependencies = await renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
     { isPodfile: false }
@@ -94,7 +93,7 @@ async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubst
     );
   }
 
-  await fs.promise.writeFile(pathToOutput, result);
+  await fs.writeFile(pathToOutput, result);
 }
 
 function renderExpoKitDependency(options) {
@@ -264,11 +263,11 @@ async function renderVersionedReactNativePostinstallsAsync(templatesDirectory) {
 }
 
 async function concatTemplateFilesInDirectoryAsync(directory) {
-  let templateFilenames = await glob.promise(path.join(directory, '*.rb'));
+  let templateFilenames = await glob(path.join(directory, '*.rb'));
   let templateStrings = [];
   await Promise.all(
     templateFilenames.map(async filename => {
-      let templateString = await fs.promise.readFile(filename, 'utf8');
+      let templateString = await fs.readFile(filename, 'utf8');
       if (templateString) {
         templateStrings.push(templateString);
       }

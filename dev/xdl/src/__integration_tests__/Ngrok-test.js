@@ -7,7 +7,7 @@
 jest.useRealTimers();
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
-const request = require('request');
+const request = require('request-promise-native');
 const path = require('path');
 
 const xdl = require('../xdl');
@@ -23,7 +23,7 @@ describe('ngrok', () => {
     if (!ngrokUrl) {
       throw new Error("ngrok didn't return a URL");
     }
-    let response = await request.promise.get(ngrokUrl);
+    let response = await request.get(ngrokUrl);
     if (!response.body) {
       throw new Error("Didn't get expected manifest response");
     }
@@ -36,7 +36,7 @@ describe('ngrok', () => {
 
     let bundleUrl = responseValue.bundleUrl;
     console.log(`Fetching bundle at ${bundleUrl}`);
-    let bundleResponse = await request.promise.get(bundleUrl);
+    let bundleResponse = await request.get(bundleUrl);
     if (!bundleResponse.body || !bundleResponse.body.includes('sourceMappingURL')) {
       throw new Error("Didn't get expected bundle response");
     }

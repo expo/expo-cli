@@ -2,8 +2,6 @@
  * @flow
  */
 
-import 'instapromise';
-
 import fs from 'fs';
 import uuid from 'uuid';
 import JsonFile from '@expo/json-file';

@@ -2,11 +2,9 @@
  * @flow
  */
 
-import 'instapromise';
-
 import delayAsync from 'delay-async';
 import existsAsync from 'exists-async';
-import glob from 'glob';
+import glob from 'glob-promise';
 import homeDir from 'home-dir';
 import mkdirp from 'mkdirp';
 import osascript from '@expo/osascript';
@@ -14,7 +12,7 @@ import path from 'path';
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
 import rimraf from 'rimraf';
-import fs from 'fs';
+import fs from 'fs-extra';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
@@ -200,7 +198,7 @@ export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
     return false;
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob.promise(
+  let matches = await glob(
     './data/Containers/Data/Application/*/Library/Caches/Snapshots/host.exp.Exponent',
     { cwd: simDir }
   );
@@ -223,7 +221,7 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
     return null;
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob.promise('./data/Containers/Bundle/Application/*/Exponent-*.app', {
+  let matches = await glob('./data/Containers/Bundle/Application/*/Exponent-*.app', {
     cwd: simDir,
   });
 
@@ -264,7 +262,7 @@ export async function _downloadSimulatorAppAsync(url) {
   let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
   if (await existsAsync(dir)) {
-    let filesInDir = await fs.promise.readdir(dir);
+    let filesInDir = await fs.readdir(dir);
     if (filesInDir.length > 0) {
       return dir;
     } else {

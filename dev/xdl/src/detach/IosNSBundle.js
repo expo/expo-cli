@@ -2,7 +2,7 @@
  * @flow
  */
 
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
 import _ from 'lodash';
@@ -74,12 +74,8 @@ async function _cleanPropertyListBackupsAsync(context: StandaloneContext, backup
  */
 async function _preloadManifestAndBundleAsync(manifest, supportingDirectory) {
   let bundleUrl = manifest.bundleUrl;
-  await fs.promise.writeFile(
-    `${supportingDirectory}/shell-app-manifest.json`,
-    JSON.stringify(manifest)
-  );
+  await fs.writeFile(`${supportingDirectory}/shell-app-manifest.json`, JSON.stringify(manifest));
   await saveUrlToPathAsync(bundleUrl, `${supportingDirectory}/shell-app.bundle`);
-  return;
 }
 
 /**
@@ -410,7 +406,6 @@ async function configureAsync(context: StandaloneContext) {
   if (fs.existsSync(intermediatesDirectory)) {
     rimraf.sync(intermediatesDirectory);
   }
-  return;
 }
 
 export { configureAsync };

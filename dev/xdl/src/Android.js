@@ -2,8 +2,6 @@
  * @flow
  */
 
-import 'instapromise';
-
 import _ from 'lodash';
 import spawnAsync from '@expo/spawn-async';
 import existsAsync from 'exists-async';

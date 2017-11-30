@@ -2,10 +2,9 @@
 
 'use strict';
 
-import fs from 'fs';
-import 'instapromise';
+import fs from 'fs-extra';
 import path from 'path';
-import request from 'request';
+import request from 'request-promise-native';
 import rimraf from 'rimraf';
 import spawnAsyncQuiet from '@expo/spawn-async';
 
@@ -63,7 +62,7 @@ async function getManifestAsync(url, headers) {
     headers,
   };
 
-  let response = await request.promise(requestOptions);
+  let response = await request(requestOptions);
   let responseBody = response.body;
   console.log('Using manifest:', responseBody);
   let manifest;
@@ -96,12 +95,11 @@ async function spawnAsync(...args) {
 }
 
 async function transformFileContentsAsync(filename, transform) {
-  let fileString = await fs.promise.readFile(filename, 'utf8');
+  let fileString = await fs.readFile(filename, 'utf8');
   let newFileString = transform(fileString);
   if (newFileString !== null) {
-    await fs.promise.writeFile(filename, newFileString);
+    await fs.writeFile(filename, newFileString);
   }
-  return;
 }
 
 function manifestUsesSplashApi(manifest, platform) {

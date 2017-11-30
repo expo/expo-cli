@@ -2,8 +2,6 @@
  * @flow
  */
 
-import 'instapromise';
-
 import _ from 'lodash';
 import ExtendableError from 'es6-error';
 import QueryString from 'querystring';
