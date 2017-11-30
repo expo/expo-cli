@@ -15,6 +15,7 @@ ENV['FASTLANE_TEAM_ID'] = $teamId
 json_reply = with_captured_stderr{
   begin
     Spaceship::Portal.login($appleId, $password)
+    Spaceship::Portal.client.team_id = $teamId
     csr, pkey = Spaceship.certificate.create_certificate_signing_request()
     cert = Spaceship::Portal.certificate.production_push.create!(csr: csr, bundle_id:$bundleId)
     x509_certificate = cert.download

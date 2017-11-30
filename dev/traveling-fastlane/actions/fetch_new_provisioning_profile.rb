@@ -15,6 +15,7 @@ ENV['FASTLANE_TEAM_ID'] = $teamId
 json_reply = with_captured_stderr{
   begin
     Spaceship::Portal.login($appleId, $password)
+    Spaceship::Portal.client.team_id = $teamId
     # First check for it, if it exists, then grab it and use it.
     filtered_profiles = Spaceship::Portal.provisioning_profile.app_store.find_by_bundle_id(bundle_id:$bundleId)
     if !filtered_profiles.empty?

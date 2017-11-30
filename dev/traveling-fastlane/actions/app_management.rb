@@ -14,6 +14,7 @@ ENV['FASTLANE_ITC_TEAM_ID'] = $teamId
 
 def manage(action)
   Spaceship::Portal.login($appleId, $password)
+  Spaceship::Portal.client.team_id = $teamId
   if action == 'create'
     app = Spaceship::Portal.app.create!(bundle_id:$bundleId, name: $experienceName)
     JSON.generate({result:'success',
