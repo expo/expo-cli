@@ -624,9 +624,7 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
       if (file && fullPatterns.some(p => minimatch(file, p))) {
         bundledAssets.push({
           type: asset.type,
-          hash: asset.hash || asset.fileHashes[0],
           fileHashes: asset.fileHashes,
-          scales: asset.scales,
         });
       }
     }
