@@ -237,7 +237,9 @@ function getPaths(context: StandaloneContext) {
   let projectName;
   let supportingDirectory;
   let intermediatesDirectory;
-  if (context.config && context.config.name) {
+  if (context.isAnonymous()) {
+    projectName = 'ExpoProject';
+  } else if (context.config && context.config.name) {
     let projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
   } else {
