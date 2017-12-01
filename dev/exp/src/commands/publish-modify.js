@@ -23,7 +23,7 @@ export default (program: any) => {
         log.error('You must specify a release channel.');
       }
       if (!options.publishId) {
-        log.error('You must specify a publish id.');
+        log.error('You must specify a publish id. You can find ids using publish:history.');
       }
       const user = await User.getCurrentUserAsync();
       const api = ApiV2.clientForUser(user);
@@ -36,6 +36,33 @@ export default (program: any) => {
         let tableString = table.printTableJson(
           result.queryResult,
           'Channel Set Status ',
+          'SUCCESS'
+        );
+        console.log(tableString);
+      } catch (e) {
+        log.error(e);
+      }
+    });
+  program
+    .command('publish:rollback [project-dir]')
+    .alias('pr')
+    .description('Rollback an update to a channel.')
+    .option('--channel-id <channel-id>', 'The channel id to rollback in the channel.')
+    .allowNonInteractive()
+    .asyncActionProjectDir(async (projectDir, options) => {
+      if (!options.channelId) {
+        log.error('You must specify a channel id. You can find ids using publish:history.');
+      }
+      const user = await User.getCurrentUserAsync();
+      const api = ApiV2.clientForUser(user);
+      try {
+        let result = await api.postAsync('publish/rollback', {
+          channelId: options.channelId,
+          slug: await Project.getSlugAsync(projectDir, options),
+        });
+        let tableString = table.printTableJson(
+          result.queryResult,
+          'Channel Rollback Status ',
           'SUCCESS'
         );
         console.log(tableString);

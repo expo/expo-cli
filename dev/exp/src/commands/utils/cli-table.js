@@ -25,6 +25,8 @@ export function printTableJson(json, header1, header2) {
     // check if value is a JSON
     if (typeof value === 'object') {
       value = JSON.stringify(value);
+    } else {
+      value = String(value);
     }
     // Add newline every 80 chars
     key = key.replace(new RegExp('(.{' + VERTICAL_CELL_WIDTH + '})', 'g'), '$1\n');
