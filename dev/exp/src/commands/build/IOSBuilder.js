@@ -213,6 +213,9 @@ export default class IOSBuilder extends BaseBuilder {
     );
 
     if (this.options.localAuth) {
+      if (this.options.clearCredentials) {
+        await Credentials.removeCredentialsForPlatform('ios', credentialMetadata);
+      }
       return await this._localCollectAndValidateCredentials(
         existingCredentials,
         credentialMetadata
