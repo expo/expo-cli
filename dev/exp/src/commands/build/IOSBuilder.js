@@ -140,7 +140,7 @@ export default class IOSBuilder extends BaseBuilder {
       if (creds === undefined) {
         return await this._fullLocalAuthRun(metadata);
       } else {
-        if (!creds.certP12 || !creds.pushP12 || !creds.provisionProfile) {
+        if (!creds.certP12 || !creds.pushP12 || !creds.provisioningProfile) {
           const userCreds: IOSCredentials = await this.askForAppleId({ askForTeamId: true });
           let credentials = {};
           if (creds.certP12 === undefined) {
