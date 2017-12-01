@@ -7,6 +7,7 @@ import path from 'path';
 import { getManifestAsync, spawnAsync, spawnAsyncThrowError } from './ExponentTools';
 
 import * as IosNSBundle from './IosNSBundle';
+import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 
 function validateConfigArguments(manifest, cmdArgs, configFilePath) {
@@ -154,15 +155,25 @@ async function configureIOSShellAppAsync(args, manifest) {
 
   // make sure we have all the required info
   validateConfigArguments(manifest, args, args.archivePath);
+
+  // right now we only ever build a single detached workspace for service contexts.
+  // TODO: support multiple different pod configurations, assemble a cache of those builds.
+  const workspaceSourcePath = path.join(
+    expoSourcePath,
+    '..',
+    'shellAppWorkspaces',
+    'ios',
+    'default'
+  );
+  const buildFlags = StandaloneBuildFlags.createIos(args.configuration, { workspaceSourcePath });
   const context = StandaloneContext.createServiceContext(
     expoSourcePath,
     args.archivePath,
     manifest,
     privateConfig,
-    args.configuration,
+    buildFlags,
     args.url,
-    args.releaseChannel,
-    null
+    args.releaseChannel
   );
   await IosNSBundle.configureAsync(context);
 }

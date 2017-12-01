@@ -37,28 +37,37 @@ async function _getVersionedExpoKitConfigAsync(sdkVersion: string): any {
   };
 }
 
-async function _getOrCreateTemplateDirectoryAsync(projectRoot: string, iosExpoViewUrl: string) {
-  let expoTemplateDirectory;
-  if (process.env.EXPO_VIEW_DIR) {
-    // Only for testing
-    expoTemplateDirectory = process.env.EXPO_VIEW_DIR;
-  } else {
-    expoTemplateDirectory = path.join(projectRoot, 'temp-ios-directory');
-    if (!isDirectory(expoTemplateDirectory)) {
-      mkdirp.sync(expoTemplateDirectory);
-      console.log('Downloading iOS code...');
-      await Api.downloadAsync(iosExpoViewUrl, expoTemplateDirectory, {
-        extract: true,
-      });
+async function _getOrCreateTemplateDirectoryAsync(
+  context: StandaloneContext,
+  iosExpoViewUrl: string
+) {
+  if (context.type === 'service') {
+    return path.join(context.data.expoSourcePath, '..');
+  } else if (context.type === 'user') {
+    let expoRootTemplateDirectory;
+    if (process.env.EXPO_VIEW_DIR) {
+      // Only for testing
+      expoRootTemplateDirectory = process.env.EXPO_VIEW_DIR;
+    } else {
+      // HEY: if you need other paths into the extracted archive, be sure and include them
+      // when the archive is generated in `ios/pipeline.js`
+      expoRootTemplateDirectory = path.join(context.data.projectPath, 'temp-ios-directory');
+      if (!isDirectory(expoRootTemplateDirectory)) {
+        mkdirp.sync(expoRootTemplateDirectory);
+        console.log('Downloading iOS code...');
+        await Api.downloadAsync(iosExpoViewUrl, expoRootTemplateDirectory, {
+          extract: true,
+        });
+      }
     }
+    return expoRootTemplateDirectory;
   }
-  return expoTemplateDirectory;
 }
 
 async function _renameAndMoveProjectFilesAsync(
+  context: StandaloneContext,
   projectDirectory: string,
-  projectName: string,
-  exp: any
+  projectName: string
 ) {
   // remove .gitignore, as this actually pertains to internal expo template management
   try {
@@ -79,7 +88,16 @@ async function _renameAndMoveProjectFilesAsync(
     ),
   ];
 
-  const bundleIdentifier = exp.ios && exp.ios.bundleIdentifier ? exp.ios.bundleIdentifier : '';
+  let bundleIdentifier;
+  if (context.type === 'user') {
+    const exp = context.data.exp;
+    bundleIdentifier = exp.ios && exp.ios.bundleIdentifier ? exp.ios.bundleIdentifier : null;
+    if (!bundleIdentifier) {
+      throw new Error(`Cannot configure an ExpoKit workspace with no iOS bundle identifier.`);
+    }
+  } else if (context.type === 'service') {
+    bundleIdentifier = 'host.exp.Exponent';
+  }
 
   await Promise.all(
     filesToTransform.map(fileName =>
@@ -116,18 +134,23 @@ async function _renameAndMoveProjectFilesAsync(
 }
 
 // TODO: logic for when kernel sdk version is different from detached sdk version
-// TODO: logic for when we're building a shell app (which may support many versions).
 async function _configureVersionsPlistAsync(
   configFilePath: string,
-  detachedSDKVersion: string,
-  kernelSDKVersion: string
+  standaloneSdkVersion: string,
+  isMultipleVersion: boolean
 ) {
   await IosPlist.modifyAsync(configFilePath, 'EXSDKVersions', versionConfig => {
-    versionConfig.sdkVersions = [detachedSDKVersion];
-    versionConfig.detachedNativeVersions = {
-      shell: detachedSDKVersion,
-      kernel: kernelSDKVersion,
-    };
+    if (isMultipleVersion) {
+      delete versionConfig.detachedNativeVersions;
+      // leave versionConfig.sdkVersions unchanged
+      // because the ExpoKit template already contains the list of supported versions.
+    } else {
+      versionConfig.sdkVersions = [standaloneSdkVersion];
+      versionConfig.detachedNativeVersions = {
+        shell: standaloneSdkVersion,
+        kernel: standaloneSdkVersion,
+      };
+    }
     return versionConfig;
   });
 }
@@ -135,17 +158,36 @@ async function _configureVersionsPlistAsync(
 // TODO: logic for builds that support multiple RN versions.
 async function _renderPodfileFromTemplateAsync(
   context: StandaloneContext,
-  templatePodfilePath: string,
+  expoRootTemplateDirectory: string,
   sdkVersion: string,
   iosClientVersion: string
 ) {
   const { iosProjectDirectory, projectName } = getPaths(context);
-  let podfileSubstitutions = {
-    TARGET_NAME: projectName,
-    REACT_NATIVE_PATH: path.relative(
+  const templatePodfilePath = path.join(
+    expoRootTemplateDirectory,
+    'template-files',
+    'ios',
+    'ExpoKit-Podfile'
+  );
+  let reactNativeDependencyPath;
+  if (context.type === 'user') {
+    reactNativeDependencyPath = path.relative(
       iosProjectDirectory,
       path.join(context.data.projectPath, 'node_modules', 'react-native')
-    ),
+    );
+  } else if (context.type === 'service') {
+    reactNativeDependencyPath = path.join(
+      expoRootTemplateDirectory,
+      '..',
+      'react-native-lab',
+      'react-native'
+    );
+  } else {
+    throw new Error(`Unsupported context type: ${context.type}`);
+  }
+  let podfileSubstitutions = {
+    TARGET_NAME: projectName,
+    REACT_NATIVE_PATH: reactNativeDependencyPath,
     EXPOKIT_TAG: `ios/${iosClientVersion}`,
   };
   if (process.env.EXPOKIT_TAG_IOS) {
@@ -167,45 +209,52 @@ async function _renderPodfileFromTemplateAsync(
 }
 
 async function createDetachedAsync(context: StandaloneContext) {
-  // TODO: support both types of context
-  if (context.type !== 'user') {
-    throw new Error(`IosWorkspace only supports user standalone contexts`);
+  let isMultipleVersion, standaloneSdkVersion;
+  if (context.type === 'user') {
+    standaloneSdkVersion = context.config.sdkVersion;
+    isMultipleVersion = false;
+  } else if (context.type === 'service') {
+    const { version } = await Versions.newestSdkVersionAsync();
+    standaloneSdkVersion = version;
+    isMultipleVersion = true;
   }
-  const sdkVersion = context.config.sdkVersion;
   const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(context);
-  const { iosClientVersion, iosExpoViewUrl } = await _getVersionedExpoKitConfigAsync(sdkVersion);
+  console.log(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
 
-  const expoTemplateDirectory = await _getOrCreateTemplateDirectoryAsync(
-    context.data.projectPath,
+  const { iosClientVersion, iosExpoViewUrl } = await _getVersionedExpoKitConfigAsync(
+    standaloneSdkVersion
+  );
+  const expoRootTemplateDirectory = await _getOrCreateTemplateDirectoryAsync(
+    context,
     iosExpoViewUrl
   );
 
-  // copy downloaded template xcodeproj into the user's project.
-  // HEY: if you need other paths into the extracted archive, be sure and include them
-  // when the archive is generated in `ios/pipeline.js`
+  // copy template workspace
   console.log('Moving iOS project files...');
   await Utils.ncpAsync(
-    path.join(expoTemplateDirectory, 'exponent-view-template', 'ios'),
+    path.join(expoRootTemplateDirectory, 'exponent-view-template', 'ios'),
     iosProjectDirectory
   );
 
   console.log('Naming iOS project...');
-  await _renameAndMoveProjectFilesAsync(iosProjectDirectory, projectName, context.data.exp);
+  await _renameAndMoveProjectFilesAsync(context, iosProjectDirectory, projectName);
 
   console.log('Configuring iOS dependencies...');
   // this configuration must happen prior to build time because it affects which
   // native versions of RN we depend on.
-  await _configureVersionsPlistAsync(supportingDirectory, sdkVersion, sdkVersion);
-  const templatePodfilePath = path.join(
-    expoTemplateDirectory,
-    'template-files',
-    'ios',
-    'ExpoKit-Podfile'
+  await _configureVersionsPlistAsync(supportingDirectory, standaloneSdkVersion, isMultipleVersion);
+  // TODO: add multiple versions in service context
+  await _renderPodfileFromTemplateAsync(
+    context,
+    expoRootTemplateDirectory,
+    standaloneSdkVersion,
+    iosClientVersion
   );
-  await _renderPodfileFromTemplateAsync(context, templatePodfilePath, sdkVersion, iosClientVersion);
 
   if (!process.env.EXPO_VIEW_DIR) {
-    rimrafDontThrow(expoTemplateDirectory);
+    if (context.type === 'user') {
+      rimrafDontThrow(expoRootTemplateDirectory);
+    }
     await IosPlist.cleanBackupAsync(supportingDirectory, 'EXSDKVersions', false);
   }
 
@@ -232,6 +281,16 @@ function addDetachedConfigToExp(exp: any, context: StandaloneContext): any {
   return exp;
 }
 
+/**
+ *  paths returned:
+ *    iosProjectDirectory - root directory of an (uncompiled) xcworkspace and obj-c source tree
+ *    projectName - xcworkspace project name normalized from context.config
+ *    supportingDirectory - location of Info.plist, xib files, etc. during configuration.
+ *      for an unbuilt app this is underneath iosProjectDirectory. for a compiled app it's just
+ *      a path to the flat xcarchive.
+ *    intermediatesDirectory - temporary spot to write whatever files are needed during the
+ *      detach/build process but can be discarded afterward.
+ */
 function getPaths(context: StandaloneContext) {
   let iosProjectDirectory;
   let projectName;
@@ -252,8 +311,8 @@ function getPaths(context: StandaloneContext) {
   } else if (context.type === 'service') {
     // compiled archive has a flat NSBundle
     supportingDirectory = context.data.archivePath;
-    iosProjectDirectory = context.data.archivePath;
-    intermediatesDirectory = path.join(context.data.expoSourcePath, '..', 'shellAppIntermediates');
+    iosProjectDirectory = context.build.ios.workspaceSourcePath;
+    intermediatesDirectory = path.join(iosProjectDirectory, '..', 'intermediates');
   } else {
     throw new Error(`Unsupported StandaloneContext type: ${context.type}`);
   }

@@ -47,10 +47,7 @@ async function buildAssetArchiveAsync(
     ['--minimum-deployment-target', '9.0'],
     ['--platform', 'iphoneos'],
     ['--app-icon', 'AppIcon'],
-    [
-      '--output-partial-info-plist',
-      path.join(intermediatesDirectory, 'assetcatalog_generated_info.plist'),
-    ],
+    ['--output-partial-info-plist', 'assetcatalog_generated_info.plist'],
     ['--compress-pngs'],
     ['--enable-on-demand-resources', 'YES'],
     ['--product-type', 'com.apple.product-type.application'],
@@ -59,6 +56,11 @@ async function buildAssetArchiveAsync(
     ['--compile', path.relative(intermediatesDirectory, destinationCARPath)],
     ['Images.xcassets']
   );
+  /*
+   *  Note: if you want to debug issues with `actool`, try changing to stdio: 'inherit'.
+   *  In both success and failure cases, actool will write an enormous .plist to stdout
+   *  which may contain the key `com.apple.actool.errors`. Great work Apple
+   */
   await spawnAsyncThrowError('xcrun', xcrunargs, {
     stdio: ['ignore', 'ignore', 'inherit'], // only stderr
     cwd: intermediatesDirectory,

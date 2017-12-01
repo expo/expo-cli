@@ -2,15 +2,9 @@
  * @flow
  */
 
+import StandaloneBuildFlags from './StandaloneBuildFlags';
+
 type StandaloneContextDataType = 'user' | 'service';
-type StandaloneContextBuildConfiguration = 'Debug' | 'Release';
-type StandaloneContextAndroidBuildConfiguration = {
-  keystore: string,
-  keystorePassword: string,
-  keyAlias: string,
-  keyPassword: string,
-  outputFile: ?string,
-};
 
 /**
  *  A user context is used when we are configuring a standalone app locally on a user's machine,
@@ -40,10 +34,7 @@ class StandaloneContext {
     url: ?string,
     releaseChannel: string,
   };
-  build: {
-    configuration: StandaloneContextBuildConfiguration,
-    android: ?StandaloneContextAndroidBuildConfiguration,
-  };
+  build: StandaloneBuildFlags;
 
   static createUserContext = (
     projectPath: string,
@@ -61,11 +52,8 @@ class StandaloneContext {
       url: publishedUrl,
       releaseChannel: 'default',
     };
-    // we never expect user contexts to be pre-built right now
-    context.build = {
-      configuration: 'Debug',
-      android: null,
-    };
+    // we never expect to handle the build step for user contexts right now
+    context.build = StandaloneBuildFlags.createEmpty();
     return context;
   };
 
@@ -74,10 +62,9 @@ class StandaloneContext {
     archivePath: ?string,
     manifest: ?any,
     privateConfig: ?any,
-    buildConfiguration: StandaloneContextBuildConfiguration,
+    build: StandaloneBuildFlags,
     publishedUrl: ?string,
-    releaseChannel: ?string,
-    androidBuildConfiguration: ?StandaloneContextAndroidBuildConfiguration
+    releaseChannel: ?string
   ): StandaloneContext => {
     let context = new StandaloneContext();
     context.type = 'service';
@@ -88,10 +75,7 @@ class StandaloneContext {
       privateConfig,
     };
     context.config = manifest;
-    context.build = {
-      configuration: buildConfiguration,
-      android: androidBuildConfiguration,
-    };
+    context.build = build;
     context.published = {
       url: publishedUrl,
       releaseChannel: releaseChannel ? releaseChannel : 'default',

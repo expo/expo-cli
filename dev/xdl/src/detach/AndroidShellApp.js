@@ -13,6 +13,7 @@ const _ = require('lodash');
 const globby = require('globby');
 
 import * as ExponentTools from './ExponentTools';
+import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 
 const { getManifestAsync, saveUrlToPathAsync, spawnAsyncThrowError, spawnAsync } = ExponentTools;
@@ -299,15 +300,18 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     };
   }
 
+  let buildFlags = StandaloneBuildFlags.createAndroid(
+    configuration,
+    androidBuildConfiguration
+  );
   let context = StandaloneContext.createServiceContext(
     androidSrcPath,
     null,
     manifest,
     privateConfig,
-    configuration,
+    buildFlags,
     url,
-    releaseChannel,
-    androidBuildConfiguration
+    releaseChannel
   );
 
   await copyInitialShellAppFilesAsync(androidSrcPath, shellPath);
