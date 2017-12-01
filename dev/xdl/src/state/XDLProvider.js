@@ -2,8 +2,10 @@
  * @flow
  */
 
+import PropTypes from 'prop-types';
+import { Component, Children } from 'react';
+
 import { getStore } from './store';
-import { Component, PropTypes, Children } from 'react';
 
 export default class XDLProvider extends Component {
   getChildContext() {
