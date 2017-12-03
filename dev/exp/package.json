@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "46.0.5",
+  "version": "46.0.6",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -82,6 +82,7 @@
     "progress": "^2.0.0",
     "qrcode-terminal": "^0.11.0",
     "semver": "^5.0.1",
+    "slash": "^1.0.0",
     "source-map-support": "^0.4.1",
     "tmp": "^0.0.33",
     "untildify": "^3.0.2",
