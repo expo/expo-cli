@@ -5,11 +5,16 @@ import log from '../log';
 async function action(projectDir, options) {
   try {
     if (options.schema) {
-      let { errorMessage } = await Doctor.validateWithSchemaFileAsync(projectDir, options.schema);
-      if (errorMessage) {
-        log(errorMessage);
+      let { schemaErrorMessage, assetsErrorMessage } = await Doctor.validateWithSchemaFileAsync(
+        projectDir,
+        options.schema
+      );
+      if (schemaErrorMessage) {
+        log(schemaErrorMessage);
+      } else if (assetsErrorMessage) {
+        log(assetsErrorMessage);
       } else {
-        log(`Schema and exp.json are valid`);
+        log(`Schema and app.json are valid`);
       }
     } else {
       log(`No option provided`);
