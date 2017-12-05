@@ -15,7 +15,6 @@ let projectSettingsDefaults = {
   dev: true,
   strict: false,
   minify: false,
-  urlType: 'exp',
   urlRandomness: null,
 };
 let packagerInfoFile = 'packager-info.json';
@@ -37,6 +36,11 @@ export async function readAsync(projectRoot: string) {
   if (projectSettings.hostType === 'ngrok') {
     // 'ngrok' is deprecated
     projectSettings.hostType = 'tunnel';
+  }
+
+  if (projectSettings.urlType) {
+    // urlType is deprecated as a project setting
+    delete projectSettings.urlType;
   }
 
   // Set defaults for any missing fields

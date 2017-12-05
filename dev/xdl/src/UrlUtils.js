@@ -173,7 +173,7 @@ export async function constructUrlAsync(
   if (!opts) {
     opts = defaultOpts;
   } else {
-    opts = Object.assign(defaultOpts, opts);
+    opts = Object.assign({}, defaultOpts, opts);
   }
 
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
