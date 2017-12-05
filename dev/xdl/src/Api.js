@@ -123,7 +123,7 @@ async function _convertFormDataToBuffer(formData) {
   });
 }
 
-async function _downloadAsync(url, path, progressFunction, retryFunction) {
+async function _downloadAsync(url, outputPath, progressFunction, retryFunction) {
   let promptShown = false;
   let currentProgress = 0;
 
@@ -160,15 +160,16 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
       },
     };
     let response = await axios(url, config);
-    await fs.writeFile(path, Buffer.from(response.data));
+    await fs.writeFile(outputPath, Buffer.from(response.data));
     clearTimeout(warningTimer);
   } else {
+    const tmpPath = `${outputPath}.download`;
     config = {
       timeout: TIMEOUT,
       responseType: 'stream',
     };
     let response = await axios(url, config);
-    return new Promise(resolve => {
+    await new Promise(resolve => {
       let totalDownloadSize = response.data.headers['content-length'];
       let downloadProgress = 0;
       response.data
@@ -198,8 +199,9 @@ async function _downloadAsync(url, path, progressFunction, retryFunction) {
           }
           resolve();
         })
-        .pipe(fs.createWriteStream(path));
+        .pipe(fs.createWriteStream(tmpPath));
     });
+    await fs.rename(tmpPath, outputPath);
   }
 }
 
