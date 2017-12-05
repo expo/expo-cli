@@ -165,6 +165,10 @@ function _getPrivateConfig(context: StandaloneContext): any {
   return privateConfig;
 }
 
+function _isAppleUsageDescriptionKey(key: string): boolean {
+  return key.indexOf('UsageDescription') !== -1;
+}
+
 /**
  * Configure an iOS Info.plist for a standalone app.
  */
@@ -176,11 +180,17 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
   let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
     // apply any custom information from ios.infoPlist prior to all other exponent config
+    let usageDescriptionKeysConfigured = {};
     if (config.ios && config.ios.infoPlist) {
       let extraConfig = config.ios.infoPlist;
       for (let key in extraConfig) {
         if (extraConfig.hasOwnProperty(key)) {
           infoPlist[key] = extraConfig[key];
+
+          // if the user provides *UsageDescription keys, don't override them later.
+          if (_isAppleUsageDescriptionKey(key)) {
+            usageDescriptionKeysConfigured[key] = true;
+          }
         }
       }
     }
@@ -276,7 +286,11 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
 
     let permissionsAppName = config.name ? config.name : 'this app';
     for (let key in infoPlist) {
-      if (infoPlist.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1) {
+      if (
+        infoPlist.hasOwnProperty(key) &&
+        _isAppleUsageDescriptionKey(key) &&
+        !usageDescriptionKeysConfigured.hasOwnProperty(key)
+      ) {
         infoPlist[key] = infoPlist[key].replace('Expo experiences', permissionsAppName);
       }
     }
