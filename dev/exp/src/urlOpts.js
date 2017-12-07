@@ -22,8 +22,6 @@ function addOptions(program) {
     .option('--localhost', 'Same as --host localhost')
     .option('--dev', 'Turns dev flag on')
     .option('--no-dev', 'Turns dev flag off')
-    .option('--strict', 'Turns strict flag on')
-    .option('--no-strict', 'Turns strict flag off')
     .option('--minify', 'Turns minify flag on')
     .option('--no-minify', 'Turns minify flag off');
 }
@@ -66,9 +64,6 @@ async function optsAsync(projectDir, options) {
   let rawArgs = options.parent.rawArgs;
   if (hasBooleanArg(rawArgs, 'dev')) {
     opts.dev = getBooleanArg(rawArgs, 'dev');
-  }
-  if (hasBooleanArg(rawArgs, 'strict')) {
-    opts.strict = getBooleanArg(rawArgs, 'strict');
   }
   if (hasBooleanArg(rawArgs, 'minify')) {
     opts.minify = getBooleanArg(rawArgs, 'minify');

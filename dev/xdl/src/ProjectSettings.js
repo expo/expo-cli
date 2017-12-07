@@ -13,7 +13,6 @@ let projectSettingsDefaults = {
   hostType: 'tunnel',
   lanType: 'ip',
   dev: true,
-  strict: false,
   minify: false,
   urlRandomness: null,
 };
@@ -41,6 +40,11 @@ export async function readAsync(projectRoot: string) {
   if (projectSettings.urlType) {
     // urlType is deprecated as a project setting
     delete projectSettings.urlType;
+  }
+
+  if ('strict' in projectSettings) {
+    // strict mode is not supported at the moment
+    delete projectSettings.strict;
   }
 
   // Set defaults for any missing fields
