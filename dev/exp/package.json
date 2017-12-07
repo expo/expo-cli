@@ -74,6 +74,7 @@
     "commander": "^2.9.0",
     "delay-async": "^1.0.0",
     "es6-error": "^3.0.0",
+    "fs-extra": "^4.0.2",
     "glob": "^7.0.3",
     "indent-string": "^3.1.0",
     "inquirer": "^2.0.0",

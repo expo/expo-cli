@@ -2,7 +2,7 @@
  * @flow
  */
 
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import inquirer from 'inquirer';
 import untildify from 'untildify';
@@ -337,7 +337,7 @@ export default class IOSBuilder extends BaseBuilder {
         message: 'Path to P12 file:',
         validate: async p12Path => {
           try {
-            const stats = await fs.stat.promise(p12Path);
+            const stats = await fs.stat(p12Path);
             return stats.isFile();
           } catch (e) {
             // file does not exist
@@ -371,7 +371,7 @@ export default class IOSBuilder extends BaseBuilder {
       await Credentials.fetchAppleCertificates(credentialMetadata);
     } else {
       // Upload credentials
-      const p12Data = await fs.readFile.promise(answers.pathToP12);
+      const p12Data = await fs.readFile(answers.pathToP12);
       const credentials = {
         certP12: p12Data.toString('base64'),
         certPassword: answers.certPassword,
@@ -408,7 +408,7 @@ export default class IOSBuilder extends BaseBuilder {
         message: 'Path to P12 file:',
         validate: async p12Path => {
           try {
-            const stats = await fs.stat.promise(p12Path);
+            const stats = await fs.stat(p12Path);
             return stats.isFile();
           } catch (e) {
             // file does not exist
@@ -445,7 +445,7 @@ export default class IOSBuilder extends BaseBuilder {
       await Credentials.fetchPushCertificates(credentialMetadata);
     } else {
       // Upload credentials
-      const p12Data = await fs.readFile.promise(answers.pathToP12);
+      const p12Data = await fs.readFile(answers.pathToP12);
 
       const credentials: IOSCredentials = {
         pushP12: p12Data.toString('base64'),

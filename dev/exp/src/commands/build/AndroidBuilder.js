@@ -2,7 +2,7 @@
  * @flow
  */
 
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import inquirer from 'inquirer';
 import untildify from 'untildify';
@@ -109,7 +109,7 @@ export default class AndroidBuilder extends BaseBuilder {
           message: `Path to keystore:`,
           validate: async keystorePath => {
             try {
-              const keystorePathStats = await fs.stat.promise(keystorePath);
+              const keystorePathStats = await fs.stat(keystorePath);
               return keystorePathStats.isFile();
             } catch (e) {
               // file does not exist
@@ -166,7 +166,7 @@ export default class AndroidBuilder extends BaseBuilder {
         const { keystorePath, keystoreAlias, keystorePassword, keyPassword } = answers;
 
         // read the keystore
-        const keystoreData = await fs.readFile.promise(keystorePath);
+        const keystoreData = await fs.readFile(keystorePath);
 
         const credentials: AndroidCredentials = {
           keystore: keystoreData.toString('base64'),
