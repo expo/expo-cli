@@ -10,6 +10,18 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [47.0.0] - 2017-12-07
+
+### Changed
+
+* Update `xdl` to v47.1.0.
+* Fix issue with `exp build:android` and `exp build:ios` commands not being able to locate p12/keystore files.
+
+### Removed
+
+* Remove `--protocol`, `--exp`, `--http` and `--redirect` flags from `exp start|send|url`. These commands display `exp` protocol URLs by default.
+* Remove `--strict` and `--no-strict` flags.
+
 ## [46.0.1] - 2017-11-16
 
 ### Added
