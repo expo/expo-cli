@@ -253,6 +253,8 @@ export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath) {
   await copyToShellApp('local.properties');
   await copyToShellApp('settings.gradle');
   await copyToShellApp('maven');
+  await copyToShellApp('debug.keystore');
+  await copyToShellApp('run.sh');
 }
 
 exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(args: any) {
@@ -327,7 +329,7 @@ function shellPathForContext(context: StandaloneContext) {
   }
 }
 
-export async function runShellAppModificationsAsync(context: StandaloneContext) {
+export async function runShellAppModificationsAsync(context: StandaloneContext, isDetached: boolean = false) {
   let shellPath = shellPathForContext(context);
   let url: string = context.published.url;
   let manifest = context.config; // manifest or app.json
@@ -354,7 +356,7 @@ export async function runShellAppModificationsAsync(context: StandaloneContext) 
   let name = manifest.name;
   let iconUrl =
     manifest.android && manifest.android.iconUrl ? manifest.android.iconUrl : manifest.iconUrl;
-  let scheme = manifest.scheme;
+  let scheme = manifest.scheme || (manifest.detach && manifest.detach.scheme);
   let bundleUrl: ?string = manifest.bundleUrl;
   let isFullManifest = !!bundleUrl;
   let notificationIconUrl = manifest.notification ? manifest.notification.iconUrl : null;
@@ -492,6 +494,23 @@ export async function runShellAppModificationsAsync(context: StandaloneContext) 
       )
     );
   }
+  if (isDetached) {
+    await regexFileAsync(
+      'IS_DETACHED = false',
+      `IS_DETACHED = true`,
+      path.join(
+        shellPath,
+        'expoview',
+        'src',
+        'main',
+        'java',
+        'host',
+        'exp',
+        'exponent',
+        'Constants.java'
+      )
+    );
+  }
 
   // App name
   await regexFileAsync(
@@ -530,16 +549,29 @@ export async function runShellAppModificationsAsync(context: StandaloneContext) 
     path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
   );
 
-  // Add LAUNCHER category to ShellAppActivity
-  await regexFileAsync(
-    '<!-- ADD SHELL INTENT FILTERS HERE -->',
-    `<intent-filter>
-      <action android:name="android.intent.action.MAIN"/>
+  if (isDetached) {
+    // Add LAUNCHER category to MainActivity
+    await regexFileAsync(
+      '<!-- ADD DETACH INTENT FILTERS HERE -->',
+      `<intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
 
-      <category android:name="android.intent.category.LAUNCHER"/>
-    </intent-filter>`,
-    path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
-  );
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  } else {
+    // Add LAUNCHER category to ShellAppActivity
+    await regexFileAsync(
+      '<!-- ADD SHELL INTENT FILTERS HERE -->',
+      `<intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
 
   // Add shell app scheme
   if (scheme) {

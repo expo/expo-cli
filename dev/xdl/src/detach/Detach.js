@@ -26,6 +26,7 @@ import * as IosPlist from './IosPlist';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
 import * as AndroidShellApp from './AndroidShellApp';
+import * as OldAndroidDetach from './OldAndroidDetach';
 
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';
@@ -161,7 +162,18 @@ export async function detachAsync(projectRoot: string, options: any) {
     let androidDirectory = path.join(expoDirectory, 'android');
     rimraf.sync(androidDirectory);
     mkdirp.sync(androidDirectory);
-    await detachAndroidAsync(context, sdkVersionConfig.androidExpoViewUrl);
+    if (Versions.gteSdkVersion(exp, '24.0.0')) {
+      await detachAndroidAsync(context, sdkVersionConfig.androidExpoViewUrl);
+    } else {
+      await OldAndroidDetach.detachAndroidAsync(
+        projectRoot,
+        androidDirectory,
+        exp.sdkVersion,
+        experienceUrl,
+        exp,
+        sdkVersionConfig.androidExpoViewUrl
+      );
+    }
     exp.detach.androidExpoViewUrl = sdkVersionConfig.androidExpoViewUrl;
   }
 
@@ -221,7 +233,7 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
   }
 
   console.log('Updating Android app...');
-  await AndroidShellApp.runShellAppModificationsAsync(context);
+  await AndroidShellApp.runShellAppModificationsAsync(context, true);
 
   // Clean up
   console.log('Cleaning up Android...');
@@ -297,9 +309,11 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
   if (args.platform === 'ios') {
     await prepareDetachedBuildIosAsync(projectDir, exp, args);
   } else {
+    let buildConstantsFileName = Versions.gteSdkVersion(exp, '24.0.0') ? 'DetachBuildConstants.java' : 'ExponentBuildConstants.java';
+
     let androidProjectDirectory = path.join(projectDir, 'android');
     let expoBuildConstantsMatches = await glob(
-      androidProjectDirectory + '/**/ExponentBuildConstants.java'
+      androidProjectDirectory + '/**/' + buildConstantsFileName
     );
     if (expoBuildConstantsMatches && expoBuildConstantsMatches.length) {
       let expoBuildConstants = expoBuildConstantsMatches[0];
