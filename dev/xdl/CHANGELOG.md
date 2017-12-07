@@ -10,6 +10,21 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [47.1.0] - 2017-12-07
+
+### Added
+
+* Add support for custom `*UsageDescription` strings in iOS standalone builds
+
+### Changed
+
+* Fix failed downloads being stored in template cache
+* Remove invalid peer dependency warnings
+
+### Removed
+
+* Deprecate `urlType` and `strict` project settings
+
 ## [47.0.4] - 2017-11-23
 
 ### Changed
