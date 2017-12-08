@@ -369,6 +369,13 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
   await fs.remove(path.join(shellPath, 'ReactAndroid', 'build'));
   await fs.remove(path.join(shellPath, 'expoview', 'build'));
 
+  if (isDetached) {
+    let appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
+    await regexFileAsync(appBuildGradle, /\/\* UNCOMMENT WHEN DISTRIBUTING/g, '');
+    await regexFileAsync(appBuildGradle, /END UNCOMMENT WHEN DISTRIBUTING \*\//g, '');
+    await regexFileAsync(appBuildGradle, `compile project(':expoview')`, '');
+  }
+
   // Package
   await regexFileAsync(
     `applicationId 'host.exp.exponent'`,
