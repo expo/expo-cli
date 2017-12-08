@@ -359,7 +359,7 @@ async function _downloadAssetsAsync(assets, dest) {
         if (!asset.fileHashes) {
           return;
         }
-        console.log('Bundling asset:', asset.hash);
+
         const downloadTasks = asset.fileHashes.map(async hash => {
           await saveUrlToPathAsync(
             'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,

@@ -300,10 +300,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     };
   }
 
-  let buildFlags = StandaloneBuildFlags.createAndroid(
-    configuration,
-    androidBuildConfiguration
-  );
+  let buildFlags = StandaloneBuildFlags.createAndroid(configuration, androidBuildConfiguration);
   let context = StandaloneContext.createServiceContext(
     androidSrcPath,
     null,

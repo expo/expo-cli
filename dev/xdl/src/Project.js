@@ -619,13 +619,22 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
   if (exp.assetBundlePatterns) {
     const fullPatterns = exp.assetBundlePatterns.map(p => path.join(projectRoot, p));
     const bundledAssets = [];
+    // The assets returned by the RN packager has duplicates so make sure we
+    // only bundle each once.
+    const bundledHashes = new Set();
     for (const asset of assets) {
       const file = asset.files && asset.files[0];
-      if (file && fullPatterns.some(p => minimatch(file, p))) {
+      if (
+        asset.__packager_asset &&
+        file &&
+        fullPatterns.some(p => minimatch(file, p)) &&
+        !bundledHashes.has(asset.hash)
+      ) {
         bundledAssets.push({
           type: asset.type,
           fileHashes: asset.fileHashes,
         });
+        bundledHashes.add(asset.hash);
       }
     }
     exp.bundledAssets = bundledAssets;
