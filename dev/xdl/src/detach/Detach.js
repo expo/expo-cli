@@ -222,7 +222,8 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
     // Only for testing
     await AndroidShellApp.copyInitialShellAppFilesAsync(
       path.join(process.env.EXPO_VIEW_DIR, 'android'),
-      androidProjectDirectory
+      androidProjectDirectory,
+      true
     );
   } else {
     tmpExpoDirectory = path.join(context.data.projectPath, 'temp-android-directory');

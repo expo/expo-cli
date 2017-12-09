@@ -107,14 +107,15 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
     `END\ EMBEDDED\ RESPONSES`,
     path.join(
       shellPath,
-      'expoview',
+      'app',
       'src',
       'main',
       'java',
       'host',
       'exp',
       'exponent',
-      'Constants.java'
+      'generated',
+      'AppConstants.java'
     )
   );
 
@@ -123,19 +124,20 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
     `
     // ADD EMBEDDED RESPONSES HERE
     // START EMBEDDED RESPONSES
-    embeddedResponses.add(new EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-    embeddedResponses.add(new EmbeddedResponse("${bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+    embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
+    embeddedResponses.add(new Constants.EmbeddedResponse("${bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
     // END EMBEDDED RESPONSES`,
     path.join(
       shellPath,
-      'expoview',
+      'app',
       'src',
       'main',
       'java',
       'host',
       'exp',
       'exponent',
-      'Constants.java'
+      'generated',
+      'AppConstants.java'
     )
   );
 
@@ -144,14 +146,15 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
     `RELEASE_CHANNEL = "${releaseChannel}"`,
     path.join(
       shellPath,
-      'expoview',
+      'app',
       'src',
       'main',
       'java',
       'host',
       'exp',
       'exponent',
-      'Constants.java'
+      'generated',
+      'AppConstants.java'
     )
   );
 };
@@ -163,7 +166,7 @@ function backgroundImagesForApp(shellPath, manifest) {
   //   {url: 'anotherURlToDownload', path: 'anotherPathToSaveTo'},
   // ]
   const imageKeys = ['ldpi', 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
-  let basePath = path.join(shellPath, 'expoview', 'src', 'main', 'res');
+  let basePath = path.join(shellPath, 'app', 'src', 'main', 'res');
   if (_.get(manifest, 'android.splash')) {
     var splash = _.get(manifest, 'android.splash');
     return _.reduce(
@@ -226,7 +229,7 @@ function shouldShowLoadingView(manifest) {
   );
 }
 
-export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath) {
+export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath, isDetached: boolean = false) {
   await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
     stdio: 'inherit',
     cwd: path.join(exponentDirectory(), 'android', 'app'),
@@ -241,9 +244,12 @@ export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath) {
     }
   };
 
-  await copyToShellApp('expoview');
-  await copyToShellApp('ReactCommon');
-  await copyToShellApp('ReactAndroid');
+  if (!isDetached) {
+    await copyToShellApp('expoview');
+    await copyToShellApp('ReactCommon');
+    await copyToShellApp('ReactAndroid');
+  }
+
   await copyToShellApp('android.iml');
   await copyToShellApp('app');
   await copyToShellApp('build.gradle');
@@ -255,6 +261,7 @@ export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath) {
   await copyToShellApp('maven');
   await copyToShellApp('debug.keystore');
   await copyToShellApp('run.sh');
+  await copyToShellApp('detach-scripts');
 }
 
 exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(args: any) {
@@ -368,12 +375,18 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
   await fs.remove(path.join(shellPath, 'app', 'build'));
   await fs.remove(path.join(shellPath, 'ReactAndroid', 'build'));
   await fs.remove(path.join(shellPath, 'expoview', 'build'));
+  await fs.remove(path.join(shellPath, 'app', 'src', 'androidTest'));
 
   if (isDetached) {
     let appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
-    await regexFileAsync(appBuildGradle, /\/\* UNCOMMENT WHEN DISTRIBUTING/g, '');
-    await regexFileAsync(appBuildGradle, /END UNCOMMENT WHEN DISTRIBUTING \*\//g, '');
-    await regexFileAsync(appBuildGradle, `compile project(':expoview')`, '');
+    await regexFileAsync(/\/\* UNCOMMENT WHEN DISTRIBUTING/g, '', appBuildGradle);
+    await regexFileAsync(/END UNCOMMENT WHEN DISTRIBUTING \*\//g, '', appBuildGradle);
+    await regexFileAsync(`compile project(path: ':expoview')`, '', appBuildGradle);
+
+    // Don't need to compile expoview or ReactAndroid
+    await fs.writeFile(path.join(shellPath, 'settings.gradle'), `include ':app'`);
+
+    await regexFileAsync('TEMPLATE_INITIAL_URL', url, path.join(shellPath, 'app', 'src', 'main', 'java', 'host', 'exp', 'exponent', 'MainActivity.java'));
   }
 
   // Package
@@ -396,14 +409,15 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
     `VERSION_NAME = "${androidVersion}"`,
     path.join(
       shellPath,
-      'expoview',
+      'app',
       'src',
       'main',
       'java',
       'host',
       'exp',
       'exponent',
-      'Constants.java'
+      'generated',
+      'AppConstants.java'
     )
   );
   await deleteLinesInFileAsync(
@@ -419,11 +433,13 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
   );
 
   // Remove Exponent build script
-  await regexFileAsync(
-    `preBuild.dependsOn generateDynamicMacros`,
-    ``,
-    path.join(shellPath, 'expoview', 'build.gradle')
-  );
+  if (!isDetached) {
+    await regexFileAsync(
+      `preBuild.dependsOn generateDynamicMacros`,
+      ``,
+      path.join(shellPath, 'expoview', 'build.gradle')
+    );
+  }
 
   // change javaMaxHeapSize
   await regexFileAsync(
@@ -445,11 +461,13 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
     `${javaPackage}.permission.C2D_MESSAGE`,
     path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
   );
-  await regexFileAsync(
-    /host\.exp\.exponent\.permission\.C2D_MESSAGE/g,
-    `${javaPackage}.permission.C2D_MESSAGE`,
-    path.join(shellPath, 'expoview', 'src', 'main', 'AndroidManifest.xml')
-  );
+  if (!isDetached) {
+    await regexFileAsync(
+      /host\.exp\.exponent\.permission\.C2D_MESSAGE/g,
+      `${javaPackage}.permission.C2D_MESSAGE`,
+      path.join(shellPath, 'expoview', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
 
   // Set INITIAL_URL, SHELL_APP_SCHEME and SHOW_LOADING_VIEW
   await regexFileAsync(
@@ -457,14 +475,15 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
     `INITIAL_URL = "${url}"`,
     path.join(
       shellPath,
-      'expoview',
+      'app',
       'src',
       'main',
       'java',
       'host',
       'exp',
       'exponent',
-      'Constants.java'
+      'generated',
+      'AppConstants.java'
     )
   );
   if (scheme) {
@@ -473,14 +492,15 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
       `SHELL_APP_SCHEME = "${scheme}"`,
       path.join(
         shellPath,
-        'expoview',
+        'app',
         'src',
         'main',
         'java',
         'host',
         'exp',
         'exponent',
-        'Constants.java'
+        'generated',
+        'AppConstants.java'
       )
     );
   }
@@ -490,14 +510,15 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
       'SHOW_LOADING_VIEW_IN_SHELL_APP = true',
       path.join(
         shellPath,
-        'expoview',
+        'app',
         'src',
         'main',
         'java',
         'host',
         'exp',
         'exponent',
-        'Constants.java'
+        'generated',
+        'AppConstants.java'
       )
     );
   }
@@ -507,14 +528,15 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
       `IS_DETACHED = true`,
       path.join(
         shellPath,
-        'expoview',
+        'app',
         'src',
         'main',
         'java',
         'host',
         'exp',
         'exponent',
-        'Constants.java'
+        'generated',
+        'AppConstants.java'
       )
     );
   }
@@ -692,18 +714,19 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
       '// START EMBEDDED RESPONSES',
       `
       // START EMBEDDED RESPONSES
-      embeddedResponses.add(new EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-      embeddedResponses.add(new EmbeddedResponse("${bundleUrl}", "assets://shell-app.bundle", "application/javascript"));`,
+      embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
+      embeddedResponses.add(new Constants.EmbeddedResponse("${bundleUrl}", "assets://shell-app.bundle", "application/javascript"));`,
       path.join(
         shellPath,
-        'expoview',
+        'app',
         'src',
         'main',
         'java',
         'host',
         'exp',
         'exponent',
-        'Constants.java'
+        'generated',
+        'AppConstants.java'
       )
     );
   }
@@ -713,14 +736,15 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
     `RELEASE_CHANNEL = "${releaseChannel}"`,
     path.join(
       shellPath,
-      'expoview',
+      'app',
       'src',
       'main',
       'java',
       'host',
       'exp',
       'exponent',
-      'Constants.java'
+      'generated',
+      'AppConstants.java'
     )
   );
 
@@ -736,17 +760,6 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
     await saveUrlToPathAsync(
       iconUrl,
       path.join(shellPath, 'app', 'src', 'main', 'res', 'mipmap-hdpi', 'ic_launcher.png')
-    );
-
-    (await globby(['**/ic_launcher.png'], {
-      cwd: path.join(shellPath, 'expoview', 'src', 'main', 'res'),
-      absolute: true,
-    })).forEach(filePath => {
-      fs.removeSync(filePath);
-    });
-    await saveUrlToPathAsync(
-      iconUrl,
-      path.join(shellPath, 'expoview', 'src', 'main', 'res', 'mipmap-hdpi', 'ic_launcher.png')
     );
   }
 
@@ -770,32 +783,13 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
         'shell_notification_icon.png'
       )
     );
-
-    (await globby(['**/shell_notification_icon.png'], {
-      cwd: path.join(shellPath, 'expoview', 'src', 'main', 'res'),
-      absolute: true,
-    })).forEach(filePath => {
-      fs.removeSync(filePath);
-    });
-    await saveUrlToPathAsync(
-      notificationIconUrl,
-      path.join(
-        shellPath,
-        'expoview',
-        'src',
-        'main',
-        'res',
-        'drawable-hdpi',
-        'shell_notification_icon.png'
-      )
-    );
   }
 
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
     // Delete the placeholder images
     (await globby(['**/shell_launch_background_image.png'], {
-      cwd: path.join(shellPath, 'expoview', 'src', 'main', 'res'),
+      cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
       absolute: true,
     })).forEach(filePath => {
       fs.removeSync(filePath);
@@ -807,7 +801,7 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
   }
 
   if (manifest.bundledAssets) {
-    await downloadAssetsAsync(manifest.bundledAssets, `${shellPath}/expoview/src/main/assets`);
+    await downloadAssetsAsync(manifest.bundledAssets, `${shellPath}/app/src/main/assets`);
   }
 
   let certificateHash = '';
