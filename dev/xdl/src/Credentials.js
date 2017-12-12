@@ -24,7 +24,7 @@ export type IOSCredentials = {
   clientExpMadeCerts?: string,
 };
 
-export type Credentials = IOSCredentials & AndroidCredentials;
+export type Credentials = IOSCredentials | AndroidCredentials;
 
 export type CredentialMetadata = {
   username: string,

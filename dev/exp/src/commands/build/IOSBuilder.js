@@ -14,6 +14,43 @@ import log from '../../log';
 
 import * as authFuncs from '../../local-auth/auth';
 
+const sharedQuestions = {
+  teamId: {
+    type: 'input',
+    name: 'teamId',
+    message: `What is your Apple Team ID (you can find that on this page: https://developer.apple.com/account/#/membership)?`,
+    validate: val => val !== '',
+  },
+  p12Path: {
+    type: 'input',
+    name: 'pathToP12',
+    message: 'Path to P12 file:',
+    validate: async p12Path => {
+      try {
+        const stats = await fs.stat(p12Path);
+        return stats.isFile();
+      } catch (e) {
+        // file does not exist
+        console.log('\nFile does not exist.');
+        return false;
+      }
+    },
+    filter: p12Path => {
+      p12Path = untildify(p12Path);
+      if (!path.isAbsolute(p12Path)) {
+        p12Path = path.resolve(p12Path);
+      }
+      return p12Path;
+    },
+  },
+  p12Password: {
+    type: 'password',
+    name: 'p12Password',
+    message: 'P12 password:',
+    validate: password => password.length > 0,
+  },
+};
+
 /**
  * Steps:
  * 1) Check for active builds -- only one build per user/experience can happen at once
@@ -137,7 +174,7 @@ export default class IOSBuilder extends BaseBuilder {
   async _localCollectAndValidateCredentials(creds: ?IOSCredentials, metadata: CredentialMetadata) {
     try {
       // In the case when user has no credentials at all, get everything
-      if (creds === undefined) {
+      if (!creds) {
         return await this._fullLocalAuthRun(metadata);
       } else {
         if (!creds.certP12 || !creds.pushP12 || !creds.provisioningProfile) {
@@ -220,7 +257,93 @@ export default class IOSBuilder extends BaseBuilder {
         existingCredentials,
         credentialMetadata
       );
+    } else if (this.options.expertAuth) {
+      log(`
+WARNING! In expert auth mode, we won't be able to make sure your certificates,
+provisioning profile, app ID, or team ID are valid. Please double check that you're
+uploading valid files for your app otherwise you may encounter strange errors!
+
+Make sure you've created your app ID on the developer portal, that your app ID
+is in app.json as \`bundleIdentifier\`, and that the provisioning profile you
+upload matches that team ID and app ID.
+`);
+
+      let hasTeamId, hasCert, hasPushCert, hasProfile;
+      if (this.options.clearCredentials || !existingCredentials) {
+        hasTeamId = false;
+        hasCert = false;
+        hasPushCert = false;
+        hasProfile = false;
+      } else if (existingCredentials) {
+        hasTeamId = !!existingCredentials.teamId;
+        hasCert = !!existingCredentials.certP12;
+        hasPushCert = !!existingCredentials.pushP12;
+        hasProfile = !!existingCredentials.provisioningProfile;
+      }
+
+      const credsToUpload: IOSCredentials = {
+        clientExpMadeCerts: 'true',
+      };
+
+      if (!hasTeamId) {
+        const { teamId } = await inquirer.prompt([ sharedQuestions.teamId, ]);
+        credsToUpload.teamId = teamId;
+      }
+
+      if (!hasCert) {
+        log('Please provide your distribution certificate P12:')
+        const answers = await inquirer.prompt([
+          sharedQuestions.p12Path, sharedQuestions.p12Password,
+        ]);
+
+        const p12Data = await fs.readFile(answers.pathToP12);
+        credsToUpload.certP12 = p12Data.toString('base64');
+        credsToUpload.certPassword = answers.p12Password;
+      }
+
+      if (!hasPushCert) {
+        log('Please provide the path to your push notification cert P12');
+        const answers = await inquirer.prompt([
+          sharedQuestions.p12Path, sharedQuestions.p12Password,
+        ]);
+
+        const p12Data = await fs.readFile(answers.pathToP12);
+        credsToUpload.pushP12 = p12Data.toString('base64');
+        credsToUpload.pushPassword = answers.p12Password;
+      }
+
+      if (!hasProfile) {
+        const { profilePath } = await inquirer.prompt([{
+          type: 'input',
+          name: 'profilePath',
+          message: 'Path to your provisioning profile which matches bundleIdentifer from app.json:',
+          validate: async profilePath => {
+            try {
+              const stats = await fs.stat(profilePath);
+              return stats.isFile();
+            } catch (e) {
+              // file does not exist
+              console.log('\nFile does not exist.');
+              return false;
+            }
+          },
+          filter: profilePath => {
+            profilePath = untildify(profilePath);
+            if (!path.isAbsolute(profilePath)) {
+              profilePath = path.resolve(profilePath);
+            }
+            return profilePath;
+          },
+        }]);
+
+        const profileData = await fs.readFile(profilePath);
+        credsToUpload.provisioningProfile = profileData.toString('base64');
+      }
+
+      await Credentials.updateCredentialsForPlatform('ios', credsToUpload, credentialMetadata);
+
     } else {
+      // TODO remove this entirely!!!
       let hasAppleId, hasCert, hasPushCert;
       if (this.options.clearCredentials || !existingCredentials) {
         hasAppleId = false;
@@ -279,7 +402,7 @@ export default class IOSBuilder extends BaseBuilder {
     }
   }
 
-  async askForAppleId(opts) {
+  async askForAppleId(opts: { askForTeamId?: boolean }): Promise<IOSCredentials> {
     // ask for creds
     console.log('');
     console.log(
@@ -300,12 +423,7 @@ export default class IOSBuilder extends BaseBuilder {
       },
     ];
     if (opts.askForTeamId) {
-      questions.push({
-        type: 'input',
-        name: 'teamId',
-        message: `What is your Apple Team ID (you can find that on this page: https://developer.apple.com/account/#/membership)?`,
-        validate: val => val !== '',
-      });
+      questions.push(sharedQuestions.teamId);
     }
     const answers = await inquirer.prompt(questions);
 
@@ -332,33 +450,11 @@ export default class IOSBuilder extends BaseBuilder {
         ],
       },
       {
-        type: 'input',
-        name: 'pathToP12',
-        message: 'Path to P12 file:',
-        validate: async p12Path => {
-          try {
-            const stats = await fs.stat(p12Path);
-            return stats.isFile();
-          } catch (e) {
-            // file does not exist
-            console.log('\nFile does not exist.');
-            return false;
-          }
-        },
-        filter: p12Path => {
-          p12Path = untildify(p12Path);
-          if (!path.isAbsolute(p12Path)) {
-            p12Path = path.resolve(p12Path);
-          }
-          return p12Path;
-        },
+        ...sharedQuestions.p12Path,
         when: answers => !answers.manageCertificates,
       },
       {
-        type: 'password',
-        name: 'certPassword',
-        message: 'Certificate P12 password:',
-        validate: password => password.length > 0,
+        ...sharedQuestions.p12Password,
         when: answers => !answers.manageCertificates,
       },
     ];
@@ -374,7 +470,7 @@ export default class IOSBuilder extends BaseBuilder {
       const p12Data = await fs.readFile(answers.pathToP12);
       const credentials = {
         certP12: p12Data.toString('base64'),
-        certPassword: answers.certPassword,
+        certPassword: answers.p12Password,
       };
       log('Validating distribution certificate...');
       await Credentials.validateCredentialsForPlatform(
@@ -403,40 +499,19 @@ export default class IOSBuilder extends BaseBuilder {
         ],
       },
       {
-        type: 'input',
-        name: 'pathToP12',
-        message: 'Path to P12 file:',
-        validate: async p12Path => {
-          try {
-            const stats = await fs.stat(p12Path);
-            return stats.isFile();
-          } catch (e) {
-            // file does not exist
-            console.log('\nFile does not exist.');
-            return false;
-          }
-        },
-        filter: p12Path => {
-          p12Path = untildify(p12Path);
-          if (!path.isAbsolute(p12Path)) {
-            p12Path = path.resolve(p12Path);
-          }
-          return p12Path;
-        },
+        ...sharedQuestions.p12Path,
         when: answers => !answers.managePushCertificates,
       },
       {
-        type: 'password',
-        name: 'pushPassword',
-        message: 'Push certificate P12 password (empty is OK):',
+        ...sharedQuestions.p12Password,
         when: answers => !answers.managePushCertificates,
-      },
+      }
     ];
 
     const answers: {
       managePushCertificates: boolean,
       pathToP12?: string,
-      pushPassword?: string,
+      p12Password?: string,
     } = await inquirer.prompt(questions);
 
     if (answers.managePushCertificates) {
@@ -449,7 +524,7 @@ export default class IOSBuilder extends BaseBuilder {
 
       const credentials: IOSCredentials = {
         pushP12: p12Data.toString('base64'),
-        pushPassword: answers.pushPassword,
+        pushPassword: answers.p12Password,
       };
 
       log('Validating push certificate...');
