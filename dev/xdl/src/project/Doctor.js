@@ -559,7 +559,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
         } else if (!installedDependency || !installedDependency.version) {
           if (installedDependency && installedDependency.peerMissing) {
             errorStrings.push(
-              `Warning: '${dependency}' peer depencency missing. Run \`npm ls\` in ${nodeModulesPath} to see full warning.`
+              `Warning: '${dependency}' peer dependency missing. Run \`npm ls\` in ${nodeModulesPath} to see full warning.`
             );
           } else {
             errorStrings.push(`Warning: '${dependency}' dependency is not installed.`);
