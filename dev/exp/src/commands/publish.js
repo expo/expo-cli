@@ -31,7 +31,7 @@ export async function action(projectDir: string, options: Options = {}) {
   if (status !== 'running') {
     log('Unable to find an existing exp instance for this directory, starting a new one...');
     installExitHooks(projectDir);
-    await Project.startAsync(projectDir, {}, !options.quiet);
+    await Project.startAsync(projectDir, {reset: options.clear}, !options.quiet);
     startedOurOwn = true;
   }
 
@@ -81,6 +81,7 @@ export default (program: any) => {
     .description('Publishes your project to exp.host')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
+    .option('-c, --clear', 'Clear the React Native packager cache')
     .option(
       '-c --release-channel <release channel>',
       "The release channel to publish to. Default is 'default'.",
