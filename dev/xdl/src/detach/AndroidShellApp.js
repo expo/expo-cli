@@ -384,7 +384,8 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
     await regexFileAsync(`compile project(path: ':expoview')`, '', appBuildGradle);
 
     // Don't need to compile expoview or ReactAndroid
-    await fs.writeFile(path.join(shellPath, 'settings.gradle'), `include ':app'`);
+    // react-native link looks for a \n so we need that. See https://github.com/facebook/react-native/blob/master/local-cli/link/android/patches/makeSettingsPatch.js
+    await fs.writeFile(path.join(shellPath, 'settings.gradle'), `include ':app'\n`);
 
     await regexFileAsync('TEMPLATE_INITIAL_URL', url, path.join(shellPath, 'app', 'src', 'main', 'java', 'host', 'exp', 'exponent', 'MainActivity.java'));
   }
