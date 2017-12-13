@@ -230,7 +230,11 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
     mkdirp.sync(tmpExpoDirectory);
     console.log('Downloading Android code...');
     await Api.downloadAsync(expoViewUrl, tmpExpoDirectory, { extract: true });
-    await Utils.ncpAsync(path.join(tmpExpoDirectory, 'android'), androidProjectDirectory);
+    await AndroidShellApp.copyInitialShellAppFilesAsync(
+      tmpExpoDirectory,
+      androidProjectDirectory,
+      true
+    );
   }
 
   console.log('Updating Android app...');
