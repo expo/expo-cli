@@ -274,7 +274,7 @@ export async function startAdbReverseAsync(projectRoot: string) {
   ];
 
   for (let port of adbReversePorts) {
-    if (!await adbReverse(packagerInfo.packagerPort)) {
+    if (!await adbReverse(port)) {
       return false;
     }
   }
@@ -294,7 +294,7 @@ export async function stopAdbReverseAsync(projectRoot: string) {
   ];
 
   for (let port of adbReversePorts) {
-    await adbReverseRemove(packagerInfo.packagerPort);
+    await adbReverseRemove(port);
   }
 }
 
