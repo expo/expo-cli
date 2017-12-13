@@ -10,6 +10,17 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [47.1.1] - 2017-12-13
+
+### Added
+
+* Add support for SDK 24
+
+### Changed
+
+* Fix duplicate assets in manifest "bundledAssets"
+* Fix adb reverse not running for all ports
+
 ## [47.1.0] - 2017-12-07
 
 ### Added
