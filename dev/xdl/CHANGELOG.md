@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [47.1.2] - 2017-12-18
+
+### Changed
+
+* Fixed detach bug
+
 ## [47.1.1] - 2017-12-13
 
 ### Added

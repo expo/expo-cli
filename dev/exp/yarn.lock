@@ -4462,6 +4462,15 @@ react-redux@^5.0.2:
     loose-envify "^1.1.0"
     prop-types "^15.5.10"
 
+react@^16.0.0:
+  version "16.2.0"
+  resolved "https://registry.yarnpkg.com/react/-/react-16.2.0.tgz#a31bd2dab89bff65d42134fa187f24d054c273ba"
+  dependencies:
+    fbjs "^0.8.16"
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
+    prop-types "^15.6.0"
+
 read-chunk@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/read-chunk/-/read-chunk-2.1.0.tgz#6a04c0928005ed9d42e1a6ac5600e19cbc7ff655"
@@ -5635,9 +5644,9 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@47.0.6:
-  version "47.0.6"
-  resolved "https://registry.yarnpkg.com/xdl/-/xdl-47.0.6.tgz#069472a00ee09ddaa1f58ba3e40ed8872a2ce79b"
+xdl@47.1.2:
+  version "47.1.2"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-47.1.2.tgz#d5b6304ca48ecebae93127d3cd4cdffef34c7cdd"
   dependencies:
     "@expo/bunyan" "^1.8.10"
     "@expo/json-file" "^5.3.0"
@@ -5683,9 +5692,11 @@ xdl@47.0.6:
     ncp "^2.0.0"
     opn "^4.0.2"
     plist "2.1.0"
+    prop-types "^15.5.10"
     querystring "^0.2.0"
     raven "^2.1.1"
     raven-js "^3.17.0"
+    react "^16.0.0"
     react-redux "^5.0.2"
     read-chunk "^2.0.0"
     redux "^3.6.0"
