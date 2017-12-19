@@ -18,13 +18,14 @@ import StandaloneContext from './StandaloneContext';
 
 const { getManifestAsync, saveUrlToPathAsync, spawnAsyncThrowError, spawnAsync } = ExponentTools;
 
+// Do not call this from anything used by detach
 function exponentDirectory() {
   if (process.env.TURTLE_WORKING_DIR_PATH) {
     return process.env.TURTLE_WORKING_DIR_PATH;
   } else if (process.env.EXPO_UNIVERSE_DIR) {
     return path.join(process.env.EXPO_UNIVERSE_DIR, 'exponent');
   } else {
-    throw new Error(`Can't determine exponent directory`);
+    return null;
   }
 }
 
@@ -230,10 +231,13 @@ function shouldShowLoadingView(manifest) {
 }
 
 export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath, isDetached: boolean = false) {
-  await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
-    stdio: 'inherit',
-    cwd: path.join(exponentDirectory(), 'android', 'app'),
-  }); // populate android template files now since we take out the prebuild step later on
+  let _exponentDirectory = exponentDirectory();
+  if (_exponentDirectory) {
+    await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
+      stdio: 'inherit',
+      cwd: path.join(_exponentDirectory, 'android', 'app'),
+    }); // populate android template files now since we take out the prebuild step later on
+  }
 
   let copyToShellApp = async fileName => {
     try {
@@ -934,11 +938,6 @@ async function buildShellAppAsync(context: StandaloneContext) {
     ]);
     await fs.copy('shell.apk', androidBuildConfiguration.outputFile || '/tmp/shell-signed.apk');
   } else {
-    let androidSrcPath = path.join(exponentDirectory(), 'android');
-    await fs.copy(
-      path.join(androidSrcPath, 'debug.keystore'),
-      path.join(shellPath, 'debug.keystore')
-    );
     try {
       await fs.remove('shell-debug.apk');
     } catch (e) {}
