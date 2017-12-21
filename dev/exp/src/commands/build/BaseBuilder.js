@@ -5,6 +5,7 @@
 import { Project, ProjectUtils } from 'xdl';
 
 import log from '../../log';
+import chalk from 'chalk';
 import { action as publishAction } from '../publish';
 
 import BuildError from './BuildError';
@@ -48,7 +49,6 @@ export default class BaseBuilder {
     if (exp.isDetached) {
       log.error(`\`exp build\` is not supported for detached projects.`);
       process.exit(1);
-      return;
     }
   }
 
@@ -194,10 +194,24 @@ ${buildStatus.id}
       log('Build started, it may take a few minutes to complete.');
 
       if (buildResp.id) {
-        log(`Build ID: ${buildResp.id}`);
+        log(
+          `You can monitor the build at\n\n ${chalk.underline(
+            constructBuildLogsUrl(buildResp.id)
+          )}\n`
+        );
       }
 
-      log('Run `exp build:status` to monitor it.');
+      log('Alternatively, run `exp build:status` to monitor it from the command line.');
     }
+  }
+}
+
+function constructBuildLogsUrl(buildId: string): string {
+  if (process.env.EXPO_STAGING) {
+    return `https://staging.expo.io/builds/${buildId}`;
+  } else if (process.env.EXPO_LOCAL) {
+    return `http://expo.dev/builds/${buildId}`;
+  } else {
+    return `https://expo.io/builds/${buildId}`;
   }
 }
