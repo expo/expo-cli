@@ -1025,7 +1025,10 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
     return;
   } // Fix watchman if it's being dumb
   if (Watchman.isPlatformSupported() && output.includes('watchman watch-del')) {
-    _restartWatchmanAsync(projectRoot);
+    // Skip this as it is likely no longer needed. We may want to add a message
+    // in this place in the event that there are still issues reported that could
+    // be resolved by restarting watchman when the log output includes this message.
+    // _restartWatchmanAsync(projectRoot);
     return;
   }
 
