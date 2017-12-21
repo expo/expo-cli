@@ -1136,6 +1136,7 @@ export async function startReactNativeServerAsync(
     port: packagerPort,
     customLogReporterPath: path.join(nodeModulesPath, 'expo', 'tools', 'LogReporter'),
     assetExts: ['ttf'],
+    nonPersistent: !!options.nonPersistent,
   };
 
   if (!Versions.gteSdkVersion(exp, '16.0.0')) {
@@ -1165,9 +1166,9 @@ export async function startReactNativeServerAsync(
     (opts, val, key) => {
       // If the packager opt value is boolean, don't set
       // --[opt] [value], just set '--opt'
-      if (typeof val === 'boolean') {
+      if (val && typeof val === 'boolean') {
         opts.push(`--${key}`);
-      } else if (val && val !== '') {
+      } else if (val) {
         opts.push(`--${key}`, val);
       }
       return opts;
