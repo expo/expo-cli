@@ -12,6 +12,7 @@ import sendTo from '../sendTo';
 import { installExitHooks } from '../exit';
 
 type Options = {
+  clear?: boolean,
   sendTo?: string,
   quiet?: boolean,
   releaseChannel?: string,

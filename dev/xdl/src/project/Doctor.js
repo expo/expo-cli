@@ -21,7 +21,8 @@ import * as Watchman from '../Watchman';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
-export const FATAL = 2;
+export const ERROR = 2;
+export const FATAL = 3;
 
 const MIN_WATCHMAN_VERSION = '4.6.0';
 const MIN_NPM_VERSION = '3.0.0';
@@ -113,7 +114,7 @@ async function _checkWatchmanVersionAsync(projectRoot) {
 export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
-): Promise<{ errorMessage?: string }> {
+): Promise<{ schemaErrorMessage: ?string, assetsErrorMessage: ?string }> {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
@@ -126,7 +127,7 @@ export async function validateWithSchema(
   configName: string,
   sdkVersion: string,
   validateAssets: boolean
-): { errorMessage?: string } {
+): Promise<{ schemaErrorMessage: ?string, assetsErrorMessage: ?string }> {
   let schemaErrorMessage;
   let assetsErrorMessage;
   let validator = new Schemer(schema, { rootDir: projectRoot });
@@ -136,7 +137,7 @@ export async function validateWithSchema(
     await validator.validateSchemaAsync(exp);
   } catch (e) {
     if (e instanceof SchemerError) {
-      schemaErrorMessage = `Warning: Problem${e.errors.length > 1
+      schemaErrorMessage = `Error: Problem${e.errors.length > 1
         ? 's'
         : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
@@ -148,7 +149,7 @@ export async function validateWithSchema(
       await validator.validateAssetsAsync(exp);
     } catch (e) {
       if (e instanceof SchemerError) {
-        assetsErrorMessage = `Warning: Problem${e.errors.length > 1
+        assetsErrorMessage = `Error: Problem${e.errors.length > 1
           ? ''
           : 's'} validating asset fields in ${configName}. See ${Config.helpUrl}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
@@ -170,8 +171,7 @@ async function _validatePackageJsonAsync(exp, pkg, projectRoot): Promise<number>
     let reactNative = pkg.dependencies['react-native'];
 
     // Expo fork of react-native is required
-    // TODO(2016-12-20): Remove the check for our old "exponentjs" org eventually
-    if (!reactNative.match(/(exponent(?:js)?|expo)\/react-native/)) {
+    if (!reactNative.match(/expo\/react-native/)) {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
@@ -255,7 +255,7 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
   const configName = await ProjectUtils.configFilenameAsync(projectRoot);
 
   // Skip validation if the correct token is set in env
-  if (!(sdkVersion === 'UNVERSIONED' && process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'])) {
+  if (!(sdkVersion === 'UNVERSIONED' && process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN)) {
     try {
       let schema = await ExpSchema.getSchemaAsync(sdkVersion);
       let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
@@ -268,17 +268,12 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
       );
 
       if (schemaErrorMessage) {
-        ProjectUtils.logWarning(
-          projectRoot,
-          'expo',
-          schemaErrorMessage,
-          'doctor-schema-validation'
-        );
+        ProjectUtils.logError(projectRoot, 'expo', schemaErrorMessage, 'doctor-schema-validation');
       } else {
         ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation');
       }
       if (assetsErrorMessage) {
-        ProjectUtils.logWarning(
+        ProjectUtils.logError(
           projectRoot,
           'expo',
           assetsErrorMessage,
@@ -288,7 +283,7 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
         ProjectUtils.clearNotification(projectRoot, `doctor-validate-asset-fields`);
       }
       ProjectUtils.clearNotification(projectRoot, 'doctor-schema-validation-exception');
-      if (schemaErrorMessage || assetsErrorMessage) return WARNING;
+      if (schemaErrorMessage || assetsErrorMessage) return ERROR;
     } catch (e) {
       ProjectUtils.logWarning(
         projectRoot,
@@ -300,50 +295,49 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
   }
 
   // Warn if sdkVersion is UNVERSIONED
-  if (sdkVersion === 'UNVERSIONED') {
-    ProjectUtils.logWarning(
+  if (sdkVersion === 'UNVERSIONED' && !process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN) {
+    ProjectUtils.logError(
       projectRoot,
       'expo',
-      `Warning: Using unversioned Expo SDK. Do not publish until you set sdkVersion in ${configName}`,
+      `Error: Using unversioned Expo SDK. Do not publish until you set sdkVersion in ${configName}`,
       'doctor-unversioned'
     );
-    return WARNING;
+    return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
 
   // react-native is required
   if (!pkg.dependencies || !pkg.dependencies['react-native']) {
-    ProjectUtils.logWarning(
+    ProjectUtils.logError(
       projectRoot,
       'expo',
-      `Warning: Can't find react-native in package.json dependencies`,
+      `Error: Can't find react-native in package.json dependencies`,
       'doctor-no-react-native-in-package-json'
     );
-    return WARNING;
+    return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
 
-  // TODO(adam) set up caching for this
   let sdkVersions = await Api.sdkVersionsAsync();
   if (!sdkVersions) {
-    ProjectUtils.logWarning(
+    ProjectUtils.logError(
       projectRoot,
       'expo',
-      `Warning: Couldn't connect to SDK versions server`,
+      `Error: Couldn't connect to SDK versions server`,
       'doctor-versions-endpoint-failed'
     );
-    return WARNING;
+    return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-versions-endpoint-failed');
 
   if (!sdkVersions[sdkVersion]) {
-    ProjectUtils.logWarning(
+    ProjectUtils.logError(
       projectRoot,
       'expo',
-      `Warning: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`,
+      `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`,
       'doctor-invalid-sdk-version'
     );
-    return WARNING;
+    return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-sdk-version');
 
@@ -374,8 +368,7 @@ async function _validateReactNativeVersionAsync(
   if (Config.validation.reactNativeVersionWarnings) {
     let reactNative = pkg.dependencies['react-native'];
 
-    // TODO(2016-12-20): Remove the check for our old "exponentjs" org eventually
-    if (!reactNative.match(/(exponent(?:js)?|expo)\/react-native/)) {
+    if (!reactNative.match(/expo\/react-native/)) {
       return NO_ISSUES;
 
       // (TODO-2017-07-20): Validate the react-native version if it uses
@@ -606,11 +599,7 @@ export async function validateWithNetworkAsync(projectRoot: string): Promise<num
   return validateAsync(projectRoot, true);
 }
 
-async function validateAsync(
-  projectRoot: string,
-  allowNetwork: boolean,
-  strict: boolean
-): Promise<number> {
+async function validateAsync(projectRoot: string, allowNetwork: boolean): Promise<number> {
   if (getenv.boolish('EXPO_NO_DOCTOR', false)) {
     return NO_ISSUES;
   }
@@ -644,11 +633,13 @@ async function validateAsync(
   return status;
 }
 
+type ExpoSdkStatus = 0 | 1 | 2;
+
 export const EXPO_SDK_INSTALLED_AND_IMPORTED = 0;
 export const EXPO_SDK_NOT_INSTALLED = 1;
 export const EXPO_SDK_NOT_IMPORTED = 2;
 
-export async function getExpoSdkStatus(projectRoot: string): Promise<number> {
+export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
   let { pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
   try {

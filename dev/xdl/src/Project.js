@@ -301,6 +301,14 @@ export async function publishAsync(
   await _validatePackagerReadyAsync(projectRoot);
   Analytics.logEvent('Publish', { projectRoot });
 
+  const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot);
+  if (validationStatus == Doctor.ERROR || validationStatus === Doctor.FATAL) {
+    throw new XDLError(
+      ErrorCode.PUBLISH_VALIDATION_ERROR,
+      "Couldn't publish because errors were found. (See logs above.) Please fix the errors and try again."
+    );
+  }
+
   // Get project config
   let exp = await _getPublishExpConfigAsync(projectRoot, options);
 
