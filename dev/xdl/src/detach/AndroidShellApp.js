@@ -260,7 +260,6 @@ export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath, i
   await copyToShellApp('gradle');
   await copyToShellApp('gradle.properties');
   await copyToShellApp('gradlew');
-  await copyToShellApp('local.properties');
   await copyToShellApp('settings.gradle');
   await copyToShellApp('maven');
   await copyToShellApp('debug.keystore');
