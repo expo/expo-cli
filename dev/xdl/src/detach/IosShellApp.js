@@ -7,39 +7,23 @@ import path from 'path';
 import { getManifestAsync, spawnAsync, spawnAsyncThrowError } from './ExponentTools';
 
 import * as IosNSBundle from './IosNSBundle';
+import * as IosWorkspace from './IosWorkspace';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 
-function _validateConfigArguments(manifest, cmdArgs, configFilePath) {
-  if (!configFilePath) {
-    throw new Error('No path to config files provided');
-  }
-  let bundleIdentifierFromManifest = manifest.ios ? manifest.ios.bundleIdentifier : null;
-  if (!bundleIdentifierFromManifest) {
-    throw new Error('No bundle identifier found in either the manifest or argv');
-  }
-  if (!manifest.name) {
-    throw new Error('Manifest does not have a name');
-  }
-
-  if (!cmdArgs.privateConfigFile) {
-    console.warn('Warning: No config file specified.');
-  }
-  return true;
-}
-
 /**
- * Writes Fabric config to private-shell-app-config.json if necessary. Used by
+ * Writes private config to private-shell-app-config.json if necessary. Used by
  * generate-dynamic-macros when building.
+ * TODO: remove
  */
-async function _configurePrivateConfigForBuildAsync(args, iosDir) {
+async function _writePrivateConfigForBuildAsync(args, iosWorkspaceDir) {
   if (!args.privateConfigFile) {
     return;
   }
 
   spawnAsyncThrowError('/bin/cp', [
     args.privateConfigFile,
-    path.join(iosDir, 'private-shell-app-config.json'),
+    path.join(iosWorkspaceDir, 'private-shell-app-config.json'),
   ]);
 }
 
@@ -131,7 +115,7 @@ function _validateCLIArgs(args) {
   return args;
 }
 
-async function _configureNSBundleAsync(args, manifest) {
+async function _createStandaloneContextAsync(args, workspaceSourcePath) {
   const expoSourcePath = '../ios';
   let { privateConfigFile } = args;
 
@@ -141,18 +125,16 @@ async function _configureNSBundleAsync(args, manifest) {
     privateConfig = JSON.parse(privateConfigContents);
   }
 
-  // make sure we have all the required info
-  _validateConfigArguments(manifest, args, args.archivePath);
+  let manifest;
+  if (args.action === 'configure') {
+    const { url, sdkVersion, releaseChannel } = args;
+    manifest = await getManifestAsync(url, {
+      'Exponent-SDK-Version': sdkVersion,
+      'Exponent-Platform': 'ios',
+      'Expo-Release-Channel': releaseChannel ? releaseChannel : 'default',
+    });
+  }
 
-  // right now we only ever build a single detached workspace for service contexts.
-  // TODO: support multiple different pod configurations, assemble a cache of those builds.
-  const workspaceSourcePath = path.join(
-    expoSourcePath,
-    '..',
-    'shellAppWorkspaces',
-    'ios',
-    'default'
-  );
   const buildFlags = StandaloneBuildFlags.createIos(args.configuration, { workspaceSourcePath });
   const context = StandaloneContext.createServiceContext(
     expoSourcePath,
@@ -163,7 +145,7 @@ async function _configureNSBundleAsync(args, manifest) {
     args.url,
     args.releaseChannel
   );
-  await IosNSBundle.configureAsync(context);
+  return context;
 }
 
 async function _moveConfiguredArchiveAsync(archivePath, destination, type, manifest) {
@@ -204,15 +186,23 @@ async function _moveConfiguredArchiveAsync(archivePath, destination, type, manif
 async function createIOSShellAppAsync(args) {
   args = _validateCLIArgs(args);
 
+  // right now we only ever build a single detached workspace for service contexts.
+  // TODO: support multiple different pod configurations, assemble a cache of those builds.
+  const expoSourcePath = '../ios';
+  const context = await _createStandaloneContextAsync(
+    args,
+    path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'ios', 'default')
+  );
+
   if (args.action === 'build') {
     const { configuration, verbose, type } = args;
-    const workspacePath = '../ios'; // TODO: use detached workspace
-    await _configurePrivateConfigForBuildAsync(args, workspacePath);
+    await IosWorkspace.createDetachedAsync(context);
+    await _writePrivateConfigForBuildAsync(args, context.build.ios.workspaceSourcePath);
     const pathToArtifact = await _buildAsync(
-      workspacePath,
+      context.build.ios.workspaceSourcePath,
       configuration,
       type,
-      '../shellAppBase',
+      path.relative(context.build.ios.workspaceSourcePath, '../shellAppBase'),
       verbose
     );
     const artifactDestPath = path.join('../shellAppBase-builds', type, configuration);
@@ -223,15 +213,10 @@ async function createIOSShellAppAsync(args) {
     }
     await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
   } else if (args.action === 'configure') {
-    const { url, sdkVersion, archivePath, output, type, releaseChannel } = args;
-    let manifest = await getManifestAsync(url, {
-      'Exponent-SDK-Version': sdkVersion,
-      'Exponent-Platform': 'ios',
-      'Expo-Release-Channel': releaseChannel ? releaseChannel : 'default',
-    });
-    await _configureNSBundleAsync(args, manifest);
+    const { archivePath, output, type } = args;
+    await IosNSBundle.configureAsync(context);
     if (output) {
-      await _moveConfiguredArchiveAsync(archivePath, output, type, manifest);
+      await _moveConfiguredArchiveAsync(archivePath, output, type, context.manifest);
     }
   }
 }

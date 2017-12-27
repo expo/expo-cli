@@ -297,7 +297,7 @@ function getPaths(context: StandaloneContext) {
   let supportingDirectory;
   let intermediatesDirectory;
   if (context.isAnonymous()) {
-    projectName = 'ExpoProject';
+    projectName = 'Exponent';
   } else if (context.config && context.config.name) {
     let projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
@@ -307,15 +307,20 @@ function getPaths(context: StandaloneContext) {
   if (context.type === 'user') {
     iosProjectDirectory = path.join(context.data.projectPath, 'ios');
     supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
-    intermediatesDirectory = path.join(iosProjectDirectory, 'ExpoKitIntermediates');
   } else if (context.type === 'service') {
-    // compiled archive has a flat NSBundle
-    supportingDirectory = context.data.archivePath;
     iosProjectDirectory = context.build.ios.workspaceSourcePath;
-    intermediatesDirectory = path.join(iosProjectDirectory, '..', 'intermediates');
+    if (context.data.archivePath) {
+      // compiled archive has a flat NSBundle
+      supportingDirectory = context.data.archivePath;
+    } else {
+      supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
+    }
   } else {
     throw new Error(`Unsupported StandaloneContext type: ${context.type}`);
   }
+  // sandbox intermediates directory by workspace so that concurrently operating
+  // contexts do not interfere with one another.
+  intermediatesDirectory = path.join(iosProjectDirectory, 'ExpoKitIntermediates');
   return {
     intermediatesDirectory,
     iosProjectDirectory,
