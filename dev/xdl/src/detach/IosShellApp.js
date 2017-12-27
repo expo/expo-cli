@@ -10,7 +10,7 @@ import * as IosNSBundle from './IosNSBundle';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 
-function validateConfigArguments(manifest, cmdArgs, configFilePath) {
+function _validateConfigArguments(manifest, cmdArgs, configFilePath) {
   if (!configFilePath) {
     throw new Error('No path to config files provided');
   }
@@ -32,7 +32,7 @@ function validateConfigArguments(manifest, cmdArgs, configFilePath) {
  * Writes Fabric config to private-shell-app-config.json if necessary. Used by
  * generate-dynamic-macros when building.
  */
-async function configureShellAppSecretsAsync(args, iosDir) {
+async function _configurePrivateConfigForBuildAsync(args, iosDir) {
   if (!args.privateConfigFile) {
     return;
   }
@@ -44,57 +44,45 @@ async function configureShellAppSecretsAsync(args, iosDir) {
 }
 
 /**
- *  Build the iOS binary from source.
- *  @return the path to the resulting .app
+ *  Build the iOS workspace at the given path.
+ *  @return the path to the resulting build artifact
  */
-async function buildAsync(args, iOSRootPath, relativeBuildDestination) {
-  let { action, configuration, verbose, type } = args;
-
-  let buildCmd, buildDest, pathToApp;
+async function _buildAsync(workspacePath, configuration, type, relativeBuildDestination, verbose) {
+  let buildCmd, pathToArtifact;
+  const buildDest = `${relativeBuildDestination}-${type}`;
   if (type === 'simulator') {
-    buildDest = path.relative(iOSRootPath, `${relativeBuildDestination}-simulator`);
     buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphonesimulator -configuration ${configuration} -derivedDataPath ${buildDest} CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
-    pathToApp = `${buildDest}/Build/Products/${configuration}-iphonesimulator/Exponent.app`;
+    pathToArtifact = path.join(
+      buildDest,
+      'Build',
+      'Products',
+      `${configuration}-iphonesimulator`,
+      'Exponent.app'
+    );
   } else if (type === 'archive') {
-    buildDest = path.relative(iOSRootPath, `${relativeBuildDestination}-archive`);
     buildCmd = `xcodebuild -workspace Exponent.xcworkspace -scheme Exponent -sdk iphoneos -destination generic/platform=iOS -configuration ${configuration} archive -derivedDataPath ${buildDest} -archivePath ${buildDest}/Exponent.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty`;
-    pathToApp = `${buildDest}/Exponent.xcarchive/Products/Applications/Exponent.app`;
+    pathToArtifact = path.join(buildDest, 'Exponent.xcarchive');
+  } else {
+    throw new Error(`Unsupported build type: ${type}`);
   }
 
-  if (buildCmd) {
-    console.log(`Building shell app under ${buildDest}:\n`);
-    console.log(buildCmd);
-    if (!verbose) {
-      console.log(
-        '\nxcodebuild is running. Logging errors only. To see full output, use --verbose 1...'
-      );
-    }
-    await spawnAsyncThrowError(buildCmd, null, {
-      // only stderr
-      stdio: verbose ? 'inherit' : ['ignore', 'ignore', 'inherit'],
-      cwd: iOSRootPath,
-      shell: true,
-    });
-
-    const artifactLocation = path.join(iOSRootPath, '../shellAppBase-builds', type, configuration);
-    await spawnAsyncThrowError('/bin/rm', ['-rf', artifactLocation]);
-    await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactLocation]);
-
-    console.log(`\nFinished building, copying artifact to ${artifactLocation}...`);
-    if (type === 'archive') {
-      await spawnAsyncThrowError('/bin/cp', [
-        '-R',
-        `${buildDest}/Exponent.xcarchive`,
-        artifactLocation,
-      ]);
-    } else if (type === 'simulator') {
-      await spawnAsyncThrowError('/bin/cp', ['-R', pathToApp, artifactLocation]);
-    }
+  console.log(`Building shell app under ${buildDest}:\n`);
+  console.log(buildCmd);
+  if (!verbose) {
+    console.log(
+      '\nxcodebuild is running. Logging errors only. To see full output, use --verbose 1...'
+    );
   }
-  return pathToApp;
+  await spawnAsyncThrowError(buildCmd, null, {
+    // only stderr
+    stdio: verbose ? 'inherit' : ['ignore', 'ignore', 'inherit'],
+    cwd: workspacePath,
+    shell: true,
+  });
+  return pathToArtifact;
 }
 
-function validateArgs(args) {
+function _validateCLIArgs(args) {
   args.type = args.type || 'archive';
   args.configuration = args.configuration || 'Release';
   args.verbose = args.verbose || false;
@@ -143,7 +131,7 @@ function validateArgs(args) {
   return args;
 }
 
-async function configureIOSShellAppAsync(args, manifest) {
+async function _configureNSBundleAsync(args, manifest) {
   const expoSourcePath = '../ios';
   let { privateConfigFile } = args;
 
@@ -154,7 +142,7 @@ async function configureIOSShellAppAsync(args, manifest) {
   }
 
   // make sure we have all the required info
-  validateConfigArguments(manifest, args, args.archivePath);
+  _validateConfigArguments(manifest, args, args.archivePath);
 
   // right now we only ever build a single detached workspace for service contexts.
   // TODO: support multiple different pod configurations, assemble a cache of those builds.
@@ -178,13 +166,12 @@ async function configureIOSShellAppAsync(args, manifest) {
   await IosNSBundle.configureAsync(context);
 }
 
-async function moveShellAppArchiveAsync(args, manifest) {
-  const { archivePath, output, type } = args;
+async function _moveConfiguredArchiveAsync(archivePath, destination, type, manifest) {
   const archiveName = manifest.name.replace(/[^0-9a-z_\-\.]/gi, '_');
   const appReleasePath = path.resolve(path.join(`${archivePath}`, '..'));
   if (type === 'simulator') {
     await spawnAsync(
-      `mv Exponent.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+      `mv Exponent.app ${archiveName}.app && tar -czvf ${destination} ${archiveName}.app`,
       null,
       {
         stdio: 'inherit',
@@ -193,7 +180,7 @@ async function moveShellAppArchiveAsync(args, manifest) {
       }
     );
   } else if (type === 'archive') {
-    await spawnAsync('/bin/mv', ['Exponent.xcarchive', output], {
+    await spawnAsync('/bin/mv', ['Exponent.xcarchive', destination], {
       stdio: 'inherit',
       cwd: `${archivePath}/../../../..`,
     });
@@ -215,21 +202,36 @@ async function moveShellAppArchiveAsync(args, manifest) {
 *  @param output specify the output path of built project (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
 */
 async function createIOSShellAppAsync(args) {
-  args = validateArgs(args);
+  args = _validateCLIArgs(args);
 
   if (args.action === 'build') {
-    await configureShellAppSecretsAsync(args, '../ios');
-    await buildAsync(args, '../ios', '../shellAppBase');
+    const { configuration, verbose, type } = args;
+    const workspacePath = '../ios'; // TODO: use detached workspace
+    await _configurePrivateConfigForBuildAsync(args, workspacePath);
+    const pathToArtifact = await _buildAsync(
+      workspacePath,
+      configuration,
+      type,
+      '../shellAppBase',
+      verbose
+    );
+    const artifactDestPath = path.join('../shellAppBase-builds', type, configuration);
+    console.log(`\nFinished building, copying artifact to ${artifactDestPath}...`);
+    if (fs.existsSync(artifactDestPath)) {
+      await spawnAsyncThrowError('/bin/rm', ['-rf', artifactDestPath]);
+      await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactDestPath]);
+    }
+    await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
   } else if (args.action === 'configure') {
-    let { url, sdkVersion } = args;
+    const { url, sdkVersion, archivePath, output, type, releaseChannel } = args;
     let manifest = await getManifestAsync(url, {
       'Exponent-SDK-Version': sdkVersion,
       'Exponent-Platform': 'ios',
-      'Expo-Release-Channel': args.releaseChannel ? args.releaseChannel : 'default',
+      'Expo-Release-Channel': releaseChannel ? releaseChannel : 'default',
     });
-    await configureIOSShellAppAsync(args, manifest);
-    if (args.output) {
-      await moveShellAppArchiveAsync(args, manifest);
+    await _configureNSBundleAsync(args, manifest);
+    if (output) {
+      await _moveConfiguredArchiveAsync(archivePath, output, type, manifest);
     }
   }
 }
