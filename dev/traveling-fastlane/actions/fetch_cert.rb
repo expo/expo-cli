@@ -4,8 +4,6 @@ $LOAD_PATH.unshift File.expand_path(__dir__, __FILE__)
 require 'funcs'
 require 'spaceship'
 require 'json'
-# This provides the ask function which asks enduser for creds
-require 'highline/import'
 require 'base64'
 
 $appleId, $password, $teamId = ARGV
@@ -23,9 +21,9 @@ json_reply = with_captured_stderr{
     p12password = SecureRandom.base64()
     p12 = OpenSSL::PKCS12.create(p12password, 'key', pkey, cert_content)
     $stderr.puts(JSON.generate({result:'success',
-                                privateSigningKey:pkey,
-                                p12:Base64.encode64(p12.to_der),
-                                p12password:p12password}))
+                                certPrivateSigningKey:pkey,
+                                certP12:Base64.encode64(p12.to_der),
+                                certPassword:p12password}))
   rescue Spaceship::Client::UnexpectedResponse => e
     r = "#{e.error_info['userString']} #{e.error_info['resultString']}"
     $stderr.puts(JSON.generate({result:'failure',

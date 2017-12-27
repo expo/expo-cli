@@ -3,8 +3,6 @@ $LOAD_PATH.unshift File.expand_path(__dir__, __FILE__)
 require 'funcs'
 require 'spaceship'
 require 'json'
-# This provides the ask function which asks enduser for creds
-require 'highline/import'
 
 $appleId, $password = ARGV
 

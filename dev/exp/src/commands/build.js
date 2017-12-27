@@ -15,8 +15,6 @@ export default (program: any) => {
     .option('-c, --clear-credentials', 'Clear stored credentials.')
     .option('-t --type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i)
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
-    .option('-f, --local-auth', 'Turn on local auth flow')
-    .option('--expert-auth', "Don't log in to Apple, provide all of the files needed to build.")
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
@@ -35,10 +33,6 @@ export default (program: any) => {
         options.type !== 'simulator'
       ) {
         log.error('Build type must be one of {archive, simulator}');
-        process.exit(1);
-      }
-      if (options.localAuth && options.expertAuth) {
-        log.error('Only one authentication mode can be selected at once.');
         process.exit(1);
       }
       const iosBuilder = new IOSBuilder(projectDir, options);

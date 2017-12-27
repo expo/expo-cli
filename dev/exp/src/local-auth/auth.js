@@ -1,3 +1,4 @@
+// Getting an undefined anywhere here probably means a ruby script is throwing an exception
 import child_process from 'child_process';
 import slash from 'slash';
 import spawnAsync from '@expo/spawn-async';
@@ -13,6 +14,8 @@ const FASTLANE =
 
 const WSL_BASH = 'C:\\Windows\\system32\\bash.exe';
 const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
+
+export const NO_BUNDLE_ID = 'App could not be found for bundle id';
 
 function appStoreAction(creds, metadata, teamId, action) {
   const args = [
@@ -60,7 +63,7 @@ export function produceCerts(credentials, teamId) {
   ]);
 }
 
-export async function validateCredentialsProduceTeamId(creds, metadata) {
+export async function validateCredentialsProduceTeamId(creds) {
   const getTeamsAttempt = await spawnAndCollectJSONOutputAsync(
     FASTLANE.validate_apple_credentials,
     [creds.appleId, creds.password]
@@ -78,16 +81,17 @@ export async function validateCredentialsProduceTeamId(creds, metadata) {
     console.log(`Only 1 team associated with your account, using Team ID: ${teams[0].teamId}`);
     return { teamId: teams[0].teamId };
   } else {
-    teams.forEach((team, i) => {
-      console.log(`${i + 1}) ${team['teamId']} "${team['name']}" (${team['type']})`);
-    });
+    const teamChoices = teams.map(
+      (team, i) => `${i + 1}) ${team['teamId']} "${team['name']}" (${team['type']})`
+    );
+    teamChoices.forEach(choice => console.log(choice));
     const answers = await inquirer.prompt({
-      type: 'input',
+      type: 'list',
       name: 'choice',
       message: `Which Team ID to use?`,
-      validate: val => !Number.isNaN(parseInt(val, 10)),
+      choices: teamChoices,
     });
-    return { teamId: teams[+answers.choice - 1].teamId };
+    return { teamId: teams[teamChoices.indexOf(answers.choice)].teamId };
   }
 }
 

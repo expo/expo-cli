@@ -1,9 +1,9 @@
 {
   "name": "@expo/traveling-fastlane-darwin",
-  "version": "1.0.15",
+  "version": "1.0.17",
   "description": "Bundled up fastlane",
-  "os" : [ "darwin" ],
   "main": "index.js",
+  "os" : [ "darwin" ],
   "scripts": {
     "preinstall":"node platform.js"
   },
