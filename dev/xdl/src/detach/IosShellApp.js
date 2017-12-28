@@ -4,6 +4,7 @@
 
 import fs from 'fs-extra';
 import path from 'path';
+import rimraf from 'rimraf';
 import { getManifestAsync, spawnAsync, spawnAsyncThrowError } from './ExponentTools';
 
 import * as IosNSBundle from './IosNSBundle';
@@ -64,6 +65,29 @@ async function _buildAsync(workspacePath, configuration, type, relativeBuildDest
     shell: true,
   });
   return pathToArtifact;
+}
+
+async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
+  // ensure pods are clean
+  const pathsToClean = [path.join(workspacePath, 'Pods'), path.join(workspacePath, 'Podfile.lock')];
+  pathsToClean.forEach(path => {
+    if (fs.existsSync(path)) {
+      rimraf.sync(path);
+    }
+  });
+
+  // install
+  let cocoapodsArgs = ['install'];
+  if (isRepoUpdateEnabled) {
+    cocoapodsArgs.push('--repo-update');
+  }
+  console.log('Installing iOS workspace dependencies...');
+  console.log(`pod ${cocoapodsArgs.join(' ')}`);
+  await spawnAsyncThrowError('pod', cocoapodsArgs, {
+    stdio: 'inherit',
+    cwd: workspacePath,
+  });
+  return;
 }
 
 function _validateCLIArgs(args) {
@@ -182,6 +206,7 @@ async function _moveConfiguredArchiveAsync(archivePath, destination, type, manif
 *  @param privateConfigFile path to a private config file containing, e.g., private api keys
 *  @param verbose show all xcodebuild output (default false)
 *  @param output specify the output path of built project (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
+*  @param skipRepoUpdate if true, when building, omit `--repo-update` cocoapods flag.
 */
 async function createIOSShellAppAsync(args) {
   args = _validateCLIArgs(args);
@@ -198,6 +223,7 @@ async function createIOSShellAppAsync(args) {
     const { configuration, verbose, type } = args;
     await IosWorkspace.createDetachedAsync(context);
     await _writePrivateConfigForBuildAsync(args, context.build.ios.workspaceSourcePath);
+    await _podInstallAsync(context.build.ios.workspaceSourcePath, !args.skipRepoUpdate);
     const pathToArtifact = await _buildAsync(
       context.build.ios.workspaceSourcePath,
       configuration,

@@ -169,12 +169,13 @@ async function _renderPodfileFromTemplateAsync(
     'ios',
     'ExpoKit-Podfile'
   );
+  let podfileSubstitutions = {
+    TARGET_NAME: projectName,
+  };
   let reactNativeDependencyPath;
   if (context.type === 'user') {
-    reactNativeDependencyPath = path.relative(
-      iosProjectDirectory,
-      path.join(context.data.projectPath, 'node_modules', 'react-native')
-    );
+    reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
+    podfileSubstitutions.EXPOKIT_TAG = `ios/${iosClientVersion}`;
   } else if (context.type === 'service') {
     reactNativeDependencyPath = path.join(
       expoRootTemplateDirectory,
@@ -182,14 +183,19 @@ async function _renderPodfileFromTemplateAsync(
       'react-native-lab',
       'react-native'
     );
+    podfileSubstitutions.EXPOKIT_PATH = path.relative(
+      iosProjectDirectory,
+      expoRootTemplateDirectory
+    );
   } else {
     throw new Error(`Unsupported context type: ${context.type}`);
   }
-  let podfileSubstitutions = {
-    TARGET_NAME: projectName,
-    REACT_NATIVE_PATH: reactNativeDependencyPath,
-    EXPOKIT_TAG: `ios/${iosClientVersion}`,
-  };
+  podfileSubstitutions.REACT_NATIVE_PATH = path.relative(
+    iosProjectDirectory,
+    reactNativeDependencyPath
+  );
+
+  // env flags for testing
   if (process.env.EXPOKIT_TAG_IOS) {
     console.log(`EXPOKIT_TAG_IOS: Using custom ExpoKit iOS tag...`);
     podfileSubstitutions.EXPOKIT_TAG = process.env.EXPOKIT_TAG_IOS;
