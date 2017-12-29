@@ -22,7 +22,7 @@ json_reply = with_captured_stderr{
     $stderr.puts(JSON.generate({result:'success',
                                 pushPrivateSigningKey:pkey,
                                 pushP12:Base64.encode64(pushP12.to_der),
-                                pushP12password:pushP12password}))
+                                pushPassword:pushP12password}))
   rescue Spaceship::Client::UnexpectedResponse => e
     r = "#{e.error_info['userString']} #{e.error_info['resultString']}"
     $stderr.puts(JSON.generate({result:'failure',
