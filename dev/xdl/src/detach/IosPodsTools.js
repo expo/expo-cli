@@ -204,14 +204,14 @@ function _renderDependencyAttributes(attributes) {
   return attributesStrings.join(',\n');
 }
 
-async function _renderVersionedReactNativeDependenciesAsync(templatesDirectory, versionedReactNativePath) {
+async function _renderVersionedReactNativeDependenciesAsync(
+  templatesDirectory,
+  versionedReactNativePath
+) {
   let result = await _concatTemplateFilesInDirectoryAsync(
     path.join(templatesDirectory, 'versioned-react-native', 'dependencies')
   );
-  result = result.replace(
-      /\$\{VERSIONED_REACT_NATIVE_PATH\}/g,
-    versionedReactNativePath
-  );
+  result = result.replace(/\$\{VERSIONED_REACT_NATIVE_PATH\}/g, versionedReactNativePath);
   return result;
 }
 

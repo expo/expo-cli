@@ -310,7 +310,7 @@ function getPaths(context: StandaloneContext) {
   let supportingDirectory;
   let intermediatesDirectory;
   if (context.isAnonymous()) {
-    projectName = 'Exponent';
+    projectName = 'ExpoKitApp';
   } else if (context.config && context.config.name) {
     let projectNameLabel = context.config.name;
     projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
