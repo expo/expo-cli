@@ -18,6 +18,8 @@ import * as authFuncs from '../../local-auth/auth';
 
 const nonEmptyInput = val => val !== '';
 
+const DEBUG = process.env.EXPO_DEBUG;
+
 const expertPrompt = `
 WARNING! In expert auth mode, we won't be able to make sure your certificates,
 provisioning profile, app ID, or team ID are valid. Please double check that you're
@@ -34,16 +36,6 @@ const produceAbsolutePath = p12Path => {
     p12Path = path.resolve(p12Path);
   }
   return p12Path;
-};
-
-const doesFileProvidedExist = async p12Path => {
-  try {
-    const stats = await fs.stat(p12Path);
-    return stats.isFile();
-  } catch (e) {
-    console.log('\nFile does not exist.');
-    return false;
-  }
 };
 
 const runAsExpertQuestion = {
@@ -95,7 +87,7 @@ const provisionProfilePath = {
   type: 'input',
   name: 'pathToProvisioningProfile',
   message: 'Path to your .mobile provisioning Profile',
-  validate: doesFileProvidedExist,
+  validate: authFuncs.doesFileProvidedExist.bind(null, true),
   filter: produceAbsolutePath,
 };
 
@@ -104,7 +96,7 @@ const sharedQuestions = [
     type: 'input',
     name: 'pathToP12',
     message: 'Path to P12 file:',
-    validate: doesFileProvidedExist,
+    validate: authFuncs.doesFileProvidedExist.bind(null, true),
     filter: produceAbsolutePath,
   },
   {
@@ -159,9 +151,15 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
     if (this.options.type !== 'simulator') {
       try {
+        if (DEBUG) {
+          console.log(await authFuncs.doFastlaneActionsExist());
+        }
         await this.runLocalAuth(credentialMetadata);
       } catch (e) {
-        log.error(`Error while gathering & validating credentials: ${e.message}`);
+        log.error(`Error while gathering & validating credentials`);
+        if (DEBUG) {
+          log.error(e);
+        }
         throw e;
       } finally {
         await authFuncs.cleanUp();

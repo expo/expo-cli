@@ -4,6 +4,7 @@ import slash from 'slash';
 import spawnAsync from '@expo/spawn-async';
 import { basename } from 'path';
 import inquirer from 'inquirer';
+import fs from 'fs-extra';
 
 import log from '../log';
 
@@ -16,6 +17,29 @@ const WSL_BASH = 'C:\\Windows\\system32\\bash.exe';
 const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
 
 export const NO_BUNDLE_ID = 'App could not be found for bundle id';
+
+const DEBUG = process.env.EXPO_DEBUG;
+
+export const doesFileProvidedExist = async (printOut, p12Path) => {
+  try {
+    const stats = await fs.stat(p12Path);
+    return stats.isFile();
+  } catch (e) {
+    if (printOut) {
+      console.log('\nFile does not exist.');
+    }
+    return false;
+  }
+};
+
+export const doFastlaneActionsExist = async () => {
+  return Promise.all(
+    Object.keys(FASTLANE).map(async action => {
+      let path = FASTLANE[action];
+      return { action, path, doesExist: await doesFileProvidedExist(false, path) };
+    })
+  );
+};
 
 function appStoreAction(creds, metadata, teamId, action) {
   const args = [
@@ -68,6 +92,9 @@ export async function validateCredentialsProduceTeamId(creds) {
     FASTLANE.validate_apple_credentials,
     [creds.appleId, creds.password]
   );
+  if (DEBUG) {
+    console.log({ action: 'teams attempt retrieval', dump: getTeamsAttempt });
+  }
   if (getTeamsAttempt.result === 'failure') {
     const { reason, rawDump } = getTeamsAttempt;
     throw new Error(`Reason:${reason}, raw:${JSON.stringify(rawDump)}`);
