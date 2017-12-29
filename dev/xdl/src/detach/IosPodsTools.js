@@ -34,6 +34,8 @@ function _validatePodfileSubstitutions(substitutions) {
     'PODFILE_VERSIONED_RN_DEPENDENCIES',
     // versioned rn postinstall hooks read from template files
     'PODFILE_VERSIONED_POSTINSTALLS',
+    // list of generated Expo subspecs to include under a versioned react native dependency
+    'REACT_NATIVE_EXPO_SUBSPECS',
     // path to use for the unversioned react native dependency
     'REACT_NATIVE_PATH',
     // name of the main build target, e.g. Exponent
@@ -206,12 +208,15 @@ function _renderDependencyAttributes(attributes) {
 
 async function _renderVersionedReactNativeDependenciesAsync(
   templatesDirectory,
-  versionedReactNativePath
+  versionedReactNativePath,
+  expoSubspecs
 ) {
   let result = await _concatTemplateFilesInDirectoryAsync(
     path.join(templatesDirectory, 'versioned-react-native', 'dependencies')
   );
+  expoSubspecs = expoSubspecs.map(subspec => `'${subspec}'`).join(', ');
   result = result.replace(/\$\{VERSIONED_REACT_NATIVE_PATH\}/g, versionedReactNativePath);
+  result = result.replace(/\$\{REACT_NATIVE_EXPO_SUBSPECS\}/g, expoSubspecs);
   return result;
 }
 
@@ -342,10 +347,15 @@ async function renderPodfileAsync(
   if (!versionedRnPath) {
     versionedRnPath = './versioned-react-native';
   }
+  let rnExpoSubspecs = moreSubstitutions.REACT_NATIVE_EXPO_SUBSPECS;
+  if (!rnExpoSubspecs) {
+    rnExpoSubspecs = ['Expo'];
+  }
 
   let versionedDependencies = await _renderVersionedReactNativeDependenciesAsync(
     templatesDirectory,
-    versionedRnPath
+    versionedRnPath,
+    rnExpoSubspecs
   );
   let versionedPostinstalls = await _renderVersionedReactNativePostinstallsAsync(
     templatesDirectory
