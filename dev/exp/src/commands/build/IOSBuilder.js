@@ -57,6 +57,7 @@ const OBLIGATORY_CREDS_KEYS = new Set([
   'pushP12',
   'pushPassword',
   'provisioningProfile',
+  'teamId',
 ]);
 
 const LET_EXPO_HANDLE = 'Let Expo handle the process';
@@ -244,6 +245,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       credsMetadata,
       teamId
     );
+    this._throwIfFailureWithReasonDump(produceProvisionProfileAttempt);
     this._copyOverAsString(credsStarter, produceProvisionProfileAttempt);
   }
 
@@ -311,25 +313,34 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   async runLocalAuth(credsMetadata) {
     let credsStarter = await Credentials.credentialsExistForPlatformAsync(credsMetadata);
     const credsMissing = [];
+    let clientHasAllNeededCreds = false;
     if (credsStarter !== undefined) {
+      clientHasAllNeededCreds = true;
       const clientHas = new Set(Object.keys(credsStarter));
-      for (const k of clientHas.keys()) {
-        if (OBLIGATORY_CREDS_KEYS.has(k) === false) {
+      for (const k of OBLIGATORY_CREDS_KEYS.keys()) {
+        if (clientHas.has(k) === false) {
+          clientHasAllNeededCreds = false;
           credsMissing.push(k);
         }
       }
     } else {
       credsStarter = {};
     }
-    const strategy = await inquirer.prompt(runAsExpertQuestion);
-    // We just keep mutating the creds object.
-    if (strategy.isExpoManaged) {
-      await this.runningAsExpoManaged(credsStarter, credsMetadata);
-    } else {
-      await this.runningAsExpert(credsStarter);
+
+    if (credsMissing.length !== 0) {
+      throw new Error(`We do not have some credentials for you, ${credsMissing}; recommend -c`);
     }
-    const { result, ...creds } = credsStarter;
-    await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
+    if (clientHasAllNeededCreds === false) {
+      const strategy = await inquirer.prompt(runAsExpertQuestion);
+      // We just keep mutating the creds object.
+      if (strategy.isExpoManaged) {
+        await this.runningAsExpoManaged(credsStarter, credsMetadata);
+      } else {
+        await this.runningAsExpert(credsStarter);
+      }
+      const { result, ...creds } = credsStarter;
+      await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
+    }
   }
 
   _throwIfFailureWithReasonDump(replyAttempt) {
