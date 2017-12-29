@@ -10,6 +10,293 @@ import path from 'path';
 
 import { parseSdkMajorVersion } from './ExponentTools';
 
+function _validatePodfileSubstitutions(substitutions) {
+  const validKeys = [
+    // a pod dependency on ExpoKit (can be local or remote)
+    'EXPOKIT_DEPENDENCY',
+    // local path to ExpoKit dependency
+    'EXPOKIT_PATH',
+    // tag to use for ExpoKit dependency
+    'EXPOKIT_TAG',
+    // the contents of dependencies.json enumerated as deps in podfile format
+    'EXPONENT_CLIENT_DEPS',
+    // postinstall for detached projects (defines EX_DETACHED among other things)
+    'PODFILE_DETACHED_POSTINSTALL',
+    // ExponentIntegrationTests
+    'PODFILE_TEST_TARGET',
+    // unversioned react native pod dependency, probably at the path given in
+    // REACT_NATIVE_PATH, with a bunch of subspecs.
+    'PODFILE_UNVERSIONED_RN_DEPENDENCY',
+    // postinstall hook for unversioned deps
+    'PODFILE_UNVERSIONED_POSTINSTALL',
+    // versioned rn dependencies (paths to versioned-react-native directories)
+    // read from template files
+    'PODFILE_VERSIONED_RN_DEPENDENCIES',
+    // versioned rn postinstall hooks read from template files
+    'PODFILE_VERSIONED_POSTINSTALLS',
+    // path to use for the unversioned react native dependency
+    'REACT_NATIVE_PATH',
+    // name of the main build target, e.g. Exponent
+    'TARGET_NAME',
+  ];
+
+  for (const key in substitutions) {
+    if (substitutions.hasOwnProperty(key)) {
+      if (!validKeys.includes(key)) {
+        throw new Error(`Unrecognized Podfile template key: ${key}`);
+      }
+    }
+  }
+  return true;
+}
+
+function _renderExpoKitDependency(options) {
+  let attributes;
+  if (options.expoKitPath) {
+    attributes = {
+      path: options.expoKitPath,
+    };
+  } else if (options.expoKitTag) {
+    attributes = {
+      git: 'http://github.com/expo/expo.git',
+      tag: options.expoKitTag,
+    };
+  } else {
+    attributes = {
+      git: 'http://github.com/expo/expo.git',
+      branch: 'master',
+    };
+  }
+  attributes.subspecs = ['Core', 'CPP'];
+
+  let dependency = `pod 'ExpoKit',
+${indentString(_renderDependencyAttributes(attributes), 2)}`;
+
+  return indentString(dependency, 2);
+}
+
+/**
+ * @param sdkVersion if specified, indicates which sdkVersion this project uses
+ *  as 'UNVERSIONED', e.g. if we are detaching a sdk15 project, we render
+ *  an unversioned dependency pointing at RN#sdk-15.
+ */
+function _renderUnversionedReactNativeDependency(options, sdkVersion) {
+  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+  if (sdkMajorVersion === 14) {
+    return indentString(
+      `
+${_renderUnversionedReactDependency(options)}
+`,
+      2
+    );
+  } else if (sdkMajorVersion < 21) {
+    return indentString(
+      `
+${_renderUnversionedReactDependency(options, sdkVersion)}
+${_renderUnversionedYogaDependency(options, sdkVersion)}
+`,
+      2
+    );
+  } else {
+    return indentString(
+      `
+${_renderUnversionedReactDependency(options, sdkVersion)}
+${_renderUnversionedYogaDependency(options, sdkVersion)}
+${_renderUnversionedThirdPartyDependency(
+        'DoubleConversion',
+        path.join('third-party-podspecs', 'DoubleConversion.podspec'),
+        options
+      )}
+${_renderUnversionedThirdPartyDependency(
+        'Folly',
+        path.join('third-party-podspecs', 'Folly.podspec'),
+        options
+      )}
+${_renderUnversionedThirdPartyDependency(
+        'GLog',
+        path.join('third-party-podspecs', 'GLog.podspec'),
+        options
+      )}
+`,
+      2
+    );
+  }
+}
+
+function _renderUnversionedReactDependency(options, sdkVersion) {
+  let attributes;
+  if (options.reactNativePath) {
+    attributes = {
+      path: options.reactNativePath,
+    };
+  } else {
+    throw new Error(`Unsupported options for RN dependency: ${options}`);
+  }
+
+  attributes.subspecs = [
+    'Core',
+    'ART',
+    'RCTActionSheet',
+    'RCTAnimation',
+    'RCTCameraRoll',
+    'RCTGeolocation',
+    'RCTImage',
+    'RCTNetwork',
+    'RCTText',
+    'RCTVibration',
+    'RCTWebSocket',
+  ];
+
+  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+  if (!(sdkMajorVersion < 16)) {
+    attributes.subspecs.push('DevSupport');
+  }
+  if (!(sdkMajorVersion < 21)) {
+    attributes.subspecs.push('CxxBridge');
+  } else if (!(sdkMajorVersion < 18)) {
+    attributes.subspecs.push('BatchedBridge');
+  }
+
+  return `pod 'React',
+${indentString(_renderDependencyAttributes(attributes), 2)}`;
+}
+
+function _renderUnversionedYogaDependency(options, sdkVersion) {
+  let attributes;
+  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+  if (options.reactNativePath) {
+    attributes = {
+      path: path.join(
+        options.reactNativePath,
+        'ReactCommon',
+        sdkMajorVersion < 22 ? 'Yoga' : 'yoga'
+      ),
+    };
+  } else {
+    throw new Error(`Unsupported options for Yoga dependency: ${options}`);
+  }
+  return `pod '${sdkMajorVersion < 22 ? 'Yoga' : 'yoga'}',
+${indentString(_renderDependencyAttributes(attributes), 2)}`;
+}
+
+function _renderUnversionedThirdPartyDependency(podName, podspecRelativePath, options) {
+  let attributes;
+  if (options.reactNativePath) {
+    attributes = {
+      podspec: path.join(options.reactNativePath, podspecRelativePath),
+      inhibit_warnings: true,
+    };
+  } else {
+    throw new Error(`Unsupported options for ${podName} dependency: ${options}`);
+  }
+  return `pod '${podName}',
+${indentString(_renderDependencyAttributes(attributes), 2)}`;
+}
+
+function _renderDependencyAttributes(attributes) {
+  let attributesStrings = [];
+  for (let key of Object.keys(attributes)) {
+    let value = JSON.stringify(attributes[key], null, 2);
+    attributesStrings.push(`:${key} => ${value}`);
+  }
+  return attributesStrings.join(',\n');
+}
+
+async function _renderVersionedReactNativeDependenciesAsync(templatesDirectory) {
+  // TODO: write these files with versioning script
+  return _concatTemplateFilesInDirectoryAsync(
+    path.join(templatesDirectory, 'versioned-react-native', 'dependencies')
+  );
+}
+
+async function _renderVersionedReactNativePostinstallsAsync(templatesDirectory) {
+  // TODO: write these files with versioning script
+  return _concatTemplateFilesInDirectoryAsync(
+    path.join(templatesDirectory, 'versioned-react-native', 'postinstalls')
+  );
+}
+
+async function _concatTemplateFilesInDirectoryAsync(directory) {
+  let templateFilenames = await glob(path.join(directory, '*.rb'));
+  let templateStrings = [];
+  await Promise.all(
+    templateFilenames.map(async filename => {
+      let templateString = await fs.readFile(filename, 'utf8');
+      if (templateString) {
+        templateStrings.push(templateString);
+      }
+    })
+  );
+  return templateStrings.join('\n');
+}
+
+function _renderDetachedPostinstall(sdkVersion) {
+  let podsRootSub = '${PODS_ROOT}';
+  return `
+    if target.pod_name == 'ExpoKit'
+      target.native_target.build_configurations.each do |config|
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'
+        # needed for GoogleMaps 2.x
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
+        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'
+      end
+    end
+`;
+}
+
+function _renderUnversionedPostinstall() {
+  return `
+    if target.pod_name == 'AppAuth'
+      target.native_target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
+      end
+    end
+    # Build React Native with RCT_DEV enabled
+    next unless target.pod_name == 'React'
+    target.native_target.build_configurations.each do |config|
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_DEV=1'
+    end
+`;
+}
+
+function _renderTestTarget(reactNativePath) {
+  return `
+  target 'ExponentIntegrationTests' do
+    inherit! :search_paths
+  end
+`;
+}
+
+async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
+  let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
+  let type = options.isPodfile ? 'pod' : 'ss.dependency';
+  let depsStrings = dependencies.map(
+    dependency => `  ${type} '${dependency.name}', '${dependency.version}'`
+  );
+  return depsStrings.join('\n');
+}
+
+async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
+  let templatesDirectory = path.dirname(pathToTemplate);
+  let templateString = await fs.readFile(pathToTemplate, 'utf8');
+  let dependencies = await _renderPodDependenciesAsync(
+    path.join(templatesDirectory, 'dependencies.json'),
+    { isPodfile: false }
+  );
+  let result = templateString.replace(/\$\{IOS_EXPOKIT_DEPS\}/g, indentString(dependencies, 2));
+  if (moreSubstitutions && moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION) {
+    result = result.replace(
+      /\$\{IOS_EXPONENT_CLIENT_VERSION\}/g,
+      moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION
+    );
+  }
+
+  await fs.writeFile(pathToOutput, result);
+}
+
 /**
  *  @param pathToTemplate path to template Podfile
  *  @param pathToOutput path to render final Podfile
@@ -45,27 +332,32 @@ async function renderPodfileAsync(
     expoKitDependencyOptions = { expoKitTag };
   }
 
-  let versionedDependencies = await renderVersionedReactNativeDependenciesAsync(templatesDirectory);
-  let versionedPostinstalls = await renderVersionedReactNativePostinstallsAsync(templatesDirectory);
-  let podDependencies = await renderPodDependenciesAsync(
+  let versionedDependencies = await _renderVersionedReactNativeDependenciesAsync(
+    templatesDirectory
+  );
+  let versionedPostinstalls = await _renderVersionedReactNativePostinstallsAsync(
+    templatesDirectory
+  );
+  let podDependencies = await _renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
     { isPodfile: true }
   );
 
   let substitutions = {
     EXPONENT_CLIENT_DEPS: podDependencies,
-    EXPOKIT_DEPENDENCY: renderExpoKitDependency(expoKitDependencyOptions),
-    PODFILE_UNVERSIONED_RN_DEPENDENCY: renderUnversionedReactNativeDependency(
+    EXPOKIT_DEPENDENCY: _renderExpoKitDependency(expoKitDependencyOptions),
+    PODFILE_UNVERSIONED_RN_DEPENDENCY: _renderUnversionedReactNativeDependency(
       rnDependencyOptions,
       sdkVersion
     ),
-    PODFILE_UNVERSIONED_POSTINSTALL: renderUnversionedPostinstall(),
-    PODFILE_DETACHED_POSTINSTALL: renderDetachedPostinstall(sdkVersion),
+    PODFILE_UNVERSIONED_POSTINSTALL: _renderUnversionedPostinstall(),
+    PODFILE_DETACHED_POSTINSTALL: _renderDetachedPostinstall(sdkVersion),
     PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
     PODFILE_VERSIONED_POSTINSTALLS: versionedPostinstalls,
-    PODFILE_TEST_TARGET: renderPodfileTestTarget(reactNativePath),
+    PODFILE_TEST_TARGET: _renderTestTarget(reactNativePath),
     ...moreSubstitutions,
   };
+  _validatePodfileSubstitutions(substitutions);
 
   let result = templateString;
   for (let key in substitutions) {
@@ -76,253 +368,6 @@ async function renderPodfileAsync(
   }
 
   await fs.writeFile(pathToOutput, result);
-}
-
-async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
-  let templatesDirectory = path.dirname(pathToTemplate);
-  let templateString = await fs.readFile(pathToTemplate, 'utf8');
-  let dependencies = await renderPodDependenciesAsync(
-    path.join(templatesDirectory, 'dependencies.json'),
-    { isPodfile: false }
-  );
-  let result = templateString.replace(/\$\{IOS_EXPOKIT_DEPS\}/g, indentString(dependencies, 2));
-  if (moreSubstitutions && moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION) {
-    result = result.replace(
-      /\$\{IOS_EXPONENT_CLIENT_VERSION\}/g,
-      moreSubstitutions.IOS_EXPONENT_CLIENT_VERSION
-    );
-  }
-
-  await fs.writeFile(pathToOutput, result);
-}
-
-function renderExpoKitDependency(options) {
-  let attributes;
-  if (options.expoKitPath) {
-    attributes = {
-      path: options.expoKitPath,
-    };
-  } else if (options.expoKitTag) {
-    attributes = {
-      git: 'http://github.com/expo/expo.git',
-      tag: options.expoKitTag,
-    };
-  } else {
-    attributes = {
-      git: 'http://github.com/expo/expo.git',
-      branch: 'master',
-    };
-  }
-  attributes.subspecs = ['Core', 'CPP'];
-
-  let dependency = `pod 'ExpoKit',
-${indentString(renderDependencyAttributes(attributes), 2)}`;
-
-  return indentString(dependency, 2);
-}
-
-/**
- * @param sdkVersion if specified, indicates which sdkVersion this project uses
- *  as 'UNVERSIONED', e.g. if we are detaching a sdk15 project, we render
- *  an unversioned dependency pointing at RN#sdk-15.
- */
-function renderUnversionedReactNativeDependency(options, sdkVersion) {
-  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
-  if (sdkMajorVersion === 14) {
-    return indentString(
-      `
-${renderUnversionedReactDependency(options)}
-`,
-      2
-    );
-  } else if (sdkMajorVersion < 21) {
-    return indentString(
-      `
-${renderUnversionedReactDependency(options, sdkVersion)}
-${renderUnversionedYogaDependency(options, sdkVersion)}
-`,
-      2
-    );
-  } else {
-    return indentString(
-      `
-${renderUnversionedReactDependency(options, sdkVersion)}
-${renderUnversionedYogaDependency(options, sdkVersion)}
-${renderUnversionedThirdPartyDependency(
-        'DoubleConversion',
-        path.join('third-party-podspecs', 'DoubleConversion.podspec'),
-        options
-      )}
-${renderUnversionedThirdPartyDependency(
-        'Folly',
-        path.join('third-party-podspecs', 'Folly.podspec'),
-        options
-      )}
-${renderUnversionedThirdPartyDependency(
-        'GLog',
-        path.join('third-party-podspecs', 'GLog.podspec'),
-        options
-      )}
-`,
-      2
-    );
-  }
-}
-
-function renderUnversionedReactDependency(options, sdkVersion) {
-  let attributes;
-  if (options.reactNativePath) {
-    attributes = {
-      path: options.reactNativePath,
-    };
-  } else {
-    throw new Error(`Unsupported options for RN dependency: ${options}`);
-  }
-
-  attributes.subspecs = [
-    'Core',
-    'ART',
-    'RCTActionSheet',
-    'RCTAnimation',
-    'RCTCameraRoll',
-    'RCTGeolocation',
-    'RCTImage',
-    'RCTNetwork',
-    'RCTText',
-    'RCTVibration',
-    'RCTWebSocket',
-  ];
-
-  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
-  if (!(sdkMajorVersion < 16)) {
-    attributes.subspecs.push('DevSupport');
-  }
-  if (!(sdkMajorVersion < 21)) {
-    attributes.subspecs.push('CxxBridge');
-  } else if (!(sdkMajorVersion < 18)) {
-    attributes.subspecs.push('BatchedBridge');
-  }
-
-  return `pod 'React',
-${indentString(renderDependencyAttributes(attributes), 2)}`;
-}
-
-function renderUnversionedYogaDependency(options, sdkVersion) {
-  let attributes;
-  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
-  if (options.reactNativePath) {
-    attributes = {
-      path: path.join(
-        options.reactNativePath,
-        'ReactCommon',
-        sdkMajorVersion < 22 ? 'Yoga' : 'yoga'
-      ),
-    };
-  } else {
-    throw new Error(`Unsupported options for Yoga dependency: ${options}`);
-  }
-  return `pod '${sdkMajorVersion < 22 ? 'Yoga' : 'yoga'}',
-${indentString(renderDependencyAttributes(attributes), 2)}`;
-}
-
-function renderUnversionedThirdPartyDependency(podName, podspecRelativePath, options) {
-  let attributes;
-  if (options.reactNativePath) {
-    attributes = {
-      podspec: path.join(options.reactNativePath, podspecRelativePath),
-      inhibit_warnings: true,
-    };
-  } else {
-    throw new Error(`Unsupported options for ${podName} dependency: ${options}`);
-  }
-  return `pod '${podName}',
-${indentString(renderDependencyAttributes(attributes), 2)}`;
-}
-
-function renderDependencyAttributes(attributes) {
-  let attributesStrings = [];
-  for (let key of Object.keys(attributes)) {
-    let value = JSON.stringify(attributes[key], null, 2);
-    attributesStrings.push(`:${key} => ${value}`);
-  }
-  return attributesStrings.join(',\n');
-}
-
-async function renderVersionedReactNativeDependenciesAsync(templatesDirectory) {
-  // TODO: write these files with versioning script
-  return concatTemplateFilesInDirectoryAsync(
-    path.join(templatesDirectory, 'versioned-react-native', 'dependencies')
-  );
-}
-
-async function renderVersionedReactNativePostinstallsAsync(templatesDirectory) {
-  // TODO: write these files with versioning script
-  return concatTemplateFilesInDirectoryAsync(
-    path.join(templatesDirectory, 'versioned-react-native', 'postinstalls')
-  );
-}
-
-async function concatTemplateFilesInDirectoryAsync(directory) {
-  let templateFilenames = await glob(path.join(directory, '*.rb'));
-  let templateStrings = [];
-  await Promise.all(
-    templateFilenames.map(async filename => {
-      let templateString = await fs.readFile(filename, 'utf8');
-      if (templateString) {
-        templateStrings.push(templateString);
-      }
-    })
-  );
-  return templateStrings.join('\n');
-}
-
-function renderDetachedPostinstall(sdkVersion) {
-  let podsRootSub = '${PODS_ROOT}';
-  return `
-    if target.pod_name == 'ExpoKit'
-      target.native_target.build_configurations.each do |config|
-        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'
-        # needed for GoogleMaps 2.x
-        config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
-        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
-        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'
-      end
-    end
-`;
-}
-
-function renderUnversionedPostinstall() {
-  return `
-    if target.pod_name == 'AppAuth'
-      target.native_target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
-      end
-    end
-    # Build React Native with RCT_DEV enabled
-    next unless target.pod_name == 'React'
-    target.native_target.build_configurations.each do |config|
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_DEV=1'
-    end
-`;
-}
-
-function renderPodfileTestTarget(reactNativePath) {
-  return `
-  target 'ExponentIntegrationTests' do
-    inherit! :search_paths
-  end
-`;
-}
-
-async function renderPodDependenciesAsync(dependenciesConfigPath, options) {
-  let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
-  let type = options.isPodfile ? 'pod' : 'ss.dependency';
-  let depsStrings = dependencies.map(
-    dependency => `  ${type} '${dependency.name}', '${dependency.version}'`
-  );
-  return depsStrings.join('\n');
 }
 
 export { renderExpoKitPodspecAsync, renderPodfileAsync };
