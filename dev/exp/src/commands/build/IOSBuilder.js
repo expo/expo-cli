@@ -161,7 +161,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       try {
         await this.runLocalAuth(credentialMetadata);
       } catch (e) {
-        log.error(`Error while gathering & validating credentials`);
+        log.error(`Error while gathering & validating credentials: ${e.message}`);
         throw e;
       } finally {
         await authFuncs.cleanUp();
