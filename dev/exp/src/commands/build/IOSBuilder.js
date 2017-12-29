@@ -159,6 +159,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         log.error(`Error while gathering & validating credentials`);
         if (DEBUG) {
           log.error(e);
+          log.error(JSON.stringify(e));
         }
         throw e;
       } finally {
