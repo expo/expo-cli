@@ -328,7 +328,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
 
     if (credsMissing.length !== 0) {
-      throw new Error(`We do not have some credentials for you, ${credsMissing}; recommend -c`);
+      log.warn(`We do not have some credentials for you, ${credsMissing}`);
     }
     if (clientHasAllNeededCreds === false) {
       const strategy = await inquirer.prompt(runAsExpertQuestion);
