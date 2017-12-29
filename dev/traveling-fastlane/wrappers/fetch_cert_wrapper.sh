@@ -14,4 +14,4 @@ export FASTLANE_SKIP_UPDATE_CHECK=1
 
 script="$SELFDIR/lib/app/fetch_cert.rb"
 
-exec "$SELFDIR/lib/ruby/bin/ruby" -rbundler/setup $script "$@"
+exec "$SELFDIR/lib/ruby/bin/ruby" -W0 -rbundler/setup $script "$@"
