@@ -340,6 +340,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       }
       const { result, ...creds } = credsStarter;
       await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
+    } else {
+      log('Using existing credentials for this build');
     }
   }
 
