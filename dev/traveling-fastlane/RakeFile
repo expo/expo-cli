@@ -2,7 +2,7 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
@@ -57,7 +57,7 @@ namespace :package do
     sh "mkdir packaging/tmp"
     sh "cp Gemfile Gemfile.lock packaging/tmp/"
     Bundler.with_clean_env do
-      sh "cd packaging/tmp && env BUNDLE_IGNORE_CONFIG=1 bundle install --path ../vendor --without development"
+      sh "cd packaging/tmp && env BUNDLE_IGNORE_CONFIG=1 bundle install --deployment --path ../vendor --without development"
     end
     sh "rm -rf packaging/tmp"
     sh "rm -f packaging/vendor/*/*/cache/*"
