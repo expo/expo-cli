@@ -163,12 +163,7 @@ async function _renderPodfileFromTemplateAsync(
   iosClientVersion: string
 ) {
   const { iosProjectDirectory, projectName } = getPaths(context);
-  const templatePodfilePath = path.join(
-    expoRootTemplateDirectory,
-    'template-files',
-    'ios',
-    'ExpoKit-Podfile'
-  );
+  let podfileTemplateFilename;
   let podfileSubstitutions = {
     TARGET_NAME: projectName,
   };
@@ -176,6 +171,7 @@ async function _renderPodfileFromTemplateAsync(
   if (context.type === 'user') {
     reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
     podfileSubstitutions.EXPOKIT_TAG = `ios/${iosClientVersion}`;
+    podfileTemplateFilename = 'ExpoKit-Podfile';
   } else if (context.type === 'service') {
     reactNativeDependencyPath = path.join(
       expoRootTemplateDirectory,
@@ -187,6 +183,11 @@ async function _renderPodfileFromTemplateAsync(
       iosProjectDirectory,
       expoRootTemplateDirectory
     );
+    podfileSubstitutions.VERSIONED_REACT_NATIVE_PATH = path.relative(
+      iosProjectDirectory,
+      path.join(expoRootTemplateDirectory, 'ios', 'versioned-react-native')
+    );
+    podfileTemplateFilename = 'ExpoKit-Podfile-multiple-versions';
   } else {
     throw new Error(`Unsupported context type: ${context.type}`);
   }
@@ -206,6 +207,12 @@ async function _renderPodfileFromTemplateAsync(
       process.env.EXPO_VIEW_DIR
     );
   }
+  const templatePodfilePath = path.join(
+    expoRootTemplateDirectory,
+    'template-files',
+    'ios',
+    podfileTemplateFilename
+  );
   await renderPodfileAsync(
     templatePodfilePath,
     path.join(iosProjectDirectory, 'Podfile'),

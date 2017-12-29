@@ -38,6 +38,8 @@ function _validatePodfileSubstitutions(substitutions) {
     'REACT_NATIVE_PATH',
     // name of the main build target, e.g. Exponent
     'TARGET_NAME',
+    // path from Podfile to versioned-react-native
+    'VERSIONED_REACT_NATIVE_PATH',
   ];
 
   for (const key in substitutions) {
@@ -202,11 +204,15 @@ function _renderDependencyAttributes(attributes) {
   return attributesStrings.join(',\n');
 }
 
-async function _renderVersionedReactNativeDependenciesAsync(templatesDirectory) {
-  // TODO: write these files with versioning script
-  return _concatTemplateFilesInDirectoryAsync(
+async function _renderVersionedReactNativeDependenciesAsync(templatesDirectory, versionedReactNativePath) {
+  let result = await _concatTemplateFilesInDirectoryAsync(
     path.join(templatesDirectory, 'versioned-react-native', 'dependencies')
   );
+  result = result.replace(
+      /\$\{VERSIONED_REACT_NATIVE_PATH\}/g,
+    versionedReactNativePath
+  );
+  return result;
 }
 
 async function _renderVersionedReactNativePostinstallsAsync(templatesDirectory) {
@@ -332,8 +338,14 @@ async function renderPodfileAsync(
     expoKitDependencyOptions = { expoKitTag };
   }
 
+  let versionedRnPath = moreSubstitutions.VERSIONED_REACT_NATIVE_PATH;
+  if (!versionedRnPath) {
+    versionedRnPath = './versioned-react-native';
+  }
+
   let versionedDependencies = await _renderVersionedReactNativeDependenciesAsync(
-    templatesDirectory
+    templatesDirectory,
+    versionedRnPath
   );
   let versionedPostinstalls = await _renderVersionedReactNativePostinstallsAsync(
     templatesDirectory
