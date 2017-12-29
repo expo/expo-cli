@@ -16,7 +16,8 @@ const FASTLANE =
 const WSL_BASH = 'C:\\Windows\\system32\\bash.exe';
 const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
 
-export const NO_BUNDLE_ID = 'App could not be found for bundle id';
+// Careful, could be dependent on fastlane versions
+export const NO_BUNDLE_ID = 'Could not find app with bundle id';
 
 const DEBUG = process.env.EXPO_DEBUG;
 
