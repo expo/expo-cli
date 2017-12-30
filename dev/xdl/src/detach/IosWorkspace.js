@@ -155,7 +155,17 @@ async function _configureVersionsPlistAsync(
   });
 }
 
-// TODO: logic for builds that support multiple RN versions.
+async function _configureBuildConstantsPlistAsync(
+  configFilePath: string,
+  context: StandaloneContext
+) {
+  await IosPlist.modifyAsync(configFilePath, 'EXBuildConstants', constantsConfig => {
+    constantsConfig.STANDALONE_CONTEXT_TYPE = context.type;
+    return constantsConfig;
+  });
+  return;
+}
+
 async function _renderPodfileFromTemplateAsync(
   context: StandaloneContext,
   expoRootTemplateDirectory: string,
@@ -256,7 +266,7 @@ async function createDetachedAsync(context: StandaloneContext) {
   // this configuration must happen prior to build time because it affects which
   // native versions of RN we depend on.
   await _configureVersionsPlistAsync(supportingDirectory, standaloneSdkVersion, isMultipleVersion);
-  // TODO: add multiple versions in service context
+  await _configureBuildConstantsPlistAsync(supportingDirectory, context);
   await _renderPodfileFromTemplateAsync(
     context,
     expoRootTemplateDirectory,

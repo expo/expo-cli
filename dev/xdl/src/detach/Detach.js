@@ -33,6 +33,7 @@ import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
 import UserManager from '../User';
 import XDLError from '../XDLError';
+import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
@@ -260,7 +261,65 @@ async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
   }
 }
 
-async function prepareDetachedBuildIosAsync(projectDir: string, exp: any, args: any) {
+async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory: string) {
+  let expoKitVersion = '';
+  const podfileLockPath = path.join(iosProjectDirectory, 'Podfile.lock');
+  try {
+    const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
+    const expoKitVersionRegex = /ExpoKit\/Core\W?\(([0-9\.]+)\)/gi;
+    let match = expoKitVersionRegex.exec(podfileLock);
+    expoKitVersion = match[1];
+  } catch (e) {
+    throw new Error(
+      `Unable to read ExpoKit version from Podfile.lock. Make sure your project depends on ExpoKit. (${e})`
+    );
+  }
+  return expoKitVersion;
+}
+
+async function prepareDetachedBuildIosAsync(projectDir: string, args: any) {
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  if (exp) {
+    return prepareDetachedUserContextIosAsync(projectDir, exp, args);
+  } else {
+    return prepareDetachedServiceContextIosAsync(projectDir, args);
+  }
+}
+
+async function prepareDetachedServiceContextIosAsync(projectDir: string, args: any) {
+  // service context
+  // TODO: very brittle hack: the paths here are hard coded to match the single workspace
+  // path generated inside IosShellApp. When we support more than one path, this needs to
+  // be smarter.
+  const workspaceSourcePath = path.join(projectDir, 'default');
+  const buildFlags = StandaloneBuildFlags.createIos('Release', { workspaceSourcePath });
+  const context = StandaloneContext.createServiceContext(
+    path.join(projectDir, '..', '..'),
+    null,
+    null,
+    null,
+    buildFlags,
+    null,
+    null
+  );
+  const { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
+  const expoKitVersion = await _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory);
+
+  await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
+    // verify that we are actually in a service context and not a misconfigured project
+    const contextType = constantsConfig.STANDALONE_CONTEXT_TYPE;
+    if (contextType !== 'service') {
+      throw new Error(
+        'Unable to configure a project which has no app.json and also no STANDALONE_CONTEXT_TYPE.'
+      );
+    }
+    constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
+    return constantsConfig;
+  });
+  return;
+}
+
+async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, args: any) {
   const context = StandaloneContext.createUserContext(projectDir, exp);
   let { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
 
@@ -283,18 +342,7 @@ async function prepareDetachedBuildIosAsync(projectDir: string, exp: any, args: 
   // insert expo development url into iOS config
   if (!args.skipXcodeConfig) {
     // populate EXPO_RUNTIME_VERSION from ExpoKit pod version
-    let expoKitVersion = '';
-    const podfileLockPath = path.join(iosProjectDirectory, 'Podfile.lock');
-    try {
-      const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
-      const expoKitVersionRegex = /ExpoKit\/Core\W?\(([0-9\.]+)\)/gi;
-      let match = expoKitVersionRegex.exec(podfileLock);
-      expoKitVersion = match[1];
-    } catch (e) {
-      throw new Error(
-        `Unable to read ExpoKit version from Podfile.lock. Make sure your project depends on ExpoKit. (${e})`
-      );
-    }
+    const expoKitVersion = await _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory);
 
     // populate development url
     let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
@@ -309,12 +357,13 @@ async function prepareDetachedBuildIosAsync(projectDir: string, exp: any, args: 
 }
 
 export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
-
   if (args.platform === 'ios') {
-    await prepareDetachedBuildIosAsync(projectDir, exp, args);
+    await prepareDetachedBuildIosAsync(projectDir, args);
   } else {
-    let buildConstantsFileName = Versions.gteSdkVersion(exp, '24.0.0') ? 'DetachBuildConstants.java' : 'ExponentBuildConstants.java';
+    let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+    let buildConstantsFileName = Versions.gteSdkVersion(exp, '24.0.0')
+      ? 'DetachBuildConstants.java'
+      : 'ExponentBuildConstants.java';
 
     let androidProjectDirectory = path.join(projectDir, 'android');
     let expoBuildConstantsMatches = await glob(
