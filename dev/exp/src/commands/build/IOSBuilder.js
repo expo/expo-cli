@@ -228,10 +228,10 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       credsMetadata,
       teamId
     );
-    if (
-      checkAppExistenceAttempt.result === 'failure' &&
-      checkAppExistenceAttempt.reason.startsWith(authFuncs.NO_BUNDLE_ID)
-    ) {
+    if (checkAppExistenceAttempt.result === 'failure') {
+      if (DEBUG) {
+        console.log(checkAppExistenceAttempt);
+      }
       checkAppExistenceAttempt = await authFuncs.createAppOnPortal(
         appleCreds,
         credsMetadata,
