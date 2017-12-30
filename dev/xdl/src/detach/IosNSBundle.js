@@ -7,17 +7,19 @@ import path from 'path';
 import rimraf from 'rimraf';
 import _ from 'lodash';
 
-import { saveUrlToPathAsync, manifestUsesSplashApi } from './ExponentTools';
+import { getManifestAsync, saveUrlToPathAsync, manifestUsesSplashApi } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as IosIcons from './IosIcons';
 import * as IosPlist from './IosPlist';
 import * as IosLaunchScreen from './IosLaunchScreen';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
+import * as Versions from '../Versions';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
 const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
+const KERNEL_URL = 'https://expo.io/@exponent/home';
 
 function _configureInfoPlistForLocalDevelopment(config: any, exp: any) {
   // add detached scheme
@@ -65,17 +67,42 @@ async function _cleanPropertyListBackupsAsync(context: StandaloneContext, backup
   await IosPlist.cleanBackupAsync(backupPath, 'Info', false);
   // TODO: support this in user contexts as well
   if (context.type === 'service') {
-    await IosPlist.cleanBackupAsync(backupPath, 'Exponent.entitlements', false);
+    const { projectName } = IosWorkspace.getPaths(context);
+    await IosPlist.cleanBackupAsync(backupPath, `${projectName}.entitlements`, false);
   }
 }
 
 /**
  * Write the manifest and JS bundle to the NSBundle.
  */
-async function _preloadManifestAndBundleAsync(manifest, supportingDirectory) {
-  let bundleUrl = manifest.bundleUrl;
-  await fs.writeFile(`${supportingDirectory}/shell-app-manifest.json`, JSON.stringify(manifest));
-  await saveUrlToPathAsync(bundleUrl, `${supportingDirectory}/shell-app.bundle`);
+async function _preloadManifestAndBundleAsync(
+  manifest: any,
+  supportingDirectory: string,
+  manifestFilename: string,
+  bundleFilename: string
+) {
+  const bundleUrl = manifest.bundleUrl;
+  await fs.writeFile(path.join(supportingDirectory, manifestFilename), JSON.stringify(manifest));
+  await saveUrlToPathAsync(bundleUrl, path.join(supportingDirectory, bundleFilename));
+  return;
+}
+
+async function _preloadKernelManifestAndBundleAsync(
+  supportingDirectory: string,
+  manifestFilename: string,
+  bundleFilename: string
+) {
+  const { version } = await Versions.newestSdkVersionAsync();
+  const kernelManifest = await getManifestAsync(KERNEL_URL, {
+    'Exponent-SDK-Version': version,
+    'Exponent-Platform': 'ios',
+  });
+  return _preloadManifestAndBundleAsync(
+    kernelManifest,
+    supportingDirectory,
+    manifestFilename,
+    bundleFilename
+  );
 }
 
 /**
@@ -104,45 +131,45 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
     return {};
   } else {
     // modify the .entitlements file
-    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    const { projectName, supportingDirectory } = IosWorkspace.getPaths(context);
     const manifest = context.data.manifest;
-    const result = IosPlist.modifyAsync(
-      supportingDirectory,
-      'Exponent.entitlements',
-      entitlements => {
-        // push notif entitlement changes based on build configuration
-        entitlements['aps-environment'] =
-          context.build.configuration === 'Release' ? 'production' : 'development';
+    const entitlementsFilename = `${projectName}.entitlements`;
+    if (!fs.existsSync(path.join(supportingDirectory, entitlementsFilename))) {
+      await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
+    }
+    const result = IosPlist.modifyAsync(supportingDirectory, entitlementsFilename, entitlements => {
+      // push notif entitlement changes based on build configuration
+      entitlements['aps-environment'] =
+        context.build.configuration === 'Release' ? 'production' : 'development';
 
-        // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-        if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
-          let iCloudKeys = [
-            'com.apple.developer.icloud-container-identifiers',
-            'com.apple.developer.icloud-services',
-            'com.apple.developer.ubiquity-container-identifiers',
-            'com.apple.developer.ubiquity-kvstore-identifier',
-          ];
-          iCloudKeys.forEach(key => {
-            if (entitlements.hasOwnProperty(key)) {
-              delete entitlements[key];
-            }
-          });
-        }
-
-        // Add app associated domains remove exp-specific ones.
-        if (manifest.ios && manifest.ios.associatedDomains) {
-          entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
-        } else if (entitlements.hasOwnProperty('com.apple.developer.associated-domains')) {
-          delete entitlements['com.apple.developer.associated-domains'];
-        }
-
-        // for now, remove any merchant ID in shell apps
-        // (TODO: better plan for payments)
-        delete entitlements['com.apple.developer.in-app-payments'];
-
-        return entitlements;
+      // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
+      if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
+        let iCloudKeys = [
+          'com.apple.developer.icloud-container-identifiers',
+          'com.apple.developer.icloud-services',
+          'com.apple.developer.ubiquity-container-identifiers',
+          'com.apple.developer.ubiquity-kvstore-identifier',
+        ];
+        iCloudKeys.forEach(key => {
+          if (entitlements.hasOwnProperty(key)) {
+            delete entitlements[key];
+          }
+        });
       }
-    );
+
+      // Add app associated domains remove exp-specific ones.
+      if (manifest.ios && manifest.ios.associatedDomains) {
+        entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
+      } else if (entitlements.hasOwnProperty('com.apple.developer.associated-domains')) {
+        delete entitlements['com.apple.developer.associated-domains'];
+      }
+
+      // for now, remove any merchant ID in shell apps
+      // (TODO: better plan for payments)
+      delete entitlements['com.apple.developer.in-app-payments'];
+
+      return entitlements;
+    });
     return result;
   }
 }
@@ -411,7 +438,17 @@ async function configureAsync(context: StandaloneContext) {
       supportingDirectory,
       intermediatesDirectory
     );
-    await _preloadManifestAndBundleAsync(context.data.manifest, supportingDirectory);
+    await _preloadManifestAndBundleAsync(
+      context.data.manifest,
+      supportingDirectory,
+      'shell-app-manifest.json',
+      'shell-app.bundle'
+    );
+    await _preloadKernelManifestAndBundleAsync(
+      supportingDirectory,
+      'kernel-manifest.json',
+      'kernel.ios.bundle'
+    );
   }
 
   console.log('Cleaning up iOS...');

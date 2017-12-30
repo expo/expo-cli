@@ -13,22 +13,6 @@ import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 
 /**
- * Writes private config to private-shell-app-config.json if necessary. Used by
- * generate-dynamic-macros when building.
- * TODO: remove
- */
-async function _writePrivateConfigForBuildAsync(args, iosWorkspaceDir) {
-  if (!args.privateConfigFile) {
-    return;
-  }
-
-  spawnAsyncThrowError('/bin/cp', [
-    args.privateConfigFile,
-    path.join(iosWorkspaceDir, 'private-shell-app-config.json'),
-  ]);
-}
-
-/**
  *  Build the iOS workspace at the given path.
  *  @return the path to the resulting build artifact
  */
@@ -232,7 +216,6 @@ async function createIOSShellAppAsync(args) {
     const { configuration, verbose, type, reuseWorkspace } = args;
     if (!reuseWorkspace) {
       await IosWorkspace.createDetachedAsync(context);
-      await _writePrivateConfigForBuildAsync(args, context.build.ios.workspaceSourcePath);
       await _podInstallAsync(context.build.ios.workspaceSourcePath, !args.skipRepoUpdate);
     }
     const pathToArtifact = await _buildAsync(

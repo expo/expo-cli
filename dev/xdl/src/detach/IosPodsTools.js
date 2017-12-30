@@ -221,7 +221,6 @@ async function _renderVersionedReactNativeDependenciesAsync(
 }
 
 async function _renderVersionedReactNativePostinstallsAsync(templatesDirectory) {
-  // TODO: write these files with versioning script
   return _concatTemplateFilesInDirectoryAsync(
     path.join(templatesDirectory, 'versioned-react-native', 'postinstalls')
   );

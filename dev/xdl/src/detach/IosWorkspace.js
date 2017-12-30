@@ -133,7 +133,6 @@ async function _renameAndMoveProjectFilesAsync(
   return;
 }
 
-// TODO: logic for when kernel sdk version is different from detached sdk version
 async function _configureVersionsPlistAsync(
   configFilePath: string,
   standaloneSdkVersion: string,
