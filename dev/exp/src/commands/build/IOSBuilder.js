@@ -248,6 +248,14 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       credsMetadata,
       teamId
     );
+    if (
+      produceProvisionProfileAttempt.result === 'failure' &&
+      produceProvisionProfileAttempt.reason.startsWith(authFuncs.MULTIPLE_PROFILES)
+    ) {
+      log.warn(
+        'Consider logging into https://developer.apple.com and removing the existing provisioning profile'
+      );
+    }
     this._throwIfFailureWithReasonDump(produceProvisionProfileAttempt);
     this._copyOverAsString(credsStarter, produceProvisionProfileAttempt);
   }

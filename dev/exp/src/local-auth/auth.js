@@ -18,6 +18,8 @@ const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/s
 
 export const NO_BUNDLE_ID = 'App could not be found for bundle id';
 
+export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
+
 const DEBUG = process.env.EXPO_DEBUG;
 
 export const doesFileProvidedExist = async (printOut, p12Path) => {
