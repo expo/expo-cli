@@ -222,16 +222,16 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     });
   }
 
-  async _ensureAppProduceProvisionProfile(appleCreds, credsMetadata, teamId, credsStarter) {
+  async _ensureAppExists(appleCreds, credsMetadata, teamId, credsStarter) {
     let checkAppExistenceAttempt = await authFuncs.ensureAppIdLocally(
       appleCreds,
       credsMetadata,
       teamId
     );
-    if (checkAppExistenceAttempt.result === 'failure') {
-      if (DEBUG) {
-        console.log(checkAppExistenceAttempt);
-      }
+    if (
+      checkAppExistenceAttempt.result === 'failure' &&
+      checkAppExistenceAttempt.reason.startsWith(authFuncs.NO_BUNDLE_ID)
+    ) {
       checkAppExistenceAttempt = await authFuncs.createAppOnPortal(
         appleCreds,
         credsMetadata,
@@ -240,6 +240,9 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
     this._throwIfFailureWithReasonDump(checkAppExistenceAttempt);
     this._copyOverAsString(credsStarter, checkAppExistenceAttempt);
+  }
+
+  async produceProvisionProfile(appleCreds, credsMetadata, teamId, credsStarter) {
     const produceProvisionProfileAttempt = await authFuncs.produceProvisionProfile(
       appleCreds,
       credsMetadata,
@@ -266,12 +269,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         this._copyOverAsString(credsStarter, producePushCertsAttempt);
         break;
       case 'provisioningProfile':
-        await this._ensureAppProduceProvisionProfile(
-          appleCreds,
-          credsMetadata,
-          teamId,
-          credsStarter
-        );
+        await this.produceProvisionProfile(appleCreds, credsMetadata, teamId, credsStarter);
         break;
       default:
         throw new Error(`Unknown manage resource choice requested: ${choice}`);
@@ -286,6 +284,12 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     const expoManages = { ...(await inquirer.prompt(whatToOverride)), provisioningProfile: true };
     credsStarter.teamId = checkCredsAttempt.teamId;
     const spinner = ora('Running local authentication and producing required credentials').start();
+    await this._ensureAppExists(
+      appleCredentials,
+      credsMetadata,
+      checkCredsAttempt.teamId,
+      credsStarter
+    );
     try {
       for (const choice of Object.keys(expoManages)) {
         spinner.text = `Now producing files for ${choice}`;
@@ -337,6 +341,9 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         await this.runningAsExpoManaged(credsStarter, credsMetadata);
       } else {
         await this.runningAsExpert(credsStarter);
+        if (DEBUG) {
+          console.log(credsStarter);
+        }
       }
       const { result, ...creds } = credsStarter;
       await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
