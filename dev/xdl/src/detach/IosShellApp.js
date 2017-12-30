@@ -58,7 +58,7 @@ async function _buildAsync(
     throw new Error(`Unsupported build type: ${type}`);
   }
 
-  console.log(`Building shell app under ${buildDest}:\n`);
+  console.log(`Building iOS workspace at ${workspacePath} to ${buildDest}:\n`);
   console.log(buildCmd);
   if (!verbose) {
     console.log(
@@ -71,7 +71,7 @@ async function _buildAsync(
     cwd: workspacePath,
     shell: true,
   });
-  return pathToArtifact;
+  return path.resolve(workspacePath, pathToArtifact);
 }
 
 async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
@@ -213,6 +213,7 @@ async function _moveConfiguredArchiveAsync(projectName, archivePath, destination
 *  @param privateConfigFile path to a private config file containing, e.g., private api keys
 *  @param verbose show all xcodebuild output (default false)
 *  @param output specify the output path of built project (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
+*  @param reuseWorkspace if true, when building, assume a detached workspace already exists rather than creating a new one.
 *  @param skipRepoUpdate if true, when building, omit `--repo-update` cocoapods flag.
 */
 async function createIOSShellAppAsync(args) {
@@ -228,10 +229,12 @@ async function createIOSShellAppAsync(args) {
   const { projectName } = IosWorkspace.getPaths(context);
 
   if (args.action === 'build') {
-    const { configuration, verbose, type } = args;
-    await IosWorkspace.createDetachedAsync(context);
-    await _writePrivateConfigForBuildAsync(args, context.build.ios.workspaceSourcePath);
-    await _podInstallAsync(context.build.ios.workspaceSourcePath, !args.skipRepoUpdate);
+    const { configuration, verbose, type, reuseWorkspace } = args;
+    if (!reuseWorkspace) {
+      await IosWorkspace.createDetachedAsync(context);
+      await _writePrivateConfigForBuildAsync(args, context.build.ios.workspaceSourcePath);
+      await _podInstallAsync(context.build.ios.workspaceSourcePath, !args.skipRepoUpdate);
+    }
     const pathToArtifact = await _buildAsync(
       projectName,
       context.build.ios.workspaceSourcePath,
