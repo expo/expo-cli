@@ -155,6 +155,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         if (DEBUG) {
           console.log(await authFuncs.doFastlaneActionsExist());
         }
+        await authFuncs.prepareLocalAuth();
         await this.runLocalAuth(credentialMetadata);
       } catch (e) {
         log.error(`Error while gathering & validating credentials`);

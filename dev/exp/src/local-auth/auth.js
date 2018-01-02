@@ -14,6 +14,7 @@ const FASTLANE =
     : require('@expo/traveling-fastlane-linux')();
 
 const WSL_BASH = 'C:\\Windows\\system32\\bash.exe';
+
 const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
 
 export const NO_BUNDLE_ID = 'App could not be found for bundle id';
@@ -21,6 +22,11 @@ export const NO_BUNDLE_ID = 'App could not be found for bundle id';
 export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
 
 const DEBUG = process.env.EXPO_DEBUG;
+
+const ENABLE_WSL = `
+Does not seem like WSL enabled on this machine. In an admin powershell, please run:
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+`;
 
 export const doesFileProvidedExist = async (printOut, p12Path) => {
   try {
@@ -137,15 +143,24 @@ export async function cleanUp() {
   }
 }
 
-async function spawnAndCollectJSONOutputAsync(program, args) {
-  if (process.platform === 'win32' && fastlaneScratchPad === null) {
+export async function prepareLocalAuth() {
+  if (process.platform === 'win32') {
+    try {
+      await fs.access(WSL_BASH, fs.constants.F_OK);
+    } catch (e) {
+      log.warn(ENABLE_WSL);
+      throw e;
+    }
+
     const tmpDir = await spawnAsync(WSL_BASH, ['-c', 'mktemp -d']);
     const tmp = tmpDir.stdout.trim();
     const cmd = `cp -R '/mnt/c${windowsToWSLPath(FASTLANE.ruby_dir)}' ${tmp}/fastlane`;
     await spawnAsync(WSL_BASH, ['-c', cmd]);
     fastlaneScratchPad = `${tmp}/fastlane`;
   }
+}
 
+async function spawnAndCollectJSONOutputAsync(program, args) {
   return new Promise((resolve, reject) => {
     const jsonContent = [];
     const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
