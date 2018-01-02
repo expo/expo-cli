@@ -134,6 +134,7 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
     const { projectName, supportingDirectory } = IosWorkspace.getPaths(context);
     const manifest = context.data.manifest;
     const entitlementsFilename = `${projectName}.entitlements`;
+    const appleTeamId = context.build.ios.appleTeamId;
     if (!fs.existsSync(path.join(supportingDirectory, entitlementsFilename))) {
       await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
     }
@@ -143,13 +144,34 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
         context.build.configuration === 'Release' ? 'production' : 'development';
 
       // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-      if (!(manifest.ios && manifest.ios.usesIcloudStorage)) {
-        let iCloudKeys = [
-          'com.apple.developer.icloud-container-identifiers',
-          'com.apple.developer.icloud-services',
-          'com.apple.developer.ubiquity-container-identifiers',
-          'com.apple.developer.ubiquity-kvstore-identifier',
-        ];
+      let iCloudKeys = [
+        'com.apple.developer.icloud-container-identifiers',
+        'com.apple.developer.icloud-services',
+        'com.apple.developer.ubiquity-container-identifiers',
+        'com.apple.developer.ubiquity-kvstore-identifier',
+      ];
+      if (manifest.ios && manifest.ios.usesIcloudStorage && appleTeamId) {
+        iCloudKeys.forEach(key => {
+          if (entitlements.hasOwnProperty(key)) {
+            switch (key) {
+            case 'com.apple.developer.icloud-container-identifiers':
+              entitlements[key] = ['iCloud.' + manifest.ios.bundleIdentifier];
+              break;
+            case 'com.apple.developer.ubiquity-container-identifiers':
+              entitlements[key] = ['iCloud.' + manifest.ios.bundleIdentifier];
+              break;
+            case 'com.apple.developer.ubiquity-kvstore-identifier':
+              entitlements[key] = appleTeamId + '.' + manifest.ios.bundleIdentifier;
+              break;
+            case 'com.apple.developer.icloud-services':
+              entitlements[key] = ['CloudDocuments'];
+              break;
+            default:
+              break;
+            }
+          }
+        });
+      } else {
         iCloudKeys.forEach(key => {
           if (entitlements.hasOwnProperty(key)) {
             delete entitlements[key];

@@ -150,7 +150,10 @@ async function _createStandaloneContextAsync(args, workspaceSourcePath) {
     });
   }
 
-  const buildFlags = StandaloneBuildFlags.createIos(args.configuration, { workspaceSourcePath });
+  const buildFlags = StandaloneBuildFlags.createIos(args.configuration, {
+    workspaceSourcePath,
+    appleTeamId: args.appleTeamId,
+  });
   const context = StandaloneContext.createServiceContext(
     expoSourcePath,
     args.archivePath,
@@ -199,6 +202,7 @@ async function _moveConfiguredArchiveAsync(projectName, archivePath, destination
 *  @param output specify the output path of built project (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
 *  @param reuseWorkspace if true, when building, assume a detached workspace already exists rather than creating a new one.
 *  @param skipRepoUpdate if true, when building, omit `--repo-update` cocoapods flag.
+*  @param appleTeamId Apple Developer's account Team ID
 */
 async function createIOSShellAppAsync(args) {
   args = _validateCLIArgs(args);

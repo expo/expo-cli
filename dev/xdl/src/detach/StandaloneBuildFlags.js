@@ -15,6 +15,7 @@ type StandaloneBuildAndroidFlags = {
 };
 type StandaloneBuildIosFlags = {
   workspaceSourcePath: string,
+  appleTeamId: ?string,
 };
 
 class StandaloneBuildFlags {
