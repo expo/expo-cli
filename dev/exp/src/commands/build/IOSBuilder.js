@@ -163,8 +163,6 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           log.error(JSON.stringify(e));
         }
         throw e;
-      } finally {
-        await authFuncs.cleanUp();
       }
     }
     // Publish the experience

@@ -135,66 +135,58 @@ const windowsToWSLPath = p => {
   return noSlashes.slice(2, noSlashes.length);
 };
 
-let fastlaneScratchPad = null;
+const WSL_TIMEOUT = 60 * 1000 * 2;
 
-export async function cleanUp() {
-  if (process.platform === 'win32' && fastlaneScratchPad !== null) {
-    await spawnAsync(WSL_BASH, ['-c', `rm -rf ${fastlaneScratchPad}`]);
-  }
-}
+const WSL_TIMEOUT_MESSAGE = `Took too long to execute WSL based command, check your installation of WSL`;
+
+const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
 
 export async function prepareLocalAuth() {
   if (process.platform === 'win32') {
-    // try {
-    //   await fs.access(WSL_BASH, fs.constants.F_OK);
-    // } catch (e) {
-    //   log.warn(ENABLE_WSL);
-    //   throw e;
-    // }
-    let tmpDir = null;
     try {
-      tmpDir = await spawnAsync(WSL_BASH, ['-c', 'mktemp -d']);
-      // Possible that bash.exe exists but still no WSL implementation is available
+      await fs.access(WSL_BASH, fs.constants.F_OK);
     } catch (e) {
-      const { stdout } = e;
-      throw new Error(`Issue running WSL, please fix as appropriate: ${stdout.replace(/\0/g, '')}`);
+      log.warn(ENABLE_WSL);
+      throw e;
     }
-    const tmp = tmpDir.stdout.trim();
-    const cmd = `cp -R '/mnt/c${windowsToWSLPath(FASTLANE.ruby_dir)}' ${tmp}/fastlane`;
-    await spawnAsync(WSL_BASH, ['-c', cmd]);
-    fastlaneScratchPad = `${tmp}/fastlane`;
   }
 }
 
 async function spawnAndCollectJSONOutputAsync(program, args) {
-  return new Promise((resolve, reject) => {
-    const jsonContent = [];
-    const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
-    try {
-      if (process.platform === 'win32') {
-        const script = basename(program);
-        const cmd = ['-c', `${WSL_ONLY_PATH} ${fastlaneScratchPad}/${script} ${args.join(' ')}`];
-        var child = child_process.spawn(WSL_BASH, cmd, opts);
-      } else {
-        var child = child_process.spawn(program, args, opts);
-      }
-    } catch (e) {
-      return reject(e);
-    }
-    child.stdout.on('data', d => console.log(d.toString()));
-    // This is where we get our replies back from the ruby code
-    child.stderr.on('data', d => jsonContent.push(d));
-    child.stdout.on('end', () => {
-      const reply = Buffer.concat(jsonContent).toString();
+  return Promise.race([
+    new Promise((resolve, reject) => {
+      setTimeout(() => reject(new Error(WSL_TIMEOUT_MESSAGE)), WSL_TIMEOUT);
+    }),
+    new Promise((resolve, reject) => {
+      const jsonContent = [];
       try {
-        resolve(JSON.parse(reply));
+        if (process.platform === 'win32') {
+          const cmd = [
+            '-c',
+            `${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} ${args.join(' ')}`,
+          ];
+          var child = child_process.spawn(WSL_BASH, cmd, opts);
+        } else {
+          var child = child_process.spawn(program, args, opts);
+        }
       } catch (e) {
-        reject({
-          result: 'failure',
-          reason: 'Could not understand JSON reply from Ruby local auth scripts',
-          rawDump: reply,
-        });
+        return reject(e);
       }
-    });
-  });
+      child.stdout.on('data', d => console.log(d.toString()));
+      // This is where we get our replies back from the ruby code
+      child.stderr.on('data', d => jsonContent.push(d));
+      child.stdout.on('end', () => {
+        const reply = Buffer.concat(jsonContent).toString();
+        try {
+          resolve(JSON.parse(reply));
+        } catch (e) {
+          reject({
+            result: 'failure',
+            reason: 'Could not understand JSON reply from Ruby local auth scripts',
+            rawDump: reply,
+          });
+        }
+      });
+    }),
+  ]);
 }
