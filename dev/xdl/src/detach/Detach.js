@@ -9,6 +9,7 @@
 
 import mkdirp from 'mkdirp';
 import fs from 'fs-extra';
+import JsonFile from '@expo/json-file';
 import path from 'path';
 import rimraf from 'rimraf';
 import glob from 'glob-promise';
@@ -305,6 +306,11 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
   const { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
   const expoKitVersion = await _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory);
 
+  // use prod api keys if available
+  const prodApiKeys = await _readDefaultApiKeysAsync(
+    path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
+  );
+
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project
     const contextType = constantsConfig.STANDALONE_CONTEXT_TYPE;
@@ -314,9 +320,27 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
       );
     }
     constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
+    if (prodApiKeys) {
+      constantsConfig.DEFAULT_API_KEYS = prodApiKeys;
+    }
     return constantsConfig;
   });
   return;
+}
+
+async function _readDefaultApiKeysAsync(jsonFilePath: string) {
+  if (fs.existsSync(jsonFilePath)) {
+    let keys = {};
+    const allKeys = await new JsonFile(jsonFilePath).readAsync();
+    const validKeys = ['AMPLITUDE_KEY', 'GOOGLE_MAPS_IOS_API_KEY'];
+    for (const key in allKeys) {
+      if (allKeys.hasOwnProperty(key) && validKeys.includes(key)) {
+        keys[key] = allKeys[key];
+      }
+    }
+    return keys;
+  }
+  return null;
 }
 
 async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, args: any) {
@@ -347,10 +371,18 @@ async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, 
     // populate development url
     let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
 
+    // populate default api keys
+    const defaultApiKeys = await _readDefaultApiKeysAsync(
+      path.join(podsDirectory, 'ExpoKit', 'template-files', 'keys.json')
+    );
+
     await ensureBuildConstantsExistsIOSAsync(supportingDirectory);
     await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
       constantsConfig.developmentUrl = devUrl;
       constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
+      if (defaultApiKeys) {
+        constantsConfig.DEFAULT_API_KEYS = defaultApiKeys;
+      }
       return constantsConfig;
     });
   }
