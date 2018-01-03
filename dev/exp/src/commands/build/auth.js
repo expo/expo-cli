@@ -6,7 +6,7 @@ import { basename } from 'path';
 import inquirer from 'inquirer';
 import fs from 'fs-extra';
 
-import log from '../log';
+import log from '../../log';
 
 const FASTLANE =
   process.platform === 'darwin'

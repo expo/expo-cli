@@ -14,7 +14,7 @@ import type { IOSCredentials, CredentialMetadata } from 'xdl/src/Credentials';
 import BaseBuilder from './BaseBuilder';
 import log from '../../log';
 
-import * as authFuncs from '../../local-auth/auth';
+import * as authFuncs from './auth';
 
 const nonEmptyInput = val => val !== '';
 

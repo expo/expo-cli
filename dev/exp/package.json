@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "47.3.9",
+  "version": "47.3.10",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
