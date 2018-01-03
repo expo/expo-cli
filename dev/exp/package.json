@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "47.3.12",
+  "version": "47.3.13",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "start": "yarn run build && yarn run watch",
-    "build": "gulp clean && gulp babel",
+    "build": "gulp clean && gulp babel && gulp build",
     "watch": "gulp watch",
     "prepare": "yarn build",
     "pkg": "pkg ."
