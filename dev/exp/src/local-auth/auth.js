@@ -151,8 +151,14 @@ export async function prepareLocalAuth() {
       log.warn(ENABLE_WSL);
       throw e;
     }
-
-    const tmpDir = await spawnAsync(WSL_BASH, ['-c', 'mktemp -d']);
+    let tmpDir = null;
+    try {
+      tmpDir = await spawnAsync(WSL_BASH, ['-c', 'mktemp -d']);
+      // Possible that bash.exe exists but still no WSL implementation is available
+    } catch (e) {
+      const { stdout } = e;
+      throw new Error(`Issue running WSL, please fix as appropriate: ${stdout.replace(/\0/g, '')}`);
+    }
     const tmp = tmpDir.stdout.trim();
     const cmd = `cp -R '/mnt/c${windowsToWSLPath(FASTLANE.ruby_dir)}' ${tmp}/fastlane`;
     await spawnAsync(WSL_BASH, ['-c', cmd]);
