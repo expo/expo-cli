@@ -145,12 +145,12 @@ export async function cleanUp() {
 
 export async function prepareLocalAuth() {
   if (process.platform === 'win32') {
-    try {
-      await fs.access(WSL_BASH, fs.constants.F_OK);
-    } catch (e) {
-      log.warn(ENABLE_WSL);
-      throw e;
-    }
+    // try {
+    //   await fs.access(WSL_BASH, fs.constants.F_OK);
+    // } catch (e) {
+    //   log.warn(ENABLE_WSL);
+    //   throw e;
+    // }
     let tmpDir = null;
     try {
       tmpDir = await spawnAsync(WSL_BASH, ['-c', 'mktemp -d']);
