@@ -18,8 +18,6 @@ import * as authFuncs from './auth';
 
 const nonEmptyInput = val => val !== '';
 
-const DEBUG = process.env.EXPO_DEBUG;
-
 const expertPrompt = `
 WARNING! In expert auth mode, we won't be able to make sure your certificates,
 provisioning profile, app ID, or team ID are valid. Please double check that you're
@@ -152,14 +150,14 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
     if (this.options.type !== 'simulator') {
       try {
-        if (DEBUG) {
+        if (authFuncs.DEBUG) {
           console.log(await authFuncs.doFastlaneActionsExist());
         }
         await authFuncs.prepareLocalAuth();
         await this.runLocalAuth(credentialMetadata);
       } catch (e) {
         log.error(`Error while gathering & validating credentials`);
-        if (DEBUG) {
+        if (authFuncs.DEBUG) {
           log.error(JSON.stringify(e));
         }
         throw e;
@@ -348,7 +346,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         await this.runningAsExpoManaged(credsStarter, credsMetadata);
       } else {
         await this.runningAsExpert(credsStarter);
-        if (DEBUG) {
+        if (authFuncs.DEBUG) {
           console.log(credsStarter);
         }
       }
@@ -360,7 +358,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   }
 
   _throwIfFailureWithReasonDump(replyAttempt) {
-    if (DEBUG) {
+    if (authFuncs.DEBUG) {
       console.log(replyAttempt);
     }
     if (replyAttempt.result === 'failure') {

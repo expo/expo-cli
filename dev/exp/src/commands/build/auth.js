@@ -21,7 +21,7 @@ export const NO_BUNDLE_ID = 'App could not be found for bundle id';
 
 export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
 
-const DEBUG = process.env.EXPO_DEBUG;
+export const DEBUG = process.env.EXPO_DEBUG && process.env.EXPO_DEBUG === 'true';
 
 const ENABLE_WSL = `
 Does not seem like WSL enabled on this machine. In an admin powershell, please run:
