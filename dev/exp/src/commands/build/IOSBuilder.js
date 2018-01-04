@@ -158,7 +158,12 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       } catch (e) {
         log.error(`Error while gathering & validating credentials`);
         if (authFuncs.DEBUG) {
-          log.error(JSON.stringify(e));
+          if (e.stdout !== undefined) {
+            // sometimes WSL adds null characters
+            log.error(e.stdout.replace(/\0/g, ''));
+          } else {
+            log.error(JSON.stringify(e));
+          }
         }
         throw e;
       }
