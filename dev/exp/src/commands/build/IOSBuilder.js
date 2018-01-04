@@ -286,20 +286,24 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
-  async runningAsExpoManaged(credsStarter, credsMetadata) {
+  async _validateCredsEnsureAppExists(credsStarter, credsMetadata) {
     const appleCredentials = await this.askForAppleCreds();
     log('Validating Credentials...');
     const checkCredsAttempt = await authFuncs.validateCredentialsProduceTeamId(appleCredentials);
     this._throwIfFailureWithReasonDump(checkCredsAttempt);
-    const expoManages = { ...(await inquirer.prompt(whatToOverride)), provisioningProfile: true };
     credsStarter.teamId = checkCredsAttempt.teamId;
-    const spinner = ora('Running local authentication and producing required credentials').start();
     await this._ensureAppExists(
       appleCredentials,
       credsMetadata,
       checkCredsAttempt.teamId,
       credsStarter
     );
+    return appleCredentials;
+  }
+
+  async runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata) {
+    const expoManages = { ...(await inquirer.prompt(whatToOverride)), provisioningProfile: true };
+    const spinner = ora('Running local authentication and producing required credentials').start();
     try {
       for (const choice of Object.keys(expoManages)) {
         spinner.text = `Now producing files for ${choice}`;
@@ -309,7 +313,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
             credsStarter,
             choice,
             appleCredentials,
-            checkCredsAttempt.teamId,
+            credsStarter.teamId,
             credsMetadata
           );
         } else {
@@ -345,10 +349,14 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       log.warn(`We do not have some credentials for you, ${credsMissing}`);
     }
     if (clientHasAllNeededCreds === false) {
-      const strategy = await inquirer.prompt(runAsExpertQuestion);
       // We just keep mutating the creds object.
+      const strategy = await inquirer.prompt(runAsExpertQuestion);
+      const appleCredentials = await this._validateCredsEnsureAppExists(
+        credsStarter,
+        credsMetadata
+      );
       if (strategy.isExpoManaged) {
-        await this.runningAsExpoManaged(credsStarter, credsMetadata);
+        await this.runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata);
       } else {
         await this.runningAsExpert(credsStarter);
         if (authFuncs.DEBUG) {
