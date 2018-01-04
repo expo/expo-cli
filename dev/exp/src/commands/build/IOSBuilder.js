@@ -146,7 +146,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     // Clear credentials if they want to:
     if (this.options.clearCredentials) {
       await Credentials.removeCredentialsForPlatform('ios', credentialMetadata);
-      log(chalk.red('Removed existing credentials'));
+      log.warn('Removed existing credentials');
     }
     if (this.options.type !== 'simulator') {
       try {
