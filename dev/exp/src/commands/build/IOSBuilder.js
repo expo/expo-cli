@@ -19,8 +19,8 @@ import * as authFuncs from './auth';
 const nonEmptyInput = val => val !== '';
 
 const expertPrompt = `
-WARNING! In expert auth mode, we won't be able to make sure your certificates,
-provisioning profile, app ID, or team ID are valid. Please double check that you're
+WARNING! In this mode, we won't be able to make sure your certificates,
+or provisioning profile are valid. Please double check that you're
 uploading valid files for your app otherwise you may encounter strange errors!
 
 Make sure you've created your app ID on the developer portal, that your app ID
@@ -43,7 +43,7 @@ const runAsExpertQuestion = {
   choices: [
     { name: 'Expo handles all credentials, you can still provide overrides', value: true },
     {
-      name: 'I will provide all the credentials and files needed, Expo does no validation',
+      name: 'I will provide all the credentials and files needed, Expo does limited validation',
       value: false,
     },
   ],
@@ -286,8 +286,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
-  async _validateCredsEnsureAppExists(credsStarter, credsMetadata) {
-    const appleCredentials = await this.askForAppleCreds();
+  async _validateCredsEnsureAppExists(credsStarter, credsMetadata, justTeamId) {
+    const appleCredentials = await this.askForAppleCreds(justTeamId);
     log('Validating Credentials...');
     const checkCredsAttempt = await authFuncs.validateCredentialsProduceTeamId(appleCredentials);
     this._throwIfFailureWithReasonDump(checkCredsAttempt);
@@ -353,7 +353,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       const strategy = await inquirer.prompt(runAsExpertQuestion);
       const appleCredentials = await this._validateCredsEnsureAppExists(
         credsStarter,
-        credsMetadata
+        credsMetadata,
+        !strategy.isExpoManaged
       );
       if (strategy.isExpoManaged) {
         await this.runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata);
@@ -380,13 +381,21 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
-  async askForAppleCreds(): Promise<IOSCredentials> {
-    console.log(`
+  async askForAppleCreds(justTeamId = false): Promise<IOSCredentials> {
+    if (justTeamId === false) {
+      console.log(`
 We need your Apple ID/password to manage certificates and
 provisioning profiles from your Apple Developer account.
 
 Note: Expo does not keep your Apple ID or your Apple password.
 `);
+    } else {
+      console.log(`
+We need your Apple ID/password to ensure the correct teamID and appID
+
+Note: Expo does not keep your Apple ID or your Apple password.
+`);
+    }
     return inquirer.prompt(appleCredsQuestions);
   }
 }
