@@ -1,6 +1,6 @@
 {
   "name": "@expo/traveling-fastlane-linux",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Bundled up fastlane",
   "main": "index.js",
   "os": [
@@ -16,8 +16,5 @@
     "ruby"
   ],
   "author": "Edgar Aroutiounian",
-  "license": "MIT",
-  "dependencies": {
-    "chalk": "^2.3.0"
-  }
+  "license": "MIT"
 }
