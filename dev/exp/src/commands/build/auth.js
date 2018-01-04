@@ -28,6 +28,13 @@ Does not seem like WSL enabled on this machine. In an admin powershell, please r
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
 `;
 
+const FASTLANE_DIR_NOT_WRITABLE = `
+authentication might fail:
+
+Your node_modules permissions are incorrect and not writable by current user;
+consider using npm without sudo or try using an exp installed by yarn global.
+`;
+
 export const doesFileProvidedExist = async (printOut, p12Path) => {
   try {
     const stats = await fs.stat(p12Path);
@@ -143,10 +150,19 @@ const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
 
 export async function prepareLocalAuth() {
   if (process.platform === 'win32') {
+    // Does bash.exe exist?
     try {
       await fs.access(WSL_BASH, fs.constants.F_OK);
     } catch (e) {
       log.warn(ENABLE_WSL);
+      throw e;
+    }
+    // Are permissions in our fastlane dir correct? Can we write,
+    // needed cause bundler does a write in its own dir
+    try {
+      await fs.access(FASTLANE.ruby_dir, fs.constants.W_OK);
+    } catch (e) {
+      log.warn(FASTLANE_DIR_NOT_WRITABLE);
       throw e;
     }
   }
