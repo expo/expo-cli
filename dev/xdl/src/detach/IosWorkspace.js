@@ -173,7 +173,7 @@ async function _renderPodfileFromTemplateAsync(
 ) {
   const { iosProjectDirectory, projectName } = getPaths(context);
   let podfileTemplateFilename;
-  let podfileSubstitutions = {
+  let podfileSubstitutions: any = {
     TARGET_NAME: projectName,
   };
   let reactNativeDependencyPath;

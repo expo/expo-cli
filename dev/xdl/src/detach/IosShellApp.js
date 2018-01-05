@@ -12,6 +12,55 @@ import * as IosWorkspace from './IosWorkspace';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 
+function _validateCLIArgs(args) {
+  args.type = args.type || 'archive';
+  args.configuration = args.configuration || 'Release';
+  args.verbose = args.verbose || false;
+
+  switch (args.type) {
+    case 'simulator': {
+      if (args.configuration !== 'Debug' && args.configuration !== 'Release') {
+        throw new Error(`Unsupported build configuration ${args.configuration}`);
+      }
+      break;
+    }
+    case 'archive': {
+      if (args.configuration !== 'Release') {
+        throw new Error('Release is the only supported configuration when archiving');
+      }
+      break;
+    }
+    default: {
+      throw new Error(`Unsupported build type ${args.type}`);
+    }
+  }
+
+  switch (args.action) {
+    case 'configure': {
+      if (!args.url) {
+        throw new Error('Must run with `--url MANIFEST_URL`');
+      }
+      if (!args.sdkVersion) {
+        throw new Error('Must run with `--sdkVersion SDK_VERSION`');
+      }
+      if (!args.archivePath) {
+        throw new Error(
+          'Need to provide --archivePath <path to existing archive for configuration>'
+        );
+      }
+      break;
+    }
+    case 'build': {
+      break;
+    }
+    default: {
+      throw new Error(`Unsupported build action ${args.action}`);
+    }
+  }
+
+  return args;
+}
+
 /**
  *  Build the iOS workspace at the given path.
  *  @return the path to the resulting build artifact
@@ -78,60 +127,19 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
     stdio: 'inherit',
     cwd: workspacePath,
   });
-  return;
 }
 
-function _validateCLIArgs(args) {
-  args.type = args.type || 'archive';
-  args.configuration = args.configuration || 'Release';
-  args.verbose = args.verbose || false;
-
-  switch (args.type) {
-    case 'simulator': {
-      if (args.configuration !== 'Debug' && args.configuration !== 'Release') {
-        throw new Error(`Unsupported build configuration ${args.configuration}`);
-      }
-      break;
-    }
-    case 'archive': {
-      if (args.configuration !== 'Release') {
-        throw new Error('Release is the only supported configuration when archiving');
-      }
-      break;
-    }
-    default: {
-      throw new Error(`Unsupported build type ${args.type}`);
-    }
-  }
-
-  switch (args.action) {
-    case 'configure': {
-      if (!args.url) {
-        throw new Error('Must run with `--url MANIFEST_URL`');
-      }
-      if (!args.sdkVersion) {
-        throw new Error('Must run with `--sdkVersion SDK_VERSION`');
-      }
-      if (!args.archivePath) {
-        throw new Error(
-          'Need to provide --archivePath <path to existing archive for configuration>'
-        );
-      }
-      break;
-    }
-    case 'build': {
-      break;
-    }
-    default: {
-      throw new Error(`Unsupported build action ${args.action}`);
-    }
-  }
-
-  return args;
-}
-
-async function _createStandaloneContextAsync(args, workspaceSourcePath) {
+async function _createStandaloneContextAsync(args) {
+  // right now we only ever build a single detached workspace for service contexts.
+  // TODO: support multiple different pod configurations, assemble a cache of those builds.
   const expoSourcePath = '../ios';
+  const workspaceSourcePath = path.join(
+    expoSourcePath,
+    '..',
+    'shellAppWorkspaces',
+    'ios',
+    'default'
+  );
   let { privateConfigFile } = args;
 
   let privateConfig;
@@ -166,83 +174,100 @@ async function _createStandaloneContextAsync(args, workspaceSourcePath) {
   return context;
 }
 
-async function _moveConfiguredArchiveAsync(projectName, archivePath, destination, type, manifest) {
-  const archiveName = manifest.name.replace(/[^0-9a-z_\-\.]/gi, '_');
-  const appReleasePath = path.resolve(path.join(`${archivePath}`, '..'));
-  if (type === 'simulator') {
-    await spawnAsync(
-      `mv ${projectName}.app ${archiveName}.app && tar -czvf ${destination} ${archiveName}.app`,
-      null,
-      {
+/**
+ * possible args:
+ *  @param url manifest url for shell experience
+ *  @param sdkVersion sdk to use when requesting the manifest
+ *  @param releaseChannel channel to pull manifests from, default is 'default'
+ *  @param archivePath path to existing NSBundle to configure
+ *  @param privateConfigFile path to a private config file containing, e.g., private api keys
+ *  @param appleTeamId Apple Developer's account Team ID
+ *  @param output specify the output path of the configured archive (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
+*/
+async function _configureAndCopyShellAppArchiveAsync(args) {
+  const { output, type } = args;
+  const context = await _createStandaloneContextAsync(args);
+  const { projectName } = IosWorkspace.getPaths(context);
+
+  await IosNSBundle.configureAsync(context);
+  if (output) {
+    const archiveName = context.manifest.name.replace(/[^0-9a-z_\-\.]/gi, '_');
+    const appReleasePath = path.resolve(path.join(`${context.data.archivePath}`, '..'));
+    if (type === 'simulator') {
+      await spawnAsync(
+        `mv ${projectName}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+        null,
+        {
+          stdio: 'inherit',
+          cwd: appReleasePath,
+          shell: true,
+        }
+      );
+    } else if (type === 'archive') {
+      await spawnAsync('/bin/mv', [`${projectName}.xcarchive`, output], {
         stdio: 'inherit',
-        cwd: appReleasePath,
-        shell: true,
-      }
-    );
-  } else if (type === 'archive') {
-    await spawnAsync('/bin/mv', [`${projectName}.xcarchive`, destination], {
-      stdio: 'inherit',
-      cwd: `${archivePath}/../../../..`,
-    });
+        cwd: `${context.data.archivePath}/../../../..`,
+      });
+    }
   }
 }
 
-/**
-*  @param url manifest url for shell experience
-*  @param sdkVersion sdk to use when requesting the manifest
-*  @param action
-*    build - build a binary
-*    configure - don't build anything, just configure the files in an existing .app bundle
-*  @param type simulator or archive
-*  @param releaseChannel channel to pull manifests from, default is 'default'
-*  @param configuration Debug or Release, for type == simulator (default Release)
-*  @param archivePath path to existing bundle, for action == configure
-*  @param privateConfigFile path to a private config file containing, e.g., private api keys
-*  @param verbose show all xcodebuild output (default false)
-*  @param output specify the output path of built project (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
-*  @param reuseWorkspace if true, when building, assume a detached workspace already exists rather than creating a new one.
-*  @param skipRepoUpdate if true, when building, omit `--repo-update` cocoapods flag.
-*  @param appleTeamId Apple Developer's account Team ID
-*/
-async function createIOSShellAppAsync(args) {
-  args = _validateCLIArgs(args);
+async function _createShellAppWorkspaceAsync(context, skipRepoUpdate) {
+  if (fs.existsSync(context.build.ios.workspaceSourcePath)) {
+    console.log(`Removing existing workspace at ${context.build.ios.workspaceSourcePath}...`);
+    try {
+      rimraf.sync(context.build.ios.workspaceSourcePath);
+    } catch (_) {}
+  }
+  await IosWorkspace.createDetachedAsync(context);
+  await _podInstallAsync(context.build.ios.workspaceSourcePath, !skipRepoUpdate);
+}
 
-  // right now we only ever build a single detached workspace for service contexts.
-  // TODO: support multiple different pod configurations, assemble a cache of those builds.
-  const expoSourcePath = '../ios';
-  const context = await _createStandaloneContextAsync(
-    args,
-    path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'ios', 'default')
-  );
+/**
+ * possible args:
+ *  @param configuration StandaloneBuildConfiguration (Debug or Release)
+ *  @param verbose show all xcodebuild output (default false)
+ *  @param reuseWorkspace if true, when building, assume a detached workspace already exists rather than creating a new one.
+ *  @param skipRepoUpdate if true, when building, omit `--repo-update` cocoapods flag.
+ */
+async function _buildAndCopyShellAppArtifactAsync(args) {
+  const context = await _createStandaloneContextAsync(args);
+  const { verbose, type, reuseWorkspace } = args;
   const { projectName } = IosWorkspace.getPaths(context);
 
+  if (!reuseWorkspace) {
+    await _createShellAppWorkspaceAsync(context, args.skipRepoUpdate);
+  }
+  const pathToArtifact = await _buildAsync(
+    projectName,
+    context.build.ios.workspaceSourcePath,
+    context.build.configuration,
+    type,
+    path.relative(context.build.ios.workspaceSourcePath, '../shellAppBase'),
+    verbose
+  );
+  const artifactDestPath = path.join('../shellAppBase-builds', type, context.build.configuration);
+  console.log(`\nFinished building, copying artifact to ${artifactDestPath}...`);
+  if (fs.existsSync(artifactDestPath)) {
+    await spawnAsyncThrowError('/bin/rm', ['-rf', artifactDestPath]);
+    await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactDestPath]);
+  }
+  await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
+}
+
+/**
+ *  possible args in addition to action-specific args:
+ *  @param action
+ *    build - build a binary
+ *    configure - don't build anything, just configure the files in an existing NSBundle
+ *  @param type type of artifact to build or configure (simulator or archive)
+ */
+async function createIOSShellAppAsync(args) {
+  args = _validateCLIArgs(args);
   if (args.action === 'build') {
-    const { configuration, verbose, type, reuseWorkspace } = args;
-    if (!reuseWorkspace) {
-      await IosWorkspace.createDetachedAsync(context);
-      await _podInstallAsync(context.build.ios.workspaceSourcePath, !args.skipRepoUpdate);
-    }
-    const pathToArtifact = await _buildAsync(
-      projectName,
-      context.build.ios.workspaceSourcePath,
-      configuration,
-      type,
-      path.relative(context.build.ios.workspaceSourcePath, '../shellAppBase'),
-      verbose
-    );
-    const artifactDestPath = path.join('../shellAppBase-builds', type, configuration);
-    console.log(`\nFinished building, copying artifact to ${artifactDestPath}...`);
-    if (fs.existsSync(artifactDestPath)) {
-      await spawnAsyncThrowError('/bin/rm', ['-rf', artifactDestPath]);
-      await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactDestPath]);
-    }
-    await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
+    await _buildAndCopyShellAppArtifactAsync(args);
   } else if (args.action === 'configure') {
-    const { archivePath, output, type } = args;
-    await IosNSBundle.configureAsync(context);
-    if (output) {
-      await _moveConfiguredArchiveAsync(projectName, archivePath, output, type, context.manifest);
-    }
+    await _configureAndCopyShellAppArchiveAsync(args);
   }
 }
 
