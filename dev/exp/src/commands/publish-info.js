@@ -8,6 +8,7 @@ import * as table from '../commands/utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
 const HORIZ_CELL_WIDTH_BIG = 40;
+const VERSION = 2;
 
 export default (program: any) => {
   program
@@ -31,6 +32,7 @@ export default (program: any) => {
       let formData = new FormData();
       formData.append('queryType', 'history');
       formData.append('slug', await Project.getSlugAsync(projectDir, options));
+      formData.append('version', VERSION);
       if (options.releaseChannel) {
         formData.append('releaseChannel', options.releaseChannel);
       }
@@ -51,17 +53,21 @@ export default (program: any) => {
         let generalTableString = table.printTableJson(
           {
             fullName: sampleItem.fullName,
-            ...(sampleItem.channel ? { channel: sampleItem.channel } : null),
           },
           'General Info'
         );
         console.log(generalTableString);
 
         // Print info specific to each publication
-        let headers = ['publicationId', 'appVersion', 'sdkVersion', 'publishedTime', 'platform'];
-        if (options.releaseChannel) {
-          headers.push('channelId');
-        }
+        let headers = [
+          'publishedTime',
+          'appVersion',
+          'sdkVersion',
+          'platform',
+          'channel',
+          'channelId',
+          'publicationId',
+        ];
 
         // colWidths contains the cell size of each header
         let colWidths = [];
