@@ -15,7 +15,10 @@ export default (program: any) => {
     .command('publish:history [project-dir]')
     .alias('ph')
     .description('View a log of your published releases.')
-    .option('-c, --release-channel <channel-name>', 'Filter by release channel')
+    .option(
+      '-c, --release-channel <channel-name>',
+      'Filter by release channel. If this flag is not included, the most recent publications will be shown.'
+    )
     .option(
       '-count, --count <number-of-logs>',
       'Number of logs to view, maximum 100, default 5.',
@@ -87,7 +90,7 @@ export default (program: any) => {
     .command('publish:details [project-dir]')
     .alias('pd')
     .description('View the details of a published release.')
-    .option('--publish-id <publish-id>', 'Publication id.')
+    .option('--publish-id <publish-id>', 'Publication id. (Required)')
     .allowNonInteractive()
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.publishId) {

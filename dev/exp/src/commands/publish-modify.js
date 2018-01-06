@@ -12,10 +12,13 @@ export default (program: any) => {
     .command('publish:set [project-dir]')
     .alias('ps')
     .description('Set a published release to be served from a specified channel.')
-    .option('-c, --release-channel <channel-name>', 'The channel to set the published release.')
+    .option(
+      '-c, --release-channel <channel-name>',
+      'The channel to set the published release. (Required)'
+    )
     .option(
       '-p, --publish-id <publish-id>',
-      'The id of the published release to serve from the channel.'
+      'The id of the published release to serve from the channel. (Required)'
     )
     .allowNonInteractive()
     .asyncActionProjectDir(async (projectDir, options) => {
@@ -47,7 +50,7 @@ export default (program: any) => {
     .command('publish:rollback [project-dir]')
     .alias('pr')
     .description('Rollback an update to a channel.')
-    .option('--channel-id <channel-id>', 'The channel id to rollback in the channel.')
+    .option('--channel-id <channel-id>', 'The channel id to rollback in the channel. (Required)')
     .allowNonInteractive()
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.channelId) {
