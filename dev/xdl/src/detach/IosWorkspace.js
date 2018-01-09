@@ -253,6 +253,7 @@ async function createDetachedAsync(context: StandaloneContext) {
 
   // copy template workspace
   console.log('Moving iOS project files...');
+  mkdirp.sync(iosProjectDirectory);
   await Utils.ncpAsync(
     path.join(expoRootTemplateDirectory, 'exponent-view-template', 'ios'),
     iosProjectDirectory
