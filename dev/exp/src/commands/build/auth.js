@@ -5,6 +5,7 @@ import spawnAsync from '@expo/spawn-async';
 import { basename } from 'path';
 import inquirer from 'inquirer';
 import fs from 'fs-extra';
+import { release } from 'os';
 
 import log from '../../log';
 
@@ -150,6 +151,10 @@ const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
 
 export async function prepareLocalAuth() {
   if (process.platform === 'win32') {
+    const [version] = release().match(/\d./);
+    if (version !== '10') {
+      log.error('Must be on Windows version 10 for WSL support to work');
+    }
     // Does bash.exe exist?
     try {
       await fs.access(WSL_BASH, fs.constants.F_OK);
