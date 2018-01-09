@@ -30,10 +30,11 @@ Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-L
 `;
 
 const FASTLANE_DIR_NOT_WRITABLE = `
-authentication might fail:
+NOTE: authentication might fail:
 
-Your node_modules permissions are incorrect and not writable by current user;
-consider using npm without sudo or try using an exp installed by yarn global.
+Your node_modules permissions are incorrect (consider fixing them)
+and not writable by current user; consider using npm without sudo,
+or try using an exp installed locally like in devDependencies.
 `;
 
 export const doesFileProvidedExist = async (printOut, p12Path) => {
@@ -160,18 +161,19 @@ export async function prepareLocalAuth() {
       await fs.access(WSL_BASH, fs.constants.F_OK);
     } catch (e) {
       log.warn(ENABLE_WSL);
-      throw e;
-    }
-    // Are permissions in our fastlane dir correct? Can we write,
-    // needed cause bundler does a write in its own dir
-    try {
-      await fs.access(FASTLANE.ruby_dir, fs.constants.W_OK);
-    } catch (e) {
-      log.warn(FASTLANE_DIR_NOT_WRITABLE);
-      throw e;
     }
   }
+  // Are permissions in our fastlane dir correct? Can we write,
+  // needed cause bundler does a write in its own dir
+  try {
+    await fs.access(FASTLANE.ruby_dir, fs.constants.W_OK);
+  } catch (e) {
+    log.warn(FASTLANE_DIR_NOT_WRITABLE);
+  }
 }
+
+const USER_PERMISSIONS_ERROR =
+  'You probably do not have user permissions for where exp is installed, consider changing permissions there';
 
 async function spawnAndCollectJSONOutputAsync(program, args) {
   return Promise.race([
@@ -203,7 +205,10 @@ async function spawnAndCollectJSONOutputAsync(program, args) {
         } catch (e) {
           reject({
             result: 'failure',
-            reason: 'Could not understand JSON reply from Ruby local auth scripts',
+            reason:
+              reply.match(/Bundler::InstallError/) === null
+                ? 'Could not understand JSON reply from Ruby based local auth scripts'
+                : USER_PERMISSIONS_ERROR,
             rawDump: reply,
           });
         }
