@@ -15,4 +15,6 @@ export FASTLANE_DISABLE_ANIMATION=1
 
 script="$SELFDIR/lib/app/validate_apple_certs.rb"
 
-exec "$SELFDIR/lib/ruby/bin/ruby" -W0 -I"$SELFDIR" -rpreload "$script" "$@"
+lib_loc="$SELFDIR/lib/app"
+
+exec "$SELFDIR/lib/ruby/bin/ruby" -W0 -I"$lib_loc" -rpreload "$script" "$@"
