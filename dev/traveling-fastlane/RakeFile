@@ -111,7 +111,7 @@ def create_package target
   sh "mkdir #{package_dir}/lib/ruby"
   sh "tar -xzf packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}.tar.gz -C #{package_dir}/lib/ruby"
   for script in SCRIPTS do
-    if script != 'funcs'
+    if script != 'funcs' && script != 'preload'
       sh "cp wrappers/#{script}_wrapper.sh #{package_dir}/#{script}"
     end
   end
