@@ -2,7 +2,7 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.2.3"
+VERSION = "1.2.4"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
@@ -16,7 +16,8 @@ SCRIPTS = [
   'validate_apple_credentials',
   'validate_apple_certs',
   'validate_apple_push_certs',
-  'funcs'
+  'funcs',
+  'preload'
 ]
 
 desc "Package your app"

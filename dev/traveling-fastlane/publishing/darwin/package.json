@@ -1,17 +1,13 @@
 {
   "name": "@expo/traveling-fastlane-darwin",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Bundled up fastlane",
   "main": "index.js",
-  "os" : [ "darwin" ],
+  "os": ["darwin"],
   "scripts": {
-    "preinstall":"node platform.js"
+    "preinstall": "node platform.js"
   },
-  "keywords": [
-    "fastlane",
-    "expo",
-    "ruby"
-  ],
+  "keywords": ["fastlane", "expo", "ruby"],
   "author": "Edgar Aroutiounian",
   "license": "MIT"
 }

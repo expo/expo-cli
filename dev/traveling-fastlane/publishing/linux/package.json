@@ -1,20 +1,13 @@
 {
   "name": "@expo/traveling-fastlane-linux",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Bundled up fastlane",
   "main": "index.js",
-  "os": [
-    "win32",
-    "linux"
-  ],
+  "os": ["win32", "linux"],
   "scripts": {
     "preinstall": "node platform.js"
   },
-  "keywords": [
-    "fastlane",
-    "expo",
-    "ruby"
-  ],
+  "keywords": ["fastlane", "expo", "ruby"],
   "author": "Edgar Aroutiounian",
   "license": "MIT"
 }

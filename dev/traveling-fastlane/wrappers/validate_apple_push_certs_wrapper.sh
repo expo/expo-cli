@@ -14,4 +14,4 @@ export FASTLANE_SKIP_UPDATE_CHECK=1
 
 script="$SELFDIR/lib/app/validate_apple_push_certs.rb"
 
-exec "$SELFDIR/lib/ruby/bin/ruby" -W0 -rbundler/setup $script "$@"
+exec "$SELFDIR/lib/ruby/bin/ruby" -W0 -I"$SELFDIR" -rpreload "$script" "$@"
