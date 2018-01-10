@@ -4,7 +4,10 @@
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
-  "files": ["build", "bin"],
+  "files": [
+    "build",
+    "bin"
+  ],
   "scripts": {
     "start": "yarn run build && yarn run watch",
     "build": "gulp clean && gulp babel && gulp build",
@@ -19,7 +22,10 @@
     "type": "git",
     "url": "git+https://github.com/expo/exp.git"
   },
-  "keywords": ["expo", "react-native"],
+  "keywords": [
+    "expo",
+    "react-native"
+  ],
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
@@ -33,7 +39,10 @@
     "scripts": "build/**/*.js"
   },
   "powertools": {
-    "group": ["dev-tools", "exp"]
+    "group": [
+      "dev-tools",
+      "exp"
+    ]
   },
   "devDependencies": {
     "babel-eslint": "^7.1.0",
