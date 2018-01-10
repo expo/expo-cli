@@ -328,26 +328,30 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
+  _areCredsMissing(creds, action) {
+    const clientHas = new Set(Object.keys(creds));
+    const credsMissing = [];
+    for (const k of OBLIGATORY_CREDS_KEYS.keys()) {
+      if (clientHas.has(k) === false) {
+        credsMissing.push(k);
+        action !== undefined && action();
+      }
+    }
+    if (credsMissing.length !== 0) {
+      log.warn(`We do not have some credentials for you, ${credsMissing}`);
+    }
+  }
+
   async runLocalAuth(credsMetadata) {
     let credsStarter = await Credentials.credentialsExistForPlatformAsync(credsMetadata);
-    const credsMissing = [];
     let clientHasAllNeededCreds = false;
     if (credsStarter !== undefined) {
       clientHasAllNeededCreds = true;
-      const clientHas = new Set(Object.keys(credsStarter));
-      for (const k of OBLIGATORY_CREDS_KEYS.keys()) {
-        if (clientHas.has(k) === false) {
-          clientHasAllNeededCreds = false;
-          credsMissing.push(k);
-        }
-      }
+      this._areCredsMissing(credsStarter, () => (clientHasAllNeededCreds = false));
     } else {
       credsStarter = {};
     }
 
-    if (credsMissing.length !== 0) {
-      log.warn(`We do not have some credentials for you, ${credsMissing}`);
-    }
     if (clientHasAllNeededCreds === false) {
       // We just keep mutating the creds object.
       const strategy = await inquirer.prompt(runAsExpertQuestion);
@@ -360,11 +364,12 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         await this.runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata);
       } else {
         await this.runningAsExpert(credsStarter);
-        if (authFuncs.DEBUG) {
-          console.log(credsStarter);
-        }
       }
       const { result, ...creds } = credsStarter;
+      if (authFuncs.DEBUG) {
+        console.log(credsStarter);
+      }
+      this._areCredsMissing(creds);
       await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
     } else {
       log('Using existing credentials for this build');

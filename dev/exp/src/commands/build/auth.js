@@ -136,9 +136,9 @@ const windowsToWSLPath = p => {
   return noSlashes.slice(2, noSlashes.length);
 };
 
-const WSL_TIMEOUT = 60 * 1000 * 2;
+const TIMEOUT = 60 * 1000 * 3;
 
-const WSL_TIMEOUT_MESSAGE = `Took too long to execute WSL based command, check your installation of WSL`;
+const timeout_msg = prgm => `Took too long (limit is ${TIMEOUT} minutes) to execute ${prgm}`;
 
 const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
 
@@ -164,7 +164,7 @@ const USER_PERMISSIONS_ERROR =
 async function spawnAndCollectJSONOutputAsync(program, args) {
   return Promise.race([
     new Promise((resolve, reject) => {
-      setTimeout(() => reject(new Error(WSL_TIMEOUT_MESSAGE)), WSL_TIMEOUT);
+      setTimeout(() => reject(new Error(timeout_msg(program))), TIMEOUT);
     }),
     new Promise((resolve, reject) => {
       const jsonContent = [];
