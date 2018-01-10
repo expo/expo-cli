@@ -29,24 +29,43 @@ export default (program: any) => {
         platform: 'ios',
       };
 
-      log(`Retreiving iOS certificates for ${experienceName}`);
+      log(`Retreiving iOS credentials for ${experienceName}`);
 
       try {
         const {
           certP12,
           certPassword,
+          certPrivateSigningKey,
           pushP12,
           pushPassword,
+          pushPrivateSigningKey,
+          provisioningProfile,
+          teamId,
         } = await Credentials.getCredentialsForPlatform(credentialMetadata);
-
+        // if undefines because some people might have pre-local-auth as default credentials.
+        if (teamId !== undefined) {
+          log(`These credentials are associated with Apple Team ID: ${teamId}`);
+        }
         log(`Writing distribution cert to ${distOutputFile}...`);
         fs.writeFileSync(distOutputFile, Buffer.from(certP12, 'base64'));
-        log('Done writing distribution cert to disk.');
-
+        if (certPrivateSigningKey !== undefined) {
+          let keyPath = path.resolve(projectDir, `${remotePackageName}_dist_cert_private.key`);
+          fs.writeFileSync(keyPath, certPrivateSigningKey);
+        }
+        log('Done writing distribution cert credentials to disk.');
         log(`Writing push cert to ${pushOutputFile}...`);
         fs.writeFileSync(pushOutputFile, Buffer.from(pushP12, 'base64'));
-        log('Done writing push cert to disk.');
-
+        if (pushPrivateSigningKey !== undefined) {
+          let keyPath = path.resolve(projectDir, `${remotePackageName}_push_cert_private.key`);
+          fs.writeFileSync(keyPath, pushPrivateSigningKey);
+        }
+        log('Done writing push cert credentials to disk.');
+        if (provisioningProfile !== undefined) {
+          let p = path.resolve(projectDir, `${remotePackageName}.mobileprovision`);
+          log(`Writing provisioning profile to ${p}...`);
+          fs.writeFileSync(p, Buffer.from(provisioningProfile, 'base64'));
+          log('Done writing provisioning profile to disk');
+        }
         log(`Save these important values as well:
 
 Distribution p12 password: ${chalk.bold(certPassword)}
