@@ -25,7 +25,9 @@ export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
 export const DEBUG = process.env.EXPO_DEBUG && process.env.EXPO_DEBUG === 'true';
 
 const ENABLE_WSL = `
-Does not seem like WSL enabled on this machine. In an admin powershell, please run:
+Does not seem like WSL enabled on this machine. Download from the Windows app
+store a distribution of Linux, then in an admin powershell, please run:
+
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
 `;
 
@@ -135,12 +137,22 @@ const windowsToWSLPath = p => {
   const noSlashes = slash(p);
   return noSlashes.slice(2, noSlashes.length);
 };
+const MINUTES = 3;
+const TIMEOUT = 60 * 1000 * MINUTES;
 
-const TIMEOUT = 60 * 1000 * 3;
-
-const timeout_msg = prgm => `Took too long (limit is ${TIMEOUT} minutes) to execute ${prgm}`;
+const timeout_msg = prgm =>
+  process.platform === 'win32'
+    ? `Took too long (limit is ${MINUTES} minutes) to execute ${prgm}.
+Is your WSL working? in Powershell try: bash.exe -c 'uname'`
+    : `Took too long (limit is ${MINUTES} minutes) to execute ${prgm}`;
 
 const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
+
+const WSL_DOES_NOT_WORK = `
+You need to have a working installation of WSL to use exp build:ios on Windows 10.
+
+Double check you have WSL working, try running in powershell: bash.exe -c 'uname'
+`;
 
 export async function prepareLocalAuth() {
   if (process.platform === 'win32') {
@@ -155,6 +167,11 @@ export async function prepareLocalAuth() {
       log.warn(ENABLE_WSL);
       throw e;
     }
+    // Does WSL actually work? Give it 20 seconds max
+    await Promise.race([
+      new Promise((r, reject) => setTimeout(() => reject(new Error(WSL_DOES_NOT_WORK)), 20 * 1000)),
+      spawnAsync(WSL_BASH, ['-c', 'uname']),
+    ]);
   }
 }
 
