@@ -167,11 +167,17 @@ export async function prepareLocalAuth() {
       log.warn(ENABLE_WSL);
       throw e;
     }
-    // Does WSL actually work? Give it 20 seconds max
-    await Promise.race([
-      new Promise((r, reject) => setTimeout(() => reject(new Error(WSL_DOES_NOT_WORK)), 20 * 1000)),
-      spawnAsync(WSL_BASH, ['-c', 'uname']),
-    ]);
+    try {
+      // Does WSL actually work? Give it 20 seconds max
+      await Promise.race([
+        new Promise((r, reject) =>
+          setTimeout(() => reject(new Error(WSL_DOES_NOT_WORK)), 20 * 1000)
+        ),
+        spawnAsync(WSL_BASH, ['-c', 'uname']),
+      ]);
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
