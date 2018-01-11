@@ -148,12 +148,6 @@ Is your WSL working? in Powershell try: bash.exe -c 'uname'`
 
 const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
 
-const WSL_DOES_NOT_WORK = `
-You need to have a working installation of WSL to use exp build:ios on Windows 10.
-
-Double check you have WSL working, try running in powershell: bash.exe -c 'uname'
-`;
-
 export async function prepareLocalAuth() {
   if (process.platform === 'win32') {
     const [version] = release().match(/\d./);
@@ -165,17 +159,6 @@ export async function prepareLocalAuth() {
       await fs.access(WSL_BASH, fs.constants.F_OK);
     } catch (e) {
       log.warn(ENABLE_WSL);
-      throw e;
-    }
-    try {
-      // Does WSL actually work? Give it 20 seconds max
-      await Promise.race([
-        new Promise((r, reject) =>
-          setTimeout(() => reject(new Error(WSL_DOES_NOT_WORK)), 20 * 1000)
-        ),
-        spawnAsync(WSL_BASH, ['-c', 'uname']),
-      ]);
-    } catch (e) {
       throw e;
     }
   }
