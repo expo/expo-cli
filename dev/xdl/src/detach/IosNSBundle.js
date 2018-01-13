@@ -400,23 +400,22 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
   });
 }
 
-async function _downloadAssetsAsync(assets, dest) {
+async function _downloadAssetsAsync(assets, dest, oldFormat) {
   const batches = _.chunk(assets, 5);
   for (const batch of batches) {
     await Promise.all(
       batch.map(async asset => {
-        if (!asset.fileHashes) {
-          return;
-        }
-
-        const downloadTasks = asset.fileHashes.map(async hash => {
-          await saveUrlToPathAsync(
-            'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
-            path.join(dest, hash)
-          );
-        });
-
-        await Promise.all(downloadTasks);
+        const extensionIndex = asset.lastIndexOf('.');
+        const prefixLength = 'asset_'.length;
+        const hash =
+          extensionIndex >= 0
+            ? asset.substring(prefixLength, extensionIndex)
+            : asset.substring(prefixLength);
+        await saveUrlToPathAsync(
+          'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
+          // For sdk24 the runtime expects only the hash as the filename.
+          path.join(dest, oldFormat ? hash : asset)
+        );
       })
     );
   }
@@ -435,7 +434,11 @@ async function configureAsync(context: StandaloneContext) {
 
   if (context.data.manifest) {
     const { supportingDirectory } = IosWorkspace.getPaths(context);
-    await _downloadAssetsAsync(context.data.manifest.bundledAssets, supportingDirectory);
+    await _downloadAssetsAsync(
+      context.data.manifest.bundledAssets,
+      supportingDirectory,
+      context.data.manifest.sdkVersion === '24.0.0'
+    );
   }
 
   // common configuration for all contexts

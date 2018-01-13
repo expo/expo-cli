@@ -623,29 +623,22 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
     logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
   }
 
-  // Convert asset patterns to a list of asset hashes that match them.
+  // Convert asset patterns to a list of asset strings that match them.
+  // Assets strings are formatted as `asset_<hash>.<type>` and represent
+  // the name that the file will have in the app bundle. The `asset_` prefix is
+  // needed because android doesn't support assets that start with numbers.
   if (exp.assetBundlePatterns) {
     const fullPatterns = exp.assetBundlePatterns.map(p => path.join(projectRoot, p));
-    const bundledAssets = [];
     // The assets returned by the RN packager has duplicates so make sure we
     // only bundle each once.
-    const bundledHashes = new Set();
+    const bundledAssets = new Set();
     for (const asset of assets) {
       const file = asset.files && asset.files[0];
-      if (
-        asset.__packager_asset &&
-        file &&
-        fullPatterns.some(p => minimatch(file, p)) &&
-        !bundledHashes.has(asset.hash)
-      ) {
-        bundledAssets.push({
-          type: asset.type,
-          fileHashes: asset.fileHashes,
-        });
-        bundledHashes.add(asset.hash);
+      if (asset.__packager_asset && file && fullPatterns.some(p => minimatch(file, p))) {
+        bundledAssets.add('asset_' + asset.hash + (asset.type ? '.' + asset.type : ''));
       }
     }
-    exp.bundledAssets = bundledAssets;
+    exp.bundledAssets = [...bundledAssets];
     delete exp.assetBundlePatterns;
   }
 

@@ -230,7 +230,11 @@ function shouldShowLoadingView(manifest) {
   );
 }
 
-export async function copyInitialShellAppFilesAsync(androidSrcPath, shellPath, isDetached: boolean = false) {
+export async function copyInitialShellAppFilesAsync(
+  androidSrcPath,
+  shellPath,
+  isDetached: boolean = false
+) {
   let _exponentDirectory = exponentDirectory();
   if (_exponentDirectory) {
     await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
@@ -339,7 +343,10 @@ function shellPathForContext(context: StandaloneContext) {
   }
 }
 
-export async function runShellAppModificationsAsync(context: StandaloneContext, isDetached: boolean = false) {
+export async function runShellAppModificationsAsync(
+  context: StandaloneContext,
+  isDetached: boolean = false
+) {
   let shellPath = shellPathForContext(context);
   let url: string = context.published.url;
   let manifest = context.config; // manifest or app.json
@@ -390,7 +397,21 @@ export async function runShellAppModificationsAsync(context: StandaloneContext, 
     // react-native link looks for a \n so we need that. See https://github.com/facebook/react-native/blob/master/local-cli/link/android/patches/makeSettingsPatch.js
     await fs.writeFile(path.join(shellPath, 'settings.gradle'), `include ':app'\n`);
 
-    await regexFileAsync('TEMPLATE_INITIAL_URL', url, path.join(shellPath, 'app', 'src', 'main', 'java', 'host', 'exp', 'exponent', 'MainActivity.java'));
+    await regexFileAsync(
+      'TEMPLATE_INITIAL_URL',
+      url,
+      path.join(
+        shellPath,
+        'app',
+        'src',
+        'main',
+        'java',
+        'host',
+        'exp',
+        'exponent',
+        'MainActivity.java'
+      )
+    );
   }
 
   // Package
@@ -957,17 +978,16 @@ async function downloadAssetsAsync(assets, dest) {
   for (const batch of batches) {
     await Promise.all(
       batch.map(async asset => {
-        if (!asset.fileHashes) {
-          return;
-        }
-        const downloadTasks = asset.fileHashes.map(async (hash, idx) => {
-          await saveUrlToPathAsync(
-            'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
-            path.join(dest, 'asset_' + hash)
-          );
-        });
-
-        await Promise.all(downloadTasks);
+        const extensionIndex = asset.lastIndexOf('.');
+        const prefixLength = 'asset_'.length;
+        const hash =
+          extensionIndex >= 0
+            ? asset.substring(prefixLength, extensionIndex)
+            : asset.substring(prefixLength);
+        await saveUrlToPathAsync(
+          'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
+          path.join(dest, asset)
+        );
       })
     );
   }
