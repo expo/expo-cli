@@ -257,8 +257,23 @@ function _renderDetachedPostinstall(sdkVersion) {
 }
 
 function _renderUnversionedPostinstall() {
+  // TODO: switch to `installer.pods_project.targets.each` in postinstall
+  // see: https://stackoverflow.com/questions/37160688/set-deployment-target-for-cocoapodss-pod
+  const podsToChangeDeployTarget = [
+    'Amplitude-iOS',
+    'Analytics',
+    'AppAuth',
+    'Branch',
+    'CocoaLumberjack',
+    'FBSDKCoreKit',
+    'FBSDKLoginKit',
+    'FBSDKShareKit',
+    'GPUImage',
+    'JKBigInteger2',
+  ];
+  const podsToChangeRB = `[${podsToChangeDeployTarget.map(pod => `'${pod}'`).join(',')}]`;
   return `
-    if target.pod_name == 'AppAuth'
+    if ${podsToChangeRB}.include? target.pod_name
       target.native_target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
       end
