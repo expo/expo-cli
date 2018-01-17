@@ -35,6 +35,11 @@ export async function constructManifestUrlAsync(
   return constructUrlAsync(projectRoot, opts, false, requestHostname);
 }
 
+export async function constructLogUrlAsync(projectRoot: string, requestHostname?: string) {
+  let baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
+  return `${baseUrl}/logs`;
+}
+
 export async function constructUrlWithExtensionAsync(
   projectRoot: string,
   entryPoint: string,
@@ -195,7 +200,22 @@ export async function constructUrlAsync(
   let hostname;
   let port;
 
-  if (opts.hostType === 'localhost' || requestHostname === 'localhost') {
+  const proxyURL = isPackager
+    ? process.env.EXPO_PACKAGER_PROXY_URL
+    : process.env.EXPO_MANIFEST_PROXY_URL;
+  if (proxyURL) {
+    const parsedProxyURL = url.parse(proxyURL);
+    hostname = parsedProxyURL.hostname;
+    port = parsedProxyURL.port;
+    if (parsedProxyURL.protocol === 'https:') {
+      if (protocol === 'http') {
+        protocol = 'https';
+      }
+      if (!port) {
+        port = '443';
+      }
+    }
+  } else if (opts.hostType === 'localhost' || requestHostname === 'localhost') {
     hostname = 'localhost';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else if (opts.hostType === 'lan' || Config.offline) {

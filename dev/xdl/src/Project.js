@@ -1334,11 +1334,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         path;
       manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, req.hostname);
       manifest.mainModuleName = mainModuleName;
-      manifest.logUrl = `${await UrlUtils.constructManifestUrlAsync(
-        projectRoot,
-        { urlType: 'http' },
-        req.hostname
-      )}/logs`; // Resolve manifest assets to their packager URL
+      manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, req.hostname);
       await _resolveManifestAssets(
         projectRoot,
         manifest,
