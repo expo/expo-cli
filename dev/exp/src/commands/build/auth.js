@@ -98,6 +98,9 @@ export function produceCerts(credentials, teamId) {
   ]);
 }
 
+const NO_TEAM_ID = `You have no team ID associated with your apple account, cannot proceed.
+(Do you have a paid Apple developer Account?)`;
+
 export async function validateCredentialsProduceTeamId(creds) {
   const getTeamsAttempt = await spawnAndCollectJSONOutputAsync(
     FASTLANE.validate_apple_credentials,
@@ -112,7 +115,7 @@ export async function validateCredentialsProduceTeamId(creds) {
   }
   const { teams } = getTeamsAttempt;
   if (teams.length === 0) {
-    throw new Error('You have no team ID associated with your apple account, cannot proceed');
+    throw new Error(NO_TEAM_ID);
   }
   log(`You have ${teams.length} teams`);
   if (teams.length === 1) {
