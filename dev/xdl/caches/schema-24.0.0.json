@@ -115,7 +115,7 @@
       },
       "loading": {
         "description":
-          "Configuration for the loading screen that users see when opening your app, while fetching & caching bundle and assets.",
+          "DEPREACTED: Use `splash` instead. Configuration for the loading screen that users see when opening your app, while fetching & caching bundle and assets.",
         "type": "object",
         "properties": {
           "icon": {
@@ -484,7 +484,7 @@
           },
           "permissions": {
             "description":
-              "List of permissions used by the standalone app. Remove the field to use the default list of permissions.\n\nExample: `[ \"CAMERA\", \"ACCESS_FINE_LOCATION\" ]`.\n\nYou can specify the following permissions depending on what you need:\n\n- `ACCESS_COARSE_LOCATION`\n- `ACCESS_FINE_LOCATION`\n- `CAMERA`\n- `MANAGE_DOCUMENTS`\n- `READ_CONTACTS`\n- `READ_EXTERNAL_STORAGE`\n- `READ_INTERNAL_STORAGE`\n- `READ_PHONE_STATE`\n- `RECORD_AUDIO`\n- `USE_FINGERPRINT`\n- `VIBRATE`\n- `WAKE_LOCK`\n- `WRITE_EXTERNAL_STORAGE`\n- `com.anddoes.launcher.permission.UPDATE_COUNT`\n- `com.android.launcher.permission.INSTALL_SHORTCUT`\n- `com.google.android.c2dm.permission.RECEIVE`\n- `com.google.android.gms.permission.ACTIVITY_RECOGNITION`\n- `com.google.android.providers.gsf.permission.READ_GSERVICES`\n- `com.htc.launcher.permission.READ_SETTINGS`\n- `com.htc.launcher.permission.UPDATE_SHORTCUT`\n- `com.majeur.launcher.permission.UPDATE_BADGE`\n- `com.sec.android.provider.badge.permission.READ`\n- `com.sec.android.provider.badge.permission.WRITE`\n- `com.sonyericsson.home.permission.BROADCAST_BADGE`",
+              "List of permissions used by the standalone app. Remove the field to use the default list of permissions.\n\n  Example: `[ \"CAMERA\", \"ACCESS_FINE_LOCATION\" ]`.\n\n  You can specify the following permissions depending on what you need:\n\n- `ACCESS_COARSE_LOCATION`\n- `ACCESS_FINE_LOCATION`\n- `CAMERA`\n- `MANAGE_DOCUMENTS`\n- `READ_CONTACTS`\n- `READ_EXTERNAL_STORAGE`\n- `READ_INTERNAL_STORAGE`\n- `READ_PHONE_STATE`\n- `RECORD_AUDIO`\n- `USE_FINGERPRINT`\n- `VIBRATE`\n- `WAKE_LOCK`\n- `WRITE_EXTERNAL_STORAGE`\n- `com.anddoes.launcher.permission.UPDATE_COUNT`\n- `com.android.launcher.permission.INSTALL_SHORTCUT`\n- `com.google.android.c2dm.permission.RECEIVE`\n- `com.google.android.gms.permission.ACTIVITY_RECOGNITION`\n- `com.google.android.providers.gsf.permission.READ_GSERVICES`\n- `com.htc.launcher.permission.READ_SETTINGS`\n- `com.htc.launcher.permission.UPDATE_SHORTCUT`\n- `com.majeur.launcher.permission.UPDATE_BADGE`\n- `com.sec.android.provider.badge.permission.READ`\n- `com.sec.android.provider.badge.permission.WRITE`\n- `com.sonyericsson.home.permission.BROADCAST_BADGE`",
             "type": "array"
           },
           "config": {
@@ -708,7 +708,7 @@
         }
       },
       "assetBundlePatterns": {
-        "description": "",
+        "description": "An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/versions/latest/guides/offline-support.html)",
         "type": "array"
       }
     },

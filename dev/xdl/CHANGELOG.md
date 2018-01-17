@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [47.2.0] - 2018-01-17
+
+### Added
+
+* Support for HTTP(S) reverse proxies using `EXPO_PACKAGER_PROXY_URL` and `EXPO_MANIFEST_PROXY_URL` environment variables.
+
 ## [47.1.2] - 2017-12-18
 
 ### Changed
