@@ -11,6 +11,7 @@ import {
   isDirectory,
   rimrafDontThrow,
   spawnAsync,
+  spawnAsyncThrowError,
   transformFileContentsAsync,
 } from './ExponentTools';
 import { renderPodfileAsync } from './IosPodsTools.js';
@@ -124,7 +125,7 @@ async function _renameAndMoveProjectFilesAsync(
 
   filesToMove.forEach(async fileName => {
     let destFileName = path.join(path.dirname(fileName), `${projectName}${path.extname(fileName)}`);
-    await spawnAsync('/bin/mv', [
+    await spawnAsyncThrowError('/bin/mv', [
       path.join(projectDirectory, fileName),
       path.join(projectDirectory, destFileName),
     ]);
