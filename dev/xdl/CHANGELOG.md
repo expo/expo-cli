@@ -16,6 +16,11 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 * Support for HTTP(S) reverse proxies using `EXPO_PACKAGER_PROXY_URL` and `EXPO_MANIFEST_PROXY_URL` environment variables.
 
+### Changed
+
+* Fix `DocumentPicker` entitlements in detached iOS apps.
+* Other iOS detach improvements.
+
 ## [47.1.2] - 2017-12-18
 
 ### Changed
