@@ -995,6 +995,15 @@ async function buildShellAppAsync(context: StandaloneContext) {
 }
 
 async function downloadAssetsAsync(assets, dest) {
+  // Compat with exp 46.x.x, can remove when this version is phasing out.
+  if (typeof assets[0] === 'object') {
+    assets = assets.reduce(
+      (res, cur) =>
+        res.concat(cur.fileHashes.map(h => 'asset_' + h + (cur.type ? '.' + cur.type : ''))),
+      []
+    );
+  }
+
   await fs.ensureDir(dest);
   const batches = _.chunk(assets, 5);
   for (const batch of batches) {

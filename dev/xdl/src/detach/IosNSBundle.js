@@ -154,20 +154,20 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
         iCloudKeys.forEach(key => {
           if (entitlements.hasOwnProperty(key)) {
             switch (key) {
-            case 'com.apple.developer.icloud-container-identifiers':
-              entitlements[key] = ['iCloud.' + manifest.ios.bundleIdentifier];
-              break;
-            case 'com.apple.developer.ubiquity-container-identifiers':
-              entitlements[key] = ['iCloud.' + manifest.ios.bundleIdentifier];
-              break;
-            case 'com.apple.developer.ubiquity-kvstore-identifier':
-              entitlements[key] = appleTeamId + '.' + manifest.ios.bundleIdentifier;
-              break;
-            case 'com.apple.developer.icloud-services':
-              entitlements[key] = ['CloudDocuments'];
-              break;
-            default:
-              break;
+              case 'com.apple.developer.icloud-container-identifiers':
+                entitlements[key] = ['iCloud.' + manifest.ios.bundleIdentifier];
+                break;
+              case 'com.apple.developer.ubiquity-container-identifiers':
+                entitlements[key] = ['iCloud.' + manifest.ios.bundleIdentifier];
+                break;
+              case 'com.apple.developer.ubiquity-kvstore-identifier':
+                entitlements[key] = appleTeamId + '.' + manifest.ios.bundleIdentifier;
+                break;
+              case 'com.apple.developer.icloud-services':
+                entitlements[key] = ['CloudDocuments'];
+                break;
+              default:
+                break;
             }
           }
         });
@@ -401,6 +401,14 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
 }
 
 async function _downloadAssetsAsync(assets, dest, oldFormat) {
+  // Compat with exp 46.x.x, can remove when this version is phasing out.
+  if (typeof assets[0] === 'object') {
+    assets = assets.reduce(
+      (res, cur) =>
+        res.concat(cur.fileHashes.map(h => 'asset_' + h + (cur.type ? '.' + cur.type : ''))),
+      []
+    );
+  }
   const batches = _.chunk(assets, 5);
   for (const batch of batches) {
     await Promise.all(
