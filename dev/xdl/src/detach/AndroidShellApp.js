@@ -809,17 +809,30 @@ export async function runShellAppModificationsAsync(
       fs.removeSync(filePath);
     });
 
-    await saveUrlToPathAsync(
-      notificationIconUrl,
-      path.join(
-        shellPath,
-        'app',
-        'src',
-        'main',
-        'res',
-        'drawable-hdpi',
-        'shell_notification_icon.png'
-      )
+    await Promise.all(
+      imageKeys.map(async key => {
+        try {
+          fs.accessSync(
+            path.join(shellPath, 'app', 'src', 'main', 'res', `drawable-${key}`),
+            fs.constants.F_OK
+          );
+
+          await saveUrlToPathAsync(
+            notificationIconUrl,
+            path.join(
+              shellPath,
+              'app',
+              'src',
+              'main',
+              'res',
+              `drawable-${key}`,
+              'shell_notification_icon.png'
+            )
+          );
+        } catch (e) {
+          // directory does not exist, so ignore
+        }
+      })
     );
   }
 
