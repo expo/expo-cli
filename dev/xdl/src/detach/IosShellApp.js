@@ -247,11 +247,13 @@ async function _buildAndCopyShellAppArtifactAsync(args) {
     verbose
   );
   const artifactDestPath = path.join('../shellAppBase-builds', type, context.build.configuration);
-  console.log(`\nFinished building, copying artifact to ${artifactDestPath}...`);
+  console.log(`\nFinished building, copying artifact to ${path.resolve(artifactDestPath)}...`);
   if (fs.existsSync(artifactDestPath)) {
     await spawnAsyncThrowError('/bin/rm', ['-rf', artifactDestPath]);
   }
+  console.log(`mkdir -p ${artifactDestPath}`);
   await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactDestPath]);
+  console.log(`cp -R ${pathToArtifact} ${artifactDestPath}`);
   await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
 }
 
