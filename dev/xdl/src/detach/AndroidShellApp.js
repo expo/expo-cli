@@ -344,6 +344,23 @@ function shellPathForContext(context: StandaloneContext) {
   }
 }
 
+async function copyIconsToResSubfolders(resDirPath, folderPrefix, fileName, iconUrl, isLocalUrl) {
+  return Promise.all(
+    imageKeys.map(async key => {
+      try {
+        const dirPath = path.join(resDirPath, `${folderPrefix}-${key}`);
+        fs.accessSync(dirPath, fs.constants.F_OK);
+        if (isLocalUrl) {
+          return fs.copyFileSync(iconUrl, path.join(dirPath, fileName));
+        }
+        return await saveUrlToPathAsync(iconUrl, path.join(dirPath, fileName));
+      } catch (e) {
+        // directory does not exist, so ignore
+      }
+    })
+  );
+}
+
 export async function runShellAppModificationsAsync(
   context: StandaloneContext,
   isDetached: boolean = false
@@ -381,6 +398,12 @@ export async function runShellAppModificationsAsync(
   let version = manifest.version ? manifest.version : '0.0.0';
   let backgroundImages = backgroundImagesForApp(shellPath, manifest);
   let splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
+
+  if (isDetached) {
+    // manifest is actually just app.json in this case, so iconUrl fields don't exist
+    iconUrl = manifest.android && manifest.android.icon ? manifest.android.icon : manifest.icon;
+    notificationIconUrl = manifest.notification ? manifest.notification.icon : null;
+  }
 
   // Clean build directories
   await fs.remove(path.join(shellPath, 'app', 'build'));
@@ -783,21 +806,12 @@ export async function runShellAppModificationsAsync(
       fs.removeSync(filePath);
     });
 
-    await Promise.all(
-      imageKeys.map(async key => {
-        try {
-          fs.accessSync(
-            path.join(shellPath, 'app', 'src', 'main', 'res', `mipmap-${key}`),
-            fs.constants.F_OK
-          );
-          return await saveUrlToPathAsync(
-            iconUrl,
-            path.join(shellPath, 'app', 'src', 'main', 'res', `mipmap-${key}`, 'ic_launcher.png')
-          );
-        } catch (e) {
-          // directory does not exist, so ignore
-        }
-      })
+    await copyIconsToResSubfolders(
+      path.join(shellPath, 'app', 'src', 'main', 'res'),
+      'mipmap',
+      'ic_launcher.png',
+      iconUrl,
+      isDetached
     );
   }
 
@@ -809,30 +823,12 @@ export async function runShellAppModificationsAsync(
       fs.removeSync(filePath);
     });
 
-    await Promise.all(
-      imageKeys.map(async key => {
-        try {
-          fs.accessSync(
-            path.join(shellPath, 'app', 'src', 'main', 'res', `drawable-${key}`),
-            fs.constants.F_OK
-          );
-
-          await saveUrlToPathAsync(
-            notificationIconUrl,
-            path.join(
-              shellPath,
-              'app',
-              'src',
-              'main',
-              'res',
-              `drawable-${key}`,
-              'shell_notification_icon.png'
-            )
-          );
-        } catch (e) {
-          // directory does not exist, so ignore
-        }
-      })
+    await copyIconsToResSubfolders(
+      path.join(shellPath, 'app', 'src', 'main', 'res'),
+      'drawable',
+      'shell_notification_icon.png',
+      notificationIconUrl,
+      isDetached
     );
   }
 
