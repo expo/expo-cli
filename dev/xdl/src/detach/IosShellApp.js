@@ -250,8 +250,8 @@ async function _buildAndCopyShellAppArtifactAsync(args) {
   console.log(`\nFinished building, copying artifact to ${artifactDestPath}...`);
   if (fs.existsSync(artifactDestPath)) {
     await spawnAsyncThrowError('/bin/rm', ['-rf', artifactDestPath]);
-    await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactDestPath]);
   }
+  await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactDestPath]);
   await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
 }
 
