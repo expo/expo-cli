@@ -18,6 +18,8 @@ import StandaloneContext from './StandaloneContext';
 
 const { getManifestAsync, saveUrlToPathAsync, spawnAsyncThrowError, spawnAsync } = ExponentTools;
 
+const imageKeys = ['ldpi', 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
+
 // Do not call this from anything used by detach
 function exponentDirectory() {
   if (process.env.TURTLE_WORKING_DIR_PATH) {
@@ -166,7 +168,6 @@ function backgroundImagesForApp(shellPath, manifest) {
   //   {url: 'urlToDownload', path: 'pathToSaveTo'},
   //   {url: 'anotherURlToDownload', path: 'anotherPathToSaveTo'},
   // ]
-  const imageKeys = ['ldpi', 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
   let basePath = path.join(shellPath, 'app', 'src', 'main', 'res');
   if (_.get(manifest, 'android.splash')) {
     var splash = _.get(manifest, 'android.splash');
@@ -782,9 +783,21 @@ export async function runShellAppModificationsAsync(
       fs.removeSync(filePath);
     });
 
-    await saveUrlToPathAsync(
-      iconUrl,
-      path.join(shellPath, 'app', 'src', 'main', 'res', 'mipmap-hdpi', 'ic_launcher.png')
+    await Promise.all(
+      imageKeys.map(async key => {
+        try {
+          fs.accessSync(
+            path.join(shellPath, 'app', 'src', 'main', 'res', `mipmap-${key}`),
+            fs.constants.F_OK
+          );
+          return await saveUrlToPathAsync(
+            iconUrl,
+            path.join(shellPath, 'app', 'src', 'main', 'res', `mipmap-${key}`, 'ic_launcher.png')
+          );
+        } catch (e) {
+          // directory does not exist, so ignore
+        }
+      })
     );
   }
 
