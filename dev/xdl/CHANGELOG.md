@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [48.0.0] - 2018-01-17
+
+### Changed
+
+* Detach upgrades for SDK 25.
+
 ## [47.2.0] - 2018-01-17
 
 ### Added
