@@ -191,7 +191,7 @@ async function _configureAndCopyShellAppArchiveAsync(args) {
 
   await IosNSBundle.configureAsync(context);
   if (output) {
-    const archiveName = context.manifest.name.replace(/[^0-9a-z_\-\.]/gi, '_');
+    const archiveName = projectName.replace(/[^0-9a-z_\-\.]/gi, '_');
     const appReleasePath = path.resolve(path.join(`${context.data.archivePath}`, '..'));
     if (type === 'simulator') {
       await spawnAsync(
