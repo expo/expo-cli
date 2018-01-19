@@ -10,7 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
-## [48.0.0] - 2018-01-17
+## [48.0.1] - 2018-01-19
+
+### Changed
+
+* Fix _inquirer ... is not a function error
+
+## [48.0.0] - 2018-01-18
 
 ### Changed
 

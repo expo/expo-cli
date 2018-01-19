@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "48.0.1",
+  "version": "48.0.2",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -87,7 +87,7 @@
     "slash": "^1.0.0",
     "source-map-support": "^0.4.1",
     "untildify": "^3.0.2",
-    "xdl": "48.0.0"
+    "xdl": "48.0.1"
   },
   "optionalDependencies": {
     "@expo/traveling-fastlane-darwin": "1.2.5",
