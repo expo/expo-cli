@@ -108,7 +108,7 @@ async function downloadAndExtractTemplate(templateType, projectDir, validatedOpt
 
 async function triggerRetryPrompt() {
   _downloadIsSlowPrompt = true;
-  var answer = await inquirer({
+  var answer = await inquirer.prompt({
     type: 'input',
     name: 'retry',
     message: '\n' + MessageCode.DOWNLOAD_IS_SLOW + '(y/n)',
