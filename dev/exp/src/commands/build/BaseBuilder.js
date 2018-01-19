@@ -3,6 +3,7 @@
  */
 
 import { Project, ProjectUtils } from 'xdl';
+import inquirer from 'inquirer';
 
 import log from '../../log';
 import chalk from 'chalk';
@@ -14,7 +15,8 @@ type BuilderOptions = {
   wait: boolean,
   clearCredentials: boolean,
   type?: string,
-  releaseChannel?: string,
+  releaseChannel: string,
+  publish: boolean,
 };
 
 export default class BaseBuilder {
@@ -22,6 +24,8 @@ export default class BaseBuilder {
   options: BuilderOptions = {
     wait: false,
     clearCredentials: false,
+    releaseChannel: 'default',
+    publish: false,
   };
   run: () => Promise<void>;
 
@@ -138,22 +142,48 @@ ${buildStatus.id}
     log('No currently active or previous builds for this project.');
   }
 
-  async publish() {
-    // Begin publish
-    log('Starting build process...');
-
-    //run publish -- in future, we should determine whether we NEED to do this
-    const { ids: expIds, url, err } = await publishAction(this.projectDir, {
-      releaseChannel: this.options.releaseChannel,
-    });
-
-    if (err) {
-      throw new BuildError(`No url was returned from publish. Please try again.\n${err}`);
-    } else if (!url || url === '') {
-      throw new BuildError('No url was returned from publish. Please try again.');
+  async _shouldPublish() {
+    if (this.options.publish) {
+      return true;
     }
+    const { shouldPublish } = await inquirer.prompt([
+      {
+        name: 'shouldPublish',
+        type: 'confirm',
+        message: 'No existing releases found. Would you like to publish your app now?',
+      },
+    ]);
+    return shouldPublish;
+  }
 
-    return expIds;
+  async ensureReleaseExists(platform: string) {
+    if (!this.options.publish) {
+      log('Looking for releases...');
+      const release = await Project.getLatestReleaseAsync(this.projectDir, {
+        releaseChannel: this.options.releaseChannel,
+        platform,
+      });
+      if (release) {
+        log(
+          `Using existing release on channel "${release.channel}":\n  publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
+        );
+        return [release.publicationId];
+      }
+    }
+    if (await this._shouldPublish()) {
+      const { ids, url, err } = await publishAction(this.projectDir, {
+        releaseChannel: this.options.releaseChannel,
+        platform,
+      });
+      if (err) {
+        throw new BuildError(`No url was returned from publish. Please try again.\n${err}`);
+      } else if (!url || url === '') {
+        throw new BuildError('No url was returned from publish. Please try again.');
+      }
+      return ids;
+    } else {
+      throw new BuildError('No releases found. Please create one using `exp publish` first.');
+    }
   }
 
   async build(expIds: Array<string>, platform: string) {

@@ -12,6 +12,7 @@ import fs from 'fs-extra';
 import joi from 'joi';
 import promisify from 'util.promisify';
 import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
@@ -293,10 +294,35 @@ export async function getSlugAsync(projectRoot: string, options: Object = {}) {
   return exp.slug;
 }
 
+export async function getLatestReleaseAsync(
+  projectRoot: string,
+  options: {
+    releaseChannel: string,
+    platform: string,
+  }
+) {
+  // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
+  let formData = new FormData();
+  formData.append('queryType', 'history');
+  formData.append('slug', await getSlugAsync(projectRoot));
+  formData.append('version', '2');
+  formData.append('count', '1');
+  formData.append('releaseChannel', options.releaseChannel);
+  formData.append('platform', options.platform);
+  const { queryResult } = await Api.callMethodAsync('publishInfo', [], 'post', null, {
+    formData,
+  });
+  if (queryResult && queryResult.length > 0) {
+    return queryResult[0];
+  } else {
+    return null;
+  }
+}
+
 export async function publishAsync(
   projectRoot: string,
   options: Object = {}
-): Promise<{ url: string }> {
+): Promise<{ url: string, ids: string[], err: ?string }> {
   const user = await UserManager.ensureLoggedInAsync();
   await _validatePackagerReadyAsync(projectRoot);
   Analytics.logEvent('Publish', { projectRoot });

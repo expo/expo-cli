@@ -235,7 +235,12 @@ export default class ApiClient {
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
-  static async callPathAsync(path, method, requestBody, requestOptions: ?Object = {}) {
+  static async callPathAsync(
+    path: string,
+    method: string,
+    requestBody: ?Object,
+    requestOptions: ?Object = {}
+  ) {
     let url = ROOT_BASE_URL + path;
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }

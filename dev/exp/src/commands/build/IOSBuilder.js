@@ -168,8 +168,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         throw e;
       }
     }
-    // Publish the experience
-    const publishedExpIds = await this.publish();
+    // Publish the experience, if necessary
+    const publishedExpIds = await this.ensureReleaseExists('ios');
     // Initiate the build with the published experience
     await this.build(publishedExpIds, 'ios');
   }

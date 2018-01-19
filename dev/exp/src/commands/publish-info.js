@@ -32,6 +32,7 @@ export default (program: any) => {
         process.exit(1);
       }
 
+      // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
       let formData = new FormData();
       formData.append('queryType', 'history');
       formData.append('slug', await Project.getSlugAsync(projectDir, options));
@@ -46,7 +47,7 @@ export default (program: any) => {
         formData.append('platform', options.platform);
       }
 
-      let result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
+      let result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
         formData,
       });
 

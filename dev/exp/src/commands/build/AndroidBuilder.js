@@ -20,8 +20,8 @@ export default class AndroidBuilder extends BaseBuilder {
     await this.checkStatus();
     // Check for existing credentials, collect any missing credentials, and validate them
     await this.collectAndValidateCredentials();
-    // Publish the current experience
-    const publishedExpIds = await this.publish();
+    // Publish the current experience, if necessary
+    const publishedExpIds = await this.ensureReleaseExists('android');
     // Initiate a build
     await this.build(publishedExpIds, 'android');
   }
