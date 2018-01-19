@@ -198,7 +198,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         const pushCertValues = await inquirer.prompt(sharedQuestions);
         this._copyOverAsString(credsStarter, {
           pushP12: (await fs.readFile(pushCertValues.pathToP12)).toString('base64'),
-          pushPassword: pushCertValues.password,
+          pushPassword: pushCertValues.p12Password,
         });
         break;
       case 'provisioningProfile':
