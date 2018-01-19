@@ -191,11 +191,12 @@ async function _configureAndCopyShellAppArchiveAsync(args) {
 
   await IosNSBundle.configureAsync(context);
   if (output) {
+    // TODO: un-hard-code ExpoKitApp.app
     const archiveName = projectName.replace(/[^0-9a-z_\-\.]/gi, '_');
     const appReleasePath = path.resolve(path.join(`${context.data.archivePath}`, '..'));
     if (type === 'simulator') {
       await spawnAsync(
-        `mv ${projectName}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+        `mv ExpoKitApp.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
         null,
         {
           stdio: 'inherit',
@@ -204,7 +205,7 @@ async function _configureAndCopyShellAppArchiveAsync(args) {
         }
       );
     } else if (type === 'archive') {
-      await spawnAsync('/bin/mv', [`${projectName}.xcarchive`, output], {
+      await spawnAsync('/bin/mv', [`ExpoKitApp.xcarchive`, output], {
         stdio: 'inherit',
         cwd: `${context.data.archivePath}/../../../..`,
       });
