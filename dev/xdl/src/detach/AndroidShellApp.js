@@ -704,6 +704,8 @@ export async function runShellAppModificationsAsync(
       'android.permission.CAMERA',
       'android.permission.MANAGE_DOCUMENTS',
       'android.permission.READ_CONTACTS',
+      'android.permission.READ_CALENDAR',
+      'android.permission.WRITE_CALENDAR',
       'android.permission.READ_EXTERNAL_STORAGE',
       'android.permission.READ_INTERNAL_STORAGE',
       'android.permission.READ_PHONE_STATE',
