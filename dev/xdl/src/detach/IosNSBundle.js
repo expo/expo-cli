@@ -199,7 +199,7 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
 /**
  *  Resolve the private config for a project.
  *  For standalone apps, this is copied into a separate context field context.data.privateConfig
- *  by the turtle builder. For a local project, this is available in app.json under ios.config.
+ *  by the turtle builder. For a local project, this is available ing app.json under ios.config.
  */
 function _getPrivateConfig(context: StandaloneContext): any {
   let privateConfig;
@@ -401,6 +401,9 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
 }
 
 async function _downloadAssetsAsync(assets, dest, oldFormat) {
+  if (!assets) {
+    return;
+  }
   // Compat with exp 46.x.x, can remove when this version is phasing out.
   if (typeof assets[0] === 'object') {
     assets = assets.reduce(
