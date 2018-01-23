@@ -371,6 +371,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       }
       this._areCredsMissing(creds);
       await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
+      log.warn(`Encrypted ${[...OBLIGATORY_CREDS_KEYS.keys()]} and saved to expo servers`);
     } else {
       log('Using existing credentials for this build');
     }
