@@ -5,7 +5,7 @@ import spawnAsync from '@expo/spawn-async';
 import { basename } from 'path';
 import inquirer from 'inquirer';
 import fs from 'fs-extra';
-import { release } from 'os';
+import { release, userInfo } from 'os';
 
 import log from '../../log';
 
@@ -143,11 +143,11 @@ const windowsToWSLPath = p => {
 const MINUTES = 10;
 const TIMEOUT = 60 * 1000 * MINUTES;
 
-const timeout_msg = prgm =>
+const timeout_msg = (prgm, args) =>
   process.platform === 'win32'
-    ? `Took too long (limit is ${MINUTES} minutes) to execute ${prgm}.
+    ? `Took too long (limit is ${MINUTES} minutes) to execute ${prgm} ${args}.
 Is your WSL working? in Powershell try: bash.exe -c 'uname'`
-    : `Took too long (limit is ${MINUTES} minutes) to execute ${prgm}`;
+    : `Took too long (limit is ${MINUTES} minutes) to execute ${prgm} ${args}`;
 
 const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
 
@@ -156,6 +156,10 @@ export async function prepareLocalAuth() {
     const [version] = release().match(/\d./);
     if (version !== '10') {
       throw new Error('Must be on at least Windows version 10 for WSL support to work');
+    }
+    const { username } = userInfo();
+    if (username && username.split(' ').length !== 1) {
+      log.warn('Your username should not have empty space in it, exp might fail');
     }
     // Does bash.exe exist?
     try {
@@ -171,21 +175,21 @@ const USER_PERMISSIONS_ERROR =
   'You probably do not have user permissions for where exp is installed, consider changing permissions there';
 
 async function spawnAndCollectJSONOutputAsync(program, args) {
+  let prgm = program;
+  let cmd = args;
   return Promise.race([
     new Promise((resolve, reject) => {
-      setTimeout(() => reject(new Error(timeout_msg(program))), TIMEOUT);
+      setTimeout(() => reject(new Error(timeout_msg(prgm, cmd))), TIMEOUT);
     }),
     new Promise((resolve, reject) => {
       const jsonContent = [];
       try {
         if (process.platform === 'win32') {
-          const cmd = [
-            '-c',
-            `${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} ${args.join(' ')}`,
-          ];
-          var child = child_process.spawn(WSL_BASH, cmd, opts);
+          prgm = WSL_BASH;
+          cmd = ['-c', `${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} ${args.join(' ')}`];
+          var child = child_process.spawn(prgm, cmd, opts);
         } else {
-          var child = child_process.spawn(program, args, opts);
+          var child = child_process.spawn(prgm, cmd, opts);
         }
       } catch (e) {
         return reject(e);
