@@ -140,7 +140,7 @@ const windowsToWSLPath = p => {
   const noSlashes = slash(p);
   return noSlashes.slice(2, noSlashes.length);
 };
-const MINUTES = 3;
+const MINUTES = 10;
 const TIMEOUT = 60 * 1000 * MINUTES;
 
 const timeout_msg = prgm =>
