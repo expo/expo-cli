@@ -9,15 +9,15 @@ async function action(options) {
   log('Generating diagnostics report...');
   log('You can join our slack here: https://slack.expo.io/.');
 
+  envinfoPrint();
+
+  console.log(`\x1b[4mDiagnostics report:\x1b[0m`);
   simpleSpinner.start();
-  let { url } = await Diagnostics.getDeviceInfoAsync({
+  const { url } = await Diagnostics.getDeviceInfoAsync({
     uploadLogs: true,
   });
   simpleSpinner.stop();
-
-  envinfoPrint();
-
-  console.log(`\x1b[4mDiagnostics report:\x1b[0m\n  ${url}\n`);
+  console.log(`  ${url}\n`);
   log.raw(url);
 }
 
