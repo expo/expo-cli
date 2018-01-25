@@ -142,35 +142,8 @@ ${buildStatus.id}
     log('No currently active or previous builds for this project.');
   }
 
-  async _shouldPublish() {
-    if (this.options.publish) {
-      return true;
-    }
-    const { shouldPublish } = await inquirer.prompt([
-      {
-        name: 'shouldPublish',
-        type: 'confirm',
-        message: 'No existing releases found. Would you like to publish your app now?',
-      },
-    ]);
-    return shouldPublish;
-  }
-
   async ensureReleaseExists(platform: string) {
-    if (!this.options.publish) {
-      log('Looking for releases...');
-      const release = await Project.getLatestReleaseAsync(this.projectDir, {
-        releaseChannel: this.options.releaseChannel,
-        platform,
-      });
-      if (release) {
-        log(
-          `Using existing release on channel "${release.channel}":\n  publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
-        );
-        return [release.publicationId];
-      }
-    }
-    if (await this._shouldPublish()) {
+    if (this.options.publish) {
       const { ids, url, err } = await publishAction(this.projectDir, {
         releaseChannel: this.options.releaseChannel,
         platform,
@@ -182,7 +155,18 @@ ${buildStatus.id}
       }
       return ids;
     } else {
-      throw new BuildError('No releases found. Please create one using `exp publish` first.');
+      log('Looking for releases...');
+      const release = await Project.getLatestReleaseAsync(this.projectDir, {
+        releaseChannel: this.options.releaseChannel,
+        platform,
+      });
+      if (!release) {
+        throw new BuildError('No releases found. Please create one using `exp publish` first.');
+      }
+      log(
+        `Using existing release on channel "${release.channel}":\n  publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
+      );
+      return [release.publicationId];
     }
   }
 

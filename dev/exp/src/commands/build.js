@@ -17,7 +17,7 @@ export default (program: any) => {
     .option('-f, --local-auth', 'Turn on local auth flow')
     .option('--expert-auth', "Don't log in to Apple, provide all of the files needed to build.")
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
-    .option('--publish', 'Publish the project before building.')
+    .option('--no-publish', 'Disable automatic publishing before building.')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
@@ -52,7 +52,7 @@ export default (program: any) => {
     .alias('ba')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
-    .option('--publish', 'Publish the project before building.')
+    .option('--no-publish', 'Disable automatic publishing before building.')
     .description(
       'Build a standalone APK for your project, signed and ready for submission to the Google Play Store.'
     )
