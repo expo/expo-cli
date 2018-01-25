@@ -1,5 +1,6 @@
 import { Diagnostics } from 'xdl';
 import { print as envinfoPrint } from 'envinfo';
+import chalk from 'chalk';
 
 import simpleSpinner from '@expo/simple-spinner';
 
@@ -11,7 +12,7 @@ async function action(options) {
 
   envinfoPrint();
 
-  console.log(`\x1b[4mDiagnostics report:\x1b[0m`);
+  console.log(chalk.underline('Diagnostics report:'));
   simpleSpinner.start();
   const { url } = await Diagnostics.getDeviceInfoAsync({
     uploadLogs: true,
