@@ -540,6 +540,14 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
         let installedDependency = npmlsDependencies[dependency];
         if (dependency === 'react' && versionRequired.match(/-(alpha|beta|rc)/)) {
           // ignore prerelease dependencies on react
+        } else if (!installedDependency || !installedDependency.version) {
+          if (installedDependency && installedDependency.peerMissing) {
+            errorStrings.push(
+              `Warning: '${dependency}' peer dependency missing. Run \`npm ls\` in ${nodeModulesPath} to see full warning.`
+            );
+          } else {
+            errorStrings.push(`Warning: '${dependency}' dependency is not installed.`);
+          }
         } else if (
           dependency === 'expo' &&
           exp.sdkVersion !== 'UNVERSIONED' &&
@@ -549,14 +557,6 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
           errorStrings.push(
             'Warning: Expo version in package.json does not match sdkVersion in manifest.'
           );
-        } else if (!installedDependency || !installedDependency.version) {
-          if (installedDependency && installedDependency.peerMissing) {
-            errorStrings.push(
-              `Warning: '${dependency}' peer dependency missing. Run \`npm ls\` in ${nodeModulesPath} to see full warning.`
-            );
-          } else {
-            errorStrings.push(`Warning: '${dependency}' dependency is not installed.`);
-          }
         } else if (
           dependency !== 'react-native' &&
           !semver.satisfies(installedDependency.version, versionRequired) &&
