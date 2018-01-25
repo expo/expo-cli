@@ -10,13 +10,28 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
-## [48.0.2] - 2018-1-19
+## [49.0.1] - 2018-01-25
+
+### Added
+
+* Add environment info to `exp diagnostics` command. (https://github.com/expo/exp/pull/98)
+* Add `--no-publish` flag to `exp build:*` commands.
+
+### Changed
+
+* Update `xdl` to v48.0.2.
+
+## Removed
+
+* Remove `--publish` flag from `exp build:*` commands. Build commands now always publish by default. Publishing before building can be disabled with the `--no-publish` flag.
+
+## [48.0.2] - 2018-01-19
 
 ### Changed
 
 * Update `xdl` to v48.0.1.
 
-## [48.0.0] - 2018-1-18
+## [48.0.0] - 2018-01-18
 
 ### Changed
 

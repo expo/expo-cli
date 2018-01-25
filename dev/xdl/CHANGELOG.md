@@ -10,6 +10,14 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [48.0.2] - 2018-01-25
+
+### Changed
+
+* Fix project validation crashing when `npm ls` doesn't return a package version.
+* Fix unnecessary warning "Problem checking node_modules dependencies" being shown when server is stopped using Ctrl+C.
+* Fix iOS detach attempting to download assets when none are specified.
+
 ## [48.0.1] - 2018-01-19
 
 ### Changed
