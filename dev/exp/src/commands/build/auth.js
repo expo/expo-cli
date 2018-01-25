@@ -45,10 +45,12 @@ export const doesFileProvidedExist = async (printOut, p12Path) => {
 
 export const doFastlaneActionsExist = async () => {
   return Promise.all(
-    Object.keys(FASTLANE).map(async action => {
-      let path = FASTLANE[action];
-      return { action, path, doesExist: await doesFileProvidedExist(false, path) };
-    })
+    Object.keys(FASTLANE)
+      .filter(k => k !== FASTLANE.ruby_dir)
+      .map(async action => {
+        let path = FASTLANE[action];
+        return { action, path, doesExist: await doesFileProvidedExist(false, path) };
+      })
   );
 };
 
