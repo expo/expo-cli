@@ -73,6 +73,7 @@
     "cli-table": "^0.3.1",
     "commander": "^2.9.0",
     "delay-async": "^1.0.0",
+    "envinfo": "^3.11.1",
     "es6-error": "^3.0.0",
     "fs-extra": "^4.0.2",
     "glob": "^7.0.3",
