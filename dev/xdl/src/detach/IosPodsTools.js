@@ -71,7 +71,7 @@ function _renderExpoKitDependency(options) {
       branch: 'master',
     };
   }
-  attributes.subspecs = ['Core', 'CPP'];
+  attributes.subspecs = ['Core', 'CPP', 'GL'];
 
   let dependency = `pod 'ExpoKit',
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
