@@ -199,7 +199,7 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
 /**
  *  Resolve the private config for a project.
  *  For standalone apps, this is copied into a separate context field context.data.privateConfig
- *  by the turtle builder. For a local project, this is available ing app.json under ios.config.
+ *  by the turtle builder. For a local project, this is available in app.json under ios.config.
  */
 function _getPrivateConfig(context: StandaloneContext): any {
   let privateConfig;
