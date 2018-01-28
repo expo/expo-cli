@@ -157,7 +157,7 @@ export async function prepareLocalAuth() {
   if (process.platform === 'win32') {
     const [version] = release().match(/\d./);
     if (version !== '10') {
-      throw new Error('Must be on at least Windows version 10 for WSL support to work');
+      log.warn('Must be on at least Windows version 10 for WSL support to work');
     }
     const { username } = userInfo();
     if (username && username.split(' ').length !== 1) {
@@ -168,7 +168,6 @@ export async function prepareLocalAuth() {
       await fs.access(WSL_BASH, fs.constants.F_OK);
     } catch (e) {
       log.warn(ENABLE_WSL);
-      throw e;
     }
   }
 }
