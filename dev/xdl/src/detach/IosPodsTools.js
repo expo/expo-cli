@@ -22,6 +22,8 @@ function _validatePodfileSubstitutions(substitutions) {
     'EXPONENT_CLIENT_DEPS',
     // postinstall for detached projects (defines EX_DETACHED among other things)
     'PODFILE_DETACHED_POSTINSTALL',
+    // same as previous but also defines EX_DETACHED_SERVICE
+    'PODFILE_DETACHED_SERVICE_POSTINSTALL',
     // ExponentIntegrationTests
     'PODFILE_TEST_TARGET',
     // unversioned react native pod dependency, probably at the path given in
@@ -240,13 +242,17 @@ async function _concatTemplateFilesInDirectoryAsync(directory) {
   return templateStrings.join('\n');
 }
 
-function _renderDetachedPostinstall(sdkVersion) {
+function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
   let podsRootSub = '${PODS_ROOT}';
+  const maybeDetachedServiceDef = (isServiceContext)
+        ? `config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED_SERVICE=1'`
+        : '';
   return `
     if target.pod_name == 'ExpoKit'
       target.native_target.build_configurations.each do |config|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'
+        ${maybeDetachedServiceDef}
         # needed for GoogleMaps 2.x
         config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
         config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
@@ -387,7 +393,8 @@ async function renderPodfileAsync(
       sdkVersion
     ),
     PODFILE_UNVERSIONED_POSTINSTALL: _renderUnversionedPostinstall(),
-    PODFILE_DETACHED_POSTINSTALL: _renderDetachedPostinstall(sdkVersion),
+    PODFILE_DETACHED_POSTINSTALL: _renderDetachedPostinstall(sdkVersion, false),
+    PODFILE_DETACHED_SERVICE_POSTINSTALL: _renderDetachedPostinstall(sdkVersion, true),
     PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
     PODFILE_VERSIONED_POSTINSTALLS: versionedPostinstalls,
     PODFILE_TEST_TARGET: _renderTestTarget(reactNativePath),
