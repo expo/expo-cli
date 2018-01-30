@@ -10,7 +10,7 @@ async function action(options) {
   log('Generating diagnostics report...');
   log('You can join our slack here: https://slack.expo.io/.');
 
-  envinfoPrint();
+  envinfoPrint({ packages: ['expo', 'react', 'react-native'] });
 
   console.log(chalk.underline('Diagnostics report:'));
   simpleSpinner.start();
