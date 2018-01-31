@@ -20,6 +20,13 @@ const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/s
 
 export const NO_BUNDLE_ID = 'App could not be found for bundle id';
 
+const APPLE_ERRORS = `If you get errors about
+
+'Maximum number of certificates generated' or 'duplicate profiles'
+
+then consider going to developer.apple.com and revoking those certs or
+the existing provisioning profile for this app`;
+
 export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
 
 export const DEBUG = process.env.EXPO_DEBUG && process.env.EXPO_DEBUG === 'true';
@@ -154,6 +161,10 @@ Is your WSL working? in Powershell try: bash.exe -c 'uname'`
 const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
 
 export async function prepareLocalAuth() {
+  if (DEBUG) {
+    log.warn(APPLE_ERRORS);
+  }
+
   if (process.platform === 'win32') {
     const [version] = release().match(/\d./);
     if (version !== '10') {
