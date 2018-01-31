@@ -26,7 +26,7 @@ export const DEBUG = process.env.EXPO_DEBUG && process.env.EXPO_DEBUG === 'true'
 
 const ENABLE_WSL = `
 Does not seem like WSL enabled on this machine. Download from the Windows app
-store a distribution of Linux, then in an admin powershell, please run:
+store a distribution of Linux, run it at least once, then in an admin powershell, please run:
 
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
 `;

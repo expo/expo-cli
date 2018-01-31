@@ -14,8 +14,6 @@ export default (program: any) => {
     .alias('bi')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
     .option('-t --type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i)
-    .option('-f, --local-auth', 'Turn on local auth flow')
-    .option('--expert-auth', "Don't log in to Apple, provide all of the files needed to build.")
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
     .description(
@@ -23,11 +21,6 @@ export default (program: any) => {
     )
     .allowNonInteractive()
     .asyncActionProjectDir((projectDir, options) => {
-      if (options.localAuth || options.expertAuth) {
-        log.warn(
-          'DEPRECATED: --local-auth and --expert-auth are no-ops now, will be removed in future'
-        );
-      }
       let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
       if (!channelRe.test(options.releaseChannel)) {
         log.error(
