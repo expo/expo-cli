@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [49.0.6] - 2018-02-01
+
+### Changed
+
+* Update `xdl` to v48.0.3.
+
 ## [49.0.1] - 2018-01-25
 
 ### Added
