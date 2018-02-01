@@ -37,6 +37,7 @@ import FormData from './tools/FormData';
 import { isNode } from './tools/EnvironmentHelper';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
+import * as Sentry from './Sentry';
 import * as UrlUtils from './UrlUtils';
 import UserManager from './User';
 import UserSettings from './UserSettings';
@@ -386,7 +387,8 @@ export async function publishAsync(
         `There was an error validating your project schema. Check for any warnings about the contents of your app/exp.json.`
       );
     }
-    throw new Error(`There was an error publishing your project. Please check for any warnings.`);
+    Sentry.captureException(e);
+    throw e;
   }
 
   await _maybeWriteArtifactsToDiskAsync({

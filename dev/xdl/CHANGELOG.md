@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [48.0.3] - 2018-02-01
+
+### Changed
+
+* Improve logging of publishing errors.
+
 ## [48.0.2] - 2018-01-25
 
 ### Changed
