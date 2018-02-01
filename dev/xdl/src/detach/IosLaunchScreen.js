@@ -1,8 +1,10 @@
 /**
  *  @flow
  */
+ import fs from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
+import rimraf from 'rimraf';
 import { DOMParser, XMLSerializer } from 'xmldom';
 
 import {
@@ -244,6 +246,11 @@ async function configureLaunchAssetsAsync(
       splashOutputFilename,
       splashIntermediateFilename,
     ]);
+
+    const generatedUnnecessaryNib = path.join(supportingDirectory, 'LaunchScreen.nib');
+    if (fs.existsSync(generatedUnnecessaryNib)) {
+      rimraf.sync(generatedUnnecessaryNib);
+    }
   }
   return;
 }
