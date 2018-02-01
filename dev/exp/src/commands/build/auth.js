@@ -154,9 +154,9 @@ const TIMEOUT = 60 * 1000 * MINUTES;
 
 const timeout_msg = (prgm, args) =>
   process.platform === 'win32'
-    ? `Took too long (limit is ${MINUTES} minutes) to execute ${prgm} ${args}.
+    ? `Took too long (limit is ${MINUTES} minutes) to execute ${prgm} ${args.join(' ')}.
 Is your WSL working? in Powershell try: bash.exe -c 'uname'`
-    : `Took too long (limit is ${MINUTES} minutes) to execute ${prgm} ${args}`;
+    : `Took too long (limit is ${MINUTES} minutes) to execute ${prgm} ${args.join(' ')}`;
 
 const opts = { stdio: ['inherit', 'pipe', 'pipe'] };
 
@@ -198,7 +198,7 @@ async function spawnAndCollectJSONOutputAsync(program, args) {
       try {
         if (process.platform === 'win32') {
           prgm = WSL_BASH;
-          cmd = ['-c', `'${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} ${args.join(' ')}'`];
+          cmd = ['-c', `${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} ${args.join(' ')}`];
           if (DEBUG) {
             log.warn(`Running: bash.exe ${cmd.join(' ')}`);
           }
