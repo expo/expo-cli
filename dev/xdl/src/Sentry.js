@@ -1,6 +1,7 @@
 /**
  * @flow
  */
+import Config from './Config';
 
 let Raven;
 let SENTRY_DSN;
@@ -23,12 +24,23 @@ type TagType = {
   [key: string]: string,
 };
 
-export function logError(message: string, { tags }: { tags: TagType }): void {
+export function logError(message: string, options?: Object): void {
   // send error to Sentry
   // add `testing: true` to tags to avoid sending an email when testing
-  Raven.captureMessage(message, {
+  Raven.captureMessage(message, getOptions(options));
+}
+
+export function captureException(ex: Error, options?: Object) {
+  Raven.captureException(ex, getOptions(options));
+}
+
+function getOptions(options = {}) {
+  return {
+    ...options,
     tags: {
-      ...tags,
+      ...options.tags,
+      developerTool: Config.developerTool,
+      offline: Config.offline,
     },
-  });
+  };
 }
