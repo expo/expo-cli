@@ -198,7 +198,7 @@ async function spawnAndCollectJSONOutputAsync(program, args) {
       try {
         if (process.platform === 'win32') {
           prgm = WSL_BASH;
-          cmd = ['-c', `${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} ${args.join(' ')}`];
+          cmd = ['-c', `'${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} ${args.join(' ')}'`];
           if (DEBUG) {
             log.warn(`Running: bash.exe ${cmd.join(' ')}`);
           }
