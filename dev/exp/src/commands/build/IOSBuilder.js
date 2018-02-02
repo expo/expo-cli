@@ -244,11 +244,12 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     this._copyOverAsString(credsStarter, checkAppExistenceAttempt);
   }
 
-  async produceProvisionProfile(appleCreds, credsMetadata, teamId, credsStarter) {
+  async produceProvisionProfile(appleCreds, credsMetadata, teamId, credsStarter, isEnterprise) {
     const produceProvisionProfileAttempt = await authFuncs.produceProvisionProfile(
       appleCreds,
       credsMetadata,
-      teamId
+      teamId,
+      isEnterprise
     );
     if (
       produceProvisionProfileAttempt.result === 'failure' &&
@@ -262,10 +263,10 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     this._copyOverAsString(credsStarter, produceProvisionProfileAttempt);
   }
 
-  async expoManagedResource(credsStarter, choice, appleCreds, teamId, credsMetadata) {
+  async expoManagedResource(credsStarter, choice, appleCreds, teamId, credsMetadata, isEnterprise) {
     switch (choice) {
       case 'distCert':
-        const produceCertAttempt = await authFuncs.produceCerts(appleCreds, teamId);
+        const produceCertAttempt = await authFuncs.produceCerts(appleCreds, teamId, isEnterprise);
         this._throwIfFailureWithReasonDump(produceCertAttempt);
         this._copyOverAsString(credsStarter, produceCertAttempt);
         break;
@@ -273,13 +274,20 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         const producePushCertsAttempt = await authFuncs.producePushCerts(
           appleCreds,
           credsMetadata,
-          teamId
+          teamId,
+          isEnterprise
         );
         this._throwIfFailureWithReasonDump(producePushCertsAttempt);
         this._copyOverAsString(credsStarter, producePushCertsAttempt);
         break;
       case 'provisioningProfile':
-        await this.produceProvisionProfile(appleCreds, credsMetadata, teamId, credsStarter);
+        await this.produceProvisionProfile(
+          appleCreds,
+          credsMetadata,
+          teamId,
+          credsStarter,
+          isEnterprise
+        );
         break;
       default:
         throw new Error(`Unknown manage resource choice requested: ${choice}`);
@@ -301,7 +309,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     return appleCredentials;
   }
 
-  async runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata) {
+  async runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata, isEnterprise) {
     const expoManages = { ...(await inquirer.prompt(whatToOverride)), provisioningProfile: true };
     const spinner = ora('Running local authentication and producing required credentials').start();
     try {
@@ -314,7 +322,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
             choice,
             appleCredentials,
             credsStarter.teamId,
-            credsMetadata
+            credsMetadata,
+            isEnterprise
           );
         } else {
           spinner.stop();
@@ -355,13 +364,24 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     if (clientHasAllNeededCreds === false) {
       // We just keep mutating the creds object.
       const strategy = await inquirer.prompt(runAsExpertQuestion);
+      const { isEnterprise } = await inquirer.prompt({
+        type: 'confirm',
+        name: 'isEnterprise',
+        message: 'Run as enterprise account?',
+      });
+      credsStarter.enterpriseAccount = isEnterprise ? 'true' : 'false';
       const appleCredentials = await this._validateCredsEnsureAppExists(
         credsStarter,
         credsMetadata,
         !strategy.isExpoManaged
       );
       if (strategy.isExpoManaged) {
-        await this.runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata);
+        await this.runningAsExpoManaged(
+          appleCredentials,
+          credsStarter,
+          credsMetadata,
+          isEnterprise
+        );
       } else {
         await this.runningAsExpert(credsStarter);
       }

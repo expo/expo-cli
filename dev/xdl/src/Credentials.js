@@ -21,7 +21,7 @@ export type IOSCredentials = {
   pushP12?: string,
   pushPassword?: string,
   provisioningProfile?: string,
-  clientExpMadeCerts?: string,
+  enterpriseAccount?: string,
 };
 
 export type Credentials = IOSCredentials | AndroidCredentials;
@@ -107,18 +107,17 @@ export async function validateCredentialsForPlatform(
   credentials: ?Credentials,
   metadata: CredentialMetadata
 ): Promise<void> {
-  const {
-    requestId,
-    isValid,
-    error,
-    errorCode,
-    errorMessage,
-  } = await Api.callMethodAsync('validateCredentials', [], 'post', {
-    credentials,
-    platform,
-    validationType,
-    ...metadata,
-  });
+  const { requestId, isValid, error, errorCode, errorMessage } = await Api.callMethodAsync(
+    'validateCredentials',
+    [],
+    'post',
+    {
+      credentials,
+      platform,
+      validationType,
+      ...metadata,
+    }
+  );
 
   if (!isValid || error) {
     throw new XDLError(
@@ -131,16 +130,14 @@ export async function validateCredentialsForPlatform(
 }
 
 export async function fetchAppleCertificates(metadata: CredentialMetadata): Promise<void> {
-  const {
-    requestId,
-    err,
-    success,
-    error,
-    errorCode,
-    errorMessage,
-  } = await Api.callMethodAsync('fetchAppleCertificates', [], 'post', {
-    ...metadata,
-  });
+  const { requestId, err, success, error, errorCode, errorMessage } = await Api.callMethodAsync(
+    'fetchAppleCertificates',
+    [],
+    'post',
+    {
+      ...metadata,
+    }
+  );
 
   if (err || !success || error) {
     throw new XDLError(
@@ -153,15 +150,14 @@ export async function fetchAppleCertificates(metadata: CredentialMetadata): Prom
 }
 
 export async function ensureAppId(metadata: CredentialMetadata): Promise<void> {
-  const {
-    requestId,
-    err,
-    success,
-    errorCode,
-    errorMessage,
-  } = await Api.callMethodAsync('ensureAppId', [], 'post', {
-    ...metadata,
-  });
+  const { requestId, err, success, errorCode, errorMessage } = await Api.callMethodAsync(
+    'ensureAppId',
+    [],
+    'post',
+    {
+      ...metadata,
+    }
+  );
 
   if (err || !success) {
     throw new XDLError(
@@ -181,7 +177,9 @@ export async function fetchPushCertificates(metadata: CredentialMetadata): Promi
   if (result.err || !result.success) {
     throw new XDLError(
       result.errorCode,
-      `Unable to fetch push certificate. Request ID ${result.requestId}, message: ${result.errorMessage}`
+      `Unable to fetch push certificate. Request ID ${result.requestId}, message: ${
+        result.errorMessage
+      }`
     );
   }
 

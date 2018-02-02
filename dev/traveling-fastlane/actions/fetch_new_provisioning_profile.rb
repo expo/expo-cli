@@ -6,7 +6,7 @@ require 'spaceship'
 require 'json'
 require 'base64'
 
-$appleId, $password, $bundleId, $teamId = ARGV
+$appleId, $password, $bundleId, $teamId, $isEnterprise = ARGV
 
 ENV['FASTLANE_TEAM_ID'] = $teamId
 
@@ -14,14 +14,27 @@ json_reply = with_captured_stderr{
   begin
     Spaceship::Portal.login($appleId, $password)
     Spaceship::Portal.client.team_id = $teamId
-    cert = Spaceship::Portal.certificate.production.all.last
+    cert = nil
+
+    if $isEnterprise == 'true'
+      cert = Spaceship::Portal.certificate.in_house.production.all.last
+    else
+      cert = Spaceship::Portal.certificate.production.all.last
+    end
+
     if cert == nil
       $stderr.puts(JSON.generate({result:'failure',
                                   reason:'No cert available to make provision profile against',
                                   rawDump:'Make sure you were able to make a certificate prior to this step'}))
     else
-      profile = Spaceship::Portal.provisioning_profile.app_store.create!(bundle_id: $bundleId,
-                                                                         certificate: cert)
+      profile = nil
+
+      if $isEnterprise == 'true'
+        profile = Spaceship::Portal.provisioning_profile.in_house.create!(bundle_id: $bundleId, certificate: cert)
+      else
+        profile = Spaceship::Portal.provisioning_profile.app_store.create!(bundle_id: $bundleId, certificate: cert)
+      end
+
       provisionProfile = profile.download
       $stderr.puts(JSON.generate({result:'success',
                                   provisioningProfile:Base64.encode64(provisionProfile)}))

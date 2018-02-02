@@ -25,7 +25,8 @@ const APPLE_ERRORS = `If you get errors about
 'Maximum number of certificates generated' or 'duplicate profiles'
 
 then consider going to developer.apple.com and revoking those certs or
-the existing provisioning profile for this app`;
+the existing provisioning profile for this app
+`;
 
 export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
 
@@ -52,12 +53,10 @@ export const doesFileProvidedExist = async (printOut, p12Path) => {
 
 export const doFastlaneActionsExist = async () => {
   return Promise.all(
-    Object.keys(FASTLANE)
-      .filter(k => k !== FASTLANE.ruby_dir)
-      .map(async action => {
-        let path = FASTLANE[action];
-        return { action, path, doesExist: await doesFileProvidedExist(false, path) };
-      })
+    Object.keys(FASTLANE).map(async action => {
+      let path = FASTLANE[action];
+      return { action, path, doesExist: await doesFileProvidedExist(false, path) };
+    })
   );
 };
 
@@ -81,29 +80,32 @@ export function ensureAppIdLocally(creds, metadata, teamId) {
   return appStoreAction(creds, metadata, teamId, 'verify');
 }
 
-export function produceProvisionProfile(credentials, { bundleIdentifier }, teamId) {
+export function produceProvisionProfile(credentials, { bundleIdentifier }, teamId, isEnterprise) {
   return spawnAndCollectJSONOutputAsync(FASTLANE.fetch_new_provisioning_profile, [
     credentials.appleId,
     credentials.password,
     bundleIdentifier,
     teamId,
+    isEnterprise,
   ]);
 }
 
-export function producePushCerts(credentials, { bundleIdentifier }, teamId) {
+export function producePushCerts(credentials, { bundleIdentifier }, teamId, isEnterprise) {
   return spawnAndCollectJSONOutputAsync(FASTLANE.fetch_push_cert, [
     credentials.appleId,
     credentials.password,
     bundleIdentifier,
     teamId,
+    isEnterprise,
   ]);
 }
 
-export function produceCerts(credentials, teamId) {
+export function produceCerts(credentials, teamId, isEnterprise) {
   return spawnAndCollectJSONOutputAsync(FASTLANE.fetch_cert, [
     credentials.appleId,
     credentials.password,
     teamId,
+    isEnterprise,
   ]);
 }
 
@@ -149,7 +151,9 @@ const windowsToWSLPath = p => {
   const noSlashes = slash(p);
   return noSlashes.slice(2, noSlashes.length);
 };
+
 const MINUTES = 10;
+
 const TIMEOUT = 60 * 1000 * MINUTES;
 
 const timeout_msg = (prgm, args) =>
@@ -183,9 +187,6 @@ export async function prepareLocalAuth() {
   }
 }
 
-const USER_PERMISSIONS_ERROR =
-  'You probably do not have user permissions for where exp is installed, consider changing permissions there';
-
 async function spawnAndCollectJSONOutputAsync(program, args) {
   let prgm = program;
   let cmd = args;
@@ -202,10 +203,8 @@ async function spawnAndCollectJSONOutputAsync(program, args) {
           if (DEBUG) {
             log.warn(`Running: bash.exe ${cmd.join(' ')}`);
           }
-          var child = child_process.spawn(prgm, cmd, opts);
-        } else {
-          var child = child_process.spawn(prgm, cmd, opts);
         }
+        var child = child_process.spawn(prgm, cmd, opts);
       } catch (e) {
         return reject(e);
       }
@@ -213,17 +212,14 @@ async function spawnAndCollectJSONOutputAsync(program, args) {
       // This is where we get our replies back from the ruby code
       child.stderr.on('data', d => jsonContent.push(d));
       child.stdout.on('end', () => {
-        const reply = Buffer.concat(jsonContent).toString();
+        const rawDump = Buffer.concat(jsonContent).toString();
         try {
-          resolve(JSON.parse(reply));
+          resolve(JSON.parse(rawDump));
         } catch (e) {
           reject({
             result: 'failure',
-            reason:
-              reply.match(/Bundler::InstallError/) === null
-                ? 'Could not understand JSON reply from Ruby based local auth scripts'
-                : USER_PERMISSIONS_ERROR,
-            rawDump: reply,
+            reason: 'Could not understand JSON reply from Ruby based local auth scripts',
+            rawDump,
           });
         }
       });

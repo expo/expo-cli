@@ -8,7 +8,6 @@ const TRAVELING_FASTLANE = `traveling-fastlane-${version}-osx`;
 module.exports = () => {
   let p = join.bind(null, __dirname, TRAVELING_FASTLANE);
   return {
-    ruby_dir: p(),
     app_management: p('app_management'),
     fetch_cert: p('fetch_cert'),
     fetch_new_provisioning_profile: p('fetch_new_provisioning_profile'),

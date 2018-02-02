@@ -6,7 +6,7 @@ require 'spaceship'
 require 'json'
 require 'base64'
 
-$appleId, $password, $bundleId, $teamId = ARGV
+$appleId, $password, $bundleId, $teamId, $isEnterprise = ARGV
 
 ENV['FASTLANE_TEAM_ID'] = $teamId
 
@@ -15,7 +15,14 @@ json_reply = with_captured_stderr{
     Spaceship::Portal.login($appleId, $password)
     Spaceship::Portal.client.team_id = $teamId
     csr, pkey = Spaceship.certificate.create_certificate_signing_request()
-    cert = Spaceship::Portal.certificate.production_push.create!(csr: csr, bundle_id:$bundleId)
+    cert = nil
+
+    if $isEnterprise == 'true'
+      cert = Spaceship::Portal.certificate.in_house.production_push.create!(csr: csr, bundle_id:$bundleId)
+    else
+      cert = Spaceship::Portal.certificate.production_push.create!(csr: csr, bundle_id:$bundleId)
+    end
+
     x509_certificate = cert.download
     pushP12password = SecureRandom.base64()
     pushP12 = OpenSSL::PKCS12.create(pushP12password, 'production', pkey, x509_certificate)
