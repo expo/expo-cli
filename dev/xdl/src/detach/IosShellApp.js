@@ -192,7 +192,7 @@ async function _configureAndCopyShellAppArchiveAsync(args) {
   await IosNSBundle.configureAsync(context);
   if (output) {
     // TODO: un-hard-code ExpoKitApp.app
-    const archiveName = projectName.replace(/[^0-9a-z_\-\.]/gi, '_');
+    const archiveName = context.config.slug.replace(/[^0-9a-z_\-]/gi, '_');
     const appReleasePath = path.resolve(path.join(`${context.data.archivePath}`, '..'));
     if (type === 'simulator') {
       await spawnAsync(
