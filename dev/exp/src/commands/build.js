@@ -12,8 +12,16 @@ export default (program: any) => {
   program
     .command('build:ios [project-dir]')
     .alias('bi')
-    .option('-c, --clear-credentials', 'Clear stored credentials.')
-    .option('--revoke-apple-certs', 'Revoke dist, push certs on developer.apple.com')
+    .option('-c, --clear-credentials', 'Clear credentials stored on expo servers')
+    .option('-e, --apple-enterprise-account', 'Run as Apple Enterprise account')
+    .option(
+      '--revoke-apple-dist-certs',
+      'Revoke distribution certs on developer.apple.com before attempting to make new certs'
+    )
+    .option(
+      '--revoke-apple-push-certs',
+      'Revoke push certs on developer.apple.com before attempting to make new certs'
+    )
     .option(
       '--revoke-apple-provisioning-profile',
       'Revoke provisioning profile on developer.apple.com'

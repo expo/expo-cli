@@ -71,6 +71,7 @@ function appStoreAction(creds, metadata, teamId, action) {
     metadata.bundleIdentifier,
     metadata.experienceName,
     '[]',
+    'false',
   ];
   return spawnAndCollectJSONOutputAsync(FASTLANE.app_management, args);
 }
@@ -190,32 +191,35 @@ export async function prepareLocalAuth() {
 type appManagementAction =
   | 'create'
   | 'verify'
-  | 'revoke-certs'
-  | 'dump-certs'
-  | 'revoke-provisioning-profile';
+  | 'revokeCerts'
+  | 'dumpDistCert'
+  | 'dumpPushCert'
+  | 'revokeProvisioningProfile';
 
 export async function revokeProvisioningProfile(creds, metadata, teamId) {
   const args = [
-    ('revoke-provisioning-profile': appManagementAction),
+    ('revokeProvisioningProfile': appManagementAction),
     creds.appleId,
     creds.password,
     teamId,
     metadata.bundleIdentifier,
     metadata.experienceName,
     '[]',
+    'false',
   ];
   return spawnAndCollectJSONOutputAsync(FASTLANE.app_management, args);
 }
 
-export async function dumpExistingCerts(creds, metadata, teamId) {
+export async function askWhichCertsToDump(creds, metadata, teamId, distOrPush, isEnterprise) {
   const args = [
-    ('dump-certs': appManagementAction),
+    (distOrPush === 'distCert' && 'dumpDistCert') || (distOrPush === 'pushCert' && 'dumpPushCert'),
     creds.appleId,
     creds.password,
     teamId,
     metadata.bundleIdentifier,
     metadata.experienceName,
     '[]',
+    isEnterprise ? 'true' : 'false',
   ];
   const dumpExistingCertsAttempt = await spawnAndCollectJSONOutputAsync(
     FASTLANE.app_management,
@@ -256,7 +260,7 @@ export async function dumpExistingCerts(creds, metadata, teamId) {
 
 export async function revokeCredentialsOnApple(creds, metadata, ids, teamId) {
   const args = [
-    ('revoke-certs': appManagementAction),
+    ('revokeCerts': appManagementAction),
     creds.appleId,
     creds.password,
     teamId,

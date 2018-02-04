@@ -289,24 +289,42 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
-  async _handleRevokes(appleCredentials, credsStarter, credsMetadata, teamId) {
-    if (this.options.revokeAppleCerts) {
-      // Get back IDs that Spaceship knows how to revoke
-      const revokeWhat = await authFuncs.dumpExistingCerts(appleCredentials, credsMetadata, teamId);
-      if (revokeWhat.length !== 0) {
-        const revokeAttempt = await authFuncs.revokeCredentialsOnApple(
-          appleCredentials,
-          credsMetadata,
-          revokeWhat,
-          teamId
-        );
-        if (revokeAttempt.result === 'success') {
-          log(`Revoked ${revokeAttempt.revokeCount} existing certs on developer.apple.com`);
-        } else {
-          log.warn(`Could not revoke certs: ${revokeAttempt.reason}`);
-        }
+  async _revokeHelper(appleCredentials, credsMetadata, teamId, isEnterprise, distOrPush) {
+    // Get back IDs that Spaceship knows how to revoke
+    const revokeWhat = await authFuncs.askWhichCertsToDump(
+      appleCredentials,
+      credsMetadata,
+      teamId,
+      distOrPush,
+      isEnterprise
+    );
+    if (revokeWhat.length !== 0) {
+      const revokeAttempt = await authFuncs.revokeCredentialsOnApple(
+        appleCredentials,
+        credsMetadata,
+        revokeWhat,
+        teamId
+      );
+      if (revokeAttempt.result === 'success') {
+        log(`Revoked ${revokeAttempt.revokeCount} existing certs on developer.apple.com`);
+      } else {
+        log.warn(`Could not revoke certs: ${revokeAttempt.reason}`);
       }
     }
+  }
+
+  async _handleRevokes(appleCredentials, credsStarter, credsMetadata, teamId, isEnterprise) {
+    const f = this._revokeHelper.bind(null, appleCredentials, credsMetadata, teamId, isEnterprise);
+    if (this.options.revokeAppleDistCerts) {
+      log.warn('ATTENTION: Revoking your Apple Distribution Certificates is permanent');
+      await f('distCert');
+    }
+
+    if (this.options.revokeApplePushCerts) {
+      log.warn('ATTENTION: Revoking your Apple Push Certificates is permanent');
+      await f('pushCert');
+    }
+
     if (this.options.revokeAppleProvisioningProfile) {
       await new Promise(r => setTimeout(() => r(), 400));
       const revokeAttempt = await authFuncs.revokeProvisioningProfile(
@@ -326,7 +344,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
-  async _validateCredsEnsureAppExists(credsStarter, credsMetadata, justTeamId) {
+  async _validateCredsEnsureAppExists(credsStarter, credsMetadata, justTeamId, isEnterprise) {
     const appleCredentials = await this.askForAppleCreds(justTeamId);
     log('Validating Credentials...');
     const checkCredsAttempt = await authFuncs.validateCredentialsProduceTeamId(appleCredentials);
@@ -336,7 +354,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       appleCredentials,
       credsStarter,
       credsMetadata,
-      checkCredsAttempt.teamId
+      checkCredsAttempt.teamId,
+      isEnterprise
     );
     await this._ensureAppExists(
       appleCredentials,
@@ -398,20 +417,17 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     } else {
       credsStarter = {};
     }
-
     if (clientHasAllNeededCreds === false) {
       // We just keep mutating the creds object.
       const strategy = await inquirer.prompt(runAsExpertQuestion);
-      const { isEnterprise } = await inquirer.prompt({
-        type: 'confirm',
-        name: 'isEnterprise',
-        message: 'Run as enterprise account?',
-      });
+      const isEnterprise = this.options.appleEnterpriseAccount !== undefined;
+      console.log({ isEnterprise });
       credsStarter.enterpriseAccount = isEnterprise ? 'true' : 'false';
       const appleCredentials = await this._validateCredsEnsureAppExists(
         credsStarter,
         credsMetadata,
-        !strategy.isExpoManaged
+        !strategy.isExpoManaged,
+        isEnterprise
       );
       if (strategy.isExpoManaged) {
         await this.runningAsExpoManaged(

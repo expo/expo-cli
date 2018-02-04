@@ -1,12 +1,12 @@
 # So that we can require funcs.rb
 $LOAD_PATH.unshift File.expand_path(__dir__, __FILE__)
 
-require 'funcs'
 require 'spaceship'
 require 'json'
+require 'funcs'
 require 'base64'
 
-$action, $appleId, $password, $teamId, $bundleId, $experienceName, $certIds = ARGV
+$action, $appleId, $password, $teamId, $bundleId, $experienceName, $certIds, $distOrPush, $isEnterprise = ARGV
 
 ENV['FASTLANE_ITC_TEAM_ID'] = $teamId
 
@@ -19,9 +19,8 @@ def manage(action)
                    appId: app.app_id,
                    features: app.features,
                    enabledFeatures: app.enable_services})
-  elsif action == 'dump-certs'
-    certs = Spaceship.certificate.all.map{|cert| cert.to_s}
-    JSON.generate({result:'success', certs:certs})
+  elsif action == 'dumpDistCert' or action == 'dumpPushCert'
+    dumpCert(action, $isEnterprise)
   elsif action == 'verify'
     queriedApp = Spaceship::Portal.app.find $bundleId
     if queriedApp == nil
@@ -32,19 +31,19 @@ def manage(action)
                      name:queriedApp.name,
                      prefix:queriedApp.prefix})
     end
-  elsif action == 'revoke-provisioning-profile'
+  elsif action == 'revokeProvisioningProfile'
     pp = Spaceship::Portal.provisioning_profile.app_store.find_by_bundle_id(bundle_id: $bundleId)
     if pp.length != 0
       ppId = pp[0].id
-      pp[0].delete!
+      profile = pp[0]
+      profile.delete!
       JSON.generate({result:'success', msg:"Revoked provisioning profile #{ppId}"})
     else
       rsn = "Revoked certificates but could not find provisioning profile by bundle #{$bundleID} to delete"
-      JSON.generate({result:'failure',
-                     reason: rsn})
+      JSON.generate({result:'failure', reason: rsn})
     end
 
-  elsif action == 'revoke-certs'
+  elsif action == 'revokeCerts'
     # array of ids
     certIds = eval($certIds)
     revokeCount = 0
@@ -54,9 +53,7 @@ def manage(action)
       c.revoke!
       revokeCount += 1
     end
-    JSON.generate({result:'success',
-                   revokeCount:revokeCount,
-                   msg:"Revoked certs"})
+    JSON.generate({result:'success', revokeCount:revokeCount, msg:"Revoked certs"})
   else
     JSON.generate({result:'failure',
                    reason:"Unknown action requested: #{action}"})
