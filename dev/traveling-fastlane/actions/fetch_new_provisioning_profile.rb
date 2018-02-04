@@ -37,6 +37,7 @@ json_reply = with_captured_stderr{
 
       provisionProfile = profile.download
       $stderr.puts(JSON.generate({result:'success',
+                                  provisioningProfileId: profile.id,
                                   provisioningProfile:Base64.encode64(provisionProfile)}))
     end
 

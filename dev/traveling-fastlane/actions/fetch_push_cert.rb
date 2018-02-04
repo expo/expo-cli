@@ -18,9 +18,11 @@ json_reply = with_captured_stderr{
     cert = nil
 
     if $isEnterprise == 'true'
-      cert = Spaceship::Portal.certificate.in_house.production_push.create!(csr: csr, bundle_id:$bundleId)
+      cert = Spaceship::Portal.certificate.in_house.production_push.create!(csr: csr,
+                                                                            bundle_id:$bundleId)
     else
-      cert = Spaceship::Portal.certificate.production_push.create!(csr: csr, bundle_id:$bundleId)
+      cert = Spaceship::Portal.certificate.production_push.create!(csr: csr,
+                                                                   bundle_id:$bundleId)
     end
 
     x509_certificate = cert.download
@@ -29,7 +31,8 @@ json_reply = with_captured_stderr{
     $stderr.puts(JSON.generate({result:'success',
                                 pushPrivateSigningKey:pkey,
                                 pushP12:Base64.encode64(pushP12.to_der),
-                                pushPassword:pushP12password}))
+                                pushPassword:pushP12password,
+                                pushId: cert.id}))
   rescue Spaceship::Client::UnexpectedResponse => e
     r = "#{e.error_info['userString']} #{e.error_info['resultString']}"
     $stderr.puts(JSON.generate({result:'failure',

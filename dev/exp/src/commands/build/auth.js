@@ -20,12 +20,12 @@ const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/s
 
 export const NO_BUNDLE_ID = 'App could not be found for bundle id';
 
-const APPLE_ERRORS = `If you get errors about
+export const APPLE_ERRORS = `If you get errors about
 
 'Maximum number of certificates generated' or 'duplicate profiles'
 
-then consider going to developer.apple.com and revoking those certs or
-the existing provisioning profile for this app
+then consider using the flag --revoke-apple-certs and --revoke-apple-provisioning-profile
+or go to developer.apple.com and revoke those credentials manually
 `;
 
 export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
@@ -34,9 +34,11 @@ export const DEBUG = process.env.EXPO_DEBUG && process.env.EXPO_DEBUG === 'true'
 
 const ENABLE_WSL = `
 Does not seem like WSL enabled on this machine. Download from the Windows app
-store a distribution of Linux, run it at least once, then in an admin powershell, please run:
+store a distribution of Linux, then in an admin powershell, please run:
 
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+
+and run the new Linux installation at least once
 `;
 
 export const doesFileProvidedExist = async (printOut, p12Path) => {
@@ -68,6 +70,7 @@ function appStoreAction(creds, metadata, teamId, action) {
     teamId,
     metadata.bundleIdentifier,
     metadata.experienceName,
+    '[]',
   ];
   return spawnAndCollectJSONOutputAsync(FASTLANE.app_management, args);
 }
@@ -117,9 +120,6 @@ export async function validateCredentialsProduceTeamId(creds) {
     FASTLANE.validate_apple_credentials,
     [creds.appleId, creds.password]
   );
-  if (DEBUG) {
-    console.log({ action: 'teams attempt retrieval', dump: getTeamsAttempt });
-  }
   if (getTeamsAttempt.result === 'failure') {
     const { reason, rawDump } = getTeamsAttempt;
     throw new Error(`Reason:${reason}, raw:${JSON.stringify(rawDump)}`);
@@ -185,6 +185,86 @@ export async function prepareLocalAuth() {
       log.warn(ENABLE_WSL);
     }
   }
+}
+
+type appManagementAction =
+  | 'create'
+  | 'verify'
+  | 'revoke-certs'
+  | 'dump-certs'
+  | 'revoke-provisioning-profile';
+
+export async function revokeProvisioningProfile(creds, metadata, teamId) {
+  const args = [
+    ('revoke-provisioning-profile': appManagementAction),
+    creds.appleId,
+    creds.password,
+    teamId,
+    metadata.bundleIdentifier,
+    metadata.experienceName,
+    '[]',
+  ];
+  return spawnAndCollectJSONOutputAsync(FASTLANE.app_management, args);
+}
+
+export async function dumpExistingCerts(creds, metadata, teamId) {
+  const args = [
+    ('dump-certs': appManagementAction),
+    creds.appleId,
+    creds.password,
+    teamId,
+    metadata.bundleIdentifier,
+    metadata.experienceName,
+    '[]',
+  ];
+  const dumpExistingCertsAttempt = await spawnAndCollectJSONOutputAsync(
+    FASTLANE.app_management,
+    args
+  );
+  if (dumpExistingCertsAttempt.result === 'success') {
+    const { certs } = dumpExistingCertsAttempt;
+    const trimmedOneLiners = certs.map(s =>
+      s
+        .split('\n')
+        .map(i => i.trim().replace(',', ''))
+        .join(' ')
+    );
+    if (trimmedOneLiners.length === 0) {
+      log.warn('No certs on developer.apple.com available to revoke');
+      return [];
+    }
+    const { revokeTheseCerts } = await inquirer.prompt({
+      type: 'checkbox',
+      name: 'revokeTheseCerts',
+      message: `Which Certs to revoke?`,
+      choices: trimmedOneLiners,
+    });
+    const certIds = revokeTheseCerts
+      .map(s => trimmedOneLiners[trimmedOneLiners.indexOf(s)])
+      .map(s => s.split(' ')[1].split('=')[1])
+      .map(s => s.slice(1, s.length - 1));
+    return certIds;
+  } else {
+    log.warn(
+      `Unable to dump existing Apple Developer files: ${JSON.stringify(
+        dumpExistingCertsAttempt.reason
+      )}`
+    );
+    return [];
+  }
+}
+
+export async function revokeCredentialsOnApple(creds, metadata, ids, teamId) {
+  const args = [
+    ('revoke-certs': appManagementAction),
+    creds.appleId,
+    creds.password,
+    teamId,
+    metadata.bundleIdentifier,
+    metadata.experienceName,
+    ids.length === 0 ? '[]' : `[${ids.map(i => `"${i}"`).join(',')}]`,
+  ];
+  return spawnAndCollectJSONOutputAsync(FASTLANE.app_management, args);
 }
 
 async function spawnAndCollectJSONOutputAsync(program, args) {

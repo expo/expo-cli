@@ -31,7 +31,8 @@ json_reply = with_captured_stderr{
     $stderr.puts(JSON.generate({result:'success',
                                 certPrivateSigningKey:pkey,
                                 certP12:Base64.encode64(p12.to_der),
-                                certPassword:p12password}))
+                                certPassword:p12password,
+                                certId: certs.last.id}))
   rescue Spaceship::Client::UnexpectedResponse => e
     r = "#{e.error_info['userString']} #{e.error_info['resultString']}"
     $stderr.puts(JSON.generate({result:'failure',

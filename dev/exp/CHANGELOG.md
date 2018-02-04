@@ -10,6 +10,10 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [49.2.0] - 2018-02-04
+
+* Expose `--revoke-apple-certs` and `--revoke-apple-provisioning-profile` for `build:ios`
+
 ## [49.1.0] - 2018-02-02
 
 * Use bumped traveling-fastlane, let user make enterprise based Apple accounts cert files

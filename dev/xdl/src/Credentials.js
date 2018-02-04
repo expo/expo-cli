@@ -22,6 +22,10 @@ export type IOSCredentials = {
   pushPassword?: string,
   provisioningProfile?: string,
   enterpriseAccount?: string,
+  // These are ids on the spaceship object (implementation detail), Spaceship::Portal::Certificate
+  certId?: string,
+  pushId?: string,
+  provisioningProfileId?: string,
 };
 
 export type Credentials = IOSCredentials | AndroidCredentials;

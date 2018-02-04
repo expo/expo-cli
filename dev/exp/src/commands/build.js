@@ -13,6 +13,11 @@ export default (program: any) => {
     .command('build:ios [project-dir]')
     .alias('bi')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
+    .option('--revoke-apple-certs', 'Revoke dist, push certs on developer.apple.com')
+    .option(
+      '--revoke-apple-provisioning-profile',
+      'Revoke provisioning profile on developer.apple.com'
+    )
     .option('-t --type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i)
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')

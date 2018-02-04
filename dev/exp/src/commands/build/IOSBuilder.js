@@ -146,13 +146,10 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     // Clear credentials if they want to:
     if (this.options.clearCredentials) {
       await Credentials.removeCredentialsForPlatform('ios', credentialMetadata);
-      log.warn('Removed existing credentials');
+      log.warn('Removed existing credentials from expo servers');
     }
     if (this.options.type !== 'simulator') {
       try {
-        if (authFuncs.DEBUG) {
-          console.log(await authFuncs.doFastlaneActionsExist());
-        }
         await authFuncs.prepareLocalAuth();
         await this.runLocalAuth(credentialMetadata);
       } catch (e) {
@@ -255,9 +252,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       produceProvisionProfileAttempt.result === 'failure' &&
       produceProvisionProfileAttempt.reason.startsWith(authFuncs.MULTIPLE_PROFILES)
     ) {
-      log.warn(
-        'Consider logging into https://developer.apple.com and removing the existing provisioning profile'
-      );
+      log.warn(authFuncs.APPLE_ERRORS);
     }
     this._throwIfFailureWithReasonDump(produceProvisionProfileAttempt);
     this._copyOverAsString(credsStarter, produceProvisionProfileAttempt);
@@ -294,12 +289,55 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
+  async _handleRevokes(appleCredentials, credsStarter, credsMetadata, teamId) {
+    if (this.options.revokeAppleCerts) {
+      // Get back IDs that Spaceship knows how to revoke
+      const revokeWhat = await authFuncs.dumpExistingCerts(appleCredentials, credsMetadata, teamId);
+      if (revokeWhat.length !== 0) {
+        const revokeAttempt = await authFuncs.revokeCredentialsOnApple(
+          appleCredentials,
+          credsMetadata,
+          revokeWhat,
+          teamId
+        );
+        if (revokeAttempt.result === 'success') {
+          log(`Revoked ${revokeAttempt.revokeCount} existing certs on developer.apple.com`);
+        } else {
+          log.warn(`Could not revoke certs: ${revokeAttempt.reason}`);
+        }
+      }
+    }
+    if (this.options.revokeAppleProvisioningProfile) {
+      await new Promise(r => setTimeout(() => r(), 400));
+      const revokeAttempt = await authFuncs.revokeProvisioningProfile(
+        appleCredentials,
+        credsMetadata,
+        teamId
+      );
+      if (revokeAttempt.result === 'success') {
+        log.warn(revokeAttempt.msg);
+      } else {
+        log.warn(
+          `Could not revoke provisioning profile: ${revokeAttempt.reason} rawDump:${JSON.stringify(
+            revokeAttempt
+          )}`
+        );
+      }
+    }
+  }
+
   async _validateCredsEnsureAppExists(credsStarter, credsMetadata, justTeamId) {
     const appleCredentials = await this.askForAppleCreds(justTeamId);
     log('Validating Credentials...');
     const checkCredsAttempt = await authFuncs.validateCredentialsProduceTeamId(appleCredentials);
     this._throwIfFailureWithReasonDump(checkCredsAttempt);
     credsStarter.teamId = checkCredsAttempt.teamId;
+    await this._handleRevokes(
+      appleCredentials,
+      credsStarter,
+      credsMetadata,
+      checkCredsAttempt.teamId
+    );
     await this._ensureAppExists(
       appleCredentials,
       credsMetadata,
@@ -386,9 +424,6 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         await this.runningAsExpert(credsStarter);
       }
       const { result, ...creds } = credsStarter;
-      if (authFuncs.DEBUG) {
-        console.log(credsStarter);
-      }
       this._areCredsMissing(creds);
       await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
       log.warn(`Encrypted ${[...OBLIGATORY_CREDS_KEYS.keys()]} and saved to expo servers`);
@@ -398,9 +433,6 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   }
 
   _throwIfFailureWithReasonDump(replyAttempt) {
-    if (authFuncs.DEBUG) {
-      console.log(replyAttempt);
-    }
     if (replyAttempt.result === 'failure') {
       const { reason, rawDump } = replyAttempt;
       throw new Error(`Reason:${reason}, raw:${JSON.stringify(rawDump)}`);
