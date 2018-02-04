@@ -327,6 +327,11 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
 
     if (this.options.revokeAppleProvisioningProfile) {
       await new Promise(r => setTimeout(() => r(), 400));
+      log.warn(
+        `ATTENTION: Revoking your Apple Provisioning Profile for ${
+          credsMetadata.bundleIdentifier
+        } is permanent`
+      );
       const revokeAttempt = await authFuncs.revokeProvisioningProfile(
         appleCredentials,
         credsMetadata,
@@ -421,7 +426,6 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       // We just keep mutating the creds object.
       const strategy = await inquirer.prompt(runAsExpertQuestion);
       const isEnterprise = this.options.appleEnterpriseAccount !== undefined;
-      console.log({ isEnterprise });
       credsStarter.enterpriseAccount = isEnterprise ? 'true' : 'false';
       const appleCredentials = await this._validateCredsEnsureAppExists(
         credsStarter,

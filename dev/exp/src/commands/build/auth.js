@@ -24,8 +24,9 @@ export const APPLE_ERRORS = `If you get errors about
 
 'Maximum number of certificates generated' or 'duplicate profiles'
 
-then consider using the flag --revoke-apple-certs and --revoke-apple-provisioning-profile
-or go to developer.apple.com and revoke those credentials manually
+then consider using the flags --revoke-apple-dist-certs, --revoke-apple-push-certs,
+and --revoke-apple-provisioning-profile or go to developer.apple.com
+and revoke those credentials manually
 `;
 
 export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
