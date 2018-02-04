@@ -4,7 +4,7 @@ require 'funcs'
 require 'spaceship'
 require 'json'
 
-$appleId, $password = ARGV
+$appleId, $password = ARGV[0].gsub(/\s+/m, ' ').strip.split(" ")
 
 json_reply = with_captured_stderr{
   begin

@@ -6,7 +6,7 @@ require 'spaceship'
 require 'json'
 require 'base64'
 
-$appleId, $password, $bundleId, $teamId, $isEnterprise = ARGV
+$appleId, $password, $bundleId, $teamId, $isEnterprise = ARGV[0].gsub(/\s+/m, ' ').strip.split(" ")
 
 ENV['FASTLANE_TEAM_ID'] = $teamId
 

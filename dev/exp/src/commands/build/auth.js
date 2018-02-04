@@ -267,8 +267,13 @@ export async function revokeCredentialsOnApple(creds, metadata, ids, teamId) {
     teamId,
     metadata.bundleIdentifier,
     metadata.experienceName,
-    ids.length === 0 ? '[]' : `[${ids.map(i => `"${i}"`).join(',')}]`,
   ];
+  if (process.platform === 'win32') {
+    args.push(ids.length === 0 ? '[]' : `[${ids.map(i => `\\"${i}\\"`).join(',')}]`);
+  } else {
+    args.push(ids.length === 0 ? '[]' : `[${ids.map(i => `"${i}"`).join(',')}]`);
+  }
+
   return spawnAndCollectJSONOutputAsync(FASTLANE.app_management, args);
 }
 
@@ -284,12 +289,15 @@ async function spawnAndCollectJSONOutputAsync(program, args) {
       try {
         if (process.platform === 'win32') {
           prgm = WSL_BASH;
-          cmd = ['-c', `${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} ${args.join(' ')}`];
+          cmd = ['-c', `${WSL_ONLY_PATH} /mnt/c${windowsToWSLPath(program)} "${args.join(' ')}"`];
           if (DEBUG) {
             log.warn(`Running: bash.exe ${cmd.join(' ')}`);
           }
+          var child = child_process.spawn(prgm, cmd, opts);
+        } else {
+          const wrapped = [`${cmd.join(' ')}`];
+          var child = child_process.spawn(prgm, wrapped, opts);
         }
-        var child = child_process.spawn(prgm, cmd, opts);
       } catch (e) {
         return reject(e);
       }

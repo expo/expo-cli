@@ -6,7 +6,9 @@ require 'json'
 require 'funcs'
 require 'base64'
 
-$action, $appleId, $password, $teamId, $bundleId, $experienceName, $certIds, $distOrPush, $isEnterprise = ARGV
+$action, $appleId, $password, $teamId, $bundleId,
+$experienceName, $certIds,
+$distOrPush, $isEnterprise = ARGV[0].gsub(/\s+/m, ' ').strip.split(" ")
 
 ENV['FASTLANE_ITC_TEAM_ID'] = $teamId
 
@@ -37,9 +39,9 @@ def manage(action)
       ppId = pp[0].id
       profile = pp[0]
       profile.delete!
-      JSON.generate({result:'success', msg:"Revoked provisioning profile #{ppId}"})
+      JSON.generate({result:'success', msg:"Revoked provisioning profile #{ppId} for #{$bundleId}"})
     else
-      rsn = "Revoked certificates but could not find provisioning profile by bundle #{$bundleID} to delete"
+      rsn = "Revoked certificates but could not find provisioning profile by bundle #{$bundleId} to delete"
       JSON.generate({result:'failure', reason: rsn})
     end
 

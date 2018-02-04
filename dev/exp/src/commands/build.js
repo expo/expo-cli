@@ -16,15 +16,15 @@ export default (program: any) => {
     .option('-e, --apple-enterprise-account', 'Run as Apple Enterprise account')
     .option(
       '--revoke-apple-dist-certs',
-      'Revoke distribution certs on developer.apple.com before attempting to make new certs'
+      'Revoke distribution certs on developer.apple.com before attempting to make new certs, must use with -c'
     )
     .option(
       '--revoke-apple-push-certs',
-      'Revoke push certs on developer.apple.com before attempting to make new certs'
+      'Revoke push certs on developer.apple.com before attempting to make new certs, must use with -c'
     )
     .option(
       '--revoke-apple-provisioning-profile',
-      'Revoke provisioning profile on developer.apple.com'
+      'Revoke provisioning profile on developer.apple.com, must use with -c'
     )
     .option('-t --type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i)
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
