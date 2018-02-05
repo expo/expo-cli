@@ -10,6 +10,8 @@ const paths = {
   source: 'src/**/*.js',
   build: 'build',
   sourceRoot: path.join(__dirname, 'src'),
+  builtFiles: 'build/**/*.{js,map}',
+  nextBuild: 'expo-cli/build',
 };
 
 const tasks = {
@@ -24,15 +26,17 @@ const tasks = {
       .pipe(gulp.dest(paths.build));
   },
 
+  copy() {
+    return gulp.src(paths.builtFiles).pipe(gulp.dest(paths.nextBuild));
+  },
+
   watchBabel(done) {
-    gulp.watch(paths.source, tasks.babel);
+    gulp.watch(paths.source, gulp.series([tasks.babel, tasks.copy]));
     done();
   },
 };
 
-gulp.task('build', tasks.babel);
-gulp.task('babel', tasks.babel);
-gulp.task('build', tasks.babel);
+gulp.task('build', gulp.series([tasks.babel, tasks.copy]));
 gulp.task('watch', tasks.watchBabel);
 gulp.task('clean', done => {
   rimraf(paths.build, done);

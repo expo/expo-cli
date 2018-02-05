@@ -1,9 +1,9 @@
 {
-  "name": "exp",
-  "version": "49.2.2",
+  "name": "expo-cli",
+  "version": "1.0.0",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
-  "main": "build/exp.js",
+  "main": "build/expo.js",
   "files": [
     "build",
     "bin"
@@ -16,7 +16,7 @@
     "pkg": "pkg ."
   },
   "bin": {
-    "exp": "./bin/exp.js"
+    "expo": "./bin/expo.js"
   },
   "repository": {
     "type": "git",
@@ -29,7 +29,7 @@
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/expo/exp/issues"
+    "url": "https://github.com/expo/expo/issues"
   },
   "homepage": "https://github.com/expo/exp#readme",
   "engines": {
@@ -89,10 +89,10 @@
     "slash": "^1.0.0",
     "source-map-support": "^0.4.1",
     "untildify": "^3.0.2",
-    "xdl": "48.0.4"
+    "xdl": "48.0.2"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.4.5",
-    "@expo/traveling-fastlane-linux": "1.4.5"
+    "@expo/traveling-fastlane-darwin": "1.2.5",
+    "@expo/traveling-fastlane-linux": "1.2.5"
   }
 }

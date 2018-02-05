@@ -136,18 +136,34 @@ export async function fileExistsAsync(file: string): Promise<boolean> {
   }
 }
 
-export async function configFilenameAsync(projectRoot: string): Promise<string> {
-  // we should always default to exp.json, and only use app.json if it exists
-  const appJsonExists = await fileExistsAsync(path.join(projectRoot, 'app.json'));
-  const expJsonExists = await fileExistsAsync(path.join(projectRoot, 'exp.json'));
-
-  if (appJsonExists) {
-    return 'app.json';
-  } else if (expJsonExists || Config.developerTool !== 'crna') {
-    return 'exp.json';
+async function _findConfigPathAsync(projectRoot) {
+  const appJson = path.join(projectRoot, 'app.json');
+  const expJson = path.join(projectRoot, 'exp.json');
+  if (await fileExistsAsync(appJson)) {
+    return appJson;
+  } else if (await fileExistsAsync(expJson)) {
+    return expJson;
   } else {
-    return 'app.json';
+    return appJson;
   }
+}
+
+export async function findConfigFileAsync(
+  projectRoot: string
+): Promise<{ configPath: string, configName: string, configNamespace: ?string }> {
+  let configPath;
+  if (customConfigPaths[projectRoot]) {
+    configPath = customConfigPaths[projectRoot];
+  } else {
+    configPath = await _findConfigPathAsync(projectRoot);
+  }
+  const configName = path.basename(configPath);
+  const configNamespace = configName === 'app.json' ? 'expo' : null;
+  return { configPath, configName, configNamespace };
+}
+
+export async function configFilenameAsync(projectRoot: string): Promise<string> {
+  return (await findConfigFileAsync(projectRoot)).configName;
 }
 
 export async function readExpRcAsync(projectRoot: string): Promise<any> {
@@ -171,26 +187,21 @@ export async function setCustomConfigPath(projectRoot: string, configPath: strin
   customConfigPaths[projectRoot] = configPath;
 }
 
-export async function readConfigJsonAsync(projectRoot: string): Promise<any> {
+export async function readConfigJsonAsync(
+  projectRoot: string
+): Promise<{ exp: ?Object, pkg: ?Object }> {
   let exp;
   let pkg;
 
-  let configPath, configName;
-  if (customConfigPaths[projectRoot]) {
-    configPath = customConfigPaths[projectRoot];
-    configName = path.basename(configPath);
-  } else {
-    configName = await configFilenameAsync(projectRoot);
-    configPath = path.join(projectRoot, configName);
-  }
+  const { configPath, configName, configNamespace } = await findConfigFileAsync(projectRoot);
 
   try {
     exp = await new JsonFile(configPath, { json5: true }).readAsync();
 
-    if (configName === 'app.json') {
+    if (configNamespace) {
       // if we're not using exp.json, then we've stashed everything under an expo key
       // this is only for app.json at time of writing
-      exp = exp.expo;
+      exp = exp[configNamespace];
     }
   } catch (e) {
     if (e.isJsonFileError) {

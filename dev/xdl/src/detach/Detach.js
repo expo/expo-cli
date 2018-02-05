@@ -14,7 +14,8 @@ import path from 'path';
 import rimraf from 'rimraf';
 import glob from 'glob-promise';
 import uuid from 'uuid';
-import yesno from 'yesno';
+import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 import {
   isDirectory,
@@ -39,16 +40,20 @@ import StandaloneContext from './StandaloneContext';
 import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
 import * as Versions from '../Versions';
+import installPackageAsync from './installPackageAsync';
 
-function yesnoAsync(question) {
-  return new Promise(resolve => {
-    yesno.ask(question, null, ok => {
-      resolve(ok);
-    });
-  });
+async function yesnoAsync(message) {
+  const { ok } = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'ok',
+      message,
+    },
+  ]);
+  return ok;
 }
 
-export async function detachAsync(projectRoot: string, options: any) {
+export async function detachAsync(projectRoot: string, options: any = {}) {
   let user = await UserManager.ensureLoggedInAsync();
 
   if (!user) {
@@ -56,7 +61,12 @@ export async function detachAsync(projectRoot: string, options: any) {
   }
 
   let username = user.username;
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { configName, configPath, configNamespace } = await ProjectUtils.findConfigFileAsync(
+    projectRoot
+  );
+  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  if (!exp) throw new Error(`Couldn't read ${configName}`);
+  if (!pkg) throw new Error(`Couldn't read package.json`);
   let experienceName = `@${username}/${exp.slug}`;
   let experienceUrl = `exp://exp.host/${experienceName}`;
 
@@ -87,15 +97,8 @@ export async function detachAsync(projectRoot: string, options: any) {
   }
 
   console.log('Validating project manifest...');
-  const configName = await ProjectUtils.configFilenameAsync(projectRoot);
   if (!exp.name) {
     throw new Error(`${configName} is missing \`name\``);
-  }
-
-  if (!exp.android || !exp.android.package) {
-    throw new Error(
-      `${configName} is missing android.package field. See https://docs.expo.io/versions/latest/guides/configuration.html#package`
-    );
   }
 
   if (!exp.sdkVersion) {
@@ -138,7 +141,6 @@ export async function detachAsync(projectRoot: string, options: any) {
 
   let expoDirectory = path.join(projectRoot, '.expo-source');
   mkdirp.sync(expoDirectory);
-
   const context = StandaloneContext.createUserContext(projectRoot, exp, experienceUrl);
 
   // iOS
@@ -153,7 +155,25 @@ export async function detachAsync(projectRoot: string, options: any) {
       isIosSupported = false;
     }
   }
+
   if (!hasIosDirectory && isIosSupported) {
+    if (!exp.ios) {
+      exp.ios = {};
+    }
+    if (!exp.ios.bundleIdentifier) {
+      console.log(
+        `You'll need to specify an iOS bundle identifier. See: https://docs.expo.io/versions/latest/guides/configuration.html#bundleidentifier`
+      );
+      const { iosBundleIdentifier } = await inquirer.prompt([
+        {
+          name: 'iosBundleIdentifier',
+          message: 'What would you like your iOS bundle identifier to be?',
+          validate: value => /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value),
+        },
+      ]);
+      exp.ios.bundleIdentifier = iosBundleIdentifier;
+    }
+
     await detachIOSAsync(context);
     exp = IosWorkspace.addDetachedConfigToExp(exp, context);
     exp.detach.iosExpoViewUrl = sdkVersionConfig.iosExpoViewUrl;
@@ -161,6 +181,23 @@ export async function detachAsync(projectRoot: string, options: any) {
 
   // Android
   if (!hasAndroidDirectory) {
+    if (!exp.android) {
+      exp.android = {};
+    }
+    if (!exp.android.package) {
+      console.log(
+        `You'll need to specify an Android package name. See: https://docs.expo.io/versions/latest/guides/configuration.html#package`
+      );
+      const { androidPackage } = await inquirer.prompt([
+        {
+          name: 'androidPackage',
+          message: 'What would you like your Android package name to be?',
+          validate: value => /^[a-zA-Z][a-zA-Z0-9\_\.]+$/.test(value),
+        },
+      ]);
+      exp.android.package = androidPackage;
+    }
+
     let androidDirectory = path.join(expoDirectory, 'android');
     rimraf.sync(androidDirectory);
     mkdirp.sync(androidDirectory);
@@ -182,11 +219,32 @@ export async function detachAsync(projectRoot: string, options: any) {
   console.log('Writing ExpoKit configuration...');
   // Update exp.json/app.json
   // if we're writing to app.json, we need to place the configuration under the expo key
-  const nameToWrite = await ProjectUtils.configFilenameAsync(projectRoot);
-  if (nameToWrite === 'app.json') {
-    exp = { expo: exp };
+  const config = configNamespace ? { [configNamespace]: exp } : exp;
+  await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+
+  const { expoReactNativeTag } = versions.sdkVersions[exp.sdkVersion];
+  const reactNativeVersion = `https://github.com/expo/react-native/archive/${expoReactNativeTag}.tar.gz`;
+  if (expoReactNativeTag && pkg.dependencies['react-native'] !== reactNativeVersion) {
+    console.log('Installing the Expo fork of react-native...');
+    const nodeModulesPath = exp.nodeModulesPath
+      ? path.resolve(projectRoot, exp.nodeModulesPath)
+      : projectRoot;
+    const { code } = await installPackageAsync(
+      nodeModulesPath,
+      'react-native',
+      reactNativeVersion,
+      {
+        silent: true,
+      }
+    );
+    if (code !== 0) {
+      console.warn(`
+        ${chalk.yellow('Unable to install the Expo fork of react-native.')}
+        ${chalk.yellow(`Please install react-native@${reactNativeVersion} to complete detaching.`)}
+      `);
+      return false;
+    }
   }
-  await fs.writeFile(path.join(projectRoot, nameToWrite), JSON.stringify(exp, null, 2));
 
   console.log(
     'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.\n'

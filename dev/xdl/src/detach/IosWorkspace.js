@@ -288,13 +288,10 @@ async function createDetachedAsync(context: StandaloneContext) {
   return;
 }
 
-function addDetachedConfigToExp(exp: any, context: StandaloneContext): any {
+function addDetachedConfigToExp(exp: Object, context: StandaloneContext): Object {
   if (context.type !== 'user') {
     console.warn(`Tried to modify exp for a non-user StandaloneContext, ignoring`);
-    return;
-  }
-  if (!exp) {
-    exp = {};
+    return exp;
   }
   const { supportingDirectory } = getPaths(context);
   exp.ios.publishBundlePath = path.relative(

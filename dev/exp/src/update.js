@@ -29,7 +29,11 @@ async function currentExpVersionAsync() {
   return new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('version');
 }
 
-async function checkForExpUpdateAsync() {
+async function checkForExpUpdateAsync(): Promise<{
+  state: 'out-of-date' | 'up-to-date' | 'ahead-of-published',
+  current: string,
+  latest: string,
+}> {
   const current = await currentExpVersionAsync();
 
   // check for an outdated install based on either a fresh npm query or our cache
