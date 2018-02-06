@@ -89,10 +89,10 @@
     "slash": "^1.0.0",
     "source-map-support": "^0.4.1",
     "untildify": "^3.0.2",
-    "xdl": "48.0.2"
+    "xdl": "48.0.4"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.2.5",
-    "@expo/traveling-fastlane-linux": "1.2.5"
+    "@expo/traveling-fastlane-darwin": "1.4.5",
+    "@expo/traveling-fastlane-linux": "1.4.5"
   }
 }
