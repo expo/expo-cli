@@ -224,7 +224,7 @@ function constructBuildLogsUrl(buildId: string): string {
   if (process.env.EXPO_STAGING) {
     return `https://staging.expo.io/builds/${buildId}`;
   } else if (process.env.EXPO_LOCAL) {
-    return `http://expo.dev/builds/${buildId}`;
+    return `http://expo.test/builds/${buildId}`;
   } else {
     return `https://expo.io/builds/${buildId}`;
   }
