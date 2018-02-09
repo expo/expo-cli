@@ -13,7 +13,8 @@ export default (program: any) => {
   program
     .command('fetch:ios:certs [project-dir]')
     .description(
-      "Fetch this project's iOS certificates. Writes to PROJECT_DIR/PROJECT_NAME_(dist|push).p12 and prints passwords to stdout."
+      `Fetch this project's iOS certificates and provisioning profile.
+Writes certificates to PROJECT_DIR/PROJECT_NAME_(dist|push).p12 and prints passwords to stdout.`
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       const {
@@ -23,11 +24,7 @@ export default (program: any) => {
       let distOutputFile = path.resolve(projectDir, `${remotePackageName}_dist.p12`);
       let pushOutputFile = path.resolve(projectDir, `${remotePackageName}_push.p12`);
 
-      const credentialMetadata = {
-        username,
-        experienceName,
-        platform: 'ios',
-      };
+      const credentialMetadata = { username, experienceName, platform: 'ios' };
 
       log(`Retreiving iOS credentials for ${experienceName}`);
 
@@ -90,11 +87,7 @@ Push p12 password:         ${chalk.bold(pushPassword)}
 
       let outputFile = path.resolve(projectDir, `${remotePackageName}.jks`);
 
-      const credentialMetadata = {
-        username,
-        experienceName,
-        platform: 'android',
-      };
+      const credentialMetadata = { username, experienceName, platform: 'android' };
 
       log(`Retreiving Android keystore for ${experienceName}`);
 
