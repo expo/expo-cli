@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-const maxTimestampLength = new Date('12-31-1970 23:59:59').toLocaleTimeString().length;
+const maxTimestampLength = new Date('1970-01-01T23:59:59').toLocaleTimeString().length;
 
 let _bundleProgressBar;
 
