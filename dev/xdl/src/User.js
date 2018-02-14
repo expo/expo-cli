@@ -55,6 +55,7 @@ export type User = {
   idToken: string,
   refreshToken: string,
   currentConnection: ConnectionType,
+  sessionSecret: string,
 };
 
 export type LegacyUser = {
@@ -136,7 +137,7 @@ export class UserManagerInstance {
    */
   async loginAsync(
     loginType: LoginType,
-    loginArgs?: { username: string, password: string }
+    loginArgs?: { username: string, password: string, testSession?: boolean }
   ): Promise<User> {
     let loginOptions;
 
@@ -150,6 +151,7 @@ export class UserManagerInstance {
         sso: false,
         username: loginArgs.username,
         password: loginArgs.password,
+        testSession: loginArgs.testSession,
       };
     } else if (loginType === 'facebook') {
       loginOptions = {
@@ -184,13 +186,23 @@ export class UserManagerInstance {
 
     if (loginType === 'user-pass') {
       try {
-        const loginResp = await this._auth0LoginAsync(auth0Options, loginOptions);
+        const apiAnonymous = ApiV2Client.clientForUser();
+        const loginResp = await apiAnonymous.postAsync('auth/loginAsync', {
+          username: loginOptions.username,
+          password: loginOptions.password,
+          clientId: this.clientID,
+          ...(loginOptions.testSession ? { testSession: loginOptions.testSession } : {}),
+        });
+        if (loginResp.error) {
+          throw new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, loginResp['error_description']);
+        }
         return await this._getProfileAsync({
           currentConnection: loginOptions.connection,
           accessToken: loginResp.access_token,
           refreshToken: loginResp.refresh_token,
           idToken: loginResp.id_token,
           refreshTokenClientId: this.clientID,
+          sessionSecret: loginResp.sessionSecret,
         });
       } catch (err) {
         throw err;
@@ -341,10 +353,12 @@ export class UserManagerInstance {
     await this._getSessionLock.acquire();
 
     try {
-      // If user is cached and token isn't expired
+      // If user is cached and there is a sessionSecret, or the Auth0 token isn't expired
       // return the user
-      if (this._currentUser && !this._isTokenExpired(this._currentUser.idToken)) {
-        return this._currentUser;
+      if (this._currentUser) {
+        if (this._currentUser.sessionSecret || !this._isTokenExpired(this._currentUser.idToken)) {
+          return this._currentUser;
+        }
       }
 
       if (Config.offline) {
@@ -352,13 +366,16 @@ export class UserManagerInstance {
       }
 
       // Not cached, check for token
-      let { currentConnection, idToken, accessToken, refreshToken } = await UserSettings.getAsync(
-        'auth',
-        {}
-      );
+      let {
+        currentConnection,
+        idToken,
+        accessToken,
+        refreshToken,
+        sessionSecret,
+      } = await UserSettings.getAsync('auth', {});
 
       // No tokens, no current user. Need to login
-      if (!currentConnection || !idToken || !accessToken || !refreshToken) {
+      if ((!currentConnection || !idToken || !accessToken || !refreshToken) && !sessionSecret) {
         return null;
       }
 
@@ -368,6 +385,7 @@ export class UserManagerInstance {
           accessToken,
           idToken,
           refreshToken,
+          sessionSecret,
         });
       } catch (e) {
         Logger.global.error(e);
@@ -459,7 +477,11 @@ export class UserManagerInstance {
    * Forgot Password
    */
   async forgotPasswordAsync(usernameOrEmail: string): Promise<void> {
-    return await this._auth0ForgotPasswordAsync(usernameOrEmail);
+    const apiAnonymous = ApiV2Client.clientForUser();
+    return apiAnonymous.postAsync('auth/forgotPasswordAsync', {
+      usernameOrEmail,
+      clientId: this.clientID,
+    });
   }
 
   /**
@@ -483,83 +505,56 @@ export class UserManagerInstance {
     idToken,
     refreshToken,
     refreshTokenClientId,
+    sessionSecret,
   }: {
     currentConnection: ConnectionType,
-    accessToken: string,
-    idToken: string,
-    refreshToken: string,
+    accessToken?: string,
+    idToken?: string,
+    refreshToken?: string,
     refreshTokenClientId?: string,
+    sessionSecret?: string,
   }): Promise<User> {
-    // Attempt to grab profile from Auth0.
-    // If token is expired / getting the profile fails, use refresh token to
     let user;
-    try {
-      const dtoken = jwt.decode(idToken, { complete: true });
-      const { aud } = dtoken.payload;
+    if (!sessionSecret) {
+      // Attempt to grab profile from Auth0.
+      // If token is expired / getting the profile fails, use refresh token to
+      try {
+        const dtoken = jwt.decode(idToken, { complete: true });
+        const { aud } = dtoken.payload;
 
-      // If it's not a new login, refreshTokenClientId won't be set in the arguments.
-      // In this case, try to get the currentRefreshTokenClientId from UserSettings,
-      // otherwise, default back to the audience of the current id_token
-      if (!refreshTokenClientId) {
-        const { refreshTokenClientId: currentRefreshTokenClientId } = await UserSettings.getAsync(
-          'auth',
-          {}
-        );
-        if (!currentRefreshTokenClientId) {
-          refreshTokenClientId = aud; // set it to the "aud" property of the existing token
-        } else {
-          refreshTokenClientId = currentRefreshTokenClientId;
+        // If it's not a new login, refreshTokenClientId won't be set in the arguments.
+        // In this case, try to get the currentRefreshTokenClientId from UserSettings,
+        // otherwise, default back to the audience of the current id_token
+        if (!refreshTokenClientId) {
+          const { refreshTokenClientId: currentRefreshTokenClientId } = await UserSettings.getAsync(
+            'auth',
+            {}
+          );
+          if (!currentRefreshTokenClientId) {
+            refreshTokenClientId = aud; // set it to the "aud" property of the existing token
+          } else {
+            refreshTokenClientId = currentRefreshTokenClientId;
+          }
         }
-      }
-
-      // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') {
-        Logger.global.debug('REFRESH_TOKEN_CLIENT_ID', refreshTokenClientId);
-      }
-      // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') {
-        Logger.global.debug('DECODED TOKEN', dtoken);
-      }
-
-      if (this._isTokenExpired(idToken)) {
-        // if there's less than the refresh session threshold left on the token, refresh it
-        // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') {
-          Logger.global.debug('REFRESHING ID TOKEN');
+        if (this._isTokenExpired(idToken)) {
+          const delegationResult = await this._auth0RefreshToken(
+            refreshTokenClientId, // client id that's associated with the refresh token
+            refreshToken // refresh token to use
+          );
+          idToken = delegationResult.id_token;
         }
-        // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') {
-          Logger.global.debug('REFRESH TOKEN', refreshToken);
-        }
-        const delegationResult = await this._auth0RefreshToken(
-          refreshTokenClientId, // client id that's associated with the refresh token
-          refreshToken // refresh token to use
-        );
-        // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') {
-          Logger.global.debug('SUCCESSFULLY GOT NEW ID TOKEN');
-        }
-        idToken = delegationResult.id_token;
-        // TODO(@skevy): remove
-        if (process.env.NODE_ENV !== 'production') {
-          Logger.global.debug('NEW ID TOKEN', idToken);
-        }
+      } catch (e) {
+        throw e;
       }
-      // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') {
-        Logger.global.debug('ID TOKEN FOR PROFILE', idToken);
-      }
-      user = await this._auth0GetProfileAsync(idToken);
-      // TODO(@skevy): remove
-      if (process.env.NODE_ENV !== 'production') {
-        Logger.global.debug('USER DATA', user);
-      }
-      if (!user) {
-        throw new Error('No user profile associated with this token');
-      }
-    } catch (e) {
-      throw e;
     }
+
+    let api = ApiV2Client.clientForUser({
+      idToken,
+      accessToken,
+      sessionSecret,
+    });
+
+    user = await api.postAsync('auth/userProfileAsync', { clientId: this.clientID });
 
     if (!user) {
       throw new Error('Unable to fetch user.');
@@ -569,9 +564,10 @@ export class UserManagerInstance {
       ..._parseAuth0Profile(user),
       kind: 'user',
       currentConnection,
-      accessToken,
-      idToken,
-      refreshToken,
+      ...(accessToken ? { accessToken } : {}),
+      ...(idToken ? { idToken } : {}),
+      ...(refreshToken ? { refreshToken } : {}),
+      ...(sessionSecret ? { sessionSecret } : {}),
     };
 
     await UserSettings.mergeAsync({
@@ -579,10 +575,11 @@ export class UserManagerInstance {
         userId: user.userId,
         username: user.username,
         currentConnection,
-        accessToken,
-        idToken,
-        refreshToken,
+        ...(accessToken ? { accessToken } : {}),
+        ...(idToken ? { idToken } : {}),
+        ...(refreshToken ? { refreshToken } : {}),
         ...(refreshTokenClientId ? { refreshTokenClientId } : {}),
+        ...(sessionSecret ? { sessionSecret } : {}),
       },
     });
 
@@ -662,20 +659,6 @@ export class UserManagerInstance {
     }
   }
 
-  async _auth0GetProfileAsync(idToken: string): Promise<*> {
-    if (typeof window !== 'undefined' && window) {
-      const Auth0JS = _auth0JSInstanceWithOptions({ clientID: this.clientID });
-      return await Auth0JS.getProfileAsync(idToken);
-    }
-
-    const Auth0Node = _nodeAuth0InstanceWithOptions({
-      clientID: this.clientID,
-    });
-
-    const profile = await Auth0Node.tokens.getInfo(idToken);
-    return profile;
-  }
-
   async _auth0RefreshToken(clientId: string, refreshToken: string): Promise<*> {
     const delegationTokenOptions = {
       refresh_token: refreshToken,
@@ -705,25 +688,6 @@ export class UserManagerInstance {
     });
 
     return delegationResult;
-  }
-
-  async _auth0ForgotPasswordAsync(usernameOrEmail: string): Promise<void> {
-    if (typeof window !== 'undefined' && window) {
-      const Auth0JS = _auth0JSInstanceWithOptions({ clientID: this.clientID });
-      return await Auth0JS.changePasswordAsync({
-        connection: 'Username-Password-Authentication',
-        email: usernameOrEmail,
-      });
-    }
-
-    const Auth0Node = _nodeAuth0InstanceWithOptions({
-      clientID: this.clientID,
-    });
-
-    return await Auth0Node.database.changePassword({
-      connection: 'Username-Password-Authentication',
-      email: usernameOrEmail,
-    });
   }
 }
 

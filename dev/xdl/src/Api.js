@@ -40,11 +40,17 @@ if (Config.api.port) {
 }
 let API_BASE_URL = ROOT_BASE_URL + '/--/api/';
 
-async function _callMethodAsync(url, method, requestBody, requestOptions): Promise<any> {
+async function _callMethodAsync(
+  url,
+  method,
+  requestBody,
+  requestOptions,
+  returnEntireResponse = false
+): Promise<any> {
   const clientId = await Session.clientIdAsync();
   const user = (await UserManager.getCurrentUserAsync()) || {};
 
-  const { idToken, accessToken } = user;
+  const { idToken, accessToken, sessionSecret } = user;
   const skipValidationToken = process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'];
 
   let headers: any = {
@@ -61,6 +67,10 @@ async function _callMethodAsync(url, method, requestBody, requestOptions): Promi
 
   if (accessToken) {
     headers['Exp-Access-Token'] = accessToken;
+  }
+
+  if (sessionSecret) {
+    headers['Expo-Session'] = sessionSecret;
   }
 
   let options = {
@@ -116,7 +126,7 @@ async function _callMethodAsync(url, method, requestBody, requestOptions): Promi
     err.serverError = responseObj.err;
     throw err;
   } else {
-    return responseObj;
+    return returnEntireResponse ? response : responseObj;
   }
 }
 
@@ -228,14 +238,15 @@ export default class ApiClient {
     args: Array<*>,
     method: string,
     requestBody: ?Object,
-    requestOptions: ?Object = {}
+    requestOptions: ?Object = {},
+    returnEntireResponse: boolean = false
   ): Promise<any> {
     let url =
       API_BASE_URL +
       encodeURIComponent(methodName) +
       '/' +
       encodeURIComponent(JSON.stringify(args));
-    return _callMethodAsync(url, method, requestBody, requestOptions);
+    return _callMethodAsync(url, method, requestBody, requestOptions, returnEntireResponse);
   }
 
   static async callPathAsync(

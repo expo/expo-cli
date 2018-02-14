@@ -48,17 +48,20 @@ type ErrorWithResponseBody = Error & {
 type APIV2ClientOptions = {
   idToken?: string,
   accessToken?: string,
+  sessionSecret?: string,
 };
 
 export default class ApiV2Client {
   idToken: ?string = null;
   accessToken: ?string = null;
+  sessionSecret: ?string = null;
 
   static clientForUser(user: ?User): ApiV2Client {
     if (user) {
       return new ApiV2Client({
         accessToken: user.accessToken,
         idToken: user.idToken,
+        sessionSecret: user.sessionSecret,
       });
     }
 
@@ -73,12 +76,17 @@ export default class ApiV2Client {
     if (options.accessToken) {
       this.accessToken = options.accessToken;
     }
+
+    if (options.sessionSecret) {
+      this.sessionSecret = options.sessionSecret;
+    }
   }
 
   async getAsync(
     methodName: string,
     args: QueryParameters = {},
-    extraOptions: Object = {}
+    extraOptions: Object = {},
+    returnEntireResponse: boolean = false
   ): Promise<*> {
     return this._requestAsync(
       methodName,
@@ -87,36 +95,50 @@ export default class ApiV2Client {
         queryParameters: args,
         json: true,
       },
-      extraOptions
+      extraOptions,
+      returnEntireResponse
     );
   }
 
-  async postAsync(methodName: string, data: Object = {}, extraOptions: Object = {}): Promise<*> {
+  async postAsync(
+    methodName: string,
+    data: Object = {},
+    extraOptions: Object = {},
+    returnEntireResponse: boolean = false
+  ): Promise<*> {
     return this._requestAsync(
       methodName,
       {
         httpMethod: 'post',
         body: data,
       },
-      extraOptions
+      extraOptions,
+      returnEntireResponse
     );
   }
 
-  async putAsync(methodName: string, data: Object = {}, extraOptions: Object = {}): Promise<*> {
+  async putAsync(
+    methodName: string,
+    data: Object = {},
+    extraOptions: Object = {},
+    returnEntireResponse: boolean = false
+  ): Promise<*> {
     return this._requestAsync(
       methodName,
       {
         httpMethod: 'put',
         body: data,
       },
-      extraOptions
+      extraOptions,
+      returnEntireResponse
     );
   }
 
   async _requestAsync(
     methodName: string,
     options: RequestOptions,
-    extraRequestOptions: Object
+    extraRequestOptions: Object,
+    returnEntireResponse: boolean = false
   ): Promise<*> {
     const url = `${API_BASE_URL}/${methodName}`;
     let reqOptions: Object = {
@@ -134,6 +156,10 @@ export default class ApiV2Client {
 
     if (this.accessToken) {
       reqOptions.headers['Exp-Access-Token'] = this.accessToken;
+    }
+
+    if (this.sessionSecret) {
+      reqOptions.headers['Expo-Session'] = this.sessionSecret;
     }
 
     // Handle qs
@@ -182,6 +208,6 @@ export default class ApiV2Client {
       throw error;
     }
 
-    return result.data;
+    return returnEntireResponse ? response : result.data;
   }
 }
