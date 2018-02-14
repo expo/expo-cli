@@ -183,12 +183,11 @@ async function _createStandaloneContextAsync(args) {
  *  @param privateConfigFile path to a private config file containing, e.g., private api keys
  *  @param appleTeamId Apple Developer's account Team ID
  *  @param output specify the output path of the configured archive (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
-*/
+ */
 async function _configureAndCopyShellAppArchiveAsync(args) {
   const { output, type } = args;
   const context = await _createStandaloneContextAsync(args);
   const { projectName } = IosWorkspace.getPaths(context);
-
   await IosNSBundle.configureAsync(context);
   if (output) {
     // TODO: un-hard-code ExpoKitApp.app

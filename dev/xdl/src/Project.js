@@ -181,7 +181,9 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
     }
     throw new XDLError(
       errorCode,
-      `Packager URL ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
+      `Packager URL ${fullUrl} returned unexpected code ${
+        response.statusCode
+      }. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
     );
   }
 
@@ -195,9 +197,9 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter(({ fieldPath }) => _.get(manifest, fieldPath));
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)).filter(
+      ({ fieldPath }) => _.get(manifest, fieldPath)
+    );
 
     // Get the URLs
     const urls = await Promise.all(
@@ -230,7 +232,9 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
       logMethod(
         projectRoot,
         'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
+        `Unable to resolve asset "${e.localAssetPath}" from "${
+          e.manifestField
+        }" in your app/exp.json.`
       );
     } else {
       logMethod(
@@ -558,7 +562,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
   if (exp.sdkVersion === 'UNVERSIONED' && !process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, 'Cannot publish with sdkVersion UNVERSIONED.');
   }
-
+  exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
   return exp;
 }
 

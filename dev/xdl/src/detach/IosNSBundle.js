@@ -15,6 +15,7 @@ import * as IosLaunchScreen from './IosLaunchScreen';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
+import * as IosLocalization from './IosLocalization';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -459,7 +460,13 @@ async function configureAsync(context: StandaloneContext) {
   await _configureEntitlementsAsync(context);
   await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
 
-  if (context.type === 'user') {
+  const isUser = context.type === 'user';
+  await IosLocalization.writeLocalizationResourcesAsync({
+    supportingDirectory,
+    context,
+  });
+
+  if (isUser) {
     const iconPath = path.join(
       iosProjectDirectory,
       projectName,

@@ -7,6 +7,8 @@ import path from 'path';
 import Request from 'request-promise-native';
 import rimraf from 'rimraf';
 import spawnAsyncQuiet from '@expo/spawn-async';
+import XDLError from '../XDLError';
+import ErrorCode from '../ErrorCode';
 
 const request = Request.defaults({
   resolveWithFullResponse: true,
@@ -138,6 +140,21 @@ function isDirectory(dir) {
   }
 }
 
+async function getResolvedLocalesAsync(inMemoryManifest) {
+  const locales = {};
+  if (inMemoryManifest.locales !== undefined) {
+    for (const [lang, path] of Object.entries(inMemoryManifest.locales)) {
+      const s = await fs.readFile(path, 'utf8');
+      try {
+        locales[lang] = JSON.parse(s);
+      } catch (e) {
+        throw new XDLError(ErrorCode.INVALID_JSON, JSON.stringify(e));
+      }
+    }
+  }
+  return locales;
+}
+
 export {
   isDirectory,
   parseSdkMajorVersion,
@@ -149,4 +166,5 @@ export {
   spawnAsync,
   transformFileContentsAsync,
   manifestUsesSplashApi,
+  getResolvedLocalesAsync,
 };
