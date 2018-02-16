@@ -318,6 +318,50 @@ export class UserManagerInstance {
   }
 
   /**
+   * Migrate a user from auth0 tokens to sessions
+   * TODO: remove when everyone is migrated to sessions
+   */
+  async migrateAuth0ToSessionAsync(options: {[string]:any} ={testMode:false}) {
+    const {testMode} = options;
+    // If logged in but using legacy auth0 tokens, migrate to sessions
+    const user = await this.getCurrentUserAsync();
+    if (!user) {
+      return;
+    }
+    const hasCachedSession = this._currentUser && this._currentUser.sessionSecret;
+    if (hasCachedSession){
+      return;
+    }
+    
+    // check for sessionSecret in state.json file
+    let { sessionSecret } = await UserSettings.getAsync('auth', {});
+    if (sessionSecret) {
+      return;
+    }
+    let api = ApiV2Client.clientForUser({
+      idToken: user.idToken,
+      accessToken: user.accessToken,
+    });
+
+    try {
+      // get sessionSecret and save it
+      const response = await api.postAsync('auth/auth0ToSession', {
+        ...(testMode ? { testSession: testMode } : {}),
+      });
+      const { sessionSecret } = response;
+      if (sessionSecret) {
+        user.sessionSecret = sessionSecret;
+        await UserSettings.mergeAsync({
+          auth: {
+            sessionSecret,
+          },
+        });
+      }
+      return response;
+    } catch (e) {}
+  }
+
+  /**
    * Ensure user is logged in and has a valid token.
    *
    * If there are any issues with the login, this method throws.
@@ -328,6 +372,9 @@ export class UserManagerInstance {
     if (Config.offline) {
       return null;
     }
+
+    // migrate from auth0 to sessions, if available
+    await this.migrateAuth0ToSessionAsync();
 
     const user = await this.getCurrentUserAsync();
     if (!user) {
@@ -374,7 +421,7 @@ export class UserManagerInstance {
         sessionSecret,
       } = await UserSettings.getAsync('auth', {});
 
-      // No tokens, no current user. Need to login
+      // No tokens/session, no current user. Need to login
       if ((!currentConnection || !idToken || !accessToken || !refreshToken) && !sessionSecret) {
         return null;
       }
@@ -537,6 +584,12 @@ export class UserManagerInstance {
           }
         }
         if (this._isTokenExpired(idToken)) {
+          // User has expired token and no session -- they need to log back in if Auth0 is gone
+          const dateAuth0Gone = new Date(2018, 3, 2); // April 1, 2018 - the months are 0 indexed
+          if (Date.now() > dateAuth0Gone) {
+            await this.logoutAsync();
+            throw new XDLError('Tokens expired, logging out. Please try again.');
+          }
           const delegationResult = await this._auth0RefreshToken(
             refreshTokenClientId, // client id that's associated with the refresh token
             refreshToken // refresh token to use
