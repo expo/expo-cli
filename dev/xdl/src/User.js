@@ -3,14 +3,14 @@
  */
 
 import _ from 'lodash';
-import Bluebird from 'bluebird';
 import freeportAsync from 'freeport-async';
 import http from 'http';
 import qs from 'querystring';
 import opn from 'opn';
 import jwt from 'jsonwebtoken';
+import promisify from 'util.promisify';
 
-import type Auth0JS from 'auth0-js';
+import type { WebAuth } from 'auth0-js';
 import type Auth0Node from 'auth0';
 
 import ApiV2Client, { ApiV2Error } from './ApiV2';
@@ -25,6 +25,7 @@ import * as Intercom from './Intercom';
 import UserSettings from './UserSettings';
 
 import { Semaphore } from './Utils';
+import { isNode } from './tools/EnvironmentHelper';
 
 export type User = {
   kind: 'user',
@@ -76,6 +77,8 @@ type LoginOptions = {
   device: string,
   responseType: string,
   responseMode: string,
+  username?: string,
+  password?: string,
 };
 
 export type RegistrationData = {
@@ -88,7 +91,7 @@ export type RegistrationData = {
 
 type Auth0Options = {
   clientID: string,
-  callbackURL?: string,
+  redirectUri?: string,
 };
 
 export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
@@ -145,14 +148,24 @@ export class UserManagerInstance {
       if (!loginArgs) {
         throw new Error(`The 'user-pass' login type requires a username and password.`);
       }
-      loginOptions = {
-        connection: 'Username-Password-Authentication',
-        responseType: 'token',
-        sso: false,
+      const apiAnonymous = ApiV2Client.clientForUser();
+      const loginResp = await apiAnonymous.postAsync('auth/loginAsync', {
         username: loginArgs.username,
         password: loginArgs.password,
-        testSession: loginArgs.testSession,
-      };
+        clientId: this.clientID,
+        ...(loginArgs.testSession ? { testSession: loginArgs.testSession } : {}),
+      });
+      if (loginResp.error) {
+        throw new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, loginResp['error_description']);
+      }
+      return this._getProfileAsync({
+        currentConnection: 'Username-Password-Authentication',
+        accessToken: loginResp.access_token,
+        refreshToken: loginResp.refresh_token,
+        idToken: loginResp.id_token,
+        refreshTokenClientId: this.clientID,
+        sessionSecret: loginResp.sessionSecret,
+      });
     } else if (loginType === 'facebook') {
       loginOptions = {
         connection: 'facebook',
@@ -184,31 +197,6 @@ export class UserManagerInstance {
       clientID: this.clientID,
     };
 
-    if (loginType === 'user-pass') {
-      try {
-        const apiAnonymous = ApiV2Client.clientForUser();
-        const loginResp = await apiAnonymous.postAsync('auth/loginAsync', {
-          username: loginOptions.username,
-          password: loginOptions.password,
-          clientId: this.clientID,
-          ...(loginOptions.testSession ? { testSession: loginOptions.testSession } : {}),
-        });
-        if (loginResp.error) {
-          throw new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, loginResp['error_description']);
-        }
-        return await this._getProfileAsync({
-          currentConnection: loginOptions.connection,
-          accessToken: loginResp.access_token,
-          refreshToken: loginResp.refresh_token,
-          idToken: loginResp.id_token,
-          refreshTokenClientId: this.clientID,
-          sessionSecret: loginResp.sessionSecret,
-        });
-      } catch (err) {
-        throw err;
-      }
-    }
-
     // Doing a social login, so start a server
     const { server, callbackURL, getTokenInfoAsync } = await _startLoginServerAsync();
 
@@ -221,12 +209,12 @@ export class UserManagerInstance {
 
     auth0Options = {
       clientID: this.clientID,
-      callbackURL,
+      redirectUri: callbackURL,
     };
 
     // Don't await -- we'll get response back through server
     // This will open a browser window
-    this._auth0LoginAsync(auth0Options, loginOptions);
+    this._auth0SocialLogin(auth0Options, loginOptions);
 
     // Wait for token info to come back from server
     const tokenInfo = await getTokenInfoAsync();
@@ -321,18 +309,18 @@ export class UserManagerInstance {
    * Migrate a user from auth0 tokens to sessions
    * TODO: remove when everyone is migrated to sessions
    */
-  async migrateAuth0ToSessionAsync(options: {[string]:any} ={testMode:false}) {
-    const {testMode} = options;
+  async migrateAuth0ToSessionAsync(options: { [string]: any } = { testMode: false }) {
+    const { testMode } = options;
     // If logged in but using legacy auth0 tokens, migrate to sessions
     const user = await this.getCurrentUserAsync();
     if (!user) {
       return;
     }
     const hasCachedSession = this._currentUser && this._currentUser.sessionSecret;
-    if (hasCachedSession){
+    if (hasCachedSession) {
       return;
     }
-    
+
     // check for sessionSecret in state.json file
     let { sessionSecret } = await UserSettings.getAsync('auth', {});
     if (sessionSecret) {
@@ -684,31 +672,14 @@ export class UserManagerInstance {
     return exp - Date.now() / 1000 <= this.refreshSessionThreshold;
   }
 
-  async _auth0LoginAsync(auth0Options: Auth0Options, loginOptions: LoginOptions): Promise<*> {
-    if (typeof window !== 'undefined' && window) {
-      const Auth0JS = _auth0JSInstanceWithOptions(auth0Options);
-      const resp = await Auth0JS.loginAsync(loginOptions);
-      return {
-        access_token: resp.accessToken,
-        id_token: resp.idToken,
-        refresh_token: resp.refreshToken,
-      };
-    }
-
-    const Auth0Node = _nodeAuth0InstanceWithOptions(auth0Options);
-
-    if (loginOptions.connection === 'Username-Password-Authentication') {
-      try {
-        return await Auth0Node.oauth.signIn(loginOptions);
-      } catch (e) {
-        throw _formatAuth0NodeError(e);
-      }
-    } else {
-      // social
+  _auth0SocialLogin(auth0Options: Auth0Options, loginOptions: LoginOptions) {
+    if (isNode()) {
       opn(_buildAuth0SocialLoginUrl(auth0Options, loginOptions), {
         wait: false,
       });
-      return {};
+    } else {
+      const webAuth = _auth0WebAuthInstanceWithOptions(auth0Options);
+      webAuth.authorize(loginOptions);
     }
   }
 
@@ -719,26 +690,20 @@ export class UserManagerInstance {
       scope: 'openid offline_access nickname username',
       target: this.clientID,
       client_id: clientId,
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
     };
 
     if (typeof window !== 'undefined' && window) {
-      const Auth0JS = _auth0JSInstanceWithOptions({
-        clientID: clientId,
-      });
-
-      return await Auth0JS.getDelegationTokenAsync({
-        ...delegationTokenOptions,
-      });
+      const webAuth = _auth0WebAuthInstanceWithOptions({ clientID: clientId });
+      const delegationAsync = promisify(webAuth.client.delegation.bind(webAuth.client));
+      return await delegationAsync(delegationTokenOptions);
     }
 
     const Auth0Node = _nodeAuth0InstanceWithOptions({
       clientID: this.clientID,
     });
 
-    const delegationResult = await Auth0Node.tokens.getDelegationToken({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      ...delegationTokenOptions,
-    });
+    const delegationResult = await Auth0Node.tokens.getDelegationToken(delegationTokenOptions);
 
     return delegationResult;
   }
@@ -784,7 +749,7 @@ function _buildAuth0SocialLoginUrl(auth0Options: Auth0Options, loginOptions: Log
     connection: loginOptions.connection,
     device: 'xdl',
     client_id: auth0Options.clientID,
-    redirect_uri: auth0Options.callbackURL,
+    redirect_uri: auth0Options.redirectUri,
   };
 
   const queryString = qs.stringify(qsData);
@@ -792,18 +757,17 @@ function _buildAuth0SocialLoginUrl(auth0Options: Auth0Options, loginOptions: Log
   return `https://${AUTH0_DOMAIN}/authorize?${queryString}`;
 }
 
-function _auth0JSInstanceWithOptions(options: Object = {}): any {
-  const Auth0 = require('auth0-js');
+function _auth0WebAuthInstanceWithOptions(options: Auth0Options): WebAuth {
+  const auth0 = require('auth0-js');
 
   let auth0Options = {
     domain: AUTH0_DOMAIN,
     responseType: 'token',
+    _disableDeprecationWarnings: true,
     ...options,
   };
 
-  const Auth0Instance = Bluebird.promisifyAll(new Auth0(auth0Options));
-
-  return Auth0Instance;
+  return new auth0.WebAuth(auth0Options);
 }
 
 function _nodeAuth0InstanceWithOptions(options: Object = {}): any {
