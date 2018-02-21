@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import fs from 'fs-extra';
 import path from 'path';
 import mkdirp from 'mkdirp';
@@ -11,6 +7,8 @@ export async function writeLocalizationResourcesAsync({ supportingDirectory, con
   let locales = {};
   if (context.type === 'user') {
     locales = await getResolvedLocalesAsync(context.config);
+  } else if (context.type === 'service') {
+    locales = context.config.locales !== undefined ? context.config.locales : {};
   }
   for (const [lang, localizationObj] of Object.entries(locales)) {
     const dir = path.join(supportingDirectory, `${lang}.lproj`);
