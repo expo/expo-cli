@@ -162,7 +162,16 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
   );
 };
 
-function backgroundImagesForApp(shellPath, manifest) {
+function getRemoteOrLocalUrl(manifest, key, isDetached) {
+  // in detached apps, `manifest` is actually just app.json, so there are no remote url fields
+  // we should return a local url starting with file:// instead
+  if (isDetached) {
+    return _.get(manifest, key);
+  }
+  return _.get(manifest, `${key}Url`);
+}
+
+function backgroundImagesForApp(shellPath, manifest, isDetached) {
   // returns an array like:
   // [
   //   {url: 'urlToDownload', path: 'pathToSaveTo'},
@@ -174,7 +183,7 @@ function backgroundImagesForApp(shellPath, manifest) {
     return _.reduce(
       imageKeys,
       function(acc, imageKey) {
-        let url = _.get(splash, `${imageKey}Url`);
+        let url = getRemoteOrLocalUrl(splash, imageKey, isDetached);
         if (url) {
           acc.push({
             url,
@@ -188,8 +197,8 @@ function backgroundImagesForApp(shellPath, manifest) {
     );
   }
 
-  if (_.get(manifest, 'splash.imageUrl')) {
-    let url = _.get(manifest, 'splash.imageUrl');
+  let url = getRemoteOrLocalUrl(manifest, 'splash.image', isDetached);
+  if (url) {
     return [
       {
         url,
@@ -396,7 +405,7 @@ export async function runShellAppModificationsAsync(
   let isFullManifest = !!bundleUrl;
   let notificationIconUrl = manifest.notification ? manifest.notification.iconUrl : null;
   let version = manifest.version ? manifest.version : '0.0.0';
-  let backgroundImages = backgroundImagesForApp(shellPath, manifest);
+  let backgroundImages = backgroundImagesForApp(shellPath, manifest, isDetached);
   let splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
 
   if (isDetached) {
@@ -845,7 +854,12 @@ export async function runShellAppModificationsAsync(
     });
 
     _.forEach(backgroundImages, async image => {
-      await saveUrlToPathAsync(image.url, image.path);
+      if (isDetached) {
+        // local file so just copy it
+        fs.copyFileSync(image.url, image.path);
+      } else {
+        await saveUrlToPathAsync(image.url, image.path);
+      }
     });
   }
 
