@@ -6,6 +6,8 @@ import StandaloneBuildFlags from './StandaloneBuildFlags';
 
 type StandaloneContextDataType = 'user' | 'service';
 
+type StandaloneContextTestEnvironment = 'none' | 'local' | 'ci';
+
 /**
  *  A user context is used when we are configuring a standalone app locally on a user's machine,
  *  such as during `exp detach`.
@@ -24,6 +26,7 @@ type StandaloneContextDataService = {
   archivePath: ?string,
   manifest: ?any,
   privateConfig: ?any,
+  testEnvironment: StandaloneContextTestEnvironment;
 };
 
 class StandaloneContext {
@@ -62,6 +65,7 @@ class StandaloneContext {
     archivePath: ?string,
     manifest: ?any,
     privateConfig: ?any,
+    testEnvironment: StandaloneContextTestEnvironment,
     build: StandaloneBuildFlags,
     publishedUrl: ?string,
     releaseChannel: ?string
@@ -73,6 +77,7 @@ class StandaloneContext {
       archivePath,
       manifest,
       privateConfig,
+      testEnvironment,
     };
     context.config = manifest;
     context.build = build;

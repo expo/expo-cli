@@ -16,6 +16,7 @@ function _validateCLIArgs(args) {
   args.type = args.type || 'archive';
   args.configuration = args.configuration || 'Release';
   args.verbose = args.verbose || false;
+  args.testEnvironment = args.testEnvironment || 'none';
 
   switch (args.type) {
     case 'simulator': {
@@ -47,6 +48,13 @@ function _validateCLIArgs(args) {
         throw new Error(
           'Need to provide --archivePath <path to existing archive for configuration>'
         );
+      }
+      if (
+        args.testEnvironment !== 'local' &&
+        args.testEnvironment !== 'ci' &&
+        args.testEnvironment !== 'none'
+      ) {
+        throw new Error(`Unsupported test environment ${args.testEnvironment}`);
       }
       break;
     }
@@ -167,6 +175,7 @@ async function _createStandaloneContextAsync(args) {
     args.archivePath,
     manifest,
     privateConfig,
+    args.testEnvironment,
     buildFlags,
     args.url,
     args.releaseChannel
@@ -192,7 +201,7 @@ async function _configureAndCopyShellAppArchiveAsync(args) {
   if (output) {
     // TODO: un-hard-code ExpoKitApp.app
     const archiveName = context.config.slug.replace(/[^0-9a-z_\-]/gi, '_');
-    const appReleasePath = path.resolve(path.join(`${context.data.archivePath}`, '..'));
+    const appReleasePath = path.resolve(context.data.archivePath, '..');
     if (type === 'simulator') {
       await spawnAsync(
         `mv ExpoKitApp.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,

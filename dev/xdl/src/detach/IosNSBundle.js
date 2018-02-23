@@ -375,6 +375,9 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
     shellPlist.isShell = true;
     shellPlist.manifestUrl = context.published.url;
     shellPlist.releaseChannel = context.published.releaseChannel;
+    if (context.data.testEnvironment) {
+      shellPlist.testEnvironment = context.data.testEnvironment;
+    }
     if (config.ios && config.ios.permissions) {
       shellPlist.permissions = config.ios.permissions;
     }

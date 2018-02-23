@@ -332,6 +332,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     null,
     manifest,
     privateConfig,
+    /* testEnvironment */ 'none',
     buildFlags,
     url,
     releaseChannel

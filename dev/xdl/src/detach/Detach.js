@@ -357,6 +357,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
     null,
     null,
     null,
+    /* testEnvironment */ 'none',
     buildFlags,
     null,
     null
