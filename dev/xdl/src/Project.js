@@ -79,22 +79,27 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
     urlType: 'http',
   });
 
+  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
   let packagerRunning = false;
-  try {
-    const res = await request(`${packagerUrl}/status`);
+  if (packagerInfo.packagerPort) {
+    try {
+      const res = await request(`${packagerUrl}/status`);
 
-    if (res.statusCode < 400 && res.body && res.body.includes('packager-status:running')) {
-      packagerRunning = true;
-    }
-  } catch (e) {}
+      if (res.statusCode < 400 && res.body && res.body.includes('packager-status:running')) {
+        packagerRunning = true;
+      }
+    } catch (e) {}
+  }
 
   let manifestServerRunning = false;
-  try {
-    const res = await request(manifestUrl);
-    if (res.statusCode < 400) {
-      manifestServerRunning = true;
-    }
-  } catch (e) {}
+  if (packagerInfo.expoServerPort) {
+    try {
+      const res = await request(manifestUrl);
+      if (res.statusCode < 400) {
+        manifestServerRunning = true;
+      }
+    } catch (e) {}
+  }
 
   if (packagerRunning && manifestServerRunning) {
     return 'running';
