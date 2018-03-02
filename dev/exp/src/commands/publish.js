@@ -41,7 +41,7 @@ export async function action(projectDir: string, options: Options = {}) {
   }
 
   let recipient = await sendTo.getRecipient(options.sendTo);
-  log('Publishing...');
+  log(`Publishing to channel '${options.releaseChannel}'...`);
 
   if (options.quiet) {
     simpleSpinner.start();
