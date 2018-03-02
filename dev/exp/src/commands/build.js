@@ -29,6 +29,7 @@ export default (program: any) => {
     .option('-t --type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i)
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
+    .option('--no-wait', 'Exit immediately after triggering build.')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
@@ -59,6 +60,7 @@ export default (program: any) => {
     .option('-c, --clear-credentials', 'Clear stored credentials.')
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
+    .option('--no-wait', 'Exit immediately after triggering build.')
     .description(
       'Build a standalone APK for your project, signed and ready for submission to the Google Play Store.'
     )

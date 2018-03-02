@@ -4,12 +4,17 @@
 
 import { Project, ProjectUtils } from 'xdl';
 import inquirer from 'inquirer';
+import chalk from 'chalk';
+import fp from 'lodash/fp';
+import simpleSpinner from '@expo/simple-spinner';
 
 import log from '../../log';
-import chalk from 'chalk';
 import { action as publishAction } from '../publish';
 
 import BuildError from './BuildError';
+
+const sleep = (ms) => new Promise(res => setTimeout(res, ms));
+const secondsToMilliseconds = (seconds) => seconds * 1000;
 
 type BuilderOptions = {
   wait: boolean,
@@ -22,7 +27,7 @@ type BuilderOptions = {
 export default class BaseBuilder {
   projectDir: string = '';
   options: BuilderOptions = {
-    wait: false,
+    wait: true,
     clearCredentials: false,
     releaseChannel: 'default',
     publish: false,
@@ -170,6 +175,37 @@ ${buildStatus.id}
     }
   }
 
+  async wait(buildId, { timeout = 1200, interval = 60 } = {}) {
+    let time = new Date().getTime();
+    log(`Waiting for build to complete. You can press Ctrl+C to exit.`);
+    await sleep(secondsToMilliseconds(interval));
+    const endTime = time + secondsToMilliseconds(timeout);
+    while (time <= endTime) {
+      const res = await Project.buildAsync(this.projectDir, { current: false, mode: 'status' });
+      const job = fp.compose(
+        fp.head,
+        fp.filter(job => buildId && job.id === buildId),
+        fp.getOr([], 'jobs')
+      )(res);
+      switch (job.status) {
+      case 'finished':
+        return job;
+      case 'pending':
+      case 'started':
+      case 'in-progress':
+        break;
+      case 'errored':
+        throw new BuildError(`Standalone build failed!`);
+      default:
+        throw new BuildError(`Unknown status: ${job.status} - aborting!`);
+      }
+      time = new Date().getTime();
+      await sleep(secondsToMilliseconds(interval));
+    }
+    throw new BuildError('Timeout reached! Project is taking longer than expected to finish building, aborting wait...');
+    return false;
+  }
+
   async build(expIds: Array<string>, platform: string) {
     log('Building...');
 
@@ -188,33 +224,24 @@ ${buildStatus.id}
     }
 
     // call out to build api here with url
-    const buildResp = await Project.buildAsync(this.projectDir, opts);
+    const { id: buildId } = await Project.buildAsync(this.projectDir, opts);
+
+    log('Build started, it may take a few minutes to complete.');
+    
+    if (buildId) {
+      log(
+        `You can monitor the build at\n\n ${chalk.underline(
+          constructBuildLogsUrl(buildId)
+        )}\n`
+      );
+    }
 
     if (this.options.wait) {
-      const { ipaUrl, apkUrl, buildErr } = buildResp;
-      // do some stuff here
-      // FIXME(perry) this is duplicate code to the checkStatus function
-      if (buildErr) {
-        throw new BuildError(`Build failed with error.\n${buildErr}`);
-      } else if (!ipaUrl || ipaUrl === '' || !apkUrl || apkUrl === '') {
-        throw new BuildError('No url was returned from the build process. Please try again.');
-      }
-
-      log(`IPA Url: ${ipaUrl}`);
-      log(`APK Url: ${apkUrl}`);
-
-      log('Successfully built standalone app!');
-    } else {
-      log('Build started, it may take a few minutes to complete.');
-
-      if (buildResp.id) {
-        log(
-          `You can monitor the build at\n\n ${chalk.underline(
-            constructBuildLogsUrl(buildResp.id)
-          )}\n`
-        );
-      }
-
+      simpleSpinner.start();
+      const completedJob = await this.wait(buildId);
+      simpleSpinner.stop();
+      log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(completedJob.artifacts.url)}`);
+    } else {  
       log('Alternatively, run `exp build:status` to monitor it from the command line.');
     }
   }
