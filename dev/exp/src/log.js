@@ -59,17 +59,12 @@ function respectProgressBars(commitLogs) {
 }
 
 function getPrefix(chalkColor) {
-  const timestamp = new Date().toLocaleTimeString().padStart(maxTimestampLength);
-  const leftBracket = chalkColor('[');
-  const rightBracket = chalkColor(']');
   return (
-    leftBracket +
-    chalk.gray('exp') +
-    rightBracket +
+    chalkColor(new Date().toTimeString().slice(0, 8)) +
     ' ' +
-    leftBracket +
-    chalk.gray(timestamp) +
-    rightBracket
+    chalkColor('[') +
+    chalk.gray('exp') +
+    chalkColor(']')
   );
 }
 
