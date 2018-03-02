@@ -36,6 +36,10 @@ async function action(projectDir, options) {
     startOpts.reset = true;
   }
 
+  if (options.maxWorkers) {
+    startOpts.maxWorkers = options.maxWorkers;
+  }
+
   await Project.startAsync(root, startOpts);
 
   log('Expo is ready.');
@@ -76,6 +80,8 @@ export default (program: any) => {
     .description('Starts or restarts a local server for your app and gives you a URL to it')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
+    // TODO(anp) set a default for this dynamically based on whether we're inside a container?
+    .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .urlOpts()
     .allowNonInteractive()
     .allowOffline()

@@ -32,10 +32,16 @@ export async function action(projectDir: string, options: Options = {}) {
   if (status !== 'running') {
     log('Unable to find an existing exp instance for this directory, starting a new one...');
     installExitHooks(projectDir);
+
+    const startOpts = { reset: options.clear, nonPersistent: true };
+    if (options.maxWorkers) {
+      startOpts.maxWorkers = options.maxWorkers;
+    }
+
     await Project.startAsync(
       projectDir,
-      { reset: options.clear, nonPersistent: true },
-      !options.quiet
+      startOpts,
+      !options.quiet,
     );
     startedOurOwn = true;
   }
@@ -87,6 +93,8 @@ export default (program: any) => {
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
+    // TODO(anp) set a default for this dynamically based on whether we're inside a container?
+    .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .option(
       '--release-channel <release channel>',
       "The release channel to publish to. Default is 'default'.",

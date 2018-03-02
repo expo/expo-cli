@@ -1180,6 +1180,10 @@ export async function startReactNativeServerAsync(
     nonPersistent: !!options.nonPersistent,
   };
 
+  if (options.maxWorkers) {
+    packagerOpts['max-workers'] = options.maxWorkers;
+  }
+
   if (!Versions.gteSdkVersion(exp, '16.0.0')) {
     delete packagerOpts.customLogReporterPath;
   }
