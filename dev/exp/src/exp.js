@@ -112,10 +112,6 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
 // - Runs AsyncAction with the projectDir as an argument
 Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
   return this.asyncAction(async (projectDir, ...args) => {
-    try {
-      await checkForUpdateAsync();
-    } catch (e) {}
-
     const opts = args[0];
     if (!skipAuthCheck && !opts.nonInteractive && !opts.offline) {
       await loginOrRegisterIfLoggedOut();
@@ -302,7 +298,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     // will be undefined in most cases. we can explicitly pass a truthy value here to avoid validation (eg for init)
 
     return asyncFn(projectDir, ...args);
-  }, true);
+  });
 };
 
 function runAsync(programName) {
