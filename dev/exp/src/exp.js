@@ -31,6 +31,7 @@ import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import addCommonOptions from './commonOptions';
+import packageJSON from '../package.json';
 
 if (process.env.NODE_ENV === 'development') {
   require('source-map-support').install();
@@ -101,7 +102,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
 
 // asyncActionProjectDir captures the projectDirectory from the command line,
 // setting it to cwd if it is not provided.
-// Commands such as `exp start` and `exp publish` use this.
+// Commands such as `start` and `publish` use this.
 // It does several things:
 // - Everything in asyncAction
 // - Checks if the user is logged in or out
@@ -283,7 +284,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     //
     // If the packager/manifest server is running and healthy, there is no need
     // to rerun Doctor because the directory was already checked previously
-    // This is relevant for command such as `exp send`
+    // This is relevant for command such as `send`
     if (!skipProjectValidation && (await Project.currentStatus(projectDir)) !== 'running') {
       log('Making sure project is set up correctly...');
       simpleSpinner.start();
@@ -304,11 +305,11 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
   }, true);
 };
 
-function runAsync() {
+function runAsync(programName) {
   try {
     // Setup analytics
     Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
-    Analytics.setVersionName(require('../package.json').version);
+    Analytics.setVersionName(packageJSON.version);
     _registerLogs();
 
     if (process.env.SERVER_URL) {
@@ -321,18 +322,20 @@ function runAsync() {
       Config.api.port = parsedUrl.port;
     }
 
-    Config.developerTool = 'exp';
+    Config.developerTool = packageJSON.name;
 
     // Setup our commander instance
-    program.name = 'exp';
+    program.name = programName;
     program
-      .version(require('../package.json').version)
+      .version(packageJSON.version)
       .option('-o, --output [format]', 'Output format. pretty (default), raw');
 
     // Load each module found in ./commands by 'registering' it with our commander instance
     const files = _.uniqBy(
       [
-        ...glob.sync('exp_commands/*.js', { cwd: __dirname }),
+        ...(programName === 'exp'
+          ? glob.sync('exp_commands/*.js', { cwd: __dirname })
+          : glob.sync('expo_commands/*.js', { cwd: __dirname })),
         ...glob.sync('commands/*.js', { cwd: __dirname }),
       ],
       path.basename
@@ -374,7 +377,7 @@ function runAsync() {
       });
       if (!_.includes(commands, subCommand)) {
         console.log(
-          `"${subCommand}" is not an exp command. See "exp --help" for the full list of commands.`
+          `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
         );
       }
     } else {
@@ -394,18 +397,15 @@ async function checkForUpdateAsync() {
       break;
 
     case 'out-of-date':
-      message = `There is a new version of exp available (${latest}).
-You are currently using exp ${current}
-Run \`npm install -g exp\` to get the latest version`;
+      message = `There is a new version of ${packageJSON.name} available (${latest}).
+You are currently using ${packageJSON.name} ${current}
+Run \`npm install -g ${packageJSON.name}\` to get the latest version`;
       log.error(chalk.green(message));
       break;
 
     case 'ahead-of-published':
       // if the user is ahead of npm, we're going to assume they know what they're doing
       break;
-
-    default:
-      log.error('Confused about what version of exp you have?');
   }
 }
 
@@ -453,9 +453,9 @@ async function writePathAsync() {
 }
 
 // This is the entry point of the CLI
-export function run() {
+export function run(programName) {
   (async function() {
-    await Promise.all([writePathAsync(), runAsync()]);
+    await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
     console.error('Uncaught Error', e);
     process.exit(1);

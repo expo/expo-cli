@@ -7,7 +7,7 @@ var ver = process.versions.node;
 ver = ver.split('-')[0]; // explode and truncate tag from version
 
 if (semver.satisfies(ver, '>=6.0.0')) {
-  require('../build/exp.js').run();
+  require('../build/exp.js').run('exp');
 } else {
   console.log(
     require('chalk').red(
