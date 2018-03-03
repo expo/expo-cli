@@ -8,36 +8,28 @@ import path from 'path';
 import semver from 'semver';
 
 import { FsCache, UserSettings } from 'xdl';
+import packageJSON from '../package.json';
 
 const UpdateCacher = new FsCache.Cacher(
   async () => {
-    const packageName = await new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync(
-      'name'
-    );
-    const [version_, _] = await child_process.exec(`npm view ${packageName} version`);
-    const trimmed = version_.trim();
-
+    const [version, _] = await child_process.exec(`npm view ${packageJSON.name} version`);
     return {
-      latestVersionExp: trimmed,
+      latestVersion: version.trim(),
     };
   },
-  'exp-updates.json',
+  `${packageJSON.name}-updates.json`,
   24 * 60 * 60 * 1000 // one day
 );
 
-async function currentExpVersionAsync() {
-  return new JsonFile(path.join(__dirname, '..', 'package.json')).getAsync('version');
-}
-
-async function checkForExpUpdateAsync(): Promise<{
+async function checkForUpdateAsync(): Promise<{
   state: 'out-of-date' | 'up-to-date' | 'ahead-of-published',
   current: string,
   latest: string,
 }> {
-  const current = await currentExpVersionAsync();
+  const current = packageJSON.version;
 
   // check for an outdated install based on either a fresh npm query or our cache
-  const { latestVersionExp: latest } = await UpdateCacher.getAsync();
+  const { latestVersion: latest } = await UpdateCacher.getAsync();
 
   let state;
   switch (semver.compare(current, latest)) {
@@ -54,7 +46,7 @@ async function checkForExpUpdateAsync(): Promise<{
       break;
 
     default:
-      throw new Error('Confused about whether exp is up-to-date or not');
+      throw new Error('Confused about whether CLI is up-to-date or not');
   }
 
   return {
@@ -65,6 +57,5 @@ async function checkForExpUpdateAsync(): Promise<{
 }
 
 export default {
-  currentExpVersionAsync,
-  checkForExpUpdateAsync,
+  checkForUpdateAsync,
 };

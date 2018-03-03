@@ -390,7 +390,7 @@ function runAsync(programName) {
 }
 
 async function checkForUpdateAsync() {
-  let { state, current, latest } = await update.checkForExpUpdateAsync();
+  let { state, current, latest } = await update.checkForUpdateAsync();
   let message;
   switch (state) {
     case 'up-to-date':
