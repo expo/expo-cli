@@ -1,14 +1,21 @@
 import chalk from 'chalk';
 
-import { UrlUtils } from 'xdl';
+import { Project, UrlUtils } from 'xdl';
 
+import CommandError from '../CommandError';
 import log from '../log';
 import urlOpts from '../urlOpts';
 
 async function action(projectDir, options) {
   await urlOpts.optsAsync(projectDir, options);
 
-  let url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  if ((await Project.currentStatus(projectDir)) !== 'running') {
+    throw new CommandError(
+      'NOT_RUNNING',
+      `Project is not running. Please start it with \`${options.parent.name} start\`.`
+    );
+  }
+  const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
   log('You can scan this QR code:\n');
   urlOpts.printQRCode(url);
@@ -17,8 +24,6 @@ async function action(projectDir, options) {
   log.raw(url);
 
   await urlOpts.handleMobileOptsAsync(projectDir, options);
-  // this is necessary because we have undiagnosed event loop gunk that prevents exit
-  process.exit();
 }
 
 export default program => {
@@ -29,5 +34,5 @@ export default program => {
     .urlOpts()
     .allowOffline()
     .allowNonInteractive()
-    .asyncActionProjectDir(action);
+    .asyncActionProjectDir(action, /* skipProjectValidation: */ true, /* skipAuthCheck: */ true);
 };
