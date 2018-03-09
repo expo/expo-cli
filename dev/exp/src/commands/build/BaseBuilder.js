@@ -150,7 +150,7 @@ ${buildStatus.id}
   async ensureReleaseExists(platform: string) {
     if (this.options.publish) {
       const { ids, url, err } = await publishAction(this.projectDir, {
-        releaseChannel: this.options.releaseChannel,
+        ...this.options,
         platform,
       });
       if (err) {
