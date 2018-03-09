@@ -11,8 +11,6 @@ export default (program: any) => {
     .description('Login to Expo')
     .option('-u, --username [string]', 'Username')
     .option('-p, --password [string]', 'Password')
-    .option('-t, --token [string]', 'Token')
-    .option('--github', 'Login with Github')
     .allowNonInteractive()
     .asyncAction(login);
 };

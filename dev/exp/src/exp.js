@@ -357,11 +357,24 @@ function runAsync(programName) {
         });
     }
 
-    // Commander will now parse argv/argc
-    program.parse(process.argv);
+    let subCommand = process.argv[2];
+    let argv = process.argv.filter(arg => {
+      // Remove deprecated `--github` option here in order to fallback to password login/signup.
+      if (subCommand === 'login' && arg === '--github') {
+        log.nestedWarn(
+          'GitHub login is not currently available.\nPlease log in with your Expo account.'
+        );
+        return false;
+      }
+      if (subCommand === 'register' && arg === '--github') {
+        log.nestedWarn('GitHub sign up is not currently available.');
+        return false;
+      }
+      return true;
+    });
+    program.parse(argv);
 
     // Display a message if the user does not input a valid command
-    let subCommand = process.argv[2];
     if (subCommand) {
       let commands = [];
       program.commands.forEach(command => {

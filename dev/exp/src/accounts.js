@@ -53,9 +53,7 @@ export async function loginOrRegisterIfLoggedOut() {
 
   const { action } = await inquirer.prompt(questions);
 
-  if (action === 'github') {
-    await login({ github: true });
-  } else if (action === 'register') {
+  if (action === 'register') {
     await _onboardUser();
     console.log(chalk.green('Thanks!\n'));
   } else if (action === 'existingUser') {
@@ -85,25 +83,9 @@ export async function login(options: CommandOptions) {
         return;
       }
     }
-
-    if (options.facebook) {
-      // handle fb login
-      return await _socialAuth('facebook');
-    } else if (options.google) {
-      // handle google login
-      return await _socialAuth('google');
-    } else if (options.github) {
-      // handle github login
-      return await _socialAuth('github');
-    } else if (options.token) {
-      // handle token login
-      return await _tokenAuth(options.token);
-    } else {
-      // handle username/password auth
-      return await _usernamePasswordAuth(options.username, options.password);
-    }
+    return _usernamePasswordAuth(options.username, options.password);
   } else if (options.username && options.password) {
-    return await _usernamePasswordAuth(options.username, options.password);
+    return _usernamePasswordAuth(options.username, options.password);
   } else {
     throw new CommandError(
       'NON_INTERACTIVE',
@@ -113,35 +95,8 @@ export async function login(options: CommandOptions) {
 }
 
 export async function register(options: CommandOptions) {
-  if (options.github) {
-    // handle github login
-    await _socialAuth('github');
-    console.log('\nThanks for signing up!');
-  } else {
-    await _onboardUser();
-    console.log('\nThanks for signing up!');
-  }
-}
-
-async function _socialAuth(provider: LoginType) {
-  let user = await UserManager.loginAsync(provider);
-  if (user) {
-    if (user.userMetadata.onboarded) {
-      console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
-      return user;
-    } else {
-      user = await _onboardUser(user);
-      console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
-      return user;
-    }
-  } else {
-    throw new Error('Unexpected Error: No user returned from the API');
-  }
-}
-
-async function _tokenAuth(token: string) {
-  console.log('\nStay tuned! This feature is not yet implemented.');
-  return;
+  await _onboardUser();
+  console.log('\nThanks for signing up!');
 }
 
 async function _usernamePasswordAuth(username?: string, password?: string): Promise<User> {
