@@ -14,10 +14,6 @@ import type { LoginType, User, UserOrLegacyUser } from 'xdl/build/User';
 UserManager.initialize();
 
 type CommandOptions = {
-  facebook?: boolean,
-  google?: boolean,
-  github?: boolean,
-  token?: string,
   username?: string,
   password?: string,
 };
