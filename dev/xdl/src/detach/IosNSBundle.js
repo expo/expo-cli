@@ -390,9 +390,6 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
       // enable/disable code push if the developer provided specific behavior
       shellPlist.isRemoteJSEnabled = config.ios.isRemoteJSEnabled;
     }
-    if (config.ios && config.ios.hasOwnProperty('loadJSInBackgroundExperimental')) {
-      shellPlist.loadJSInBackgroundExperimental = config.ios.loadJSInBackgroundExperimental;
-    }
     if (!manifestUsesSplashApi(config, 'ios')) {
       // for people still using the old loading api, hide the native splash screen.
       // we can remove this code eventually.
