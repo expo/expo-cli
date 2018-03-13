@@ -130,11 +130,11 @@ export async function validateCredentialsProduceTeamId(creds) {
   if (teams.length === 0) {
     throw new Error(NO_TEAM_ID);
   }
-  log(`You have ${teams.length} teams`);
   if (teams.length === 1) {
-    console.log(`Only 1 team associated with your account, using Team ID: ${teams[0].teamId}`);
+    log(`Only 1 team associated with your account, using Team ID: ${teams[0].teamId}`);
     return { teamId: teams[0].teamId };
   } else {
+    log(`You have ${teams.length} teams`);
     const teamChoices = teams.map(
       (team, i) => `${i + 1}) ${team['teamId']} "${team['name']}" (${team['type']})`
     );
