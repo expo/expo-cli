@@ -465,7 +465,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
       ProjectUtils.logError(
         projectRoot,
         'expo',
-        `Error: React native is not installed. Please run \`npm install\` in your project directory.`,
+        `Error: React Native is not installed. Please run \`npm install\` in your project directory.`,
         'doctor-react-native-not-installed'
       );
       return FATAL;
