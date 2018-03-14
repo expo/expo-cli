@@ -2,7 +2,7 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.4.5"
+VERSION = "1.4.6"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
@@ -117,6 +117,15 @@ def create_package target
   sh "cp Gemfile Gemfile.lock #{package_dir}/lib/vendor/"
   sh "mkdir #{package_dir}/lib/vendor/.bundle"
   sh "cp packaging/bundler-config #{package_dir}/lib/vendor/.bundle/config"
+
+  # Hack to fix traveling-ruby failing when installed in a path that contains spaces.
+  # https://github.com/phusion/traveling-ruby/issues/38
+  sh "mv #{package_dir}/lib/ruby/lib/restore_environment.rb #{package_dir}/lib/ruby/lib/ruby/site_ruby/"
+  sh <<-eos
+    sed -i '' -e 's|RUBYOPT=\\\\"-r$ROOT/lib/restore_environment\\\\"|RUBYOPT=\\\\"-rrestore_environment\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+    sed -i '' -e 's|GEM_HOME="\\(.*\\)"|GEM_HOME=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+    sed -i '' -e 's|GEM_PATH="\\(.*\\)"|GEM_PATH=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+  eos
 
   # Put in our native dependencies rather than the one provided by bundle
   for native_lib, version in {'json':JSON_VERSION, 'unf_ext':UNF_VERSION} do
