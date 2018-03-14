@@ -4,6 +4,8 @@ import spawn from 'cross-spawn';
 import pathExists from 'path-exists';
 import path from 'path';
 
+import logger from './Logger';
+
 type InstallResult = {
   code: number,
   command: string,
@@ -41,8 +43,8 @@ export default async function installPackageAsync(
   }
 
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
-  console.log(`Installing ${pkg ? pkg : 'dependencies'} using ${npmOrYarn}...`);
-  console.log();
+  logger.info(`Installing ${pkg ? pkg : 'dependencies'} using ${npmOrYarn}...`);
+  logger.info();
 
   let spawnOpts = {};
   if (options.silent) {

@@ -41,6 +41,7 @@ import * as UrlUtils from '../UrlUtils';
 import * as Utils from '../Utils';
 import * as Versions from '../Versions';
 import installPackageAsync from './installPackageAsync';
+import logger from './Logger';
 
 async function yesnoAsync(message) {
   const { ok } = await inquirer.prompt([
@@ -87,7 +88,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
       `This will add an Xcode project and leave your existing Android project alone. Enter 'yes' to continue:`
     );
     if (!response) {
-      console.log('Exiting...');
+      logger.info('Exiting...');
       return false;
     }
   }
@@ -96,7 +97,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     throw new Error('`ios` directory already exists. Please remove it and try again.');
   }
 
-  console.log('Validating project manifest...');
+  logger.info('Validating project manifest...');
   if (!exp.name) {
     throw new Error(`${configName} is missing \`name\``);
   }
@@ -118,7 +119,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     !sdkVersionConfig.iosExpoViewUrl
   ) {
     if (process.env.EXPO_VIEW_DIR) {
-      console.warn(
+      logger.warn(
         `Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPO_VIEW_DIR`
       );
       sdkVersionConfig = {};
@@ -147,11 +148,11 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
   let isIosSupported = true;
   if (process.platform !== 'darwin') {
     if (options && options.force) {
-      console.warn(
+      logger.warn(
         `You are not running macOS, but have provided the --force option, so we will attempt to generate an iOS project anyway. This might fail.`
       );
     } else {
-      console.warn(`Skipping iOS because you are not running macOS.`);
+      logger.warn(`Skipping iOS because you are not running macOS.`);
       isIosSupported = false;
     }
   }
@@ -161,7 +162,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
       exp.ios = {};
     }
     if (!exp.ios.bundleIdentifier) {
-      console.log(
+      logger.info(
         `You'll need to specify an iOS bundle identifier. See: https://docs.expo.io/versions/latest/guides/configuration.html#bundleidentifier`
       );
       const { iosBundleIdentifier } = await inquirer.prompt([
@@ -185,7 +186,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
       exp.android = {};
     }
     if (!exp.android.package) {
-      console.log(
+      logger.info(
         `You'll need to specify an Android package name. See: https://docs.expo.io/versions/latest/guides/configuration.html#package`
       );
       const { androidPackage } = await inquirer.prompt([
@@ -216,7 +217,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     exp.detach.androidExpoViewUrl = sdkVersionConfig.androidExpoViewUrl;
   }
 
-  console.log('Writing ExpoKit configuration...');
+  logger.info('Writing ExpoKit configuration...');
   // Update exp.json/app.json
   // if we're writing to app.json, we need to place the configuration under the expo key
   const config = configNamespace ? { [configNamespace]: exp } : exp;
@@ -225,7 +226,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
   const { expoReactNativeTag } = versions.sdkVersions[exp.sdkVersion];
   const reactNativeVersion = `https://github.com/expo/react-native/archive/${expoReactNativeTag}.tar.gz`;
   if (expoReactNativeTag && pkg.dependencies['react-native'] !== reactNativeVersion) {
-    console.log('Installing the Expo fork of react-native...');
+    logger.info('Installing the Expo fork of react-native...');
     const nodeModulesPath = exp.nodeModulesPath
       ? path.resolve(projectRoot, exp.nodeModulesPath)
       : projectRoot;
@@ -238,7 +239,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
       }
     );
     if (code !== 0) {
-      console.warn(`
+      logger.warn(`
         ${chalk.yellow('Unable to install the Expo fork of react-native.')}
         ${chalk.yellow(`Please install react-native@${reactNativeVersion} to complete detaching.`)}
       `);
@@ -246,7 +247,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     }
   }
 
-  console.log(
+  logger.info(
     'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.\n'
   );
   return true;
@@ -258,10 +259,10 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
 async function detachIOSAsync(context: StandaloneContext) {
   await IosWorkspace.createDetachedAsync(context);
 
-  console.log('Configuring iOS project...');
+  logger.info('Configuring iOS project...');
   await IosNSBundle.configureAsync(context);
 
-  console.log(`iOS detach is complete!`);
+  logger.info(`iOS detach is complete!`);
 }
 
 async function regexFileAsync(filename, regex, replace) {
@@ -275,7 +276,7 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
     throw new Error(`detachAndroidAsync only supports user standalone contexts`);
   }
 
-  console.log('Moving Android project files...');
+  logger.info('Moving Android project files...');
   let androidProjectDirectory = path.join(context.data.projectPath, 'android');
   let tmpExpoDirectory;
   if (process.env.EXPO_VIEW_DIR) {
@@ -288,7 +289,7 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
   } else {
     tmpExpoDirectory = path.join(context.data.projectPath, 'temp-android-directory');
     mkdirp.sync(tmpExpoDirectory);
-    console.log('Downloading Android code...');
+    logger.info('Downloading Android code...');
     await Api.downloadAsync(expoViewUrl, tmpExpoDirectory, { extract: true });
     await AndroidShellApp.copyInitialShellAppFilesAsync(
       tmpExpoDirectory,
@@ -297,15 +298,15 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
     );
   }
 
-  console.log('Updating Android app...');
+  logger.info('Updating Android app...');
   await AndroidShellApp.runShellAppModificationsAsync(context, true);
 
   // Clean up
-  console.log('Cleaning up Android...');
+  logger.info('Cleaning up Android...');
   if (!process.env.EXPO_VIEW_DIR) {
     rimrafDontThrow(tmpExpoDirectory);
   }
-  console.log('Android detach is complete!\n');
+  logger.info('Android detach is complete!\n');
 }
 
 async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
@@ -316,7 +317,7 @@ async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
   );
   if (!doesBuildConstantsExist) {
     await IosPlist.createBlankAsync(configFilePath, 'EXBuildConstants');
-    console.log('Created `EXBuildConstants.plist` because it did not exist yet');
+    logger.info('Created `EXBuildConstants.plist` because it did not exist yet');
   }
 }
 
@@ -406,7 +407,7 @@ async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, 
   const context = StandaloneContext.createUserContext(projectDir, exp);
   let { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
 
-  console.log(`Preparing iOS build at ${iosProjectDirectory}...`);
+  logger.info(`Preparing iOS build at ${iosProjectDirectory}...`);
   // These files cause @providesModule naming collisions
   // but are not available until after `pod install` has run.
   let podsDirectory = path.join(iosProjectDirectory, 'Pods');

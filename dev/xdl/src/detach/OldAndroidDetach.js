@@ -17,6 +17,7 @@ import {
   saveImageToPathAsync,
   rimrafDontThrow,
 } from './ExponentTools';
+import logger from './Logger';
 
 import Api from '../Api';
 import * as Utils from '../Utils';
@@ -75,13 +76,13 @@ export async function detachAndroidAsync(
   } else {
     tmpExpoDirectory = path.join(projectRoot, 'temp-android-directory');
     mkdirp.sync(tmpExpoDirectory);
-    console.log('Downloading Android code...');
+    logger.info('Downloading Android code...');
     await Api.downloadAsync(expoViewUrl, tmpExpoDirectory, { extract: true });
   }
 
   let androidProjectDirectory = path.join(projectRoot, 'android');
 
-  console.log('Moving Android project files...');
+  logger.info('Moving Android project files...');
 
   await Utils.ncpAsync(
     path.join(tmpExpoDirectory, 'android', 'maven'),
@@ -101,7 +102,7 @@ export async function detachAndroidAsync(
   }
 
   // Fix up app/build.gradle
-  console.log('Configuring Android project...');
+  logger.info('Configuring Android project...');
   let appBuildGradle = path.join(androidProjectDirectory, 'app', 'build.gradle');
   await regexFileAsync(appBuildGradle, /\/\* UNCOMMENT WHEN DISTRIBUTING/g, '');
   await regexFileAsync(appBuildGradle, /END UNCOMMENT WHEN DISTRIBUTING \*\//g, '');
@@ -160,7 +161,7 @@ export async function detachAndroidAsync(
   }
 
   // Fix app name
-  console.log('Naming Android project...');
+  logger.info('Naming Android project...');
   let appName = manifest.name;
   await regexFileAsync(
     path.resolve(androidProjectDirectory, 'app', 'src', 'main', 'res', 'values', 'strings.xml'),
@@ -184,9 +185,9 @@ export async function detachAndroidAsync(
   }
 
   // Clean up
-  console.log('Cleaning up Android...');
+  logger.info('Cleaning up Android...');
   if (!process.env.EXPO_VIEW_DIR) {
     rimrafDontThrow(tmpExpoDirectory);
   }
-  console.log('Android detach is complete!\n');
+  logger.info('Android detach is complete!\n');
 }

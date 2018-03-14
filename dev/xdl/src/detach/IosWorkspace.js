@@ -16,6 +16,7 @@ import {
 } from './ExponentTools';
 import { renderPodfileAsync } from './IosPodsTools.js';
 import * as IosPlist from './IosPlist';
+import logger from './Logger';
 import * as Utils from '../Utils';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
@@ -55,7 +56,7 @@ async function _getOrCreateTemplateDirectoryAsync(
       expoRootTemplateDirectory = path.join(context.data.projectPath, 'temp-ios-directory');
       if (!isDirectory(expoRootTemplateDirectory)) {
         mkdirp.sync(expoRootTemplateDirectory);
-        console.log('Downloading iOS code...');
+        logger.info('Downloading iOS code...');
         await Api.downloadAsync(iosExpoViewUrl, expoRootTemplateDirectory, {
           extract: true,
         });
@@ -208,10 +209,10 @@ async function _renderPodfileFromTemplateAsync(
 
   // env flags for testing
   if (process.env.EXPOKIT_TAG_IOS) {
-    console.log(`EXPOKIT_TAG_IOS: Using custom ExpoKit iOS tag...`);
+    logger.info(`EXPOKIT_TAG_IOS: Using custom ExpoKit iOS tag...`);
     podfileSubstitutions.EXPOKIT_TAG = process.env.EXPOKIT_TAG_IOS;
   } else if (process.env.EXPO_VIEW_DIR) {
-    console.log('EXPO_VIEW_DIR: Using local ExpoKit source for iOS...');
+    logger.info('EXPO_VIEW_DIR: Using local ExpoKit source for iOS...');
     podfileSubstitutions.EXPOKIT_PATH = path.relative(
       iosProjectDirectory,
       process.env.EXPO_VIEW_DIR
@@ -242,7 +243,7 @@ async function createDetachedAsync(context: StandaloneContext) {
     isMultipleVersion = true;
   }
   const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(context);
-  console.log(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
+  logger.info(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
 
   const { iosClientVersion, iosExpoViewUrl } = await _getVersionedExpoKitConfigAsync(
     standaloneSdkVersion
@@ -253,20 +254,20 @@ async function createDetachedAsync(context: StandaloneContext) {
   );
 
   // copy template workspace
-  console.log('Moving iOS project files...');
-  console.log('Attempting to create project directory...');
-  console.log(`project dir: ${iosProjectDirectory}`);
+  logger.info('Moving iOS project files...');
+  logger.info('Attempting to create project directory...');
+  logger.info(`project dir: ${iosProjectDirectory}`);
   mkdirp.sync(iosProjectDirectory);
-  console.log('Created project directory! Copying files:');
+  logger.info('Created project directory! Copying files:');
   await Utils.ncpAsync(
     path.join(expoRootTemplateDirectory, 'exponent-view-template', 'ios'),
     iosProjectDirectory
   );
 
-  console.log('Naming iOS project...');
+  logger.info('Naming iOS project...');
   await _renameAndMoveProjectFilesAsync(context, iosProjectDirectory, projectName);
 
-  console.log('Configuring iOS dependencies...');
+  logger.info('Configuring iOS dependencies...');
   // this configuration must happen prior to build time because it affects which
   // native versions of RN we depend on.
   await _configureVersionsPlistAsync(supportingDirectory, standaloneSdkVersion, isMultipleVersion);
@@ -290,7 +291,7 @@ async function createDetachedAsync(context: StandaloneContext) {
 
 function addDetachedConfigToExp(exp: Object, context: StandaloneContext): Object {
   if (context.type !== 'user') {
-    console.warn(`Tried to modify exp for a non-user StandaloneContext, ignoring`);
+    logger.warn(`Tried to modify exp for a non-user StandaloneContext, ignoring`);
     return exp;
   }
   const { supportingDirectory } = getPaths(context);

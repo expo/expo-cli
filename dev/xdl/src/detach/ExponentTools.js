@@ -7,6 +7,8 @@ import path from 'path';
 import Request from 'request-promise-native';
 import rimraf from 'rimraf';
 import spawnAsyncQuiet from '@expo/spawn-async';
+
+import logger, { pipeOutputToLogger } from './Logger';
 import XDLError from '../XDLError';
 import ErrorCode from '../ErrorCode';
 
@@ -63,14 +65,15 @@ function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
 }
 
 async function getManifestAsync(url, headers) {
-  let requestOptions = {
+  const buildPhaseLogger = logger.withFields({ buildPhase: 'reading manifest' });
+  const requestOptions = {
     url: url.replace('exp://', 'http://') + '/index.exp',
     headers,
   };
 
-  let response = await request(requestOptions);
-  let responseBody = response.body;
-  console.log('Using manifest:', responseBody);
+  const response = await request(requestOptions);
+  const responseBody = response.body;
+  buildPhaseLogger.info('Using manifest:', responseBody);
   let manifest;
   try {
     manifest = JSON.parse(responseBody);
@@ -88,7 +91,16 @@ async function spawnAsyncThrowError(...args) {
       cwd: process.cwd(),
     });
   } else {
-    return spawnAsyncQuiet(...args);
+    const options = args[2];
+    if (options.pipeToLogger) {
+      options.stdio = 'pipe';
+      options.cwd = options.cwd || process.cwd();
+    }
+    const promise = spawnAsyncQuiet(...args);
+    if (options.pipeToLogger && promise.child) {
+      pipeOutputToLogger(promise.child, options.loggerFields, options.stdoutOnly);
+    }
+    return promise;
   }
 }
 
@@ -96,7 +108,7 @@ async function spawnAsync(...args) {
   try {
     return await spawnAsyncThrowError(...args);
   } catch (e) {
-    console.error(e.message);
+    logger.error(e.message);
   }
 }
 
@@ -122,7 +134,7 @@ function rimrafDontThrow(directory) {
   try {
     rimraf.sync(directory);
   } catch (e) {
-    console.warn(
+    logger.warn(
       `There was an issue cleaning up, but your project should still work. You may need to manually remove ${directory}. (${e})`
     );
   }

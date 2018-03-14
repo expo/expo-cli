@@ -1,7 +1,7 @@
 /**
  *  @flow
  */
- import fs from 'fs-extra';
+import fs from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import rimraf from 'rimraf';
@@ -16,6 +16,7 @@ import {
 } from './ExponentTools';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
+import logger from './Logger';
 
 const ASPECT_FILL = 'scaleAspectFill';
 const ASPECT_FIT = 'scaleAspectFit';
@@ -27,7 +28,7 @@ function _backgroundColorFromHexString(hexColor) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
   if (!result || result.length < 4) {
     // Default to white if we can't parse the color. We should have 3 matches.
-    console.warn('Unable to parse color: ', hexColor, ' result:', result);
+    logger.warn('Unable to parse color: ', hexColor, ' result:', result);
     return { r: 1, g: 1, b: 1 };
   }
 
@@ -207,7 +208,7 @@ async function configureLaunchAssetsAsync(
   if (_maybeAbortForBackwardsCompatibility(context)) {
     return;
   }
-  console.log('Configuring iOS Launch Screen...');
+  logger.info('Configuring iOS Launch Screen...');
 
   mkdirp.sync(intermediatesDirectory);
   const { supportingDirectory } = IosWorkspace.getPaths(context);

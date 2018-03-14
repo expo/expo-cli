@@ -3,6 +3,7 @@ import path from 'path';
 import plist from 'plist';
 
 import { spawnAsyncThrowError } from './ExponentTools';
+import logger from './Logger';
 
 function _getNormalizedPlistFilename(plistName) {
   let plistFilename;
@@ -37,8 +38,8 @@ async function modifyAsync(plistPath, plistName, transform) {
     try {
       config = JSON.parse(configContents);
     } catch (e) {
-      console.log(`Error parsing ${configFilename}`, e);
-      console.log('The erroneous file contents was:', configContents);
+      logger.info(`Error parsing ${configFilename}`, e);
+      logger.info('The erroneous file contents was:', configContents);
       config = {};
     }
   } else {

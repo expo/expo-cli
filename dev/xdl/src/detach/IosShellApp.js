@@ -5,12 +5,13 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
-import { getManifestAsync, spawnAsync, spawnAsyncThrowError } from './ExponentTools';
 
+import { getManifestAsync, spawnAsync, spawnAsyncThrowError } from './ExponentTools';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
+import logger from './Logger';
 
 function _validateCLIArgs(args) {
   args.type = args.type || 'archive';
@@ -99,10 +100,10 @@ async function _buildAsync(
     throw new Error(`Unsupported build type: ${type}`);
   }
 
-  console.log(`Building iOS workspace at ${workspacePath} to ${buildDest}:\n`);
-  console.log(buildCmd);
+  logger.info(`Building iOS workspace at ${workspacePath} to ${buildDest}:\n`);
+  logger.info(buildCmd);
   if (!verbose) {
-    console.log(
+    logger.info(
       '\nxcodebuild is running. Logging errors only. To see full output, use --verbose 1...'
     );
   }
@@ -129,8 +130,8 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
   if (isRepoUpdateEnabled) {
     cocoapodsArgs.push('--repo-update');
   }
-  console.log('Installing iOS workspace dependencies...');
-  console.log(`pod ${cocoapodsArgs.join(' ')}`);
+  logger.info('Installing iOS workspace dependencies...');
+  logger.info(`pod ${cocoapodsArgs.join(' ')}`);
   await spawnAsyncThrowError('pod', cocoapodsArgs, {
     stdio: 'inherit',
     cwd: workspacePath,
@@ -196,7 +197,6 @@ async function _createStandaloneContextAsync(args) {
 async function _configureAndCopyShellAppArchiveAsync(args) {
   const { output, type } = args;
   const context = await _createStandaloneContextAsync(args);
-  const { projectName } = IosWorkspace.getPaths(context);
   await IosNSBundle.configureAsync(context);
   if (output) {
     // TODO: un-hard-code ExpoKitApp.app
@@ -207,15 +207,18 @@ async function _configureAndCopyShellAppArchiveAsync(args) {
         `mv ExpoKitApp.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
         null,
         {
-          stdio: 'inherit',
+          stdoutOnly: true,
+          pipeToLogger: true,
+          loggerFields: { buildPhase: 'creating an archive for simulator' },
           cwd: appReleasePath,
           shell: true,
         }
       );
     } else if (type === 'archive') {
       await spawnAsync('/bin/mv', [`ExpoKitApp.xcarchive`, output], {
-        stdio: 'inherit',
+        pipeToLogger: true,
         cwd: `${context.data.archivePath}/../../../..`,
+        loggerFields: { buildPhase: 'renaming archive' },
       });
     }
   }
@@ -223,7 +226,7 @@ async function _configureAndCopyShellAppArchiveAsync(args) {
 
 async function _createShellAppWorkspaceAsync(context, skipRepoUpdate) {
   if (fs.existsSync(context.build.ios.workspaceSourcePath)) {
-    console.log(`Removing existing workspace at ${context.build.ios.workspaceSourcePath}...`);
+    logger.info(`Removing existing workspace at ${context.build.ios.workspaceSourcePath}...`);
     try {
       rimraf.sync(context.build.ios.workspaceSourcePath);
     } catch (_) {}
@@ -256,13 +259,13 @@ async function _buildAndCopyShellAppArtifactAsync(args) {
     verbose
   );
   const artifactDestPath = path.join('../shellAppBase-builds', type, context.build.configuration);
-  console.log(`\nFinished building, copying artifact to ${path.resolve(artifactDestPath)}...`);
+  logger.info(`\nFinished building, copying artifact to ${path.resolve(artifactDestPath)}...`);
   if (fs.existsSync(artifactDestPath)) {
     await spawnAsyncThrowError('/bin/rm', ['-rf', artifactDestPath]);
   }
-  console.log(`mkdir -p ${artifactDestPath}`);
+  logger.info(`mkdir -p ${artifactDestPath}`);
   await spawnAsyncThrowError('/bin/mkdir', ['-p', artifactDestPath]);
-  console.log(`cp -R ${pathToArtifact} ${artifactDestPath}`);
+  logger.info(`cp -R ${pathToArtifact} ${artifactDestPath}`);
   await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
 }
 

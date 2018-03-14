@@ -5,6 +5,7 @@ import path from 'path';
 
 import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
 import StandaloneContext from './StandaloneContext';
+import logger from './Logger';
 
 function _getAppleIconQualifier(iconSize: number, iconResolution: number): string {
   let iconQualifier;
@@ -52,14 +53,14 @@ async function createAndWriteIconsToPathAsync(
   destinationIconPath: string
 ) {
   if (process.platform !== 'darwin' && _resizeImageAsync === _resizeImageWithSipsAsync) {
-    console.warn('`sips` utility may or may not work outside of macOS');
+    logger.warn('`sips` utility may or may not work outside of macOS');
   }
   let defaultIconFilename = 'exp-icon.png';
   try {
     await _saveDefaultIconToPathAsync(context, path.join(destinationIconPath, defaultIconFilename));
   } catch (e) {
     defaultIconFilename = null;
-    console.warn(e.message);
+    logger.warn(e.message);
   }
 
   const iconSizes = [1024, 20, 29, 40, 60, 76, 83.5];
@@ -104,7 +105,7 @@ async function createAndWriteIconsToPathAsync(
             if (defaultIconFilename) {
               rawIconFilename = defaultIconFilename;
             } else {
-              console.warn(
+              logger.warn(
                 `Project does not specify ios.${iconKey} nor a default iconUrl. Bundle will use the Expo logo.`
               );
               return;
@@ -162,7 +163,7 @@ async function getImageDimensionsMacOSAsync(
   basename: string
 ): Promise<?(number[])> {
   if (process.platform !== 'darwin') {
-    console.warn('`sips` utility may or may not work outside of macOS');
+    logger.warn('`sips` utility may or may not work outside of macOS');
   }
   let dimensions = null;
   try {

@@ -5,16 +5,17 @@
 
 'use strict';
 
-const fs = require('fs-extra');
-const path = require('path');
-const JsonFile = require('@expo/json-file');
-const replaceString = require('replace-string');
-const _ = require('lodash');
-const globby = require('globby');
+import fs from 'fs-extra';
+import path from 'path';
+import JsonFile from '@expo/json-file';
+import replaceString from 'replace-string';
+import _ from 'lodash';
+import globby from 'globby';
 
 import * as ExponentTools from './ExponentTools';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
+import logger from './Logger';
 
 const { getManifestAsync, saveUrlToPathAsync, spawnAsyncThrowError, spawnAsync } = ExponentTools;
 
@@ -245,20 +246,27 @@ export async function copyInitialShellAppFilesAsync(
   shellPath,
   isDetached: boolean = false
 ) {
-  let _exponentDirectory = exponentDirectory();
+  const _exponentDirectory = exponentDirectory();
   if (_exponentDirectory) {
     await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
-      stdio: 'inherit',
+      pipeToLogger: true,
+      loggerFields: { buildPhase: 'generating dynamic macros' },
       cwd: path.join(_exponentDirectory, 'android', 'app'),
+      env: {
+        ...process.env,
+        JSON_LOGS: '0',
+      },
     }); // populate android template files now since we take out the prebuild step later on
   }
 
-  let copyToShellApp = async fileName => {
+  const initialCopyLogger = logger.withFields({ buildPhase: 'copying initial shell app files' });
+
+  const copyToShellApp = async fileName => {
     try {
       await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
     } catch (e) {
       // android.iml is only available locally, not on the builders, so don't crash when this happens
-      console.warn(`Warning: Could not copy ${fileName} to shell app directory.`);
+      initialCopyLogger.warn(`Warning: Could not copy ${fileName} to shell app directory.`);
     }
   };
 
@@ -375,13 +383,15 @@ export async function runShellAppModificationsAsync(
   context: StandaloneContext,
   isDetached: boolean = false
 ) {
+  const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
+
   let shellPath = shellPathForContext(context);
   let url: string = context.published.url;
   let manifest = context.config; // manifest or app.json
   let releaseChannel = context.published.releaseChannel;
 
   if (!context.data.privateConfig) {
-    console.warn('Warning: No config file specified.');
+    fnLogger.warn('Warning: No config file specified.');
   }
 
   let fullManifestUrl = `${url.replace('exp://', 'https://')}/index.exp`;
@@ -961,47 +971,66 @@ async function buildShellAppAsync(context: StandaloneContext) {
       gradleArgs.unshift('--no-daemon');
     }
     await spawnAsyncThrowError(`./gradlew`, gradleArgs, {
-      stdio: 'inherit',
+      pipeToLogger: true,
+      loggerFields: { buildPhase: 'running gradle' },
       cwd: shellPath,
     });
     await fs.copy(
       path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'app-prod-release-unsigned.apk'),
       `shell-unaligned.apk`
     );
-    await spawnAsync(`jarsigner`, [
-      '-verbose',
-      '-sigalg',
-      'SHA1withRSA',
-      '-digestalg',
-      'SHA1',
-      '-storepass',
-      androidBuildConfiguration.keystorePassword,
-      '-keypass',
-      androidBuildConfiguration.keyPassword,
-      '-keystore',
-      androidBuildConfiguration.keystore,
-      'shell-unaligned.apk',
-      androidBuildConfiguration.keyAlias,
-    ]);
-    await spawnAsync(`zipalign`, ['-v', '4', 'shell-unaligned.apk', 'shell.apk']);
+    await spawnAsync(
+      `jarsigner`,
+      [
+        '-verbose',
+        '-sigalg',
+        'SHA1withRSA',
+        '-digestalg',
+        'SHA1',
+        '-storepass',
+        androidBuildConfiguration.keystorePassword,
+        '-keypass',
+        androidBuildConfiguration.keyPassword,
+        '-keystore',
+        androidBuildConfiguration.keystore,
+        'shell-unaligned.apk',
+        androidBuildConfiguration.keyAlias,
+      ],
+      {
+        pipeToLogger: true,
+        loggerFields: { buildPhase: 'signing created apk' },
+      }
+    );
+    await spawnAsync(`zipalign`, ['-v', '4', 'shell-unaligned.apk', 'shell.apk'], {
+      pipeToLogger: true,
+      loggerFields: { buildPhase: 'verifying apk alignment' },
+    });
     try {
       await fs.remove('shell-unaligned.apk');
     } catch (e) {}
-    await spawnAsync(`jarsigner`, [
-      '-verify',
-      '-verbose',
-      '-certs',
-      '-keystore',
-      androidBuildConfiguration.keystore,
-      'shell.apk',
-    ]);
+    await spawnAsync(
+      `jarsigner`,
+      [
+        '-verify',
+        '-verbose',
+        '-certs',
+        '-keystore',
+        androidBuildConfiguration.keystore,
+        'shell.apk',
+      ],
+      {
+        pipeToLogger: true,
+        loggerFields: { buildPhase: 'verifying apk' },
+      }
+    );
     await fs.copy('shell.apk', androidBuildConfiguration.outputFile || '/tmp/shell-signed.apk');
   } else {
     try {
       await fs.remove('shell-debug.apk');
     } catch (e) {}
     await spawnAsyncThrowError(`./gradlew`, ['assembleDevRemoteKernelDebug'], {
-      stdio: 'inherit',
+      pipeToLogger: true,
+      loggerFields: { buildPhase: 'running gradle' },
       cwd: shellPath,
     });
     await fs.copy(

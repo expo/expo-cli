@@ -16,6 +16,7 @@ import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
 import * as IosLocalization from './IosLocalization';
+import logger from './Logger';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -53,11 +54,11 @@ function _logDeveloperInfoForLocalDevelopment(infoPlist: any) {
     }
   }
   if (usageKeysConfigured.length) {
-    console.log('We added some permissions keys to `Info.plist` in your detached iOS project:');
+    logger.info('We added some permissions keys to `Info.plist` in your detached iOS project:');
     usageKeysConfigured.forEach(key => {
-      console.log(`  ${key}`);
+      logger.info(`  ${key}`);
     });
-    console.log(
+    logger.info(
       'You may want to revise them to include language appropriate to your project. You can also remove them if your app will never use the corresponding API. See the Apple docs for these keys.'
     );
   }
@@ -113,7 +114,7 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
   if (context.type === 'user') {
     // don't modify .entitlements, print info/instructions
     const exp = context.data.exp;
-    console.log(
+    logger.info(
       'Your iOS ExpoKit project will not contain an .entitlements file by default. If you need specific Apple entitlements, enable them manually via Xcode or the Apple Developer website.'
     );
     let keysToFlag = [];
@@ -124,9 +125,9 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
       keysToFlag.push('ios.associatedDomains');
     }
     if (keysToFlag.length) {
-      console.log('We noticed the following keys in your project which may require entitlements:');
+      logger.info('We noticed the following keys in your project which may require entitlements:');
       keysToFlag.forEach(key => {
-        console.log(`  ${key}`);
+        logger.info(`  ${key}`);
       });
     }
     return {};
@@ -396,7 +397,7 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
       shellPlist.isSplashScreenDisabled = true;
     }
 
-    console.log('Using shell config:', shellPlist);
+    logger.info('Using shell config:', shellPlist);
     return shellPlist;
   });
 }
@@ -434,6 +435,8 @@ async function _downloadAssetsAsync(assets, dest, oldFormat) {
 }
 
 async function configureAsync(context: StandaloneContext) {
+  const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
+
   let {
     intermediatesDirectory,
     iosProjectDirectory,
@@ -454,7 +457,7 @@ async function configureAsync(context: StandaloneContext) {
   }
 
   // common configuration for all contexts
-  console.log(`Modifying NSBundle configuration at ${supportingDirectory}...`);
+  buildPhaseLogger.info(`Modifying NSBundle configuration at ${supportingDirectory}...`);
   await _configureInfoPlistAsync(context);
   await _configureShellPlistAsync(context);
   await _configureEntitlementsAsync(context);
@@ -475,7 +478,7 @@ async function configureAsync(context: StandaloneContext) {
     );
     await IosIcons.createAndWriteIconsToPathAsync(context, iconPath);
   } else if (context.type === 'service') {
-    console.log('Compiling resources...');
+    buildPhaseLogger.info('Compiling resources...');
     await IosAssetArchive.buildAssetArchiveAsync(
       context,
       supportingDirectory,
@@ -494,7 +497,7 @@ async function configureAsync(context: StandaloneContext) {
     );
   }
 
-  console.log('Cleaning up iOS...');
+  buildPhaseLogger.info('Cleaning up iOS...');
   await _cleanPropertyListBackupsAsync(context, supportingDirectory);
   // maybe clean intermediates
   if (fs.existsSync(intermediatesDirectory)) {
