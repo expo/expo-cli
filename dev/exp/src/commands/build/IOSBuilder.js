@@ -4,7 +4,6 @@
 
 import fs from 'fs-extra';
 import path from 'path';
-import inquirer from 'inquirer';
 import untildify from 'untildify';
 import { Exp, Credentials, XDLError, ErrorCode } from 'xdl';
 import ora from 'ora';
@@ -12,6 +11,7 @@ import chalk from 'chalk';
 
 import type { IOSCredentials, CredentialMetadata } from 'xdl/src/Credentials';
 import BaseBuilder from './BaseBuilder';
+import prompt from '../../prompt';
 import log from '../../log';
 
 import * as authFuncs from './auth';
@@ -184,7 +184,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     switch (choice) {
       case 'distCert':
         log('Please provide your distribution certificate P12:');
-        const distCertValues = await inquirer.prompt(sharedQuestions);
+        const distCertValues = await prompt(sharedQuestions);
         this._copyOverAsString(credsStarter, {
           certP12: (await fs.readFile(distCertValues.pathToP12)).toString('base64'),
           certPassword: distCertValues.p12Password,
@@ -192,7 +192,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         break;
       case 'pushCert':
         log('Please provide the path to your push notification cert P12');
-        const pushCertValues = await inquirer.prompt(sharedQuestions);
+        const pushCertValues = await prompt(sharedQuestions);
         this._copyOverAsString(credsStarter, {
           pushP12: (await fs.readFile(pushCertValues.pathToP12)).toString('base64'),
           pushPassword: pushCertValues.p12Password,
@@ -200,7 +200,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         break;
       case 'provisioningProfile':
         log('Please provide the path to your .mobile provisioning profile');
-        const { pathToProvisioningProfile } = await inquirer.prompt(provisionProfilePath);
+        const { pathToProvisioningProfile } = await prompt(provisionProfilePath);
         this._copyOverAsString(credsStarter, {
           provisioningProfile: (await fs.readFile(pathToProvisioningProfile)).toString('base64'),
         });
@@ -372,7 +372,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   }
 
   async runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata, isEnterprise) {
-    const expoManages = { ...(await inquirer.prompt(whatToOverride)), provisioningProfile: true };
+    const expoManages = { ...(await prompt(whatToOverride)), provisioningProfile: true };
     const spinner = ora('Running local authentication and producing required credentials').start();
     try {
       for (const choice of Object.keys(expoManages)) {
@@ -424,7 +424,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
     if (clientHasAllNeededCreds === false) {
       // We just keep mutating the creds object.
-      const strategy = await inquirer.prompt(runAsExpertQuestion);
+      const strategy = await prompt(runAsExpertQuestion);
       const isEnterprise = this.options.appleEnterpriseAccount !== undefined;
       credsStarter.enterpriseAccount = isEnterprise ? 'true' : 'false';
       const appleCredentials = await this._validateCredsEnsureAppExists(
@@ -474,6 +474,6 @@ We need your Apple ID/password to ensure the correct teamID and appID
 Note: Expo does not keep your Apple ID or your Apple password.
 `);
     }
-    return inquirer.prompt(appleCredsQuestions);
+    return prompt(appleCredsQuestions);
   }
 }

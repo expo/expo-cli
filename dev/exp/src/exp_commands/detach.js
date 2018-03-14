@@ -17,6 +17,5 @@ export default program => {
       '-f --force',
       'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
     )
-    .allowNonInteractive()
     .asyncActionProjectDir(action);
 };

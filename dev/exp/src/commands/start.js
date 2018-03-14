@@ -83,7 +83,6 @@ export default (program: any) => {
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .urlOpts()
-    .allowNonInteractive()
     .allowOffline()
     .asyncActionProjectDir(action, true);
 };

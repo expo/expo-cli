@@ -49,11 +49,6 @@ Command.prototype.allowOffline = function() {
   return this;
 };
 
-Command.prototype.allowNonInteractive = function() {
-  this.option('--non-interactive', 'Fails if an interactive prompt would be required to continue.');
-  return this;
-};
-
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
@@ -113,7 +108,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
 Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
   return this.asyncAction(async (projectDir, ...args) => {
     const opts = args[0];
-    if (!skipAuthCheck && !opts.nonInteractive && !opts.offline) {
+    if (!skipAuthCheck && !opts.parent.nonInteractive && !opts.offline) {
       await loginOrRegisterIfLoggedOut();
     }
 
@@ -324,7 +319,11 @@ function runAsync(programName) {
     program.name = programName;
     program
       .version(packageJSON.version)
-      .option('-o, --output [format]', 'Output format. pretty (default), raw');
+      .option('-o, --output [format]', 'Output format. pretty (default), raw')
+      .option(
+        '--non-interactive',
+        'Fail, if an interactive prompt would be required to continue. Enabled by default if stdin is not a TTY.'
+      );
 
     // Load each module found in ./commands by 'registering' it with our commander instance
     const files = _.uniqBy(
@@ -373,6 +372,11 @@ function runAsync(programName) {
       return true;
     });
     program.parse(argv);
+
+    if (typeof program.nonInteractive === 'undefined') {
+      // Commander doesn't initialize boolean args with default values.
+      program.nonInteractive = !process.stdin.isTTY;
+    }
 
     // Display a message if the user does not input a valid command
     if (subCommand) {

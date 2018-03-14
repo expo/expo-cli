@@ -2,7 +2,6 @@
 
 import chalk from 'chalk';
 import fse from 'fs-extra';
-import inquirer from 'inquirer';
 import matchRequire from 'match-require';
 import path from 'path';
 import rimraf from 'rimraf';
@@ -10,9 +9,10 @@ import spawn from 'cross-spawn';
 import { ProjectUtils, Detach, Versions } from 'xdl';
 import log from '../../log';
 
+import prompt from '../../prompt';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 
-export async function ejectAsync(projectRoot: string) {
+export async function ejectAsync(projectRoot: string, options) {
   const filesWithExpo = await filesUsingExpoSdk(projectRoot);
   const usingExpo = filesWithExpo.length > 0;
 
@@ -62,11 +62,11 @@ Ejecting is permanent! Please be careful with your selection.
       type: 'list',
       name: 'ejectMethod',
       message: 'How would you like to eject from create-react-native-app?',
-      default: usingExpo ? 'expoKit' : 'raw',
+      default: usingExpo ? 'expoKit' : 'plain',
       choices: [
         {
           name: reactNativeOptionMessage,
-          value: 'raw',
+          value: 'plain',
         },
         {
           name:
@@ -81,41 +81,56 @@ Ejecting is permanent! Please be careful with your selection.
     },
   ];
 
-  const { ejectMethod } = await inquirer.prompt(questions);
+  const ejectMethod =
+    options.ejectMethod ||
+    (await prompt(questions, {
+      nonInteractiveHelp:
+        'Please specify eject method (expoKit, plain) with --eject-method option.',
+    })).ejectMethod;
 
-  if (ejectMethod === 'raw') {
+  if (ejectMethod === 'plain') {
     const useYarn = await fse.exists(path.resolve('yarn.lock'));
     const npmOrYarn = useYarn ? 'yarn' : 'npm';
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const { configPath, configName } = await ProjectUtils.findConfigFileAsync(projectRoot);
     const { exp, pkg: pkgJson } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+    const appJson = configName === 'app.json' ? JSON.parse(await fse.readFile(configPath)) : {};
     if (!exp) throw new Error(`Couldn't read ${configName}`);
     if (!pkgJson) throw new Error(`Couldn't read package.json`);
 
-    log("We have a couple of questions to ask you about how you'd like to name your app:");
-    const appJson = await inquirer.prompt([
-      {
-        name: 'displayName',
-        message: "What should your app appear as on a user's home screen?",
-        default: exp.name,
-        validate: s => {
-          return s.length > 0;
-        },
-      },
-      {
-        name: 'name',
-        message: 'What should your Android Studio and Xcode projects be called?',
-        default: pkgJson.name ? stripDashes(pkgJson.name) : undefined,
-        validate: s => {
-          return s.length > 0 && s.indexOf('-') === -1 && s.indexOf(' ') === -1;
-        },
-      },
-    ]);
-
-    log('Writing your selections to app.json...');
+    let { displayName, name } = appJson;
+    if (!displayName || !name) {
+      log("We have a couple of questions to ask you about how you'd like to name your app:");
+      ({ displayName, name } = await prompt(
+        [
+          {
+            name: 'displayName',
+            message: "What should your app appear as on a user's home screen?",
+            default: name || exp.name,
+            validate: s => {
+              return s.length > 0;
+            },
+          },
+          {
+            name: 'name',
+            message: 'What should your Android Studio and Xcode projects be called?',
+            default: pkgJson.name ? stripDashes(pkgJson.name) : undefined,
+            validate: s => {
+              return s.length > 0 && s.indexOf('-') === -1 && s.indexOf(' ') === -1;
+            },
+          },
+        ],
+        {
+          nonInteractiveHelp: 'Please specify "displayName" and "name" in app.json.',
+        }
+      ));
+      appJson.displayName = displayName;
+      appJson.name = name;
+    }
+    delete appJson.expo;
+    log('Writing app.json...');
     // write the updated app.json file
     await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
     log(chalk.green('Wrote to app.json, please update it manually in the future.'));
-
     const ejectCommand = 'node';
     const ejectArgs = [
       path.resolve('node_modules', 'react-native', 'local-cli', 'cli.js'),
@@ -176,7 +191,7 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
 
     delete pkgJson.main;
 
-    // NOTE: expo won't work after performing a raw eject, so we should delete this
+    // NOTE: expo won't work after performing a plain eject, so we should delete this
     // it will be a better error message for the module to not be found than for whatever problems
     // missing native modules will cause
     delete pkgJson.dependencies.expo;
@@ -249,11 +264,15 @@ Android Studio to build the native code for your project.`);
     }
   } else if (ejectMethod === 'expoKit') {
     await loginOrRegisterIfLoggedOut();
-    await Detach.detachAsync(projectRoot);
-  } else {
+    await Detach.detachAsync(projectRoot, options);
+  } else if (ejectMethod === 'cancel') {
     // we don't want to print the survey for cancellations
     log('OK! If you change your mind you can run this command again.');
     return;
+  } else {
+    throw new Error(
+      `Unrecognized eject method "${ejectMethod}". Valid options are: expoKit, plain.`
+    );
   }
 
   log(

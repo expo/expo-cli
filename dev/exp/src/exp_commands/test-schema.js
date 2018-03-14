@@ -29,6 +29,5 @@ export default program => {
   program
     .command('test-schema [project-dir]', null, { noHelp: true })
     .option('-s, --schema [path]', 'Validate the current directory against the given schema')
-    .allowNonInteractive()
     .asyncActionProjectDir(action, true /* skip project validation */);
 };

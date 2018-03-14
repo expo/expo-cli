@@ -12,9 +12,12 @@ export default program => {
       'Creates Xcode and Android Studio projects for your app. Use this if you need to add custom native functionality.'
     )
     .option(
+      '--eject-method [type]',
+      'Eject method to use. If not specified, the command will ask which one to use. Required when using the --non-interactive option. expoKit, plain'
+    )
+    .option(
       '-f --force',
       'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
     )
-    .allowNonInteractive()
     .asyncActionProjectDir(action, /* skipProjectValidation: */ false, /* skipAuthCheck: */ true);
 };

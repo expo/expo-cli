@@ -11,6 +11,5 @@ export default (program: any) => {
     .description('Login to Expo')
     .option('-u, --username [string]', 'Username')
     .option('-p, --password [string]', 'Password')
-    .allowNonInteractive()
     .asyncAction(login);
 };

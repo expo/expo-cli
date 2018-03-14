@@ -4,13 +4,13 @@
 
 import fs from 'fs-extra';
 import path from 'path';
-import inquirer from 'inquirer';
 import untildify from 'untildify';
 import { Exp, Credentials } from 'xdl';
 import chalk from 'chalk';
 import log from '../../log';
 
 import BaseBuilder from './BaseBuilder';
+import prompt from '../../prompt';
 
 import type { AndroidCredentials } from 'xdl/build/credentials';
 
@@ -69,7 +69,7 @@ export default class AndroidBuilder extends BaseBuilder {
       },
     ];
 
-    const answers = await inquirer.prompt(questions);
+    const answers = await prompt(questions);
 
     if (answers.confirm) {
       await Credentials.removeCredentialsForPlatform('android', credentialMetadata);
@@ -155,7 +155,7 @@ export default class AndroidBuilder extends BaseBuilder {
         },
       ];
 
-      const answers = await inquirer.prompt(questions);
+      const answers = await prompt(questions);
 
       if (!answers.uploadKeystore) {
         if (this.options.clearCredentials) {

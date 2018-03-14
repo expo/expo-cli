@@ -57,6 +57,5 @@ export default program => {
       'Specifies the mobile number or e-mail address to send this URL to'
     )
     .urlOpts()
-    .allowNonInteractive()
     .asyncActionProjectDir(action);
 };

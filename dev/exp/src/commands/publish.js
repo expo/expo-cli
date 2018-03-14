@@ -100,6 +100,5 @@ export default (program: any) => {
       "The release channel to publish to. Default is 'default'.",
       'default'
     )
-    .allowNonInteractive()
     .asyncActionProjectDir(action, true);
 };

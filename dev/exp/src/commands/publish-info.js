@@ -25,7 +25,6 @@ export default (program: any) => {
       parseInt
     )
     .option('-p, --platform <ios|android>', 'Filter by platform, android or ios.')
-    .allowNonInteractive()
     .asyncActionProjectDir(async (projectDir, options) => {
       if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
         log.error('-n must be a number between 1 and 100 inclusive');
@@ -92,7 +91,6 @@ export default (program: any) => {
     .alias('pd')
     .description('View the details of a published release.')
     .option('--publish-id <publish-id>', 'Publication id. (Required)')
-    .allowNonInteractive()
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.publishId) {
         log.error('publishId must be specified.');

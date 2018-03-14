@@ -3,10 +3,10 @@
  */
 
 import chalk from 'chalk';
-import inquirer from 'inquirer';
 
 import { User as UserManager } from 'xdl';
 import CommandError from './CommandError';
+import prompt from './prompt';
 
 import type { LoginType, User, UserOrLegacyUser } from 'xdl/build/User';
 
@@ -47,7 +47,7 @@ export async function loginOrRegisterIfLoggedOut() {
     },
   ];
 
-  const { action } = await inquirer.prompt(questions);
+  const { action } = await prompt(questions);
 
   if (action === 'register') {
     await _onboardUser();
@@ -73,7 +73,7 @@ export async function login(options: CommandOptions) {
         },
       ];
 
-      const { action } = await inquirer.prompt(question);
+      const { action } = await prompt(question);
       if (!action) {
         // If user chooses to stay logged in, return
         return;
@@ -125,7 +125,7 @@ async function _usernamePasswordAuth(username?: string, password?: string): Prom
     });
   }
 
-  const answers = await inquirer.prompt(questions);
+  const answers = await prompt(questions);
 
   const data = {
     username: username || answers.username,
@@ -261,7 +261,7 @@ Just a few questions:`
     });
   }
 
-  const answers = await inquirer.prompt(questions);
+  const answers = await prompt(questions);
 
   // Don't send user data (username/password) if
   const shouldUpdateUsernamePassword = !(user && user.kind === 'user' && user.userMetadata.legacy);

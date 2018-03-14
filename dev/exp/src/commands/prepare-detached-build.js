@@ -10,6 +10,5 @@ export default program => {
     .option('--platform [platform]', 'detached project platform')
     .option('--skipXcodeConfig [bool]', '[iOS only] if true, do not configure Xcode project')
     .description('Prepares a detached project for building')
-    .allowNonInteractive()
     .asyncActionProjectDir(action, true, true);
 };

@@ -1,8 +1,8 @@
-import inquirer from 'inquirer';
 import ProgressBar from 'progress';
 import { Api, Exp, Logger, NotificationCode, MessageCode } from 'xdl';
 
 import _ from 'lodash';
+import prompt from '../prompt';
 import log from '../log';
 import CommandError from '../CommandError';
 
@@ -50,7 +50,7 @@ async function action(projectDir, options) {
   }
 
   if (questions.length > 0) {
-    var answers = await inquirer.prompt(questions);
+    var answers = await prompt(questions);
     if (answers.name) {
       // If the user supplies a project name, change the insertPath and name
       insertPath = projectDir;
@@ -108,7 +108,7 @@ async function downloadAndExtractTemplate(templateType, projectDir, validatedOpt
 
 async function triggerRetryPrompt() {
   _downloadIsSlowPrompt = true;
-  var answer = await inquirer.prompt({
+  var answer = await prompt({
     type: 'input',
     name: 'retry',
     message: '\n' + MessageCode.DOWNLOAD_IS_SLOW + '(y/n)',
@@ -144,6 +144,5 @@ export default program => {
       '-t, --projectType [type]',
       'Specify what type of template to use. Run without this option to see all choices.'
     )
-    .allowNonInteractive()
     .asyncActionProjectDir(action, true /* skipProjectValidation */);
 };

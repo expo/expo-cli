@@ -8,7 +8,6 @@ export default program => {
   program
     .command('android [project-dir]')
     .description('Opens your app in Expo on a connected Android device')
-    .allowNonInteractive()
     .allowOffline()
     .asyncActionProjectDir(action);
 };

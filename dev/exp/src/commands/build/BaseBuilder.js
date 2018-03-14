@@ -3,14 +3,12 @@
  */
 
 import { Project, ProjectUtils } from 'xdl';
-import inquirer from 'inquirer';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import simpleSpinner from '@expo/simple-spinner';
 
 import log from '../../log';
 import { action as publishAction } from '../publish';
-
 import BuildError from './BuildError';
 
 const sleep = (ms) => new Promise(res => setTimeout(res, ms));
@@ -227,7 +225,7 @@ ${buildStatus.id}
     const { id: buildId } = await Project.buildAsync(this.projectDir, opts);
 
     log('Build started, it may take a few minutes to complete.');
-    
+
     if (buildId) {
       log(
         `You can monitor the build at\n\n ${chalk.underline(
@@ -241,7 +239,7 @@ ${buildStatus.id}
       const completedJob = await this.wait(buildId);
       simpleSpinner.stop();
       log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(completedJob.artifacts.url)}`);
-    } else {  
+    } else {
       log('Alternatively, run `exp build:status` to monitor it from the command line.');
     }
   }

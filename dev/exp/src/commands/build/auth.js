@@ -3,10 +3,10 @@ import child_process from 'child_process';
 import slash from 'slash';
 import spawnAsync from '@expo/spawn-async';
 import { basename } from 'path';
-import inquirer from 'inquirer';
 import fs from 'fs-extra';
 import { release, userInfo } from 'os';
 
+import prompt from '../../prompt';
 import log from '../../log';
 
 const FASTLANE =
@@ -139,7 +139,7 @@ export async function validateCredentialsProduceTeamId(creds) {
       (team, i) => `${i + 1}) ${team['teamId']} "${team['name']}" (${team['type']})`
     );
     teamChoices.forEach(choice => console.log(choice));
-    const answers = await inquirer.prompt({
+    const answers = await prompt({
       type: 'list',
       name: 'choice',
       message: `Which Team ID to use?`,
@@ -238,7 +238,7 @@ export async function askWhichCertsToDump(creds, metadata, teamId, distOrPush, i
       log.warn('No certs on developer.apple.com available to revoke');
       return [];
     }
-    const { revokeTheseCerts } = await inquirer.prompt({
+    const { revokeTheseCerts } = await prompt({
       type: 'checkbox',
       name: 'revokeTheseCerts',
       message: `Which Certs to revoke?`,

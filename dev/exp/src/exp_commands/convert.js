@@ -1,7 +1,6 @@
-import inquirer from 'inquirer';
-
 import { Exp } from 'xdl';
 
+import prompt from '../prompt';
 import log from '../log';
 
 async function action(projectDir, options) {
@@ -20,7 +19,7 @@ async function __unused_action(projectDir, options) {
       message: `Warning: we are going to modify your package.json, delete your node_modules directory, and modify your .babelrc file (or create if you do not have one). Are you OK with this?\n`,
     },
   ];
-  let { confirmed } = await inquirer.prompt(warning);
+  let { confirmed } = await prompt(warning);
 
   if (!confirmed) {
     log(
@@ -37,7 +36,7 @@ async function __unused_action(projectDir, options) {
     },
   ];
 
-  let { gitConfirmed } = await inquirer.prompt(gitWarning);
+  let { gitConfirmed } = await prompt(gitWarning);
 
   if (!gitConfirmed) {
     log(
@@ -72,7 +71,7 @@ async function __unused_action(projectDir, options) {
     },
   ];
 
-  let answers = await inquirer.prompt(questions);
+  let answers = await prompt(questions);
   await Exp.convertProjectAsync(projectDir, answers, log);
 }
 
@@ -81,6 +80,5 @@ export default program => {
     .command('convert [project-dir]')
     .alias('onentize')
     .description('Initialize Expo project files within an existing React Native project')
-    .allowNonInteractive()
     .asyncActionProjectDir(action, true); // skip validation because the project dir isn't a valid exp dir yet
 };
