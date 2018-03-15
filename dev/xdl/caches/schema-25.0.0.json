@@ -14,7 +14,7 @@
       "slug": {
         "description": "The friendly url name for publishing. eg: `expo.io/@your-username/slug`.",
         "type": "string",
-        "pattern": "^[a-zA-Z0-9\\-]+$"
+        "pattern": "^[a-zA-Z0-9_\\-]+$"
       },
       "privacy": {
         "description":

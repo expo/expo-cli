@@ -73,7 +73,8 @@
         "meta": {
           "asset": true,
           "contentTypePattern": "^image/png$",
-          "contentTypeHuman": ".png image"
+          "contentTypeHuman": ".png image",
+          "square": true
         }
       },
       "notification": {
@@ -87,7 +88,8 @@
             "meta": {
               "asset": true,
               "contentTypePattern": "^image/png$",
-              "contentTypeHuman": ".png image"
+              "contentTypeHuman": ".png image",
+              "square": true
             }
           },
           "color": {
@@ -218,7 +220,10 @@
         "description":
           "URL scheme to link into your app. For example, if we set this to `'demo'`, then demo:// URLs would open your app when tapped.",
         "type": "string",
+        "pattern": "^[a-zA-Z][a-zA-Z0-9+.-]*$",
         "meta": {
+          "regexHuman":
+            "String beginning with a letter followed by any combination of letters, digits, \"+\", \".\" or \"-\"",
           "standaloneOnly": true
         }
       },
@@ -246,6 +251,34 @@
       },
       "nodeModulesPath": {
         "type": "string"
+      },
+      "updates": {
+        "description":
+          "Configuration for how and when the app should request OTA JavaScript updates",
+        "type": "object",
+        "properties": {
+          "checkAutomatically": {
+            "description":
+              "By default, Expo will check for updates every time the app is launched. Set this to `'never'` to disable automatic checking.",
+            "enum": ["never", "launch"],
+            "type": ["array", "boolean", "number", "object", "string", "null"]
+          },
+          "fallbackToCacheTimeout": {
+            "description":
+              "How long (in ms) to allow for fetching OTA updates before falling back to a cached version of the app. Defaults to 30000 (30 sec).",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 300000
+          }
+        },
+        "additionalProperties": false
+      },
+      "locales": {
+        "description":
+          "Provide overrides by locale for System Dialog prompts like Permissions Boxes",
+        "type": "object",
+        "properties": {},
+        "additionalProperties": true
       },
       "ios": {
         "description": "iOS standalone app specific configuration",
@@ -293,7 +326,8 @@
             "meta": {
               "asset": true,
               "contentTypePattern": "^image/png$",
-              "contentTypeHuman": ".png image"
+              "contentTypeHuman": ".png image",
+              "square": true
             }
           },
           "merchantId": {
@@ -355,8 +389,9 @@
           },
           "loadJSInBackgroundExperimental": {
             "description":
-              "If true, your standalone app will immediately run its cached JS bundle, if one exists, and request a new one in the background.",
-            "type": "boolean"
+              "DEPRECATED: use `updates` key with `fallbackToCacheTimeout: 0` instead.",
+            "type": "boolean",
+            "deprecated": true
           },
           "supportsTablet": {
             "description":
@@ -467,12 +502,13 @@
           },
           "icon": {
             "description":
-              "Local path or remote url to an image to use for your app's icon. If specified, this overrides the top-level `icon` key. We recommend that you use a 1024x1024 png file (transparency is recommended for the Google Play Store). This icon will appear on the home screen and within the Expo app.",
+              "Local path or remote url to an image to use for your app's icon on Android. If specified, this overrides the top-level `icon` key. We recommend that you use a 1024x1024 png file (transparency is recommended for the Google Play Store). This icon will appear on the home screen and within the Expo app.",
             "type": "string",
             "meta": {
               "asset": true,
               "contentTypePattern": "^image/png$",
-              "contentTypeHuman": ".png image"
+              "contentTypeHuman": ".png image",
+              "square": true
             }
           },
           "playStoreUrl": {
@@ -708,7 +744,8 @@
         }
       },
       "assetBundlePatterns": {
-        "description": "An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/versions/latest/guides/offline-support.html)",
+        "description":
+          "An array of file glob strings which point to assets that will be bundled within your standalone app binary. Read more in the [Offline Support guide](https://docs.expo.io/versions/latest/guides/offline-support.html)",
         "type": "array"
       }
     },

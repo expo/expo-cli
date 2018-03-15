@@ -10,6 +10,22 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [48.0.5] - 2018-03-15
+
+### Added
+
+* `Project.startAsync` now allows `maxWorkers` option to be passed to Metro.
+* Added `developerTool` to XDL Serve Manifest event.
+* Detach command now prompts for iOS `bundleIdentifier` and Android `package` unless found in `app.json`.
+
+### Changed
+
+* Moved authentication to use the sessions API.
+* Upgraded authentication libraries.
+* Upgraded ngrok binaries.
+* Fixed unnecessary requests being made to `localhost:80` before starting the server.
+* XDL now trims the hostname read from `EXPO_PACKAGER_HOSTNAME` environment variables to fix issues on Windows.
+
 ## [48.0.4] - 2018-02-02
 
 ### Changed
