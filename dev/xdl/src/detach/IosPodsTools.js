@@ -119,8 +119,8 @@ ${_renderUnversionedThirdPartyDependency(
         options
       )}
 ${_renderUnversionedThirdPartyDependency(
-        'GLog',
-        path.join('third-party-podspecs', 'GLog.podspec'),
+        'glog',
+        path.join('third-party-podspecs', 'glog.podspec'),
         options
       )}
 `,
