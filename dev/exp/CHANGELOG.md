@@ -14,18 +14,18 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Added
 
-* [expo/exp#102] Add ability to block/wait until standalone build succeeds or fails (@mglagola)
+* [#102](https://github.com/expo/exp/pull/102) Add ability to block/wait until standalone build succeeds or fails ([@mglagola](https://github.com/mglagola))
 
   `exp build:android` and `exp build:ios` now automatically wait until the build has finished – no need to manually poll for the status. To disable waiting, run with `--no-wait`.
 
-* [expo/exp#103] Add `exp url:apk` and `exp url:ipa` commands for looking up Android and iOS binary URLs after building a standalone app. (@mglagola)
+* [#103](https://github.com/expo/exp/pull/103) Add `exp url:apk` and `exp url:ipa` commands for looking up Android and iOS binary URLs after building a standalone app. ([@mglagola](https://github.com/mglagola))
 
 * Add `--max-workers [num]` option to `exp publish`.
 
   You can use this to limit the number of workers Metro uses when building the app, e.g. if you're running `exp publish` on a CI server that has a smaller number of CPUs available than reported by the operating system.
 
-* [expo/exp#96] Add release channel to the output of `exp publish` (@dozoisch)
-* [expo/exp#100] Add timestamps to log output. (@wKovacs64)
+* [#96](https://github.com/expo/exp/pull/96) Add release channel to the output of `exp publish` ([@dozoisch](https://github.com/dozoisch))
+* [#100](https://github.com/expo/exp/pull/100) Add timestamps to log output. ([@wKovacs64](https://github.com/wKovacs64))
 
 ### Changed
 
@@ -36,7 +36,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
-* [expo/exp#97] Remove alias `-c` for `--release-channel` from `exp build` commands, because it conflicted with the alias for `--clear`. (@dozoisch)
+* [#97](https://github.com/expo/exp/pull/97) Remove alias `-c` for `--release-channel` from `exp build` commands, because it conflicted with the alias for `--clear`. ([@dozoisch](https://github.com/dozoisch))
 * `exp login --github` is temporarily disabled, while we migrate to the new authentication system. Please use username and password to login for now.
 
 ## [49.2.0] - 2018-02-04
