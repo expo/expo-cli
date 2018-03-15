@@ -10,6 +10,35 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.0.0] - 2018-03-15
+
+### Added
+
+* [expo/exp#102] Add ability to block/wait until standalone build succeeds or fails (@mglagola)
+
+  `exp build:android` and `exp build:ios` now automatically wait until the build has finished – no need to manually poll for the status. To disable waiting, run with `--no-wait`.
+
+* [expo/exp#103] Add `exp url:apk` and `exp url:ipa` commands for looking up Android and iOS binary URLs after building a standalone app. (@mglagola)
+
+* Add `--max-workers [num]` option to `exp publish`.
+
+  You can use this to limit the number of workers Metro uses when building the app, e.g. if you're running `exp publish` on a CI server that has a smaller number of CPUs available than reported by the operating system.
+
+* [expo/exp#96] Add release channel to the output of `exp publish` (@dozoisch)
+* [expo/exp#100] Add timestamps to log output. (@wKovacs64)
+
+### Changed
+
+* `--non-interactive` option is now automatically enabled for all commands, if stdout is not a terminal. (E.g. on a continuous integration server.)
+* `exp url` now aborts, if the `exp` server is not running, instead of returning an incorrect URL.
+* `exp detach` command now prompts for iOS `bundleIdentifier` and Android `package` unless found in `app.json`.
+* Fix `exp build:ios` failing when installation path has a space in it.
+
+### Removed
+
+* [expo/exp#97] Remove alias `-c` for `--release-channel` from `exp build` commands, because it conflicted with the alias for `--clear`. (@dozoisch)
+* `exp login --github` is temporarily disabled, while we migrate to the new authentication system. Please use username and password to login for now.
+
 ## [49.2.0] - 2018-02-04
 
 * Expose `--revoke-apple-certs` and `--revoke-apple-provisioning-profile` for `build:ios`
