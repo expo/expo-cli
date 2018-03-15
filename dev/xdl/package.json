@@ -34,7 +34,7 @@
   "dependencies": {
     "@expo/bunyan": "^1.8.10",
     "@expo/json-file": "^5.3.0",
-    "@expo/ngrok": "2.3.0",
+    "@expo/ngrok": "2.4.1",
     "@expo/osascript": "^1.8.0",
     "@expo/schemer": "1.1.0",
     "@expo/spawn-async": "^1.2.8",

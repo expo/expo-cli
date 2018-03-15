@@ -25,10 +25,71 @@
     lodash "^4.6.1"
     mz "^2.6.0"
 
-"@expo/ngrok@2.3.0":
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/@expo/ngrok/-/ngrok-2.3.0.tgz#e6c37c74c2ede6c32f04b13d30383e10255908d3"
+"@expo/ngrok-bin-darwin-ia32@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-darwin-ia32/-/ngrok-bin-darwin-ia32-2.2.8.tgz#46ed6d485a87396acf4af317beeaab7a1f607315"
+
+"@expo/ngrok-bin-darwin-x64@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-darwin-x64/-/ngrok-bin-darwin-x64-2.2.8.tgz#bf32ece32c3a1c6dcbe518ee88e6c2af3ad8764a"
+
+"@expo/ngrok-bin-freebsd-ia32@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-freebsd-ia32/-/ngrok-bin-freebsd-ia32-2.2.8.tgz#7b198757f6bb6602a4c2bc5384b4ddb4d272eca5"
+
+"@expo/ngrok-bin-freebsd-x64@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-freebsd-x64/-/ngrok-bin-freebsd-x64-2.2.8.tgz#3d510c3196087e17747d5e34b765cca1e3279f36"
+
+"@expo/ngrok-bin-linux-arm64@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-linux-arm64/-/ngrok-bin-linux-arm64-2.2.8.tgz#3829665093c7921c8b73e26c7c262493a93d53b4"
+
+"@expo/ngrok-bin-linux-arm@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-linux-arm/-/ngrok-bin-linux-arm-2.2.8.tgz#1e64ca1a0856daea5fd752b56d394f083079f195"
+
+"@expo/ngrok-bin-linux-ia32@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-linux-ia32/-/ngrok-bin-linux-ia32-2.2.8.tgz#dcd8be0a894ba8969548e113a3cd16e7e6fe912b"
+
+"@expo/ngrok-bin-linux-x64@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-linux-x64/-/ngrok-bin-linux-x64-2.2.8.tgz#517119cb9aa0b74e678d953878910500b6f7f6ec"
+
+"@expo/ngrok-bin-sunos-x64@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-sunos-x64/-/ngrok-bin-sunos-x64-2.2.8.tgz#66ebd87786b94836ba5636b22e386b81d4e7da32"
+
+"@expo/ngrok-bin-win32-ia32@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-win32-ia32/-/ngrok-bin-win32-ia32-2.2.8.tgz#9df0f73c285e9260c2810f1b96c6b2148bc1c90a"
+
+"@expo/ngrok-bin-win32-x64@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin-win32-x64/-/ngrok-bin-win32-x64-2.2.8.tgz#a26edf719a235e0365714af63a281d8080602d67"
+
+"@expo/ngrok-bin@2.2.8":
+  version "2.2.8"
+  resolved "https://registry.npmjs.org/@expo/ngrok-bin/-/ngrok-bin-2.2.8.tgz#0c3aa291cf0ce0e6fdc37ed615110bac9bcfea82"
+  optionalDependencies:
+    "@expo/ngrok-bin-darwin-ia32" "2.2.8"
+    "@expo/ngrok-bin-darwin-x64" "2.2.8"
+    "@expo/ngrok-bin-freebsd-ia32" "2.2.8"
+    "@expo/ngrok-bin-freebsd-x64" "2.2.8"
+    "@expo/ngrok-bin-linux-arm" "2.2.8"
+    "@expo/ngrok-bin-linux-arm64" "2.2.8"
+    "@expo/ngrok-bin-linux-ia32" "2.2.8"
+    "@expo/ngrok-bin-linux-x64" "2.2.8"
+    "@expo/ngrok-bin-sunos-x64" "2.2.8"
+    "@expo/ngrok-bin-win32-ia32" "2.2.8"
+    "@expo/ngrok-bin-win32-x64" "2.2.8"
+
+"@expo/ngrok@2.4.1":
+  version "2.4.1"
+  resolved "https://registry.npmjs.org/@expo/ngrok/-/ngrok-2.4.1.tgz#23171679c730b6b140cbd22b9343ac6d7665e2d1"
   dependencies:
+    "@expo/ngrok-bin" "2.2.8"
     async "^0.9.0"
     decompress-zip "^0.3.0"
     lock "^0.1.2"
