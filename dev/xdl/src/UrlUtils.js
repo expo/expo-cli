@@ -220,9 +220,9 @@ export async function constructUrlAsync(
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else if (opts.hostType === 'lan' || Config.offline) {
     if (process.env.EXPO_PACKAGER_HOSTNAME) {
-      hostname = process.env.EXPO_PACKAGER_HOSTNAME;
+      hostname = process.env.EXPO_PACKAGER_HOSTNAME.trim();
     } else if (process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
-      hostname = process.env.REACT_NATIVE_PACKAGER_HOSTNAME;
+      hostname = process.env.REACT_NATIVE_PACKAGER_HOSTNAME.trim();
     } else if (opts.lanType === 'ip') {
       if (requestHostname) {
         hostname = requestHostname;
