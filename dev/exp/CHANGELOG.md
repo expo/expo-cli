@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.0.1] - 2018-03-16
+
+### Changed
+
+* Fixed a regression with starting tunnels on Windows.
+* Fixed `exp login` failing in non-interactive mode.
+
 ## [50.0.0] - 2018-03-15
 
 ### Added
