@@ -4,7 +4,7 @@ import inquirer from 'inquirer';
 import CommandError from './CommandError';
 
 export default function prompt(questions, { nonInteractiveHelp } = {}) {
-  if (program.nonInteractive) {
+  if (program.nonInteractive && questions.length !== 0) {
     let message = `Input is required, but ${program.name} is in non-interactive mode.\n`;
     if (nonInteractiveHelp) {
       message += nonInteractiveHelp;
