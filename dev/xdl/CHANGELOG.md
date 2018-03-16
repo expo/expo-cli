@@ -10,6 +10,10 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [48.0.6] - 2018-03-16
+
+* Fix a regression with starting tunnels on Windows.
+
 ## [48.0.5] - 2018-03-15
 
 ### Added
