@@ -418,6 +418,7 @@ export async function runShellAppModificationsAsync(
   let version = manifest.version ? manifest.version : '0.0.0';
   let backgroundImages = backgroundImagesForApp(shellPath, manifest, isDetached);
   let splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
+  let updatesDisabled = manifest.updates && manifest.updates.enabled === false;
 
   if (isDetached) {
     // manifest is actually just app.json in this case, so iconUrl fields don't exist
@@ -595,6 +596,24 @@ export async function runShellAppModificationsAsync(
     await regexFileAsync(
       'IS_DETACHED = false',
       `IS_DETACHED = true`,
+      path.join(
+        shellPath,
+        'app',
+        'src',
+        'main',
+        'java',
+        'host',
+        'exp',
+        'exponent',
+        'generated',
+        'AppConstants.java'
+      )
+    );
+  }
+  if (updatesDisabled) {
+    await regexFileAsync(
+      'ARE_REMOTE_UPDATES_ENABLED = true',
+      'ARE_REMOTE_UPDATES_ENABLED = false',
       path.join(
         shellPath,
         'app',

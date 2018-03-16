@@ -86,7 +86,6 @@ async function _preloadManifestAndBundleAsync(
   const bundleUrl = manifest.bundleUrl;
   await fs.writeFile(path.join(supportingDirectory, manifestFilename), JSON.stringify(manifest));
   await saveUrlToPathAsync(bundleUrl, path.join(supportingDirectory, bundleFilename));
-  return;
 }
 
 async function _preloadKernelManifestAndBundleAsync(
@@ -388,8 +387,12 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
       shellPlist.isManifestVerificationBypassed = true;
     }
     if (config.ios && config.ios.hasOwnProperty('isRemoteJSEnabled')) {
+      // deprecated, overridden by updates.enabled if that exists
+      shellPlist.areRemoteUpdatesEnabled = config.ios.isRemoteJSEnabled;
+    }
+    if (config.updates && config.updates.hasOwnProperty('enabled')) {
       // enable/disable code push if the developer provided specific behavior
-      shellPlist.isRemoteJSEnabled = config.ios.isRemoteJSEnabled;
+      shellPlist.areRemoteUpdatesEnabled = config.updates.enabled;
     }
     if (!manifestUsesSplashApi(config, 'ios')) {
       // for people still using the old loading api, hide the native splash screen.
