@@ -424,9 +424,14 @@ export class UserManagerInstance {
         });
       } catch (e) {
         Logger.global.error(e);
+        // Surface network errors
+        if (e.code === 'ECONNREFUSED') {
+          throw new Error(
+            'Could not connect to the server. Please check your internet connection.'
+          );
+        }
         // This logs us out if theres a fatal error when getting the profile with
         // current access token
-        // However, this also logs us out if there is a network error
         await this.logoutAsync();
         return null;
       }

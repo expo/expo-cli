@@ -184,6 +184,9 @@ export default class ApiV2Client {
       const maybeErrorData = idx(e, _ => _.response.data.errors.length);
       if (maybeErrorData) {
         result = e.response.data;
+      } else if (e.code === 'ECONNREFUSED') {
+        // surface network failures
+        throw e;
       } else {
         const error: ErrorWithResponseBody = new Error(
           `There was a problem understanding the server. Please try again.`
