@@ -303,9 +303,10 @@ function _renderTestTarget(reactNativePath) {
 
 async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
   let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
-  let type = options.isPodfile ? 'pod' : 'ss.dependency';
+  const type = options.isPodfile ? 'pod' : 'ss.dependency';
+  const noWarningsFlag = options.isPodfile ? `, :inhibit_warnings => true` : '';
   let depsStrings = dependencies.map(
-    dependency => `  ${type} '${dependency.name}', '${dependency.version}'`
+    dependency => `  ${type} '${dependency.name}', '${dependency.version}'${noWarningsFlag}`
   );
   return depsStrings.join('\n');
 }
