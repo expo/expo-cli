@@ -7,6 +7,10 @@ ensure
   $stderr = old_stderr
 end
 
+def dump_error(e)
+  {type: e.class.to_s, message: e.message, backtrace: e.backtrace}
+end
+
 def dumpCert(distOrPush, isEnterprise)
   if distOrPush == 'dumpDistCert'
     if isEnterprise == 'true'

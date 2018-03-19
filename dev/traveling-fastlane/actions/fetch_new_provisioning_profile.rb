@@ -42,10 +42,9 @@ json_reply = with_captured_stderr{
     end
 
   rescue Spaceship::Client::UnexpectedResponse => e
-    r = "#{e.error_info['userString']} #{e.error_info['resultString']}"
     $stderr.puts(JSON.generate({result:'failure',
-                                reason:r,
-                                rawDump:e.error_info}))
+                                reason:'Unexpected response',
+                                rawDump:e.error_info || dump_error(e)}))
   rescue Spaceship::Client::InvalidUserCredentialsError => invalid_cred
     $stderr.puts(JSON.generate({result:'failure',
                                 reason:'Invalid credentials',
@@ -53,7 +52,7 @@ json_reply = with_captured_stderr{
   rescue Exception => e
     $stderr.puts(JSON.generate({result:'failure',
                                 reason:'Unknown reason',
-                                rawDump:e.message}))
+                                rawDump:dump_error(e)}))
   end
 }
 

@@ -91,7 +91,7 @@
     "xdl": "48.0.6"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.4.6",
-    "@expo/traveling-fastlane-linux": "1.4.6"
+    "@expo/traveling-fastlane-darwin": "1.4.7",
+    "@expo/traveling-fastlane-linux": "1.4.7"
   }
 }
