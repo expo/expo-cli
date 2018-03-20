@@ -223,9 +223,18 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
   const config = configNamespace ? { [configNamespace]: exp } : exp;
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
-  const { expoReactNativeTag } = versions.sdkVersions[exp.sdkVersion];
-  const reactNativeVersion = `https://github.com/expo/react-native/archive/${expoReactNativeTag}.tar.gz`;
-  if (expoReactNativeTag && pkg.dependencies['react-native'] !== reactNativeVersion) {
+  let reactNativeVersion, expoReactNativeTag;
+  if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
+    expoReactNativeTag = sdkVersionConfig.expoReactNativeTag;
+    reactNativeVersion = `https://github.com/expo/react-native/archive/${expoReactNativeTag}.tar.gz`;
+  } else {
+    if (process.env.EXPO_VIEW_DIR) {
+      // ignore, using test directory
+    } else {
+      throw new Error(`Expo's React Native fork does not support this SDK version.`);
+    }
+  }
+  if (reactNativeVersion && pkg.dependencies['react-native'] !== reactNativeVersion) {
     logger.info('Installing the Expo fork of react-native...');
     const nodeModulesPath = exp.nodeModulesPath
       ? path.resolve(projectRoot, exp.nodeModulesPath)
