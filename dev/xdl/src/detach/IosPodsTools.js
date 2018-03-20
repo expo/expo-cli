@@ -88,14 +88,7 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
  */
 function _renderUnversionedReactNativeDependency(options, sdkVersion) {
   let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
-  if (sdkMajorVersion === 14) {
-    return indentString(
-      `
-${_renderUnversionedReactDependency(options)}
-`,
-      2
-    );
-  } else if (sdkMajorVersion < 21) {
+  if (sdkMajorVersion < 21) {
     return indentString(
       `
 ${_renderUnversionedReactDependency(options, sdkVersion)}
@@ -104,6 +97,9 @@ ${_renderUnversionedYogaDependency(options, sdkVersion)}
       2
     );
   } else {
+    const glogLibraryName = (sdkMajorVersion < 26)
+          ? 'GLog'
+          : 'glog';
     return indentString(
       `
 ${_renderUnversionedReactDependency(options, sdkVersion)}
@@ -119,8 +115,8 @@ ${_renderUnversionedThirdPartyDependency(
         options
       )}
 ${_renderUnversionedThirdPartyDependency(
-        'glog',
-        path.join('third-party-podspecs', 'glog.podspec'),
+        glogLibraryName,
+        path.join('third-party-podspecs', `${glogLibraryName}.podspec`),
         options
       )}
 `,
