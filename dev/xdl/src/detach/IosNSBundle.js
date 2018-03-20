@@ -21,7 +21,6 @@ import logger from './Logger';
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
 const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
-const KERNEL_URL = 'https://expo.io/@exponent/home';
 
 function _configureInfoPlistForLocalDevelopment(config: any, exp: any) {
   // add detached scheme
@@ -86,24 +85,6 @@ async function _preloadManifestAndBundleAsync(
   const bundleUrl = manifest.bundleUrl;
   await fs.writeFile(path.join(supportingDirectory, manifestFilename), JSON.stringify(manifest));
   await saveUrlToPathAsync(bundleUrl, path.join(supportingDirectory, bundleFilename));
-}
-
-async function _preloadKernelManifestAndBundleAsync(
-  supportingDirectory: string,
-  manifestFilename: string,
-  bundleFilename: string
-) {
-  const { version } = await Versions.newestSdkVersionAsync();
-  const kernelManifest = await getManifestAsync(KERNEL_URL, {
-    'Exponent-SDK-Version': version,
-    'Exponent-Platform': 'ios',
-  });
-  return _preloadManifestAndBundleAsync(
-    kernelManifest,
-    supportingDirectory,
-    manifestFilename,
-    bundleFilename
-  );
 }
 
 /**
@@ -492,11 +473,6 @@ async function configureAsync(context: StandaloneContext) {
       supportingDirectory,
       'shell-app-manifest.json',
       'shell-app.bundle'
-    );
-    await _preloadKernelManifestAndBundleAsync(
-      supportingDirectory,
-      'kernel-manifest.json',
-      'kernel.ios.bundle'
     );
   }
 
