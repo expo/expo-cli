@@ -146,6 +146,11 @@ ${buildStatus.id}
   }
 
   async ensureReleaseExists(platform: string) {
+    if (this.options.hardcodeRevisionId) {
+      // Used for sandbox build
+      return [this.options.hardcodeRevisionId];
+    }
+
     if (this.options.publish) {
       const { ids, url, err } = await publishAction(this.projectDir, {
         ...this.options,
