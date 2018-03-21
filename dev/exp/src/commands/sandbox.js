@@ -130,7 +130,7 @@ export default (program: any) => {
         await UserSettings.mergeAsync({ sandboxBundleId });
       }
 
-      options.type = 'archive';
+      options.type = 'sandbox';
       options.releaseChannel = 'default';
       options.hardcodeRevisionId = 'eb310d00-2af3-11e8-9906-3ba982c41215';
 

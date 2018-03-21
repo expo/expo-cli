@@ -849,7 +849,7 @@ export async function buildAsync(
     mode: joi.string(),
     platform: joi.any().valid('ios', 'android', 'all'),
     expIds: joi.array(),
-    type: joi.any().valid('archive', 'simulator'),
+    type: joi.any().valid('archive', 'simulator', 'sandbox'),
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
   });
 
