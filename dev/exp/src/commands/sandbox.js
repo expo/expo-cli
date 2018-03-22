@@ -39,6 +39,9 @@ const HOME_APP_JSON = {
       supportsTablet: true,
       bundleIdentifier: 'host.exp.exponent',
       publishBundlePath: '../ios/Exponent/Supporting/kernel.ios.bundle',
+      config: {
+        actualBundleIdentifier: 'REPLACEME',
+      },
     },
     android: {
       package: 'host.exp.exponent',
@@ -138,7 +141,9 @@ export default (program: any) => {
       mkdirp.sync(projectDir);
 
       let modifiedAppJSON = HOME_APP_JSON;
-      modifiedAppJSON.expo.ios.bundleIdentifier = `host.exp.${normalizedUsername}${sandboxBundleId}`;
+      modifiedAppJSON.expo.ios.bundleIdentifier = `host.exp.${normalizedUsername}-${sandboxBundleId}`;
+      modifiedAppJSON.expo.ios.config.actualBundleIdentifier =
+        modifiedAppJSON.expo.ios.bundleIdentifier;
       fs.writeFileSync(path.join(projectDir, 'app.json'), JSON.stringify(modifiedAppJSON));
       fs.writeFileSync(path.join(projectDir, 'package.json'), JSON.stringify(HOME_PKG_JSON));
 
