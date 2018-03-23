@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { ProjectUtils, Project } from 'xdl';
+import { ProjectUtils, ProjectSettings, Project } from 'xdl';
 
 import chalk from 'chalk';
 import path from 'path';
@@ -55,11 +55,14 @@ async function action(projectDir, options) {
   }
 
   log('Your URL is: ' + chalk.underline(url));
+
   if (isUrlFallback) {
+    await ProjectSettings.setAsync(projectDir, { hostType: 'lan' });
+
     log.warn(
       'Switched to a LAN URL because the tunnel appears to be down. ' +
         'Only devices in the same network can access the app. ' +
-        'Restart with `exp start` to try reconnecting.'
+        'Restart with `exp start --tunnel` to try reconnecting.'
     );
   }
 
