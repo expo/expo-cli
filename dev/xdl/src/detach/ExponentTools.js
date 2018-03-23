@@ -23,6 +23,11 @@ function _getFilesizeInBytes(path) {
 }
 
 function parseSdkMajorVersion(expSdkVersion) {
+  // We assume that the unversioned SDK is the latest
+  if (expSdkVersion === 'UNVERSIONED') {
+    return Infinity;
+  }
+
   let sdkMajorVersion = 0;
   try {
     let versionComponents = expSdkVersion.split('.').map(number => parseInt(number, 10));

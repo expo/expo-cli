@@ -2,6 +2,7 @@
  * @flow
  */
 import fs from 'fs';
+import invariant from 'invariant';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import rimraf from 'rimraf';
@@ -42,7 +43,7 @@ async function _getVersionedExpoKitConfigAsync(sdkVersion: string, skipServerVal
 
 async function _getOrCreateTemplateDirectoryAsync(
   context: StandaloneContext,
-  iosExpoViewUrl: string
+  iosExpoViewUrl: ?string
 ) {
   if (context.type === 'service') {
     return path.join(context.data.expoSourcePath, '..');
@@ -58,6 +59,7 @@ async function _getOrCreateTemplateDirectoryAsync(
       if (!isDirectory(expoRootTemplateDirectory)) {
         mkdirp.sync(expoRootTemplateDirectory);
         logger.info('Downloading iOS code...');
+        invariant(iosExpoViewUrl, `The URL for ExpoKit iOS must be set`);
         await Api.downloadAsync(iosExpoViewUrl, expoRootTemplateDirectory, {
           extract: true,
         });
@@ -172,7 +174,7 @@ async function _renderPodfileFromTemplateAsync(
   context: StandaloneContext,
   expoRootTemplateDirectory: string,
   sdkVersion: string,
-  iosClientVersion: string
+  iosClientVersion: ?string
 ) {
   const { iosProjectDirectory, projectName } = getPaths(context);
   let podfileTemplateFilename;
@@ -181,6 +183,7 @@ async function _renderPodfileFromTemplateAsync(
   };
   let reactNativeDependencyPath;
   if (context.type === 'user') {
+    invariant(iosClientVersion, `The iOS client version must be specified`);
     reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
     podfileSubstitutions.EXPOKIT_TAG = `ios/${iosClientVersion}`;
     podfileTemplateFilename = 'ExpoKit-Podfile';
@@ -240,10 +243,14 @@ async function createDetachedAsync(context: StandaloneContext) {
   let isMultipleVersion = (context.type === 'service');
   let standaloneSdkVersion = await getNewestSdkVersionSupportedAsync(context);
 
-  const { iosClientVersion, iosExpoViewUrl } = await _getVersionedExpoKitConfigAsync(
-    standaloneSdkVersion,
-    (process.env.EXPO_VIEW_DIR || context.type === 'service')
-  );
+  let iosClientVersion;
+  let iosExpoViewUrl;
+  if (context.type === 'user') {
+    ({ iosClientVersion, iosExpoViewUrl } = await _getVersionedExpoKitConfigAsync(
+      standaloneSdkVersion
+    ));
+  }
+
   const expoRootTemplateDirectory = await _getOrCreateTemplateDirectoryAsync(
     context,
     iosExpoViewUrl
