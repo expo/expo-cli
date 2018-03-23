@@ -505,8 +505,18 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
         cwd: nodeModulesPath,
       });
       npmls = npmlsCommand.stdout;
+      if (npmlsCommand.signal === 'SIGINT') {
+        // The child process was interrupted (e.g. the user pressed ^C),
+        // let's not spam the console with warnings about that.
+        return NO_ISSUES;
+      }
     } catch (e) {
       npmls = e.stdout; // `npm ls` sometimes returns an error code
+      if (e.signal === 'SIGINT') {
+        // The child process was interrupted (e.g. the user pressed ^C),
+        // let's not spam the console with warnings about that.
+        return NO_ISSUES;
+      }
     }
 
     if (!npmls) {
