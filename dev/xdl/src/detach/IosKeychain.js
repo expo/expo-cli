@@ -1,0 +1,97 @@
+import uuidv1 from 'uuid/v1';
+import _ from 'lodash';
+import fs from 'fs-extra';
+
+import _logger from './Logger';
+import { spawnAsyncThrowError } from './ExponentTools';
+
+export async function createKeychain(appUUID) {
+  const BUILD_PHASE = 'creating keychain';
+  const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
+  const spawn = createSpawner(BUILD_PHASE, logger);
+
+  const name = uuidv1();
+  const password = uuidv1();
+  const path = getKeychainPath(name);
+
+  logger.info('creating new keychain...', uuidv1());
+  await runFastlane([
+    'run',
+    'create_keychain',
+    `path:${path}`,
+    `password:${password}`,
+    'unlock:true',
+    'timeout:360000',
+  ]);
+  await spawn('security', 'show-keychain-info', path, { stdoutOnly: true });
+
+  logger.info('created new keychain');
+  const keychainInfoPath = getKeychainInfoPath(appUUID);
+  const keychainInfo = {
+    name,
+    path,
+    password,
+  };
+  await fs.writeFile(keychainInfoPath, JSON.stringify(keychainInfo));
+  logger.info('saved keychain info to %s', keychainInfoPath);
+}
+
+export async function deleteKeychain({ path, appUUID }) {
+  const BUILD_PHASE = 'deleting keychain';
+  const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
+  const spawn = createSpawner(BUILD_PHASE, logger);
+
+  logger.info('deleting keychain...');
+  await runFastlane(['run', 'delete_keychain', `keychain_path:${path}`]);
+  await spawn('security', 'delete-keychain', path);
+
+  const keychainInfoPath = getKeychainInfoPath(appUUID);
+  await fs.remove(keychainInfoPath);
+}
+
+export async function importIntoKeychain({ keychainPath, certPath, certPassword }) {
+  const BUILD_PHASE = 'importing certificate into keychain';
+  const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
+  const spawn = createSpawner(BUILD_PHASE, logger);
+
+  logger.info('importing certificate into keychain...');
+  const args = ['import', certPath, '-A', '-k', keychainPath, '-f', 'pkcs12'];
+  if (certPassword) {
+    logger.info('certificate has password');
+    args.push('-P', certPassword);
+  } else {
+    logger.info("certificate doesn't have password");
+  }
+  await spawn('security', ...args);
+  logger.info('imported certificate into keychain');
+}
+
+function createSpawner(buildPhase, logger) {
+  return (command, ...args) => {
+    const lastArg = _.last(args);
+    const optionsFromArg = _.isObject(lastArg) ? args.pop() : {};
+
+    const options = { ...optionsFromArg, pipeToLogger: true };
+    if (buildPhase) {
+      options.loggerFields = options.loggerFields ? options.loggerFields : {};
+      options.loggerFields = { ...options.loggerFields, buildPhase };
+    }
+
+    logger.info('Executing command:', command, ...args);
+    return spawnAsyncThrowError(command, args, options);
+  };
+}
+
+async function runFastlane(fastlaneArgs) {
+  const fastlaneEnvVars = {
+    FASTLANE_DISABLE_COLORS: 1,
+    FASTLANE_SKIP_UPDATE_CHECK: 1,
+    CI: 1,
+  };
+  await spawnAsyncThrowError('fastlane', fastlaneArgs, {
+    env: { ...process.env, ...fastlaneEnvVars },
+  });
+}
+
+const getKeychainPath = name => `/private/tmp/xdl/${name}.keychain`;
+const getKeychainInfoPath = appUUID => `/private/tmp/${appUUID}-keychain-info.json`;

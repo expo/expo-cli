@@ -69,14 +69,20 @@ module.exports = {
   get Intercom() {
     return require('./Intercom');
   },
-  get IosPlist() {
-    return require('./detach/IosPlist');
-  },
   get IosClient() {
     return require('./client/IosClient');
   },
   get IosIcons() {
     return require('./detach/IosIcons');
+  },
+  get IosIPABuilder() {
+    return require('./detach/IosIPABuilder').default;
+  },
+  get IosKeychain() {
+    return require('./detach/IosKeychain');
+  },
+  get IosPlist() {
+    return require('./detach/IosPlist');
   },
   get IosPodsTools() {
     return require('./detach/IosPodsTools');
