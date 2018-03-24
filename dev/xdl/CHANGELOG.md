@@ -10,6 +10,10 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [48.0.7] - 2018-03-24
+
+* Fix a regression in `Detach`.
+
 ## [48.0.6] - 2018-03-16
 
 * Fix a regression with starting tunnels on Windows.
