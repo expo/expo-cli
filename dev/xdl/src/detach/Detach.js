@@ -239,25 +239,19 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     const nodeModulesPath = exp.nodeModulesPath
       ? path.resolve(projectRoot, exp.nodeModulesPath)
       : projectRoot;
-    const { code } = await installPackageAsync(
-      nodeModulesPath,
-      'react-native',
-      reactNativeVersion,
-      {
+    try {
+      await installPackageAsync(nodeModulesPath, 'react-native', reactNativeVersion, {
         silent: true,
-      }
-    );
-    if (code !== 0) {
-      logger.warn(`
-        ${chalk.yellow('Unable to install the Expo fork of react-native.')}
-        ${chalk.yellow(`Please install react-native@${reactNativeVersion} to complete detaching.`)}
-      `);
-      return false;
+      });
+    } catch (e) {
+      logger.warn('Unable to install the Expo fork of react-native.');
+      logger.warn(`Please install react-native@${reactNativeVersion} to complete detaching.`);
+      throw e;
     }
   }
 
   logger.info(
-    'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.\n'
+    'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.'
   );
   return true;
 }

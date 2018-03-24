@@ -1,7 +1,7 @@
 // @flow
 
-import spawn from 'cross-spawn';
-import pathExists from 'path-exists';
+import spawnAsync from '@expo/spawn-async';
+import fs from 'fs-extra';
 import path from 'path';
 
 import logger from './Logger';
@@ -18,7 +18,7 @@ export default async function installPackageAsync(
   packageVersion?: string,
   options?: any = {}
 ): Promise<InstallResult> {
-  const useYarn: boolean = await pathExists(path.join(appPath, 'yarn.lock'));
+  const useYarn: boolean = await fs.pathExists(path.join(appPath, 'yarn.lock'));
 
   let command = '';
   let args = [];
@@ -53,8 +53,5 @@ export default async function installPackageAsync(
     spawnOpts.stdio = 'inherit';
   }
 
-  const proc = spawn(command, args, spawnOpts);
-  return new Promise(resolve => {
-    proc.on('close', code => resolve({ code, command, args }));
-  });
+  return spawnAsync(command, args, spawnOpts);
 }
