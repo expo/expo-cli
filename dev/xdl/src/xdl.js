@@ -18,6 +18,9 @@ module.exports = {
   get AndroidShellApp() {
     return require('./detach/AndroidShellApp');
   },
+  get AndroidKeystore() {
+    return require('./detach/AndroidKeystore');
+  },
   get Api() {
     return require('./Api').default;
   },

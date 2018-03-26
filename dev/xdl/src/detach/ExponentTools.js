@@ -10,6 +10,7 @@ import Request from 'request-promise-native';
 import pipeRequest from 'request';
 import rimraf from 'rimraf';
 import spawnAsyncQuiet from '@expo/spawn-async';
+import _ from 'lodash';
 
 import logger, { pipeOutputToLogger } from './Logger';
 import XDLError from '../XDLError';
@@ -120,6 +121,24 @@ async function spawnAsync(...args) {
   }
 }
 
+function createSpawner(buildPhase, logger) {
+  return (command, ...args) => {
+    const lastArg = _.last(args);
+    const optionsFromArg = _.isObject(lastArg) ? args.pop() : {};
+
+    const options = { ...optionsFromArg, pipeToLogger: true };
+    if (buildPhase) {
+      options.loggerFields = options.loggerFields ? options.loggerFields : {};
+      options.loggerFields = { ...options.loggerFields, buildPhase };
+    }
+
+    if (logger) {
+      logger.info('Executing command:', command, ...args);
+    }
+    return spawnAsyncThrowError(command, args, options);
+  };
+}
+
 async function transformFileContentsAsync(filename, transform) {
   let fileString = await fs.readFile(filename, 'utf8');
   let newFileString = transform(fileString);
@@ -218,4 +237,5 @@ export {
   getResolvedLocalesAsync,
   regexFileAsync,
   deleteLinesInFileAsync,
+  createSpawner,
 };
