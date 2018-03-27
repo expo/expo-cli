@@ -92,32 +92,52 @@ export async function buildIPA(
     keychainPath,
     exportMethod,
   },
-  credentials
+  credentials,
+  client = false
 ) {
-  await runFastlane(credentials, [
-    'gym',
-    '-n',
-    path.basename(ipaPath),
-    '--workspace',
-    workspace,
-    '--scheme',
-    'ExpoKitApp',
-    '--archive_path',
-    archivePath,
-    '--skip_build_archive',
-    'true',
-    '-i',
-    codeSignIdentity,
-    '--export_options',
-    exportOptionsPlistPath,
-    '--export_method',
-    exportMethod,
-    '--export_xcargs',
-    `OTHER_CODE_SIGN_FLAGS="--keychain ${keychainPath}"`,
-    '-o',
-    path.dirname(ipaPath),
-    '--verbose',
-  ]);
+  if (client) {
+    await spawnAsyncThrowError(
+      'xcodebuild',
+      [
+        '-exportArchive',
+        '-archivePath',
+        archivePath,
+        '-exportOptionsPlist',
+        exportOptionsPlistPath,
+        '-exportPath',
+        path.Dir(ipaPath),
+        `OTHER_CODE_SIGN_FLAGS="--keychain ${keychainPath}"`,
+      ],
+      {
+        env: { ...process.env, CI: 1 },
+      }
+    );
+  } else {
+    await runFastlane(credentials, [
+      'gym',
+      '-n',
+      path.basename(ipaPath),
+      '--workspace',
+      workspace,
+      '--scheme',
+      'ExpoKitApp',
+      '--archive_path',
+      archivePath,
+      '--skip_build_archive',
+      'true',
+      '-i',
+      codeSignIdentity,
+      '--export_options',
+      exportOptionsPlistPath,
+      '--export_method',
+      exportMethod,
+      '--export_xcargs',
+      `OTHER_CODE_SIGN_FLAGS="--keychain ${keychainPath}"`,
+      '-o',
+      path.dirname(ipaPath),
+      '--verbose',
+    ]);
+  }
 }
 
 export const resolveExportMethod = plistData => {

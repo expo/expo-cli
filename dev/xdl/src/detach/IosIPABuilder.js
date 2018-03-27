@@ -27,7 +27,7 @@ export default function createIPABuilder(buildParams) {
   const uploadPath = path.join(buildDir, 'archive.ipa');
 
   async function build() {
-    const { provisioningProfilePath } = buildParams;
+    const { provisioningProfilePath, clientBuild } = buildParams;
 
     await copyProvisioningProfileToHomedir(provisioningProfilePath, appUUID);
     logger.info('provisioning profile copied to home directory');
@@ -63,7 +63,7 @@ export default function createIPABuilder(buildParams) {
       keychainPath,
       exportMethod,
     };
-    await utils.buildIPA(ipaBuilderArgs, buildParams);
+    await utils.buildIPA(ipaBuilderArgs, buildParams, clientBuild);
     logger.info('generated IPA');
 
     logger.info('creating entitlements file...');

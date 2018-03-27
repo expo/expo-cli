@@ -14,7 +14,7 @@ export async function createKeychain(appUUID) {
   const password = uuidv1();
   const path = getKeychainPath(name);
 
-  logger.info('creating new keychain...', uuidv1());
+  logger.info('creating new keychain...');
   await runFastlane([
     'run',
     'create_keychain',
@@ -39,11 +39,9 @@ export async function createKeychain(appUUID) {
 export async function deleteKeychain({ path, appUUID }) {
   const BUILD_PHASE = 'deleting keychain';
   const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
-  const spawn = createSpawner(BUILD_PHASE, logger);
 
   logger.info('deleting keychain...');
   await runFastlane(['run', 'delete_keychain', `keychain_path:${path}`]);
-  await spawn('security', 'delete-keychain', path);
 
   const keychainInfoPath = getKeychainInfoPath(appUUID);
   await fs.remove(keychainInfoPath);
@@ -64,22 +62,6 @@ export async function importIntoKeychain({ keychainPath, certPath, certPassword 
   }
   await spawn('security', ...args);
   logger.info('imported certificate into keychain');
-}
-
-function createSpawner(buildPhase, logger) {
-  return (command, ...args) => {
-    const lastArg = _.last(args);
-    const optionsFromArg = _.isObject(lastArg) ? args.pop() : {};
-
-    const options = { ...optionsFromArg, pipeToLogger: true };
-    if (buildPhase) {
-      options.loggerFields = options.loggerFields ? options.loggerFields : {};
-      options.loggerFields = { ...options.loggerFields, buildPhase };
-    }
-
-    logger.info('Executing command:', command, ...args);
-    return spawnAsyncThrowError(command, args, options);
-  };
 }
 
 async function runFastlane(fastlaneArgs) {
