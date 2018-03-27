@@ -7,7 +7,7 @@ import path from 'path';
 import rimraf from 'rimraf';
 import _ from 'lodash';
 
-import { getManifestAsync, saveUrlToPathAsync, manifestUsesSplashApi } from './ExponentTools';
+import { getManifestAsync, saveUrlToPathAsync, manifestUsesSplashApi, parseSdkMajorVersion } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as IosIcons from './IosIcons';
 import * as IosPlist from './IosPlist';
@@ -21,6 +21,7 @@ import logger from './Logger';
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
 const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
+const KERNEL_URL = 'https://expo.io/@exponent/home';
 
 function _configureInfoPlistForLocalDevelopment(config: any, exp: any) {
   // add detached scheme
@@ -85,6 +86,32 @@ async function _preloadManifestAndBundleAsync(
   const bundleUrl = manifest.bundleUrl;
   await fs.writeFile(path.join(supportingDirectory, manifestFilename), JSON.stringify(manifest));
   await saveUrlToPathAsync(bundleUrl, path.join(supportingDirectory, bundleFilename));
+}
+
+/**
+ *  This method only makes sense when operating on a context with sdk version < 26.
+ */
+async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
+  context: StandaloneContext,
+  manifestFilename: string,
+  bundleFilename: string
+) {
+  const { supportingDirectory } = IosWorkspace.getPaths(context);
+  let sdkVersionSupported = await IosWorkspace.getNewestSdkVersionSupportedAsync(context);
+
+  if (parseSdkMajorVersion(sdkVersionSupported) < 26) {
+    logger.info('Preloading Expo kernel JS...');
+    const kernelManifest = await getManifestAsync(KERNEL_URL, {
+      'Exponent-SDK-Version': sdkVersionSupported,
+      'Exponent-Platform': 'ios',
+    });
+    return _preloadManifestAndBundleAsync(
+      kernelManifest,
+      supportingDirectory,
+      manifestFilename,
+      bundleFilename
+    );
+  }
 }
 
 /**
@@ -475,6 +502,12 @@ async function configureAsync(context: StandaloneContext) {
       'shell-app.bundle'
     );
   }
+
+  await _maybeLegacyPreloadKernelManifestAndBundleAsync(
+    context,
+    'kernel-manifest.json',
+    'kernel.ios.bundle'
+  );
 
   buildPhaseLogger.info('Cleaning up iOS...');
   await _cleanPropertyListBackupsAsync(context, supportingDirectory);

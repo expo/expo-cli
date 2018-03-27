@@ -10,6 +10,7 @@ import Api from '../Api';
 import {
   isDirectory,
   rimrafDontThrow,
+  parseSdkMajorVersion,
   spawnAsync,
   spawnAsyncThrowError,
   transformFileContentsAsync,
@@ -21,11 +22,11 @@ import * as Utils from '../Utils';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
 
-async function _getVersionedExpoKitConfigAsync(sdkVersion: string): any {
+async function _getVersionedExpoKitConfigAsync(sdkVersion: string, skipServerValidation: boolean): any {
   const versions = await Versions.versionsAsync();
   let sdkVersionConfig = versions.sdkVersions[sdkVersion];
   if (!sdkVersionConfig) {
-    if (process.env.EXPO_VIEW_DIR) {
+    if (skipServerValidation) {
       sdkVersionConfig = {};
     } else {
       throw new Error(`Unsupported SDK version: ${sdkVersion}`);
@@ -233,20 +234,15 @@ async function _renderPodfileFromTemplateAsync(
 }
 
 async function createDetachedAsync(context: StandaloneContext) {
-  let isMultipleVersion, standaloneSdkVersion;
-  if (context.type === 'user') {
-    standaloneSdkVersion = context.config.sdkVersion;
-    isMultipleVersion = false;
-  } else if (context.type === 'service') {
-    const { version } = await Versions.newestSdkVersionAsync();
-    standaloneSdkVersion = version;
-    isMultipleVersion = true;
-  }
   const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(context);
   logger.info(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
 
+  let isMultipleVersion = (context.type === 'service');
+  let standaloneSdkVersion = await getNewestSdkVersionSupportedAsync(context);
+
   const { iosClientVersion, iosExpoViewUrl } = await _getVersionedExpoKitConfigAsync(
-    standaloneSdkVersion
+    standaloneSdkVersion,
+    (process.env.EXPO_VIEW_DIR || context.type === 'service')
   );
   const expoRootTemplateDirectory = await _getOrCreateTemplateDirectoryAsync(
     context,
@@ -354,4 +350,37 @@ function getPaths(context: StandaloneContext) {
   };
 }
 
-export { addDetachedConfigToExp, createDetachedAsync, getPaths };
+/**
+ *  Get the newest sdk version supported given the standalone context.
+ *  Not all contexts support the newest sdk version.
+ */
+async function getNewestSdkVersionSupportedAsync(context: StandaloneContext) {
+  if (context.type === 'user') {
+    return context.data.exp.sdkVersion;
+  } else if (context.type === 'service') {
+    // when running in universe or on a turtle machine,
+    // we care about what sdk version is actually present in this working copy.
+    // this might not be the same thing deployed to our www Versions endpoint.
+    let { supportingDirectory } = getPaths(context);
+    if (!fs.existsSync(supportingDirectory)) {
+      // if we run this method before creating the workspace, we may need to look at the template.
+      supportingDirectory = path.join(context.data.expoSourcePath, '..', 'exponent-view-template', 'ios', 'exponent-view-template', 'Supporting');
+    }
+    let allVersions, newestVersion;
+    await IosPlist.modifyAsync(supportingDirectory, 'EXSDKVersions', versionConfig => {
+      allVersions = versionConfig.sdkVersions;
+      return versionConfig;
+    });
+    let highestMajorComponent = 0;
+    allVersions.forEach(version => {
+      let majorComponent = parseSdkMajorVersion(version);
+      if (majorComponent > highestMajorComponent) {
+        highestMajorComponent = majorComponent;
+        newestVersion = version;
+      }
+    });
+    return newestVersion;
+  }
+}
+
+export { addDetachedConfigToExp, createDetachedAsync, getPaths, getNewestSdkVersionSupportedAsync };
