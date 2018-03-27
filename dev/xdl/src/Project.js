@@ -28,6 +28,7 @@ import * as Android from './Android';
 import Api from './Api';
 import Config from './Config';
 import * as Doctor from './project/Doctor';
+import * as DevSession from './DevSession';
 import ErrorCode from './ErrorCode';
 import logger from './Logger';
 import * as ExponentTools from './detach/ExponentTools';
@@ -1715,9 +1716,11 @@ export async function startAsync(
     }
   }
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  DevSession.startSession(projectRoot, exp);
   return exp;
 }
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
+  DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   if (!Config.offline) {
