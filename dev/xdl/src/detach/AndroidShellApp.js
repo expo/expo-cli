@@ -905,6 +905,7 @@ export async function runShellAppModificationsAsync(
     let fabric = privateConfig.fabric;
     let googleMaps = privateConfig.googleMaps;
     let googleSignIn = privateConfig.googleSignIn;
+    let googleServicesFile = privateConfig.googleServicesFile;
 
     // Branch
     if (branch) {
@@ -959,6 +960,42 @@ export async function runShellAppModificationsAsync(
     if (googleSignIn) {
       certificateHash = googleSignIn.certificateHash;
       googleAndroidApiKey = googleSignIn.apiKey;
+    }
+
+    // google-services.json
+    // Used for configuring FCM
+    if (googleServicesFile) {
+      await saveUrlToPathAsync(
+        googleServicesFile,
+        path.join(shellPath, 'app', 'google-services.json')
+      );
+
+      await regexFileAsync(
+        '<!-- ADD FCM CONFIG HERE -->',
+        `<service
+          android:name=".fcm.ExpoFcmMessagingService">
+          <intent-filter>
+              <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+          </intent-filter>
+        </service>
+        <service
+          android:name=".fcm.ExpoFcmInstanceIDService">
+          <intent-filter>
+              <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+          </intent-filter>
+        </service>
+        <meta-data
+          android:name="com.google.firebase.messaging.default_notification_icon"
+          android:resource="@drawable/shell_notification_icon" />
+        <meta-data
+          android:name="com.google.firebase.messaging.default_notification_color"
+          android:resource="@color/colorAccent" />
+        <service
+          android:name=".fcm.FcmRegistrationIntentService"
+          android:exported="false">
+        </service>`,
+        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+      );
     }
   }
 
