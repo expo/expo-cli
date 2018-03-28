@@ -238,28 +238,12 @@ export class UserManagerInstance {
       user = await this.getCurrentUserAsync();
     }
 
-    if (user && user.kind === 'user' && user.userMetadata && user.userMetadata.onboarded) {
+    if (user) {
       await this.logoutAsync();
       user = null;
     }
 
-    let shouldUpdateUsernamePassword = true;
-    if (user && user.kind === 'legacyUser') {
-      // we're upgrading from an older client,
-      // so login with username/pass
-      if (userData.username && userData.password) {
-        user = await this.loginAsync('user-pass', {
-          username: userData.username,
-          password: userData.password,
-        });
-      }
-      shouldUpdateUsernamePassword = false;
-    }
-
     const currentUser: ?User = (user: any);
-
-    const shouldLinkAccount =
-      currentUser && currentUser.currentConnection !== 'Username-Password-Authentication';
 
     try {
       // Create or update the profile
@@ -271,36 +255,18 @@ export class UserManagerInstance {
           givenName: userData.givenName,
           familyName: userData.familyName,
         },
-        ...(shouldUpdateUsernamePassword ? { username: userData.username } : {}),
-        ...(shouldLinkAccount ? { emailVerified: true } : {}),
-        ...(shouldUpdateUsernamePassword ? { password: userData.password } : {}),
-        ...(currentUser && shouldLinkAccount
-          ? {
-              forceCreate: true,
-              linkedAccountId: currentUser.userId,
-              linkedAccountConnection: currentUser.currentConnection,
-            }
-          : {}),
+        username: userData.username,
+        password: userData.password,
       });
 
-      // if it's a new registration, or if they signed up with a social account,
-      // we need to re-log them in with their username/pass. Otherwise, they're
-      // already logged in.
-      if (
-        shouldLinkAccount ||
-        (registeredUser &&
-          (!registeredUser.loginsCount ||
-            (registeredUser.loginsCount && registeredUser.loginsCount < 1)))
-      ) {
-        // this is a new registration, log them in
-        registeredUser = await this.loginAsync('user-pass', {
-          username: userData.username,
-          password: userData.password,
-        });
-      }
+      registeredUser = await this.loginAsync('user-pass', {
+        username: userData.username,
+        password: userData.password,
+      });
 
       return registeredUser;
     } catch (e) {
+      console.error(e);
       throw new XDLError(ErrorCode.REGISTRATION_ERROR, 'Error registering user: ' + e.message);
     }
   }
@@ -322,7 +288,7 @@ export class UserManagerInstance {
     }
 
     // check for sessionSecret in state.json file
-    let { sessionSecret } = await UserSettings.getAsync('auth', {});
+    let sessionSecret = await UserSettings.getAsync('auth.sessionSecret', null);
     if (sessionSecret) {
       return;
     }
@@ -354,9 +320,7 @@ export class UserManagerInstance {
    *
    * If there are any issues with the login, this method throws.
    */
-  async ensureLoggedInAsync(
-    options: { noTrackError: boolean } = { noTrackError: false }
-  ): Promise<?User> {
+  async ensureLoggedInAsync(): Promise<?User> {
     if (Config.offline) {
       return null;
     }
@@ -366,16 +330,7 @@ export class UserManagerInstance {
 
     const user = await this.getCurrentUserAsync();
     if (!user) {
-      if (await this.getLegacyUserData()) {
-        throw new XDLError(
-          ErrorCode.LEGACY_ACCOUNT_ERROR,
-          `We've updated our account system! Please login again by running \`exp login\`. Sorry for the inconvenience!`,
-          { noTrack: options.noTrackError }
-        );
-      }
-      throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in', {
-        noTrack: options.noTrackError,
-      });
+      throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
     }
     return user;
   }
@@ -441,24 +396,6 @@ export class UserManagerInstance {
   }
 
   /**
-   * Get legacy user data from UserSettings.
-   */
-  async getLegacyUserData(): Promise<?LegacyUser> {
-    const legacyUsername = await UserSettings.getAsync('username', null);
-    if (legacyUsername) {
-      return {
-        kind: 'legacyUser',
-        username: legacyUsername,
-        userMetadata: {
-          legacy: true,
-          needsPasswordMigration: true,
-        },
-      };
-    }
-    return null;
-  }
-
-  /**
    * Create or update a user.
    */
   async createOrUpdateUserAsync(userData: Object): Promise<User> {
@@ -506,8 +443,6 @@ export class UserManagerInstance {
 
     // Delete saved JWT
     await UserSettings.deleteKeyAsync('auth');
-    // Delete legacy auth
-    await UserSettings.deleteKeyAsync('username');
 
     // Logout of Intercom
     Intercom.update(null);
@@ -628,8 +563,6 @@ export class UserManagerInstance {
         ...(sessionSecret ? { sessionSecret } : {}),
       },
     });
-
-    await UserSettings.deleteKeyAsync('username');
 
     // If no currentUser, or currentUser.id differs from profiles
     // user id, that means we have a new login

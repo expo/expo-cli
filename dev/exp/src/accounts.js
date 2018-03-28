@@ -8,7 +8,7 @@ import { User as UserManager } from 'xdl';
 import CommandError from './CommandError';
 import prompt from './prompt';
 
-import type { LoginType, User, UserOrLegacyUser } from 'xdl/build/User';
+import type { LoginType, User } from 'xdl/build/User';
 
 // const EXP_CLIENT_ID = 'Zso9S1J7xpRYzT4QNlanGYLL5aBrqy1l';
 UserManager.initialize();
@@ -50,8 +50,7 @@ export async function loginOrRegisterIfLoggedOut() {
   const { action } = await prompt(questions);
 
   if (action === 'register') {
-    await _onboardUser();
-    console.log(chalk.green('Thanks!\n'));
+    await register();
   } else if (action === 'existingUser') {
     await login({});
   } else {
@@ -88,11 +87,6 @@ export async function login(options: CommandOptions) {
       'Username and password not provided in non-interactive mode.'
     );
   }
-}
-
-export async function register(options: CommandOptions) {
-  await _onboardUser();
-  console.log('\nThanks for signing up!');
 }
 
 async function _usernamePasswordAuth(username?: string, password?: string): Promise<User> {
@@ -135,51 +129,27 @@ async function _usernamePasswordAuth(username?: string, password?: string): Prom
   let user = await UserManager.loginAsync('user-pass', data);
 
   if (user) {
-    if (user.userMetadata.onboarded) {
-      console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
-      return user;
-    } else {
-      user = await _onboardUser(user, data);
-      console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
-      return user;
-    }
+    console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
+    return user;
   } else {
     throw new Error('Unexpected Error: No user returned from the API');
   }
 }
 
-async function _onboardUser(
-  user?: UserOrLegacyUser,
-  usernamePass?: { username: string, password: string }
-): Promise<User> {
-  console.log('');
+export async function register(): Promise<User> {
+  console.log(
+    `
+Thanks for signing up for Expo!
+Just a few questions:
+`
+  );
 
-  const legacyMigration =
-    (user && user.kind === 'legacyUser') ||
-    (user && user.kind === 'user' && user.currentConnection === 'Username-Password-Authentication');
-
-  if (user && legacyMigration) {
-    console.log(
-      `Signed in as: @${chalk.green(user.username)}
-Hi there! We don't currently have any way to identify you if you were to lose
-your password. Please provide us with your name and e-mail address.`
-    );
-  } else {
-    console.log(
-      `Thanks for signing up for Expo!
-Just a few questions:`
-    );
-  }
-
-  console.log('');
-
-  const questions = [];
-  questions.push(
+  let questions = [
     {
       type: 'input',
-      name: 'givenName',
-      message: 'First Name:',
-      default: (!legacyMigration && user && user.kind === 'user' && user.givenName) || null,
+      name: 'email',
+      message: 'E-mail:',
+      filter: val => val.trim(),
       validate(val) {
         if (val.trim() === '') {
           return false;
@@ -188,67 +158,33 @@ Just a few questions:`
       },
     },
     {
-      type: 'input',
-      name: 'familyName',
-      message: 'Last Name:',
-      default: (!legacyMigration && user && user.kind === 'user' && user.familyName) || null,
-      validate(val) {
-        if (val.trim() === '') {
-          return false;
-        }
-        return true;
-      },
-    }
-  );
-
-  if (!legacyMigration) {
-    // needs a username
-    questions.push({
       type: 'input',
       name: 'username',
       message: 'Username:',
-      default: (user && user.kind === 'user' && (user.username || user.nickname)) || null,
-      validate(val, answers) {
-        if (val.trim() === '') {
-          return false;
-        }
-        return true;
-      },
-    });
-  }
-
-  questions.push({
-    type: 'input',
-    name: 'email',
-    message: 'Email Address:',
-    default: (!legacyMigration && user && user.kind === 'user' && user.email) || null,
-    validate(val) {
-      if (val.trim() === '') {
-        return false;
-      }
-      return true;
-    },
-  });
-
-  if (!legacyMigration || (user && user.userMetadata.needsPasswordMigration)) {
-    questions.push({
-      type: 'password',
-      name: 'password',
-      message: 'Password:',
+      filter: val => val.trim(),
       validate(val) {
         if (val.trim() === '') {
           return false;
         }
         return true;
       },
-    });
-  }
-
-  if (!legacyMigration) {
-    questions.push({
+    },
+    {
+      type: 'password',
+      name: 'password',
+      message: 'Password:',
+      filter: val => val.trim(),
+      validate(val) {
+        if (val.trim() === '') {
+          return 'Please create a password';
+        }
+        return true;
+      },
+    },
+    {
       type: 'password',
       name: 'passwordRepeat',
-      message: 'Password Repeat:',
+      message: 'Confirm Password:',
       validate(val, answers) {
         if (val.trim() === '') {
           return false;
@@ -258,21 +194,10 @@ Just a few questions:`
         }
         return true;
       },
-    });
-  }
-
-  const answers = await prompt(questions);
-
-  // Don't send user data (username/password) if
-  const shouldUpdateUsernamePassword = !(user && user.kind === 'user' && user.userMetadata.legacy);
-
-  const registeredUser = await UserManager.registerAsync(
-    {
-      ...(shouldUpdateUsernamePassword && usernamePass ? usernamePass : {}),
-      ...answers,
     },
-    user
-  );
-
+  ];
+  let answers = await prompt(questions);
+  let registeredUser = await UserManager.registerAsync(answers);
+  console.log('\nThanks for signing up!');
   return registeredUser;
 }

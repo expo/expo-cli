@@ -8,5 +8,5 @@ export default (program: any) => {
   program
     .command('register')
     .description('Sign up for a new Expo account')
-    .asyncAction(register);
+    .asyncAction(() => register());
 };
