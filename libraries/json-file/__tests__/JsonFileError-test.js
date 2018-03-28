@@ -1,5 +1,3 @@
-'use strict';
-
 import JsonFileError from '../src/JsonFileError';
 
 describe('JsonFileError', () => {

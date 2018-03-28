@@ -2,44 +2,19 @@
  * @flow
  */
 
-const fsp = require('mz/fs');
-const _ = require('lodash');
 const util = require('util');
-const JSON5 = require('json5');
-const writeFileAtomic = require('write-file-atomic');
-const lockFile = require('lockfile');
-const promisify = require('util.promisify');
+import fs from 'fs';
+import get from 'lodash/get';
+import has from 'lodash/has';
+import set from 'lodash/set';
+import JSON5 from 'json5';
+import writeFileAtomic from 'write-file-atomic';
+import promisify from 'util.promisify';
 
-const JsonFileError = require('./JsonFileError');
+import JsonFileError from './JsonFileError';
 
-const lockAsync = promisify(lockFile.lock);
-
-// A promisified writeFileAtomic
-const writeFileAtomicAsync = async (file, data): Promise<void> =>
-  new Promise((resolve, reject) => {
-    writeFileAtomic(file, data, err => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
-
-async function callWithLock<X>(file: string, fn: () => Promise<X>): Promise<X> {
-  let result;
-  const lockFileName = file + '.lock';
-  // These options are fairly arbitrary
-  await lockAsync(lockFileName, {
-    wait: 5000,
-    retries: 500,
-    pollPeriod: 50,
-    retryWait: 50,
-  });
-  try {
-    result = await fn();
-  } finally {
-    lockFile.unlockSync(lockFileName);
-  }
-  return result;
-}
+const readFileAsync = promisify(fs.readFile);
+const writeFileAtomicAsync = promisify(writeFileAtomic);
 
 type JSONT = Object;
 
@@ -78,11 +53,11 @@ class JsonFile<JSONObject: JSONT> {
   }
 
   async readAsync(options?: Options<JSONObject>): Promise<JSONObject> {
-    return callWithLock(this.file, () => readAsync(this.file, this._getOptions(options)));
+    return readAsync(this.file, this._getOptions(options));
   }
 
   async writeAsync(object: JSONObject, options?: Options<JSONObject>) {
-    return callWithLock(this.file, () => writeAsync(this.file, object, this._getOptions(options)));
+    return writeAsync(this.file, object, this._getOptions(options));
   }
 
   async getAsync<K: string, DefaultValue>(
@@ -90,39 +65,31 @@ class JsonFile<JSONObject: JSONT> {
     defaultValue: DefaultValue,
     options?: Options<JSONObject>
   ): $ElementType<JSONObject, K> | DefaultValue {
-    return callWithLock(this.file, () =>
-      getAsync(this.file, key, defaultValue, this._getOptions(options))
-    );
+    return getAsync(this.file, key, defaultValue, this._getOptions(options));
   }
 
   async setAsync(key: string, value: mixed, options?: Options<JSONObject>) {
-    return callWithLock(this.file, () =>
-      setAsync(this.file, key, value, this._getOptions(options))
-    );
+    return setAsync(this.file, key, value, this._getOptions(options));
   }
 
   async updateAsync(key: string, value: mixed, options?: Options<JSONObject>) {
-    return callWithLock(this.file, () =>
-      updateAsync(this.file, key, value, this._getOptions(options))
-    );
+    return updateAsync(this.file, key, value, this._getOptions(options));
   }
 
   async mergeAsync(sources: JSONObject | Array<JSONObject>, options?: Options<JSONObject>) {
-    return callWithLock(this.file, () => mergeAsync(this.file, sources, this._getOptions(options)));
+    return mergeAsync(this.file, sources, this._getOptions(options));
   }
 
   async deleteKeyAsync(key: string, options?: Options<JSONObject>) {
-    return callWithLock(this.file, () => deleteKeyAsync(this.file, key, this._getOptions(options)));
+    return deleteKeyAsync(this.file, key, this._getOptions(options));
   }
 
   async deleteKeysAsync(keys: Array<string>, options?: Options<JSONObject>) {
-    return callWithLock(this.file, () =>
-      deleteKeysAsync(this.file, keys, this._getOptions(options))
-    );
+    return deleteKeysAsync(this.file, keys, this._getOptions(options));
   }
 
   async rewriteAsync(options?: Options<JSONObject>) {
-    return callWithLock(this.file, () => rewriteAsync(this.file, this._getOptions(options)));
+    return rewriteAsync(this.file, this._getOptions(options));
   }
 
   _getOptions(options?: Options<JSONObject>): Options<JSONObject> {
@@ -139,7 +106,7 @@ async function readAsync<JSONObject: JSONT>(
 ): Promise<JSONObject> {
   var json5 = _getOption(options, 'json5');
   try {
-    const json = await fsp.readFile(file, 'utf8');
+    const json = await readFileAsync(file, 'utf8');
     try {
       if (json5) {
         return JSON5.parse(json);
@@ -171,10 +138,10 @@ async function getAsync<JSONObject: JSONT, K: $Keys<JSONObject>, DefaultValue>(
   options?: Options<JSONObject>
 ): Promise<any> {
   const object = await readAsync(file, options);
-  if (defaultValue === undefined && !_.has(object, key)) {
+  if (defaultValue === undefined && !has(object, key)) {
     throw new JsonFileError(`No value at key path "${key}" in JSON object from: ${file}`);
   }
-  return _.get(object, key, defaultValue);
+  return get(object, key, defaultValue);
 }
 
 async function writeAsync<JSONObject: JSONT>(
@@ -194,7 +161,7 @@ async function writeAsync<JSONObject: JSONT>(
   } catch (e) {
     throw new JsonFileError(`Couldn't JSON.stringify object for file: ${file}`, e);
   }
-  await writeFileAtomicAsync(file, json);
+  await writeFileAtomicAsync(file, json, {});
   return object;
 }
 
@@ -207,7 +174,7 @@ async function setAsync<JSONObject: JSONT>(
   // TODO: Consider implementing some kind of locking mechanism, but
   // it's not critical for our use case, so we'll leave it out for now
   let object = await readAsync(file, options);
-  object = _.set(object, key, value);
+  object = set(object, key, value);
   return writeAsync(file, object, options);
 }
 
@@ -295,22 +262,15 @@ function _getOption<JSONObject: JSONT, X: $Subtype<$Keys<Options<JSONObject>>>>(
   return DEFAULT_OPTIONS[field];
 }
 
-const fns = {
+Object.assign(JsonFile, {
   readAsync,
   writeAsync,
   getAsync,
   setAsync,
-  updateAsync,
   mergeAsync,
   deleteKeyAsync,
   deleteKeysAsync,
   rewriteAsync,
-};
-
-const lockedFns = _.mapValues(fns, fn => (file, ...args) =>
-  callWithLock(file, () => fn(file, ...args))
-);
-
-Object.assign(JsonFile, lockedFns);
+});
 
 export default JsonFile;
