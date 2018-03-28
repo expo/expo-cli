@@ -11,6 +11,7 @@ import log from '../log';
 import sendTo from '../sendTo';
 import { installExitHooks } from '../exit';
 import urlOpts from '../urlOpts';
+import printRunInstructionsAsync from '../printRunInstructionsAsync';
 
 async function action(projectDir, options) {
   const projectState = await Project.currentStatus(projectDir);
@@ -43,18 +44,19 @@ async function action(projectDir, options) {
   await Project.startAsync(root, startOpts);
 
   log('Expo is ready.');
+  log.newLine();
 
   let { url, isUrlFallback } = await Project.getManifestUrlWithFallbackAsync(projectDir);
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
   if (!exp.isDetached) {
-    log('You can scan this QR code:');
-    log.newLine();
     urlOpts.printQRCode(url);
   }
 
   log('Your URL is: ' + chalk.underline(url));
+
+  await printRunInstructionsAsync();
 
   if (isUrlFallback) {
     await ProjectSettings.setAsync(projectDir, { hostType: 'lan' });

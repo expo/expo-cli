@@ -12,9 +12,6 @@ async function action(projectDir, options) {
 
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
-  log('You can scan this QR code:\n');
-  urlOpts.printQRCode(url);
-
   log('Your URL is\n\n' + chalk.underline(url) + '\n');
   log.raw(url);
 

@@ -6,8 +6,9 @@ import { Project, UrlUtils } from 'xdl';
 import CommandError from '../CommandError';
 import log from '../log';
 import urlOpts from '../urlOpts';
+import printRunInstructionsAsync from '../printRunInstructionsAsync';
 
-const logArtifactUrl = (platform) => async (projectDir, options) => {
+const logArtifactUrl = platform => async (projectDir, options) => {
   const res = await Project.buildAsync(projectDir, { current: false, mode: 'status' });
   const url = fp.compose(
     fp.get(['artifacts', 'url']),
@@ -20,7 +21,7 @@ const logArtifactUrl = (platform) => async (projectDir, options) => {
   } else {
     throw new Error(`No ${platform} binary file found. Use "exp build:${platform}" to create one.`);
   }
-}
+};
 
 async function action(projectDir, options) {
   await urlOpts.optsAsync(projectDir, options);
@@ -33,12 +34,12 @@ async function action(projectDir, options) {
   }
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
-  log('You can scan this QR code:\n');
   urlOpts.printQRCode(url);
 
   log('Your URL is\n\n' + chalk.underline(url) + '\n');
   log.raw(url);
 
+  await printRunInstructionsAsync();
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 }
 
@@ -58,6 +59,8 @@ export default program => {
 
   program
     .command('url:apk [project-dir]')
-    .description('Displays the standalone Android binary URL you can use to download your app binary')
+    .description(
+      'Displays the standalone Android binary URL you can use to download your app binary'
+    )
     .asyncActionProjectDir(logArtifactUrl('android'), true);
 };
