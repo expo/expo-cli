@@ -2,7 +2,6 @@
  * @flow
  */
 
-const util = require('util');
 import fs from 'fs';
 import get from 'lodash/get';
 import has from 'lodash/has';
@@ -70,10 +69,6 @@ class JsonFile<JSONObject: JSONT> {
 
   async setAsync(key: string, value: mixed, options?: Options<JSONObject>) {
     return setAsync(this.file, key, value, this._getOptions(options));
-  }
-
-  async updateAsync(key: string, value: mixed, options?: Options<JSONObject>) {
-    return updateAsync(this.file, key, value, this._getOptions(options));
   }
 
   async mergeAsync(sources: JSONObject | Array<JSONObject>, options?: Options<JSONObject>) {
@@ -177,11 +172,6 @@ async function setAsync<JSONObject: JSONT>(
   object = set(object, key, value);
   return writeAsync(file, object, options);
 }
-
-let updateAsync = util.deprecate(
-  setAsync,
-  'Deprecated "updateAsync" in favor of "setAsync". Please use "setAsync" instead.'
-);
 
 async function mergeAsync<JSONObject: JSONT>(
   file: string,
