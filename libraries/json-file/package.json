@@ -1,6 +1,6 @@
 {
-  "name": "@expo/json-file-internal",
-  "version": "6.1.0",
+  "name": "@expo/json-file",
+  "version": "7.0.0",
   "description": "A module for reading, writing, and manipulating JSON files",
   "main": "build/JsonFile.js",
   "scripts": {
@@ -23,6 +23,9 @@
     "url": "https://github.com/expo/json-file/issues"
   },
   "homepage": "https://github.com/expo/json-file#readme",
+  "files": [
+    "build"
+  ],
   "dependencies": {
     "json5": "^1.0.1",
     "lodash": "^4.17.4",
