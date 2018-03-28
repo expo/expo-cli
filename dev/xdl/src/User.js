@@ -425,7 +425,7 @@ export class UserManagerInstance {
       } catch (e) {
         Logger.global.error(e);
         // Surface network errors
-        if (e.code === 'ECONNREFUSED') {
+        if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND' || e.code === 'ETIMEDOUT') {
           throw new Error(
             'Could not connect to the server. Please check your internet connection.'
           );
