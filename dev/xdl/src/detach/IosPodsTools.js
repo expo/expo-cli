@@ -56,7 +56,8 @@ function _validatePodfileSubstitutions(substitutions) {
   return true;
 }
 
-function _renderExpoKitDependency(options) {
+function _renderExpoKitDependency(options, sdkVersion) {
+  const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
   let attributes;
   if (options.expoKitPath) {
     attributes = {
@@ -73,7 +74,13 @@ function _renderExpoKitDependency(options) {
       branch: 'master',
     };
   }
-  attributes.subspecs = ['Core', 'CPP', 'GL'];
+
+  // GL subspec is available as of SDK 26
+  if (sdkMajorVersion < 26) {
+    attributes.subspecs = ['Core', 'CPP'];
+  } else {
+    attributes.subspecs = ['Core', 'CPP', 'GL'];
+  }
 
   let dependency = `pod 'ExpoKit',
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
@@ -384,7 +391,7 @@ async function renderPodfileAsync(
 
   let substitutions = {
     EXPONENT_CLIENT_DEPS: podDependencies,
-    EXPOKIT_DEPENDENCY: _renderExpoKitDependency(expoKitDependencyOptions),
+    EXPOKIT_DEPENDENCY: _renderExpoKitDependency(expoKitDependencyOptions, sdkVersion),
     PODFILE_UNVERSIONED_RN_DEPENDENCY: _renderUnversionedReactNativeDependency(
       rnDependencyOptions,
       sdkVersion
