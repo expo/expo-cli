@@ -27,7 +27,9 @@ export async function startSession(
     let user = await UserManager.getCurrentUserAsync();
 
     if (!user) {
-      throw new Error('development sessions can only be initiated for logged in users');
+      // NOTE(brentvatne) let's just bail out in this case for now
+      // throw new Error('development sessions can only be initiated for logged in users');
+      return;
     }
 
     try {
