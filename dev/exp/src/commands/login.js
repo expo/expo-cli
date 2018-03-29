@@ -8,7 +8,7 @@ export default (program: any) => {
   program
     .command('login')
     .alias('signin')
-    .description('Login to Expo')
+    .description('Login with your Expo account')
     .option('-u, --username [string]', 'Username')
     .option('-p, --password [string]', 'Password')
     .asyncAction(login);

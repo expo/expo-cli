@@ -13,8 +13,7 @@ export default (program: any) => {
   program
     .command('fetch:ios:certs [project-dir]')
     .description(
-      `Fetch this project's iOS certificates and provisioning profile.
-Writes certificates to PROJECT_DIR/PROJECT_NAME_(dist|push).p12 and prints passwords to stdout.`
+      `Fetch this project's iOS certificates and provisioning profile. Writes certificates to PROJECT_DIR/PROJECT_NAME_(dist|push).p12 and prints passwords to stdout.`
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       const {

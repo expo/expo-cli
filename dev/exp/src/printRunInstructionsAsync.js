@@ -13,7 +13,7 @@ export default async function printRunInstructionsAsync() {
     log(
       `${chalk.underline('iOS devices')}: run ${chalk.bold(
         'exp send -s <your-phone-number-or-email>'
-      )} to send the URL to your device.`
+      )} in this project directory in another terminal window to send the URL to your device.`
     );
 
     // NOTE(brentvatne) Uncomment this when we update iOS client

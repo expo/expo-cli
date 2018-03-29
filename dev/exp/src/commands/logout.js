@@ -18,6 +18,6 @@ async function action(options) {
 export default (program: any) => {
   program
     .command('logout')
-    .description('Logout from exp.host')
+    .description('Logout from your Expo account')
     .asyncAction(action);
 };
