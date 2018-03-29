@@ -56,7 +56,9 @@ async function action(projectDir, options) {
 
   log('Your URL is: ' + chalk.underline(url));
 
-  await printRunInstructionsAsync();
+  if (!exp.isDetached) {
+    await printRunInstructionsAsync();
+  }
 
   if (isUrlFallback) {
     await ProjectSettings.setAsync(projectDir, { hostType: 'lan' });
