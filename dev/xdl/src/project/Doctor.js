@@ -26,8 +26,8 @@ export const FATAL = 3;
 
 const MIN_WATCHMAN_VERSION = '4.6.0';
 const MIN_NPM_VERSION = '3.0.0';
-const CORRECT_NPM_VERSION = '4.6.1';
-const WARN_NPM_VERSION_RANGES = ['>= 5.0.0'];
+const CORRECT_NPM_VERSION = 'latest';
+const WARN_NPM_VERSION_RANGES = ['>= 5.0.0 < 5.7.0'];
 const BAD_NPM_VERSION_RANGES = ['>= 5.0.0 <= 5.0.3'];
 
 function _isNpmVersionWithinRanges(npmVersion, ranges) {
@@ -55,7 +55,7 @@ async function _checkNpmVersionAsync(projectRoot) {
       ProjectUtils.logError(
         projectRoot,
         'expo',
-        `Error: You are using npm version ${npmVersion}. We recommend version ${CORRECT_NPM_VERSION}. To install it, run 'npm i -g npm@${CORRECT_NPM_VERSION}'.`,
+        `Error: You are using npm version ${npmVersion}. We recommend the latest version ${CORRECT_NPM_VERSION}. To install it, run 'npm i -g npm@${CORRECT_NPM_VERSION}'.`,
         'doctor-npm-version'
       );
       return WARNING;
