@@ -22,11 +22,11 @@ async function getRecipient(sendTo) {
   return recipient;
 }
 
-async function sendUrlAsync(url, recipient) {
+async function sendUrlAsync(url, recipient, allowUnauthed = false) {
   log('Sending URL to', recipient);
   simpleSpinner.start();
   try {
-    var result = await Exp.sendAsync(recipient, url);
+    var result = await Exp.sendAsync(recipient, url, allowUnauthed);
   } finally {
     simpleSpinner.stop();
   }
