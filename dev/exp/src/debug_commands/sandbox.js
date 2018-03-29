@@ -8,7 +8,7 @@ import rimraf from 'rimraf';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 
-import IOSBuilder from './build/IOSBuilder';
+import IOSBuilder from '../commands/build/IOSBuilder';
 
 const HOME_APP_JSON = {
   expo: {
