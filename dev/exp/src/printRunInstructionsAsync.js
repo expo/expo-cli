@@ -15,11 +15,13 @@ export default async function printRunInstructionsAsync() {
         'exp send -s <your-phone-number-or-email>'
       )} to send the URL to your device.`
     );
-    log(
-      `Alternatively, sign in to your account (${chalk.bold(
-        user.username
-      )}) in the latest version of the Expo client on your iOS or Android device. Your projects will automatically appear in the "Projects" tab.`
-    );
+
+    // NOTE(brentvatne) Uncomment this when we update iOS client
+    // log(
+    //   `Alternatively, sign in to your account (${chalk.bold(
+    //     user.username
+    //   )}) in the latest version of the Expo client on your iOS or Android device. Your projects will automatically appear in the "Projects" tab.`
+    // );
   }
 
   log.newLine();
