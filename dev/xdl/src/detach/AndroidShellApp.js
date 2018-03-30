@@ -321,6 +321,8 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   if (privateConfigFile) {
     let privateConfigContents = await fs.readFile(privateConfigFile, 'utf8');
     privateConfig = JSON.parse(privateConfigContents);
+  } else if (manifest.android) {
+    privateConfig = manifest.android.config;
   }
 
   let androidBuildConfiguration;
@@ -905,7 +907,6 @@ export async function runShellAppModificationsAsync(
     let fabric = privateConfig.fabric;
     let googleMaps = privateConfig.googleMaps;
     let googleSignIn = privateConfig.googleSignIn;
-    let googleServicesFile = privateConfig.googleServicesFile;
 
     // Branch
     if (branch) {
@@ -961,42 +962,39 @@ export async function runShellAppModificationsAsync(
       certificateHash = googleSignIn.certificateHash;
       googleAndroidApiKey = googleSignIn.apiKey;
     }
+  }
 
+  if (manifest.android && manifest.android.googleServicesFile) {
     // google-services.json
     // Used for configuring FCM
-    if (googleServicesFile) {
-      await saveUrlToPathAsync(
-        googleServicesFile,
-        path.join(shellPath, 'app', 'google-services.json')
-      );
+    await fs.writeFile(path.join(shellPath, 'app', 'google-services.json'), manifest.android.googleServicesFile);
 
-      await regexFileAsync(
-        '<!-- ADD FCM CONFIG HERE -->',
-        `<service
-          android:name=".fcm.ExpoFcmMessagingService">
-          <intent-filter>
-              <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-          </intent-filter>
-        </service>
-        <service
-          android:name=".fcm.ExpoFcmInstanceIDService">
-          <intent-filter>
-              <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-          </intent-filter>
-        </service>
-        <meta-data
-          android:name="com.google.firebase.messaging.default_notification_icon"
-          android:resource="@drawable/shell_notification_icon" />
-        <meta-data
-          android:name="com.google.firebase.messaging.default_notification_color"
-          android:resource="@color/colorAccent" />
-        <service
-          android:name=".fcm.FcmRegistrationIntentService"
-          android:exported="false">
-        </service>`,
-        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
-      );
-    }
+    await regexFileAsync(
+      '<!-- ADD FCM CONFIG HERE -->',
+      `<service
+        android:name=".fcm.ExpoFcmMessagingService">
+        <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+        </intent-filter>
+      </service>
+      <service
+        android:name=".fcm.ExpoFcmInstanceIDService">
+        <intent-filter>
+            <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+        </intent-filter>
+      </service>
+      <meta-data
+        android:name="com.google.firebase.messaging.default_notification_icon"
+        android:resource="@drawable/shell_notification_icon" />
+      <meta-data
+        android:name="com.google.firebase.messaging.default_notification_color"
+        android:resource="@color/colorAccent" />
+      <service
+        android:name=".fcm.FcmRegistrationIntentService"
+        android:exported="false">
+      </service>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
   }
 
   // Google sign in

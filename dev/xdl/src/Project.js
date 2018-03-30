@@ -198,6 +198,13 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
   return response.body;
 }
 
+async function _resolveGoogleServicesFile(projectRoot, manifest) {
+  if (manifest.android && manifest.android.googleServicesFile) {
+    const contents = await fs.readFile(manifest.android.googleServicesFile, 'utf8');
+    manifest.android.googleServicesFile = contents;
+  }
+}
+
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
@@ -644,6 +651,7 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
     },
     true
   );
+  await _resolveGoogleServicesFile(projectRoot, exp);
 
   logger.global.info('Uploading assets');
 
@@ -1380,6 +1388,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         manifest,
         async path => manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path
       ); // the server normally inserts this but if we're offline we'll do it here
+      await _resolveGoogleServicesFile(projectRoot, manifest);
       const hostUUID = await UserSettings.anonymousIdentifier();
       if (Config.offline) {
         manifest.id = `@anonymous/${manifest.slug}-${hostUUID}`;
