@@ -995,6 +995,23 @@ export async function runShellAppModificationsAsync(
       </service>`,
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
+
+    await regexFileAsync(
+      'FCM_ENABLED = false',
+      'FCM_ENABLED = true',
+      path.join(
+        shellPath,
+        'app',
+        'src',
+        'main',
+        'java',
+        'host',
+        'exp',
+        'exponent',
+        'generated',
+        'AppConstants.java'
+      )
+    );
   }
 
   // Google sign in
