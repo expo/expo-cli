@@ -35,6 +35,23 @@ export default (program: any) => {
     }, true);
 
   program
+    .command('push:android:show [project-dir]')
+    .description('Print the value currently in use for FCM notifications for this project.')
+    .asyncActionProjectDir(async (projectDir, options) => {
+      const { args: { remotePackageName } } = await Exp.getPublishInfoAsync(projectDir);
+      let user = await User.getCurrentUserAsync();
+      let apiClient = ApiV2.clientForUser(user);
+
+      let result = await apiClient.getAsync(`credentials/push/android/${remotePackageName}`);
+
+      if (result.status === 'ok' && result.fcmApiKey) {
+        console.log(JSON.stringify(result));
+      } else {
+        throw new Error('Server returned an invalid result!');
+      }
+    }, true);
+
+  program
     .command('push:android:clear [project-dir]')
     .description('Deletes a previously uploaded FCM credential.')
     .asyncActionProjectDir(async (projectDir, options) => {
