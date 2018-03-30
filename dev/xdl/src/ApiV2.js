@@ -134,6 +134,23 @@ export default class ApiV2Client {
     );
   }
 
+  async deleteAsync(
+    methodName: string,
+    data: Object = {},
+    extraOptions: Object = {},
+    returnEntireResponse: boolean = false
+  ): Promise<*> {
+    return this._requestAsync(
+      methodName,
+      {
+        httpMethod: 'delete',
+        body: data,
+      },
+      extraOptions,
+      returnEntireResponse
+    );
+  }
+
   async _requestAsync(
     methodName: string,
     options: RequestOptions,
