@@ -1366,7 +1366,9 @@ export async function startExpoServerAsync(projectRoot: string) {
         packagerOpts,
         req.hostname
       );
-      let path = `/${mainModuleName}.bundle?platform=${platform}&${queryParams}`;
+      let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
+        platform
+      )}&${queryParams}`;
       manifest.bundleUrl =
         (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, req.hostname)) +
         path;

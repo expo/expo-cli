@@ -127,7 +127,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
     ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'node_modules')
     : path.join(projectRoot, 'node_modules');
   let pluginModule = path.join(nodeModulesPath, sdkPkg, 'tools', 'hashAssetFiles');
-  queryParams += `&assetPlugin=${pluginModule}`;
+  queryParams += `&assetPlugin=${encodeURIComponent(pluginModule)}`;
 
   // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
   // major version in the sdkVersion field, so check for 11.0.0 to be sure.
