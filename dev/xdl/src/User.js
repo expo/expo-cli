@@ -513,10 +513,13 @@ export class UserManagerInstance {
         }
         if (this._isTokenExpired(idToken)) {
           // User has expired token and no session -- they need to log back in if Auth0 is gone
-          const dateAuth0Gone = new Date(2018, 3, 2); // April 1, 2018 - the months are 0 indexed
+          const dateAuth0Gone = new Date(2018, 6, 2); // July 1, 2018 - the months are 0 indexed
           if (Date.now() > dateAuth0Gone) {
             await this.logoutAsync();
-            throw new XDLError('Tokens expired, logging out. Please try again.');
+            throw new XDLError(
+              ErrorCode.CREDENTIAL_ERROR,
+              'Tokens expired, logging out. Please try again.'
+            );
           }
           const delegationResult = await this._auth0RefreshToken(
             refreshTokenClientId, // client id that's associated with the refresh token
