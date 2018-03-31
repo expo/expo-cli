@@ -89,5 +89,5 @@ export default (program: any) => {
         }
         throw e;
       }
-    });
+    }, /* skipProjectValidation: */true);
 };

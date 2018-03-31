@@ -144,5 +144,5 @@ export default program => {
       '-t, --projectType [type]',
       'Specify what type of template to use. Run without this option to see all choices.'
     )
-    .asyncActionProjectDir(action, true /* skipProjectValidation */);
+    .asyncActionProjectDir(action, /* skipProjectValidation: */true, /* skipAuthCheck: */true);
 };
