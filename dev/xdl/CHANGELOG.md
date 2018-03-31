@@ -10,7 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
-## [48.2.0] - 2018-03-18
+## [48.3.0] - 2018-03-31
+
+### Changed
+
+* Made reading authentication state more robust.
+
+## [48.2.0] - 2018-03-30
 
 ### Added
 

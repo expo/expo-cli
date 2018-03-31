@@ -10,7 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
-## [51.2.0] - 2018-03-18
+## [51.4.0] - 2018-03-31
+
+* Remove unnecessary validations.
+* Update `@expo/json-file` dependency.
+
+## [51.2.0] - 2018-03-30
 
 ### Added
 
