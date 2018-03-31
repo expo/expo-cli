@@ -257,10 +257,15 @@
           "Configuration for how and when the app should request OTA JavaScript updates",
         "type": "object",
         "properties": {
+          "enabled": {
+            "description":
+              "If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through Apple review. Defaults to true. (Note that this will not work out of the box with ExpoKit projects)",
+            "type": "boolean"
+          },
           "checkAutomatically": {
             "description":
-              "By default, Expo will check for updates every time the app is launched. Set this to `'never'` to disable automatic checking.",
-            "enum": ["never", "launch"],
+              "By default, Expo will check for updates every time the app is loaded. Set this to `'ON_ERROR_RECOVERY'` to disable automatic checking unless recovering from an error.",
+            "enum": ["ON_ERROR_RECOVERY", "ON_LOAD"],
             "type": ["array", "boolean", "number", "object", "string", "null"]
           },
           "fallbackToCacheTimeout": {
@@ -384,8 +389,9 @@
           },
           "isRemoteJSEnabled": {
             "description":
-              "If set to false, your standalone app will never download any code, and will only use code bundled locally on the device. In that case, all updates to your app must be submitted through Apple review. Defaults to true. (Note that this will not work out of the box with ExpoKit projects)",
-            "type": "boolean"
+              "DEPRECATED: use `updates.enabled` instead.",
+            "type": "boolean",
+            "deprecated": true
           },
           "loadJSInBackgroundExperimental": {
             "description":

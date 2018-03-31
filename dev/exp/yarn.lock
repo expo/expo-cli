@@ -6388,9 +6388,9 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@48.1.4:
-  version "48.1.4"
-  resolved "https://registry.yarnpkg.com/xdl/-/xdl-48.1.4.tgz#95e75ab3537034508e5d0e1cb476c8c661df43b4"
+xdl@48.2.0:
+  version "48.2.0"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-48.2.0.tgz#2a6acaa9837628a8098acdf54c3ee64c4ce8e178"
   dependencies:
     "@expo/bunyan" "^1.8.10"
     "@expo/json-file" "^5.3.0"

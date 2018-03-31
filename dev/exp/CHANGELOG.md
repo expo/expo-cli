@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [51.2.0] - 2018-03-18
+
+### Added
+
+* Added `push:android` commands and support for `android.googleServicesFile` app.json config.
+
 ## [50.0.1] - 2018-03-16
 
 ### Changed

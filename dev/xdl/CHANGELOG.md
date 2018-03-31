@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [48.2.0] - 2018-03-18
+
+### Added
+
+* Added `push:android` commands and support for `android.googleServicesFile` app.json config.
+
 ## [48.0.7] - 2018-03-24
 
 * Fix a regression in `Detach`.
