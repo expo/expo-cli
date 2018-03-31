@@ -3,6 +3,7 @@
  */
 
 import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import freeportAsync from 'freeport-async';
 import http from 'http';
 import qs from 'querystring';
@@ -356,13 +357,23 @@ export class UserManagerInstance {
       }
 
       // Not cached, check for token
+      let auth = await UserSettings.getAsync('auth', {});
+      if (isEmpty(auth)) {
+        // XXX(ville):
+        // We sometimes read an empty string from ~/.expo/state.json,
+        // even though it has valid credentials in it.
+        // We don't know why.
+        // An empty string can't be parsed as JSON, so an empty default object is returned.
+        // In this case, retrying usually helps.
+        auth = await UserSettings.getAsync('auth', {});
+      }
       let {
         currentConnection,
         idToken,
         accessToken,
         refreshToken,
         sessionSecret,
-      } = await UserSettings.getAsync('auth', {});
+      } = auth;
 
       // No tokens/session, no current user. Need to login
       if ((!currentConnection || !idToken || !accessToken || !refreshToken) && !sessionSecret) {
