@@ -1,5 +1,5 @@
 {
-  "name": "@expo/json-file-internal",
+  "name": "@expo/json-file",
   "version": "7.0.0",
   "description": "A module for reading, writing, and manipulating JSON files",
   "main": "build/JsonFile.js",
