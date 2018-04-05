@@ -9,7 +9,6 @@ import mkdirp from 'mkdirp';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
-import joi from 'joi';
 import rimraf from 'rimraf';
 
 import * as Analytics from './Analytics';
@@ -34,7 +33,6 @@ export { default as convertProjectAsync } from './project/Convert';
 
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
-const validateAsync = promisify(joi.validate);
 const mkdirpAsync = promisify(mkdirp);
 
 export async function determineEntryPointAsync(root: string) {
@@ -81,17 +79,6 @@ async function _downloadStarterAppAsync(templateId, progressFunction, retryFunct
 }
 
 export async function downloadTemplateApp(templateId: string, selectedDir: string, opts: any) {
-  // Validate
-  let schema = joi.object().keys({
-    name: joi.string().required(),
-  });
-
-  // Should we validate that name is a valid name here?
-  try {
-    await validateAsync({ name: opts.name }, schema);
-  } catch (e) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
-  }
   let name = opts.name;
   let root = path.join(selectedDir, name);
 
@@ -100,20 +87,20 @@ export async function downloadTemplateApp(templateId: string, selectedDir: strin
     name,
   });
 
-  let fileExists = true;
+  let stats;
   try {
     // If file doesn't exist it will throw an error.
     // Don't want to continue unless there is nothing there.
-    fs.statSync(root);
+    stats = fs.statSync(root);
   } catch (e) {
-    fileExists = false;
+    stats = null;
   }
   // This check is required because without it, the retry button would throw an error because the directory already exists,
   // even though it is empty.
-  if (fileExists && fs.readdirSync(root).length !== 0) {
+  if (stats && !(stats.isDirectory() && fs.readdirSync(root).length === 0)) {
     throw new XDLError(
       ErrorCode.DIRECTORY_ALREADY_EXISTS,
-      `That directory already exists. Please choose a different parent directory or project name.`
+      `The path "${root}" already exists.\nPlease choose a different parent directory or project name.`
     );
   }
 
