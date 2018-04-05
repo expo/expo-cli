@@ -84,9 +84,8 @@ async function _downloadStarterAppAsync(templateId, progressFunction, retryFunct
     };
   }
 
-  let url = `https://s3.amazonaws.com/exp-starter-apps/${filename}`;
   await Api.downloadAsync(
-    url,
+    templateApp.url,
     path.join(_starterAppCacheDirectory(), filename),
     {},
     progressFunction,
