@@ -1,9 +1,12 @@
 // @flow
 
 import fs from 'fs-extra';
-import mkdirp from 'mkdirp-promise';
+import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
+import promisify from 'util.promisify';
+
+const mkdirpAsync = promisify(mkdirp);
 
 /*
 A Cacher is used to wrap a fallible or expensive function and to memoize its results on disk
@@ -46,7 +49,7 @@ class Cacher<T> {
   }
 
   async getAsync(): Promise<T> {
-    await mkdirp(getCacheDir());
+    await mkdirpAsync(getCacheDir());
 
     let mtime: Date;
     try {
