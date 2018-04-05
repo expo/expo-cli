@@ -3,7 +3,6 @@
  */
 
 import promisify from 'util.promisify';
-import existsAsync from 'exists-async';
 import fs from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
@@ -67,7 +66,7 @@ async function _downloadStarterAppAsync(templateId, progressFunction, retryFunct
     `${templateId}-${templateApp.version}.tar.gz`
   );
 
-  if (await existsAsync(starterAppPath)) {
+  if (await fs.exists(starterAppPath)) {
     return starterAppPath;
   }
 

@@ -3,7 +3,6 @@
  */
 
 import delayAsync from 'delay-async';
-import existsAsync from 'exists-async';
 import glob from 'glob-promise';
 import homeDir from 'home-dir';
 import mkdirp from 'mkdirp';
@@ -261,7 +260,7 @@ export async function _downloadSimulatorAppAsync(url) {
   let versions = await Api.versionsAsync();
   let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
-  if (await existsAsync(dir)) {
+  if (await fs.exists(dir)) {
     let filesInDir = await fs.readdir(dir);
     if (filesInDir.length > 0) {
       return dir;

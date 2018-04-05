@@ -47,7 +47,6 @@
     "decache": "^4.1.0",
     "delay-async": "^1.0.0",
     "es6-error": "^4.0.2",
-    "exists-async": "^2.0.0",
     "express": "^4.13.4",
     "file-type": "^4.0.0",
     "follow-redirects": "^1.2.3",

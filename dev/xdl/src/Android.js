@@ -3,8 +3,8 @@
  */
 
 import _ from 'lodash';
+import fs from 'fs-extra';
 import spawnAsync from '@expo/spawn-async';
-import existsAsync from 'exists-async';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import semver from 'semver';
@@ -115,7 +115,7 @@ async function _downloadApkAsync() {
   let versions = await Api.versionsAsync();
   let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
-  if (await existsAsync(apkPath)) {
+  if (await fs.exists(apkPath)) {
     return apkPath;
   }
 
