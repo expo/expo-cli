@@ -4,7 +4,7 @@
 
 import promisify from 'util.promisify';
 import existsAsync from 'exists-async';
-import fs from 'fs';
+import fs from 'fs-extra';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
@@ -31,8 +31,6 @@ export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 
 export { default as convertProjectAsync } from './project/Convert';
 
-const readFileAsync = promisify(fs.readFile);
-const writeFileAsync = promisify(fs.writeFile);
 const mkdirpAsync = promisify(mkdirp);
 
 export async function determineEntryPointAsync(root: string) {
@@ -122,11 +120,11 @@ export async function extractTemplateApp(starterAppPath: string, name: string, r
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
 
   // Update app.json
-  let appJson = await readFileAsync(path.join(root, 'app.json'), 'utf8');
+  let appJson = await fs.readFile(path.join(root, 'app.json'), 'utf8');
   let customAppJson = appJson
     .replace(/\"My New Project\"/, `"${name}"`)
     .replace(/\"my-new-project\"/, `"${name}"`);
-  await writeFileAsync(path.join(root, 'app.json'), customAppJson, 'utf8');
+  await fs.writeFile(path.join(root, 'app.json'), customAppJson, 'utf8');
 
   await initGitRepo(root);
 

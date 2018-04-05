@@ -4,11 +4,10 @@
 
 import _ from 'lodash';
 import child_process from 'child_process';
-import fs from 'fs';
+import fs from 'fs-extra';
 import JsonFile from '@expo/json-file';
 import os from 'os';
 import path from 'path';
-import promisify from 'util.promisify';
 import rimraf from 'rimraf';
 import spawnAsync from '@expo/spawn-async';
 import tar from 'tar';
@@ -23,8 +22,6 @@ import UserManager from './User';
 import UserSettings from './UserSettings';
 import * as Utils from './Utils';
 import * as Watchman from './Watchman';
-
-const readFileAsync = promisify(fs.readFile);
 
 async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   let user = await UserManager.getCurrentUserAsync();
@@ -76,7 +73,7 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   if (isNode()) {
     file = fs.createReadStream(archivePath);
   } else {
-    file = new Blob([await readFileAsync(archivePath)]);
+    file = new Blob([await fs.readFile(archivePath)]);
   }
   let formData = new FormData();
   formData.append('archive', file);

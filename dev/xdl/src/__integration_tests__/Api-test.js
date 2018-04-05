@@ -7,7 +7,6 @@ import path from 'path';
 import HashIds from 'hashids';
 import uuid from 'uuid';
 import os from 'os';
-import promisify from 'util.promisify';
 import ApiV2Client from '../ApiV2';
 import { stopAsync } from '../Project';
 import { UserManagerInstance } from '../User';
@@ -20,8 +19,6 @@ const _makeShortId = (salt: string, minLength: number = 10): string => {
   const hashIds = new HashIds(salt, minLength);
   return hashIds.encode(Date.now());
 };
-
-const statAsync = promisify(fs.stat);
 
 describe('api', () => {
   let userForTest;
@@ -80,7 +77,7 @@ describe('api', () => {
     });
     // $FlowFixMe: missing definition for expect.any
     expect(starterAppPath).toEqual(expect.any(String));
-    let stats = await statAsync(starterAppPath);
+    let stats = await fs.stat(starterAppPath);
     expect(stats.isFile());
   });
 });
