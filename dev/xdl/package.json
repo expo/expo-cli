@@ -43,7 +43,6 @@
     "auth0-js": "9.3.3",
     "axios": "0.16.2",
     "body-parser": "^1.15.2",
-    "chalk": "^2.3.0",
     "concat-stream": "^1.6.0",
     "decache": "^4.1.0",
     "delay-async": "^1.0.0",

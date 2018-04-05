@@ -14,7 +14,6 @@ import path from 'path';
 import rimraf from 'rimraf';
 import glob from 'glob-promise';
 import uuid from 'uuid';
-import chalk from 'chalk';
 import inquirer from 'inquirer';
 
 import {
