@@ -168,7 +168,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     // Publish the experience, if necessary
     const publishedExpIds = await this.ensureReleaseExists('ios');
     // Initiate the build with the published experience
-    await this.build(publishedExpIds, 'ios');
+    await this.build(publishedExpIds, 'ios', { bundleIdentifier });
   }
 
   async runningAsExpert(credsStarter) {

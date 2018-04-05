@@ -209,7 +209,7 @@ ${buildStatus.id}
     return false;
   }
 
-  async build(expIds: Array<string>, platform: string) {
+  async build(expIds: Array<string>, platform: string, extraArgs: { bundleIdentifier?: string } = {}) {
     log('Building...');
 
     let opts = {
@@ -223,6 +223,7 @@ ${buildStatus.id}
       opts = {
         ...opts,
         type: this.options.type,
+        bundleIdentifier: extraArgs.bundleIdentifier,
       };
     }
 

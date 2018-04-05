@@ -875,6 +875,7 @@ export async function buildAsync(
     expIds?: Array<string>,
     type?: string,
     releaseChannel?: string,
+    bundleIdentifier?: string,
   } = {}
 ) {
   await UserManager.ensureLoggedInAsync();
@@ -891,6 +892,7 @@ export async function buildAsync(
     expIds: joi.array(),
     type: joi.any().valid('archive', 'simulator', 'client'),
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
+    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-\.]+$/),
   });
 
   try {
