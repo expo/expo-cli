@@ -61,40 +61,23 @@ function _starterAppCacheDirectory() {
 
 async function _downloadStarterAppAsync(templateId, progressFunction, retryFunction) {
   let versions = await Api.versionsAsync();
-  let templateApp = null;
-  for (let i = 0; i < versions.templatesv2.length; i++) {
-    if (templateId === versions.templatesv2[i].id) {
-      templateApp = versions.templatesv2[i];
-    }
-  }
-
+  let templateApp = versions.templatesv2.find(template => template.id === templateId);
   if (!templateApp) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, `No template app with id ${templateId}.`);
   }
 
-  let starterAppVersion = templateApp.version;
-  let starterAppName = `${templateId}-${starterAppVersion}`;
-  let filename = `${starterAppName}.tar.gz`;
-  let starterAppPath = path.join(_starterAppCacheDirectory(), filename);
+  let starterAppPath = path.join(
+    _starterAppCacheDirectory(),
+    `${templateId}-${templateApp.version}.tar.gz`
+  );
 
   if (await existsAsync(starterAppPath)) {
-    return {
-      starterAppPath,
-      starterAppName,
-    };
+    return starterAppPath;
   }
 
-  await Api.downloadAsync(
-    templateApp.url,
-    path.join(_starterAppCacheDirectory(), filename),
-    {},
-    progressFunction,
-    retryFunction
-  );
-  return {
-    starterAppPath,
-    starterAppName,
-  };
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.DOWNLOADING);
+  await Api.downloadAsync(templateApp.url, starterAppPath, {}, progressFunction, retryFunction);
+  return starterAppPath;
 }
 
 export async function downloadTemplateApp(templateId: string, selectedDir: string, opts: any) {
@@ -136,8 +119,7 @@ export async function downloadTemplateApp(templateId: string, selectedDir: strin
 
   // Download files
   await mkdirpAsync(root);
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.DOWNLOADING);
-  let { starterAppPath } = await _downloadStarterAppAsync(
+  let starterAppPath = await _downloadStarterAppAsync(
     templateId,
     opts.progressFunction,
     opts.retryFunction
