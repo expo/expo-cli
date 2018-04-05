@@ -1,6 +1,6 @@
 // @flow
 
-import fsp from 'mz/fs';
+import fs from 'fs-extra';
 import mkdirp from 'mkdirp-promise';
 import os from 'os';
 import path from 'path';
@@ -50,13 +50,13 @@ class Cacher<T> {
 
     let mtime: Date;
     try {
-      const stats = await fsp.stat(this.filename);
+      const stats = await fs.stat(this.filename);
       mtime = stats.mtime;
     } catch (e) {
       if (this.bootstrapFile) {
         try {
-          const bootstrapContents = (await fsp.readFile(this.bootstrapFile)).toString();
-          await fsp.writeFile(this.filename, bootstrapContents, 'utf8');
+          const bootstrapContents = (await fs.readFile(this.bootstrapFile)).toString();
+          await fs.writeFile(this.filename, bootstrapContents, 'utf8');
         } catch (e) {
           // intentional no-op
         }
@@ -72,7 +72,7 @@ class Cacher<T> {
       try {
         fromCache = await this.refresher();
         try {
-          await fsp.writeFile(this.filename, JSON.stringify(fromCache), 'utf8');
+          await fs.writeFile(this.filename, JSON.stringify(fromCache), 'utf8');
         } catch (e) {
           this.writeError = e;
           // do nothing, if the refresh succeeded it'll be returned, if the persist failed we don't care
@@ -84,7 +84,7 @@ class Cacher<T> {
 
     if (!fromCache) {
       try {
-        fromCache = JSON.parse(await fsp.readFile(this.filename));
+        fromCache = JSON.parse(await fs.readFile(this.filename));
       } catch (e) {
         this.readError = e;
         // if this fails then we've exhausted our options and it should remain null
@@ -104,7 +104,7 @@ class Cacher<T> {
 
   async clearAsync(): Promise<void> {
     try {
-      await fsp.unlink(this.filename);
+      await fs.unlink(this.filename);
     } catch (e) {
       this.writeError = e;
     }

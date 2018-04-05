@@ -2,10 +2,8 @@
  * @flow
  */
 
-import fs from 'fs';
-import fsp from 'mz/fs';
+import fs from 'fs-extra';
 import path from 'path';
-
 import JsonFile from '@expo/json-file';
 import slug from 'slugify';
 
@@ -130,7 +128,7 @@ export function attachLoggerStream(projectRoot: string, stream: any) {
 
 export async function fileExistsAsync(file: string): Promise<boolean> {
   try {
-    return (await fsp.stat(file)).isFile();
+    return (await fs.stat(file)).isFile();
   } catch (e) {
     return false;
   }

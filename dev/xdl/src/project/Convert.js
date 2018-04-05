@@ -6,7 +6,7 @@ import slug from 'slugify';
 
 import path from 'path';
 import jsonfile from 'jsonfile';
-import fse from 'fs-extra';
+import fs from 'fs-extra';
 import spawnAsync from '@expo/spawn-async';
 import expJsonTemplate from './templates/exp';
 import babelRcTemplate from './templates/babelrc';
@@ -107,7 +107,7 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
   let nodeModulesPath = path.join(projectDir, '/node_modules');
   let nextStepMessagePath = path.join(projectDir, '/expo-next-steps.txt');
 
-  fse.removeSync(nodeModulesPath);
+  fs.removeSync(nodeModulesPath);
   console.log('Running npm install, this may take a few minutes.');
   console.log('-----------------------------------------------------');
   let npmInstallError = false;
@@ -140,6 +140,6 @@ async function installAndInstructAsync(projectDir, unsupportedPackagesUsed) {
 6. Open your app in XDE and run it, fix bugs as they arise.
 `;
   console.log(nextStepMessage);
-  fse.outputFileSync(nextStepMessagePath, nextStepMessage);
+  fs.outputFileSync(nextStepMessagePath, nextStepMessage);
   console.log('(This message has been saved to expo-next-steps.txt for your convenience)');
 }

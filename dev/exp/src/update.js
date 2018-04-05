@@ -2,20 +2,18 @@
  * @flow
  */
 
-import child_process from 'mz/child_process';
 import JsonFile from '@expo/json-file';
 import path from 'path';
 import semver from 'semver';
+import spawnAsync from '@expo/spawn-async';
 
 import { FsCache, UserSettings } from 'xdl';
 import packageJSON from '../package.json';
 
 const UpdateCacher = new FsCache.Cacher(
   async () => {
-    const [version, _] = await child_process.exec(`npm view ${packageJSON.name} version`);
-    return {
-      latestVersion: version.trim(),
-    };
+    let result = await spawnAsync('npm', ['view', packageJSON.name, 'version']);
+    return { latestVersion: result.stdout.trim() };
   },
   `${packageJSON.name}-updates.json`,
   24 * 60 * 60 * 1000 // one day

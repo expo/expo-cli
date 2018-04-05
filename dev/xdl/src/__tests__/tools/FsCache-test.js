@@ -1,6 +1,6 @@
 jest.mock('analytics-node');
 
-const fsp = require('mz/fs');
+const fs = require('fs-extra');
 const path = require('path');
 const pathExists = require('path-exists');
 
@@ -37,7 +37,7 @@ describe('Cacher', () => {
   });
 
   it('works with a bootstrap file', async () => {
-    const expected = JSON.parse(await fsp.readFile(path.join(__dirname, '../../../package.json')));
+    const expected = JSON.parse(await fs.readFile(path.join(__dirname, '../../../package.json')));
 
     const failCacher = new Cacher(
       () => {
