@@ -202,15 +202,12 @@ export async function readConfigJsonAsync(
       exp = exp[configNamespace];
     }
   } catch (e) {
-    if (e.isJsonFileError) {
-      // TODO: add error codes to json-file
-      if (e.message.startsWith('Error parsing JSON file')) {
-        logError(projectRoot, 'expo', `Error parsing JSON file: ${e.cause.toString()}`);
-        return { exp: null, pkg: null };
-      }
+    if (e.code === 'ENOENT') {
+      // config missing. might be in package.json
+    } else if (e.isJsonFileError) {
+      logError(projectRoot, 'expo', e.message);
+      return { exp: null, pkg: null };
     }
-
-    // exp missing. might be in package.json
   }
 
   try {
@@ -221,11 +218,8 @@ export async function readConfigJsonAsync(
     pkg = await new JsonFile(packageJsonPath).readAsync();
   } catch (e) {
     if (e.isJsonFileError) {
-      // TODO: add error codes to json-file
-      if (e.message.startsWith('Error parsing JSON file')) {
-        logError(projectRoot, 'expo', `Error parsing JSON file: ${e.cause.toString()}`);
-        return { exp: null, pkg: null };
-      }
+      logError(projectRoot, 'expo', e.message);
+      return { exp: null, pkg: null };
     }
 
     // pkg missing
