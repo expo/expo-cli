@@ -42,9 +42,18 @@ const DEFAULT_OPTIONS: Options<*> = {
  * and object with string keys and either objects or primitive types as values.
  * @type {[type]}
  */
-class JsonFile<JSONObject: JSONT> {
+export default class JsonFile<JSONObject: JSONT> {
   file: string;
   options: Options<JSONObject>;
+
+  static readAsync = readAsync;
+  static writeAsync = writeAsync;
+  static getAsync = getAsync;
+  static setAsync = setAsync;
+  static mergeAsync = mergeAsync;
+  static deleteKeyAsync = deleteKeyAsync;
+  static deleteKeysAsync = deleteKeysAsync;
+  static rewriteAsync = rewriteAsync;
 
   constructor(file: string, options?: Options<JSONObject> = {}) {
     this.file = file;
@@ -256,16 +265,3 @@ function _getOption<JSONObject: JSONT, X: $Subtype<$Keys<Options<JSONObject>>>>(
   }
   return DEFAULT_OPTIONS[field];
 }
-
-Object.assign(JsonFile, {
-  readAsync,
-  writeAsync,
-  getAsync,
-  setAsync,
-  mergeAsync,
-  deleteKeyAsync,
-  deleteKeysAsync,
-  rewriteAsync,
-});
-
-export default JsonFile;
