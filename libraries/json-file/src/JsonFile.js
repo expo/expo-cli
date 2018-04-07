@@ -99,27 +99,27 @@ async function readAsync<JSONObject: JSONT>(
   file: string,
   options?: Options<JSONObject>
 ): Promise<JSONObject> {
-  var json5 = _getOption(options, 'json5');
+  let json;
   try {
-    const json = await readFileAsync(file, 'utf8');
-    try {
-      if (json5) {
-        return JSON5.parse(json);
-      } else {
-        return JSON.parse(json);
-      }
-    } catch (e) {
-      let defaultValue = jsonParseErrorDefault(options);
-      if (defaultValue === undefined) {
-        throw new JsonFileError(`Error parsing JSON file: ${file}`, e);
-      } else {
-        return defaultValue;
-      }
-    }
+    json = await readFileAsync(file, 'utf8');
   } catch (error) {
     let defaultValue = cantReadFileDefault(options);
     if (defaultValue === undefined) {
-      throw new JsonFileError(`Can't read JSON file: ${file}`, error);
+      throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
+    } else {
+      return defaultValue;
+    }
+  }
+  try {
+    if (_getOption(options, 'json5')) {
+      return JSON5.parse(json);
+    } else {
+      return JSON.parse(json);
+    }
+  } catch (e) {
+    let defaultValue = jsonParseErrorDefault(options);
+    if (defaultValue === undefined) {
+      throw new JsonFileError(`Error parsing JSON file: ${file}`, e, 'EJSONPARSE');
     } else {
       return defaultValue;
     }
@@ -225,18 +225,23 @@ async function rewriteAsync<JSONObject: JSONT>(
   return writeAsync(file, object, options);
 }
 
-function jsonParseErrorDefault<JSONObject: JSONT>(options?: Options<JSONObject> = {}): JSONObject {
-  if (typeof options.jsonParseErrorDefault === 'undefined') {
-    return options.default || (({}: any): JSONObject);
+function jsonParseErrorDefault<JSONObject: JSONT>(
+  options?: Options<JSONObject> = {}
+): JSONObject | void {
+  if (options.jsonParseErrorDefault === undefined) {
+    return options.default;
+  } else {
+    return options.jsonParseErrorDefault;
   }
-  return options.jsonParseErrorDefault || (({}: any): JSONObject);
 }
 
-function cantReadFileDefault<JSONObject: JSONT>(options?: Options<JSONObject> = {}): JSONObject {
+function cantReadFileDefault<JSONObject: JSONT>(
+  options?: Options<JSONObject> = {}
+): JSONObject | void {
   if (options.cantReadFileDefault === undefined) {
-    return options.default || (({}: any): JSONObject);
+    return options.default;
   } else {
-    return options.cantReadFileDefault || (({}: any): JSONObject);
+    return options.cantReadFileDefault;
   }
 }
 
