@@ -677,7 +677,11 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
     for (const asset of assets) {
       const file = asset.files && asset.files[0];
       if (asset.__packager_asset && file && fullPatterns.some(p => minimatch(file, p))) {
-        bundledAssets.add('asset_' + asset.hash + (asset.type ? '.' + asset.type : ''));
+        asset.fileHashes.forEach(hash =>
+          bundledAssets.add(
+            "asset_" + hash + (asset.type ? "." + asset.type : "")
+          )
+        );
       }
     }
     exp.bundledAssets = [...bundledAssets];
