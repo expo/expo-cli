@@ -172,7 +172,7 @@ export async function readExpRcAsync(projectRoot: string): Promise<any> {
   }
 
   try {
-    return await new JsonFile(expRcPath, { json5: true }).readAsync();
+    return await JsonFile.readAsync(expRcPath, { json5: true });
   } catch (e) {
     logError(projectRoot, 'expo', `Error parsing JSON file: ${e.toString()}`);
     return {};
@@ -194,7 +194,7 @@ export async function readConfigJsonAsync(
   const { configPath, configName, configNamespace } = await findConfigFileAsync(projectRoot);
 
   try {
-    exp = await new JsonFile(configPath, { json5: true }).readAsync();
+    exp = await JsonFile.readAsync(configPath, { json5: true });
 
     if (configNamespace) {
       // if we're not using exp.json, then we've stashed everything under an expo key
@@ -215,7 +215,7 @@ export async function readConfigJsonAsync(
       exp && exp.nodeModulesPath
         ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
         : path.join(projectRoot, 'package.json');
-    pkg = await new JsonFile(packageJsonPath).readAsync();
+    pkg = await JsonFile.readAsync(packageJsonPath);
   } catch (e) {
     if (e.isJsonFileError) {
       logError(projectRoot, 'expo', e.message);
