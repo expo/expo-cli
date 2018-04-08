@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "@expo/bunyan": "^1.8.10",
-    "@expo/json-file": "^7.0.0",
+    "@expo/json-file": "^8.0.0",
     "@expo/simple-spinner": "^1.0.2",
     "@expo/spawn-async": "^1.3.0",
     "babel-runtime": "^6.9.2",
