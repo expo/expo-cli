@@ -36,11 +36,21 @@ it(`reads JSON statically from a file`, async () => {
 });
 
 it(`reads JSON5 from a file`, async () => {
-  let file = new JsonFile(path.join(__dirname, 'files/test-json5.json'), {
-    json5: true,
-  });
+  let file = new JsonFile(path.join(__dirname, 'files/test-json5.json'), { json5: true });
   let object = await file.readAsync();
   expect(object.itParsedProperly).toBe(42);
+});
+
+it(`has useful error messages for JSON parsing errors`, async () => {
+  await expect(
+    JsonFile.readAsync(path.join(__dirname, 'files/syntax-error.json'))
+  ).rejects.toThrowErrorMatchingSnapshot();
+});
+
+it(`has useful error messages for JSON5 parsing errors`, async () => {
+  await expect(
+    JsonFile.readAsync(path.join(__dirname, 'files/syntax-error.json5'), { json5: true })
+  ).rejects.toThrowErrorMatchingSnapshot();
 });
 
 let obj1 = { x: 1 };

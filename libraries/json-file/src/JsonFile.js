@@ -9,6 +9,7 @@ import set from 'lodash/set';
 import JSON5 from 'json5';
 import writeFileAtomic from 'write-file-atomic';
 import promisify from 'util.promisify';
+import { codeFrameColumns } from '@babel/code-frame';
 
 import JsonFileError from './JsonFileError';
 
@@ -128,6 +129,12 @@ async function readAsync<JSONObject: JSONT>(
   } catch (e) {
     let defaultValue = jsonParseErrorDefault(options);
     if (defaultValue === undefined) {
+      let location = locationFromSyntaxError(e, json);
+      if (location) {
+        let codeFrame = codeFrameColumns(json, { start: location });
+        e.codeFrame = codeFrame;
+        e.message += `\n${codeFrame}`;
+      }
       throw new JsonFileError(`Error parsing JSON file: ${file}`, e, 'EJSONPARSE');
     } else {
       return defaultValue;
@@ -264,4 +271,20 @@ function _getOption<JSONObject: JSONT, X: $Subtype<$Keys<Options<JSONObject>>>>(
     }
   }
   return DEFAULT_OPTIONS[field];
+}
+
+function locationFromSyntaxError(error, sourceString) {
+  // JSON5 SyntaxError has lineNumber and columnNumber.
+  if ('lineNumber' in error && 'columnNumber' in error) {
+    return { line: error.lineNumber, column: error.columnNumber };
+  }
+  // JSON SyntaxError only includes the index in the message.
+  let match = /at position (\d+)/.exec(error.message);
+  if (match) {
+    let index = parseInt(match[1], 10);
+    let lines = sourceString.slice(0, index + 1).split('\n');
+    return { line: lines.length, column: lines[lines.length - 1].length };
+  }
+
+  return null;
 }

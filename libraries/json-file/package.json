@@ -27,6 +27,7 @@
     "build"
   ],
   "dependencies": {
+    "@babel/code-frame": "^7.0.0-beta.44",
     "json5": "^1.0.1",
     "lodash": "^4.17.4",
     "util.promisify": "^1.0.0",
@@ -44,7 +45,7 @@
     "eslint-config-universe": "^1.0.7",
     "flow-bin": "^0.55.0",
     "flow-copy-source": "^1.2.1",
-    "jest": "^21.1.0",
+    "jest": "^22.4.3",
     "mkdirp": "^0.5.1",
     "prettier": "^1.7.4",
     "rimraf": "^2.6.2"
