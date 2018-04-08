@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
 import rimraf from 'rimraf';
@@ -6,10 +7,12 @@ import mkdirp from 'mkdirp';
 
 import JsonFile from '../src/JsonFile';
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 2 * 60 * 1000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 20 * 1000;
 
-beforeAll(done => mkdirp('__fixtures__', done));
-afterAll(done => rimraf('__fixtures__', done));
+const FIXTURES = path.join(os.tmpdir(), 'json-file-fixtures');
+
+beforeAll(done => mkdirp(FIXTURES, done));
+afterAll(done => rimraf(FIXTURES, done));
 
 it(`is a class`, () => {
   let file = new JsonFile(path.join(__dirname, '../package.json'));
@@ -43,30 +46,32 @@ it(`reads JSON5 from a file`, async () => {
 let obj1 = { x: 1 };
 
 it(`writes JSON to a file`, async () => {
-  let file = new JsonFile('__fixtures__/new.json', { json5: true });
+  let filename = path.join(FIXTURES, 'test.json');
+  let file = new JsonFile(filename, { json5: true });
   await file.writeAsync(obj1);
-  expect(fs.existsSync('__fixtures__/new.json')).toBe(true);
+  expect(fs.existsSync(filename)).toBe(true);
   await expect(file.readAsync()).resolves.toEqual(obj1);
 });
 
 it(`rewrite async`, async () => {
-  let file = new JsonFile('__fixtures__/test.json', { json5: true });
+  let filename = path.join(FIXTURES, 'test.json');
+  let file = new JsonFile(filename, { json5: true });
   await file.writeAsync(obj1);
-  expect(fs.existsSync('__fixtures__/test.json')).toBe(true);
+  expect(fs.existsSync(filename)).toBe(true);
   await expect(file.readAsync()).resolves.toEqual(obj1);
   await expect(file.rewriteAsync()).resolves.toBeDefined();
-  expect(fs.existsSync('__fixtures__/test.json')).toBe(true);
+  expect(fs.existsSync(filename)).toBe(true);
   await expect(file.readAsync()).resolves.toEqual(obj1);
 });
 
 it(`changes an existing key in that file`, async () => {
-  let file = new JsonFile('__fixtures__/test.json', { json5: true });
+  let file = new JsonFile(path.join(FIXTURES, 'test.json'), { json5: true });
   await expect(file.setAsync('x', 2)).resolves.toBeDefined();
   await expect(file.readAsync()).resolves.toEqual({ x: 2 });
 });
 
 it(`adds a new key to the file`, async () => {
-  let file = new JsonFile('__fixtures__/test.json', { json5: true });
+  let file = new JsonFile(path.join(FIXTURES, 'test.json'), { json5: true });
   await expect(file.setAsync('x', 2)).resolves.toBeDefined();
   await expect(file.readAsync()).resolves.toEqual({ x: 2 });
   await expect(file.setAsync('y', 3)).resolves.toBeDefined();
@@ -74,7 +79,7 @@ it(`adds a new key to the file`, async () => {
 });
 
 it(`deletes that same new key from the file`, async () => {
-  let file = new JsonFile('__fixtures__/test.json', { json5: true });
+  let file = new JsonFile(path.join(FIXTURES, 'test.json'), { json5: true });
   await expect(file.setAsync('x', 2)).resolves.toBeDefined();
   await expect(file.setAsync('y', 3)).resolves.toBeDefined();
   await expect(file.deleteKeyAsync('y')).resolves.toBeDefined();
@@ -82,7 +87,7 @@ it(`deletes that same new key from the file`, async () => {
 });
 
 it(`deletes another key from the file`, async () => {
-  let file = new JsonFile('__fixtures__/test.json', { json5: true });
+  let file = new JsonFile(path.join(FIXTURES, 'test.json'), { json5: true });
   await expect(file.setAsync('x', 2)).resolves.toBeDefined();
   await expect(file.setAsync('y', 3)).resolves.toBeDefined();
   await expect(file.deleteKeyAsync('x')).resolves.toBeDefined();
@@ -91,7 +96,7 @@ it(`deletes another key from the file`, async () => {
 });
 
 xit('Multiple updates to the same file from different processes are atomic', async () => {
-  let file = new JsonFile('__fixtures__/atomic-test.json', { json5: true });
+  let file = new JsonFile(path.join(FIXTURES, 'atomic-test.json'), { json5: true });
   let baseObj = {};
   for (var i = 0; i < 20; i++) {
     const k = i.toString();
@@ -109,7 +114,7 @@ xit('Multiple updates to the same file from different processes are atomic', asy
 // This fails when i is high, around 200. However, no realistic use case would have the user
 // constantly update a file that often
 it('Multiple updates to the same file have no race conditions', async () => {
-  let file = new JsonFile('__fixtures__/atomic-test.json', { json5: true });
+  let file = new JsonFile(path.join(FIXTURES, 'atomic-test.json'), { json5: true });
   for (var i = 0; i < 50; i++) {
     await file.writeAsync({});
     let baseObj = {};
@@ -123,7 +128,7 @@ it('Multiple updates to the same file have no race conditions', async () => {
 });
 
 it('Continuous updating!', async () => {
-  let file = new JsonFile('__fixtures__/test.json', { json5: true });
+  let file = new JsonFile(path.join(FIXTURES, 'test.json'), { json5: true });
   await file.writeAsync({ i: 0 });
   for (var i = 0; i < 20; i++) {
     await file.writeAsync({ i });
