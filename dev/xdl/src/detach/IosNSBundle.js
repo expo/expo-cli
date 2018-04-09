@@ -294,6 +294,9 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
     // add or remove other facebook config
     if (config.facebookAppId) {
       infoPlist.FacebookAppID = config.facebookAppId;
+      let queriesSchemes = infoPlist.LSApplicationQueriesSchemes || [];
+      queriesSchemes = queriesSchemes.concat([ 'fbapi', 'fb-messenger-api', 'fbauth2', 'fbshareextension' ]);
+      infoPlist.LSApplicationQueriesSchemes = queriesSchemes;
     } else {
       delete infoPlist['FacebookAppID'];
     }
