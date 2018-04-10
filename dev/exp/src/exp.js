@@ -11,6 +11,7 @@ import fs from 'fs';
 import path from 'path';
 import simpleSpinner from '@expo/simple-spinner';
 import url from 'url';
+import { codeFrameColumns } from '@babel/code-frame';
 
 import program, { Command } from 'commander';
 import {
@@ -253,6 +254,16 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
         let newLogChunks = updater([]);
         newLogChunks.forEach(newLogChunk => {
           logWithLevel(newLogChunk);
+        });
+      },
+      getSnippetForError: error => {
+        if (!error.filename || !error.lineNumber || !error.column) {
+          return null;
+        }
+        let rawLines = fs.readFileSync(error.filename, 'utf8');
+        let location = { start: { line: error.lineNumber, column: error.column + 1 } };
+        return codeFrameColumns(rawLines, location, {
+          highlightCode: true,
         });
       },
     });

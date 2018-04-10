@@ -1,17 +1,122 @@
 /* @flow */
+import path from 'path';
+import escapeStringRegexp from 'escape-string-regexp';
 
 import * as ProjectUtils from '../project/ProjectUtils';
+import Logger from '../Logger';
 import { trim } from 'lodash';
 import { isNode } from '../tools/EnvironmentHelper';
 
-type ChunkT = {
-  _id: ?number,
-  shouldHide: boolean,
-  msg: any,
-  tag: 'packager' | 'expo' | 'device',
-};
+type ChunkT =
+  | {
+      tag: 'expo' | 'device',
+      _id: ?number,
+      shouldHide: boolean,
+      msg: any,
+      level: number,
+    }
+  | {
+      tag: 'metro',
+      _id: ?number,
+      shouldHide: boolean,
+      msg: ReportableEvent,
+      level: number,
+    };
 
 type LogUpdater = (logState: Array<ChunkT>) => Array<ChunkT>;
+
+type Error =
+  | {
+      originModulePath: string,
+      message: string,
+      errors: Array<Object>,
+    }
+  | {
+      type: 'TransformError',
+      snippet: string,
+      lineNumber: number,
+      column: number,
+      filename: string,
+      errors: Array<Object>,
+    };
+
+// Metro reporter types
+// https://github.com/facebook/metro/blob/2a327fb19dd62169ab3ae9069011d8a599cfcf3e/packages/metro/src/lib/reporting.js
+type GlobalCacheDisabledReason = 'too_many_errors' | 'too_many_misses';
+type BundleDetails = {
+  entryFile: string,
+  platform: string,
+  dev: boolean,
+  minify: boolean,
+  bundleType: string,
+};
+type ReportableEvent =
+  | {
+      port: ?number,
+      // $FlowFixMe: $ReadOnlyArray not recognized
+      projectRoots: $ReadOnlyArray<string>,
+      type: 'initialize_started',
+    }
+  | {
+      type: 'initialize_done',
+    }
+  | {
+      type: 'initialize_failed',
+      port: number,
+      error: Error,
+    }
+  | {
+      buildID: string,
+      type: 'bundle_build_done',
+    }
+  | {
+      buildID: string,
+      type: 'bundle_build_failed',
+    }
+  | {
+      buildID: string,
+      bundleDetails: BundleDetails,
+      type: 'bundle_build_started',
+    }
+  | {
+      error: Error,
+      type: 'bundling_error',
+    }
+  | {
+      type: 'dep_graph_loading',
+    }
+  | {
+      type: 'dep_graph_loaded',
+    }
+  | {
+      buildID: string,
+      type: 'bundle_transform_progressed',
+      transformedFileCount: number,
+      totalFileCount: number,
+    }
+  | {
+      type: 'global_cache_error',
+      error: Error,
+    }
+  | {
+      type: 'global_cache_disabled',
+      reason: GlobalCacheDisabledReason,
+    }
+  | {
+      type: 'transform_cache_reset',
+    }
+  | {
+      type: 'worker_stdout_chunk',
+      chunk: string,
+    }
+  | {
+      type: 'worker_stderr_chunk',
+      chunk: string,
+    }
+  | {
+      type: 'hmr_client_error',
+      error: Error,
+    };
 
 export default class PackagerLogsStream {
   _projectRoot: string;
@@ -24,6 +129,7 @@ export default class PackagerLogsStream {
   _onProgressBuildBundle: ?Function;
   _onFinishBuildBundle: ?Function;
   _onFailBuildBundle: ?Function;
+  _getSnippetForError: ?(error: Error) => ?string;
   _bundleBuildStart: ?Date;
 
   _resetState = () => {
@@ -38,6 +144,7 @@ export default class PackagerLogsStream {
     onStartBuildBundle,
     onProgressBuildBundle,
     onFinishBuildBundle,
+    getSnippetForError,
   }: {
     projectRoot: string,
     getCurrentOpenProjectId?: () => any,
@@ -45,6 +152,7 @@ export default class PackagerLogsStream {
     onStartBuildBundle?: () => void,
     onProgressBuildBundle?: (progress: number) => void,
     onFinishBuildBundle?: () => void,
+    getSnippetForError?: (error: Error) => ?string,
   }) {
     this._resetState();
     this._projectRoot = projectRoot;
@@ -57,6 +165,10 @@ export default class PackagerLogsStream {
     this._onProgressBuildBundle = onProgressBuildBundle;
     this._onFinishBuildBundle = onFinishBuildBundle;
 
+    // Optional function for creating custom code frame snippet
+    // (e.g. with terminal colors) from a syntax error.
+    this._getSnippetForError = getSnippetForError;
+
     this._attachLoggerStream();
   }
 
@@ -65,8 +177,8 @@ export default class PackagerLogsStream {
 
     ProjectUtils.attachLoggerStream(this._projectRoot, {
       stream: {
-        write: (chunk: any) => {
-          if (chunk.tag !== 'packager' && chunk.tag !== 'expo') {
+        write: chunk => {
+          if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
             return;
           } else if (this._getCurrentOpenProjectId() !== projectId) {
             // TODO: We should be confident that we are properly unsubscribing
@@ -78,12 +190,13 @@ export default class PackagerLogsStream {
           chunk = this._formatMsg(chunk);
           chunk = this._cleanUpNodeErrors(chunk);
           chunk = this._attachChunkID(chunk);
-
-          if (typeof chunk.msg === 'object' || chunk.type === 'packager') {
-            this._handlePackagerEvent(chunk);
-          } else if (!chunk.msg.match(/\w/) || !chunk.msg || chunk.msg[0] === '{') {
-            return;
-          } else {
+          if (chunk.tag === 'metro') {
+            this._handleMetroEvent(chunk);
+          } else if (
+            typeof chunk.msg === 'string' &&
+            chunk.msg.match(/\w/) &&
+            chunk.msg[0] !== '{'
+          ) {
             this._enqueueAppendLogChunk(chunk);
           }
         },
@@ -92,31 +205,57 @@ export default class PackagerLogsStream {
     });
   }
 
-  // This is where we handle any special packager events
-  _handlePackagerEvent = (chunk: any) => {
+  _handleMetroEvent(chunk: ChunkT) {
     let { msg } = chunk;
-
-    if (!msg.type) {
+    if (chunk.tag !== 'metro' || !msg.type) {
       return;
-    } else if (msg.type && msg.type.match(/^bundle_/)) {
+    }
+    if (msg.type.match(/^bundle_/)) {
       this._handleBundleTransformEvent(chunk);
       return;
     }
-
-    if (msg.type === 'dep_graph_loading') {
-      chunk.msg = 'Loading dependency graph.'; // doesn't seem important to log this
-    } else if (msg.type == 'dep_graph_loaded') {
-      chunk.msg = 'Dependency graph loaded.'; // doesn't seem important to log this
-    } else if (msg.type === 'transform_cache_reset') {
-      chunk.msg = 'Your JavaScript transform cache is empty, rebuilding (this may take a minute).';
-    } else if (msg.type === 'initialize_packager_started') {
-      chunk.msg = `Running packager on port ${msg.port}.`;
-    } else {
-      chunk.msg = '';
+    switch (msg.type) {
+      case 'initialize_started': // SDK >=23 (changed in Metro v0.17.0)
+      case 'initialize_packager_started': // SDK <=22
+        chunk.msg = msg.port
+          ? `Starting Metro Bundler on port ${msg.port}.`
+          : 'Starting Metro Bundler.';
+        break;
+      case 'initialize_done':
+        chunk.msg = `Metro Bundler ready.`;
+        break;
+      case 'initialize_failed': {
+        // $FlowFixMe
+        let code = msg.error.code;
+        chunk.msg =
+          code === 'EADDRINUSE'
+            ? `Metro Bundler can't listen on port ${msg.port}. The port is in use.`
+            : `Metro Bundler failed to start. (code: ${code})`;
+        break;
+      }
+      case 'bundling_error':
+        chunk.msg =
+          this._formatModuleResolutionError(msg.error) || this._formatBundlingError(msg.error);
+        chunk.level = Logger.ERROR;
+        break;
+      case 'transform_cache_reset':
+        chunk.msg =
+          'Your JavaScript transform cache is empty, rebuilding (this may take a minute).';
+        break;
+      case 'hmr_client_error':
+        chunk.msg = `A WebSocket client got a connection error. Please reload your device to get HMR working again.`;
+        break;
+      // Ignored events.
+      case 'dep_graph_loading':
+      case 'dep_graph_loaded':
+      case 'global_cache_disabled':
+      case 'global_cache_error':
+      case 'worker_stdout_chunk':
+      case 'worker_stderr_chunk':
+        return;
     }
-
     this._enqueueAppendLogChunk(chunk);
-  };
+  }
 
   // Any event related to bundle building is handled here
   _handleBundleTransformEvent = (chunk: any) => {
@@ -142,10 +281,11 @@ export default class PackagerLogsStream {
       }
     } else {
       // Unrecognized bundle_* message!
+      console.log('Unrecognized bundle_* message!', msg);
     }
   };
 
-  _handleNewBundleTransformStarted = (chunk: any) => {
+  _handleNewBundleTransformStarted(chunk: any) {
     if (this._bundleBuildChunkID) {
       return;
     }
@@ -159,9 +299,9 @@ export default class PackagerLogsStream {
     } else {
       this._enqueueAppendLogChunk(chunk);
     }
-  };
+  }
 
-  _handleUpdateBundleTransformProgress = (progressChunk: any) => {
+  _handleUpdateBundleTransformProgress(progressChunk: any) {
     let { msg } = progressChunk;
     let percentProgress;
     let bundleComplete = false;
@@ -227,7 +367,52 @@ export default class PackagerLogsStream {
         return [...logs];
       });
     }
-  };
+  }
+
+  _formatModuleResolutionError(error: any) {
+    let match = /^Unable to resolve module `(.+?)`/.exec(error.message);
+    let { originModulePath } = error;
+    if (!match || !originModulePath) {
+      return null;
+    }
+    let moduleName = match[1];
+    let relativePath = path.relative(this._projectRoot, originModulePath);
+
+    const DOCS_PAGE_URL =
+      'https://docs.expo.io/versions/latest/introduction/faq.html#can-i-use-nodejs-packages-with-expo';
+
+    if (NODE_STDLIB_MODULES.includes(moduleName)) {
+      if (originModulePath.includes('node_modules')) {
+        return `The package at "${relativePath}" attempted to import the Node standard library module "${moduleName}". It failed because React Native does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`;
+      } else {
+        return `You attempted attempted to import the Node standard library module "${moduleName}" from "${relativePath}". It failed because React Native does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`;
+      }
+    }
+    return `Unable to resolve ${moduleName}" from "${relativePath}"`;
+  }
+
+  _formatBundlingError(error: any) {
+    let message = error.message;
+    if (!message && error.errors && error.errors.length) {
+      message = error.errors[0].description;
+    }
+
+    // Before metro@0.29.0 the message may include the filename twice.
+    // TODO(ville): Remove this once we drop support for react-native v0.54.4 or older.
+    if (message && error.filename) {
+      let escapedFilename = escapeStringRegexp(error.filename);
+      message = message.replace(
+        new RegExp(`Error in ${escapedFilename}: ${escapedFilename}:`),
+        `Error in ${error.filename}:`
+      );
+    }
+
+    let snippet = (this._getSnippetForError && this._getSnippetForError(error)) || error.snippet;
+    if (snippet) {
+      message += `\n${snippet}`;
+    }
+    return message;
+  }
 
   _enqueueAppendLogChunk(chunk: ChunkT) {
     if (chunk.shouldHide) {
@@ -258,39 +443,22 @@ export default class PackagerLogsStream {
     }
   };
 
-  _attachChunkID(chunk: any) {
+  _attachChunkID(chunk: ChunkT) {
     this._chunkID++;
     chunk._id = this._chunkID;
     return chunk;
   }
 
-  _maybeParseMsgJSON(chunk: any) {
+  _maybeParseMsgJSON(chunk: ChunkT) {
     try {
       let parsedMsg = JSON.parse(chunk.msg);
       chunk.msg = parsedMsg;
     } catch (e) {
-      // Fallback to the <= SDK 15 version of formatting logs
-      let msg = this._legacyFormatter(chunk);
-      chunk.msg = msg;
+      // non-JSON message
     }
 
     return chunk;
   }
-
-  _legacyFormatter = (chunk: ChunkT) => {
-    if (typeof chunk.msg === 'object') {
-      return chunk;
-    }
-
-    if (chunk.msg.match(/Transforming modules/)) {
-      let progress = chunk.msg.match(/\d+\.\d+% \(\d+\/\d+\)/);
-      if (progress && progress[0]) {
-        chunk.msg = `Transforming modules: ${progress[0]}`;
-      }
-    }
-
-    return chunk.msg;
-  };
 
   _cleanUpNodeErrors = (chunk: ChunkT) => {
     if (typeof chunk.msg === 'object') {
@@ -316,7 +484,7 @@ export default class PackagerLogsStream {
   // This message is just noise
   // Fall back to the same formatting we did on SDK <= 15 before we had a custom
   // reporter class.
-  _formatMsg(chunk: any) {
+  _formatMsg(chunk) {
     if (typeof chunk.msg === 'object') {
       return chunk;
     }
@@ -333,3 +501,35 @@ export default class PackagerLogsStream {
     return chunk;
   }
 }
+
+const NODE_STDLIB_MODULES = [
+  'assert',
+  'async_hooks',
+  'buffer',
+  'child_process',
+  'cluster',
+  'crypto',
+  'dgram',
+  'dns',
+  'domain',
+  'events',
+  'fs',
+  'http',
+  'https',
+  'net',
+  'os',
+  'path',
+  'punycode',
+  'querystring',
+  'readline',
+  'repl',
+  'stream',
+  'string_decoder',
+  'tls',
+  'tty',
+  'url',
+  'util',
+  'v8',
+  'vm',
+  'zlib',
+];
