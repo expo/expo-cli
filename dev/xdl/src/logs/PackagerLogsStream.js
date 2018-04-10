@@ -388,7 +388,7 @@ export default class PackagerLogsStream {
         return `You attempted attempted to import the Node standard library module "${moduleName}" from "${relativePath}". It failed because React Native does not include the Node standard library. Read more at ${DOCS_PAGE_URL}`;
       }
     }
-    return `Unable to resolve ${moduleName}" from "${relativePath}"`;
+    return `Unable to resolve "${moduleName}" from "${relativePath}"`;
   }
 
   _formatBundlingError(error: any) {
