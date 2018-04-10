@@ -1,0 +1,29 @@
+{
+  "name": "expo-dev-tools",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "next",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "babel-plugin-emotion": "^8.0.4",
+    "emotion": "^8.0.5",
+    "emotion-server": "^8.0.5",
+    "lodash": "^4.17.5",
+    "next": "latest",
+    "qrcode-react": "^0.1.16",
+    "react": "16.2.0",
+    "react-dnd": "^2.5.4",
+    "react-dnd-html5-backend": "^2.5.4",
+    "react-dom": "16.2.0",
+    "react-emotion": "^8.0.5",
+    "react-redux": "^5.0.7",
+    "react-textarea-autosize": "^6.0.0",
+    "redux": "^3.7.2"
+  },
+  "devDependencies": {
+    "babel-plugin-module-resolver": "^3.0.0"
+  },
+  "license": "ISC"
+}

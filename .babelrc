@@ -1,0 +1,13 @@
+{
+  "presets": [
+    "next/babel"
+  ],
+  "plugins": [
+    ["emotion", { "inline": true }],
+    ["module-resolver", {
+      "alias": {
+        "app": "."
+      }
+    }]
+  ]
+}
