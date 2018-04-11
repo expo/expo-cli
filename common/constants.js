@@ -16,6 +16,14 @@ export const colors = {
   red: '#CC0000',
 };
 
+export const fontFamilies = {
+  bold: 'bold',
+  light: 'light',
+  demi: 'demi',
+  mono: 'mono',
+  regular: 'regular',
+};
+
 export const status = {
   warning: colors.yellow,
   success: colors.green,

@@ -5,14 +5,14 @@ import * as Constants from 'app/common/constants';
 import * as SVG from 'app/common/svg';
 
 const STYLES_VIEWING_OPTIONS_LINK = css`
+  font-family: ${Constants.fontFamilies.demi};
   border-bottom: 1px solid ${Constants.colors.border};
-  font-family: 'prototype-regular-demi';
+  color: ${Constants.colors.foregroundAccent};
   padding: 8px 16px 8px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   transition: 200ms ease all;
-  color: #333333;
   cursor: pointer;
 
   :hover {

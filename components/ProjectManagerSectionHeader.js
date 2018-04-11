@@ -5,7 +5,7 @@ import * as Constants from 'app/common/constants';
 import { DragSource } from 'react-dnd';
 
 const STYLES_LOG = css`
-  font-family: 'prototype-mono';
+  font-family: ${Constants.fontFamilies.mono};
   display: flex;
   cursor: pointer;
   justify-content: space-between;

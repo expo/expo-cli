@@ -4,10 +4,10 @@ import * as React from 'react';
 import * as Constants from 'app/common/constants';
 
 const STYLES_LOG = css`
+  font-family: ${Constants.fontFamilies.mono};
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  font-family: 'prototype-mono';
   font-size: 12px;
   margin-bottom: 12px;
 `;

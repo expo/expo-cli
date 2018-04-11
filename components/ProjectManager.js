@@ -16,7 +16,7 @@ import ProjectManagerViewingOption from 'app/components/ProjectManagerViewingOpt
 
 const STYLES_HEADER = css`
   background: ${Constants.colors.yellow};
-  font-family: 'prototype-regular-bold';
+  font-family: ${Constants.fontFamilies.bold};
   font-size: 12px;
   padding: 8px 16px 8px 16px;
   width: 100%;
@@ -41,13 +41,13 @@ const STYLES_URL_SECTION = css`
 `;
 
 const STYLES_URL_SECTION_TOP = css`
-  font-family: 'prototype-regular-bold';
+  font-family: ${Constants.fontFamilies.bold};
   font-size: 12px;
   margin-bottom: 8px;
 `;
 
 const STYLES_URL_SECTION_BOTTOM = css`
-  font-family: 'prototype-regular-book';
+  font-family: ${Constants.fontFamilies.regular};
   font-size: 12px;
 `;
 

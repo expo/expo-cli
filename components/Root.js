@@ -1,6 +1,8 @@
 import React from 'react';
 import styled, { hydrate, keyframes, css, injectGlobal } from 'react-emotion';
 
+import * as Constants from 'app/common/constants';
+
 if (typeof window !== 'undefined') {
   hydrate(window.__NEXT_DATA__.ids);
 }
@@ -32,31 +34,31 @@ injectGlobal`
   }
 
   @font-face {
-    font-family: 'prototype-regular-bold';
+    font-family: ${Constants.fontFamilies.bold};
     src: url('/static/fonts/MaisonNeue-Bold.woff2');
     src: url('/static/fonts/MaisonNeue-Bold.woff') format('woff');
   }
 
   @font-face {
-    font-family: 'prototype-regular-book';
+    font-family: ${Constants.fontFamilies.regular};
     src: url('/static/fonts/MaisonNeue-Book.woff2');
     src: url('/static/fonts/MaisonNeue-Book.woff') format('woff');
   }
 
   @font-face {
-    font-family: 'prototype-regular-demi';
+    font-family: ${Constants.fontFamilies.demi};
     src: url('/static/fonts/MaisonNeue-Demi.woff2');
     src: url('/static/fonts/MaisonNeue-Demi.woff') format('woff');
   }
 
   @font-face {
-    font-family: 'prototype-regular-light';
+    font-family: ${Constants.fontFamilies.light};
     src: url('/static/fonts/MaisonNeue-Light.woff2');
     src: url('/static/fonts/MaisonNeue-Light.woff') format('woff');
   }
 
   @font-face {
-    font-family: 'prototype-mono';
+    font-family: ${Constants.fontFamilies.mono};
     src: url('/static/fonts/MaisonNeue-Mono.woff2');
     src: url('/static/fonts/MaisonNeue-Mono.woff') format('woff');
   }
@@ -71,7 +73,7 @@ injectGlobal`
     }
 
     ::-webkit-scrollbar-thumb {
-      background: #000000;
+      background: ${Constants.colors.appBackground};
     }
   }
 

@@ -22,7 +22,7 @@ const STYLES_TAB_SECTION_CONTAINER = css`
 `;
 
 const STYLES_TAB_SECTION_CONTAINER_TITLE = css`
-  font-family: 'prototype-mono';
+  font-family: ${Constants.fontFamilies.mono};
   text-transform: uppercase;
   font-size: 10px;
   display: flex;
@@ -30,14 +30,14 @@ const STYLES_TAB_SECTION_CONTAINER_TITLE = css`
 `;
 
 const STYLES_TAB_SECTION_CONTAINER_DESCRIPTION = css`
-  font-family: 'prototype-regular-demi';
+  font-family: ${Constants.fontFamilies.demi};
   font-size: 14px;
   margin-bottom: 8px;
 `;
 
 const STYLES_INDICATOR = css`
   color: ${Constants.colors.primary};
-  font-family: 'prototype-mono';
+  font-family: ${Constants.fontFamilies.mono};
   text-transform: uppercase;
   font-size: 10px;
 `;
