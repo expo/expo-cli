@@ -137,6 +137,7 @@ function _renderUnversionedReactDependency(options, sdkVersion) {
   if (options.reactNativePath) {
     attributes = {
       path: options.reactNativePath,
+      inhibit_warnings: true,
     };
   } else {
     throw new Error(`Unsupported options for RN dependency: ${options}`);
@@ -180,6 +181,7 @@ function _renderUnversionedYogaDependency(options, sdkVersion) {
         'ReactCommon',
         sdkMajorVersion < 22 ? 'Yoga' : 'yoga'
       ),
+      inhibit_warnings: true,
     };
   } else {
     throw new Error(`Unsupported options for Yoga dependency: ${options}`);
