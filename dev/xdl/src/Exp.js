@@ -102,7 +102,6 @@ export async function downloadTemplateApp(templateId: string, selectedDir: strin
   }
 
   // Download files
-  await mkdirpAsync(root);
   let starterAppPath = await _downloadStarterAppAsync(
     templateId,
     opts.progressFunction,
@@ -113,6 +112,7 @@ export async function downloadTemplateApp(templateId: string, selectedDir: strin
 
 export async function extractTemplateApp(starterAppPath: string, name: string, root: string) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
+  await mkdirpAsync(root);
   await Extract.extractAsync(starterAppPath, root);
 
   // Update files
@@ -126,8 +126,6 @@ export async function extractTemplateApp(starterAppPath: string, name: string, r
   await fs.writeFile(path.join(root, 'app.json'), customAppJson, 'utf8');
 
   await initGitRepo(root);
-
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Starting project...');
 
   return root;
 }

@@ -140,9 +140,11 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
   let promptShown = false;
   let currentProgress = 0;
 
+  let { cancel, token } = axios.CancelToken.source();
+
   let warningTimer = setTimeout(() => {
     if (retryFunction) {
-      retryFunction();
+      retryFunction(cancel);
     }
     promptShown = true;
   }, TIMER_DURATION);
@@ -153,6 +155,7 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
     config = {
       timeout: TIMEOUT,
       responseType: 'arraybuffer',
+      cancelToken: token,
       onDownloadProgress: progressEvent => {
         const roundedProgress = Math.floor(progressEvent.loaded / progressEvent.total * 100);
         if (currentProgress !== roundedProgress) {
@@ -161,7 +164,7 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
           if (!promptShown) {
             warningTimer = setTimeout(() => {
               if (retryFunction) {
-                retryFunction();
+                retryFunction(cancel);
               }
               promptShown = true;
             }, TIMER_DURATION);
@@ -180,6 +183,7 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
     config = {
       timeout: TIMEOUT,
       responseType: 'stream',
+      cancelToken: token,
     };
     let response = await axios(url, config);
     await new Promise(resolve => {
@@ -195,7 +199,7 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
             if (!promptShown) {
               warningTimer = setTimeout(() => {
                 if (retryFunction) {
-                  retryFunction();
+                  retryFunction(cancel);
                 }
                 promptShown = true;
               }, TIMER_DURATION);
@@ -223,9 +227,7 @@ export default class ApiClient {
   static port: number = Config.api.port || 80;
 
   static _versionCache = new Cacher(
-    async () => {
-      return await ApiClient.callPathAsync('/--/versions');
-    },
+    () => ApiClient.callPathAsync('/--/api/v2/versions'),
     'versions.json',
     0,
     path.join(__dirname, '../caches/versions.json')
@@ -251,7 +253,7 @@ export default class ApiClient {
 
   static async callPathAsync(
     path: string,
-    method: string,
+    method: ?string,
     requestBody: ?Object,
     requestOptions: ?Object = {}
   ) {

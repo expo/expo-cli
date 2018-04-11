@@ -1,135 +1,140 @@
+import fs from 'fs';
+import chalk from 'chalk';
 import ProgressBar from 'progress';
 import { Api, Exp, Logger, NotificationCode, MessageCode } from 'xdl';
+import wordwrap from 'wordwrap';
 
-import _ from 'lodash';
 import prompt from '../prompt';
 import log from '../log';
 import CommandError from '../CommandError';
 
 import path from 'path';
 
-let _currentRequestID = 0;
 let _downloadIsSlowPrompt = false;
-let _retryObject = {};
-let _bar = new ProgressBar('[:bar] :percent', {
-  total: 100,
-  complete: '=',
-  incomplete: ' ',
-});
 
 async function action(projectDir, options) {
-  let templateType;
-  let questions = [];
+  let parentDir;
+  let name;
 
-  let insertPath = path.dirname(projectDir);
-  let name = path.basename(projectDir);
+  // No `await` here, just start fetching versions in the background and block later.
+  let versionsPromise = Api.versionsAsync();
 
-  // If the user does not supply a project name, exp prompts the user
-  if (projectDir === process.cwd()) {
-    questions.push({
+  if (projectDir) {
+    let root = path.resolve(projectDir);
+    parentDir = path.dirname(root);
+    name = path.basename(root);
+    let validationResult = validateName(parentDir, name);
+    if (validationResult !== true) {
+      throw new CommandError('INVALID_PROJECT_DIR', validationResult);
+    }
+  } else {
+    parentDir = process.cwd();
+    ({ name } = await prompt({
       name: 'name',
       message: 'Choose a project name:',
-      validate(input) {
-        return /^[a-z0-9@.' '\-\_]*$/i.test(input) && input.length > 0;
-      },
-    });
+      filter: name => name.trim(),
+      validate: name => validateName(parentDir, name),
+    }));
   }
 
-  if (options.projectType) {
-    templateType = options.projectType;
+  let templateId;
+  if (options.template) {
+    templateId = options.template;
   } else {
-    let versions = await Api.versionsAsync();
-    let templateIds = _.map(versions.templatesv2, template => template.id);
-
-    questions.push({
+    let versions = await versionsPromise;
+    let wrap = wordwrap(2, process.stdout.columns || 80);
+    ({ templateId } = await prompt({
       type: 'list',
-      name: 'type',
-      message: 'Choose a template type:',
-      choices: templateIds,
-    });
+      name: 'templateId',
+      message: 'Choose a template:',
+      choices: versions.templatesv2.map(template => ({
+        value: template.id,
+        name: chalk.bold(template.id) + '\n' + wrap(template.description),
+        short: template.id,
+      })),
+    }));
   }
-
-  if (questions.length > 0) {
-    var answers = await prompt(questions);
-    if (answers.name) {
-      // If the user supplies a project name, change the insertPath and name
-      insertPath = projectDir;
-      name = answers.name;
-    }
-    if (answers.type) {
-      templateType = answers.type;
-    }
+  let projectPath = await downloadAndExtractTemplate(templateId, parentDir, name);
+  let cdPath = path.relative(process.cwd(), projectPath);
+  if (cdPath.length > projectPath.length) {
+    cdPath = projectPath;
   }
-
-  if (!insertPath || !name) {
-    throw new CommandError('PATH_ERROR', `Couldn't determine path for new project.`);
+  log.nested(`\nYour project is ready at ${projectPath}`);
+  log.nested(`To get started, you can type:\n`)
+  if (cdPath) {  // empty string if project was created in current directory
+    log.nested(`  cd ${cdPath}`);
   }
+  log.nested(`  ${options.parent.name} start\n`);
+}
 
-  // TODO(jim): We will need to update this method later to not force
-  // us to strip out the <name> from /path/to/<name> if we don't want
-  // to duplicate the folder at creation time. (example: test => test/test)
-  await downloadAndExtractTemplate(templateType, insertPath, {
+async function downloadAndExtractTemplate(templateId, parentDir, name) {
+  let bar = new ProgressBar('[:bar] :percent', {
+    total: 100,
+    width: 50,
+    clear: true,
+    complete: '=',
+    incomplete: ' ',
+  });
+  let showProgress = true;
+  let opts = {
     name,
-  });
-}
-
-async function downloadAndExtractTemplate(templateType, projectDir, validatedOptions) {
-  _retryObject = { templateType, projectDir, validatedOptions };
-  const requestID = _currentRequestID + 1;
-  _currentRequestID = requestID;
-
-  let templateDownload = await Exp.downloadTemplateApp(templateType, projectDir, {
-    ...validatedOptions,
     progressFunction: progress => {
-      if (_currentRequestID === requestID) {
-        Logger.notifications.info({ code: NotificationCode.DOWNLOAD_CLI_PROGRESS }, progress + '%');
-        if (!_downloadIsSlowPrompt) {
-          _bar.tick();
-        }
+      Logger.notifications.info({ code: NotificationCode.DOWNLOAD_CLI_PROGRESS }, progress + '%');
+      if (showProgress) {
+        bar.update(progress / 100);
       }
     },
-    retryFunction: () => {
-      triggerRetryPrompt();
+    retryFunction: async cancel => {
+      bar.terminate();
+      showProgress = false;
+      let { shouldRestart } = await prompt({
+        type: 'confirm',
+        name: 'shouldRestart',
+        message: MessageCode.DOWNLOAD_IS_SLOW,
+      });
+      if (shouldRestart) {
+        cancel();
+      } else {
+        showProgress = true;
+      }
     },
-  });
-
-  // Since we cannot cancel the download request, we need a way to ignore all of the requests made except the last one when retrying.
-  if (_currentRequestID !== requestID) {
-    return;
+  };
+  try {
+    let templateDownload = await Exp.downloadTemplateApp(templateId, parentDir, opts);
+    return Exp.extractTemplateApp(
+      templateDownload.starterAppPath,
+      templateDownload.name,
+      templateDownload.root
+    );
+  } catch (error) {
+    if (error.__CANCEL__) {
+      log('Download was canceled. Starting again...');
+      return downloadAndExtractTemplate(templateId, parentDir, name);
+    } else {
+      throw error;
+    }
   }
-  let root = await Exp.extractTemplateApp(
-    templateDownload.starterAppPath,
-    templateDownload.name,
-    templateDownload.root
-  );
-  log(`Your project is ready at ${root}. Use "exp start ${root}" to get started.`);
-  process.exit();
 }
 
-async function triggerRetryPrompt() {
-  _downloadIsSlowPrompt = true;
-  var answer = await prompt({
-    type: 'input',
-    name: 'retry',
-    message: '\n' + MessageCode.DOWNLOAD_IS_SLOW + '(y/n)',
-    validate(val) {
-      if (val !== 'y' && val !== 'n') {
-        return false;
-      }
-      return true;
-    },
-  });
+function validateName(parentDir, name) {
+  if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
+    return 'The project name can only contain URL-friendly characters.';
+  }
+  let dir = path.join(parentDir, name);
+  if (!isNonExistentOrEmptyDir(dir)) {
+    return `The path "${dir}" already exists.\nPlease choose a different parent directory or project name.`;
+  }
+  return true;
+}
 
-  if (answer.retry === 'n') {
-    _downloadIsSlowPrompt = false;
-  } else {
-    Exp.clearXDLCacheAsync();
-    _downloadIsSlowPrompt = false;
-    downloadAndExtractTemplate(
-      _retryObject.templateType,
-      _retryObject.projectDir,
-      _retryObject.validatedOptions
-    );
+function isNonExistentOrEmptyDir(dir) {
+  try {
+    return fs.statSync(dir).isDirectory() && fs.readdirSync(dir).length === 0;
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return true;
+    }
+    throw error;
   }
 }
 
@@ -141,8 +146,8 @@ export default program => {
       'Initializes a directory with an example project. Run it without any options and you will be prompted for the name and type.'
     )
     .option(
-      '-t, --projectType [type]',
-      'Specify what type of template to use. Run without this option to see all choices.'
+      '-t, --template [name]',
+      'Specify which template to use. Run without this option to see all choices.'
     )
-    .asyncActionProjectDir(action, /* skipProjectValidation: */true, /* skipAuthCheck: */true);
+    .asyncAction(action);
 };
