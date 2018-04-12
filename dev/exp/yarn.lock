@@ -100,15 +100,6 @@
     mv "~2"
     safe-json-stringify "~1"
 
-"@expo/json-file@^7.0.0":
-  version "7.0.0"
-  resolved "https://registry.npmjs.org/@expo/json-file/-/json-file-7.0.0.tgz#828e421427d3c1d2990caa469eb9ac969495b43f"
-  dependencies:
-    json5 "^1.0.1"
-    lodash "^4.17.4"
-    util.promisify "^1.0.0"
-    write-file-atomic "^2.3.0"
-
 "@expo/json-file@^8.0.0":
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/@expo/json-file/-/json-file-8.0.0.tgz#5c3cb84469b1229e6c4aac9a4285fca59e6709fd"
@@ -400,7 +391,7 @@ ansi-wrap@0.1.0, ansi-wrap@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/ansi-wrap/-/ansi-wrap-0.1.0.tgz#a82250ddb0015e9a27ca82e82ea603bbfa45efaf"
 
-any-promise@^1.0.0, any-promise@^1.3.0:
+any-promise@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/any-promise/-/any-promise-1.3.0.tgz#abc6afeedcea52e809cdc0376aed3ce39635d17f"
 
@@ -1523,7 +1514,7 @@ chalk@^1.0.0, chalk@^1.1.3:
     strip-ansi "^3.0.0"
     supports-color "^2.0.0"
 
-chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.3.0:
+chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.3.2.tgz#250dc96b07491bfd601e648d66ddf5f60c7a5c65"
   dependencies:
@@ -2385,10 +2376,6 @@ execa@^0.8.0:
     p-finally "^1.0.0"
     signal-exit "^3.0.0"
     strip-eof "^1.0.0"
-
-exists-async@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/exists-async/-/exists-async-2.0.0.tgz#7e0b1652b34b0fe18b9f9640987bd56d59e51e5e"
 
 expand-brackets@^0.1.4:
   version "0.1.5"
@@ -3378,7 +3365,7 @@ interpret@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.1.0.tgz#7ed1b1410c6a0e0f78cf95d3b8440c63f78b8614"
 
-invariant@^2.0.0, invariant@^2.2.0, invariant@^2.2.2:
+invariant@^2.0.0, invariant@^2.2.0, invariant@^2.2.2, invariant@^2.2.4:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/invariant/-/invariant-2.2.4.tgz#610f3c92c9359ce1db616e538008d23ff35158e6"
   dependencies:
@@ -3804,10 +3791,6 @@ jsonfile@^4.0.0:
 jsonify@~0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/jsonify/-/jsonify-0.0.0.tgz#2c74b6ee41d93ca51b7b5aaee8f503631d252a73"
-
-jsonschema@^1.1.0:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/jsonschema/-/jsonschema-1.2.2.tgz#83ab9c63d65bf4d596f91d81195e78772f6452bc"
 
 jsonwebtoken@^7.2.1:
   version "7.4.3"
@@ -4269,13 +4252,7 @@ mixin-deep@^1.2.0:
     for-in "^1.0.2"
     is-extendable "^1.0.1"
 
-mkdirp-promise@^5.0.0:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/mkdirp-promise/-/mkdirp-promise-5.0.1.tgz#e9b8f68e552c68a9c1713b84883f7a1dd039b8a1"
-  dependencies:
-    mkdirp "*"
-
-mkdirp@*, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
+"mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-0.5.1.tgz#30057438eac6cf7f8c4767f38648d6697d75c903"
   dependencies:
@@ -4314,21 +4291,13 @@ mute-stream@0.0.7:
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.7.tgz#3075ce93bc21b8fab43e1bc4da7e8115ed1e7bab"
 
-mv@^2.1.1, mv@~2:
+mv@~2:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/mv/-/mv-2.1.1.tgz#ae6ce0d6f6d5e0a4f7d893798d03c1ea9559b6a2"
   dependencies:
     mkdirp "~0.5.1"
     ncp "~2.0.0"
     rimraf "~2.4.0"
-
-mz@^2.6.0:
-  version "2.7.0"
-  resolved "https://registry.yarnpkg.com/mz/-/mz-2.7.0.tgz#95008057a56cafadc2bc63dde7f9ff6955948e32"
-  dependencies:
-    any-promise "^1.0.0"
-    object-assign "^4.0.1"
-    thenify-all "^1.0.0"
 
 nan@^2.3.0:
   version "2.10.0"
@@ -5250,7 +5219,7 @@ replace-string@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/replace-string/-/replace-string-1.1.0.tgz#87062117f823fe5800c306bacb2cfa359b935fea"
 
-request-progress@3.0.0, request-progress@^3.0.0:
+request-progress@3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/request-progress/-/request-progress-3.0.0.tgz#4ca754081c7fec63f505e4faa825aa06cd669dbe"
   dependencies:
@@ -5968,18 +5937,6 @@ text-table@~0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
 
-thenify-all@^1.0.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/thenify-all/-/thenify-all-1.6.0.tgz#1a1918d402d8fc3f98fbf234db0bcc8cc10e9726"
-  dependencies:
-    thenify ">= 3.1.0 < 4"
-
-"thenify@>= 3.1.0 < 4":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/thenify/-/thenify-3.3.0.tgz#e69e38a1babe969b0108207978b9f62b88604839"
-  dependencies:
-    any-promise "^1.0.0"
-
 throttleit@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/throttleit/-/throttleit-1.0.0.tgz#9e785836daf46743145a5984b6268d828528ac6c"
@@ -6427,12 +6384,12 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@48.3.0:
-  version "48.3.0"
-  resolved "https://registry.npmjs.org/xdl/-/xdl-48.3.0.tgz#ccfa3849e6c53642f80a77e8f3cdeb3d496e4ef3"
+xdl@49.0.0:
+  version "49.0.0"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-49.0.0.tgz#92188f8389943394f91cbf759c2b39e54cdb29ca"
   dependencies:
     "@expo/bunyan" "^1.8.10"
-    "@expo/json-file" "^7.0.0"
+    "@expo/json-file" "^8.0.0"
     "@expo/ngrok" "2.4.2"
     "@expo/osascript" "^1.8.0"
     "@expo/schemer" "1.1.0"
@@ -6442,12 +6399,11 @@ xdl@48.3.0:
     auth0-js "9.3.3"
     axios "0.16.2"
     body-parser "^1.15.2"
-    chalk "^2.3.0"
     concat-stream "^1.6.0"
     decache "^4.1.0"
     delay-async "^1.0.0"
     es6-error "^4.0.2"
-    exists-async "^2.0.0"
+    escape-string-regexp "^1.0.5"
     express "^4.13.4"
     file-type "^4.0.0"
     follow-redirects "^1.2.3"
@@ -6463,17 +6419,14 @@ xdl@48.3.0:
     idx "^2.1.0"
     indent-string "^3.1.0"
     inquirer "^5.0.1"
+    invariant "^2.2.4"
     joi "^10.0.2"
     jsonfile "^2.3.1"
-    jsonschema "^1.1.0"
     jsonwebtoken "^7.2.1"
     lodash "^4.14.1"
     md5hex "^1.0.0"
     minimatch "^3.0.4"
     mkdirp "^0.5.1"
-    mkdirp-promise "^5.0.0"
-    mv "^2.1.1"
-    mz "^2.6.0"
     ncp "^2.0.0"
     opn "^4.0.2"
     plist "2.1.0"
@@ -6488,7 +6441,6 @@ xdl@48.3.0:
     redux-logger "^2.7.4"
     replace-string "^1.1.0"
     request "^2.83.0"
-    request-progress "^3.0.0"
     request-promise-native "^1.0.5"
     semver "^5.3.0"
     slugid "^1.1.0"
@@ -6501,7 +6453,6 @@ xdl@48.3.0:
     util.promisify "^1.0.0"
     uuid "^3.0.1"
     xmldom "^0.1.27"
-    yesno "^0.0.1"
 
 xmlbuilder@8.2.2:
   version "8.2.2"
@@ -6554,7 +6505,3 @@ yargs@^7.1.0:
     which-module "^1.0.0"
     y18n "^3.2.1"
     yargs-parser "^5.0.0"
-
-yesno@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/yesno/-/yesno-0.0.1.tgz#ffbc04ff3d6f99dad24f7463134e9b92ae41bef6"

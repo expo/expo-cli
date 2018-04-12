@@ -10,6 +10,24 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [52.0.0] - 2018-04-12
+
+### Added
+
+* Errors from building JavaScript bundles are now shown in the console with syntax highlighted code snippets.
+
+### Changed
+
+* Improve the error message for syntax errors in `app.json` or `package.json`.
+* Rename `--projectType` option of `exp init` to `--template`.
+* Make `exp init` faster: download templates from a CDN.
+* Improve validation of the project path in `exp init`.
+* Remove the need to be logged in to use `exp init`.
+* Display descriptions of templates in `exp init`.
+* Fix resolving the project directory: `exp init .` now creates a project in the current working directory.
+
+### Removed
+
 ## [51.4.0] - 2018-03-31
 
 * Remove unnecessary validations.
