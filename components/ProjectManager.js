@@ -4,15 +4,12 @@ import HTML5Backend from 'react-dnd-html5-backend';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
-import * as SVG from 'app/common/svg';
-import * as Strings from 'app/common/strings';
 import * as Sets from 'app/common/sets';
 
-import SmallButton from 'app/components/SmallButton';
 import ProjectManagerLayout from 'app/components/ProjectManagerLayout';
 import ProjectManagerDeviceTab from 'app/components/ProjectManagerDeviceTab';
-import ProjectManagerViewingOption from 'app/components/ProjectManagerViewingOption';
-import ProjectManagerSidebarSection from 'app/components/ProjectManagerSidebarSection';
+import ProjectManagerSidebarOptions from 'app/components/ProjectManagerSidebarOptions';
+import ProjectManagerToolbar from 'app/components/ProjectManagerToolbar';
 
 const STYLES_HEADER = css`
   background: ${Constants.colors.yellow};
@@ -31,68 +28,28 @@ const STYLES_LINK = css`
   }
 `;
 
-const STYLES_URL_SECTION = css`
-  padding: 16px;
-`;
-
-const STYLES_URL_SECTION_TOP = css`
-  font-family: ${Constants.fontFamilies.bold};
-  font-size: 12px;
-  margin-bottom: 8px;
-`;
-
-const STYLES_URL_SECTION_BOTTOM = css`
-  font-family: ${Constants.fontFamilies.regular};
-  font-size: 12px;
-`;
-
 class ProjectManager extends React.Component {
-  _handleToggleDeviceIOS = () => {
+  _handleDeviceClickIOS = () => {
     this.props.onUpdateState({
-      showIOSDeviceSection: !this.props.deviceIOS,
-      showAndroidDeviceSection: false,
+      isActiveDeviceIOS: !this.props.isActiveDeviceIOS,
+      isActiveDeviceAndroid: false,
     });
   };
 
-  _handleToggleDeviceAndroid = () => {
+  _handleDeviceClickAndroid = () => {
     this.props.onUpdateState({
-      showIOSDeviceSection: false,
-      showAndroidDeviceSection: !this.props.showAndroidDeviceSection,
+      isActiveDeviceIOS: false,
+      isActiveDeviceAndroid: !this.props.isActiveDeviceAndroid,
     });
   };
 
   render() {
-    const statusSectionElements = (
-      <div>
-        {this.props.sections.length > 1 && (
-          <SmallButton
-            onClick={() => this.props.onChangeSelectionCount(1)}
-            isActive={this.props.renderableSections.length === 1}>
-            <SVG.One size="16px" />
-          </SmallButton>
-        )}
-        {this.props.sections.length > 1 && (
-          <SmallButton
-            onClick={() => this.props.onChangeSelectionCount(2)}
-            isActive={this.props.renderableSections.length === 2}>
-            <SVG.Columns size="16px" />
-          </SmallButton>
-        )}
-        {this.props.sections.length > 2 && (
-          <SmallButton
-            onClick={() => this.props.onChangeSelectionCount(3)}
-            isActive={this.props.renderableSections.length === 3}>
-            <SVG.Three size="16px" />
-          </SmallButton>
-        )}
-        {this.props.sections.length > 3 && (
-          <SmallButton
-            onClick={() => this.props.onChangeSelectionCount(4)}
-            isActive={this.props.renderableSections.length === 4}>
-            <SVG.Grid size="16px" />
-          </SmallButton>
-        )}
-      </div>
+    const toolbarElements = (
+      <ProjectManagerToolbar
+        onChangeSelectionCount={this.props.onChangeSelectionCount}
+        count={this.props.sections.length}
+        renderableCount={this.props.renderableSections.length}
+      />
     );
 
     const devicesElements = (
@@ -110,34 +67,14 @@ class ProjectManager extends React.Component {
     );
 
     const viewingElements = (
-      <div>
-        <ProjectManagerSidebarSection
-          header={
-            <ProjectManagerViewingOption
-              onSimulatorClick={this.props.onOpenIOSSimulator}
-              onDeviceClick={this._handleToggleDeviceIOS}>
-              Open on iOS:
-            </ProjectManagerViewingOption>
-          }
-          isActive={this.props.showIOSDeviceSection}>
-          Viewing options will appear here.
-        </ProjectManagerSidebarSection>
-        <ProjectManagerSidebarSection
-          header={
-            <ProjectManagerViewingOption
-              onSimulatorClick={this.props.onOpenAndroidSimulator}
-              onDeviceClick={this._handleToggleDeviceAndroid}>
-              Open on Android:
-            </ProjectManagerViewingOption>
-          }
-          isActive={this.props.showAndroidDeviceSection}>
-          Viewing options will appear here.
-        </ProjectManagerSidebarSection>
-        <div className={STYLES_URL_SECTION}>
-          <div className={STYLES_URL_SECTION_TOP}>Development URL</div>
-          <div className={STYLES_URL_SECTION_BOTTOM}>{this.props.url}</div>
-        </div>
-      </div>
+      <ProjectManagerSidebarOptions
+        onSimulatorClickIOS={this.props.onSimulatorClickIOS}
+        onDeviceClickIOS={this._handleDeviceClickIOS}
+        isActiveDeviceIOS={this.props.isActiveDeviceIOS}
+        onSimulatorClickAndroid={this.props.onSimulatorClickAndroid}
+        onDeviceClickAndroid={this._handleDeviceClickAndroid}
+        isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
+      />
     );
 
     const alertElement = (
@@ -149,9 +86,11 @@ class ProjectManager extends React.Component {
 
     return (
       <ProjectManagerLayout
+        navigationSection={null}
+        headerSection={null}
         alertSection={alertElement}
         devicesSection={devicesElements}
-        statusSection={statusSectionElements}
+        toolbarSection={toolbarElements}
         viewingSection={viewingElements}
         sections={this.props.renderableSections}
         selectedId={this.props.selectedId}

@@ -14,7 +14,7 @@ const STYLES_CHILDREN = css`
   padding: 16px;
 `;
 
-export default class ProjectManagerSidebarSection extends React.Component {
+export default class ContentGroup extends React.Component {
   render() {
     return (
       <div>

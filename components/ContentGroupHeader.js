@@ -39,7 +39,7 @@ const STYLES_CONTAINER_RIGHT = css`
   }
 `;
 
-export default class ProjectManagerViewingOption extends React.Component {
+export default class ContentGroupHeader extends React.Component {
   render() {
     return (
       <div className={STYLES_CONTAINER} onClick={this.props.onClick}>

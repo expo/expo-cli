@@ -64,7 +64,7 @@ class IndexPage extends React.Component {
     this.props.dispatch({ type: 'UPDATE', state });
   };
 
-  _handleOpenIOSSimulator = () => {
+  _handleSimulatorClickIOS = () => {
     alert('TODO: open IOS simulator');
 
     // NOTE(jim): Fake adding of a device.
@@ -79,7 +79,7 @@ class IndexPage extends React.Component {
     });
   };
 
-  _handleOpenAndroidSimulator = () => {
+  _handleSimulatorClickAndroid = () => {
     alert('TODO: open Android simulator');
 
     // NOTE(jim): Fake adding of a device.
@@ -110,16 +110,16 @@ class IndexPage extends React.Component {
           count={this.props.count}
           url={this.props.url}
           selectedId={this.props.selectedId}
-          showIOSDeviceSection={this.props.showIOSDeviceSection}
-          showAndroidDeviceSection={this.props.showAndroidDeviceSection}
-          onUpdateState={this._handleUpdateState}
-          onOpenIOSSimulator={this._handleOpenIOSSimulator}
-          onOpenAndroidSimulator={this._handleOpenAndroidSimulator}
+          isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
+          isActiveDeviceIOS={this.props.isActiveDeviceIOS}
+          onSimulatorClickIOS={this._handleSimulatorClickIOS}
+          onSimulatorClickAndroid={this._handleSimulatorClickAndroid}
           onChangeSelectionCount={this._handleChangeSectionCount}
           onDeviceSelect={this._handleDeviceSelect}
           onSectionDrag={this._handleSectionDrag}
           onSectionDismiss={this._handleSectionDismiss}
           onSectionSelect={this._handleSectionSelect}
+          onUpdateState={this._handleUpdateState}
         />
       </Root>
     );

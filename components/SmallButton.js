@@ -35,7 +35,7 @@ export default class SmallButton extends React.Component {
   render() {
     return (
       <span
-        {...this.props}
+        onClick={this.props.onClick}
         className={`${STYLES_SMALL_BUTTON} ${this.props.isActive
           ? STYLES_SMALL_BUTTON_ACTIVE
           : STYLES_SMALL_BUTTON_DEFAULT}`}>

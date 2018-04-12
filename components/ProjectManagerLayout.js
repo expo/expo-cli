@@ -87,6 +87,15 @@ const STYLES_CONTAINER_MIDDLE_BOTTOM = css`
   position: relative;
 `;
 
+const STYLES_ROW_STACK = css`
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+`;
+
 const STYLES_ROW_FULL = css`
   min-height: 25%;
   height: 100%;
@@ -109,15 +118,6 @@ const STYLES_ROW_HALF = css`
   :last-child {
     border-bottom: 0px;
   }
-`;
-
-const STYLES_STACK = css`
-  height: 100%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: column;
 `;
 
 const STYLES_COL = css`
@@ -183,7 +183,7 @@ export default class ProjectManagerLayout extends React.Component {
 
     if (sections.length === 4) {
       return (
-        <div className={STYLES_STACK}>
+        <div className={STYLES_ROW_STACK}>
           <div className={STYLES_ROW_HALF}>
             <div className={STYLES_COL}>{this._renderSection(sections[0])}</div>
             <div className={STYLES_COL}>{this._renderSection(sections[1])}</div>
@@ -199,11 +199,11 @@ export default class ProjectManagerLayout extends React.Component {
 
   render() {
     const {
-      navigation,
+      navigationSection,
       devicesSection,
       viewingSection,
       headerSection,
-      statusSection,
+      toolbarSection,
       alertSection,
       sections,
     } = this.props;
@@ -211,7 +211,7 @@ export default class ProjectManagerLayout extends React.Component {
 
     return (
       <section className={STYLES_MAIN_SECTION}>
-        {navigation}
+        {navigationSection}
         {alertSection}
         <div className={STYLES_CONTAINER}>
           <div className={STYLES_CONTAINER_LEFT}>
@@ -221,7 +221,7 @@ export default class ProjectManagerLayout extends React.Component {
           <div className={STYLES_CONTAINER_MIDDLE}>
             <div className={STYLES_CONTAINER_MIDDLE_TOP}>
               <div className={STYLES_CONTAINER_MIDDLE_TOP_HEADER}>{headerSection}</div>
-              <div className={STYLES_CONTAINER_MIDDLE_TOP_ACTIONS}>{statusSection}</div>
+              <div className={STYLES_CONTAINER_MIDDLE_TOP_ACTIONS}>{toolbarSection}</div>
             </div>
             {sectionElements}
           </div>
