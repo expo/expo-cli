@@ -28,6 +28,11 @@ class IndexPage extends React.Component {
   _handleDeviceSelect = ({ id }) => {
     const existingIndex = Sets.findIndex(this.props.devices, id);
 
+    if (existingIndex < this.props.count) {
+      this.props.dispatch({ type: 'UPDATE', state: { selectedId: id } });
+      return;
+    }
+
     if (this.props.selectedId) {
       const selectedIndex = Sets.findIndex(this.props.devices, this.props.selectedId);
       const swapDevices = Sets.swap(this.props.devices, selectedIndex, existingIndex);
