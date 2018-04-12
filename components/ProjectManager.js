@@ -1,6 +1,5 @@
 import styled, { css } from 'react-emotion';
 import { DragDropContext } from 'react-dnd';
-import QRCodeReact from 'qrcode-react';
 import HTML5Backend from 'react-dnd-html5-backend';
 
 import * as React from 'react';
@@ -13,6 +12,7 @@ import SmallButton from 'app/components/SmallButton';
 import ProjectManagerLayout from 'app/components/ProjectManagerLayout';
 import ProjectManagerDeviceTab from 'app/components/ProjectManagerDeviceTab';
 import ProjectManagerViewingOption from 'app/components/ProjectManagerViewingOption';
+import ProjectManagerSidebarSection from 'app/components/ProjectManagerSidebarSection';
 
 const STYLES_HEADER = css`
   background: ${Constants.colors.yellow};
@@ -31,13 +31,8 @@ const STYLES_LINK = css`
   }
 `;
 
-const STYLES_QR_SECTION = css`
-  padding: 16px;
-`;
-
 const STYLES_URL_SECTION = css`
   padding: 16px;
-  border-top: 1px solid ${Constants.colors.border};
 `;
 
 const STYLES_URL_SECTION_TOP = css`
@@ -52,6 +47,19 @@ const STYLES_URL_SECTION_BOTTOM = css`
 `;
 
 class ProjectManager extends React.Component {
+  state = {
+    deviceIOS: false,
+    deviceAndroid: false,
+  };
+
+  _handleToggleDeviceIOS = () => {
+    this.setState({ deviceIOS: !this.state.deviceIOS, deviceAndroid: false });
+  };
+
+  _handleToggleDeviceAndroid = () => {
+    this.setState({ deviceIOS: false, deviceAndroid: !this.state.deviceAndroid });
+  };
+
   render() {
     const statusSectionElements = (
       <div>
@@ -102,15 +110,28 @@ class ProjectManager extends React.Component {
 
     const viewingElements = (
       <div>
-        <ProjectManagerViewingOption onClick={this.props.onOpenIOSSimulator}>
-          Open with iOS Simulator
-        </ProjectManagerViewingOption>
-        <ProjectManagerViewingOption onClick={this.props.onOpenAndroidSimulator}>
-          Open with Android Simulator
-        </ProjectManagerViewingOption>
-        <div className={STYLES_QR_SECTION}>
-          <QRCodeReact value={`https://www.google.com`} size={212} />
-        </div>
+        <ProjectManagerSidebarSection
+          header={
+            <ProjectManagerViewingOption
+              onSimulatorClick={this.props.onOpenIOSSimulator}
+              onDeviceClick={this._handleToggleDeviceIOS}>
+              Open on iOS:
+            </ProjectManagerViewingOption>
+          }
+          isActive={this.state.deviceIOS}>
+          Viewing options will appear here.
+        </ProjectManagerSidebarSection>
+        <ProjectManagerSidebarSection
+          header={
+            <ProjectManagerViewingOption
+              onSimulatorClick={this.props.onOpenAndroidSimulator}
+              onDeviceClick={this._handleToggleDeviceAndroid}>
+              Open on Android:
+            </ProjectManagerViewingOption>
+          }
+          isActive={this.state.deviceAndroid}>
+          Viewing options will appear here.
+        </ProjectManagerSidebarSection>
         <div className={STYLES_URL_SECTION}>
           <div className={STYLES_URL_SECTION_TOP}>Development URL</div>
           <div className={STYLES_URL_SECTION_BOTTOM}>{this.props.url}</div>

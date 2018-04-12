@@ -26,7 +26,7 @@ const STYLES_CONTAINER = css`
 const STYLES_CONTAINER_LEFT = css`
   border-right: 1px solid ${Constants.colors.border};
   background: ${Constants.colors.sidebarBackground};
-  width: 240px;
+  width: 300px;
   height: 100%;
   flex-shrink: 0;
   display: flex;
@@ -46,9 +46,6 @@ const STYLES_CONTAINER_LEFT_BOTTOM = css`
   background: ${Constants.colors.white};
   flex-shrink: 0;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 `;
 
 const STYLES_CONTAINER_MIDDLE = css`

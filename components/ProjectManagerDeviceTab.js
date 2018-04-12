@@ -42,27 +42,6 @@ const STYLES_INDICATOR = css`
   font-size: 10px;
 `;
 
-const source = {
-  beginDrag(props) {
-    // NOTE(jim): we can override props here.
-    console.log('beginDrag');
-
-    /*
-    What you return is the only information available to the drop targets about the drag source so it's important to pick the minimal data they need to know.
-    */
-    return {
-      id: props.data.id,
-    };
-  },
-};
-
-const collect = (connect, monitor) => {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-  };
-};
-
 // TODO(jim): Change icon based on device.
 class ProjectManagerDeviceTab extends React.Component {
   render() {
@@ -84,5 +63,20 @@ class ProjectManagerDeviceTab extends React.Component {
     );
   }
 }
+
+const source = {
+  beginDrag(props) {
+    return {
+      id: props.data.id,
+    };
+  },
+};
+
+const collect = (connect, monitor) => {
+  return {
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging(),
+  };
+};
 
 export default DragSource('tab', source, collect)(ProjectManagerDeviceTab);

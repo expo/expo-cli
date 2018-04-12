@@ -4,43 +4,51 @@ import * as React from 'react';
 import * as Constants from 'app/common/constants';
 import * as SVG from 'app/common/svg';
 
-const STYLES_VIEWING_OPTIONS_LINK = css`
-  font-family: ${Constants.fontFamilies.demi};
-  border-bottom: 1px solid ${Constants.colors.border};
+const STYLES_CONTAINER = css`
+  font-family: ${Constants.fontFamilies.regular};
   color: ${Constants.colors.foregroundAccent};
-  padding: 8px 16px 8px 16px;
   display: flex;
+  height: 30px;
   align-items: center;
   justify-content: space-between;
   transition: 200ms ease all;
+`;
+
+const STYLES_CONTAINER_LEFT = css`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 16px;
+  min-width: 25%;
+  width: 100%;
+`;
+
+const STYLES_CONTAINER_RIGHT = css`
+  font-family: ${Constants.fontFamilies.demi};
+  border-left: 1px solid ${Constants.colors.border};
+  flex-shrink: 0;
   cursor: pointer;
+  padding: 0 16px 0 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   :hover {
     background: ${Constants.colors.border};
   }
 `;
 
-const STYLES_VIEWING_OPTIONS_LINK_LEFT = css`
-  min-width: 25%;
-  width: 100%;
-`;
-
-const STYLES_VIEWING_OPTIONS_LINK_RIGHT = css`
-  flex-shrink: 0;
-`;
-
 export default class ProjectManagerViewingOption extends React.Component {
   render() {
     return (
-      <div className={STYLES_VIEWING_OPTIONS_LINK} onClick={this.props.onClick}>
-        <span className={STYLES_VIEWING_OPTIONS_LINK_LEFT}>{this.props.children}</span>
-        <span className={STYLES_VIEWING_OPTIONS_LINK_RIGHT}>
-          <SVG.Arrow
-            size="16px"
-            style={{
-              color: '#333333',
-            }}
-          />
+      <div className={STYLES_CONTAINER} onClick={this.props.onClick}>
+        <span className={STYLES_CONTAINER_LEFT}>{this.props.children}</span>
+        <span className={STYLES_CONTAINER_RIGHT} onClick={this.props.onSimulatorClick}>
+          Simulator
+        </span>
+        <span className={STYLES_CONTAINER_RIGHT} onClick={this.props.onDeviceClick}>
+          Device
         </span>
       </div>
     );
