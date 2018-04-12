@@ -1,7 +1,7 @@
 export const loggers = [
   {
     id: 1,
-    type: 'tracer',
+    type: 'process',
     name: 'Trace Viewer',
     logs: [
       {
@@ -29,7 +29,7 @@ export const loggers = [
   },
   {
     id: 2,
-    type: 'packager',
+    type: 'process',
     name: 'React Native Packager',
     logs: [
       {
@@ -272,7 +272,7 @@ export const generateServerSideMockData = store => {
     type: 'CONNECT_DEVICE',
     device: {
       id: 1,
-      type: 'packager',
+      type: 'process',
       name: 'React Native Packager',
       logs: [],
     },

@@ -6,6 +6,8 @@ import * as SVG from 'app/common/svg';
 
 import { DragSource } from 'react-dnd';
 
+import LoggerIcon from 'app/components/LoggerIcon';
+
 const STYLES_TAB_SECTION = css``;
 
 const STYLES_TAB_SECTION_CONTAINER = css`
@@ -55,7 +57,7 @@ class ProjectManagerDeviceTab extends React.Component {
         <div className={STYLES_TAB_SECTION_CONTAINER}>
           <div className={STYLES_TAB_SECTION_CONTAINER_DESCRIPTION}>{name}</div>
           <div className={STYLES_TAB_SECTION_CONTAINER_TITLE}>
-            <SVG.Logs size="12px" style={{ marginRight: '8px', marginBottom: '2px' }} />
+            <LoggerIcon type={type} style={{ marginRight: '8px', marginBottom: '2px' }} />
             {`${type} ${deviceLogCount} ${deviceLastTimestamp}`}
           </div>
         </div>
