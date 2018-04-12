@@ -78,9 +78,9 @@ class ProjectManager extends React.Component {
 
     return (
       <ProjectManagerLayout
+        alertSection={alertElement}
         navigationSection={null}
         headerSection={null}
-        alertSection={alertElement}
         devicesSection={devicesElements}
         toolbarSection={toolbarElements}
         viewingSection={viewingElements}

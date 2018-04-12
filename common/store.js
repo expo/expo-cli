@@ -11,24 +11,36 @@ const INITIAL_STATE = {
   isActiveDeviceIOS: false,
 };
 
+const stateUpdate = (state, action) => {
+  return { ...state, ...action.state };
+};
+
+const stateUpdateDeviceWithLog = (state, action) => {
+  if (!state.devices[action.log.deviceIndex]) {
+    return { ...state };
+  }
+
+  state.devices[action.log.deviceIndex].logs.push(action.log);
+
+  return { ...state, ...{ devices: [...state.devices] } };
+};
+
+const stateConnectDevice = (state, action) => {
+  if (state.devices.find(d => d.id === action.device.id)) {
+    return { ...state };
+  }
+
+  return { ...state, ...{ devices: [...state.devices, action.device] } };
+};
+
 export const reducer = (state = INITIAL_STATE, action) => {
   switch (action.type) {
     case 'UPDATE':
-      return { ...state, ...action.state };
+      return stateUpdate(state, action);
     case 'PUSH_LOG_TO_DEVICE':
-      if (!state.devices[action.log.deviceIndex]) {
-        return { ...state };
-      }
-
-      state.devices[action.log.deviceIndex].logs.push(action.log);
-
-      return { ...state, ...{ devices: [...state.devices] } };
+      return stateUpdateDeviceWithLog(state, action);
     case 'CONNECT_DEVICE':
-      if (state.devices.find(d => d.id === action.device.id)) {
-        return { ...state };
-      }
-
-      return { ...state, ...{ devices: [...state.devices, action.device] } };
+      return stateConnectDevice(state, action);
     default:
       return state;
   }
