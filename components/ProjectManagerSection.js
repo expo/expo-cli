@@ -3,10 +3,10 @@ import { DropTarget } from 'react-dnd';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
-import * as SVG from 'app/common/svg';
 
 import ProjectManagerSectionHeader from 'app/components/ProjectManagerSectionHeader';
 import Boundary from 'app/components/Boundary';
+import LoggerIcon from 'app/components/LoggerIcon';
 import Log from 'app/components/Log';
 
 const STYLES_BOUNDARY = css`
@@ -99,8 +99,11 @@ class ProjectManagerSection extends React.Component {
     let headerElement;
     if (this.props.data) {
       headerElement = (
-        <ProjectManagerSectionHeader id={this.props.data.id}>
-          <SVG.Logs size="12px" style={{ marginRight: '8px', marginBottom: '2px' }} />{' '}
+        <ProjectManagerSectionHeader id={this.props.data.id} isSelected={this.props.isSelected}>
+          <LoggerIcon
+            type={this.props.data.type}
+            style={{ marginRight: '8px', marginBottom: '2px' }}
+          />&nbsp;
           {this.props.data.name}
         </ProjectManagerSectionHeader>
       );

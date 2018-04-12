@@ -4,28 +4,16 @@ import * as React from 'react';
 import * as Constants from 'app/common/constants';
 import { DragSource } from 'react-dnd';
 
-const STYLES_LOG = css`
+const STYLES_HEADER = css`
   font-family: ${Constants.fontFamilies.mono};
   display: flex;
-  cursor: pointer;
   justify-content: space-between;
   align-items: flex-start;
   font-size: 14px;
   padding: 16px;
 `;
 
-const STYLES_LOG_COL_CONTEXT = css`
-  color: ${Constants.colors.darkButtonColor};
-  flex-shrink: 0;
-  font-size: 10px;
-  margin: 0 8px 4px 0;
-  text-transform: uppercase;
-  overflow-wrap: break-word;
-  margin-right: 8px;
-`;
-
-const STYLES_LOG_COL_CONTENT = css`
-  color: ${Constants.colors.darkButtonColor};
+const STYLES_HEADER_CONTENT = css`
   width: 100%;
   min-width: 25%;
   font-size: 10px;
@@ -36,16 +24,29 @@ const STYLES_LOG_COL_CONTENT = css`
   align-items: center;
 `;
 
-const STYLES_LOG_LEFT = css`
-  flex-shrink: 0;
-  width: 100px;
+const STYLES_HEADER_SELECTED = css`
+  color: ${Constants.colors.white};
+`;
+
+const STYLES_HEADER_DEFAULT = css`
+  color: ${Constants.colors.darkButtonColor};
+  transition: 200ms ease color;
+  cursor: pointer;
+
+  :hover {
+    color: ${Constants.colors.white};
+  }
 `;
 
 class ProjectManagerWindowHeader extends React.Component {
   render() {
     return this.props.connectDragSource(
-      <div className={STYLES_LOG}>
-        <div className={STYLES_LOG_COL_CONTENT}>{this.props.children}'s logs</div>
+      <div
+        className={`
+          ${STYLES_HEADER} 
+          ${this.props.isSelected ? STYLES_HEADER_SELECTED : STYLES_HEADER_DEFAULT}
+        `}>
+        <div className={STYLES_HEADER_CONTENT}>{this.props.children}'s logs</div>
       </div>
     );
   }
