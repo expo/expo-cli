@@ -47,17 +47,18 @@ const STYLES_URL_SECTION_BOTTOM = css`
 `;
 
 class ProjectManager extends React.Component {
-  state = {
-    deviceIOS: false,
-    deviceAndroid: false,
-  };
-
   _handleToggleDeviceIOS = () => {
-    this.setState({ deviceIOS: !this.state.deviceIOS, deviceAndroid: false });
+    this.props.onUpdateState({
+      showIOSDeviceSection: !this.props.deviceIOS,
+      showAndroidDeviceSection: false,
+    });
   };
 
   _handleToggleDeviceAndroid = () => {
-    this.setState({ deviceIOS: false, deviceAndroid: !this.state.deviceAndroid });
+    this.props.onUpdateState({
+      showIOSDeviceSection: false,
+      showAndroidDeviceSection: !this.props.showAndroidDeviceSection,
+    });
   };
 
   render() {
@@ -118,7 +119,7 @@ class ProjectManager extends React.Component {
               Open on iOS:
             </ProjectManagerViewingOption>
           }
-          isActive={this.state.deviceIOS}>
+          isActive={this.props.showIOSDeviceSection}>
           Viewing options will appear here.
         </ProjectManagerSidebarSection>
         <ProjectManagerSidebarSection
@@ -129,7 +130,7 @@ class ProjectManager extends React.Component {
               Open on Android:
             </ProjectManagerViewingOption>
           }
-          isActive={this.state.deviceAndroid}>
+          isActive={this.props.showAndroidDeviceSection}>
           Viewing options will appear here.
         </ProjectManagerSidebarSection>
         <div className={STYLES_URL_SECTION}>

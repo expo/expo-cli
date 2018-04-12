@@ -60,6 +60,10 @@ class IndexPage extends React.Component {
     this.props.dispatch({ type: 'UPDATE', state: { count } });
   };
 
+  _handleUpdateState = state => {
+    this.props.dispatch({ type: 'UPDATE', state });
+  };
+
   _handleOpenIOSSimulator = () => {
     alert('TODO: open IOS simulator');
 
@@ -106,6 +110,9 @@ class IndexPage extends React.Component {
           count={this.props.count}
           url={this.props.url}
           selectedId={this.props.selectedId}
+          showIOSDeviceSection={this.props.showIOSDeviceSection}
+          showAndroidDeviceSection={this.props.showAndroidDeviceSection}
+          onUpdateState={this._handleUpdateState}
           onOpenIOSSimulator={this._handleOpenIOSSimulator}
           onOpenAndroidSimulator={this._handleOpenAndroidSimulator}
           onChangeSelectionCount={this._handleChangeSectionCount}

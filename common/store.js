@@ -7,6 +7,8 @@ const INITIAL_STATE = {
   selectedId: null,
   count: 1,
   url: 'exp://192.168.0.1',
+  showIOSDeviceSection: false,
+  showAndroidDeviceSection: false,
 };
 
 export const reducer = (state = INITIAL_STATE, action) => {
