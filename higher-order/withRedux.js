@@ -5,6 +5,8 @@ import * as React from 'react';
 const __NEXT_REDUX_STORE__ = '__NEXT_REDUX_STORE__';
 const isCallOnServer = () => Object.prototype.toString.call(global.process) === '[object process]';
 
+// NOTE(jim):
+// We can get the initial state from any source.
 const getOrCreateStore = (initStore, initialState) => {
   if (isCallOnServer() || typeof window === 'undefined') {
     return initStore(initialState);

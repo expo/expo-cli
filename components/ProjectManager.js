@@ -56,22 +56,30 @@ class ProjectManager extends React.Component {
     const statusSectionElements = (
       <div>
         {this.props.sections.length > 1 && (
-          <SmallButton onClick={() => this.props.onChangeSelectionCount(1)}>
+          <SmallButton
+            onClick={() => this.props.onChangeSelectionCount(1)}
+            isActive={this.props.renderableSections.length === 1}>
             <SVG.One size="16px" />
           </SmallButton>
         )}
         {this.props.sections.length > 1 && (
-          <SmallButton onClick={() => this.props.onChangeSelectionCount(2)}>
+          <SmallButton
+            onClick={() => this.props.onChangeSelectionCount(2)}
+            isActive={this.props.renderableSections.length === 2}>
             <SVG.Columns size="16px" />
           </SmallButton>
         )}
         {this.props.sections.length > 2 && (
-          <SmallButton onClick={() => this.props.onChangeSelectionCount(3)}>
+          <SmallButton
+            onClick={() => this.props.onChangeSelectionCount(3)}
+            isActive={this.props.renderableSections.length === 3}>
             <SVG.Three size="16px" />
           </SmallButton>
         )}
         {this.props.sections.length > 3 && (
-          <SmallButton onClick={() => this.props.onChangeSelectionCount(4)}>
+          <SmallButton
+            onClick={() => this.props.onChangeSelectionCount(4)}
+            isActive={this.props.renderableSections.length === 4}>
             <SVG.Grid size="16px" />
           </SmallButton>
         )}
