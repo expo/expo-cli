@@ -19,15 +19,6 @@ const STYLES_HEADER = css`
   width: 100%;
 `;
 
-const STYLES_LINK = css`
-  color: ${Constants.colors.black};
-  text-decoration: none;
-
-  :visited: {
-    color: ${Constants.colors.black};
-  }
-`;
-
 class ProjectManager extends React.Component {
   _handleDeviceClickIOS = () => {
     this.props.onUpdateState({
@@ -68,6 +59,7 @@ class ProjectManager extends React.Component {
 
     const viewingElements = (
       <ProjectManagerSidebarOptions
+        url={this.props.url}
         onSimulatorClickIOS={this.props.onSimulatorClickIOS}
         onDeviceClickIOS={this._handleDeviceClickIOS}
         isActiveDeviceIOS={this.props.isActiveDeviceIOS}

@@ -23,28 +23,28 @@ const STYLES_URL_SECTION_BOTTOM = css`
 
 export default class ProjectManagerSidebarOptions extends React.Component {
   render() {
+    const IOSHeader = (
+      <ContentGroupHeader
+        onSimulatorClick={this.props.onSimulatorClickIOS}
+        onDeviceClick={this.props.onDeviceClickIOS}>
+        Open on iOS:
+      </ContentGroupHeader>
+    );
+
+    const AndroidHeader = (
+      <ContentGroupHeader
+        onSimulatorClick={this.props.onSimulatorClickAndroid}
+        onDeviceClick={this.props.onDeviceClickAndroid}>
+        Open on Android:
+      </ContentGroupHeader>
+    );
+
     return (
       <div>
-        <ContentGroup
-          header={
-            <ContentGroupHeader
-              onSimulatorClick={this.props.onSimulatorClickIOS}
-              onDeviceClick={this.props.onDeviceClickIOS}>
-              Open on iOS:
-            </ContentGroupHeader>
-          }
-          isActive={this.props.isActiveDeviceIOS}>
+        <ContentGroup header={IOSHeader} isActive={this.props.isActiveDeviceIOS}>
           Viewing options will appear here.
         </ContentGroup>
-        <ContentGroup
-          header={
-            <ContentGroupHeader
-              onSimulatorClick={this.props.onSimulatorClickAndroid}
-              onDeviceClick={this.props.onDeviceClickAndroid}>
-              Open on Android:
-            </ContentGroupHeader>
-          }
-          isActive={this.props.isActiveDeviceAndroid}>
+        <ContentGroup header={AndroidHeader} isActive={this.props.isActiveDeviceAndroid}>
           Viewing options will appear here.
         </ContentGroup>
         <div className={STYLES_URL_SECTION}>
