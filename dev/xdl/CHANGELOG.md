@@ -10,6 +10,17 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [49.0.0] - 2018-04-12
+
+### Changed
+
+* Syntax errors in `app.json` now display more useful error messages.
+* Improve the error message for trying to create a project in a path that collides with a file.
+* Automatically add `LSApplicationQueriesSchemes` when detaching an app that uses the Facebook API (expo/expo#1619).
+* Fix regressions with logging events from Metro Bundler.
+* Support for canceling a template download.
+* Get project templates from a CDN for faster downloads.
+
 ## [48.3.0] - 2018-03-31
 
 ### Changed
