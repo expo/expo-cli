@@ -92,14 +92,8 @@ class ProjectManager extends React.Component {
           return (
             <ProjectManagerDeviceTab
               onClick={() => this.props.onDeviceSelect({ id: l.id })}
-              id={l.id}
               key={`devices-${l.name}`}
-              type={`${l.type} ${l.logs && l.logs.length ? `(${l.logs.length})` : ''} ${l.logs &&
-              l.logs.length
-                ? `- ${l.logs[l.logs.length - 1].timestamp}`
-                : ''}`}
-              name={`${l.name}`}
-              logs={l.logs}
+              data={l}
             />
           );
         })}

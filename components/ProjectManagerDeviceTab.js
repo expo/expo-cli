@@ -51,7 +51,7 @@ const source = {
     What you return is the only information available to the drop targets about the drag source so it's important to pick the minimal data they need to know.
     */
     return {
-      id: props.id,
+      id: props.data.id,
     };
   },
 };
@@ -63,15 +63,21 @@ const collect = (connect, monitor) => {
   };
 };
 
+// TODO(jim): Change icon based on device.
 class ProjectManagerDeviceTab extends React.Component {
   render() {
+    const { name, logs, id, type } = this.props.data;
+
+    const deviceLogCount = logs && logs.length ? `(${logs.length})` : '';
+    const deviceLastTimestamp = logs && logs.length ? `- ${logs[logs.length - 1].timestamp}` : '';
+
     return this.props.connectDragSource(
       <div className={STYLES_TAB_SECTION} onClick={this.props.onClick}>
         <div className={STYLES_TAB_SECTION_CONTAINER}>
-          <div className={STYLES_TAB_SECTION_CONTAINER_DESCRIPTION}>{this.props.name}</div>
+          <div className={STYLES_TAB_SECTION_CONTAINER_DESCRIPTION}>{name}</div>
           <div className={STYLES_TAB_SECTION_CONTAINER_TITLE}>
             <SVG.Logs size="12px" style={{ marginRight: '8px', marginBottom: '2px' }} />
-            {this.props.type}
+            {`${type} ${deviceLogCount} ${deviceLastTimestamp}`}
           </div>
         </div>
       </div>
