@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [52.0.2] - 2018-04-13
+
+### Changed
+
+* Fix handling of unrecognized Metro events.
+
 ## [52.0.0] - 2018-04-12
 
 ### Added
