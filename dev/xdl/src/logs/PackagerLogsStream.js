@@ -221,10 +221,12 @@ export default class PackagerLogsStream {
           ? `Starting Metro Bundler on port ${msg.port}.`
           : 'Starting Metro Bundler.';
         break;
-      case 'initialize_done':
+      case 'initialize_done': // SDK >=23 (changed in Metro v0.17.0)
+      case 'initialize_packager_done': // SDK <=22
         chunk.msg = `Metro Bundler ready.`;
         break;
-      case 'initialize_failed': {
+      case 'initialize_failed':  // SDK >=23 (changed in Metro v0.17.0)
+      case 'initialize_packager_failed': { // SDK <=22
         // $FlowFixMe
         let code = msg.error.code;
         chunk.msg =
