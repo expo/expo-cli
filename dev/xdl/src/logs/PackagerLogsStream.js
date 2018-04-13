@@ -253,6 +253,10 @@ export default class PackagerLogsStream {
       case 'worker_stdout_chunk':
       case 'worker_stderr_chunk':
         return;
+      default:
+        chunk.msg = `Unrecognized event: ${msg.type}`;
+        chunk.level = Logger.DEBUG;
+        break;
     }
     this._enqueueAppendLogChunk(chunk);
   }

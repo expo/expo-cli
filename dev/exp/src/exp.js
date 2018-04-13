@@ -132,8 +132,12 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     }
 
     const logLines = (msg, logFn) => {
-      for (let line of msg.split('\n')) {
-        logFn(line);
+      if (typeof msg === 'string') {
+        for (let line of msg.split('\n')) {
+          logFn(line);
+        }
+      } else {
+        logFn(msg);
       }
     };
 
