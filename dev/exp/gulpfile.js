@@ -6,10 +6,11 @@ const plumber = require('gulp-plumber');
 const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
 
+const package = require('./package.json');
+
 const paths = {
   source: 'src/**/*.js',
   build: 'build',
-  sourceRoot: path.join(__dirname, 'src'),
   builtFiles: 'build/**/*.{js,map}',
   nextBuild: 'expo-cli/build',
 };
@@ -22,7 +23,11 @@ const tasks = {
       .pipe(plumber())
       .pipe(sourcemaps.init())
       .pipe(babel())
-      .pipe(sourcemaps.write('__sourcemaps__', { sourceRoot: paths.sourceRoot }))
+      .pipe(
+        sourcemaps.write('__sourcemaps__', {
+          sourceRoot: `/${package.name}@${package.version}/src`,
+        })
+      )
       .pipe(gulp.dest(paths.build));
   },
 

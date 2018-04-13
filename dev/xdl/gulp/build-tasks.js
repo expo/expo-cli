@@ -9,11 +9,12 @@ const request = require('request');
 const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
 
+const package = require('../package.json');
+
 const paths = {
   source: {
     js: 'src/**/*.js',
   },
-  sourceRoot: path.join(__dirname, 'src'),
   build: 'build',
   caches: 'caches',
 };
@@ -30,7 +31,11 @@ const tasks = {
         })
       )
       .pipe(babel())
-      .pipe(sourcemaps.write('__sourcemaps__', { sourceRoot: '/xdl/src' }))
+      .pipe(
+        sourcemaps.write('__sourcemaps__', {
+          sourceRoot: `/${package.name}@${package.version}/src`,
+        })
+      )
       .pipe(gulp.dest(paths.build));
   },
 
