@@ -76,31 +76,25 @@ describe('User Sessions', () => {
     if (!user) {
       return;
     }
-    // expect auth0 tokens and session to be cached
+    // expect session to be cached
     expect(user.username).toBe(userForTest.username);
-    expect(user.idToken).not.toBeFalsy();
-    expect(user.sessionSecret).toEqual('TEST');
+    expect(user.sessionSecret).not.toBe(undefined);
 
-    // expect auth0 tokens and session to be in state.json
-    let { idToken, sessionSecret } = await UserSettings.getAsync('auth', {});
-
-    expect(idToken).not.toBeFalsy();
-    expect(sessionSecret).toEqual('TEST');
+    // expect session to be in state.json
+    let { sessionSecret } = await UserSettings.getAsync('auth', {});
+    expect(sessionSecret).not.toBe(undefined);
   });
   it('should remove a session token upon logout', async () => {
     const UserManager = _newTestUserManager();
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
       password: userForTestPassword,
-      testSession: true,
     });
 
     await UserManager.logoutAsync();
 
-    // expect auth0 tokens and sesion to be removed
-    let { idToken, sessionSecret } = await UserSettings.getAsync('auth', {});
-
-    expect(idToken).toBe(undefined);
+    // expect session to be removed
+    let { sessionSecret } = await UserSettings.getAsync('auth', {});
     expect(sessionSecret).toBe(undefined);
   });
 
@@ -109,7 +103,6 @@ describe('User Sessions', () => {
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
       password: userForTestPassword,
-      testSession: true,
     });
 
     let formData = new FormData();
@@ -126,8 +119,7 @@ describe('User Sessions', () => {
       },
       true
     );
-    const sessionHeaderReceived = response.headers['expo-session-response'];
-    expect(sessionHeaderReceived).toEqual('received');
+    expect(response.status).toBe(200);
   });
 
   it('should use the token in apiv2', async () => {
@@ -135,36 +127,12 @@ describe('User Sessions', () => {
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
       password: userForTestPassword,
-      testSession: true,
     });
 
     const user = await UserManager.getCurrentUserAsync();
     const api = ApiV2Client.clientForUser(user);
     const response = await api.getAsync('auth/intercomUserHash', {}, {}, true);
-    const sessionHeaderReceived = response.headers['expo-session-response'];
-    expect(sessionHeaderReceived).toEqual('received');
-  });
-
-  it('migration endpoint should be contacted if there is no session', async () => {
-    const UserManager = _newTestUserManager();
-    await UserManager.loginAsync('user-pass', {
-      username: userForTest.username,
-      password: userForTestPassword,
-    });
-    let user = await UserManager.getCurrentUserAsync();
-
-    // expect session to NOT be present
-    expect(user.sessionSecret).toBe(undefined);
-    let { sessionSecretOld } = await UserSettings.getAsync('auth', {});
-    expect(sessionSecretOld).toBe(undefined);
-
-    // migrate to sessions
-    await UserManager.migrateAuth0ToSessionAsync({  testMode: true  });
-
-    // expect session to be cached and stored in state.json
-    expect(user.sessionSecret).toEqual('TEST');
-    let { sessionSecret } = await UserSettings.getAsync('auth', {});
-    expect(sessionSecret).toEqual('TEST');
+    expect(response.status).toBe(200);
   });
 });
 

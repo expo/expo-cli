@@ -90,10 +90,10 @@ describe('UserManager', () => {
       return;
     }
     expect(user.username).toBe(userForTest.username);
-    expect(user.idToken).not.toBeFalsy();
+    expect(user.sessionSecret).not.toBeFalsy();
   });
 
-  it('should use cached user after first run of getCurrentUserAsync() instead of verifying token with Auth0', async () => {
+  it('should use cached user after first run of getCurrentUserAsync() instead of making call to www', async () => {
     const UserManager = _newTestUserManager();
     await UserManager.loginAsync('user-pass', {
       username: userForTest.username,
@@ -132,28 +132,7 @@ describe('UserManager', () => {
     expect(_getProfileSpy).toHaveBeenCalledTimes(1);
 
     // This shouldn't have changed, but just double check it
-    expect(users[0].idToken).toEqual(users[1].idToken);
-    expect(users[0].refreshToken).toEqual(users[1].refreshToken);
-  });
-
-  it('should detect expired token when calling getCurrentUserAsync', async () => {
-    const UserManager = _newTestUserManager();
-    // Make sure we have a session
-    const initialUser = await UserManager.loginAsync('user-pass', {
-      username: userForTest.username,
-      password: userForTestPassword,
-    });
-    // set the refresh session threshold to a very high value, simulating an expired token
-    UserManager.refreshSessionThreshold = 63072000;
-
-    // Spy on _auth0RefreshToken
-    const _auth0RefreshTokenSpy = jest.fn(UserManager._auth0RefreshToken);
-    // $FlowFixMe
-    UserManager._auth0RefreshToken = _auth0RefreshTokenSpy;
-
-    const currentUser = ((await UserManager.getCurrentUserAsync(): any): User);
-    expect(_auth0RefreshTokenSpy).toBeCalled();
-    expect(currentUser.idToken).not.toEqual(initialUser.idToken);
+    expect(users[0].sessionSecret).toEqual(users[1].sessionSecret);
   });
 });
 

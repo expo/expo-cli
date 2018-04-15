@@ -46,21 +46,15 @@ type ErrorWithResponseBody = Error & {
 };
 
 type APIV2ClientOptions = {
-  idToken?: string,
-  accessToken?: string,
   sessionSecret?: string,
 };
 
 export default class ApiV2Client {
-  idToken: ?string = null;
-  accessToken: ?string = null;
   sessionSecret: ?string = null;
 
   static clientForUser(user: ?User): ApiV2Client {
     if (user) {
       return new ApiV2Client({
-        accessToken: user.accessToken,
-        idToken: user.idToken,
         sessionSecret: user.sessionSecret,
       });
     }
@@ -69,14 +63,6 @@ export default class ApiV2Client {
   }
 
   constructor(options: APIV2ClientOptions = {}) {
-    if (options.idToken) {
-      this.idToken = options.idToken;
-    }
-
-    if (options.accessToken) {
-      this.accessToken = options.accessToken;
-    }
-
     if (options.sessionSecret) {
       this.sessionSecret = options.sessionSecret;
     }
@@ -166,14 +152,6 @@ export default class ApiV2Client {
       },
       json: typeof options.json !== 'undefined' ? options.json : false,
     };
-
-    if (this.idToken) {
-      reqOptions.headers['Authorization'] = `Bearer ${this.idToken}`;
-    }
-
-    if (this.accessToken) {
-      reqOptions.headers['Exp-Access-Token'] = this.accessToken;
-    }
 
     if (this.sessionSecret) {
       reqOptions.headers['Expo-Session'] = this.sessionSecret;
