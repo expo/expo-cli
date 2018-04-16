@@ -7,17 +7,24 @@
 
 import fs from 'fs-extra';
 import path from 'path';
-import JsonFile from '@expo/json-file';
 import replaceString from 'replace-string';
 import _ from 'lodash';
 import globby from 'globby';
 
+import * as AssetBundle from './AssetBundle';
 import * as ExponentTools from './ExponentTools';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 import logger from './Logger';
 
-const { getManifestAsync, saveUrlToPathAsync, spawnAsyncThrowError, spawnAsync } = ExponentTools;
+const {
+  getManifestAsync,
+  saveUrlToPathAsync,
+  spawnAsyncThrowError,
+  spawnAsync,
+  regexFileAsync,
+  deleteLinesInFileAsync,
+} = ExponentTools;
 
 const imageKeys = ['ldpi', 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
 
@@ -30,35 +37,6 @@ function exponentDirectory() {
   } else {
     return null;
   }
-}
-
-async function regexFileAsync(regex, replace, filename) {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
-  await fs.writeFile(filename, fileString.replace(regex, replace));
-}
-
-// Matches sed /d behavior
-async function deleteLinesInFileAsync(startRegex, endRegex, filename) {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
-  let lines = fileString.split(/\r?\n/);
-  let filteredLines = [];
-  let inDeleteRange = false;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].match(startRegex)) {
-      inDeleteRange = true;
-    }
-
-    if (!inDeleteRange) {
-      filteredLines.push(lines[i]);
-    }
-
-    if (inDeleteRange && lines[i].match(endRegex)) {
-      inDeleteRange = false;
-    }
-  }
-  await fs.writeFile(filename, filteredLines.join('\n'));
 }
 
 function xmlWeirdAndroidEscape(original) {
@@ -895,9 +873,7 @@ export async function runShellAppModificationsAsync(
     });
   }
 
-  if (manifest.bundledAssets) {
-    await downloadAssetsAsync(manifest.bundledAssets, `${shellPath}/app/src/main/assets`);
-  }
+  await AssetBundle.bundleAsync(manifest.bundledAssets, `${shellPath}/app/src/main/assets`);
 
   let certificateHash = '';
   let googleAndroidApiKey = '';
@@ -967,7 +943,10 @@ export async function runShellAppModificationsAsync(
   if (manifest.android && manifest.android.googleServicesFile) {
     // google-services.json
     // Used for configuring FCM
-    await fs.writeFile(path.join(shellPath, 'app', 'google-services.json'), manifest.android.googleServicesFile);
+    await fs.writeFile(
+      path.join(shellPath, 'app', 'google-services.json'),
+      manifest.android.googleServicesFile
+    );
 
     await regexFileAsync(
       '<!-- ADD FCM CONFIG HERE -->',
@@ -1111,32 +1090,20 @@ async function buildShellAppAsync(context: StandaloneContext) {
   }
 }
 
-async function downloadAssetsAsync(assets, dest) {
-  // Compat with exp 46.x.x, can remove when this version is phasing out.
-  if (typeof assets[0] === 'object') {
-    assets = assets.reduce(
-      (res, cur) =>
-        res.concat(cur.fileHashes.map(h => 'asset_' + h + (cur.type ? '.' + cur.type : ''))),
-      []
-    );
+export function addDetachedConfigToExp(exp: Object, context: StandaloneContext): Object {
+  if (context.type !== 'user') {
+    console.warn(`Tried to modify exp for a non-user StandaloneContext, ignoring`);
+    return exp;
   }
-
-  await fs.ensureDir(dest);
-  const batches = _.chunk(assets, 5);
-  for (const batch of batches) {
-    await Promise.all(
-      batch.map(async asset => {
-        const extensionIndex = asset.lastIndexOf('.');
-        const prefixLength = 'asset_'.length;
-        const hash =
-          extensionIndex >= 0
-            ? asset.substring(prefixLength, extensionIndex)
-            : asset.substring(prefixLength);
-        await saveUrlToPathAsync(
-          'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
-          path.join(dest, asset)
-        );
-      })
-    );
-  }
+  let shellPath = shellPathForContext(context);
+  let assetsDirectory = path.join(shellPath, 'app', 'src', 'main', 'assets');
+  exp.android.publishBundlePath = path.relative(
+    context.data.projectPath,
+    path.join(assetsDirectory, 'shell-app.bundle')
+  );
+  exp.android.publishManifestPath = path.relative(
+    context.data.projectPath,
+    path.join(assetsDirectory, 'shell-app-manifest.json')
+  );
+  return exp;
 }

@@ -19,10 +19,11 @@ import inquirer from 'inquirer';
 import {
   isDirectory,
   parseSdkMajorVersion,
-  saveImageToPathAsync,
   rimrafDontThrow,
+  regexFileAsync,
 } from './ExponentTools';
 
+import * as AssetBundle from './AssetBundle';
 import * as IosPlist from './IosPlist';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
@@ -37,7 +38,6 @@ import XDLError from '../XDLError';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 import * as UrlUtils from '../UrlUtils';
-import * as Utils from '../Utils';
 import * as Versions from '../Versions';
 import installPackageAsync from './installPackageAsync';
 import logger from './Logger';
@@ -213,6 +213,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
         sdkVersionConfig.androidExpoViewUrl
       );
     }
+    exp = AndroidShellApp.addDetachedConfigToExp(exp, context);
     exp.detach.androidExpoViewUrl = sdkVersionConfig.androidExpoViewUrl;
   }
 
@@ -265,12 +266,6 @@ async function detachIOSAsync(context: StandaloneContext) {
   await IosNSBundle.configureAsync(context);
 
   logger.info(`iOS detach is complete!`);
-}
-
-async function regexFileAsync(filename, regex, replace) {
-  let file = await fs.readFile(filename);
-  let fileString = file.toString();
-  await fs.writeFile(filename, fileString.replace(regex, replace));
 }
 
 async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: string) {
@@ -425,6 +420,7 @@ async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, 
       }
     }
   }
+
   // insert expo development url into iOS config
   if (!args.skipXcodeConfig) {
     // populate EXPO_RUNTIME_VERSION from ExpoKit pod version
@@ -467,10 +463,43 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
       let expoBuildConstants = expoBuildConstantsMatches[0];
       let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
       await regexFileAsync(
-        expoBuildConstants,
         /DEVELOPMENT_URL \= \"[^\"]*\"\;/,
-        `DEVELOPMENT_URL = "${devUrl}";`
+        `DEVELOPMENT_URL = "${devUrl}";`,
+        expoBuildConstants
       );
     }
   }
+}
+
+type BundleAssetsArgs = {
+  platform: 'ios' | 'android',
+  // This is the path where assets will be copied to. It should be
+  // `$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH` on iOS
+  // (see `exponent-view-template.xcodeproj/project.pbxproj` for an example)
+  // and `$buildDir/intermediates/assets/$targetPath` on Android (see
+  // `android/app/expo.gradle` for an example).
+  dest: string,
+};
+
+export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsArgs) {
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  let publishManifestPath =
+    args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
+  if (!publishManifestPath) {
+    logger.warn(
+      `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
+    );
+    return;
+  }
+  let bundledManifestPath = path.join(projectDir, publishManifestPath);
+  let manifest;
+  try {
+    manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
+  } catch (ex) {
+    throw new Error(
+      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
+    );
+  }
+
+  await AssetBundle.bundleAsync(manifest.bundledAssets, args.dest);
 }

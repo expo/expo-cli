@@ -5,16 +5,20 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
-import _ from 'lodash';
 
-import { getManifestAsync, saveUrlToPathAsync, manifestUsesSplashApi, parseSdkMajorVersion } from './ExponentTools';
+import {
+  getManifestAsync,
+  saveUrlToPathAsync,
+  manifestUsesSplashApi,
+  parseSdkMajorVersion,
+} from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
+import * as AssetBundle from './AssetBundle';
 import * as IosIcons from './IosIcons';
 import * as IosPlist from './IosPlist';
 import * as IosLaunchScreen from './IosLaunchScreen';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
-import * as Versions from '../Versions';
 import * as IosLocalization from './IosLocalization';
 import logger from './Logger';
 
@@ -416,38 +420,6 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
   });
 }
 
-async function _downloadAssetsAsync(assets, dest, oldFormat) {
-  if (!assets) {
-    return;
-  }
-  // Compat with exp 46.x.x, can remove when this version is phasing out.
-  if (typeof assets[0] === 'object') {
-    assets = assets.reduce(
-      (res, cur) =>
-        res.concat(cur.fileHashes.map(h => 'asset_' + h + (cur.type ? '.' + cur.type : ''))),
-      []
-    );
-  }
-  const batches = _.chunk(assets, 5);
-  for (const batch of batches) {
-    await Promise.all(
-      batch.map(async asset => {
-        const extensionIndex = asset.lastIndexOf('.');
-        const prefixLength = 'asset_'.length;
-        const hash =
-          extensionIndex >= 0
-            ? asset.substring(prefixLength, extensionIndex)
-            : asset.substring(prefixLength);
-        await saveUrlToPathAsync(
-          'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
-          // For sdk24 the runtime expects only the hash as the filename.
-          path.join(dest, oldFormat ? hash : asset)
-        );
-      })
-    );
-  }
-}
-
 async function configureAsync(context: StandaloneContext) {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
@@ -463,7 +435,7 @@ async function configureAsync(context: StandaloneContext) {
 
   if (context.data.manifest) {
     const { supportingDirectory } = IosWorkspace.getPaths(context);
-    await _downloadAssetsAsync(
+    await AssetBundle.bundleAsync(
       context.data.manifest.bundledAssets,
       supportingDirectory,
       context.data.manifest.sdkVersion === '24.0.0'

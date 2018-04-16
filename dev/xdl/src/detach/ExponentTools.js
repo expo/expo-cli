@@ -5,6 +5,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import Request from 'request-promise-native';
+// `request-promise-native` discourages using pipe. Noticed some issues with
+// error handling so when using pipe use the original request lib instead.
+import pipeRequest from 'request';
 import rimraf from 'rimraf';
 import spawnAsyncQuiet from '@expo/spawn-async';
 
@@ -46,7 +49,7 @@ function saveUrlToPathAsync(url, path) {
       resolve();
     });
     stream.on('error', reject);
-    request(url).pipe(stream);
+    pipeRequest(url).pipe(stream);
   });
 }
 
@@ -64,7 +67,7 @@ function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
     if (fs.existsSync(localPath)) {
       fs.createReadStream(localPath).pipe(stream);
     } else {
-      request(pathOrURL).pipe(stream);
+      pipeRequest(pathOrURL).pipe(stream);
     }
   });
 }
@@ -172,6 +175,35 @@ async function getResolvedLocalesAsync(inMemoryManifest) {
   return locales;
 }
 
+async function regexFileAsync(regex, replace, filename) {
+  let file = await fs.readFile(filename);
+  let fileString = file.toString();
+  await fs.writeFile(filename, fileString.replace(regex, replace));
+}
+
+// Matches sed /d behavior
+async function deleteLinesInFileAsync(startRegex, endRegex, filename) {
+  let file = await fs.readFile(filename);
+  let fileString = file.toString();
+  let lines = fileString.split(/\r?\n/);
+  let filteredLines = [];
+  let inDeleteRange = false;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].match(startRegex)) {
+      inDeleteRange = true;
+    }
+
+    if (!inDeleteRange) {
+      filteredLines.push(lines[i]);
+    }
+
+    if (inDeleteRange && lines[i].match(endRegex)) {
+      inDeleteRange = false;
+    }
+  }
+  await fs.writeFile(filename, filteredLines.join('\n'));
+}
+
 export {
   isDirectory,
   parseSdkMajorVersion,
@@ -184,4 +216,6 @@ export {
   transformFileContentsAsync,
   manifestUsesSplashApi,
   getResolvedLocalesAsync,
+  regexFileAsync,
+  deleteLinesInFileAsync,
 };

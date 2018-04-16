@@ -12,7 +12,6 @@ import fs from 'fs-extra';
 import joi from 'joi';
 import promisify from 'util.promisify';
 import _ from 'lodash';
-import isEmpty from 'lodash/isEmpty';
 import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
@@ -482,6 +481,40 @@ export async function publishAsync(
         'android.publishManifestPath',
         exp.android.publishManifestPath,
         JSON.stringify(androidManifest)
+      );
+    }
+
+    // We need to add EmbeddedResponse instances on Android to tell the runtime
+    // that the shell app manifest and bundle is packaged.
+    if (exp.android && exp.android.publishManifestPath && exp.android.publishBundlePath) {
+      let fullManifestUrl = `${response.url.replace('exp://', 'https://')}/index.exp`;
+      let constantsPath = path.join(
+        projectRoot,
+        'android',
+        'app',
+        'src',
+        'main',
+        'java',
+        'host',
+        'exp',
+        'exponent',
+        'generated',
+        'AppConstants.java'
+      );
+      await ExponentTools.deleteLinesInFileAsync(
+        `START EMBEDDED RESPONSES`,
+        `END EMBEDDED RESPONSES`,
+        constantsPath
+      );
+      await ExponentTools.regexFileAsync(
+        '// ADD EMBEDDED RESPONSES HERE',
+        `
+        // ADD EMBEDDED RESPONSES HERE
+        // START EMBEDDED RESPONSES
+        embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
+        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+        // END EMBEDDED RESPONSES`,
+        constantsPath
       );
     }
   }
