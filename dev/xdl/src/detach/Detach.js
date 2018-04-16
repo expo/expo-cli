@@ -134,9 +134,19 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     exp.detach = {};
   }
 
-  if (!exp.detach.scheme) {
-    let detachedUUID = uuid.v4().replace(/-/g, '');
-    exp.detach.scheme = `exp${detachedUUID}`;
+  let detachedUUID = uuid.v4().replace(/-/g, '');
+  let generatedScheme = `exp${detachedUUID}`;
+
+  if (!exp.detach.scheme && !Versions.gteSdkVersion(exp, '27.0.0')) {
+    // set this for legacy purposes
+    exp.detach.scheme = generatedScheme;
+  }
+
+  if (!exp.scheme) {
+    logger.info(
+      `You have not specified a custom scheme for deep linking. A default value of ${generatedScheme} will be used. You can change this later by following the instructions in this guide: https://docs.expo.io/versions/latest/workflow/linking`
+    );
+    exp.scheme = generatedScheme;
   }
 
   let expoDirectory = path.join(projectRoot, '.expo-source');
@@ -382,7 +392,6 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
     }
     return constantsConfig;
   });
-  return;
 }
 
 async function _readDefaultApiKeysAsync(jsonFilePath: string) {

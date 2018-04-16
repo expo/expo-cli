@@ -35,6 +35,16 @@ export async function constructManifestUrlAsync(
   return constructUrlAsync(projectRoot, opts, false, requestHostname);
 }
 
+// gets the base manifest URL and removes the scheme
+export async function constructHostUriAsync(projectRoot: string, requestHostname?: string) {
+  let urlString = await constructUrlAsync(projectRoot, null, false, requestHostname);
+  // we need to use node's legacy urlObject api since the newer one doesn't like empty protocols
+  let urlObj = url.parse(urlString);
+  urlObj.protocol = '';
+  urlObj.slashes = false;
+  return url.format(urlObj);
+}
+
 export async function constructLogUrlAsync(projectRoot: string, requestHostname?: string) {
   let baseUrl = await constructUrlAsync(projectRoot, { urlType: 'http' }, false, requestHostname);
   return `${baseUrl}/logs`;
@@ -192,8 +202,14 @@ export async function constructUrlAsync(
     protocol = 'exp';
 
     let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-    if (exp.detach && exp.detach.scheme) {
-      protocol = exp.detach.scheme;
+    if (exp.detach) {
+      if (exp.scheme && Versions.gteSdkVersion(exp, '27.0.0')) {
+        protocol = exp.scheme;
+      } else if (exp.detach.scheme) {
+        // must keep this fallback in place for older projects
+        // and those detached with an older version of xdl
+        protocol = exp.detach.scheme;
+      }
     }
   }
 

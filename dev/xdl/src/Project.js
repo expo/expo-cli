@@ -711,9 +711,7 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
       const file = asset.files && asset.files[0];
       if (asset.__packager_asset && file && fullPatterns.some(p => minimatch(file, p))) {
         asset.fileHashes.forEach(hash =>
-          bundledAssets.add(
-            "asset_" + hash + (asset.type ? "." + asset.type : "")
-          )
+          bundledAssets.add('asset_' + hash + (asset.type ? '.' + asset.type : ''))
         );
       }
     }
@@ -1293,6 +1291,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, req.hostname);
       manifest.mainModuleName = mainModuleName;
       manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, req.hostname);
+      manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, req.hostname);
       await _resolveManifestAssets(
         projectRoot,
         manifest,
