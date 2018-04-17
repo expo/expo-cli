@@ -14,7 +14,9 @@ const STYLES_INPUT = css`
 `;
 
 const STYLES_INPUT_ELEMENT = css`
+  font-family: ${Constants.fontFamilies.regular};
   border-radius: 4px 0 0 4px;
+  font-size: 14px;
   min-width: 25%;
   width: 100%;
   height: 100%;
@@ -48,6 +50,7 @@ export default class InputWithButton extends React.Component {
     return (
       <div className={STYLES_INPUT}>
         <input
+          placeholder={this.props.placeholder}
           className={STYLES_INPUT_ELEMENT}
           onChange={this._handleChange}
           onSubmit={this._handleSubmit}

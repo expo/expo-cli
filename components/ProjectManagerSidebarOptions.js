@@ -6,6 +6,7 @@ import * as Constants from 'app/common/constants';
 import ContentGroup from 'app/components/ContentGroup';
 import ContentGroupHeader from 'app/components/ContentGroupHeader';
 import InputWithButton from 'app/components/InputWithButton';
+import QRCode from 'app/components/QRCode';
 
 const STYLES_URL_SECTION = css`
   padding: 16px;
@@ -46,6 +47,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           <InputWithButton placeholder="Enter email or number">Send</InputWithButton>
         </ContentGroup>
         <ContentGroup header={AndroidHeader} isActive={this.props.isActiveDeviceAndroid}>
+          <QRCode url="https://www.google.com" />
           <InputWithButton placeholder="Enter email or number">Send</InputWithButton>
         </ContentGroup>
         <div className={STYLES_URL_SECTION}>
