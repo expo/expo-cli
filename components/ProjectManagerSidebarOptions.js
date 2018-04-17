@@ -5,11 +5,13 @@ import * as Constants from 'app/common/constants';
 
 import ContentGroup from 'app/components/ContentGroup';
 import ContentGroupHeader from 'app/components/ContentGroupHeader';
+import NetworkGroupHeader from 'app/components/NetworkGroupHeader';
 import InputWithButton from 'app/components/InputWithButton';
 import QRCode from 'app/components/QRCode';
 
 const STYLES_URL_SECTION = css`
   padding: 16px;
+  border-bottom: 1px solid ${Constants.colors.border};
 `;
 
 const STYLES_URL_SECTION_TOP = css`
@@ -37,7 +39,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
       <ContentGroupHeader
         onSimulatorClick={this.props.onSimulatorClickIOS}
         onDeviceClick={this.props.onDeviceClickIOS}>
-        Open on iOS:
+        Run on iOS:
       </ContentGroupHeader>
     );
 
@@ -45,8 +47,17 @@ export default class ProjectManagerSidebarOptions extends React.Component {
       <ContentGroupHeader
         onSimulatorClick={this.props.onSimulatorClickAndroid}
         onDeviceClick={this.props.onDeviceClickAndroid}>
-        Open on Android:
+        Run on Android:
       </ContentGroupHeader>
+    );
+
+    const ConnectionHeader = (
+      <NetworkGroupHeader
+        onLocalhostClick={this.props.onNetworkLocalhostClick}
+        onTunnelClick={this.props.onNetworkTunnelClick}
+        onLANClick={this.props.onNetworkLANClick}>
+        Connection:
+      </NetworkGroupHeader>
     );
 
     return (
@@ -67,6 +78,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           <div className={STYLES_URL_SECTION_TOP}>Development URL</div>
           <div className={STYLES_URL_SECTION_BOTTOM}>{this.props.url}</div>
         </div>
+        <ContentGroup header={ConnectionHeader} />
       </div>
     );
   }
