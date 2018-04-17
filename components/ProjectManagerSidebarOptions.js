@@ -23,6 +23,14 @@ const STYLES_URL_SECTION_BOTTOM = css`
   font-size: 12px;
 `;
 
+const STYLES_SUBTITLE = css`
+  font-family: ${Constants.fontFamilies.mono};
+  color: #777777;
+  font-size: 12px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+`;
+
 export default class ProjectManagerSidebarOptions extends React.Component {
   render() {
     const IOSHeader = (
@@ -44,10 +52,15 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     return (
       <div>
         <ContentGroup header={IOSHeader} isActive={this.props.isActiveDeviceIOS}>
+          <div className={STYLES_SUBTITLE}>Send link to load</div>
           <InputWithButton placeholder="Enter email or number">Send</InputWithButton>
         </ContentGroup>
         <ContentGroup header={AndroidHeader} isActive={this.props.isActiveDeviceAndroid}>
+          <div className={STYLES_SUBTITLE}>Scan to load</div>
           <QRCode url="https://www.google.com" />
+          <div className={STYLES_SUBTITLE} style={{ marginTop: 24 }}>
+            Send link to load
+          </div>
           <InputWithButton placeholder="Enter email or number">Send</InputWithButton>
         </ContentGroup>
         <div className={STYLES_URL_SECTION}>

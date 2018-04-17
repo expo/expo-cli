@@ -9,7 +9,7 @@ const STYLES_INPUT = css`
   height: 266px;
   padding: 16px;
   background: ${Constants.colors.white};
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 `;
 

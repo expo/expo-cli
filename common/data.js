@@ -302,6 +302,7 @@ export const generateClientSideMockData = async props => {
     },
   });
 
+  /*
   await delay(2000);
 
   props.dispatch({
@@ -313,6 +314,7 @@ export const generateClientSideMockData = async props => {
       logs: [],
     },
   });
+  */
 
   await delay(2000);
 
@@ -321,7 +323,7 @@ export const generateClientSideMockData = async props => {
     props.dispatch({
       type: 'PUSH_LOG_TO_DEVICE',
       log: {
-        deviceIndex: getRandomInt(0, 4),
+        deviceIndex: getRandomInt(0, 3),
         status: 'success',
         timestamp: new Date().toLocaleTimeString('en-US'),
         text:
@@ -337,7 +339,7 @@ export const generateClientSideMockData = async props => {
     props.dispatch({
       type: 'PUSH_LOG_TO_DEVICE',
       log: {
-        deviceId: getRandomInt(1, 4),
+        deviceId: getRandomInt(1, 3),
         status: 'success',
         timestamp: new Date().toLocaleTimeString('en-US'),
         text:
@@ -353,7 +355,7 @@ export const generateClientSideMockData = async props => {
     props.dispatch({
       type: 'PUSH_LOG_TO_DEVICE',
       log: {
-        deviceId: getRandomInt(1, 4),
+        deviceId: getRandomInt(1, 3),
         status: 'success',
         timestamp: new Date().toLocaleTimeString('en-US'),
         text:

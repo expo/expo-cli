@@ -9,7 +9,7 @@ const STYLES_INPUT = css`
   justify-content: space-between;
   position: relative;
   height: 40px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   border-radius: 4px;
 `;
 
@@ -34,11 +34,12 @@ const STYLES_INPUT_ELEMENT = css`
 
 const STYLES_INPUT_BUTTON = css`
   font-family: ${Constants.fontFamilies.demi};
+  text-transform: uppercase;
   border-radius: 0 4px 4px 0;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  padding: 0 16px 0 16px;
+  padding: 2px 16px 0 16px;
   height: 100%;
   background: ${Constants.colors.green};
   color: #ffffff;
