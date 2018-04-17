@@ -5,6 +5,7 @@ import * as Constants from 'app/common/constants';
 
 import ContentGroup from 'app/components/ContentGroup';
 import ContentGroupHeader from 'app/components/ContentGroupHeader';
+import InputWithButton from 'app/components/InputWithButton';
 
 const STYLES_URL_SECTION = css`
   padding: 16px;
@@ -42,10 +43,10 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     return (
       <div>
         <ContentGroup header={IOSHeader} isActive={this.props.isActiveDeviceIOS}>
-          Viewing options will appear here.
+          <InputWithButton placeholder="Enter email or number">Send</InputWithButton>
         </ContentGroup>
         <ContentGroup header={AndroidHeader} isActive={this.props.isActiveDeviceAndroid}>
-          Viewing options will appear here.
+          <InputWithButton placeholder="Enter email or number">Send</InputWithButton>
         </ContentGroup>
         <div className={STYLES_URL_SECTION}>
           <div className={STYLES_URL_SECTION_TOP}>Development URL</div>
