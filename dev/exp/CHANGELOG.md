@@ -23,7 +23,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
   --push-p12-path <push.p12>                      Path to your push notification certificate P12 file.
   --provisioning-profile-path <.mobileprovision>  Path to your provisioning Profile.
   ```
-  * New environment variables for `exp build:android`:
+  * New environment variables for `exp build:ios`:
   ```
   EXPO_IOS_DIST_P12_PASSWORD
   EXPO_IOS_PUSH_P12_PASSWORD
