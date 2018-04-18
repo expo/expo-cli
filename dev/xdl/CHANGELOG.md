@@ -10,6 +10,19 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [49.1.0] - 2018-04-18
+
+### Changed
+
+* Enabled session authentication.
+* Make iOS build select credentials based on `bundleIdentifier`.
+* Always generate a scheme for detached apps, if a custom one is not defined.
+* Starting from SDK 27, the `detach.scheme` setting is no longer used.
+
+### Removed
+
+* Removed legacy Auth0 authentication.
+
 ## [49.0.2] - 2018-04-13
 
 ### Changed

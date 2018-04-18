@@ -10,6 +10,37 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [53.0.0] - 2018-04-18
+
+### Added
+
+* Added `exp bundle-assets` command used by the build scripts in detached apps.
+* Added CLI options for specifying credentials, so that build scripts can pass them to avoid triggering a prompt to enter these settings.
+  * New options for `exp build:ios`:
+  ```
+  --team-id <apple-teamId>                        Apple Team ID.
+  --dist-p12-path <dist.p12>                      Path to your Distribution Certificate P12.
+  --push-p12-path <push.p12>                      Path to your push notification certificate P12 file.
+  --provisioning-profile-path <.mobileprovision>  Path to your provisioning Profile.
+  ```
+  * New environment variables for `exp build:android`:
+  ```
+  EXPO_IOS_DIST_P12_PASSWORD
+  EXPO_IOS_PUSH_P12_PASSWORD
+  ```
+  * New options for `exp build:android`:
+  ```
+  --keystore-path <app.jks>   Path to your keystore.
+  --keystore-alias <alias>    Keystore alias
+  ```
+  * New environment variables for `exp build:android`:
+  ```
+  EXPO_ANDROID_KEYSTORE_PASSWORD
+  EXPO_ANDROID_KEY_PASSWORD
+  ```
+
+### Removed
+
 ## [52.0.3] - 2018-04-13
 
 ### Changed
