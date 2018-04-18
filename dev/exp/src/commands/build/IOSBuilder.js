@@ -171,6 +171,35 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     await this.build(publishedExpIds, 'ios', { bundleIdentifier });
   }
 
+  checkEnv() {
+    return (
+      this.options.teamId &&
+      this.options.distP12Path &&
+      process.env.EXPO_IOS_DIST_P12_PASSWORD &&
+      this.options.pushP12Path &&
+      process.env.EXPO_IOS_PUSH_P12_PASSWORD &&
+      this.options.provisioningProfilePath
+    );
+  }
+
+  async runningAsCI(credsStarter, credsMetadata) {
+    const creds = {
+      teamId: this.options.teamId,
+      certP12: this.options.distP12Path,
+      certPassword: process.env.EXPO_IOS_DIST_P12_PASSWORD,
+      pushP12: this.options.pushP12Path,
+      pushPassword: process.env.EXPO_IOS_PUSH_P12_PASSWORD,
+      provisioningProfile: this.options.provisioningProfilePath,
+    };
+
+    this._copyOverAsString(credsStarter, {
+      ...creds,
+      provisioningProfile: (await fs.readFile(creds.provisioningProfile)).toString('base64'),
+      certP12: (await fs.readFile(creds.certP12)).toString('base64'),
+      pushP12: (await fs.readFile(creds.pushP12)).toString('base64'),
+    });
+  }
+
   async runningAsExpert(credsStarter) {
     log(expertPrompt);
     for (const choice of ['distCert', 'pushCert', 'provisioningProfile']) {
@@ -328,9 +357,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     if (this.options.revokeAppleProvisioningProfile) {
       await new Promise(r => setTimeout(() => r(), 400));
       log.warn(
-        `ATTENTION: Revoking your Apple Provisioning Profile for ${
-          credsMetadata.bundleIdentifier
-        } is permanent`
+        `ATTENTION: Revoking your Apple Provisioning Profile for ${credsMetadata.bundleIdentifier} is permanent`
       );
       const revokeAttempt = await authFuncs.revokeProvisioningProfile(
         appleCredentials,
@@ -422,7 +449,12 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     } else {
       credsStarter = {};
     }
-    if (clientHasAllNeededCreds === false) {
+    if (this.checkEnv()) {
+      await this.runningAsCI(credsStarter, credsMetadata);
+      this._areCredsMissing(credsStarter);
+      await Credentials.updateCredentialsForPlatform('ios', credsStarter, credsMetadata);
+      log.warn(`Encrypted ${[...OBLIGATORY_CREDS_KEYS.keys()]} and saved to expo servers`);
+    } else if (clientHasAllNeededCreds === false) {
       // We just keep mutating the creds object.
       const strategy = await prompt(runAsExpertQuestion);
       const isEnterprise = this.options.appleEnterpriseAccount !== undefined;

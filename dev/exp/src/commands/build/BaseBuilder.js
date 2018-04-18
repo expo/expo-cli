@@ -20,6 +20,10 @@ type BuilderOptions = {
   type?: string,
   releaseChannel: string,
   publish: boolean,
+  teamId?: string,
+  distP12Path?: string,
+  pushP12Path?: string,
+  provisioningProfilePath?: string,
 };
 
 export default class BaseBuilder {

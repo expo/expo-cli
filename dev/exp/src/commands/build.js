@@ -30,6 +30,10 @@ export default (program: any) => {
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
     .option('--no-wait', 'Exit immediately after triggering build.')
+    .option('--team-id <apple-teamId>', 'Apple Team ID.')
+    .option('--dist-p12-path <dist.p12>', 'Path to your Distribution Certificate P12.')
+    .option('--push-p12-path <push.p12>', 'Path to your Push Notification Certificate P12.')
+    .option('--provisioning-profile-path <.mobileprovision>', 'Path to your Provisioning Profile.')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
@@ -60,6 +64,8 @@ export default (program: any) => {
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
     .option('--no-wait', 'Exit immediately after triggering build.')
+    .option('--keystore-path <app.jks>', 'Path to your Keystore.')
+    .option('--keystore-alias <alias>', 'Keystore Alias')
     .description(
       'Build a standalone APK for your project, signed and ready for submission to the Google Play Store.'
     )
