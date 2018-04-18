@@ -68,7 +68,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
         </ContentGroup>
         <ContentGroup header={AndroidHeader} isActive={this.props.isActiveDeviceAndroid}>
           <div className={STYLES_SUBTITLE}>Scan to load</div>
-          <QRCode url="https://www.google.com" />
+          <QRCode url={this.props.url} />
           <div className={STYLES_SUBTITLE} style={{ marginTop: 24 }}>
             Send link to load
           </div>

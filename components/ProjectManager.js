@@ -61,10 +61,10 @@ class ProjectManager extends React.Component {
       <ProjectManagerSidebarOptions
         url={this.props.url}
         onSimulatorClickIOS={this.props.onSimulatorClickIOS}
-        onDeviceClickIOS={this._handleDeviceClickIOS}
-        isActiveDeviceIOS={this.props.isActiveDeviceIOS}
         onSimulatorClickAndroid={this.props.onSimulatorClickAndroid}
+        onDeviceClickIOS={this._handleDeviceClickIOS}
         onDeviceClickAndroid={this._handleDeviceClickAndroid}
+        isActiveDeviceIOS={this.props.isActiveDeviceIOS}
         isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
       />
     );
