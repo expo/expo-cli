@@ -47,6 +47,14 @@ const STYLES_INPUT_BUTTON = css`
 `;
 
 export default class InputWithButton extends React.Component {
+  _handleChange = e => {
+    this.props.onChange(e);
+  };
+
+  _handleSubmit = e => {
+    this.props.onSubmit(e);
+  };
+
   render() {
     return (
       <div className={STYLES_INPUT}>

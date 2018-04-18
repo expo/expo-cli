@@ -114,6 +114,7 @@ class IndexPage extends React.Component {
           sections={this.props.devices}
           count={this.props.count}
           url={this.props.url}
+          userAddress={this.props.userAddress}
           selectedId={this.props.selectedId}
           isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
           isActiveDeviceIOS={this.props.isActiveDeviceIOS}

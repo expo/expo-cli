@@ -34,6 +34,12 @@ class ProjectManager extends React.Component {
     });
   };
 
+  _handleUserAddressChange = e => {
+    this.props.onUpdateState({
+      userAddress: e.target.value,
+    });
+  };
+
   render() {
     const toolbarElements = (
       <ProjectManagerToolbar
@@ -60,6 +66,8 @@ class ProjectManager extends React.Component {
     const viewingElements = (
       <ProjectManagerSidebarOptions
         url={this.props.url}
+        userAddress={this.props.userAddress}
+        onAddressChange={this._handleUserAddressChange}
         onSimulatorClickIOS={this.props.onSimulatorClickIOS}
         onSimulatorClickAndroid={this.props.onSimulatorClickAndroid}
         onDeviceClickIOS={this._handleDeviceClickIOS}
