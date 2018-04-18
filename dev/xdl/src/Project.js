@@ -979,8 +979,6 @@ function _stripPackagerOutputBox(output: string) {
   }
 }
 
-
-
 function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   let output = data.toString();
   if (!output) {
@@ -1227,6 +1225,21 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
     packagerPid: null,
   });
 }
+
+let blacklistedEnvironmentVariables = new Set([
+  'EXPO_ANDROID_KEY_PASSWORD',
+  'EXPO_ANDROID_KEYSTORE_PASSWORD',
+  'EXPO_IOS_DIST_P12_PASSWORD',
+  'EXPO_IOS_PUSH_P12_PASSWORD',
+]);
+
+function shouldExposeEnvironmentVariableInManifest(key) {
+  if (blacklistedEnvironmentVariables.has(key.toUpperCase())) {
+    return false;
+  }
+  return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
+}
+
 export async function startExpoServerAsync(projectRoot: string) {
   await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
@@ -1271,7 +1284,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       manifest.packagerOpts = packagerOpts;
       manifest.env = {};
       for (let key of Object.keys(process.env)) {
-        if (key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_')) {
+        if (shouldExposeEnvironmentVariableInManifest(key)) {
           manifest.env[key] = process.env[key];
         }
       }
