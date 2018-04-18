@@ -72,6 +72,10 @@ class ProjectManager extends React.Component {
         onSimulatorClickAndroid={this.props.onSimulatorClickAndroid}
         onDeviceClickIOS={this._handleDeviceClickIOS}
         onDeviceClickAndroid={this._handleDeviceClickAndroid}
+        onNetworkLocalhostClick={this.props.onNetworkLocalhostClick}
+        onNetworkTunnelClick={this.props.onNetworkTunnelClick}
+        onNetworkLANClick={this.props.onNetworkLANClick}
+        onSubmitPhoneNumberOrEmail={this.props.onSubmitPhoneNumberOrEmail}
         isActiveDeviceIOS={this.props.isActiveDeviceIOS}
         isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
       />

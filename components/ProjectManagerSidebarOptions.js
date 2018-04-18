@@ -80,7 +80,8 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           <InputWithButton
             placeholder="Enter email or number"
             value={this.props.userAddress}
-            onChange={this.props.onAddressChange}>
+            onChange={this.props.onAddressChange}
+            onSubmit={this.props.onSubmitPhoneNumberOrEmail}>
             Send
           </InputWithButton>
         </ContentGroup>

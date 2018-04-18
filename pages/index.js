@@ -99,6 +99,22 @@ class IndexPage extends React.Component {
     });
   };
 
+  _handleNetworkLocalhostClick = () => {
+    console.log('select localhost');
+  };
+
+  _handleNetworkTunnelClick = () => {
+    console.log('select tunnel');
+  };
+
+  _handleNetworkLANClick = () => {
+    console.log('select lan');
+  };
+
+  _handleSubmitPhoneNumberOrEmail = () => {
+    console.log('submit phone number or email');
+  };
+
   render() {
     const renderableSections = [];
     this.props.devices.forEach((s, i) => {
@@ -118,13 +134,17 @@ class IndexPage extends React.Component {
           selectedId={this.props.selectedId}
           isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
           isActiveDeviceIOS={this.props.isActiveDeviceIOS}
+          onNetworkLocalhostClick={this._handleNetworkLocalhostClick}
+          onNetworkTunnelClick={this._handleNetworkTunnelClick}
+          onNetworkLANClick={this._handleNetworkLANClick}
           onSimulatorClickIOS={this._handleSimulatorClickIOS}
           onSimulatorClickAndroid={this._handleSimulatorClickAndroid}
-          onChangeSelectionCount={this._handleChangeSectionCount}
-          onDeviceSelect={this._handleDeviceSelect}
           onSectionDrag={this._handleSectionDrag}
           onSectionDismiss={this._handleSectionDismiss}
           onSectionSelect={this._handleSectionSelect}
+          onSubmitPhoneNumberOrEmail={this._handleSubmitPhoneNumberOrEmail}
+          onChangeSelectionCount={this._handleChangeSectionCount}
+          onDeviceSelect={this._handleDeviceSelect}
           onUpdateState={this._handleUpdateState}
         />
       </Root>

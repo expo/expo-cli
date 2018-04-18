@@ -64,7 +64,9 @@ export default class InputWithButton extends React.Component {
           onChange={this._handleChange}
           onSubmit={this._handleSubmit}
         />
-        <span className={STYLES_INPUT_BUTTON}>{this.props.children}</span>
+        <span className={STYLES_INPUT_BUTTON} onClick={this._handleSubmit}>
+          {this.props.children}
+        </span>
       </div>
     );
   }
