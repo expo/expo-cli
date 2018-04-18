@@ -20,10 +20,17 @@ const stateUpdateDeviceWithLog = (state, action) => {
   if (!state.devices[action.log.deviceIndex]) {
     return { ...state };
   }
-
-  state.devices[action.log.deviceIndex].logs.push(action.log);
-
-  return { ...state, ...{ devices: [...state.devices] } };
+  let devices = state.devices.map((device, i) => {
+    if (i === action.log.deviceIndex) {
+      return {
+        ...device,
+        logs: [...device.logs, action.log],
+      };
+    } else {
+      return device;
+    }
+  });
+  return { ...state, devices };
 };
 
 const stateConnectDevice = (state, action) => {

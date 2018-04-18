@@ -85,14 +85,34 @@ class ProjectManagerSection extends React.Component {
     if (this.props.isOverCurrent && !nextProps.isOverCurrent) {
       console.log('isOverCurrent');
     }
-
-    if (this.refs.logs) {
-      this.refs.logs.scrollIntoView({});
-    }
   }
 
   componentDidMount() {
-    this.refs.logs.scrollIntoView({});
+    this.scrollToEnd();
+  }
+
+  // TODO: When upgrading to React 16.3, switch to getSnapshotBeforeUpdate
+  componentWillUpdate(nextProps) {
+    let prevProps = this.props;
+    if (this.refs.logContainer && prevProps.data.logs.length < nextProps.data.logs.length) {
+      let { scrollHeight, scrollTop, clientHeight } = this.refs.logContainer;
+      this.scrollOffsetFromBottom = scrollHeight - (scrollTop + clientHeight);
+    } else {
+      this.scrollOffsetFromBottom = null;
+    }
+  }
+
+  componentDidUpdate() {
+    if (this.scrollOffsetFromBottom != null && this.scrollOffsetFromBottom < 20) {
+      this.scrollToEnd();
+    }
+  }
+
+  scrollToEnd() {
+    let element = this.refs.logContainer;
+    if (element) {
+      element.scrollTop = element.scrollHeight - element.clientHeight;
+    }
   }
 
   render() {
@@ -147,9 +167,10 @@ class ProjectManagerSection extends React.Component {
               ${STYLES_CONTAINER_SECTION_FRAME}
               ${this.props.isSelected ? STYLES_CONTAINER_SECTION_FRAME_SELECTED : ''}
               ${this.props.isOver ? STYLES_CONTAINER_SECTION_FRAME_HOVER : ''}
-            `}>
+            `}
+            ref="logContainer"
+            >
             {logElements}
-            <div ref="logs" />
           </div>
         </Boundary>
       </div>

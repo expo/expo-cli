@@ -30,7 +30,7 @@ export const loggers = [
   {
     id: 2,
     type: 'process',
-    name: 'React Native Packager',
+    name: 'Metro Bundler',
     logs: [
       {
         status: 'success',
@@ -273,7 +273,7 @@ export const generateServerSideMockData = store => {
     device: {
       id: 1,
       type: 'process',
-      name: 'React Native Packager',
+      name: 'Metro Bundler',
       logs: [],
     },
   });
