@@ -77,76 +77,68 @@ export default class BaseBuilder {
       throw new Error('Error getting current build status for this project.');
     }
 
-    if (buildStatus.jobs && buildStatus.jobs.length) {
-      log.raw();
-      log('============');
-      log('Build Status');
-      log('============\n');
-      buildStatus.jobs.forEach(j => {
-        let platform;
-        if (j.platform === 'ios') {
-          platform = 'iOS';
-        } else {
-          platform = 'Android';
-        }
+    if (!(buildStatus.jobs && buildStatus.jobs.length)) {
+      log('No currently active or previous builds for this project.');
+      return;
+    }
 
-        let status;
-        switch (j.status) {
-          case 'pending':
-            status = 'Build waiting in queue...';
-            break;
-          case 'started':
-            status = 'Build started...';
-            break;
-          case 'in-progress':
-            status = 'Build in progress...';
-            break;
-          case 'finished':
-            status = 'Build finished.';
-            break;
-          case 'errored':
-            status = 'There was an error with this build.';
-            if (buildStatus.id) {
-              status += `
+    log.raw();
+    log('=================');
+    log(' Builds Statuses ');
+    log('=================\n');
+    buildStatus.jobs.forEach((job, i) => {
+      let platform, packageExtension;
+      if (job.platform === 'ios') {
+        platform = 'iOS';
+        packageExtension = 'IPA';
+      } else {
+        platform = 'Android';
+        packageExtension = 'APK';
+      }
+
+      log(`### ${i} | ${platform} | ${constructBuildLogsUrl(job.id)} ###`);
+
+      let status;
+      switch (job.status) {
+        case 'pending':
+          status = 'Build waiting in queue...';
+          break;
+        case 'started':
+          status = 'Build started...';
+          break;
+        case 'in-progress':
+          status = 'Build in progress...';
+          break;
+        case 'finished':
+          status = 'Build finished.';
+          break;
+        case 'errored':
+          status = 'There was an error with this build.';
+          if (buildStatus.id) {
+            status += `
 
 When requesting support, please provide this build ID:
 
 ${buildStatus.id}
 `;
-            }
-            break;
-          default:
-            status = '';
-            break;
-        }
-
-        if (j.status !== 'finished') {
-          log(`${platform}: ${status}`);
-        } else {
-          log(`${platform}:`);
-          switch (j.platform) {
-            case 'ios':
-              if (!j.artifacts) {
-                log(`Problem getting IPA URL. Please try build again.`);
-                break;
-              }
-              log(`IPA: ${j.artifacts.url}\n`);
-              break;
-            case 'android':
-              if (!j.artifacts) {
-                log(`Problem getting APK URL. Please try build again.`);
-                break;
-              }
-              log(`APK: ${j.artifacts.url}\n`);
-              break;
           }
+          break;
+        default:
+          status = '';
+          break;
+      }
+
+      log(status);
+      if (job.status == 'finished') {
+        if (job.artifacts) {
+          log(`${packageExtension}: ${job.artifacts.url}`);
+        } else {
+          log(`Problem getting ${packageExtension} URL. Please try to build again.`);
         }
-      });
+      }
+    });
 
-      throw new BuildError('Cannot start new build, as there is a build in progress.');
-    }
-
-    log('No currently active or previous builds for this project.');
+    throw new BuildError('Cannot start new build, as there is a build in progress.');
   }
 
   async ensureReleaseExists(platform: string) {
