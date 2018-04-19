@@ -157,35 +157,23 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
         context.build.configuration === 'Release' ? 'production' : 'development';
 
       // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
-      let iCloudKeys = [
-        'com.apple.developer.icloud-container-identifiers',
-        'com.apple.developer.icloud-services',
-        'com.apple.developer.ubiquity-container-identifiers',
-        'com.apple.developer.ubiquity-kvstore-identifier',
-      ];
       if (manifest.ios && manifest.ios.usesIcloudStorage && appleTeamId) {
-        iCloudKeys.forEach(key => {
-          if (entitlements.hasOwnProperty(key)) {
-            switch (key) {
-              case 'com.apple.developer.icloud-container-identifiers':
-                entitlements[key] = ['iCloud.' + manifest.ios.bundleIdentifier];
-                break;
-              case 'com.apple.developer.ubiquity-container-identifiers':
-                entitlements[key] = ['iCloud.' + manifest.ios.bundleIdentifier];
-                break;
-              case 'com.apple.developer.ubiquity-kvstore-identifier':
-                entitlements[key] = appleTeamId + '.' + manifest.ios.bundleIdentifier;
-                break;
-              case 'com.apple.developer.icloud-services':
-                entitlements[key] = ['CloudDocuments'];
-                break;
-              default:
-                break;
-            }
-          }
-        });
+        entitlements['com.apple.developer.icloud-container-identifiers'] = [
+          'iCloud.' + manifest.ios.bundleIdentifier,
+        ];
+        entitlements['com.apple.developer.ubiquity-container-identifiers'] = [
+          'iCloud.' + manifest.ios.bundleIdentifier,
+        ];
+        entitlements['com.apple.developer.ubiquity-kvstore-identifier'] =
+          appleTeamId + '.' + manifest.ios.bundleIdentifier;
+        entitlements['com.apple.developer.icloud-services'] = ['CloudDocuments'];
       } else {
-        iCloudKeys.forEach(key => {
+        [
+          'com.apple.developer.icloud-container-identifiers',
+          'com.apple.developer.icloud-services',
+          'com.apple.developer.ubiquity-container-identifiers',
+          'com.apple.developer.ubiquity-kvstore-identifier',
+        ].forEach(key => {
           if (entitlements.hasOwnProperty(key)) {
             delete entitlements[key];
           }
@@ -299,7 +287,12 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
     if (config.facebookAppId) {
       infoPlist.FacebookAppID = config.facebookAppId;
       let queriesSchemes = infoPlist.LSApplicationQueriesSchemes || [];
-      queriesSchemes = queriesSchemes.concat([ 'fbapi', 'fb-messenger-api', 'fbauth2', 'fbshareextension' ]);
+      queriesSchemes = queriesSchemes.concat([
+        'fbapi',
+        'fb-messenger-api',
+        'fbauth2',
+        'fbshareextension',
+      ]);
       infoPlist.LSApplicationQueriesSchemes = queriesSchemes;
     } else {
       delete infoPlist['FacebookAppID'];
