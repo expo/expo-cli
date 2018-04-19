@@ -104,9 +104,7 @@ ${_renderUnversionedYogaDependency(options, sdkVersion)}
       2
     );
   } else {
-    const glogLibraryName = (sdkMajorVersion < 26)
-          ? 'GLog'
-          : 'glog';
+    const glogLibraryName = sdkMajorVersion < 26 ? 'GLog' : 'glog';
     return indentString(
       `
 ${_renderUnversionedReactDependency(options, sdkVersion)}
@@ -234,7 +232,7 @@ async function _renderVersionedReactNativePostinstallsAsync(templatesDirectory) 
 }
 
 async function _concatTemplateFilesInDirectoryAsync(directory) {
-  let templateFilenames = await glob(path.join(directory, '*.rb'));
+  let templateFilenames = (await glob(path.join(directory, '*.rb'))).sort();
   let templateStrings = [];
   await Promise.all(
     templateFilenames.map(async filename => {
@@ -249,9 +247,9 @@ async function _concatTemplateFilesInDirectoryAsync(directory) {
 
 function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
   let podsRootSub = '${PODS_ROOT}';
-  const maybeDetachedServiceDef = (isServiceContext)
-        ? `config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED_SERVICE=1'`
-        : '';
+  const maybeDetachedServiceDef = isServiceContext
+    ? `config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED_SERVICE=1'`
+    : '';
   return `
     if target.pod_name == 'ExpoKit'
       target.native_target.build_configurations.each do |config|
