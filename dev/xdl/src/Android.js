@@ -246,7 +246,9 @@ async function openUrlAsync(url: string, isDetached: boolean = false) {
   }
 }
 
-export async function openProjectAsync(projectRoot: string) {
+export async function openProjectAsync(
+  projectRoot: string
+): Promise<{ success: true, url: string } | { success: false, error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
 
@@ -254,7 +256,7 @@ export async function openProjectAsync(projectRoot: string) {
     let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
     await openUrlAsync(projectUrl, !!exp.isDetached);
-    return { success: true, error: null };
+    return { success: true, url: projectUrl };
   } catch (e) {
     Logger.global.error(`Couldn't start project on Android: ${e.message}`);
     return { success: false, error: e };

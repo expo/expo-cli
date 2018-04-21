@@ -340,7 +340,10 @@ export async function _openUrlInSimulatorAsync(url: string) {
   return await _xcrunAsync(['simctl', 'openurl', 'booted', url]);
 }
 
-export async function openUrlInSimulatorSafeAsync(url: string, isDetached: boolean = false) {
+export async function openUrlInSimulatorSafeAsync(
+  url: string,
+  isDetached: boolean = false
+): Promise<{ success: true } | { success: false, msg: string }> {
   if (!await _isSimulatorInstalledAsync()) {
     return {
       success: false,
@@ -397,12 +400,19 @@ export async function openUrlInSimulatorSafeAsync(url: string, isDetached: boole
   };
 }
 
-export async function openProjectAsync(projectRoot: string) {
+export async function openProjectAsync(
+  projectRoot: string
+): Promise<{ success: true, url: string } | { success: false, error: string }> {
   let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
     hostType: 'localhost',
   });
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
-  await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
+  let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
+  if (result.success) {
+    return { success: true, url: projectUrl };
+  } else {
+    return { success: result.success, error: result.msg };
+  }
 }
