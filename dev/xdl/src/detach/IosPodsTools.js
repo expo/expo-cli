@@ -281,10 +281,19 @@ function _renderUnversionedPostinstall() {
     'JKBigInteger2',
   ];
   const podsToChangeRB = `[${podsToChangeDeployTarget.map(pod => `'${pod}'`).join(',')}]`;
+  const podsRoot = '${PODS_ROOT}'
   return `
     if ${podsToChangeRB}.include? target.pod_name
       target.native_target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
+      end
+    end
+    # Can't specify this in the React podspec because we need
+    # to use those podspecs for detached projects which don't reference ExponentCPP.
+    if target.pod_name.start_with?('React')
+      target.native_target.build_configurations.each do |config|
+        config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
+        config.build_settings['HEADER_SEARCH_PATHS'] << "${podsRoot}/Headers/Public/#{EXPO_CPP_HEADER_DIR}"
       end
     end
     # Build React Native with RCT_DEV enabled
