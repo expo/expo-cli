@@ -81,6 +81,7 @@ function _renderExpoKitDependency(options, sdkVersion) {
   } else {
     attributes.subspecs = ['Core', 'CPP', 'GL'];
   }
+  attributes.inhibit_warnings = 'true';
 
   let dependency = `pod 'ExpoKit',
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
