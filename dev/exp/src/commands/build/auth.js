@@ -132,7 +132,11 @@ export async function validateCredentialsProduceTeamId(creds) {
   }
   if (teams.length === 1) {
     log(`Only 1 team associated with your account, using Team ID: ${teams[0].teamId}`);
-    return { teamId: teams[0].teamId };
+    const [team] = teams;
+    return {
+      teamId: team.teamId,
+      teamName: `${team.name} (${team.type})`,
+    };
   } else {
     log(`You have ${teams.length} teams`);
     const teamChoices = teams.map(
@@ -145,7 +149,11 @@ export async function validateCredentialsProduceTeamId(creds) {
       message: `Which Team ID to use?`,
       choices: teamChoices,
     });
-    return { teamId: teams[teamChoices.indexOf(answers.choice)].teamId };
+    const chosenTeam = teams[teamChoices.indexOf(answers.choice)];
+    return {
+      teamId: chosenTeam.teamId,
+      teamName: `${chosenTeam.name} (${chosenTeam.type})`,
+    };
   }
 }
 

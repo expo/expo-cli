@@ -17,13 +17,18 @@ export default (program: any) => {
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       const {
-        args: { username, remotePackageName, remoteFullPackageName: experienceName },
+        args: {
+          username,
+          remotePackageName,
+          remoteFullPackageName: experienceName,
+          bundleIdentifierIOS: bundleIdentifier,
+        },
       } = await Exp.getPublishInfoAsync(projectDir);
 
       let distOutputFile = path.resolve(projectDir, `${remotePackageName}_dist.p12`);
       let pushOutputFile = path.resolve(projectDir, `${remotePackageName}_push.p12`);
 
-      const credentialMetadata = { username, experienceName, platform: 'ios' };
+      const credentialMetadata = { username, experienceName, platform: 'ios', bundleIdentifier };
 
       log(`Retreiving iOS credentials for ${experienceName}`);
 

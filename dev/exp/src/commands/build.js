@@ -13,6 +13,11 @@ export default (program: any) => {
     .command('build:ios [project-dir]')
     .alias('bi')
     .option('-c, --clear-credentials', 'Clear credentials stored on expo servers')
+    .option(
+      '--clear-app-credentials',
+      'Remove app related credentials stored on expo servers (iOS)'
+    )
+    .option('--clear-dist-cert', 'Remove distribution cert stored on expo servers (iOS)')
     .option('-e, --apple-enterprise-account', 'Run as Apple Enterprise account')
     .option(
       '--revoke-apple-dist-certs',
@@ -95,5 +100,5 @@ export default (program: any) => {
         }
         throw e;
       }
-    }, /* skipProjectValidation: */true);
+    }, /* skipProjectValidation: */ true);
 };

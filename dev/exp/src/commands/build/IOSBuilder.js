@@ -8,8 +8,8 @@ import untildify from 'untildify';
 import { Exp, Credentials, XDLError, ErrorCode } from 'xdl';
 import ora from 'ora';
 import chalk from 'chalk';
+import _ from 'lodash';
 
-import type { IOSCredentials, CredentialMetadata } from 'xdl/src/Credentials';
 import BaseBuilder from './BaseBuilder';
 import prompt from '../../prompt';
 import log from '../../log';
@@ -49,14 +49,17 @@ const runAsExpertQuestion = {
   ],
 };
 
-const OBLIGATORY_CREDS_KEYS = new Set([
-  'certP12',
-  'certPassword',
-  'pushP12',
-  'pushPassword',
-  'provisioningProfile',
-  'teamId',
-]);
+const OBLIGATORY_CREDS_KEYS = {
+  pushP12: 'pushCert',
+  pushPassword: 'pushCert',
+  provisioningProfile: 'provisioningProfile',
+  teamId: 'teamId',
+};
+
+const OBLIGATORY_DIST_CERT_CREDS_KEYS = {
+  certP12: 'distCert',
+  certPassword: 'distCert',
+};
 
 const LET_EXPO_HANDLE = 'Let Expo handle the process';
 
@@ -121,6 +124,13 @@ const appleCredsQuestions = [
   },
 ];
 
+const createChooseDistCertPrompt = choices => ({
+  type: 'list',
+  name: 'userCredentialId',
+  message: 'Would you like to reuse Distribution Certificate from another app?',
+  choices,
+});
+
 export default class IOSBuilder extends BaseBuilder {
   async run() {
     // validate bundleIdentifier before hitting the network to check build status
@@ -143,9 +153,24 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     // Check the status of any current builds
     await this.checkStatus();
     const credentialMetadata = { username, experienceName, bundleIdentifier, platform: 'ios' };
-    // Clear credentials if they want to:
+    const clearOnly = {};
     if (this.options.clearCredentials) {
-      await Credentials.removeCredentialsForPlatform('ios', credentialMetadata);
+      clearOnly.distCert = true;
+      clearOnly.appCredentials = true;
+    } else {
+      if (this.options.clearAppCredentials) {
+        clearOnly.appCredentials = true;
+      }
+      if (this.options.clearDistCert) {
+        clearOnly.distCert = true;
+      }
+    }
+    // Clear credentials if they want to:
+    if (!_.isEmpty(clearOnly)) {
+      await Credentials.removeCredentialsForPlatform('ios', {
+        ...credentialMetadata,
+        only: clearOnly,
+      });
       log.warn('Removed existing credentials from expo servers');
     }
     if (this.options.type !== 'simulator') {
@@ -200,9 +225,12 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     });
   }
 
-  async runningAsExpert(credsStarter) {
+  async runningAsExpert(
+    credsStarter,
+    credentialsToAskFor = ['distCert', 'pushCert', 'provisioningProfile']
+  ) {
     log(expertPrompt);
-    for (const choice of ['distCert', 'pushCert', 'provisioningProfile']) {
+    for (const choice of credentialsToAskFor) {
       await this.userProvidedOverride(credsStarter, choice);
     }
   }
@@ -211,7 +239,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   // to provide their own creds
   async userProvidedOverride(credsStarter, choice) {
     switch (choice) {
-      case 'distCert':
+      case 'distCert': {
         log('Please provide your distribution certificate P12:');
         const distCertValues = await prompt(sharedQuestions);
         this._copyOverAsString(credsStarter, {
@@ -219,7 +247,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           certPassword: distCertValues.p12Password,
         });
         break;
-      case 'pushCert':
+      }
+      case 'pushCert': {
         log('Please provide the path to your push notification cert P12');
         const pushCertValues = await prompt(sharedQuestions);
         this._copyOverAsString(credsStarter, {
@@ -227,13 +256,15 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           pushPassword: pushCertValues.p12Password,
         });
         break;
-      case 'provisioningProfile':
+      }
+      case 'provisioningProfile': {
         log('Please provide the path to your .mobile provisioning profile');
         const { pathToProvisioningProfile } = await prompt(provisionProfilePath);
         this._copyOverAsString(credsStarter, {
           provisioningProfile: (await fs.readFile(pathToProvisioningProfile)).toString('base64'),
         });
         break;
+      }
       default:
         throw new Error(`Unknown choice to override: ${choice}`);
     }
@@ -382,6 +413,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     const checkCredsAttempt = await authFuncs.validateCredentialsProduceTeamId(appleCredentials);
     this._throwIfFailureWithReasonDump(checkCredsAttempt);
     credsStarter.teamId = checkCredsAttempt.teamId;
+    credsStarter.teamName = checkCredsAttempt.teamName;
     await this._handleRevokes(
       appleCredentials,
       credsStarter,
@@ -398,11 +430,37 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     return appleCredentials;
   }
 
-  async runningAsExpoManaged(appleCredentials, credsStarter, credsMetadata, isEnterprise) {
-    const expoManages = { ...(await prompt(whatToOverride)), provisioningProfile: true };
+  async runningAsExpoManaged(
+    appleCredentials,
+    credsStarter,
+    credsMetadata,
+    isEnterprise,
+    credsMissing = ['distCert', 'pushCert', 'provisioningProfile']
+  ) {
+    const whatToOverrideFiltered = whatToOverride.filter(({ name }) =>
+      _.includes(credsMissing, name)
+    );
+    const whatToOverrideResult = await prompt(whatToOverrideFiltered);
+    const expoManages = { provisioningProfile: true };
+
+    const userCredentialId = whatToOverrideResult.distCert
+      ? await this._chooseDistCert(credsMetadata.username, credsStarter.teamId)
+      : null;
+
+    const toCopy = userCredentialId
+      ? _.omit(whatToOverrideResult, 'distCert')
+      : whatToOverrideResult;
+    Object.assign(expoManages, toCopy);
+
+    if (userCredentialId) {
+      credsStarter.userCredentialId = userCredentialId;
+    }
+
     const spinner = ora('Running local authentication and producing required credentials').start();
+
+    const choices = _.intersection(credsMissing, Object.keys(expoManages));
     try {
-      for (const choice of Object.keys(expoManages)) {
+      for (const choice of choices) {
         spinner.text = `Now producing files for ${choice}`;
         if (expoManages[choice]) {
           spinner.start();
@@ -426,10 +484,45 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
+  async _chooseDistCert(username, teamId) {
+    const certs = await Credentials.getExistingDistCerts(username, teamId);
+    if (certs.length > 0) {
+      const choices = certs.map(({ userCredentialId, certId, usedByApps }) => {
+        let name;
+
+        if (certId) {
+          name = `Certificate ID: ${certId}`;
+        }
+
+        if (usedByApps) {
+          name = `${name && `${name}; `}Used in apps: ${usedByApps.join(',')}`;
+        }
+
+        return {
+          name: name || '(user provided certificate)',
+          value: userCredentialId,
+        };
+      });
+      choices.push({
+        name: 'No, please create a new one',
+        value: null,
+      });
+      const { userCredentialId } = await prompt(createChooseDistCertPrompt(choices));
+      return userCredentialId && String(userCredentialId);
+    } else {
+      return null;
+    }
+  }
+
   _areCredsMissing(creds, action) {
     const clientHas = new Set(Object.keys(creds));
     const credsMissing = [];
-    for (const k of OBLIGATORY_CREDS_KEYS.keys()) {
+    const obligatoryCreds = clientHas.has('userCredentialId')
+      ? OBLIGATORY_CREDS_KEYS
+      : { ...OBLIGATORY_CREDS_KEYS, ...OBLIGATORY_DIST_CERT_CREDS_KEYS };
+    const obligatoryKeys = new Set(Object.keys(obligatoryCreds));
+
+    for (const k of obligatoryKeys.keys()) {
       if (clientHas.has(k) === false) {
         credsMissing.push(k);
         action !== undefined && action();
@@ -437,15 +530,20 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
     if (credsMissing.length !== 0) {
       log.warn(`We do not have some credentials for you, ${credsMissing}`);
+      return _.chain(credsMissing)
+        .map(k => obligatoryCreds[k])
+        .uniq()
+        .value();
     }
   }
 
   async runLocalAuth(credsMetadata) {
     let credsStarter = await Credentials.credentialsExistForPlatformAsync(credsMetadata);
     let clientHasAllNeededCreds = false;
+    let credsMissing;
     if (credsStarter !== undefined) {
       clientHasAllNeededCreds = true;
-      this._areCredsMissing(credsStarter, () => (clientHasAllNeededCreds = false));
+      credsMissing = this._areCredsMissing(credsStarter, () => (clientHasAllNeededCreds = false));
     } else {
       credsStarter = {};
     }
@@ -470,15 +568,17 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           appleCredentials,
           credsStarter,
           credsMetadata,
-          isEnterprise
+          isEnterprise,
+          credsMissing
         );
       } else {
-        await this.runningAsExpert(credsStarter);
+        await this.runningAsExpert(credsStarter, credsMissing);
       }
       const { result, ...creds } = credsStarter;
       this._areCredsMissing(creds);
-      await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
-      log.warn(`Encrypted ${[...OBLIGATORY_CREDS_KEYS.keys()]} and saved to expo servers`);
+
+      const withoutEncrypted = _.pickBy(creds, v => v !== 'encrypted');
+      await Credentials.updateCredentialsForPlatform('ios', withoutEncrypted, credsMetadata);
     } else {
       log('Using existing credentials for this build');
     }
@@ -491,20 +591,20 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
-  async askForAppleCreds(justTeamId = false): Promise<IOSCredentials> {
+  async askForAppleCreds(justTeamId = false) {
     if (justTeamId === false) {
       console.log(`
 We need your Apple ID/password to manage certificates and
 provisioning profiles from your Apple Developer account.
 
 Note: Expo does not keep your Apple ID or your Apple password.
-`);
+    `);
     } else {
       console.log(`
 We need your Apple ID/password to ensure the correct teamID and appID
 
 Note: Expo does not keep your Apple ID or your Apple password.
-`);
+    `);
     }
     return prompt(appleCredsQuestions);
   }

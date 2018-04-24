@@ -12,8 +12,6 @@ import log from '../../log';
 import BaseBuilder from './BaseBuilder';
 import prompt from '../../prompt';
 
-import type { AndroidCredentials } from 'xdl/build/credentials';
-
 export default class AndroidBuilder extends BaseBuilder {
   async run() {
     // Check the status of any current builds
@@ -87,9 +85,7 @@ export default class AndroidBuilder extends BaseBuilder {
       platform: 'android',
     };
 
-    const credentials: ?AndroidCredentials = await Credentials.credentialsExistForPlatformAsync(
-      credentialMetadata
-    );
+    const credentials = await Credentials.credentialsExistForPlatformAsync(credentialMetadata);
 
     if (this.checkEnv()) {
       await this.collectAndValidateCredentialsFromCI(credentialMetadata);
@@ -163,14 +159,14 @@ export default class AndroidBuilder extends BaseBuilder {
         if (this.options.clearCredentials) {
           await this._clearCredentials();
         }
-        return; // just continue
+        // just continue
       } else {
         const { keystorePath, keystoreAlias, keystorePassword, keyPassword } = answers;
 
         // read the keystore
         const keystoreData = await fs.readFile(keystorePath);
 
-        const credentials: AndroidCredentials = {
+        const credentials = {
           keystore: keystoreData.toString('base64'),
           keystoreAlias,
           keystorePassword,

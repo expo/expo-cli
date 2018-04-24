@@ -3,7 +3,6 @@
  */
 
 import Api from './Api';
-import XDLError from './XDLError';
 
 export type AndroidCredentials = {
   keystore: string,
@@ -36,6 +35,13 @@ export type CredentialMetadata = {
   bundleIdentifier: string,
   platform: string,
 };
+
+export type CertObject = {
+  userCredentialId: number,
+  certId: string,
+};
+
+export type CertsList = Array<CertObject>;
 
 export async function credentialsExistForPlatformAsync(
   metadata: CredentialMetadata
@@ -84,8 +90,6 @@ export async function updateCredentialsForPlatform(
   if (err || !credentials) {
     throw new Error('Error updating credentials.');
   }
-
-  return;
 }
 
 export async function removeCredentialsForPlatform(
@@ -101,91 +105,23 @@ export async function removeCredentialsForPlatform(
   if (err) {
     throw new Error('Error deleting credentials.');
   }
-
-  return;
 }
 
-export async function validateCredentialsForPlatform(
-  platform: string,
-  validationType: string,
-  credentials: ?Credentials,
-  metadata: CredentialMetadata
-): Promise<void> {
-  const { requestId, isValid, error, errorCode, errorMessage } = await Api.callMethodAsync(
-    'validateCredentials',
-    [],
-    'post',
-    {
-      credentials,
-      platform,
-      validationType,
-      ...metadata,
-    }
-  );
-
-  if (!isValid || error) {
-    throw new XDLError(
-      errorCode,
-      `Unable to validate credentials. Request ID ${requestId}, message: ${errorMessage}`
-    );
-  }
-
-  return;
-}
-
-export async function fetchAppleCertificates(metadata: CredentialMetadata): Promise<void> {
-  const { requestId, err, success, error, errorCode, errorMessage } = await Api.callMethodAsync(
-    'fetchAppleCertificates',
-    [],
-    'post',
-    {
-      ...metadata,
-    }
-  );
-
-  if (err || !success || error) {
-    throw new XDLError(
-      errorCode,
-      `Unable to fetch distribution certificate. Request ID ${requestId}, message: ${errorMessage}`
-    );
-  }
-
-  return success;
-}
-
-export async function ensureAppId(metadata: CredentialMetadata): Promise<void> {
-  const { requestId, err, success, errorCode, errorMessage } = await Api.callMethodAsync(
-    'ensureAppId',
-    [],
-    'post',
-    {
-      ...metadata,
-    }
-  );
-
-  if (err || !success) {
-    throw new XDLError(
-      errorCode,
-      `Unable to create app id. Request ID ${requestId}, message: ${errorMessage}`
-    );
-  }
-
-  return success;
-}
-
-export async function fetchPushCertificates(metadata: CredentialMetadata): Promise<void> {
-  const result = await Api.callMethodAsync('fetchPushCertificates', [], 'post', {
-    ...metadata,
+export async function getExistingDistCerts(
+  username: string,
+  appleTeamId: string
+): Promise<?CertsList> {
+  const { err, certs } = await Api.callMethodAsync('getExistingDistCerts', [], 'post', {
+    username,
+    appleTeamId,
   });
 
-  if (result.err || !result.success) {
-    throw new XDLError(
-      result.errorCode,
-      `Unable to fetch push certificate. Request ID ${result.requestId}, message: ${
-        result.errorMessage
-      }`
-    );
+  if (err) {
+    throw new Error('Error getting existing distribution certificates.');
   }
 
-  return result.success;
+  return certs.map(({ usedByApps, ...rest }) => ({
+    usedByApps: usedByApps && usedByApps.split(';'),
+    ...rest,
+  }));
 }
