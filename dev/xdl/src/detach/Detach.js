@@ -495,6 +495,10 @@ type BundleAssetsArgs = {
 
 export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsArgs) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  if (!exp) {
+    // Don't run assets bundling for the service context.
+    return;
+  }
   let publishManifestPath =
     args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
   if (!publishManifestPath) {
