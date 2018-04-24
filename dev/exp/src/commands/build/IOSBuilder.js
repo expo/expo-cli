@@ -184,7 +184,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
             // sometimes WSL adds null characters
             log.error(e.stdout.replace(/\0/g, ''));
           } else {
-            log.error(JSON.stringify(e));
+            log.error(e);
           }
         }
         throw e;
