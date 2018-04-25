@@ -54,7 +54,14 @@ function dotExpoHomeDirectory() {
         "Can't determine your home directory; make sure your $HOME environment variable is set."
       );
     }
-    dirPath = path.join(home, '.expo');
+
+    if (process.env.EXPO_STAGING) {
+      dirPath = path.join(home, '.expo-staging');
+    } else if (process.env.EXPO_LOCAL) {
+      dirPath = path.join(home, '.expo-local');
+    } else {
+      dirPath = path.join(home, '.expo');
+    }
 
     try {
       // move .exponent to .expo
