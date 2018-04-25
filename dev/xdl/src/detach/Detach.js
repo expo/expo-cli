@@ -11,6 +11,7 @@ import mkdirp from 'mkdirp';
 import fs from 'fs-extra';
 import JsonFile from '@expo/json-file';
 import path from 'path';
+import process from 'process';
 import rimraf from 'rimraf';
 import glob from 'glob-promise';
 import uuid from 'uuid';
@@ -390,7 +391,10 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
       );
     }
     constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
-    constantsConfig.API_SERVER_ENDPOINT = 'https://exp.host/--/api/v2/';
+    constantsConfig.API_SERVER_ENDPOINT =
+      process.env.ENVIRONMENT === 'staging'
+        ? 'https://staging.exp.host/--/api/v2/'
+        : 'https://exp.host/--/api/v2/';
     if (prodApiKeys) {
       constantsConfig.DEFAULT_API_KEYS = prodApiKeys;
     }
