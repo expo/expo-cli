@@ -390,6 +390,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
       );
     }
     constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
+    constantsConfig.API_SERVER_ENDPOINT = 'https://exp.host/--/api/v2/';
     if (prodApiKeys) {
       constantsConfig.DEFAULT_API_KEYS = prodApiKeys;
     }
