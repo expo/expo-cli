@@ -204,9 +204,9 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
           name: 'androidPackage',
           message: 'What would you like your Android package name to be?',
           validate: value =>
-            /^[a-zA-Z][a-zA-Z0-9\_\.]+$/.test(value)
+            /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value)
               ? true
-              : "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed)",
+              : "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)",
         },
       ]);
       exp.android.package = androidPackage;
