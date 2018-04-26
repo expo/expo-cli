@@ -199,7 +199,10 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
 
 async function _resolveGoogleServicesFile(projectRoot, manifest) {
   if (manifest.android && manifest.android.googleServicesFile) {
-    const contents = await fs.readFile(manifest.android.googleServicesFile, 'utf8');
+    const contents = await fs.readFile(
+      path.resolve(projectRoot, manifest.android.googleServicesFile),
+      'utf8'
+    );
     manifest.android.googleServicesFile = contents;
   }
 }
