@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [53.1.0] - 2018-04-27
+
+### Changed
+
+* Make `exp build:status` print 10 last builds.
+* Upgrade to XDL v49.2.0.
+
 ## [53.0.0] - 2018-04-18
 
 ### Added
