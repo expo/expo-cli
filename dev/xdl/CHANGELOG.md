@@ -10,6 +10,15 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [49.2.0] - 2018-04-27
+
+### Changed
+
+* Fix generating entitlements in standalone iOS builds.
+* `Simulator.openProjectAsync` now returns a result object.
+* Fix Android package name validation.
+* Fix resolving a relative path specified in `android.googleServicesFile`.
+
 ## [49.1.0] - 2018-04-18
 
 ### Changed
