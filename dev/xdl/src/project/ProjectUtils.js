@@ -156,7 +156,7 @@ export async function findConfigFileAsync(
     configPath = await _findConfigPathAsync(projectRoot);
   }
   const configName = path.basename(configPath);
-  const configNamespace = configName === 'app.json' ? 'expo' : null;
+  const configNamespace = configName !== 'exp.json' ? 'expo' : null;
   return { configPath, configName, configNamespace };
 }
 
@@ -198,7 +198,6 @@ export async function readConfigJsonAsync(
 
     if (configNamespace) {
       // if we're not using exp.json, then we've stashed everything under an expo key
-      // this is only for app.json at time of writing
       exp = exp[configNamespace];
     }
   } catch (e) {
