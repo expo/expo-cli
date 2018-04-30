@@ -1121,6 +1121,10 @@ export async function startReactNativeServerAsync(
           }
         : {}),
     };
+      
+    if (userPackagerOpts.port !== undefined && userPackagerOpts.port !== null) {
+      packagerPort = userPackagerOpts.port;
+    }
   }
   let cliOpts = _.reduce(
     packagerOpts,
