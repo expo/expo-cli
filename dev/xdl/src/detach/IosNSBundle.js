@@ -427,12 +427,7 @@ async function configureAsync(context: StandaloneContext) {
   }
 
   if (context.data.manifest) {
-    const { supportingDirectory } = IosWorkspace.getPaths(context);
-    await AssetBundle.bundleAsync(
-      context.data.manifest.bundledAssets,
-      supportingDirectory,
-      context.data.manifest.sdkVersion === '24.0.0'
-    );
+
   }
 
   // common configuration for all contexts
@@ -441,14 +436,12 @@ async function configureAsync(context: StandaloneContext) {
   await _configureShellPlistAsync(context);
   await _configureEntitlementsAsync(context);
   await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
-
-  const isUser = context.type === 'user';
   await IosLocalization.writeLocalizationResourcesAsync({
     supportingDirectory,
     context,
   });
 
-  if (isUser) {
+  if (context.type === 'user') {
     const iconPath = path.join(
       iosProjectDirectory,
       projectName,
@@ -457,6 +450,13 @@ async function configureAsync(context: StandaloneContext) {
     );
     await IosIcons.createAndWriteIconsToPathAsync(context, iconPath);
   } else if (context.type === 'service') {
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    buildPhaseLogger.info('Bundling assets...');
+    await AssetBundle.bundleAsync(
+      context.data.manifest.bundledAssets,
+      supportingDirectory,
+      context.data.manifest.sdkVersion === '24.0.0'
+    );
     buildPhaseLogger.info('Compiling resources...');
     await IosAssetArchive.buildAssetArchiveAsync(
       context,
