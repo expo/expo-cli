@@ -1,0 +1,11 @@
+.npm
+node_modules
+.DS_Store
+.npm-cache
+.vscode
+config.js
+.next
+scripts/raw-github-results.json
+secrets.json
+npm-debug.log
+.expo
