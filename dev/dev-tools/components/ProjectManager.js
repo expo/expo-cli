@@ -108,6 +108,7 @@ class ProjectManager extends React.Component {
       <ProjectManagerPublishingSection
         title={this.props.project.config.name}
         description={this.props.project.config.description}
+        slug={this.props.project.config.slug}
         onUpdateState={this.props.onUpdateState}
         onPublish={this.props.onPublishProject}
       />

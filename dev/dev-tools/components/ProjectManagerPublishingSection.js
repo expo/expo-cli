@@ -28,8 +28,17 @@ const STYLES_PUBLISHING_SECTION = css`
   color: #ececec;
   background: #111111;
   height: 100%;
+  overflow-y: scroll;
   width: 100%;
-  padding: 16px;
+  padding: 16px 16px 48px 16px;
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: ${Constants.colors.foregroundAccent};
+  }
 `;
 
 const STYLES_HEADING = css`
@@ -142,10 +151,12 @@ export default class ProjectManagerPublishingSection extends React.Component {
             size="24px"
           />
         </h2>
+
         <p className={STYLES_PARAGRAPH}>
           By publishing your project, users with an Android phone will be able to access your
           project from our website. Users will also be able to leave comments on your project page.
         </p>
+
         <label className={STYLES_SUBTITLE}>Project name</label>
         <input
           className={STYLES_INPUT}
@@ -153,11 +164,21 @@ export default class ProjectManagerPublishingSection extends React.Component {
           onChange={this._handleChange}
           name="title"
         />
+
+        <label className={STYLES_SUBTITLE}>Project URL slug</label>
+        <input
+          className={STYLES_INPUT}
+          value={this.props.slug}
+          onChange={this._handleChange}
+          name="slug"
+        />
+
         <p className={STYLES_SMALL_PARAGRAPH}>
-          Your project title will be modified and saved as &nbsp;
-          <span className={STYLES_EMPHASIS}>{Strings.createSlug(this.props.title)}</span>&nbsp; in
+          Your project slug will be saved as &nbsp;
+          <span className={STYLES_EMPHASIS}>{Strings.createSlug(this.props.slug)}</span>&nbsp; in
           your <span className={STYLES_EMPHASIS}>App.json</span> file.
         </p>
+
         <label className={STYLES_SUBTITLE}>Project description</label>
         <UnstyledTextArea
           className={STYLES_INPUT}
@@ -166,6 +187,7 @@ export default class ProjectManagerPublishingSection extends React.Component {
           onChange={this._handleChange}
           name="description"
         />
+
         <h2 className={STYLES_HEADING}>Confirm changes</h2>
         <p className={STYLES_PARAGRAPH}>
           Once you publish your project, you will be able to view it at&nbsp;
