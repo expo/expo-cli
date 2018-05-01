@@ -11,6 +11,7 @@ import ProjectManagerDeviceTab from 'app/components/ProjectManagerDeviceTab';
 import ProjectManagerSidebarOptions from 'app/components/ProjectManagerSidebarOptions';
 import ProjectManagerToolbar from 'app/components/ProjectManagerToolbar';
 import ProjectManagerPublishingSection from 'app/components/ProjectManagerPublishingSection';
+import NetworkIndicator from 'app/components/NetworkIndicator';
 
 // TODO(jim): I'm not really sure about the offline header right now.
 const STYLES_HEADER = css`
@@ -101,7 +102,7 @@ class ProjectManager extends React.Component {
       />
     );
 
-    const alertElement = null;
+    const offlineElement = <NetworkIndicator />;
 
     const publishingElement = (
       <ProjectManagerPublishingSection
@@ -114,9 +115,9 @@ class ProjectManager extends React.Component {
 
     return (
       <ProjectManagerLayout
-        alertSection={alertElement}
+        alertSection={null}
         navigationSection={null}
-        headerSection={null}
+        headerSection={offlineElement}
         devicesSection={devicesElements}
         toolbarSection={toolbarElements}
         viewingSection={viewingElements}
