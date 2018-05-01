@@ -1,10 +1,17 @@
 {
-  "name": "expo-dev-tools",
+  "name": "@expo/dev-tools",
   "version": "0.0.1",
   "scripts": {
     "dev": "babel-node index.js --presets latest",
     "build": "NODE_ENV=production next build",
+    "prepare": "yarn build",
     "start": "NODE_ENV=production babel-node index.js --presets latest"
+  },
+  "powertools": {
+    "group": [
+      "dev-tools",
+      "exp"
+    ]
   },
   "dependencies": {
     "apollo-cache-inmemory": "^1.1.12",
