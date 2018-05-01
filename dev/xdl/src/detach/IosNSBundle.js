@@ -426,10 +426,6 @@ async function configureAsync(context: StandaloneContext) {
     throw new Error(`Can't configure a NSBundle without a published url.`);
   }
 
-  if (context.data.manifest) {
-
-  }
-
   // common configuration for all contexts
   buildPhaseLogger.info(`Modifying NSBundle configuration at ${supportingDirectory}...`);
   await _configureInfoPlistAsync(context);
@@ -450,13 +446,16 @@ async function configureAsync(context: StandaloneContext) {
     );
     await IosIcons.createAndWriteIconsToPathAsync(context, iconPath);
   } else if (context.type === 'service') {
-    const { supportingDirectory } = IosWorkspace.getPaths(context);
     buildPhaseLogger.info('Bundling assets...');
-    await AssetBundle.bundleAsync(
-      context.data.manifest.bundledAssets,
-      supportingDirectory,
-      context.data.manifest.sdkVersion === '24.0.0'
-    );
+    try {
+      await AssetBundle.bundleAsync(
+        context.data.manifest.bundledAssets,
+        supportingDirectory,
+        context.data.manifest.sdkVersion === '24.0.0'
+      );
+    } catch (e) {
+      throw new Error(`Asset bundling failed: ${e}`);
+    }
     buildPhaseLogger.info('Compiling resources...');
     await IosAssetArchive.buildAssetArchiveAsync(
       context,
