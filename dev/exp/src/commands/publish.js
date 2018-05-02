@@ -59,13 +59,6 @@ export async function action(projectDir: string, options: Options = {}) {
 
   let url = result.url;
 
-  // Append the query param for the release channel to the URL.
-  // When we integrate release channels into XDE, we can revisit this and
-  // perhaps push the logic for this into xdl
-  if (options.releaseChannel && options.releaseChannel !== 'default') {
-    url = `${url}?release-channel=${options.releaseChannel}`;
-  }
-
   if (options.quiet) {
     simpleSpinner.stop();
   }

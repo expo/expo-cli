@@ -532,7 +532,13 @@ export async function publishAsync(
     });
   }
 
-  return response;
+  return {
+    ...response,
+    url:
+      options.releaseChannel && options.releaseChannel !== 'default'
+        ? `${response.url}?release-channel=${options.releaseChannel}`
+        : response.url,
+  };
 }
 
 async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options }) {
