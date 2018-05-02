@@ -4,15 +4,18 @@ import { InMemoryCache, defaultDataIdFromObject } from 'apollo-cache-inmemory';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { WebSocketLink } from 'apollo-link-ws';
 import fetch from 'isomorphic-fetch';
+import getConfig from 'next/config';
 
+// TODO: remove
 let GRAPHQL_HTTP_URL = 'http://localhost:19000/graphql';
-let GRAPHQL_WS_URL = 'ws://localhost:19000/graphql';
 
 export default function createApolloClient(initialState) {
+  const { publicRuntimeConfig } = getConfig();
+
   if (process.browser) {
     return new ApolloClient({
       link: new WebSocketLink(
-        new SubscriptionClient(GRAPHQL_WS_URL, {
+        new SubscriptionClient(publicRuntimeConfig.graphqlWebSocketURL, {
           reconnect: true,
         })
       ),
