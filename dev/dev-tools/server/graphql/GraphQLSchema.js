@@ -5,6 +5,7 @@ import {
   Android,
   Exp,
   Simulator,
+  Project,
   ProjectSettings,
   ProjectUtils,
   UrlUtils,
@@ -46,6 +47,10 @@ const typeDefs = /* GraphQL */ `
     url: String!
   }
   type OpenProjectResult {
+    url: String!
+  }
+
+  type PublishProjectResult {
     url: String!
   }
 
@@ -91,6 +96,8 @@ const typeDefs = /* GraphQL */ `
   type Mutation {
     # Opens the app in an iOS simulator or and Android device/emulator.
     openSimulator(platform: Platform!): OpenProjectResult
+    # Publishes the current project to expo.io
+    publishProject(releaseChannel: String): PublishProjectResult
     # Sends the project URL by email or SMS.
     sendProjectUrl(recipient: String!): SendProjectResult
     # Updates specified project settings.
@@ -149,6 +156,9 @@ const resolvers = {
           : await Simulator.openProjectAsync(currentProject.projectDir);
       if (!result.success) throw new Error(result.error);
       else return { url: result.url };
+    },
+    publishProject({ currentProject }, { releaseChannel }) {
+      return Project.publishAsync(currentProject.projectDir, { releaseChannel });
     },
     async setProjectSettings({ currentProject }, { settings }) {
       let updatedSettings = await ProjectSettings.setAsync(currentProject.projectDir, settings);
