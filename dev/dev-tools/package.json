@@ -45,6 +45,9 @@
     "redux": "^3.7.2",
     "subscriptions-transport-ws": "^0.9.8"
   },
+  "peerDependencies": {
+    "xdl": "^49.2.0"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-module-resolver": "^3.0.0",
