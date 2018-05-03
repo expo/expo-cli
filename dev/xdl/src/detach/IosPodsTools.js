@@ -282,7 +282,7 @@ function _renderUnversionedPostinstall() {
     'JKBigInteger2',
   ];
   const podsToChangeRB = `[${podsToChangeDeployTarget.map(pod => `'${pod}'`).join(',')}]`;
-  const podsRoot = '${PODS_ROOT}'
+  const podsRoot = '${PODS_ROOT}';
   return `
     if ${podsToChangeRB}.include? target.pod_name
       target.native_target.build_configurations.each do |config|

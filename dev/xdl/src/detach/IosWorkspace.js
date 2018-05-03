@@ -23,7 +23,10 @@ import * as Utils from '../Utils';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
 
-async function _getVersionedExpoKitConfigAsync(sdkVersion: string, skipServerValidation: boolean): any {
+async function _getVersionedExpoKitConfigAsync(
+  sdkVersion: string,
+  skipServerValidation: boolean
+): any {
   const versions = await Versions.versionsAsync();
   let sdkVersionConfig = versions.sdkVersions[sdkVersion];
   if (!sdkVersionConfig) {
@@ -240,7 +243,7 @@ async function createDetachedAsync(context: StandaloneContext) {
   const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(context);
   logger.info(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
 
-  let isMultipleVersion = (context.type === 'service');
+  let isMultipleVersion = context.type === 'service';
   let standaloneSdkVersion = await getNewestSdkVersionSupportedAsync(context);
 
   let iosClientVersion;
@@ -371,7 +374,14 @@ async function getNewestSdkVersionSupportedAsync(context: StandaloneContext) {
     let { supportingDirectory } = getPaths(context);
     if (!fs.existsSync(supportingDirectory)) {
       // if we run this method before creating the workspace, we may need to look at the template.
-      supportingDirectory = path.join(context.data.expoSourcePath, '..', 'exponent-view-template', 'ios', 'exponent-view-template', 'Supporting');
+      supportingDirectory = path.join(
+        context.data.expoSourcePath,
+        '..',
+        'exponent-view-template',
+        'ios',
+        'exponent-view-template',
+        'Supporting'
+      );
     }
     let allVersions, newestVersion;
     await IosPlist.modifyAsync(supportingDirectory, 'EXSDKVersions', versionConfig => {

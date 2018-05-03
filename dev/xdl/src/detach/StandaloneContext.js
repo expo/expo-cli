@@ -26,7 +26,7 @@ type StandaloneContextDataService = {
   archivePath: ?string,
   manifest: ?any,
   privateConfig: ?any,
-  testEnvironment: StandaloneContextTestEnvironment;
+  testEnvironment: StandaloneContextTestEnvironment,
 };
 
 class StandaloneContext {

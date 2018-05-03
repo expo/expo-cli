@@ -13,10 +13,7 @@ import path from 'path';
 import rimraf from 'rimraf';
 import glob from 'glob-promise';
 
-import {
-  saveImageToPathAsync,
-  rimrafDontThrow,
-} from './ExponentTools';
+import { saveImageToPathAsync, rimrafDontThrow } from './ExponentTools';
 import logger from './Logger';
 
 import Api from '../Api';

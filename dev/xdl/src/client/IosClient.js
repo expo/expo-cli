@@ -13,13 +13,7 @@ import logger from '../detach/Logger';
  *  Build the iOS workspace at the given path.
  *  @return the path to the resulting build artifact
  */
-async function _buildAsync(
-  workspacePath,
-  configuration,
-  type,
-  derivedDataPath,
-  verbose
-) {
+async function _buildAsync(workspacePath, configuration, type, derivedDataPath, verbose) {
   let buildCmd, pathToArtifact;
   const projectName = 'Exponent';
   if (type === 'simulator') {
@@ -38,7 +32,9 @@ async function _buildAsync(
     throw new Error(`Unsupported build type: ${type}`);
   }
 
-  logger.info(`Building iOS workspace at ${workspacePath} with derived data path ${derivedDataPath}:\n`);
+  logger.info(
+    `Building iOS workspace at ${workspacePath} with derived data path ${derivedDataPath}:\n`
+  );
   logger.info(buildCmd);
   if (!verbose) {
     logger.info(
@@ -66,9 +62,15 @@ async function _configureExpoClientBundleAsync(pathToArchive, bundleId, appleTea
   if (fs.existsSync(entitlementsFile)) {
     let entitlementsFileContents = await fs.readFile(entitlementsFile, 'utf8');
     entitlementsFileContents = entitlementsFileContents.replace(/host\.exp\.Exponent/g, bundleId);
-    entitlementsFileContents = entitlementsFileContents.replace(/\$\(CFBundleIdentifier\)/g, bundleId);
+    entitlementsFileContents = entitlementsFileContents.replace(
+      /\$\(CFBundleIdentifier\)/g,
+      bundleId
+    );
     if (appleTeamIdentifierPrefix) {
-      entitlementsFileContents = entitlementsFileContents.replace(/\$\(TeamIdentifierPrefix\)/g, appleTeamIdentifierPrefix);
+      entitlementsFileContents = entitlementsFileContents.replace(
+        /\$\(TeamIdentifierPrefix\)/g,
+        appleTeamIdentifierPrefix
+      );
     }
     await fs.writeFile(entitlementsFile, entitlementsFileContents);
   }
@@ -78,7 +80,7 @@ async function _buildAndCopyClientArtifactAsync(buildType, buildConfiguration, v
   const clientWorkspacePath = path.join('..', 'ios');
   let buildPath = path.join('..', 'client-builds');
   let derivedDataPath = path.join(buildPath, 'derived-data', buildType);
-  
+
   const pathToArtifact = await _buildAsync(
     clientWorkspacePath,
     buildConfiguration,
@@ -115,7 +117,9 @@ async function configureBundleAsync(pathToArchive, bundleId, appleTeamId) {
     throw new Error('Must specify a bundle identifier to write.');
   }
   if (!appleTeamId) {
-    logger.warn('No apple team id was specified. This may lead to unexpected behavior with the resulting Entitlements.');
+    logger.warn(
+      'No apple team id was specified. This may lead to unexpected behavior with the resulting Entitlements.'
+    );
   }
   return _configureExpoClientBundleAsync(pathToArchive, bundleId, appleTeamId);
 }

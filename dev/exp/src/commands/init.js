@@ -60,8 +60,9 @@ async function action(projectDir, options) {
     cdPath = projectPath;
   }
   log.nested(`\nYour project is ready at ${projectPath}`);
-  log.nested(`To get started, you can type:\n`)
-  if (cdPath) {  // empty string if project was created in current directory
+  log.nested(`To get started, you can type:\n`);
+  if (cdPath) {
+    // empty string if project was created in current directory
     log.nested(`  cd ${cdPath}`);
   }
   log.nested(`  ${options.parent.name} start\n`);
