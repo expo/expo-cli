@@ -109,6 +109,7 @@ class ProjectManager extends React.Component {
         title={this.props.project.config.name}
         description={this.props.project.config.description}
         slug={this.props.project.config.slug}
+        githubUrl={this.props.project.config.githubUrl}
         onUpdateState={this.props.onUpdateState}
         onPublish={this.props.onPublishProject}
       />

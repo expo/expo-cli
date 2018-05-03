@@ -179,6 +179,14 @@ export default class ProjectManagerPublishingSection extends React.Component {
           your <span className={STYLES_EMPHASIS}>App.json</span> file.
         </p>
 
+        <label className={STYLES_SUBTITLE}>Github Source URL (optional)</label>
+        <input
+          className={STYLES_INPUT}
+          value={this.props.githubUrl}
+          onChange={this._handleChange}
+          name="githubUrl"
+        />
+
         <label className={STYLES_SUBTITLE}>Project description</label>
         <UnstyledTextArea
           className={STYLES_INPUT}
