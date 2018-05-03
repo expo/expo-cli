@@ -29,7 +29,7 @@ const STYLES_HEADER_SELECTED = css`
 `;
 
 const STYLES_HEADER_DEFAULT = css`
-  color: ${Constants.colors.darkButtonColor};
+  color: ${Constants.colors.darkText};
   transition: 200ms ease color;
   cursor: pointer;
 

@@ -5,10 +5,10 @@ import * as React from 'react';
 import * as Constants from 'app/common/constants';
 
 const STYLES_INPUT = css`
-  display: inline-block;
-  padding: 8px;
   background: ${Constants.colors.white};
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  padding: 8px;
   border-radius: 4px;
 `;
 

@@ -6,7 +6,7 @@ import * as Constants from 'app/common/constants';
 import ProjectManagerSection from 'app/components/ProjectManagerSection';
 
 const STYLES_MAIN_SECTION = css`
-  background: ${Constants.colors.appBackground};
+  background: ${Constants.colors.black};
   position: relative;
   display: flex;
   flex-direction: column;
@@ -66,7 +66,7 @@ const STYLES_CONTAINER_MIDDLE = css`
 
 const STYLES_CONTAINER_MIDDLE_TOP = css`
   background: ${Constants.colors.foreground};
-  border-bottom: 1px solid #111111;
+  border-bottom: 1px solid ${Constants.colors.black};
   flex-shrink: 0;
   height: 64px;
   width: 100%;

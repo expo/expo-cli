@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as Constants from 'app/common/constants';
 
 const STYLES_SMALL_BUTTON = css`
+  font-family: ${Constants.fontFamilies.demi};
   user-select: none;
   height: 28px;
   padding: 2px 8px 0 8px;
@@ -13,7 +14,6 @@ const STYLES_SMALL_BUTTON = css`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-family: ${Constants.fontFamilies.demi};
 `;
 
 const STYLES_SMALL_BUTTON_ACTIVE = css`

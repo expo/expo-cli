@@ -34,14 +34,14 @@ const STYLES_INPUT_ELEMENT = css`
 
 const STYLES_INPUT_BUTTON = css`
   font-family: ${Constants.fontFamilies.demi};
+  background: ${Constants.colors.green};
+  color: ${Constants.colors.white};
   border-radius: 0 4px 4px 0;
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   padding: 2px 16px 0 16px;
   height: 100%;
-  background: ${Constants.colors.green};
-  color: #ffffff;
   cursor: pointer;
   transition: 200ms ease opacity;
   opacity: 1;

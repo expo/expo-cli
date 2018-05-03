@@ -6,9 +6,9 @@ import * as SVG from 'app/common/svg';
 
 const STYLES_INDICATOR = css`
   font-family: ${Constants.fontFamilies.mono};
+  color: ${Constants.colors.darkText};
   font-size: 10px;
   text-transform: uppercase;
-  color: #999999;
   display: inline-flex;
   align-items: center;
 `;

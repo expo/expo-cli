@@ -17,11 +17,11 @@ const STYLES_TOAST_CONTAINER = css`
 `;
 
 const STYLES_TOAST = css`
+  background: ${Constants.colors.white};
+  box-shadow: 0 1px 4px rgba(0, 0, 30, 0.3);
   user-select: none;
   width: 100%;
   border-radius: 4px;
-  background: ${Constants.colors.white};
-  box-shadow: 0 1px 4px rgba(0, 0, 30, 0.3);
   margin-top: 16px;
   transition: 200ms ease all;
   animation: 400ms ease fadeInRight;

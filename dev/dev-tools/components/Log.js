@@ -13,20 +13,20 @@ const STYLES_LOG = css`
 `;
 
 const STYLES_LOG_COL_TIMESTAMP = css`
+  color: ${Constants.colors.logTimestamp};
   flex-shrink: 0;
   font-size: 10px;
   margin: 0 8px 4px 0;
   overflow-wrap: break-word;
-  color: #555555;
 `;
 
 const STYLES_LOG_COL_CONTEXT = css`
+  color: ${Constants.colors.logContext};
   flex-shrink: 0;
   font-size: 10px;
   margin: 0 8px 4px 0;
   text-transform: uppercase;
   overflow-wrap: break-word;
-  color: #777777;
   margin-right: 8px;
 `;
 

@@ -4,22 +4,22 @@ import * as React from 'react';
 import * as Constants from 'app/common/constants';
 
 const STYLES_SMALL_BUTTON = css`
+  border-left: 1px solid ${Constants.colors.black};
   user-select: none;
   height: 64px;
   width: 64px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-left: 1px solid #111111;
 `;
 
 const STYLES_SMALL_BUTTON_ACTIVE = css`
-  background: #111111;
-  color: #666666;
+  background: ${Constants.colors.black};
+  color: ${Constants.colors.darkTextActive};
 `;
 
 const STYLES_SMALL_BUTTON_DEFAULT = css`
-  color: ${Constants.colors.darkButtonColor};
+  color: ${Constants.colors.darkText};
   cursor: pointer;
   transition: 200ms ease all;
   transition-property: border, color;

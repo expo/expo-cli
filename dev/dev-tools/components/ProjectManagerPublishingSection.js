@@ -25,8 +25,8 @@ const STYLES_HEADING_WITH_DISMISS_RIGHT = css`
 
 const STYLES_PUBLISHING_SECTION = css`
   font-family: ${Constants.fontFamilies.regular};
-  color: #ececec;
-  background: #111111;
+  background: ${Constants.colors.black};
+  color: ${Constants.colors.border};
   height: 100%;
   overflow-y: scroll;
   width: 100%;
@@ -43,12 +43,12 @@ const STYLES_PUBLISHING_SECTION = css`
 
 const STYLES_HEADING = css`
   font-family: ${Constants.fontFamilies.demi};
+  border-bottom: ${Constants.colors.foregroundAccent} 1px solid;
   overflow-wrap: break-word;
   font-weight: 400;
   font-size: 16px;
   line-height: 1.25;
   padding-bottom: 16px;
-  border-bottom: #333333 1px solid;
   margin-bottom: 16px;
 `;
 
@@ -70,9 +70,9 @@ const STYLES_SMALL_PARAGRAPH = css`
 `;
 
 const STYLES_SUBTITLE = css`
-  display: block;
   font-family: ${Constants.fontFamilies.mono};
   color: ${Constants.colors.darkBorder};
+  display: block;
   font-size: 10px;
   text-transform: uppercase;
   margin-top: 24px;
@@ -80,6 +80,9 @@ const STYLES_SUBTITLE = css`
 `;
 
 const STYLES_INPUT = css`
+  background: ${Constants.colors.foregroundAccent};
+  font-family: ${Constants.fontFamilies.regular};
+  color: ${Constants.colors.darkInputColor};
   overflow-wrap: break-word;
   margin: 0;
   padding: 0;
@@ -91,10 +94,7 @@ const STYLES_INPUT = css`
   max-width: 640px;
   padding: 8px 8px 8px 8px;
   border-radius: 4px;
-  background: #333333;
-  color: #acacac;
   resize: none;
-  font-family: ${Constants.fontFamilies.regular};
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 24px;
@@ -102,11 +102,11 @@ const STYLES_INPUT = css`
 
 const STYLES_LARGE_BUTTON = css`
   font-family: ${Constants.fontFamilies.demi};
+  color: ${Constants.colors.white};
+  background: ${Constants.colors.primary};
   border-radius: 4px;
   padding: 12px 16px 10px 16px;
   font-size: 16px;
-  color: ${Constants.colors.white};
-  background: ${Constants.colors.primary};
   line-height: 1;
   transtion: 200ms ease all;
   cursor: pointer;

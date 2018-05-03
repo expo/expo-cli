@@ -88,7 +88,7 @@ injectGlobal`
     }
 
     ::-webkit-scrollbar-thumb {
-      background: ${Constants.colors.appBackground};
+      background: ${Constants.colors.black};
     }
   }
 

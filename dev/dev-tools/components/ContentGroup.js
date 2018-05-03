@@ -10,7 +10,7 @@ const STYLES_HEADER = css`
 
 const STYLES_CHILDREN = css`
   font-family: ${Constants.fontFamilies.regular};
-  background: rgb(248, 248, 248);
+  background: ${Constants.colors.sidebarBackground};
   padding: 16px;
 `;
 
