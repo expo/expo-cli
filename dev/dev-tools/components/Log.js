@@ -41,7 +41,7 @@ const STYLES_LOG_COL_CONTENT = css`
 
 const STYLES_LOG_LEFT = css`
   flex-shrink: 0;
-  width: 100px;
+  width: 64px;
 `;
 
 const STYLES_LOG_COL_STATUS = css`
@@ -70,7 +70,9 @@ export default class Log extends React.Component {
             undefined
           )}
           {this.props.time ? (
-            <div className={STYLES_LOG_COL_TIMESTAMP}>{Strings.formatTime(this.props.time)}</div>
+            <div className={STYLES_LOG_COL_TIMESTAMP}>
+              {Strings.formatTimeMilitary(this.props.time)}
+            </div>
           ) : (
             undefined
           )}

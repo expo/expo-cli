@@ -1,5 +1,13 @@
 var URL_REGEX = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/;
 
+const appendZero = i => {
+  if (i < 10) {
+    i = `0${i}`;
+  }
+
+  return i;
+};
+
 // NOTE(jim): Source: https://gist.github.com/mathewbyrne/1280286
 export const createSlug = text => {
   const a = 'æøåàáäâèéëêìíïîòóöôùúüûñçßÿœæŕśńṕẃǵǹḿǘẍźḧ·/_,:;';
@@ -19,3 +27,11 @@ export const createSlug = text => {
 };
 
 export const formatTime = dateString => new Date(dateString).toLocaleTimeString('en-US');
+
+export const formatTimeMilitary = dateString => {
+  const date = new Date(dateString);
+
+  const h = appendZero(date.getHours());
+  const m = appendZero(date.getMinutes());
+  return `${h}:${m}`;
+};
