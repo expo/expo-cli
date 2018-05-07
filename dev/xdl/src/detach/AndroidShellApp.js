@@ -672,8 +672,11 @@ export async function runShellAppModificationsAsync(
 
   // Add shell app scheme
   if (scheme) {
+    const searchLine = isDetached
+      ? '<!-- ADD DETACH SCHEME HERE -->'
+      : '<!-- ADD SHELL SCHEME HERE -->';
     await regexFileAsync(
-      '<!-- ADD SHELL SCHEME HERE -->',
+      searchLine,
       `<intent-filter>
         <data android:scheme="${scheme}"/>
 
