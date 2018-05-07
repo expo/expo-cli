@@ -1,7 +1,5 @@
 import { createStore } from 'redux';
 
-import * as Sets from 'app/common/sets';
-
 const INITIAL_STATE = {
   isPublishing: false,
   devices: [],

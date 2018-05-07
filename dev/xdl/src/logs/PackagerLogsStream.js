@@ -149,9 +149,9 @@ export default class PackagerLogsStream {
     projectRoot: string,
     getCurrentOpenProjectId?: () => any,
     updateLogs: (updater: LogUpdater) => void,
-    onStartBuildBundle?: () => void,
-    onProgressBuildBundle?: (progress: number) => void,
-    onFinishBuildBundle?: () => void,
+    onStartBuildBundle?: (chunk: any) => void,
+    onProgressBuildBundle?: (progress: number, start: Date, chunk: any) => void,
+    onFinishBuildBundle?: (error: ?string, start: ?Date, end: Date, chunk: any) => void,
     getSnippetForError?: (error: Error) => ?string,
   }) {
     this._resetState();
@@ -205,7 +205,8 @@ export default class PackagerLogsStream {
     });
   }
 
-  _handleMetroEvent(chunk: ChunkT) {
+  _handleMetroEvent(originalChunk: ChunkT) {
+    const chunk = { ...originalChunk };
     let { msg } = chunk;
     if (chunk.tag !== 'metro' || !msg.type) {
       return;
@@ -302,7 +303,7 @@ export default class PackagerLogsStream {
     chunk.msg = 'Building JavaScript bundle';
 
     if (this._onStartBuildBundle) {
-      this._onStartBuildBundle();
+      this._onStartBuildBundle(chunk);
     } else {
       this._enqueueAppendLogChunk(chunk);
     }
@@ -328,12 +329,42 @@ export default class PackagerLogsStream {
       percentProgress = Math.floor(msg.transformedFileCount / msg.totalFileCount * 100);
     }
 
+    if (this._bundleBuildChunkID) {
+      progressChunk._id = this._bundleBuildChunkID;
+    }
+    if (bundleError) {
+      progressChunk.msg = `Building JavaScript bundle: error`;
+      if (msg.error) {
+        progressChunk.msg += '\n' + (msg.error.description || msg.error.message);
+      }
+    } else {
+      if (bundleComplete) {
+        let duration;
+        if (this._bundleBuildStart) {
+          duration = bundleBuildEnd - this._bundleBuildStart;
+        }
+
+        if (duration) {
+          progressChunk.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
+        } else {
+          progressChunk.msg = `Building JavaScript bundle: finished.`;
+        }
+      } else {
+        progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
+      }
+    }
+
     if (this._onProgressBuildBundle) {
-      this._onProgressBuildBundle(percentProgress);
+      this._onProgressBuildBundle(percentProgress, this._bundleBuildStart, progressChunk);
 
       if (bundleComplete) {
         this._onFinishBuildBundle &&
-          this._onFinishBuildBundle(bundleError, this._bundleBuildStart, bundleBuildEnd);
+          this._onFinishBuildBundle(
+            bundleError,
+            this._bundleBuildStart,
+            bundleBuildEnd,
+            progressChunk
+          );
         this._bundleBuildStart = null;
         this._bundleBuildChunkID = null;
       }
@@ -345,25 +376,7 @@ export default class PackagerLogsStream {
 
         logs.forEach(log => {
           if (log._id === this._bundleBuildChunkID) {
-            if (percentProgress === -1) {
-              log.msg = `Building JavaScript bundle: error\n${msg.error.description ||
-                msg.error.message}`;
-            } else {
-              if (bundleComplete) {
-                let duration;
-                if (this._bundleBuildStart) {
-                  duration = bundleBuildEnd - this._bundleBuildStart;
-                }
-
-                if (duration) {
-                  log.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
-                } else {
-                  log.msg = `Building JavaScript bundle: finished.`;
-                }
-              } else {
-                log.msg = `Building JavaScript bundle: ${percentProgress}%`;
-              }
-            }
+            log.msg = progressChunk.msg;
           }
         });
 

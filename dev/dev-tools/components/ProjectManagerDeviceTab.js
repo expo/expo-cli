@@ -2,6 +2,7 @@ import styled, { css } from 'react-emotion';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
+import * as Strings from 'app/common/strings';
 import * as SVG from 'app/common/svg';
 
 import { DragSource } from 'react-dnd';
@@ -55,26 +56,45 @@ const STYLES_INDICATOR = css`
 // TODO(jim): Change icon based on device.
 class ProjectManagerDeviceTab extends React.Component {
   render() {
-    const { name, logs, id, type } = this.props.data;
+    const { name, messages, id, __typename } = this.props.data;
 
-    const deviceLogCount = logs && logs.length ? `(${logs.length})` : '';
-    const deviceLastTimestamp = logs && logs.length ? `- ${logs[logs.length - 1].timestamp}` : '';
+    let type;
+    switch (__typename) {
+      case 'Issues': {
+        type = 'issues';
+        break;
+      }
+      case 'Process': {
+        type = 'process';
+        break;
+      }
+      case 'Device': {
+        type = 'device';
+        break;
+      }
+    }
+
+    const deviceLogCount = messages.count;
+    const deviceLastTimestamp =
+      messages && messages.nodes.length
+        ? `- ${Strings.formatTime(messages.nodes[messages.nodes.length - 1].time)}`
+        : '';
 
     return this.props.connectDragSource(
       <div className={STYLES_TAB_SECTION} onClick={this.props.onClick}>
         <div className={STYLES_TAB_SECTION_CONTAINER}>
           <div
             className={`
-            ${STYLES_TAB_SECTION_CONTAINER_DESCRIPTION} 
+            ${STYLES_TAB_SECTION_CONTAINER_DESCRIPTION}
             ${type === 'issues' ? STYLES_TAB_SECTION_CONTAINER_DESCRIPTION_IS_WARNING : ''}`}>
             {name}
           </div>
           <div
             className={`
-            ${STYLES_TAB_SECTION_CONTAINER_TITLE} 
+            ${STYLES_TAB_SECTION_CONTAINER_TITLE}
             ${type === 'issues' ? STYLES_TAB_SECTION_CONTAINER_TITLE_IS_WARNING : ''}`}>
             <LoggerIcon type={type} style={{ marginRight: '8px', marginBottom: '2px' }} />
-            {`${type} ${deviceLogCount} ${deviceLastTimestamp}`}
+            {`${type} (${deviceLogCount}) ${deviceLastTimestamp}`}
           </div>
         </div>
       </div>

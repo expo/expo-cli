@@ -2,6 +2,7 @@ import styled, { css } from 'react-emotion';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
+import * as Strings from 'app/common/strings';
 
 const STYLES_LOG = css`
   font-family: ${Constants.fontFamilies.mono};
@@ -68,8 +69,8 @@ export default class Log extends React.Component {
           ) : (
             undefined
           )}
-          {this.props.timestamp ? (
-            <div className={STYLES_LOG_COL_TIMESTAMP}>{this.props.timestamp}</div>
+          {this.props.time ? (
+            <div className={STYLES_LOG_COL_TIMESTAMP}>{Strings.formatTime(this.props.time)}</div>
           ) : (
             undefined
           )}

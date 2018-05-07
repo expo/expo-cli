@@ -17,3 +17,5 @@ export const createSlug = text => {
     .replace(/^-+/, '') // Trim - from start of text
     .replace(/-+$/, ''); // Trim - from end of text
 };
+
+export const formatTime = dateString => new Date(dateString).toLocaleTimeString('en-US');

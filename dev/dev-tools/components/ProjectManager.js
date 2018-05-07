@@ -4,7 +4,6 @@ import HTML5Backend from 'react-dnd-html5-backend';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
-import * as Sets from 'app/common/sets';
 
 import ProjectManagerLayout from 'app/components/ProjectManagerLayout';
 import ProjectManagerDeviceTab from 'app/components/ProjectManagerDeviceTab';
@@ -69,13 +68,13 @@ class ProjectManager extends React.Component {
 
     const devicesElements = (
       <div>
-        {Sets.alphabetize(this.props.sections).map(l => {
+        {this.props.sections.map(source => {
           return (
             <ProjectManagerDeviceTab
-              onClick={() => this.props.onDeviceSelect({ id: l.id })}
+              onClick={() => this.props.onDeviceSelect(source)}
               onUpdateState={this.props.onUpdateState}
-              key={`devices-${l.name}`}
-              data={l}
+              key={source.id}
+              data={source}
             />
           );
         })}

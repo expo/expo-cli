@@ -20,10 +20,10 @@ const getOrCreateStore = (initStore, initialState) => {
 };
 
 export default (initStore, ...connectArgs) => Component => {
+  const ConnectedComponent = connect(...connectArgs)(Component);
+
   const ComponentWithRedux = (props = {}) => {
     const { store, initialProps, initialState, ...otherProps } = props;
-
-    const ConnectedComponent = connect(...connectArgs)(Component);
 
     return React.createElement(
       Provider,

@@ -1,50 +1,127 @@
 import gql from 'graphql-tag';
+import uniqBy from 'lodash/uniqBy';
+import set from 'lodash/fp/set';
 
 import * as Sets from 'app/common/sets';
 
-export const deviceSelect = ({ id }, props) => {
-  const existingIndex = Sets.findIndex(props.devices, id);
+export const sourceSelect = (source, props) => {
+  const { projectManagerLayout: layout } = props.data;
+  const existingIndex = layout.sources.findIndex(s => s.id === source.id);
+  const selected = source.id;
 
-  if (existingIndex < props.count) {
-    props.dispatch({ type: 'UPDATE', state: { selectedId: id } });
-    return;
+  let sources;
+  if (existingIndex >= 0) {
+    // If source is already shown, only select it.
+    sources = layout.sources;
+  } else {
+    const selectedIndex = layout.sources.findIndex(
+      s => layout.selected && s.id === layout.selected.id
+    );
+    // Replace the source in the selected panel.
+    // If selectedIndex is -1 (no panel selected), set the first item.
+    sources = set(Math.max(selectedIndex, 0), source, layout.sources);
   }
-
-  if (props.selectedId) {
-    const selectedIndex = Sets.findIndex(props.devices, props.selectedId);
-    const swapDevices = Sets.swap(props.devices, selectedIndex, existingIndex);
-
-    props.dispatch({ type: 'UPDATE', state: { devices: swapDevices, selectedId: id } });
-    return;
-  }
-
-  const devices = Sets.swap(props.devices, 0, existingIndex);
-  props.dispatch({ type: 'UPDATE', state: { devices, selectedId: id } });
+  return updateLayout(props.client, { selected, sources });
 };
 
-export const deviceSwap = ({ oldId, newId }, props) => {
-  const oldIndex = Sets.findIndex(props.devices, oldId);
-  const newIndex = Sets.findIndex(props.devices, newId);
-  const devices = Sets.swap(props.devices, oldIndex, newIndex);
-
-  props.dispatch({ type: 'UPDATE', state: { devices, selectedId: newId } });
+export const sourceSwap = ({ oldId, newId }, props) => {
+  const { projectManagerLayout: layout } = props.data;
+  const oldIndex = layout.sources.findIndex(source => source.id === oldId);
+  const newIndex = layout.sources.findIndex(source => source.id === newId);
+  return updateLayout(props.client, {
+    selected: layout.selected ? layout.selected.id : null,
+    sources: Sets.swap([...layout.sources], oldIndex, newIndex),
+  });
 };
 
 export const sectionSelect = ({ id }, props) => {
-  props.dispatch({ type: 'UPDATE', state: { selectedId: id } });
+  const { projectManagerLayout: layout } = props.data;
+  const layoutInput = {
+    selected: id,
+    sources: layout.sources,
+  };
+  return updateLayout(props.client, layoutInput);
 };
 
 export const sectionClear = props => {
-  props.dispatch({ type: 'UPDATE', state: { selectedId: null } });
+  const { projectManagerLayout: layout } = props.data;
+  const layoutInput = {
+    selected: null,
+    sources: layout.sources,
+  };
+  return updateLayout(props.client, layoutInput);
 };
 
 export const sectionCount = ({ count }, props) => {
-  props.dispatch({ type: 'UPDATE', state: { count, isPublishing: false } });
+  const { projectManagerLayout: layout, currentProject } = props.data;
+  let newSources;
+  if (count > layout.sources.length) {
+    newSources = uniqBy([...layout.sources, ...currentProject.sources], source => source.id);
+  } else {
+    newSources = layout.sources.slice(0, count);
+  }
+  const layoutInput = {
+    selected: layout.selected ? layout.selected.id : null,
+    sources: newSources,
+  };
+  return updateLayout(props.client, layoutInput);
 };
 
 export const update = (state, props) => {
   props.dispatch({ type: 'UPDATE', state });
 };
+
+const PROJECT_MANAGER_LAYOUT_FRAGMENT = gql`
+  fragment ProjectManagerLayoutFragment on ProjectManagerLayout {
+    __typename
+    selected {
+      id
+    }
+    sources {
+      id
+    }
+  }
+`;
+
+const UPDATE_PROJECT_MANAGER_QUERY = gql`
+  mutation UpdateProjectManagerLayout($input: ProjectManagerLayoutInput!) {
+    setProjectManagerLayout(input: $input) {
+      ...ProjectManagerLayoutFragment
+    }
+  }
+
+  ${PROJECT_MANAGER_LAYOUT_FRAGMENT}
+`;
+
+function updateLayout(client, input) {
+  return client.mutate({
+    mutation: UPDATE_PROJECT_MANAGER_QUERY,
+    variables: {
+      input: {
+        selected: input.selected,
+        sources: input.sources.map(source => source.id),
+      },
+    },
+    update(cache, { data: { setProjectManagerLayout } }) {
+      cache.writeFragment({
+        id: 'ProjectManagerLayout',
+        fragment: PROJECT_MANAGER_LAYOUT_FRAGMENT,
+        data: setProjectManagerLayout,
+      });
+    },
+    optimisticResponse: {
+      __typename: 'Mutation',
+      setProjectManagerLayout: {
+        __typename: 'ProjectManagerLayout',
+        selected: {
+          __typename: 'Source',
+          id: input.selected,
+        },
+        sources: input.sources,
+      },
+    },
+  });
+}
 
 export const openSimulator = (platform, props) => {
   props.dispatch({
@@ -72,6 +149,7 @@ export const setProjectSettings = (settings, props) => {
     mutation: gql`
       mutation SetProjectSettings($settings: ProjectSettingsInput!) {
         setProjectSettings(settings: $settings) {
+          projectDir
           manifestUrl
           settings {
             hostType

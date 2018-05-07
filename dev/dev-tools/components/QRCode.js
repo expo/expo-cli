@@ -16,7 +16,7 @@ export default class QRCode extends React.Component {
   render() {
     return (
       <div className={STYLES_INPUT}>
-        <QRCodeReact size={168} url={this.props.url} />
+        <QRCodeReact size={168} value={this.props.url} />
       </div>
     );
   }

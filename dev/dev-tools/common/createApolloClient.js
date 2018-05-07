@@ -36,10 +36,34 @@ export default function createApolloClient(initialState) {
 
 function dataIdFromObject(object) {
   switch (object.__typename) {
-    case 'Project':
-      return `Project:${object.projectDir}`;
+    case 'Project': {
+      if (object.projectDir) {
+        return `Project:${object.projectDir}`;
+      }
+      break;
+    }
     case 'UserSettings':
       return 'UserSettings';
+    case 'ProjectManagerLayout':
+      return 'ProjectManagerLayout';
+    case 'Issues':
+    case 'Process':
+    case 'Device': {
+      if (object.id) {
+        return `Source:${object.id}`;
+      }
+      break;
+    }
+    case 'LogMessage':
+    case 'DeviceMessage':
+    case 'BuildProgress':
+    case 'BuildFinished':
+    case 'BuildError': {
+      if (object.id) {
+        return `Message:${object.id}`;
+      }
+      break;
+    }
     default:
       return defaultDataIdFromObject(object);
   }
