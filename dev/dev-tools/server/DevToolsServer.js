@@ -23,7 +23,6 @@ export async function startAsync(projectDir) {
       },
     },
   });
-  const handle = app.getRequestHandler();
   await app.prepare();
 
   const server = express();
@@ -32,9 +31,7 @@ export async function startAsync(projectDir) {
     server.use(compression());
   }
   server.get('/graphiql', graphiqlExpress({ endpointURL: `ws://localhost:${port}/graphql` }));
-  server.get('*', (req, res) => {
-    return handle(req, res);
-  });
+  server.get('*', app.getRequestHandler());
 
   return new Promise((resolve, reject) => {
     let httpServer = server.listen(port, err => {
