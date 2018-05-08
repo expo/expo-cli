@@ -104,6 +104,6 @@ injectGlobal`
 export default props => (
   <div style={{ height: '100%', position: 'relative', ...props.style }}>
     {props.children}
-    {/* <GlobalToasts /> */}
+    <GlobalToasts />
   </div>
 );
