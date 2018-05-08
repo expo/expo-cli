@@ -37,7 +37,7 @@ const typeDefs = graphql`
     # Project configuration from app.json.
     config: ProjectConfig
     # Things that can send messages
-    sources: [Source!]
+    sources: [Source]
     # All messages from all sources
     messages: MessageConnection!
   }
@@ -184,7 +184,7 @@ const typeDefs = graphql`
 
   type ProjectManagerLayout {
     selected: Source
-    sources: [Source!]
+    sources: [Source]
   }
 
   input ProjectManagerLayoutInput {
