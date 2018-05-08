@@ -10,6 +10,7 @@ import { PackagerLogsStream, ProjectUtils } from 'xdl';
 
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
 import GraphQLSchema from './graphql/GraphQLSchema';
+import createContext from './graphql/createContext';
 
 const dev = process.env.EXPO_DEV_TOOLS_DEBUG === '1';
 
@@ -42,33 +43,22 @@ export async function startAsync(projectDir) {
         return;
       }
 
-      let layout = {
-        selected: null,
-        sources: null,
-      };
-      const logBuffer = createLogBuffer(projectDir);
-
-      const context = {
-        getCurrentProject() {
-          return {
-            projectDir,
-            logBuffer,
-          };
-        },
-        getProjectManagerLayout() {
-          return layout;
-        },
-        setProjectManagerLayout(newLayout) {
-          layout = newLayout;
-        },
-      };
+      const layout = createLayout();
+      const messageBuffer = createMessageBuffer(projectDir);
 
       SubscriptionServer.create(
         {
           schema: GraphQLSchema,
           execute: graphql.execute,
           subscribe: graphql.subscribe,
-          onConnect: () => context,
+          onOperation: (operation, params) => ({
+            ...params,
+            context: createContext({
+              projectDir,
+              messageBuffer,
+              layout,
+            }),
+          }),
         },
         { server: httpServer, path: '/graphql' }
       );
@@ -77,7 +67,22 @@ export async function startAsync(projectDir) {
   });
 }
 
-function createLogBuffer(projectRoot) {
+function createLayout() {
+  let layout = {
+    selected: null,
+    sources: null,
+  };
+  return {
+    get() {
+      return layout;
+    },
+    set(newLayout) {
+      layout = newLayout;
+    },
+  };
+}
+
+function createMessageBuffer(projectRoot) {
   const buffer = new AsyncIterableRingBuffer(10000);
 
   const packagerLogsStream = new PackagerLogsStream({
@@ -86,34 +91,46 @@ function createLogBuffer(projectRoot) {
       const chunks = updater([]);
       chunks.forEach(chunk => {
         chunk.id = chunk._id;
-        buffer.push(chunk);
+        buffer.push({
+          type: 'ADDED',
+          node: chunk,
+        });
       });
     },
     onStartBuildBundle: chunk => {
       buffer.push({
-        ...chunk,
-        id: chunk._id,
-        _bundleEventType: 'PROGRESS',
-        progress: 0,
-        duration: 0,
+        type: 'ADDED',
+        node: {
+          ...chunk,
+          id: chunk._id,
+          _bundleEventType: 'PROGRESS',
+          progress: 0,
+          duration: 0,
+        },
       });
     },
     onProgressBuildBundle: (percentage, start, chunk) => {
-      buffer.update(existingChunk => existingChunk._id === chunk._id, {
-        ...chunk,
-        id: chunk._id,
-        _bundleEventType: 'PROGRESS',
-        progress: percentage,
-        duration: new Date() - (start || new Date()),
+      buffer.push({
+        type: 'UPDATED',
+        node: {
+          ...chunk,
+          id: chunk._id,
+          _bundleEventType: 'PROGRESS',
+          progress: percentage,
+          duration: new Date() - (start || new Date()),
+        },
       });
     },
     onFinishBuildBundle: (error, start, end, chunk) => {
-      buffer.update(existingChunk => existingChunk._id === chunk._id, {
-        ...chunk,
-        id: chunk._id,
-        error,
-        _bundleEventType: error ? 'FAILED' : 'FINISHED',
-        duration: end - (start || new Date()),
+      buffer.push({
+        type: 'UPDATED',
+        node: {
+          ...chunk,
+          id: chunk._id,
+          error,
+          _bundleEventType: error ? 'FAILED' : 'FINISHED',
+          duration: end - (start || new Date()),
+        },
       });
     },
   });
@@ -124,7 +141,10 @@ function createLogBuffer(projectRoot) {
       write: chunk => {
         if (chunk.tag === 'device') {
           chunk.id = chunk._id;
-          buffer.push(chunk);
+          buffer.push({
+            type: 'ADDED',
+            node: chunk,
+          });
         }
       },
     },

@@ -12,7 +12,6 @@ import {
   UrlUtils,
   UserSettings,
 } from 'xdl';
-import uniqBy from 'lodash/uniqBy';
 
 // for prettier
 const graphql = text => text;
@@ -221,18 +220,6 @@ const typeDefs = graphql`
   }
 `;
 
-const ISSUES_SOURCE = {
-  __typename: 'Issues',
-  id: 'issues',
-  name: 'Critical Issues',
-};
-const PROCESS_SOURCE = {
-  __typename: 'Process',
-  id: 'metro',
-  name: 'Metro Bundler',
-};
-const DEFAULT_SOURCES = [ISSUES_SOURCE, PROCESS_SOURCE];
-
 const resolvers = {
   Message: {
     __resolveType(parent) {
@@ -257,28 +244,28 @@ const resolvers = {
     },
   },
   Issue: {
-    source() {
-      return ISSUES_SOURCE;
+    source(parent, args, context) {
+      return context.getIssuesSource();
     },
   },
   LogMessage: {
-    source() {
-      return PROCESS_SOURCE;
+    source(parent, args, context) {
+      return context.getProcessSource();
     },
   },
   BuildProgress: {
-    source() {
-      return PROCESS_SOURCE;
+    source(parent, args, context) {
+      return context.getProcessSource();
     },
   },
   BuildFinished: {
-    source() {
-      return PROCESS_SOURCE;
+    source(parent, args, context) {
+      return context.getProcessSource();
     },
   },
   BuildError: {
-    source() {
-      return PROCESS_SOURCE;
+    source(parent, args, context) {
+      return context.getProcessSource();
     },
   },
   DeviceMessage: {
@@ -297,12 +284,11 @@ const resolvers = {
       let { exp } = await ProjectUtils.readConfigJsonAsync(project.projectDir);
       return exp;
     },
-    sources(project) {
-      return getSourcesFromBuffer(project.logBuffer);
+    sources(project, args, context) {
+      return context.getSources();
     },
     messages(source, args, context) {
-      const { logBuffer } = context.getCurrentProject();
-      return connectionFromBuffer(logBuffer);
+      return context.getMessageConnection();
     },
   },
   ProjectSettings: {
@@ -317,37 +303,30 @@ const resolvers = {
   },
   Issues: {
     messages(source, args, context) {
-      return connectionFromBuffer(
-        context.getCurrentProject().logBuffer,
-        message => message.type === 'notifications'
-      );
+      return context.getMessageConnection(message => message.type === 'notifications');
     },
   },
   Process: {
     messages(source, args, context) {
-      return connectionFromBuffer(
-        context.getCurrentProject().logBuffer,
+      return context.getMessageConnection(
         message => message.tag === 'metro' || message.tag === 'expo'
       );
     },
   },
   Device: {
     messages(source, args, context) {
-      return connectionFromBuffer(
-        context.getCurrentProject().logBuffer,
+      return context.getMessageConnection(
         message => message.tag === 'device' && message.deviceId === source.id
       );
     },
   },
   ProjectManagerLayout: {
     selected(layout, args, context) {
-      const currentProject = context.getCurrentProject();
-      const sources = getSourcesFromBuffer(currentProject.logBuffer);
+      const sources = context.getSources();
       return sources.find(source => source.id === layout.selected);
     },
     sources(layout, args, context) {
-      const currentProject = context.getCurrentProject();
-      const sources = getSourcesFromBuffer(currentProject.logBuffer);
+      const sources = context.getSources();
       let layoutSources = layout.sources;
       if (!layoutSources) {
         layoutSources = [sources.find(source => source.__typename !== 'Issues').id];
@@ -403,26 +382,18 @@ const resolvers = {
   Subscription: {
     messages: {
       subscribe(parent, { after }, context) {
-        const currentProject = context.getCurrentProject();
         let parsedCursor = null;
         if (after) {
           parsedCursor = parseInt(after, 10);
         }
-        const iterator = filterAsyncIterator(
-          mergeAsyncIteratorMap({
-            ADDED: currentProject.logBuffer.getPushIterator(parsedCursor),
-            UPDATED: currentProject.logBuffer.getUpdateIterator(),
-          }),
-          item => true
-        );
+        const iterator = context.getMessageIterator(parsedCursor);
         return {
           async next() {
             const { done, value } = await iterator.next();
             return {
               value: {
                 messages: {
-                  type: value.key,
-                  node: value.value,
+                  ...value,
                 },
               },
               done,
@@ -437,100 +408,5 @@ const resolvers = {
     },
   },
 };
-
-function connectionFromBuffer(
-  buffer: AsyncIterableRingBuffer,
-  filter?: (chunk: any, cursor: number) => boolean
-) {
-  let cursor;
-  let items;
-  if (filter) {
-    ({ cursor, items } = buffer.filterWithCursor(filter));
-  } else {
-    cursor = buffer.getLastCursor();
-    items = buffer.all();
-  }
-  return {
-    count: items.length,
-    nodes: items,
-    pageInfo: {
-      hasNextPage: false,
-      lastCursor: cursor,
-    },
-  };
-}
-
-function mergeAsyncIteratorMap(iterators: { [key: string]: Array<AsyncIterator> }): AsyncIterator {
-  const dones = {};
-  Object.keys(iterators).forEach(key => {
-    dones[key] = false;
-  });
-  const promises = dones;
-
-  return {
-    async next() {
-      Object.keys(iterators).forEach(key => {
-        if (!promises[key] && !dones[key]) {
-          promises[key] = iterators[key].next();
-        }
-      });
-
-      const [key, result] = await Promise.race(
-        Object.keys(promises).map(async key => [key, await promises[key]])
-      );
-      promises[key] = false;
-      dones[key] = result.done;
-
-      let done = false;
-      if (Object.keys(dones).every(key => dones[key])) {
-        done = true;
-      }
-      return {
-        done,
-        value: {
-          key,
-          value: result.value,
-        },
-      };
-    },
-
-    [$$asyncIterator]() {
-      return this;
-    },
-  };
-}
-
-function filterAsyncIterator(
-  iterator: AsyncIterator,
-  filter: item => boolean | Promise<boolean>
-): AsyncIterator {
-  return {
-    async next() {
-      while (true) {
-        const next = await iterator.next();
-        if (await filter(next.value)) {
-          return {
-            done: next.done,
-            value: next.value,
-          };
-        }
-      }
-    },
-
-    [$$asyncIterator]() {
-      return this;
-    },
-  };
-}
-
-function getSourcesFromBuffer(buffer) {
-  const chunks = buffer.all().filter(chunk => chunk.tag === 'device');
-  const devices = uniqBy(chunks, chunk => chunk.deviceId).map(chunk => ({
-    __typename: 'Device',
-    id: chunk.deviceId,
-    name: chunk.deviceName,
-  }));
-  return DEFAULT_SOURCES.concat(devices);
-}
 
 export default makeExecutableSchema({ typeDefs, resolvers });

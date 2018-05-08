@@ -63,7 +63,7 @@ const query = gql`
 `;
 
 const subscriptionQuery = gql`
-  subscription MessageSubscription($after: String!) {
+  subscription MessageSubscription($after: String) {
     messages(after: $after) {
       type
       node {
