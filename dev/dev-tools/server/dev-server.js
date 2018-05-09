@@ -1,18 +1,40 @@
-import path from 'path';
-import XDL from 'xdl';
+import { graphiqlExpress } from 'apollo-server-express';
+import { Project } from 'xdl';
+import express from 'express';
+import http from 'http';
+import next from 'next';
 import opn from 'opn';
 
-import { DevToolsServer } from '../';
+import { startGraphQLServer } from './DevToolsServer';
+
+const PORT = 3333;
 
 async function run() {
   try {
-    let projectDir = process.argv[2];
-    console.log('Using project at', projectDir);
-    console.log('Starting DevToolsServer...');
-    let devToolsUrl = await DevToolsServer.startAsync(projectDir);
-    console.log('DevTools running at', devToolsUrl);
-    opn(devToolsUrl);
-    await XDL.Project.startAsync(projectDir);
+    const projectDir = process.argv[2];
+    if (!projectDir) {
+      throw new Error('No project dir specified.\nUsage: yarn dev <project-dir>');
+    }
+
+    const app = next({ dev: true });
+    await app.prepare();
+
+    const server = express();
+    server.get('/graphiql', graphiqlExpress({ endpointURL: `ws://localhost:${PORT}/graphql` }));
+    server.get('*', app.getRequestHandler());
+
+    const httpServer = http.createServer(server);
+    await new Promise((resolve, reject) => {
+      httpServer.once('error', reject);
+      httpServer.once('listening', resolve);
+      httpServer.listen(PORT);
+    });
+    startGraphQLServer(projectDir, httpServer);
+    console.log('Starting project...');
+    await Project.startAsync(projectDir);
+    let url = `http://localhost:${PORT}`;
+    console.log(`Development server running at ${url}`);
+    opn(url);
   } catch (error) {
     console.error(error);
     process.exit(1);

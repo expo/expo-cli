@@ -9,3 +9,4 @@ scripts/raw-github-results.json
 secrets.json
 npm-debug.log
 .expo
+/build

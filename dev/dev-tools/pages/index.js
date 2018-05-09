@@ -1,15 +1,15 @@
 import * as React from 'react';
 import gql from 'graphql-tag';
-import { Query } from 'react-apollo';
+import { ApolloProvider, Query } from 'react-apollo';
 
 import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
 import * as Data from 'app/common/data';
 import * as State from 'app/common/state';
+import createApolloClient from 'app/common/createApolloClient';
 import { initStore } from 'app/common/store';
 
 import withRedux from 'app/higher-order/withRedux';
-import withApollo from 'app/higher-order/withApollo';
 
 import Root from 'app/components/Root';
 import ProjectManager from 'app/components/ProjectManager';
@@ -204,20 +204,27 @@ class IndexPageContents extends React.Component {
   }
 }
 
-@withApollo
 export default class IndexPage extends React.Component {
+  client = process.browser ? createApolloClient() : null;
+
   render() {
+    if (!this.client) {
+      // Server-side rendering for static HTML export.
+      return null;
+    }
     return (
-      <Query query={query}>
-        {result => {
-          if (!result.loading && !result.error) {
-            return <IndexPageContents {...result} />;
-          } else {
-            // TODO(freiksenet): fix loading states
-            return null;
-          }
-        }}
-      </Query>
+      <ApolloProvider client={this.client}>
+        <Query query={query}>
+          {result => {
+            if (!result.loading && !result.error) {
+              return <IndexPageContents {...result} />;
+            } else {
+              // TODO(freiksenet): fix loading states
+              return null;
+            }
+          }}
+        </Query>
+      </ApolloProvider>
     );
   }
 }

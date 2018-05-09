@@ -1,70 +1,51 @@
-import { graphiqlExpress } from 'apollo-server-express';
+import { PackagerLogsStream, ProjectUtils } from 'xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+import * as graphql from 'graphql';
 import bodyParser from 'body-parser';
-import compression from 'compression';
 import express from 'express';
 import freeportAsync from 'freeport-async';
-import * as graphql from 'graphql';
-import next from 'next';
-import { PackagerLogsStream, ProjectUtils } from 'xdl';
+import path from 'path';
+import http from 'http';
 
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
 import GraphQLSchema from './graphql/GraphQLSchema';
 import createContext from './graphql/createContext';
 
-const dev = process.env.EXPO_DEV_TOOLS_DEBUG === '1';
-
 export async function startAsync(projectDir) {
   const port = await freeportAsync(19002);
-
-  const app = next({
-    dev,
-    quiet: !dev,
-    conf: {
-      publicRuntimeConfig: {
-        graphqlWebSocketURL: `ws://localhost:${port}/graphql`,
-      },
-    },
-  });
-  await app.prepare();
-
   const server = express();
-  server.use('/static', express.static('static'));
-  if (!dev) {
-    server.use(compression());
-  }
-  server.get('/graphiql', graphiqlExpress({ endpointURL: `ws://localhost:${port}/graphql` }));
-  server.get('*', app.getRequestHandler());
+  server.get('*', express.static(path.join(__dirname, '../client')));
 
-  return new Promise((resolve, reject) => {
-    let httpServer = server.listen(port, err => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      const layout = createLayout();
-      const messageBuffer = createMessageBuffer(projectDir);
-
-      SubscriptionServer.create(
-        {
-          schema: GraphQLSchema,
-          execute: graphql.execute,
-          subscribe: graphql.subscribe,
-          onOperation: (operation, params) => ({
-            ...params,
-            context: createContext({
-              projectDir,
-              messageBuffer,
-              layout,
-            }),
-          }),
-        },
-        { server: httpServer, path: '/graphql' }
-      );
-      resolve(`http://localhost:${port}`);
-    });
+  const httpServer = http.createServer(server);
+  await new Promise((resolve, reject) => {
+    httpServer.once('error', reject);
+    httpServer.once('listening', resolve);
+    httpServer.listen(port);
   });
+  startGraphQLServer(projectDir, httpServer);
+  return `http://localhost:${port}`;
+}
+
+export function startGraphQLServer(projectDir, httpServer) {
+  const layout = createLayout();
+  const messageBuffer = createMessageBuffer(projectDir);
+
+  SubscriptionServer.create(
+    {
+      schema: GraphQLSchema,
+      execute: graphql.execute,
+      subscribe: graphql.subscribe,
+      onOperation: (operation, params) => ({
+        ...params,
+        context: createContext({
+          projectDir,
+          messageBuffer,
+          layout,
+        }),
+      }),
+    },
+    { server: httpServer, path: '/graphql' }
+  );
 }
 
 function createLayout() {
