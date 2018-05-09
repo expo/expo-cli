@@ -7,7 +7,6 @@ import path from 'path';
 import untildify from 'untildify';
 import { Exp, Credentials, XDLError, ErrorCode } from 'xdl';
 import ora from 'ora';
-import chalk from 'chalk';
 import _ from 'lodash';
 
 import BaseBuilder from './BaseBuilder';
@@ -139,8 +138,11 @@ export default class IOSBuilder extends BaseBuilder {
         username,
         remoteFullPackageName: experienceName,
         bundleIdentifierIOS: bundleIdentifier,
+        sdkVersion,
       },
     } = await Exp.getPublishInfoAsync(this.projectDir);
+
+    await this.checkIfSdkIsSupported(sdkVersion, 'ios');
 
     if (!bundleIdentifier) {
       throw new XDLError(

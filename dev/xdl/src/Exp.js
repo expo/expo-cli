@@ -216,7 +216,6 @@ type PublishInfo = {
     remotePackageName: string,
     remoteFullPackageName: string,
     bundleIdentifierIOS: ?string,
-    packageNameAndroid: ?string,
   },
 };
 
@@ -233,11 +232,11 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const { exp } = await ProjectUtils.readConfigJsonAsync(root);
 
   const name = exp.slug;
-  const version = exp.version;
+  const { version, sdkVersion } = exp;
 
   const configName = await ProjectUtils.configFilenameAsync(root);
 
-  if (!exp || !exp.sdkVersion) {
+  if (!sdkVersion) {
     throw new Error(`sdkVersion is missing from ${configName}`);
   }
 
@@ -250,11 +249,10 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
     throw new Error(`Can't get version of package.`);
   }
 
-  let remotePackageName = name;
-  let remoteUsername = username;
-  let remoteFullPackageName = `@${remoteUsername}/${remotePackageName}`;
-  let bundleIdentifierIOS = exp.ios ? exp.ios.bundleIdentifier : null;
-  let packageNameAndroid = exp.android ? exp.android.package : null;
+  const remotePackageName = name;
+  const remoteUsername = username;
+  const remoteFullPackageName = `@${remoteUsername}/${remotePackageName}`;
+  const bundleIdentifierIOS = exp.ios ? exp.ios.bundleIdentifier : null;
 
   return {
     args: {
@@ -263,7 +261,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
       remotePackageName,
       remoteFullPackageName,
       bundleIdentifierIOS,
-      packageNameAndroid, // TODO: this isn't used anywhere
+      sdkVersion,
     },
   };
 }

@@ -16,6 +16,8 @@ export default class AndroidBuilder extends BaseBuilder {
   async run() {
     // Check the status of any current builds
     await this.checkStatus();
+    // Validate project
+    await this.validateProject();
     // Check for existing credentials, collect any missing credentials, and validate them
     await this.collectAndValidateCredentials();
     // Publish the current experience, if necessary
@@ -194,5 +196,10 @@ export default class AndroidBuilder extends BaseBuilder {
       keyPassword: process.env.EXPO_ANDROID_KEY_PASSWORD,
     };
     await Credentials.updateCredentialsForPlatform('android', credentials, credentialMetadata);
+  }
+
+  async validateProject() {
+    const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(this.projectDir);
+    await this.checkIfSdkIsSupported(sdkVersion, 'android');
   }
 }

@@ -103,3 +103,24 @@ export async function facebookReactNativeVersionToExpoVersionAsync(
 
   return currentSdkVersion;
 }
+
+export async function canTurtleBuildSdkVersion(sdkVersion, platform) {
+  if (sdkVersion === 'UNVERSIONED') {
+    return true;
+  }
+
+  const turtleSdkVersions = await Api.turtleSdkVersionsAsync();
+  if (!turtleSdkVersions || !turtleSdkVersions[platform]) {
+    return true;
+  }
+
+  try {
+    const turtleSdkVersion = turtleSdkVersions[platform];
+    return semver.gte(turtleSdkVersion, sdkVersion);
+  } catch (e) {
+    throw new XDLError(
+      ErrorCode.INVALID_VERSION,
+      `${sdkVersion} is not a valid version. Must be in the form of x.y.z`
+    );
+  }
+}

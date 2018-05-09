@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, ProjectUtils } from 'xdl';
+import { Project, ProjectUtils, Versions } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import simpleSpinner from '@expo/simple-spinner';
@@ -129,7 +129,7 @@ ${buildStatus.id}
       }
 
       log(status);
-      if (job.status == 'finished') {
+      if (job.status === 'finished') {
         if (job.artifacts) {
           log(`${packageExtension}: ${job.artifacts.url}`);
         } else {
@@ -204,7 +204,6 @@ ${buildStatus.id}
     throw new BuildError(
       'Timeout reached! Project is taking longer than expected to finish building, aborting wait...'
     );
-    return false;
   }
 
   async build(
@@ -249,6 +248,18 @@ ${buildStatus.id}
       );
     } else {
       log('Alternatively, run `exp build:status` to monitor it from the command line.');
+    }
+  }
+
+  async checkIfSdkIsSupported(sdkVersion: string, platform: string) {
+    const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
+    if (!isSupported) {
+      const storeName = platform === 'ios' ? 'Apple App Store' : 'Google Play Store';
+      log.error(
+        chalk.red(
+          `Unsupported SDK version: our app builders don't have support for ${sdkVersion} version yet. Submitting the app to the ${storeName} may result in an unexpected behaviour`
+        )
+      );
     }
   }
 }

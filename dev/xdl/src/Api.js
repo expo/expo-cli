@@ -273,8 +273,13 @@ export default class ApiClient {
   }
 
   static async sdkVersionsAsync() {
-    let versions = await ApiClient.versionsAsync();
-    return versions.sdkVersions;
+    const { sdkVersions } = await ApiClient.versionsAsync();
+    return sdkVersions;
+  }
+
+  static async turtleSdkVersionsAsync() {
+    const { turtleSdkVersions } = await ApiClient.versionsAsync();
+    return turtleSdkVersions;
   }
 
   static async downloadAsync(url, outputPath, options = {}, progressFunction, retryFunction) {
