@@ -134,7 +134,7 @@ class ProjectManagerSection extends React.Component {
 
     let logElements = this.props.data.messages.nodes.map((logData, i) => {
       return (
-        <Log key={`${i}-${logData.id}`} status={logData.status} time={logData.time}>
+        <Log key={logData.id} level={logData.level} time={logData.time}>
           {logData.msg}
         </Log>
       );

@@ -44,7 +44,7 @@ const STYLES_LOG_LEFT = css`
   width: 64px;
 `;
 
-const STYLES_LOG_COL_STATUS = css`
+const STYLES_LOG_COL_LEVEL = css`
   flex-shrink: 0;
   font-size: 10px;
   margin: 0 8px 4px 0;
@@ -53,18 +53,31 @@ const STYLES_LOG_COL_STATUS = css`
   margin-right: 8px;
 `;
 
+const logLevelLabel = level => {
+  switch (level) {
+    case 'DEBUG':
+      return 'Debug';
+    case 'INFO':
+      return 'Info';
+    case 'WARN':
+      return 'Warning';
+    case 'ERROR':
+      return 'Error';
+  }
+};
+
 export default class Log extends React.Component {
   render() {
     return (
       <div className={STYLES_LOG}>
         <div className={STYLES_LOG_LEFT}>
-          {this.props.status ? (
+          {this.props.level ? (
             <div
-              className={STYLES_LOG_COL_STATUS}
+              className={STYLES_LOG_COL_LEVEL}
               style={{
-                color: this.props.status ? Constants.status[this.props.status] : undefined,
+                color: Constants.logLevel[this.props.level],
               }}>
-              {this.props.status}
+              {logLevelLabel(this.props.level)}
             </div>
           ) : (
             undefined
@@ -84,7 +97,7 @@ export default class Log extends React.Component {
         </div>
         <div
           className={STYLES_LOG_COL_CONTENT}
-          style={{ color: this.props.status ? Constants.status[this.props.status] : undefined }}>
+          style={{ color: this.props.level ? Constants.logLevel[this.props.level] : undefined }}>
           {this.props.children}
         </div>
       </div>

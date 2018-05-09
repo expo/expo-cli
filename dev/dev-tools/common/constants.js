@@ -27,14 +27,9 @@ export const fontFamilies = {
   regular: 'regular',
 };
 
-export const status = {
-  warning: colors.yellow,
-  success: colors.green,
-  failure: colors.red,
-};
-
-export const darkStatus = {
-  warning: colors.yellow,
-  success: colors.primary,
-  failure: colors.red,
+export const logLevel = {
+  DEBUG: colors.white,
+  INFO: colors.white,
+  WARN: colors.yellow,
+  ERROR: colors.red,
 };

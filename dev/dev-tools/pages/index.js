@@ -38,6 +38,7 @@ const query = gql`
             __typename
             msg
             time
+            level
           }
         }
       }
@@ -71,6 +72,7 @@ const subscriptionQuery = gql`
         __typename
         msg
         time
+        level
         source {
           id
         }
@@ -132,6 +134,7 @@ class IndexPageContents extends React.Component {
             __typename
             msg
             time
+            level
           }
         }
       }

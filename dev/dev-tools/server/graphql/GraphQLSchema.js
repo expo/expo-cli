@@ -5,6 +5,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import {
   Android,
   Exp,
+  Logger,
   Simulator,
   Project,
   ProjectSettings,
@@ -102,11 +103,19 @@ const typeDefs = graphql`
     messages: MessageConnection!
   }
 
+  enum LogLevel {
+    DEBUG
+    INFO
+    WARN
+    ERROR
+  }
+
   interface Message {
     id: ID!
     msg: String!
     time: String!
     source: Source!
+    level: LogLevel!
   }
 
   type Issue implements Message {
@@ -114,6 +123,7 @@ const typeDefs = graphql`
     msg: String!
     time: String!
     source: Issues!
+    level: LogLevel!
   }
 
   type LogMessage implements Message {
@@ -121,7 +131,7 @@ const typeDefs = graphql`
     msg: String!
     time: String!
     source: Process!
-    level: Int!
+    level: LogLevel!
   }
 
   type DeviceMessage implements Message {
@@ -129,7 +139,7 @@ const typeDefs = graphql`
     msg: String!
     time: String!
     source: Device!
-    level: Int!
+    level: LogLevel!
   }
 
   type BuildProgress implements Message {
@@ -137,7 +147,7 @@ const typeDefs = graphql`
     msg: String!
     time: String!
     source: Process!
-    level: Int!
+    level: LogLevel!
     progress: Int!
     duration: Int!
   }
@@ -147,7 +157,7 @@ const typeDefs = graphql`
     msg: String!
     time: String!
     source: Process!
-    level: Int!
+    level: LogLevel!
     duration: Int!
   }
 
@@ -156,7 +166,7 @@ const typeDefs = graphql`
     msg: String!
     time: String!
     source: Process!
-    level: Int!
+    level: LogLevel!
     error: String!
     duration: Int!
   }
@@ -220,6 +230,13 @@ const typeDefs = graphql`
   }
 `;
 
+const level = record => {
+  if (record.level <= Logger.DEBUG) return 'DEBUG';
+  if (record.level <= Logger.INFO) return 'INFO';
+  if (record.level <= Logger.WARN) return 'WARN';
+  return 'ERROR';
+};
+
 const resolvers = {
   Message: {
     __resolveType(parent) {
@@ -244,31 +261,37 @@ const resolvers = {
     },
   },
   Issue: {
+    level,
     source(parent, args, context) {
       return context.getIssuesSource();
     },
   },
   LogMessage: {
+    level,
     source(parent, args, context) {
       return context.getProcessSource();
     },
   },
   BuildProgress: {
+    level,
     source(parent, args, context) {
       return context.getProcessSource();
     },
   },
   BuildFinished: {
+    level,
     source(parent, args, context) {
       return context.getProcessSource();
     },
   },
   BuildError: {
+    level,
     source(parent, args, context) {
       return context.getProcessSource();
     },
   },
   DeviceMessage: {
+    level,
     source(message) {
       return { id: message.deviceId, name: message.deviceName };
     },
