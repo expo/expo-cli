@@ -187,17 +187,11 @@ export default class AndroidBuilder extends BaseBuilder {
   }
 
   async collectAndValidateCredentialsFromCI(credentialMetadata) {
-    const creds = {
-      keystorePath: this.options.keystorePath,
+    const credentials = {
+      keystore: (await fs.readFile(this.options.keystorePath)).toString('base64'),
       keystoreAlias: this.options.keystoreAlias,
       keystorePassword: process.env.EXPO_ANDROID_KEYSTORE_PASSWORD,
       keyPassword: process.env.EXPO_ANDROID_KEY_PASSWORD,
-      uploadKeystore: false,
-    };
-
-    const credentials: AndroidCredentials = {
-      ...creds,
-      keystore: (await fs.readFile(creds.keystorePath)).toString('base64'),
     };
     await Credentials.updateCredentialsForPlatform('android', credentials, credentialMetadata);
   }
