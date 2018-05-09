@@ -35,3 +35,7 @@ export const formatTimeMilitary = dateString => {
   const m = appendZero(date.getMinutes());
   return `${h}:${m}`;
 };
+
+export const isEmptyOrNull = text => {
+  return !text || !text.trim();
+};
