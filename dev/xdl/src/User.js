@@ -85,7 +85,6 @@ export type RegistrationData = {
 export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 
 export class UserManagerInstance {
-  clientID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y'; // Default Client ID
   loginServer = null;
   refreshSessionThreshold = 60 * 60; // 1 hour
   _currentUser: ?User = null;
@@ -98,10 +97,7 @@ export class UserManagerInstance {
     return __globalInstance;
   }
 
-  initialize(clientID: ?string) {
-    if (clientID) {
-      this.clientID = clientID;
-    }
+  initialize() {
     this.loginServer = null;
     this._currentUser = null;
     this._getSessionLock = new Semaphore();
@@ -128,7 +124,6 @@ export class UserManagerInstance {
       const loginResp = await apiAnonymous.postAsync('auth/loginAsync', {
         username: loginArgs.username,
         password: loginArgs.password,
-        clientId: 'enable-sessions',
       });
       if (loginResp.error) {
         throw new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, loginResp['error_description']);
@@ -313,7 +308,6 @@ export class UserManagerInstance {
     const apiAnonymous = ApiV2Client.clientForUser();
     return apiAnonymous.postAsync('auth/forgotPasswordAsync', {
       usernameOrEmail,
-      clientId: this.clientID,
     });
   }
 
@@ -344,7 +338,7 @@ export class UserManagerInstance {
       sessionSecret,
     });
 
-    user = await api.postAsync('auth/userProfileAsync', { clientId: this.clientID });
+    user = await api.postAsync('auth/userProfileAsync');
 
     if (!user) {
       throw new Error('Unable to fetch user.');

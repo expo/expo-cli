@@ -84,6 +84,6 @@ describe('api', () => {
 
 function _newTestUserManager() {
   const UserManager = new UserManagerInstance();
-  UserManager.initialize(XDL_TEST_CLIENT_ID); // XDL Test Client
+  UserManager.initialize();
   return UserManager;
 }
