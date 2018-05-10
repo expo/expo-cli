@@ -15,7 +15,7 @@ const STYLES_INDICATOR = css`
 
 export default class NetworkIndicator extends React.Component {
   render() {
-    if (this.props.isOffline) {
+    if (this.props.networkStatus === 'OFFLINE') {
       return (
         <span className={STYLES_INDICATOR}>
           <SVG.WifiOff size="12px" style={{ marginLeft: 2, marginRight: 14 }} />

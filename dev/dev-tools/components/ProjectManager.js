@@ -101,7 +101,9 @@ class ProjectManager extends React.Component {
       />
     );
 
-    const offlineElement = <NetworkIndicator />;
+    const offlineElement = (
+      <NetworkIndicator networkStatus={this.props.processInfo.networkStatus} />
+    );
 
     const publishingElement = (
       <ProjectManagerPublishingSection

@@ -4,6 +4,7 @@ import { $$asyncIterator } from 'iterall';
 import { makeExecutableSchema } from 'graphql-tools';
 import {
   Android,
+  Config,
   Exp,
   Logger,
   Simulator,
@@ -202,6 +203,15 @@ const typeDefs = graphql`
     sources: [ID!]
   }
 
+  enum NetworkStatus {
+    ONLINE
+    OFFLINE
+  }
+
+  type ProcessInfo {
+    networkStatus: NetworkStatus!
+  }
+
   type Query {
     # The project this instance of the XDL server is serving.
     currentProject: Project!
@@ -209,6 +219,8 @@ const typeDefs = graphql`
     userSettings: UserSettings!
     # Layout of the sections in project manager
     projectManagerLayout: ProjectManagerLayout
+    # Information about the current process
+    processInfo: ProcessInfo
   }
 
   type Mutation {
@@ -366,6 +378,11 @@ const resolvers = {
     },
     projectManagerLayout(parent, args, context) {
       return context.getProjectManagerLayout();
+    },
+    processInfo() {
+      return {
+        networkStatus: Config.offline ? 'OFFLINE' : 'ONLINE',
+      };
     },
   },
   Mutation: {

@@ -60,6 +60,9 @@ const query = gql`
         id
       }
     }
+    processInfo {
+      networkStatus
+    }
   }
 `;
 
@@ -165,7 +168,11 @@ class IndexPageContents extends React.Component {
   }
 
   render() {
-    const { data: { currentProject, projectManagerLayout }, loading, error } = this.props;
+    const {
+      data: { currentProject, projectManagerLayout, processInfo },
+      loading,
+      error,
+    } = this.props;
 
     const sources = currentProject.sources.filter(source => {
       return source.__typename !== 'Issues' || source.messages.count > 0;
@@ -182,6 +189,7 @@ class IndexPageContents extends React.Component {
           loading={loading}
           error={error}
           project={currentProject}
+          processInfo={processInfo}
           renderableSections={sections}
           sections={sources}
           count={count}
