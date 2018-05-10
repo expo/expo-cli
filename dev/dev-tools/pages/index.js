@@ -226,6 +226,7 @@ export default class IndexPage extends React.Component {
       // Server-side rendering for static HTML export.
       return null;
     }
+
     return (
       <ApolloProvider client={this.client}>
         <Query query={query}>
