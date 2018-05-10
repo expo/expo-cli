@@ -42,12 +42,13 @@ const STYLES_LOG_COL_CONTENT = css`
 const STYLES_LOG_LEFT = css`
   flex-shrink: 0;
   width: 64px;
+  opacity: 0.5;
 `;
 
 const STYLES_LOG_COL_LEVEL = css`
   flex-shrink: 0;
   font-size: 10px;
-  margin: 0 8px 4px 0;
+  margin: 1px 8px 4px 0;
   text-transform: uppercase;
   overflow-wrap: break-word;
   margin-right: 8px;
