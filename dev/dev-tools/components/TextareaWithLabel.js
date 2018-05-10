@@ -9,7 +9,7 @@ import UnstyledTextArea from 'react-textarea-autosize';
 const STYLES_CONTAINER = css`
   position: relative;
   width: 100%;
-  max-width: 640px;
+  max-width: ${Constants.breakpoints.medium}px;
 `;
 
 const STYLES_LABEL = css`
@@ -21,7 +21,7 @@ const STYLES_LABEL = css`
   margin-bottom: 12px;
 `;
 
-const STYLES_INPUT = css`
+const STYLES_TEXTAREA = css`
   background: ${Constants.colors.foregroundAccent};
   font-family: ${Constants.fontFamilies.regular};
   color: ${Constants.colors.darkInputColor};
@@ -64,7 +64,7 @@ export default class TextareaWithLabel extends React.Component {
         {errorValuePopoverElement}
         {labelElement}
         <UnstyledTextArea
-          className={STYLES_INPUT}
+          className={STYLES_TEXTAREA}
           value={this.props.value}
           name={this.props.name}
           onChange={this.props.onChange}

@@ -56,19 +56,19 @@ const STYLES_HEADING = css`
 
 const STYLES_PARAGRAPH = css`
   font-family: ${Constants.fontFamilies.regular};
+  max-width: ${Constants.breakpoints.medium}px;
   overflow-wrap: break-word;
   font-size: 14px;
   line-height: 1.5;
   width: 100%;
-  max-width: 640px;
 `;
 
 const STYLES_SMALL_PARAGRAPH = css`
   font-family: ${Constants.fontFamilies.regular};
+  max-width: ${Constants.breakpoints.medium}px;
   font-size: 12px;
   line-height: 1.5;
   width: 100%;
-  max-width: 640px;
 `;
 
 const STYLES_EMPHASIS = css`

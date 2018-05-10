@@ -27,16 +27,17 @@ const STYLES_CONTAINER = css`
 
 const STYLES_CONTAINER_LEFT = css`
   background: ${Constants.colors.sidebarBackground};
-  width: 288px;
+  width: ${Constants.breakpoints.sidebar}px;
   height: 100%;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
+  transition: 200ms ease width;
 
-  @media only screen and (max-width: 728px) {
-    width: 232px;
+  @media only screen and (max-width: ${Constants.breakpoints.medium}px) {
+    width: ${Constants.breakpoints.smallSidebar}px;
   }
 `;
 

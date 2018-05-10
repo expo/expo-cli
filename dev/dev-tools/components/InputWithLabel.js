@@ -8,7 +8,7 @@ import { Toast } from 'app/components/GlobalToasts';
 const STYLES_CONTAINER = css`
   position: relative;
   width: 100%;
-  max-width: 640px;
+  max-width: ${Constants.breakpoints.medium}px;
 `;
 
 const STYLES_LABEL = css`
@@ -43,7 +43,7 @@ const STYLES_ERROR_POPOVER_ANCHOR = css`
   position: absolute;
   bottom: 32px;
   right: 0;
-  width: 248px;
+  width: ${Constants.breakpoints.sidebar}px;
 `;
 
 export default class InputWithLabel extends React.Component {

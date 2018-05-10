@@ -8,11 +8,11 @@ import * as Constants from 'app/common/constants';
 import withRedux from 'app/higher-order/withRedux';
 
 const STYLES_TOAST_CONTAINER = css`
+  max-width: ${Constants.breakpoints.sidebar}px;
   line-height: 1.5;
   position: fixed;
   bottom: 24px;
   right: 24px;
-  max-width: 268px;
   width: 100%;
 `;
 

@@ -33,3 +33,13 @@ export const logLevel = {
   WARN: colors.yellow,
   ERROR: colors.red,
 };
+
+export const breakpoints = {
+  smallSidebar: 232,
+  sidebar: 288,
+  small: 576,
+  medium: 768,
+  large: 992,
+  xlarge: 1200,
+  full: 1452,
+};
