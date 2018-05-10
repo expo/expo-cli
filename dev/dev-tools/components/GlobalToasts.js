@@ -29,6 +29,7 @@ const STYLES_TOAST = css`
 
 const STYLES_TOAST_BODY = css`
   font-family: ${Constants.fontFamilies.regular};
+  color: ${Constants.colors.black};
   font-size: 12px;
   overflow-wrap: break-word;
   white-space: pre-wrap;
@@ -87,24 +88,30 @@ const STYLES_TOAST_TOP_RIGHT = css`
   cursor: pointer;
 `;
 
-class Toast extends React.Component {
+export class Toast extends React.Component {
   static defaultProps = {
     name: 'notice',
   };
 
   render() {
+    const dismissElement = this.props.onDismiss ? (
+      <span className={STYLES_TOAST_TOP_RIGHT} onClick={this.props.onDismiss}>
+        <SVG.Dismiss size="16px" />
+      </span>
+    ) : null;
+
     return (
-      <div className={STYLES_TOAST}>
+      <div className={STYLES_TOAST} style={this.props.style}>
         <header
           className={`${STYLES_TOAST_TOP} 
             ${this.props.name === 'notice' ? STYLES_TOAST_TOP_NORMAL : ''}
-            ${this.props.name === 'warning' ? STYLES_TOAST_TOP_WARNING : ''}
+            ${this.props.name === 'warning' || this.props.name === 'error'
+              ? STYLES_TOAST_TOP_WARNING
+              : ''}
             ${this.props.name === 'success' ? STYLES_TOAST_TOP_SUCCESS : ''}
             ${this.props.name === 'alert' ? STYLES_TOAST_TOP_ALERT : ''}`}>
           <span className={STYLES_TOAST_TOP_LEFT}>{this.props.name}</span>
-          <span className={STYLES_TOAST_TOP_RIGHT} onClick={this.props.onDismiss}>
-            <SVG.Dismiss size="16px" />
-          </span>
+          {dismissElement}
         </header>
         <div className={STYLES_TOAST_BODY}>{this.props.children}</div>
       </div>

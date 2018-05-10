@@ -5,7 +5,8 @@ import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
 import * as SVG from 'app/common/svg';
 
-import UnstyledTextArea from 'react-textarea-autosize';
+import InputWithLabel from 'app/components/InputWithLabel';
+import TextareaWithLabel from 'app/components/TextareaWithLabel';
 
 const STYLES_HEADING_WITH_DISMISS = css`
   display: flex;
@@ -67,37 +68,6 @@ const STYLES_SMALL_PARAGRAPH = css`
   line-height: 1.5;
   width: 100%;
   max-width: 640px;
-`;
-
-const STYLES_SUBTITLE = css`
-  font-family: ${Constants.fontFamilies.mono};
-  color: ${Constants.colors.darkBorder};
-  display: block;
-  font-size: 10px;
-  text-transform: uppercase;
-  margin-top: 24px;
-  margin-bottom: 12px;
-`;
-
-const STYLES_INPUT = css`
-  background: ${Constants.colors.foregroundAccent};
-  font-family: ${Constants.fontFamilies.regular};
-  color: ${Constants.colors.darkInputColor};
-  overflow-wrap: break-word;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  outline: 0;
-  box-sizing: border-box;
-  display: block;
-  width: 100%;
-  max-width: 640px;
-  padding: 8px 8px 8px 8px;
-  border-radius: 4px;
-  resize: none;
-  font-size: 14px;
-  line-height: 1.5;
-  margin-bottom: 24px;
 `;
 
 const STYLES_LARGE_BUTTON = css`
@@ -269,45 +239,41 @@ export default class ProjectManagerPublishingSection extends React.Component {
           project from our website. Users will also be able to leave comments on your project page.
         </p>
 
-        <label className={STYLES_SUBTITLE}>Project name</label>
-        {/* TODO(freiksenet): Add error state */}
-        {this.state.errors.name && <p>{this.state.errors.name}</p>}
-        <input
-          className={STYLES_INPUT}
-          value={this.state.config.name}
-          onChange={this._handleChangeName}
+        <InputWithLabel
+          style={{ margin: '24px 0 24px 0' }}
+          label="Name"
           name="name"
+          value={this.state.config.name}
+          errorValue={this.state.errors.name}
+          onChange={this._handleChangeName}
         />
 
-        <label className={STYLES_SUBTITLE}>Project URL slug</label>
-        {/* TODO(freiksenet): Add error state */}
-        {this.state.errors.slug && <p>{this.state.errors.slug}</p>}
-        <input
-          className={STYLES_INPUT}
-          value={this.state.config.slug}
-          onChange={this._handleChangeSlug}
+        <InputWithLabel
+          style={{ margin: '0 0 24px 0' }}
+          label="URL slug"
           name="slug"
+          value={this.state.config.slug}
+          errorValue={this.state.errors.slug}
+          onChange={this._handleChangeSlug}
         />
 
-        <label className={STYLES_SUBTITLE}>Github Source URL (optional)</label>
-        {/* TODO(freiksenet): Add error state */}
-        {this.state.errors.githubUrl && <p>{this.state.errors.githubUrl}</p>}
-        <input
-          className={STYLES_INPUT}
-          value={this.state.config.githubUrl}
-          onChange={this._handleChangeGithubUrl}
+        <InputWithLabel
+          style={{ margin: '0 0 24px 0' }}
+          label="Github Source URL (optional)"
           name="githubUrl"
+          value={this.state.config.githubUrl}
+          errorValue={this.state.errors.githubUrl}
+          onChange={this._handleChangeGithubUrl}
         />
 
-        <label className={STYLES_SUBTITLE}>Project description</label>
-        {/* TODO(freiksenet): Add error state */}
-        {this.state.errors.description && <p>{this.state.errors.description}</p>}
-        <UnstyledTextArea
-          className={STYLES_INPUT}
+        <TextareaWithLabel
+          style={{ margin: '0 0 24px 0' }}
+          label="Description (optional)"
+          name="description"
           minRows={3}
           value={this.state.config.description}
+          errorValue={this.state.errors.description}
           onChange={this._handleChangeDescription}
-          name="description"
         />
 
         <h2 className={STYLES_HEADING}>Confirm changes</h2>
