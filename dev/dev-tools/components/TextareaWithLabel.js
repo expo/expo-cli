@@ -42,7 +42,7 @@ const STYLES_INPUT = css`
 
 const STYLES_ERROR_POPOVER_ANCHOR = css`
   position: absolute;
-  bottom: 48px;
+  bottom: 32px;
   right: 0;
   width: 248px;
 `;

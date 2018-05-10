@@ -7,6 +7,7 @@ import * as SVG from 'app/common/svg';
 
 import InputWithLabel from 'app/components/InputWithLabel';
 import TextareaWithLabel from 'app/components/TextareaWithLabel';
+import PrimaryButtonWithStates from 'app/components/PrimaryButtonWithStates';
 
 const STYLES_HEADING_WITH_DISMISS = css`
   display: flex;
@@ -68,22 +69,6 @@ const STYLES_SMALL_PARAGRAPH = css`
   line-height: 1.5;
   width: 100%;
   max-width: 640px;
-`;
-
-const STYLES_LARGE_BUTTON = css`
-  font-family: ${Constants.fontFamilies.demi};
-  color: ${Constants.colors.white};
-  background: ${Constants.colors.primary};
-  border-radius: 4px;
-  padding: 12px 16px 10px 16px;
-  font-size: 16px;
-  line-height: 1;
-  transtion: 200ms ease all;
-  cursor: pointer;
-
-  :hover {
-    background: ${Constants.colors.primaryAccent};
-  }
 `;
 
 const STYLES_EMPHASIS = css`
@@ -195,30 +180,17 @@ export default class ProjectManagerPublishingSection extends React.Component {
     return Object.keys(this.state.errors).some(key => this.state.errors[key]);
   }
 
-  renderActions() {
-    let publishButton;
-    // TODO(freiksenet): Add styling to different button states
+  _getCurrentPublishButtonState = () => {
     if (this.state.isPublishing) {
-      publishButton = (
-        <span role="button" className={STYLES_LARGE_BUTTON}>
-          Publishing...
-        </span>
-      );
-    } else if (this.hasErrors()) {
-      publishButton = (
-        <span role="button" className={STYLES_LARGE_BUTTON}>
-          Fix errors
-        </span>
-      );
-    } else {
-      publishButton = (
-        <span role="button" className={STYLES_LARGE_BUTTON} onClick={this._handlePublish}>
-          Publish {this.state.config.slug}
-        </span>
-      );
+      return 'PUBLISHING';
     }
-    return <div className={STYLES_ACTIONS}>{publishButton}</div>;
-  }
+
+    if (this.hasErrors()) {
+      return 'ERRORS';
+    }
+
+    return 'IDLE';
+  };
 
   render() {
     return (
@@ -283,7 +255,17 @@ export default class ProjectManagerPublishingSection extends React.Component {
             https://expo.io/@username/{this.state.config.slug}
           </span>.
         </p>
-        {this.renderActions()}
+        <div className={STYLES_ACTIONS}>
+          <PrimaryButtonWithStates
+            states={{
+              IDLE: { text: 'Publish project to Expo.io', decoration: 'DEFAULT' },
+              ERRORS: { text: 'You must fix errors before publishing', decoration: 'ERROR' },
+              PUBLISHING: { text: 'Publishing...', decoration: 'LOADING' },
+            }}
+            currentState={this._getCurrentPublishButtonState()}
+            onClick={this._handlePublish}
+          />
+        </div>
       </div>
     );
   }

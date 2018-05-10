@@ -104,7 +104,9 @@ export class Toast extends React.Component {
       <div className={STYLES_TOAST} style={this.props.style}>
         <header
           className={`${STYLES_TOAST_TOP} 
-            ${this.props.name === 'notice' ? STYLES_TOAST_TOP_NORMAL : ''}
+            ${this.props.name === 'notice' || this.props.name === 'info'
+              ? STYLES_TOAST_TOP_NORMAL
+              : ''}
             ${this.props.name === 'warning' || this.props.name === 'error'
               ? STYLES_TOAST_TOP_WARNING
               : ''}
