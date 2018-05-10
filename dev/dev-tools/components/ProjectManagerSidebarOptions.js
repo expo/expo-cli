@@ -87,6 +87,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     const IOSHeader = (
       <ContentGroupHeader
         isDeviceActive={this.props.isActiveDeviceIOS}
+        isSimulatorSupported={this.props.processInfo.isIosSimulatorSupported}
         onSimulatorClick={this.props.onSimulatorClickIOS}
         onDeviceClick={this.props.onDeviceClickIOS}>
         iOS
@@ -96,6 +97,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     const AndroidHeader = (
       <ContentGroupHeader
         isDeviceActive={this.props.isActiveDeviceAndroid}
+        isSimulatorSupported={this.props.processInfo.isAndroidSimulatorSupported}
         onSimulatorClick={this.props.onSimulatorClickAndroid}
         onDeviceClick={this.props.onDeviceClickAndroid}>
         Android

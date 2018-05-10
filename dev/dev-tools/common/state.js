@@ -125,14 +125,6 @@ function updateLayout(client, input) {
 }
 
 export const openSimulator = (platform, props) => {
-  props.dispatch({
-    type: 'ADD_TOAST',
-    toast: {
-      id: new Date().getTime(),
-      text: `We are trying to open a ${platform} simulator. If nothing appears it means you do not have the simulator installed on your machine.`,
-    },
-  });
-
   return props.client.mutate({
     mutation: gql`
       mutation OpenSimulator($platform: Platform!) {

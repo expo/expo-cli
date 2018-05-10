@@ -87,6 +87,7 @@ class ProjectManager extends React.Component {
         hostType={this.props.project.settings.hostType}
         recipient={this.props.recipient}
         title={this.props.project.config.name}
+        processInfo={this.props.processInfo}
         onUpdateState={this.props.onUpdateState}
         onRecipientChange={this._handleRecipientChange}
         onSimulatorClickIOS={this.props.onSimulatorClickIOS}

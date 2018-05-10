@@ -20,8 +20,8 @@ const graphql = text => text;
 
 const typeDefs = graphql`
   enum Platform {
-    android
-    ios
+    ANDROID
+    IOS
   }
 
   enum HostType {
@@ -218,6 +218,8 @@ const typeDefs = graphql`
 
   type ProcessInfo {
     networkStatus: NetworkStatus!
+    isAndroidSimulatorSupported: Boolean
+    isIosSimulatorSupported: Boolean
   }
 
   type Query {
@@ -392,6 +394,8 @@ const resolvers = {
     processInfo() {
       return {
         networkStatus: Config.offline ? 'OFFLINE' : 'ONLINE',
+        isAndroidSimulatorSupported: Android.isPlatformSupported(),
+        isIosSimulatorSupported: Simulator.isPlatformSupported(),
       };
     },
   },
@@ -399,7 +403,7 @@ const resolvers = {
     async openSimulator(parent, { platform }, context) {
       const currentProject = context.getCurrentProject();
       let result =
-        platform === 'android'
+        platform === 'ANDROID'
           ? await Android.openProjectAsync(currentProject.projectDir)
           : await Simulator.openProjectAsync(currentProject.projectDir);
       if (!result.success) throw new Error(result.error);

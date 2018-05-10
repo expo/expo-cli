@@ -1,4 +1,4 @@
-import { PackagerLogsStream, ProjectUtils } from 'xdl';
+import { Logger, PackagerLogsStream, ProjectUtils } from 'xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import * as graphql from 'graphql';
 import bodyParser from 'body-parser';
@@ -127,6 +127,20 @@ function createMessageBuffer(projectRoot) {
             node: chunk,
           });
         }
+      },
+    },
+    type: 'raw',
+  });
+
+  let chunkCount = 0;
+  Logger.global.addStream({
+    stream: {
+      write: chunk => {
+        chunk.id = `global:${++chunkCount}`;
+        buffer.push({
+          type: 'ADDED',
+          node: chunk,
+        });
       },
     },
     type: 'raw',

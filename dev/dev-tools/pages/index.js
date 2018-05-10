@@ -63,6 +63,8 @@ const query = gql`
     }
     processInfo {
       networkStatus
+      isAndroidSimulatorSupported
+      isIosSimulatorSupported
     }
   }
 `;
@@ -93,8 +95,8 @@ class IndexPageContents extends React.Component {
   _handleSectionDismiss = () => State.sectionClear(this.props);
   _handleChangeSectionCount = count => State.sectionCount({ count }, this.props);
   _handleUpdateState = options => State.update(options, this.props);
-  _handleSimulatorClickIOS = () => State.openSimulator('ios', this.props);
-  _handleSimulatorClickAndroid = () => State.openSimulator('android', this.props);
+  _handleSimulatorClickIOS = () => State.openSimulator('IOS', this.props);
+  _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
   _handleHostTypeClick = hostType => State.setProjectSettings({ hostType }, this.props);
   _handleSubmitPhoneNumberOrEmail = () => State.sendProjectUrl(this.props.recipient, this.props);
   _handlePublishProject = options => State.publishProject(options, this.props);
