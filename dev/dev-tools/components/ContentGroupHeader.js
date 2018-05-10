@@ -49,19 +49,30 @@ const STYLES_CONTAINER_RIGHT_ACTIVE = css`
 
 export default class ContentGroupHeader extends React.Component {
   render() {
-    return (
-      <div className={STYLES_CONTAINER} onClick={this.props.onClick}>
-        <span className={STYLES_CONTAINER_LEFT}>{this.props.children}</span>
+    let simulatorElement;
+    if (this.props.isSimulatorSupported) {
+      simulatorElement = (
         <span className={STYLES_CONTAINER_RIGHT} onClick={this.props.onSimulatorClick}>
           Simulator
         </span>
-        <span
-          className={`${STYLES_CONTAINER_RIGHT} ${this.props.isDeviceActive
-            ? STYLES_CONTAINER_RIGHT_ACTIVE
-            : ''}`}
-          onClick={this.props.onDeviceClick}>
-          Device
-        </span>
+      );
+    }
+
+    let deviceElement = (
+      <span
+        className={`${STYLES_CONTAINER_RIGHT} ${this.props.isDeviceActive
+          ? STYLES_CONTAINER_RIGHT_ACTIVE
+          : ''}`}
+        onClick={this.props.onDeviceClick}>
+        Device
+      </span>
+    );
+
+    return (
+      <div className={STYLES_CONTAINER} onClick={this.props.onClick}>
+        <span className={STYLES_CONTAINER_LEFT}>{this.props.children}</span>
+        {simulatorElement}
+        {deviceElement}
       </div>
     );
   }
