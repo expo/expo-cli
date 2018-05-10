@@ -56,6 +56,14 @@ const typeDefs = graphql`
     name: String
     description: String
     slug: String
+    githubUrl: String
+  }
+
+  input ProjectConfigInput {
+    name: String
+    description: String
+    slug: String
+    githubUrl: String
   }
 
   type UserSettings {
@@ -232,6 +240,8 @@ const typeDefs = graphql`
     sendProjectUrl(recipient: String!): SendProjectResult
     # Updates specified project settings.
     setProjectSettings(settings: ProjectSettingsInput!): Project
+    # Update projectConfig
+    setProjectConfig(input: ProjectConfigInput!): Project
     # Update the layout
     setProjectManagerLayout(input: ProjectManagerLayoutInput): ProjectManagerLayout
   }
@@ -405,6 +415,21 @@ const resolvers = {
       return {
         ...currentProject,
         settings: updatedSettings,
+      };
+    },
+    async setProjectConfig(parent, { input }, context) {
+      const currentProject = context.getCurrentProject();
+      const filteredInput = {
+        ...input,
+        githubUrl: input.githubUrl.match(/^https:\/\/github.com\//) ? input.githubUrl : undefined,
+      };
+      let { exp } = await ProjectUtils.writeConfigJsonAsync(
+        currentProject.projectDir,
+        filteredInput
+      );
+      return {
+        ...currentProject,
+        config: exp,
       };
     },
     async sendProjectUrl(parent, { recipient }, context) {

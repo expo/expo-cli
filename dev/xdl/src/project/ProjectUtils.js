@@ -187,9 +187,10 @@ export async function setCustomConfigPath(projectRoot: string, configPath: strin
 
 export async function readConfigJsonAsync(
   projectRoot: string
-): Promise<{ exp: ?Object, pkg: ?Object }> {
+): Promise<{ exp: ?Object, pkg: ?Object, rootConfig: ?Object }> {
   let exp;
   let pkg;
+  let rootConfig;
 
   const { configPath, configName, configNamespace } = await findConfigFileAsync(projectRoot);
 
@@ -198,6 +199,7 @@ export async function readConfigJsonAsync(
 
     if (configNamespace) {
       // if we're not using exp.json, then we've stashed everything under an expo key
+      rootConfig = exp;
       exp = exp[configNamespace];
     }
   } catch (e) {
@@ -255,5 +257,40 @@ export async function readConfigJsonAsync(
     exp.version = pkg.version;
   }
 
-  return { exp, pkg };
+  return { exp, pkg, rootConfig };
+}
+
+export async function writeConfigJsonAsync(
+  projectRoot: string,
+  options: Object
+): Promise<{ exp: ?Object, pkg: ?Object, rootConfig: ?Object }> {
+  const { configName, configPath, configNamespace } = await findConfigFileAsync(projectRoot);
+  let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
+  let config = rootConfig || {};
+
+  if (!exp) {
+    throw new Error(`Couldn't read ${configName}`);
+  }
+  if (!pkg) {
+    throw new Error(`Couldn't read package.json`);
+  }
+
+  exp = {
+    ...exp,
+    ...options,
+  };
+
+  if (configNamespace) {
+    config[configNamespace] = exp;
+  } else {
+    config = exp;
+  }
+
+  await JsonFile.writeAsync(configPath, config, { json5: false });
+
+  return {
+    exp,
+    pkg,
+    rootConfig,
+  };
 }

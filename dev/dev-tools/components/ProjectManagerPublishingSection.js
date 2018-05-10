@@ -126,17 +126,129 @@ const STYLES_ACTIONS = css`
 
 // TODO(jim): Controls for privacy.
 export default class ProjectManagerPublishingSection extends React.Component {
-  _handleChange = e => {
-    this.props.onUpdateState({
-      [e.target.name]: e.target.value,
+  state = {
+    isPublishing: false,
+    config: getConfigFromProps(this.props),
+    errors: {},
+  };
+
+  _handleChangeName = e => {
+    const value = e.target.value;
+    this.setState(state => {
+      const oldSlug = Strings.slugify(state.config.name);
+      let slug = state.config.slug;
+      if (state.config.slug === oldSlug) {
+        slug = Strings.slugify(value);
+      }
+      return {
+        config: {
+          ...state.config,
+          name: value,
+          slug,
+        },
+        errors: {
+          ...state.errors,
+          name: Strings.isEmptyOrNull(value) ? 'Must be not blank' : null,
+          slug: Strings.isEmptyOrNull(slug) ? 'Must be not blank' : null,
+        },
+      };
+    });
+  };
+
+  _handleChangeSlug = e => {
+    const value = e.target.value;
+    this.setState(state => {
+      let slug = Strings.slugify(value);
+      return {
+        config: {
+          ...state.config,
+          slug,
+        },
+        errors: {
+          ...state.errors,
+          slug: Strings.isEmptyOrNull(slug) ? 'Must be not blank' : null,
+        },
+      };
+    });
+  };
+
+  _handleChangeGithubUrl = e => {
+    const value = e.target.value;
+    this.setState(state => {
+      return {
+        config: {
+          ...state.config,
+          githubUrl: value,
+        },
+        errors: {
+          ...state.errors,
+          githubUrl:
+            !Strings.isEmptyOrNull(value) && !value.match(/^https:\/\/github.com\//)
+              ? 'Must be in format "https://github.com/"'
+              : null,
+        },
+      };
+    });
+  };
+
+  _handleChangeDescription = e => {
+    const value = e.target.value;
+    this.setState(state => {
+      return {
+        config: {
+          ...state.config,
+          description: value,
+        },
+      };
     });
   };
 
   _handleDismissPublishView = () => {
+    this.setState((state, props) => ({
+      config: getConfigFromProps(props),
+    }));
     this.props.onUpdateState({
       isPublishing: false,
     });
   };
+
+  _handlePublish = async () => {
+    this.setState({
+      isPublishing: true,
+    });
+    await this.props.onPublish({
+      config: this.state.config,
+    });
+  };
+
+  hasErrors() {
+    return Object.keys(this.state.errors).some(key => this.state.errors[key]);
+  }
+
+  renderActions() {
+    let publishButton;
+    // TODO(freiksenet): Add styling to different button states
+    if (this.state.isPublishing) {
+      publishButton = (
+        <span role="button" className={STYLES_LARGE_BUTTON}>
+          Publishing...
+        </span>
+      );
+    } else if (this.hasErrors()) {
+      publishButton = (
+        <span role="button" className={STYLES_LARGE_BUTTON}>
+          Fix errors
+        </span>
+      );
+    } else {
+      publishButton = (
+        <span role="button" className={STYLES_LARGE_BUTTON} onClick={this._handlePublish}>
+          Publish {this.state.config.slug}
+        </span>
+      );
+    }
+    return <div className={STYLES_ACTIONS}>{publishButton}</div>;
+  }
 
   render() {
     return (
@@ -158,41 +270,43 @@ export default class ProjectManagerPublishingSection extends React.Component {
         </p>
 
         <label className={STYLES_SUBTITLE}>Project name</label>
+        {/* TODO(freiksenet): Add error state */}
+        {this.state.errors.name && <p>{this.state.errors.name}</p>}
         <input
           className={STYLES_INPUT}
-          value={this.props.title}
-          onChange={this._handleChange}
-          name="title"
+          value={this.state.config.name}
+          onChange={this._handleChangeName}
+          name="name"
         />
 
         <label className={STYLES_SUBTITLE}>Project URL slug</label>
+        {/* TODO(freiksenet): Add error state */}
+        {this.state.errors.slug && <p>{this.state.errors.slug}</p>}
         <input
           className={STYLES_INPUT}
-          value={this.props.slug}
-          onChange={this._handleChange}
+          value={this.state.config.slug}
+          onChange={this._handleChangeSlug}
           name="slug"
         />
 
-        <p className={STYLES_SMALL_PARAGRAPH}>
-          Your project slug will be saved as &nbsp;
-          <span className={STYLES_EMPHASIS}>{Strings.createSlug(this.props.slug)}</span>&nbsp; in
-          your <span className={STYLES_EMPHASIS}>App.json</span> file.
-        </p>
-
         <label className={STYLES_SUBTITLE}>Github Source URL (optional)</label>
+        {/* TODO(freiksenet): Add error state */}
+        {this.state.errors.githubUrl && <p>{this.state.errors.githubUrl}</p>}
         <input
           className={STYLES_INPUT}
-          value={this.props.githubUrl}
-          onChange={this._handleChange}
+          value={this.state.config.githubUrl}
+          onChange={this._handleChangeGithubUrl}
           name="githubUrl"
         />
 
         <label className={STYLES_SUBTITLE}>Project description</label>
+        {/* TODO(freiksenet): Add error state */}
+        {this.state.errors.description && <p>{this.state.errors.description}</p>}
         <UnstyledTextArea
           className={STYLES_INPUT}
           minRows={3}
-          value={this.props.description}
-          onChange={this._handleChange}
+          value={this.state.config.description}
+          onChange={this._handleChangeDescription}
           name="description"
         />
 
@@ -200,15 +314,20 @@ export default class ProjectManagerPublishingSection extends React.Component {
         <p className={STYLES_PARAGRAPH}>
           Once you publish your project, you will be able to view it at&nbsp;
           <span className={STYLES_EMPHASIS}>
-            https://expo.io/@username/{Strings.createSlug(this.props.title)}.
-          </span>
+            https://expo.io/@username/{this.state.config.slug}
+          </span>.
         </p>
-        <div className={STYLES_ACTIONS}>
-          <span className={STYLES_LARGE_BUTTON} onClick={this.props.onPublish}>
-            Publish {Strings.createSlug(this.props.title)}
-          </span>
-        </div>
+        {this.renderActions()}
       </div>
     );
   }
+}
+
+function getConfigFromProps(props) {
+  return {
+    name: props.config.name || '',
+    slug: props.config.slug || '',
+    githubUrl: props.config.githubUrl || '',
+    description: props.config.description || '',
+  };
 }

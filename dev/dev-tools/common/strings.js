@@ -1,3 +1,5 @@
+import slugifyLib from 'slugify';
+
 var URL_REGEX = /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/;
 
 const appendZero = i => {
@@ -38,4 +40,10 @@ export const formatTimeMilitary = dateString => {
 
 export const isEmptyOrNull = text => {
   return !text || !text.trim();
+};
+
+export const slugify = string => {
+  return slugifyLib(string, {
+    lower: true,
+  });
 };

@@ -66,6 +66,7 @@
     "react-redux": "^5.0.7",
     "react-textarea-autosize": "^6.1.0",
     "redux": "^3.7.2",
+    "slugify": "^1.0.2",
     "xdl": "^49.2.0"
   },
   "license": "MIT"

@@ -1,3 +1,4 @@
+import React from 'react';
 import gql from 'graphql-tag';
 import uniqBy from 'lodash/uniqBy';
 import set from 'lodash/fp/set';
@@ -183,13 +184,83 @@ export const sendProjectUrl = (recipient, props) => {
   });
 };
 
-export const publishProject = props => {
+export const updateProjectConfig = (config, props) => {
+  return props.client.mutate({
+    mutation: gql`
+      mutation SetProjectConfig($input: ProjectConfigInput!) {
+        setProjectConfig(input: $input) {
+          projectDir
+          __typename
+          config {
+            name
+            description
+            slug
+            githubUrl
+          }
+        }
+      }
+    `,
+    variables: {
+      input: config,
+    },
+  });
+};
+
+export const publishProject = async (options, props) => {
+  const publishingId = new Date().getTime();
   props.dispatch({
     type: 'ADD_TOAST',
     toast: {
-      id: new Date().getTime(),
-      name: 'success',
-      text: `We have successfully published your project.`,
+      id: publishingId,
+      name: 'info',
+      text: `Publishing...`,
     },
   });
+  await updateProjectConfig(options.config, props);
+  update(
+    {
+      isPublishing: false,
+    },
+    props
+  );
+  const result = await props.client.mutate({
+    mutation: gql`
+      mutation PublishProject {
+        publishProject {
+          url
+        }
+      }
+    `,
+  });
+  props.dispatch({
+    type: 'REMOVE_TOAST',
+    id: publishingId,
+  });
+  if (!result.errors) {
+    const url = result.data.publishProject.url;
+    props.dispatch({
+      type: 'ADD_TOAST',
+      toast: {
+        id: new Date().getTime(),
+        name: 'success',
+        text: (
+          <span>
+            Successfully published to{' '}
+            <a target="_blank" href={url}>
+              {url}
+            </a>.
+          </span>
+        ),
+      },
+    });
+  } else {
+    props.dispatch({
+      type: 'ADD_TOAST',
+      toast: {
+        id: new Date().getTime(),
+        name: 'alert',
+        text: `Failed to publish the project. See Metro logs for details.`,
+      },
+    });
+  }
 };

@@ -26,6 +26,7 @@ const query = gql`
         name
         description
         slug
+        githubUrl
       }
       sources {
         __typename
@@ -96,7 +97,7 @@ class IndexPageContents extends React.Component {
   _handleSimulatorClickAndroid = () => State.openSimulator('android', this.props);
   _handleHostTypeClick = hostType => State.setProjectSettings({ hostType }, this.props);
   _handleSubmitPhoneNumberOrEmail = () => State.sendProjectUrl(this.props.recipient, this.props);
-  _handlePublishProject = () => State.publishProject(this.props);
+  _handlePublishProject = options => State.publishProject(options, this.props);
 
   componentDidMount() {
     const observable = this.props.client.subscribe({
