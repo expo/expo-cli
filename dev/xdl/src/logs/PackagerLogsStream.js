@@ -208,10 +208,12 @@ export default class PackagerLogsStream {
   _handleMetroEvent(originalChunk: ChunkT) {
     const chunk = { ...originalChunk };
     let { msg } = chunk;
-    if (chunk.tag !== 'metro' || !msg.type) {
+    if (typeof msg === 'string') {
+      // If Metro crashes for some reason, it may log an error message as a plain string to stderr.
+      this._enqueueAppendLogChunk(chunk);
       return;
     }
-    if (msg.type.match(/^bundle_/)) {
+    if (/^bundle_/.test(msg.type)) {
       this._handleBundleTransformEvent(chunk);
       return;
     }
