@@ -10,14 +10,14 @@ import { isNode } from '../tools/EnvironmentHelper';
 type ChunkT =
   | {
       tag: 'expo' | 'device',
-      _id: ?number,
+      id: string,
       shouldHide: boolean,
       msg: any,
       level: number,
     }
   | {
       tag: 'metro',
-      _id: ?number,
+      id: string,
       shouldHide: boolean,
       msg: ReportableEvent,
       level: number,
@@ -123,7 +123,6 @@ export default class PackagerLogsStream {
   _getCurrentOpenProjectId: () => any;
   _updateLogs: (updater: LogUpdater) => void;
   _logsToAdd: Array<ChunkT>;
-  _chunkID: number;
   _bundleBuildChunkID: ?number;
   _onStartBuildBundle: ?Function;
   _onProgressBuildBundle: ?Function;
@@ -134,7 +133,6 @@ export default class PackagerLogsStream {
 
   _resetState = () => {
     this._logsToAdd = [];
-    this._chunkID = 0;
   };
 
   constructor({
@@ -189,7 +187,6 @@ export default class PackagerLogsStream {
           chunk = this._maybeParseMsgJSON(chunk);
           chunk = this._formatMsg(chunk);
           chunk = this._cleanUpNodeErrors(chunk);
-          chunk = this._attachChunkID(chunk);
           if (chunk.tag === 'metro') {
             this._handleMetroEvent(chunk);
           } else if (
@@ -300,7 +297,7 @@ export default class PackagerLogsStream {
       return;
     }
 
-    this._bundleBuildChunkID = chunk._id;
+    this._bundleBuildChunkID = chunk.id;
     this._bundleBuildStart = new Date();
     chunk.msg = 'Building JavaScript bundle';
 
@@ -332,7 +329,7 @@ export default class PackagerLogsStream {
     }
 
     if (this._bundleBuildChunkID) {
-      progressChunk._id = this._bundleBuildChunkID;
+      progressChunk.id = this._bundleBuildChunkID;
     }
     if (bundleError) {
       progressChunk.msg = `Building JavaScript bundle: error`;
@@ -377,7 +374,7 @@ export default class PackagerLogsStream {
         }
 
         logs.forEach(log => {
-          if (log._id === this._bundleBuildChunkID) {
+          if (log.id === this._bundleBuildChunkID) {
             log.msg = progressChunk.msg;
           }
         });
@@ -464,12 +461,6 @@ export default class PackagerLogsStream {
       setImmediate(func);
     }
   };
-
-  _attachChunkID(chunk: ChunkT) {
-    this._chunkID++;
-    chunk._id = this._chunkID;
-    return chunk;
-  }
 
   _maybeParseMsgJSON(chunk: ChunkT) {
     try {

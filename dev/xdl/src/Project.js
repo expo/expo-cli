@@ -1036,13 +1036,7 @@ function _isIgnorableDuplicateModuleWarning(
   return reactNativeNodeModulesCollisionRegex.test(output);
 }
 
-function _handleDeviceLogs(
-  projectRoot: string,
-  deviceId: string,
-  deviceName: string,
-  sessionId: string,
-  logs: any
-) {
+function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
   for (let i = 0; i < logs.length; i++) {
     let log = logs[i];
     let body = typeof log.body === 'string' ? [log.body] : log.body;
@@ -1068,12 +1062,10 @@ function _handleDeviceLogs(
     let groupDepth = log.groupDepth;
     let shouldHide = log.shouldHide;
     let includesStack = log.includesStack;
-    let _id = `${sessionId}:${log.count}`;
     ProjectUtils.logWithLevel(
       projectRoot,
       level,
       {
-        _id,
         tag: 'device',
         deviceId,
         deviceName,
@@ -1399,9 +1391,8 @@ export async function startExpoServerAsync(projectRoot: string) {
     try {
       let deviceId = req.get('Device-Id');
       let deviceName = req.get('Device-Name');
-      let sessionId = req.get('Session-Id');
-      if (deviceId && deviceName && sessionId && req.body) {
-        _handleDeviceLogs(projectRoot, deviceId, deviceName, sessionId, req.body);
+      if (deviceId && deviceName && req.body) {
+        _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
       }
     } catch (e) {
       ProjectUtils.logError(projectRoot, 'expo', `Error getting device logs: ${e} ${e.stack}`);

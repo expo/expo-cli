@@ -71,7 +71,6 @@ function createMessageBuffer(projectRoot) {
     updateLogs: updater => {
       const chunks = updater([]);
       chunks.forEach(chunk => {
-        chunk.id = chunk._id;
         buffer.push({
           type: 'ADDED',
           node: chunk,
@@ -83,7 +82,6 @@ function createMessageBuffer(projectRoot) {
         type: 'ADDED',
         node: {
           ...chunk,
-          id: chunk._id,
           _bundleEventType: 'PROGRESS',
           progress: 0,
           duration: 0,
@@ -95,7 +93,6 @@ function createMessageBuffer(projectRoot) {
         type: 'UPDATED',
         node: {
           ...chunk,
-          id: chunk._id,
           _bundleEventType: 'PROGRESS',
           progress: percentage,
           duration: new Date() - (start || new Date()),
@@ -107,7 +104,6 @@ function createMessageBuffer(projectRoot) {
         type: 'UPDATED',
         node: {
           ...chunk,
-          id: chunk._id,
           error,
           _bundleEventType: error ? 'FAILED' : 'FINISHED',
           duration: end - (start || new Date()),
@@ -121,7 +117,6 @@ function createMessageBuffer(projectRoot) {
     stream: {
       write: chunk => {
         if (chunk.tag === 'device') {
-          chunk.id = chunk._id;
           buffer.push({
             type: 'ADDED',
             node: chunk,
@@ -132,11 +127,9 @@ function createMessageBuffer(projectRoot) {
     type: 'raw',
   });
 
-  let chunkCount = 0;
   Logger.global.addStream({
     stream: {
       write: chunk => {
-        chunk.id = `global:${++chunkCount}`;
         buffer.push({
           type: 'ADDED',
           node: chunk,

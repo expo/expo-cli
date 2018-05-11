@@ -259,9 +259,6 @@ const typeDefs = graphql`
 `;
 
 const messageResolvers = {
-  id(message) {
-    return `Message:${message.id}`;
-  },
   level(message) {
     if (message.level <= Logger.DEBUG) return 'DEBUG';
     if (message.level <= Logger.INFO) return 'INFO';
