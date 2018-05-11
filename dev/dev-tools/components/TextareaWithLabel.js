@@ -40,6 +40,10 @@ const STYLES_TEXTAREA = css`
   line-height: 1.5;
 `;
 
+const STYLES_TEXTAREA_ERROR = css`
+  box-shadow: inset 0 0 4px ${Constants.colors.red};
+`;
+
 const STYLES_ERROR_POPOVER_ANCHOR = css`
   position: absolute;
   bottom: 32px;
@@ -64,7 +68,7 @@ export default class TextareaWithLabel extends React.Component {
         {errorValuePopoverElement}
         {labelElement}
         <UnstyledTextArea
-          className={STYLES_TEXTAREA}
+          className={`${STYLES_TEXTAREA} ${this.props.errorValue ? STYLES_TEXTAREA_ERROR : ''}`}
           value={this.props.value}
           name={this.props.name}
           onChange={this.props.onChange}

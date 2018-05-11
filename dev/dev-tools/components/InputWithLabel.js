@@ -39,6 +39,10 @@ const STYLES_INPUT = css`
   line-height: 1.5;
 `;
 
+const STYLES_INPUT_ERROR = css`
+  box-shadow: inset 0 0 4px ${Constants.colors.red};
+`;
+
 const STYLES_ERROR_POPOVER_ANCHOR = css`
   position: absolute;
   bottom: 32px;
@@ -63,7 +67,7 @@ export default class InputWithLabel extends React.Component {
         {errorValuePopoverElement}
         {labelElement}
         <input
-          className={STYLES_INPUT}
+          className={`${STYLES_INPUT} ${this.props.errorValue ? STYLES_INPUT_ERROR : ''}`}
           value={this.props.value}
           name={this.props.name}
           onChange={this.props.onChange}
