@@ -1036,6 +1036,10 @@ function _isIgnorableDuplicateModuleWarning(
   return reactNativeNodeModulesCollisionRegex.test(output);
 }
 
+function _isIgnorableBugReportingExtraData(body) {
+  return body.length === 2 && body[0] === 'BugReporting extraData:';
+}
+
 function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
   for (let i = 0; i < logs.length; i++) {
     let log = logs[i];
@@ -1059,6 +1063,9 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
       })
       .join(' ');
     let level = log.level;
+    if (_isIgnorableBugReportingExtraData(body)) {
+      level = logger.DEBUG;
+    }
     let groupDepth = log.groupDepth;
     let shouldHide = log.shouldHide;
     let includesStack = log.includesStack;
