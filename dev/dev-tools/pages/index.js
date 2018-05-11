@@ -17,7 +17,7 @@ import ProjectManager from 'app/components/ProjectManager';
 const query = gql`
   query IndexPageQuery {
     currentProject {
-      projectDir
+      id
       manifestUrl
       settings {
         hostType
@@ -50,10 +50,12 @@ const query = gql`
       }
     }
     userSettings {
+      id
       sendTo
     }
     projectManagerLayout {
       __typename
+      id
       selected {
         id
       }
@@ -145,7 +147,7 @@ class IndexPageContents extends React.Component {
         }
       }
     `;
-    const id = `Source:${message.source.id}`;
+    const id = message.source.id;
     let existingSource;
     try {
       existingSource = this.props.client.readFragment({ id, fragment });

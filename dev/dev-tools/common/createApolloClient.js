@@ -1,6 +1,6 @@
 import { ApolloClient } from 'apollo-client';
 import { HttpLink } from 'apollo-link-http';
-import { InMemoryCache, defaultDataIdFromObject } from 'apollo-cache-inmemory';
+import { InMemoryCache } from 'apollo-cache-inmemory';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import { WebSocketLink } from 'apollo-link-ws';
 import fetch from 'isomorphic-fetch';
@@ -18,36 +18,9 @@ export default function createApolloClient(initialState) {
 }
 
 function dataIdFromObject(object) {
-  switch (object.__typename) {
-    case 'Project': {
-      if (object.projectDir) {
-        return `Project:${object.projectDir}`;
-      }
-      break;
-    }
-    case 'UserSettings':
-      return 'UserSettings';
-    case 'ProjectManagerLayout':
-      return 'ProjectManagerLayout';
-    case 'Issues':
-    case 'Process':
-    case 'Device': {
-      if (object.id) {
-        return `Source:${object.id}`;
-      }
-      break;
-    }
-    case 'LogMessage':
-    case 'DeviceMessage':
-    case 'BuildProgress':
-    case 'BuildFinished':
-    case 'BuildError': {
-      if (object.id) {
-        return `Message:${object.id}`;
-      }
-      break;
-    }
-    default:
-      return defaultDataIdFromObject(object);
+  // If the object has a field named `id`, it must be a globally unique ID.
+  if (object.id !== undefined) {
+    return object.id;
   }
+  return null;
 }

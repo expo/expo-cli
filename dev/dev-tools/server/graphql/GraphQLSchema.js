@@ -31,6 +31,8 @@ const typeDefs = graphql`
   }
 
   type Project {
+    id: ID!
+    # Absolute path of the project directory.
     projectDir: String!
     # The URL where the Expo manifest is being served.
     manifestUrl: String
@@ -67,6 +69,7 @@ const typeDefs = graphql`
   }
 
   type UserSettings {
+    id: ID!
     sendTo: String
   }
 
@@ -202,6 +205,7 @@ const typeDefs = graphql`
   }
 
   type ProjectManagerLayout {
+    id: ID!
     selected: Source
     sources: [Source]
   }
@@ -254,12 +258,20 @@ const typeDefs = graphql`
   }
 `;
 
-const level = record => {
-  if (record.level <= Logger.DEBUG) return 'DEBUG';
-  if (record.level <= Logger.INFO) return 'INFO';
-  if (record.level <= Logger.WARN) return 'WARN';
-  return 'ERROR';
+const messageResolvers = {
+  id(message) {
+    return `Message:${message.id}`;
+  },
+  level(message) {
+    if (message.level <= Logger.DEBUG) return 'DEBUG';
+    if (message.level <= Logger.INFO) return 'INFO';
+    if (message.level <= Logger.WARN) return 'WARN';
+    return 'ERROR';
+  },
 };
+
+const USER_SETTINGS_ID = 'UserSettings';
+const PROJECT_MANAGER_LAYOUT_ID = 'ProjectManagerLayout';
 
 const resolvers = {
   Message: {
@@ -285,42 +297,45 @@ const resolvers = {
     },
   },
   Issue: {
-    level,
+    ...messageResolvers,
     source(parent, args, context) {
       return context.getIssuesSource();
     },
   },
   LogMessage: {
-    level,
+    ...messageResolvers,
     source(parent, args, context) {
       return context.getProcessSource();
     },
   },
   BuildProgress: {
-    level,
+    ...messageResolvers,
     source(parent, args, context) {
       return context.getProcessSource();
     },
   },
   BuildFinished: {
-    level,
+    ...messageResolvers,
     source(parent, args, context) {
       return context.getProcessSource();
     },
   },
   BuildError: {
-    level,
+    ...messageResolvers,
     source(parent, args, context) {
       return context.getProcessSource();
     },
   },
   DeviceMessage: {
-    level,
+    ...messageResolvers,
     source(message) {
       return { id: message.deviceId, name: message.deviceName };
     },
   },
   Project: {
+    id(project) {
+      return Buffer.from(project.projectDir).toString('base64');
+    },
     manifestUrl(project) {
       return UrlUtils.constructManifestUrlAsync(project.projectDir);
     },
@@ -368,6 +383,9 @@ const resolvers = {
     },
   },
   ProjectManagerLayout: {
+    id() {
+      return PROJECT_MANAGER_LAYOUT_ID;
+    },
     selected(layout, args, context) {
       const sources = context.getSources();
       return sources.find(source => source.id === layout.selected);
@@ -379,6 +397,11 @@ const resolvers = {
         layoutSources = [sources.find(source => source.__typename !== 'Issues').id];
       }
       return layoutSources.map(sourceId => sources.find(source => source.id === sourceId));
+    },
+  },
+  UserSettings: {
+    id() {
+      return USER_SETTINGS_ID;
     },
   },
   Query: {

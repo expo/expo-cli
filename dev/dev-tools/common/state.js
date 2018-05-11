@@ -22,14 +22,14 @@ export const sourceSelect = (source, props) => {
     // If selectedIndex is -1 (no panel selected), set the first item.
     sources = set(Math.max(selectedIndex, 0), source, layout.sources);
   }
-  return updateLayout(props.client, { selected, sources });
+  return updateLayout(props.client, layout.id, { selected, sources });
 };
 
 export const sourceSwap = ({ oldId, newId }, props) => {
   const { projectManagerLayout: layout } = props.data;
   const oldIndex = layout.sources.findIndex(source => source.id === oldId);
   const newIndex = layout.sources.findIndex(source => source.id === newId);
-  return updateLayout(props.client, {
+  return updateLayout(props.client, layout.id, {
     selected: layout.selected ? layout.selected.id : null,
     sources: Sets.swap([...layout.sources], oldIndex, newIndex),
   });
@@ -41,7 +41,7 @@ export const sectionSelect = ({ id }, props) => {
     selected: id,
     sources: layout.sources,
   };
-  return updateLayout(props.client, layoutInput);
+  return updateLayout(props.client, layout.id, layoutInput);
 };
 
 export const sectionClear = props => {
@@ -50,7 +50,7 @@ export const sectionClear = props => {
     selected: null,
     sources: layout.sources,
   };
-  return updateLayout(props.client, layoutInput);
+  return updateLayout(props.client, layout.id, layoutInput);
 };
 
 export const sectionCount = ({ count }, props) => {
@@ -65,7 +65,7 @@ export const sectionCount = ({ count }, props) => {
     selected: layout.selected ? layout.selected.id : null,
     sources: newSources,
   };
-  return updateLayout(props.client, layoutInput);
+  return updateLayout(props.client, layout.id, layoutInput);
 };
 
 export const update = (state, props) => {
@@ -74,7 +74,7 @@ export const update = (state, props) => {
 
 const PROJECT_MANAGER_LAYOUT_FRAGMENT = gql`
   fragment ProjectManagerLayoutFragment on ProjectManagerLayout {
-    __typename
+    id
     selected {
       id
     }
@@ -94,7 +94,7 @@ const UPDATE_PROJECT_MANAGER_QUERY = gql`
   ${PROJECT_MANAGER_LAYOUT_FRAGMENT}
 `;
 
-function updateLayout(client, input) {
+function updateLayout(client, id, input) {
   return client.mutate({
     mutation: UPDATE_PROJECT_MANAGER_QUERY,
     variables: {
@@ -114,6 +114,7 @@ function updateLayout(client, input) {
       __typename: 'Mutation',
       setProjectManagerLayout: {
         __typename: 'ProjectManagerLayout',
+        id,
         selected: {
           __typename: 'Source',
           id: input.selected,
@@ -151,7 +152,7 @@ export const setProjectSettings = (settings, props) => {
     mutation: gql`
       mutation SetProjectSettings($settings: ProjectSettingsInput!) {
         setProjectSettings(settings: $settings) {
-          projectDir
+          id
           manifestUrl
           settings {
             hostType
@@ -190,8 +191,7 @@ export const updateProjectConfig = (config, props) => {
     mutation: gql`
       mutation SetProjectConfig($input: ProjectConfigInput!) {
         setProjectConfig(input: $input) {
-          projectDir
-          __typename
+          id
           config {
             name
             description

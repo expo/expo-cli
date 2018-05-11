@@ -2,12 +2,12 @@ import uniqBy from 'lodash/uniqBy';
 
 const ISSUES_SOURCE = {
   __typename: 'Issues',
-  id: 'issues',
+  id: 'Source:issues',
   name: 'Critical Issues',
 };
 const PROCESS_SOURCE = {
   __typename: 'Process',
-  id: 'metro',
+  id: 'Source:metro',
   name: 'Metro Bundler',
 };
 const DEFAULT_SOURCES = [ISSUES_SOURCE, PROCESS_SOURCE];
