@@ -125,6 +125,15 @@ function updateLayout(client, input) {
 }
 
 export const openSimulator = (platform, props) => {
+  props.dispatch({
+    type: 'ADD_TOAST',
+    toast: {
+      id: new Date().getTime(),
+      name: 'info',
+      text: `Attempting to open a simulator...`,
+    },
+  });
+
   return props.client.mutate({
     mutation: gql`
       mutation OpenSimulator($platform: Platform!) {
