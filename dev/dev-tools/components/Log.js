@@ -42,7 +42,6 @@ const STYLES_LOG_COL_CONTENT = css`
 const STYLES_LOG_LEFT = css`
   flex-shrink: 0;
   width: 64px;
-  opacity: 0.5;
 `;
 
 const STYLES_LOG_COL_LEVEL = css`
@@ -76,7 +75,7 @@ export default class Log extends React.Component {
             <div
               className={STYLES_LOG_COL_LEVEL}
               style={{
-                color: Constants.logLevel[this.props.level],
+                color: Constants.logLevelWithAlpha[this.props.level],
               }}>
               {logLevelLabel(this.props.level)}
             </div>

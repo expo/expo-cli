@@ -34,6 +34,13 @@ export const logLevel = {
   ERROR: colors.red,
 };
 
+export const logLevelWithAlpha = {
+  DEUBG: 'rgba(255, 255, 255, 0.5)',
+  INFO: 'rgba(255, 255, 255, 0.5)',
+  WARN: 'rgba(255, 193, 7, 0.5)',
+  ERROR: 'rgba(204, 0, 0, 0.5)',
+};
+
 export const breakpoints = {
   smallSidebar: 232,
   sidebar: 288,
