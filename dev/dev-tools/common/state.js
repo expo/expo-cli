@@ -105,7 +105,7 @@ function updateLayout(client, id, input) {
     },
     update(cache, { data: { setProjectManagerLayout } }) {
       cache.writeFragment({
-        id: 'ProjectManagerLayout',
+        id,
         fragment: PROJECT_MANAGER_LAYOUT_FRAGMENT,
         data: setProjectManagerLayout,
       });
