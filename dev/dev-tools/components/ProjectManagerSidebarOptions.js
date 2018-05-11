@@ -148,12 +148,14 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           </InputWithButton>
         </ContentGroup>
 
-        <div className={STYLES_CONTENT_GROUP} onClick={this._handleShowPublishView}>
-          <span className={STYLES_CONTENT_GROUP_LEFT}>Publish {this.props.title} to Expo.io</span>
-          <span className={STYLES_CONTENT_GROUP_RIGHT}>
-            <SVG.Arrow size="16px" />
-          </span>
-        </div>
+        {this.props.isOnline ? (
+          <div className={STYLES_CONTENT_GROUP} onClick={this._handleShowPublishView}>
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Publish {this.props.title} to Expo.io</span>
+            <span className={STYLES_CONTENT_GROUP_RIGHT}>
+              <SVG.Arrow size="16px" />
+            </span>
+          </div>
+        ) : null}
       </div>
     );
   }
