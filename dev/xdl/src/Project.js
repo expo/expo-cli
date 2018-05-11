@@ -1200,14 +1200,17 @@ export async function startReactNativeServerAsync(
       _logPackagerOutput(projectRoot, 'error', data);
     }
   });
-  packagerProcess.on('exit', async code => {
-    ProjectUtils.logDebug(projectRoot, 'expo', `packager process exited with code ${code}`);
+  let exitPromise = new Promise((resolve, reject) => {
+    packagerProcess.once('exit', code => {
+      ProjectUtils.logDebug(projectRoot, 'expo', `Metro Bundler process exited with code ${code}`);
+      reject(new Error(`Metro Bundler process exited with code ${code}`));
+    });
   });
   let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
     urlType: 'http',
     hostType: 'localhost',
   });
-  await _waitForRunningAsync(`${packagerUrl}/status`);
+  await Promise.race([_waitForRunningAsync(`${packagerUrl}/status`), exitPromise]);
 } // Simulate the node_modules resolution // If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns // "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
   let paths = [];
