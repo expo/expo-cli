@@ -2,6 +2,7 @@ import React from 'react';
 import gql from 'graphql-tag';
 import uniqBy from 'lodash/uniqBy';
 import set from 'lodash/fp/set';
+import { ApolloError } from 'apollo-client';
 
 import * as Sets from 'app/common/sets';
 
@@ -164,7 +165,33 @@ export const setProjectSettings = (settings, props) => {
   });
 };
 
-export const sendProjectUrl = (recipient, props) => {
+export const sendProjectUrl = async (recipient, props) => {
+  try {
+    await props.client.mutate({
+      mutation: gql`
+        mutation SendProjectUrl($recipient: String!) {
+          sendProjectUrl(recipient: $recipient) {
+            medium
+          }
+        }
+      `,
+      variables: { recipient },
+    });
+  } catch (error) {
+    if (error instanceof ApolloError) {
+      props.dispatch({
+        type: 'ADD_TOAST',
+        toast: {
+          id: new Date().getTime(),
+          name: 'error',
+          text: `Oops, sending a link to "${recipient}" failed.`,
+        },
+      });
+      return;
+    } else {
+      throw error;
+    }
+  }
   props.dispatch({
     type: 'ADD_TOAST',
     toast: {
@@ -172,17 +199,6 @@ export const sendProjectUrl = (recipient, props) => {
       name: 'success',
       text: `We sent ${recipient} a link to open this project.`,
     },
-  });
-
-  return props.client.mutate({
-    mutation: gql`
-      mutation SendProjectUrl($recipient: String!) {
-        sendProjectUrl(recipient: $recipient) {
-          medium
-        }
-      }
-    `,
-    variables: { recipient },
   });
 };
 
