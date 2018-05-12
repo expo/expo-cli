@@ -152,11 +152,8 @@ export class UserManagerInstance {
       let registeredUser = await this.createOrUpdateUserAsync({
         connection: 'Username-Password-Authentication', // Always create/update username password
         email: userData.email,
-        userMetadata: {
-          onboarded: true,
-          givenName: userData.givenName,
-          familyName: userData.familyName,
-        },
+        givenName: userData.givenName,
+        familyName: userData.familyName,
         username: userData.username,
         password: userData.password,
       });
