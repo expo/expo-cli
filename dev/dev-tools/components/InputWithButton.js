@@ -67,8 +67,7 @@ const STYLES_INPUT_BUTTON_SUBMITTING = css`
 
 export default class InputWithButton extends React.Component {
   static defaultProps = {
-    onValidation: () => {},
-    onKeyUp: () => {},
+    onValidation: () => true,
   };
 
   state = {
@@ -96,7 +95,9 @@ export default class InputWithButton extends React.Component {
       return;
     }
 
-    this.props.onKeyUp(e);
+    if (this.props.onKeyUp) {
+      this.props.onKeyUp(e);
+    }
   };
 
   render() {

@@ -49,7 +49,7 @@ class ProjectManager extends React.Component {
 
   _handleEmailOrPhoneNumberValidation = async recipient => {
     const isPhoneNumber = Validations.isPhoneNumber(recipient);
-    const isEmail = Validations.isPhoneNumber(recipient);
+    const isEmail = Validations.isEmail(recipient);
 
     if (isPhoneNumber || isEmail) {
       return true;
