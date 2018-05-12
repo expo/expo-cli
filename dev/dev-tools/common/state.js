@@ -182,7 +182,7 @@ export const sendProjectUrl = async (recipient, props) => {
       props.dispatch({
         type: 'ADD_TOAST',
         toast: {
-          id: new Date().getTime(),
+          id: 'send-email-or-number',
           name: 'error',
           text: `Oops, sending a link to "${recipient}" failed.`,
         },
@@ -192,10 +192,11 @@ export const sendProjectUrl = async (recipient, props) => {
       throw error;
     }
   }
+
   props.dispatch({
     type: 'ADD_TOAST',
     toast: {
-      id: new Date().getTime(),
+      id: 'send-email-or-number',
       name: 'success',
       text: `We sent ${recipient} a link to open this project.`,
     },

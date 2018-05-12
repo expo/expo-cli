@@ -4,6 +4,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
+import * as Validations from 'app/common/validations';
 
 import ProjectManagerLayout from 'app/components/ProjectManagerLayout';
 import ProjectManagerDeviceTab from 'app/components/ProjectManagerDeviceTab';
@@ -44,6 +45,26 @@ class ProjectManager extends React.Component {
     this.props.onUpdateState({
       recipient: e.target.value,
     });
+  };
+
+  _handleEmailOrPhoneNumberValidation = async recipient => {
+    const isPhoneNumber = Validations.isPhoneNumber(recipient);
+    const isEmail = Validations.isPhoneNumber(recipient);
+
+    if (isPhoneNumber || isEmail) {
+      return true;
+    }
+
+    this.props.dispatch({
+      type: 'ADD_TOAST',
+      toast: {
+        id: 'send-email-or-number',
+        name: 'error',
+        text: `Please provide a valid email or phone number.`,
+      },
+    });
+
+    return false;
   };
 
   render() {
@@ -96,6 +117,7 @@ class ProjectManager extends React.Component {
         onDeviceClickAndroid={this._handleDeviceClickAndroid}
         onHostTypeClick={this.props.onHostTypeClick}
         onSubmitPhoneNumberOrEmail={this.props.onSubmitPhoneNumberOrEmail}
+        onEmailOrNumberValidation={this._handleEmailOrPhoneNumberValidation}
         isOnline={this.props.processInfo.networkStatus !== 'OFFLINE'}
         isPublishing={this.props.isPublishing}
         isActiveDeviceIOS={this.props.isActiveDeviceIOS}

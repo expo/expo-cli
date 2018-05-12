@@ -128,6 +128,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             placeholder="Enter email or number"
             value={this.props.recipient}
             onChange={this.props.onRecipientChange}
+            onValidation={this.props.onEmailOrNumberValidation}
             onSubmit={this.props.onSubmitPhoneNumberOrEmail}>
             Send
           </InputWithButton>
@@ -143,6 +144,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             placeholder="Enter email or number"
             value={this.props.recipient}
             onChange={this.props.onRecipientChange}
+            onValidation={this.props.onEmailOrNumberValidation}
             onSubmit={this.props.onSubmitPhoneNumberOrEmail}>
             Send
           </InputWithButton>

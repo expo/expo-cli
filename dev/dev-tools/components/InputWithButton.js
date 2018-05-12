@@ -51,13 +51,52 @@ const STYLES_INPUT_BUTTON = css`
   }
 `;
 
+const STYLES_INPUT_BUTTON_SUBMITTING = css`
+  font-family: ${Constants.fontFamilies.demi};
+  background: ${Constants.colors.white};
+  color: ${Constants.colors.black};
+  border-left: 1px solid ${Constants.colors.border};
+  border-radius: 0 4px 4px 0;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 16px 0 16px;
+  height: 100%;
+  cursor: wait;
+`;
+
 export default class InputWithButton extends React.Component {
+  static defaultProps = {
+    onValidation: () => {},
+    onKeyUp: () => {},
+  };
+
+  state = {
+    isSubmitting: false,
+  };
+
   _handleChange = e => {
     this.props.onChange(e);
   };
 
-  _handleSubmit = e => {
-    this.props.onSubmit(e);
+  _handleSubmit = async e => {
+    this.setState({ isSubmitting: true });
+    const isValidated = await this.props.onValidation(this.props.value);
+
+    if (isValidated) {
+      await this.props.onSubmit(e);
+    }
+
+    this.setState({ isSubmitting: false });
+  };
+
+  _handleKeyUp = async e => {
+    if (e.which === 13) {
+      await this._handleSubmit(e);
+      return;
+    }
+
+    this.props.onKeyUp(e);
   };
 
   render() {
@@ -65,13 +104,19 @@ export default class InputWithButton extends React.Component {
       <div className={STYLES_INPUT}>
         <input
           placeholder={this.props.placeholder}
+          value={this.props.value}
           className={STYLES_INPUT_ELEMENT}
           onChange={this._handleChange}
+          onKeyUp={this._handleKeyUp}
           onSubmit={this._handleSubmit}
         />
-        <span className={STYLES_INPUT_BUTTON} onClick={this._handleSubmit}>
-          {this.props.children}
-        </span>
+        {!this.state.isSubmitting ? (
+          <span className={STYLES_INPUT_BUTTON} onClick={this._handleSubmit}>
+            {this.props.children}
+          </span>
+        ) : (
+          <span className={STYLES_INPUT_BUTTON_SUBMITTING}>Sending...</span>
+        )}
       </div>
     );
   }

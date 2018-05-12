@@ -47,7 +47,7 @@ const stateConnectDevice = (state, action) => {
 };
 
 const stateAddToast = (state, action) => {
-  const toasts = [...state.toasts];
+  const toasts = [...state.toasts].filter(t => t.id !== action.toast.id);
 
   toasts.unshift(action.toast);
 

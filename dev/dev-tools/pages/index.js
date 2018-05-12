@@ -100,8 +100,9 @@ class IndexPageContents extends React.Component {
   _handleSimulatorClickIOS = () => State.openSimulator('IOS', this.props);
   _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
   _handleHostTypeClick = hostType => State.setProjectSettings({ hostType }, this.props);
-  _handleSubmitPhoneNumberOrEmail = () => State.sendProjectUrl(this.props.recipient, this.props);
   _handlePublishProject = options => State.publishProject(options, this.props);
+  _handleSubmitPhoneNumberOrEmail = async () =>
+    await State.sendProjectUrl(this.props.recipient, this.props);
 
   componentDidMount() {
     const observable = this.props.client.subscribe({
@@ -200,6 +201,8 @@ class IndexPageContents extends React.Component {
           count={count}
           userAddress={this.props.userAddress}
           selectedId={selectedId}
+          recipient={this.props.recipient}
+          dispatch={this.props.dispatch}
           isPublishing={this.props.isPublishing}
           isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
           isActiveDeviceIOS={this.props.isActiveDeviceIOS}
