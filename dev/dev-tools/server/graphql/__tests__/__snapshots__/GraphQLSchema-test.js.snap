@@ -375,6 +375,75 @@ Object {
       "sources": Array [
         Object {
           "messages": Object {
+            "count": 1,
+            "nodes": Array [
+              Object {
+                "__typename": "Issue",
+                "id": "Issue:fake-issue",
+                "msg": "Warning: Fake error.",
+                "time": "2018-05-07T13:07:56.540Z",
+              },
+            ],
+          },
+        },
+        Object {
+          "messages": Object {
+            "count": 4,
+            "nodes": Array [
+              Object {
+                "__typename": "LogMessage",
+                "id": "3",
+                "msg": "Starting Metro Bundler on port 19003.",
+                "time": "2018-05-07T13:01:14.738Z",
+              },
+              Object {
+                "__typename": "LogMessage",
+                "id": "4",
+                "msg": "Metro Bundler ready.",
+                "time": "2018-05-07T13:01:14.878Z",
+              },
+              Object {
+                "__typename": "LogMessage",
+                "id": "6",
+                "msg": "Tunnel connected.",
+                "time": "2018-05-07T13:01:16.117Z",
+              },
+              Object {
+                "__typename": "BuildProgress",
+                "id": "7",
+                "msg": "Building JavaScript bundle",
+                "progress": 50,
+                "time": "2018-05-07T13:07:56.540Z",
+              },
+            ],
+          },
+        },
+        Object {
+          "messages": Object {
+            "count": 1,
+            "nodes": Array [
+              Object {
+                "__typename": "DeviceMessage",
+                "id": "74accc01-a61d-461f-b55e-f98fb629422c:0",
+                "msg": "Running application \\"main\\" with appParams:",
+                "time": "2018-05-07T13:07:59.594Z",
+              },
+            ],
+          },
+        },
+      ],
+    },
+  },
+}
+`;
+
+exports[`message queries 7`] = `
+Object {
+  "data": Object {
+    "currentProject": Object {
+      "sources": Array [
+        Object {
+          "messages": Object {
             "count": 0,
             "nodes": Array [],
           },
@@ -476,7 +545,7 @@ Array [
           },
           "time": "2018-05-07T13:07:56.540Z",
         },
-        "type": "DELETED",
+        "type": "UPDATED",
       },
     },
   },
@@ -493,6 +562,22 @@ Array [
           "time": "2018-05-07T13:07:59.594Z",
         },
         "type": "ADDED",
+      },
+    },
+  },
+  Object {
+    "data": Object {
+      "messages": Object {
+        "node": Object {
+          "__typename": "Issue",
+          "id": "Issue:fake-issue",
+          "msg": "Warning: Fake error.",
+          "source": Object {
+            "id": "Source:issues",
+          },
+          "time": "2018-05-07T13:07:56.540Z",
+        },
+        "type": "DELETED",
       },
     },
   },

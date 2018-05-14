@@ -7,11 +7,19 @@ export default class Issues extends EventEmitter {
   }
 
   addIssue(issueId, issue) {
+    let newIssue = false;
+    if (!this.issues[issueId]) {
+      newIssue = true;
+    }
     this.issues[issueId] = {
       ...issue,
       id: issueId,
     };
-    this.emit('ADDED', this.issues[issueId]);
+    if (newIssue) {
+      this.emit('ADDED', this.issues[issueId]);
+    } else {
+      this.emit('UPDATED', this.issues[issueId]);
+    }
   }
 
   clearIssue(issueId) {

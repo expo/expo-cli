@@ -289,6 +289,11 @@ test('message queries', async () => {
   result = await graphql({ schema, source: messageQuery, contextValue: context() });
   expect(result).toMatchSnapshot();
 
+  issues.addIssue(MOCK_ISSUE.id, MOCK_ISSUE);
+
+  result = await graphql({ schema, source: messageQuery, contextValue: context() });
+  expect(result).toMatchSnapshot();
+
   issues.clearIssue(MOCK_ISSUE.id);
 
   result = await graphql({ schema, source: messageQuery, contextValue: context() });
@@ -319,13 +324,15 @@ test('subscriptions', async () => {
   logBuffer.push(MOCK_BUNDLE_LOGS[0]);
   logBuffer.push(MOCK_BUNDLE_LOGS[1]);
 
+  issues.addIssue(MOCK_ISSUE.id, MOCK_ISSUE);
+
   issues.clearIssue(MOCK_ISSUE.id);
   issues.clearIssue('some-other-fake-id');
 
   const result = [];
   // Note that this expects 6 items. If there are less, then it will timeout
   // if there are more, then it won't get the ones after the first 6
-  while (result.length < 8) {
+  while (result.length < 9) {
     result.push((await subscription.next()).value);
   }
 

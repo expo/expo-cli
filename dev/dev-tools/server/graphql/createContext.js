@@ -76,7 +76,7 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
       };
     },
     getIssueIterator() {
-      const iterator = eventEmitterToAsyncIterator(issues, ['ADDED', 'DELETED']);
+      const iterator = eventEmitterToAsyncIterator(issues, ['ADDED', 'UPDATED', 'DELETED']);
       return {
         async next() {
           const { value, done } = await iterator.next();
