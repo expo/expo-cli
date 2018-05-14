@@ -75,6 +75,15 @@ const STYLES_BUTTON_ACTIVE = css`
   }
 `;
 
+const STYLES_BUTTON_DISABLED = css`
+  color: ${Constants.colors.border};
+  cursor: default;
+
+  :hover {
+    background: none;
+  }
+`;
+
 export default class NetworkGroupButton extends React.Component {
   _handleTunnelClick = () => this.props.onHostTypeClick('tunnel');
   _handleLANClick = () => this.props.onHostTypeClick('lan');
@@ -87,8 +96,9 @@ export default class NetworkGroupButton extends React.Component {
           className={`
             ${STYLES_BUTTON}
             ${this.props.activeState === 'tunnel' ? STYLES_BUTTON_ACTIVE : ''}
+            ${!this.props.isOnline ? STYLES_BUTTON_DISABLED : ''}
           `}
-          onClick={this._handleTunnelClick}>
+          onClick={this.props.isOnline ? this._handleTunnelClick : null}>
           Tunnel
         </span>
         <span

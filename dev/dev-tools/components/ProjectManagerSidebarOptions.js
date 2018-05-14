@@ -117,6 +117,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
 
           <NetworkGroupButton
             activeState={this.props.hostType}
+            isOnline={this.props.isOnline}
             onHostTypeClick={this.props.onHostTypeClick}
           />
 

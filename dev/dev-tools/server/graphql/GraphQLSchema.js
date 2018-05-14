@@ -378,7 +378,11 @@ const resolvers = {
   },
   ProjectSettings: {
     hostType(projectSettings) {
-      return projectSettings.hostType;
+      if (Config.offline && projectSettings.hostType === 'tunnel') {
+        return 'lan';
+      } else {
+        return projectSettings.hostType;
+      }
     },
   },
   Source: {
