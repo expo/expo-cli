@@ -33,19 +33,19 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:3",
+                "id": "3",
                 "msg": "Starting Metro Bundler on port 19003.",
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:4",
+                "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
               },
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:6",
+                "id": "6",
                 "msg": "Tunnel connected.",
                 "time": "2018-05-07T13:01:16.117Z",
               },
@@ -61,7 +61,7 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "DeviceMessage",
-                "id": "Message:74accc01-a61d-461f-b55e-f98fb629422c:0",
+                "id": "74accc01-a61d-461f-b55e-f98fb629422c:0",
                 "msg": "Running application \\"main\\" with appParams:",
                 "time": "2018-05-07T13:07:59.594Z",
               },
@@ -104,7 +104,7 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:3",
+                "id": "3",
                 "msg": "Starting Metro Bundler on port 19003.",
                 "time": "2018-05-07T13:01:14.738Z",
               },
@@ -134,19 +134,19 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:3",
+                "id": "3",
                 "msg": "Starting Metro Bundler on port 19003.",
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:4",
+                "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
               },
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:6",
+                "id": "6",
                 "msg": "Tunnel connected.",
                 "time": "2018-05-07T13:01:16.117Z",
               },
@@ -159,7 +159,7 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "DeviceMessage",
-                "id": "Message:74accc01-a61d-461f-b55e-f98fb629422c:0",
+                "id": "74accc01-a61d-461f-b55e-f98fb629422c:0",
                 "msg": "Running application \\"main\\" with appParams:",
                 "time": "2018-05-07T13:07:59.594Z",
               },
@@ -189,25 +189,25 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:3",
+                "id": "3",
                 "msg": "Starting Metro Bundler on port 19003.",
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:4",
+                "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
               },
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:6",
+                "id": "6",
                 "msg": "Tunnel connected.",
                 "time": "2018-05-07T13:01:16.117Z",
               },
               Object {
                 "__typename": "BuildProgress",
-                "id": "Message:7",
+                "id": "7",
                 "msg": "Building JavaScript bundle",
                 "progress": 0,
                 "time": "2018-05-07T13:07:56.540Z",
@@ -221,7 +221,7 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "DeviceMessage",
-                "id": "Message:74accc01-a61d-461f-b55e-f98fb629422c:0",
+                "id": "74accc01-a61d-461f-b55e-f98fb629422c:0",
                 "msg": "Running application \\"main\\" with appParams:",
                 "time": "2018-05-07T13:07:59.594Z",
               },
@@ -251,25 +251,25 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:3",
+                "id": "3",
                 "msg": "Starting Metro Bundler on port 19003.",
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:4",
+                "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
               },
               Object {
                 "__typename": "LogMessage",
-                "id": "Message:6",
+                "id": "6",
                 "msg": "Tunnel connected.",
                 "time": "2018-05-07T13:01:16.117Z",
               },
               Object {
                 "__typename": "BuildProgress",
-                "id": "Message:7",
+                "id": "7",
                 "msg": "Building JavaScript bundle",
                 "progress": 50,
                 "time": "2018-05-07T13:07:56.540Z",
@@ -283,7 +283,7 @@ Object {
             "nodes": Array [
               Object {
                 "__typename": "DeviceMessage",
-                "id": "Message:74accc01-a61d-461f-b55e-f98fb629422c:0",
+                "id": "74accc01-a61d-461f-b55e-f98fb629422c:0",
                 "msg": "Running application \\"main\\" with appParams:",
                 "time": "2018-05-07T13:07:59.594Z",
               },
@@ -303,7 +303,7 @@ Array [
       "messages": Object {
         "node": Object {
           "__typename": "LogMessage",
-          "id": "Message:3",
+          "id": "3",
           "msg": "Starting Metro Bundler on port 19003.",
           "source": Object {
             "id": "Source:metro",
@@ -319,7 +319,7 @@ Array [
       "messages": Object {
         "node": Object {
           "__typename": "DeviceMessage",
-          "id": "Message:74accc01-a61d-461f-b55e-f98fb629422c:0",
+          "id": "74accc01-a61d-461f-b55e-f98fb629422c:0",
           "msg": "Running application \\"main\\" with appParams:",
           "source": Object {
             "id": "ebe8cd5c-9aab-48e9-9d00-0ee0e9ec3710",
@@ -335,7 +335,7 @@ Array [
       "messages": Object {
         "node": Object {
           "__typename": "LogMessage",
-          "id": "Message:4",
+          "id": "4",
           "msg": "Metro Bundler ready.",
           "source": Object {
             "id": "Source:metro",
@@ -351,7 +351,7 @@ Array [
       "messages": Object {
         "node": Object {
           "__typename": "LogMessage",
-          "id": "Message:6",
+          "id": "6",
           "msg": "Tunnel connected.",
           "source": Object {
             "id": "Source:metro",
@@ -367,7 +367,7 @@ Array [
       "messages": Object {
         "node": Object {
           "__typename": "BuildProgress",
-          "id": "Message:7",
+          "id": "7",
           "msg": "Building JavaScript bundle",
           "progress": 0,
           "source": Object {
@@ -384,7 +384,7 @@ Array [
       "messages": Object {
         "node": Object {
           "__typename": "BuildProgress",
-          "id": "Message:7",
+          "id": "7",
           "msg": "Building JavaScript bundle",
           "progress": 50,
           "source": Object {
