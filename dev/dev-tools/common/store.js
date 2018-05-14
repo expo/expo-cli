@@ -2,9 +2,6 @@ import { createStore } from 'redux';
 
 const INITIAL_STATE = {
   isPublishing: false,
-  devices: [],
-  selectedId: null,
-  count: 1,
   recipient: '',
   toasts: [],
   isActiveDeviceAndroid: false,

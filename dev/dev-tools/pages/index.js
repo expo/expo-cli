@@ -123,6 +123,11 @@ class IndexPageContents extends React.Component {
     await State.sendProjectUrl(this.props.recipient, this.props);
 
   componentDidMount() {
+    if (this.props.data.userSettings.sendTo) {
+      this._handleUpdateState({
+        recipient: this.props.data.userSettings.sendTo,
+      });
+    }
     const observable = this.props.client.subscribe({
       query: subscriptionQuery,
       variables: {
