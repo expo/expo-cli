@@ -71,6 +71,43 @@ const query = gql`
   }
 `;
 
+const projectPollQuery = gql`
+  query IndexPageQuery {
+    currentProject {
+      id
+      manifestUrl
+      settings {
+        hostType
+      }
+      config {
+        name
+        description
+        slug
+        githubUrl
+      }
+    }
+    userSettings {
+      id
+      sendTo
+    }
+    projectManagerLayout {
+      __typename
+      id
+      selected {
+        id
+      }
+      sources {
+        id
+      }
+    }
+    processInfo {
+      networkStatus
+      isAndroidSimulatorSupported
+      isIosSimulatorSupported
+    }
+  }
+`;
+
 const subscriptionQuery = gql`
   subscription MessageSubscription($after: String) {
     messages(after: $after) {
@@ -128,26 +165,37 @@ class IndexPageContents extends React.Component {
         recipient: this.props.data.userSettings.sendTo,
       });
     }
-    const observable = this.props.client.subscribe({
+
+    const subscriptionObservable = this.props.client.subscribe({
       query: subscriptionQuery,
       variables: {
         after: this.props.data.currentProject.messages.pageInfo.lastCursor,
       },
     });
-    this.querySubscription = observable.subscribe({
+    this.querySubscription = subscriptionObservable.subscribe({
       next: result => this.updateCurrentData(result),
       // error: this.updateError,
     });
+    this.pollingObservable = this.props.client.watchQuery({
+      query: projectPollQuery,
+    });
+    this.pollingObservable.startPolling(60000);
   }
 
   componentWillUnmount() {
     if (this.querySubscription) {
       this.querySubscription.unsubscribe();
     }
+    if (this.pollingObservable) {
+      this.pollingObservable.unsubscribe();
+    }
   }
 
   updateCurrentData(result) {
     if (result.data.messages.type === 'ADDED') {
+      if (result.data.messages.node.__typename === 'MetroInitializeStarted') {
+        this.pollingObservable.refetch();
+      }
       this.addNewMessage(result.data.messages.node);
     } else if (result.data.messages.type === 'DELETED') {
       this.removeMessage(result.data.messages.node);

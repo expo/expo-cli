@@ -86,12 +86,15 @@ export default class ProjectManagerSidebarOptions extends React.Component {
   };
 
   render() {
+    let isDisabled = !this.props.url;
+
     const IOSHeader = (
       <ContentGroupHeader
         isDeviceActive={this.props.isActiveDeviceIOS}
         isSimulatorSupported={this.props.processInfo.isIosSimulatorSupported}
         onSimulatorClick={this.props.onSimulatorClickIOS}
-        onDeviceClick={this.props.onDeviceClickIOS}>
+        onDeviceClick={this.props.onDeviceClickIOS}
+        isDisabled={isDisabled}>
         iOS
       </ContentGroupHeader>
     );
@@ -101,7 +104,8 @@ export default class ProjectManagerSidebarOptions extends React.Component {
         isDeviceActive={this.props.isActiveDeviceAndroid}
         isSimulatorSupported={this.props.processInfo.isAndroidSimulatorSupported}
         onSimulatorClick={this.props.onSimulatorClickAndroid}
-        onDeviceClick={this.props.onDeviceClickAndroid}>
+        onDeviceClick={this.props.onDeviceClickAndroid}
+        isDisabled={isDisabled}>
         Android
       </ContentGroupHeader>
     );
@@ -120,7 +124,9 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             <div className={STYLES_URL_SECTION_BOTTOM_LEFT}>
               <SVG.Link size="12px" />
             </div>
-            <div className={STYLES_URL_SECTION_BOTTOM_RIGHT}>{this.props.url}</div>
+            <div className={STYLES_URL_SECTION_BOTTOM_RIGHT}>
+              {!isDisabled ? this.props.url : '—'}
+            </div>
           </div>
         </div>
 

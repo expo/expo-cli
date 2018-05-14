@@ -2,6 +2,7 @@ import styled, { css } from 'react-emotion';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
+import OptionsButton from './OptionsButton';
 
 const STYLES_CONTAINER = css`
   font-family: ${Constants.fontFamilies.regular};
@@ -22,50 +23,26 @@ const STYLES_CONTAINER_LEFT = css`
   width: 100%;
 `;
 
-const STYLES_CONTAINER_RIGHT = css`
-  font-family: ${Constants.fontFamilies.demi};
-  border-left: 1px solid ${Constants.colors.border};
-  flex-shrink: 0;
-  cursor: pointer;
-  padding: 0 16px 0 16px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  :hover {
-    background: ${Constants.colors.border};
-  }
-`;
-
-const STYLES_CONTAINER_RIGHT_ACTIVE = css`
-  box-shadow: inset 0 -2px 0 ${Constants.colors.primary};
-  border-left: 1px solid ${Constants.colors.border};
-
-  :hover {
-    background: ${Constants.colors.white};
-  }
-`;
-
 export default class ContentGroupHeader extends React.Component {
   render() {
     let simulatorElement;
     if (this.props.isSimulatorSupported) {
       simulatorElement = (
-        <span className={STYLES_CONTAINER_RIGHT} onClick={this.props.onSimulatorClick}>
+        <OptionsButton
+          isDisabled={this.props.isDisabled}
+          onClick={!this.props.isDisabled ? this.props.onSimulatorClick : null}>
           Simulator
-        </span>
+        </OptionsButton>
       );
     }
 
     let deviceElement = (
-      <span
-        className={`${STYLES_CONTAINER_RIGHT} ${this.props.isDeviceActive
-          ? STYLES_CONTAINER_RIGHT_ACTIVE
-          : ''}`}
-        onClick={this.props.onDeviceClick}>
+      <OptionsButton
+        isActive={this.props.isDeviceActive}
+        isDisabled={this.props.isDisabled}
+        onClick={!this.props.isDisabled ? this.props.onDeviceClick : null}>
         Device
-      </span>
+      </OptionsButton>
     );
 
     return (

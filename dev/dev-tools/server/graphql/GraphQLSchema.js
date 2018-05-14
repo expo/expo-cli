@@ -155,6 +155,14 @@ const typeDefs = graphql`
     level: LogLevel!
   }
 
+  type MetroInitializeStarted implements Message {
+    id: ID!
+    msg: String!
+    time: String!
+    source: Process!
+    level: LogLevel!
+  }
+
   type BuildProgress implements Message {
     id: ID!
     msg: String!
@@ -278,9 +286,13 @@ const resolvers = {
         return 'DeviceMessage';
       } else if (parent.issueId) {
         return 'Issue';
-      } else if (parent._bundleEventType) {
-        switch (parent._bundleEventType) {
-          case 'PROGRESS': {
+      } else if (parent._metroEventType) {
+        switch (parent._metroEventType) {
+          case 'METRO_INITIALIZE_STARTED': {
+            return 'MetroInitializeStarted';
+          }
+          case 'BUILD_STARTED':
+          case 'BUILD_PROGRESS': {
             return 'BuildProgress';
           }
           case 'FINISHED': {
@@ -304,6 +316,12 @@ const resolvers = {
     },
   },
   LogMessage: {
+    ...messageResolvers,
+    source(parent, args, context) {
+      return context.getProcessSource();
+    },
+  },
+  MetroInitializeStarted: {
     ...messageResolvers,
     source(parent, args, context) {
       return context.getProcessSource();
@@ -337,8 +355,12 @@ const resolvers = {
     id(project) {
       return Buffer.from(project.projectDir).toString('base64');
     },
-    manifestUrl(project) {
-      return UrlUtils.constructManifestUrlAsync(project.projectDir);
+    async manifestUrl(project) {
+      if ((await Project.currentStatus(project.projectDir)) === 'running') {
+        return UrlUtils.constructManifestUrlAsync(project.projectDir);
+      } else {
+        return null;
+      }
     },
     settings(project) {
       return ProjectSettings.readAsync(project.projectDir);

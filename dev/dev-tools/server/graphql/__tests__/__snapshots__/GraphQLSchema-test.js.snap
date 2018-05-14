@@ -45,7 +45,7 @@ Object {
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
-                "__typename": "LogMessage",
+                "__typename": "MetroInitializeStarted",
                 "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
@@ -142,7 +142,7 @@ Object {
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
-                "__typename": "LogMessage",
+                "__typename": "MetroInitializeStarted",
                 "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
@@ -197,7 +197,7 @@ Object {
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
-                "__typename": "LogMessage",
+                "__typename": "MetroInitializeStarted",
                 "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
@@ -259,7 +259,7 @@ Object {
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
-                "__typename": "LogMessage",
+                "__typename": "MetroInitializeStarted",
                 "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
@@ -328,7 +328,7 @@ Object {
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
-                "__typename": "LogMessage",
+                "__typename": "MetroInitializeStarted",
                 "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
@@ -397,7 +397,7 @@ Object {
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
-                "__typename": "LogMessage",
+                "__typename": "MetroInitializeStarted",
                 "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
@@ -459,7 +459,7 @@ Object {
                 "time": "2018-05-07T13:01:14.738Z",
               },
               Object {
-                "__typename": "LogMessage",
+                "__typename": "MetroInitializeStarted",
                 "id": "4",
                 "msg": "Metro Bundler ready.",
                 "time": "2018-05-07T13:01:14.878Z",
@@ -585,7 +585,7 @@ Array [
     "data": Object {
       "messages": Object {
         "node": Object {
-          "__typename": "LogMessage",
+          "__typename": "MetroInitializeStarted",
           "id": "4",
           "msg": "Metro Bundler ready.",
           "source": Object {

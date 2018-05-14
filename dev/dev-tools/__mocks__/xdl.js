@@ -32,4 +32,10 @@ xdl.UserSettings = {
   },
 };
 
+xdl.Project = {
+  currentStatus() {
+    return Promise.resolve('running');
+  },
+};
+
 module.exports = xdl;

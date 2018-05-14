@@ -93,7 +93,6 @@ function createMessageBuffer(projectRoot, issues) {
         type: 'ADDED',
         node: {
           ...chunk,
-          _bundleEventType: 'PROGRESS',
           progress: 0,
           duration: 0,
         },
@@ -104,7 +103,6 @@ function createMessageBuffer(projectRoot, issues) {
         type: 'UPDATED',
         node: {
           ...chunk,
-          _bundleEventType: 'PROGRESS',
           progress: percentage,
           duration: new Date() - (start || new Date()),
         },
@@ -116,7 +114,6 @@ function createMessageBuffer(projectRoot, issues) {
         node: {
           ...chunk,
           error,
-          _bundleEventType: error ? 'FAILED' : 'FINISHED',
           duration: end - (start || new Date()),
         },
       });

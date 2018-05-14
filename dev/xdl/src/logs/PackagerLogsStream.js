@@ -217,6 +217,7 @@ export default class PackagerLogsStream {
     switch (msg.type) {
       case 'initialize_started': // SDK >=23 (changed in Metro v0.17.0)
       case 'initialize_packager_started': // SDK <=22
+        chunk._metroEventType = 'METRO_INITIALIZE_STARTED';
         chunk.msg = msg.port
           ? `Starting Metro Bundler on port ${msg.port}.`
           : 'Starting Metro Bundler.';
@@ -269,18 +270,22 @@ export default class PackagerLogsStream {
     let { msg } = chunk;
 
     if (msg.type === 'bundle_build_started') {
+      chunk._metroEventType = 'BUILD_STARTED';
       this._handleNewBundleTransformStarted(chunk);
     } else if (msg.type === 'bundle_transform_progressed') {
+      chunk._metroEventType = 'BUILD_PROGRESS';
       this._bundleBuildChunkID
         ? this._handleUpdateBundleTransformProgress(chunk)
         : this._handleNewBundleTransformStarted(chunk);
     } else if (msg.type === 'bundle_build_failed') {
+      chunk._metroEventType = 'BUILD_FAILED';
       if (!this._bundleBuildChunkID) {
         return; // maybe?
       } else {
         this._handleUpdateBundleTransformProgress(chunk);
       }
     } else if (msg.type === 'bundle_build_done') {
+      chunk._metroEventType = 'BUILD_DONE';
       if (!this._bundleBuildChunkID) {
         return; // maybe?
       } else {
