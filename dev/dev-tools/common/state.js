@@ -70,9 +70,11 @@ export const sectionCount = ({ count }, props) => {
   } else {
     newSources = layout.sources.slice(0, count);
   }
-  let selected = layout.selected ? layout.selected.id : null;
 
-  if (layout.selected && !newSources.some(source => source.id === layout.selected.id)) {
+  let selected;
+  if (layout.selected && newSources.some(source => source.id === layout.selected.id)) {
+    selected = layout.selected.id;
+  } else {
     selected = null;
   }
 
