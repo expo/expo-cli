@@ -66,7 +66,10 @@ export const sectionCount = ({ count }, props) => {
   const { projectManagerLayout: layout, currentProject } = props.data;
   let newSources;
   if (count > layout.sources.length) {
-    newSources = uniqBy([...layout.sources, ...currentProject.sources], source => source.id);
+    newSources = uniqBy([...layout.sources, ...currentProject.sources], source => source.id).slice(
+      0,
+      count
+    );
   } else {
     newSources = layout.sources.slice(0, count);
   }

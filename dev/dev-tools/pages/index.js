@@ -219,7 +219,7 @@ class IndexPageContents extends React.Component {
       return source.__typename !== 'Issues' || source.messages.count > 0;
     });
     let sections = projectManagerLayout.sources
-      .map(({ id }) => sources.find(source => source.id === id))
+      .map(({ id }) => currentProject.sources.find(source => source.id === id))
       .filter(section => section);
     if (sections.length === 0) {
       sections = [sources[0]];
