@@ -92,6 +92,17 @@
     lodash "^4.2.0"
     to-fast-properties "^2.0.0"
 
+"@expo/bunyan@3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@expo/bunyan/-/bunyan-3.0.2.tgz#775680bd479a8b79ada4a5676936a58eef1579c9"
+  dependencies:
+    exeunt "1.1.0"
+    uuid "^3.2.1"
+  optionalDependencies:
+    moment "^2.10.6"
+    mv "~2"
+    safe-json-stringify "~1"
+
 "@expo/bunyan@^1.8.10":
   version "1.8.10"
   resolved "https://registry.yarnpkg.com/@expo/bunyan/-/bunyan-1.8.10.tgz#7d19354a6bce85aae5fea0e973569d3f0142533e"
@@ -2216,6 +2227,10 @@ execa@^0.8.0:
     signal-exit "^3.0.0"
     strip-eof "^1.0.0"
 
+exeunt@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/exeunt/-/exeunt-1.1.0.tgz#af72db6f94b3cb75e921aee375d513049843d284"
+
 expand-brackets@^0.1.4:
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/expand-brackets/-/expand-brackets-0.1.5.tgz#df07284e342a807cd733ac5af72411e581d1177b"
@@ -3992,7 +4007,7 @@ mute-stream@0.0.7:
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.7.tgz#3075ce93bc21b8fab43e1bc4da7e8115ed1e7bab"
 
-mv@~2:
+mv@^2.1.1, mv@~2:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/mv/-/mv-2.1.1.tgz#ae6ce0d6f6d5e0a4f7d893798d03c1ea9559b6a2"
   dependencies:
@@ -4051,6 +4066,10 @@ node-fetch@^1.0.1:
   dependencies:
     encoding "^0.1.11"
     is-stream "^1.0.1"
+
+node-forge@^0.7.4:
+  version "0.7.5"
+  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.7.5.tgz#6c152c345ce11c52f465c2abd957e8639cd674df"
 
 node-pre-gyp@^0.9.0:
   version "0.9.1"
@@ -4471,7 +4490,7 @@ pkg@^4.2.1:
     simple-bufferstream "1.0.0"
     stream-meter "1.0.4"
 
-plist@2.1.0:
+plist@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/plist/-/plist-2.1.0.tgz#57ccdb7a0821df21831217a3cad54e3e146a1025"
   dependencies:
@@ -5768,7 +5787,7 @@ uuid@^2.0.1:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-2.0.3.tgz#67e2e863797215530dff318e5bf9dcebfd47b21a"
 
-uuid@^3.0.0, uuid@^3.0.1, uuid@^3.1.0:
+uuid@^3.0.0, uuid@^3.0.1, uuid@^3.1.0, uuid@^3.2.1:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/uuid/-/uuid-3.2.1.tgz#12c528bb9d58d0b9265d9a2f6f0fe8be17ff1f14"
 
@@ -5923,11 +5942,11 @@ write@^0.2.1:
   dependencies:
     mkdirp "^0.5.1"
 
-xdl@49.2.0:
-  version "49.2.0"
-  resolved "https://registry.yarnpkg.com/xdl/-/xdl-49.2.0.tgz#79ff34022fc3fe6c0c26cc7e23ae5a404c860aca"
+xdl@50.0.0:
+  version "50.0.0"
+  resolved "https://registry.yarnpkg.com/xdl/-/xdl-50.0.0.tgz#a28359c6ffc4fb691679a5a2c2477109a5c7cd76"
   dependencies:
-    "@expo/bunyan" "^1.8.10"
+    "@expo/bunyan" "3.0.2"
     "@expo/json-file" "^8.0.0"
     "@expo/ngrok" "2.4.2"
     "@expo/osascript" "^1.8.0"
@@ -5963,9 +5982,11 @@ xdl@49.2.0:
     md5hex "^1.0.0"
     minimatch "^3.0.4"
     mkdirp "^0.5.1"
+    mv "^2.1.1"
     ncp "^2.0.0"
+    node-forge "^0.7.4"
     opn "^4.0.2"
-    plist "2.1.0"
+    plist "^2.1.0"
     prop-types "^15.5.10"
     querystring "^0.2.0"
     raven "^2.1.1"

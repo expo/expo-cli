@@ -10,6 +10,17 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [54.0.0] - 2018-05-14
+
+### Added
+
+* Add `exp fetch:android:hashes` for fetching the Android key hashes needed to setup Google/Facebook authentication.
+
+### Changed
+
+* Warn about builds for invalid SDK version
+* Update xdl to version 50.0.0.
+
 ## [53.1.0] - 2018-04-27
 
 ### Changed
