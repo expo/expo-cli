@@ -26,13 +26,21 @@ export const sourceSelect = (source, props) => {
   return updateLayout(props.client, layout.id, { selected, sources });
 };
 
-export const sourceSwap = ({ oldId, newId }, props) => {
-  const { projectManagerLayout: layout } = props.data;
-  const oldIndex = layout.sources.findIndex(source => source.id === oldId);
-  const newIndex = layout.sources.findIndex(source => source.id === newId);
+export const sourceSwap = ({ targetSourceId, movedSourceId }, props) => {
+  const { projectManagerLayout: layout, currentProject } = props.data;
+  const targetIndex = layout.sources.findIndex(source => source.id === targetSourceId);
+  const movedIndex = layout.sources.findIndex(source => source.id === movedSourceId);
+  let sources;
+  if (movedIndex === -1) {
+    const newSource = currentProject.sources.find(source => source.id === movedSourceId);
+    sources = set(targetIndex, newSource, layout.sources);
+  } else {
+    sources = Sets.swap(layout.sources, targetIndex, movedIndex);
+  }
+
   return updateLayout(props.client, layout.id, {
     selected: layout.selected ? layout.selected.id : null,
-    sources: Sets.swap([...layout.sources], oldIndex, newIndex),
+    sources,
   });
 };
 
@@ -62,8 +70,14 @@ export const sectionCount = ({ count }, props) => {
   } else {
     newSources = layout.sources.slice(0, count);
   }
+  let selected = layout.selected ? layout.selected.id : null;
+
+  if (layout.selected && !newSources.some(source => source.id === layout.selected.id)) {
+    selected = null;
+  }
+
   const layoutInput = {
-    selected: layout.selected ? layout.selected.id : null,
+    selected,
     sources: newSources,
   };
   return updateLayout(props.client, layout.id, layoutInput);

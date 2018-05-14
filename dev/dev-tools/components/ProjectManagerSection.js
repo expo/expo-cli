@@ -73,20 +73,6 @@ const STYLES_CONTAINER_HOVER = css`
 `;
 
 class ProjectManagerSection extends React.Component {
-  componentWillReceiveProps(nextProps) {
-    if (!this.props.isOver && nextProps.isOver) {
-      console.log('isEntering');
-    }
-
-    if (this.props.isOver && !nextProps.isOver) {
-      console.log('isLeaving');
-    }
-
-    if (this.props.isOverCurrent && !nextProps.isOverCurrent) {
-      console.log('isOverCurrent');
-    }
-  }
-
   componentDidMount() {
     this.scrollToEnd();
   }
@@ -180,7 +166,7 @@ const target = {
   drop(props, monitor) {
     const result = monitor.getItem();
     if (!props.data || result.id !== props.data.id) {
-      props.onSectionDrag({ newId: result.id, oldId: props.data.id });
+      props.onSectionDrag({ movedSourceId: result.id, targetSourceId: props.data.id });
     }
   },
 };
