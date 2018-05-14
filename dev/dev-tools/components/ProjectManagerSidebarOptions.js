@@ -33,7 +33,9 @@ const STYLES_URL_SECTION_BOTTOM_RIGHT = css`
   font-family: ${Constants.fontFamilies.mono};
   font-size: 10px;
   padding-bottom: 3px;
-  overflow-wrap: break-word;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
   min-width: 25%;
   width: 100%;
 `;
