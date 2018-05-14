@@ -10,6 +10,29 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.0.0] - 2018-05-14
+
+### Added
+
+* Add iOS app signing
+* Add creating Android keystores
+* Add `ProjectUtils.writeConfigJsonAsync` for modifying `app.json` configuration
+* Add a unique ID to each log entry
+
+### Changed
+
+* Fix handing configuration files using a custom file name (fixes expo/expo#1688)
+* Add more logging to ExpoKit asset bundling
+* Store user session state in a different file when using the staging API
+* Warn about builds for invalid SDK version
+* Fix infinitely waiting for Metro bundler to start if it crashes
+* Ensure error messages from Metro bundler are logged
+* Hide the noisy "BugReporting extraData" logs from react-native
+
+### Removed
+
+* Remove `clientId` from requests to `userProfileAsync` API.
+
 ## [49.2.0] - 2018-04-27
 
 ### Changed
