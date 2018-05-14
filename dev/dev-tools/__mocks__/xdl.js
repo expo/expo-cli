@@ -38,4 +38,8 @@ xdl.Project = {
   },
 };
 
+xdl.Config = {
+  offline: false,
+};
+
 module.exports = xdl;
