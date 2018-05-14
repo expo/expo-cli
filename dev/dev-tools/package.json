@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
@@ -32,7 +32,7 @@
     "subscriptions-transport-ws": "0.9.8"
   },
   "peerDependencies": {
-    "xdl": "^49.2.0"
+    "xdl": "^50.0.0"
   },
   "devDependencies": {
     "apollo-cache-inmemory": "^1.1.12",
