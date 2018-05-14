@@ -1,4 +1,6 @@
 import uniqBy from 'lodash/uniqBy';
+import { $$asyncIterator } from 'iterall';
+import eventEmitterToAsyncIterator from '../asynciterators/eventEmitterToAsyncIterator';
 
 const ISSUES_SOURCE = {
   __typename: 'Issues',
@@ -12,7 +14,7 @@ const PROCESS_SOURCE = {
 };
 const DEFAULT_SOURCES = [ISSUES_SOURCE, PROCESS_SOURCE];
 
-export default function createContext({ projectDir, messageBuffer, layout }) {
+export default function createContext({ projectDir, messageBuffer, layout, issues }) {
   let flattenedMessages;
   return {
     getCurrentProject() {
@@ -62,6 +64,35 @@ export default function createContext({ projectDir, messageBuffer, layout }) {
     },
     setProjectManagerLayout(newLayout) {
       layout.set(newLayout);
+    },
+    getIssues() {
+      const nodes = issues.getIssueList();
+      return {
+        count: nodes.length,
+        nodes,
+        pageInfo: {
+          lastCursor: null,
+        },
+      };
+    },
+    getIssueIterator() {
+      const iterator = eventEmitterToAsyncIterator(issues, ['ADDED', 'DELETED']);
+      return {
+        async next() {
+          const { value, done } = await iterator.next();
+          return {
+            value: {
+              type: value.eventName,
+              node: value.event,
+            },
+            done,
+          };
+        },
+
+        [$$asyncIterator]() {
+          return this;
+        },
+      };
     },
   };
 }

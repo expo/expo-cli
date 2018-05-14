@@ -132,10 +132,12 @@ function updateLayout(client, id, input) {
       setProjectManagerLayout: {
         __typename: 'ProjectManagerLayout',
         id,
-        selected: {
-          __typename: 'Source',
-          id: input.selected,
-        },
+        selected: input.selected
+          ? {
+              __typename: 'Source',
+              id: input.selected,
+            }
+          : null,
         sources: input.sources,
       },
     },

@@ -14,6 +14,7 @@ import {
   UrlUtils,
   UserSettings,
 } from 'xdl';
+import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
 // for prettier
 const graphql = text => text;
@@ -185,7 +186,6 @@ const typeDefs = graphql`
 
   type PageInfo {
     lastCursor: String
-    hasNextPage: Boolean!
   }
 
   type MessageConnection {
@@ -197,6 +197,7 @@ const typeDefs = graphql`
   enum MessagePayloadType {
     ADDED
     UPDATED
+    DELETED
   }
 
   type MessageSubscriptionPayload {
@@ -275,7 +276,7 @@ const resolvers = {
     __resolveType(parent) {
       if (parent.tag === 'device') {
         return 'DeviceMessage';
-      } else if (parent.tag === 'notifications') {
+      } else if (parent.issueId) {
         return 'Issue';
       } else if (parent._bundleEventType) {
         switch (parent._bundleEventType) {
@@ -295,6 +296,9 @@ const resolvers = {
   },
   Issue: {
     ...messageResolvers,
+    id(issue) {
+      return `Issue:${issue.id}`;
+    },
     source(parent, args, context) {
       return context.getIssuesSource();
     },
@@ -362,7 +366,7 @@ const resolvers = {
   },
   Issues: {
     messages(source, args, context) {
-      return context.getMessageConnection(message => message.type === 'notifications');
+      return context.getIssues();
     },
   },
   Process: {
@@ -391,9 +395,10 @@ const resolvers = {
       const sources = context.getSources();
       let layoutSources = layout.sources;
       if (!layoutSources) {
-        layoutSources = [sources.find(source => source.__typename !== 'Issues').id];
+        return [];
+      } else {
+        return layoutSources.map(sourceId => sources.find(source => source.id === sourceId));
       }
-      return layoutSources.map(sourceId => sources.find(source => source.id === sourceId));
     },
   },
   UserSettings: {
@@ -475,10 +480,13 @@ const resolvers = {
         if (after) {
           parsedCursor = parseInt(after, 10);
         }
-        const iterator = context.getMessageIterator(parsedCursor);
+        const issueIterator = context.getIssueIterator();
+        const messageIterator = context.getMessageIterator(parsedCursor);
+        const iterator = mergeAsyncIterators(issueIterator, messageIterator);
         return {
           async next() {
-            const { done, value } = await iterator.next();
+            const result = await iterator.next();
+            const { done, value } = result;
             return {
               value: {
                 messages: {

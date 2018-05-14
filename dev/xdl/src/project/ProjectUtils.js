@@ -39,6 +39,10 @@ export function logWithLevel(
 ) {
   let useRedux = id && Config.useReduxNotifications;
 
+  if (id) {
+    object.issueId = id;
+  }
+
   let logger = _getLogger(projectRoot);
   switch (level) {
     case 'debug':
@@ -75,7 +79,11 @@ export function logInfo(projectRoot: string, tag: string, message: string, id: ?
   if (id && Config.useReduxNotifications) {
     state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'info'));
   } else {
-    _getLogger(projectRoot).info({ tag }, message.toString());
+    const object = { tag };
+    if (id) {
+      object.issueId = id;
+    }
+    _getLogger(projectRoot).info(object, message.toString());
   }
 }
 
@@ -83,7 +91,11 @@ export function logError(projectRoot: string, tag: string, message: string, id: 
   if (id && Config.useReduxNotifications) {
     state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'error'));
   } else {
-    _getLogger(projectRoot).error({ tag }, message.toString());
+    const object = { tag };
+    if (id) {
+      object.issueId = id;
+    }
+    _getLogger(projectRoot).error(object, message.toString());
   }
 
   let truncatedMessage = message.toString();
@@ -102,7 +114,11 @@ export function logWarning(projectRoot: string, tag: string, message: string, id
   if (id && Config.useReduxNotifications) {
     state.store.dispatch(state.actions.notifications.add(projectRoot, id, message, tag, 'warn'));
   } else {
-    _getLogger(projectRoot).warn({ tag }, message.toString());
+    const object = { tag };
+    if (id) {
+      object.issueId = id;
+    }
+    _getLogger(projectRoot).warn(object, message.toString());
   }
 
   let truncatedMessage = message.toString();
@@ -119,6 +135,15 @@ export function logWarning(projectRoot: string, tag: string, message: string, id
 export function clearNotification(projectRoot: string, id: string) {
   if (Config.useReduxNotifications) {
     state.store.dispatch(state.actions.notifications.clear(projectRoot, id));
+  } else {
+    _getLogger(projectRoot).info(
+      {
+        tag: 'expo',
+        issueCleared: true,
+        issueId: id,
+      },
+      `No issue with ${id}`
+    );
   }
 }
 

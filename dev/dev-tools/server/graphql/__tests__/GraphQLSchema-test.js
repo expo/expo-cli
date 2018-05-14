@@ -2,6 +2,7 @@ import { graphql, subscribe, parse } from 'graphql';
 import schema from '../GraphQLSchema';
 import createContext from '../createContext';
 import AsyncIterableRingBuffer from '../AsyncIterableRingBuffer';
+import Issues from '../Issues';
 
 jest.mock('xdl');
 
@@ -124,6 +125,21 @@ const MOCK_BUNDLE_LOGS = [
   },
 ];
 
+const MOCK_ISSUE = {
+  name: 'expo',
+  hostname: 'freiksenet-laptop',
+  pid: 17465,
+  type: 'project',
+  project: '/home/freiksenet/Work/expo/test-project-1',
+  level: 40,
+  tag: 'expo',
+  issueId: 'fake-issue',
+  msg: 'Warning: Fake error.',
+  time: '2018-05-07T13:07:56.540Z',
+  v: 0,
+  id: 'fake-issue',
+};
+
 const fullQuery = `
 query IndexPageQuery {
   currentProject {
@@ -214,8 +230,10 @@ subscription MessageSubscription($after: String!) {
 
 let logBuffer;
 let context;
+let issues;
 beforeEach(() => {
   logBuffer = new AsyncIterableRingBuffer();
+  issues = new Issues();
   context = () =>
     createContext({
       projectDir: 'test-project-dir',
@@ -228,6 +246,7 @@ beforeEach(() => {
           };
         },
       },
+      issues,
     });
 });
 
@@ -235,6 +254,7 @@ test('full query', async () => {
   for (const log of MOCK_LOGS) {
     logBuffer.push(log);
   }
+  issues.addIssue(MOCK_ISSUE.id, MOCK_ISSUE);
   let result = await graphql({ schema, source: fullQuery, contextValue: context() });
   expect(result).toMatchSnapshot();
 });
@@ -263,6 +283,16 @@ test('message queries', async () => {
 
   result = await graphql({ schema, source: messageQuery, contextValue: context() });
   expect(result).toMatchSnapshot();
+
+  issues.addIssue(MOCK_ISSUE.id, MOCK_ISSUE);
+
+  result = await graphql({ schema, source: messageQuery, contextValue: context() });
+  expect(result).toMatchSnapshot();
+
+  issues.clearIssue(MOCK_ISSUE.id);
+
+  result = await graphql({ schema, source: messageQuery, contextValue: context() });
+  expect(result).toMatchSnapshot();
 });
 
 test('subscriptions', async () => {
@@ -284,13 +314,18 @@ test('subscriptions', async () => {
     variableValues: { after: `${cursor}` },
   });
 
+  issues.addIssue(MOCK_ISSUE.id, MOCK_ISSUE);
+
   logBuffer.push(MOCK_BUNDLE_LOGS[0]);
   logBuffer.push(MOCK_BUNDLE_LOGS[1]);
+
+  issues.clearIssue(MOCK_ISSUE.id);
+  issues.clearIssue('some-other-fake-id');
 
   const result = [];
   // Note that this expects 6 items. If there are less, then it will timeout
   // if there are more, then it won't get the ones after the first 6
-  while (result.length < 6) {
+  while (result.length < 8) {
     result.push((await subscription.next()).value);
   }
 

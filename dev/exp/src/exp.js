@@ -257,6 +257,9 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
       updateLogs: updater => {
         let newLogChunks = updater([]);
         newLogChunks.forEach(newLogChunk => {
+          if (newLogChunk.issueId && newLogChunk.issueCleared) {
+            return;
+          }
           logWithLevel(newLogChunk);
         });
       },

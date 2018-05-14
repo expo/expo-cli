@@ -10,6 +10,7 @@ import http from 'http';
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
 import GraphQLSchema from './graphql/GraphQLSchema';
 import createContext from './graphql/createContext';
+import Issues from './graphql/Issues';
 
 export async function startAsync(projectDir) {
   const port = await freeportAsync(19002);
@@ -28,7 +29,8 @@ export async function startAsync(projectDir) {
 
 export function startGraphQLServer(projectDir, httpServer) {
   const layout = createLayout();
-  const messageBuffer = createMessageBuffer(projectDir);
+  const issues = new Issues();
+  const messageBuffer = createMessageBuffer(projectDir, issues);
 
   SubscriptionServer.create(
     {
@@ -41,6 +43,7 @@ export function startGraphQLServer(projectDir, httpServer) {
           projectDir,
           messageBuffer,
           layout,
+          issues,
         }),
       }),
     },
@@ -63,7 +66,7 @@ function createLayout() {
   };
 }
 
-function createMessageBuffer(projectRoot) {
+function createMessageBuffer(projectRoot, issues) {
   const buffer = new AsyncIterableRingBuffer(10000);
 
   const packagerLogsStream = new PackagerLogsStream({
@@ -71,6 +74,14 @@ function createMessageBuffer(projectRoot) {
     updateLogs: updater => {
       const chunks = updater([]);
       chunks.forEach(chunk => {
+        if (chunk.issueId) {
+          if (chunk.issueCleared) {
+            issues.clearIssue(chunk.issueId);
+          } else {
+            issues.addIssue(chunk.issueId, chunk);
+          }
+          return;
+        }
         buffer.push({
           type: 'ADDED',
           node: chunk,

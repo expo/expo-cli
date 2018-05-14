@@ -89,6 +89,24 @@ const subscriptionQuery = gql`
   }
 `;
 
+const createSourceQuery = typename => gql`
+  fragment ${typename}Fragment on ${typename} {
+    __typename
+    id
+    messages {
+      __typename
+      count
+      nodes {
+        id
+        __typename
+        msg
+        time
+        level
+      }
+    }
+  }
+`;
+
 @withRedux(initStore, state => state)
 class IndexPageContents extends React.Component {
   _handleDeviceSelect = options => State.sourceSelect(options, this.props);
@@ -126,28 +144,14 @@ class IndexPageContents extends React.Component {
   updateCurrentData(result) {
     if (result.data.messages.type === 'ADDED') {
       this.addNewMessage(result.data.messages.node);
+    } else if (result.data.messages.type === 'DELETED') {
+      this.removeMessage(result.data.messages.node);
     }
   }
 
   addNewMessage(message) {
     const typename = message.source.__typename;
-    const fragment = gql`
-      fragment ${typename}Fragment on ${typename} {
-        __typename
-        id
-        messages {
-          __typename
-          count
-          nodes {
-            id
-            __typename
-            msg
-            time
-            level
-          }
-        }
-      }
-    `;
+    const fragment = createSourceQuery(typename);
     const id = message.source.id;
     let existingSource;
     try {
@@ -173,6 +177,37 @@ class IndexPageContents extends React.Component {
     });
   }
 
+  removeMessage(message) {
+    const typename = message.source.__typename;
+    const fragment = createSourceQuery(typename);
+    const id = message.source.id;
+    let existingSource;
+    try {
+      existingSource = this.props.client.readFragment({ id, fragment });
+    } catch (e) {
+      // XXX(@fson): refetching all data
+      this.props.refetch();
+      return;
+    }
+    const newNodes = existingSource.messages.nodes.filter(
+      existingMessage => existingMessage.id !== message.id
+    );
+    const newMessages = {
+      __typename: 'MessageConnection',
+      count: newNodes.length,
+      nodes: newNodes,
+    };
+    this.props.client.writeFragment({
+      id,
+      fragment,
+      data: {
+        id,
+        __typename: typename,
+        messages: newMessages,
+      },
+    });
+  }
+
   render() {
     const {
       data: { currentProject, projectManagerLayout, processInfo },
@@ -183,10 +218,13 @@ class IndexPageContents extends React.Component {
     const sources = currentProject.sources.filter(source => {
       return source.__typename !== 'Issues' || source.messages.count > 0;
     });
-    const sections = projectManagerLayout.sources
+    let sections = projectManagerLayout.sources
       .map(({ id }) => sources.find(source => source.id === id))
       .filter(section => section);
-    const count = projectManagerLayout.sources.length;
+    if (sections.length === 0) {
+      sections = [sources[0]];
+    }
+    const count = sections.length;
     const selectedId = projectManagerLayout.selected && projectManagerLayout.selected.id;
 
     return (
