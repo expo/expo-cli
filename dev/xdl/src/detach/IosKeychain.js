@@ -69,6 +69,7 @@ async function runFastlane(fastlaneArgs) {
     FASTLANE_DISABLE_COLORS: 1,
     FASTLANE_SKIP_UPDATE_CHECK: 1,
     CI: 1,
+    LC_ALL: 'en_US.UTF-8',
   };
   await spawnAsyncThrowError('fastlane', fastlaneArgs, {
     env: { ...process.env, ...fastlaneEnvVars },

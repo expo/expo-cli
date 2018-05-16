@@ -268,6 +268,7 @@ async function runFastlane({ teamID, password }, fastlaneArgs) {
     FASTLANE_TEAM_ID: teamID,
     FASTLANE_PASSWORD: password,
     CI: 1,
+    LC_ALL: 'en_US.UTF-8',
   };
 
   await spawnAsyncThrowError('fastlane', fastlaneArgs, {
