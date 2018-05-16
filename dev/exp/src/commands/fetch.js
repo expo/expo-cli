@@ -27,41 +27,6 @@ function exportCertAsync(keystoreFile, keystorePassword, keyAlias, certFile) {
   ]);
 }
 
-async function writeKeystore(projectDir, temporary = false) {
-  const {
-    args: { username, remotePackageName, remoteFullPackageName: experienceName },
-  } = await Exp.getPublishInfoAsync(projectDir);
-
-  const outputFile = path.resolve(projectDir, `${remotePackageName}${temporary ? '.tmp' : ''}.jks`);
-  const credentialMetadata = { username, experienceName, platform: 'android' };
-
-  log(`Retreiving Android keystore for ${experienceName}`);
-  const credentials: ?AndroidCredentials = await Credentials.getCredentialsForPlatform(
-    credentialMetadata
-  );
-
-  if (!credentials) {
-    throw new Error(
-      'Unable to fetch credentials for this project. Are you sure they exist? Did you build a standalone Android app?'
-    );
-  }
-
-  const { keystore, keystorePassword, keystoreAlias: keyAlias, keyPassword } = credentials;
-  const storeBuf = Buffer.from(keystore, 'base64');
-
-  if (!temporary) {
-    log(`Writing keystore to ${outputFile}...`);
-  }
-  fs.writeFileSync(outputFile, storeBuf);
-
-  return {
-    outputFile,
-    keystorePassword,
-    keyPassword,
-    keyAlias,
-  };
-}
-
 export default (program: any) => {
   program
     .command('fetch:ios:certs [project-dir]')
@@ -138,17 +103,17 @@ Push p12 password:         ${chalk.bold(pushPassword)}
       "Fetch this project's Android keystore. Writes keystore to PROJECT_DIR/PROJECT_NAME.jks and prints passwords to stdout."
     )
     .asyncActionProjectDir(async (projectDir, options) => {
-      const { keystorePassword, keyPassword, keyAlias } = await writeKeystore(projectDir);
+      const {
+        args: { username, remotePackageName, remoteFullPackageName: experienceName },
+      } = await Exp.getPublishInfoAsync(projectDir);
 
-      log('Done writing keystore to disk.');
-      log(`Save these important values as well:
-
-Keystore password: ${chalk.bold(keystorePassword)}
-Key alias:         ${chalk.bold(keyAlias)}
-Key password:      ${chalk.bold(keyPassword)}
-`);
-
-      log('All done!');
+      const backupKeystoreOutputPath = path.resolve(projectDir, `${remotePackageName}.jks`);
+      await Credentials.backupExistingAndroidCredentials({
+        outputPath: backupKeystoreOutputPath,
+        username,
+        experienceName,
+        log,
+      });
     }, true);
 
   program
@@ -157,10 +122,21 @@ Key password:      ${chalk.bold(keyPassword)}
       "Fetch this project's Android key hashes needed to setup Google/Facebook authentication."
     )
     .asyncActionProjectDir(async (projectDir, options) => {
-      const { outputFile, keystorePassword, keyAlias } = await writeKeystore(projectDir, true);
-      const certFile = outputFile.replace('jks', 'cer');
+      const {
+        args: { username, remotePackageName, remoteFullPackageName: experienceName },
+      } = await Exp.getPublishInfoAsync(projectDir);
+
+      const outputPath = path.resolve(projectDir, `${remotePackageName}.tmp.jks`);
+      const { keystorePassword, keyAlias } = await Credentials.backupExistingAndroidCredentials({
+        outputPath,
+        username,
+        experienceName,
+        log,
+        logSecrets: false,
+      });
+      const certFile = outputPath.replace('jks', 'cer');
       try {
-        await exportCertAsync(outputFile, keystorePassword, keyAlias, certFile);
+        await exportCertAsync(outputPath, keystorePassword, keyAlias, certFile);
         const data = fs.readFileSync(certFile);
         const googleHash = crypto
           .createHash('sha1')
@@ -196,7 +172,7 @@ Key password:      ${chalk.bold(keyPassword)}
           }
         }
         try {
-          fs.unlinkSync(outputFile);
+          fs.unlinkSync(outputPath);
         } catch (err) {
           if (err.code !== 'ENOENT') {
             log.error(err);

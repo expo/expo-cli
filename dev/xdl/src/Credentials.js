@@ -2,7 +2,12 @@
  * @flow
  */
 
+import path from 'path';
+import chalk from 'chalk';
+import fs from 'fs-extra';
+
 import Api from './Api';
+import logger from './Logger';
 
 export type AndroidCredentials = {
   keystore: string,
@@ -44,6 +49,12 @@ export type CertObject = {
 export type CertsList = Array<CertObject>;
 
 export async function credentialsExistForPlatformAsync(
+  metadata: CredentialMetadata
+): Promise<?Credentials> {
+  return !!fetchCredentials(metadata, false);
+}
+
+export async function getEncryptedCredentialsForPlatformAsync(
   metadata: CredentialMetadata
 ): Promise<?Credentials> {
   return fetchCredentials(metadata, false);
@@ -124,4 +135,41 @@ export async function getExistingDistCerts(
     usedByApps: usedByApps && usedByApps.split(';'),
     ...rest,
   }));
+}
+
+export async function backupExistingAndroidCredentials({
+  outputPath,
+  username,
+  experienceName,
+  log = logger.info.bind(logger),
+  logSecrets = true,
+}) {
+  const credentialMetadata = { username, experienceName, platform: 'android' };
+
+  log(`Retreiving Android keystore for ${experienceName}`);
+
+  const credentials = await getCredentialsForPlatform(credentialMetadata);
+  if (!credentials) {
+    throw new Error('Unable to fetch credentials for this project. Are you sure they exist?');
+  }
+  const { keystore, keystorePassword, keystoreAlias: keyAlias, keyPassword } = credentials;
+
+  const storeBuf = Buffer.from(keystore, 'base64');
+  log(`Writing keystore to ${outputPath}...`);
+  fs.writeFileSync(outputPath, storeBuf);
+  if (logSecrets) {
+    log('Done writing keystore to disk.');
+    log(`Save these important values as well:
+
+  Keystore password: ${chalk.bold(keystorePassword)}
+  Key alias:         ${chalk.bold(keyAlias)}
+  Key password:      ${chalk.bold(keyPassword)}
+  `);
+    log('All done!');
+  }
+  return {
+    keystorePassword,
+    keyAlias,
+    keyPassword,
+  };
 }

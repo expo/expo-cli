@@ -37,19 +37,6 @@ export default class AndroidBuilder extends BaseBuilder {
       platform: 'android',
     };
 
-    const localKeystorePath = path.resolve(`${remotePackageName}.jks`);
-    const localKeystoreExists = fs.existsSync(localKeystorePath);
-    if (localKeystoreExists) {
-      log.warn(
-        'Detected a local copy of an Android keystore. Please double check that the keystore is up to date so it can be used as a backup.'
-      );
-    } else {
-      log.warn('Cannot find a local keystore in the current project directory.');
-      log.warn('Can you make sure you have a local backup of your keystore?');
-      log.warn(
-        'You can fetch an updated version from our servers by using `exp fetch:android:keystore [project-dir]`'
-      );
-    }
     log.warn(
       `Clearing your Android build credentials from our build servers is a ${chalk.red(
         'PERMANENT and IRREVERSIBLE action.'
@@ -60,6 +47,9 @@ export default class AndroidBuilder extends BaseBuilder {
     );
     log.warn(
       'Please read https://docs.expo.io/versions/latest/guides/building-standalone-apps.html#if-you-choose-to-build-for-android for more info before proceeding.'
+    );
+    log.warn(
+      "We'll store a backup of your Android keystore in this directory in case you decide to delete it from our servers."
     );
     let questions = [
       {
@@ -72,7 +62,19 @@ export default class AndroidBuilder extends BaseBuilder {
     const answers = await prompt(questions);
 
     if (answers.confirm) {
+      log('Backing up your Android keystore now...');
+      const backupKeystoreOutputPath = path.resolve(
+        this.projectDir,
+        `${remotePackageName}.jks.bak`
+      );
+      await Credentials.backupExistingAndroidCredentials({
+        outputPath: backupKeystoreOutputPath,
+        username,
+        experienceName,
+        log,
+      });
       await Credentials.removeCredentialsForPlatform('android', credentialMetadata);
+      log.warn('Removed existing credentials from Expo servers');
     }
   }
 
@@ -87,11 +89,11 @@ export default class AndroidBuilder extends BaseBuilder {
       platform: 'android',
     };
 
-    const credentials = await Credentials.credentialsExistForPlatformAsync(credentialMetadata);
+    const credentialsExist = await Credentials.credentialsExistForPlatformAsync(credentialMetadata);
 
     if (this.checkEnv()) {
       await this.collectAndValidateCredentialsFromCI(credentialMetadata);
-    } else if (this.options.clearCredentials || !credentials) {
+    } else if (this.options.clearCredentials || !credentialsExist) {
       console.log('');
       const questions = [
         {
@@ -158,7 +160,7 @@ export default class AndroidBuilder extends BaseBuilder {
       const answers = await prompt(questions);
 
       if (!answers.uploadKeystore) {
-        if (this.options.clearCredentials) {
+        if (this.options.clearCredentials && credentialsExist) {
           await this._clearCredentials();
         }
         // just continue

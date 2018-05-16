@@ -540,7 +540,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   }
 
   async runLocalAuth(credsMetadata) {
-    let credsStarter = await Credentials.credentialsExistForPlatformAsync(credsMetadata);
+    let credsStarter = await Credentials.getEncryptedCredentialsForPlatformAsync(credsMetadata);
     let clientHasAllNeededCreds = false;
     let credsMissing;
     if (credsStarter !== undefined) {
