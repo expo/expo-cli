@@ -193,8 +193,10 @@ async function _createStandaloneContextAsync(args) {
  *  @param privateConfigFile path to a private config file containing, e.g., private api keys
  *  @param appleTeamId Apple Developer's account Team ID
  *  @param output specify the output path of the configured archive (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
+ *  @param type type of artifact to configure (simulator or archive)
  */
-async function _configureAndCopyShellAppArchiveAsync(args) {
+async function configureAndCopyArchiveAsync(args) {
+  args = _validateCLIArgs(args);
   const { output, type } = args;
   const context = await _createStandaloneContextAsync(args);
   await IosNSBundle.configureAsync(context);
@@ -241,8 +243,10 @@ async function _createShellAppWorkspaceAsync(context, skipRepoUpdate) {
  *  @param verbose show all xcodebuild output (default false)
  *  @param reuseWorkspace if true, when building, assume a detached workspace already exists rather than creating a new one.
  *  @param skipRepoUpdate if true, when building, omit `--repo-update` cocoapods flag.
+ *  @param type type of artifact to build (simulator or archive)
  */
-async function _buildAndCopyShellAppArtifactAsync(args) {
+async function buildAndCopyArtifactAsync(args) {
+  args = _validateCLIArgs(args);
   const context = await _createStandaloneContextAsync(args);
   const { verbose, type, reuseWorkspace } = args;
   const { projectName } = IosWorkspace.getPaths(context);
@@ -269,20 +273,7 @@ async function _buildAndCopyShellAppArtifactAsync(args) {
   await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
 }
 
-/**
- *  possible args in addition to action-specific args:
- *  @param action
- *    build - build a binary
- *    configure - don't build anything, just configure the files in an existing NSBundle
- *  @param type type of artifact to build or configure (simulator or archive)
- */
-async function createIOSShellAppAsync(args) {
-  args = _validateCLIArgs(args);
-  if (args.action === 'build') {
-    await _buildAndCopyShellAppArtifactAsync(args);
-  } else if (args.action === 'configure') {
-    await _configureAndCopyShellAppArchiveAsync(args);
-  }
-}
-
-export { createIOSShellAppAsync };
+export {
+  buildAndCopyArtifactAsync,
+  configureAndCopyArchiveAsync,
+};
