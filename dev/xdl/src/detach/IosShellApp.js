@@ -62,6 +62,9 @@ function _validateCLIArgs(args) {
     case 'build': {
       break;
     }
+    case 'create-workspace': {
+      break;
+    }
     default: {
       throw new Error(`Unsupported build action ${args.action}`);
     }
@@ -138,17 +141,25 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
   });
 }
 
+/**
+ * @param workspacePath optionally provide a path for the unbuilt xcode workspace to create/use.
+ */
 async function _createStandaloneContextAsync(args) {
   // right now we only ever build a single detached workspace for service contexts.
   // TODO: support multiple different pod configurations, assemble a cache of those builds.
   const expoSourcePath = '../ios';
-  const workspaceSourcePath = path.join(
-    expoSourcePath,
-    '..',
-    'shellAppWorkspaces',
-    'ios',
-    'default'
-  );
+  let workspaceSourcePath;
+  if (args.workspacePath) {
+    workspaceSourcePath = args.workspacePath;
+  } else {
+    workspaceSourcePath = path.join(
+      expoSourcePath,
+      '..',
+      'shellAppWorkspaces',
+      'ios',
+      'default'
+    );
+  }
   let { privateConfigFile } = args;
 
   let privateConfig;
@@ -226,7 +237,12 @@ async function configureAndCopyArchiveAsync(args) {
   }
 }
 
-async function _createShellAppWorkspaceAsync(context, skipRepoUpdate) {
+/**
+ * possible args:
+ *  @param skipRepoUpdate if true, omit `--repo-update` cocoapods flag.
+ */
+async function _createTurtleWorkspaceAsync(context, args) {
+  const { skipRepoUpdate } = args;
   if (fs.existsSync(context.build.ios.workspaceSourcePath)) {
     logger.info(`Removing existing workspace at ${context.build.ios.workspaceSourcePath}...`);
     try {
@@ -238,11 +254,25 @@ async function _createShellAppWorkspaceAsync(context, skipRepoUpdate) {
 }
 
 /**
+ * External-facing version can be used to create a turtle workspace without building it.
+ * Probably only useful for local testing.
+ */
+async function createTurtleWorkspaceAsync(args) {
+  args = _validateCLIArgs(args);
+  if (!args.workspacePath) {
+    logger.info('No workspace path was provided with --workspacePath, so the default will be used.');
+  }
+  const context = await _createStandaloneContextAsync(args);
+  await _createTurtleWorkspaceAsync(context, args);
+  logger.info(`Created turtle workspace at ${context.build.ios.workspaceSourcePath}. You can open and run this in Xcode.`);
+  logger.info(`The minimum configuration to get something running is to specify a manifest url in 'EXShell.plist' (for Release builds) or 'EXBuildConstants.plist' (for Debug builds).`);
+}
+
+/**
  * possible args:
  *  @param configuration StandaloneBuildConfiguration (Debug or Release)
  *  @param verbose show all xcodebuild output (default false)
  *  @param reuseWorkspace if true, when building, assume a detached workspace already exists rather than creating a new one.
- *  @param skipRepoUpdate if true, when building, omit `--repo-update` cocoapods flag.
  *  @param type type of artifact to build (simulator or archive)
  */
 async function buildAndCopyArtifactAsync(args) {
@@ -252,7 +282,7 @@ async function buildAndCopyArtifactAsync(args) {
   const { projectName } = IosWorkspace.getPaths(context);
 
   if (!reuseWorkspace) {
-    await _createShellAppWorkspaceAsync(context, args.skipRepoUpdate);
+    await _createTurtleWorkspaceAsync(context, args);
   }
   const pathToArtifact = await _buildAsync(
     projectName,
@@ -276,4 +306,5 @@ async function buildAndCopyArtifactAsync(args) {
 export {
   buildAndCopyArtifactAsync,
   configureAndCopyArchiveAsync,
+  createTurtleWorkspaceAsync,
 };

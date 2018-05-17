@@ -262,7 +262,6 @@ async function createDetachedAsync(context: StandaloneContext) {
   // copy template workspace
   logger.info('Moving iOS project files...');
   logger.info('Attempting to create project directory...');
-  logger.info(`project dir: ${iosProjectDirectory}`);
   mkdirp.sync(iosProjectDirectory);
   logger.info('Created project directory! Copying files:');
   await Utils.ncpAsync(
