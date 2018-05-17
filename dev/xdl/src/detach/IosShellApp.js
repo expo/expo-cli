@@ -13,6 +13,9 @@ import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 import logger from './Logger';
 
+// TODO: we will need to vary this when we support multiple different build artifacts.
+const DEFAULT_EXPOKIT_WORKSPACE_NAME = 'ExpoKitApp';
+
 function _validateCLIArgs(args) {
   args.type = args.type || 'archive';
   args.configuration = args.configuration || 'Release';
@@ -169,7 +172,7 @@ async function _createStandaloneContextAsync(args) {
   }
 
   let manifest;
-  if (args.action === 'configure') {
+  if (args.url && args.sdkVersion) {
     const { url, sdkVersion, releaseChannel } = args;
     manifest = await getManifestAsync(url, {
       'Exponent-SDK-Version': sdkVersion,
@@ -212,12 +215,11 @@ async function configureAndCopyArchiveAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await IosNSBundle.configureAsync(context);
   if (output) {
-    // TODO: un-hard-code ExpoKitApp.app
     const archiveName = context.config.slug.replace(/[^0-9a-z_\-]/gi, '_');
     const appReleasePath = path.resolve(context.data.archivePath, '..');
     if (type === 'simulator') {
       await spawnAsync(
-        `mv ExpoKitApp.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+        `mv ${DEFAULT_EXPOKIT_WORKSPACE_NAME}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
         null,
         {
           stdoutOnly: true,
@@ -228,7 +230,7 @@ async function configureAndCopyArchiveAsync(args) {
         }
       );
     } else if (type === 'archive') {
-      await spawnAsync('/bin/mv', [`ExpoKitApp.xcarchive`, output], {
+      await spawnAsync('/bin/mv', [`${DEFAULT_EXPOKIT_WORKSPACE_NAME}.xcarchive`, output], {
         pipeToLogger: true,
         cwd: `${context.data.archivePath}/../../../..`,
         loggerFields: { buildPhase: 'renaming archive' },
@@ -256,6 +258,10 @@ async function _createTurtleWorkspaceAsync(context, args) {
 /**
  * External-facing version can be used to create a turtle workspace without building it.
  * Probably only useful for local testing.
+ * 
+ * @param workspacePath (optional) provide some other path to create the workspace besides the default
+ * @param url (optional, with sdkVersion) url to an expo manifest, if you want the workspace to be configured automatically
+ * @param sdkVersion (optional, with url) sdkVersion to an expo manifest, if you want the workspace to be configured automatically
  */
 async function createTurtleWorkspaceAsync(args) {
   args = _validateCLIArgs(args);
@@ -265,7 +271,12 @@ async function createTurtleWorkspaceAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await _createTurtleWorkspaceAsync(context, args);
   logger.info(`Created turtle workspace at ${context.build.ios.workspaceSourcePath}. You can open and run this in Xcode.`);
-  logger.info(`The minimum configuration to get something running is to specify a manifest url in 'EXShell.plist' (for Release builds) or 'EXBuildConstants.plist' (for Debug builds).`);
+  if (context.config) {
+    await IosNSBundle.configureAsync(context);
+    logger.info(`The turtle workspace was configured for the url ${args.url}. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`);
+  } else {
+    logger.info(`You can specify --url <manifestUrl> --sdkVersion <version> to configure this workspace as a particular Expo app.\n\nBecause those arguments were omitted, the workspace has not been configured. It will compile but not run. The minimum configuration to get something running is to specify a manifest url in 'EXShell.plist' (for Release builds) or 'EXBuildConstants.plist' (for Debug builds).`);
+  }
 }
 
 /**
