@@ -18,18 +18,18 @@ export async function ensureCertificateValid({ certPath, certPassword, teamID })
   return fingerprint;
 }
 
-function genCertFingerprint(p12Buffer, password) {
+function genCertFingerprint(p12Buffer, passwordRaw) {
   if (Buffer.isBuffer(p12Buffer)) {
     p12Buffer = p12Buffer.toString('base64');
   } else if (typeof p12Buffer !== 'string') {
     throw new Error('genCertFingerprint only takes strings and buffers.');
   }
 
+  const password = String(passwordRaw || '');
   const certBagType = forge.pki.oids.certBag;
-
   const p12Der = forge.util.decode64(p12Buffer);
   const p12Asn1 = forge.asn1.fromDer(p12Der);
-  const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password || '');
+  const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
   const certData = _.get(p12.getBags({ bagType: certBagType }), [certBagType, 0, 'cert']);
   if (!certData) {
     throw new Error("genCertFingerprint: couldn't find cert bag");
