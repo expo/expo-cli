@@ -1,4 +1,5 @@
 import bunyan from '@expo/bunyan';
+import _ from 'lodash';
 
 const PRINT_JSON_LOGS = process.env.JSON_LOGS === '1';
 const LOGGER_NAME = 'xdl-detach';
@@ -21,9 +22,17 @@ export function withFields(logger, extraFields) {
   }, {});
 }
 
-export function pipeOutputToLogger({ stdout, stderr } = {}, extraFields = {}, stdoutOnly = false) {
+export function pipeOutputToLogger(
+  { stdout, stderr } = {},
+  extraFields = {},
+  { stdoutOnly = false, dontShowStdout = false } = {}
+) {
   if (stdout) {
-    stdout.on('data', line => logMultiline(line, { ...extraFields, source: 'stdout' }));
+    const stdoutExtraFields = { ...extraFields };
+    if (dontShowStdout) {
+      stdoutExtraFields.dontShowStdout = true;
+    }
+    stdout.on('data', line => logMultiline(line, { ...stdoutExtraFields, source: 'stdout' }));
   }
   if (stderr) {
     const source = stdoutOnly ? 'stdout' : 'stderr';

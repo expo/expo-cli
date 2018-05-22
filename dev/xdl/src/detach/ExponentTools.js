@@ -101,13 +101,18 @@ async function spawnAsyncThrowError(...args) {
     });
   } else {
     const options = args[2];
-    if (options.pipeToLogger) {
+    const { pipeToLogger } = options;
+    if (pipeToLogger) {
       options.stdio = 'pipe';
       options.cwd = options.cwd || process.cwd();
     }
     const promise = spawnAsyncQuiet(...args);
-    if (options.pipeToLogger && promise.child) {
-      pipeOutputToLogger(promise.child, options.loggerFields, options.stdoutOnly);
+    if (pipeToLogger && promise.child) {
+      const streamsKeys = _.isObject(pipeToLogger)
+        ? _.keys(_.pickBy(pipeToLogger, _.identity))
+        : ['stdout', 'stderr'];
+      const streamsToLogs = _.pick(promise.child, streamsKeys);
+      pipeOutputToLogger(streamsToLogs, options.loggerFields, options);
     }
     return promise;
   }
