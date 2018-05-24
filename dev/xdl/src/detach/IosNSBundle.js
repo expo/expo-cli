@@ -9,7 +9,6 @@ import rimraf from 'rimraf';
 import {
   getManifestAsync,
   saveUrlToPathAsync,
-  manifestUsesSplashApi,
   parseSdkMajorVersion,
 } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
@@ -400,11 +399,6 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
     if (config.updates && config.updates.hasOwnProperty('enabled')) {
       // enable/disable code push if the developer provided specific behavior
       shellPlist.areRemoteUpdatesEnabled = config.updates.enabled;
-    }
-    if (!manifestUsesSplashApi(config, 'ios')) {
-      // for people still using the old loading api, hide the native splash screen.
-      // we can remove this code eventually.
-      shellPlist.isSplashScreenDisabled = true;
     }
 
     logger.info('Using standalone config:', shellPlist);
