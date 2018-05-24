@@ -380,7 +380,6 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
   const config = context.config;
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXShell', shellPlist => {
-    shellPlist.isShell = true;
     shellPlist.manifestUrl = context.published.url;
     shellPlist.releaseChannel = context.published.releaseChannel;
     if (context.data.testEnvironment) {
@@ -408,7 +407,7 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
       shellPlist.isSplashScreenDisabled = true;
     }
 
-    logger.info('Using shell config:', shellPlist);
+    logger.info('Using standalone config:', shellPlist);
     return shellPlist;
   });
 }
