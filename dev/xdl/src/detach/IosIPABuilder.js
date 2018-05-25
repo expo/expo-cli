@@ -31,13 +31,20 @@ export default function createIPABuilder(buildParams) {
 
     await copyProvisioningProfileToHomedir(provisioningProfilePath, appUUID);
     logger.info('provisioning profile copied to home directory');
-
     const plistData = await readCMSMessage(provisioningProfilePath);
     logger.info('done retrieving provisioning profile data');
 
     logger.info('checking if teamID is present in keychain and that certificate is valid...');
     const codeSignIdentity = await utils.ensureCertificateValid(buildParams);
     logger.info('ensured certificate is valid');
+
+    logger.info('validating provisioning profile...');
+    utils.validateProvisioningProfile(plistData, {
+      distCertFingerprint: codeSignIdentity,
+      teamID,
+      bundleIdentifier,
+    });
+    logger.info('provisioning profile is valid');
 
     logger.info('writing export-options.plist file...');
     const exportMethod = utils.resolveExportMethod(plistData);

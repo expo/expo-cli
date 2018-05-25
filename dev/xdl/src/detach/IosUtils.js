@@ -4,12 +4,13 @@ import fs from 'fs-extra';
 import path from 'path';
 import glob from 'glob-promise';
 import plist from 'plist';
+import crypto from 'crypto';
 
 import { spawnAsyncThrowError } from './ExponentTools';
 
 export async function ensureCertificateValid({ certPath, certPassword, teamID }) {
   const certData = await fs.readFile(certPath);
-  const fingerprint = genCertFingerprint(certData, certPassword);
+  const fingerprint = genP12CertFingerprint(certData, certPassword);
   const identities = await findIdentitiesByTeamID(teamID);
   const isValid = identities.indexOf(fingerprint) !== -1;
   if (!isValid) {
@@ -18,11 +19,11 @@ export async function ensureCertificateValid({ certPath, certPassword, teamID })
   return fingerprint;
 }
 
-function genCertFingerprint(p12Buffer, passwordRaw) {
+function genP12CertFingerprint(p12Buffer, passwordRaw) {
   if (Buffer.isBuffer(p12Buffer)) {
     p12Buffer = p12Buffer.toString('base64');
   } else if (typeof p12Buffer !== 'string') {
-    throw new Error('genCertFingerprint only takes strings and buffers.');
+    throw new Error('genP12CertFingerprint only takes strings and buffers.');
   }
 
   const password = String(passwordRaw || '');
@@ -32,7 +33,7 @@ function genCertFingerprint(p12Buffer, passwordRaw) {
   const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
   const certData = _.get(p12.getBags({ bagType: certBagType }), [certBagType, 0, 'cert']);
   if (!certData) {
-    throw new Error("genCertFingerprint: couldn't find cert bag");
+    throw new Error("genP12CertFingerprint: couldn't find cert bag");
   }
   const certAsn1 = forge.pki.certificateToAsn1(certData);
   const certDer = forge.asn1.toDer(certAsn1).getBytes();
@@ -53,6 +54,42 @@ async function findIdentitiesByTeamID(teamID) {
     }
   );
   return output.join('');
+}
+
+export function validateProvisioningProfile(plistData, params) {
+  ensureDeveloperCertificateIsValid(plistData, params.distCertFingerprint);
+  ensureBundleIdentifierIsValid(plistData, params);
+}
+
+function ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
+  const devCertBase64 = plistData.DeveloperCertificates[0];
+  const devCertFingerprint = genDerCertFingerprint(devCertBase64);
+  if (devCertFingerprint !== distCertFingerprint) {
+    throw new Error(
+      'validateProvisioningProfile: provisioning profile is not associated with uploaded distribution certificate'
+    );
+  }
+}
+
+function genDerCertFingerprint(certBase64) {
+  const certBuffer = Buffer.from(certBase64, 'base64');
+  return crypto
+    .createHash('sha1')
+    .update(certBuffer)
+    .digest('hex')
+    .toUpperCase();
+}
+
+function ensureBundleIdentifierIsValid(plistData, { bundleIdentifier, teamID }) {
+  const expectedApplicationIdentifier = `${teamID}.${bundleIdentifier}`;
+  const actualApplicationIdentifier = plistData.Entitlements['application-identifier'];
+
+  if (expectedApplicationIdentifier !== actualApplicationIdentifier) {
+    const actualBundleIdentifier = /\.(.+)/.exec(actualApplicationIdentifier)[1];
+    throw new Error(
+      `validateProvisioningProfile: wrong bundleIdentifier found in provisioning profile; expected: ${bundleIdentifier}, found: ${actualBundleIdentifier}`
+    );
+  }
 }
 
 export async function writeExportOptionsPlistFile(plistPath, data) {
