@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [54.0.1] - 2018-05-28
+
+### Changed
+
+* Show a better error message for Apple ID privacy statement errors in `exp build:ios`.
+
 ## [54.0.0] - 2018-05-14
 
 ### Added
