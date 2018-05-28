@@ -1519,18 +1519,6 @@ export async function startTunnelsAsync(projectRoot: string) {
   let packageShortName = path.parse(projectRoot).base;
   let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
 
-  ngrok.addListener('statuschange', status => {
-    if (status === 'reconnecting') {
-      ProjectUtils.logError(
-        projectRoot,
-        'expo',
-        'We noticed your tunnel is having issues. This may be due to intermittent problems with our tunnel provider. If you have trouble connecting to your app, try to Restart the project, or switch Host to LAN.'
-      );
-    } else if (status === 'online') {
-      ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
-    }
-  });
-
   try {
     let startedTunnelsSuccessfully = false;
 
@@ -1592,6 +1580,28 @@ export async function startTunnelsAsync(projectRoot: string) {
         });
 
         startedTunnelsSuccessfully = true;
+
+        ProjectUtils.logWithLevel(
+          projectRoot,
+          'info',
+          {
+            tag: 'expo',
+            _expoEventType: 'TUNNEL_READY',
+          },
+          'Tunnel ready.'
+        );
+
+        ngrok.addListener('statuschange', status => {
+          if (status === 'reconnecting') {
+            ProjectUtils.logError(
+              projectRoot,
+              'expo',
+              'We noticed your tunnel is having issues. This may be due to intermittent problems with our tunnel provider. If you have trouble connecting to your app, try to Restart the project, or switch Host to LAN.'
+            );
+          } else if (status === 'online') {
+            ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
+          }
+        });
       })(),
     ]);
   } catch (e) {

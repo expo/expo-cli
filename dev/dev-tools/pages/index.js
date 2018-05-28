@@ -193,7 +193,12 @@ class IndexPageContents extends React.Component {
 
   updateCurrentData(result) {
     if (result.data.messages.type === 'ADDED') {
-      if (result.data.messages.node.__typename === 'MetroInitializeStarted') {
+      const hostType = this.props.data.currentProject.settings.hostType;
+      const typename = result.data.messages.node.__typename;
+      if (
+        (hostType === 'tunnel' && typename === 'TunnelReady') ||
+        (hostType !== 'tunnel' && typename === 'MetroInitializeStarted')
+      ) {
         this.pollingObservable.refetch();
       }
       this.addNewMessage(result.data.messages.node);

@@ -64,12 +64,12 @@ export const sectionClear = props => {
 
 export const sectionCount = ({ count }, props) => {
   const { projectManagerLayout: layout, currentProject } = props.data;
+  const sources = currentProject.sources.filter(source => {
+    return source.__typename !== 'Issues' || source.messages.count > 0;
+  });
   let newSources;
   if (count > layout.sources.length) {
-    newSources = uniqBy([...layout.sources, ...currentProject.sources], source => source.id).slice(
-      0,
-      count
-    );
+    newSources = uniqBy([...layout.sources, ...sources], source => source.id).slice(0, count);
   } else {
     newSources = layout.sources.slice(0, count);
   }
@@ -147,26 +147,54 @@ function updateLayout(client, id, input) {
   });
 }
 
-export const openSimulator = (platform, props) => {
+export const openSimulator = async (platform, props) => {
+  const id = new Date().getTime();
   props.dispatch({
     type: 'ADD_TOAST',
     toast: {
-      id: new Date().getTime(),
+      id,
       name: 'info',
       text: `Attempting to open a simulator...`,
     },
   });
 
-  return props.client.mutate({
-    mutation: gql`
-      mutation OpenSimulator($platform: Platform!) {
-        openSimulator(platform: $platform) {
-          url
+  let hasError = false;
+  // TODO(freiksenet): Add generic error handling
+  try {
+    const result = await props.client.mutate({
+      mutation: gql`
+        mutation OpenSimulator($platform: Platform!) {
+          openSimulator(platform: $platform) {
+            __typename
+          }
         }
-      }
-    `,
-    variables: { platform },
-  });
+      `,
+      variables: { platform },
+    });
+    hasError = result.data.openSimulator.__typename === 'OpenSimulatorError';
+  } catch (e) {
+    hasError = true;
+  }
+
+  if (!hasError) {
+    props.dispatch({
+      type: 'ADD_TOAST',
+      toast: {
+        id,
+        name: 'success',
+        text: `Simulator ready`,
+      },
+    });
+  } else {
+    props.dispatch({
+      type: 'ADD_TOAST',
+      toast: {
+        id,
+        name: 'error',
+        text: `Error opening simulator. Check Metro logs for details.`,
+      },
+    });
+  }
 };
 
 export const setProjectSettings = (settings, props) => {

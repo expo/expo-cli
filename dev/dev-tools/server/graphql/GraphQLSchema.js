@@ -84,8 +84,14 @@ const typeDefs = graphql`
     url: String!
   }
 
-  type OpenProjectResult {
+  union OpenSimulatorResult = OpenSimulatorSuccess | OpenSimulatorError
+
+  type OpenSimulatorSuccess {
     url: String!
+  }
+
+  type OpenSimulatorError {
+    error: String!
   }
 
   type PublishProjectResult {
@@ -192,6 +198,14 @@ const typeDefs = graphql`
     duration: Int!
   }
 
+  type TunnelReady implements Message {
+    id: ID!
+    msg: String!
+    time: String!
+    source: Process!
+    level: LogLevel!
+  }
+
   type PageInfo {
     lastCursor: String
   }
@@ -248,7 +262,7 @@ const typeDefs = graphql`
 
   type Mutation {
     # Opens the app in an iOS simulator or and Android device/emulator.
-    openSimulator(platform: Platform!): OpenProjectResult
+    openSimulator(platform: Platform!): OpenSimulatorResult
     # Publishes the current project to expo.io
     publishProject(releaseChannel: String): PublishProjectResult
     # Sends the project URL by email or SMS.
@@ -280,6 +294,15 @@ const USER_SETTINGS_ID = 'UserSettings';
 const PROJECT_MANAGER_LAYOUT_ID = 'ProjectManagerLayout';
 
 const resolvers = {
+  OpenSimulatorResult: {
+    __resolveType(result) {
+      if (result.success) {
+        return 'OpenSimulatorSuccess';
+      } else {
+        return 'OpenSimulatorError';
+      }
+    },
+  },
   Message: {
     __resolveType(parent) {
       if (parent.tag === 'device') {
@@ -302,6 +325,8 @@ const resolvers = {
             return 'BuildError';
           }
         }
+      } else if (parent._expoEventType === 'TUNNEL_READY') {
+        return 'TunnelReady';
       }
       return 'LogMessage';
     },
@@ -340,6 +365,12 @@ const resolvers = {
     },
   },
   BuildError: {
+    ...messageResolvers,
+    source(parent, args, context) {
+      return context.getProcessSource();
+    },
+  },
+  TunnelReady: {
     ...messageResolvers,
     source(parent, args, context) {
       return context.getProcessSource();
@@ -453,12 +484,20 @@ const resolvers = {
   Mutation: {
     async openSimulator(parent, { platform }, context) {
       const currentProject = context.getCurrentProject();
-      let result =
-        platform === 'ANDROID'
-          ? await Android.openProjectAsync(currentProject.projectDir)
-          : await Simulator.openProjectAsync(currentProject.projectDir);
-      if (!result.success) throw new Error(result.error);
-      else return { url: result.url };
+      let result;
+      if (platform === 'ANDROID') {
+        result = await Android.openProjectAsync(currentProject.projectDir);
+      } else {
+        result = await Simulator.openProjectAsync(currentProject.projectDir);
+      }
+      if (result.success) {
+        return result;
+      } else {
+        return {
+          success: false,
+          error: result.error.toString(),
+        };
+      }
     },
     publishProject(parent, { releaseChannel }, context) {
       const currentProject = context.getCurrentProject();
