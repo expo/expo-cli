@@ -1,10 +1,9 @@
 // Getting an undefined anywhere here probably means a ruby script is throwing an exception
 import child_process from 'child_process';
 import slash from 'slash';
-import spawnAsync from '@expo/spawn-async';
-import { basename } from 'path';
 import fs from 'fs-extra';
 import { release, userInfo } from 'os';
+import _ from 'lodash';
 
 import prompt from '../../prompt';
 import log from '../../log';
@@ -124,6 +123,8 @@ export async function validateCredentialsProduceTeamId(creds) {
   );
   if (getTeamsAttempt.result === 'failure') {
     const { reason, rawDump } = getTeamsAttempt;
+    // TODO: remove this after upgrading fastlane in @expo/traveling-fastlane-*
+    findCommonFastlaneErrors(rawDump);
     throw new Error(`Reason:${reason}, raw:${JSON.stringify(rawDump)}`);
   }
   const { teams } = getTeamsAttempt;
@@ -156,6 +157,25 @@ export async function validateCredentialsProduceTeamId(creds) {
     };
   }
 }
+
+// TODO: remove this after upgrading fastlane in @expo/traveling-fastlane-*
+const findCommonFastlaneErrors = message => {
+  if (message) {
+    const lines = message.split('\n');
+    const firstLineRaw = lines[0];
+    // converting ruby hash to json
+    const maybeJSON = firstLineRaw.replace(/=>/g, ':');
+    const maybeObject = _.attempt(JSON.parse, maybeJSON);
+    if (
+      !_.isError(maybeObject) &&
+      _.includes(['sa', 'hsa', 'non-sa', 'hsa2'], maybeObject.authType)
+    ) {
+      throw new Error(
+        "Need to acknowledge to Apple's Apple ID and Privacy statement. Please manually log into https://appleid.apple.com (or https://itunesconnect.apple.com) to acknowledge the statement."
+      );
+    }
+  }
+};
 
 const windowsToWSLPath = p => {
   const noSlashes = slash(p);
