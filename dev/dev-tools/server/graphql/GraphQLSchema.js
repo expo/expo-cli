@@ -491,12 +491,8 @@ const resolvers = {
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
       };
     },
-    async user() {
-      if (Config.offline) {
-        return null;
-      } else {
-        return User.getCurrentUserAsync();
-      }
+    user() {
+      return User.getCurrentUserAsync();
     },
   },
   Mutation: {
