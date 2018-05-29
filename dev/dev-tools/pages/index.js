@@ -68,6 +68,9 @@ const query = gql`
       isAndroidSimulatorSupported
       isIosSimulatorSupported
     }
+    user {
+      username
+    }
   }
 `;
 
@@ -268,7 +271,7 @@ class IndexPageContents extends React.Component {
 
   render() {
     const {
-      data: { currentProject, projectManagerLayout, processInfo },
+      data: { currentProject, projectManagerLayout, processInfo, user },
       loading,
       error,
     } = this.props;
@@ -291,6 +294,7 @@ class IndexPageContents extends React.Component {
           loading={loading}
           error={error}
           project={currentProject}
+          user={user}
           processInfo={processInfo}
           renderableSections={sections}
           sections={sources}

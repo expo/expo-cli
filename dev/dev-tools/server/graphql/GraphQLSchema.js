@@ -13,6 +13,7 @@ import {
   ProjectUtils,
   UrlUtils,
   UserSettings,
+  User,
 } from 'xdl';
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
@@ -29,6 +30,14 @@ const typeDefs = graphql`
     lan
     localhost
     tunnel
+  }
+
+  type User {
+    username: String!
+    nickname: String!
+    userId: String!
+    picture: String!
+    email: String!
   }
 
   type Project {
@@ -258,6 +267,8 @@ const typeDefs = graphql`
     projectManagerLayout: ProjectManagerLayout
     # Information about the current process
     processInfo: ProcessInfo
+    # Current logged-in user
+    user: User
   }
 
   type Mutation {
@@ -479,6 +490,13 @@ const resolvers = {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
       };
+    },
+    async user() {
+      if (Config.offline) {
+        return null;
+      } else {
+        return User.getCurrentUserAsync();
+      }
     },
   },
   Mutation: {

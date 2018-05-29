@@ -252,7 +252,7 @@ export default class ProjectManagerPublishingSection extends React.Component {
         <p className={STYLES_PARAGRAPH}>
           Once you publish your project, you will be able to view it at&nbsp;
           <span className={STYLES_EMPHASIS}>
-            https://expo.io/@username/{this.state.config.slug}
+            https://expo.io/@{this.props.user.username}/{this.state.config.slug}
           </span>.
         </p>
         <div className={STYLES_ACTIONS}>
