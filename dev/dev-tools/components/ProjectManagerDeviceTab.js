@@ -32,18 +32,10 @@ const STYLES_TAB_SECTION_CONTAINER_TITLE = css`
   align-items: center;
 `;
 
-const STYLES_TAB_SECTION_CONTAINER_TITLE_IS_WARNING = css`
-  color: ${Constants.colors.red};
-`;
-
 const STYLES_TAB_SECTION_CONTAINER_DESCRIPTION = css`
   font-family: ${Constants.fontFamilies.demi};
   font-size: 14px;
   margin-bottom: 8px;
-`;
-
-const STYLES_TAB_SECTION_CONTAINER_DESCRIPTION_IS_WARNING = css`
-  color: ${Constants.colors.red};
 `;
 
 const STYLES_INDICATOR = css`
@@ -53,32 +45,27 @@ const STYLES_INDICATOR = css`
   font-size: 10px;
 `;
 
+function colorFromIssueLevel(messages) {
+  if (!messages || !messages.length) {
+    return null;
+  }
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i].level === 'ERROR') {
+      return Constants.logLevel.ERROR;
+    }
+  }
+  return Constants.logLevel.WARN;
+}
+
 // TODO(jim): Change icon based on device.
 class ProjectManagerDeviceTab extends React.Component {
   render() {
-    const { name, messages, id, __typename } = this.props.data;
-
-    let type;
-    switch (__typename) {
-      case 'Issues': {
-        type = 'issues';
-        break;
-      }
-      case 'Process': {
-        type = 'process';
-        break;
-      }
-      case 'Device': {
-        type = 'device';
-        break;
-      }
-    }
-
-    const deviceLogCount = messages.count;
-    const deviceLastTimestamp =
-      messages && messages.nodes.length
-        ? `- ${Strings.formatTime(messages.nodes[messages.nodes.length - 1].time)}`
-        : '';
+    const { source } = this.props;
+    const { messages, __typename: type } = source;
+    const deviceLastTimestamp = messages.nodes.length
+      ? `- ${Strings.formatTime(messages.nodes[messages.nodes.length - 1].time)}`
+      : '';
+    const colorStyle = type === 'Issues' ? css({ color: colorFromIssueLevel(messages.nodes) }) : '';
 
     return this.props.connectDragSource(
       <div className={STYLES_TAB_SECTION} onClick={this.props.onClick}>
@@ -86,15 +73,15 @@ class ProjectManagerDeviceTab extends React.Component {
           <div
             className={`
             ${STYLES_TAB_SECTION_CONTAINER_DESCRIPTION}
-            ${type === 'issues' ? STYLES_TAB_SECTION_CONTAINER_DESCRIPTION_IS_WARNING : ''}`}>
-            {name}
+            ${colorStyle}`}>
+            {source.name}
           </div>
           <div
             className={`
             ${STYLES_TAB_SECTION_CONTAINER_TITLE}
-            ${type === 'issues' ? STYLES_TAB_SECTION_CONTAINER_TITLE_IS_WARNING : ''}`}>
+            ${colorStyle}`}>
             <LoggerIcon type={type} style={{ marginRight: '8px', marginBottom: '2px' }} />
-            {`${type} (${deviceLogCount}) ${deviceLastTimestamp}`}
+            {`${type} (${messages.count}) ${deviceLastTimestamp}`}
           </div>
         </div>
       </div>
@@ -107,7 +94,7 @@ const source = {
     props.onUpdateState({ isPublishing: false });
 
     return {
-      id: props.data.id,
+      id: props.source.id,
     };
   },
 };

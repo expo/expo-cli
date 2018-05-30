@@ -30,7 +30,7 @@ Object {
               },
             ],
           },
-          "name": "Critical Issues",
+          "name": "Issues",
         },
         Object {
           "__typename": "Process",

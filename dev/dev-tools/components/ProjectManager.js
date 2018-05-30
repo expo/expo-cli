@@ -95,7 +95,7 @@ class ProjectManager extends React.Component {
               onClick={() => this.props.onDeviceSelect(source)}
               onUpdateState={this.props.onUpdateState}
               key={source.id}
-              data={source}
+              source={source}
             />
           );
         })}

@@ -5,7 +5,7 @@ import eventEmitterToAsyncIterator from '../asynciterators/eventEmitterToAsyncIt
 const ISSUES_SOURCE = {
   __typename: 'Issues',
   id: 'Source:issues',
-  name: 'Critical Issues',
+  name: 'Issues',
 };
 const PROCESS_SOURCE = {
   __typename: 'Process',

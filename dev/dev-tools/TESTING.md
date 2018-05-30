@@ -33,12 +33,12 @@
 * ✅ Dragging a log panel to another log panel should work.
 * ✅ Selecting different numbers of log panels (upper right corner) should work.
 
-## Critical issues
+## Issues
 
 * Add an error to your app, e.g. incorrect React Native version or an invalid field in `app.json`.
-* ✅ "Critical Issues" log source should appear as the first item in the left sidebar.
-* ✅ Should be able to open critical issues in a log panel.
-* ✅ "Critical Issues" should disappear when there's no more errors.
+* ✅ "Issues" log source should appear as the first item in the left sidebar.
+* ✅ Should be able to open Issues in a log panel.
+* ✅ "Issues" should disappear when there's no more errors.
 
 ## Publishing
 

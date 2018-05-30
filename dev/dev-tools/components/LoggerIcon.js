@@ -2,19 +2,15 @@ import * as React from 'react';
 import * as SVG from 'app/common/svg';
 
 export default props => {
-  if (props.type === 'process') {
+  if (props.type === 'Process') {
     return <SVG.Package size="12px" style={props.style} />;
   }
 
-  if (props.type === 'device') {
+  if (props.type === 'Device') {
     return <SVG.Tablet size="12px" style={props.style} />;
   }
 
-  if (props.type === 'simulator') {
-    return <SVG.HardDrive size="12px" style={props.style} />;
-  }
-
-  if (props.type === 'issues') {
+  if (props.type === 'Issues') {
     return <SVG.Warning size="12px" style={props.style} />;
   }
 
