@@ -282,7 +282,7 @@ class IndexPageContents extends React.Component {
       .map(({ id }) => currentProject.sources.find(source => source.id === id))
       .filter(section => section);
     if (sections.length === 0) {
-      sections = [sources[0]];
+      sections = [sources.find(source => source.__typename !== 'Issues')];
     }
     const count = sections.length;
     const selectedId = projectManagerLayout.selected && projectManagerLayout.selected.id;
