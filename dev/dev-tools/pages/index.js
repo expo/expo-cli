@@ -4,7 +4,6 @@ import { ApolloProvider, Query } from 'react-apollo';
 
 import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
-import * as Data from 'app/common/data';
 import * as State from 'app/common/state';
 import createApolloClient from 'app/common/createApolloClient';
 import { initStore } from 'app/common/store';
