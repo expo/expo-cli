@@ -43,10 +43,10 @@ class ProjectManagerWindowHeader extends React.Component {
     return this.props.connectDragSource(
       <div
         className={`
-          ${STYLES_HEADER} 
+          ${STYLES_HEADER}
           ${this.props.isSelected ? STYLES_HEADER_SELECTED : STYLES_HEADER_DEFAULT}
         `}>
-        <div className={STYLES_HEADER_CONTENT}>{this.props.children}'s logs</div>
+        <div className={STYLES_HEADER_CONTENT}>{this.props.children}</div>
       </div>
     );
   }
