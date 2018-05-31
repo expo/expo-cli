@@ -25,22 +25,59 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
     getMessageIterator(cursor) {
       return messageBuffer.getIterator(cursor);
     },
-    getMessageConnection(filter?) {
+    getMessageEdges(source) {
       if (!flattenedMessages) {
         flattenedMessages = flattenMessagesFromBuffer(messageBuffer);
       }
+
       let items;
-      if (filter) {
-        items = flattenedMessages.filter(({ cursor, item }) => filter(item.node));
-      } else {
+      if (source) {
+        let filter;
+        switch (source.__typename) {
+          case 'Issues': {
+            items = issues.getIssueList();
+            break;
+          }
+          case 'Process': {
+            filter = message =>
+              message.tag === 'metro' || message.tag === 'expo' || message.type === 'global';
+            break;
+          }
+          case 'Device': {
+            filter = message => message.tag === 'device' && message.deviceId === source.id;
+            break;
+          }
+        }
+        if (filter) {
+          items = flattenedMessages.filter(({ item: { node } }) => filter(node));
+        }
+      }
+
+      if (!items) {
         items = [...flattenedMessages];
       }
+
+      return items.map(({ item }) => item);
+    },
+    getMessageConnection(source) {
+      const edges = this.getMessageEdges(source);
+
+      let unreadCount = 0;
+      let lastReadCursor = null;
+      if (source) {
+        ({ unreadCount, lastReadCursor } = extractReadInfo(layout.get(), source.id, edges));
+      }
+
       return {
-        count: items.length,
-        nodes: items.map(({ item }) => item.node),
+        count: edges.length,
+        unreadCount,
+        edges,
+        // on-demand mapping
+        nodes: () => edges.map(({ node }) => node),
         pageInfo: {
           hasNextPage: false,
-          lastCursor: items.length > 0 ? items[items.length - 1].cursor : null,
+          lastReadCursor,
+          lastCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
         },
       };
     },
@@ -49,6 +86,10 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
     },
     getProcessSource() {
       return PROCESS_SOURCE;
+    },
+    getSourceById(id) {
+      const allSources = this.getSources();
+      return allSources.find(source => source.id === id);
     },
     getSources() {
       const chunks = messageBuffer.all().filter(({ node }) => node.tag === 'device');
@@ -63,17 +104,22 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
       return layout.get();
     },
     setProjectManagerLayout(newLayout) {
+      newLayout.sources.forEach(sourceId => {
+        this.setLastRead(sourceId);
+      });
       layout.set(newLayout);
     },
-    getIssues() {
-      const nodes = issues.getIssueList();
-      return {
-        count: nodes.length,
-        nodes,
-        pageInfo: {
-          lastCursor: null,
-        },
-      };
+    setLastRead(sourceId, lastReadCursor) {
+      if (!lastReadCursor) {
+        const source = this.getSourceById(sourceId);
+        const edges = this.getMessageEdges(source);
+        if (edges.length === 0) {
+          return;
+        } else {
+          lastReadCursor = edges[edges.length - 1].cursor;
+        }
+      }
+      layout.setLastRead(sourceId, lastReadCursor.toString());
     },
     getIssueIterator() {
       const iterator = eventEmitterToAsyncIterator(issues, ['ADDED', 'UPDATED', 'DELETED']);
@@ -102,7 +148,13 @@ function flattenMessagesFromBuffer(buffer) {
   const ids = new Set();
   const flattenedItems = [];
   for (let i = items.length - 1; i >= 0; i--) {
-    const element = items[i];
+    const item = items[i];
+    const element = {
+      item: {
+        cursor: item.cursor,
+        node: item.item.node,
+      },
+    };
     const id = element.item.node.id;
     if (!ids.has(id)) {
       ids.add(id);
@@ -110,4 +162,20 @@ function flattenMessagesFromBuffer(buffer) {
     }
   }
   return flattenedItems;
+}
+
+function extractReadInfo(layout, sourceId, items) {
+  let lastReadCursor = layout.sourceLastReads[sourceId];
+  let unreadCount;
+  if (!lastReadCursor) {
+    lastReadCursor = items[0] && items[0].cursor;
+    unreadCount = items.length;
+  } else {
+    const index = items.findIndex(({ cursor }) => cursor.toString() === lastReadCursor);
+    unreadCount = items.length - index - 1;
+  }
+  return {
+    lastReadCursor,
+    unreadCount,
+  };
 }

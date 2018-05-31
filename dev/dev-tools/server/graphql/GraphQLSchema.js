@@ -216,11 +216,13 @@ const typeDefs = graphql`
   }
 
   type PageInfo {
+    lastReadCursor: String
     lastCursor: String
   }
 
   type MessageConnection {
     count: Int!
+    unreadCount: Int!
     nodes: [Message!]
     pageInfo: PageInfo
   }
@@ -233,6 +235,7 @@ const typeDefs = graphql`
 
   type MessageSubscriptionPayload {
     type: MessagePayloadType!
+    cursor: String
     node: Message!
   }
 
@@ -284,6 +287,8 @@ const typeDefs = graphql`
     setProjectConfig(input: ProjectConfigInput!): Project
     # Update the layout
     setProjectManagerLayout(input: ProjectManagerLayoutInput): ProjectManagerLayout
+    # Update a last read status for a source
+    updateLastRead(sourceId: ID!, lastReadCursor: String!): Source
   }
 
   type Subscription {
@@ -434,21 +439,17 @@ const resolvers = {
   },
   Issues: {
     messages(source, args, context) {
-      return context.getIssues();
+      return context.getMessageConnection(source);
     },
   },
   Process: {
     messages(source, args, context) {
-      return context.getMessageConnection(
-        message => message.tag === 'metro' || message.tag === 'expo'
-      );
+      return context.getMessageConnection(source);
     },
   },
   Device: {
     messages(source, args, context) {
-      return context.getMessageConnection(
-        message => message.tag === 'device' && message.deviceId === source.id
-      );
+      return context.getMessageConnection(source);
     },
   },
   ProjectManagerLayout: {
@@ -550,6 +551,15 @@ const resolvers = {
     setProjectManagerLayout(parent, { input }, context) {
       context.setProjectManagerLayout(input);
       return context.getProjectManagerLayout();
+    },
+    updateLastRead(parent, { sourceId, lastReadCursor }, context) {
+      const source = context.getSourceById(sourceId);
+      if (source) {
+        context.setLastRead(sourceId, lastReadCursor);
+        return source;
+      } else {
+        return null;
+      }
     },
   },
   Subscription: {

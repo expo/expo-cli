@@ -31,6 +31,11 @@ export default class Issues extends EventEmitter {
   }
 
   getIssueList() {
-    return Object.keys(this.issues).map(key => this.issues[key]);
+    return Object.keys(this.issues).map(key => ({
+      item: {
+        cursor: key,
+        node: this.issues[key],
+      },
+    }));
   }
 }

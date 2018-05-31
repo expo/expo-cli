@@ -55,13 +55,20 @@ function createLayout() {
   let layout = {
     selected: null,
     sources: null,
+    sourceLastReads: {},
   };
   return {
     get() {
       return layout;
     },
     set(newLayout) {
-      layout = newLayout;
+      layout = {
+        ...layout,
+        ...newLayout,
+      };
+    },
+    setLastRead(sourceId, lastReadCursor) {
+      layout.sourceLastReads[sourceId] = lastReadCursor;
     },
   };
 }

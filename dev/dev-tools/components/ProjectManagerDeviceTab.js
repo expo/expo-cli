@@ -9,19 +9,39 @@ import { DragSource } from 'react-dnd';
 
 import LoggerIcon from 'app/components/LoggerIcon';
 
-const STYLES_TAB_SECTION = css``;
-
-const STYLES_TAB_SECTION_CONTAINER = css`
+const STYLES_TAB_SECTION = css`
+  display: flex;
+  flex-direction: row;
   background: ${Constants.colors.white};
-  border-bottom: 1px solid ${Constants.colors.border};
   padding: 13px 16px 14px 16px;
-  position: relative;
-  transition: 200ms ease all;
-  cursor: move;
+  border-bottom: 1px solid ${Constants.colors.border};
+  align-items: center;
 
   :hover {
     background: ${Constants.colors.border};
   }
+
+  cursor: move;
+  transition: 200ms ease all;
+`;
+
+const STYLES_TAB_SECTION_CONTAINER = css`
+  flex: 1 1;
+  position: relative;
+`;
+
+const STYLES_UNREAD_COUNT = css`
+  flex: 0 0 20px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${Constants.colors.primaryAccent};
+  text-align: center;
+  color: ${Constants.colors.white};
+  width: 20px;
+  height: 20px;
+  border-radius: 20px;
 `;
 
 const STYLES_TAB_SECTION_CONTAINER_TITLE = css`
@@ -59,6 +79,15 @@ function colorFromIssueLevel(messages) {
 
 // TODO(jim): Change icon based on device.
 class ProjectManagerDeviceTab extends React.Component {
+  renderUnreadCount() {
+    const unreadCount = this.props.source.messages.unreadCount;
+    if (unreadCount && unreadCount > 0) {
+      return `(${unreadCount}) `;
+    } else {
+      return '';
+    }
+  }
+
   render() {
     const { source } = this.props;
     const { messages, __typename: type } = source;
@@ -81,7 +110,7 @@ class ProjectManagerDeviceTab extends React.Component {
             ${STYLES_TAB_SECTION_CONTAINER_TITLE}
             ${colorStyle}`}>
             <LoggerIcon type={type} style={{ marginRight: '8px', marginBottom: '2px' }} />
-            {`${type} (${messages.count}) ${deviceLastTimestamp}`}
+            {`${type} ${this.renderUnreadCount()}${deviceLastTimestamp}`}
           </div>
         </div>
       </div>

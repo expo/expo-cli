@@ -100,6 +100,9 @@ const PROJECT_MANAGER_LAYOUT_FRAGMENT = gql`
     }
     sources {
       id
+      messages {
+        unreadCount
+      }
     }
   }
 `;
@@ -141,7 +144,13 @@ function updateLayout(client, id, input) {
               id: input.selected,
             }
           : null,
-        sources: input.sources,
+        sources: input.sources.map(source => ({
+          ...source,
+          messages: {
+            __typename: 'MessageConnection',
+            unreadCount: 0,
+          },
+        })),
       },
     },
   });
@@ -330,4 +339,44 @@ export const publishProject = async (options, props) => {
       },
     });
   }
+};
+
+const UPDATE_LAST_READ = gql`
+  mutation UpdateLastread($sourceId: ID!, $lastReadCursor: String!) {
+    updateLastRead(sourceId: $sourceId, lastReadCursor: $lastReadCursor) {
+      __typename
+      id
+      messages {
+        unreadCount
+        pageInfo {
+          lastReadCursor
+        }
+      }
+    }
+  }
+`;
+
+export const updateLastRead = async ({ sourceId, sourceType, lastReadCursor }, props) => {
+  return props.client.mutate({
+    mutation: UPDATE_LAST_READ,
+    variables: {
+      sourceId,
+      lastReadCursor,
+    },
+    optimisticResponse: {
+      __typename: 'Mutation',
+      updateLastRead: {
+        id: sourceId,
+        __typename: sourceType,
+        messages: {
+          unreadCount: 0,
+          __typename: 'MessageConnection',
+          pageInfo: {
+            __typename: 'PageInfo',
+            lastReadCursor,
+          },
+        },
+      },
+    },
+  });
 };

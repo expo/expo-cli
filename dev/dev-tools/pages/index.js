@@ -33,12 +33,16 @@ const query = gql`
         name
         messages {
           count
+          unreadCount
           nodes {
             id
             __typename
             msg
             time
             level
+          }
+          pageInfo {
+            lastReadCursor
           }
         }
       }
@@ -114,6 +118,7 @@ const subscriptionQuery = gql`
   subscription MessageSubscription($after: String) {
     messages(after: $after) {
       type
+      cursor
       node {
         id
         __typename
@@ -135,12 +140,16 @@ const createSourceQuery = typename => gql`
     messages {
       __typename
       count
+      unreadCount
       nodes {
         id
         __typename
         msg
         time
         level
+      }
+      pageInfo {
+        lastReadCursor
       }
     }
   }
@@ -203,13 +212,13 @@ class IndexPageContents extends React.Component {
       ) {
         this.pollingObservable.refetch();
       }
-      this.addNewMessage(result.data.messages.node);
+      this.addNewMessage(result.data.messages);
     } else if (result.data.messages.type === 'DELETED') {
       this.removeMessage(result.data.messages.node);
     }
   }
 
-  addNewMessage(message) {
+  addNewMessage({ cursor, node: message }) {
     const typename = message.source.__typename;
     const fragment = createSourceQuery(typename);
     const id = message.source.id;
@@ -221,10 +230,27 @@ class IndexPageContents extends React.Component {
       this.props.refetch();
       return;
     }
+
+    let unreadCount = existingSource.messages.unreadCount;
+    let lastReadCursor = existingSource.messages.pageInfo.lastReadCursor;
+    const { currentProject, projectManagerLayout } = this.props.data;
+    const { sections } = getSections(currentProject, projectManagerLayout);
+    if (!document.hidden && sections.find(section => section.id === id)) {
+      lastReadCursor = cursor;
+      State.updateLastRead({ sourceId: id, sourceType: typename, lastReadCursor }, this.props);
+    } else {
+      unreadCount += 1;
+    }
+
     const newMessages = {
       __typename: 'MessageConnection',
+      unreadCount,
       count: existingSource.messages.count + 1,
       nodes: [...existingSource.messages.nodes, message],
+      pageInfo: {
+        __typename: 'PageInfo',
+        lastReadCursor,
+      },
     };
     this.props.client.writeFragment({
       id,
@@ -268,6 +294,34 @@ class IndexPageContents extends React.Component {
     });
   }
 
+  getTotalUnreadCount() {
+    const { currentProject } = this.props.data;
+    let count = 0;
+    currentProject.sources.forEach(source => {
+      count += source.messages.unreadCount;
+    });
+    return count;
+  }
+
+  updateTitleCount() {
+    let title = document.title;
+    if (title.startsWith('(')) {
+      title = title.slice(4);
+    }
+    const unreadCount = this.getTotalUnreadCount();
+    if (unreadCount > 0) {
+      title = `(${unreadCount}) ${title}`;
+    }
+
+    if (title !== document.title) {
+      document.title = title;
+    }
+  }
+
+  componentDidUpdate() {
+    this.updateTitleCount();
+  }
+
   render() {
     const {
       data: { currentProject, projectManagerLayout, processInfo, user },
@@ -275,15 +329,7 @@ class IndexPageContents extends React.Component {
       error,
     } = this.props;
 
-    const sources = currentProject.sources.filter(source => {
-      return source.__typename !== 'Issues' || source.messages.count > 0;
-    });
-    let sections = projectManagerLayout.sources
-      .map(({ id }) => currentProject.sources.find(source => source.id === id))
-      .filter(section => section);
-    if (sections.length === 0) {
-      sections = [sources.find(source => source.__typename !== 'Issues')];
-    }
+    const { sections, sources } = getSections(currentProject, projectManagerLayout);
     const count = sections.length;
     const selectedId = projectManagerLayout.selected && projectManagerLayout.selected.id;
 
@@ -320,6 +366,22 @@ class IndexPageContents extends React.Component {
       </Root>
     );
   }
+}
+
+function getSections(currentProject, projectManagerLayout) {
+  const sources = currentProject.sources.filter(source => {
+    return source.__typename !== 'Issues' || source.messages.count > 0;
+  });
+  let sections = projectManagerLayout.sources
+    .map(({ id }) => currentProject.sources.find(source => source.id === id))
+    .filter(section => section);
+  if (sections.length === 0) {
+    sections = [sources.find(source => source.__typename !== 'Issues')];
+  }
+  return {
+    sections,
+    sources,
+  };
 }
 
 export default class IndexPage extends React.Component {

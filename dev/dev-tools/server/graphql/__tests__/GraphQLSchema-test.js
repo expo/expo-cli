@@ -244,6 +244,7 @@ beforeEach(() => {
           return {
             selected: null,
             sources: null,
+            sourceLastReads: {},
           };
         },
       },

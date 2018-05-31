@@ -81,7 +81,10 @@ export default class AsyncIterableRingBuffer {
         iterableCursor = buffer.getNextCursor(iterableCursor);
         const value = await buffer.get(iterableCursor);
         return {
-          value,
+          value: {
+            ...value,
+            cursor: iterableCursor,
+          },
           done: false,
         };
       },
