@@ -6,11 +6,6 @@ import * as SVG from 'app/common/svg';
 
 import Loader from 'app/components/Loader';
 
-const wait = delay =>
-  new Promise(resolve => {
-    window.setTimeout(resolve, delay);
-  });
-
 const STYLES_CONTAINER = css`
   font-family: ${Constants.fontFamilies.regular};
   color: ${Constants.colors.foregroundAccent};
@@ -103,34 +98,12 @@ const STYLES_BUTTON_DISABLED = css`
 `;
 
 export default class NetworkGroupButton extends React.Component {
-  state = {
-    loading: false,
-  };
-
-  load = () => this.setState({ loading: true });
-  unload = () => this.setState({ loading: false });
-
-  _handleTunnelClick = async () => {
-    this.load();
-    await this.props.onHostTypeClick('tunnel');
-    await wait(1000);
-    this.unload();
-  };
-  _handleLANClick = async () => {
-    this.load();
-    await this.props.onHostTypeClick('lan');
-    await wait(1000);
-    this.unload();
-  };
-  _handleLocalhostClick = async () => {
-    this.load();
-    await this.props.onHostTypeClick('localhost');
-    await wait(1000);
-    this.unload();
-  };
+  _handleTunnelClick = () => this.props.onHostTypeClick('tunnel');
+  _handleLANClick = () => this.props.onHostTypeClick('lan');
+  _handleLocalhostClick = () => this.props.onHostTypeClick('localhost');
 
   render() {
-    if (this.state.loading) {
+    if (this.props.loading) {
       return (
         <div className={STYLES_CONTAINER}>
           <div className={STYLES_LOADER}>

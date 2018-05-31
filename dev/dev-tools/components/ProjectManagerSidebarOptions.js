@@ -119,6 +119,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             activeState={this.props.hostType}
             isOnline={this.props.isOnline}
             onHostTypeClick={this.props.onHostTypeClick}
+            loading={this.props.hostTypeLoading}
           />
 
           <div className={STYLES_URL_SECTION_BOTTOM}>
@@ -126,7 +127,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
               <SVG.Link size="12px" />
             </div>
             <div className={STYLES_URL_SECTION_BOTTOM_RIGHT}>
-              {!isDisabled ? this.props.url : '—'}
+              {!isDisabled && !this.props.hostTypeLoading ? this.props.url : '—'}
             </div>
           </div>
         </div>

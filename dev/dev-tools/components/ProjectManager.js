@@ -13,6 +13,11 @@ import ProjectManagerToolbar from 'app/components/ProjectManagerToolbar';
 import ProjectManagerPublishingSection from 'app/components/ProjectManagerPublishingSection';
 import NetworkIndicator from 'app/components/NetworkIndicator';
 
+const wait = delay =>
+  new Promise(resolve => {
+    window.setTimeout(resolve, delay);
+  });
+
 // TODO(jim): I'm not really sure about the offline header right now.
 const STYLES_HEADER = css`
   background: ${Constants.colors.yellow};
@@ -25,6 +30,10 @@ const STYLES_HEADER = css`
 class ProjectManager extends React.Component {
   static defaultProps = {
     project: { settings: {}, config: {} },
+  };
+
+  state = {
+    hostTypeLoading: false,
   };
 
   _handleDeviceClickIOS = () => {
@@ -67,6 +76,19 @@ class ProjectManager extends React.Component {
     return false;
   };
 
+  _handleHostTypeClick = async type => {
+    this.setState({ hostTypeLoading: true });
+    try {
+      await Promise.all([
+        this.props.onHostTypeClick(type),
+        // Delay hiding the loading indicator to avoid flashing.
+        wait(500),
+      ]);
+    } finally {
+      this.setState({ hostTypeLoading: false });
+    }
+  };
+
   render() {
     if (this.props.loading) {
       return null;
@@ -106,6 +128,7 @@ class ProjectManager extends React.Component {
       <ProjectManagerSidebarOptions
         url={this.props.project.manifestUrl}
         hostType={this.props.project.settings.hostType}
+        hostTypeLoading={this.state.hostTypeLoading}
         recipient={this.props.recipient}
         title={this.props.project.config.name}
         processInfo={this.props.processInfo}
@@ -115,7 +138,7 @@ class ProjectManager extends React.Component {
         onSimulatorClickAndroid={this.props.onSimulatorClickAndroid}
         onDeviceClickIOS={this._handleDeviceClickIOS}
         onDeviceClickAndroid={this._handleDeviceClickAndroid}
-        onHostTypeClick={this.props.onHostTypeClick}
+        onHostTypeClick={this._handleHostTypeClick}
         onSubmitPhoneNumberOrEmail={this.props.onSubmitPhoneNumberOrEmail}
         onEmailOrNumberValidation={this._handleEmailOrPhoneNumberValidation}
         isOnline={this.props.processInfo.networkStatus !== 'OFFLINE'}
