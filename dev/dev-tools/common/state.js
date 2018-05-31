@@ -6,6 +6,8 @@ import { ApolloError } from 'apollo-client';
 
 import * as Sets from 'app/common/sets';
 
+const delay = time => new Promise(resolve => window.setTimeout(resolve, time));
+
 export const sourceSelect = (source, props) => {
   const { projectManagerLayout: layout } = props.data;
   const existingIndex = layout.sources.findIndex(s => s.id === source.id);
@@ -193,6 +195,13 @@ export const openSimulator = async (platform, props) => {
         name: 'success',
         text: `Simulator ready`,
       },
+    });
+
+    await delay(2000);
+
+    props.dispatch({
+      type: 'REMOVE_TOAST',
+      id,
     });
   } else {
     props.dispatch({
