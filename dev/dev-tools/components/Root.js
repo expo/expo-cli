@@ -35,6 +35,15 @@ injectGlobal`
     display: block;
   }
 
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   @keyframes fadeInRight {
     from {
       opacity: 0;
