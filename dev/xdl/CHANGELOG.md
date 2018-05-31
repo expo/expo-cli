@@ -10,6 +10,18 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.1.0] - 2018-05-31
+
+### Added
+
+* Add support for backing up Android credentials.
+
+### Changed
+
+* Change JSON payload used for sign up.
+* Remove deprecated flag `splash` that allowed old standalone apps to skip the splash API.
+* Fix generating fingerprint from certificate (fixes expo/expo#1771)
+
 ## [50.0.0] - 2018-05-14
 
 ### Added
