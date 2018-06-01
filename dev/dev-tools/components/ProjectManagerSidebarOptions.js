@@ -1,4 +1,5 @@
 import styled, { css } from 'react-emotion';
+import copyToClipboard from 'copy-to-clipboard';
 
 import * as React from 'react';
 import * as SVG from 'app/common/svg';
@@ -85,6 +86,10 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     });
   };
 
+  _handleCopyLink = () => {
+    copyToClipboard(this.props.url, {});
+  };
+
   render() {
     let isDisabled = !this.props.url;
 
@@ -124,7 +129,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           />
 
           <div className={STYLES_URL_SECTION_BOTTOM}>
-            <div className={STYLES_URL_SECTION_BOTTOM_LEFT}>
+            <div className={STYLES_URL_SECTION_BOTTOM_LEFT} onClick={this._handleCopyLink}>
               <SVG.Link size="12px" />
             </div>
             <div className={STYLES_URL_SECTION_BOTTOM_RIGHT}>
