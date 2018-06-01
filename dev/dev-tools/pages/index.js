@@ -299,10 +299,7 @@ class IndexPageContents extends React.Component {
   }
 
   updateTitleCount() {
-    let title = document.title;
-    if (title.startsWith('(')) {
-      title = title.slice(4);
-    }
+    let title = document.title.replace(/^\(\d+\) /, '');
     const unreadCount = this.getTotalUnreadCount();
     if (unreadCount > 0) {
       title = `(${unreadCount}) ${title}`;
