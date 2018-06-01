@@ -320,13 +320,13 @@ const resolvers = {
     },
   },
   Message: {
-    __resolveType(parent) {
-      if (parent.tag === 'device') {
+    __resolveType(message) {
+      if (message.tag === 'device') {
         return 'DeviceMessage';
-      } else if (parent.issueId) {
+      } else if (message.issueId) {
         return 'Issue';
-      } else if (parent._metroEventType) {
-        switch (parent._metroEventType) {
+      } else if (message._metroEventType) {
+        switch (message._metroEventType) {
           case 'METRO_INITIALIZE_STARTED': {
             return 'MetroInitializeStarted';
           }
@@ -341,7 +341,7 @@ const resolvers = {
             return 'BuildError';
           }
         }
-      } else if (parent._expoEventType === 'TUNNEL_READY') {
+      } else if (message._expoEventType === 'TUNNEL_READY') {
         return 'TunnelReady';
       }
       return 'LogMessage';
@@ -352,43 +352,43 @@ const resolvers = {
     id(issue) {
       return `Issue:${issue.id}`;
     },
-    source(parent, args, context) {
+    source(issue, args, context) {
       return context.getIssuesSource();
     },
   },
   LogMessage: {
     ...messageResolvers,
-    source(parent, args, context) {
+    source(message, args, context) {
       return context.getProcessSource();
     },
   },
   MetroInitializeStarted: {
     ...messageResolvers,
-    source(parent, args, context) {
+    source(message, args, context) {
       return context.getProcessSource();
     },
   },
   BuildProgress: {
     ...messageResolvers,
-    source(parent, args, context) {
+    source(message, args, context) {
       return context.getProcessSource();
     },
   },
   BuildFinished: {
     ...messageResolvers,
-    source(parent, args, context) {
+    source(message, args, context) {
       return context.getProcessSource();
     },
   },
   BuildError: {
     ...messageResolvers,
-    source(parent, args, context) {
+    source(message, args, context) {
       return context.getProcessSource();
     },
   },
   TunnelReady: {
     ...messageResolvers,
-    source(parent, args, context) {
+    source(message, args, context) {
       return context.getProcessSource();
     },
   },
@@ -433,8 +433,8 @@ const resolvers = {
     },
   },
   Source: {
-    __resolveType(parent) {
-      return parent.__typename;
+    __resolveType(source) {
+      return source.__typename;
     },
   },
   Issues: {
