@@ -186,6 +186,11 @@ class IndexPageContents extends React.Component {
       query: projectPollQuery,
     });
     this.pollingObservable.startPolling(60000);
+    this.updateTitle();
+  }
+
+  componentDidUpdate() {
+    this.updateTitle();
   }
 
   componentWillUnmount() {
@@ -298,20 +303,20 @@ class IndexPageContents extends React.Component {
     return count;
   }
 
-  updateTitleCount() {
-    let title = document.title.replace(/^\(\d+\) /, '');
-    const unreadCount = this.getTotalUnreadCount();
-    if (unreadCount > 0) {
-      title = `(${unreadCount}) ${title}`;
+  updateTitle() {
+    if (this.props.data) {
+      const { name } = this.props.data.currentProject.config;
+      const unreadCount = this.getTotalUnreadCount();
+      let title;
+      if (unreadCount > 0) {
+        title = `(${unreadCount}) ${name} on Expo Developer Tools`;
+      } else {
+        title = `${name} on Expo Developer Tools`;
+      }
+      if (title !== document.title) {
+        document.title = title;
+      }
     }
-
-    if (title !== document.title) {
-      document.title = title;
-    }
-  }
-
-  componentDidUpdate() {
-    this.updateTitleCount();
   }
 
   render() {
