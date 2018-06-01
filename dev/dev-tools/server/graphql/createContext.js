@@ -30,34 +30,23 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
         flattenedMessages = flattenMessagesFromBuffer(messageBuffer);
       }
 
-      let items;
-      if (source) {
-        let filter;
-        switch (source.__typename) {
-          case 'Issues': {
-            items = issues.getIssueList();
-            break;
-          }
-          case 'Process': {
-            filter = message =>
-              message.tag === 'metro' || message.tag === 'expo' || message.type === 'global';
-            break;
-          }
-          case 'Device': {
-            filter = message => message.tag === 'device' && message.deviceId === source.id;
-            break;
-          }
-        }
-        if (filter) {
-          items = flattenedMessages.filter(({ item: { node } }) => filter(node));
-        }
+      if (!source) {
+        return flattenedMessages;
       }
 
-      if (!items) {
-        items = [...flattenedMessages];
+      switch (source.__typename) {
+        case 'Issues':
+          return issues.getIssueList();
+        case 'Process':
+          return flattenedMessages.filter(
+            ({ node: message }) =>
+              message.tag === 'metro' || message.tag === 'expo' || message.type === 'global'
+          );
+        case 'Device':
+          return flattenedMessages.filter(
+            ({ node: message }) => message.tag === 'device' && message.deviceId === source.id
+          );
       }
-
-      return items.map(({ item }) => item);
     },
     getMessageConnection(source) {
       const edges = this.getMessageEdges(source);
@@ -148,19 +137,13 @@ function flattenMessagesFromBuffer(buffer) {
   const itemsById = new Map();
   const flattenedItems = [];
   for (let i = items.length - 1; i >= 0; i--) {
-    const item = items[i];
-    const element = {
-      item: {
-        cursor: item.cursor,
-        node: item.item.node,
-      },
-    };
-    const id = element.item.node.id;
-    if (!itemsById.has(id)) {
-      itemsById.set(id, element);
+    const { cursor, item: { node } } = items[i];
+    if (!itemsById.has(node.id)) {
+      const element = { cursor, node };
+      itemsById.set(node.id, element);
       flattenedItems.unshift(element);
     } else {
-      itemsById.get(id).item.cursor = item.cursor;
+      itemsById.get(node.id).cursor = cursor;
     }
   }
   return flattenedItems;
