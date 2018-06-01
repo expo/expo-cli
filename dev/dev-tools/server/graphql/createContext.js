@@ -145,7 +145,7 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
 
 function flattenMessagesFromBuffer(buffer) {
   const items = buffer.allWithCursor();
-  const ids = new Set();
+  const itemsById = new Map();
   const flattenedItems = [];
   for (let i = items.length - 1; i >= 0; i--) {
     const item = items[i];
@@ -156,9 +156,11 @@ function flattenMessagesFromBuffer(buffer) {
       },
     };
     const id = element.item.node.id;
-    if (!ids.has(id)) {
-      ids.add(id);
+    if (!itemsById.has(id)) {
+      itemsById.set(id, element);
       flattenedItems.unshift(element);
+    } else {
+      itemsById.get(id).item.cursor = item.cursor;
     }
   }
   return flattenedItems;
