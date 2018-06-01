@@ -40,6 +40,7 @@ class ProjectManager extends React.Component {
     this.props.onUpdateState({
       isActiveDeviceIOS: !this.props.isActiveDeviceIOS,
       isActiveDeviceAndroid: false,
+      isPublishing: false,
     });
   };
 
@@ -47,12 +48,14 @@ class ProjectManager extends React.Component {
     this.props.onUpdateState({
       isActiveDeviceIOS: false,
       isActiveDeviceAndroid: !this.props.isActiveDeviceAndroid,
+      isPublishing: false,
     });
   };
 
   _handleRecipientChange = e => {
     this.props.onUpdateState({
       recipient: e.target.value,
+      isPublishing: false,
     });
   };
 

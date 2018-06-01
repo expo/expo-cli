@@ -25,6 +25,15 @@ export const sourceSelect = (source, props) => {
     // If selectedIndex is -1 (no panel selected), set the first item.
     sources = set(Math.max(selectedIndex, 0), source, layout.sources);
   }
+
+  // NOTE(jim): Breaks out of publishing modal.
+  props.dispatch({
+    type: 'UPDATE',
+    state: {
+      isPublishing: false,
+    },
+  });
+
   return updateLayout(props.client, layout.id, { selected, sources });
 };
 
@@ -87,6 +96,15 @@ export const sectionCount = ({ count }, props) => {
     selected,
     sources: newSources,
   };
+
+  // NOTE(jim): Breaks out of publishing modal.
+  props.dispatch({
+    type: 'UPDATE',
+    state: {
+      isPublishing: false,
+    },
+  });
+
   return updateLayout(props.client, layout.id, layoutInput);
 };
 
@@ -160,6 +178,14 @@ function updateLayout(client, id, input) {
 
 export const openSimulator = async (platform, props) => {
   const id = new Date().getTime();
+  // NOTE(jim): Breaks out of publishing modal.
+  props.dispatch({
+    type: 'UPDATE',
+    state: {
+      isPublishing: false,
+    },
+  });
+
   props.dispatch({
     type: 'ADD_TOAST',
     toast: {

@@ -119,6 +119,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             activeState={this.props.hostType}
             isOnline={this.props.isOnline}
             onHostTypeClick={this.props.onHostTypeClick}
+            onUpdateState={this.props.onUpdateState}
             loading={this.props.hostTypeLoading}
           />
 

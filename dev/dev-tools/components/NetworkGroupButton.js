@@ -98,9 +98,18 @@ const STYLES_BUTTON_DISABLED = css`
 `;
 
 export default class NetworkGroupButton extends React.Component {
-  _handleTunnelClick = () => this.props.onHostTypeClick('tunnel');
-  _handleLANClick = () => this.props.onHostTypeClick('lan');
-  _handleLocalhostClick = () => this.props.onHostTypeClick('localhost');
+  _handleTunnelClick = () => {
+    this.props.onUpdateState({ isPublishing: false });
+    this.props.onHostTypeClick('tunnel');
+  };
+  _handleLANClick = () => {
+    this.props.onUpdateState({ isPublishing: false });
+    this.props.onHostTypeClick('lan');
+  };
+  _handleLocalhostClick = () => {
+    this.props.onUpdateState({ isPublishing: false });
+    this.props.onHostTypeClick('localhost');
+  };
 
   render() {
     if (this.props.loading) {
