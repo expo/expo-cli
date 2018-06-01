@@ -132,7 +132,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             <div className={STYLES_URL_SECTION_BOTTOM_LEFT} onClick={this._handleCopyLink}>
               <SVG.Link size="12px" />
             </div>
-            <div className={STYLES_URL_SECTION_BOTTOM_RIGHT}>
+            <div className={STYLES_URL_SECTION_BOTTOM_RIGHT} onClick={this._handleCopyLink}>
               {!isDisabled && !this.props.hostTypeLoading ? this.props.url : '—'}
             </div>
           </div>
