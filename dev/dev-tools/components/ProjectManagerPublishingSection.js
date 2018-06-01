@@ -79,6 +79,14 @@ const STYLES_ACTIONS = css`
   margin-top: 48px;
 `;
 
+const STYLES_CANCEL = css`
+  font-family: ${Constants.fontFamilies.demi};
+  color: ${Constants.colors.border};
+  font-size: 16px;
+  margin-left: 24px;
+  cursor: pointer;
+`;
+
 // TODO(jim): Controls for privacy.
 export default class ProjectManagerPublishingSection extends React.Component {
   state = {
@@ -162,6 +170,12 @@ export default class ProjectManagerPublishingSection extends React.Component {
     this.setState((state, props) => ({
       config: getConfigFromProps(props),
     }));
+    this.props.onUpdateState({
+      isPublishing: false,
+    });
+  };
+
+  _handleCancel = () => {
     this.props.onUpdateState({
       isPublishing: false,
     });
@@ -265,6 +279,10 @@ export default class ProjectManagerPublishingSection extends React.Component {
             currentState={this._getCurrentPublishButtonState()}
             onClick={this._handlePublish}
           />
+
+          <span className={STYLES_CANCEL} onClick={this._handleCancel}>
+            Cancel
+          </span>
         </div>
       </div>
     );
