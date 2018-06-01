@@ -342,7 +342,13 @@ function shellPathForContext(context: StandaloneContext) {
   }
 }
 
-async function copyIconsToResSubfolders(resDirPath, folderPrefix, fileName, iconUrl, isLocalUrl) {
+async function copyIconsToResSubfoldersAsync(
+  resDirPath,
+  folderPrefix,
+  fileName,
+  iconUrl,
+  isLocalUrl
+) {
   return Promise.all(
     imageKeys.map(async key => {
       try {
@@ -351,10 +357,22 @@ async function copyIconsToResSubfolders(resDirPath, folderPrefix, fileName, icon
         if (isLocalUrl) {
           return fs.copyFileSync(iconUrl, path.join(dirPath, fileName));
         }
-        return await saveUrlToPathAsync(iconUrl, path.join(dirPath, fileName));
+        return saveUrlToPathAsync(iconUrl, path.join(dirPath, fileName));
       } catch (e) {
         // directory does not exist, so ignore
       }
+    })
+  );
+}
+
+async function regexFileInResSubfoldersAsync(oldText, newText, resDirPath, folderPrefix, fileName) {
+  return Promise.all(
+    imageKeys.map(async key => {
+      return regexFileAsync(
+        oldText,
+        newText,
+        path.join(resDirPath, `${folderPrefix}-${key}`, fileName)
+      );
     })
   );
 }
@@ -404,6 +422,19 @@ export async function runShellAppModificationsAsync(
     // manifest is actually just app.json in this case, so iconUrl fields don't exist
     iconUrl = manifest.android && manifest.android.icon ? manifest.android.icon : manifest.icon;
     notificationIconUrl = manifest.notification ? manifest.notification.icon : null;
+  }
+
+  let iconBackgroundUrl;
+  let iconBackgroundColor;
+  if (manifest.android && manifest.android.adaptiveIcon) {
+    iconBackgroundColor = manifest.android.adaptiveIcon.backgroundColor;
+    if (isDetached) {
+      iconUrl = manifest.android.adaptiveIcon.foregroundImage || iconUrl; // fall back to previous iconUrl if this particular field isn't specified
+      iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImage;
+    } else {
+      iconUrl = manifest.android.adaptiveIcon.foregroundImageUrl || iconUrl; // fall back to previous iconUrl if this particular field isn't specified
+      iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImage;
+    }
   }
 
   // Clean build directories
@@ -823,19 +854,63 @@ export async function runShellAppModificationsAsync(
 
   // Icon
   if (iconUrl) {
-    (await globby(['**/ic_launcher.png'], {
-      cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-      absolute: true,
-    })).forEach(filePath => {
-      fs.removeSync(filePath);
-    });
+    if (manifest.android && manifest.android.adaptiveIcon) {
+      (await globby(['**/ic_foreground.png'], {
+        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+        absolute: true,
+      })).forEach(filePath => {
+        fs.removeSync(filePath);
+      });
 
-    await copyIconsToResSubfolders(
+      await copyIconsToResSubfoldersAsync(
+        path.join(shellPath, 'app', 'src', 'main', 'res'),
+        'mipmap',
+        'ic_foreground.png',
+        iconUrl,
+        isDetached
+      );
+    } else {
+      // the OS's default method of coercing normal app icons to adaptive
+      // makes them look quite different from using an actual adaptive icon (with xml)
+      // so we need to support falling back to the old version
+      (await globby(['**/ic_foreground.png', '**/ic_launcher.xml'], {
+        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+        absolute: true,
+      })).forEach(filePath => {
+        fs.removeSync(filePath);
+      });
+
+      await copyIconsToResSubfoldersAsync(
+        path.join(shellPath, 'app', 'src', 'main', 'res'),
+        'mipmap',
+        'ic_launcher.png',
+        iconUrl,
+        isDetached
+      );
+    }
+  }
+
+  if (iconBackgroundUrl) {
+    await copyIconsToResSubfoldersAsync(
       path.join(shellPath, 'app', 'src', 'main', 'res'),
       'mipmap',
-      'ic_launcher.png',
-      iconUrl,
+      'ic_background.png',
+      iconBackgroundColor,
       isDetached
+    );
+
+    await regexFileInResSubfoldersAsync(
+      '@color/iconBackground',
+      '@mipmap/ic_background',
+      path.join(shellPath, 'app', 'src', 'main', 'res'),
+      'mipmap',
+      'ic_launcher.xml'
+    );
+  } else if (iconBackgroundColor) {
+    await regexFileAsync(
+      '"iconBackground">#FFFFFF',
+      `"iconBackground">${iconBackgroundColor}`,
+      path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
     );
   }
 
@@ -847,7 +922,7 @@ export async function runShellAppModificationsAsync(
       fs.removeSync(filePath);
     });
 
-    await copyIconsToResSubfolders(
+    await copyIconsToResSubfoldersAsync(
       path.join(shellPath, 'app', 'src', 'main', 'res'),
       'drawable',
       'shell_notification_icon.png',
