@@ -28,7 +28,6 @@ const query = gql`
         githubUrl
       }
       sources {
-        __typename
         id
         name
         messages {
@@ -36,7 +35,6 @@ const query = gql`
           unreadCount
           nodes {
             id
-            __typename
             msg
             time
             level
@@ -57,7 +55,6 @@ const query = gql`
       sendTo
     }
     projectManagerLayout {
-      __typename
       id
       selected {
         id
@@ -97,7 +94,6 @@ const projectPollQuery = gql`
       sendTo
     }
     projectManagerLayout {
-      __typename
       id
       selected {
         id
@@ -121,7 +117,6 @@ const subscriptionQuery = gql`
       cursor
       node {
         id
-        __typename
         msg
         time
         level

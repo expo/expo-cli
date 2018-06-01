@@ -379,7 +379,6 @@ export const publishProject = async (options, props) => {
 const UPDATE_LAST_READ = gql`
   mutation UpdateLastread($sourceId: ID!, $lastReadCursor: String!) {
     updateLastRead(sourceId: $sourceId, lastReadCursor: $lastReadCursor) {
-      __typename
       id
       messages {
         unreadCount
