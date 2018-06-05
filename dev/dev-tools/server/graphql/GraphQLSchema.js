@@ -233,10 +233,16 @@ const typeDefs = graphql`
     DELETED
   }
 
-  type MessageSubscriptionPayload {
+  union MessageSubscriptionPayload = MessagePayload | SourceClearedPayload
+
+  type MessagePayload {
     type: MessagePayloadType!
     cursor: String
     node: Message!
+  }
+
+  type SourceClearedPayload {
+    source: Source
   }
 
   type ProjectManagerLayout {
@@ -289,6 +295,8 @@ const typeDefs = graphql`
     setProjectManagerLayout(input: ProjectManagerLayoutInput): ProjectManagerLayout
     # Update a last read status for a source
     updateLastRead(sourceId: ID!, lastReadCursor: String!): Source
+    # Clear a log from a source
+    clearMessages(sourceId: ID!): Source
   }
 
   type Subscription {
@@ -398,6 +406,20 @@ const resolvers = {
       return { id: message.deviceId, name: message.deviceName };
     },
   },
+  MessageSubscriptionPayload: {
+    __resolveType(payload) {
+      if (payload.type === 'CLEARED') {
+        return 'SourceClearedPayload';
+      } else {
+        return 'MessagePayload';
+      }
+    },
+  },
+  SourceClearedPayload: {
+    source(payload, args, context) {
+      return context.getSourceById(payload.sourceId);
+    },
+  },
   Project: {
     id(project) {
       return Buffer.from(project.projectDir).toString('base64');
@@ -419,7 +441,7 @@ const resolvers = {
     sources(project, args, context) {
       return context.getSources();
     },
-    messages(source, args, context) {
+    messages(project, args, context) {
       return context.getMessageConnection();
     },
   },
@@ -560,6 +582,11 @@ const resolvers = {
       } else {
         return null;
       }
+    },
+    clearMessages(parent, { sourceId }, context) {
+      const source = context.getSourceById(sourceId);
+      context.clearMessages(source.id);
+      return source;
     },
   },
   Subscription: {

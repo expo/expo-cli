@@ -113,13 +113,20 @@ const projectPollQuery = gql`
 const subscriptionQuery = gql`
   subscription MessageSubscription($after: String) {
     messages(after: $after) {
-      type
-      cursor
-      node {
-        id
-        msg
-        time
-        level
+      ... on MessagePayload {
+        type
+        cursor
+        node {
+          id
+          msg
+          time
+          level
+          source {
+            id
+          }
+        }
+      }
+      ... on SourceClearedPayload {
         source {
           id
         }
@@ -164,6 +171,12 @@ class IndexPageContents extends React.Component {
   _handlePublishProject = options => State.publishProject(options, this.props);
   _handleSubmitPhoneNumberOrEmail = async () =>
     await State.sendProjectUrl(this.props.recipient, this.props);
+  _handleKeyPress = event => {
+    if (event.key === 'l' && event.ctrlKey && this.props.data.projectManagerLayout.selected) {
+      State.clearMessages({ source: this.props.data.projectManagerLayout.selected }, this.props);
+    }
+  };
+  _handleClearMessages = source => State.clearMessages({ source }, this.props);
 
   componentDidMount() {
     if (this.props.data.userSettings.sendTo) {
@@ -186,6 +199,9 @@ class IndexPageContents extends React.Component {
       query: projectPollQuery,
     });
     this.pollingObservable.startPolling(60000);
+
+    document.addEventListener('keypress', this._handleKeyPress);
+
     this.updateTitle();
   }
 
@@ -200,10 +216,13 @@ class IndexPageContents extends React.Component {
     if (this.pollingObservable) {
       this.pollingObservable.unsubscribe();
     }
+    document.removeEventListener('keypress', this._handleKeyPress);
   }
 
   updateCurrentData(result) {
-    if (result.data.messages.type === 'ADDED') {
+    if (result.data.messages.__typename === 'SourceClearedPayload') {
+      this.clearMessagesFromSource(result.data.messages.source);
+    } else if (result.data.messages.type === 'ADDED') {
       const hostType = this.props.data.currentProject.settings.hostType;
       const typename = result.data.messages.node.__typename;
       if (
@@ -294,6 +313,30 @@ class IndexPageContents extends React.Component {
     });
   }
 
+  clearMessagesFromSource(source) {
+    this.props.client.writeFragment({
+      id: source.id,
+      fragment: gql`
+        fragment ClearMessagesFragment on Source {
+          messages {
+            count
+            unreadCount
+            nodes
+          }
+        }
+      `,
+      data: {
+        __typename: source.__typename,
+        messages: {
+          __typename: 'MessageConnection',
+          count: 0,
+          unreadCount: 0,
+          nodes: [],
+        },
+      },
+    });
+  }
+
   getTotalUnreadCount() {
     const { currentProject } = this.props.data;
     let count = 0;
@@ -358,6 +401,7 @@ class IndexPageContents extends React.Component {
           onSubmitPhoneNumberOrEmail={this._handleSubmitPhoneNumberOrEmail}
           onChangeSectionCount={this._handleChangeSectionCount}
           onDeviceSelect={this._handleDeviceSelect}
+          onClearMessages={this._handleClearMessages}
           onUpdateState={this._handleUpdateState}
         />
       </Root>

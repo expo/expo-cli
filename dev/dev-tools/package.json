@@ -4,9 +4,10 @@
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
-    "build": "yarn clean && yarn build-server && yarn build-client",
+    "build": "yarn clean && yarn build-server && yarn extract-fragment-types && yarn build-client",
     "build-client": "NODE_ENV=production next build && next export -o ./build/client",
     "build-server": "NODE_ENV=production babel ./server --ignore __tests__,__mocks__ --out-dir ./build/server",
+    "extract-fragment-types": "node ./scripts/extract-fragment-types",
     "clean": "rm -rf ./build",
     "prepare": "yarn build",
     "start": "yarn dev",

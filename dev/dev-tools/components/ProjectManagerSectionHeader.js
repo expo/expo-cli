@@ -8,20 +8,25 @@ const STYLES_HEADER = css`
   font-family: ${Constants.fontFamilies.mono};
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: stretch;
   font-size: 14px;
-  padding: 16px;
 `;
 
 const STYLES_HEADER_CONTENT = css`
   width: 100%;
   min-width: 25%;
+  padding: 16px;
   font-size: 10px;
   text-transform: uppercase;
   overflow-wrap: break-word;
   white-space: pre-wrap;
   display: flex;
   align-items: center;
+  flex: 1;
+
+  :hover {
+    color: ${Constants.colors.white};
+  }
 `;
 
 const STYLES_HEADER_SELECTED = css`
@@ -32,13 +37,9 @@ const STYLES_HEADER_DEFAULT = css`
   color: ${Constants.colors.darkText};
   transition: 200ms ease color;
   cursor: pointer;
-
-  :hover {
-    color: ${Constants.colors.white};
-  }
 `;
 
-class ProjectManagerWindowHeader extends React.Component {
+class ProjectManagerSectionHeader extends React.Component {
   render() {
     return this.props.connectDragSource(
       <div
@@ -47,6 +48,7 @@ class ProjectManagerWindowHeader extends React.Component {
           ${this.props.isSelected ? STYLES_HEADER_SELECTED : STYLES_HEADER_DEFAULT}
         `}>
         <div className={STYLES_HEADER_CONTENT}>{this.props.children}</div>
+        {this.props.actions}
       </div>
     );
   }
@@ -67,4 +69,4 @@ const collect = (connect, monitor) => {
   };
 };
 
-export default DragSource('tab', source, collect)(ProjectManagerWindowHeader);
+export default DragSource('tab', source, collect)(ProjectManagerSectionHeader);

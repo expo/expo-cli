@@ -2,12 +2,12 @@ import uniqBy from 'lodash/uniqBy';
 import { $$asyncIterator } from 'iterall';
 import eventEmitterToAsyncIterator from '../asynciterators/eventEmitterToAsyncIterator';
 
-const ISSUES_SOURCE = {
+export const ISSUES_SOURCE = {
   __typename: 'Issues',
   id: 'Source:issues',
   name: 'Issues',
 };
-const PROCESS_SOURCE = {
+export const PROCESS_SOURCE = {
   __typename: 'Process',
   id: 'Source:metro',
   name: 'Metro Bundler',
@@ -26,26 +26,13 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
       return messageBuffer.getIterator(cursor);
     },
     getMessageEdges(source) {
-      if (!flattenedMessages) {
-        flattenedMessages = flattenMessagesFromBuffer(messageBuffer);
-      }
-
-      if (!source) {
-        return flattenedMessages;
-      }
-
-      switch (source.__typename) {
-        case 'Issues':
+      if (source) {
+        if (source.id === ISSUES_SOURCE.id) {
           return issues.getIssueList();
-        case 'Process':
-          return flattenedMessages.filter(
-            ({ node: message }) =>
-              message.tag === 'metro' || message.tag === 'expo' || message.type === 'global'
-          );
-        case 'Device':
-          return flattenedMessages.filter(
-            ({ node: message }) => message.tag === 'device' && message.deviceId === source.id
-          );
+        }
+        return flattenMessagesFromBuffer(messageBuffer, source.id);
+      } else {
+        return flattenMessagesFromBuffer(messageBuffer);
       }
     },
     getMessageConnection(source) {
@@ -81,7 +68,7 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
       return allSources.find(source => source.id === id);
     },
     getSources() {
-      const chunks = messageBuffer.all().filter(({ node }) => node.tag === 'device');
+      const chunks = messageBuffer.all().filter(({ node }) => node && node.tag === 'device');
       const devices = uniqBy(chunks, ({ node }) => node.deviceId).map(({ node }) => ({
         __typename: 'Device',
         id: node.deviceId,
@@ -110,6 +97,12 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
       }
       layout.setLastRead(sourceId, lastReadCursor.toString());
     },
+    clearMessages(sourceId) {
+      messageBuffer.push({
+        type: 'CLEARED',
+        sourceId,
+      });
+    },
     getIssueIterator() {
       const iterator = eventEmitterToAsyncIterator(issues, ['ADDED', 'UPDATED', 'DELETED']);
       return {
@@ -132,12 +125,19 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
   };
 }
 
-function flattenMessagesFromBuffer(buffer) {
+function flattenMessagesFromBuffer(buffer, sourceId) {
   const items = buffer.allWithCursor();
   const itemsById = new Map();
   const flattenedItems = [];
   for (let i = items.length - 1; i >= 0; i--) {
-    const { cursor, item: { node } } = items[i];
+    const { cursor, item } = items[i];
+    if (sourceId && item.sourceId !== sourceId) {
+      continue;
+    }
+    if (item.type === 'CLEARED') {
+      break;
+    }
+    const { node } = item;
     if (!itemsById.has(node.id)) {
       const element = { cursor, node };
       itemsById.set(node.id, element);

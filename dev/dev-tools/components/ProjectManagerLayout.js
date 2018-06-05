@@ -156,6 +156,7 @@ export default class ProjectManagerLayout extends React.Component {
         onSectionDrag={this.props.onSectionDrag}
         onSectionSelect={() => this.props.onSectionSelect({ id: section.id })}
         onSectionDismiss={this.props.onSectionDismiss}
+        onClearMessages={this.props.onClearMessages}
         isSelected={this.props.selectedId === section.id}
         data={section}
       />

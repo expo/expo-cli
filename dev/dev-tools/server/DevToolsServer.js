@@ -9,7 +9,7 @@ import http from 'http';
 
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
 import GraphQLSchema from './graphql/GraphQLSchema';
-import createContext from './graphql/createContext';
+import createContext, { ISSUES_SOURCE, PROCESS_SOURCE } from './graphql/createContext';
 import Issues from './graphql/Issues';
 
 export async function startAsync(projectDir) {
@@ -91,6 +91,7 @@ function createMessageBuffer(projectRoot, issues) {
         }
         buffer.push({
           type: 'ADDED',
+          sourceId: PROCESS_SOURCE.id,
           node: chunk,
         });
       });
@@ -98,6 +99,7 @@ function createMessageBuffer(projectRoot, issues) {
     onStartBuildBundle: chunk => {
       buffer.push({
         type: 'ADDED',
+        sourceId: PROCESS_SOURCE.id,
         node: {
           ...chunk,
           progress: 0,
@@ -108,6 +110,7 @@ function createMessageBuffer(projectRoot, issues) {
     onProgressBuildBundle: (percentage, start, chunk) => {
       buffer.push({
         type: 'UPDATED',
+        sourceId: PROCESS_SOURCE.id,
         node: {
           ...chunk,
           progress: percentage,
@@ -118,6 +121,7 @@ function createMessageBuffer(projectRoot, issues) {
     onFinishBuildBundle: (error, start, end, chunk) => {
       buffer.push({
         type: 'UPDATED',
+        sourceId: PROCESS_SOURCE.id,
         node: {
           ...chunk,
           error,
@@ -134,6 +138,7 @@ function createMessageBuffer(projectRoot, issues) {
         if (chunk.tag === 'device') {
           buffer.push({
             type: 'ADDED',
+            sourceId: chunk.deviceId,
             node: chunk,
           });
         }
@@ -147,6 +152,7 @@ function createMessageBuffer(projectRoot, issues) {
       write: chunk => {
         buffer.push({
           type: 'ADDED',
+          sourceId: PROCESS_SOURCE.id,
           node: chunk,
         });
       },

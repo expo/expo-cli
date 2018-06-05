@@ -414,3 +414,35 @@ export const updateLastRead = async ({ sourceId, sourceType, lastReadCursor }, p
     },
   });
 };
+
+export const clearMessages = async ({ source }, props) => {
+  return props.client.mutate({
+    mutation: gql`
+      mutation ClearMessages($sourceId: ID!) {
+        clearMessages(sourceId: $sourceId) {
+          id
+          messages {
+            count
+            unreadCount
+          }
+        }
+      }
+    `,
+    variables: {
+      sourceId: source.id,
+    },
+    optimisticResponse: {
+      __typename: 'Mutation',
+      clearMessages: {
+        __typename: source.__typename,
+        id: source.id,
+        messages: {
+          __typename: 'MessageConnection',
+          count: 0,
+          unreadCount: 0,
+          nodes: [],
+        },
+      },
+    },
+  });
+};

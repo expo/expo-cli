@@ -3,6 +3,7 @@ import { DropTarget } from 'react-dnd';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
+import { Trash } from 'app/common/svg';
 
 import ProjectManagerSectionHeader from 'app/components/ProjectManagerSectionHeader';
 import Boundary from 'app/components/Boundary';
@@ -72,6 +73,18 @@ const STYLES_CONTAINER_HOVER = css`
   background: ${Constants.colors.foregroundHover};
 `;
 
+const STYLES_CLEAR_BUTTON = css`
+  border: none;
+  outline: none;
+  background: transparent;
+  color: currentcolor;
+  padding: 16px;
+
+  :hover {
+    color: ${Constants.colors.white};
+  }
+`;
+
 class ProjectManagerSection extends React.Component {
   componentDidMount() {
     this.scrollToEnd();
@@ -104,11 +117,27 @@ class ProjectManagerSection extends React.Component {
     }
   }
 
+  _handleClearClick = e => {
+    e.stopPropagation();
+    this.props.onClearMessages(this.props.data);
+  };
+
   render() {
     let headerElement;
     if (this.props.data) {
       headerElement = (
-        <ProjectManagerSectionHeader id={this.props.data.id} isSelected={this.props.isSelected}>
+        <ProjectManagerSectionHeader
+          id={this.props.data.id}
+          isSelected={this.props.isSelected}
+          actions={
+            <button
+              className={STYLES_CLEAR_BUTTON}
+              title="Clear log (^L)"
+              aria-label="Clear log"
+              onClick={this._handleClearClick}>
+              <Trash size="12px" />
+            </button>
+          }>
           <LoggerIcon
             type={this.props.data.type}
             style={{ marginRight: '8px', marginBottom: '2px' }}

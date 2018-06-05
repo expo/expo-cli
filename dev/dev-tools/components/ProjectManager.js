@@ -178,6 +178,7 @@ class ProjectManager extends React.Component {
         onSectionDrag={this.props.onSectionDrag}
         onSectionDismiss={this.props.onSectionDismiss}
         onSectionSelect={this.props.onSectionSelect}
+        onClearMessages={this.props.onClearMessages}
       />
     );
   }
