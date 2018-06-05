@@ -250,7 +250,8 @@ async function createDetachedAsync(context: StandaloneContext) {
   let iosExpoViewUrl;
   if (context.type === 'user') {
     ({ iosClientVersion, iosExpoViewUrl } = await _getVersionedExpoKitConfigAsync(
-      standaloneSdkVersion
+      standaloneSdkVersion,
+      process.env.EXPO_VIEW_DIR
     ));
   }
 
