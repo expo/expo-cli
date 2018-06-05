@@ -26,7 +26,7 @@ const {
   deleteLinesInFileAsync,
 } = ExponentTools;
 
-const imageKeys = ['ldpi', 'mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
+const imageKeys = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
 
 // Do not call this from anything used by detach
 function exponentDirectory() {
@@ -345,6 +345,7 @@ function shellPathForContext(context: StandaloneContext) {
 async function copyIconsToResSubfoldersAsync(
   resDirPath,
   folderPrefix,
+  folderSuffix,
   fileName,
   iconUrl,
   isLocalUrl
@@ -352,7 +353,7 @@ async function copyIconsToResSubfoldersAsync(
   return Promise.all(
     imageKeys.map(async key => {
       try {
-        const dirPath = path.join(resDirPath, `${folderPrefix}-${key}`);
+        const dirPath = path.join(resDirPath, `${folderPrefix}${key}${folderSuffix}`);
         fs.accessSync(dirPath, fs.constants.F_OK);
         if (isLocalUrl) {
           return fs.copyFileSync(iconUrl, path.join(dirPath, fileName));
@@ -365,13 +366,20 @@ async function copyIconsToResSubfoldersAsync(
   );
 }
 
-async function regexFileInResSubfoldersAsync(oldText, newText, resDirPath, folderPrefix, fileName) {
+async function regexFileInResSubfoldersAsync(
+  oldText,
+  newText,
+  resDirPath,
+  folderPrefix,
+  folderSuffix,
+  fileName
+) {
   return Promise.all(
     imageKeys.map(async key => {
       return regexFileAsync(
         oldText,
         newText,
-        path.join(resDirPath, `${folderPrefix}-${key}`, fileName)
+        path.join(resDirPath, `${folderPrefix}${key}${folderSuffix}`, fileName)
       );
     })
   );
@@ -426,13 +434,14 @@ export async function runShellAppModificationsAsync(
 
   let iconBackgroundUrl;
   let iconBackgroundColor;
+  let iconForegroundUrl;
   if (manifest.android && manifest.android.adaptiveIcon) {
     iconBackgroundColor = manifest.android.adaptiveIcon.backgroundColor;
     if (isDetached) {
-      iconUrl = manifest.android.adaptiveIcon.foregroundImage || iconUrl; // fall back to previous iconUrl if this particular field isn't specified
+      iconForegroundUrl = manifest.android.adaptiveIcon.foregroundImage;
       iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImage;
     } else {
-      iconUrl = manifest.android.adaptiveIcon.foregroundImageUrl || iconUrl; // fall back to previous iconUrl if this particular field isn't specified
+      iconForegroundUrl = manifest.android.adaptiveIcon.foregroundImageUrl;
       iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImage;
     }
   }
@@ -853,8 +862,26 @@ export async function runShellAppModificationsAsync(
   );
 
   // Icon
-  if (iconUrl) {
-    if (manifest.android && manifest.android.adaptiveIcon) {
+  if (iconUrl || iconForegroundUrl) {
+    if (iconUrl) {
+      (await globby(['**/ic_launcher.png'], {
+        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+        absolute: true,
+      })).forEach(filePath => {
+        fs.removeSync(filePath);
+      });
+
+      await copyIconsToResSubfoldersAsync(
+        path.join(shellPath, 'app', 'src', 'main', 'res'),
+        'mipmap-',
+        '',
+        'ic_launcher.png',
+        iconUrl,
+        isDetached
+      );
+    }
+
+    if (iconForegroundUrl) {
       (await globby(['**/ic_foreground.png'], {
         cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
         absolute: true,
@@ -864,38 +891,47 @@ export async function runShellAppModificationsAsync(
 
       await copyIconsToResSubfoldersAsync(
         path.join(shellPath, 'app', 'src', 'main', 'res'),
-        'mipmap',
+        'mipmap-',
+        '-v26',
         'ic_foreground.png',
-        iconUrl,
+        iconForegroundUrl,
         isDetached
       );
     } else {
       // the OS's default method of coercing normal app icons to adaptive
       // makes them look quite different from using an actual adaptive icon (with xml)
-      // so we need to support falling back to the old version
-      (await globby(['**/ic_foreground.png', '**/ic_launcher.xml'], {
+      // so we need to support falling back to the old version on Android 8
+      (await globby(['**/mipmap-*-v26/*'], {
         cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
         absolute: true,
+        dot: true,
       })).forEach(filePath => {
         fs.removeSync(filePath);
       });
 
-      await copyIconsToResSubfoldersAsync(
-        path.join(shellPath, 'app', 'src', 'main', 'res'),
-        'mipmap',
-        'ic_launcher.png',
-        iconUrl,
-        isDetached
-      );
+      try {
+        (await globby(['**/mipmap-*-v26'], {
+          cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+          absolute: true,
+        })).forEach(filePath => {
+          fs.rmdirSync(filePath);
+        });
+      } catch (e) {
+        // we don't want the entire detach script to fail if node
+        // can't remove the directories for whatever reason.
+        // people can remove the directories themselves if they need
+        // so just fail silently here
+      }
     }
   }
 
   if (iconBackgroundUrl) {
     await copyIconsToResSubfoldersAsync(
       path.join(shellPath, 'app', 'src', 'main', 'res'),
-      'mipmap',
+      'mipmap-',
+      '-v26',
       'ic_background.png',
-      iconBackgroundColor,
+      iconBackgroundUrl,
       isDetached
     );
 
@@ -903,7 +939,8 @@ export async function runShellAppModificationsAsync(
       '@color/iconBackground',
       '@mipmap/ic_background',
       path.join(shellPath, 'app', 'src', 'main', 'res'),
-      'mipmap',
+      'mipmap-',
+      '-v26',
       'ic_launcher.xml'
     );
   } else if (iconBackgroundColor) {
@@ -924,7 +961,8 @@ export async function runShellAppModificationsAsync(
 
     await copyIconsToResSubfoldersAsync(
       path.join(shellPath, 'app', 'src', 'main', 'res'),
-      'drawable',
+      'drawable-',
+      '',
       'shell_notification_icon.png',
       notificationIconUrl,
       isDetached
