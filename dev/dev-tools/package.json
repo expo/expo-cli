@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "body-parser": "1.18.2",
-    "copy-to-clipboard": "^3.0.8",
     "express": "4.16.3",
     "freeport-async": "1.1.1",
     "graphql": "0.13.2",
@@ -51,6 +50,7 @@
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.1",
     "babel-register": "^6.26.0",
+    "copy-to-clipboard": "^3.0.8",
     "emotion": "^8.0.5",
     "emotion-server": "^8.0.5",
     "graphql-tag": "^2.9.1",
