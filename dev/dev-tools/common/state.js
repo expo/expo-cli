@@ -112,29 +112,21 @@ export const update = (state, props) => {
   props.dispatch({ type: 'UPDATE', state });
 };
 
-const PROJECT_MANAGER_LAYOUT_FRAGMENT = gql`
-  fragment ProjectManagerLayoutFragment on ProjectManagerLayout {
-    id
-    selected {
-      id
-    }
-    sources {
-      id
-      messages {
-        unreadCount
-      }
-    }
-  }
-`;
-
 const UPDATE_PROJECT_MANAGER_QUERY = gql`
   mutation UpdateProjectManagerLayout($input: ProjectManagerLayoutInput!) {
     setProjectManagerLayout(input: $input) {
-      ...ProjectManagerLayoutFragment
+      id
+      selected {
+        id
+      }
+      sources {
+        id
+        messages {
+          unreadCount
+        }
+      }
     }
   }
-
-  ${PROJECT_MANAGER_LAYOUT_FRAGMENT}
 `;
 
 function updateLayout(client, id, input) {
@@ -146,23 +138,21 @@ function updateLayout(client, id, input) {
         sources: input.sources.map(source => source.id),
       },
     },
-    update(cache, { data: { setProjectManagerLayout } }) {
-      cache.writeFragment({
-        id,
-        fragment: PROJECT_MANAGER_LAYOUT_FRAGMENT,
-        data: setProjectManagerLayout,
-      });
-    },
     optimisticResponse: {
       __typename: 'Mutation',
       setProjectManagerLayout: {
         __typename: 'ProjectManagerLayout',
         id,
         selected: input.selected
-          ? {
-              __typename: 'Source',
+          ? client.readFragment({
               id: input.selected,
-            }
+              fragment: gql`
+                fragment SelectedSource on Source {
+                  __typename
+                  id
+                }
+              `,
+            })
           : null,
         sources: input.sources.map(source => ({
           ...source,
