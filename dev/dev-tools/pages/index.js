@@ -172,8 +172,15 @@ class IndexPageContents extends React.Component {
   _handleSubmitPhoneNumberOrEmail = async () =>
     await State.sendProjectUrl(this.props.recipient, this.props);
   _handleKeyPress = event => {
-    if (event.key === 'l' && event.ctrlKey && this.props.data.projectManagerLayout.selected) {
-      State.clearMessages({ source: this.props.data.projectManagerLayout.selected }, this.props);
+    if (event.key === 'l' && event.ctrlKey) {
+      if (this.props.data.projectManagerLayout.selected) {
+        State.clearMessages({ source: this.props.data.projectManagerLayout.selected }, this.props);
+      } else if (this.props.data.projectManagerLayout.sources.length) {
+        State.clearMessages(
+          { source: this.props.data.projectManagerLayout.sources[0] },
+          this.props
+        );
+      }
     }
   };
   _handleClearMessages = source => State.clearMessages({ source }, this.props);
