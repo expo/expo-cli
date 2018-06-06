@@ -6,7 +6,7 @@
   "scripts": {
     "build": "babel src --out-dir lib --source-maps",
     "watch": "babel src --out-dir lib --source-maps --watch",
-    "prepublish": "npm run build"
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
     "babel-cli": "^6.24.1",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
     "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-es2017": "^6.24.1"
+    "babel-preset-env": "^1.7.0"
   },
   "files": [
     "lib/",
