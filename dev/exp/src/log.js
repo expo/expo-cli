@@ -57,13 +57,7 @@ function respectProgressBars(commitLogs) {
 }
 
 function getPrefix(chalkColor) {
-  return (
-    chalkColor(new Date().toTimeString().slice(0, 8)) +
-    ' ' +
-    chalkColor('[') +
-    chalk.gray('exp') +
-    chalkColor(']')
-  );
+  return chalkColor(`[${new Date().toTimeString().slice(0, 8)}]`);
 }
 
 function withPrefixAndTextColor(args, chalkColor = chalk.gray) {
