@@ -1,6 +1,7 @@
 import * as React from 'react';
 import gql from 'graphql-tag';
 import { ApolloProvider, Query } from 'react-apollo';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
@@ -221,7 +222,7 @@ class IndexPageContents extends React.Component {
       this.querySubscription.unsubscribe();
     }
     if (this.pollingObservable) {
-      this.pollingObservable.unsubscribe();
+      this.pollingObservable.stopPolling();
     }
     document.removeEventListener('keypress', this._handleKeyPress);
   }
@@ -374,6 +375,7 @@ class IndexPageContents extends React.Component {
       data: { currentProject, projectManagerLayout, processInfo, user },
       loading,
       error,
+      disconnected,
     } = this.props;
 
     const { sections, sources } = getSections(currentProject, projectManagerLayout);
@@ -385,6 +387,7 @@ class IndexPageContents extends React.Component {
         <ProjectManager
           loading={loading}
           error={error}
+          disconnected={disconnected}
           project={currentProject}
           user={user}
           processInfo={processInfo}
@@ -433,10 +436,37 @@ function getSections(currentProject, projectManagerLayout) {
 }
 
 export default class IndexPage extends React.Component {
-  client = process.browser ? createApolloClient() : null;
+  constructor(props) {
+    super(props);
+    this.state = {
+      disconnected: false,
+    };
+    this.unsubscribers = [];
+    if (process.browser) {
+      this.subscriptionClient = new SubscriptionClient(`ws://${window.location.host}/graphql`, {
+        reconnect: true,
+      });
+      this.client = createApolloClient(this.subscriptionClient);
+    }
+  }
+
+  _handleConnected = () => this.setState({ disconnected: false });
+  _handleDisconnected = () => this.setState({ disconnected: true });
+
+  componentDidMount() {
+    this.unsubscribers.push(
+      this.subscriptionClient.on('connected', this._handleConnected),
+      this.subscriptionClient.on('reconnected', this._handleConnected),
+      this.subscriptionClient.on('disconnected', this._handleDisconnected)
+    );
+  }
+
+  componentWillUnmount() {
+    this.unsubscribers.forEach(unsubscribe => unsubscribe());
+  }
 
   render() {
-    if (!this.client) {
+    if (!process.browser) {
       // Server-side rendering for static HTML export.
       return null;
     }
@@ -446,7 +476,7 @@ export default class IndexPage extends React.Component {
         <Query query={query}>
           {result => {
             if (!result.loading && !result.error) {
-              return <IndexPageContents {...result} />;
+              return <IndexPageContents {...result} disconnected={this.state.disconnected} />;
             } else {
               // TODO(freiksenet): fix loading states
               return null;

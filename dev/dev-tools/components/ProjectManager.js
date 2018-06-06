@@ -18,14 +18,44 @@ const wait = delay =>
     window.setTimeout(resolve, delay);
   });
 
-// TODO(jim): I'm not really sure about the offline header right now.
+const OVERLAY_Z_INDEX = 1;
+
 const STYLES_HEADER = css`
   background: ${Constants.colors.yellow};
   font-family: ${Constants.fontFamilies.bold};
   font-size: 12px;
   padding: 8px 16px 8px 16px;
   width: 100%;
+  z-index: ${OVERLAY_Z_INDEX + 1};
 `;
+
+const STYLES_OVERLAY = css`
+  background: rgba(1, 1, 1, 0.75);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: ${OVERLAY_Z_INDEX};
+`;
+
+const STYLES_COMMAND = css`
+  font-family: ${Constants.fontFamilies.mono};
+`;
+
+class DisconnectedHeader extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        <div className={STYLES_HEADER} key="header">
+          Expo Developer Tools is disconnected from Expo CLI. Use the{' '}
+          <code className={STYLES_COMMAND}>expo start</code> command to start the CLI again.
+        </div>
+        <div className={STYLES_OVERLAY} key="overlay" />
+      </React.Fragment>
+    );
+  }
+}
 
 class ProjectManager extends React.Component {
   static defaultProps = {
@@ -166,7 +196,7 @@ class ProjectManager extends React.Component {
 
     return (
       <ProjectManagerLayout
-        alertSection={null}
+        alertSection={this.props.disconnected ? <DisconnectedHeader /> : null}
         navigationSection={null}
         headerSection={offlineElement}
         devicesSection={devicesElements}
