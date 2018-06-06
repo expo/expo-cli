@@ -235,14 +235,14 @@ async function _renderVersionedReactNativePostinstallsAsync(templatesDirectory) 
 async function _concatTemplateFilesInDirectoryAsync(directory) {
   let templateFilenames = (await glob(path.join(directory, '*.rb'))).sort();
   let templateStrings = [];
-  await Promise.all(
-    templateFilenames.map(async filename => {
-      let templateString = await fs.readFile(filename, 'utf8');
-      if (templateString) {
-        templateStrings.push(templateString);
-      }
-    })
-  );
+  // perform this in series in order to get deterministic output
+  for (let fileIdx = 0, nFiles = templateFilenames.length; fileIdx < nFiles; fileIdx++) {
+    const filename = templateFilenames[fileIdx];
+    let templateString = await fs.readFile(filename, 'utf8');
+    if (templateString) {
+      templateStrings.push(templateString);
+    }
+  }
   return templateStrings.join('\n');
 }
 
