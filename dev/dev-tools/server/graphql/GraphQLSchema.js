@@ -484,11 +484,12 @@ const resolvers = {
     },
     sources(layout, args, context) {
       const sources = context.getSources();
-      let layoutSources = layout.sources;
-      if (!layoutSources) {
+      if (!layout.sources) {
         return [];
       } else {
-        return layoutSources.map(sourceId => sources.find(source => source.id === sourceId));
+        return layout.sources
+          .map(sourceId => sources.find(source => source.id === sourceId))
+          .filter(source => source);
       }
     },
   },
