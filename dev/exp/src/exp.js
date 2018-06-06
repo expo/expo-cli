@@ -431,7 +431,7 @@ async function checkForUpdateAsync() {
       message = `There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
 Run \`npm install -g ${packageJSON.name}\` to get the latest version`;
-      log.error(chalk.green(message));
+      log.nestedWarn(chalk.green(message));
       break;
 
     case 'ahead-of-published':
