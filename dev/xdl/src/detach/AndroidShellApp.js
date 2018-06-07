@@ -1132,7 +1132,7 @@ async function buildShellAppAsync(context: StandaloneContext) {
       await fs.remove(`shell-unaligned.apk`);
       await fs.remove(`shell.apk`);
     } catch (e) {}
-    const gradleArgs = [`assembleProdRelease`];
+    const gradleArgs = [`assembleProdMinSdkProdKernelRelease`];
     if (process.env.GRADLE_DAEMON_DISABLED) {
       gradleArgs.unshift('--no-daemon');
     }
