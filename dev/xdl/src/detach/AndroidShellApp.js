@@ -1142,7 +1142,7 @@ async function buildShellAppAsync(context: StandaloneContext) {
       cwd: shellPath,
     });
     await fs.copy(
-      path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'app-prod-release-unsigned.apk'),
+      path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'prodMinSdkProdKernel', 'release', 'app-prodMinSdk-prodKernel-release-unsigned.apk'),
       `shell-unaligned.apk`
     );
     await spawnAsync(
@@ -1194,13 +1194,13 @@ async function buildShellAppAsync(context: StandaloneContext) {
     try {
       await fs.remove('shell-debug.apk');
     } catch (e) {}
-    await spawnAsyncThrowError(`./gradlew`, ['assembleDevRemoteKernelDebug'], {
+    await spawnAsyncThrowError(`./gradlew`, ['assembleDevMinSdkDevKernelDebug'], {
       pipeToLogger: true,
       loggerFields: { buildPhase: 'running gradle' },
       cwd: shellPath,
     });
     await fs.copy(
-      path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'app-devRemoteKernel-debug.apk'),
+      path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'devMinSdkDevKernel', 'debug', 'app-devMinSdk-devKernel-debug.apk'),
       `/tmp/shell-debug.apk`
     );
   }
