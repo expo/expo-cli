@@ -4,7 +4,8 @@
   "description": "Centralized scheme validation library for Expo",
   "main": "./build/index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --testPathIgnorePatterns network",
+    "test-integration": "jest",
     "watch": "babel -w src -d build",
     "build": "babel src -d build",
     "prepare": "npm run build",

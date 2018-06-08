@@ -56,30 +56,12 @@ describe('Manual Validation Individual Unit Tests', () => {
     await expect(S.validateIcon('./files/check.png')).resolves;
   });
 
-  it('Remote Icon', async () => {
-    await expect(
-      S.validateIcon(
-        'https://upload.wikimedia.org/wikipedia/commons/0/0f/Icon_Pinguin_2_512x512.png'
-      )
-    ).resolves;
-  });
-
   it('Local Square Icon correct', async () => {
     const S = new Schemer(
       { properties: { icon: { meta: { asset: true, square: true } } } },
       { rootDir: './__tests__' }
     );
     await expect(S.validateIcon('./files/check.png')).resolves;
-  });
-  it('Remote icon dimensions correct', async () => {
-    const S = new Schemer({
-      properties: {
-        icon: {
-          meta: { asset: true, dimensions: { width: 100, height: 100 } },
-        },
-      },
-    });
-    await expect(S.validateIcon('https://httpbin.org/image/png')).resolves;
   });
 
   it('Local icon dimensions wrong', async () => {
@@ -98,24 +80,6 @@ describe('Manual Validation Individual Unit Tests', () => {
     }
   });
 
-  it('Remote icon dimensions wrong', async () => {
-    const S = new Schemer(
-      {
-        properties: {
-          icon: {
-            meta: { asset: true, dimensions: { width: 101, height: 100 } },
-          },
-        },
-      },
-      { rootDir: './__tests__' }
-    );
-    try {
-      await S.validateIcon('https://httpbin.org/image/png');
-    } catch (e) {
-      expect(e).toBeTruthy();
-      expect(e.errors.length).toBe(1);
-    }
-  });
 });
 
 describe('Individual Unit Tests', async () => {
