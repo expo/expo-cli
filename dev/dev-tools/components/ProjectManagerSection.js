@@ -76,6 +76,7 @@ const STYLES_CONTAINER_HOVER = css`
 const STYLES_CLEAR_BUTTON = css`
   border: none;
   outline: none;
+  cursor: pointer;
   background: transparent;
   color: currentcolor;
   padding: 16px;
