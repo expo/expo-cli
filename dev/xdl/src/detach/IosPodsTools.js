@@ -318,6 +318,10 @@ function _renderTestTarget(reactNativePath) {
   target 'ExponentIntegrationTests' do
     inherit! :search_paths
   end
+
+  target 'Tests' do
+    inherit! :search_paths
+  end
 `;
 }
 
