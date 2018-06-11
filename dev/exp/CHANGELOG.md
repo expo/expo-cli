@@ -10,6 +10,21 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [55.0.0] - 2018-06-11
+
+### Added
+
+* Add support for backing up Android credentials.
+
+### Changed
+
+* Upgrade to XDL 50.2.0.
+* Use released gulp 4.0.
+
+### Removed
+
+* Remove `[exp]` prefix from logs.
+
 ## [54.0.1] - 2018-05-28
 
 ### Changed
