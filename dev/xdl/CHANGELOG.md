@@ -10,6 +10,19 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.2.0] - 2018-06-11
+
+### Added
+
+* Add support for `android.adaptiveIcon` app.json fields in shell app script
+* Add provisioning profile validation
+
+### Changed
+
+* Ensure that all versioned react native pods target iOS 9
+* Use released gulp 4.0
+* Upgrade `fs-extra` to remove warning on Node v10.1.0.
+
 ## [50.1.0] - 2018-05-31
 
 ### Added
