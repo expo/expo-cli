@@ -442,7 +442,7 @@ export async function runShellAppModificationsAsync(
       iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImage;
     } else {
       iconForegroundUrl = manifest.android.adaptiveIcon.foregroundImageUrl;
-      iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImage;
+      iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImageUrl;
     }
   }
 
