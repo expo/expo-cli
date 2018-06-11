@@ -9,6 +9,7 @@ import rimraf from 'rimraf';
 import {
   getManifestAsync,
   saveUrlToPathAsync,
+  manifestUsesSplashApi,
   parseSdkMajorVersion,
 } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
@@ -379,6 +380,10 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
   const config = context.config;
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXShell', shellPlist => {
+    // older SDK versions rely on `isShell` flag in xdl
+    if (parseSdkMajorVersion(config.sdkVersion) < 28) {
+      shellPlist.isShell = true;
+    }
     shellPlist.manifestUrl = context.published.url;
     shellPlist.releaseChannel = context.published.releaseChannel;
     if (context.data.testEnvironment) {
@@ -399,6 +404,11 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
     if (config.updates && config.updates.hasOwnProperty('enabled')) {
       // enable/disable code push if the developer provided specific behavior
       shellPlist.areRemoteUpdatesEnabled = config.updates.enabled;
+    }
+    if (!manifestUsesSplashApi(config, 'ios') && parseSdkMajorVersion(config.sdkVersion) < 28) {
+      // for people still using the old loading api, hide the native splash screen.
+      // we can remove this code eventually.
+      shellPlist.isSplashScreenDisabled = true;
     }
 
     logger.info('Using standalone config:', shellPlist);
