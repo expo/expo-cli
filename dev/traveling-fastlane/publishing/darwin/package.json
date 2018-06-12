@@ -1,6 +1,6 @@
 {
   "name": "@expo/traveling-fastlane-darwin",
-  "version": "1.4.7",
+  "version": "1.5.0",
   "description": "Bundled up fastlane",
   "main": "index.js",
   "os": ["darwin"],

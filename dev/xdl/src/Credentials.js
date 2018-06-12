@@ -2,12 +2,12 @@
  * @flow
  */
 
-import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 
 import Api from './Api';
 import logger from './Logger';
+import * as IosCodeSigning from './detach/IosCodeSigning';
 
 export type AndroidCredentials = {
   keystore: string,
@@ -131,10 +131,17 @@ export async function getExistingDistCerts(
     throw new Error('Error getting existing distribution certificates.');
   }
 
-  return certs.map(({ usedByApps, ...rest }) => ({
-    usedByApps: usedByApps && usedByApps.split(';'),
-    ...rest,
-  }));
+  return certs.map(({ usedByApps, certP12, certPassword, ...rest }) => {
+    const serialNumber =
+      certP12 !== undefined && certPassword !== undefined
+        ? IosCodeSigning.findP12CertSerialNumber(certP12, certPassword)
+        : null;
+    return {
+      usedByApps: usedByApps && usedByApps.split(';'),
+      serialNumber,
+      ...rest,
+    };
+  });
 }
 
 export async function backupExistingAndroidCredentials({

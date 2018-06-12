@@ -84,12 +84,18 @@ export function ensureAppIdLocally(creds, metadata, teamId) {
   return appStoreAction(creds, metadata, teamId, 'verify');
 }
 
-export function produceProvisionProfile(credentials, { bundleIdentifier }, teamId, isEnterprise) {
+export function produceProvisionProfile(
+  credentials,
+  { bundleIdentifier, distCertSerialNumber },
+  teamId,
+  isEnterprise
+) {
   return spawnAndCollectJSONOutputAsync(FASTLANE.fetch_new_provisioning_profile, [
     credentials.appleId,
     credentials.password,
     bundleIdentifier,
     teamId,
+    distCertSerialNumber || '__last__',
     isEnterprise,
   ]);
 }

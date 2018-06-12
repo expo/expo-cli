@@ -6,7 +6,7 @@ import plist from 'plist';
 
 import _logger from './Logger';
 import { spawnAsyncThrowError } from './ExponentTools';
-import * as utils from './IosUtils';
+import * as IosCodeSigning from './IosCodeSigning';
 
 const logger = _logger.withFields({ buildPhase: 'building and signing IPA' });
 
@@ -35,11 +35,11 @@ export default function createIPABuilder(buildParams) {
     logger.info('done retrieving provisioning profile data');
 
     logger.info('checking if teamID is present in keychain and that certificate is valid...');
-    const codeSignIdentity = await utils.ensureCertificateValid(buildParams);
+    const codeSignIdentity = await IosCodeSigning.ensureCertificateValid(buildParams);
     logger.info('ensured certificate is valid');
 
     logger.info('validating provisioning profile...');
-    utils.validateProvisioningProfile(plistData, {
+    IosCodeSigning.validateProvisioningProfile(plistData, {
       distCertFingerprint: codeSignIdentity,
       teamID,
       bundleIdentifier,
@@ -47,7 +47,7 @@ export default function createIPABuilder(buildParams) {
     logger.info('provisioning profile is valid');
 
     logger.info('writing export-options.plist file...');
-    const exportMethod = utils.resolveExportMethod(plistData);
+    const exportMethod = IosCodeSigning.resolveExportMethod(plistData);
     const exportOptionsPlistPath = path.join(provisionDir, 'export-options.plist');
     const exportOptionsData = {
       bundleIdentifier,
@@ -55,7 +55,7 @@ export default function createIPABuilder(buildParams) {
       exportMethod,
       teamID,
     };
-    await utils.writeExportOptionsPlistFile(exportOptionsPlistPath, exportOptionsData);
+    await IosCodeSigning.writeExportOptionsPlistFile(exportOptionsPlistPath, exportOptionsData);
     logger.info('created export-options.plist file');
 
     logger.info('generating IPA...');
@@ -70,12 +70,12 @@ export default function createIPABuilder(buildParams) {
       keychainPath,
       exportMethod,
     };
-    await utils.buildIPA(ipaBuilderArgs, buildParams, clientBuild);
+    await IosCodeSigning.buildIPA(ipaBuilderArgs, buildParams, clientBuild);
     logger.info('generated IPA');
 
     logger.info('creating entitlements file...');
     const generatedEntitlementsPath = path.join(appDir, 'generatedEntitlements.entitlements');
-    await utils.createEntitlementsFile({
+    await IosCodeSigning.createEntitlementsFile({
       generatedEntitlementsPath,
       plistData,
       archivePath: outputPath,
@@ -83,7 +83,7 @@ export default function createIPABuilder(buildParams) {
     logger.info('created entitlements file');
 
     logger.info('resigning IPA...');
-    await utils.resignIPA(
+    await IosCodeSigning.resignIPA(
       {
         codeSignIdentity,
         entitlementsPath: generatedEntitlementsPath,

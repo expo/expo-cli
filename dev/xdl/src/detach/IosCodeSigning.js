@@ -8,10 +8,10 @@ import crypto from 'crypto';
 
 import { spawnAsyncThrowError } from './ExponentTools';
 
-export async function ensureCertificateValid({ certPath, certPassword, teamID }) {
+async function ensureCertificateValid({ certPath, certPassword, teamID }) {
   const certData = await fs.readFile(certPath);
-  const fingerprint = genP12CertFingerprint(certData, certPassword);
-  const identities = await findIdentitiesByTeamID(teamID);
+  const fingerprint = _genP12CertFingerprint(certData, certPassword);
+  const identities = await _findIdentitiesByTeamID(teamID);
   const isValid = identities.indexOf(fingerprint) !== -1;
   if (!isValid) {
     throw new Error(`codesign ident not present in find-identity: ${fingerprint}\n${identities}`);
@@ -19,22 +19,8 @@ export async function ensureCertificateValid({ certPath, certPassword, teamID })
   return fingerprint;
 }
 
-function genP12CertFingerprint(p12Buffer, passwordRaw) {
-  if (Buffer.isBuffer(p12Buffer)) {
-    p12Buffer = p12Buffer.toString('base64');
-  } else if (typeof p12Buffer !== 'string') {
-    throw new Error('genP12CertFingerprint only takes strings and buffers.');
-  }
-
-  const password = String(passwordRaw || '');
-  const certBagType = forge.pki.oids.certBag;
-  const p12Der = forge.util.decode64(p12Buffer);
-  const p12Asn1 = forge.asn1.fromDer(p12Der);
-  const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
-  const certData = _.get(p12.getBags({ bagType: certBagType }), [certBagType, 0, 'cert']);
-  if (!certData) {
-    throw new Error("genP12CertFingerprint: couldn't find cert bag");
-  }
+function _genP12CertFingerprint(p12Buffer, passwordRaw) {
+  const certData = _getCertData(p12Buffer, passwordRaw);
   const certAsn1 = forge.pki.certificateToAsn1(certData);
   const certDer = forge.asn1.toDer(certAsn1).getBytes();
   return forge.md.sha1
@@ -45,7 +31,32 @@ function genP12CertFingerprint(p12Buffer, passwordRaw) {
     .toUpperCase();
 }
 
-async function findIdentitiesByTeamID(teamID) {
+function findP12CertSerialNumber(p12Buffer, passwordRaw) {
+  const certData = _getCertData(p12Buffer, passwordRaw);
+  const { serialNumber } = certData;
+  return serialNumber ? certData.serialNumber.replace(/^0+/, '').toUpperCase() : null;
+}
+
+function _getCertData(p12Buffer, passwordRaw) {
+  if (Buffer.isBuffer(p12Buffer)) {
+    p12Buffer = p12Buffer.toString('base64');
+  } else if (typeof p12Buffer !== 'string') {
+    throw new Error('_getCertData only takes strings and buffers.');
+  }
+
+  const password = String(passwordRaw || '');
+  const p12Der = forge.util.decode64(p12Buffer);
+  const p12Asn1 = forge.asn1.fromDer(p12Der);
+  const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
+  const certBagType = forge.pki.oids.certBag;
+  const certData = _.get(p12.getBags({ bagType: certBagType }), [certBagType, 0, 'cert']);
+  if (!certData) {
+    throw new Error("_getCertData: couldn't find cert bag");
+  }
+  return certData;
+}
+
+async function _findIdentitiesByTeamID(teamID) {
   const { output } = await spawnAsyncThrowError(
     'security',
     ['find-identity', '-v', '-s', `(${teamID})`],
@@ -56,14 +67,14 @@ async function findIdentitiesByTeamID(teamID) {
   return output.join('');
 }
 
-export function validateProvisioningProfile(plistData, params) {
-  ensureDeveloperCertificateIsValid(plistData, params.distCertFingerprint);
-  ensureBundleIdentifierIsValid(plistData, params);
+function validateProvisioningProfile(plistData, params) {
+  _ensureDeveloperCertificateIsValid(plistData, params.distCertFingerprint);
+  _ensureBundleIdentifierIsValid(plistData, params);
 }
 
-function ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
+function _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
   const devCertBase64 = plistData.DeveloperCertificates[0];
-  const devCertFingerprint = genDerCertFingerprint(devCertBase64);
+  const devCertFingerprint = _genDerCertFingerprint(devCertBase64);
   if (devCertFingerprint !== distCertFingerprint) {
     throw new Error(
       'validateProvisioningProfile: provisioning profile is not associated with uploaded distribution certificate'
@@ -71,7 +82,7 @@ function ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
   }
 }
 
-function genDerCertFingerprint(certBase64) {
+function _genDerCertFingerprint(certBase64) {
   const certBuffer = Buffer.from(certBase64, 'base64');
   return crypto
     .createHash('sha1')
@@ -80,7 +91,7 @@ function genDerCertFingerprint(certBase64) {
     .toUpperCase();
 }
 
-function ensureBundleIdentifierIsValid(plistData, { bundleIdentifier, teamID }) {
+function _ensureBundleIdentifierIsValid(plistData, { bundleIdentifier, teamID }) {
   const expectedApplicationIdentifier = `${teamID}.${bundleIdentifier}`;
   const actualApplicationIdentifier = plistData.Entitlements['application-identifier'];
 
@@ -92,7 +103,7 @@ function ensureBundleIdentifierIsValid(plistData, { bundleIdentifier, teamID }) 
   }
 }
 
-export async function writeExportOptionsPlistFile(plistPath, data) {
+async function writeExportOptionsPlistFile(plistPath, data) {
   const toWrite = createExportOptionsPlist(data);
   await fs.writeFile(plistPath, toWrite);
 }
@@ -118,7 +129,7 @@ const createExportOptionsPlist = ({
   </dict>
 </plist>`;
 
-export async function buildIPA(
+async function buildIPA(
   {
     ipaPath,
     workspace,
@@ -150,7 +161,7 @@ export async function buildIPA(
       }
     );
   } else {
-    await runFastlane(credentials, [
+    await _runFastlane(credentials, [
       'gym',
       '-n',
       path.basename(ipaPath),
@@ -177,7 +188,7 @@ export async function buildIPA(
   }
 }
 
-export const resolveExportMethod = plistData => {
+const resolveExportMethod = plistData => {
   if (plistData.ProvisionedDevices) {
     return 'ad-hoc';
   } else if (plistData.ProvisionsAllDevices === true) {
@@ -219,11 +230,7 @@ const blacklistedEntitlementKeys = [
   'com.apple.external-accessory.wireless-configuration',
 ];
 
-export async function createEntitlementsFile({
-  generatedEntitlementsPath,
-  plistData,
-  archivePath,
-}) {
+async function createEntitlementsFile({ generatedEntitlementsPath, plistData, archivePath }) {
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
 
   const entitlementsPattern = path.join(
@@ -270,7 +277,7 @@ export async function createEntitlementsFile({
   });
 }
 
-export async function resignIPA(
+async function resignIPA(
   {
     codeSignIdentity,
     entitlementsPath,
@@ -282,7 +289,7 @@ export async function resignIPA(
   credentials
 ) {
   await spawnAsyncThrowError('cp', ['-rf', sourceIpaPath, destIpaPath]);
-  await runFastlane(credentials, [
+  await _runFastlane(credentials, [
     'sigh',
     'resign',
     '--verbose',
@@ -298,7 +305,7 @@ export async function resignIPA(
   ]);
 }
 
-async function runFastlane({ teamID, password }, fastlaneArgs) {
+async function _runFastlane({ teamID, password }, fastlaneArgs) {
   const fastlaneEnvVars = {
     FASTLANE_SKIP_UPDATE_CHECK: 1,
     FASTLANE_DISABLE_COLORS: 1,
@@ -314,3 +321,14 @@ async function runFastlane({ teamID, password }, fastlaneArgs) {
     dontShowStdout: false,
   });
 }
+
+export {
+  ensureCertificateValid,
+  findP12CertSerialNumber,
+  validateProvisioningProfile,
+  writeExportOptionsPlistFile,
+  buildIPA,
+  resolveExportMethod,
+  createEntitlementsFile,
+  resignIPA,
+};

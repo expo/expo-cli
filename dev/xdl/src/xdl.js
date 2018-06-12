@@ -93,6 +93,9 @@ module.exports = {
   get IosShellApp() {
     return require('./detach/IosShellApp');
   },
+  get IosCodeSigning() {
+    return require('./detach/IosCodeSigning');
+  },
   get MessageCode() {
     return require('./MessageCode').default;
   },

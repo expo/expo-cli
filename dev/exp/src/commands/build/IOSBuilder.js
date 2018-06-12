@@ -5,7 +5,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import untildify from 'untildify';
-import { Exp, Credentials, XDLError, ErrorCode } from 'xdl';
+import { Exp, Credentials, XDLError, ErrorCode, IosCodeSigning } from 'xdl';
 import ora from 'ora';
 import _ from 'lodash';
 
@@ -125,7 +125,7 @@ const appleCredsQuestions = [
 
 const createChooseDistCertPrompt = choices => ({
   type: 'list',
-  name: 'userCredentialId',
+  name: 'distCert',
   message: 'Would you like to reuse Distribution Certificate from another app?',
   choices,
 });
@@ -239,14 +239,20 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
 
   // End user wants to override these credentials, that is, they want
   // to provide their own creds
-  async userProvidedOverride(credsStarter, choice) {
+  async userProvidedOverride(credsStarter, choice, credsMetadata) {
     switch (choice) {
       case 'distCert': {
         log('Please provide your distribution certificate P12:');
         const distCertValues = await prompt(sharedQuestions);
+        const certP12Buffer = await fs.readFile(distCertValues.pathToP12);
+        const certPassword = distCertValues.p12Password;
+        credsMetadata.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+          certP12Buffer,
+          certPassword
+        );
         this._copyOverAsString(credsStarter, {
-          certP12: (await fs.readFile(distCertValues.pathToP12)).toString('base64'),
-          certPassword: distCertValues.p12Password,
+          certP12: certP12Buffer.toString('base64'),
+          certPassword,
         });
         break;
       }
@@ -325,6 +331,10 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       case 'distCert':
         const produceCertAttempt = await authFuncs.produceCerts(appleCreds, teamId, isEnterprise);
         this._throwIfFailureWithReasonDump(produceCertAttempt);
+        credsMetadata.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+          produceCertAttempt.certP12,
+          produceCertAttempt.certPassword
+        );
         this._copyOverAsString(credsStarter, produceCertAttempt);
         break;
       case 'pushCert':
@@ -439,15 +449,27 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     isEnterprise,
     credsMissing = ['distCert', 'pushCert', 'provisioningProfile']
   ) {
+    // (dsokal)
+    // This function and generally - IOSBuilder is unnecessarily overcomplicated.
+    // It would be good to refactor it some day, because changing anything here always takes me more time than I think it should.
+    //
+    // There are only two possible scenarios here:
+    //  - all of credentials are missing
+    //  - distribution certificate is missing (we have to regenerate provisioning profile)
+
+    if (_.includes(credsMissing, 'distCert') && !_.includes(credsMissing, 'provisioningProfile')) {
+      credsMissing.push('provisioningProfile');
+    }
+
     const whatToOverrideFiltered = whatToOverride.filter(({ name }) =>
       _.includes(credsMissing, name)
     );
     const whatToOverrideResult = await prompt(whatToOverrideFiltered);
     const expoManages = { provisioningProfile: true };
 
-    const userCredentialId = whatToOverrideResult.distCert
+    const { userCredentialId, serialNumber } = whatToOverrideResult.distCert
       ? await this._chooseDistCert(credsMetadata.username, credsStarter.teamId)
-      : null;
+      : {};
 
     const toCopy = userCredentialId
       ? _.omit(whatToOverrideResult, 'distCert')
@@ -456,6 +478,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
 
     if (userCredentialId) {
       credsStarter.userCredentialId = userCredentialId;
+      credsMetadata.distCertSerialNumber = serialNumber;
     }
 
     const spinner = ora('Running local authentication and producing required credentials').start();
@@ -476,7 +499,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           );
         } else {
           spinner.stop();
-          await this.userProvidedOverride(credsStarter, choice);
+          await this.userProvidedOverride(credsStarter, choice, credsMetadata);
         }
       }
     } catch (e) {
@@ -489,30 +512,36 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   async _chooseDistCert(username, teamId) {
     const certs = await Credentials.getExistingDistCerts(username, teamId);
     if (certs.length > 0) {
-      const choices = certs.map(({ userCredentialId, certId, usedByApps }) => {
-        let name;
+      const choices = certs.map(({ userCredentialId, certId, serialNumber, usedByApps }) => {
+        let name = `Serial number: ${serialNumber || 'unknown'}`;
 
         if (certId) {
-          name = `Certificate ID: ${certId}`;
+          name = `${name}, Certificate ID: ${certId}`;
         }
 
         if (usedByApps) {
-          name = `${name && `${name}; `}Used in apps: ${usedByApps.join(',')}`;
+          name = `Used in apps: ${usedByApps.join(', ')} (${name})`;
         }
 
         return {
-          name: name || '(user provided certificate)',
-          value: userCredentialId,
+          name,
+          value: {
+            userCredentialId,
+            serialNumber,
+          },
         };
       });
       choices.push({
         name: 'No, please create a new one',
         value: null,
       });
-      const { userCredentialId } = await prompt(createChooseDistCertPrompt(choices));
-      return userCredentialId && String(userCredentialId);
+      const { distCert } = await prompt(createChooseDistCertPrompt(choices));
+      return {
+        userCredentialId: distCert && String(distCert.userCredentialId),
+        serialNumber: distCert && distCert.serialNumber,
+      };
     } else {
-      return null;
+      return {};
     }
   }
 

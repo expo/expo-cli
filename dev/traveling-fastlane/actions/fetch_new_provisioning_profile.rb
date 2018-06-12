@@ -6,7 +6,7 @@ require 'spaceship'
 require 'json'
 require 'base64'
 
-$appleId, $password, $bundleId, $teamId, $isEnterprise = ARGV[0].gsub(/\s+/m, ' ').strip.split(" ")
+$appleId, $password, $bundleId, $teamId, $certSerialNum, $isEnterprise = ARGV[0].gsub(/\s+/m, ' ').strip.split(" ")
 
 ENV['FASTLANE_TEAM_ID'] = $teamId
 
@@ -17,9 +17,17 @@ json_reply = with_captured_stderr{
     cert = nil
 
     if $isEnterprise == 'true'
-      cert = Spaceship::Portal.certificate.in_house.production.all.last
+      certs = Spaceship::Portal.certificate.in_house.production.all
     else
-      cert = Spaceship::Portal.certificate.production.all.last
+      certs = Spaceship::Portal.certificate.production.all
+    end
+
+    if $certSerialNum == '__last__'
+      cert = certs.last
+    else
+      cert = certs.find do |c|
+        c.raw_data['serialNum'] == $certSerialNum
+      end
     end
 
     if cert == nil
