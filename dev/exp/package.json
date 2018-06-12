@@ -94,7 +94,7 @@
     "xdl": "50.2.0"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.4.7",
-    "@expo/traveling-fastlane-linux": "1.4.7"
+    "@expo/traveling-fastlane-darwin": "1.5.0",
+    "@expo/traveling-fastlane-linux": "1.5.0"
   }
 }
