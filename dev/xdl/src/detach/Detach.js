@@ -16,6 +16,7 @@ import rimraf from 'rimraf';
 import glob from 'glob-promise';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
+import spawnAsync from '@expo/spawn-async';
 
 import {
   isDirectory,
@@ -248,11 +249,12 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
       throw new Error(`Expo's React Native fork does not support this SDK version.`);
     }
   }
+
+  const nodeModulesPath = exp.nodeModulesPath
+    ? path.resolve(projectRoot, exp.nodeModulesPath)
+    : projectRoot;
   if (reactNativeVersion && pkg.dependencies['react-native'] !== reactNativeVersion) {
     logger.info('Installing the Expo fork of react-native...');
-    const nodeModulesPath = exp.nodeModulesPath
-      ? path.resolve(projectRoot, exp.nodeModulesPath)
-      : projectRoot;
     try {
       await installPackageAsync(nodeModulesPath, 'react-native', reactNativeVersion, {
         silent: true,
@@ -260,7 +262,27 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     } catch (e) {
       logger.warn('Unable to install the Expo fork of react-native.');
       logger.warn(`Please install react-native@${reactNativeVersion} to complete detaching.`);
-      throw e;
+    }
+  }
+
+  if (process.env.EXPO_VIEW_DIR) {
+    await spawnAsync(
+      'npm',
+      ['install', path.join(process.env.EXPO_VIEW_DIR, 'expokit-npm-package')],
+      {
+        cwd: nodeModulesPath,
+      }
+    );
+  } else {
+    try {
+      let packageName = sdkVersionConfig.expokitNpmPackage.split('@')[0];
+      let packageVersion = sdkVersionConfig.expokitNpmPackage.split('@')[1];
+      await installPackageAsync(nodeModulesPath, packageName, packageVersion, {
+        silent: true,
+      });
+    } catch (e) {
+      logger.warn(`Unable to install ${sdkVersionConfig.expokitNpmPackage}.`);
+      logger.warn('Please install manually to complete detaching.');
     }
   }
 
