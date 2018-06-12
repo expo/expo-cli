@@ -9,6 +9,7 @@ import ContentGroup from 'app/components/ContentGroup';
 import ContentGroupHeader from 'app/components/ContentGroupHeader';
 import NetworkGroupButton from 'app/components/NetworkGroupButton';
 import InputWithButton from 'app/components/InputWithButton';
+import SettingsControl from 'app/components/SettingsControl';
 import QRCode from 'app/components/QRCode';
 
 const STYLES_URL_SECTION = css`
@@ -118,6 +119,12 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     return (
       <div>
         <div className={STYLES_URL_SECTION}>
+          <SettingsControl 
+            onClick={this.props.onToggleProductionMode} 
+            isActive={this.props.isProduction}>
+            Run in production mode
+          </SettingsControl>
+
           <div className={STYLES_SUBTITLE}>Selected Connection</div>
 
           <NetworkGroupButton

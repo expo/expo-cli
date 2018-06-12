@@ -174,6 +174,8 @@ class ProjectManager extends React.Component {
         onHostTypeClick={this._handleHostTypeClick}
         onSubmitPhoneNumberOrEmail={this.props.onSubmitPhoneNumberOrEmail}
         onEmailOrNumberValidation={this._handleEmailOrPhoneNumberValidation}
+        onToggleProductionMode={this.props.onToggleProductionMode}
+        isProduction={this.props.isProduction}
         isOnline={this.props.processInfo.networkStatus !== 'OFFLINE'}
         isPublishing={this.props.isPublishing}
         isActiveDeviceIOS={this.props.isActiveDeviceIOS}

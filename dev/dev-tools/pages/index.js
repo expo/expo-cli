@@ -160,6 +160,8 @@ const createSourceQuery = typename => gql`
 
 @withRedux(initStore, state => state)
 class IndexPageContents extends React.Component {
+  state = {};
+
   _handleDeviceSelect = options => State.sourceSelect(options, this.props);
   _handleSectionDrag = options => State.sourceSwap(options, this.props);
   _handleSectionSelect = options => State.sectionSelect(options, this.props);
@@ -170,6 +172,11 @@ class IndexPageContents extends React.Component {
   _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
   _handleHostTypeClick = hostType => State.setProjectSettings({ hostType }, this.props);
   _handlePublishProject = options => State.publishProject(options, this.props);
+  _handleToggleProductionMode = () => {
+    // TODO(VILLE): Integrate production mode toggle.
+    this.setState({ isProduction: !this.state.isProduction });
+  };
+
   _handleSubmitPhoneNumberOrEmail = async () =>
     await State.sendProjectUrl(this.props.recipient, this.props);
   _handleKeyPress = event => {
@@ -401,7 +408,9 @@ class IndexPageContents extends React.Component {
           isPublishing={this.props.isPublishing}
           isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
           isActiveDeviceIOS={this.props.isActiveDeviceIOS}
+          isProduction={this.state.isProduction}
           onPublishProject={this._handlePublishProject}
+          onToggleProductionMode={this._handleToggleProductionMode}
           onHostTypeClick={this._handleHostTypeClick}
           onSimulatorClickIOS={this._handleSimulatorClickIOS}
           onSimulatorClickAndroid={this._handleSimulatorClickAndroid}
