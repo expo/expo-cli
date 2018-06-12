@@ -22,8 +22,10 @@ const OVERLAY_Z_INDEX = 1;
 
 const STYLES_HEADER = css`
   background: ${Constants.colors.yellow};
-  font-family: ${Constants.fontFamilies.bold};
+  font-family: sans-serif;
+  font-weight: 600;
   font-size: 12px;
+  line-height: 18px;
   padding: 8px 16px 8px 16px;
   width: 100%;
   z-index: ${OVERLAY_Z_INDEX + 1};
@@ -41,6 +43,14 @@ const STYLES_OVERLAY = css`
 
 const STYLES_COMMAND = css`
   font-family: ${Constants.fontFamilies.mono};
+  color: ${Constants.colors.white};
+  background: #a88400;
+  display: inline-block;
+  vertical-align: top;
+  padding: 4px 4px 4px 4px;
+  line-height: 10px;
+  border-radius: 2px;
+  font-size: 10px;
 `;
 
 class DisconnectedHeader extends React.Component {
