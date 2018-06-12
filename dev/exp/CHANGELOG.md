@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [55.0.1] - 2018-06-12
+
+### Changed
+
+* Fix generating provisioning profile in `exp build:ios`.
+
 ## [55.0.0] - 2018-06-11
 
 ### Added
