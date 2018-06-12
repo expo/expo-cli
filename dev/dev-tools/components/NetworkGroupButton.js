@@ -20,7 +20,7 @@ const STYLES_LOADER = css`
   border: 1px solid ${Constants.colors.border};
   border-radius: 6px;
   height: 30px;
-  width: 189.18px;
+  width: 125.72px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,8 +29,9 @@ const STYLES_LOADER = css`
 
 const STYLES_BUTTON = css`
   font-family: ${Constants.fontFamilies.demi};
+  font-size: 10px;
   cursor: pointer;
-  padding: 2px 12px 0 12px;
+  padding: 2px 8px 0 8px;
   height: 100%;
   display: flex;
   align-items: center;
@@ -147,7 +148,7 @@ export default class NetworkGroupButton extends React.Component {
             ${this.props.activeState === 'localhost' ? STYLES_BUTTON_ACTIVE : ''}
           `}
           onClick={this._handleLocalhostClick}>
-          Localhost
+          Local
         </span>
       </div>
     );

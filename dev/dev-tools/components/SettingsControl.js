@@ -4,11 +4,14 @@ import * as React from 'react';
 import * as Constants from 'app/common/constants';
 
 const STYLES_SETTINGS_CONTROL = css`
-  font-family: ${Constants.fontFamilies.demi};
+  font-family: ${Constants.fontFamilies.mono};
+  color: #555555;
+  font-size: 10px;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 `;
 
 const STYLES_SETTINGS_CONTROL_LEFT = css`
@@ -57,17 +60,17 @@ const STYLES_SELECTOR_BUBBLE_IS_ACTIVE = css`
 `;
 
 export default props => {
-  const selectorClassName = props.isActive ? 
-    `${STYLES_SELECTOR_IS_ACTIVE} ${STYLES_SELECTOR}` : `${STYLES_SELECTOR_DEFAULT} ${STYLES_SELECTOR}`;
+  const selectorClassName = props.isActive
+    ? `${STYLES_SELECTOR_IS_ACTIVE} ${STYLES_SELECTOR}`
+    : `${STYLES_SELECTOR_DEFAULT} ${STYLES_SELECTOR}`;
 
-  const bubbleClassName = props.isActive ?
-    `${STYLES_SELECTOR_BUBBLE} ${STYLES_SELECTOR_BUBBLE_IS_ACTIVE}` : `${STYLES_SELECTOR_BUBBLE}`;
+  const bubbleClassName = props.isActive
+    ? `${STYLES_SELECTOR_BUBBLE} ${STYLES_SELECTOR_BUBBLE_IS_ACTIVE}`
+    : `${STYLES_SELECTOR_BUBBLE}`;
 
   return (
     <div className={STYLES_SETTINGS_CONTROL}>
-      <span className={STYLES_SETTINGS_CONTROL_LEFT}>
-        {props.children}
-      </span>
+      <span className={STYLES_SETTINGS_CONTROL_LEFT}>{props.children}</span>
 
       <span className={STYLES_SETTINGS_CONTROL_RIGHT}>
         <span className={selectorClassName} onClick={props.onClick}>

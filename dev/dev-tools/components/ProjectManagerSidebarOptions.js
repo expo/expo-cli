@@ -12,6 +12,21 @@ import InputWithButton from 'app/components/InputWithButton';
 import SettingsControl from 'app/components/SettingsControl';
 import QRCode from 'app/components/QRCode';
 
+const STYLES_CONNECTION_SECTION = css`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const STYLES_CONNECTION_SECTION_LEFT = css`
+  min-width: 25%;
+  width: 100%;
+`;
+
+const STYLES_CONNECTION_SECTION_RIGHT = css`
+  flex-shrink: 0;
+`;
+
 const STYLES_URL_SECTION = css`
   padding: 16px;
   border-bottom: 1px solid ${Constants.colors.border};
@@ -44,8 +59,8 @@ const STYLES_URL_SECTION_BOTTOM_RIGHT = css`
 
 const STYLES_SUBTITLE = css`
   font-family: ${Constants.fontFamilies.mono};
-  color: #777777;
-  font-size: 11px;
+  color: #555555;
+  font-size: 10px;
   text-transform: uppercase;
   margin-bottom: 8px;
 `;
@@ -119,21 +134,28 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     return (
       <div>
         <div className={STYLES_URL_SECTION}>
-          <SettingsControl 
-            onClick={this.props.onToggleProductionMode} 
+          <SettingsControl
+            onClick={this.props.onToggleProductionMode}
             isActive={this.props.isProduction}>
-            Run in production mode
+            Production Mode
           </SettingsControl>
 
-          <div className={STYLES_SUBTITLE}>Selected Connection</div>
-
-          <NetworkGroupButton
-            activeState={this.props.hostType}
-            isOnline={this.props.isOnline}
-            onHostTypeClick={this.props.onHostTypeClick}
-            onUpdateState={this.props.onUpdateState}
-            loading={this.props.hostTypeLoading}
-          />
+          <div className={STYLES_CONNECTION_SECTION}>
+            <span className={STYLES_CONNECTION_SECTION_LEFT}>
+              <div className={STYLES_SUBTITLE} style={{ marginBottom: 0 }}>
+                Connection
+              </div>
+            </span>
+            <span className={STYLES_CONNECTION_SECTION_RIGHT}>
+              <NetworkGroupButton
+                activeState={this.props.hostType}
+                isOnline={this.props.isOnline}
+                onHostTypeClick={this.props.onHostTypeClick}
+                onUpdateState={this.props.onUpdateState}
+                loading={this.props.hostTypeLoading}
+              />
+            </span>
+          </div>
 
           <div className={STYLES_URL_SECTION_BOTTOM}>
             <div className={STYLES_URL_SECTION_BOTTOM_LEFT} onClick={this._handleCopyLink}>
