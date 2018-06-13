@@ -265,15 +265,17 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     }
   }
 
+  // Add expokitNpmPackage if it is supported. Was added before SDK 29.
   if (process.env.EXPO_VIEW_DIR) {
-    await spawnAsync(
-      'npm',
-      ['install', path.join(process.env.EXPO_VIEW_DIR, 'expokit-npm-package')],
-      {
-        cwd: nodeModulesPath,
-      }
-    );
-  } else {
+    logger.info(`Installing 'expokit' package...`);
+    await spawnAsync('yarn', ['link'], {
+      cwd: path.join(process.env.EXPO_VIEW_DIR, 'expokit-npm-package'),
+    });
+    await spawnAsync('yarn', ['link', 'expokit'], {
+      cwd: nodeModulesPath,
+    });
+  } else if (sdkVersionConfig.expokitNpmPackage) {
+    logger.info(`Installing 'expokit' package...`);
     try {
       let packageName = sdkVersionConfig.expokitNpmPackage.split('@')[0];
       let packageVersion = sdkVersionConfig.expokitNpmPackage.split('@')[1];

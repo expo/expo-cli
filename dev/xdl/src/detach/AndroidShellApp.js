@@ -343,7 +343,7 @@ async function copyIconsToResSubfoldersAsync(
         const dirPath = path.join(resDirPath, `${folderPrefix}${key}${folderSuffix}`);
         fs.accessSync(dirPath, fs.constants.F_OK);
         if (isLocalUrl) {
-          return fs.copyFileSync(iconUrl, path.join(dirPath, fileName));
+          return fs.copy(iconUrl, path.join(dirPath, fileName));
         }
         return saveUrlToPathAsync(iconUrl, path.join(dirPath, fileName));
       } catch (e) {
@@ -437,6 +437,7 @@ export async function runShellAppModificationsAsync(
   await fs.remove(path.join(shellPath, 'app', 'build'));
   await fs.remove(path.join(shellPath, 'ReactAndroid', 'build'));
   await fs.remove(path.join(shellPath, 'expoview', 'build'));
+  await fs.remove(path.join(shellPath, 'app', 'src', 'test'));
   await fs.remove(path.join(shellPath, 'app', 'src', 'androidTest'));
 
   if (isDetached) {
@@ -978,7 +979,7 @@ export async function runShellAppModificationsAsync(
     _.forEach(backgroundImages, async image => {
       if (isDetached) {
         // local file so just copy it
-        fs.copyFileSync(image.url, image.path);
+        await fs.copy(image.url, image.path);
       } else {
         await saveUrlToPathAsync(image.url, image.path);
       }
@@ -1055,9 +1056,16 @@ export async function runShellAppModificationsAsync(
   if (manifest.android && manifest.android.googleServicesFile) {
     // google-services.json
     // Used for configuring FCM
+    let googleServicesFileContents = manifest.android.googleServicesFile;
+    if (isDetached) {
+      googleServicesFileContents = await fs.readFile(
+        path.resolve(shellPath, '..', manifest.android.googleServicesFile),
+        'utf8'
+      );
+    }
     await fs.writeFile(
       path.join(shellPath, 'app', 'google-services.json'),
-      manifest.android.googleServicesFile
+      googleServicesFileContents
     );
 
     await regexFileAsync(
