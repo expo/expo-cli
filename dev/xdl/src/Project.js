@@ -713,12 +713,21 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
   // needed because android doesn't support assets that start with numbers.
   if (exp.assetBundlePatterns) {
     const fullPatterns = exp.assetBundlePatterns.map(p => path.join(projectRoot, p));
+    logger.global.info('Processing asset bundle patterns:');
+    fullPatterns.forEach(p => logger.global.info('- ' + p));
     // The assets returned by the RN packager has duplicates so make sure we
     // only bundle each once.
     const bundledAssets = new Set();
     for (const asset of assets) {
       const file = asset.files && asset.files[0];
-      if (asset.__packager_asset && file && fullPatterns.some(p => minimatch(file, p))) {
+      const shouldBundle =
+        asset.__packager_asset && file && fullPatterns.some(p => minimatch(file, p));
+      ProjectUtils.logDebug(
+        projectRoot,
+        'expo',
+        `${shouldBundle ? 'Include' : 'Exclude'} asset ${file}`
+      );
+      if (shouldBundle) {
         asset.fileHashes.forEach(hash =>
           bundledAssets.add('asset_' + hash + (asset.type ? '.' + asset.type : ''))
         );
