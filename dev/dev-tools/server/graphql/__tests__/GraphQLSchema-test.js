@@ -9,6 +9,7 @@ jest.mock('xdl');
 const MOCK_LOGS = [
   {
     type: 'ADDED',
+    sourceId: 'Source:metro',
     node: {
       name: 'expo',
       hostname: 'freiksenet-laptop',
@@ -26,6 +27,7 @@ const MOCK_LOGS = [
   },
   {
     type: 'ADDED',
+    sourceId: 'ebe8cd5c-9aab-48e9-9d00-0ee0e9ec3710',
     node: {
       name: 'expo',
       hostname: 'example-laptop',
@@ -48,6 +50,7 @@ const MOCK_LOGS = [
   },
   {
     type: 'ADDED',
+    sourceId: 'Source:metro',
     node: {
       name: 'expo',
       hostname: 'freiksenet-laptop',
@@ -66,6 +69,7 @@ const MOCK_LOGS = [
   },
   {
     type: 'ADDED',
+    sourceId: 'Source:metro',
     node: {
       name: 'expo',
       hostname: 'freiksenet-laptop',
@@ -86,6 +90,7 @@ const MOCK_LOGS = [
 const MOCK_BUNDLE_LOGS = [
   {
     type: 'ADDED',
+    sourceId: 'Source:metro',
     node: {
       name: 'expo',
       hostname: 'freiksenet-laptop',
@@ -106,6 +111,7 @@ const MOCK_BUNDLE_LOGS = [
   },
   {
     type: 'UPDATED',
+    sourceId: 'Source:metro',
     node: {
       name: 'expo',
       hostname: 'freiksenet-laptop',
