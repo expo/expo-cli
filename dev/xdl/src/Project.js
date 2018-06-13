@@ -1013,6 +1013,10 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
     );
     return;
   }
+  if (/^Scanning folders for symlinks in /.test(output)) {
+    ProjectUtils.logDebug(projectRoot, 'metro', output);
+    return;
+  }
   if (level === 'info') {
     ProjectUtils.logInfo(projectRoot, 'metro', output);
   } else {

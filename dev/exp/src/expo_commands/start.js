@@ -46,14 +46,12 @@ async function action(projectDir, options) {
   let devToolsUrl = await DevToolsServer.startAsync(root);
   await Project.startAsync(root, startOpts);
 
-  log('Expo is ready.');
-  log.newLine();
-
   let { url, isUrlFallback } = await Project.getManifestUrlWithFallbackAsync(projectDir);
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
   if (!exp.isDetached) {
+    log.newLine();
     urlOpts.printQRCode(url);
   }
 
