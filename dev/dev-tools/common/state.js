@@ -231,11 +231,11 @@ export const openSimulator = async (platform, props) => {
   }
 };
 
-export const setProjectSettings = (settings, props) => {
-  return props.client.mutate({
+export const setHostType = ({ hostType }, { client }) => {
+  return client.mutate({
     mutation: gql`
-      mutation SetProjectSettings($settings: ProjectSettingsInput!) {
-        setProjectSettings(settings: $settings) {
+      mutation SetHostType($hostType: HostType!) {
+        setProjectSettings(settings: { hostType: $hostType }) {
           id
           manifestUrl
           settings {
@@ -244,7 +244,24 @@ export const setProjectSettings = (settings, props) => {
         }
       }
     `,
-    variables: { settings },
+    variables: { hostType },
+  });
+};
+
+export const setBuildFlags = ({ dev, minify }, { client }) => {
+  return client.mutate({
+    mutation: gql`
+      mutation SetBuildFlags($dev: Boolean!, $minify: Boolean!) {
+        setProjectSettings(settings: { dev: $dev, minify: $minify }) {
+          id
+          settings {
+            dev
+            minify
+          }
+        }
+      }
+    `,
+    variables: { dev, minify },
   });
 };
 

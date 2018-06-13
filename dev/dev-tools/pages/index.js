@@ -21,6 +21,8 @@ const query = gql`
       manifestUrl
       settings {
         hostType
+        dev
+        minify
       }
       config {
         name
@@ -82,6 +84,8 @@ const projectPollQuery = gql`
       manifestUrl
       settings {
         hostType
+        dev
+        minify
       }
       config {
         name
@@ -170,11 +174,11 @@ class IndexPageContents extends React.Component {
   _handleUpdateState = options => State.update(options, this.props);
   _handleSimulatorClickIOS = () => State.openSimulator('IOS', this.props);
   _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
-  _handleHostTypeClick = hostType => State.setProjectSettings({ hostType }, this.props);
+  _handleHostTypeClick = hostType => State.setHostType({ hostType }, this.props);
   _handlePublishProject = options => State.publishProject(options, this.props);
   _handleToggleProductionMode = () => {
-    // TODO(VILLE): Integrate production mode toggle.
-    this.setState({ isProduction: !this.state.isProduction });
+    const dev = !this.props.data.currentProject.settings.dev;
+    State.setBuildFlags({ dev, minify: !dev }, this.props);
   };
 
   _handleSubmitPhoneNumberOrEmail = async () =>

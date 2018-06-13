@@ -185,7 +185,7 @@ class ProjectManager extends React.Component {
         onSubmitPhoneNumberOrEmail={this.props.onSubmitPhoneNumberOrEmail}
         onEmailOrNumberValidation={this._handleEmailOrPhoneNumberValidation}
         onToggleProductionMode={this.props.onToggleProductionMode}
-        isProduction={this.props.isProduction}
+        isProduction={!this.props.project.settings.dev}
         isOnline={this.props.processInfo.networkStatus !== 'OFFLINE'}
         isPublishing={this.props.isPublishing}
         isActiveDeviceIOS={this.props.isActiveDeviceIOS}

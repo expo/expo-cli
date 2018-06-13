@@ -58,10 +58,14 @@ const typeDefs = graphql`
 
   type ProjectSettings {
     hostType: HostType!
+    dev: Boolean!
+    minify: Boolean!
   }
 
   input ProjectSettingsInput {
     hostType: HostType
+    dev: Boolean
+    minify: Boolean
   }
 
   type ProjectConfig {
