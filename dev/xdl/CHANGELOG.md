@@ -10,6 +10,14 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.3.0] - 2018-06-14
+
+### Changed
+
+* Hide redundant messages from the logs:
+  - Stop printing "Expo is ready"
+  - Stop printing "Scanning folders for symlinks in..."
+
 ## [50.2.1] - 2018-06-12
 
 ### Changed
