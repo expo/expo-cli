@@ -1,4 +1,4 @@
-import { Logger, PackagerLogsStream, ProjectUtils } from 'xdl';
+import { Logger, PackagerLogsStream, ProjectUtils, ProjectSettings } from 'xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import * as graphql from 'graphql';
 import bodyParser from 'body-parser';
@@ -24,6 +24,7 @@ export async function startAsync(projectDir) {
     httpServer.listen(port);
   });
   startGraphQLServer(projectDir, httpServer);
+  await ProjectSettings.setPackagerInfoAsync(projectDir, { devToolsPort: port });
   return `http://localhost:${port}`;
 }
 
