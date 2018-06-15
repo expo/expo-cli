@@ -229,11 +229,12 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
 
   async runningAsExpert(
     credsStarter,
+    credsMetadata,
     credentialsToAskFor = ['distCert', 'pushCert', 'provisioningProfile']
   ) {
     log(expertPrompt);
     for (const choice of credentialsToAskFor) {
-      await this.userProvidedOverride(credsStarter, choice);
+      await this.userProvidedOverride(credsStarter, choice, credsMetadata);
     }
   }
 
@@ -603,7 +604,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           credsMissing
         );
       } else {
-        await this.runningAsExpert(credsStarter, credsMissing);
+        await this.runningAsExpert(credsStarter, credsMetadata, credsMissing);
       }
       const { result, ...creds } = credsStarter;
       this._areCredsMissing(creds);
