@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [55.0.2] - 2018-06-15
+
+### Changed
+
+* Fix providing credentials in an expert mode.
+
 ## [55.0.1] - 2018-06-12
 
 ### Changed
