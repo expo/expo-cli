@@ -541,9 +541,15 @@ const resolvers = {
         };
       }
     },
-    publishProject(parent, { releaseChannel }, context) {
-      const currentProject = context.getCurrentProject();
-      return Project.publishAsync(currentProject.projectDir, { releaseChannel });
+    async publishProject(parent, { releaseChannel }, context) {
+      const { projectDir } = context.getCurrentProject();
+      try {
+        const result = await Project.publishAsync(projectDir, { releaseChannel });
+        return result;
+      } catch (error) {
+        ProjectUtils.logError(projectDir, 'expo', error.message);
+        throw error;
+      }
     },
     async setProjectSettings(parent, { settings }, context) {
       const currentProject = context.getCurrentProject();

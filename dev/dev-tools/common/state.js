@@ -341,37 +341,18 @@ export const publishProject = async (options, props) => {
     },
     props
   );
-  const result = await props.client.mutate({
-    mutation: gql`
-      mutation PublishProject {
-        publishProject {
-          url
+  let result;
+  try {
+    result = await props.client.mutate({
+      mutation: gql`
+        mutation PublishProject {
+          publishProject {
+            url
+          }
         }
-      }
-    `,
-  });
-  props.dispatch({
-    type: 'REMOVE_TOAST',
-    id: publishingId,
-  });
-  if (!result.errors) {
-    const url = result.data.publishProject.url;
-    props.dispatch({
-      type: 'ADD_TOAST',
-      toast: {
-        id: new Date().getTime(),
-        name: 'success',
-        text: (
-          <span>
-            Successfully published to{' '}
-            <a target="_blank" href={url}>
-              {url}
-            </a>.
-          </span>
-        ),
-      },
+      `,
     });
-  } else {
+  } catch (error) {
     props.dispatch({
       type: 'ADD_TOAST',
       toast: {
@@ -380,7 +361,29 @@ export const publishProject = async (options, props) => {
         text: `Failed to publish the project. See Metro logs for details.`,
       },
     });
+    throw error;
+  } finally {
+    props.dispatch({
+      type: 'REMOVE_TOAST',
+      id: publishingId,
+    });
   }
+  const url = result.data.publishProject.url;
+  props.dispatch({
+    type: 'ADD_TOAST',
+    toast: {
+      id: new Date().getTime(),
+      name: 'success',
+      text: (
+        <span>
+          Successfully published to{' '}
+          <a target="_blank" href={url}>
+            {url}
+          </a>.
+        </span>
+      ),
+    },
+  });
 };
 
 const UPDATE_LAST_READ = gql`
