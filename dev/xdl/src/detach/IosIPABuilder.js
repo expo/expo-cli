@@ -11,8 +11,13 @@ import * as IosCodeSigning from './IosCodeSigning';
 const logger = _logger.withFields({ buildPhase: 'building and signing IPA' });
 
 export default function createIPABuilder(buildParams) {
-  const { appUUID, keychainPath, bundleIdentifier, teamID } = buildParams;
-  const workingDir = process.env.TURTLE_WORKING_DIR_PATH;
+  const {
+    appUUID,
+    keychainPath,
+    bundleIdentifier,
+    teamID,
+    workingDir = process.env.TURTLE_WORKING_DIR_PATH,
+  } = buildParams;
   const workspace = path.join(
     workingDir,
     'shellAppWorkspaces',

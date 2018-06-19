@@ -957,6 +957,10 @@ export async function buildAsync(
     }
   }
 
+  if (process.env.FORCE_TURTLE_VERSION) {
+    options.forceTurtleVersion = process.env.FORCE_TURTLE_VERSION;
+  }
+
   let response = await Api.callMethodAsync('build', [], 'put', {
     manifest: exp,
     options,

@@ -378,6 +378,7 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
 async function _configureShellPlistAsync(context: StandaloneContext) {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
+  const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXShell', shellPlist => {
     // older SDK versions rely on `isShell` flag in xdl
@@ -411,7 +412,7 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
       shellPlist.isSplashScreenDisabled = true;
     }
 
-    logger.info('Using standalone config:', shellPlist);
+    buildPhaseLogger.info('Using standalone config:', shellPlist);
     return shellPlist;
   });
 }

@@ -69,6 +69,9 @@ module.exports = {
   get FsCache() {
     return require('./tools/FsCache');
   },
+  get ImageHelpers() {
+    return require('./detach/ImageHelpers');
+  },
   get Intercom() {
     return require('./Intercom');
   },
@@ -101,6 +104,9 @@ module.exports = {
   },
   get Logger() {
     return require('./Logger').default;
+  },
+  get LoggerDetach() {
+    return require('./detach/Logger').default;
   },
   get NotificationCode() {
     return require('./NotificationCode').default;

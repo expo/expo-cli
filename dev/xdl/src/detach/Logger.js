@@ -3,24 +3,46 @@ import _ from 'lodash';
 
 const PRINT_JSON_LOGS = process.env.JSON_LOGS === '1';
 const LOGGER_NAME = 'xdl-detach';
+const LEVELS = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
 
-const logger = PRINT_JSON_LOGS ? bunyan.createLogger({ name: LOGGER_NAME }) : console;
-logger.withFields = extraFields => withFields(logger, extraFields);
+const logger = {
+  init(levels) {
+    this.loggerObj = PRINT_JSON_LOGS ? bunyan.createLogger({ name: LOGGER_NAME }) : console;
+    this.configured = PRINT_JSON_LOGS;
+    this.selfConfigured = this.configured && true;
+    this.extraFields = {};
+    levels.forEach(level => {
+      this[level] = function(...args) {
+        this.logLine(level, ...args);
+      };
+    });
+  },
+  configure(loggerObj) {
+    this.loggerObj = loggerObj;
+    this.configured = true;
+    this.selfConfigured = false;
+  },
+  withFields(extraFields) {
+    return Object.assign({}, this, { extraFields: { ...this.extraFields, ...extraFields } });
+  },
+  logLine(level, ...args) {
+    const argsToLog = [...args];
+    const extraFieldsFromArgsExist = _.isPlainObject(_.first(args));
+    const extraFieldsFromArgs = extraFieldsFromArgsExist ? args[0] : {};
+    if (extraFieldsFromArgsExist) {
+      argsToLog.shift();
+    }
+    const extraFields = { ...extraFieldsFromArgs, ...this.extraFields };
+    if (!_.isEmpty(extraFields)) {
+      argsToLog.unshift(extraFields);
+    }
+    this.loggerObj[level](...argsToLog);
+  },
+};
+
+logger.init(LEVELS);
 
 export default logger;
-
-const levels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
-
-export function withFields(logger, extraFields) {
-  if (!PRINT_JSON_LOGS) {
-    return console;
-  }
-
-  return levels.reduce((obj, level) => {
-    obj[level] = (...args) => logger[level](extraFields, ...args);
-    return obj;
-  }, {});
-}
 
 export function pipeOutputToLogger(
   { stdout, stderr } = {},
@@ -48,10 +70,17 @@ function logMultiline(data, extraFields) {
   lines.forEach(line => {
     if (line) {
       const args = [line];
-      if (PRINT_JSON_LOGS) {
+      if (logger.configured) {
         args.unshift(extraFields);
       }
-      logger.info(...args);
+      const shouldntLogMessage =
+        extraFields.source === 'stdout' &&
+        extraFields.dontShowStdout &&
+        logger.configured &&
+        !logger.selfConfigured;
+      if (!shouldntLogMessage) {
+        logger.info(...args);
+      }
     }
   });
 }

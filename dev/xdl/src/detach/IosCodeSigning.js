@@ -161,30 +161,34 @@ async function buildIPA(
       }
     );
   } else {
-    await _runFastlane(credentials, [
-      'gym',
-      '-n',
-      path.basename(ipaPath),
-      '--workspace',
-      workspace,
-      '--scheme',
-      'ExpoKitApp',
-      '--archive_path',
-      archivePath,
-      '--skip_build_archive',
-      'true',
-      '-i',
-      codeSignIdentity,
-      '--export_options',
-      exportOptionsPlistPath,
-      '--export_method',
-      exportMethod,
-      '--export_xcargs',
-      `OTHER_CODE_SIGN_FLAGS="--keychain ${keychainPath}"`,
-      '-o',
-      path.dirname(ipaPath),
-      '--verbose',
-    ]);
+    await runFastlane(
+      credentials,
+      [
+        'gym',
+        '-n',
+        path.basename(ipaPath),
+        '--workspace',
+        workspace,
+        '--scheme',
+        'ExpoKitApp',
+        '--archive_path',
+        archivePath,
+        '--skip_build_archive',
+        'true',
+        '-i',
+        codeSignIdentity,
+        '--export_options',
+        exportOptionsPlistPath,
+        '--export_method',
+        exportMethod,
+        '--export_xcargs',
+        `OTHER_CODE_SIGN_FLAGS="--keychain ${keychainPath}"`,
+        '-o',
+        path.dirname(ipaPath),
+        '--verbose',
+      ],
+      { buildPhase: 'building and signing IPA' }
+    );
   }
 }
 
@@ -289,28 +293,31 @@ async function resignIPA(
   credentials
 ) {
   await spawnAsyncThrowError('cp', ['-rf', sourceIpaPath, destIpaPath]);
-  await _runFastlane(credentials, [
-    'sigh',
-    'resign',
-    '--verbose',
-    '--entitlements',
-    entitlementsPath,
-    '--signing_identity',
-    codeSignIdentity,
-    '--keychain_path',
-    keychainPath,
-    '--provisioning_profile',
-    provisioningProfilePath,
-    destIpaPath,
-  ]);
+  await runFastlane(
+    credentials,
+    [
+      'sigh',
+      'resign',
+      '--verbose',
+      '--entitlements',
+      entitlementsPath,
+      '--signing_identity',
+      codeSignIdentity,
+      '--keychain_path',
+      keychainPath,
+      '--provisioning_profile',
+      provisioningProfilePath,
+      destIpaPath,
+    ],
+    { buildPhase: 'building and signing IPA' }
+  );
 }
 
-async function _runFastlane({ teamID, password }, fastlaneArgs) {
+async function runFastlane({ teamID }, fastlaneArgs, loggerFields) {
   const fastlaneEnvVars = {
     FASTLANE_SKIP_UPDATE_CHECK: 1,
     FASTLANE_DISABLE_COLORS: 1,
     FASTLANE_TEAM_ID: teamID,
-    FASTLANE_PASSWORD: password,
     CI: 1,
     LC_ALL: 'en_US.UTF-8',
   };
@@ -319,6 +326,7 @@ async function _runFastlane({ teamID, password }, fastlaneArgs) {
     env: { ...process.env, ...fastlaneEnvVars },
     pipeToLogger: true,
     dontShowStdout: false,
+    loggerFields,
   });
 }
 

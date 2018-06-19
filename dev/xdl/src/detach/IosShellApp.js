@@ -14,7 +14,7 @@ import StandaloneContext from './StandaloneContext';
 import logger from './Logger';
 
 // TODO: we will need to vary this when we support multiple different build artifacts.
-const DEFAULT_EXPOKIT_WORKSPACE_NAME = 'ExpoKitApp';
+export const DEFAULT_EXPOKIT_WORKSPACE_NAME = 'ExpoKitApp';
 
 function _validateCLIArgs(args) {
   args.type = args.type || 'archive';
@@ -146,27 +146,24 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
 
 /**
  * @param workspacePath optionally provide a path for the unbuilt xcode workspace to create/use.
+ * @param expoSourcePath path to expo client app sourcecode (/ios dir from expo/expo repo)
  */
 async function _createStandaloneContextAsync(args) {
   // right now we only ever build a single detached workspace for service contexts.
   // TODO: support multiple different pod configurations, assemble a cache of those builds.
-  const expoSourcePath = '../ios';
+  const expoSourcePath = args.expoSourcePath || '../ios';
   let workspaceSourcePath;
   if (args.workspacePath) {
     workspaceSourcePath = args.workspacePath;
   } else {
-    workspaceSourcePath = path.join(
-      expoSourcePath,
-      '..',
-      'shellAppWorkspaces',
-      'ios',
-      'default'
-    );
+    workspaceSourcePath = path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'ios', 'default');
   }
-  let { privateConfigFile } = args;
+  let { privateConfigFile, privateConfigData } = args;
 
   let privateConfig;
-  if (privateConfigFile) {
+  if (privateConfigData) {
+    privateConfig = privateConfigData;
+  } else if (privateConfigFile) {
     let privateConfigContents = await fs.readFile(privateConfigFile, 'utf8');
     privateConfig = JSON.parse(privateConfigContents);
   }
@@ -208,6 +205,7 @@ async function _createStandaloneContextAsync(args) {
  *  @param appleTeamId Apple Developer's account Team ID
  *  @param output specify the output path of the configured archive (ie) /tmp/my-app-archive-build.xcarchive or /tmp/my-app-ios-build.tar.gz
  *  @param type type of artifact to configure (simulator or archive)
+ *  @param expoSourcePath path to expo client app sourcecode (/ios dir from expo/expo repo)
  */
 async function configureAndCopyArchiveAsync(args) {
   args = _validateCLIArgs(args);
@@ -258,7 +256,7 @@ async function _createTurtleWorkspaceAsync(context, args) {
 /**
  * External-facing version can be used to create a turtle workspace without building it.
  * Probably only useful for local testing.
- * 
+ *
  * @param workspacePath (optional) provide some other path to create the workspace besides the default
  * @param url (optional, with sdkVersion) url to an expo manifest, if you want the workspace to be configured automatically
  * @param sdkVersion (optional, with url) sdkVersion to an expo manifest, if you want the workspace to be configured automatically
@@ -266,16 +264,25 @@ async function _createTurtleWorkspaceAsync(context, args) {
 async function createTurtleWorkspaceAsync(args) {
   args = _validateCLIArgs(args);
   if (!args.workspacePath) {
-    logger.info('No workspace path was provided with --workspacePath, so the default will be used.');
+    logger.info(
+      'No workspace path was provided with --workspacePath, so the default will be used.'
+    );
   }
   const context = await _createStandaloneContextAsync(args);
   await _createTurtleWorkspaceAsync(context, args);
-  logger.info(`Created turtle workspace at ${context.build.ios.workspaceSourcePath}. You can open and run this in Xcode.`);
+  logger.info(
+    `Created turtle workspace at ${context.build.ios
+      .workspaceSourcePath}. You can open and run this in Xcode.`
+  );
   if (context.config) {
     await IosNSBundle.configureAsync(context);
-    logger.info(`The turtle workspace was configured for the url ${args.url}. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`);
+    logger.info(
+      `The turtle workspace was configured for the url ${args.url}. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
+    );
   } else {
-    logger.info(`You can specify --url <manifestUrl> --sdkVersion <version> to configure this workspace as a particular Expo app.\n\nBecause those arguments were omitted, the workspace has not been configured. It will compile but not run. The minimum configuration to get something running is to specify a manifest url in 'EXShell.plist' (for Release builds) or 'EXBuildConstants.plist' (for Debug builds).`);
+    logger.info(
+      `You can specify --url <manifestUrl> --sdkVersion <version> to configure this workspace as a particular Expo app.\n\nBecause those arguments were omitted, the workspace has not been configured. It will compile but not run. The minimum configuration to get something running is to specify a manifest url in 'EXShell.plist' (for Release builds) or 'EXBuildConstants.plist' (for Debug builds).`
+    );
   }
 }
 
@@ -314,8 +321,4 @@ async function buildAndCopyArtifactAsync(args) {
   await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
 }
 
-export {
-  buildAndCopyArtifactAsync,
-  configureAndCopyArchiveAsync,
-  createTurtleWorkspaceAsync,
-};
+export { buildAndCopyArtifactAsync, configureAndCopyArchiveAsync, createTurtleWorkspaceAsync };

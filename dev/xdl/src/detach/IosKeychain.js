@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import _logger from './Logger';
 import { spawnAsyncThrowError, createSpawner } from './ExponentTools';
 
-export async function createKeychain(appUUID) {
+export async function createKeychain(appUUID, saveResultToFile = true) {
   const BUILD_PHASE = 'creating keychain';
   const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
   const spawn = createSpawner(BUILD_PHASE, logger);
@@ -32,8 +32,13 @@ export async function createKeychain(appUUID) {
     path,
     password,
   };
-  await fs.writeFile(keychainInfoPath, JSON.stringify(keychainInfo));
-  logger.info('saved keychain info to %s', keychainInfoPath);
+
+  if (saveResultToFile) {
+    await fs.writeFile(keychainInfoPath, JSON.stringify(keychainInfo));
+    logger.info('saved keychain info to %s', keychainInfoPath);
+  }
+
+  return keychainInfo;
 }
 
 export async function deleteKeychain({ path, appUUID }) {
@@ -50,7 +55,7 @@ export async function deleteKeychain({ path, appUUID }) {
 export async function importIntoKeychain({ keychainPath, certPath, certPassword }) {
   const BUILD_PHASE = 'importing certificate into keychain';
   const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
-  const spawn = createSpawner(BUILD_PHASE, logger);
+  const spawn = createSpawner(BUILD_PHASE);
 
   logger.info('importing certificate into keychain...');
   const args = ['import', certPath, '-A', '-k', keychainPath, '-f', 'pkcs12'];

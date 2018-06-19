@@ -16,7 +16,9 @@ import {
 } from './ExponentTools';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
-import logger from './Logger';
+import _logger from './Logger';
+
+const logger = _logger.withFields({ buildPhase: 'configuring NSBundle' });
 
 const ASPECT_FILL = 'scaleAspectFill';
 const ASPECT_FIT = 'scaleAspectFit';
@@ -182,7 +184,7 @@ async function _copyIntermediateLaunchScreenAsync(
   await spawnAsyncThrowError('/bin/cp', [splashTemplateFilename, launchScreenPath], {
     stdio: 'inherit',
   });
-  return;
+
 }
 
 function _maybeAbortForBackwardsCompatibility(context: StandaloneContext) {
@@ -253,7 +255,7 @@ async function configureLaunchAssetsAsync(
       rimraf.sync(generatedUnnecessaryNib);
     }
   }
-  return;
+
 }
 
 export { configureLaunchAssetsAsync };

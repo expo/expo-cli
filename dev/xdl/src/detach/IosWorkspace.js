@@ -137,8 +137,6 @@ async function _renameAndMoveProjectFilesAsync(
       path.join(projectDirectory, destFileName),
     ]);
   });
-
-  return;
 }
 
 async function _configureVersionsPlistAsync(
@@ -170,7 +168,6 @@ async function _configureBuildConstantsPlistAsync(
     constantsConfig.STANDALONE_CONTEXT_TYPE = context.type;
     return constantsConfig;
   });
-  return;
 }
 
 async function _renderPodfileFromTemplateAsync(
@@ -291,8 +288,6 @@ async function createDetachedAsync(context: StandaloneContext) {
     }
     await IosPlist.cleanBackupAsync(supportingDirectory, 'EXSDKVersions', false);
   }
-
-  return;
 }
 
 function addDetachedConfigToExp(exp: Object, context: StandaloneContext): Object {

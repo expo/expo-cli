@@ -101,6 +101,7 @@ export default class BaseBuilder {
       let status;
       switch (job.status) {
         case 'pending':
+        case 'sent-to-queue':
           status = 'Build waiting in queue...';
           break;
         case 'started':
@@ -190,6 +191,7 @@ ${buildStatus.id}
         case 'finished':
           return job;
         case 'pending':
+        case 'sent-to-queue':
         case 'started':
         case 'in-progress':
           break;

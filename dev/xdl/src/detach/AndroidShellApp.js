@@ -48,18 +48,7 @@ function xmlWeirdAndroidEscape(original) {
 }
 
 exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(args: any) {
-  let {
-    url,
-    sdkVersion,
-    androidPackage,
-    privateConfigFile,
-    keystore,
-    alias,
-    keystorePassword,
-    keyPassword,
-    releaseChannel,
-    outputFile,
-  } = args;
+  let { url, sdkVersion, releaseChannel } = args;
 
   releaseChannel = releaseChannel ? releaseChannel : 'default';
   let manifest = await getManifestAsync(url, {
@@ -1142,7 +1131,16 @@ async function buildShellAppAsync(context: StandaloneContext) {
       cwd: shellPath,
     });
     await fs.copy(
-      path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'prodMinSdkProdKernel', 'release', 'app-prodMinSdk-prodKernel-release-unsigned.apk'),
+      path.join(
+        shellPath,
+        'app',
+        'build',
+        'outputs',
+        'apk',
+        'prodMinSdkProdKernel',
+        'release',
+        'app-prodMinSdk-prodKernel-release-unsigned.apk'
+      ),
       `shell-unaligned.apk`
     );
     await spawnAsync(
@@ -1200,7 +1198,16 @@ async function buildShellAppAsync(context: StandaloneContext) {
       cwd: shellPath,
     });
     await fs.copy(
-      path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'devMinSdkDevKernel', 'debug', 'app-devMinSdk-devKernel-debug.apk'),
+      path.join(
+        shellPath,
+        'app',
+        'build',
+        'outputs',
+        'apk',
+        'devMinSdkDevKernel',
+        'debug',
+        'app-devMinSdk-devKernel-debug.apk'
+      ),
       `/tmp/shell-debug.apk`
     );
   }
