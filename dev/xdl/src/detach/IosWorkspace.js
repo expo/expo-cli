@@ -23,6 +23,36 @@ import * as Utils from '../Utils';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
 
+const DEFAULT_DETACHED_UNIVERSAL_MODULES = [
+  { podName: 'EXCore', libName: 'expo-core' },
+  { podName: 'EXCamera', libName: 'expo-camera' },
+  {
+    podName: 'EXFileSystem',
+    libName: 'expo-file-system',
+  },
+  {
+    podName: 'EXFileSystemInterface',
+    libName: 'expo-file-system-interface',
+  },
+  {
+    podName: 'EXReactNativeAdapter',
+    libName: 'expo-react-native-adapter',
+  },
+  { podName: 'EXSensors', libName: 'expo-sensors' },
+  {
+    podName: 'EXSensorsInterface',
+    libName: 'expo-sensors-interface',
+  },
+  {
+    podName: 'EXPermissionsInterface',
+    libName: 'expo-permissions-interface',
+  },
+  {
+    podName: 'EXFaceDetectorInterface',
+    libName: 'expo-face-detector-interface',
+  },
+];
+
 async function _getVersionedExpoKitConfigAsync(
   sdkVersion: string,
   skipServerValidation: boolean
@@ -182,11 +212,22 @@ async function _renderPodfileFromTemplateAsync(
     TARGET_NAME: projectName,
   };
   let reactNativeDependencyPath;
+  const universalModules = DEFAULT_DETACHED_UNIVERSAL_MODULES;
   if (context.type === 'user') {
     invariant(iosClientVersion, `The iOS client version must be specified`);
     reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
     podfileSubstitutions.EXPOKIT_TAG = `ios/${iosClientVersion}`;
     podfileTemplateFilename = 'ExpoKit-Podfile';
+    const expoDependenciesPath = path.join(
+      context.data.projectPath,
+      'node_modules',
+      'expo',
+      'node_modules'
+    );
+    podfileSubstitutions.UNIVERSAL_MODULES = universalModules.map(module => ({
+      ...module,
+      path: path.join(expoDependenciesPath, module.libName, 'ios'),
+    }));
   } else if (context.type === 'service') {
     reactNativeDependencyPath = path.join(
       expoRootTemplateDirectory,
@@ -202,6 +243,11 @@ async function _renderPodfileFromTemplateAsync(
       iosProjectDirectory,
       path.join(expoRootTemplateDirectory, 'ios', 'versioned-react-native')
     );
+    const modulesPath = path.join(expoRootTemplateDirectory, 'modules');
+    podfileSubstitutions.UNIVERSAL_MODULES = universalModules.map(module => ({
+      ...module,
+      path: path.join(modulesPath, module.libName, 'ios'),
+    }));
     podfileTemplateFilename = 'ExpoKit-Podfile-multiple-versions';
   } else {
     throw new Error(`Unsupported context type: ${context.type}`);
@@ -210,6 +256,10 @@ async function _renderPodfileFromTemplateAsync(
     iosProjectDirectory,
     reactNativeDependencyPath
   );
+  podfileSubstitutions.UNIVERSAL_MODULES = podfileSubstitutions.UNIVERSAL_MODULES.map(module => ({
+    ...module,
+    path: path.relative(iosProjectDirectory, module.path),
+  }));
 
   // env flags for testing
   if (process.env.EXPOKIT_TAG_IOS) {
@@ -221,6 +271,14 @@ async function _renderPodfileFromTemplateAsync(
       iosProjectDirectory,
       process.env.EXPO_VIEW_DIR
     );
+    // If EXPO_VIEW_DIR is defined overwrite UNIVERSAL_MODULES with paths pointing to EXPO_VIEW_DIR
+    podfileSubstitutions.UNIVERSAL_MODULES = podfileSubstitutions.UNIVERSAL_MODULES.map(module => ({
+      ...module,
+      path: path.relative(
+        iosProjectDirectory,
+        path.join(process.env.EXPO_VIEW_DIR, 'modules', module.libName, 'ios')
+      ),
+    }));
   }
   const templatePodfilePath = path.join(
     expoRootTemplateDirectory,

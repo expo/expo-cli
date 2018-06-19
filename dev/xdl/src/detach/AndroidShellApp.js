@@ -445,7 +445,16 @@ export async function runShellAppModificationsAsync(
     let appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
     await regexFileAsync(/\/\* UNCOMMENT WHEN DISTRIBUTING/g, '', appBuildGradle);
     await regexFileAsync(/END UNCOMMENT WHEN DISTRIBUTING \*\//g, '', appBuildGradle);
-    await regexFileAsync(`compile project(path: ':expoview')`, '', appBuildGradle);
+    await regexFileAsync(
+      /\/\/ WHEN_DISTRIBUTING_REMOVE_FROM_HERE/g,
+      '/* REMOVED_WHEN_DISTRIBUTING_FROM_HERE',
+      appBuildGradle
+    );
+    await regexFileAsync(
+      /\/\/ WHEN_DISTRIBUTING_REMOVE_TO_HERE/g,
+      'REMOVED_WHEN_DISTRIBUTING_TO_HERE */',
+      appBuildGradle
+    );
 
     // Don't need to compile expoview or ReactAndroid
     // react-native link looks for a \n so we need that. See https://github.com/facebook/react-native/blob/master/local-cli/link/android/patches/makeSettingsPatch.js

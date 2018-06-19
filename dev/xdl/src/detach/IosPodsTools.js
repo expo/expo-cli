@@ -44,6 +44,10 @@ function _validatePodfileSubstitutions(substitutions) {
     'TARGET_NAME',
     // path from Podfile to versioned-react-native
     'VERSIONED_REACT_NATIVE_PATH',
+    // Expo universal modules dependencies
+    'PODFILE_UNVERSIONED_EXPO_MODULES_DEPENDENCIES',
+    // Universal modules configurations to be included in the Podfile
+    'UNIVERSAL_MODULES',
   ];
 
   for (const key in substitutions) {
@@ -353,6 +357,26 @@ async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubst
   await fs.writeFile(pathToOutput, result);
 }
 
+function _renderUnversionedUniversalModulesDependencies(universalModules, sdkVersion) {
+  return indentString(
+    universalModules
+      .map(moduleInfo =>
+        _renderUnversionedUniversalModuleDependency(moduleInfo.podName, moduleInfo.path, sdkVersion)
+      )
+      .join('\n'),
+    2
+  );
+}
+
+function _renderUnversionedUniversalModuleDependency(podName, path, sdkVersion) {
+  const attributes = {
+    path,
+    inhibit_warnings: true,
+  };
+  return `pod '${podName}',
+${indentString(_renderDependencyAttributes(attributes), 2)}`;
+}
+
 /**
  *  @param pathToTemplate path to template Podfile
  *  @param pathToOutput path to render final Podfile
@@ -410,9 +434,18 @@ async function renderPodfileAsync(
     { isPodfile: true }
   );
 
+  let universalModules = moreSubstitutions.UNIVERSAL_MODULES;
+  if (!universalModules) {
+    universalModules = [];
+  }
+
   let substitutions = {
     EXPONENT_CLIENT_DEPS: podDependencies,
     EXPOKIT_DEPENDENCY: _renderExpoKitDependency(expoKitDependencyOptions, sdkVersion),
+    PODFILE_UNVERSIONED_EXPO_MODULES_DEPENDENCIES: _renderUnversionedUniversalModulesDependencies(
+      universalModules,
+      sdkVersion
+    ),
     PODFILE_UNVERSIONED_RN_DEPENDENCY: _renderUnversionedReactNativeDependency(
       rnDependencyOptions,
       sdkVersion
