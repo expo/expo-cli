@@ -64,7 +64,6 @@
     "rimraf": "^2.5.2"
   },
   "dependencies": {
-    "@babel/code-frame": "^7.0.0-beta.44",
     "@expo/bunyan": "^1.8.10",
     "@expo/json-file": "^8.0.0",
     "@expo/simple-spinner": "^1.0.2",
