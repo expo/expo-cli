@@ -561,10 +561,12 @@ async function _validatePackagerReadyAsync(projectRoot) {
   // Ensure the packager is started
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
-    throw new XDLError(
-      ErrorCode.NO_PACKAGER_PORT,
-      `No packager found for project at ${projectRoot}.`
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      'Metro Bundler is not running. Trying to restart it...'
     );
+    await startReactNativeServerAsync(projectRoot, { reset: true });
   }
 }
 
@@ -1217,9 +1219,15 @@ export async function startReactNativeServerAsync(
     }
   });
   let exitPromise = new Promise((resolve, reject) => {
-    packagerProcess.once('exit', code => {
+    packagerProcess.once('exit', async code => {
       ProjectUtils.logDebug(projectRoot, 'expo', `Metro Bundler process exited with code ${code}`);
       reject(new Error(`Metro Bundler process exited with code ${code}`));
+      try {
+        await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+          packagerPort: null,
+          packagerPid: null,
+        });
+      } catch (e) {}
     });
   });
   let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
