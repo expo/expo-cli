@@ -91,7 +91,7 @@
     "source-map-support": "^0.4.1",
     "untildify": "^3.0.2",
     "wordwrap": "^1.0.0",
-    "xdl": "50.2.1"
+    "xdl": "50.4.0"
   },
   "optionalDependencies": {
     "@expo/traveling-fastlane-darwin": "1.5.0",
