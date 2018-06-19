@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.4.0] - 2018-06-19
+
+### Added
+
+* Added support for new turtle agent.
+
 ## [50.3.0] - 2018-06-14
 
 ### Changed
