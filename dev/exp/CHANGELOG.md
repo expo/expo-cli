@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [55.0.3] - 2018-06-19
+
+### Added
+
+* Add support for new build job status (`sent-to-queue`).
+
 ## [55.0.2] - 2018-06-15
 
 ### Changed
