@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [55.0.4] - 2018-06-20
+
+### Changed
+
+* Upgrade XDL to 50.4.2.
+
 ## [55.0.3] - 2018-06-19
 
 ### Added
