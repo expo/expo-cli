@@ -10,6 +10,13 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.4.1] - 2018-06-20
+
+### Removed
+
+* Remove ImageHelpers module.
+* Remove sharp from peer dependencies.
+
 ## [50.4.0] - 2018-06-19
 
 ### Added
