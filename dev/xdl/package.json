@@ -45,7 +45,6 @@
     "concat-stream": "^1.6.0",
     "decache": "^4.1.0",
     "delay-async": "^1.0.0",
-    "detect-installed": "^2.0.4",
     "es6-error": "^4.0.2",
     "escape-string-regexp": "^1.0.5",
     "express": "^4.13.4",
@@ -131,10 +130,6 @@
     "mock-fs": "^3.12.1",
     "prettier": "~1.7.4",
     "promise-print": "^2.3.0",
-    "rimraf": "^2.5.4",
-    "sharp": "^0.18.4"
-  },
-  "peerDependencies": {
-    "sharp": "^0.18.4"
+    "rimraf": "^2.5.4"
   }
 }
