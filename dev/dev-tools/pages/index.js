@@ -78,7 +78,7 @@ const query = gql`
 `;
 
 const projectPollQuery = gql`
-  query IndexPageQuery {
+  query IndexPagePollingQuery {
     currentProject {
       id
       manifestUrl
