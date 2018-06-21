@@ -40,15 +40,6 @@ describe('Holistic Unit Test', () => {
       expect(e.errors.length).toBe(5);
     }
   });
-
-  it('bad example app.json all', async () => {
-    try {
-      await S.validateAll(bad);
-    } catch (e) {
-      expect(e).toBeTruthy();
-      expect(e.errors.length).toBe(6);
-    }
-  });
 });
 
 describe('Manual Validation Individual Unit Tests', () => {
