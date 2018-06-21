@@ -11,6 +11,7 @@ import LoggerIcon from 'app/components/LoggerIcon';
 
 const STYLES_TAB_SECTION = css`
   display: flex;
+  width: 100%;
   flex-direction: row;
   background: ${Constants.colors.white};
   padding: 13px 16px 14px 16px;
@@ -53,8 +54,10 @@ const STYLES_TAB_SECTION_CONTAINER_TITLE = css`
 `;
 
 const STYLES_TAB_SECTION_CONTAINER_DESCRIPTION = css`
+  display: flex;
   font-family: ${Constants.fontFamilies.demi};
   font-size: 14px;
+  line-height: 18px;
   margin-bottom: 8px;
 `;
 
