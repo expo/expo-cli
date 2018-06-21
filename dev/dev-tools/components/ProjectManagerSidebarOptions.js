@@ -197,7 +197,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
 
         {this.props.isOnline ? (
           <div className={STYLES_CONTENT_GROUP} onClick={this._handleShowPublishView}>
-            <span className={STYLES_CONTENT_GROUP_LEFT}>Publish {this.props.title} to Expo.io</span>
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Publish or republish project</span>
             <span className={STYLES_CONTENT_GROUP_RIGHT}>
               <SVG.Arrow size="16px" />
             </span>
