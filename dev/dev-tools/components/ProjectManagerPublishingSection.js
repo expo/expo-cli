@@ -211,7 +211,7 @@ export default class ProjectManagerPublishingSection extends React.Component {
       <div className={STYLES_PUBLISHING_SECTION}>
         <h2 className={`${STYLES_HEADING} ${STYLES_HEADING_WITH_DISMISS}`}>
           <span className={STYLES_HEADING_WITH_DISMISS_LEFT}>
-            Publish your project to the internet
+            Publish or republish your project to the internet
           </span>
           <SVG.Dismiss
             className={STYLES_HEADING_WITH_DISMISS_RIGHT}
@@ -272,7 +272,7 @@ export default class ProjectManagerPublishingSection extends React.Component {
         <div className={STYLES_ACTIONS}>
           <PrimaryButtonWithStates
             states={{
-              IDLE: { text: 'Publish project to Expo.io', decoration: 'DEFAULT' },
+              IDLE: { text: 'Publish project', decoration: 'DEFAULT' },
               ERRORS: { text: 'You must fix errors before publishing', decoration: 'ERROR' },
               PUBLISHING: { text: 'Publishing...', decoration: 'LOADING' },
             }}
