@@ -18,7 +18,7 @@ const wait = delay =>
     window.setTimeout(resolve, delay);
   });
 
-const OVERLAY_Z_INDEX = 1;
+const OVERLAY_Z_INDEX = 10;
 
 const STYLES_HEADER = css`
   background: ${Constants.colors.yellow};
