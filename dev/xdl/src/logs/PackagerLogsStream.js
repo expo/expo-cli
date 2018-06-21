@@ -1,6 +1,7 @@
 /* @flow */
 import path from 'path';
 import escapeStringRegexp from 'escape-string-regexp';
+import chalk from 'chalk';
 
 import * as ProjectUtils from '../project/ProjectUtils';
 import Logger from '../Logger';
@@ -431,6 +432,8 @@ export default class PackagerLogsStream {
         `Error in ${error.filename}:`
       );
     }
+
+    message = chalk.red(message);
 
     let snippet = (this._getSnippetForError && this._getSnippetForError(error)) || error.snippet;
     if (snippet) {
