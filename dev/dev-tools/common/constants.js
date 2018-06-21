@@ -34,6 +34,18 @@ export const logLevel = {
   ERROR: colors.red,
 };
 
+// https://github.com/IonicaBizau/anser/blob/15a0c888382d7a9681ffe85fd4741ff1a5cd60f4/lib/index.js#L5
+export const ansiColorOverrides = {
+  '0, 0, 0': colors.black,
+  '187, 0, 0': colors.red,
+  '0, 187, 0': colors.green,
+  '187, 187, 0': colors.yellow,
+  '0, 0, 187': undefined, // blue
+  '187, 0, 187': undefined, // magenta
+  '0, 187, 187': undefined, // cyan
+  '255,255,255': colors.white,
+};
+
 export const logLevelWithAlpha = {
   DEUBG: 'rgba(255, 255, 255, 0.5)',
   INFO: 'rgba(255, 255, 255, 0.5)',

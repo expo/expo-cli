@@ -1,7 +1,7 @@
+import React from 'react';
 import styled, { css } from 'react-emotion';
 import { DropTarget } from 'react-dnd';
 
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
 import { Trash } from 'app/common/svg';
 
@@ -148,13 +148,9 @@ class ProjectManagerSection extends React.Component {
       );
     }
 
-    let logElements = this.props.data.messages.nodes.map((logData, i) => {
-      return (
-        <Log key={logData.id} level={logData.level} time={logData.time}>
-          {logData.msg}
-        </Log>
-      );
-    });
+    let logElements = this.props.data.messages.nodes.map(message => (
+      <Log key={message.id} message={message} />
+    ));
 
     return this.props.connectDropTarget(
       <div className={STYLES_BOUNDARY}>

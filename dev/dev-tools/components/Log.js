@@ -1,6 +1,8 @@
-import styled, { css } from 'react-emotion';
+import React from 'react';
+import styled, { css, cx } from 'react-emotion';
+import hasAnsi from 'has-ansi';
+import { ansiToJson } from 'anser';
 
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
 
@@ -32,6 +34,7 @@ const STYLES_LOG_COL_CONTEXT = css`
 `;
 
 const STYLES_LOG_COL_CONTENT = css`
+  font-family: ${Constants.fontFamilies.mono};
   width: 100%;
   min-width: 25%;
   line-height: 14px;
@@ -67,24 +70,54 @@ const logLevelLabel = level => {
 };
 
 export default class Log extends React.Component {
+  renderMessageContent({ msg, level }) {
+    if (!hasAnsi(msg)) {
+      return (
+        <div
+          className={cx(
+            STYLES_LOG_COL_CONTENT,
+            level ? css({ color: Constants.logLevel[level] }) : null
+          )}>
+          {msg}
+        </div>
+      );
+    }
+    const chunks = ansiToJson(msg, {
+      remove_empty: true,
+    });
+    console.log(chunks);
+    const content = chunks.map(chunk => {
+      const style = {};
+      if (chunk.bg) {
+        style.backgroundColor = Constants.ansiColorOverrides[chunk.bg] || `rgb(${chunk.bg})`;
+      }
+      if (chunk.fg) {
+        style.color = Constants.ansiColorOverrides[chunk.fg] || `rgb(${chunk.fg})`;
+      }
+      return <span style={style}>{chunk.content}</span>;
+    });
+    return <div className={STYLES_LOG_COL_CONTENT}>{content}</div>;
+  }
+
   render() {
+    const { message } = this.props;
     return (
       <div className={STYLES_LOG}>
         <div className={STYLES_LOG_LEFT}>
-          {this.props.level ? (
+          {message.level ? (
             <div
               className={STYLES_LOG_COL_LEVEL}
               style={{
-                color: Constants.logLevelWithAlpha[this.props.level],
+                color: Constants.logLevelWithAlpha[message.level],
               }}>
-              {logLevelLabel(this.props.level)}
+              {logLevelLabel(message.level)}
             </div>
           ) : (
             undefined
           )}
-          {this.props.time ? (
+          {message.time ? (
             <div className={STYLES_LOG_COL_TIMESTAMP}>
-              {Strings.formatTimeMilitary(this.props.time)}
+              {Strings.formatTimeMilitary(message.time)}
             </div>
           ) : (
             undefined
@@ -95,11 +128,7 @@ export default class Log extends React.Component {
             undefined
           )}
         </div>
-        <div
-          className={STYLES_LOG_COL_CONTENT}
-          style={{ color: this.props.level ? Constants.logLevel[this.props.level] : undefined }}>
-          {this.props.children}
-        </div>
+        {this.renderMessageContent(message)}
       </div>
     );
   }

@@ -33,9 +33,10 @@
     "subscriptions-transport-ws": "0.9.8"
   },
   "peerDependencies": {
-    "xdl": "^50.0.0"
+    "xdl": "^50.4.0"
   },
   "devDependencies": {
+    "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
     "apollo-link-http": "^1.5.4",
@@ -54,6 +55,7 @@
     "emotion": "^8.0.5",
     "emotion-server": "^8.0.5",
     "graphql-tag": "^2.9.1",
+    "has-ansi": "^3.0.0",
     "http-proxy-middleware": "^0.18.0",
     "jest": "^22.4.3",
     "next": "^5.1.0",
@@ -69,7 +71,7 @@
     "react-textarea-autosize": "^6.1.0",
     "redux": "^3.7.2",
     "slugify": "^1.0.2",
-    "xdl": "^49.2.0"
+    "xdl": "^50.4.0"
   },
   "license": "MIT"
 }
