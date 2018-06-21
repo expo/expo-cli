@@ -116,7 +116,12 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
             done,
           };
         },
-
+        return() {
+          return iterator.return();
+        },
+        throw(error) {
+          return iterator.throw(error);
+        },
         [$$asyncIterator]() {
           return this;
         },
