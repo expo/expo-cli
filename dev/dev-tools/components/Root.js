@@ -82,8 +82,8 @@ injectGlobal`
 
   @font-face {
     font-family: ${Constants.fontFamilies.mono};
-    src: url('/static/fonts/MaisonNeue-Mono.woff2');
-    src: url('/static/fonts/MaisonNeue-Mono.woff') format('woff');
+    src: url('/static/fonts/MaisonNeueMono-Regular.woff2');
+    src: url('/static/fonts/MaisonNeueMono-Regular.woff') format('woff');
   }
 
   html, body {
