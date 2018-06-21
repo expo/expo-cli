@@ -338,6 +338,7 @@ export default class PackagerLogsStream {
     }
     if (bundleError) {
       progressChunk.msg = `Building JavaScript bundle: error`;
+      progressChunk.level = Logger.ERROR;
       if (msg.error) {
         progressChunk.msg += '\n' + (msg.error.description || msg.error.message);
       }
