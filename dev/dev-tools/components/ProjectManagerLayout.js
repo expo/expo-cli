@@ -45,11 +45,32 @@ const STYLES_CONTAINER_LEFT_TOP = css`
   min-height: 25%;
   height: 100%;
   width: 100%;
+  overflow-y: scroll;
+  /* width */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: ${Constants.colors.border};
+  }
+
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: ${Constants.colors.darkBorder};
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: ${Constants.colors.green};
+  }
 `;
 
 const STYLES_CONTAINER_LEFT_BOTTOM = css`
   border-top: 1px solid ${Constants.colors.border};
   background: ${Constants.colors.white};
+  z-index: 1;
   flex-shrink: 0;
   width: 100%;
 `;
