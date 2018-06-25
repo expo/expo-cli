@@ -67,9 +67,9 @@ async function _findIdentitiesByTeamID(teamID) {
   return output.join('');
 }
 
-function validateProvisioningProfile(plistData, params) {
-  _ensureDeveloperCertificateIsValid(plistData, params.distCertFingerprint);
-  _ensureBundleIdentifierIsValid(plistData, params);
+function validateProvisioningProfile(plistData, { distCertFingerprint, bundleIdentifier }) {
+  _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint);
+  _ensureBundleIdentifierIsValid(plistData, bundleIdentifier);
 }
 
 function _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
@@ -91,14 +91,13 @@ function _genDerCertFingerprint(certBase64) {
     .toUpperCase();
 }
 
-function _ensureBundleIdentifierIsValid(plistData, { bundleIdentifier, teamID }) {
-  const expectedApplicationIdentifier = `${teamID}.${bundleIdentifier}`;
+function _ensureBundleIdentifierIsValid(plistData, expectedBundleIdentifier) {
   const actualApplicationIdentifier = plistData.Entitlements['application-identifier'];
+  const actualBundleIdentifier = /\.(.+)/.exec(actualApplicationIdentifier)[1];
 
-  if (expectedApplicationIdentifier !== actualApplicationIdentifier) {
-    const actualBundleIdentifier = /\.(.+)/.exec(actualApplicationIdentifier)[1];
+  if (expectedBundleIdentifier !== actualBundleIdentifier) {
     throw new Error(
-      `validateProvisioningProfile: wrong bundleIdentifier found in provisioning profile; expected: ${bundleIdentifier}, found: ${actualBundleIdentifier}`
+      `validateProvisioningProfile: wrong bundleIdentifier found in provisioning profile; expected: ${expectedBundleIdentifier}, found (in provisioning profile): ${actualBundleIdentifier}`
     );
   }
 }
