@@ -165,60 +165,6 @@ function formatValidationError(validationError) {
     : ''}${validationError.message}.`;
 }
 
-async function _validatePackageJsonAsync(exp, pkg, projectRoot): Promise<number> {
-  // TODO: Check any native module versions here
-  if (Config.validation.reactNativeVersionWarnings) {
-    let reactNative = pkg.dependencies['react-native'];
-
-    // Expo fork of react-native is required
-    if (!reactNative.match(/expo\/react-native/)) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`,
-        'doctor-not-using-expo-fork'
-      );
-      return WARNING;
-    }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
-
-    let sdkVersions = await Api.sdkVersionsAsync();
-    let sdkVersion = exp.sdkVersion;
-    try {
-      let reactNativeTag = reactNative.match(/sdk-\d+\.\d+\.\d+/)[0];
-      let sdkVersionObject = sdkVersions[sdkVersion];
-
-      // TODO: Want to be smarter about this. Maybe warn if there's a newer version.
-      if (
-        semver.major(Versions.parseSdkVersionFromTag(reactNativeTag)) !==
-        semver.major(Versions.parseSdkVersionFromTag(sdkVersionObject['expoReactNativeTag']))
-      ) {
-        ProjectUtils.logWarning(
-          projectRoot,
-          'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject[
-            'expoReactNativeTag'
-          ]}`,
-          'doctor-invalid-version-of-react-native'
-        );
-        return WARNING;
-      }
-      ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-version-of-react-native');
-
-      ProjectUtils.clearNotification(projectRoot, 'doctor-malformed-version-of-react-native');
-    } catch (e) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Warning: ${reactNative} is not a valid version. Version must be in the form of sdk-x.y.z. Please update your package.json file.`,
-        'doctor-malformed-version-of-react-native'
-      );
-      return WARNING;
-    }
-  }
-  return NO_ISSUES;
-}
-
 async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promise<number> {
   if (!exp || !pkg) {
     // readConfigJsonAsync already logged an error
@@ -306,18 +252,6 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
 
-  // react-native is required
-  if (!pkg.dependencies || !pkg.dependencies['react-native']) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: Can't find react-native in package.json dependencies`,
-      'doctor-no-react-native-in-package-json'
-    );
-    return ERROR;
-  }
-  ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
-
   let sdkVersions = await Api.sdkVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(
@@ -366,9 +300,21 @@ async function _validateReactNativeVersionAsync(
   sdkVersion
 ): Promise<number> {
   if (Config.validation.reactNativeVersionWarnings) {
-    let reactNative = pkg.dependencies['react-native'];
+    let reactNative = pkg.dependencies ? pkg.dependencies['react-native'] : null;
 
-    if (!reactNative.match(/expo\/react-native/)) {
+    // react-native is required
+    if (!reactNative) {
+      ProjectUtils.logError(
+        projectRoot,
+        'expo',
+        `Error: Can't find react-native in package.json dependencies`,
+        'doctor-no-react-native-in-package-json'
+      );
+      return ERROR;
+    }
+    ProjectUtils.clearNotification(projectRoot, 'doctor-no-react-native-in-package-json');
+
+    if (!exp.isDetached) {
       return NO_ISSUES;
 
       // (TODO-2017-07-20): Validate the react-native version if it uses
@@ -377,14 +323,17 @@ async function _validateReactNativeVersionAsync(
       // validation of the version if we are using the fork. We should probably
       // validate the version here as well such that it matches with the
       // react-native version compatible with the selected SDK.
-      //
-      // ProjectUtils.logWarning(
-      //   projectRoot,
-      //   'expo',
-      //   `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`,
-      //   'doctor-not-using-expo-fork'
-      // );
-      // return WARNING;
+    }
+
+    // Expo fork of react-native is required
+    if (!/expo\/react-native/.test(reactNative)) {
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        `Warning: Not using the Expo fork of react-native. See ${Config.helpUrl}.`,
+        'doctor-not-using-expo-fork'
+      );
+      return WARNING;
     }
     ProjectUtils.clearNotification(projectRoot, 'doctor-not-using-expo-fork');
 
@@ -508,12 +457,9 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
     return expStatus;
   }
 
-  const packageStatus = await _validatePackageJsonAsync(exp, pkg, projectRoot);
+  status = Math.max(status, expStatus);
 
-  status = Math.max(status, expStatus, packageStatus);
-  if (status === FATAL) return status;
-
-  if (status !== FATAL && exp && !exp.ignoreNodeModulesValidation) {
+  if (exp && !exp.ignoreNodeModulesValidation) {
     let nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
     if (nodeModulesStatus > status) {
       return nodeModulesStatus;
