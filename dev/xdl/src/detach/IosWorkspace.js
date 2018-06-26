@@ -25,7 +25,14 @@ import * as Versions from '../Versions';
 
 const DEFAULT_DETACHED_UNIVERSAL_MODULES = [
   { podName: 'EXCore', libName: 'expo-core' },
-  { podName: 'EXCamera', libName: 'expo-camera' },
+  {
+    podName: 'EXCamera',
+    libName: 'expo-camera',
+  },
+  {
+    podName: 'EXCameraInterface',
+    libName: 'expo-camera-interface',
+  },
   {
     podName: 'EXFileSystem',
     libName: 'expo-file-system',
@@ -50,6 +57,23 @@ const DEFAULT_DETACHED_UNIVERSAL_MODULES = [
   {
     podName: 'EXFaceDetectorInterface',
     libName: 'expo-face-detector-interface',
+  },
+  {
+    podName: 'EXConstants',
+    libName: 'expo-constants',
+  },
+  {
+    podName: 'EXConstantsInterface',
+    libName: 'expo-constants-interface',
+  },
+  {
+    podName: 'EXGL',
+    libName: 'expo-gl',
+  },
+  {
+    podName: 'EXGL-CPP',
+    libName: 'expo-gl-cpp',
+    subdirectory: 'cpp',
   },
 ];
 
@@ -272,13 +296,17 @@ async function _renderPodfileFromTemplateAsync(
       process.env.EXPO_VIEW_DIR
     );
     // If EXPO_VIEW_DIR is defined overwrite UNIVERSAL_MODULES with paths pointing to EXPO_VIEW_DIR
-    podfileSubstitutions.UNIVERSAL_MODULES = podfileSubstitutions.UNIVERSAL_MODULES.map(module => ({
-      ...module,
-      path: path.relative(
-        iosProjectDirectory,
-        path.join(process.env.EXPO_VIEW_DIR, 'modules', module.libName, 'ios')
-      ),
-    }));
+    podfileSubstitutions.UNIVERSAL_MODULES = podfileSubstitutions.UNIVERSAL_MODULES.map(module => {
+      const subdirectory = module.subdirectory != null ? module.subdirectory : 'ios';
+
+      return {
+        ...module,
+        path: path.relative(
+          iosProjectDirectory,
+          path.join(process.env.EXPO_VIEW_DIR, 'modules', module.libName, subdirectory)
+        ),
+      };
+    });
   }
   const templatePodfilePath = path.join(
     expoRootTemplateDirectory,

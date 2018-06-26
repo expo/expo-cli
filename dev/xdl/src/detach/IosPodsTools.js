@@ -80,10 +80,13 @@ function _renderExpoKitDependency(options, sdkVersion) {
   }
 
   // GL subspec is available as of SDK 26
+  // but removed together with CPP subspec in SDK 29
   if (sdkMajorVersion < 26) {
     attributes.subspecs = ['Core', 'CPP'];
-  } else {
+  } else if (sdkMajorVersion < 29) {
     attributes.subspecs = ['Core', 'CPP', 'GL'];
+  } else {
+    attributes.subspecs = ['Core'];
   }
   attributes.inhibit_warnings = true;
 
@@ -286,17 +289,11 @@ function _renderUnversionedPostinstall() {
     'JKBigInteger2',
   ];
   const podsToChangeRB = `[${podsToChangeDeployTarget.map(pod => `'${pod}'`).join(',')}]`;
-  const podsRoot = '${PODS_ROOT}';
+
   return `
     if ${podsToChangeRB}.include? target.pod_name
       target.native_target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
-      end
-    end
-    if target.pod_name == "#{EXPO_CPP_HEADER_DIR}"
-      target.native_target.build_configurations.each do |config|
-        config.build_settings['CLANG_WARN_COMMA'] = false
-        config.build_settings['CLANG_WARN_UNGUARDED_AVAILABILITY'] = false
       end
     end
     # Can't specify this in the React podspec because we need
@@ -305,7 +302,6 @@ function _renderUnversionedPostinstall() {
       target.native_target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
         config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
-        config.build_settings['HEADER_SEARCH_PATHS'] << "${podsRoot}/Headers/Public/#{EXPO_CPP_HEADER_DIR}"
       end
     end
     # Build React Native with RCT_DEV enabled
