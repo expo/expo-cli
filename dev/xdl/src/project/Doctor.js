@@ -424,12 +424,11 @@ async function _validateReactNativeVersionAsync(
   return NO_ISSUES;
 }
 
-// TODO: use `yarn check`
 async function _validateNodeModulesAsync(projectRoot): Promise<number> {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
-    nodeModulesPath = path.join(projectRoot, exp.nodeModulesPath);
+    nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }
 
   // Check to make sure node_modules exists at all
@@ -481,123 +480,6 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
     );
     return FATAL;
   }
-
-  // Validate all package.json dependencies are installed and up to date
-  if (pkg.dependencies) {
-    await Binaries.sourceBashLoginScriptsAsync();
-
-    try {
-      await spawnAsync('npm', ['--version']);
-    } catch (e) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `\`npm\` command not found. If you have npm installed please run \`npm install -g exp && exp path\`.`,
-        'doctor-npm-not-found'
-      );
-      return WARNING;
-    }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-npm-not-found');
-
-    let npmls;
-    try {
-      let npmlsCommand = await spawnAsync('npm', ['ls', '--json', '--depth', '1'], {
-        cwd: nodeModulesPath,
-      });
-      npmls = npmlsCommand.stdout;
-      if (npmlsCommand.signal === 'SIGINT') {
-        // The child process was interrupted (e.g. the user pressed ^C),
-        // let's not spam the console with warnings about that.
-        return NO_ISSUES;
-      }
-    } catch (e) {
-      npmls = e.stdout; // `npm ls` sometimes returns an error code
-      if (e.signal === 'SIGINT') {
-        // The child process was interrupted (e.g. the user pressed ^C),
-        // let's not spam the console with warnings about that.
-        return NO_ISSUES;
-      }
-    }
-
-    if (!npmls) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Problem checking node_modules dependencies. Could not run \`npm ls\` in ${projectRoot}.`,
-        'doctor-could-not-run-npm-ls'
-      );
-      return WARNING;
-    }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-could-not-run-npm-ls');
-
-    let npmlsDependencies;
-    try {
-      npmlsDependencies = JSON.parse(npmls).dependencies;
-    } catch (e) {
-      ProjectUtils.logWarning(
-        projectRoot,
-        'expo',
-        `Problem checking node_modules dependencies: ${e.message}`,
-        'doctor-problem-checking-node-modules'
-      );
-      return WARNING;
-    }
-    ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-node-modules');
-
-    if (npmlsDependencies) {
-      let errorStrings = [];
-      _.forEach(pkg.dependencies, (versionRequired, dependency) => {
-        let installedDependency = npmlsDependencies[dependency];
-        if (dependency === 'react' && versionRequired.match(/-(alpha|beta|rc)/)) {
-          // ignore prerelease dependencies on react
-        } else if (!installedDependency || !installedDependency.version) {
-          if (installedDependency && installedDependency.peerMissing) {
-            errorStrings.push(
-              `Warning: '${dependency}' peer dependency missing. Run \`npm ls\` in ${nodeModulesPath} to see full warning.`
-            );
-          } else {
-            errorStrings.push(`Warning: '${dependency}' dependency is not installed.`);
-          }
-        } else if (
-          dependency === 'expo' &&
-          exp.sdkVersion !== 'UNVERSIONED' &&
-          semver.major(installedDependency.version) !== semver.major(exp.sdkVersion)
-        ) {
-          // Warn user if versions are not aligned
-          errorStrings.push(
-            'Warning: Expo version in package.json does not match sdkVersion in manifest.'
-          );
-        } else if (
-          dependency !== 'react-native' &&
-          !semver.satisfies(installedDependency.version, versionRequired) &&
-          !versionRequired.includes(installedDependency.from)
-        ) {
-          // TODO: also check react-native
-          // For react native, `from` field looks like "expo/react-native#sdk-8.0.1" and
-          // versionRequired looks like "github:expo/react-native#sdk-8.0.0"
-          errorStrings.push(
-            `Warning: Installed version ${installedDependency.version} of '${dependency}' does not satisfy required version ${versionRequired}`
-          );
-        }
-      });
-
-      if (errorStrings.length > 0) {
-        errorStrings.push(
-          `\nIf there is an issue running your project, please run \`npm install\` in ${nodeModulesPath} and restart.`
-        );
-        ProjectUtils.logWarning(
-          projectRoot,
-          'expo',
-          errorStrings.join('\n'),
-          'doctor-node-modules-issues'
-        );
-        return WARNING;
-      } else {
-        ProjectUtils.clearNotification(projectRoot, 'doctor-node-modules-issues');
-      }
-    }
-  }
-
   return NO_ISSUES;
 }
 
@@ -631,8 +513,6 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
   status = Math.max(status, expStatus, packageStatus);
   if (status === FATAL) return status;
 
-  // TODO: this broke once we started using yarn because `npm ls` doesn't
-  // work on a yarn install. Use `yarn check` in the future.
   if (status !== FATAL && exp && !exp.ignoreNodeModulesValidation) {
     let nodeModulesStatus = await _validateNodeModulesAsync(projectRoot);
     if (nodeModulesStatus > status) {
