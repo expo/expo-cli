@@ -243,11 +243,10 @@ ${buildStatus.id}
       simpleSpinner.start();
       const completedJob = await this.wait(buildId);
       simpleSpinner.stop();
-      log(
-        `${chalk.green('Successfully built standalone app:')} ${chalk.underline(
-          completedJob.artifacts.url
-        )}`
-      );
+      const artifactUrl = completedJob.artifactId
+        ? constructArtifactUrl(completedJob.artifactId)
+        : completedJob.artifacts.url;
+      log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`);
     } else {
       log('Alternatively, run `exp build:status` to monitor it from the command line.');
     }
@@ -267,11 +266,19 @@ ${buildStatus.id}
 }
 
 function constructBuildLogsUrl(buildId: string): string {
+  return `${getExpoDomainUrl()}/builds/${buildId}`;
+}
+
+function constructArtifactUrl(artifactId: string): string {
+  return `${getExpoDomainUrl()}/artifacts/${artifactId}`;
+}
+
+function getExpoDomainUrl() {
   if (process.env.EXPO_STAGING) {
-    return `https://staging.expo.io/builds/${buildId}`;
+    return `https://staging.expo.io`;
   } else if (process.env.EXPO_LOCAL) {
-    return `http://expo.test/builds/${buildId}`;
+    return `http://expo.test`;
   } else {
-    return `https://expo.io/builds/${buildId}`;
+    return `https://expo.io`;
   }
 }
