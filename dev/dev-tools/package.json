@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
@@ -33,7 +33,7 @@
     "subscriptions-transport-ws": "0.9.8"
   },
   "peerDependencies": {
-    "xdl": "^50.4.0"
+    "xdl": "^50.5.0"
   },
   "devDependencies": {
     "anser": "^1.4.7",
@@ -71,7 +71,7 @@
     "react-textarea-autosize": "^6.1.0",
     "redux": "^3.7.2",
     "slugify": "^1.0.2",
-    "xdl": "^50.4.0"
+    "xdl": "50.5.0"
   },
   "license": "MIT"
 }
