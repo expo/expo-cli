@@ -15,7 +15,7 @@ import prompt from '../../prompt';
 export default class AndroidBuilder extends BaseBuilder {
   async run() {
     // Check the status of any current builds
-    await this.checkStatus();
+    await this.checkStatus('android');
     // Validate project
     await this.validateProject();
     // Check for existing credentials, collect any missing credentials, and validate them

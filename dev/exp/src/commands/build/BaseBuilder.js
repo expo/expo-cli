@@ -63,13 +63,14 @@ export default class BaseBuilder {
     }
   }
 
-  async checkStatus(current: boolean = true): Promise<void> {
+  async checkStatus(platform: string = 'all', current: boolean = true): Promise<void> {
     await this._checkProjectConfig();
 
     log('Checking if current build exists...\n');
 
     const buildStatus = await Project.buildAsync(this.projectDir, {
       mode: 'status',
+      platform,
       current,
     });
 

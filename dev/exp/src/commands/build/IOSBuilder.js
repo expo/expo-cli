@@ -153,7 +153,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
 
     // Check the status of any current builds
-    await this.checkStatus();
+    await this.checkStatus('ios');
     const credentialMetadata = { username, experienceName, bundleIdentifier, platform: 'ios' };
     const clearOnly = {};
     if (this.options.clearCredentials) {

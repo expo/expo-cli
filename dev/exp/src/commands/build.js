@@ -93,7 +93,7 @@ export default (program: any) => {
     .asyncActionProjectDir(async (projectDir, options) => {
       const builder = new BaseBuilder(projectDir, options);
       try {
-        return await builder.checkStatus(false);
+        return await builder.checkStatus('all', false);
       } catch (e) {
         if (e instanceof BuildError) {
           return;
