@@ -16,7 +16,8 @@
     "pkg": "pkg ."
   },
   "bin": {
-    "expo": "./bin/expo.js"
+    "expo": "./bin/expo.js",
+    "expo-cli": "./bin/expo.js"
   },
   "repository": {
     "type": "git",
