@@ -10,6 +10,19 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.5.0] - 2018-06-27
+
+### Changed
+
+* If Metro has stopped, we now try to restart it when publishing.
+* Log bundling errors with log level as error.
+* Color the message in syntax errors as red.
+* Expo fork of React Native is only required in ExpoKit projects.
+
+### Removed
+
+* Remove `npm ls` validation from `Doctor`.
+
 ## [50.4.2] - 2018-06-20
 
 ### Removed
