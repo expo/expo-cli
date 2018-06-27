@@ -168,7 +168,11 @@ export default class ProjectManagerSidebarOptions extends React.Component {
         </div>
 
         <ContentGroup header={IOSHeader} isActive={this.props.isActiveDeviceIOS}>
-          <div className={STYLES_SUBTITLE}>Send link to load</div>
+          <div className={STYLES_SUBTITLE}>Scan with the Camera app</div>
+          <QRCode url={this.props.url} />
+          <div className={STYLES_SUBTITLE} style={{ marginTop: 24 }}>
+            Send link with email or SMS
+          </div>
           <InputWithButton
             placeholder="Enter email or number"
             value={this.props.recipient}
@@ -180,10 +184,10 @@ export default class ProjectManagerSidebarOptions extends React.Component {
         </ContentGroup>
 
         <ContentGroup header={AndroidHeader} isActive={this.props.isActiveDeviceAndroid}>
-          <div className={STYLES_SUBTITLE}>Scan to load</div>
+          <div className={STYLES_SUBTITLE}>Scan with the Expo app</div>
           <QRCode url={this.props.url} />
           <div className={STYLES_SUBTITLE} style={{ marginTop: 24 }}>
-            Send link to load
+            Send link with email or SMS
           </div>
           <InputWithButton
             placeholder="Enter email or number"
