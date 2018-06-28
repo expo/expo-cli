@@ -1,0 +1,86 @@
+const defaultUniversalModuleConfig = {
+  ios: {
+    // subdirectory in which the module podspec is placed.
+    subdirectory: 'ios',
+    // whether when adding a new version of ABI
+    // the module should be versioned and released
+    // as eg. ABI28_0_0EXCamera
+    versionable: true,
+    // whether the module should be included in the newly created detached app.
+    detachable: true,
+  },
+  android: {
+    // subdirectory in which the Android project can be found.
+    subdirectory: 'android',
+    // whether when adding a new version of ABI
+    // the module should be versioned and released
+    // as eg. abi28_2_0.expo.modules.camera
+    versionable: true,
+    // whether the module should be included in the newly created detached app,
+    // so when releasing a new version of expoview
+    // as eg. host.exp.exponent:expoview:28.2.0 the module will
+    // be assembled and uploaded to the local maven repo
+    detachable: true,
+  },
+};
+
+const expoSdkUniversalModules = [
+  // versioned modules
+  { podName: 'EXGL', libName: 'expo-gl' },
+  { podName: 'EXCore', libName: 'expo-core' },
+  { podName: 'EXCamera', libName: 'expo-camera' },
+  { podName: 'EXSensors', libName: 'expo-sensors' },
+  { podName: 'EXConstants', libName: 'expo-constants' },
+  { podName: 'EXFileSystem', libName: 'expo-file-system' },
+  { podName: 'EXCameraInterface', libName: 'expo-camera-interface' },
+  { podName: 'EXSensorsInterface', libName: 'expo-sensors-interface' },
+  { podName: 'EXConstantsInterface', libName: 'expo-constants-interface' },
+  { podName: 'EXReactNativeAdapter', libName: 'expo-react-native-adapter' },
+  { podName: 'EXFileSystemInterface', libName: 'expo-file-system-interface' },
+  { podName: 'EXPermissionsInterface', libName: 'expo-permissions-interface' },
+  { podName: 'EXFaceDetectorInterface', libName: 'expo-face-detector-interface' },
+  {
+    podName: 'EXFaceDetector',
+    libName: 'expo-face-detector',
+    detachable: false,
+  },
+
+  // unversioned modules
+  {
+    podName: 'EXGL-CPP',
+    libName: 'expo-gl-cpp',
+    versionable: false,
+    config: {
+      ios: {
+        subdirectory: 'cpp',
+      },
+    },
+  },
+];
+
+function defaults(defaultConfig, ...customConfigs) {
+  const config = { ...defaultConfig };
+  for (const customConfig of customConfigs) {
+    if (customConfig) {
+      Object.assign(config, customConfig || {});
+    }
+  }
+  return config;
+}
+
+const expoSdkUniversalModulesConfigs = expoSdkUniversalModules.map(
+  ({ config, podName, libName, ...params }) => {
+    return {
+      podName,
+      libName,
+      config: {
+        ios: defaults(defaultUniversalModuleConfig.ios, params, config && config.ios),
+        android: defaults(defaultUniversalModuleConfig.android, params, config && config.android),
+      },
+    };
+  }
+);
+
+module.exports = {
+  expoSdkUniversalModulesConfigs,
+};

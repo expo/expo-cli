@@ -83,7 +83,7 @@ function _renderExpoKitDependency(options, sdkVersion) {
   // but removed together with CPP subspec in SDK 29
   if (sdkMajorVersion < 26) {
     attributes.subspecs = ['Core', 'CPP'];
-  } else if (sdkMajorVersion < 29) {
+  } else if (sdkMajorVersion < 29 && !process.env.EXPO_UNIVERSE_DIR) {
     attributes.subspecs = ['Core', 'CPP', 'GL'];
   } else {
     attributes.subspecs = ['Core'];

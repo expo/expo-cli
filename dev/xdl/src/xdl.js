@@ -105,6 +105,9 @@ module.exports = {
   get LoggerDetach() {
     return require('./detach/Logger').default;
   },
+  get Modules() {
+    return require('./modules/Modules');
+  },
   get NotificationCode() {
     return require('./NotificationCode').default;
   },
