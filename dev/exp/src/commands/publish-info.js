@@ -25,6 +25,7 @@ export default (program: any) => {
       parseInt
     )
     .option('-p, --platform <ios|android>', 'Filter by platform, android or ios.')
+    .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
         log.error('-n must be a number between 1 and 100 inclusive');
@@ -49,6 +50,11 @@ export default (program: any) => {
       let result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
         formData,
       });
+
+      if (options.raw) {
+        console.log(JSON.stringify(result));
+        return;
+      }
 
       if (result.queryResult && result.queryResult.length > 0) {
         // Print general publication info
@@ -91,6 +97,7 @@ export default (program: any) => {
     .alias('pd')
     .description('View the details of a published release.')
     .option('--publish-id <publish-id>', 'Publication id. (Required)')
+    .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.publishId) {
         log.error('publishId must be specified.');
@@ -105,6 +112,11 @@ export default (program: any) => {
       let result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
         formData,
       });
+
+      if (options.raw) {
+        console.log(JSON.stringify(result));
+        return;
+      }
 
       if (result.queryResult) {
         let queryResult = result.queryResult;
