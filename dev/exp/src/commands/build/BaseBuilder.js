@@ -138,6 +138,7 @@ ${buildStatus.id}
           log(`Problem getting ${packageExtension} URL. Please try to build again.`);
         }
       }
+      log();
     });
 
     throw new BuildError('Cannot start new build, as there is a build in progress.');
