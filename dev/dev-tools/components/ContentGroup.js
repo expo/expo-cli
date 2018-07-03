@@ -1,14 +1,20 @@
-import styled, { css } from 'react-emotion';
+import React from 'react';
+import { css } from 'react-emotion';
+import { VelocityTransitionGroup } from 'velocity-react';
 
-import * as React from 'react';
 import * as Constants from 'app/common/constants';
 
+if (process.browser) {
+  require('velocity-animate');
+  require('velocity-animate/velocity.ui');
+}
+
 const STYLES_HEADER = css`
-  border-bottom: 1px solid ${Constants.colors.border};
   width: 100%;
 `;
 
 const STYLES_CHILDREN = css`
+  border-top: 1px solid ${Constants.colors.border};
   font-family: ${Constants.fontFamilies.regular};
   background: ${Constants.colors.sidebarBackground};
   padding: 16px;
@@ -19,11 +25,15 @@ export default class ContentGroup extends React.Component {
     return (
       <div>
         <header className={STYLES_HEADER}>{this.props.header}</header>
-        {this.props.isActive ? (
-          <div className={STYLES_CHILDREN}>{this.props.children}</div>
-        ) : (
-          undefined
-        )}
+        <VelocityTransitionGroup
+          enter={{ animation: 'slideDown', duration: 300 }}
+          leave={{ animation: 'slideUp', duration: 300 }}>
+          {this.props.isActive ? (
+            <div className={STYLES_CHILDREN}>{this.props.children}</div>
+          ) : (
+            undefined
+          )}
+        </VelocityTransitionGroup>
       </div>
     );
   }

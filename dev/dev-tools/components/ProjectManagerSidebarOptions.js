@@ -29,7 +29,6 @@ const STYLES_CONNECTION_SECTION_RIGHT = css`
 
 const STYLES_URL_SECTION = css`
   padding: 16px;
-  border-bottom: 1px solid ${Constants.colors.border};
 `;
 
 const STYLES_URL_SECTION_BOTTOM = css`
@@ -57,6 +56,10 @@ const STYLES_URL_SECTION_BOTTOM_RIGHT = css`
   width: 100%;
 `;
 
+const STYLES_QR_SECTION = css`
+  padding-top: 16px;
+`;
+
 const STYLES_SUBTITLE = css`
   font-family: ${Constants.fontFamilies.mono};
   color: #555555;
@@ -66,6 +69,7 @@ const STYLES_SUBTITLE = css`
 `;
 
 const STYLES_CONTENT_GROUP = css`
+  border-bottom: 1px solid ${Constants.colors.border};
   font-family: ${Constants.fontFamilies.demi};
   height: 32px;
   padding: 0 16px 0 16px;
@@ -94,6 +98,8 @@ const STYLES_CONTENT_GROUP_RIGHT = css`
 `;
 
 export default class ProjectManagerSidebarOptions extends React.Component {
+  state = { isSendFormVisible: false };
+
   _handleShowPublishView = () => {
     this.props.onUpdateState({
       isPublishing: !this.props.isPublishing,
@@ -106,33 +112,49 @@ export default class ProjectManagerSidebarOptions extends React.Component {
     copyToClipboard(this.props.url, {});
   };
 
+  _handleSendHeaderClick = () => {
+    this.setState(state => ({ isSendFormVisible: !state.isSendFormVisible }));
+  };
+
   render() {
     let isDisabled = !this.props.url;
 
-    const IOSHeader = (
-      <ContentGroupHeader
-        isDeviceActive={this.props.isActiveDeviceIOS}
-        isSimulatorSupported={this.props.processInfo.isIosSimulatorSupported}
-        onSimulatorClick={this.props.onSimulatorClickIOS}
-        onDeviceClick={this.props.onDeviceClickIOS}
-        isDisabled={isDisabled}>
-        iOS
-      </ContentGroupHeader>
-    );
-
-    const AndroidHeader = (
-      <ContentGroupHeader
-        isDeviceActive={this.props.isActiveDeviceAndroid}
-        isSimulatorSupported={this.props.processInfo.isAndroidSimulatorSupported}
-        onSimulatorClick={this.props.onSimulatorClickAndroid}
-        onDeviceClick={this.props.onDeviceClickAndroid}
-        isDisabled={isDisabled}>
-        Android
-      </ContentGroupHeader>
+    const sendHeader = (
+      <div className={STYLES_CONTENT_GROUP} onClick={this._handleSendHeaderClick}>
+        <span className={STYLES_CONTENT_GROUP_LEFT}>Send link with email/SMS…</span>
+      </div>
     );
 
     return (
       <div>
+        <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickAndroid}>
+          <span className={STYLES_CONTENT_GROUP_LEFT}>Run on Android device/emulator</span>
+        </div>
+
+        <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickIOS}>
+          <span className={STYLES_CONTENT_GROUP_LEFT}>Run on iOS simulator</span>
+        </div>
+
+        <ContentGroup header={sendHeader} isActive={this.state.isSendFormVisible}>
+          <InputWithButton
+            placeholder="Enter email or number"
+            value={this.props.recipient}
+            onChange={this.props.onRecipientChange}
+            onValidation={this.props.onEmailOrNumberValidation}
+            onSubmit={this.props.onSubmitPhoneNumberOrEmail}>
+            Send
+          </InputWithButton>
+        </ContentGroup>
+
+        {this.props.isOnline ? (
+          <div className={STYLES_CONTENT_GROUP} onClick={this._handleShowPublishView}>
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Publish or republish project…</span>
+            <span className={STYLES_CONTENT_GROUP_RIGHT}>
+              <SVG.Arrow size="16px" />
+            </span>
+          </div>
+        ) : null}
+
         <div className={STYLES_URL_SECTION}>
           <SettingsControl
             onClick={this.props.onToggleProductionMode}
@@ -165,48 +187,11 @@ export default class ProjectManagerSidebarOptions extends React.Component {
               {!isDisabled && !this.props.hostTypeLoading ? this.props.url : '—'}
             </div>
           </div>
+
+          <div className={STYLES_QR_SECTION}>
+            <QRCode url={this.props.url} />
+          </div>
         </div>
-
-        <ContentGroup header={IOSHeader} isActive={this.props.isActiveDeviceIOS}>
-          <div className={STYLES_SUBTITLE}>Scan with the Camera app</div>
-          <QRCode url={this.props.url} />
-          <div className={STYLES_SUBTITLE} style={{ marginTop: 24 }}>
-            Send link with email or SMS
-          </div>
-          <InputWithButton
-            placeholder="Enter email or number"
-            value={this.props.recipient}
-            onChange={this.props.onRecipientChange}
-            onValidation={this.props.onEmailOrNumberValidation}
-            onSubmit={this.props.onSubmitPhoneNumberOrEmail}>
-            Send
-          </InputWithButton>
-        </ContentGroup>
-
-        <ContentGroup header={AndroidHeader} isActive={this.props.isActiveDeviceAndroid}>
-          <div className={STYLES_SUBTITLE}>Scan with the Expo app</div>
-          <QRCode url={this.props.url} />
-          <div className={STYLES_SUBTITLE} style={{ marginTop: 24 }}>
-            Send link with email or SMS
-          </div>
-          <InputWithButton
-            placeholder="Enter email or number"
-            value={this.props.recipient}
-            onChange={this.props.onRecipientChange}
-            onValidation={this.props.onEmailOrNumberValidation}
-            onSubmit={this.props.onSubmitPhoneNumberOrEmail}>
-            Send
-          </InputWithButton>
-        </ContentGroup>
-
-        {this.props.isOnline ? (
-          <div className={STYLES_CONTENT_GROUP} onClick={this._handleShowPublishView}>
-            <span className={STYLES_CONTENT_GROUP_LEFT}>Publish or republish project</span>
-            <span className={STYLES_CONTENT_GROUP_RIGHT}>
-              <SVG.Arrow size="16px" />
-            </span>
-          </div>
-        ) : null}
       </div>
     );
   }
