@@ -5,12 +5,12 @@ import { ansiToJson } from 'anser';
 
 import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
+import StackTrace from './StackTrace';
 
 const STYLES_LOG = css`
   font-family: ${Constants.fontFamilies.mono};
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: flex-start;
   font-size: 12px;
   margin-bottom: 12px;
 `;
@@ -85,7 +85,6 @@ export default class Log extends React.Component {
     const chunks = ansiToJson(msg, {
       remove_empty: true,
     });
-    console.log(chunks);
     const content = chunks.map(chunk => {
       const style = {};
       if (chunk.bg) {
@@ -97,6 +96,24 @@ export default class Log extends React.Component {
       return <span style={style}>{chunk.content}</span>;
     });
     return <div className={STYLES_LOG_COL_CONTENT}>{content}</div>;
+  }
+
+  renderMessage(message) {
+    if (message.includesStack) {
+      try {
+        const data = JSON.parse(message.msg);
+        return (
+          <React.Fragment>
+            {this.renderMessageContent({ ...message, msg: data.message })}
+            <StackTrace level={message.level} stack={data.stack} />
+          </React.Fragment>
+        );
+      } catch (e) {
+        return this.renderMessageContent(message);
+      }
+    } else {
+      return this.renderMessageContent(message);
+    }
   }
 
   render() {
@@ -128,7 +145,7 @@ export default class Log extends React.Component {
             undefined
           )}
         </div>
-        {this.renderMessageContent(message)}
+        <div>{this.renderMessage(message)}</div>
       </div>
     );
   }

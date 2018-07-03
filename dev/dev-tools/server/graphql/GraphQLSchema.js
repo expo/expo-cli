@@ -172,6 +172,7 @@ const typeDefs = graphql`
     time: String!
     source: Device!
     level: LogLevel!
+    includesStack: Boolean
   }
 
   type MetroInitializeStarted implements Message {

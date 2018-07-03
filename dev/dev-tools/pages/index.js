@@ -14,6 +14,18 @@ import withRedux from 'app/higher-order/withRedux';
 import Root from 'app/components/Root';
 import ProjectManager from 'app/components/ProjectManager';
 
+const MessageFragment = gql`
+  fragment MessageFragment on Message {
+    id
+    msg
+    time
+    level
+    ... on DeviceMessage {
+      includesStack
+    }
+  }
+`;
+
 const query = gql`
   query IndexPageQuery {
     currentProject {
@@ -37,10 +49,7 @@ const query = gql`
           count
           unreadCount
           nodes {
-            id
-            msg
-            time
-            level
+            ...MessageFragment
           }
           pageInfo {
             lastReadCursor
@@ -75,6 +84,7 @@ const query = gql`
       username
     }
   }
+  ${MessageFragment}
 `;
 
 const projectPollQuery = gql`
@@ -122,10 +132,7 @@ const subscriptionQuery = gql`
         type
         cursor
         node {
-          id
-          msg
-          time
-          level
+          ...MessageFragment
           source {
             id
           }
@@ -138,6 +145,7 @@ const subscriptionQuery = gql`
       }
     }
   }
+  ${MessageFragment}
 `;
 
 const createSourceQuery = typename => gql`
@@ -149,17 +157,14 @@ const createSourceQuery = typename => gql`
       count
       unreadCount
       nodes {
-        id
-        __typename
-        msg
-        time
-        level
+        ...MessageFragment
       }
       pageInfo {
         lastReadCursor
       }
     }
   }
+  ${MessageFragment}
 `;
 
 @withRedux(initStore, state => state)
