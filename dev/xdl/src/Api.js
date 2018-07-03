@@ -34,11 +34,18 @@ function ApiError(code, message) {
   return err;
 }
 
-let ROOT_BASE_URL = `${Config.api.scheme}://${Config.api.host}`;
-if (Config.api.port) {
-  ROOT_BASE_URL += ':' + Config.api.port;
+// These aren't constants because some commands switch between staging and prod
+function _rootBaseUrl() {
+  return `${Config.api.scheme}://${Config.api.host}`;
 }
-let API_BASE_URL = ROOT_BASE_URL + '/--/api/';
+
+function _apiBaseUrl() {
+  let rootBaseUrl = _rootBaseUrl();
+  if (Config.api.port) {
+    rootBaseUrl += ':' + Config.api.port;
+  }
+  return rootBaseUrl + '/--/api/v2';
+}
 
 async function _callMethodAsync(
   url,
@@ -236,7 +243,7 @@ export default class ApiClient {
     returnEntireResponse: boolean = false
   ): Promise<any> {
     let url =
-      API_BASE_URL +
+      _apiBaseUrl() +
       encodeURIComponent(methodName) +
       '/' +
       encodeURIComponent(JSON.stringify(args));
@@ -249,7 +256,7 @@ export default class ApiClient {
     requestBody: ?Object,
     requestOptions: ?Object = {}
   ) {
-    let url = ROOT_BASE_URL + path;
+    let url = _rootBaseUrl() + path;
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 

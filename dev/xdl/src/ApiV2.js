@@ -14,11 +14,18 @@ import logger from './Logger';
 
 import type { User } from './User';
 
-let ROOT_BASE_URL = `${Config.api.scheme}://${Config.api.host}`;
-if (Config.api.port) {
-  ROOT_BASE_URL += ':' + Config.api.port;
+// These aren't constants because some commands switch between staging and prod
+function _rootBaseUrl() {
+  return `${Config.api.scheme}://${Config.api.host}`;
 }
-const API_BASE_URL = ROOT_BASE_URL + '/--/api/v2';
+
+function _apiBaseUrl() {
+  let rootBaseUrl = _rootBaseUrl();
+  if (Config.api.port) {
+    rootBaseUrl += ':' + Config.api.port;
+  }
+  return rootBaseUrl + '/--/api/v2';
+}
 
 export class ApiV2Error extends ExtendableError {
   code: string;
@@ -143,7 +150,7 @@ export default class ApiV2Client {
     extraRequestOptions: Object,
     returnEntireResponse: boolean = false
   ): Promise<*> {
-    const url = `${API_BASE_URL}/${methodName}`;
+    const url = `${_apiBaseUrl()}/${methodName}`;
     let reqOptions: Object = {
       url,
       method: options.httpMethod,
