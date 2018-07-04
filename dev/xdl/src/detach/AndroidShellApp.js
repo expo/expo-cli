@@ -1068,37 +1068,10 @@ export async function runShellAppModificationsAsync(
       path.join(shellPath, 'app', 'google-services.json'),
       googleServicesFileContents
     );
-
+  } else {
     await regexFileAsync(
-      '<!-- ADD FCM CONFIG HERE -->',
-      `<service
-        android:name=".fcm.ExpoFcmMessagingService">
-        <intent-filter>
-            <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-        </intent-filter>
-      </service>
-      <service
-        android:name=".fcm.ExpoFcmInstanceIDService">
-        <intent-filter>
-            <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-        </intent-filter>
-      </service>
-      <meta-data
-        android:name="com.google.firebase.messaging.default_notification_icon"
-        android:resource="@drawable/shell_notification_icon" />
-      <meta-data
-        android:name="com.google.firebase.messaging.default_notification_color"
-        android:resource="@color/colorAccent" />
-      <service
-        android:name=".fcm.FcmRegistrationIntentService"
-        android:exported="false">
-      </service>`,
-      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
-    );
-
-    await regexFileAsync(
-      'FCM_ENABLED = false',
       'FCM_ENABLED = true',
+      'FCM_ENABLED = false',
       path.join(
         shellPath,
         'app',
