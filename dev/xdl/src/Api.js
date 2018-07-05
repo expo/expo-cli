@@ -44,7 +44,7 @@ function _apiBaseUrl() {
   if (Config.api.port) {
     rootBaseUrl += ':' + Config.api.port;
   }
-  return rootBaseUrl + '/--/api/v2';
+  return rootBaseUrl + '/--/api';
 }
 
 async function _callMethodAsync(
@@ -244,6 +244,7 @@ export default class ApiClient {
   ): Promise<any> {
     let url =
       _apiBaseUrl() +
+      '/' +
       encodeURIComponent(methodName) +
       '/' +
       encodeURIComponent(JSON.stringify(args));
