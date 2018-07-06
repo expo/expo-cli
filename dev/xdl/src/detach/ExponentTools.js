@@ -80,7 +80,13 @@ async function getManifestAsync(url, headers) {
     headers,
   };
 
-  const response = await request(requestOptions);
+  let response;
+  try {
+    response = await _retryPromise(() => request(requestOptions));
+  } catch (err) {
+    buildPhaseLogger.error(err);
+    throw new Error('Failed to fetch manifest from www');
+  }
   const responseBody = response.body;
   buildPhaseLogger.info('Using manifest:', responseBody);
   let manifest;
@@ -91,6 +97,18 @@ async function getManifestAsync(url, headers) {
   }
 
   return manifest;
+}
+
+async function _retryPromise(fn, retries = 5) {
+  try {
+    return await fn();
+  } catch (err) {
+    if (retries-- > 0) {
+      return await _retryPromise(fn, retries);
+    } else {
+      throw err;
+    }
+  }
 }
 
 async function spawnAsyncThrowError(...args) {
