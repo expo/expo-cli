@@ -32,6 +32,7 @@ const expoSdkUniversalModules = [
   { podName: 'EXSensors', libName: 'expo-sensors' },
   { podName: 'EXConstants', libName: 'expo-constants' },
   { podName: 'EXFileSystem', libName: 'expo-file-system' },
+  { podName: 'EXPermissions', libName: 'expo-permissions' },
   { podName: 'EXCameraInterface', libName: 'expo-camera-interface' },
   { podName: 'EXSensorsInterface', libName: 'expo-sensors-interface' },
   { podName: 'EXConstantsInterface', libName: 'expo-constants-interface' },
