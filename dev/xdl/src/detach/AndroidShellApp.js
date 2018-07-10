@@ -773,6 +773,7 @@ export async function runShellAppModificationsAsync(
       'android.permission.USE_FINGERPRINT',
       'android.permission.VIBRATE',
       'android.permission.WRITE_EXTERNAL_STORAGE',
+      'android.permission.READ_SMS',
       'com.anddoes.launcher.permission.UPDATE_COUNT',
       'com.android.launcher.permission.INSTALL_SHORTCUT',
       'com.google.android.gms.permission.ACTIVITY_RECOGNITION',

@@ -39,6 +39,7 @@ const expoSdkUniversalModules = [
   { podName: 'EXFileSystemInterface', libName: 'expo-file-system-interface' },
   { podName: 'EXPermissionsInterface', libName: 'expo-permissions-interface' },
   { podName: 'EXFaceDetectorInterface', libName: 'expo-face-detector-interface' },
+  { podName: 'EXSMS', libName: 'expo-sms' },
   {
     podName: 'EXFaceDetector',
     libName: 'expo-face-detector',
