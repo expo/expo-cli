@@ -10,6 +10,14 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.5.1] - 2018-07-10
+
+### Changed
+
+* Fix provisioning profile validation.
+* Fix signing entitlements.
+* Retry fetching manifest up to 5 times.
+
 ## [50.5.0] - 2018-06-27
 
 ### Changed
