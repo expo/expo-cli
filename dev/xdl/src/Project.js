@@ -1534,11 +1534,8 @@ export async function startTunnelsAsync(projectRoot: string) {
     ProjectUtils.logInfo(
       projectRoot,
       'expo',
-      'Successfully ran `adb reverse`. Localhost urls should work on the connected Android device.',
-      'project-adb-reverse'
+      'Successfully ran `adb reverse`. Localhost URLs should work on the connected Android device.'
     );
-  } else {
-    ProjectUtils.clearNotification(projectRoot, 'project-adb-reverse');
   }
   const { username } = user;
   let packageShortName = path.parse(projectRoot).base;
