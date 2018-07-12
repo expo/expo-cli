@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import gql from 'graphql-tag';
 import { ApolloProvider, Query } from 'react-apollo';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
@@ -76,7 +76,6 @@ const query = gql`
       }
     }
     processInfo {
-      networkStatus
       isAndroidSimulatorSupported
       isIosSimulatorSupported
     }
@@ -118,9 +117,11 @@ const projectPollQuery = gql`
       }
     }
     processInfo {
-      networkStatus
       isAndroidSimulatorSupported
       isIosSimulatorSupported
+    }
+    user {
+      username
     }
   }
 `;

@@ -146,7 +146,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           </InputWithButton>
         </ContentGroup>
 
-        {this.props.isOnline ? (
+        {this.props.user ? (
           <div className={STYLES_CONTENT_GROUP} onClick={this._handleShowPublishView}>
             <span className={STYLES_CONTENT_GROUP_LEFT}>Publish or republish project…</span>
             <span className={STYLES_CONTENT_GROUP_RIGHT}>
@@ -171,7 +171,6 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             <span className={STYLES_CONNECTION_SECTION_RIGHT}>
               <NetworkGroupButton
                 activeState={this.props.hostType}
-                isOnline={this.props.isOnline}
                 onHostTypeClick={this.props.onHostTypeClick}
                 onUpdateState={this.props.onUpdateState}
                 loading={this.props.hostTypeLoading}

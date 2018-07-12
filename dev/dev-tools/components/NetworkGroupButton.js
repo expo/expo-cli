@@ -129,9 +129,8 @@ export default class NetworkGroupButton extends React.Component {
           className={`
             ${STYLES_BUTTON}
             ${this.props.activeState === 'tunnel' ? STYLES_BUTTON_ACTIVE : ''}
-            ${!this.props.isOnline ? STYLES_BUTTON_DISABLED : ''}
           `}
-          onClick={this.props.isOnline ? this._handleTunnelClick : null}>
+          onClick={this._handleTunnelClick}>
           Tunnel
         </span>
         <span

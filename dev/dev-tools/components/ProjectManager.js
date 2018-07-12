@@ -11,7 +11,7 @@ import ProjectManagerDeviceTab from 'app/components/ProjectManagerDeviceTab';
 import ProjectManagerSidebarOptions from 'app/components/ProjectManagerSidebarOptions';
 import ProjectManagerToolbar from 'app/components/ProjectManagerToolbar';
 import ProjectManagerPublishingSection from 'app/components/ProjectManagerPublishingSection';
-import NetworkIndicator from 'app/components/NetworkIndicator';
+import UserIndicator from 'app/components/UserIndicator';
 
 const wait = delay =>
   new Promise(resolve => {
@@ -185,17 +185,15 @@ class ProjectManager extends React.Component {
         onSubmitPhoneNumberOrEmail={this.props.onSubmitPhoneNumberOrEmail}
         onEmailOrNumberValidation={this._handleEmailOrPhoneNumberValidation}
         onToggleProductionMode={this.props.onToggleProductionMode}
+        user={this.props.user}
         isProduction={!this.props.project.settings.dev}
-        isOnline={this.props.processInfo.networkStatus !== 'OFFLINE'}
         isPublishing={this.props.isPublishing}
         isActiveDeviceIOS={this.props.isActiveDeviceIOS}
         isActiveDeviceAndroid={this.props.isActiveDeviceAndroid}
       />
     );
 
-    const offlineElement = (
-      <NetworkIndicator networkStatus={this.props.processInfo.networkStatus} />
-    );
+    const userElement = <UserIndicator user={this.props.user} />;
 
     const publishingElement = (
       <ProjectManagerPublishingSection
@@ -210,7 +208,7 @@ class ProjectManager extends React.Component {
       <ProjectManagerLayout
         alertSection={this.props.disconnected ? <DisconnectedHeader /> : null}
         navigationSection={null}
-        headerSection={offlineElement}
+        headerSection={userElement}
         devicesSection={devicesElements}
         toolbarSection={toolbarElements}
         viewingSection={viewingElements}

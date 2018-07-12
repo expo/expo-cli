@@ -261,13 +261,7 @@ const typeDefs = graphql`
     sources: [ID!]
   }
 
-  enum NetworkStatus {
-    ONLINE
-    OFFLINE
-  }
-
   type ProcessInfo {
-    networkStatus: NetworkStatus!
     isAndroidSimulatorSupported: Boolean
     isIosSimulatorSupported: Boolean
   }
@@ -515,7 +509,6 @@ const resolvers = {
     },
     processInfo() {
       return {
-        networkStatus: Config.offline ? 'OFFLINE' : 'ONLINE',
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
       };
