@@ -169,7 +169,9 @@ async function _createStandaloneContextAsync(args) {
   }
 
   let manifest;
-  if (args.url && args.sdkVersion) {
+  if (args.manifest) {
+    manifest = args.manifest;
+  } else if (args.url && args.sdkVersion) {
     const { url, sdkVersion, releaseChannel } = args;
     manifest = await getManifestAsync(url, {
       'Exponent-SDK-Version': sdkVersion,
