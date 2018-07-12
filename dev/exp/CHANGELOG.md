@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [55.0.5] - 2018-07-12
+
+### Added
+
+* Ability to run Android and iOS builds concurrently.
+
 ## [55.0.4] - 2018-06-20
 
 ### Changed
