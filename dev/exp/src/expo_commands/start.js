@@ -16,13 +16,6 @@ import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 
 async function action(projectDir, options) {
-  const projectState = await Project.currentStatus(projectDir);
-
-  if (projectState === 'running') {
-    log.error('Expo CLI is already running for this project. Exiting...');
-    process.exit(1);
-  }
-
   installExitHooks(projectDir);
 
   await urlOpts.optsAsync(projectDir, options);
