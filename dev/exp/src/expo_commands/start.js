@@ -19,12 +19,8 @@ async function action(projectDir, options) {
   const projectState = await Project.currentStatus(projectDir);
 
   if (projectState === 'running') {
-    log.error('exp is already running for this project. Exiting...');
+    log.error('Expo CLI is already running for this project. Exiting...');
     process.exit(1);
-  } else if (projectState === 'ill') {
-    log.warn(
-      'exp may have exited improperly. Proceeding, but you should check for orphaned processes.'
-    );
   }
 
   installExitHooks(projectDir);
