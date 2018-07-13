@@ -72,73 +72,22 @@ let _cachedSignedManifest: CachedSignedManifest = {
 export type ProjectStatus = 'running' | 'ill' | 'exited';
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
-  const manifestUrl = await UrlUtils.constructManifestUrlAsync(projectDir, {
-    urlType: 'http',
-  });
-  const packagerUrl = await UrlUtils.constructBundleUrlAsync(projectDir, {
-    urlType: 'http',
-  });
-
-  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectDir);
-  let packagerRunning = false;
-  if (packagerInfo.packagerPort) {
-    try {
-      const res = await request(`${packagerUrl}/status`);
-
-      if (res.statusCode < 400 && res.body && res.body.includes('packager-status:running')) {
-        packagerRunning = true;
-      }
-    } catch (e) {}
-  }
-
-  let manifestServerRunning = false;
-  if (packagerInfo.expoServerPort) {
-    try {
-      const res = await request(manifestUrl);
-      if (res.statusCode < 400) {
-        manifestServerRunning = true;
-      }
-    } catch (e) {}
-  }
-
-  if (packagerRunning && manifestServerRunning) {
+  const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
+  if (packagerPort && expoServerPort) {
     return 'running';
-  } else if (packagerRunning || manifestServerRunning) {
+  } else if (packagerPort || expoServerPort) {
     return 'ill';
   } else {
     return 'exited';
   }
 }
 
-async function _areTunnelsHealthy(projectRoot: string) {
-  const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.packagerNgrokUrl || !packagerInfo.expoServerNgrokUrl) {
-    return false;
-  }
-  const status = await currentStatus(projectRoot);
-  return status === 'running';
-}
-
+// DECPRECATED: use UrlUtils.constructManifestUrlAsync
 export async function getManifestUrlWithFallbackAsync(projectRoot: string) {
-  const projectSettings = await ProjectSettings.readAsync(projectRoot);
-  if (
-    projectSettings.hostType === 'tunnel' &&
-    !Config.offline &&
-    !await _areTunnelsHealthy(projectRoot)
-  ) {
-    // Fall back to LAN URL if tunnels are not available.
-    return {
-      url: await UrlUtils.constructManifestUrlAsync(projectRoot, {
-        hostType: 'lan',
-      }),
-      isUrlFallback: true,
-    };
-  } else {
-    return {
-      url: await UrlUtils.constructManifestUrlAsync(projectRoot),
-      isUrlFallback: false,
-    };
-  }
+  return {
+    url: await UrlUtils.constructManifestUrlAsync(projectRoot),
+    isUrlFallback: false,
+  };
 }
 
 async function _assertValidProjectRoot(projectRoot) {
