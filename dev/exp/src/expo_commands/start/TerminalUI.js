@@ -245,13 +245,11 @@ Please reload the project in the Expo app for the change to take effect.`
         const user = await User.getCurrentUserAsync();
         if (user) {
           await User.logoutAsync();
-          Config.offline = true;
           log('Signed out.');
         } else {
           stopWaitingForCommand();
           try {
             await loginOrRegisterIfLoggedOut();
-            Config.offline = false;
           } catch (e) {
             log.error(e);
           } finally {

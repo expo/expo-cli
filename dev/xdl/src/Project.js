@@ -1108,7 +1108,6 @@ export async function startReactNativeServerAsync(
   options: Object = {},
   verbose: boolean = true
 ) {
-  await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
@@ -1250,7 +1249,6 @@ function _nodePathForProjectRoot(projectRoot: string): string {
   return paths.join(path.delimiter);
 }
 export async function stopReactNativeServerAsync(projectRoot: string) {
-  await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort || !packagerInfo.packagerPid) {
@@ -1288,7 +1286,6 @@ function shouldExposeEnvironmentVariableInManifest(key) {
 }
 
 export async function startExpoServerAsync(projectRoot: string) {
-  await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   let app = express();
@@ -1361,19 +1358,16 @@ export async function startExpoServerAsync(projectRoot: string) {
       ); // the server normally inserts this but if we're offline we'll do it here
       await _resolveGoogleServicesFile(projectRoot, manifest);
       const hostUUID = await UserSettings.anonymousIdentifier();
-      if (Config.offline) {
+      let currentUser = await UserManager.getCurrentUserAsync();
+      if (!currentUser) {
         manifest.id = `@anonymous/${manifest.slug}-${hostUUID}`;
       }
       let manifestString = JSON.stringify(manifest);
-      let currentUser;
-      if (!Config.offline) {
-        currentUser = await UserManager.getCurrentUserAsync();
-      }
-      if (req.headers['exponent-accept-signature'] && (currentUser || Config.offline)) {
+      if (req.headers['exponent-accept-signature']) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
         } else {
-          if (Config.offline) {
+          if (!currentUser) {
             const unsignedManifest = {
               manifestString,
               signature: 'UNSIGNED',
@@ -1448,7 +1442,6 @@ export async function startExpoServerAsync(projectRoot: string) {
   await Exp.saveRecentExpRootAsync(projectRoot);
 }
 export async function stopExpoServerAsync(projectRoot: string) {
-  await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
@@ -1511,10 +1504,8 @@ async function _connectToNgrokAsync(
 }
 
 export async function startTunnelsAsync(projectRoot: string) {
-  const user = await UserManager.ensureLoggedInAsync();
-  if (!user) {
-    throw new Error('Internal error -- tunnel started in offline mode.');
-  }
+  let user = await UserManager.getCurrentUserAsync();
+  let username = user ? user.username : 'anonymous';
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
@@ -1537,102 +1528,95 @@ export async function startTunnelsAsync(projectRoot: string) {
       'Successfully ran `adb reverse`. Localhost URLs should work on the connected Android device.'
     );
   }
-  const { username } = user;
   let packageShortName = path.parse(projectRoot).base;
   let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
 
-  try {
-    let startedTunnelsSuccessfully = false;
+  let startedTunnelsSuccessfully = false;
 
-    // Some issues with ngrok cause it to hang indefinitely. After
-    // TUNNEL_TIMEOUTms we just throw an error.
-    await Promise.race([
-      (async () => {
-        await delayAsync(TUNNEL_TIMEOUT);
-        if (!startedTunnelsSuccessfully) {
-          throw new Error('Starting tunnels timed out');
+  // Some issues with ngrok cause it to hang indefinitely. After
+  // TUNNEL_TIMEOUTms we just throw an error.
+  await Promise.race([
+    (async () => {
+      await delayAsync(TUNNEL_TIMEOUT);
+      if (!startedTunnelsSuccessfully) {
+        throw new Error('Starting tunnels timed out');
+      }
+    })(),
+    (async () => {
+      let expoServerNgrokUrl = await _connectToNgrokAsync(
+        projectRoot,
+        {
+          authtoken: Config.ngrok.authToken,
+          port: packagerInfo.expoServerPort,
+          proto: 'http',
+        },
+        async () => {
+          let randomness = expRc.manifestTunnelRandomness
+            ? expRc.manifestTunnelRandomness
+            : await Exp.getProjectRandomnessAsync(projectRoot);
+          return [
+            randomness,
+            UrlUtils.domainify(username),
+            UrlUtils.domainify(packageShortName),
+            Config.ngrok.domain,
+          ].join('.');
+        },
+        packagerInfo.ngrokPid
+      );
+      let packagerNgrokUrl = await _connectToNgrokAsync(
+        projectRoot,
+        {
+          authtoken: Config.ngrok.authToken,
+          port: packagerInfo.packagerPort,
+          proto: 'http',
+        },
+        async () => {
+          let randomness = expRc.manifestTunnelRandomness
+            ? expRc.manifestTunnelRandomness
+            : await Exp.getProjectRandomnessAsync(projectRoot);
+          return [
+            'packager',
+            randomness,
+            UrlUtils.domainify(username),
+            UrlUtils.domainify(packageShortName),
+            Config.ngrok.domain,
+          ].join('.');
+        },
+        packagerInfo.ngrokPid
+      );
+      await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+        expoServerNgrokUrl,
+        packagerNgrokUrl,
+        ngrokPid: ngrok.process().pid,
+      });
+
+      startedTunnelsSuccessfully = true;
+
+      ProjectUtils.logWithLevel(
+        projectRoot,
+        'info',
+        {
+          tag: 'expo',
+          _expoEventType: 'TUNNEL_READY',
+        },
+        'Tunnel ready.'
+      );
+
+      ngrok.addListener('statuschange', status => {
+        if (status === 'reconnecting') {
+          ProjectUtils.logError(
+            projectRoot,
+            'expo',
+            'We noticed your tunnel is having issues. This may be due to intermittent problems with our tunnel provider. If you have trouble connecting to your app, try to Restart the project, or switch Host to LAN.'
+          );
+        } else if (status === 'online') {
+          ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
         }
-      })(),
-      (async () => {
-        let expoServerNgrokUrl = await _connectToNgrokAsync(
-          projectRoot,
-          {
-            authtoken: Config.ngrok.authToken,
-            port: packagerInfo.expoServerPort,
-            proto: 'http',
-          },
-          async () => {
-            let randomness = expRc.manifestTunnelRandomness
-              ? expRc.manifestTunnelRandomness
-              : await Exp.getProjectRandomnessAsync(projectRoot);
-            return [
-              randomness,
-              UrlUtils.domainify(username),
-              UrlUtils.domainify(packageShortName),
-              Config.ngrok.domain,
-            ].join('.');
-          },
-          packagerInfo.ngrokPid
-        );
-        let packagerNgrokUrl = await _connectToNgrokAsync(
-          projectRoot,
-          {
-            authtoken: Config.ngrok.authToken,
-            port: packagerInfo.packagerPort,
-            proto: 'http',
-          },
-          async () => {
-            let randomness = expRc.manifestTunnelRandomness
-              ? expRc.manifestTunnelRandomness
-              : await Exp.getProjectRandomnessAsync(projectRoot);
-            return [
-              'packager',
-              randomness,
-              UrlUtils.domainify(username),
-              UrlUtils.domainify(packageShortName),
-              Config.ngrok.domain,
-            ].join('.');
-          },
-          packagerInfo.ngrokPid
-        );
-        await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-          expoServerNgrokUrl,
-          packagerNgrokUrl,
-          ngrokPid: ngrok.process().pid,
-        });
-
-        startedTunnelsSuccessfully = true;
-
-        ProjectUtils.logWithLevel(
-          projectRoot,
-          'info',
-          {
-            tag: 'expo',
-            _expoEventType: 'TUNNEL_READY',
-          },
-          'Tunnel ready.'
-        );
-
-        ngrok.addListener('statuschange', status => {
-          if (status === 'reconnecting') {
-            ProjectUtils.logError(
-              projectRoot,
-              'expo',
-              'We noticed your tunnel is having issues. This may be due to intermittent problems with our tunnel provider. If you have trouble connecting to your app, try to Restart the project, or switch Host to LAN.'
-            );
-          } else if (status === 'online') {
-            ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
-          }
-        });
-      })(),
-    ]);
-  } catch (e) {
-    ProjectUtils.logError(projectRoot, 'expo', `Error starting tunnel: ${e.toString()}`);
-    throw e;
-  }
+      });
+    })(),
+  ]);
 }
 export async function stopTunnelsAsync(projectRoot: string) {
-  await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot); // This will kill all ngrok tunnels in the process. // We'll need to change this if we ever support more than one project // open at a time in XDE.
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   let ngrokProcess = ngrok.process();
@@ -1667,7 +1651,6 @@ export async function setOptionsAsync(
     packagerPort?: number,
   }
 ) {
-  await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot); // Check to make sure all options are valid
   let schema = joi.object().keys({
     packagerPort: joi.number().integer(),
@@ -1680,7 +1663,6 @@ export async function setOptionsAsync(
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
 }
 export async function getUrlAsync(projectRoot: string, options: Object = {}) {
-  await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
@@ -1690,7 +1672,6 @@ export async function startAsync(
   options: Object = {},
   verbose: boolean = true
 ): Promise<any> {
-  await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
   Analytics.logEvent('Start Project', {
     projectRoot,
@@ -1701,7 +1682,7 @@ export async function startAsync(
     try {
       await startTunnelsAsync(projectRoot);
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error starting ngrok ${e.message}`);
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error starting tunnel ${e.message}`);
     }
   }
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);

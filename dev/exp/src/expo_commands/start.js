@@ -90,5 +90,5 @@ export default (program: any) => {
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .urlOpts()
     .allowOffline()
-    .asyncActionProjectDir(action, true);
+    .asyncActionProjectDir(action, true, true);
 };
