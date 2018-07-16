@@ -10,11 +10,17 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.6.0] - 2018-07-16
+
+### Added
+
+* Add function for cleaning up old turtle keychains.
+
 ## [50.5.2] - 2018-07-12
 
 ### Added
 
-* Allow for passing app manifest to AndroidShellApp and IosShellApp modules as an argument
+* Allow for passing app manifest to AndroidShellApp and IosShellApp modules as an argument.
 
 ## [50.5.1] - 2018-07-10
 
