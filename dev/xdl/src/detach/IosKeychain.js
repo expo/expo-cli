@@ -26,7 +26,6 @@ export async function createKeychain(appUUID, saveResultToFile = true) {
   await spawn('security', 'show-keychain-info', path, { stdoutOnly: true });
 
   logger.info('created new keychain');
-  const keychainInfoPath = getKeychainInfoPath(appUUID);
   const keychainInfo = {
     name,
     path,
@@ -34,6 +33,7 @@ export async function createKeychain(appUUID, saveResultToFile = true) {
   };
 
   if (saveResultToFile) {
+    const keychainInfoPath = getKeychainInfoPath(appUUID);
     await fs.writeFile(keychainInfoPath, JSON.stringify(keychainInfo));
     logger.info('saved keychain info to %s', keychainInfoPath);
   }
@@ -48,8 +48,10 @@ export async function deleteKeychain({ path, appUUID }) {
   logger.info('deleting keychain...');
   await runFastlane(['run', 'delete_keychain', `keychain_path:${path}`]);
 
-  const keychainInfoPath = getKeychainInfoPath(appUUID);
-  await fs.remove(keychainInfoPath);
+  if (appUUID) {
+    const keychainInfoPath = getKeychainInfoPath(appUUID);
+    await fs.remove(keychainInfoPath);
+  }
 }
 
 export async function importIntoKeychain({ keychainPath, certPath, certPassword }) {
@@ -67,6 +69,44 @@ export async function importIntoKeychain({ keychainPath, certPath, certPassword 
   }
   await spawn('security', ...args);
   logger.info('imported certificate into keychain');
+}
+
+export async function cleanUpKeychains() {
+  const BUILD_PHASE = 'cleaning up keychains';
+  const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
+
+  try {
+    logger.info('Cleaning up keychains...');
+    const { stdout: keychainsListRaw } = await spawnAsyncThrowError(
+      'security',
+      ['list-keychains'],
+      { stdio: 'pipe' }
+    );
+    const allKeychainsList = keychainsListRaw.match(/"(.*)"/g).map(i => i.slice(1, i.length - 1));
+    const turtleKeychainsList = keychainsListRaw.match(/\/private\/tmp\/xdl\/(.*).keychain/g);
+    let shouldCleanSearchList = false;
+    if (turtleKeychainsList) {
+      for (const keychainPath of turtleKeychainsList) {
+        try {
+          await deleteKeychain({ path: keychainPath });
+        } catch (err) {
+          logger.warn(`Failed to delete keychain: ${keychainPath}`, err);
+          shouldCleanSearchList = true;
+        }
+      }
+
+      if (shouldCleanSearchList) {
+        const newSearchList = _.difference(allKeychainsList, turtleKeychainsList);
+        await spawnAsyncThrowError('security', ['list-keychains', '-s', ...newSearchList], {
+          stdio: 'pipe',
+        });
+      }
+    }
+    logger.info('Cleaned up keychains');
+  } catch (err) {
+    logger.error(err);
+    throw new Error('Failed to clean up keychains');
+  }
 }
 
 async function runFastlane(fastlaneArgs) {
