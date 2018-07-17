@@ -21,6 +21,7 @@ import spawnAsync from '@expo/spawn-async';
 import split from 'split';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
+import url from 'url';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -47,6 +48,7 @@ import XDLError from './XDLError';
 
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
+const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
 
@@ -286,6 +288,106 @@ export async function getLatestReleaseAsync(
   } else {
     return null;
   }
+}
+
+/**
+ * Apps exporting for self hosting will have the files created in the project directory the following way:
+.
+├── android-index.exp
+├── android.js
+├── assets
+│   ├── 004c2bbb035d8d06bb830efc4673c886
+│   └── 1eccbc4c41d49fd81840aef3eaabe862
+├── ios-index.exp
+└── ios.js
+ */
+export async function exportForAppHosting(
+  projectRoot: string,
+  publicUrl: string,
+  outputDir: string,
+  options: {} = {}
+) {
+  await _validatePackagerReadyAsync(projectRoot);
+
+  // make output dir if not exists
+  const pathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+  await fs.ensureDir(pathToWrite);
+
+  // build the bundles
+  let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot);
+  await _writeArtifactSafelyAsync(projectRoot, null, path.join(outputDir, 'ios.js'), iosBundle);
+  await _writeArtifactSafelyAsync(
+    projectRoot,
+    null,
+    path.join(outputDir, 'android.js'),
+    androidBundle
+  );
+  logger.global.info('Finished saving JS Bundles.');
+
+  // save the assets
+  // Get project config
+  let exp = await _getPublishExpConfigAsync(projectRoot, options);
+  await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
+
+  // Delete keys that are normally deleted in the publish process
+  delete exp.hooks;
+
+  // save the android manifest
+  // TODO(quin): follow up and write a doc page that explains these fields that users don't specify in app.json
+  exp.bundleUrl = url.resolve(publicUrl, 'android.js');
+  exp.publishedTime = new Date().toISOString();
+  if (!exp.slug) {
+    throw new XDLError(
+      ErrorCode.INVALID_MANIFEST,
+      'Must provide a slug field in the app.json manifest.'
+    );
+  }
+  const user = await UserManager.ensureLoggedInAsync();
+  exp.id = `@${user.username}/${exp.slug}`;
+  await _writeArtifactSafelyAsync(
+    projectRoot,
+    null,
+    path.join(outputDir, 'android-index.exp'),
+    JSON.stringify(exp)
+  );
+
+  // save the ios manifest
+  exp.bundleUrl = url.resolve(publicUrl, 'ios.js');
+  await _writeArtifactSafelyAsync(
+    projectRoot,
+    null,
+    path.join(outputDir, 'ios-index.exp'),
+    JSON.stringify(exp)
+  );
+}
+
+async function _saveAssetAsync(projectRoot, assets, outputDir) {
+  // Collect paths by key, also effectively handles duplicates in the array
+  const paths = {};
+  assets.forEach(asset => {
+    asset.files.forEach((path, index) => {
+      paths[asset.fileHashes[index]] = path;
+    });
+  });
+
+  // save files one chunk at a time
+  const keyChunks = _.chunk(Object.keys(paths), 5);
+  for (const keys of keyChunks) {
+    const promises = [];
+    for (const key of keys) {
+      ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
+
+      logger.global.info({ quiet: true }, `Saving ${paths[key]}`);
+
+      let assetPath = path.resolve(outputDir, 'assets', key);
+
+      // copy file over to assetPath
+      const p = fs.copy(paths[key], assetPath);
+      promises.push(p);
+    }
+    await Promise.all(promises);
+  }
+  logger.global.info('Files successfully saved.');
 }
 
 export async function publishAsync(
@@ -624,9 +726,16 @@ async function _maybeBuildSourceMapsAsync(projectRoot, exp, options = {}) {
   return { iosSourceMap, androidSourceMap };
 }
 
-async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
-  logger.global.info('Analyzing assets');
-
+/**
+ * Collects all the assets declared in the android app, ios app and manifest
+ *
+ * @param {string} hostedAssetPrefix
+ *    The path where assets are hosted (ie) http://xxx.cloudfront.com/assets/
+ * 
+ * @modifies {exp} Replaces relative asset paths in the manifest with hosted URLS
+ * 
+ */
+async function _collectAssets(projectRoot, exp, hostedAssetPrefix) {
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
   let assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
 
@@ -638,8 +747,8 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
     errorCode: ErrorCode.INVALID_ASSETS,
   });
 
-  // Resolve manifest assets to their S3 URL and add them to the list of assets to
-  // be uploaded
+  // Resolve manifest assets to their hosted URL and add them to the list of assets to
+  // be uploaded. Modifies exp.
   const manifestAssets = [];
   await _resolveManifestAssets(
     projectRoot,
@@ -649,23 +758,26 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
       const contents = await fs.readFile(absolutePath);
       const hash = md5hex(contents);
       manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
-      return 'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash;
+      return url.resolve(hostedAssetPrefix, hash);
     },
     true
   );
-  await _resolveGoogleServicesFile(projectRoot, exp);
-
-  logger.global.info('Uploading assets');
 
   // Upload asset files
   const iosAssets = JSON.parse(iosAssetsJson);
   const androidAssets = JSON.parse(androidAssetsJson);
-  const assets = iosAssets.concat(androidAssets).concat(manifestAssets);
-  if (assets.length > 0 && assets[0].fileHashes) {
-    await uploadAssetsAsync(projectRoot, assets);
-  } else {
-    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
-  }
+  return iosAssets.concat(androidAssets).concat(manifestAssets);
+}
+
+/**
+ * Configures exp, preparing it for asset export
+ * 
+ * @modifies {exp}
+ * 
+ */
+async function _configureExpForAssets(projectRoot, exp, assets) {
+  // Add google services file if it exists
+  await _resolveGoogleServicesFile(projectRoot, exp);
 
   // Convert asset patterns to a list of asset strings that match them.
   // Assets strings are formatted as `asset_<hash>.<type>` and represent
@@ -700,12 +812,53 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
   return exp;
 }
 
+async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
+  logger.global.info('Analyzing assets');
+
+  const assetCdnPath = url.resolve(EXPO_CDN, '~assets');
+  const assets = await _collectAssets(projectRoot, exp, assetCdnPath);
+
+  logger.global.info('Uploading assets');
+
+  if (assets.length > 0 && assets[0].fileHashes) {
+    await uploadAssetsAsync(projectRoot, assets);
+  } else {
+    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
+  }
+
+  // Updates the manifest to reflect additional asset bundling + configs
+  await _configureExpForAssets(projectRoot, exp, assets);
+
+  return exp;
+}
+
+async function _fetchAndSaveAssetsAsync(projectRoot, exp, hostedUrl, outputDir) {
+  logger.global.info('Analyzing assets');
+
+  const assetCdnPath = url.resolve(hostedUrl, 'assets');
+  const assets = await _collectAssets(projectRoot, exp, assetCdnPath);
+
+  logger.global.info('Saving assets');
+
+  if (assets.length > 0 && assets[0].fileHashes) {
+    await _saveAssetAsync(projectRoot, assets, outputDir);
+  } else {
+    logger.global.info({ quiet: true }, 'No assets to upload, skipped.');
+  }
+
+  // Updates the manifest to reflect additional asset bundling + configs
+  await _configureExpForAssets(projectRoot, exp, assets);
+
+  return exp;
+}
+
 async function _writeArtifactSafelyAsync(projectRoot, keyName, artifactPath, artifact) {
   const pathToWrite = path.resolve(projectRoot, artifactPath);
   if (!fs.existsSync(path.dirname(pathToWrite))) {
-    logger.global.warn(
-      `app.json specifies ${keyName}: ${pathToWrite}, but that directory does not exist.`
-    );
+    const errorMsg = keyName
+      ? `app.json specifies: ${pathToWrite}, but that directory does not exist.`
+      : `app.json specifies ${keyName}: ${pathToWrite}, but that directory does not exist.`;
+    logger.global.warn(errorMsg);
   } else {
     await fs.writeFile(pathToWrite, artifact);
   }
