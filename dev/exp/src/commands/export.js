@@ -7,13 +7,14 @@ import { Project } from 'xdl';
 
 import log from '../log';
 import { installExitHooks } from '../exit';
+import CommandError from '../CommandError';
 
 export async function action(projectDir: string, options: Options = {}) {
   if (!options.publicUrl) {
-    throw new Error('Must specify your public url that will host your static files.');
+    throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
   }
   if (!validator.isURL(options.publicUrl, { protocols: ['https'] })) {
-    throw new Error('Public URL must be proper https format.');
+    throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
   const status = await Project.currentStatus(projectDir);
 
