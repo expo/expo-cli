@@ -44,7 +44,10 @@ const tasks = {
 gulp.task('build', gulp.series([tasks.babel, tasks.copy]));
 gulp.task('watch', tasks.watchBabel);
 gulp.task('clean', done => {
-  rimraf(paths.build, done);
+  rimraf(paths.build, error => {
+    if (error) return done(error);
+    rimraf(paths.nextBuild, done);
+  });
 });
 
 gulp.task('default', gulp.series('watch'));
