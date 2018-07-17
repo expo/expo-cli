@@ -28,8 +28,7 @@ export default (program: any) => {
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
-        log.error('-n must be a number between 1 and 100 inclusive');
-        process.exit(1);
+        throw new Error('-n must be a number between 1 and 100 inclusive');
       }
 
       // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
@@ -89,7 +88,7 @@ export default (program: any) => {
         let tableString = table.printTableJsonArray(headers, result.queryResult, colWidths);
         console.log(tableString);
       } else {
-        log.error('No records found matching your query.');
+        throw new Error('No records found matching your query.');
       }
     });
   program
@@ -100,8 +99,7 @@ export default (program: any) => {
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.publishId) {
-        log.error('publishId must be specified.');
-        process.exit(1);
+        throw new Error('publishId must be specified.');
       }
 
       let formData = new FormData();
@@ -131,7 +129,7 @@ export default (program: any) => {
         let manifestTableString = table.printTableJson(manifest, 'Manifest Details');
         console.log(manifestTableString);
       } else {
-        log.error('No records found matching your query.');
+        throw new Error('No records found matching your query.');
       }
     });
 };

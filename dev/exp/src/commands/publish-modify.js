@@ -22,10 +22,10 @@ export default (program: any) => {
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.releaseChannel) {
-        log.error('You must specify a release channel.');
+        throw new Error('You must specify a release channel.');
       }
       if (!options.publishId) {
-        log.error('You must specify a publish id. You can find ids using publish:history.');
+        throw new Error('You must specify a publish id. You can find ids using publish:history.');
       }
       const user = await User.getCurrentUserAsync();
       const api = ApiV2.clientForUser(user);
@@ -52,7 +52,7 @@ export default (program: any) => {
     .option('--channel-id <channel-id>', 'The channel id to rollback in the channel. (Required)')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.channelId) {
-        log.error('You must specify a channel id. You can find ids using publish:history.');
+        throw new Error('You must specify a channel id. You can find ids using publish:history.');
       }
       const user = await User.getCurrentUserAsync();
       const api = ApiV2.clientForUser(user);
