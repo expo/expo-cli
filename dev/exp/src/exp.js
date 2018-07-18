@@ -68,6 +68,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
       if (options.offline) {
         Config.offline = true;
       }
+
       await asyncFn(...args);
       // After a command, flush the analytics queue so the program will not have any active timers
       // This allows node js to exit immediately
@@ -108,13 +109,6 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
 Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
   return this.asyncAction(async (projectDir, ...args) => {
     const opts = args[0];
-    if (!skipAuthCheck && !opts.parent.nonInteractive && !opts.offline) {
-      await loginOrRegisterIfLoggedOut();
-    }
-
-    if (!skipAuthCheck) {
-      await UserManager.ensureLoggedInAsync();
-    }
 
     if (!projectDir) {
       projectDir = process.cwd();
@@ -309,6 +303,8 @@ function runAsync(programName) {
     Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
     Analytics.setVersionName(packageJSON.version);
     _registerLogs();
+
+    UserManager.setInteractiveAuthenticationCallback(loginOrRegisterIfLoggedOut);
 
     if (process.env.SERVER_URL) {
       let serverUrl = process.env.SERVER_URL;

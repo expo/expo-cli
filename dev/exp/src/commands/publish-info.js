@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Api, Project, FormData } from 'xdl';
+import { Api, Project, FormData, User } from 'xdl';
 import log from '../log';
 import * as table from '../commands/utils/cli-table';
 
@@ -30,6 +30,9 @@ export default (program: any) => {
       if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
         throw new Error('-n must be a number between 1 and 100 inclusive');
       }
+
+      // TODO(ville): handle the API result for not authenticated user instead of checking upfront
+      await User.ensureLoggedInAsync();
 
       // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
       let formData = new FormData();
@@ -101,6 +104,9 @@ export default (program: any) => {
       if (!options.publishId) {
         throw new Error('publishId must be specified.');
       }
+
+      // TODO(ville): handle the API result for not authenticated user instead of checking upfront
+      await User.ensureLoggedInAsync();
 
       let formData = new FormData();
       formData.append('queryType', 'details');

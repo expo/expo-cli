@@ -13,5 +13,5 @@ export default program => {
   program
     .command('doctor [project-dir]')
     .description('Diagnoses issues with your Expo project.')
-    .asyncActionProjectDir(action, /* skipProjectValidation: */ true, /* skipAuthCheck: */ true);
+    .asyncActionProjectDir(action, /* skipProjectValidation: */ true);
 };

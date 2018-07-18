@@ -275,7 +275,7 @@ export async function recentValidExpsAsync() {
   return filteredResults;
 }
 
-export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = false) {
+export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
   let result = await Api.callMethodAsync('send', [recipient, url_, allowUnauthed]);
   return result;
 }

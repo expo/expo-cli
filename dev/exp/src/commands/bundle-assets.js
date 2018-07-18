@@ -12,5 +12,5 @@ export default program => {
     .description(
       'Bundles assets for a detached app. This command should be exectuted from xcode or gradle.'
     )
-    .asyncActionProjectDir(action, true, true);
+    .asyncActionProjectDir(action, true);
 };

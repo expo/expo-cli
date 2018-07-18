@@ -180,11 +180,18 @@ export class UserManagerInstance {
       return null;
     }
 
-    const user = await this.getCurrentUserAsync();
+    let user = await this.getCurrentUserAsync();
+    if (!user && this._interactiveAuthenticationCallbackAsync) {
+      user = await this._interactiveAuthenticationCallbackAsync();
+    }
     if (!user) {
       throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
     }
     return user;
+  }
+
+  setInteractiveAuthenticationCallback(callback) {
+    this._interactiveAuthenticationCallbackAsync = callback;
   }
 
   /**

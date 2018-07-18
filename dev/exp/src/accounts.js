@@ -3,10 +3,12 @@
  */
 
 import chalk from 'chalk';
+import program from 'commander';
 
 import { User as UserManager } from 'xdl';
 import CommandError from './CommandError';
 import prompt from './prompt';
+import log from './log';
 
 import type { LoginType, User } from 'xdl/build/User';
 
@@ -18,11 +20,19 @@ type CommandOptions = {
 };
 
 export async function loginOrRegisterIfLoggedOut() {
-  if (await UserManager.getCurrentUserAsync()) {
-    return;
+  let user = await UserManager.getCurrentUserAsync();
+  if (user) {
+    return user;
   }
 
-  console.log(chalk.yellow('\nAn Expo user account is required to proceed.\n'));
+  log.warn('An Expo user account is required to proceed.');
+
+  if (program.nonInteractive) {
+    throw new CommandError(
+      'NOT_LOGGED_IN',
+      `Not logged in. Use \`${program.name} login -u username -p password\` to log in.`
+    );
+  }
 
   const questions = [
     {
@@ -49,9 +59,9 @@ export async function loginOrRegisterIfLoggedOut() {
   const { action } = await prompt(questions);
 
   if (action === 'register') {
-    await register();
+    return register();
   } else if (action === 'existingUser') {
-    await login({});
+    return login({});
   } else {
     throw new CommandError('BAD_CHOICE', 'Not logged in.');
   }

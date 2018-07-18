@@ -27,7 +27,7 @@ export default (program: any) => {
       if (!options.publishId) {
         throw new Error('You must specify a publish id. You can find ids using publish:history.');
       }
-      const user = await User.getCurrentUserAsync();
+      const user = await User.ensureLoggedInAsync();
       const api = ApiV2.clientForUser(user);
       try {
         let result = await api.postAsync('publish/set', {
