@@ -219,8 +219,12 @@ const entitlementTransferRules = [
 
 const blacklistedEntitlementKeys = [
   'com.apple.developer.icloud-container-development-container-identifiers',
+  'com.apple.developer.icloud-container-environment',
+  'com.apple.developer.icloud-container-identifiers',
+  'com.apple.developer.icloud-services',
   'com.apple.developer.restricted-resource-mode',
-  'com.apple.developer.associated-domains',
+  'com.apple.developer.ubiquity-container-identifiers',
+  'com.apple.developer.ubiquity-kvstore-identifier',
   'inter-app-audio',
   'com.apple.developer.homekit',
   'com.apple.developer.healthkit',
@@ -228,8 +232,6 @@ const blacklistedEntitlementKeys = [
   'com.apple.developer.maps',
   'com.apple.external-accessory.wireless-configuration',
 ];
-
-const icloudContainerEnvKey = 'com.apple.developer.icloud-container-environment';
 
 async function createEntitlementsFile({ generatedEntitlementsPath, plistData, archivePath }) {
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
@@ -257,13 +259,10 @@ async function createEntitlementsFile({ generatedEntitlementsPath, plistData, ar
       entitlements[rule] = archiveEntitlementsData[rule];
     }
   });
-  let generatedEntitlements = _.pickBy(
+  const generatedEntitlements = _.pickBy(
     entitlements,
     (val, key) => !_.includes(blacklistedEntitlementKeys, key)
   );
-  generatedEntitlements[icloudContainerEnvKey] = generatedEntitlements[icloudContainerEnvKey]
-    ? generatedEntitlements[icloudContainerEnvKey].filter(i => i === 'Production')
-    : [];
   const generatedEntitlementsPlistData = _.attempt(plist.build, generatedEntitlements);
   await fs.writeFile(generatedEntitlementsPath, generatedEntitlementsPlistData, {
     mode: 0o755,

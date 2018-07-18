@@ -166,7 +166,7 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
         ];
         entitlements['com.apple.developer.ubiquity-kvstore-identifier'] =
           appleTeamId + '.' + manifest.ios.bundleIdentifier;
-        entitlements['com.apple.developer.icloud-services'] = ['CloudDocuments', 'CloudKit'];
+        entitlements['com.apple.developer.icloud-services'] = ['CloudDocuments'];
       } else {
         [
           'com.apple.developer.icloud-container-identifiers',
