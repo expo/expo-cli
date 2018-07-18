@@ -72,11 +72,8 @@ export async function importIntoKeychain({ keychainPath, certPath, certPassword 
 }
 
 export async function cleanUpKeychains() {
-  const BUILD_PHASE = 'cleaning up keychains';
-  const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
-
   try {
-    logger.info('Cleaning up keychains...');
+    _logger.info('Cleaning up keychains...');
     const { stdout: keychainsListRaw } = await spawnAsyncThrowError(
       'security',
       ['list-keychains'],
@@ -90,7 +87,7 @@ export async function cleanUpKeychains() {
         try {
           await deleteKeychain({ path: keychainPath });
         } catch (err) {
-          logger.warn(`Failed to delete keychain: ${keychainPath}`, err);
+          _logger.warn(`Failed to delete keychain: ${keychainPath}`, err);
           shouldCleanSearchList = true;
         }
       }
@@ -102,9 +99,9 @@ export async function cleanUpKeychains() {
         });
       }
     }
-    logger.info('Cleaned up keychains');
+    _logger.info('Cleaned up keychains');
   } catch (err) {
-    logger.error(err);
+    _logger.error(err);
     throw new Error('Failed to clean up keychains');
   }
 }
