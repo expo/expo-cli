@@ -236,6 +236,8 @@ const blacklistedEntitlementKeys = [
   'com.apple.external-accessory.wireless-configuration',
 ];
 
+const icloudContainerEnvKey = 'com.apple.developer.icloud-container-environment';
+
 async function createEntitlementsFile({
   generatedEntitlementsPath,
   plistData,
@@ -283,6 +285,10 @@ async function createEntitlementsFile({
   }
   if (!manifest.ios.associatedDomains) {
     generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.associated-domains');
+  }
+  if (generatedEntitlements[icloudContainerEnvKey]) {
+    const envs = generatedEntitlements[icloudContainerEnvKey].filter(i => i === 'Production');
+    generatedEntitlements[icloudContainerEnvKey] = envs;
   }
 
   const generatedEntitlementsPlistData = _.attempt(plist.build, generatedEntitlements);
