@@ -17,6 +17,7 @@ export default function createIPABuilder(buildParams) {
     bundleIdentifier,
     teamID,
     workingDir = process.env.TURTLE_WORKING_DIR_PATH,
+    manifest,
   } = buildParams;
   const workspace = path.join(
     workingDir,
@@ -84,6 +85,7 @@ export default function createIPABuilder(buildParams) {
       generatedEntitlementsPath,
       plistData,
       archivePath: outputPath,
+      manifest,
     });
     logger.info('created entitlements file');
 

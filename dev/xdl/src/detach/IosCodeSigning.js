@@ -217,14 +217,17 @@ const entitlementTransferRules = [
   'keychain-access-groups',
 ];
 
-const blacklistedEntitlementKeys = [
-  'com.apple.developer.icloud-container-development-container-identifiers',
+const blacklistedEntitlementKeysWithoutICloud = [
   'com.apple.developer.icloud-container-environment',
   'com.apple.developer.icloud-container-identifiers',
   'com.apple.developer.icloud-services',
-  'com.apple.developer.restricted-resource-mode',
   'com.apple.developer.ubiquity-container-identifiers',
   'com.apple.developer.ubiquity-kvstore-identifier',
+];
+
+const blacklistedEntitlementKeys = [
+  'com.apple.developer.icloud-container-development-container-identifiers',
+  'com.apple.developer.restricted-resource-mode',
   'inter-app-audio',
   'com.apple.developer.homekit',
   'com.apple.developer.healthkit',
@@ -233,7 +236,12 @@ const blacklistedEntitlementKeys = [
   'com.apple.external-accessory.wireless-configuration',
 ];
 
-async function createEntitlementsFile({ generatedEntitlementsPath, plistData, archivePath }) {
+async function createEntitlementsFile({
+  generatedEntitlementsPath,
+  plistData,
+  archivePath,
+  manifest,
+}) {
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
 
   const entitlementsPattern = path.join(
@@ -254,15 +262,29 @@ async function createEntitlementsFile({ generatedEntitlementsPath, plistData, ar
   }
 
   const entitlements = { ...decodedProvisioningProfileEntitlements };
+
   entitlementTransferRules.forEach(rule => {
     if (rule in archiveEntitlementsData) {
       entitlements[rule] = archiveEntitlementsData[rule];
     }
   });
-  const generatedEntitlements = _.pickBy(
-    entitlements,
-    (val, key) => !_.includes(blacklistedEntitlementKeys, key)
-  );
+
+  let generatedEntitlements = _.omit(entitlements, blacklistedEntitlementKeys);
+
+  if (!manifest.ios.usesIcloudStorage) {
+    generatedEntitlements = _.omit(generatedEntitlements, blacklistedEntitlementKeysWithoutICloud);
+  } else {
+    const ubiquityKvKey = 'com.apple.developer.ubiquity-kvstore-identifier';
+    if (generatedEntitlements[ubiquityKvKey]) {
+      const teamId = generatedEntitlements[ubiquityKvKey].split('.')[0];
+      generatedEntitlements[ubiquityKvKey] = `${teamId}.${manifest.ios.bundleIdentifier}`;
+    }
+    generatedEntitlements['com.apple.developer.icloud-services'] = ['CloudDocuments'];
+  }
+  if (!manifest.ios.associatedDomains) {
+    generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.associated-domains');
+  }
+
   const generatedEntitlementsPlistData = _.attempt(plist.build, generatedEntitlements);
   await fs.writeFile(generatedEntitlementsPath, generatedEntitlementsPlistData, {
     mode: 0o755,
