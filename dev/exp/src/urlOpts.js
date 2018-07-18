@@ -15,7 +15,7 @@ function addOptions(program) {
     )
     .option(
       '-m, --host [mode]',
-      'tunnel (default), lan, localhost. Type of host to use. "tunnel" allows you to view your link on other networks'
+      'lan (default), tunnel, localhost. Type of host to use. "tunnel" allows you to view your link on other networks'
     )
     .option('--tunnel', 'Same as --host tunnel')
     .option('--lan', 'Same as --host lan')
@@ -50,15 +50,14 @@ async function optsAsync(projectDir, options) {
 
   if (options.host) {
     opts.hostType = options.host;
-  }
-  if (options.tunnel) {
+  } else if (options.tunnel) {
     opts.hostType = 'tunnel';
-  }
-  if (options.lan) {
+  } else if (options.lan) {
     opts.hostType = 'lan';
-  }
-  if (options.localhost) {
+  } else if (options.localhost) {
     opts.hostType = 'localhost';
+  } else {
+    opts.hostType = 'lan';
   }
 
   let rawArgs = options.parent.rawArgs;

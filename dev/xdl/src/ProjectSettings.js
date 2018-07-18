@@ -10,7 +10,7 @@ import path from 'path';
 
 let projectSettingsFile = 'settings.json';
 let projectSettingsDefaults = {
-  hostType: 'tunnel',
+  hostType: 'lan',
   lanType: 'ip',
   dev: true,
   minify: false,
