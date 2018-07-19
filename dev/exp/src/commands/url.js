@@ -34,6 +34,7 @@ async function action(projectDir, options) {
   }
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
+  log.newLine();
   urlOpts.printQRCode(url);
 
   log('Your URL is\n\n' + chalk.underline(url) + '\n');

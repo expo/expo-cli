@@ -253,12 +253,20 @@ export async function constructUrlAsync(
   } else {
     let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
     if (!ngrokUrl) {
-      // use localhost
-      hostname = 'localhost';
-      port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
-
-      // TODO report a warning when this is for a currently served project, suppress for status checks
+      ProjectUtils.logWarning(
+        projectRoot,
+        'expo',
+        'Tunnel URL not found, falled back to LAN URL.',
+        'tunnel-url-not-found'
+      );
+      return constructUrlAsync(
+        projectRoot,
+        { ...opts, hostType: 'lan' },
+        isPackager,
+        requestHostname
+      );
     } else {
+      ProjectUtils.clearNotification(projectRoot, 'tunnel-url-not-found');
       let pnu = url.parse(ngrokUrl);
       hostname = pnu.hostname;
       port = pnu.port;
