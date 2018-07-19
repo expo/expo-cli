@@ -10,8 +10,6 @@ import idx from 'idx';
 
 import Config from './Config';
 
-import logger from './Logger';
-
 import type { User } from './User';
 
 // These aren't constants because some commands switch between staging and prod
@@ -47,10 +45,6 @@ type RequestOptions = {
 };
 
 type QueryParameters = { [key: string]: ?(string | number | boolean) };
-
-type ErrorWithResponseBody = Error & {
-  responseBody?: any,
-};
 
 type APIV2ClientOptions = {
   sessionSecret?: string,
@@ -186,23 +180,12 @@ export default class ApiV2Client {
       const maybeErrorData = idx(e, _ => _.response.data.errors.length);
       if (maybeErrorData) {
         result = e.response.data;
-      } else if (e.code === 'ECONNREFUSED' || e.code === 'ENOTFOUND' || e.code === 'ETIMEDOUT') {
-        // surface network failures
-        throw e;
+        if (!result || typeof result !== 'object') {
+          throw e;
+        }
       } else {
-        const error: ErrorWithResponseBody = new Error(
-          `There was a problem understanding the server. Please try again.`
-        );
-        error.responseBody = result;
-        logger.error(error);
-        throw error;
+        throw e;
       }
-    }
-
-    if (!result || typeof result !== 'object') {
-      let error: ErrorWithResponseBody = new Error(`There was a problem understanding the server.`);
-      error.responseBody = result;
-      throw error;
     }
 
     if (result.errors && result.errors.length) {
