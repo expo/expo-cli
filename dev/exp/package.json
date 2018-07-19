@@ -38,12 +38,6 @@
   "pkg": {
     "scripts": "build/**/*.js"
   },
-  "powertools": {
-    "group": [
-      "dev-tools",
-      "exp"
-    ]
-  },
   "devDependencies": {
     "babel-eslint": "^8.2.2",
     "babel-plugin-add-module-exports": "^0.2.1",
@@ -55,7 +49,7 @@
     "eslint": "^4.12.0",
     "eslint-config-universe": "^1.0.6",
     "gulp": "^4.0.0",
-    "gulp-babel": "^6.1.2",
+    "gulp-babel": "^7.0.1",
     "gulp-changed": "^1.3.0",
     "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^1.6.0",
@@ -91,7 +85,7 @@
     "untildify": "^3.0.2",
     "validator": "^10.4.0",
     "wordwrap": "^1.0.0",
-    "xdl": "50.4.2"
+    "xdl": "^50.6.0"
   },
   "optionalDependencies": {
     "@expo/traveling-fastlane-darwin": "1.5.0",

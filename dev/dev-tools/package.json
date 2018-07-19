@@ -16,12 +16,6 @@
   "files": [
     "build"
   ],
-  "powertools": {
-    "group": [
-      "dev-tools",
-      "exp"
-    ]
-  },
   "dependencies": {
     "body-parser": "1.18.2",
     "express": "4.16.3",
@@ -72,7 +66,7 @@
     "redux": "^3.7.2",
     "slugify": "^1.0.2",
     "velocity-react": "^1.4.1",
-    "xdl": "50.5.0"
+    "xdl": "^50.6.0"
   },
   "license": "MIT"
 }

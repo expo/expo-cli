@@ -13,6 +13,7 @@
     "start": "yarn run build && yarn run watch",
     "build": "cross-env NODE_ENV=production gulp clean && gulp build",
     "prepublish": "yarn build",
+    "prepare": "yarn build",
     "watch": "gulp watch",
     "test": "jest --config jest/unit-test-config.json",
     "integration-tests": "jest --config jest/integration-test-config.json",
@@ -28,9 +29,6 @@
     "url": "https://github.com/exponent/xdl/issues"
   },
   "homepage": "https://github.com/exponent/xdl#readme",
-  "powertools": {
-    "group": "dev-tools"
-  },
   "dependencies": {
     "@expo/bunyan": "3.0.2",
     "@expo/json-file": "^8.0.0",
@@ -113,7 +111,7 @@
     "babel-preset-stage-1": "^6.5.0",
     "cross-env": "^3.1.3",
     "eslint": "^4.12.0",
-    "eslint-config-universe": "^1.0.6",
+    "eslint-config-universe": "^1.0.7",
     "extend": "^3.0.0",
     "flow-bin": "^0.37.4",
     "flow-typed": "^2.0.0",
