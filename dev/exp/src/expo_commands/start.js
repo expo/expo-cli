@@ -50,7 +50,7 @@ async function action(projectDir, options) {
   if (!options.nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
       log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
-      opn(devToolsUrl);
+      opn(devToolsUrl, { wait: false });
     } else {
       log(
         `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`

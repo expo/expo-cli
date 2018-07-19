@@ -144,7 +144,7 @@ export const startAsync = async projectDir => {
       case 'd': {
         const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
         log('Opening DevTools in the browser...');
-        opn(`http://localhost:${devToolsPort}`);
+        opn(`http://localhost:${devToolsPort}`, { wait: false });
         printHelp();
         return;
       }
