@@ -176,13 +176,9 @@ export default class ApiV2Client {
       response = await axios.request(reqOptions);
       result = response.data;
     } catch (e) {
-      // axios errors on 400's, pass this case to better error handling downstream
       const maybeErrorData = idx(e, _ => _.response.data.errors.length);
       if (maybeErrorData) {
         result = e.response.data;
-        if (!result || typeof result !== 'object') {
-          throw e;
-        }
       } else {
         throw e;
       }
