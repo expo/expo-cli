@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.6.1] - 2018-07-20
+
+### Changed
+
+* Fix signing iOS entitlements.
+
 ## [50.6.0] - 2018-07-16
 
 ### Added
