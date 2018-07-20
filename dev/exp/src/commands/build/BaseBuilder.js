@@ -103,7 +103,8 @@ export default class BaseBuilder {
       switch (job.status) {
         case 'pending':
         case 'sent-to-queue':
-          status = 'Build waiting in queue...';
+          status = `Build waiting in queue...
+You can check the queue length at ${chalk.underline(constructTurtleStatusUrl())}`;
           break;
         case 'started':
           status = 'Build started...';
@@ -238,6 +239,10 @@ ${buildStatus.id}
     log('Build started, it may take a few minutes to complete.');
 
     if (buildId) {
+      log(`You can check the queue length at\n ${chalk.underline(constructTurtleStatusUrl())}\n`);
+    }
+
+    if (buildId) {
       log(`You can monitor the build at\n\n ${chalk.underline(constructBuildLogsUrl(buildId))}\n`);
     }
 
@@ -269,6 +274,10 @@ ${buildStatus.id}
 
 function constructBuildLogsUrl(buildId: string): string {
   return `${getExpoDomainUrl()}/builds/${buildId}`;
+}
+
+function constructTurtleStatusUrl(): string {
+  return `${getExpoDomainUrl()}/turtle-status`;
 }
 
 function constructArtifactUrl(artifactId: string): string {
