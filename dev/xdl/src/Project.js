@@ -51,6 +51,7 @@ import type { User as ExpUser } from './User'; //eslint-disable-line
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
+const WAIT_FOR_PACKAGER_TIMEOUT = 30 * 1000;
 
 const joiValidateAsync = promisify(joi.validate);
 const treekillAsync = promisify(treekill);
@@ -1340,7 +1341,19 @@ export async function startReactNativeServerAsync(
     urlType: 'http',
     hostType: 'localhost',
   });
-  await Promise.race([_waitForRunningAsync(`${packagerUrl}/status`), exitPromise]);
+  const statusUrl = `${packagerUrl}/status`;
+  const timeoutPromise = new Promise((resolve, reject) =>
+    setTimeout(
+      () =>
+        reject(
+          new Error(
+            `Could not access packager status at ${statusUrl}. Are you sure the packager is running and reachable?`
+          )
+        ),
+      WAIT_FOR_PACKAGER_TIMEOUT
+    )
+  );
+  await Promise.race([_waitForRunningAsync(statusUrl), exitPromise, timeoutPromise]);
 } // Simulate the node_modules resolution // If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns // "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
   let paths = [];
