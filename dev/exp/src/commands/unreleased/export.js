@@ -48,7 +48,7 @@ export async function action(projectDir: string, options: Options = {}) {
 }
 
 export default (program: any) => {
-  program
+  /*   program
     .command('export [project-dir]')
     .description('Exports the static files of the app for hosting it on a web server.')
     .option('-p, --public-url <url>', 'The public url that will host the static files. (Required)')
@@ -59,5 +59,5 @@ export default (program: any) => {
     )
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
-    .asyncActionProjectDir(action, false, true);
+    .asyncActionProjectDir(action, false, true); */
 };
