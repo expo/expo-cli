@@ -15,8 +15,8 @@
     "prepublish": "yarn build",
     "prepare": "yarn build",
     "watch": "gulp watch",
-    "test": "jest --config jest/unit-test-config.json",
-    "integration-tests": "jest --config jest/integration-test-config.json",
+    "test": "jest --config jest/unit-test-config.json --rootDir .",
+    "integration-tests": "jest --config jest/integration-test-config.json --rootDir .",
     "flow-typed": "flow-typed install --flowVersion=\"$(flow version | awk '{ print $9 }')\""
   },
   "repository": {
