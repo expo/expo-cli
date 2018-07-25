@@ -100,7 +100,7 @@
   "devDependencies": {
     "babel-cli": "^6.14.0",
     "babel-eslint": "^8.2.2",
-    "babel-jest": "^19.0.0",
+    "babel-jest": "^23.4.0",
     "babel-plugin-idx": "^1.1.0",
     "babel-plugin-module-resolver": "^2.4.0",
     "babel-plugin-transform-flow-strip-types": "^6.21.0",
@@ -125,7 +125,7 @@
     "gulp-sourcemaps": "^1.6.0",
     "gulplog": "^1.0.0",
     "hashids": "^1.1.1",
-    "jest": "^19.0.2",
+    "jest": "^23.4.1",
     "mock-fs": "^3.12.1",
     "prettier": "~1.7.4",
     "promise-print": "^2.3.0",
