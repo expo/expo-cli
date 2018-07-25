@@ -10,6 +10,7 @@ type ModuleConfig = {
   podName: string,
   libName: string,
   detachable: boolean,
+  isNativeModule: boolean,
   subdirectory: string,
   versionable: boolean,
 };
@@ -23,9 +24,17 @@ export function getAllForPlatform(platform: Platform): Array<ModuleConfig> {
 }
 
 export function getVersionableModulesForPlatform(platform: Platform): Array<ModuleConfig> {
-  return getAllForPlatform(platform).filter(moduleConfig => moduleConfig.versionable);
+  return getAllForPlatform(platform).filter(moduleConfig => {
+    return moduleConfig.isNativeModule && moduleConfig.versionable;
+  });
 }
 
 export function getDetachableModulesForPlatform(platform: Platform): Array<ModuleConfig> {
-  return getAllForPlatform(platform).filter(moduleConfig => moduleConfig.detachable);
+  return getAllForPlatform(platform).filter(moduleConfig => {
+    return moduleConfig.isNativeModule && moduleConfig.detachable;
+  });
+}
+
+export function getPublishableModules(): Array<ModuleConfig> {
+  return expoSdkUniversalModulesConfigs.filter(moduleConfig => !!moduleConfig.libName);
 }

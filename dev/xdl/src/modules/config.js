@@ -58,6 +58,16 @@ const expoSdkUniversalModules = [
       },
     },
   },
+
+  // JS-only modules
+  {
+    libName: 'expo-asset',
+    isNativeModule: false,
+  },
+  {
+    libName: 'expo-module-template',
+    isNativeModule: false,
+  },
 ];
 
 function defaults(defaultConfig, ...customConfigs) {
@@ -71,10 +81,11 @@ function defaults(defaultConfig, ...customConfigs) {
 }
 
 const expoSdkUniversalModulesConfigs = expoSdkUniversalModules.map(
-  ({ config, podName, libName, ...params }) => {
+  ({ config, podName, libName, isNativeModule, ...params }) => {
     return {
       podName,
       libName,
+      isNativeModule: isNativeModule == null ? true : isNativeModule,
       config: {
         ios: defaults(defaultUniversalModuleConfig.ios, params, config && config.ios),
         android: defaults(defaultUniversalModuleConfig.android, params, config && config.android),
