@@ -10,6 +10,12 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.7.0] - 2018-07-25
+
+### Changed
+
+* Fix shell app builder commands
+
 ## [50.6.1] - 2018-07-20
 
 ### Changed
