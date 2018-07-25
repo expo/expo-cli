@@ -22,6 +22,7 @@ import split from 'split';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
 import url from 'url';
+import urljoin from 'url-join';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -331,7 +332,7 @@ export async function exportForAppHosting(
 
   // save the android manifest
   // TODO(quin): follow up and write a doc page that explains these fields that users don't specify in app.json
-  exp.bundleUrl = url.resolve(publicUrl, 'android.js');
+  exp.bundleUrl = urljoin(publicUrl, 'android.js');
   exp.publishedTime = new Date().toISOString();
   if (!exp.slug) {
     throw new XDLError(
@@ -349,7 +350,7 @@ export async function exportForAppHosting(
   );
 
   // save the ios manifest
-  exp.bundleUrl = url.resolve(publicUrl, 'ios.js');
+  exp.bundleUrl = urljoin(publicUrl, 'ios.js');
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
@@ -753,7 +754,7 @@ async function _collectAssets(projectRoot, exp, hostedAssetPrefix) {
       const contents = await fs.readFile(absolutePath);
       const hash = md5hex(contents);
       manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
-      return url.resolve(hostedAssetPrefix, hash);
+      return urljoin(hostedAssetPrefix, hash);
     },
     true
   );
@@ -810,7 +811,7 @@ async function _configureExpForAssets(projectRoot, exp, assets) {
 async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
   logger.global.info('Analyzing assets');
 
-  const assetCdnPath = url.resolve(EXPO_CDN, '~assets');
+  const assetCdnPath = urljoin(EXPO_CDN, '~assets');
   const assets = await _collectAssets(projectRoot, exp, assetCdnPath);
 
   logger.global.info('Uploading assets');
@@ -830,7 +831,7 @@ async function _fetchAndUploadAssetsAsync(projectRoot, exp) {
 async function _fetchAndSaveAssetsAsync(projectRoot, exp, hostedUrl, outputDir) {
   logger.global.info('Analyzing assets');
 
-  const assetCdnPath = url.resolve(hostedUrl, 'assets');
+  const assetCdnPath = urljoin(hostedUrl, 'assets');
   const assets = await _collectAssets(projectRoot, exp, assetCdnPath);
 
   logger.global.info('Saving assets');
