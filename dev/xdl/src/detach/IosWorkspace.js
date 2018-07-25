@@ -191,8 +191,6 @@ async function _renderPodfileFromTemplateAsync(
     podfileTemplateFilename = 'ExpoKit-Podfile';
     const expoDependenciesPath = path.join(
       context.data.projectPath,
-      'node_modules',
-      'expo',
       'node_modules'
     );
     podfileSubstitutions.UNIVERSAL_MODULES = detachableUniversalModules.map(module => ({
