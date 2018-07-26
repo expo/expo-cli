@@ -3,9 +3,6 @@
   "roots": [
     "src"
   ],
-  "transform": {
-    ".*\\.js$": "<rootDir>/jest/preprocessor.js"
-  },
   "setupTestFrameworkScriptFile": "<rootDir>/jest/integration-test-setup.js",
   "moduleFileExtensions": [
     "js",

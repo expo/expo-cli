@@ -4,9 +4,6 @@
     "__mocks__",
     "src"
   ],
-  "transform": {
-    ".*\\.js$": "<rootDir>/jest/preprocessor.js"
-  },
   "moduleFileExtensions": [
     "js",
     "json"
