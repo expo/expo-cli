@@ -72,9 +72,6 @@ module.exports = {
   get Intercom() {
     return require('./Intercom');
   },
-  get IosClient() {
-    return require('./client/IosClient');
-  },
   get IosIcons() {
     return require('./detach/IosIcons');
   },
