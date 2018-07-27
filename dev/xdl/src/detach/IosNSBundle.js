@@ -5,6 +5,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
+import util from 'util';
 
 import {
   getManifestAsync,
@@ -21,6 +22,8 @@ import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
 import * as IosLocalization from './IosLocalization';
 import logger from './Logger';
+
+const rimrafAsync = util.promisify(rimraf);
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -430,61 +433,66 @@ async function configureAsync(context: StandaloneContext) {
     throw new Error(`Can't configure a NSBundle without a published url.`);
   }
 
-  // common configuration for all contexts
-  buildPhaseLogger.info(`Modifying NSBundle configuration at ${supportingDirectory}...`);
-  await _configureInfoPlistAsync(context);
-  await _configureShellPlistAsync(context);
-  await _configureEntitlementsAsync(context);
-  await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
-  await IosLocalization.writeLocalizationResourcesAsync({
-    supportingDirectory,
-    context,
-  });
+  // ensure the intermediates directory is clean of any prior build's artifacts, in the event we
+  // share directories across builds
+  await rimrafAsync(intermediatesDirectory);
 
-  if (context.type === 'user') {
-    const iconPath = path.join(
-      iosProjectDirectory,
-      projectName,
-      'Assets.xcassets',
-      'AppIcon.appiconset'
-    );
-    await IosIcons.createAndWriteIconsToPathAsync(context, iconPath);
-  } else if (context.type === 'service') {
-    buildPhaseLogger.info('Bundling assets...');
-    try {
-      await AssetBundle.bundleAsync(
-        context.data.manifest.bundledAssets,
-        supportingDirectory,
-        context.data.manifest.sdkVersion === '24.0.0'
-      );
-    } catch (e) {
-      throw new Error(`Asset bundling failed: ${e}`);
-    }
-    buildPhaseLogger.info('Compiling resources...');
-    await IosAssetArchive.buildAssetArchiveAsync(
+  try {
+    // common configuration for all contexts
+    buildPhaseLogger.info(`Modifying NSBundle configuration at ${supportingDirectory}...`);
+    await _configureInfoPlistAsync(context);
+    await _configureShellPlistAsync(context);
+    await _configureEntitlementsAsync(context);
+    await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
+    await IosLocalization.writeLocalizationResourcesAsync({
+      supportingDirectory,
       context,
-      supportingDirectory,
-      intermediatesDirectory
-    );
-    await _preloadManifestAndBundleAsync(
-      context.data.manifest,
-      supportingDirectory,
-      'shell-app-manifest.json',
-      'shell-app.bundle'
-    );
-  }
+    });
 
-  await _maybeLegacyPreloadKernelManifestAndBundleAsync(
-    context,
-    'kernel-manifest.json',
-    'kernel.ios.bundle'
-  );
+    if (context.type === 'user') {
+      const iconPath = path.join(
+        iosProjectDirectory,
+        projectName,
+        'Assets.xcassets',
+        'AppIcon.appiconset'
+      );
+      await IosIcons.createAndWriteIconsToPathAsync(context, iconPath);
+    } else if (context.type === 'service') {
+      buildPhaseLogger.info('Bundling assets...');
+      try {
+        await AssetBundle.bundleAsync(
+          context.data.manifest.bundledAssets,
+          supportingDirectory,
+          context.data.manifest.sdkVersion === '24.0.0'
+        );
+      } catch (e) {
+        throw new Error(`Asset bundling failed: ${e}`);
+      }
+      buildPhaseLogger.info('Compiling resources...');
+      await IosAssetArchive.buildAssetArchiveAsync(
+        context,
+        supportingDirectory,
+        intermediatesDirectory
+      );
+      await _preloadManifestAndBundleAsync(
+        context.data.manifest,
+        supportingDirectory,
+        'shell-app-manifest.json',
+        'shell-app.bundle'
+      );
+    }
 
-  buildPhaseLogger.info('Cleaning up iOS...');
-  await _cleanPropertyListBackupsAsync(context, supportingDirectory);
-  // maybe clean intermediates
-  if (fs.existsSync(intermediatesDirectory)) {
-    rimraf.sync(intermediatesDirectory);
+    await _maybeLegacyPreloadKernelManifestAndBundleAsync(
+      context,
+      'kernel-manifest.json',
+      'kernel.ios.bundle'
+    );
+  } finally {
+    buildPhaseLogger.info('Cleaning up iOS...');
+    await Promise.all([
+      _cleanPropertyListBackupsAsync(context, supportingDirectory),
+      rimrafAsync(intermediatesDirectory),
+    ]);
   }
 }
 
