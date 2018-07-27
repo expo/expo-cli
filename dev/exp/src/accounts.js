@@ -6,11 +6,10 @@ import chalk from 'chalk';
 import program from 'commander';
 
 import { User as UserManager } from 'xdl';
+import type { LoginType, User } from 'xdl/build/User';
 import CommandError from './CommandError';
 import prompt from './prompt';
 import log from './log';
-
-import type { LoginType, User } from 'xdl/build/User';
 
 UserManager.initialize();
 
@@ -69,7 +68,8 @@ export async function loginOrRegisterIfLoggedOut() {
 
 export async function login(options: CommandOptions) {
   const user = await UserManager.getCurrentUserAsync();
-  if (!options.parent.nonInteractive) {
+  const nonInteractive = options.parent && options.parent.nonInteractive;
+  if (!nonInteractive) {
     if (user) {
       const question = [
         {

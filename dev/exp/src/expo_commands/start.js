@@ -47,7 +47,8 @@ async function action(projectDir, options) {
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
   log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
-  if (!options.parent.nonInteractive && !exp.isDetached) {
+  const nonInteractive = options.parent && options.parent.nonInteractive;
+  if (!nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
       log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
       opn(devToolsUrl, { wait: false });
