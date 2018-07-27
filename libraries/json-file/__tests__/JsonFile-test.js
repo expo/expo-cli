@@ -44,13 +44,13 @@ it(`reads JSON5 from a file`, async () => {
 it(`has useful error messages for JSON parsing errors`, async () => {
   await expect(
     JsonFile.readAsync(path.join(__dirname, 'files/syntax-error.json'))
-  ).rejects.toThrowErrorMatchingSnapshot();
+  ).rejects.toThrowError(/Cause: SyntaxError: Unexpected string in JSON at position 602/);
 });
 
 it(`has useful error messages for JSON5 parsing errors`, async () => {
   await expect(
     JsonFile.readAsync(path.join(__dirname, 'files/syntax-error.json5'), { json5: true })
-  ).rejects.toThrowErrorMatchingSnapshot();
+  ).rejects.toThrowError(/Cause: SyntaxError: JSON5: invalid character ',' at 4:15/);
 });
 
 let obj1 = { x: 1 };

@@ -35,8 +35,8 @@
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-core": "^6.0.0",
-    "babel-jest": "^21.0.2",
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.4.0",
     "babel-plugin-transform-flow-comments": "^6.22.0",
     "babel-preset-env": "^1.6.0",
     "babel-preset-stage-1": "^6.24.1",
@@ -45,7 +45,7 @@
     "eslint-config-universe": "^1.0.7",
     "flow-bin": "^0.55.0",
     "flow-copy-source": "^1.2.1",
-    "jest": "^22.4.3",
+    "jest": "^23.4.1",
     "mkdirp": "^0.5.1",
     "prettier": "^1.7.4",
     "rimraf": "^2.6.2"
