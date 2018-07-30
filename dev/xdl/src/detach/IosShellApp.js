@@ -171,6 +171,9 @@ async function _createStandaloneContextAsync(args) {
   let manifest;
   if (args.manifest) {
     manifest = args.manifest;
+    logger
+      .withFields({ buildPhase: 'reading manifest' })
+      .info('Using manifest:', JSON.stringify(manifest));
   } else if (args.url && args.sdkVersion) {
     const { url, sdkVersion, releaseChannel } = args;
     manifest = await getManifestAsync(url, {
