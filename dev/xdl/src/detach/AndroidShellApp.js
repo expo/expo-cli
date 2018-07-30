@@ -276,13 +276,20 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   await fs.ensureDir(shellPath);
 
   releaseChannel = releaseChannel ? releaseChannel : 'default';
-  let manifest =
-    args.manifest ||
-    (await getManifestAsync(url, {
+  let manifest;
+  if (args.manifest) {
+    manifest = args.manifest;
+    logger
+      .withFields({ buildPhase: 'reading manifest' })
+      .info('Using manifest:', JSON.stringify(manifest));
+  } else {
+    manifest = await getManifestAsync(url, {
       'Exponent-SDK-Version': sdkVersion,
       'Exponent-Platform': 'android',
       'Expo-Release-Channel': releaseChannel,
-    }));
+    });
+  }
+
   configuration = configuration ? configuration : 'Release';
 
   let privateConfig;
