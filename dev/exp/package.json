@@ -1,13 +1,10 @@
 {
   "name": "exp",
-  "version": "55.0.5",
+  "version": "56.0.0",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
-  "files": [
-    "build",
-    "bin"
-  ],
+  "files": ["build", "bin"],
   "scripts": {
     "start": "yarn run build && yarn run watch",
     "build": "gulp clean && gulp build",
@@ -22,10 +19,7 @@
     "type": "git",
     "url": "git+https://github.com/expo/exp.git"
   },
-  "keywords": [
-    "expo",
-    "react-native"
-  ],
+  "keywords": ["expo", "react-native"],
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
@@ -85,7 +79,7 @@
     "untildify": "^3.0.2",
     "validator": "^10.4.0",
     "wordwrap": "^1.0.0",
-    "xdl": "^50.6.0"
+    "xdl": "50.8.0"
   },
   "optionalDependencies": {
     "@expo/traveling-fastlane-darwin": "1.5.0",
