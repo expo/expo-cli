@@ -367,7 +367,6 @@ function _renderUnversionedUniversalModulesDependencies(universalModules, sdkVer
 function _renderUnversionedUniversalModuleDependency(podName, path, sdkVersion) {
   const attributes = {
     path,
-    inhibit_warnings: true,
   };
   return `pod '${podName}',
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
