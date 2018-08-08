@@ -33,11 +33,7 @@ const typeDefs = graphql`
   }
 
   type User {
-    username: String!
-    nickname: String!
-    userId: String!
-    picture: String!
-    email: String!
+    username: String
   }
 
   type Project {
@@ -513,8 +509,9 @@ const resolvers = {
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
       };
     },
-    user() {
-      return User.getCurrentUserAsync();
+    async user() {
+      const username = await User.getCurrentUsernameAsync();
+      return { username };
     },
   },
   Mutation: {

@@ -60,7 +60,7 @@ const printUsage = async projectDir => {
 
 export const printServerInfo = async projectDir => {
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
-  const user = await User.getCurrentUserAsync();
+  const username = await User.getCurrentUsernameAsync();
   log.newLine();
   log.nested(`  ${u(url)}`);
   log.newLine();
@@ -70,11 +70,11 @@ export const printServerInfo = async projectDir => {
   const item = text => '  \u2022 ' + wrapItem(text).trimStart();
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));
-  if (user) {
+  if (username) {
     log.nested(
       item(
         `Sign in as ${i(
-          '@' + user.username
+          '@' + username
         )} in Expo Client on Android or iOS. Your projects will automatically appear in the "Projects" tab.`
       )
     );
@@ -82,7 +82,7 @@ export const printServerInfo = async projectDir => {
   log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
   log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}.`));
   log.nested(item(`Press ${b`e`} to send a link to your phone with email/SMS.`));
-  if (!user) {
+  if (!username) {
     log.nested(item(`Press ${b`s`} to sign in and enable more options.`));
   }
   printHelp();
