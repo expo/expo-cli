@@ -39,22 +39,22 @@ const printHelp = () => {
 const printUsage = async projectDir => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
-  const user = await User.getCurrentUserAsync();
+  const username = await User.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
   const iosInfo = process.platform === 'darwin' ? `, or ${b`i`} to run on ${u`i`}OS simulator` : '';
   log.nested(`
  \u203A Press ${b`a`} to run on ${u`A`}ndroid device/emulator${iosInfo}.
  \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
  \u203A Press ${b`d`} to open DevTools in the default web browser.
- \u203A Press ${b`shift-d`} to ${openDevToolsAtStartup
-    ? 'disable'
-    : 'enable'} automatically opening ${u`D`}evTools at startup.
+ \u203A Press ${b`shift-d`} to ${
+    openDevToolsAtStartup ? 'disable' : 'enable'
+  } automatically opening ${u`D`}evTools at startup.
  \u203A Press ${b`e`} to send an app link with ${u`e`}mail/SMS.
  \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
  \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
- \u203A Press ${b`s`} to ${u`s`}ign ${user
-    ? `out. (Signed in as ${i('@' + user.username)}.)`
-    : 'in.'}
+ \u203A Press ${b`s`} to ${u`s`}ign ${
+    username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
+  }
 `);
 };
 
@@ -150,7 +150,7 @@ export const startAsync = async projectDir => {
       }
       case 'D': {
         clearConsole();
-        const enabled = !await UserSettings.getAsync('openDevToolsAtStartup', true);
+        const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         log(
           `Automatically opening DevTools ${b(

@@ -194,6 +194,20 @@ export class UserManagerInstance {
     this._interactiveAuthenticationCallbackAsync = callback;
   }
 
+  async _readUserData() {
+    let auth = await UserSettings.getAsync('auth', {});
+    if (isEmpty(auth)) {
+      // XXX(ville):
+      // We sometimes read an empty string from ~/.expo/state.json,
+      // even though it has valid credentials in it.
+      // We don't know why.
+      // An empty string can't be parsed as JSON, so an empty default object is returned.
+      // In this case, retrying usually helps.
+      auth = await UserSettings.getAsync('auth', {});
+    }
+    return auth;
+  }
+
   /**
    * Get the current user based on the available token.
    * If there is no current token, returns null.
@@ -211,18 +225,7 @@ export class UserManagerInstance {
         return null;
       }
 
-      // Not cached, check for token
-      let auth = await UserSettings.getAsync('auth', {});
-      if (isEmpty(auth)) {
-        // XXX(ville):
-        // We sometimes read an empty string from ~/.expo/state.json,
-        // even though it has valid credentials in it.
-        // We don't know why.
-        // An empty string can't be parsed as JSON, so an empty default object is returned.
-        // In this case, retrying usually helps.
-        auth = await UserSettings.getAsync('auth', {});
-      }
-      let { currentConnection, sessionSecret } = auth;
+      let { currentConnection, sessionSecret } = await this._readUserData();
 
       // No session, no current user. Need to login
       if (!sessionSecret) {
@@ -250,6 +253,14 @@ export class UserManagerInstance {
     } finally {
       this._getSessionLock.release();
     }
+  }
+
+  async getCurrentUsernameAsync(): Promise<?string> {
+    let data = await this._readUserData();
+    if (!data) {
+      return null;
+    }
+    return data.username;
   }
 
   /**
