@@ -24,9 +24,9 @@ export async function startSession(
 
   if (!Config.offline && keepUpdating) {
     // TODO(anp) if the user has configured device ids, then notify for those too
-    let user = await UserManager.getCurrentUserAsync();
+    let authSession = await UserManager.getSessionAsync();
 
-    if (!user) {
+    if (!authSession) {
       // NOTE(brentvatne) let's just bail out in this case for now
       // throw new Error('development sessions can only be initiated for logged in users');
       return;
@@ -34,7 +34,7 @@ export async function startSession(
 
     try {
       let url = await UrlUtils.constructManifestUrlAsync(projectRoot);
-      let apiClient = ApiV2Client.clientForUser(user);
+      let apiClient = ApiV2Client.clientForUser(authSession);
       await apiClient.postAsync('development-sessions/notify-alive', {
         data: {
           session: {

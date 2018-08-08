@@ -257,10 +257,18 @@ export class UserManagerInstance {
 
   async getCurrentUsernameAsync(): Promise<?string> {
     let data = await this._readUserData();
-    if (!data) {
+    if (!data.username) {
       return null;
     }
     return data.username;
+  }
+
+  async getSessionAsync(): Promise<?string> {
+    let data = await this._readUserData();
+    if (!data.sessionSecret) {
+      return null;
+    }
+    return { sessionSecret: data.sessionSecret };
   }
 
   /**

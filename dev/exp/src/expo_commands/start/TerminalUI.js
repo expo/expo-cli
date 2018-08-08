@@ -242,8 +242,8 @@ Please reload the project in the Expo app for the change to take effect.`
         return;
       }
       case 's': {
-        const user = await User.getCurrentUserAsync();
-        if (user) {
+        const authSession = await User.getSessionAsync();
+        if (authSession) {
           await User.logoutAsync();
           log('Signed out.');
         } else {

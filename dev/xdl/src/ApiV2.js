@@ -10,8 +10,6 @@ import idx from 'idx';
 
 import Config from './Config';
 
-import type { User } from './User';
-
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
   return `${Config.api.scheme}://${Config.api.host}`;
@@ -50,14 +48,14 @@ type APIV2ClientOptions = {
   sessionSecret?: string,
 };
 
+type UserOrSession = ?{ sessionSecret: ?string };
+
 export default class ApiV2Client {
   sessionSecret: ?string = null;
 
-  static clientForUser(user: ?User): ApiV2Client {
-    if (user) {
-      return new ApiV2Client({
-        sessionSecret: user.sessionSecret,
-      });
+  static clientForUser({ sessionSecret } = {}): ApiV2Client {
+    if (sessionSecret) {
+      return new ApiV2Client({ sessionSecret });
     }
 
     return new ApiV2Client();

@@ -55,9 +55,7 @@ async function _callMethodAsync(
   returnEntireResponse = false
 ): Promise<any> {
   const clientId = await Session.clientIdAsync();
-  const user = (await UserManager.getCurrentUserAsync()) || {};
-
-  const { sessionSecret } = user;
+  const session = await UserManager.getSessionAsync();
   const skipValidationToken = process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN'];
 
   let headers: any = {
@@ -68,8 +66,8 @@ async function _callMethodAsync(
     headers['Exp-Skip-Manifest-Validation-Token'] = skipValidationToken;
   }
 
-  if (sessionSecret) {
-    headers['Expo-Session'] = sessionSecret;
+  if (session) {
+    headers['Expo-Session'] = session.sessionSecret;
   }
 
   let options = {
@@ -156,7 +154,7 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
       responseType: 'arraybuffer',
       cancelToken: token,
       onDownloadProgress: progressEvent => {
-        const roundedProgress = Math.floor(progressEvent.loaded / progressEvent.total * 100);
+        const roundedProgress = Math.floor((progressEvent.loaded / progressEvent.total) * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);
@@ -191,7 +189,7 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
       response.data
         .on('data', chunk => {
           downloadProgress += chunk.length;
-          const roundedProgress = Math.floor(downloadProgress / totalDownloadSize * 100);
+          const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
           if (currentProgress !== roundedProgress) {
             currentProgress = roundedProgress;
             clearTimeout(warningTimer);
