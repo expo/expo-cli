@@ -1479,8 +1479,8 @@ export async function startExpoServerAsync(projectRoot: string) {
       ); // the server normally inserts this but if we're offline we'll do it here
       await _resolveGoogleServicesFile(projectRoot, manifest);
       const hostUUID = await UserSettings.anonymousIdentifier();
-      let currentUser = await UserManager.getCurrentUserAsync();
-      if (!currentUser) {
+      let currentSession = await UserManager.getSessionAsync();
+      if (!currentSession) {
         manifest.id = `@anonymous/${manifest.slug}-${hostUUID}`;
       }
       let manifestString = JSON.stringify(manifest);
@@ -1488,7 +1488,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
         } else {
-          if (!currentUser) {
+          if (!currentSession) {
             const unsignedManifest = {
               manifestString,
               signature: 'UNSIGNED',
@@ -1625,8 +1625,7 @@ async function _connectToNgrokAsync(
 }
 
 export async function startTunnelsAsync(projectRoot: string) {
-  let user = await UserManager.getCurrentUserAsync();
-  let username = user ? user.username : 'anonymous';
+  let username = await UserManager.getCurrentUsernameAsync();
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
