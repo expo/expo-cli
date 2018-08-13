@@ -15,6 +15,7 @@ import * as AssetBundle from './AssetBundle';
 import * as ExponentTools from './ExponentTools';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
+import renderIntentFilters from './AndroidIntentFilters';
 import logger from './Logger';
 
 const {
@@ -713,6 +714,22 @@ export async function runShellAppModificationsAsync(
 
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+
+  // Add app-specific intent filters
+  var intentFilters = _.get(manifest, 'android.intentFilters');
+  if (isDetached) {
+    await regexFileAsync(
+      '<!-- ADD DETACH APP SPECIFIC INTENT FILTERS -->',
+      renderIntentFilters(intentFilters).join('\n'),
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  } else {
+    await regexFileAsync(
+      '<!-- ADD SHELL APP SPECIFIC INTENT FILTERS -->',
+      renderIntentFilters(intentFilters).join('\n'),
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
