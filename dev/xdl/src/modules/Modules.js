@@ -13,6 +13,7 @@ type ModuleConfig = {
   isNativeModule: boolean,
   subdirectory: string,
   versionable: boolean,
+  includeInExpoClient: boolean,
 };
 
 function mapForPlatform(platform: Platform): () => ModuleConfig {
@@ -21,6 +22,12 @@ function mapForPlatform(platform: Platform): () => ModuleConfig {
 
 export function getAllForPlatform(platform: Platform): Array<ModuleConfig> {
   return expoSdkUniversalModulesConfigs.map(mapForPlatform(platform));
+}
+
+export function getAllNativeForExpoClientOnPlatform(platform: Platform): Array<ModuleConfig> {
+  return getAllForPlatform(platform).filter(
+    moduleConfig => moduleConfig.includeInExpoClient && moduleConfig.isNativeModule
+  );
 }
 
 export function getVersionableModulesForPlatform(platform: Platform): Array<ModuleConfig> {
