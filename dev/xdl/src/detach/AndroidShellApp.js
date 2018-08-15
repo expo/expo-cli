@@ -485,6 +485,10 @@ export async function runShellAppModificationsAsync(
         'MainActivity.java'
       )
     );
+
+    const runShPath = path.join(shellPath, 'run.sh');
+    await regexFileAsync('host.exp.exponent/', `${javaPackage}/`, runShPath);
+    await regexFileAsync('LauncherActivity', 'MainActivity', runShPath);
   }
 
   // Package
