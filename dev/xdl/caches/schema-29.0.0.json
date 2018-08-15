@@ -728,30 +728,28 @@
             }],
             "type": "array",
             "uniqueItems": true,
-            "items": [
-              {
-                "type": "object",
-                "properties": {
-                  "action": { "type": "string" },
-                  "data": {
-                    "type": "object",
-                    "properties": {
-                      "scheme": { "type": "string" },
-                      "host": { "type": "string" },
-                      "port": { "type": "string" },
-                      "path": { "type": "string" },
-                      "pathPattern": { "type": "string" },
-                      "pathPrefix": { "type": "string" },
-                      "mimeType": { "type": "string" }
-                    },
-                    "additionalProperties": false
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": { "type": "string" },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "scheme": { "type": "string" },
+                    "host": { "type": "string" },
+                    "port": { "type": "string" },
+                    "path": { "type": "string" },
+                    "pathPattern": { "type": "string" },
+                    "pathPrefix": { "type": "string" },
+                    "mimeType": { "type": "string" }
                   },
-                  "category": { "type": ["array", "string"] }
+                  "additionalProperties": false
                 },
-                "additionalProperties": false,
-                "required": ["action"]
-              }
-            ]
+                "category": { "type": ["array", "string"] }
+              },
+              "additionalProperties": false,
+              "required": ["action"]
+            }
           }
         },
         "additionalProperties": false
