@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+scriptdir=$(dirname ${BASH_SOURCE[0]})/../node_modules/.bin
+
+scopeArgs=()
+
+for arg in "$@"; do
+  scopeArgs+=("--scope" "$arg")
+done
+
+scopeArgs+=("--include-filtered-dependencies" "--sort")
+
+"${scriptdir}/lerna" bootstrap "${scopeArgs[@]}"
+"${scriptdir}/lerna" run "${scopeArgs[@]}" --stream prepare
+
+echo "for link information invoke 'yarn workspaces info'"

@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "workspaces": [
+    ".",
+    "packages/dev-tools",
+    "packages/exp",
+    "packages/exp/expo-cli",
+    "packages/dev-tools",
+    "packages/xde",
+    "packages/xde/app",
+    "packages/xdl",
+    "packages/json-file",
+    "packages/osascript",
+    "packages/schemer"
+  ],
+  "dependencies": {
+    "lerna": "^2.11.0"
+  }
+}
