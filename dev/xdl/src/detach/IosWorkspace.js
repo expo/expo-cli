@@ -189,10 +189,7 @@ async function _renderPodfileFromTemplateAsync(
     reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
     podfileSubstitutions.EXPOKIT_TAG = `ios/${iosClientVersion}`;
     podfileTemplateFilename = 'ExpoKit-Podfile';
-    const expoDependenciesPath = path.join(
-      context.data.projectPath,
-      'node_modules'
-    );
+    const expoDependenciesPath = path.join(context.data.projectPath, 'node_modules');
     podfileSubstitutions.UNIVERSAL_MODULES = detachableUniversalModules.map(module => ({
       ...module,
       path: path.join(expoDependenciesPath, module.libName, module.subdirectory),
@@ -200,7 +197,6 @@ async function _renderPodfileFromTemplateAsync(
   } else if (context.type === 'service') {
     reactNativeDependencyPath = path.join(
       expoRootTemplateDirectory,
-      '..',
       'react-native-lab',
       'react-native'
     );
