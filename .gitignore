@@ -1,0 +1,10 @@
+node_modules
+.DS_Store
+.expo
+.eslintcache
+.tags*
+.git-crypt-key
+.npm-cache
+*~
+*.log
+.vscode
