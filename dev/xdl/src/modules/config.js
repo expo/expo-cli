@@ -47,6 +47,7 @@ const expoSdkUniversalModules = [
   { podName: 'EXReactNativeAdapter', libName: 'expo-react-native-adapter' },
   { podName: 'EXFileSystemInterface', libName: 'expo-file-system-interface' },
   { podName: 'EXPermissionsInterface', libName: 'expo-permissions-interface' },
+  { podName: 'EXImageLoaderInterface', libName: 'expo-image-loader-interface' },
   { podName: 'EXFaceDetectorInterface', libName: 'expo-face-detector-interface' },
   {
     podName: 'EXFaceDetector',
