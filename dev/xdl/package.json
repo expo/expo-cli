@@ -79,6 +79,7 @@
     "react": "^16.0.0",
     "react-redux": "^5.0.2",
     "read-chunk": "^2.0.0",
+    "read-last-lines": "^1.6.0",
     "redux": "^3.6.0",
     "redux-logger": "^2.7.4",
     "replace-string": "^1.1.0",

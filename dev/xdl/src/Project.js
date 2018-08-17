@@ -23,6 +23,7 @@ import treekill from 'tree-kill';
 import md5hex from 'md5hex';
 import url from 'url';
 import urljoin from 'url-join';
+import readLastLines from 'read-last-lines';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -58,6 +59,9 @@ const joiValidateAsync = promisify(joi.validate);
 const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
+const stat = promisify(fs.stat);
+const truncate = promisify(fs.truncate);
+const appendFile = promisify(fs.appendFile);
 
 const request = Request.defaults({
   resolveWithFullResponse: true,
@@ -302,6 +306,7 @@ export async function getLatestReleaseAsync(
 export async function exportForAppHosting(
   projectRoot: string,
   publicUrl: string,
+  assetUrl: string,
   outputDir: string,
   options: {} = {}
 ) {
@@ -312,7 +317,11 @@ export async function exportForAppHosting(
   await fs.ensureDir(pathToWrite);
 
   // build the bundles
-  let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot);
+  let packagerOpts = {};
+  if (options.isDev) {
+    packagerOpts = { dev: true, minify: false };
+  }
+  let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
   await _writeArtifactSafelyAsync(projectRoot, null, path.join(outputDir, 'ios.js'), iosBundle);
   await _writeArtifactSafelyAsync(
     projectRoot,
@@ -324,16 +333,40 @@ export async function exportForAppHosting(
 
   // save the assets
   // Get project config
-  let exp = await _getPublishExpConfigAsync(projectRoot, options);
-  await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
+  const publishOptions = options.publishOptions || {};
+  const exp = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+  const { assets } = await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
+
+  if (options.dumpAssetmap) {
+    logger.global.info('Dumping asset map.');
+    const assetmap = {};
+    assets.forEach(asset => {
+      assetmap[asset.hash] = asset;
+    });
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      null,
+      path.join(outputDir, 'assetmap.json'),
+      JSON.stringify(assetmap)
+    );
+  }
 
   // Delete keys that are normally deleted in the publish process
   delete exp.hooks;
 
-  // save the android manifest
+  // Add assetUrl to manifest
+  exp.assetUrlOverride = assetUrl;
+
   // TODO(quin): follow up and write a doc page that explains these fields that users don't specify in app.json
-  exp.bundleUrl = urljoin(publicUrl, 'android.js');
   exp.publishedTime = new Date().toISOString();
+  exp.slug = 'selfhost';
+
+  if (options.isDev) {
+    exp.developer = {
+      tool: 'exp',
+    };
+  }
+
   if (!exp.slug) {
     throw new XDLError(
       ErrorCode.INVALID_MANIFEST,
@@ -342,6 +375,9 @@ export async function exportForAppHosting(
   }
   const user = await UserManager.ensureLoggedInAsync();
   exp.id = `@${user.username}/${exp.slug}`;
+
+  // save the android manifest
+  exp.bundleUrl = urljoin(publicUrl, 'android.js');
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
@@ -357,6 +393,53 @@ export async function exportForAppHosting(
     path.join(outputDir, 'ios-index.exp'),
     JSON.stringify(exp)
   );
+
+  // build source maps
+  if (options.dumpSourcemap) {
+    const { iosSourceMap, androidSourceMap } = await _maybeBuildSourceMapsAsync(projectRoot, exp, {
+      force: true,
+    });
+    // write the sourcemap files
+    const iosMapPath = path.join(outputDir, 'ios.map');
+    const iosJsPath = path.join(outputDir, 'ios.js');
+    await _writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
+
+    const androidMapPath = path.join(outputDir, 'android.map');
+    const androidJsPath = path.join(outputDir, 'android.js');
+    await _writeArtifactSafelyAsync(projectRoot, null, androidMapPath, androidSourceMap);
+
+    // Remove original mapping to incorrect sourcemap paths
+    logger.global.info('Configuring sourcemaps');
+    await truncateLastNLines(iosJsPath, 1);
+    await truncateLastNLines(androidJsPath, 1);
+
+    // Add correct mapping to sourcemap paths
+    await appendFile(iosJsPath, '\n//# sourceMappingURL=ios.map');
+    await appendFile(androidJsPath, '\n//# sourceMappingURL=android.map');
+
+    // Make a debug html so user can debug their bundles
+    logger.global.info('Preparing additional debugging files');
+    const debugHtml = `
+    <script src="ios.js"></script>
+    <script src="android.js"></script>
+    Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
+    You can see a red coloured folder containing the original source code from your bundle. 
+    `;
+    await _writeArtifactSafelyAsync(
+      projectRoot,
+      null,
+      path.join(outputDir, 'debug.html'),
+      debugHtml
+    );
+  }
+}
+
+// truncate the last n lines in a file
+async function truncateLastNLines(filePath: string, n: number) {
+  const lines = await readLastLines.read(filePath, n);
+  const to_vanquish = lines.length;
+  const { size } = await stat(filePath);
+  await truncate(filePath, size - to_vanquish);
 }
 
 async function _saveAssetAsync(projectRoot, assets, outputDir) {
@@ -676,9 +759,9 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
 }
 
 // Fetch iOS and Android bundles for publishing
-async function _buildPublishBundlesAsync(projectRoot) {
+async function _buildPublishBundlesAsync(projectRoot, opts?: Object) {
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-  let publishUrl = await UrlUtils.constructPublishUrlAsync(projectRoot, entryPoint);
+  let publishUrl = await UrlUtils.constructPublishUrlAsync(projectRoot, entryPoint, null, opts);
 
   logger.global.info('Building iOS bundle');
   let iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
@@ -753,7 +836,7 @@ async function _collectAssets(projectRoot, exp, hostedAssetPrefix) {
       const absolutePath = path.resolve(projectRoot, assetPath);
       const contents = await fs.readFile(absolutePath);
       const hash = md5hex(contents);
-      manifestAssets.push({ files: [absolutePath], fileHashes: [hash] });
+      manifestAssets.push({ files: [absolutePath], fileHashes: [hash], hash });
       return urljoin(hostedAssetPrefix, hash);
     },
     true
@@ -845,7 +928,7 @@ async function _fetchAndSaveAssetsAsync(projectRoot, exp, hostedUrl, outputDir) 
   // Updates the manifest to reflect additional asset bundling + configs
   await _configureExpForAssets(projectRoot, exp, assets);
 
-  return exp;
+  return { exp, assets };
 }
 
 async function _writeArtifactSafelyAsync(projectRoot, keyName, artifactPath, artifact) {

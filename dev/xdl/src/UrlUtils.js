@@ -54,8 +54,14 @@ export async function constructUrlWithExtensionAsync(
   projectRoot: string,
   entryPoint: string,
   ext: string,
-  requestHostname?: string
+  requestHostname?: string,
+  opts?: Object
 ) {
+  const defaultOpts = {
+    dev: false,
+    minify: true,
+  };
+  opts = opts || defaultOpts;
   let bundleUrl = await constructBundleUrlAsync(
     projectRoot,
     {
@@ -68,23 +74,23 @@ export async function constructUrlWithExtensionAsync(
   let mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
-  let queryParams = await constructBundleQueryParamsAsync(
-    projectRoot,
-    {
-      dev: false,
-      minify: true,
-    },
-    requestHostname
-  );
+  let queryParams = await constructBundleQueryParamsAsync(projectRoot, opts, requestHostname);
   return `${bundleUrl}?${queryParams}`;
 }
 
 export async function constructPublishUrlAsync(
   projectRoot: string,
   entryPoint: string,
-  requestHostname?: string
+  requestHostname?: string,
+  opts?: Object
 ) {
-  return await constructUrlWithExtensionAsync(projectRoot, entryPoint, 'bundle', requestHostname);
+  return await constructUrlWithExtensionAsync(
+    projectRoot,
+    entryPoint,
+    'bundle',
+    requestHostname,
+    opts
+  );
 }
 
 export async function constructSourceMapUrlAsync(
