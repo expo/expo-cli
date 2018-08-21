@@ -1,0 +1,24 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/expo-dev-tools
+    steps:
+      - checkout
+      - restore_cache:
+          key: yarn-v3-{{ checksum "yarn.lock" }}
+      - run: yarn
+      - run: bin/bootstrap
+      - save_cache:
+          key: yarn-v3-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/yarn_cache
+      - run:
+          working_directory: ~/expo-dev-tools/packages/dev-tools
+          command: yarn test
