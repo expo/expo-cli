@@ -583,7 +583,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       await this.runningAsCI(credsStarter, credsMetadata);
       this._areCredsMissing(credsStarter);
       await Credentials.updateCredentialsForPlatform('ios', credsStarter, credsMetadata);
-      log.warn(`Encrypted ${[...OBLIGATORY_CREDS_KEYS.keys()]} and saved to expo servers`);
+      log.warn(`Encrypted ${Object.keys(OBLIGATORY_CREDS_KEYS)} and saved to expo servers`);
     } else if (clientHasAllNeededCreds === false) {
       // We just keep mutating the creds object.
       const strategy = await prompt(runAsExpertQuestion);
