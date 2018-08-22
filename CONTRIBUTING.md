@@ -8,7 +8,7 @@ You can contribute to Expo development tools in various ways, including:
 - [Submitting improvements to the documentation](https://github.com/expo/expo-docs). Updates, enhancements, new guides, spelling fixes...
 - Helping other people on the [forums](https://forums.expo.io).
 - Looking at existing [issues](https://github.com/expo/expo-cli/issues) and adding more information, particularly helping to reproduce the issues.
-- Submitting a pull request with a bug fix or an improvement.
+- [Submitting a pull request](#submitting-a-pull-request) with a bug fix or an improvement.
 
 ## Expo CLI repository
 
@@ -34,7 +34,7 @@ Keeping the `master` releasable means that changes merged to it need to be:
 - **Non-breaking**: If code that is unreleasable or fails the test suite ends up in `master`, it should be reverted.
 - **Tested**: Always include a test plan in pull requests. Do not merge code that doesn't pass all automated tests.
 
-## Opening a pull request
+## Submitting a pull request
 
 To submit a pull request:
 
