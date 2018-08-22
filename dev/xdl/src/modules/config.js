@@ -54,6 +54,8 @@ const expoSdkUniversalModules = [
     libName: 'expo-face-detector',
     detachable: false,
   },
+  { podName: 'EXBarCodeScannerInterface', libName: 'expo-barcode-scanner-interface' },
+  { podName: 'EXBarCodeScanner', libName: 'expo-barcode-scanner' },
 
   // unversioned modules
   {
