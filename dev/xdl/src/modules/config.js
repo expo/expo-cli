@@ -36,6 +36,7 @@ const expoSdkUniversalModules = [
   { podName: 'EXPrint', libName: 'expo-print' },
   { podName: 'EXCamera', libName: 'expo-camera' },
   { podName: 'EXSensors', libName: 'expo-sensors' },
+  { podName: 'EXLocation', libName: 'expo-location' },
   { podName: 'EXConstants', libName: 'expo-constants' },
   { podName: 'EXFileSystem', libName: 'expo-file-system' },
   { podName: 'EXPermissions', libName: 'expo-permissions' },
