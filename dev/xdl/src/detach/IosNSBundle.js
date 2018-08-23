@@ -5,7 +5,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
-import util from 'util';
+import promisify from 'util.promisify';
 
 import {
   getManifestAsync,
@@ -23,7 +23,7 @@ import StandaloneContext from './StandaloneContext';
 import * as IosLocalization from './IosLocalization';
 import logger from './Logger';
 
-const rimrafAsync = util.promisify(rimraf);
+const rimrafAsync = promisify(rimraf);
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
