@@ -10,6 +10,10 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [50.9.0] - 2018-08-23
+
+## [50.8.0] - 2018-07-31
+
 ## [50.7.0] - 2018-07-25
 
 ### Changed
