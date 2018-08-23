@@ -34,6 +34,12 @@ Keeping the `master` releasable means that changes merged to it need to be:
 - **Non-breaking**: If code that is unreleasable or fails the test suite ends up in `master`, it should be reverted.
 - **Tested**: Always include a test plan in pull requests. Do not merge code that doesn't pass all automated tests.
 
+## Setting up the repository for development
+
+1. Clone the repository.
+2. Run `yarn`. (Installs dependencies.)
+3. Run `yarn bootstrap`. (Links and builds packages.)
+
 ## Submitting a pull request
 
 To submit a pull request:

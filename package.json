@@ -1,6 +1,9 @@
 {
   "private": true,
   "workspaces": ["packages/*"],
+  "scripts": {
+    "bootstrap": "bin/bootstrap"
+  },
   "dependencies": {
     "lerna": "^2.11.0"
   }
