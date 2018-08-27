@@ -180,6 +180,7 @@ async function _createStandaloneContextAsync(args) {
       'Exponent-SDK-Version': sdkVersion,
       'Exponent-Platform': 'ios',
       'Expo-Release-Channel': releaseChannel ? releaseChannel : 'default',
+      Accept: 'application/expo+json,application/json',
     });
   }
 

@@ -564,11 +564,13 @@ export async function publishAsync(
         'Exponent-SDK-Version': exp.sdkVersion,
         'Exponent-Platform': 'android',
         'Expo-Release-Channel': options.releaseChannel,
+        Accept: 'application/expo+json,application/json',
       }),
       ExponentTools.getManifestAsync(response.url, {
         'Exponent-SDK-Version': exp.sdkVersion,
         'Exponent-Platform': 'ios',
         'Expo-Release-Channel': options.releaseChannel,
+        Accept: 'application/expo+json,application/json',
       }),
     ]);
 
@@ -999,6 +1001,7 @@ async function _handleKernelPublishedAsync({ projectRoot, user, exp, url }) {
     let manifest = await ExponentTools.getManifestAsync(url, {
       'Exponent-SDK-Version': exp.sdkVersion,
       'Exponent-Platform': 'android',
+      Accept: 'application/expo+json,application/json',
     });
     manifest.bundleUrl = kernelBundleUrl;
     manifest.sdkVersion = 'UNVERSIONED';
@@ -1012,6 +1015,7 @@ async function _handleKernelPublishedAsync({ projectRoot, user, exp, url }) {
     let manifest = await ExponentTools.getManifestAsync(url, {
       'Exponent-SDK-Version': exp.sdkVersion,
       'Exponent-Platform': 'ios',
+      Accept: 'application/expo+json,application/json',
     });
     manifest.bundleUrl = kernelBundleUrl;
     manifest.sdkVersion = 'UNVERSIONED';

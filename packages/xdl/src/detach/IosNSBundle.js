@@ -111,6 +111,7 @@ async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
     const kernelManifest = await getManifestAsync(KERNEL_URL, {
       'Exponent-SDK-Version': sdkVersionSupported,
       'Exponent-Platform': 'ios',
+      Accept: 'application/expo+json,application/json',
     });
     return _preloadManifestAndBundleAsync(
       kernelManifest,

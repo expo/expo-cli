@@ -56,9 +56,10 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
     'Exponent-SDK-Version': sdkVersion,
     'Exponent-Platform': 'android',
     'Expo-Release-Channel': releaseChannel,
+    Accept: 'application/expo+json,application/json',
   });
 
-  let fullManifestUrl = `${url.replace('exp://', 'https://')}/index.exp`;
+  let fullManifestUrl = url.replace('exp://', 'https://');
   let bundleUrl = manifest.bundleUrl;
 
   let shellPath = path.join(exponentDirectory(), 'android-shell-app');
@@ -288,6 +289,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
       'Exponent-SDK-Version': sdkVersion,
       'Exponent-Platform': 'android',
       'Expo-Release-Channel': releaseChannel,
+      Accept: 'application/expo+json,application/json',
     });
   }
 
