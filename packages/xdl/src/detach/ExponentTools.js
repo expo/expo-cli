@@ -76,7 +76,7 @@ function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
 async function getManifestAsync(url, headers) {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'reading manifest' });
   const requestOptions = {
-    url: url.replace('exp://', 'http://') + '/index.exp',
+    url: url.replace('exp://', 'http://'),
     headers,
   };
 
