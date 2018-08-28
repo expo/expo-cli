@@ -4,11 +4,13 @@
 
 import bodyParser from 'body-parser';
 import child_process from 'child_process';
+import crypto from 'crypto';
 import delayAsync from 'delay-async';
 import decache from 'decache';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
+import HashIds from 'hashids';
 import joi from 'joi';
 import promisify from 'util.promisify';
 import _ from 'lodash';
@@ -23,6 +25,7 @@ import treekill from 'tree-kill';
 import md5hex from 'md5hex';
 import url from 'url';
 import urljoin from 'url-join';
+import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
 
 import * as Analytics from './Analytics';
@@ -296,12 +299,16 @@ export async function getLatestReleaseAsync(
  * Apps exporting for self hosting will have the files created in the project directory the following way:
 .
 ├── android-index.exp
-├── android.js
+├── assetmap.json
 ├── assets
-│   ├── 004c2bbb035d8d06bb830efc4673c886
-│   └── 1eccbc4c41d49fd81840aef3eaabe862
-├── ios-index.exp
-└── ios.js
+│   ├── 1eccbc4c41d49fd81840aef3eaabe862
+├── bundles
+│   ├── android-01ee6e3ab3e8c16a4d926c91808d5320.js
+│   ├── android-01ee6e3ab3e8c16a4d926c91808d5320.map
+│   ├── ios-ee8206cc754d3f7aa9123b7f909d94ea.js
+│   └── ios-ee8206cc754d3f7aa9123b7f909d94ea.map
+├── debug.html
+└── ios-index.exp
  */
 export async function exportForAppHosting(
   projectRoot: string,
@@ -312,23 +319,34 @@ export async function exportForAppHosting(
 ) {
   await _validatePackagerReadyAsync(projectRoot);
 
-  // make output dir if not exists
-  const pathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
-  await fs.ensureDir(pathToWrite);
+  // make output dirs if not exists
+  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+  await fs.ensureDir(assetPathToWrite);
+  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+  await fs.ensureDir(bundlesPathToWrite);
 
   // build the bundles
   let packagerOpts = {};
   if (options.isDev) {
-    packagerOpts = { dev: true, minify: false };
+    packagerOpts = { dev: true, minify: true };
   }
-  let { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
-  await _writeArtifactSafelyAsync(projectRoot, null, path.join(outputDir, 'ios.js'), iosBundle);
-  await _writeArtifactSafelyAsync(
-    projectRoot,
-    null,
-    path.join(outputDir, 'android.js'),
-    androidBundle
-  );
+  const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
+  const iosBundleHash = crypto
+    .createHash('md5')
+    .update(iosBundle)
+    .digest('hex');
+  const iosBundleUrl = `ios-${iosBundleHash}.js`;
+  const iosJsPath = path.join(outputDir, 'bundles', iosBundleUrl);
+
+  const androidBundleHash = crypto
+    .createHash('md5')
+    .update(androidBundle)
+    .digest('hex');
+  const androidBundleUrl = `android-${androidBundleHash}.js`;
+  const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
+
+  await _writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
+  await _writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
   logger.global.info('Finished saving JS Bundles.');
 
   // save the assets
@@ -359,7 +377,10 @@ export async function exportForAppHosting(
 
   // TODO(quin): follow up and write a doc page that explains these fields that users don't specify in app.json
   exp.publishedTime = new Date().toISOString();
-  exp.slug = 'selfhost';
+
+  // generate revisionId the same way www does
+  const hashIds = new HashIds(uuid.v1(), 10);
+  exp.revisionId = hashIds.encode(Date.now());
 
   if (options.isDev) {
     exp.developer = {
@@ -377,7 +398,7 @@ export async function exportForAppHosting(
   exp.id = `@${user.username}/${exp.slug}`;
 
   // save the android manifest
-  exp.bundleUrl = urljoin(publicUrl, 'android.js');
+  exp.bundleUrl = urljoin(publicUrl, 'bundles', androidBundleUrl);
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
@@ -386,7 +407,7 @@ export async function exportForAppHosting(
   );
 
   // save the ios manifest
-  exp.bundleUrl = urljoin(publicUrl, 'ios.js');
+  exp.bundleUrl = urljoin(publicUrl, 'bundles', iosBundleUrl);
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
@@ -400,12 +421,12 @@ export async function exportForAppHosting(
       force: true,
     });
     // write the sourcemap files
-    const iosMapPath = path.join(outputDir, 'ios.map');
-    const iosJsPath = path.join(outputDir, 'ios.js');
+    const iosMapName = `ios-${iosBundleHash}.map`;
+    const iosMapPath = path.join(outputDir, 'bundles', iosMapName);
     await _writeArtifactSafelyAsync(projectRoot, null, iosMapPath, iosSourceMap);
 
-    const androidMapPath = path.join(outputDir, 'android.map');
-    const androidJsPath = path.join(outputDir, 'android.js');
+    const androidMapName = `android-${androidBundleHash}.map`;
+    const androidMapPath = path.join(outputDir, 'bundles', androidMapName);
     await _writeArtifactSafelyAsync(projectRoot, null, androidMapPath, androidSourceMap);
 
     // Remove original mapping to incorrect sourcemap paths
@@ -414,14 +435,14 @@ export async function exportForAppHosting(
     await truncateLastNLines(androidJsPath, 1);
 
     // Add correct mapping to sourcemap paths
-    await appendFile(iosJsPath, '\n//# sourceMappingURL=ios.map');
-    await appendFile(androidJsPath, '\n//# sourceMappingURL=android.map');
+    await appendFile(iosJsPath, `\n//# sourceMappingURL=${iosMapName}`);
+    await appendFile(androidJsPath, `\n//# sourceMappingURL=${androidMapName}`);
 
     // Make a debug html so user can debug their bundles
     logger.global.info('Preparing additional debugging files');
     const debugHtml = `
-    <script src="ios.js"></script>
-    <script src="android.js"></script>
+    <script src="${urljoin('bundles', iosBundleUrl)}"></script>
+    <script src="${urljoin('bundles', androidBundleUrl)}"></script>
     Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
     You can see a red coloured folder containing the original source code from your bundle. 
     `;
