@@ -10,6 +10,15 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+## [51.1.0] - 2018-08-28
+
+### Changed
+
+* Allow for passsing workingdir for android shell app builder.
+* Allow for generating ios shell app with single sdk.
+
+## [51.0.0] - 2018-08-24
+
 ## [50.9.0] - 2018-08-23
 
 ## [50.8.0] - 2018-07-31
