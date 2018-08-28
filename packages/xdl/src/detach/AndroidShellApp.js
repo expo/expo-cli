@@ -30,9 +30,9 @@ const {
 const imageKeys = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
 
 // Do not call this from anything used by detach
-function exponentDirectory() {
-  if (process.env.TURTLE_WORKING_DIR_PATH) {
-    return process.env.TURTLE_WORKING_DIR_PATH;
+function exponentDirectory(workingDir) {
+  if (workingDir) {
+    return workingDir;
   } else if (process.env.EXPO_UNIVERSE_DIR) {
     return path.join(process.env.EXPO_UNIVERSE_DIR, 'exponent');
   } else {
@@ -49,7 +49,7 @@ function xmlWeirdAndroidEscape(original) {
 }
 
 exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(args: any) {
-  let { url, sdkVersion, releaseChannel } = args;
+  let { url, sdkVersion, releaseChannel, workingDir } = args;
 
   releaseChannel = releaseChannel ? releaseChannel : 'default';
   let manifest = await getManifestAsync(url, {
@@ -61,7 +61,7 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
   let fullManifestUrl = `${url.replace('exp://', 'https://')}/index.exp`;
   let bundleUrl = manifest.bundleUrl;
 
-  let shellPath = path.join(exponentDirectory(), 'android-shell-app');
+  let shellPath = path.join(exponentDirectory(workingDir), 'android-shell-app');
 
   await fs.remove(path.join(shellPath, 'app', 'src', 'main', 'assets', 'shell-app-manifest.json'));
   await fs.writeFileSync(
@@ -214,12 +214,11 @@ export async function copyInitialShellAppFilesAsync(
   shellPath,
   isDetached: boolean = false
 ) {
-  const _exponentDirectory = exponentDirectory();
-  if (_exponentDirectory) {
+  if (androidSrcPath) {
     await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
       pipeToLogger: true,
       loggerFields: { buildPhase: 'generating dynamic macros' },
-      cwd: path.join(_exponentDirectory, 'android', 'app'),
+      cwd: path.join(androidSrcPath, 'app'),
       env: {
         ...process.env,
         JSON_LOGS: '0',
@@ -268,10 +267,12 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     keystorePassword,
     keyPassword,
     outputFile,
+    workingDir,
   } = args;
 
-  let androidSrcPath = path.join(exponentDirectory(), 'android');
-  let shellPath = path.join(exponentDirectory(), 'android-shell-app');
+  const exponentDir = exponentDirectory(workingDir);
+  let androidSrcPath = path.join(exponentDir, 'android');
+  let shellPath = path.join(exponentDir, 'android-shell-app');
 
   await fs.remove(shellPath);
   await fs.ensureDir(shellPath);
@@ -336,7 +337,12 @@ function shellPathForContext(context: StandaloneContext) {
   if (context.type === 'user') {
     return path.join(context.data.projectPath, 'android');
   } else {
-    return path.join(exponentDirectory(), 'android-shell-app');
+    return path.join(
+      exponentDirectory(
+        context.data.expoSourcePath && path.join(context.data.expoSourcePath, '..')
+      ),
+      'android-shell-app'
+    );
   }
 }
 

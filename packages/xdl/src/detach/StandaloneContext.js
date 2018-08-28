@@ -68,7 +68,8 @@ class StandaloneContext {
     testEnvironment: StandaloneContextTestEnvironment,
     build: StandaloneBuildFlags,
     publishedUrl: ?string,
-    releaseChannel: ?string
+    releaseChannel: ?string,
+    shellAppSdkVersion: ?string
   ): StandaloneContext => {
     let context = new StandaloneContext();
     context.type = 'service';
@@ -78,6 +79,7 @@ class StandaloneContext {
       manifest,
       privateConfig,
       testEnvironment,
+      shellAppSdkVersion,
     };
     context.config = manifest;
     context.build = build;

@@ -12,7 +12,6 @@ import {
   isDirectory,
   rimrafDontThrow,
   parseSdkMajorVersion,
-  spawnAsync,
   spawnAsyncThrowError,
   transformFileContentsAsync,
 } from './ExponentTools';
@@ -143,10 +142,10 @@ async function _renameAndMoveProjectFilesAsync(
 async function _configureVersionsPlistAsync(
   configFilePath: string,
   standaloneSdkVersion: string,
-  isMultipleVersion: boolean
+  isServiceContext: boolean
 ) {
   await IosPlist.modifyAsync(configFilePath, 'EXSDKVersions', versionConfig => {
-    if (isMultipleVersion) {
+    if (isServiceContext) {
       delete versionConfig.detachedNativeVersions;
       // leave versionConfig.sdkVersions unchanged
       // because the ExpoKit template already contains the list of supported versions.
@@ -213,7 +212,7 @@ async function _renderPodfileFromTemplateAsync(
       ...module,
       path: path.join(modulesPath, module.libName, module.subdirectory),
     }));
-    podfileTemplateFilename = 'ExpoKit-Podfile-multiple-versions';
+    podfileTemplateFilename = 'ExpoKit-Podfile-versioned';
   } else {
     throw new Error(`Unsupported context type: ${context.type}`);
   }
@@ -255,6 +254,7 @@ async function _renderPodfileFromTemplateAsync(
     templatePodfilePath,
     path.join(iosProjectDirectory, 'Podfile'),
     podfileSubstitutions,
+    context.data.shellAppSdkVersion,
     sdkVersion
   );
 }
@@ -263,8 +263,8 @@ async function createDetachedAsync(context: StandaloneContext) {
   const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(context);
   logger.info(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
 
-  let isMultipleVersion = context.type === 'service';
-  let standaloneSdkVersion = await getNewestSdkVersionSupportedAsync(context);
+  const isServiceContext = context.type === 'service';
+  const standaloneSdkVersion = await getNewestSdkVersionSupportedAsync(context);
 
   let iosClientVersion;
   let iosExpoViewUrl;
@@ -296,7 +296,7 @@ async function createDetachedAsync(context: StandaloneContext) {
   logger.info('Configuring iOS dependencies...');
   // this configuration must happen prior to build time because it affects which
   // native versions of RN we depend on.
-  await _configureVersionsPlistAsync(supportingDirectory, standaloneSdkVersion, isMultipleVersion);
+  await _configureVersionsPlistAsync(supportingDirectory, standaloneSdkVersion, isServiceContext);
   await _configureBuildConstantsPlistAsync(supportingDirectory, context);
   await _renderPodfileFromTemplateAsync(
     context,

@@ -219,13 +219,24 @@ function _renderDependencyAttributes(attributes) {
   return attributesStrings.join(',\n');
 }
 
+function createSdkFilterFn(sdkVersion) {
+  if (sdkVersion === undefined || !sdkVersion.match(/^\d+\.\d+.\d+$/)) {
+    return;
+  }
+  const sdkVersionWithUnderscores = sdkVersion.replace(/\./g, '_');
+  return i => i.endsWith(`/ReactABI${sdkVersionWithUnderscores}.rb`);
+}
+
 async function _renderVersionedReactNativeDependenciesAsync(
   templatesDirectory,
   versionedReactNativePath,
-  expoSubspecs
+  expoSubspecs,
+  shellAppSdkVersion
 ) {
+  const filterFn = createSdkFilterFn(shellAppSdkVersion);
   let result = await _concatTemplateFilesInDirectoryAsync(
-    path.join(templatesDirectory, 'versioned-react-native', 'dependencies')
+    path.join(templatesDirectory, 'versioned-react-native', 'dependencies'),
+    filterFn
   );
   expoSubspecs = expoSubspecs.map(subspec => `'${subspec}'`).join(', ');
   result = result.replace(/\$\{VERSIONED_REACT_NATIVE_PATH\}/g, versionedReactNativePath);
@@ -233,18 +244,24 @@ async function _renderVersionedReactNativeDependenciesAsync(
   return result;
 }
 
-async function _renderVersionedReactNativePostinstallsAsync(templatesDirectory) {
+async function _renderVersionedReactNativePostinstallsAsync(
+  templatesDirectory,
+  shellAppSdkVersion
+) {
+  const filterFn = createSdkFilterFn(shellAppSdkVersion);
   return _concatTemplateFilesInDirectoryAsync(
-    path.join(templatesDirectory, 'versioned-react-native', 'postinstalls')
+    path.join(templatesDirectory, 'versioned-react-native', 'postinstalls'),
+    filterFn
   );
 }
 
-async function _concatTemplateFilesInDirectoryAsync(directory) {
+async function _concatTemplateFilesInDirectoryAsync(directory, filterFn) {
   let templateFilenames = (await glob(path.join(directory, '*.rb'))).sort();
+  let filteredTemplateFilenames = filterFn ? templateFilenames.filter(filterFn) : templateFilenames;
   let templateStrings = [];
   // perform this in series in order to get deterministic output
-  for (let fileIdx = 0, nFiles = templateFilenames.length; fileIdx < nFiles; fileIdx++) {
-    const filename = templateFilenames[fileIdx];
+  for (let fileIdx = 0, nFiles = filteredTemplateFilenames.length; fileIdx < nFiles; fileIdx++) {
+    const filename = filteredTemplateFilenames[fileIdx];
     let templateString = await fs.readFile(filename, 'utf8');
     if (templateString) {
       templateStrings.push(templateString);
@@ -382,6 +399,7 @@ async function renderPodfileAsync(
   pathToTemplate,
   pathToOutput,
   moreSubstitutions,
+  shellAppSdkVersion,
   sdkVersion = 'UNVERSIONED'
 ) {
   if (!moreSubstitutions) {
@@ -419,10 +437,12 @@ async function renderPodfileAsync(
   let versionedDependencies = await _renderVersionedReactNativeDependenciesAsync(
     templatesDirectory,
     versionedRnPath,
-    rnExpoSubspecs
+    rnExpoSubspecs,
+    shellAppSdkVersion
   );
   let versionedPostinstalls = await _renderVersionedReactNativePostinstallsAsync(
-    templatesDirectory
+    templatesDirectory,
+    shellAppSdkVersion
   );
   let podDependencies = await _renderPodDependenciesAsync(
     path.join(templatesDirectory, 'dependencies.json'),
@@ -450,7 +470,7 @@ async function renderPodfileAsync(
     PODFILE_DETACHED_SERVICE_POSTINSTALL: _renderDetachedPostinstall(sdkVersion, true),
     PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
     PODFILE_VERSIONED_POSTINSTALLS: versionedPostinstalls,
-    PODFILE_TEST_TARGET: _renderTestTarget(reactNativePath),
+    PODFILE_TEST_TARGET: shellAppSdkVersion ? '' : _renderTestTarget(reactNativePath),
     ...moreSubstitutions,
   };
   _validatePodfileSubstitutions(substitutions);

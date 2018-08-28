@@ -147,6 +147,7 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
 /**
  * @param workspacePath optionally provide a path for the unbuilt xcode workspace to create/use.
  * @param expoSourcePath path to expo client app sourcecode (/ios dir from expo/expo repo)
+ * @param shellAppSdkVersion sdk version for shell app
  */
 async function _createStandaloneContextAsync(args) {
   // right now we only ever build a single detached workspace for service contexts.
@@ -195,7 +196,8 @@ async function _createStandaloneContextAsync(args) {
     args.testEnvironment,
     buildFlags,
     args.url,
-    args.releaseChannel
+    args.releaseChannel,
+    args.shellAppSdkVersion
   );
   return context;
 }
@@ -297,6 +299,7 @@ async function createTurtleWorkspaceAsync(args) {
  *  @param verbose show all xcodebuild output (default false)
  *  @param reuseWorkspace if true, when building, assume a detached workspace already exists rather than creating a new one.
  *  @param type type of artifact to build (simulator or archive)
+ *  @param shellAppSdkVersion sdk version for shell app
  */
 async function buildAndCopyArtifactAsync(args) {
   args = _validateCLIArgs(args);
