@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 'use strict';
+var whyIsNodeRunning = require('why-is-node-running');
+/* var net = require('net'); */
 
 // validate that used node version is supported
 var semver = require('semver');
@@ -16,3 +18,17 @@ if (semver.satisfies(ver, '>=6.0.0')) {
   );
   process.exit(1);
 }
+
+setInterval(function() {
+  console.log('foo');
+  whyIsNodeRunning(); // logs out active handles that are keeping node running
+}, 5000);
+
+// verify that TCP servermap gets printed
+/* function createServer() {
+  var server = net.createServer();
+  setInterval(function() {}, 1000);
+  server.listen(0);
+}
+
+createServer(); */

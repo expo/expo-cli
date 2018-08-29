@@ -85,6 +85,7 @@
     "untildify": "^3.0.2",
     "validator": "^10.4.0",
     "wordwrap": "^1.0.0",
+    "why-is-node-running": "^2.0.2",
     "xdl": "^51.0.0"
   },
   "optionalDependencies": {
