@@ -335,6 +335,16 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   }
 };
 
+function createUUID() {
+   var dt = new Date().getTime();
+   var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+     var r = (dt + Math.random() * 16) % 16 | 0;
+     dt = Math.floor(dt / 16);
+     return (c == 'x' ? r : (r & 0x3) | 0x8).toString(16);
+   });
+   return uuid;
+ }
+
 function shellPathForContext(context: StandaloneContext) {
   if (context.type === 'user') {
     return path.join(context.data.projectPath, 'android');
@@ -691,6 +701,23 @@ export async function runShellAppModificationsAsync(
       path.join(shellPath, 'app', 'src', 'main', 'res', 'drawable', 'splash_background.xml')
     );
   }
+
+  // Change stripe schemes and add meta-data
+  const randomID = createUUID();
+  const newScheme =
+    '<meta-data android:name="standaloneStripeScheme" android:value=".' + randomID + '" />';
+  await regexFileAsync(
+    '<!-- ADD HERE STRIPE SCHEME META DATA -->',
+    newScheme,
+    path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+  );
+
+  const newSchemeSuffix = 'expo.modules.payments.stripe.' + randomID + '" />';
+  await regexFileAsync(
+    'expo.modules.payments.stripe" />',
+    newSchemeSuffix,
+    path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+  );
 
   // Remove exp:// scheme from LauncherActivity
   await deleteLinesInFileAsync(
