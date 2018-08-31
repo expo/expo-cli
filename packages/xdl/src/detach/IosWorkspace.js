@@ -182,7 +182,10 @@ async function _renderPodfileFromTemplateAsync(
     TARGET_NAME: projectName,
   };
   let reactNativeDependencyPath;
-  const detachableUniversalModules = Modules.getDetachableModulesForPlatform('ios');
+  const detachableUniversalModules = Modules.getDetachableModulesForPlatformAndSdkVersion(
+    'ios',
+    sdkVersion
+  );
   if (context.type === 'user') {
     invariant(iosClientVersion, `The iOS client version must be specified`);
     reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');

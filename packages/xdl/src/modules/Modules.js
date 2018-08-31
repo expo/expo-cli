@@ -2,6 +2,8 @@
  * @flow
  */
 
+import semver from 'semver';
+
 import { expoSdkUniversalModulesConfigs } from './config';
 
 type Platform = 'ios' | 'android';
@@ -9,6 +11,7 @@ type Platform = 'ios' | 'android';
 type ModuleConfig = {
   podName: string,
   libName: string,
+  sdkVersions: string,
   detachable: boolean,
   isNativeModule: boolean,
   subdirectory: string,
@@ -36,9 +39,16 @@ export function getVersionableModulesForPlatform(platform: Platform): Array<Modu
   });
 }
 
-export function getDetachableModulesForPlatform(platform: Platform): Array<ModuleConfig> {
+export function getDetachableModulesForPlatformAndSdkVersion(
+  platform: Platform,
+  sdkVersion: string
+): Array<ModuleConfig> {
   return getAllForPlatform(platform).filter(moduleConfig => {
-    return moduleConfig.isNativeModule && moduleConfig.detachable;
+    return (
+      moduleConfig.isNativeModule &&
+      moduleConfig.detachable &&
+      semver.satisfies(sdkVersion, moduleConfig.sdkVersions)
+    );
   });
 }
 
