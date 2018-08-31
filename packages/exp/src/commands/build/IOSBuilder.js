@@ -131,7 +131,11 @@ const createChooseDistCertPrompt = choices => ({
 });
 
 export default class IOSBuilder extends BaseBuilder {
-  async run() {
+  async run(options) {
+    const publicUrl = options.publicUrl;
+    const buildOptions = {
+      ...(publicUrl ? { publicUrl } : {}),
+    };
     // validate bundleIdentifier before hitting the network to check build status
     const {
       args: {
@@ -140,7 +144,9 @@ export default class IOSBuilder extends BaseBuilder {
         bundleIdentifierIOS: bundleIdentifier,
         sdkVersion,
       },
-    } = await Exp.getPublishInfoAsync(this.projectDir);
+    } = publicUrl
+      ? await Exp.getThirdPartyInfoAsync(publicUrl)
+      : await Exp.getPublishInfoAsync(this.projectDir);
 
     await this.checkIfSdkIsSupported(sdkVersion, 'ios');
 
@@ -153,7 +159,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
 
     // Check the status of any current builds
-    await this.checkStatus('ios');
+    await this.checkStatus({ platform: 'ios', ...buildOptions });
     const credentialMetadata = { username, experienceName, bundleIdentifier, platform: 'ios' };
     const clearOnly = {};
     if (this.options.clearCredentials) {
@@ -193,9 +199,11 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       }
     }
     // Publish the experience, if necessary
-    const publishedExpIds = await this.ensureReleaseExists('ios');
+    const publishedExpIds = this.options.publicUrl
+      ? undefined
+      : await this.ensureReleaseExists('ios');
     // Initiate the build with the published experience
-    await this.build(publishedExpIds, 'ios', { bundleIdentifier });
+    await this.build(publishedExpIds, 'ios', { bundleIdentifier, ...buildOptions });
   }
 
   checkEnv() {

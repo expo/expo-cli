@@ -3,7 +3,7 @@
  */
 import validator from 'validator';
 import path from 'path';
-import { Project } from 'xdl';
+import { Project, UrlUtils } from 'xdl';
 
 import log from '../log';
 import { installExitHooks } from '../exit';
@@ -14,7 +14,7 @@ export async function action(projectDir: string, options: Options = {}) {
     throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
   }
   // If we are not in dev mode, ensure that url is https
-  if (!options.dev && !validator.isURL(options.publicUrl, { protocols: ['https'] })) {
+  if (!options.dev && !UrlUtils.isHttps(options.publicUrl)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   } else if (!validator.isURL(options.publicUrl, { protocols: ['http', 'https'] })) {
     console.warn(`Dev Mode: publicUrl ${options.publicUrl} does not conform to HTTP format.`);

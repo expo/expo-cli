@@ -123,6 +123,9 @@ module.exports = {
   get Simulator() {
     return require('./Simulator');
   },
+  get ThirdParty() {
+    return require('./ThirdParty');
+  },
   get UpdateVersions() {
     return require('./tools/UpdateVersions');
   },

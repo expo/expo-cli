@@ -41,10 +41,10 @@ export default class BaseBuilder {
     this.options = options;
   }
 
-  async command() {
+  async command(options) {
     try {
       await this._checkProjectConfig();
-      await this.run();
+      await this.run(options);
     } catch (e) {
       if (!(e instanceof BuildError)) {
         throw e;
@@ -63,7 +63,13 @@ export default class BaseBuilder {
     }
   }
 
-  async checkStatus(platform: string = 'all', current: boolean = true): Promise<void> {
+  async checkStatus(
+    {
+      platform = 'all',
+      current = true,
+      publicUrl,
+    }: { platform: string, current: boolean, publicUrl?: string } = {}
+  ): Promise<void> {
     await this._checkProjectConfig();
 
     log('Checking if current build exists...\n');
@@ -72,6 +78,7 @@ export default class BaseBuilder {
       mode: 'status',
       platform,
       current,
+      ...(publicUrl ? { publicUrl } : {}),
     });
 
     if (buildStatus.err) {
@@ -178,13 +185,17 @@ ${buildStatus.id}
     }
   }
 
-  async wait(buildId, { timeout = 1200, interval = 60 } = {}) {
+  async wait(buildId, { timeout = 1200, interval = 60, publicUrl } = {}) {
     let time = new Date().getTime();
     log(`Waiting for build to complete. You can press Ctrl+C to exit.`);
     await sleep(secondsToMilliseconds(interval));
     const endTime = time + secondsToMilliseconds(timeout);
     while (time <= endTime) {
-      const res = await Project.buildAsync(this.projectDir, { current: false, mode: 'status' });
+      const res = await Project.buildAsync(this.projectDir, {
+        current: false,
+        mode: 'status',
+        ...(publicUrl ? { publicUrl } : {}),
+      });
       const job = fp.compose(
         fp.head,
         fp.filter(job => buildId && job.id === buildId),
@@ -214,7 +225,7 @@ ${buildStatus.id}
   async build(
     expIds: Array<string>,
     platform: string,
-    extraArgs: { bundleIdentifier?: string } = {}
+    extraArgs: { publicUrl?: string, bundleIdentifier?: string } = {}
   ) {
     log('Building...');
 
@@ -223,6 +234,7 @@ ${buildStatus.id}
       expIds,
       platform,
       releaseChannel: this.options.releaseChannel,
+      ...(extraArgs.publicUrl ? { publicUrl: extraArgs.publicUrl } : {}),
     };
 
     if (platform === 'ios') {
@@ -248,7 +260,10 @@ ${buildStatus.id}
 
     if (this.options.wait) {
       simpleSpinner.start();
-      const completedJob = await this.wait(buildId);
+      const waitOpts = {
+        ...(extraArgs.publicUrl ? { publicUrl: extraArgs.publicUrl } : {}),
+      };
+      const completedJob = await this.wait(buildId, waitOpts);
       simpleSpinner.stop();
       const artifactUrl = completedJob.artifactId
         ? constructArtifactUrl(completedJob.artifactId)
