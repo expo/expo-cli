@@ -51,7 +51,8 @@ export type CertsList = Array<CertObject>;
 export async function credentialsExistForPlatformAsync(
   metadata: CredentialMetadata
 ): Promise<?Credentials> {
-  return !!fetchCredentials(metadata, false);
+  const creds = await fetchCredentials(metadata, false);
+  return !!creds; // !! performed on awaited creds
 }
 
 export async function getEncryptedCredentialsForPlatformAsync(
