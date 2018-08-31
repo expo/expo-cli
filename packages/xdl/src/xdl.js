@@ -30,6 +30,9 @@ module.exports = {
   get Binaries() {
     return require('./Binaries');
   },
+  get BuildWebhook() {
+    return require('./BuildWebhook');
+  },
   get Config() {
     return require('./Config').default;
   },
