@@ -1104,6 +1104,41 @@ async function _readFileForUpload(path) {
   }
 }
 
+async function getConfigAsync(
+  projectRoot: string, 
+  options: {
+    current?: boolean,
+    mode?: string,
+    platform?: string,
+    expIds?: Array<string>,
+    type?: string,
+    releaseChannel?: string,
+    bundleIdentifier?: string,
+    publicUrl?: string,
+  } = {}
+){
+  if (!options.publicUrl) {
+    // get the manifest from the project directory
+    const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+    configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    configPrefix = configName === 'app.json' ? 'expo.' : '';
+    return {
+      exp,
+      pkg,
+      configName: await ProjectUtils.configFilenameAsync(projectRoot),
+      configPrefix: configName === 'app.json' ? 'expo.' : '',
+    };
+  } else {
+    // get the externally hosted manifest
+    return {
+      exp: await ThirdParty.getManifest(options.publicUrl, options);
+      configName: options.publicUrl;
+      configPrefix: '';
+      pkg: {};
+    }
+  }
+}
+
 export async function buildAsync(
   projectRoot: string,
   options: {
@@ -1143,19 +1178,7 @@ export async function buildAsync(
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
 
-  let exp, pkg, configName, configPrefix;
-  if (!options.publicUrl) {
-    // get the manifest from the project directory
-    ({ exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot));
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-    configPrefix = configName === 'app.json' ? 'expo.' : '';
-  } else {
-    // get the externally hosted manifest
-    exp = await ThirdParty.getManifest(options.publicUrl, options);
-    configName = options.publicUrl;
-    configPrefix = '';
-    pkg = {};
-  }
+  const {exp, pkg, configName, configPrefix} = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
     throw new XDLError(
