@@ -274,7 +274,7 @@ export class UserManagerInstance {
     }
 
     try {
-      const api = ApiV2Client.clientForUser(this._currentUser);
+      const api = ApiV2Client.clientForUser(currentUser);
 
       const { user: updatedUser } = await api.postAsync('auth/createOrUpdateUser', {
         userData: _prepareAuth0Profile(userData),

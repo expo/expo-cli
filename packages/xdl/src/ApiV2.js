@@ -53,9 +53,9 @@ type UserOrSession = ?{ sessionSecret: ?string };
 export default class ApiV2Client {
   sessionSecret: ?string = null;
 
-  static clientForUser({ sessionSecret } = {}): ApiV2Client {
-    if (sessionSecret) {
-      return new ApiV2Client({ sessionSecret });
+  static clientForUser(user): ApiV2Client {
+    if (user && user.sessionSecret) {
+      return new ApiV2Client({ sessionSecret: user.sessionSecret });
     }
 
     return new ApiV2Client();
