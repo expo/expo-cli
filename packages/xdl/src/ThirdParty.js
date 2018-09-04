@@ -38,13 +38,13 @@ async function _extractManifest(expOrArray, publicUrl) {
     return expOrArray;
   }
 
+  const { sdkVersions } = await Versions.versionsAsync();
   for (let i = 0; i < expOrArray.length; i++) {
     const manifestCandidate = expOrArray[i];
     const sdkVersion = manifestCandidate.sdkVersion;
     if (!sdkVersion) {
       continue;
     }
-    const { sdkVersions } = await Versions.versionsAsync();
     const versionObj = sdkVersions[sdkVersion];
     if (!versionObj) {
       continue;
@@ -55,7 +55,7 @@ async function _extractManifest(expOrArray, publicUrl) {
       return manifestCandidate;
     }
   }
-  const supportedVersions = await Versions.versionsAsync();
+  const supportedVersions = Object.keys(sdkVersions);
   throw new XDLError(
     ErrorCode.INVALID_MANIFEST,
     `No compatible manifest found at ${publicUrl}. Please use one of the SDK versions supported: ${JSON.stringify(
