@@ -20,7 +20,7 @@ export async function getManifest(publicUrl, opts = {}) {
       `Unable to fetch manifest from ${publicUrl}. ` + e.toString()
     );
   }
-  exp = _extractManifest(exp, publicUrl);
+  exp = await _extractManifest(exp, publicUrl);
   if (opts.platform && exp.platform !== opts.platform && opts.platform !== 'all') {
     throw new XDLError(
       ErrorCode.INVALID_MANIFEST,
@@ -32,7 +32,7 @@ export async function getManifest(publicUrl, opts = {}) {
 
 // Third party publicUrls can return an array of manifests
 // We need to choose the first compatible one
-function _extractManifest(expOrArray, publicUrl) {
+async function _extractManifest(expOrArray, publicUrl) {
   // if its not an array, assume it was a single manifest obj
   if (!Array.isArray(expOrArray)) {
     return expOrArray;
@@ -49,8 +49,11 @@ function _extractManifest(expOrArray, publicUrl) {
       return manifestCandidate;
     }
   }
+  const supportedVersions = await Versions.versionsAsync();
   throw new XDLError(
     ErrorCode.INVALID_MANIFEST,
-    `No compatible manifest found at ${publicUrl}. Make sure you have a compatible sdkVersion.`
+    `No compatible manifest found at ${publicUrl}. Please use one of the SDK versions supported: ${JSON.stringify(
+      supportedVersions
+    )}`
   );
 }

@@ -41,7 +41,10 @@ export default (program: any) => {
     .option('--dist-p12-path <dist.p12>', 'Path to your Distribution Certificate P12.')
     .option('--push-p12-path <push.p12>', 'Path to your Push Notification Certificate P12.')
     .option('--provisioning-profile-path <.mobileprovision>', 'Path to your Provisioning Profile.')
-    .option('--public-url <url>', 'Url for an externally hosted app.')
+    .option(
+      '--public-url <url>',
+      'The URL of an externally hosted manifest (for self-hosted apps).'
+    )
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
@@ -77,7 +80,7 @@ export default (program: any) => {
     .option('--no-wait', 'Exit immediately after triggering build.')
     .option('--keystore-path <app.jks>', 'Path to your Keystore.')
     .option('--keystore-alias <alias>', 'Keystore Alias')
-    .option('--public-url <url>', 'Url for an externally hosted app.')
+    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description(
       'Build a standalone APK for your project, signed and ready for submission to the Google Play Store.'
     )
@@ -99,7 +102,10 @@ export default (program: any) => {
   program
     .command('build:status [project-dir]')
     .alias('bs')
-    .option('--public-url <url>', 'Url for an externally hosted app.')
+    .option(
+      '--public-url <url>',
+      'The URL of an externally hosted manifest (for self-hosted apps).'
+    )
     .description(`Gets the status of a current (or most recently finished) build for your project.`)
     .asyncActionProjectDir(async (projectDir, options) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {

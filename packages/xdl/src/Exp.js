@@ -2,7 +2,6 @@
  * @flow
  */
 
-import axios from 'axios';
 import promisify from 'util.promisify';
 import fs from 'fs-extra';
 import mkdirp from 'mkdirp';

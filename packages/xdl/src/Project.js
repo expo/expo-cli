@@ -1,7 +1,6 @@
 /**
  * @flow
  */
-import axios from 'axios';
 import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import crypto from 'crypto';

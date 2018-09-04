@@ -62,13 +62,13 @@ export default program => {
 
   program
     .command('url:ipa [project-dir]')
-    .option('--public-url <url>', 'Url for an externally hosted app.')
+    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description('Displays the standalone iOS binary URL you can use to download your app binary')
     .asyncActionProjectDir(logArtifactUrl('ios'), true);
 
   program
     .command('url:apk [project-dir]')
-    .option('--public-url <url>', 'Url for an externally hosted app.')
+    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description(
       'Displays the standalone Android binary URL you can use to download your app binary'
     )

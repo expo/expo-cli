@@ -14,9 +14,7 @@ import prompt from '../../prompt';
 
 export default class AndroidBuilder extends BaseBuilder {
   async run(options) {
-    const buildOptions = {
-      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-    };
+    const buildOptions = options.publicUrl ? { publicUrl: options.publicUrl } : {};
     // Check the status of any current builds
     await this.checkStatus({ platform: 'android', ...buildOptions });
     // Validate project

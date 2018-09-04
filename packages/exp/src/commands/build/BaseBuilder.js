@@ -260,9 +260,7 @@ ${buildStatus.id}
 
     if (this.options.wait) {
       simpleSpinner.start();
-      const waitOpts = {
-        ...(extraArgs.publicUrl ? { publicUrl: extraArgs.publicUrl } : {}),
-      };
+      const waitOpts = extraArgs.publicUrl ? { publicUrl: extraArgs.publicUrl } : {};
       const completedJob = await this.wait(buildId, waitOpts);
       simpleSpinner.stop();
       const artifactUrl = completedJob.artifactId
