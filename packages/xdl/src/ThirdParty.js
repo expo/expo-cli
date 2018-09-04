@@ -1,6 +1,6 @@
 import axios from 'axios';
 import ErrorCode from './ErrorCode';
-import Versions from './Versions';
+import * as Versions from './Versions';
 import XDLError from './XDLError';
 
 export async function getManifest(publicUrl, opts = {}) {
@@ -44,8 +44,14 @@ async function _extractManifest(expOrArray, publicUrl) {
     if (!sdkVersion) {
       continue;
     }
-    const turtleCanBuild = Versions.canTurtleBuildSdkVersion(sdkVersion);
-    if (turtleCanBuild) {
+    const { sdkVersions } = await Versions.versionsAsync();
+    const versionObj = sdkVersions[sdkVersion];
+    if (!versionObj) {
+      continue;
+    }
+
+    const isDeprecated = versionObj.isDeprecated || false;
+    if (!isDeprecated) {
       return manifestCandidate;
     }
   }
