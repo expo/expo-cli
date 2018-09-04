@@ -143,6 +143,16 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXPaymentsStripe',
+    libName: 'expo-payments-stripe',
+    sdkVersions: '>=30.0.0',
+    config: {
+      ios: {
+        includeInExpoClient: false,
+      },
+    },
+  },
+  {
     podName: 'EXPermissions',
     libName: 'expo-permissions',
     sdkVersions: '>=29.0.0',
