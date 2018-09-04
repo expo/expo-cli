@@ -9,7 +9,14 @@ import urlOpts from '../urlOpts';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
 
 const logArtifactUrl = platform => async (projectDir, options) => {
-  const res = await Project.buildAsync(projectDir, { current: false, mode: 'status' });
+  if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+    throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+  }
+  const res = await Project.buildAsync(projectDir, {
+    current: false,
+    mode: 'status',
+    ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+  });
   const url = fp.compose(
     fp.get(['artifacts', 'url']),
     fp.head,
@@ -55,11 +62,13 @@ export default program => {
 
   program
     .command('url:ipa [project-dir]')
+    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description('Displays the standalone iOS binary URL you can use to download your app binary')
     .asyncActionProjectDir(logArtifactUrl('ios'), true);
 
   program
     .command('url:apk [project-dir]')
+    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description(
       'Displays the standalone Android binary URL you can use to download your app binary'
     )

@@ -18,6 +18,7 @@ import * as Extract from './Extract';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectUtils from './project/ProjectUtils';
+import * as ThirdParty from './ThirdParty';
 import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
@@ -218,6 +219,43 @@ type PublishInfo = {
     bundleIdentifierIOS: ?string,
   },
 };
+
+export async function getThirdPartyInfoAsync(publicUrl: string): Promise<PublishInfo> {
+  const user = await UserManager.ensureLoggedInAsync();
+
+  if (!user) {
+    throw new Error('Attempted to login in offline mode. This is a bug.');
+  }
+
+  const { username } = user;
+
+  const exp = await ThirdParty.getManifest(publicUrl);
+  const { slug, sdkVersion, version } = exp;
+  if (!sdkVersion) {
+    throw new Error(`sdkVersion is missing from ${publicUrl}`);
+  }
+
+  if (!slug) {
+    // slug is made programmatically for app.json
+    throw new Error(`slug field is missing from exp.json.`);
+  }
+
+  if (!version) {
+    throw new Error(`Can't get version of package.`);
+  }
+
+  const bundleIdentifierIOS = exp.ios ? exp.ios.bundleIdentifier : null;
+  return {
+    args: {
+      username,
+      remoteUsername: username,
+      remotePackageName: slug,
+      remoteFullPackageName: `@${username}/${slug}`,
+      bundleIdentifierIOS,
+      sdkVersion,
+    },
+  };
+}
 
 // TODO: remove / change, no longer publishInfo, this is just used for signing
 export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {

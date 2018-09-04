@@ -1,7 +1,6 @@
 /**
  * @flow
  */
-
 import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import crypto from 'crypto';
@@ -44,6 +43,7 @@ import { isNode } from './tools/EnvironmentHelper';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as Sentry from './Sentry';
+import * as ThirdParty from './ThirdParty';
 import * as UrlUtils from './UrlUtils';
 import UserManager from './User';
 import UserSettings from './UserSettings';
@@ -378,7 +378,7 @@ export async function exportForAppHosting(
   // TODO(quin): follow up and write a doc page that explains these fields that users don't specify in app.json
   exp.publishedTime = new Date().toISOString();
 
-  // generate revisionId the same way www does
+  // generate revisionId and id the same way www does
   const hashIds = new HashIds(uuid.v1(), 10);
   exp.revisionId = hashIds.encode(Date.now());
 
@@ -399,6 +399,7 @@ export async function exportForAppHosting(
 
   // save the android manifest
   exp.bundleUrl = urljoin(publicUrl, 'bundles', androidBundleUrl);
+  exp.platform = 'android';
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
@@ -408,6 +409,7 @@ export async function exportForAppHosting(
 
   // save the ios manifest
   exp.bundleUrl = urljoin(publicUrl, 'bundles', iosBundleUrl);
+  exp.platform = 'ios';
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
@@ -1101,6 +1103,40 @@ async function _readFileForUpload(path) {
   }
 }
 
+async function getConfigAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean,
+    mode?: string,
+    platform?: string,
+    expIds?: Array<string>,
+    type?: string,
+    releaseChannel?: string,
+    bundleIdentifier?: string,
+    publicUrl?: string,
+  } = {}
+) {
+  if (!options.publicUrl) {
+    // get the manifest from the project directory
+    const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    return {
+      exp,
+      pkg,
+      configName: await ProjectUtils.configFilenameAsync(projectRoot),
+      configPrefix: configName === 'app.json' ? 'expo.' : '',
+    };
+  } else {
+    // get the externally hosted manifest
+    return {
+      exp: await ThirdParty.getManifest(options.publicUrl, options),
+      configName: options.publicUrl,
+      configPrefix: '',
+      pkg: {},
+    };
+  }
+}
+
 export async function buildAsync(
   projectRoot: string,
   options: {
@@ -1111,6 +1147,7 @@ export async function buildAsync(
     type?: string,
     releaseChannel?: string,
     bundleIdentifier?: string,
+    publicUrl?: string,
   } = {}
 ) {
   await UserManager.ensureLoggedInAsync();
@@ -1130,6 +1167,7 @@ export async function buildAsync(
     type: joi.any().valid('archive', 'simulator', 'client'),
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
     bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-\.]+$/),
+    publicUrl: joi.string(),
   });
 
   try {
@@ -1138,9 +1176,7 @@ export async function buildAsync(
     throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
   }
 
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  const configName = await ProjectUtils.configFilenameAsync(projectRoot);
-  const configPrefix = configName === 'app.json' ? 'expo.' : '';
+  const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
     throw new XDLError(

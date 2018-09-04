@@ -7,6 +7,7 @@ import os from 'os';
 import path from 'path';
 import url from 'url';
 import promisify from 'util.promisify';
+import validator from 'validator';
 
 import ip from './ip';
 import Config from './Config';
@@ -345,4 +346,8 @@ export function getPlatformSpecificBundleUrl(url: string, platform: string) {
   } else {
     return url;
   }
+}
+
+export async function isHttps(url) {
+  return validator.isURL(url, { protocols: ['https'] });
 }

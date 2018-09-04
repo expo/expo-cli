@@ -2,11 +2,13 @@
  * @flow
  */
 
+import { UrlUtils } from 'xdl';
 import BaseBuilder from './build/BaseBuilder';
 import IOSBuilder from './build/IOSBuilder';
 import AndroidBuilder from './build/AndroidBuilder';
 import BuildError from './build/BuildError';
 import log from '../log';
+import CommandError from '../CommandError';
 
 export default (program: any) => {
   program
@@ -39,10 +41,17 @@ export default (program: any) => {
     .option('--dist-p12-path <dist.p12>', 'Path to your Distribution Certificate P12.')
     .option('--push-p12-path <push.p12>', 'Path to your Push Notification Certificate P12.')
     .option('--provisioning-profile-path <.mobileprovision>', 'Path to your Provisioning Profile.')
+    .option(
+      '--public-url <url>',
+      'The URL of an externally hosted manifest (for self-hosted apps).'
+    )
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
     .asyncActionProjectDir((projectDir, options) => {
+      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+      }
       let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
       if (!channelRe.test(options.releaseChannel)) {
         log.error(
@@ -59,7 +68,7 @@ export default (program: any) => {
         process.exit(1);
       }
       const iosBuilder = new IOSBuilder(projectDir, options);
-      return iosBuilder.command();
+      return iosBuilder.command(options);
     });
 
   program
@@ -71,10 +80,14 @@ export default (program: any) => {
     .option('--no-wait', 'Exit immediately after triggering build.')
     .option('--keystore-path <app.jks>', 'Path to your Keystore.')
     .option('--keystore-alias <alias>', 'Keystore Alias')
+    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description(
       'Build a standalone APK for your project, signed and ready for submission to the Google Play Store.'
     )
     .asyncActionProjectDir((projectDir, options) => {
+      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+      }
       let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
       if (!channelRe.test(options.releaseChannel)) {
         log.error(
@@ -83,17 +96,28 @@ export default (program: any) => {
         process.exit(1);
       }
       const androidBuilder = new AndroidBuilder(projectDir, options);
-      return androidBuilder.command();
+      return androidBuilder.command(options);
     });
 
   program
     .command('build:status [project-dir]')
     .alias('bs')
+    .option(
+      '--public-url <url>',
+      'The URL of an externally hosted manifest (for self-hosted apps).'
+    )
     .description(`Gets the status of a current (or most recently finished) build for your project.`)
     .asyncActionProjectDir(async (projectDir, options) => {
+      if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+        throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+      }
       const builder = new BaseBuilder(projectDir, options);
       try {
-        return await builder.checkStatus('all', false);
+        return await builder.checkStatus({
+          platform: 'all',
+          current: false,
+          ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+        });
       } catch (e) {
         if (e instanceof BuildError) {
           return;

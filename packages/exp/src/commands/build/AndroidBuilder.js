@@ -13,23 +13,28 @@ import BaseBuilder from './BaseBuilder';
 import prompt from '../../prompt';
 
 export default class AndroidBuilder extends BaseBuilder {
-  async run() {
+  async run(options) {
+    const buildOptions = options.publicUrl ? { publicUrl: options.publicUrl } : {};
     // Check the status of any current builds
-    await this.checkStatus('android');
+    await this.checkStatus({ platform: 'android', ...buildOptions });
     // Validate project
-    await this.validateProject();
+    await this.validateProject(buildOptions);
     // Check for existing credentials, collect any missing credentials, and validate them
-    await this.collectAndValidateCredentials();
+    await this.collectAndValidateCredentials(buildOptions);
     // Publish the current experience, if necessary
-    const publishedExpIds = await this.ensureReleaseExists('android');
+    let publishedExpIds = options.publicUrl ? undefined : await this.ensureReleaseExists('android');
+
     // Initiate a build
-    await this.build(publishedExpIds, 'android');
+    await this.build(publishedExpIds, 'android', buildOptions);
   }
 
-  async _clearCredentials() {
+  async _clearCredentials(options = {}) {
+    const publicUrl = options.publicUrl;
     const {
       args: { username, remotePackageName, remoteFullPackageName: experienceName },
-    } = await Exp.getPublishInfoAsync(this.projectDir);
+    } = publicUrl
+      ? await Exp.getThirdPartyInfoAsync(publicUrl)
+      : await Exp.getPublishInfoAsync(this.projectDir);
 
     const credentialMetadata = {
       username,
@@ -78,10 +83,11 @@ export default class AndroidBuilder extends BaseBuilder {
     }
   }
 
-  async collectAndValidateCredentials() {
-    const {
-      args: { username, remoteFullPackageName: experienceName },
-    } = await Exp.getPublishInfoAsync(this.projectDir);
+  async collectAndValidateCredentials(options = {}) {
+    const publicUrl = options.publicUrl;
+    const { args: { username, remoteFullPackageName: experienceName } } = publicUrl
+      ? await Exp.getThirdPartyInfoAsync(publicUrl)
+      : await Exp.getPublishInfoAsync(this.projectDir);
 
     const credentialMetadata = {
       username,
@@ -161,7 +167,7 @@ export default class AndroidBuilder extends BaseBuilder {
 
       if (!answers.uploadKeystore) {
         if (this.options.clearCredentials && credentialsExist) {
-          await this._clearCredentials();
+          await this._clearCredentials(options);
         }
         // just continue
       } else {
@@ -200,8 +206,11 @@ export default class AndroidBuilder extends BaseBuilder {
     await Credentials.updateCredentialsForPlatform('android', credentials, credentialMetadata);
   }
 
-  async validateProject() {
-    const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(this.projectDir);
+  async validateProject(options) {
+    const publicUrl = options.publicUrl;
+    const { args: { sdkVersion } } = publicUrl
+      ? await Exp.getThirdPartyInfoAsync(publicUrl)
+      : await Exp.getPublishInfoAsync(this.projectDir);
     await this.checkIfSdkIsSupported(sdkVersion, 'android');
   }
 }
