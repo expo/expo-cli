@@ -220,6 +220,9 @@ function _renderDependencyAttributes(attributes) {
 }
 
 function createSdkFilterFn(sdkVersion) {
+  if (sdkVersion && String(sdkVersion).toUpperCase() === 'UNVERSIONED') {
+    return () => false;
+  }
   if (sdkVersion === undefined || !sdkVersion.match(/^\d+\.\d+.\d+$/)) {
     return;
   }
