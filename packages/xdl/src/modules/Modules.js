@@ -34,8 +34,8 @@ export function getAllNativeForExpoClientOnPlatform(platform: Platform): Array<M
 }
 
 export function getVersionableModulesForPlatform(platform: Platform): Array<ModuleConfig> {
-  return getAllForPlatform(platform).filter(moduleConfig => {
-    return moduleConfig.isNativeModule && moduleConfig.versionable;
+  return getAllNativeForExpoClientOnPlatform(platform).filter(moduleConfig => {
+    return moduleConfig.versionable;
   });
 }
 
