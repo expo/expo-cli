@@ -12,7 +12,7 @@ export default program => {
       '--secret <webhook-secret>',
       'Secret to be passed as a query param (?secret=<webhook-secret>) to the Webhook. It has to be at least 16 characters long.'
     )
-    .description(`Set a webhook for project to be called after finishing a standalone app build.`)
+    .description(`Set the webhook for project to be called after finishing a standalone app build.`)
     .asyncActionProjectDir(async (projectDir, options) => {
       _ensureOptionsAreValid(options);
 
@@ -38,7 +38,7 @@ export default program => {
 
   program
     .command('build-webhook:fetch [project-dir]')
-    .description(`Fetch a webhook for project.`)
+    .description(`Fetch the webhook for project.`)
     .asyncActionProjectDir(async (projectDir, options) => {
       const { args: { remoteFullPackageName: experienceName } } = await Exp.getPublishInfoAsync(
         projectDir
@@ -63,7 +63,7 @@ export default program => {
 
   program
     .command('build-webhook:clear [project-dir]')
-    .description(`Clear a webhook associated with project.`)
+    .description(`Clear the webhook associated with project.`)
     .asyncActionProjectDir(async (projectDir, options) => {
       const { args: { remoteFullPackageName: experienceName } } = await Exp.getPublishInfoAsync(
         projectDir
@@ -93,13 +93,16 @@ function _ensureOptionsAreValid(options) {
     new URL(url);
   } catch (err) {
     if (err instanceof TypeError) {
-      throw new Error('Wrong webhook url format (have you specified the protocol?)');
+      throw new Error(
+        'The provided webhook URL is invalid and must be an absolute URL, including a scheme.'
+      );
     } else {
       throw err;
     }
   }
 
-  if (String(secret).length < 16) {
-    throw new Error('Webhook secret has to have at least 16 characters');
+  const secretString = String(secret);
+  if (secretString.length < 16 || secretString.length > 1000) {
+    throw new Error('Webhook secret has be at least 16 and not more than 1000 characters long');
   }
 }
