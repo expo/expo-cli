@@ -407,7 +407,7 @@ export async function runShellAppModificationsAsync(
     fnLogger.warn('Warning: No config file specified.');
   }
 
-  let fullManifestUrl = `${url.replace('exp://', 'https://')}/index.exp`;
+  let fullManifestUrl = url.replace('exp://', 'https://');
 
   let versionCode = 1;
   let javaPackage = manifest.android.package;
