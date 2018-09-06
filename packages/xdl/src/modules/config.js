@@ -168,6 +168,20 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    libName: 'expo-print-callbacks',
+    sdkVersions: '>=30.0.0',
+    config: {
+      ios: {
+        versionable: false,
+        detachable: false,
+        includeInExpoClient: false,
+      },
+      android: {
+        versionable: false,
+      },
+    },
+  },
+  {
     podName: 'EXReactNativeAdapter',
     libName: 'expo-react-native-adapter',
     sdkVersions: '>=29.0.0',
