@@ -77,10 +77,7 @@ export default (program: any) => {
       "The absolute or relative url that will host the asset files. Default is './assets', which will be resolved against the public-url.",
       './assets'
     )
-    .option(
-      '-d, --dump-assetmap',
-      'Dump the asset map for further processing (see TODO:(quin) <INsert doc url here>'
-    )
+    .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
     .option('--dev', 'Configures static files for developing locally using a non-https server')
     .option('--s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
