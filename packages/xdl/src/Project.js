@@ -298,17 +298,13 @@ export async function getLatestReleaseAsync(
 /**
  * Apps exporting for self hosting will have the files created in the project directory the following way:
 .
-├── android-index.exp
-├── assetmap.json
+├── android-index.json
+├── ios-index.json
 ├── assets
-│   ├── 1eccbc4c41d49fd81840aef3eaabe862
-├── bundles
-│   ├── android-01ee6e3ab3e8c16a4d926c91808d5320.js
-│   ├── android-01ee6e3ab3e8c16a4d926c91808d5320.map
-│   ├── ios-ee8206cc754d3f7aa9123b7f909d94ea.js
-│   └── ios-ee8206cc754d3f7aa9123b7f909d94ea.map
-├── debug.html
-└── ios-index.exp
+│   └── 1eccbc4c41d49fd81840aef3eaabe862
+└── bundles
+      ├── android-01ee6e3ab3e8c16a4d926c91808d5320.js
+      └── ios-ee8206cc754d3f7aa9123b7f909d94ea.js
  */
 export async function exportForAppHosting(
   projectRoot: string,
@@ -403,7 +399,7 @@ export async function exportForAppHosting(
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
-    path.join(outputDir, 'android-index.exp'),
+    path.join(outputDir, 'android-index.json'),
     JSON.stringify(exp)
   );
 
@@ -413,7 +409,7 @@ export async function exportForAppHosting(
   await _writeArtifactSafelyAsync(
     projectRoot,
     null,
-    path.join(outputDir, 'ios-index.exp'),
+    path.join(outputDir, 'ios-index.json'),
     JSON.stringify(exp)
   );
 
