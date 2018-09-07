@@ -243,6 +243,7 @@ async function configureAndCopyArchiveAsync(args) {
       });
     }
   }
+  return context.data.manifest;
 }
 
 /**
