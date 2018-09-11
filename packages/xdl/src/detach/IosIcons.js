@@ -5,6 +5,7 @@ import path from 'path';
 
 import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
 import StandaloneContext from './StandaloneContext';
+import { getImageDimensionsMacOSAsync, resizeImageAsync } from '../tools/ImageUtils';
 import logger from './Logger';
 
 function _getAppleIconQualifier(iconSize: number, iconResolution: number): string {
@@ -38,7 +39,6 @@ async function _saveDefaultIconToPathAsync(context: StandaloneContext, path: str
       throw new Error('Cannot save icon because manifest has no iconUrl or ios.iconUrl key.');
     }
   }
-  return;
 }
 
 /**
@@ -52,9 +52,6 @@ async function createAndWriteIconsToPathAsync(
   context: StandaloneContext,
   destinationIconPath: string
 ) {
-  if (process.platform !== 'darwin' && _resizeImageAsync === _resizeImageWithSipsAsync) {
-    logger.warn('`sips` utility may or may not work outside of macOS');
-  }
   let defaultIconFilename = 'exp-icon.png';
   try {
     await _saveDefaultIconToPathAsync(context, path.join(destinationIconPath, defaultIconFilename));
@@ -119,7 +116,7 @@ async function createAndWriteIconsToPathAsync(
             cwd: destinationIconPath,
           });
           try {
-            await _resizeImageAsync(iconSizePx, iconFilename, destinationIconPath);
+            await resizeImageAsync(iconSizePx, iconFilename, destinationIconPath);
           } catch (e) {
             throw new Error(`Failed to resize image: ${iconFilename}. (${e})`);
           }
@@ -151,77 +148,6 @@ async function createAndWriteIconsToPathAsync(
   if (defaultIconFilename) {
     await spawnAsyncThrowError('/bin/rm', [path.join(destinationIconPath, defaultIconFilename)]);
   }
-
-  return;
 }
 
-/**
- *  @return array [ width, height ] or null if that fails for some reason.
- */
-async function getImageDimensionsMacOSAsync(
-  dirname: string,
-  basename: string
-): Promise<?(number[])> {
-  if (process.platform !== 'darwin') {
-    logger.warn('`sips` utility may or may not work outside of macOS');
-  }
-  let dimensions = null;
-  try {
-    dimensions = await _getImageDimensionsAsync(basename, dirname);
-  } catch (_) {}
-  return dimensions;
-}
-
-async function _resizeImageWithSipsAsync(
-  iconSizePx: number,
-  iconFilename: string,
-  destinationIconPath: string
-) {
-  return spawnAsyncThrowError('sips', ['-Z', iconSizePx, iconFilename], {
-    stdio: ['ignore', 'ignore', 'inherit'], // only stderr
-    cwd: destinationIconPath,
-  });
-}
-
-async function _getImageDimensionsWithSipsAsync(
-  basename: string,
-  dirname: string
-): Promise<number[]> {
-  let childProcess = await spawnAsyncThrowError(
-    'sips',
-    ['-g', 'pixelWidth', '-g', 'pixelHeight', basename],
-    {
-      cwd: dirname,
-    }
-  );
-  // stdout looks something like 'pixelWidth: 1200\n pixelHeight: 800'
-  const components = childProcess.stdout.split(/(\s+)/);
-  return components.map(c => parseInt(c, 10)).filter(n => !isNaN(n));
-}
-
-// Allow us to swap out the default implementations of image functions
-let _resizeImageAsync = _resizeImageWithSipsAsync;
-let _getImageDimensionsAsync = _getImageDimensionsWithSipsAsync;
-
-// Allow users to provide an alternate implementation for our image resize function.
-// This is used internally in order to use sharp instead of sips in standalone builder.
-function setResizeImageFunction(
-  fn: (iconSizePx: number, iconFilename: string, destinationIconPath: string) => Promise<any>
-) {
-  _resizeImageAsync = fn;
-}
-
-// Allow users to provide an alternate implementation for our image dimensions function.
-// This is used internally in order to use sharp instead of sips in standalone builder.
-function setGetImageDimensionsFunction(
-  fn: (basename: string, dirname: string) => Promise<?(number[])>
-) {
-  _getImageDimensionsAsync = fn;
-}
-
-export {
-  createAndWriteIconsToPathAsync,
-  getImageDimensionsMacOSAsync,
-  setResizeImageFunction,
-  setGetImageDimensionsFunction,
-};
+export { createAndWriteIconsToPathAsync };
