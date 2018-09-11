@@ -1,6 +1,7 @@
 /**
  * @flow
  */
+import fs from 'fs-extra';
 import validator from 'validator';
 import path from 'path';
 import { Project, UrlUtils } from 'xdl';
@@ -10,6 +11,13 @@ import { installExitHooks } from '../exit';
 import CommandError from '../CommandError';
 
 export async function action(projectDir: string, options: Options = {}) {
+  const outputPath = path.resolve(projectDir, options.outputDir);
+  if (fs.existsSync(outputPath)) {
+    throw new CommandError(
+      'OUTPUT_DIR_EXISTS',
+      `Output directory ${outputPath} already exists. Aborting export.`
+    );
+  }
   if (!options.publicUrl) {
     throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
   }
@@ -59,6 +67,11 @@ export async function action(projectDir: string, options: Options = {}) {
   log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
 
+function collect(val, memo) {
+  memo.push(val);
+  return memo;
+}
+
 export default (program: any) => {
   program
     .command('export [project-dir]')
@@ -80,4 +93,34 @@ export default (program: any) => {
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .asyncActionProjectDir(action, false, true);
+
+  program
+    .command('export:merge [project-dir]')
+    .description('Merge multiple exported apps into one.')
+    .option('-s, --source-dir [dir]', 'A repeatable source directory', collect, [])
+    .option(
+      '--output-dir <dir>',
+      'The directory to export the static files to. Default directory is `dist`',
+      'dist'
+    )
+    .asyncActionProjectDir(async (projectDir, options) => {
+      const outputPath = path.resolve(projectDir, options.outputDir);
+      if (fs.existsSync(outputPath)) {
+        throw new CommandError(
+          'OUTPUT_DIR_EXISTS',
+          `Output directory ${outputPath} already exists. Aborting export:merge.`
+        );
+      }
+
+      if (!options.outputDir) {
+        throw new CommandError('MISSING_OUTPUT_DIR', 'outputDir must be specified.');
+      }
+      if (!options.sourceDir || options.sourceDir.length === 0) {
+        throw new CommandError('MISSING_SOURCE_DIR', 'At least one sourceDir must be specified.');
+      }
+
+      log(`Starting project merge of ${JSON.stringify(options.sourceDir)} to ${options.outputDir}`);
+      await Project.mergeAppDistributions(projectDir, options.sourceDir, options.outputDir);
+      log(`Project merge was successful. Your merged files can be found in ${options.outputDir}`);
+    });
 };
