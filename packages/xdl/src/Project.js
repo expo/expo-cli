@@ -1,6 +1,7 @@
 /**
  * @flow
  */
+import JsonFile from '@expo/json-file';
 import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import crypto from 'crypto';
@@ -18,6 +19,7 @@ import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
 import Request from 'request-promise-native';
+import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
 import split from 'split';
 import treekill from 'tree-kill';
@@ -293,6 +295,85 @@ export async function getLatestReleaseAsync(
   } else {
     return null;
   }
+}
+
+// Takes multiple exported apps in sourceDirs and coalesces them to one app in outputDir
+export async function mergeAppDistributions(
+  projectRoot: string,
+  sourceDirs: Array<string>,
+  outputDir: string
+) {
+  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+  await fs.ensureDir(assetPathToWrite);
+  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+  await fs.ensureDir(bundlesPathToWrite);
+
+  // merge files from bundles and assets
+  const androidIndexes = [];
+  const iosIndexes = [];
+
+  for (let sourceDir of sourceDirs) {
+    const promises = [];
+
+    // copy file over to assetPath
+    const sourceAssetDir = path.resolve(projectRoot, path.join(sourceDir, 'assets'));
+    const outputAssetDir = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+    const assetPromise = fs.copy(sourceAssetDir, outputAssetDir);
+    promises.push(assetPromise);
+
+    // copy files over to bundlePath
+    const sourceBundleDir = path.resolve(projectRoot, path.join(sourceDir, 'bundles'));
+    const outputBundleDir = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+    const bundlePromise = fs.copy(sourceBundleDir, outputBundleDir);
+    promises.push(bundlePromise);
+
+    await Promise.all(promises);
+
+    // put index.jsons into memory
+    const androidIndexPath = path.resolve(projectRoot, path.join(sourceDir, 'android-index.json'));
+    const androidIndex = await new JsonFile(androidIndexPath).readAsync();
+    if (!androidIndex.sdkVersion) {
+      throw new XDLError(
+        ErrorCode.INVALID_MANIFEST,
+        `Invalid index.json, must specify an sdkVersion at ${androidIndexPath}`
+      );
+    }
+    androidIndexes.push(androidIndex);
+
+    const iosIndexPath = path.resolve(projectRoot, path.join(sourceDir, 'ios-index.json'));
+    const iosIndex = await new JsonFile(iosIndexPath).readAsync();
+    if (!iosIndex.sdkVersion) {
+      throw new XDLError(
+        ErrorCode.INVALID_MANIFEST,
+        `Invalid index.json, must specify an sdkVersion at ${iosIndexPath}`
+      );
+    }
+    iosIndexes.push(iosIndex);
+  }
+
+  // sort indexes by descending sdk value
+  const sortedAndroidIndexes = androidIndexes.sort((index1, index2) => {
+    return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
+  });
+
+  const sortedIosIndexes = iosIndexes.sort((index1, index2) => {
+    return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
+  });
+
+  // Save the json arrays to disk
+  await _writeArtifactSafelyAsync(
+    projectRoot,
+    null,
+    path.join(outputDir, 'android-index.json'),
+    JSON.stringify(sortedAndroidIndexes)
+  );
+
+  await _writeArtifactSafelyAsync(
+    projectRoot,
+    null,
+    path.join(outputDir, 'ios-index.json'),
+    JSON.stringify(sortedIosIndexes)
+  );
 }
 
 /**
