@@ -12,6 +12,7 @@ import _ from 'lodash';
 import globby from 'globby';
 import uuid from 'uuid';
 
+import { createAndWriteIconsToPathAsync } from './AndroidIcons';
 import * as AssetBundle from './AssetBundle';
 import * as ExponentTools from './ExponentTools';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
@@ -349,49 +350,6 @@ function shellPathForContext(context: StandaloneContext) {
   }
 }
 
-async function copyIconsToResSubfoldersAsync(
-  resDirPath,
-  folderPrefix,
-  folderSuffix,
-  fileName,
-  iconUrl,
-  isLocalUrl
-) {
-  return Promise.all(
-    imageKeys.map(async key => {
-      try {
-        const dirPath = path.join(resDirPath, `${folderPrefix}${key}${folderSuffix}`);
-        fs.accessSync(dirPath, fs.constants.F_OK);
-        if (isLocalUrl) {
-          return fs.copy(iconUrl, path.join(dirPath, fileName));
-        }
-        return saveUrlToPathAsync(iconUrl, path.join(dirPath, fileName));
-      } catch (e) {
-        // directory does not exist, so ignore
-      }
-    })
-  );
-}
-
-async function regexFileInResSubfoldersAsync(
-  oldText,
-  newText,
-  resDirPath,
-  folderPrefix,
-  folderSuffix,
-  fileName
-) {
-  return Promise.all(
-    imageKeys.map(async key => {
-      return regexFileAsync(
-        oldText,
-        newText,
-        path.join(resDirPath, `${folderPrefix}${key}${folderSuffix}`, fileName)
-      );
-    })
-  );
-}
-
 export async function runShellAppModificationsAsync(
   context: StandaloneContext,
   isDetached: boolean = false
@@ -422,36 +380,13 @@ export async function runShellAppModificationsAsync(
   }
 
   let name = manifest.name;
-  let iconUrl =
-    manifest.android && manifest.android.iconUrl ? manifest.android.iconUrl : manifest.iconUrl;
   let scheme = manifest.scheme || (manifest.detach && manifest.detach.scheme);
   let bundleUrl: ?string = manifest.bundleUrl;
   let isFullManifest = !!bundleUrl;
-  let notificationIconUrl = manifest.notification ? manifest.notification.iconUrl : null;
   let version = manifest.version ? manifest.version : '0.0.0';
   let backgroundImages = backgroundImagesForApp(shellPath, manifest, isDetached);
   let splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
   let updatesDisabled = manifest.updates && manifest.updates.enabled === false;
-
-  if (isDetached) {
-    // manifest is actually just app.json in this case, so iconUrl fields don't exist
-    iconUrl = manifest.android && manifest.android.icon ? manifest.android.icon : manifest.icon;
-    notificationIconUrl = manifest.notification ? manifest.notification.icon : null;
-  }
-
-  let iconBackgroundUrl;
-  let iconBackgroundColor;
-  let iconForegroundUrl;
-  if (manifest.android && manifest.android.adaptiveIcon) {
-    iconBackgroundColor = manifest.android.adaptiveIcon.backgroundColor;
-    if (isDetached) {
-      iconForegroundUrl = manifest.android.adaptiveIcon.foregroundImage;
-      iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImage;
-    } else {
-      iconForegroundUrl = manifest.android.adaptiveIcon.foregroundImageUrl;
-      iconBackgroundUrl = manifest.android.adaptiveIcon.backgroundImageUrl;
-    }
-  }
 
   // Clean build directories
   await fs.remove(path.join(shellPath, 'app', 'build'));
@@ -695,8 +630,7 @@ export async function runShellAppModificationsAsync(
 
   // Change stripe schemes and add meta-data
   const randomID = uuid.v4();
-  const newScheme =
-    `<meta-data android:name="standaloneStripeScheme" android:value="${randomID}" />`;
+  const newScheme = `<meta-data android:name="standaloneStripeScheme" android:value="${randomID}" />`;
   await regexFileAsync(
     '<!-- ADD HERE STRIPE SCHEME META DATA -->',
     newScheme,
@@ -918,113 +852,12 @@ export async function runShellAppModificationsAsync(
     )
   );
 
-  // Icon
-  if (iconUrl || iconForegroundUrl) {
-    if (iconUrl) {
-      (await globby(['**/ic_launcher.png'], {
-        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-        absolute: true,
-      })).forEach(filePath => {
-        fs.removeSync(filePath);
-      });
-
-      await copyIconsToResSubfoldersAsync(
-        path.join(shellPath, 'app', 'src', 'main', 'res'),
-        'mipmap-',
-        '',
-        'ic_launcher.png',
-        iconUrl,
-        isDetached
-      );
-    }
-
-    if (iconForegroundUrl) {
-      (await globby(['**/ic_foreground.png'], {
-        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-        absolute: true,
-      })).forEach(filePath => {
-        fs.removeSync(filePath);
-      });
-
-      await copyIconsToResSubfoldersAsync(
-        path.join(shellPath, 'app', 'src', 'main', 'res'),
-        'mipmap-',
-        '-v26',
-        'ic_foreground.png',
-        iconForegroundUrl,
-        isDetached
-      );
-    } else {
-      // the OS's default method of coercing normal app icons to adaptive
-      // makes them look quite different from using an actual adaptive icon (with xml)
-      // so we need to support falling back to the old version on Android 8
-      (await globby(['**/mipmap-*-v26/*'], {
-        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-        absolute: true,
-        dot: true,
-      })).forEach(filePath => {
-        fs.removeSync(filePath);
-      });
-
-      try {
-        (await globby(['**/mipmap-*-v26'], {
-          cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-          absolute: true,
-        })).forEach(filePath => {
-          fs.rmdirSync(filePath);
-        });
-      } catch (e) {
-        // we don't want the entire detach script to fail if node
-        // can't remove the directories for whatever reason.
-        // people can remove the directories themselves if they need
-        // so just fail silently here
-      }
-    }
-  }
-
-  if (iconBackgroundUrl) {
-    await copyIconsToResSubfoldersAsync(
-      path.join(shellPath, 'app', 'src', 'main', 'res'),
-      'mipmap-',
-      '-v26',
-      'ic_background.png',
-      iconBackgroundUrl,
-      isDetached
-    );
-
-    await regexFileInResSubfoldersAsync(
-      '@color/iconBackground',
-      '@mipmap/ic_background',
-      path.join(shellPath, 'app', 'src', 'main', 'res'),
-      'mipmap-',
-      '-v26',
-      'ic_launcher.xml'
-    );
-  } else if (iconBackgroundColor) {
-    await regexFileAsync(
-      '"iconBackground">#FFFFFF',
-      `"iconBackground">${iconBackgroundColor}`,
-      path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
-    );
-  }
-
-  if (notificationIconUrl) {
-    (await globby(['**/shell_notification_icon.png'], {
-      cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-      absolute: true,
-    })).forEach(filePath => {
-      fs.removeSync(filePath);
-    });
-
-    await copyIconsToResSubfoldersAsync(
-      path.join(shellPath, 'app', 'src', 'main', 'res'),
-      'drawable-',
-      '',
-      'shell_notification_icon.png',
-      notificationIconUrl,
-      isDetached
-    );
-  }
+  // Icons
+  createAndWriteIconsToPathAsync(
+    context,
+    path.join(shellPath, 'app', 'src', 'main', 'res'),
+    isDetached
+  );
 
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {

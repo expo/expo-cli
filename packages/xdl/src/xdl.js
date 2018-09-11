@@ -69,6 +69,9 @@ module.exports = {
   get FsCache() {
     return require('./tools/FsCache');
   },
+  get ImageUtils() {
+    return require('./tools/ImageUtils');
+  },
   get Intercom() {
     return require('./Intercom');
   },
