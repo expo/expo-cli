@@ -411,7 +411,7 @@ async function checkForUpdateAsync() {
       chalk.green(
         chalk.bold(`We've built a brand new CLI for Expo!\nExpo CLI is a drop in replacement for exp.\nInstall: `) + 'npm install -g expo-cli\n' +
         chalk.bold('Use: ') + 'expo --help\n' +
-        chalk.bold('Read more: ') + 'https://blog.expo.io' // TODO: link to release blog post
+        chalk.bold('Read more: ') + 'https://blog.expo.io/expo-cli-2-0-released-a7a9c250e99c'
       )
     );
     return;
