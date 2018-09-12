@@ -371,8 +371,8 @@ export async function exportForAppHosting(
   // Add assetUrl to manifest
   exp.assetUrlOverride = assetUrl;
 
-  // TODO(quin): follow up and write a doc page that explains these fields that users don't specify in app.json
   exp.publishedTime = new Date().toISOString();
+  exp.commitTime = new Date().toISOString();
 
   // generate revisionId and id the same way www does
   const hashIds = new HashIds(uuid.v1(), 10);
