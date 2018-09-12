@@ -406,6 +406,16 @@ function runAsync(programName) {
 }
 
 async function checkForUpdateAsync() {
+  if (packageJSON.name === 'exp') {
+    log.nestedWarn(
+      chalk.green(
+        chalk.bold(`We've built a brand new CLI for Expo!\nExpo CLI is a drop in replacement for exp.\nInstall: `) + 'npm install -g expo-cli\n' +
+        chalk.bold('Use: ') + 'expo --help\n' +
+        chalk.bold('Read more: ') + 'https://blog.expo.io' // TODO: link to release blog post
+      )
+    );
+    return;
+  }
   let { state, current, latest } = await update.checkForUpdateAsync();
   let message;
   switch (state) {
