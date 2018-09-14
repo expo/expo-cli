@@ -234,7 +234,7 @@ async function createAndWriteIconsToPathAsync(
     await regexFileAsync(
       '"iconBackground">#FFFFFF',
       `"iconBackground">${iconBackgroundColor}`,
-      path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
+      path.join(resPath, 'values', 'colors.xml')
     );
   }
 
