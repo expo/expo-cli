@@ -14,7 +14,7 @@ export default program => {
     .option('--event <webhook-type>', 'Type of webhook: [build].')
     .option(
       '--secret <webhook-secret>',
-      'Secret to be passed as a query param (?secret=<webhook-secret>) to the Webhook. It has to be at least 16 characters long.'
+      'Secret to be used to calculate the webhook request payload signature (check docs for more details). It has to be at least 16 characters long.'
     )
     .description(`Set a webhook for the project.`)
     .asyncActionProjectDir(async (projectDir, _options) => {
