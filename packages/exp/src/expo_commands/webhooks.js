@@ -2,6 +2,7 @@ import { URL } from 'url';
 import { Webhooks, Exp } from 'xdl';
 import chalk from 'chalk';
 import _ from 'lodash';
+import inquirer from 'inquirer';
 
 import log from '../log';
 
@@ -19,13 +20,14 @@ export default program => {
     .description(`Set a webhook for the project.`)
     .asyncActionProjectDir(async (projectDir, _options) => {
       const options = _sanitizeOptions(_options);
+      const secret = options.secret ? options.secret : await _askForSecret();
+      const webhookData = { ...options, secret };
       const { args: { remoteFullPackageName: experienceName } } = await Exp.getPublishInfoAsync(
         projectDir
       );
-
-      log(`Setting webhook and secret for ${experienceName}`);
+      log(`Setting ${webhookData.event} webhook and secret for ${experienceName}`);
       try {
-        await Webhooks.setWebhookAsync(experienceName, options);
+        await Webhooks.setWebhookAsync(experienceName, webhookData);
       } catch (e) {
         log.error(e);
         throw new Error('Unable to set webhook and secret for this project.');
@@ -68,7 +70,7 @@ export default program => {
     .option('--event <webhook-type>', 'Type of webhook: [build].')
     .description(`Clear a webhook associated with this project.`)
     .asyncActionProjectDir(async (projectDir, options) => {
-      const event = sanitizeEvent(options.event);
+      const event = _sanitizeEvent(options.event);
       const { args: { remoteFullPackageName: experienceName } } = await Exp.getPublishInfoAsync(
         projectDir
       );
@@ -85,15 +87,13 @@ export default program => {
     }, true);
 };
 
-function _sanitizeOptions(options, eventOnly = false) {
+function _sanitizeOptions(options) {
   const { url, secret, event: _event = 'build' } = options;
 
-  const event = sanitizeEvent(_event, true);
+  const event = _sanitizeEvent(_event, true);
 
-  if (!(url && secret)) {
-    if (!eventOnly) {
-      throw new Error('You must provide both --url and --secret');
-    }
+  if (!url) {
+    throw new Error('You must provide --url parameter');
   } else {
     try {
       // eslint-disable-next-line no-new
@@ -108,16 +108,18 @@ function _sanitizeOptions(options, eventOnly = false) {
       }
     }
 
-    const secretString = String(secret);
-    if (secretString.length < 16 || secretString.length > 1000) {
-      throw new Error('Webhook secret has be at least 16 and not more than 1000 characters long');
+    if (secret) {
+      const secretString = String(secret);
+      if (secretString.length < 16 || secretString.length > 1000) {
+        throw new Error('Webhook secret has be at least 16 and not more than 1000 characters long');
+      }
     }
   }
 
   return { url, secret, event };
 }
 
-function sanitizeEvent(event, required = false) {
+function _sanitizeEvent(event, required = false) {
   if (!event) {
     if (required) {
       throw new Error('Webhook type has to be provided');
@@ -132,4 +134,18 @@ function sanitizeEvent(event, required = false) {
   }
 
   return event;
+}
+
+async function _askForSecret() {
+  const { secret } = await inquirer.prompt({
+    type: 'password',
+    name: 'secret',
+    message: 'Webhook secret (at least 16 and not more than 1000 characters):',
+  });
+  if (secret.length < 16 || secret.length > 1000) {
+    log.error('Webhook secret has be at least 16 and not more than 1000 characters long');
+    return await _askForSecret();
+  } else {
+    return secret;
+  }
 }
