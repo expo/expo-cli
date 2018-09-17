@@ -15,5 +15,8 @@ module.exports = () => {
     validate_apple_certs: p('validate_apple_certs'),
     validate_apple_credentials: p('validate_apple_credentials'),
     validate_apple_push_certs: p('validate_apple_push_certs'),
+    app_supply: p('app_supply'),
+    app_produce: p('app_produce'),
+    app_deliver: p('app_deliver'),
   };
 };

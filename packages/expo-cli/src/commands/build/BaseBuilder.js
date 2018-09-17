@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import fp from 'lodash/fp';
 import simpleSpinner from '@expo/simple-spinner';
 
+import * as UrlUtils from '../utils/url';
 import log from '../../log';
 import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
@@ -112,14 +113,14 @@ Please see the docs (${chalk.underline(
         packageExtension = 'APK';
       }
 
-      log(`### ${i} | ${platform} | ${constructBuildLogsUrl(job.id)} ###`);
+      log(`### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl(job.id)} ###`);
 
       let status;
       switch (job.status) {
         case 'pending':
         case 'sent-to-queue':
           status = `Build waiting in queue...
-You can check the queue length at ${chalk.underline(constructTurtleStatusUrl())}`;
+You can check the queue length at ${chalk.underline(UrlUtils.constructTurtleStatusUrl())}`;
           break;
         case 'started':
           status = 'Build started...';
@@ -259,11 +260,19 @@ ${job.id}
     log('Build started, it may take a few minutes to complete.');
 
     if (buildId) {
-      log(`You can check the queue length at\n ${chalk.underline(constructTurtleStatusUrl())}\n`);
+      log(
+        `You can check the queue length at\n ${chalk.underline(
+          UrlUtils.constructTurtleStatusUrl()
+        )}\n`
+      );
     }
 
     if (buildId) {
-      log(`You can monitor the build at\n\n ${chalk.underline(constructBuildLogsUrl(buildId))}\n`);
+      log(
+        `You can monitor the build at\n\n ${chalk.underline(
+          UrlUtils.constructBuildLogsUrl(buildId)
+        )}\n`
+      );
     }
 
     if (this.options.wait) {
@@ -272,7 +281,7 @@ ${job.id}
       const completedJob = await this.wait(buildId, waitOpts);
       simpleSpinner.stop();
       const artifactUrl = completedJob.artifactId
-        ? constructArtifactUrl(completedJob.artifactId)
+        ? UrlUtils.constructArtifactUrl(completedJob.artifactId)
         : completedJob.artifacts.url;
       log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`);
     } else {
@@ -290,27 +299,5 @@ ${job.id}
         )
       );
     }
-  }
-}
-
-function constructBuildLogsUrl(buildId: string): string {
-  return `${getExpoDomainUrl()}/builds/${buildId}`;
-}
-
-function constructTurtleStatusUrl(): string {
-  return `${getExpoDomainUrl()}/turtle-status`;
-}
-
-function constructArtifactUrl(artifactId: string): string {
-  return `${getExpoDomainUrl()}/artifacts/${artifactId}`;
-}
-
-function getExpoDomainUrl() {
-  if (process.env.EXPO_STAGING) {
-    return `https://staging.expo.io`;
-  } else if (process.env.EXPO_LOCAL) {
-    return `http://expo.test`;
-  } else {
-    return `https://expo.io`;
   }
 }
