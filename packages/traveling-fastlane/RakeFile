@@ -15,7 +15,10 @@ SCRIPTS = [
   'app_management',
   'validate_apple_credentials',
   'funcs',
-  'preload'
+  'preload',
+  'app_deliver',
+  'app_supply',
+  'app_produce'
 ]
 
 desc "Package your app"

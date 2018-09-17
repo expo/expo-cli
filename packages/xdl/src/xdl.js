@@ -75,6 +75,9 @@ module.exports = {
   get ImageUtils() {
     return require('./tools/ImageUtils');
   },
+  get BuildInformation() {
+    return require('./BuildInformation');
+  },
   get Intercom() {
     return require('./Intercom');
   },
