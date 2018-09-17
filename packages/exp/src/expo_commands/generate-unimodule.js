@@ -3,20 +3,22 @@
  */
 import path from 'path';
 import proc from 'child_process';
-import prompt from '../prompt';
 import targz from 'targz';
 import fs from 'fs';
-import copy from 'recursive-copy';
 import fsExtra from 'fs-extra';
 import replace from 'replace';
-import os from 'os';
-const npmVersionOfTemplate = '1.0.1';
+import prompt from '../prompt';
 
-const decompress = async() => {
+const NPM_TEMPLATE_VERSION = '^1.0.1';
+const TEMP_DIR_NAME = `temp-expo-module-template`;
+let archive;
+
+const decompress = async () => {
   return new Promise((resolve, reject) => {
-    targz.decompress({
-        src: `expo-module-template-${npmVersionOfTemplate}.tgz`,
-        dest: 'temp-expo-module-template',
+    targz.decompress(
+      {
+        src: archive,
+        dest: TEMP_DIR_NAME,
       },
       error => {
         if (error) {
@@ -34,96 +36,94 @@ export default (program: any) => {
     .command('generate-unimodule')
     .description('Generate new unimodule.')
     .asyncAction(async () => {
-      let configuration = {
-        jsName: null,
-        podName: null,
-        javaModule: null,
-      };
+      const configuration = await prompt([
+        {
+          name: 'jsName',
+          message: 'How would you like to call your module in JS/NPM? (eg. expo-camera)',
+        },
+        {
+          name: 'podName',
+          message:
+            'How would you like to call your module in Cocoapods? (eg. EXCamera) (leave empty to not include iOS part)',
+        },
+        {
+          name: 'javaModule',
+          message: 'How would you like to call your module in Java? (eg. expo.modules.camera)',
+        },
+      ]);
 
-      configuration.jsName = (await prompt({
-        message: 'How would you like to call your module in JS/NPM? (eg. expo-camera)',
-        name: 'jsName'
-      })).jsName;
-
-      configuration.podName = (await prompt({
-        message: 'How would you like to call your module in Cocoapods? (eg. EXCamera) (leave empty to not include iOS part)',
-        name: 'podName'
-      })).podName;
-
-      configuration.javaModule = (await prompt({
-        message: 'How would you like to call your module in Java? (eg. expo.modules.camera)',
-        name: 'javaModule'
-      })).javaModule;
-
-      proc.execSync(`npm pack expo-module-template@${npmVersionOfTemplate}`);
-      if (!fs.existsSync('temp-expo-module-template')) {
-          fs.mkdirSync('temp-expo-module-template');
+      archive = proc
+        .execSync(`npm pack expo-module-template@${NPM_TEMPLATE_VERSION}`)
+        .toString()
+        .slice(0, -1);
+      if (!fs.existsSync(TEMP_DIR_NAME)) {
+        fs.mkdirSync(TEMP_DIR_NAME);
       }
       await decompress();
 
-      fs.unlinkSync(`expo-module-template-${npmVersionOfTemplate}.tgz`);
-      await copy(path.join(`temp-expo-module-template`, `package`), `${configuration.jsName}`);
-      await fsExtra.remove('temp-expo-module-template');
+      fs.unlinkSync(archive);
+      await fsExtra.copy(path.join(TEMP_DIR_NAME, `package`), `${configuration.jsName}`);
+      await fsExtra.remove(TEMP_DIR_NAME);
 
       if (configuration.podName) {
-          fs.renameSync(
-            path.join(`${configuration.jsName}`, `ios`, `EXModuleTemplate.podspec`),
-            path.join(`${configuration.jsName}`, `ios`, `${configuration.podName}.podspec`)
-          );
+        fs.renameSync(
+          path.join(configuration.jsName, `ios`, `EXModuleTemplate.podspec`),
+          path.join(configuration.jsName, `ios`, `${configuration.podName}.podspec`)
+        );
 
-          fs.renameSync(
-            path.join(`${configuration.jsName}`, `ios`, `EXModuleTemplate`, `EXModuleTemplate.h`),
-            path.join(`${configuration.jsName}`, `ios`, `EXModuleTemplate`, `${configuration.podName}.h`)
-          );
+        fs.renameSync(
+          path.join(configuration.jsName, `ios`, `EXModuleTemplate`, `EXModuleTemplate.h`),
+          path.join(configuration.jsName, `ios`, `EXModuleTemplate`, `${configuration.podName}.h`)
+        );
 
-          fs.renameSync(
-            path.join(`${configuration.jsName}`, `ios`, `EXModuleTemplate`, `EXModuleTemplate.m`),
-            path.join(`${configuration.jsName}`, `ios`, `EXModuleTemplate`, `${configuration.podName}.m`)
-          );
+        fs.renameSync(
+          path.join(configuration.jsName, `ios`, `EXModuleTemplate`, `EXModuleTemplate.m`),
+          path.join(configuration.jsName, `ios`, `EXModuleTemplate`, `${configuration.podName}.m`)
+        );
 
-          fs.renameSync(
-            path.join(`${configuration.jsName}`, `ios`, `EXModuleTemplate`),
-            path.join(`${configuration.jsName}`, `ios`, `${configuration.podName}`)
-          );
+        fs.renameSync(
+          path.join(configuration.jsName, `ios`, `EXModuleTemplate`),
+          path.join(configuration.jsName, `ios`, `${configuration.podName}`)
+        );
 
-          fs.renameSync(
-            path.join(`${configuration.jsName}`, `ios`, `EXModuleTemplate.xcodeproj`),
-            path.join(`${configuration.jsName}`, `ios`, `${configuration.podName}.xcodeproj`)
-          );
+        fs.renameSync(
+          path.join(configuration.jsName, `ios`, `EXModuleTemplate.xcodeproj`),
+          path.join(configuration.jsName, `ios`, `${configuration.podName}.xcodeproj`)
+        );
       } else {
-        await fsExtra.remove(path.join(`${configuration.jsName}`,`ios`));
+        await fsExtra.remove(path.join(configuration.jsName, `ios`));
       }
 
-      await replace({
-        regex: "expo-module-template",
-        replacement: `${configuration.jsName}`,
-        paths:[`${configuration.jsName}`],
+      replace({
+        regex: 'expo-module-template',
+        replacement: configuration.jsName,
+        paths: [configuration.jsName],
         recursive: true,
-        slient: true,
+        silent: true,
       });
 
-      await replace({
-        regex: "expo.modules.template",
-        replacement: `${configuration.javaModule}`,
-        paths:[`${configuration.jsName}`],
+      replace({
+        regex: 'expo.modules.template',
+        replacement: configuration.javaModule,
+        paths: [configuration.jsName],
         recursive: true,
-        slient: true,
+        silent: true,
       });
 
-      await replace({
-        regex: "EXModuleTemplate",
-        replacement: `${configuration.podName}`,
-        paths:[`${configuration.jsName}`],
+      replace({
+        regex: 'EXModuleTemplate',
+        replacement: configuration.podName,
+        paths: [configuration.jsName],
         recursive: true,
-        slient: true,
+        silent: true,
       });
 
-      await replace({
-        regex: `"version": "[0-9.]+",`,
+      replace({
+        regex: `"version": ".*",`,
         replacement: `"version": "1.0.0",`,
-        paths:[path.join(`${configuration.jsName}`, `package.json`)],
+        paths: [path.join(configuration.jsName, `package.json`)],
         recursive: false,
-        slient: true,
+        silent: true,
       });
 
       const javaDir = path.join(
@@ -136,11 +136,8 @@ export default (program: any) => {
       );
       fsExtra.mkdirpSync(javaDir);
 
-      const placeholderPath = path.join(
-        `${javaDir}`,
-        `Placeholder.java`
-      );
-      fs.appendFileSync(`${placeholderPath}`, `package ${configuration.javaModule};${os.EOL}`);
-      fs.appendFileSync(`${placeholderPath}`, `class Placeholder {}`);
+      const placeholderPath = path.join(javaDir, `Placeholder.java`);
+      fs.appendFileSync(placeholderPath, `package ${configuration.javaModule};\n`);
+      fs.appendFileSync(placeholderPath, `class Placeholder {}`);
     });
 };
