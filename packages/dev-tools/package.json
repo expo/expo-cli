@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
