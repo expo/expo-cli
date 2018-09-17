@@ -28,6 +28,20 @@ const defaultUniversalModuleConfig = {
   },
 };
 
+
+const firebaseModuleConfig = {
+  ios: {
+    versionable: false,
+    detachable: false,
+    includeInExpoClient: false,
+  },
+  android: {
+    versionable: false,
+    detachable: false,
+    includeInExpoClient: false,
+  },
+};
+
 const expoSdkUniversalModules = [
   // native modules
   {
@@ -95,6 +109,96 @@ const expoSdkUniversalModules = [
     podName: 'EXFileSystemInterface',
     libName: 'expo-file-system-interface',
     sdkVersions: '>=29.0.0',
+  },
+  {
+    podName: 'EXFirebaseAnalytics',
+    libName: 'expo-firebase-analytics',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  { 
+    podName: 'EXFirebaseApp',
+    libName: 'expo-firebase-app',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  { 
+    podName: 'EXFirebaseAuth',
+    libName: 'expo-firebase-auth',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  { 
+    podName: 'EXFirebaseCrashlytics',
+    libName: 'expo-firebase-crashlytics',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  {
+    podName: 'EXFirebaseDatabase',
+    libName: 'expo-firebase-database',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  {
+    podName: 'EXFirebaseFirestore',
+    libName: 'expo-firebase-firestore',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  {
+    podName: 'EXFirebaseFunctions',
+    libName: 'expo-firebase-functions',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  {
+    podName: 'EXFirebaseInstanceID',
+    libName: 'expo-firebase-instance-id',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  { 
+    podName: 'EXFirebaseInvites',
+    libName: 'expo-firebase-invites',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  { 
+    podName: 'EXFirebaseLinks',
+    libName: 'expo-firebase-links',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  { 
+    podName: 'EXFirebaseMessaging',
+    libName: 'expo-firebase-messaging',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  { 
+    podName: 'EXFirebaseNotifications',
+    libName: 'expo-firebase-notifications',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  {
+    podName: 'EXFirebasePerformance',
+    libName: 'expo-firebase-performance',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  {
+    podName: 'EXFirebaseRemoteConfig',
+    libName: 'expo-firebase-remote-config',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig,
+  },
+  { 
+    podName: 'EXFirebaseStorage', 
+    libName: 'expo-firebase-storage',
+    sdkVersions: '>=31.0.0',
+    config: firebaseModuleConfig 
   },
   {
     podName: 'EXFont',
