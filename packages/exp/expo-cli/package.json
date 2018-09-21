@@ -85,6 +85,7 @@
     "slash": "^1.0.0",
     "source-map-support": "^0.4.1",
     "untildify": "^3.0.2",
+    "validator": "^10.4.0",
     "wordwrap": "^1.0.0",
     "xdl": "^51.3.1"
   },
