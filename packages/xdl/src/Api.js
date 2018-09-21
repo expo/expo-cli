@@ -224,7 +224,12 @@ export default class ApiClient {
   static port: number = Config.api.port || 80;
 
   static _versionCache = new Cacher(
-    () => ApiClient.callPathAsync('/--/api/v2/versions'),
+    () =>
+      ApiClient.callPathAsync('/--/api/v2/versions', null, null, {
+        headers: {
+          'Expo-Session': '',
+        },
+      }),
     'versions.json',
     0,
     path.join(__dirname, '../caches/versions.json')
