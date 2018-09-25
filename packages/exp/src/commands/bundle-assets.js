@@ -10,7 +10,7 @@ export default program => {
     .option('--dest [dest]', 'Destination directory for assets')
     .option('--platform [platform]', 'detached project platform')
     .description(
-      'Bundles assets for a detached app. This command should be exectuted from xcode or gradle.'
+      'Bundles assets for a detached app. This command should be executed from xcode or gradle.'
     )
     .asyncActionProjectDir(action, true);
 };
