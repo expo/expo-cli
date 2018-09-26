@@ -1,9 +1,9 @@
 {
-  "name": "exp",
-  "version": "57.2.1",
+  "name": "expo-cli",
+  "version": "2.1.3",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
-  "main": "build/exp.js",
+  "main": "build/expo.js",
   "files": ["build", "bin"],
   "scripts": {
     "start": "yarn run build && yarn run watch",
@@ -13,7 +13,8 @@
     "pkg": "pkg ."
   },
   "bin": {
-    "exp": "./bin/exp.js"
+    "expo": "./bin/expo.js",
+    "expo-cli": "./bin/expo.js"
   },
   "repository": {
     "type": "git",
@@ -23,7 +24,7 @@
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/expo/exp/issues"
+    "url": "https://github.com/expo/expo-cli/issues"
   },
   "homepage": "https://github.com/expo/exp#readme",
   "engines": {
@@ -52,7 +53,8 @@
     "rimraf": "^2.5.2"
   },
   "dependencies": {
-    "@expo/bunyan": "^1.8.10",
+    "@expo/bunyan": "3.0.2",
+    "@expo/dev-tools": "^0.1.4",
     "@expo/json-file": "^8.0.1",
     "@expo/simple-spinner": "^1.0.2",
     "@expo/spawn-async": "^1.3.0",
@@ -63,7 +65,7 @@
     "delay-async": "^1.0.0",
     "envinfo": "^3.11.1",
     "es6-error": "^3.0.0",
-    "fs-extra": "^4.0.2",
+    "fs-extra": "^6.0.1",
     "glob": "^7.0.3",
     "indent-string": "^3.1.0",
     "inquirer": "^5.0.1",
