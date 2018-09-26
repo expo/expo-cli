@@ -24,10 +24,7 @@ export async function action(projectDir: string, options: Options = {}) {
 
   let startedOurOwn = false;
   if (status !== 'running') {
-    log(
-      `Unable to find an existing ${options.parent
-        .name} instance for this directory, starting a new one...`
-    );
+    log('Unable to find an existing Expo CLI instance for this directory, starting a new one...');
 
     installExitHooks(projectDir);
 
