@@ -4,10 +4,7 @@
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
-  "files": [
-    "build",
-    "bin"
-  ],
+  "files": ["build", "bin"],
   "scripts": {
     "start": "yarn run build && yarn run watch",
     "build": "gulp clean && gulp build",
@@ -22,10 +19,7 @@
     "type": "git",
     "url": "git+https://github.com/expo/exp.git"
   },
-  "keywords": [
-    "expo",
-    "react-native"
-  ],
+  "keywords": ["expo", "react-native"],
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
@@ -79,7 +73,6 @@
     "ora": "^1.3.0",
     "progress": "^2.0.0",
     "qrcode-terminal": "^0.11.0",
-    "recursive-copy": "^2.0.9",
     "replace": "^1.0.0",
     "semver": "^5.0.1",
     "slash": "^1.0.0",
