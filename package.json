@@ -1,6 +1,6 @@
 {
   "private": true,
-  "workspaces": ["packages/*", "packages/exp/expo-cli"],
+  "workspaces": ["packages/*"],
   "scripts": {
     "bootstrap": "bin/bootstrap"
   },
