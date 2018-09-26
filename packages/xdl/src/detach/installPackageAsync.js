@@ -1,6 +1,7 @@
 // @flow
 
 import spawnAsync from '@expo/spawn-async';
+import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -18,7 +19,11 @@ export default async function installPackageAsync(
   packageVersion?: string,
   options?: any = {}
 ): Promise<InstallResult> {
-  const useYarn: boolean = await fs.pathExists(path.join(appPath, 'yarn.lock'));
+  const packageLockJsonExists: boolean = await fs.pathExists(
+    path.join(appPath, 'package-lock.json')
+  );
+  const yarnExists = await commandExists('yarnpkg');
+  const useYarn = yarnExists && !packageLockJsonExists;
 
   let command = '';
   let args = [];

@@ -40,6 +40,7 @@
     "axios": "0.16.2",
     "body-parser": "^1.15.2",
     "chalk": "^2.4.1",
+    "command-exists": "^1.2.7",
     "concat-stream": "^1.6.0",
     "decache": "^4.1.0",
     "delay-async": "^1.0.0",
