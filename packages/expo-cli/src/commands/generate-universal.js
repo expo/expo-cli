@@ -7,6 +7,8 @@ import targz from 'targz';
 import fs from 'fs';
 import fsExtra from 'fs-extra';
 import replace from 'replace';
+
+import CommandError from '../CommandError';
 import prompt from '../prompt';
 
 const NPM_TEMPLATE_VERSION = '^1.0.1';
@@ -33,18 +35,24 @@ const decompress = async () => {
 
 export default (program: any) => {
   program
-    .command('generate-unimodule')
-    .description('Generate new unimodule.')
-    .asyncAction(async () => {
+    .command('generate <template>')
+    .description('Generate a module from a template.')
+    .asyncAction(async template => {
+      if (template !== 'universal') {
+        throw new CommandError(
+          'UNKNOWN_TEMPLATE',
+          `Template not found: '${template}'. Valid options are: universal`
+        );
+      }
       const configuration = await prompt([
         {
           name: 'jsName',
-          message: 'How would you like to call your module in JS/NPM? (eg. expo-camera)',
+          message: 'How would you like to call your module in JS/npm? (eg. expo-camera)',
         },
         {
           name: 'podName',
           message:
-            'How would you like to call your module in Cocoapods? (eg. EXCamera) (leave empty to not include iOS part)',
+            'How would you like to call your module in CocoaPods? (eg. EXCamera) (leave empty to not include iOS part)',
         },
         {
           name: 'javaModule',
