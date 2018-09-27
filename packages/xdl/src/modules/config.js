@@ -120,7 +120,6 @@ const expoSdkUniversalModules = [
     podName: 'EXFirebaseApp',
     libName: 'expo-firebase-app',
     sdkVersions: '>=31.0.0',
-    config: firebaseModuleConfig,
   },
   { 
     podName: 'EXFirebaseAuth',
