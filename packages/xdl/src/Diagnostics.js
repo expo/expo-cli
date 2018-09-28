@@ -55,8 +55,11 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   try {
     let settingsJsonFile = new JsonFile(path.join(tempDir, UserSettings.SETTINGS_FILE_NAME));
     let settingsJson = await settingsJsonFile.readAsync();
-    settingsJson.accessToken = 'redacted';
-    settingsJson.auth = 'redacted';
+    for (let key of ['accessToken', 'auth', 'uuid', 'sendTo']) {
+      if (settingsJson[key]) {
+        settingsJson[key] = 'redacted';
+      }
+    }
     await settingsJsonFile.writeAsync(settingsJson);
   } catch (e) {
     console.error(e);
