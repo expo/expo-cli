@@ -293,7 +293,7 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
 `;
 }
 
-function _renderUnversionedPostinstall() {
+function _renderUnversionedPostinstall(sdkVersion) {
   // TODO: switch to `installer.pods_project.targets.each` in postinstall
   // see: https://stackoverflow.com/questions/37160688/set-deployment-target-for-cocoapodss-pod
   const podsToChangeDeployTarget = [
@@ -309,18 +309,22 @@ function _renderUnversionedPostinstall() {
     'JKBigInteger2',
   ];
   const podsToChangeRB = `[${podsToChangeDeployTarget.map(pod => `'${pod}'`).join(',')}]`;
-
+  const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+  
+  // SDK31 drops support for iOS 9.0
+  const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0';
+  
   return `
     if ${podsToChangeRB}.include? target.pod_name
       target.native_target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
       end
     end
     # Can't specify this in the React podspec because we need
     # to use those podspecs for detached projects which don't reference ExponentCPP.
     if target.pod_name.start_with?('React')
       target.native_target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '9.0'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
         config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
       end
     end
@@ -468,7 +472,7 @@ async function renderPodfileAsync(
       rnDependencyOptions,
       sdkVersion
     ),
-    PODFILE_UNVERSIONED_POSTINSTALL: _renderUnversionedPostinstall(),
+    PODFILE_UNVERSIONED_POSTINSTALL: _renderUnversionedPostinstall(sdkVersion),
     PODFILE_DETACHED_POSTINSTALL: _renderDetachedPostinstall(sdkVersion, false),
     PODFILE_DETACHED_SERVICE_POSTINSTALL: _renderDetachedPostinstall(sdkVersion, true),
     PODFILE_VERSIONED_RN_DEPENDENCIES: versionedDependencies,
