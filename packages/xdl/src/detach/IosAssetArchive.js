@@ -44,7 +44,7 @@ async function buildAssetArchiveAsync(
   // compile asset archive
   let xcrunargs = [].concat(
     ['actool'],
-    ['--minimum-deployment-target', '10.0'],
+    ['--minimum-deployment-target', '9.0'],
     ['--platform', 'iphoneos'],
     ['--app-icon', 'AppIcon'],
     ['--output-partial-info-plist', 'assetcatalog_generated_info.plist'],
