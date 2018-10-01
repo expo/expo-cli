@@ -6,7 +6,7 @@ at https://github.com/expo/expo. Thanks!
 
 ## Installation
 
-[Installation instructions and documentation here.](https://docs.expo.io/versions/latest/guides/exp-cli.html)
+[Installation instructions and documentation here.](https://docs.expo.io/versions/latest/guides/expo-cli.html)
 
 ## Getting Started
 
