@@ -37,8 +37,7 @@ Keeping the `master` releasable means that changes merged to it need to be:
 ## Setting up the repository for development
 
 1. Clone the repository.
-2. Run `yarn`. (Installs dependencies.)
-3. Run `yarn bootstrap`. (Links and builds packages.)
+2. Run `yarn run bootstrap`. (Installs dependencies, links and builds packages.)
 
 ## Submitting a pull request
 
@@ -51,4 +50,4 @@ To submit a pull request:
 
 ## Publishing a release
 
-TBD
+To publish a new release, run `yarn run publish`. This command will bump the versions of all packages with changes since the previous release and publish them in the correct order. For each changed package, it will ask, if the changes require a new _major_ version (breaking changes), _minor_ version (new backwards compatible functionality) or just a _patch_ version (backwards compatible bug fixes).

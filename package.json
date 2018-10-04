@@ -2,9 +2,12 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "bootstrap": "bin/bootstrap"
+    "bootstrap": "lerna bootstrap",
+    "postbootstrap": "lerna run --stream prepare",
+    "prebootstrap": "yarn",
+    "publish": "lerna publish"
   },
   "dependencies": {
-    "lerna": "^2.11.0"
+    "lerna": "^3.4.1"
   }
 }
