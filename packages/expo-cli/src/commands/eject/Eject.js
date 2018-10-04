@@ -207,13 +207,10 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
     pkgJson.scripts.android = 'react-native run-android';
 
     if (pkgJson.jest !== undefined) {
-      pkgJson.scripts.test = 'jest';
-
       newDevDependencies.push('jest');
 
       if (pkgJson.jest.preset === 'jest-expo') {
         pkgJson.jest.preset = 'react-native';
-        newDevDependencies.push('jest-react-native');
       } else {
         log(
           `${chalk.bold('Warning')}: it looks like you've changed the Jest preset from jest-expo to ${pkgJson.jest.preset}. We recommend you make sure this Jest preset is compatible with ejected apps.`
