@@ -11,7 +11,6 @@ import replaceString from 'replace-string';
 import _ from 'lodash';
 import globby from 'globby';
 import uuid from 'uuid';
-import semver from 'semver';
 
 import { createAndWriteIconsToPathAsync } from './AndroidIcons';
 import * as AssetBundle from './AssetBundle';
@@ -28,6 +27,7 @@ const {
   spawnAsync,
   regexFileAsync,
   deleteLinesInFileAsync,
+  parseSdkMajorVersion,
 } = ExponentTools;
 
 const imageKeys = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
@@ -1135,72 +1135,64 @@ some SDK 29-specific code
 // WHEN_PREPARING_SHELL_REMOVE_TO_HERE
 ```
 
-The following function replaces `BEGIN_SDK_XX` with `REMOVE_TO_HERE`
-and `END_SDK_XX` with `REMOVE_FROM_HERE`.
+The following function replaces all `BEGIN_SDK_XX` with `REMOVE_TO_HERE`
+and all `END_SDK_XX` with `REMOVE_FROM_HERE`, so after the change the code above would read:
+
+```
+// WHEN_PREPARING_SHELL_REMOVE_FROM_HERE
+
+// WHEN_PREPARING_SHELL_REMOVE_TO_HERE       <--- changed
+some SDK 30-specific code
+// WHEN_PREPARING_SHELL_REMOVE_FROM_HERE     <--- changed
+
+// BEGIN_SDK_29
+some SDK 29-specific code
+// END_SDK_29
+
+...
+
+// WHEN_PREPARING_SHELL_REMOVE_TO_HERE
+```
 
 This allows us to use `deleteLinesInFileAsync` function to remove obsolete SDKs code easily.
 
  */
 const removeInvalidSdkLinesWhenPreparingShell = async (majorSdkVersion, filePath) => {
   await regexFileAsync(
-    `BEGIN_SDK_${majorSdkVersion}`,
+    new RegExp(`BEGIN_SDK_${majorSdkVersion}`, 'g'),
     `WHEN_PREPARING_SHELL_REMOVE_TO_HERE`,
     filePath
   );
   await regexFileAsync(
-    `END_SDK_${majorSdkVersion}`,
+    new RegExp(`END_SDK_${majorSdkVersion}`, 'g'),
     `WHEN_PREPARING_SHELL_REMOVE_FROM_HERE`,
     filePath
   );
   await deleteLinesInFileAsync(
-    'WHEN_PREPARING_SHELL_REMOVE_FROM_HERE',
+    /WHEN_PREPARING_SHELL_REMOVE_FROM_HERE/g,
     'WHEN_PREPARING_SHELL_REMOVE_TO_HERE',
     filePath
   );
 };
 
 async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string) {
-  const majorSdkVersion = semver.major(requiredSdkVersion);
+  const majorSdkVersion = parseSdkMajorVersion(requiredSdkVersion);
 
-  // Remove obsolete `expoview-abiXX_X_X` dependencies
-  const appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
-  await removeInvalidSdkLinesWhenPreparingShell(majorSdkVersion, appBuildGradle);
+  const filePaths = {
+    // Remove obsolete `expoview-abiXX_X_X` dependencies
+    appBuildGradle: path.join(shellPath, 'app/build.gradle'),
+    // Remove obsolete `host.exp.exponent:reactandroid:XX.X.X` dependencies from expoview
+    expoviewBuildGradle: path.join(shellPath, 'expoview/build.gradle'),
+    // Remove no-longer-valid interfaces from MultipleVersionReactNativeActivity
+    multipleVersionReactNativeActivity: path.join(
+      shellPath,
+      'expoview/src/main/java/host/exp/exponent/experience/MultipleVersionReactNativeActivity.java'
+    ),
+    // Remove invalid ABI versions from Constants
+    constants: path.join(shellPath, 'expoview/src/main/java/host/exp/exponent/Constants.java'),
+  };
 
-  // Remove obsolete `host.exp.exponent:reactandroid:XX.X.X` dependencies from expoview
-  const expoviewBuildGradle = path.join(shellPath, 'expoview', 'build.gradle');
-  await removeInvalidSdkLinesWhenPreparingShell(majorSdkVersion, expoviewBuildGradle);
-
-  // Remove no-longer-valid interfaces from MultipleVersionReactNativeActivity
-  const multipleVersionReactNativeActivityJava = path.join(
-    shellPath,
-    'expoview',
-    'src',
-    'main',
-    'java',
-    'host',
-    'exp',
-    'exponent',
-    'experience',
-    'MultipleVersionReactNativeActivity.java'
-  );
-  await removeInvalidSdkLinesWhenPreparingShell(
-    majorSdkVersion,
-    multipleVersionReactNativeActivityJava
-  );
-
-  // Remove invalid ABI versions from Constants
-  const constantsJava = path.join(
-    shellPath,
-    'expoview',
-    'src',
-    'main',
-    'java',
-    'host',
-    'exp',
-    'exponent',
-    'Constants.java'
-  );
-  await removeInvalidSdkLinesWhenPreparingShell(majorSdkVersion, constantsJava);
+  Promise.all(Object.values(filePaths).map(removeInvalidSdkLinesWhenPreparingShell));
 
   // The single SDK change will happen when transitioning from SDK 30 to 31.
   // Since SDK 31 there will be no versioned ABIs in shell applications, only unversioned one.
@@ -1209,7 +1201,7 @@ async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string)
     await regexFileAsync(
       'TEMPORARY_ABI_VERSION = null;',
       `TEMPORARY_ABI_VERSION = "${requiredSdkVersion}";`,
-      constantsJava
+      filePaths.constants
     );
   }
 }
