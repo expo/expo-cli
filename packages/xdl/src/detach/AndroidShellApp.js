@@ -1190,6 +1190,8 @@ async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string)
     ),
     // Remove invalid ABI versions from Constants
     constants: path.join(shellPath, 'expoview/src/main/java/host/exp/exponent/Constants.java'),
+    // Remove non-existent DevSettingsActivities
+    appAndroidManifest: path.join(shellPath, 'app/src/main/AndroidManifest.xml'),
   };
 
   Promise.all(
