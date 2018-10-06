@@ -1192,7 +1192,11 @@ async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string)
     constants: path.join(shellPath, 'expoview/src/main/java/host/exp/exponent/Constants.java'),
   };
 
-  Promise.all(Object.values(filePaths).map(removeInvalidSdkLinesWhenPreparingShell));
+  Promise.all(
+    Object.values(filePaths).map(filePath =>
+      removeInvalidSdkLinesWhenPreparingShell(majorSdkVersion, filePath)
+    )
+  );
 
   // The single SDK change will happen when transitioning from SDK 30 to 31.
   // Since SDK 31 there will be no versioned ABIs in shell applications, only unversioned one.
