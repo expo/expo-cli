@@ -400,22 +400,13 @@ function runAsync(programName) {
 }
 
 async function checkForUpdateAsync() {
-  let { state, current, latest } = await update.checkForUpdateAsync();
-  let message;
-  switch (state) {
-    case 'up-to-date':
-      break;
-
-    case 'out-of-date':
-      message = `There is a new version of ${packageJSON.name} available (${latest}).
+  let { updateIsAvailable, current, latest } = await update.checkForUpdateAsync();
+  if (updateIsAvailable) {
+    log.nestedWarn(
+      chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
-Run \`npm install -g ${packageJSON.name}\` to get the latest version`;
-      log.nestedWarn(chalk.green(message));
-      break;
-
-    case 'ahead-of-published':
-      // if the user is ahead of npm, we're going to assume they know what they're doing
-      break;
+Run \`npm install -g ${packageJSON.name}\` to get the latest version`)
+    );
   }
 }
 
