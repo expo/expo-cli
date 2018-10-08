@@ -7,7 +7,6 @@
 
 // Set EXPO_VIEW_DIR to universe/exponent to test locally
 
-import mkdirp from 'mkdirp';
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
@@ -37,7 +36,7 @@ async function renamePackageAsync(directory, originalPkg, destPkg) {
 
   // copy files into temp directory
   let tmpDirectory = path.join(directory, 'tmp-exponent-directory');
-  mkdirp.sync(tmpDirectory);
+  fs.mkdirpSync(tmpDirectory);
   await Utils.ncpAsync(originalDeepDirectory, tmpDirectory);
 
   // delete old package
@@ -48,7 +47,7 @@ async function renamePackageAsync(directory, originalPkg, destPkg) {
   let newDeepDirectory = directory;
   for (let i = 0; i < newSplitPackage.length; i++) {
     newDeepDirectory = path.join(newDeepDirectory, newSplitPackage[i]);
-    mkdirp.sync(newDeepDirectory);
+    fs.mkdirpSync(newDeepDirectory);
   }
 
   // copy from temp to new package
@@ -72,7 +71,7 @@ export async function detachAndroidAsync(
     tmpExpoDirectory = process.env.EXPO_VIEW_DIR;
   } else {
     tmpExpoDirectory = path.join(projectRoot, 'temp-android-directory');
-    mkdirp.sync(tmpExpoDirectory);
+    fs.mkdirpSync(tmpExpoDirectory);
     logger.info('Downloading Android code...');
     await Api.downloadAsync(expoViewUrl, tmpExpoDirectory, { extract: true });
   }

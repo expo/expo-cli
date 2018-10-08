@@ -2,9 +2,7 @@
  * @flow
  */
 
-import promisify from 'util.promisify';
 import fs from 'fs-extra';
-import mkdirp from 'mkdirp';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
@@ -31,8 +29,6 @@ export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 
 export { default as convertProjectAsync } from './project/Convert';
 
-const mkdirpAsync = promisify(mkdirp);
-
 export async function determineEntryPointAsync(root: string) {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(root);
 
@@ -51,7 +47,7 @@ export async function determineEntryPointAsync(root: string) {
 function _starterAppCacheDirectory() {
   let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
   let dir = path.join(dotExpoHomeDirectory, 'starter-app-cache');
-  mkdirp.sync(dir);
+  fs.mkdirpSync(dir);
   return dir;
 }
 
@@ -113,7 +109,7 @@ export async function downloadTemplateApp(templateId: string, selectedDir: strin
 
 export async function extractTemplateApp(starterAppPath: string, name: string, root: string) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
-  await mkdirpAsync(root);
+  await fs.mkdirp(root);
   await Extract.extractAsync(starterAppPath, root);
 
   // Update files

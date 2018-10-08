@@ -1,9 +1,8 @@
 /**
  * @flow
  */
-import fs from 'fs';
+import fs from 'fs-extra';
 import invariant from 'invariant';
-import mkdirp from 'mkdirp';
 import path from 'path';
 import rimraf from 'rimraf';
 
@@ -60,7 +59,7 @@ async function _getOrCreateTemplateDirectoryAsync(
       // when the archive is generated in `ios/pipeline.js`
       expoRootTemplateDirectory = path.join(context.data.projectPath, 'temp-ios-directory');
       if (!isDirectory(expoRootTemplateDirectory)) {
-        mkdirp.sync(expoRootTemplateDirectory);
+        fs.mkdirpSync(expoRootTemplateDirectory);
         logger.info('Downloading iOS code...');
         invariant(iosExpoViewUrl, `The URL for ExpoKit iOS must be set`);
         await Api.downloadAsync(iosExpoViewUrl, expoRootTemplateDirectory, {
@@ -286,7 +285,7 @@ async function createDetachedAsync(context: StandaloneContext) {
   // copy template workspace
   logger.info('Moving iOS project files...');
   logger.info('Attempting to create project directory...');
-  mkdirp.sync(iosProjectDirectory);
+  fs.mkdirpSync(iosProjectDirectory);
   logger.info('Created project directory! Copying files:');
   await Utils.ncpAsync(
     path.join(expoRootTemplateDirectory, 'exponent-view-template', 'ios'),

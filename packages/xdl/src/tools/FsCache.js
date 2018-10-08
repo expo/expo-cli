@@ -1,12 +1,8 @@
 // @flow
 
 import fs from 'fs-extra';
-import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
-import promisify from 'util.promisify';
-
-const mkdirpAsync = promisify(mkdirp);
 
 /*
 A Cacher is used to wrap a fallible or expensive function and to memoize its results on disk
@@ -55,7 +51,7 @@ class Cacher<T> {
       mtime = stats.mtime;
     } catch (e) {
       try {
-        await mkdirpAsync(getCacheDir());
+        await fs.mkdirp(getCacheDir());
 
         if (this.bootstrapFile) {
           const bootstrapContents = (await fs.readFile(this.bootstrapFile)).toString();

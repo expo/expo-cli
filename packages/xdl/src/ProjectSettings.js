@@ -4,8 +4,7 @@
 
 import _ from 'lodash';
 import JsonFile from '@expo/json-file';
-import fs from 'fs';
-import mkdirp from 'mkdirp';
+import fs from 'fs-extra';
 import path from 'path';
 
 let projectSettingsFile = 'settings.json';
@@ -96,7 +95,7 @@ export function dotExpoProjectDirectory(projectRoot: string) {
     // no old directory, continue
   }
 
-  mkdirp.sync(dirPath);
+  fs.mkdirpSync(dirPath);
   return dirPath;
 }
 
