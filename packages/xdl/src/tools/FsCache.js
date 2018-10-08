@@ -49,20 +49,21 @@ class Cacher<T> {
   }
 
   async getAsync(): Promise<T> {
-    await mkdirpAsync(getCacheDir());
-
     let mtime: Date;
     try {
       const stats = await fs.stat(this.filename);
       mtime = stats.mtime;
     } catch (e) {
-      if (this.bootstrapFile) {
-        try {
+      try {
+        await mkdirpAsync(getCacheDir());
+
+        if (this.bootstrapFile) {
           const bootstrapContents = (await fs.readFile(this.bootstrapFile)).toString();
+
           await fs.writeFile(this.filename, bootstrapContents, 'utf8');
-        } catch (e) {
-          // intentional no-op
         }
+      } catch (e) {
+        // intentional no-op
       }
       mtime = new Date(1989, 10, 19);
     }
@@ -74,6 +75,7 @@ class Cacher<T> {
     if (new Date() - mtime > this.ttlMilliseconds) {
       try {
         fromCache = await this.refresher();
+
         try {
           await fs.writeFile(this.filename, JSON.stringify(fromCache), 'utf8');
         } catch (e) {
