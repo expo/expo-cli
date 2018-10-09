@@ -402,14 +402,9 @@ export async function runShellAppModificationsAsync(
     let appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
     await regexFileAsync(/\/\* UNCOMMENT WHEN DISTRIBUTING/g, '', appBuildGradle);
     await regexFileAsync(/END UNCOMMENT WHEN DISTRIBUTING \*\//g, '', appBuildGradle);
-    await regexFileAsync(
-      /\/\/ WHEN_DISTRIBUTING_REMOVE_FROM_HERE/g,
-      '/* REMOVED_WHEN_DISTRIBUTING_FROM_HERE',
-      appBuildGradle
-    );
-    await regexFileAsync(
-      /\/\/ WHEN_DISTRIBUTING_REMOVE_TO_HERE/g,
-      'REMOVED_WHEN_DISTRIBUTING_TO_HERE */',
+    await deleteLinesInFileAsync(
+      'WHEN_DISTRIBUTING_REMOVE_FROM_HERE',
+      'WHEN_DISTRIBUTING_REMOVE_TO_HERE',
       appBuildGradle
     );
 
