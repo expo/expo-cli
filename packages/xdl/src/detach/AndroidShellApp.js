@@ -1171,9 +1171,7 @@ const removeInvalidSdkLinesWhenPreparingShell = async (majorSdkVersion, filePath
 };
 
 async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string) {
-  const majorSdkVersion = parseSdkMajorVersion(requiredSdkVersion);
-
-  const filePaths = {
+  const filePathsToTransform = {
     // Remove obsolete `expoview-abiXX_X_X` dependencies
     appBuildGradle: path.join(shellPath, 'app/build.gradle'),
     // Remove obsolete `host.exp.exponent:reactandroid:XX.X.X` dependencies from expoview
@@ -1189,20 +1187,24 @@ async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string)
     appAndroidManifest: path.join(shellPath, 'app/src/main/AndroidManifest.xml'),
   };
 
-  Promise.all(
-    Object.values(filePaths).map(filePath =>
-      removeInvalidSdkLinesWhenPreparingShell(majorSdkVersion, filePath)
-    )
-  );
+  const majorSdkVersion = parseSdkMajorVersion(requiredSdkVersion);
 
   // The single SDK change will happen when transitioning from SDK 30 to 31.
   // Since SDK 31 there will be no versioned ABIs in shell applications, only unversioned one.
   // And as such, we will treat the unversioned ABI as the SDK one by assigning TEMPORARY_ABI_VERSION.
-  if (majorSdkVersion > 30) {
+  const effectiveSdkVersion = majorSdkVersion > 30 ? 'UNVERSIONED' : `${majorSdkVersion}`;
+
+  if (effectiveSdkVersion === 'UNVERSIONED') {
     await regexFileAsync(
       'TEMPORARY_ABI_VERSION = null;',
       `TEMPORARY_ABI_VERSION = "${requiredSdkVersion}";`,
-      filePaths.constants
+      filePathsToTransform.constants
     );
   }
+
+  await Promise.all(
+    Object.values(filePathsToTransform).map(filePath =>
+      removeInvalidSdkLinesWhenPreparingShell(effectiveSdkVersion, filePath)
+    )
+  );
 }
