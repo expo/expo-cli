@@ -6,7 +6,7 @@
     "postbootstrap": "lerna run prepare --stream",
     "prebootstrap": "yarn",
     "publish": "lerna publish",
-    "start": "lerna run prepare --stream && lerna run watch --parallel --ignore @expo/dev-tools"
+    "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools"
   },
   "dependencies": {
     "lerna": "^3.4.1"
