@@ -1780,6 +1780,9 @@ async function _connectToNgrokAsync(
 
 export async function startTunnelsAsync(projectRoot: string) {
   let username = await UserManager.getCurrentUsernameAsync();
+  if (!username) {
+    username = UserManager.ANONYMOUS_USERNAME;
+  }
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
