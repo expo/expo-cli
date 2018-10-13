@@ -1635,7 +1635,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       const hostUUID = await UserSettings.anonymousIdentifier();
       let currentSession = await UserManager.getSessionAsync();
       if (!currentSession) {
-        manifest.id = `@anonymous/${manifest.slug}-${hostUUID}`;
+        manifest.id = `@${UserManager.ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
       }
       let manifestString = JSON.stringify(manifest);
       if (req.headers['exponent-accept-signature']) {

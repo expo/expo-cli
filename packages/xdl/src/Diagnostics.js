@@ -25,7 +25,7 @@ import * as Watchman from './Watchman';
 
 async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   let user = await UserManager.getCurrentUserAsync();
-  let username = user ? user.username : 'anonymous';
+  let username = user ? user.username : UserManager.ANONYMOUS_USERNAME;
 
   // write info to file
   let expoHome = UserSettings.dotExpoHomeDirectory();
