@@ -1,7 +1,6 @@
 jest.mock('analytics-node');
 jest.mock('fs');
 
-const mkdirp = require('mkdirp');
 const mockfs = require('mock-fs');
 const path = require('path');
 const slugify = require('slugify');

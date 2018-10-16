@@ -329,25 +329,19 @@ function runAsync(programName) {
       );
 
     // Load each module found in ./commands by 'registering' it with our commander instance
-    const files = _.uniqBy(
-      [
-        ...(programName === 'exp'
-          ? glob.sync('exp_commands/*.js', { cwd: __dirname })
-          : glob.sync('expo_commands/*.js', { cwd: __dirname })),
-        ...glob.sync('commands/*.js', { cwd: __dirname }),
-      ],
-      path.basename
-    );
-    _.sortBy(files, path.basename).forEach(file => {
-      const commandModule = require(`./${file}`);
-      if (typeof commandModule === 'function') {
-        commandModule(program);
-      } else if (typeof commandModule.default === 'function') {
-        commandModule.default(program);
-      } else {
-        log.error(`'${file}.js' is not a properly formatted command.`);
-      }
-    });
+    glob
+      .sync('commands/*.js', { cwd: __dirname })
+      .sort()
+      .forEach(file => {
+        const commandModule = require(`./${file}`);
+        if (typeof commandModule === 'function') {
+          commandModule(program);
+        } else if (typeof commandModule.default === 'function') {
+          commandModule.default(program);
+        } else {
+          log.error(`'${file}.js' is not a properly formatted command.`);
+        }
+      });
 
     if (process.env.EXPO_DEBUG) {
       glob
@@ -406,32 +400,13 @@ function runAsync(programName) {
 }
 
 async function checkForUpdateAsync() {
-  if (packageJSON.name === 'exp') {
+  let { updateIsAvailable, current, latest } = await update.checkForUpdateAsync();
+  if (updateIsAvailable) {
     log.nestedWarn(
-      chalk.green(
-        chalk.bold(`We've built a brand new CLI for Expo!\nExpo CLI is a drop in replacement for exp.\nInstall: `) + 'npm install -g expo-cli\n' +
-        chalk.bold('Use: ') + 'expo --help\n' +
-        chalk.bold('Read more: ') + 'https://blog.expo.io/expo-cli-2-0-released-a7a9c250e99c'
-      )
-    );
-    return;
-  }
-  let { state, current, latest } = await update.checkForUpdateAsync();
-  let message;
-  switch (state) {
-    case 'up-to-date':
-      break;
-
-    case 'out-of-date':
-      message = `There is a new version of ${packageJSON.name} available (${latest}).
+      chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
-Run \`npm install -g ${packageJSON.name}\` to get the latest version`;
-      log.nestedWarn(chalk.green(message));
-      break;
-
-    case 'ahead-of-published':
-      // if the user is ahead of npm, we're going to assume they know what they're doing
-      break;
+Run \`npm install -g ${packageJSON.name}\` to get the latest version`)
+    );
   }
 }
 

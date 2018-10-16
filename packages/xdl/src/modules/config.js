@@ -236,6 +236,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXLocalization',
+    libName: 'expo-localization',
+    sdkVersions: '>=31.0.0',
+  },
+  {
     podName: 'EXLocation',
     libName: 'expo-location',
     sdkVersions: '>=30.0.0',

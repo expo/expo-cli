@@ -1,6 +1,7 @@
 import { Diagnostics } from 'xdl';
-import { print as envinfoPrint } from 'envinfo';
+import envinfo from 'envinfo';
 import chalk from 'chalk';
+import { version } from '../../package.json';
 
 import simpleSpinner from '@expo/simple-spinner';
 
@@ -10,15 +11,27 @@ async function action(options) {
   log('Generating diagnostics report...');
   log('You can join our slack here: https://slack.expo.io/.');
 
-  envinfoPrint({ packages: ['expo', 'react', 'react-native'] });
+  let info = await envinfo.run(
+    {
+      System: ['OS', 'Shell'],
+      Binaries: ['Node', 'Yarn', 'npm', 'Watchman'],
+      IDEs: ['Xcode', 'Android Studio'],
+      npmPackages: ['expo', 'react', 'react-native', 'react-navigation'],
+      npmGlobalPackages: ['expo-cli'],
+    },
+    {
+      title: `Expo CLI ${version} environment info`,
+    }
+  );
+  console.log(info);
 
-  console.log(chalk.underline('Diagnostics report:'));
+  console.log('  Diagnostics report:');
   simpleSpinner.start();
   const { url } = await Diagnostics.getDeviceInfoAsync({
     uploadLogs: true,
   });
   simpleSpinner.stop();
-  console.log(`  ${url}\n`);
+  console.log(`    ${url}\n`);
   log.raw(url);
 }
 

@@ -2,7 +2,6 @@
  *  @flow
  */
 import fs from 'fs-extra';
-import mkdirp from 'mkdirp';
 import path from 'path';
 import rimraf from 'rimraf';
 import { DOMParser, XMLSerializer } from 'xmldom';
@@ -212,7 +211,7 @@ async function configureLaunchAssetsAsync(
   }
   logger.info('Configuring iOS Launch Screen...');
 
-  mkdirp.sync(intermediatesDirectory);
+  fs.mkdirpSync(intermediatesDirectory);
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
 

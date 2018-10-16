@@ -2,9 +2,13 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "bootstrap": "bin/bootstrap"
+    "bootstrap": "lerna bootstrap",
+    "postbootstrap": "lerna run prepare --stream",
+    "prebootstrap": "yarn",
+    "publish": "lerna publish",
+    "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools"
   },
   "dependencies": {
-    "lerna": "^2.11.0"
+    "lerna": "^3.4.1"
   }
 }

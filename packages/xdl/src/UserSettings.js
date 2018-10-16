@@ -2,11 +2,10 @@
  * @flow
  */
 
-import fs from 'fs';
+import fs from 'fs-extra';
 import uuid from 'uuid';
 import JsonFile from '@expo/json-file';
 
-import mkdirp from 'mkdirp';
 import path from 'path';
 
 import * as Env from './Env';
@@ -74,7 +73,7 @@ function dotExpoHomeDirectory() {
     }
   }
   if (!mkdirped) {
-    mkdirp.sync(dirPath);
+    fs.mkdirpSync(dirPath);
     mkdirped = true;
   }
   return dirPath;

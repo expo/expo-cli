@@ -39,10 +39,13 @@ import * as ExponentTools from './detach/ExponentTools';
 import * as Exp from './Exp';
 import * as ExpSchema from './project/ExpSchema';
 import FormData from './tools/FormData';
+import * as IosPlist from './detach/IosPlist';
+import * as IosWorkspace from './detach/IosWorkspace';
 import { isNode } from './tools/EnvironmentHelper';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as Sentry from './Sentry';
+import StandaloneContext from './detach/StandaloneContext';
 import * as ThirdParty from './ThirdParty';
 import * as UrlUtils from './UrlUtils';
 import UserManager from './User';
@@ -636,6 +639,12 @@ export async function publishAsync(
         exp.ios.publishManifestPath,
         JSON.stringify(iosManifest)
       );
+      const context = StandaloneContext.createUserContext(projectRoot, exp);
+      const { supportingDirectory } = IosWorkspace.getPaths(context);
+      await IosPlist.modifyAsync(supportingDirectory, 'EXShell', shellPlist => {
+        shellPlist.releaseChannel = options.releaseChannel;
+        return shellPlist;
+      });
     }
 
     if (exp.android && exp.android.publishManifestPath) {
@@ -677,6 +686,11 @@ export async function publishAsync(
         embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
         embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
         // END EMBEDDED RESPONSES`,
+        constantsPath
+      );
+      await ExponentTools.regexFileAsync(
+        /RELEASE_CHANNEL = "[^"]*"/,
+        `RELEASE_CHANNEL = "${options.releaseChannel}"`,
         constantsPath
       );
     }
