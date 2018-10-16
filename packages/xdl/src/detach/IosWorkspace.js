@@ -209,7 +209,7 @@ async function _renderPodfileFromTemplateAsync(
       iosProjectDirectory,
       path.join(expoRootTemplateDirectory, 'ios', 'versioned-react-native')
     );
-    const modulesPath = path.join(expoRootTemplateDirectory, 'modules');
+    const modulesPath = path.join(expoRootTemplateDirectory, 'packages');
     podfileSubstitutions.UNIVERSAL_MODULES = detachableUniversalModules.map(module => ({
       ...module,
       path: path.join(modulesPath, module.libName, module.subdirectory),
@@ -242,7 +242,7 @@ async function _renderPodfileFromTemplateAsync(
       ...module,
       path: path.relative(
         iosProjectDirectory,
-        path.join(process.env.EXPO_VIEW_DIR, 'modules', module.libName, module.subdirectory)
+        path.join(process.env.EXPO_VIEW_DIR, 'packages', module.libName, module.subdirectory)
       ),
     }));
   }
