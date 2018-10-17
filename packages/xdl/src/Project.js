@@ -1635,7 +1635,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       const hostUUID = await UserSettings.anonymousIdentifier();
       let currentSession = await UserManager.getSessionAsync();
       if (!currentSession) {
-        manifest.id = `@anonymous/${manifest.slug}-${hostUUID}`;
+        manifest.id = `@${UserManager.ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
       }
       let manifestString = JSON.stringify(manifest);
       if (req.headers['exponent-accept-signature']) {
@@ -1780,6 +1780,9 @@ async function _connectToNgrokAsync(
 
 export async function startTunnelsAsync(projectRoot: string) {
   let username = await UserManager.getCurrentUsernameAsync();
+  if (!username) {
+    username = UserManager.ANONYMOUS_USERNAME;
+  }
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {

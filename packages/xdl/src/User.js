@@ -84,6 +84,8 @@ export type RegistrationData = {
 
 export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 
+export const ANONYMOUS_USERNAME = 'anonymous';
+
 export class UserManagerInstance {
   loginServer = null;
   refreshSessionThreshold = 60 * 60; // 1 hour
