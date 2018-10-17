@@ -218,18 +218,6 @@ export async function copyInitialShellAppFilesAsync(
   shellPath,
   isDetached: boolean = false
 ) {
-  if (androidSrcPath) {
-    await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
-      pipeToLogger: true,
-      loggerFields: { buildPhase: 'generating dynamic macros' },
-      cwd: path.join(androidSrcPath, 'app'),
-      env: {
-        ...process.env,
-        JSON_LOGS: '0',
-      },
-    }); // populate android template files now since we take out the prebuild step later on
-  }
-
   const initialCopyLogger = logger.withFields({ buildPhase: 'copying initial shell app files' });
 
   const copyToShellApp = async fileName => {
