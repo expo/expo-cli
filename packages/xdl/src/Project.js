@@ -12,7 +12,12 @@ import fs from 'fs-extra';
 import HashIds from 'hashids';
 import joi from 'joi';
 import promisify from 'util.promisify';
-import _ from 'lodash';
+import chunk from 'lodash/chunk';
+import escapeRegExp from 'lodash/escapeRegExp';
+import get from 'lodash/get';
+import reduce from 'lodash/reduce';
+import set from 'lodash/set';
+import uniq from 'lodash/uniq';
 import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
@@ -149,7 +154,9 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
     }
     throw new XDLError(
       errorCode,
-      `Packager URL ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
+      `Packager URL ${fullUrl} returned unexpected code ${
+        response.statusCode
+      }. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
     );
   }
 
@@ -173,14 +180,14 @@ async function _resolveGoogleServicesFile(projectRoot, manifest) {
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter(({ fieldPath }) => _.get(manifest, fieldPath));
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)).filter(
+      ({ fieldPath }) => get(manifest, fieldPath)
+    );
 
     // Get the URLs
     const urls = await Promise.all(
       assetSchemas.map(async ({ fieldPath }) => {
-        const pathOrURL = _.get(manifest, fieldPath);
+        const pathOrURL = get(manifest, fieldPath);
         if (pathOrURL.match(/^https?:\/\/(.*)$/)) {
           // It's a remote URL
           return pathOrURL;
@@ -198,7 +205,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
     );
 
     // Set the corresponding URL fields
-    assetSchemas.forEach(({ fieldPath }, index) => _.set(manifest, fieldPath + 'Url', urls[index]));
+    assetSchemas.forEach(({ fieldPath }, index) => set(manifest, fieldPath + 'Url', urls[index]));
   } catch (e) {
     let logMethod = ProjectUtils.logWarning;
     if (strict) {
@@ -208,7 +215,9 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
       logMethod(
         projectRoot,
         'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
+        `Unable to resolve asset "${e.localAssetPath}" from "${
+          e.manifestField
+        }" in your app/exp.json.`
       );
     } else {
       logMethod(
@@ -474,7 +483,7 @@ async function _saveAssetAsync(projectRoot, assets, outputDir) {
   });
 
   // save files one chunk at a time
-  const keyChunks = _.chunk(Object.keys(paths), 5);
+  const keyChunks = chunk(Object.keys(paths), 5);
   for (const keys of keyChunks) {
     const promises = [];
     for (const key of keys) {
@@ -684,7 +693,9 @@ export async function publishAsync(
         // ADD EMBEDDED RESPONSES HERE
         // START EMBEDDED RESPONSES
         embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+        embeddedResponses.add(new Constants.EmbeddedResponse("${
+          androidManifest.bundleUrl
+        }", "assets://shell-app.bundle", "application/javascript"));
         // END EMBEDDED RESPONSES`,
         constantsPath
       );
@@ -1081,7 +1092,7 @@ async function uploadAssetsAsync(projectRoot, assets) {
 
   // Upload them!
   await Promise.all(
-    _.chunk(missing, 5).map(async keys => {
+    chunk(missing, 5).map(async keys => {
       let formData = new FormData();
       for (const key of keys) {
         ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
@@ -1311,7 +1322,7 @@ function _isIgnorableDuplicateModuleWarning(
     'react-native',
     'node_modules'
   );
-  let reactNativeNodeModulesPattern = _.escapeRegExp(reactNativeNodeModulesPath);
+  let reactNativeNodeModulesPattern = escapeRegExp(reactNativeNodeModulesPath);
   let reactNativeNodeModulesCollisionRegex = new RegExp(
     `Paths: ${reactNativeNodeModulesPattern}.+ collides with ${reactNativeNodeModulesPattern}.+`
   );
@@ -1396,7 +1407,7 @@ export async function startReactNativeServerAsync(
   if (!Versions.gteSdkVersion(exp, '16.0.0')) {
     delete packagerOpts.customLogReporterPath;
   }
-  const userPackagerOpts = _.get(exp, 'packagerOpts');
+  const userPackagerOpts = exp.packagerOpts;
   if (userPackagerOpts) {
     // The RN CLI expects rn-cli.config.js's path to be absolute. We use the
     // project root to resolve relative paths since that was the original
@@ -1410,7 +1421,7 @@ export async function startReactNativeServerAsync(
       ...userPackagerOpts,
       ...(userPackagerOpts.assetExts
         ? {
-            assetExts: _.uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]),
+            assetExts: uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]),
           }
         : {}),
     };
@@ -1419,7 +1430,7 @@ export async function startReactNativeServerAsync(
       packagerPort = userPackagerOpts.port;
     }
   }
-  let cliOpts = _.reduce(
+  let cliOpts = reduce(
     packagerOpts,
     (opts, val, key) => {
       // If the packager opt value is boolean, don't set
@@ -1443,7 +1454,7 @@ export async function startReactNativeServerAsync(
     'local-cli',
     'cli.js'
   );
-  const cliPath = _.get(exp, 'rnCliPath', defaultCliPath);
+  const cliPath = exp.rnCliPath || defaultCliPath;
   let nodePath; // When using a custom path for the RN CLI, we want it to use the project // root to look up config files and Node modules
   if (exp.rnCliPath) {
     nodePath = _nodePathForProjectRoot(projectRoot);
