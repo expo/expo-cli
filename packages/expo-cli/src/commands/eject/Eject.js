@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import fse from 'fs-extra';
 import matchRequire from 'match-require';
 import path from 'path';
-import rimraf from 'rimraf';
 import spawn from 'cross-spawn';
 import { ProjectUtils, Detach, Versions } from 'xdl';
 import log from '../../log';
@@ -243,7 +242,7 @@ Note that using \`${npmOrYarn} start\` will now require you to run Xcode and/or
 Android Studio to build the native code for your project.`);
 
     log('Removing node_modules...');
-    rimraf.sync(path.resolve('node_modules'));
+    await fse.remove('node_modules');
     if (useYarn) {
       log('Installing packages with yarn...');
       const args = newDevDependencies.length > 0 ? ['add', '--dev', ...newDevDependencies] : [];

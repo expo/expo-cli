@@ -4,7 +4,7 @@ const babel = require('gulp-babel');
 const changed = require('gulp-changed');
 const plumber = require('gulp-plumber');
 const sourcemaps = require('gulp-sourcemaps');
-const rimraf = require('rimraf');
+const fs = require('fs-extra');
 
 const package = require('./package.json');
 
@@ -38,7 +38,7 @@ const tasks = {
 gulp.task('build', tasks.babel);
 gulp.task('watch', tasks.watchBabel);
 gulp.task('clean', done => {
-  rimraf(paths.build, done);
+  fs.remove(paths.build, done);
 });
 
 gulp.task('default', gulp.series('watch'));

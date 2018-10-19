@@ -55,8 +55,7 @@
     "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^1.6.0",
     "pkg": "^4.2.1",
-    "prettier": "~1.7.4",
-    "rimraf": "^2.5.2"
+    "prettier": "~1.7.4"
   },
   "dependencies": {
     "@expo/bunyan": "3.0.2",
