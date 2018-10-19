@@ -4,8 +4,6 @@
 
 import fs from 'fs-extra';
 import path from 'path';
-import rimraf from 'rimraf';
-import promisify from 'util.promisify';
 
 import {
   getManifestAsync,
@@ -22,8 +20,6 @@ import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
 import * as IosLocalization from './IosLocalization';
 import logger from './Logger';
-
-const rimrafAsync = promisify(rimraf);
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -436,7 +432,7 @@ async function configureAsync(context: StandaloneContext) {
 
   // ensure the intermediates directory is clean of any prior build's artifacts, in the event we
   // share directories across builds
-  await rimrafAsync(intermediatesDirectory);
+  await fs.remove(intermediatesDirectory);
 
   try {
     // common configuration for all contexts
@@ -492,7 +488,7 @@ async function configureAsync(context: StandaloneContext) {
     buildPhaseLogger.info('Cleaning up iOS...');
     await Promise.all([
       _cleanPropertyListBackupsAsync(context, supportingDirectory),
-      rimrafAsync(intermediatesDirectory),
+      fs.remove(intermediatesDirectory),
     ]);
   }
 }
