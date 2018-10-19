@@ -219,7 +219,7 @@ export async function copyInitialShellAppFilesAsync(
   isDetached: boolean = false
 ) {
   if (androidSrcPath) {
-    // check if the android template files exist
+    // check if Android template files exist
     // since we take out the prebuild step later on
     // and we should have generated those files earlier
     await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
