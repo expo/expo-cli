@@ -70,9 +70,6 @@ const joiValidateAsync = promisify(joi.validate);
 const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
-const stat = promisify(fs.stat);
-const truncate = promisify(fs.truncate);
-const appendFile = promisify(fs.appendFile);
 
 const request = Request.defaults({
   resolveWithFullResponse: true,
@@ -445,8 +442,8 @@ export async function exportForAppHosting(
     await truncateLastNLines(androidJsPath, 1);
 
     // Add correct mapping to sourcemap paths
-    await appendFile(iosJsPath, `\n//# sourceMappingURL=${iosMapName}`);
-    await appendFile(androidJsPath, `\n//# sourceMappingURL=${androidMapName}`);
+    await fs.appendFile(iosJsPath, `\n//# sourceMappingURL=${iosMapName}`);
+    await fs.appendFile(androidJsPath, `\n//# sourceMappingURL=${androidMapName}`);
 
     // Make a debug html so user can debug their bundles
     logger.global.info('Preparing additional debugging files');
@@ -469,8 +466,8 @@ export async function exportForAppHosting(
 async function truncateLastNLines(filePath: string, n: number) {
   const lines = await readLastLines.read(filePath, n);
   const to_vanquish = lines.length;
-  const { size } = await stat(filePath);
-  await truncate(filePath, size - to_vanquish);
+  const { size } = await fs.stat(filePath);
+  await fs.truncate(filePath, size - to_vanquish);
 }
 
 async function _saveAssetAsync(projectRoot, assets, outputDir) {
@@ -856,9 +853,9 @@ async function _maybeBuildSourceMapsAsync(projectRoot, exp, options = {}) {
  *
  * @param {string} hostedAssetPrefix
  *    The path where assets are hosted (ie) http://xxx.cloudfront.com/assets/
- * 
+ *
  * @modifies {exp} Replaces relative asset paths in the manifest with hosted URLS
- * 
+ *
  */
 async function _collectAssets(projectRoot, exp, hostedAssetPrefix) {
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
@@ -896,9 +893,9 @@ async function _collectAssets(projectRoot, exp, hostedAssetPrefix) {
 
 /**
  * Configures exp, preparing it for asset export
- * 
+ *
  * @modifies {exp}
- * 
+ *
  */
 async function _configureExpForAssets(projectRoot, exp, assets) {
   // Add google services file if it exists
