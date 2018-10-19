@@ -33,6 +33,21 @@ async function action(projectDir, options) {
   }
 
   let devToolsUrl = await DevToolsServer.startAsync(root);
+  log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
+  const nonInteractive = options.parent && options.parent.nonInteractive;
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+
+  if (!nonInteractive && !exp.isDetached) {
+    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
+      log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
+      opn(devToolsUrl, { wait: false });
+    } else {
+      log(
+        `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
+      );
+    }
+  }
+
   await Project.startAsync(root, startOpts);
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
@@ -44,19 +59,7 @@ async function action(projectDir, options) {
 
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
-
-  log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
-  const nonInteractive = options.parent && options.parent.nonInteractive;
-  if (!nonInteractive && !exp.isDetached) {
-    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
-      log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
-      opn(devToolsUrl, { wait: false });
-    } else {
-      log(
-        `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
-      );
-    }
+  if (!nonInteractive && !exp.isDetachexped) {
     await TerminalUI.startAsync(projectDir);
   } else {
     if (!exp.isDetached) {
