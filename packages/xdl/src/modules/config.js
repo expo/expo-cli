@@ -211,6 +211,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXGoogleSignIn',
+    libName: 'expo-google-sign-in',
+    sdkVersions: '>=32.0.0',
+  },
+  {
     podName: 'EXGL',
     libName: 'expo-gl',
     sdkVersions: '>=29.0.0',
