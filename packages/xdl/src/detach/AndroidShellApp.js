@@ -219,15 +219,15 @@ export async function copyInitialShellAppFilesAsync(
   isDetached: boolean = false
 ) {
   if (androidSrcPath) {
-    await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
+    // check if Android template files exist
+    // since we take out the prebuild step later on
+    // and we should have generated those files earlier
+    await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
       pipeToLogger: true,
-      loggerFields: { buildPhase: 'generating dynamic macros' },
+      loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
       cwd: path.join(androidSrcPath, 'app'),
-      env: {
-        ...process.env,
-        JSON_LOGS: '0',
-      },
-    }); // populate android template files now since we take out the prebuild step later on
+      env: process.env,
+    });
   }
 
   const initialCopyLogger = logger.withFields({ buildPhase: 'copying initial shell app files' });
