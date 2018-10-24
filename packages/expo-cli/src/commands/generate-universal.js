@@ -4,9 +4,9 @@
 import path from 'path';
 import proc from 'child_process';
 import targz from 'targz';
-import fs from 'fs';
-import fsExtra from 'fs-extra';
-import replace from 'replace';
+import fs from 'fs-extra';
+import walkSync from 'klaw-sync';
+import JsonFile from '@expo/json-file';
 
 import CommandError from '../CommandError';
 import prompt from '../prompt';
@@ -64,75 +64,55 @@ export default (program: any) => {
         .execSync(`npm pack expo-module-template@${NPM_TEMPLATE_VERSION}`)
         .toString()
         .slice(0, -1);
-      if (!fs.existsSync(TEMP_DIR_NAME)) {
-        fs.mkdirSync(TEMP_DIR_NAME);
-      }
+
+      fs.mkdirpSync(TEMP_DIR_NAME);
       await decompress();
 
       fs.unlinkSync(archive);
-      await fsExtra.copy(path.join(TEMP_DIR_NAME, `package`), `${configuration.jsName}`);
-      await fsExtra.remove(TEMP_DIR_NAME);
+      let outputDir = path.resolve(configuration.jsName);
+      await fs.copy(path.join(TEMP_DIR_NAME, `package`), outputDir);
+      await fs.remove(TEMP_DIR_NAME);
 
       if (configuration.podName) {
         fs.renameSync(
-          path.join(configuration.jsName, `ios`, `EXModuleTemplate.podspec`),
-          path.join(configuration.jsName, `ios`, `${configuration.podName}.podspec`)
+          path.join(outputDir, `ios`, `EXModuleTemplate.podspec`),
+          path.join(outputDir, `ios`, `${configuration.podName}.podspec`)
         );
 
         fs.renameSync(
-          path.join(configuration.jsName, `ios`, `EXModuleTemplate`, `EXModuleTemplate.h`),
-          path.join(configuration.jsName, `ios`, `EXModuleTemplate`, `${configuration.podName}.h`)
+          path.join(outputDir, `ios`, `EXModuleTemplate`, `EXModuleTemplate.h`),
+          path.join(outputDir, `ios`, `EXModuleTemplate`, `${configuration.podName}.h`)
         );
 
         fs.renameSync(
-          path.join(configuration.jsName, `ios`, `EXModuleTemplate`, `EXModuleTemplate.m`),
-          path.join(configuration.jsName, `ios`, `EXModuleTemplate`, `${configuration.podName}.m`)
+          path.join(outputDir, `ios`, `EXModuleTemplate`, `EXModuleTemplate.m`),
+          path.join(outputDir, `ios`, `EXModuleTemplate`, `${configuration.podName}.m`)
         );
 
         fs.renameSync(
-          path.join(configuration.jsName, `ios`, `EXModuleTemplate`),
-          path.join(configuration.jsName, `ios`, `${configuration.podName}`)
+          path.join(outputDir, `ios`, `EXModuleTemplate`),
+          path.join(outputDir, `ios`, `${configuration.podName}`)
         );
 
         fs.renameSync(
-          path.join(configuration.jsName, `ios`, `EXModuleTemplate.xcodeproj`),
-          path.join(configuration.jsName, `ios`, `${configuration.podName}.xcodeproj`)
+          path.join(outputDir, `ios`, `EXModuleTemplate.xcodeproj`),
+          path.join(outputDir, `ios`, `${configuration.podName}.xcodeproj`)
         );
       } else {
-        await fsExtra.remove(path.join(configuration.jsName, `ios`));
+        await fs.remove(path.join(outputDir, `ios`));
       }
 
-      replace({
-        regex: 'expo-module-template',
-        replacement: configuration.jsName,
-        paths: [configuration.jsName],
-        recursive: true,
-        silent: true,
-      });
-
-      replace({
-        regex: 'expo.modules.template',
-        replacement: configuration.javaModule,
-        paths: [configuration.jsName],
-        recursive: true,
-        silent: true,
-      });
-
-      replace({
-        regex: 'EXModuleTemplate',
-        replacement: configuration.podName,
-        paths: [configuration.jsName],
-        recursive: true,
-        silent: true,
-      });
-
-      replace({
-        regex: `"version": ".*",`,
-        replacement: `"version": "1.0.0",`,
-        paths: [path.join(configuration.jsName, `package.json`)],
-        recursive: false,
-        silent: true,
-      });
+      for (let file of walkSync(outputDir, { nodir: true })) {
+        let contents = await fs.readFile(file.path, 'utf8');
+        let newContents = contents
+          .replace(/expo-module-template/g, configuration.jsName)
+          .replace(/expo\.modules\.template/g, configuration.javaModule)
+          .replace(/EXModuleTemplate/g, configuration.podName);
+        if (newContents !== contents) {
+          await fs.writeFile(file.path, newContents);
+        }
+      }
+      await JsonFile.setAsync(path.join(configuration.jsName, 'package.json'), 'version', '1.0.0');
 
       const javaDir = path.join(
         configuration.jsName,
@@ -142,7 +122,7 @@ export default (program: any) => {
         'java',
         ...configuration.javaModule.split('.')
       );
-      fsExtra.mkdirpSync(javaDir);
+      fs.mkdirpSync(javaDir);
 
       const placeholderPath = path.join(javaDir, `Placeholder.java`);
       fs.appendFileSync(placeholderPath, `package ${configuration.javaModule};\n`);
