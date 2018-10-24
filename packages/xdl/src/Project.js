@@ -151,9 +151,9 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
     }
     throw new XDLError(
       errorCode,
-      `Packager URL ${fullUrl} returned unexpected code ${
-        response.statusCode
-      }. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
+      `Packager URL ${fullUrl} returned unexpected code ${response.statusCode}. ` +
+        'Please open your project in the Expo app and see if there are any errors. ' +
+        'Also scroll up and make sure there were no errors or warnings when opening your project.'
     );
   }
 
@@ -1216,7 +1216,8 @@ export async function buildAsync(
     if (!exp.ios || !exp.ios.bundleIdentifier) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a bundle identifier in order to build this experience for iOS. Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
+        `Must specify a bundle identifier in order to build this experience for iOS.` +
+          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
       );
     }
   }
@@ -1225,7 +1226,8 @@ export async function buildAsync(
     if (!exp.android || !exp.android.package) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a java package in order to build this experience for Android. Please specify one in ${configName} at "${configPrefix}android.package"`
+        `Must specify a java package in order to build this experience for Android.` +
+          `Please specify one in ${configName} at "${configPrefix}android.package"`
       );
     }
   }
@@ -1452,13 +1454,18 @@ export async function startReactNativeServerAsync(
     'cli.js'
   );
   const cliPath = exp.rnCliPath || defaultCliPath;
-  let nodePath; // When using a custom path for the RN CLI, we want it to use the project // root to look up config files and Node modules
+  let nodePath;
+  // When using a custom path for the RN CLI, we want it to use the project
+  // root to look up config files and Node modules
   if (exp.rnCliPath) {
     nodePath = _nodePathForProjectRoot(projectRoot);
   } else {
     nodePath = null;
   }
-  // Run the copy of Node that's embedded in Electron by setting the // ELECTRON_RUN_AS_NODE environment variable // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the // child process
+  // Run the copy of Node that's embedded in Electron by setting the
+  // ELECTRON_RUN_AS_NODE environment variable
+  // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
+  // child process
   let packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
@@ -1517,7 +1524,11 @@ export async function startReactNativeServerAsync(
     )
   );
   await Promise.race([_waitForRunningAsync(statusUrl), exitPromise, timeoutPromise]);
-} // Simulate the node_modules resolution // If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns // "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
+}
+
+// Simulate the node_modules resolution
+// If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns
+// "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
   let paths = [];
   let directory = path.resolve(projectRoot);
@@ -1687,7 +1698,8 @@ export async function startExpoServerAsync(projectRoot: string) {
         developerTool: Config.developerTool,
       });
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`); // 5xx = Server Error HTTP code
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`);
+      // 5xx = Server Error HTTP code
       res.status(520).send({
         error: e.toString(),
       });
@@ -1892,7 +1904,10 @@ export async function startTunnelsAsync(projectRoot: string) {
           ProjectUtils.logError(
             projectRoot,
             'expo',
-            'We noticed your tunnel is having issues. This may be due to intermittent problems with our tunnel provider. If you have trouble connecting to your app, try to Restart the project, or switch Host to LAN.'
+            'We noticed your tunnel is having issues. ' +
+              'This may be due to intermittent problems with our tunnel provider. ' +
+              'If you have trouble connecting to your app, try to Restart the project, ' +
+              'or switch Host to LAN.'
           );
         } else if (status === 'online') {
           ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
@@ -1902,7 +1917,10 @@ export async function startTunnelsAsync(projectRoot: string) {
   ]);
 }
 export async function stopTunnelsAsync(projectRoot: string) {
-  _assertValidProjectRoot(projectRoot); // This will kill all ngrok tunnels in the process. // We'll need to change this if we ever support more than one project // open at a time in XDE.
+  _assertValidProjectRoot(projectRoot);
+  // This will kill all ngrok tunnels in the process.
+  // We'll need to change this if we ever support more than one project
+  // open at a time in XDE.
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   let ngrokProcess = ngrok.process();
   let ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;
