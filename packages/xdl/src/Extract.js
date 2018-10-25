@@ -2,11 +2,10 @@
  * @flow
  */
 
-import fs from 'fs';
+import fs from 'fs-extra';
 import tar from 'tar';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
-import mkdirp from 'mkdirp';
 import rimraf from 'rimraf';
 import uuid from 'uuid';
 
@@ -16,7 +15,7 @@ import UserSettings from './UserSettings';
 async function _extractWindowsAsync(archive: string, dir: string) {
   let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
   let tmpDir = path.join(dotExpoHomeDirectory, 'tmp', uuid.v4());
-  mkdirp.sync(tmpDir);
+  fs.mkdirpSync(tmpDir);
   let binary = path.join(Binaries.getBinariesPath(), '7z1602-extra', '7za');
   try {
     await spawnAsync(binary, ['x', archive, '-aoa', `-o${tmpDir}`]);

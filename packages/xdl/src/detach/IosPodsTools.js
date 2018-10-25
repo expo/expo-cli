@@ -328,11 +328,14 @@ function _renderUnversionedPostinstall(sdkVersion) {
         config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
       end
     end
-    # Build React Native with RCT_DEV enabled
+    # Build React Native with RCT_DEV enabled and RCT_ENABLE_INSPECTOR and
+    # RCT_ENABLE_PACKAGER_CONNECTION disabled
     next unless target.pod_name == 'React'
     target.native_target.build_configurations.each do |config|
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_DEV=1'
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_ENABLE_INSPECTOR=0'
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'ENABLE_PACKAGER_CONNECTION=0'
     end
 `;
 }

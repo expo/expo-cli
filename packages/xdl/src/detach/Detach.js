@@ -7,7 +7,6 @@
 
 // Set EXPO_VIEW_DIR to universe/exponent to test locally
 
-import mkdirp from 'mkdirp';
 import fs from 'fs-extra';
 import JsonFile from '@expo/json-file';
 import path from 'path';
@@ -152,7 +151,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
   }
 
   let expoDirectory = path.join(projectRoot, '.expo-source');
-  mkdirp.sync(expoDirectory);
+  fs.mkdirpSync(expoDirectory);
   const context = StandaloneContext.createUserContext(projectRoot, exp, experienceUrl);
 
   // iOS
@@ -215,7 +214,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
 
     let androidDirectory = path.join(expoDirectory, 'android');
     rimraf.sync(androidDirectory);
-    mkdirp.sync(androidDirectory);
+    fs.mkdirpSync(androidDirectory);
     if (Versions.gteSdkVersion(exp, '24.0.0')) {
       await detachAndroidAsync(context, sdkVersionConfig.androidExpoViewUrl);
     } else {
@@ -323,7 +322,7 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
     );
   } else {
     tmpExpoDirectory = path.join(context.data.projectPath, 'temp-android-directory');
-    mkdirp.sync(tmpExpoDirectory);
+    fs.mkdirpSync(tmpExpoDirectory);
     logger.info('Downloading Android code...');
     await Api.downloadAsync(expoViewUrl, tmpExpoDirectory, { extract: true });
     await AndroidShellApp.copyInitialShellAppFilesAsync(

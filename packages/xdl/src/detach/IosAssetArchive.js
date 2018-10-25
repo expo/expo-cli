@@ -2,7 +2,7 @@
  *  @flow
  */
 
-import mkdirp from 'mkdirp';
+import fs from 'fs-extra';
 import path from 'path';
 
 import { spawnAsyncThrowError, parseSdkMajorVersion } from './ExponentTools';
@@ -20,7 +20,7 @@ async function buildAssetArchiveAsync(
   if (context.type !== 'service') {
     throw new Error('buildAssetArchive is only supported for service standalone contexts.');
   }
-  mkdirp.sync(intermediatesDirectory);
+  fs.mkdirpSync(intermediatesDirectory);
 
   // copy expoSourceRoot/.../Images.xcassets into intermediates
   await spawnAsyncThrowError(

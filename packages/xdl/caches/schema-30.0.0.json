@@ -716,6 +716,7 @@
           "intentFilters": {
             "description": "An array of intent filters.",
             "example": [{
+              "autoVerify": true,
               "action": "VIEW",
               "data": {
                 "scheme": "https",
@@ -731,6 +732,7 @@
             "items": {
               "type": "object",
               "properties": {
+                "autoVerify": { "type": "boolean" },
                 "action": { "type": "string" },
                 "data": {
                   "type": ["array", "object"],

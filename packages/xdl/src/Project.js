@@ -12,7 +12,12 @@ import fs from 'fs-extra';
 import HashIds from 'hashids';
 import joi from 'joi';
 import promisify from 'util.promisify';
-import _ from 'lodash';
+import chunk from 'lodash/chunk';
+import escapeRegExp from 'lodash/escapeRegExp';
+import get from 'lodash/get';
+import reduce from 'lodash/reduce';
+import set from 'lodash/set';
+import uniq from 'lodash/uniq';
 import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
@@ -39,10 +44,13 @@ import * as ExponentTools from './detach/ExponentTools';
 import * as Exp from './Exp';
 import * as ExpSchema from './project/ExpSchema';
 import FormData from './tools/FormData';
+import * as IosPlist from './detach/IosPlist';
+import * as IosWorkspace from './detach/IosWorkspace';
 import { isNode } from './tools/EnvironmentHelper';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as Sentry from './Sentry';
+import StandaloneContext from './detach/StandaloneContext';
 import * as ThirdParty from './ThirdParty';
 import * as UrlUtils from './UrlUtils';
 import UserManager from './User';
@@ -62,9 +70,6 @@ const joiValidateAsync = promisify(joi.validate);
 const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
-const stat = promisify(fs.stat);
-const truncate = promisify(fs.truncate);
-const appendFile = promisify(fs.appendFile);
 
 const request = Request.defaults({
   resolveWithFullResponse: true,
@@ -146,7 +151,9 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
     }
     throw new XDLError(
       errorCode,
-      `Packager URL ${fullUrl} returned unexpected code ${response.statusCode}. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
+      `Packager URL ${fullUrl} returned unexpected code ${response.statusCode}. ` +
+        'Please open your project in the Expo app and see if there are any errors. ' +
+        'Also scroll up and make sure there were no errors or warnings when opening your project.'
     );
   }
 
@@ -170,14 +177,14 @@ async function _resolveGoogleServicesFile(projectRoot, manifest) {
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter(({ fieldPath }) => _.get(manifest, fieldPath));
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)).filter(
+      ({ fieldPath }) => get(manifest, fieldPath)
+    );
 
     // Get the URLs
     const urls = await Promise.all(
       assetSchemas.map(async ({ fieldPath }) => {
-        const pathOrURL = _.get(manifest, fieldPath);
+        const pathOrURL = get(manifest, fieldPath);
         if (pathOrURL.match(/^https?:\/\/(.*)$/)) {
           // It's a remote URL
           return pathOrURL;
@@ -195,7 +202,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
     );
 
     // Set the corresponding URL fields
-    assetSchemas.forEach(({ fieldPath }, index) => _.set(manifest, fieldPath + 'Url', urls[index]));
+    assetSchemas.forEach(({ fieldPath }, index) => set(manifest, fieldPath + 'Url', urls[index]));
   } catch (e) {
     let logMethod = ProjectUtils.logWarning;
     if (strict) {
@@ -205,7 +212,9 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
       logMethod(
         projectRoot,
         'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
+        `Unable to resolve asset "${e.localAssetPath}" from "${
+          e.manifestField
+        }" in your app/exp.json.`
       );
     } else {
       logMethod(
@@ -433,8 +442,8 @@ export async function exportForAppHosting(
     await truncateLastNLines(androidJsPath, 1);
 
     // Add correct mapping to sourcemap paths
-    await appendFile(iosJsPath, `\n//# sourceMappingURL=${iosMapName}`);
-    await appendFile(androidJsPath, `\n//# sourceMappingURL=${androidMapName}`);
+    await fs.appendFile(iosJsPath, `\n//# sourceMappingURL=${iosMapName}`);
+    await fs.appendFile(androidJsPath, `\n//# sourceMappingURL=${androidMapName}`);
 
     // Make a debug html so user can debug their bundles
     logger.global.info('Preparing additional debugging files');
@@ -457,8 +466,8 @@ export async function exportForAppHosting(
 async function truncateLastNLines(filePath: string, n: number) {
   const lines = await readLastLines.read(filePath, n);
   const to_vanquish = lines.length;
-  const { size } = await stat(filePath);
-  await truncate(filePath, size - to_vanquish);
+  const { size } = await fs.stat(filePath);
+  await fs.truncate(filePath, size - to_vanquish);
 }
 
 async function _saveAssetAsync(projectRoot, assets, outputDir) {
@@ -471,7 +480,7 @@ async function _saveAssetAsync(projectRoot, assets, outputDir) {
   });
 
   // save files one chunk at a time
-  const keyChunks = _.chunk(Object.keys(paths), 5);
+  const keyChunks = chunk(Object.keys(paths), 5);
   for (const keys of keyChunks) {
     const promises = [];
     for (const key of keys) {
@@ -636,6 +645,12 @@ export async function publishAsync(
         exp.ios.publishManifestPath,
         JSON.stringify(iosManifest)
       );
+      const context = StandaloneContext.createUserContext(projectRoot, exp);
+      const { supportingDirectory } = IosWorkspace.getPaths(context);
+      await IosPlist.modifyAsync(supportingDirectory, 'EXShell', shellPlist => {
+        shellPlist.releaseChannel = options.releaseChannel;
+        return shellPlist;
+      });
     }
 
     if (exp.android && exp.android.publishManifestPath) {
@@ -675,8 +690,15 @@ export async function publishAsync(
         // ADD EMBEDDED RESPONSES HERE
         // START EMBEDDED RESPONSES
         embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+        embeddedResponses.add(new Constants.EmbeddedResponse("${
+          androidManifest.bundleUrl
+        }", "assets://shell-app.bundle", "application/javascript"));
         // END EMBEDDED RESPONSES`,
+        constantsPath
+      );
+      await ExponentTools.regexFileAsync(
+        /RELEASE_CHANNEL = "[^"]*"/,
+        `RELEASE_CHANNEL = "${options.releaseChannel}"`,
         constantsPath
       );
     }
@@ -831,9 +853,9 @@ async function _maybeBuildSourceMapsAsync(projectRoot, exp, options = {}) {
  *
  * @param {string} hostedAssetPrefix
  *    The path where assets are hosted (ie) http://xxx.cloudfront.com/assets/
- * 
+ *
  * @modifies {exp} Replaces relative asset paths in the manifest with hosted URLS
- * 
+ *
  */
 async function _collectAssets(projectRoot, exp, hostedAssetPrefix) {
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
@@ -871,9 +893,9 @@ async function _collectAssets(projectRoot, exp, hostedAssetPrefix) {
 
 /**
  * Configures exp, preparing it for asset export
- * 
+ *
  * @modifies {exp}
- * 
+ *
  */
 async function _configureExpForAssets(projectRoot, exp, assets) {
   // Add google services file if it exists
@@ -1067,7 +1089,7 @@ async function uploadAssetsAsync(projectRoot, assets) {
 
   // Upload them!
   await Promise.all(
-    _.chunk(missing, 5).map(async keys => {
+    chunk(missing, 5).map(async keys => {
       let formData = new FormData();
       for (const key of keys) {
         ProjectUtils.logDebug(projectRoot, 'expo', `uploading ${paths[key]}`);
@@ -1194,7 +1216,8 @@ export async function buildAsync(
     if (!exp.ios || !exp.ios.bundleIdentifier) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a bundle identifier in order to build this experience for iOS. Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
+        `Must specify a bundle identifier in order to build this experience for iOS.` +
+          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
       );
     }
   }
@@ -1203,7 +1226,8 @@ export async function buildAsync(
     if (!exp.android || !exp.android.package) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a java package in order to build this experience for Android. Please specify one in ${configName} at "${configPrefix}android.package"`
+        `Must specify a java package in order to build this experience for Android.` +
+          `Please specify one in ${configName} at "${configPrefix}android.package"`
       );
     }
   }
@@ -1297,7 +1321,7 @@ function _isIgnorableDuplicateModuleWarning(
     'react-native',
     'node_modules'
   );
-  let reactNativeNodeModulesPattern = _.escapeRegExp(reactNativeNodeModulesPath);
+  let reactNativeNodeModulesPattern = escapeRegExp(reactNativeNodeModulesPath);
   let reactNativeNodeModulesCollisionRegex = new RegExp(
     `Paths: ${reactNativeNodeModulesPattern}.+ collides with ${reactNativeNodeModulesPattern}.+`
   );
@@ -1382,7 +1406,7 @@ export async function startReactNativeServerAsync(
   if (!Versions.gteSdkVersion(exp, '16.0.0')) {
     delete packagerOpts.customLogReporterPath;
   }
-  const userPackagerOpts = _.get(exp, 'packagerOpts');
+  const userPackagerOpts = exp.packagerOpts;
   if (userPackagerOpts) {
     // The RN CLI expects rn-cli.config.js's path to be absolute. We use the
     // project root to resolve relative paths since that was the original
@@ -1396,7 +1420,7 @@ export async function startReactNativeServerAsync(
       ...userPackagerOpts,
       ...(userPackagerOpts.assetExts
         ? {
-            assetExts: _.uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]),
+            assetExts: uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]),
           }
         : {}),
     };
@@ -1405,7 +1429,7 @@ export async function startReactNativeServerAsync(
       packagerPort = userPackagerOpts.port;
     }
   }
-  let cliOpts = _.reduce(
+  let cliOpts = reduce(
     packagerOpts,
     (opts, val, key) => {
       // If the packager opt value is boolean, don't set
@@ -1429,14 +1453,19 @@ export async function startReactNativeServerAsync(
     'local-cli',
     'cli.js'
   );
-  const cliPath = _.get(exp, 'rnCliPath', defaultCliPath);
-  let nodePath; // When using a custom path for the RN CLI, we want it to use the project // root to look up config files and Node modules
+  const cliPath = exp.rnCliPath || defaultCliPath;
+  let nodePath;
+  // When using a custom path for the RN CLI, we want it to use the project
+  // root to look up config files and Node modules
   if (exp.rnCliPath) {
     nodePath = _nodePathForProjectRoot(projectRoot);
   } else {
     nodePath = null;
   }
-  // Run the copy of Node that's embedded in Electron by setting the // ELECTRON_RUN_AS_NODE environment variable // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the // child process
+  // Run the copy of Node that's embedded in Electron by setting the
+  // ELECTRON_RUN_AS_NODE environment variable
+  // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
+  // child process
   let packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
@@ -1495,7 +1524,11 @@ export async function startReactNativeServerAsync(
     )
   );
   await Promise.race([_waitForRunningAsync(statusUrl), exitPromise, timeoutPromise]);
-} // Simulate the node_modules resolution // If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns // "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
+}
+
+// Simulate the node_modules resolution
+// If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns
+// "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
   let paths = [];
   let directory = path.resolve(projectRoot);
@@ -1621,7 +1654,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       const hostUUID = await UserSettings.anonymousIdentifier();
       let currentSession = await UserManager.getSessionAsync();
       if (!currentSession) {
-        manifest.id = `@anonymous/${manifest.slug}-${hostUUID}`;
+        manifest.id = `@${UserManager.ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
       }
       let manifestString = JSON.stringify(manifest);
       if (req.headers['exponent-accept-signature']) {
@@ -1665,7 +1698,8 @@ export async function startExpoServerAsync(projectRoot: string) {
         developerTool: Config.developerTool,
       });
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`); // 5xx = Server Error HTTP code
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`);
+      // 5xx = Server Error HTTP code
       res.status(520).send({
         error: e.toString(),
       });
@@ -1766,6 +1800,9 @@ async function _connectToNgrokAsync(
 
 export async function startTunnelsAsync(projectRoot: string) {
   let username = await UserManager.getCurrentUsernameAsync();
+  if (!username) {
+    username = UserManager.ANONYMOUS_USERNAME;
+  }
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
@@ -1867,7 +1904,10 @@ export async function startTunnelsAsync(projectRoot: string) {
           ProjectUtils.logError(
             projectRoot,
             'expo',
-            'We noticed your tunnel is having issues. This may be due to intermittent problems with our tunnel provider. If you have trouble connecting to your app, try to Restart the project, or switch Host to LAN.'
+            'We noticed your tunnel is having issues. ' +
+              'This may be due to intermittent problems with our tunnel provider. ' +
+              'If you have trouble connecting to your app, try to Restart the project, ' +
+              'or switch Host to LAN.'
           );
         } else if (status === 'online') {
           ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
@@ -1877,7 +1917,10 @@ export async function startTunnelsAsync(projectRoot: string) {
   ]);
 }
 export async function stopTunnelsAsync(projectRoot: string) {
-  _assertValidProjectRoot(projectRoot); // This will kill all ngrok tunnels in the process. // We'll need to change this if we ever support more than one project // open at a time in XDE.
+  _assertValidProjectRoot(projectRoot);
+  // This will kill all ngrok tunnels in the process.
+  // We'll need to change this if we ever support more than one project
+  // open at a time in XDE.
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   let ngrokProcess = ngrok.process();
   let ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;

@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import fse from 'fs-extra';
 import matchRequire from 'match-require';
 import path from 'path';
-import rimraf from 'rimraf';
 import spawn from 'cross-spawn';
 import { ProjectUtils, Detach, Versions } from 'xdl';
 import log from '../../log';
@@ -206,16 +205,16 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
     pkgJson.scripts.ios = 'react-native run-ios';
     pkgJson.scripts.android = 'react-native run-android';
 
-    if (pkgJson.jest && pkgJson.jest.preset === 'jest-expo') {
-      pkgJson.jest.preset = 'react-native';
-      newDevDependencies.push('jest-react-native');
-    } else if (pkgJson.jest) {
-      log(
-        `${chalk.bold(
-          'Warning'
-        )}: it looks like you've changed the Jest preset from jest-expo to ${pkgJson.jest
-          .preset}. We recommend you make sure this Jest preset is compatible with ejected apps.`
-      );
+    if (pkgJson.jest !== undefined) {
+      newDevDependencies.push('jest');
+
+      if (pkgJson.jest.preset === 'jest-expo') {
+        pkgJson.jest.preset = 'react-native';
+      } else {
+        log(
+          `${chalk.bold('Warning')}: it looks like you've changed the Jest preset from jest-expo to ${pkgJson.jest.preset}. We recommend you make sure this Jest preset is compatible with ejected apps.`
+        );
+      }
     }
 
     // no longer relevant to an ejected project (maybe build is?)
@@ -243,7 +242,7 @@ Note that using \`${npmOrYarn} start\` will now require you to run Xcode and/or
 Android Studio to build the native code for your project.`);
 
     log('Removing node_modules...');
-    rimraf.sync(path.resolve('node_modules'));
+    await fse.remove('node_modules');
     if (useYarn) {
       log('Installing packages with yarn...');
       const args = newDevDependencies.length > 0 ? ['add', '--dev', ...newDevDependencies] : [];

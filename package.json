@@ -3,9 +3,10 @@
   "workspaces": ["packages/*"],
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "postbootstrap": "lerna run --stream prepare",
+    "postbootstrap": "lerna run prepare --stream",
     "prebootstrap": "yarn",
-    "publish": "lerna publish"
+    "publish": "lerna publish",
+    "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools"
   },
   "dependencies": {
     "lerna": "^3.4.1"

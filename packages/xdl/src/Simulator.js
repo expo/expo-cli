@@ -5,7 +5,6 @@
 import delayAsync from 'delay-async';
 import glob from 'glob-promise';
 import homeDir from 'home-dir';
-import mkdirp from 'mkdirp';
 import osascript from '@expo/osascript';
 import path from 'path';
 import semver from 'semver';
@@ -269,7 +268,7 @@ export async function _downloadSimulatorAppAsync(url) {
     }
   }
 
-  mkdirp.sync(dir);
+  fs.mkdirpSync(dir);
   try {
     await Api.downloadAsync(versions.iosUrl, dir, { extract: true });
   } catch (e) {
@@ -310,7 +309,7 @@ export async function _uninstallExpoAppFromSimulatorAsync() {
 export function _simulatorCacheDirectory() {
   let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
   let dir = path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache');
-  mkdirp.sync(dir);
+  fs.mkdirpSync(dir);
   return dir;
 }
 

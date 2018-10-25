@@ -27,6 +27,7 @@ const {
   spawnAsync,
   regexFileAsync,
   deleteLinesInFileAsync,
+  parseSdkMajorVersion,
 } = ExponentTools;
 
 const imageKeys = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
@@ -217,16 +218,16 @@ export async function copyInitialShellAppFilesAsync(
   shellPath,
   isDetached: boolean = false
 ) {
-  if (androidSrcPath) {
-    await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
+  if (androidSrcPath && !isDetached) {
+    // check if Android template files exist
+    // since we take out the prebuild step later on
+    // and we should have generated those files earlier
+    await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
       pipeToLogger: true,
-      loggerFields: { buildPhase: 'generating dynamic macros' },
+      loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
       cwd: path.join(androidSrcPath, 'app'),
-      env: {
-        ...process.env,
-        JSON_LOGS: '0',
-      },
-    }); // populate android template files now since we take out the prebuild step later on
+      env: process.env,
+    });
   }
 
   const initialCopyLogger = logger.withFields({ buildPhase: 'copying initial shell app files' });
@@ -242,6 +243,7 @@ export async function copyInitialShellAppFilesAsync(
 
   if (!isDetached) {
     await copyToShellApp('expoview');
+    await copyToShellApp('versioned-abis');
     await copyToShellApp('ReactCommon');
     await copyToShellApp('ReactAndroid');
   }
@@ -330,6 +332,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   );
 
   await copyInitialShellAppFilesAsync(androidSrcPath, shellPath);
+  await removeObsoleteSdks(shellPath, sdkVersion);
   await runShellAppModificationsAsync(context);
 
   if (!args.skipBuild) {
@@ -399,14 +402,9 @@ export async function runShellAppModificationsAsync(
     let appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
     await regexFileAsync(/\/\* UNCOMMENT WHEN DISTRIBUTING/g, '', appBuildGradle);
     await regexFileAsync(/END UNCOMMENT WHEN DISTRIBUTING \*\//g, '', appBuildGradle);
-    await regexFileAsync(
-      /\/\/ WHEN_DISTRIBUTING_REMOVE_FROM_HERE/g,
-      '/* REMOVED_WHEN_DISTRIBUTING_FROM_HERE',
-      appBuildGradle
-    );
-    await regexFileAsync(
-      /\/\/ WHEN_DISTRIBUTING_REMOVE_TO_HERE/g,
-      'REMOVED_WHEN_DISTRIBUTING_TO_HERE */',
+    await deleteLinesInFileAsync(
+      'WHEN_DISTRIBUTING_REMOVE_FROM_HERE',
+      'WHEN_DISTRIBUTING_REMOVE_TO_HERE',
       appBuildGradle
     );
 
@@ -1110,4 +1108,103 @@ export function addDetachedConfigToExp(exp: Object, context: StandaloneContext):
     path.join(assetsDirectory, 'shell-app-manifest.json')
   );
   return exp;
+}
+
+/**
+
+Some files in `android` directory have the following patterns of code:
+
+```
+// WHEN_PREPARING_SHELL_REMOVE_FROM_HERE
+
+// BEGIN_SDK_30
+some SDK 30-specific code
+// END_SDK_30
+
+// BEGIN_SDK_29
+some SDK 29-specific code
+// END_SDK_29
+
+...
+
+// WHEN_PREPARING_SHELL_REMOVE_TO_HERE
+```
+
+The following function replaces all `BEGIN_SDK_XX` with `REMOVE_TO_HERE`
+and all `END_SDK_XX` with `REMOVE_FROM_HERE`, so after the change the code above would read:
+
+```
+// WHEN_PREPARING_SHELL_REMOVE_FROM_HERE
+
+// WHEN_PREPARING_SHELL_REMOVE_TO_HERE       <--- changed
+some SDK 30-specific code
+// WHEN_PREPARING_SHELL_REMOVE_FROM_HERE     <--- changed
+
+// BEGIN_SDK_29
+some SDK 29-specific code
+// END_SDK_29
+
+...
+
+// WHEN_PREPARING_SHELL_REMOVE_TO_HERE
+```
+
+This allows us to use `deleteLinesInFileAsync` function to remove obsolete SDKs code easily.
+
+ */
+const removeInvalidSdkLinesWhenPreparingShell = async (majorSdkVersion, filePath) => {
+  await regexFileAsync(
+    new RegExp(`BEGIN_SDK_${majorSdkVersion}`, 'g'),
+    `WHEN_PREPARING_SHELL_REMOVE_TO_HERE`,
+    filePath
+  );
+  await regexFileAsync(
+    new RegExp(`END_SDK_${majorSdkVersion}`, 'g'),
+    `WHEN_PREPARING_SHELL_REMOVE_FROM_HERE`,
+    filePath
+  );
+  await deleteLinesInFileAsync(
+    /WHEN_PREPARING_SHELL_REMOVE_FROM_HERE/g,
+    'WHEN_PREPARING_SHELL_REMOVE_TO_HERE',
+    filePath
+  );
+};
+
+async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string) {
+  const filePathsToTransform = {
+    // Remove obsolete `expoview-abiXX_X_X` dependencies
+    appBuildGradle: path.join(shellPath, 'app/build.gradle'),
+    // Remove obsolete `host.exp.exponent:reactandroid:XX.X.X` dependencies from expoview
+    expoviewBuildGradle: path.join(shellPath, 'expoview/build.gradle'),
+    // Remove no-longer-valid interfaces from MultipleVersionReactNativeActivity
+    multipleVersionReactNativeActivity: path.join(
+      shellPath,
+      'expoview/src/main/java/host/exp/exponent/experience/MultipleVersionReactNativeActivity.java'
+    ),
+    // Remove invalid ABI versions from Constants
+    constants: path.join(shellPath, 'expoview/src/main/java/host/exp/exponent/Constants.java'),
+    // Remove non-existent DevSettingsActivities
+    appAndroidManifest: path.join(shellPath, 'app/src/main/AndroidManifest.xml'),
+  };
+
+  const majorSdkVersion = parseSdkMajorVersion(requiredSdkVersion);
+
+  // The single SDK change will happen when transitioning from SDK 30 to 31.
+  // Since SDK 31 there will be no versioned ABIs in shell applications, only unversioned one.
+  // And as such, we will treat the unversioned ABI as the SDK one by assigning TEMPORARY_ABI_VERSION.
+  const effectiveSdkVersion = majorSdkVersion > 30 ? 'UNVERSIONED' : `${majorSdkVersion}`;
+
+  if (effectiveSdkVersion === 'UNVERSIONED') {
+    await regexFileAsync(
+      'TEMPORARY_ABI_VERSION = null;',
+      `TEMPORARY_ABI_VERSION = "${requiredSdkVersion}";`,
+      filePathsToTransform.constants
+    );
+  }
+
+  await Promise.all(
+    Object.values(filePathsToTransform).map(filePath =>
+      removeInvalidSdkLinesWhenPreparingShell(effectiveSdkVersion, filePath)
+    )
+  );
 }
