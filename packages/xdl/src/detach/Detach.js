@@ -313,12 +313,14 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
   logger.info('Moving Android project files...');
   let androidProjectDirectory = path.join(context.data.projectPath, 'android');
   let tmpExpoDirectory;
+  const { sdkVersion } = context.data.exp;
   if (process.env.EXPO_VIEW_DIR) {
     // Only for testing
     await AndroidShellApp.copyInitialShellAppFilesAsync(
       path.join(process.env.EXPO_VIEW_DIR, 'android'),
       androidProjectDirectory,
-      true
+      true,
+      sdkVersion
     );
   } else {
     tmpExpoDirectory = path.join(context.data.projectPath, 'temp-android-directory');
@@ -328,7 +330,8 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
     await AndroidShellApp.copyInitialShellAppFilesAsync(
       tmpExpoDirectory,
       androidProjectDirectory,
-      true
+      true,
+      sdkVersion
     );
   }
 

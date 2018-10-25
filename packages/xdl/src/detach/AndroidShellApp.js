@@ -18,6 +18,7 @@ import * as ExponentTools from './ExponentTools';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 import renderIntentFilters from './AndroidIntentFilters';
+import * as Versions from '../Versions';
 import logger from './Logger';
 
 const {
@@ -216,18 +217,31 @@ function shouldShowLoadingView(manifest) {
 export async function copyInitialShellAppFilesAsync(
   androidSrcPath,
   shellPath,
-  isDetached: boolean = false
+  isDetached,
+  sdkVersion
 ) {
-  if (androidSrcPath && !isDetached) {
-    // check if Android template files exist
-    // since we take out the prebuild step later on
-    // and we should have generated those files earlier
-    await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
-      pipeToLogger: true,
-      loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
-      cwd: path.join(androidSrcPath, 'app'),
-      env: process.env,
-    });
+  if (androidSrcPath) {
+    if (!isDetached && ExponentTools.parseSdkMajorVersion(sdkVersion) >= 31) {
+      // check if Android template files exist
+      // since we take out the prebuild step later on
+      // and we should have generated those files earlier
+      await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
+        pipeToLogger: true,
+        loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
+        cwd: path.join(androidSrcPath, 'app'),
+        env: process.env,
+      });
+    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) < 31) {
+      await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
+        pipeToLogger: true,
+        loggerFields: { buildPhase: 'generating dynamic macros' },
+        cwd: path.join(androidSrcPath, 'app'),
+        env: {
+          ...process.env,
+          JSON_LOGS: '0',
+        },
+      }); // populate android template files now since we take out the prebuild step later on
+    }
   }
 
   const initialCopyLogger = logger.withFields({ buildPhase: 'copying initial shell app files' });
@@ -331,7 +345,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     releaseChannel
   );
 
-  await copyInitialShellAppFilesAsync(androidSrcPath, shellPath);
+  await copyInitialShellAppFilesAsync(androidSrcPath, shellPath, false, sdkVersion);
   await removeObsoleteSdks(shellPath, sdkVersion);
   await runShellAppModificationsAsync(context);
 
