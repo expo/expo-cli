@@ -1,23 +1,21 @@
 # So that we can require funcs.rb
 $LOAD_PATH.unshift File.expand_path(__dir__, __FILE__)
 
-require 'produce'
+require 'pilot'
 require 'funcs'
 require 'json'
 
-$bundleId, $appName, $username, $language = ARGV
+$ipaPath, $username = ARGV
 $result = nil
 
 captured_stderr = with_captured_stderr{
   begin
     config = {
-      app_identifier: $bundleId,
-      app_name: $appName,
+      ipa: $ipaPath,
       username: $username,
-      language: $language,
+      skip_waiting_for_build_processing: true,
     }
-    Produce.config = FastlaneCore::Configuration.create(Produce::Options.available_options, config)
-    Produce::Manager.start_producing
+    Pilot::BuildManager.new.upload(config)
     $result = JSON.generate({ result: 'success' })
   rescue Spaceship::Client::InvalidUserCredentialsError => invalid_cred
     $result = JSON.generate({

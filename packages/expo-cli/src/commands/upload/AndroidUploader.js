@@ -1,54 +1,45 @@
-import fs from 'fs';
-import prompt from '../../prompt';
-import log from '../../log';
+import _ from 'lodash';
+import fs from 'fs-extra';
 
 import BaseUploader from './BaseUploader';
 import { printFastlaneError, spawnAndCollectJSONOutputAsync } from './utils';
+import prompt from '../../prompt';
+import log from '../../log';
+
+const PLATFORM = 'android';
 
 export default class AndroidUploader extends BaseUploader {
   constructor(projectDir, options) {
-    const args = {
-      projectDir,
-      options,
-      platform: 'android',
-      platformName: 'Android',
-      platformExtension: 'apk',
-    };
-    super(args);
+    super(PLATFORM, projectDir, options);
   }
 
-  ensurePlatformOptionsAreCorrect() {
-    const { key } = this.options;
-    if (key && !fs.existsSync(key)) {
-      throw new Error(`No such file: ${key}`);
+  _ensureExperienceIsValid(exp) {
+    if (!_.has(exp, 'android.package')) {
+      throw new Error('You must specify an Android package in app.json.');
     }
   }
 
-  ensureConfigDataIsCorrect(configData) {
-    const { android } = configData;
-    if (!android || !android.package) {
-      throw new Error(`You must specify a package in order to upload apk file.`);
-    }
-  }
-
-  async getPlatformData() {
-    if (!this.options.key) {
-      log('You can specify json file ID using --key option');
-      const { key } = await prompt({
+  async _getPlatformSpecificOptions() {
+    let { key } = this.options;
+    if (!key) {
+      log('You can specify JSON file using --key option');
+      const userInput = await prompt({
         name: 'key',
-        message: 'The service account json file used to authenticate with Google Play Store:',
+        message:
+          'Path to the service account JSON file used to authenticate with Google Play Store:',
         type: 'input',
       });
-      if (!fs.existsSync(key)) {
-        throw new Error(`No such file: ${key}`);
-      }
-      return { key };
+      key = userInput.key;
     }
-    return { key: this.options.key };
+    if (!await fs.exists(key)) {
+      throw new Error(`No such file: ${key}`);
+    }
+    return { key };
   }
 
-  async uploadToStore({ android: { package: androidPackage } }, { key }, path) {
-    const fastlane = this.fastlane;
+  async _uploadToTheStore({ key }, path) {
+    const { android: { package: androidPackage } } = this._exp;
+    const { fastlane } = this;
     const supply = await spawnAndCollectJSONOutputAsync(fastlane.app_supply, [
       androidPackage,
       path,
