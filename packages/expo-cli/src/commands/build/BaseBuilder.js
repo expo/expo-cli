@@ -86,6 +86,12 @@ export default class BaseBuilder {
     }
 
     if (!(buildStatus.jobs && buildStatus.jobs.length)) {
+      if (current && buildStatus.userHasBuiltAppBefore) {
+        log.warn(`Did you know that Expo provides over-the-air updates?
+Please see the docs (${chalk.underline(
+          'https://docs.expo.io/versions/latest/guides/configuring-ota-updates'
+        )}) and check if you can use them instead of building your app binaries again.`);
+      }
       log('No currently active or previous builds for this project.');
       return;
     }
@@ -124,12 +130,12 @@ You can check the queue length at ${chalk.underline(constructTurtleStatusUrl())}
           break;
         case 'errored':
           status = 'There was an error with this build.';
-          if (buildStatus.id) {
+          if (job.id) {
             status += `
 
 When requesting support, please provide this build ID:
 
-${buildStatus.id}
+${job.id}
 `;
           }
           break;
