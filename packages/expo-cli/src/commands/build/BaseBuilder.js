@@ -68,6 +68,7 @@ export default class BaseBuilder {
       platform = 'all',
       current = true,
       publicUrl,
+      sdkVersion,
     }: { platform: string, current: boolean, publicUrl?: string } = {}
   ): Promise<void> {
     await this._checkProjectConfig();
@@ -79,6 +80,7 @@ export default class BaseBuilder {
       platform,
       current,
       ...(publicUrl ? { publicUrl } : {}),
+      sdkVersion,
     });
 
     if (buildStatus.err) {

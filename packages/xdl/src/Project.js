@@ -177,9 +177,9 @@ async function _resolveGoogleServicesFile(projectRoot, manifest) {
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)).filter(
-      ({ fieldPath }) => get(manifest, fieldPath)
-    );
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
+      manifest.sdkVersion
+    )).filter(({ fieldPath }) => get(manifest, fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -212,9 +212,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
       logMethod(
         projectRoot,
         'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${
-          e.manifestField
-        }" in your app/exp.json.`
+        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
       );
     } else {
       logMethod(
@@ -451,7 +449,7 @@ export async function exportForAppHosting(
     <script src="${urljoin('bundles', iosBundleUrl)}"></script>
     <script src="${urljoin('bundles', androidBundleUrl)}"></script>
     Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
-    You can see a red coloured folder containing the original source code from your bundle. 
+    You can see a red coloured folder containing the original source code from your bundle.
     `;
     await _writeArtifactSafelyAsync(
       projectRoot,
@@ -690,9 +688,7 @@ export async function publishAsync(
         // ADD EMBEDDED RESPONSES HERE
         // START EMBEDDED RESPONSES
         embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-        embeddedResponses.add(new Constants.EmbeddedResponse("${
-          androidManifest.bundleUrl
-        }", "assets://shell-app.bundle", "application/javascript"));
+        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
         // END EMBEDDED RESPONSES`,
         constantsPath
       );
@@ -1166,6 +1162,7 @@ export async function buildAsync(
     releaseChannel?: string,
     bundleIdentifier?: string,
     publicUrl?: string,
+    sdkVersion?: string,
   } = {}
 ) {
   await UserManager.ensureLoggedInAsync();
@@ -1177,7 +1174,7 @@ export async function buildAsync(
     platform: options.platform,
   });
 
-  let schema = joi.object().keys({
+  const schema = joi.object().keys({
     current: joi.boolean(),
     mode: joi.string(),
     platform: joi.any().valid('ios', 'android', 'all'),
@@ -1186,6 +1183,7 @@ export async function buildAsync(
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
     bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-\.]+$/),
     publicUrl: joi.string(),
+    sdkVersion: joi.strict(),
   });
 
   try {
@@ -1232,16 +1230,10 @@ export async function buildAsync(
     }
   }
 
-  if (process.env.FORCE_TURTLE_VERSION) {
-    options.forceTurtleVersion = process.env.FORCE_TURTLE_VERSION;
-  }
-
-  let response = await Api.callMethodAsync('build', [], 'put', {
+  return await Api.callMethodAsync('build', [], 'put', {
     manifest: exp,
     options,
   });
-
-  return response;
 }
 
 async function _waitForRunningAsync(url) {
