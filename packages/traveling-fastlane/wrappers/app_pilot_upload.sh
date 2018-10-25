@@ -13,7 +13,7 @@ export FASTLANE_SKIP_UPDATE_CHECK=1
 export FASTLANE_DISABLE_ANIMATION=1
 export FASTLANE_HIDE_GITHUB_ISSUES=1
 
-script="$SELFDIR/lib/app/app_deliver.rb"
+script="$SELFDIR/lib/app/app_pilot_upload.rb"
 
 lib_loc="$SELFDIR/lib/app"
 
