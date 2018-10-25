@@ -214,6 +214,18 @@ function shouldShowLoadingView(manifest) {
   );
 }
 
+const checkDynamicMacrosScriptPath = androidSrcPath =>
+  path.join(androidSrcPath, '../tools-public/check-dynamic-macros-android.sh');
+
+async function ensureDynamicMacrosExist(androidSrcPath) {
+  await spawnAsyncThrowError(checkDynamicMacrosScriptPath(androidSrcPath), [], {
+    pipeToLogger: true,
+    loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
+    cwd: path.join(androidSrcPath, 'app'),
+    env: process.env,
+  });
+}
+
 export async function copyInitialShellAppFilesAsync(
   androidSrcPath,
   shellPath,
@@ -221,26 +233,33 @@ export async function copyInitialShellAppFilesAsync(
   sdkVersion
 ) {
   if (androidSrcPath) {
+    // The following convoluted logic ensures that:
+    // 1. In SDK 31 and higher we ensure that dynamic macros exist instead of
+    //    regenerating them (with a special script).
+    // 2. In pre-SDK 31 projects we ensure dynamic macros exist if we can
+    //    (i. e. if the script for that exists, for example in shell app context
+    //    or in some upgraded environment).
+    // 3. Otherwise, that is in pre-SDK 31 projects that have no confirming script
+    //    we fallback to previous behavior, which was running `generate-dynamic-macros-android.sh`.
     if (!isDetached && ExponentTools.parseSdkMajorVersion(sdkVersion) >= 31) {
       // check if Android template files exist
       // since we take out the prebuild step later on
       // and we should have generated those files earlier
-      await spawnAsyncThrowError('../../tools-public/check-dynamic-macros-android.sh', [], {
-        pipeToLogger: true,
-        loggerFields: { buildPhase: 'confirming that dynamic macros exist' },
-        cwd: path.join(androidSrcPath, 'app'),
-        env: process.env,
-      });
+      await ensureDynamicMacrosExist();
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) < 31) {
-      await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
-        pipeToLogger: true,
-        loggerFields: { buildPhase: 'generating dynamic macros' },
-        cwd: path.join(androidSrcPath, 'app'),
-        env: {
-          ...process.env,
-          JSON_LOGS: '0',
-        },
-      }); // populate android template files now since we take out the prebuild step later on
+      if (await fs.pathExists(checkDynamicMacrosScriptPath(androidSrcPath))) {
+        await ensureDynamicMacrosExist();
+      } else {
+        await spawnAsync(`../../tools-public/generate-dynamic-macros-android.sh`, [], {
+          pipeToLogger: true,
+          loggerFields: { buildPhase: 'generating dynamic macros' },
+          cwd: path.join(androidSrcPath, 'app'),
+          env: {
+            ...process.env,
+            JSON_LOGS: '0',
+          },
+        }); // populate android template files now since we take out the prebuild step later on
+      }
     }
   }
 
