@@ -109,18 +109,31 @@ export async function canTurtleBuildSdkVersion(sdkVersion, platform) {
     return true;
   }
 
+  if (semver.valid(sdkVersion) == null) {
+    throw new XDLError(
+      ErrorCode.INVALID_VERSION,
+      `"${sdkVersion}" is not a valid version. Must be in the form of x.y.z`
+    );
+  }
+
   const turtleSdkVersions = await Api.turtleSdkVersionsAsync();
+  const expoSdkVersion = (await Api.sdkVersionsAsync())[sdkVersion];
+
+  if (expoSdkVersion === undefined) {
+    throw new XDLError(
+      ErrorCode.INVALID_VERSION,
+      `"${sdkVersion}" is not a valid Expo SDK version.`
+    );
+  } else if (expoSdkVersion.isDeprecated) {
+    throw new XDLError(
+      ErrorCode.INVALID_VERSION,
+      `"${sdkVersion}" is deprecated. Please update Expo SDK version.`
+    );
+  }
   if (!turtleSdkVersions || !turtleSdkVersions[platform]) {
     return true;
   }
 
-  try {
-    const turtleSdkVersion = turtleSdkVersions[platform];
-    return semver.gte(turtleSdkVersion, sdkVersion);
-  } catch (e) {
-    throw new XDLError(
-      ErrorCode.INVALID_VERSION,
-      `${sdkVersion} is not a valid version. Must be in the form of x.y.z`
-    );
-  }
+  const turtleSdkVersion = turtleSdkVersions[platform];
+  return semver.gte(turtleSdkVersion, sdkVersion);
 }
