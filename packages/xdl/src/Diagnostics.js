@@ -18,14 +18,14 @@ import * as Binaries from './Binaries';
 import * as Env from './Env';
 import FormData from './tools/FormData';
 import { isNode } from './tools/EnvironmentHelper';
-import UserManager from './User';
+import UserManager, { ANONYMOUS_USERNAME } from './User';
 import UserSettings from './UserSettings';
 import * as Utils from './Utils';
 import * as Watchman from './Watchman';
 
 async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   let user = await UserManager.getCurrentUserAsync();
-  let username = user ? user.username : UserManager.ANONYMOUS_USERNAME;
+  let username = user ? user.username : ANONYMOUS_USERNAME;
 
   // write info to file
   let expoHome = UserSettings.dotExpoHomeDirectory();
