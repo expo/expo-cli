@@ -131,8 +131,8 @@ const createChooseDistCertPrompt = choices => ({
 });
 
 export default class IOSBuilder extends BaseBuilder {
-  async run(options) {
-    const publicUrl = options.publicUrl;
+  async run() {
+    const publicUrl = this.options.publicUrl;
     const buildOptions = {
       ...(publicUrl ? { publicUrl } : {}),
     };
@@ -217,7 +217,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     );
   }
 
-  async runningAsCI(credsStarter, credsMetadata) {
+  async runningAsCI() {
     const creds = {
       teamId: this.options.teamId,
       certP12: this.options.distP12Path,
@@ -227,78 +227,92 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       provisioningProfile: this.options.provisioningProfilePath,
     };
 
-    this._copyOverAsString(credsStarter, {
+    return {
       ...creds,
-      provisioningProfile: (await fs.readFile(creds.provisioningProfile)).toString('base64'),
-      certP12: (await fs.readFile(creds.certP12)).toString('base64'),
-      pushP12: (await fs.readFile(creds.pushP12)).toString('base64'),
-    });
+      ...{
+        provisioningProfile: (await fs.readFile(creds.provisioningProfile)).toString('base64'),
+        certP12: (await fs.readFile(creds.certP12)).toString('base64'),
+        pushP12: (await fs.readFile(creds.pushP12)).toString('base64'),
+      },
+    };
   }
 
-  async runningAsExpert(
-    credsStarter,
-    credsMetadata,
-    credentialsToAskFor = ['distCert', 'pushCert', 'provisioningProfile']
-  ) {
+  async runningAsExpert(credentialsToAskFor = ['distCert', 'pushCert', 'provisioningProfile']) {
     log(expertPrompt);
+    let newCredentials = {},
+      newMetadata = {};
     for (const choice of credentialsToAskFor) {
-      await this.userProvidedOverride(credsStarter, choice, credsMetadata);
+      const { metadata, credentials } = await this.userProvidedOverride(choice);
+      newCredentials = { ...newCredentials, ...credentials };
+      newMetadata = { ...newMetadata, ...metadata };
     }
+    return {
+      newCredentials,
+      newMetadata,
+    };
   }
 
   // End user wants to override these credentials, that is, they want
   // to provide their own creds
-  async userProvidedOverride(credsStarter, choice, credsMetadata) {
+  async userProvidedOverride(choice) {
     switch (choice) {
       case 'distCert': {
         log('Please provide your distribution certificate P12:');
         const distCertValues = await prompt(sharedQuestions);
         const certP12Buffer = await fs.readFile(distCertValues.pathToP12);
         const certPassword = distCertValues.p12Password;
-        credsMetadata.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        const distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
           certP12Buffer,
           certPassword
         );
-        this._copyOverAsString(credsStarter, {
-          certP12: certP12Buffer.toString('base64'),
-          certPassword,
-        });
-        break;
+        return {
+          metadata: distCertSerialNumber,
+          credentials: this._ensureObjectsHasOnlyStrings({
+            certP12: certP12Buffer.toString('base64'),
+            certPassword,
+          }),
+        };
       }
       case 'pushCert': {
         log('Please provide the path to your push notification cert P12');
         const pushCertValues = await prompt(sharedQuestions);
-        this._copyOverAsString(credsStarter, {
-          pushP12: (await fs.readFile(pushCertValues.pathToP12)).toString('base64'),
-          pushPassword: pushCertValues.p12Password,
-        });
-        break;
+        return {
+          metadata: {},
+          credentials: this._ensureObjectsHasOnlyStrings({
+            pushP12: (await fs.readFile(pushCertValues.pathToP12)).toString('base64'),
+            pushPassword: pushCertValues.p12Password,
+          }),
+        };
       }
       case 'provisioningProfile': {
         log('Please provide the path to your .mobile provisioning profile');
         const { pathToProvisioningProfile } = await prompt(provisionProfilePath);
-        this._copyOverAsString(credsStarter, {
-          provisioningProfile: (await fs.readFile(pathToProvisioningProfile)).toString('base64'),
-        });
-        break;
+        return {
+          metadata: {},
+          credentials: this._ensureObjectsHasOnlyStrings({
+            provisioningProfile: (await fs.readFile(pathToProvisioningProfile)).toString('base64'),
+          }),
+        };
       }
       default:
         throw new Error(`Unknown choice to override: ${choice}`);
     }
   }
 
-  _copyOverAsString(credsStarter, authActionAttempt) {
-    Object.keys(authActionAttempt).forEach(k => {
-      const isString = typeof authActionAttempt[k] === 'string';
+  _ensureObjectsHasOnlyStrings(obj) {
+    const result = {};
+    Object.keys(obj).forEach(k => {
+      const isString = typeof obj[k] === 'string';
       if (isString) {
-        credsStarter[k] = authActionAttempt[k];
+        result[k] = obj[k];
       } else {
-        credsStarter[k] = JSON.stringify(authActionAttempt[k]);
+        result[k] = JSON.stringify(obj[k]);
       }
     });
+    return result;
   }
 
-  async _ensureAppExists(appleCreds, credsMetadata, teamId, credsStarter) {
+  async _ensureAppExists(appleCreds, credsMetadata, teamId) {
     let checkAppExistenceAttempt = await authFuncs.ensureAppIdLocally(
       appleCreds,
       credsMetadata,
@@ -315,10 +329,11 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       );
     }
     this._throwIfFailureWithReasonDump(checkAppExistenceAttempt);
-    this._copyOverAsString(credsStarter, checkAppExistenceAttempt);
+    const { result, ...other } = checkAppExistenceAttempt;
+    return this._ensureObjectsHasOnlyStrings(other);
   }
 
-  async produceProvisionProfile(appleCreds, credsMetadata, teamId, credsStarter, isEnterprise) {
+  async produceProvisionProfile(appleCreds, credsMetadata, teamId, isEnterprise) {
     const produceProvisionProfileAttempt = await authFuncs.produceProvisionProfile(
       appleCreds,
       credsMetadata,
@@ -332,21 +347,26 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       log.warn(authFuncs.APPLE_ERRORS);
     }
     this._throwIfFailureWithReasonDump(produceProvisionProfileAttempt);
-    this._copyOverAsString(credsStarter, produceProvisionProfileAttempt);
+    return this._ensureObjectsHasOnlyStrings(produceProvisionProfileAttempt);
   }
 
-  async expoManagedResource(credsStarter, choice, appleCreds, teamId, credsMetadata, isEnterprise) {
+  async expoManagedResource(choice, appleCreds, teamId, credsMetadata, isEnterprise) {
     switch (choice) {
-      case 'distCert':
+      case 'distCert': {
         const produceCertAttempt = await authFuncs.produceCerts(appleCreds, teamId, isEnterprise);
         this._throwIfFailureWithReasonDump(produceCertAttempt);
-        credsMetadata.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        const distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
           produceCertAttempt.certP12,
           produceCertAttempt.certPassword
         );
-        this._copyOverAsString(credsStarter, produceCertAttempt);
-        break;
-      case 'pushCert':
+        return {
+          metadata: {
+            distCertSerialNumber,
+          },
+          credentials: this._ensureObjectsHasOnlyStrings(produceCertAttempt),
+        };
+      }
+      case 'pushCert': {
         const producePushCertsAttempt = await authFuncs.producePushCerts(
           appleCreds,
           credsMetadata,
@@ -354,17 +374,21 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           isEnterprise
         );
         this._throwIfFailureWithReasonDump(producePushCertsAttempt);
-        this._copyOverAsString(credsStarter, producePushCertsAttempt);
-        break;
+        return {
+          metadata: {},
+          credentials: this._ensureObjectsHasOnlyStrings(producePushCertsAttempt),
+        };
+      }
       case 'provisioningProfile':
-        await this.produceProvisionProfile(
-          appleCreds,
-          credsMetadata,
-          teamId,
-          credsStarter,
-          isEnterprise
-        );
-        break;
+        return {
+          metadata: {},
+          credentials: await this.produceProvisionProfile(
+            appleCreds,
+            credsMetadata,
+            teamId,
+            isEnterprise
+          ),
+        };
       default:
         throw new Error(`Unknown manage resource choice requested: ${choice}`);
     }
@@ -394,7 +418,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
-  async _handleRevokes(appleCredentials, credsStarter, credsMetadata, teamId, isEnterprise) {
+  async _handleRevokes(appleCredentials, credsMetadata, teamId, isEnterprise) {
     const f = this._revokeHelper.bind(null, appleCredentials, credsMetadata, teamId, isEnterprise);
     if (this.options.revokeAppleDistCerts) {
       log.warn('ATTENTION: Revoking your Apple Distribution Certificates is permanent');
@@ -428,39 +452,38 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
   }
 
-  async _validateCredsEnsureAppExists(credsStarter, credsMetadata, justTeamId, isEnterprise) {
+  async _validateCredsEnsureAppExists(credsMetadata, justTeamId, isEnterprise) {
     const appleCredentials = await this.askForAppleCreds(justTeamId);
     log('Validating Credentials...');
     const checkCredsAttempt = await authFuncs.validateCredentialsProduceTeamId(appleCredentials);
     this._throwIfFailureWithReasonDump(checkCredsAttempt);
-    credsStarter.teamId = checkCredsAttempt.teamId;
-    credsStarter.teamName = checkCredsAttempt.teamName;
     await this._handleRevokes(
       appleCredentials,
-      credsStarter,
       credsMetadata,
       checkCredsAttempt.teamId,
       isEnterprise
     );
-    await this._ensureAppExists(
+    await this._ensureAppExists(appleCredentials, credsMetadata, checkCredsAttempt.teamId);
+    return {
       appleCredentials,
-      credsMetadata,
-      checkCredsAttempt.teamId,
-      credsStarter
-    );
-    return appleCredentials;
+      team: {
+        teamId: checkCredsAttempt.teamId,
+        teamName: checkCredsAttempt.teamName,
+      },
+    };
   }
 
   async runningAsExpoManaged(
     appleCredentials,
-    credsStarter,
+    teamId,
     credsMetadata,
     isEnterprise,
     credsMissing = ['distCert', 'pushCert', 'provisioningProfile']
   ) {
     // (dsokal)
     // This function and generally - IOSBuilder is unnecessarily overcomplicated.
-    // It would be good to refactor it some day, because changing anything here always takes me more time than I think it should.
+    // It would be good to refactor it some day, because changing anything here
+    // always takes me more time than I think it should.
     //
     // There are only two possible scenarios here:
     //  - all of credentials are missing
@@ -477,7 +500,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     const expoManages = { provisioningProfile: true };
 
     const { userCredentialId, serialNumber } = whatToOverrideResult.distCert
-      ? await this._chooseDistCert(credsMetadata.username, credsStarter.teamId)
+      ? await this._chooseDistCert(credsMetadata.username, teamId)
       : {};
 
     const toCopy = userCredentialId
@@ -485,9 +508,14 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       : whatToOverrideResult;
     Object.assign(expoManages, toCopy);
 
+    let newCredentials = {};
+    let newMetadata = {
+      ...credsMetadata,
+    };
+
     if (userCredentialId) {
-      credsStarter.userCredentialId = userCredentialId;
-      credsMetadata.distCertSerialNumber = serialNumber;
+      newCredentials.userCredentialId = userCredentialId;
+      newMetadata.distCertSerialNumber = serialNumber;
     }
 
     const spinner = ora('Running local authentication and producing required credentials').start();
@@ -498,17 +526,20 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         spinner.text = `Now producing files for ${choice}`;
         if (expoManages[choice]) {
           spinner.start();
-          await this.expoManagedResource(
-            credsStarter,
+          const { metadata, credentials } = await this.expoManagedResource(
             choice,
             appleCredentials,
-            credsStarter.teamId,
-            credsMetadata,
+            teamId,
+            newMetadata,
             isEnterprise
           );
+          newMetadata = { ...newMetadata, ...metadata };
+          newCredentials = { ...newCredentials, ...credentials };
         } else {
           spinner.stop();
-          await this.userProvidedOverride(credsStarter, choice, credsMetadata);
+          const { metadata, credentials } = await this.userProvidedOverride(choice);
+          newMetadata = { ...newMetadata, ...metadata };
+          newCredentials = { ...newCredentials, ...credentials };
         }
       }
     } catch (e) {
@@ -516,6 +547,10 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     } finally {
       spinner.stop();
     }
+    return {
+      newCredentials,
+      newMetadata,
+    };
   }
 
   async _chooseDistCert(username, teamId) {
@@ -588,31 +623,35 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       credsStarter = {};
     }
     if (this.checkEnv()) {
-      await this.runningAsCI(credsStarter, credsMetadata);
-      this._areCredsMissing(credsStarter);
-      await Credentials.updateCredentialsForPlatform('ios', credsStarter, credsMetadata);
+      const credentialsCI = this.runningAsCI();
+      const creds = { ...credsStarter, ...credentialsCI };
+      this._areCredsMissing(creds);
+      await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
       log.warn(`Encrypted ${Object.keys(OBLIGATORY_CREDS_KEYS)} and saved to expo servers`);
     } else if (clientHasAllNeededCreds === false) {
-      // We just keep mutating the creds object.
       const strategy = await prompt(runAsExpertQuestion);
       const isEnterprise = this.options.appleEnterpriseAccount !== undefined;
       credsStarter.enterpriseAccount = isEnterprise ? 'true' : 'false';
-      const appleCredentials = await this._validateCredsEnsureAppExists(
-        credsStarter,
+      const { appleCredentials, team } = await this._validateCredsEnsureAppExists(
         credsMetadata,
         !strategy.isExpoManaged,
         isEnterprise
       );
+      credsStarter = { ...credsStarter, ...team };
       if (strategy.isExpoManaged) {
-        await this.runningAsExpoManaged(
+        const { newCredentials, newMetadata } = await this.runningAsExpoManaged(
           appleCredentials,
-          credsStarter,
+          credsStarter.teamId,
           credsMetadata,
           isEnterprise,
           credsMissing
         );
+        credsStarter = { ...credsStarter, ...newCredentials };
+        credsMetadata = { ...credsMetadata, ...newMetadata };
       } else {
-        await this.runningAsExpert(credsStarter, credsMetadata, credsMissing);
+        const { newCredentials, newMetadata } = await this.runningAsExpert(credsMissing);
+        credsStarter = { ...credsStarter, ...newCredentials };
+        credsMetadata = { ...credsMetadata, ...newMetadata };
       }
       const { result, ...creds } = credsStarter;
       this._areCredsMissing(creds);
