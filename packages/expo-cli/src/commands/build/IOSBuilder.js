@@ -623,11 +623,11 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       credsStarter = {};
     }
     if (this.checkEnv()) {
-      const credentialsCI = this.runningAsCI();
+      const credentialsCI = await this.runningAsCI();
       const creds = { ...credsStarter, ...credentialsCI };
       this._areCredsMissing(creds);
       await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
-      log.warn(`Encrypted ${Object.keys(OBLIGATORY_CREDS_KEYS)} and saved to expo servers`);
+      log.warn(`Encrypted ${Object.keys(OBLIGATORY_CREDS_KEYS).join(', ')} and saved to expo servers`);
     } else if (clientHasAllNeededCreds === false) {
       const strategy = await prompt(runAsExpertQuestion);
       const isEnterprise = this.options.appleEnterpriseAccount !== undefined;
