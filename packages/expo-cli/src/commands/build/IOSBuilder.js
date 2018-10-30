@@ -627,7 +627,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   _throwIfFailureWithReasonDump(replyAttempt) {
     if (replyAttempt.result === 'failure') {
       const { reason, rawDump } = replyAttempt;
-      throw new Error(`Reason:${reason}, raw:${JSON.stringify(rawDump)}`);
+      throw new Error(`Reason: ${reason}, raw: ${JSON.stringify(rawDump, null, 2)}`);
     }
   }
 
