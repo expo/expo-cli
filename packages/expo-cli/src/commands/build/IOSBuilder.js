@@ -239,8 +239,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
 
   async runningAsExpert(credentialsToAskFor = ['distCert', 'pushCert', 'provisioningProfile']) {
     log(expertPrompt);
-    let newCredentials = {},
-      newMetadata = {};
+    let newCredentials = {};
+    let newMetadata = {};
     for (const choice of credentialsToAskFor) {
       const { metadata, credentials } = await this.userProvidedOverride(choice);
       newCredentials = { ...newCredentials, ...credentials };
