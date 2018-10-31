@@ -7,14 +7,21 @@ import log from '../log';
 const COMMON_OPTIONS = ['id', 'latest', 'path'];
 
 export default program => {
+  const ANDROID_OPTIONS = [...COMMON_OPTIONS, 'key', 'track'];
   const androidCommand = program.command('upload:android [projectDir]').alias('ua');
   setCommonOptions(androidCommand, '.apk');
   androidCommand
     .option('--key <key>', 'path to the JSON key used to authenticate with the Google Play Store')
+    .option(
+      '--track <track>',
+      'the track of the application to use, choose from: production, beta, alpha, internal, rollout',
+      /^(production|beta|alpha|internal|rollout)$/i,
+      'internal'
+    )
     .description(
       'Uploads standalone android app to the Google Play Store (it works on macOS only). Uploads the latest build by default.'
     )
-    .asyncActionProjectDir(createUploadAction(AndroidUploader, [...COMMON_OPTIONS, 'key']));
+    .asyncActionProjectDir(createUploadAction(AndroidUploader, ANDROID_OPTIONS));
 
   const IOS_OPTIONS = [
     ...COMMON_OPTIONS,

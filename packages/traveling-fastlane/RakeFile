@@ -16,9 +16,9 @@ SCRIPTS = [
   'validate_apple_credentials',
   'funcs',
   'preload',
-  'app_deliver',
-  'app_supply',
   'app_produce'
+  'pilot_upload',
+  'supply_android',
 ]
 
 desc "Package your app"
