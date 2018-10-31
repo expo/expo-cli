@@ -88,9 +88,9 @@ async function _buildAsync(
   relativeBuildDestination,
   verbose
 ) {
+  const buildDest = `${relativeBuildDestination}-${type}`;
   let buildCmd = `set -o pipefail && xcodebuild -workspace ${projectName}.xcworkspace -scheme ${projectName} -configuration ${configuration} archive -derivedDataPath ${buildDest}`,
     pathToArtifact;
-  const buildDest = `${relativeBuildDestination}-${type}`;
   if (type === 'simulator') {
     buildCmd += `-sdk iphonesimulator CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
     pathToArtifact = path.join(
