@@ -32,9 +32,12 @@ export async function runFastlaneAsync(
     ...(pipeToLogger ? { pipeToLogger: { stdout: 1 } } : { stdio: 'pipe' }),
     env: {
       ...process.env,
-      FASTLANE_USER: appleId,
-      FASTLANE_PASSWORD: appleIdPassword,
-      FASTLANE_DONT_STORE_PASSWORD: '1',
+      ...(appleId &&
+        appleIdPassword && {
+          FASTLANE_USER: appleId,
+          FASTLANE_PASSWORD: appleIdPassword,
+          FASTLANE_DONT_STORE_PASSWORD: '1',
+        }),
     },
   });
 

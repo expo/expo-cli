@@ -83,7 +83,7 @@ export default class IOSUploader extends BaseUploader {
   async _getAppName() {
     const appName = this.options.appName || this._exp.name;
     if (!appName || appName.length > 30) {
-      if (appName.length > 30) {
+      if (appName && appName.length > 30) {
         log.error(APP_NAME_TOO_LONG_MSG);
       }
       return await this._askForAppName();
@@ -112,7 +112,7 @@ export default class IOSUploader extends BaseUploader {
     );
 
     log('Uploading the app to the Testflight, hold tight...');
-    await runFastlaneAsync(fastlane.app_pilot_upload, [buildPath, appleId], appleCreds, true);
+    await runFastlaneAsync(fastlane.pilot_upload, [buildPath, appleId], appleCreds, true);
 
     log(
       `All done! You may want to go to the App Store Connect (${chalk.underline(
