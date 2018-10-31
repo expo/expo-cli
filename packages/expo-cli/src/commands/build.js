@@ -23,7 +23,7 @@ export default (program: any) => {
     .option('-e, --apple-enterprise-account', 'Run as Apple Enterprise account')
     .option(
       '--apple-id <login>',
-      'Apple developer login (works only with password supplied via EXPO_APPLE_PASSWORD environment variable)'
+      'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable)'
     )
     .option(
       '--revoke-apple-dist-certs',
