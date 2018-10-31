@@ -1,7 +1,7 @@
 import path from 'path';
 
 import fs from 'fs-extra';
-import { BuildInformation, ProjectUtils } from 'xdl';
+import { StandaloneBuild, ProjectUtils } from 'xdl';
 import chalk from 'chalk';
 
 import { downloadFile } from './utils';
@@ -51,8 +51,9 @@ export default class BaseUploader {
   }
 
   async _downloadBuildById(id) {
-    const { slug } = this._exp.slug;
-    const build = await BuildInformation.getBuildInformation({ id, slug });
+    const { platform } = this;
+    const { slug } = this._exp;
+    const build = await StandaloneBuild.getStandaloneBuilds({ id, slug, platform });
     if (!build) {
       throw new Error(`We couldn't find build with id ${id}`);
     }
@@ -62,7 +63,7 @@ export default class BaseUploader {
   async _downloadLastestBuild() {
     const { platform } = this;
     const { slug } = this._exp;
-    const build = await BuildInformation.getBuildInformation({
+    const build = await StandaloneBuild.getStandaloneBuilds({
       slug,
       platform,
       limit: 1,
