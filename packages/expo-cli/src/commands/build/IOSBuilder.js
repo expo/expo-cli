@@ -671,7 +671,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   }
 
   async askForAppleCreds(justTeamId = false) {
-    const appleId = this.options.appleId;
+    const { appleId } = this.options;
     const password = process.env.EXPO_APPLE_PASSWORD;
     if (appleId && password) {
       return {
