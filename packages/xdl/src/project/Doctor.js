@@ -139,7 +139,7 @@ export async function validateWithSchema(
     if (e instanceof SchemerError) {
       schemaErrorMessage = `Error: Problem${e.errors.length > 1
         ? 's'
-        : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html.`;
+        : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/guides/configuration.html`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
