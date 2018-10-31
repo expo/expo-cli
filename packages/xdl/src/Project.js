@@ -1558,6 +1558,7 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
 }
 
 let blacklistedEnvironmentVariables = new Set([
+  'EXPO_APPLE_PASSWORD',
   'EXPO_ANDROID_KEY_PASSWORD',
   'EXPO_ANDROID_KEYSTORE_PASSWORD',
   'EXPO_IOS_DIST_P12_PASSWORD',
