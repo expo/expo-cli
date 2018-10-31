@@ -22,6 +22,10 @@ export default (program: any) => {
     .option('--clear-dist-cert', 'Remove distribution cert stored on expo servers (iOS)')
     .option('-e, --apple-enterprise-account', 'Run as Apple Enterprise account')
     .option(
+      '--apple-id <login>',
+      'Apple developer login (works only with password supplied via EXPO_APPLE_PASSWORD environment variable)'
+    )
+    .option(
       '--revoke-apple-dist-certs',
       'Revoke distribution certs on developer.apple.com before attempting to make new certs, must use with -c'
     )
