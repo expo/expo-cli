@@ -406,10 +406,10 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
 
   // Check to make sure react native is installed
   try {
-    let result = fs.statSync(
-      path.join(nodeModulesPath, 'node_modules', 'react-native', 'local-cli', 'cli.js')
-    );
-    if (!result.isFile()) {
+    ProjectUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+    ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
+  } catch (e) {
+    if (e.code === 'MODULE_NOT_FOUND') {
       ProjectUtils.logError(
         projectRoot,
         'expo',
@@ -417,17 +417,9 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
         'doctor-react-native-not-installed'
       );
       return FATAL;
+    } else {
+      throw error;
     }
-
-    ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
-  } catch (e) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: React native is not installed. Please run \`npm install\` in your project directory.`,
-      'doctor-react-native-not-installed'
-    );
-    return FATAL;
   }
   return NO_ISSUES;
 }

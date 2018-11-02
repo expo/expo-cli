@@ -228,27 +228,14 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
   }
 }
 
-function _requireFromProject(modulePath, projectRoot) {
+function _requireFromProject(modulePath, projectRoot, exp) {
   try {
-    if (modulePath.indexOf('.') === 0) {
-      let fullPath = path.resolve(projectRoot, modulePath);
-
-      // Clear the require cache for this module so get a fresh version of it
-      // without requiring the user to restart XDE
-      decache(fullPath);
-
-      // $FlowIssue: doesn't work with dynamic requires
-      return require(fullPath);
-    } else {
-      let fullPath = path.resolve(projectRoot, 'node_modules', modulePath);
-
-      // Clear the require cache for this module so get a fresh version of it
-      // without requiring the user to restart XDE
-      decache(fullPath);
-
-      // $FlowIssue: doesn't work with dynamic requires
-      return require(fullPath);
-    }
+    let fullPath = ProjectUtils.resolveModule(modulePath, projectRoot, exp);
+    // Clear the require cache for this module so get a fresh version of it
+    // without requiring the user to restart Expo CLI
+    decache(fullPath);
+    // $FlowIssue: doesn't work with dynamic requires
+    return require(fullPath);
   } catch (e) {
     return null;
   }
@@ -526,7 +513,7 @@ export async function publishAsync(
   if (hooks && hooks.postPublish) {
     hooks.postPublish.forEach(hook => {
       let { file, config } = hook;
-      let fn = _requireFromProject(file, projectRoot);
+      let fn = _requireFromProject(file, projectRoot, exp);
       if (fn === null) {
         logger.global.error(`Unable to load postPublishHook: '${file}'`);
       } else {
@@ -1381,12 +1368,10 @@ export async function startReactNativeServerAsync(
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
-  let nodeModulesPath = exp.nodeModulesPath
-    ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'node_modules')
-    : path.join(projectRoot, 'node_modules');
+
   let packagerOpts = {
     port: packagerPort,
-    customLogReporterPath: path.join(nodeModulesPath, 'expo', 'tools', 'LogReporter'),
+    customLogReporterPath: ProjectUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
     assetExts: ['ttf'],
     nonPersistent: !!options.nonPersistent,
   };
@@ -1438,12 +1423,10 @@ export async function startReactNativeServerAsync(
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
-  let defaultCliPath = path.join(
+  let defaultCliPath = ProjectUtils.resolveModule(
+    'react-native/local-cli/cli.js',
     projectRoot,
-    'node_modules',
-    'react-native',
-    'local-cli',
-    'cli.js'
+    exp
   );
   const cliPath = exp.rnCliPath || defaultCliPath;
   let nodePath;
