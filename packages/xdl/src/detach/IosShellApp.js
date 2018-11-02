@@ -89,10 +89,10 @@ async function _buildAsync(
   verbose
 ) {
   const buildDest = `${relativeBuildDestination}-${type}`;
-  let buildCmd = `set -o pipefail && xcodebuild -workspace ${projectName}.xcworkspace -scheme ${projectName} -configuration ${configuration} -derivedDataPath ${buildDest}`,
+  let buildCmd = `set -o pipefail && xcodebuild -workspace ${projectName}.xcworkspace -scheme ${projectName} -configuration ${configuration} -derivedDataPath ${buildDest} -UseModernBuildSystem=NO`,
     pathToArtifact;
   if (type === 'simulator') {
-    buildCmd += ` -sdk iphonesimulator CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO -UseModernBuildSystem=NO | xcpretty`;
+    buildCmd += ` -sdk iphonesimulator CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
     pathToArtifact = path.join(
       buildDest,
       'Build',
