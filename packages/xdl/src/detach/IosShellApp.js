@@ -89,10 +89,10 @@ async function _buildAsync(
   verbose
 ) {
   const buildDest = `${relativeBuildDestination}-${type}`;
-  let buildCmd = `set -o pipefail && xcodebuild -workspace ${projectName}.xcworkspace -scheme ${projectName} -configuration ${configuration} archive -derivedDataPath ${buildDest}`,
+  let buildCmd = `set -o pipefail && xcodebuild -workspace ${projectName}.xcworkspace -scheme ${projectName} -configuration ${configuration} -derivedDataPath ${buildDest}`,
     pathToArtifact;
   if (type === 'simulator') {
-    buildCmd += `-sdk iphonesimulator CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
+    buildCmd += ` -sdk iphonesimulator CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO -UseModernBuildSystem=NO | xcpretty`;
     pathToArtifact = path.join(
       buildDest,
       'Build',
@@ -101,7 +101,7 @@ async function _buildAsync(
       `${projectName}.app`
     );
   } else if (type === 'archive') {
-    buildCmd += `-sdk iphoneos -destination generic/platform=iOS -archivePath ${buildDest}/${projectName}.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty`;
+    buildCmd += ` -sdk iphoneos -destination generic/platform=iOS archive -archivePath ${buildDest}/${projectName}.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty`;
     pathToArtifact = path.join(buildDest, `${projectName}.xcarchive`);
   } else {
     throw new Error(`Unsupported build type: ${type}`);
