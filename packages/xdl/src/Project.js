@@ -663,7 +663,7 @@ export async function publishAsync(
     // We need to add EmbeddedResponse instances on Android to tell the runtime
     // that the shell app manifest and bundle is packaged.
     if (exp.android && exp.android.publishManifestPath && exp.android.publishBundlePath) {
-      let fullManifestUrl = `${response.url.replace('exp://', 'https://')}/index.exp`;
+      let fullManifestUrl = response.url.replace('exp://', 'https://');
       let constantsPath = path.join(
         projectRoot,
         'android',
