@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import simpleSpinner from '@expo/simple-spinner';
 
-import { Project } from 'xdl';
+import { Exp, Project } from 'xdl';
 
 import log from '../log';
 import sendTo from '../sendTo';
@@ -16,6 +16,7 @@ type Options = {
   sendTo?: string,
   quiet?: boolean,
   releaseChannel?: string,
+  duringBuild?: boolean,
 };
 
 export async function action(projectDir: string, options: Options = {}) {
@@ -44,6 +45,24 @@ export async function action(projectDir: string, options: Options = {}) {
 
   let recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
+
+  const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(projectDir);
+
+  const buildStatus = await Project.buildAsync(projectDir, {
+    mode: 'status',
+    platform: 'all',
+    current: true,
+    releaseChannel: options.releaseChannel,
+    sdkVersion,
+  });
+
+  if (!buildStatus.userHasBuiltAppBefore && !options.duringBuild) {
+    log.warn(
+      'We noticed you did not build standalone app with this SDK and release channel before. ' +
+        'Remeber that OTA updates will not work with app built with different SDK and/or release channel. ' +
+        'Read more at https://docs.expo.io/versions/latest/guides/publishing.html#limitations'
+    );
+  }
 
   if (options.quiet) {
     simpleSpinner.start();

@@ -67,6 +67,7 @@ export default class BaseBuilder {
     {
       platform = 'all',
       current = true,
+      releaseChannel,
       publicUrl,
       sdkVersion,
     }: { platform: string, current: boolean, publicUrl?: string } = {}
@@ -79,6 +80,7 @@ export default class BaseBuilder {
       mode: 'status',
       platform,
       current,
+      releaseChannel,
       ...(publicUrl ? { publicUrl } : {}),
       sdkVersion,
     });
@@ -170,6 +172,7 @@ ${job.id}
       const { ids, url, err } = await publishAction(this.projectDir, {
         ...this.options,
         platform,
+        duringBuild: true
       });
       if (err) {
         throw new BuildError(`No url was returned from publish. Please try again.\n${err}`);
@@ -187,7 +190,8 @@ ${job.id}
         throw new BuildError('No releases found. Please create one using `exp publish` first.');
       }
       log(
-        `Using existing release on channel "${release.channel}":\n  publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
+        `Using existing release on channel "${release.channel}":\n
+          publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
       );
       return [release.publicationId];
     }
