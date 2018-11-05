@@ -206,9 +206,14 @@ export default class PackagerLogsStream {
   _handleMetroEvent(originalChunk: ChunkT) {
     const chunk = { ...originalChunk };
     let { msg } = chunk;
+
     if (typeof msg === 'string') {
-      // If Metro crashes for some reason, it may log an error message as a plain string to stderr.
-      this._enqueueAppendLogChunk(chunk);
+      if (msg.includes('GET') && msg.includes('HTTP') && process.env.EXPO_DEBUG !== 'true') {
+        // Do nothing with this message - we want to filter out network requests logged by Metro.
+      } else {
+        // If Metro crashes for some reason, it may log an error message as a plain string to stderr.
+        this._enqueueAppendLogChunk(chunk);
+      }
       return;
     }
     if (/^bundle_/.test(msg.type)) {
