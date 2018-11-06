@@ -33,5 +33,8 @@
     "lodash": "^4.17.4",
     "probe-image-size": "^3.1.0",
     "read-chunk": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

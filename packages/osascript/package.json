@@ -42,5 +42,8 @@
   "files": [
     "lib/",
     "src/"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
