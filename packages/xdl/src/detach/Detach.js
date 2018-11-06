@@ -385,10 +385,11 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
   // TODO: very brittle hack: the paths here are hard coded to match the single workspace
   // path generated inside IosShellApp. When we support more than one path, this needs to
   // be smarter.
+  const expoRootDir = path.join(projectDir, '..', '..');
   const workspaceSourcePath = path.join(projectDir, 'default');
   const buildFlags = StandaloneBuildFlags.createIos('Release', { workspaceSourcePath });
   const context = StandaloneContext.createServiceContext(
-    path.join(projectDir, '..', '..'),
+    expoRootDir,
     null,
     null,
     null,
@@ -405,6 +406,8 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
+  const { exp } = await ProjectUtils.readConfigJsonAsync(expoRootDir);
+
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project
     const contextType = constantsConfig.STANDALONE_CONTEXT_TYPE;
@@ -420,6 +423,9 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
         : 'https://exp.host/--/api/v2/';
     if (prodApiKeys) {
       constantsConfig.DEFAULT_API_KEYS = prodApiKeys;
+    }
+    if (exp && exp.sdkVersion) {
+      constantsConfig.TEMPORARY_SDK_VERSION = exp.sdkVersion;
     }
     return constantsConfig;
   });
@@ -480,6 +486,9 @@ async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, 
       constantsConfig.EXPO_RUNTIME_VERSION = expoKitVersion;
       if (defaultApiKeys) {
         constantsConfig.DEFAULT_API_KEYS = defaultApiKeys;
+      }
+      if (exp.sdkVersion) {
+        constantsConfig.TEMPORARY_SDK_VERSION = exp.sdkVersion;
       }
       return constantsConfig;
     });
