@@ -54,6 +54,16 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=32.0.0',
   },
   {
+    podName: 'EXAppLoaderProvider',
+    libName: 'expo-app-loader-provider',
+    sdkVersions: '>=32.0.0',
+  },
+  {
+    podName: 'EXBackgroundFetch',
+    libName: 'expo-background-fetch',
+    sdkVersions: '>=32.0.0',
+  },
+  {
     podName: 'EXBarCodeScanner',
     libName: 'expo-barcode-scanner',
     sdkVersions: '>=30.0.0',
@@ -315,6 +325,16 @@ const expoSdkUniversalModules = [
     podName: 'EXSMS',
     libName: 'expo-sms',
     sdkVersions: '>=29.0.0',
+  },
+  {
+    podName: 'EXTaskManager',
+    libName: 'expo-task-manager',
+    sdkVersions: '>=32.0.0',
+  },
+  {
+    podName: 'EXTaskManagerInterface',
+    libName: 'expo-task-manager-interface',
+    sdkVersions: '>=32.0.0',
   },
 
   // JS-only modules

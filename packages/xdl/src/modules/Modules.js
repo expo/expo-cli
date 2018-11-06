@@ -47,7 +47,7 @@ export function getDetachableModulesForPlatformAndSdkVersion(
     return (
       moduleConfig.isNativeModule &&
       moduleConfig.detachable &&
-      semver.satisfies(sdkVersion, moduleConfig.sdkVersions)
+      (sdkVersion === 'UNVERSIONED' || semver.satisfies(sdkVersion, moduleConfig.sdkVersions))
     );
   });
 }
