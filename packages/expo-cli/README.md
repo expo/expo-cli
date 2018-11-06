@@ -33,7 +33,7 @@ To publish something you've made, just follow these steps:
 
 - Run an Expo CLI server using `expo start`.
 
-- Check to make sure you can load your app by sending the link to yourself with `expo send` and opening it in the Expo app.
+- Check to make sure you can load your app by opening it in the Expo app.
 
 - Once everything looks good, run `expo publish`. A few seconds later, you should get a clean URL sent to you that points to the exp.host server where your package was published to.
 
