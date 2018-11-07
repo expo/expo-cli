@@ -1,7 +1,6 @@
 /**
  * @flow
  */
-import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -1577,12 +1576,12 @@ export async function startExpoServerAsync(projectRoot: string) {
   await stopExpoServerAsync(projectRoot);
   let app = express();
   app.use(
-    bodyParser.json({
+    express.json({
       limit: '10mb',
     })
   );
   app.use(
-    bodyParser.urlencoded({
+    express.urlencoded({
       limit: '10mb',
       extended: true,
     })

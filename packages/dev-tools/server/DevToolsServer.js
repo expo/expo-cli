@@ -1,7 +1,6 @@
 import { Logger, PackagerLogsStream, ProjectUtils, ProjectSettings } from 'xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import * as graphql from 'graphql';
-import bodyParser from 'body-parser';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import path from 'path';
