@@ -12,7 +12,6 @@
   "scripts": {
     "start": "yarn run build && yarn run watch",
     "build": "cross-env NODE_ENV=production gulp clean && gulp build",
-    "prepublish": "yarn build",
     "prepare": "yarn build",
     "watch": "gulp watch",
     "test": "jest --config jest/unit-test-config.json --rootDir .",
