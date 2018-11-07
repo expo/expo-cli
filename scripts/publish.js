@@ -13,7 +13,7 @@ console.log('npm two-factor authentication (2FA) is required for publishing');
 rl.question('npm one-time password: ', password => {
   rl.close();
 
-  spawn(lerna, ['publish', ...process.argv.slice(2)], {
+  spawn(lerna, ['publish', '--npm-client=npm', ...process.argv.slice(2)], {
     stdio: 'inherit',
     env: Object.assign({}, process.env, { NPM_CONFIG_OTP: password }),
   }).on('exit', process.exit);
