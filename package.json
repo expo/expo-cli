@@ -5,7 +5,7 @@
     "bootstrap": "lerna bootstrap",
     "postbootstrap": "lerna run prepare --stream",
     "prebootstrap": "yarn",
-    "publish": "lerna publish",
+    "publish": "node scripts/publish.js",
     "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools"
   },
   "dependencies": {
