@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.2.2",
+  "version": "0.2.0",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
@@ -70,7 +70,7 @@
     "redux": "^3.7.2",
     "slugify": "^1.0.2",
     "velocity-react": "^1.4.1",
-    "xdl": "^51.5.2"
+    "xdl": "^51.5.0"
   },
   "license": "MIT",
   "gitHead": "5e6aab74774ccab6b22c4ece13c285022e04bff2",
