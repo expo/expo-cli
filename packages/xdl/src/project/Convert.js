@@ -5,8 +5,8 @@
 import slug from 'slugify';
 
 import path from 'path';
-import jsonfile from 'jsonfile';
 import fs from 'fs-extra';
+import JsonFile from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
 import expJsonTemplate from './templates/exp';
 import babelRcTemplate from './templates/babelrc';
@@ -34,12 +34,13 @@ export default (async function convertProjectAsync(
   expJson.name = projectName;
   expJson.description = projectDescription || 'No description';
   expJson.slug = projectSlug;
-  jsonfile.writeFileSync(expJsonTargetPath, expJson, { spaces: 2 });
+  await JsonFile.writeAsync(expJsonTargetPath, expJson);
   console.log('Wrote exp.json');
 
   // Add entry point and dependencies to package.json
   let unsupportedPackagesUsed = [];
-  let packageJson = jsonfile.readFileSync(packageJsonSourcePath);
+  let packageJson = await JsonFile.readAsync(packageJsonSourcePath);
+
   packageJson.dependencies = { ...packageJson.dependencies, ...dependencies };
 
   // Remove
@@ -59,14 +60,14 @@ export default (async function convertProjectAsync(
   ) {
     packageJson.main = projectEntryPoint;
   }
-  jsonfile.writeFileSync(packageJsonTargetPath, packageJson, { spaces: 2 });
+  await JsonFile.writeAsync(packageJsonTargetPath, packageJson);
   console.log('Updated package.json');
 
   // TODO: Add import Expo from 'expo'; at the top of main file
   // TODO: Add .expo/* to gitignore
 
   // Copy babelrc
-  jsonfile.writeFileSync(babelRcTargetPath, babelRcTemplate, { spaces: 2 });
+  await JsonFile.writeAsync(babelRcTargetPath, babelRcTemplate);
   console.log('Updated .babelrc');
 
   // Save next steps to a file, display, exit

@@ -62,7 +62,6 @@
     "inquirer": "^5.0.1",
     "invariant": "^2.2.4",
     "joi": "^14.0.4",
-    "jsonfile": "^2.3.1",
     "lodash": "^4.14.1",
     "md5hex": "^1.0.0",
     "minimatch": "^3.0.4",
