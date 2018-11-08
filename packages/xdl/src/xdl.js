@@ -108,6 +108,9 @@ module.exports = {
   get LoggerDetach() {
     return require('./detach/Logger').default;
   },
+  get ModuleVersion() {
+    return require('./tools/ModuleVersion');
+  },
   get Modules() {
     return require('./modules/Modules');
   },
