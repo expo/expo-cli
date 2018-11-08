@@ -183,7 +183,6 @@ async function _copyIntermediateLaunchScreenAsync(
   await spawnAsyncThrowError('/bin/cp', [splashTemplateFilename, launchScreenPath], {
     stdio: 'inherit',
   });
-
 }
 
 function _maybeAbortForBackwardsCompatibility(context: StandaloneContext) {
@@ -254,7 +253,6 @@ async function configureLaunchAssetsAsync(
       rimraf.sync(generatedUnnecessaryNib);
     }
   }
-
 }
 
 export { configureLaunchAssetsAsync };

@@ -28,7 +28,6 @@ const defaultUniversalModuleConfig = {
   },
 };
 
-
 const firebaseModuleConfig = {
   ios: {
     versionable: false,
@@ -116,19 +115,19 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=31.0.0',
     config: firebaseModuleConfig,
   },
-  { 
+  {
     podName: 'EXFirebaseApp',
     libName: 'expo-firebase-app',
     sdkVersions: '>=31.0.0',
     config: firebaseModuleConfig,
   },
-  { 
+  {
     podName: 'EXFirebaseAuth',
     libName: 'expo-firebase-auth',
     sdkVersions: '>=31.0.0',
     config: firebaseModuleConfig,
   },
-  { 
+  {
     podName: 'EXFirebaseCrashlytics',
     libName: 'expo-firebase-crashlytics',
     sdkVersions: '>=31.0.0',
@@ -158,25 +157,25 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=31.0.0',
     config: firebaseModuleConfig,
   },
-  { 
+  {
     podName: 'EXFirebaseInvites',
     libName: 'expo-firebase-invites',
     sdkVersions: '>=31.0.0',
     config: firebaseModuleConfig,
   },
-  { 
+  {
     podName: 'EXFirebaseLinks',
     libName: 'expo-firebase-links',
     sdkVersions: '>=31.0.0',
     config: firebaseModuleConfig,
   },
-  { 
+  {
     podName: 'EXFirebaseMessaging',
     libName: 'expo-firebase-messaging',
     sdkVersions: '>=31.0.0',
     config: firebaseModuleConfig,
   },
-  { 
+  {
     podName: 'EXFirebaseNotifications',
     libName: 'expo-firebase-notifications',
     sdkVersions: '>=31.0.0',
@@ -194,11 +193,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=31.0.0',
     config: firebaseModuleConfig,
   },
-  { 
-    podName: 'EXFirebaseStorage', 
+  {
+    podName: 'EXFirebaseStorage',
     libName: 'expo-firebase-storage',
     sdkVersions: '>=31.0.0',
-    config: firebaseModuleConfig 
+    config: firebaseModuleConfig,
   },
   {
     podName: 'EXFont',

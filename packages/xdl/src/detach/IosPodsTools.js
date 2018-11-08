@@ -310,10 +310,10 @@ function _renderUnversionedPostinstall(sdkVersion) {
   ];
   const podsToChangeRB = `[${podsToChangeDeployTarget.map(pod => `'${pod}'`).join(',')}]`;
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
-  
+
   // SDK31 drops support for iOS 9.0
   const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0';
-  
+
   return `
     if ${podsToChangeRB}.include? target.pod_name
       target.native_target.build_configurations.each do |config|

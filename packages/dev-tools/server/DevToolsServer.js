@@ -1,7 +1,6 @@
 import { Logger, PackagerLogsStream, ProjectUtils, ProjectSettings } from 'xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import * as graphql from 'graphql';
-import bodyParser from 'body-parser';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import path from 'path';
@@ -12,10 +11,28 @@ import GraphQLSchema from './graphql/GraphQLSchema';
 import createContext, { ISSUES_SOURCE, PROCESS_SOURCE } from './graphql/createContext';
 import Issues from './graphql/Issues';
 
+const serverStartTimeUTCString = new Date().toUTCString();
+
+function setHeaders(res) {
+  // Set the Last-Modified header to server start time because otherwise it
+  // becomes Sat, 26 Oct 1985 08:15:00 GMT for files installed from npm.
+  res.setHeader('Last-Modified', serverStartTimeUTCString);
+}
+
 export async function startAsync(projectDir) {
   const port = await freeportAsync(19002);
   const server = express();
-  server.get('*', express.static(path.join(__dirname, '../client')));
+
+  server.use(
+    '/_next',
+    express.static(path.join(__dirname, '../client/_next'), {
+      // All paths in the _next folder include hashes, so they can be cached more aggressively.
+      immutable: true,
+      maxAge: '1y',
+      setHeaders,
+    })
+  );
+  server.use(express.static(path.join(__dirname, '../client'), { setHeaders }));
 
   const httpServer = http.createServer(server);
   await new Promise((resolve, reject) => {
