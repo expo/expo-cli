@@ -133,7 +133,7 @@ export async function _isSimulatorInstalledAsync() {
 
 // Simulator opened
 export async function _openSimulatorAsync() {
-  if (!await _isSimulatorRunningAsync()) {
+  if (!(await _isSimulatorRunningAsync())) {
     Logger.global.info('Opening iOS simulator');
     await spawnAsync('open', ['-a', 'Simulator']);
     await _waitForSimulatorRunningAsync();
@@ -314,7 +314,7 @@ export function _simulatorCacheDirectory() {
 }
 
 export async function upgradeExpoAsync(): Promise<boolean> {
-  if (!await _isSimulatorInstalledAsync()) {
+  if (!(await _isSimulatorInstalledAsync())) {
     return false;
   }
 
@@ -343,7 +343,7 @@ export async function openUrlInSimulatorSafeAsync(
   url: string,
   isDetached: boolean = false
 ): Promise<{ success: true } | { success: false, msg: string }> {
-  if (!await _isSimulatorInstalledAsync()) {
+  if (!(await _isSimulatorInstalledAsync())) {
     return {
       success: false,
       msg: 'Unable to verify Xcode and Simulator installation.',
@@ -353,7 +353,7 @@ export async function openUrlInSimulatorSafeAsync(
   try {
     await _openSimulatorAsync();
 
-    if (!isDetached && !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+    if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
     }

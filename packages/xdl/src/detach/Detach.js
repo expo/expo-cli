@@ -120,7 +120,9 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
   ) {
     if (process.env.EXPO_VIEW_DIR) {
       logger.warn(
-        `Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPO_VIEW_DIR`
+        `Detaching is not supported for SDK ${
+          exp.sdkVersion
+        }; ignoring this because you provided EXPO_VIEW_DIR`
       );
       sdkVersionConfig = {};
     } else {
@@ -540,7 +542,9 @@ export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsAr
     args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
   if (!publishManifestPath) {
     logger.warn(
-      `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
+      `Skipped assets bundling because the '${
+        args.platform
+      }.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
@@ -550,7 +554,9 @@ export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsAr
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
   } catch (ex) {
     throw new Error(
-      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
+      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${
+        ex.message
+      }`
     );
   }
 

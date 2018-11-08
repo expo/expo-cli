@@ -8,22 +8,22 @@ describe('renderIntentFilters', () => {
   it('renders intent filters', () => {
     const intentFilters = [
       {
-        'data': { 'scheme': 'https' },
-        'action': 'VIEW',
-        'category': 'DEFAULT',
+        data: { scheme: 'https' },
+        action: 'VIEW',
+        category: 'DEFAULT',
       },
       {
-        'autoVerify': true,
-        'data': [
-          { 'scheme': 'http', 'host': 'exp.host', 'pathPrefix': '/@', 'mimeType': 'image/jpeg' },
-          { 'scheme': 'https', 'port': '443', 'pathPattern': '.*' },
+        autoVerify: true,
+        data: [
+          { scheme: 'http', host: 'exp.host', pathPrefix: '/@', mimeType: 'image/jpeg' },
+          { scheme: 'https', port: '443', pathPattern: '.*' },
         ],
-        'action': 'WEB_SEARCH',
-        'category': ['DEFAULT', 'BROWSABLE']
-      }
+        action: 'WEB_SEARCH',
+        category: ['DEFAULT', 'BROWSABLE'],
+      },
     ];
-    expect(normalizeWhitespace(renderIntentFilters(intentFilters)))
-      .toEqual(normalizeWhitespace([
+    expect(normalizeWhitespace(renderIntentFilters(intentFilters))).toEqual(
+      normalizeWhitespace([
         `<intent-filter>
           <data android:scheme="https"/>
           <action android:name="android.intent.action.VIEW"/>
@@ -36,6 +36,7 @@ describe('renderIntentFilters', () => {
           <category android:name="android.intent.category.DEFAULT"/>
           <category android:name="android.intent.category.BROWSABLE"/>
         </intent-filter>`,
-      ]));
+      ])
+    );
   });
 });

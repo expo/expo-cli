@@ -177,13 +177,13 @@ export async function upgradeExpoAsync(): Promise<boolean> {
 async function _assertDeviceReadyAsync() {
   const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
-  if (!await _isDeviceAttachedAsync()) {
+  if (!(await _isDeviceAttachedAsync())) {
     throw new Error(
       `No Android device found. Please connect a device and follow the instructions here to enable USB debugging:\n${genymotionMessage}`
     );
   }
 
-  if (!await _isDeviceAuthorizedAsync()) {
+  if (!(await _isDeviceAuthorizedAsync())) {
     throw new Error(
       `This computer is not authorized to debug the device. Please follow the instructions here to enable USB debugging:\n${genymotionMessage}`
     );
@@ -212,7 +212,7 @@ async function openUrlAsync(url: string, isDetached: boolean = false) {
     await _assertDeviceReadyAsync();
 
     let installedExpo = false;
-    if (!isDetached && !await _isExpoInstalledAsync()) {
+    if (!isDetached && !(await _isExpoInstalledAsync())) {
       await _installExpoAsync();
       installedExpo = true;
     }
@@ -227,7 +227,9 @@ async function openUrlAsync(url: string, isDetached: boolean = false) {
       await _openUrlAsync(url);
     } catch (e) {
       if (isDetached) {
-        e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
+        e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${
+          e.message
+        }`;
       } else {
         e.message = `Error running app. ${e.message}`;
       }
@@ -275,7 +277,7 @@ export async function startAdbReverseAsync(projectRoot: string) {
   ];
 
   for (let port of adbReversePorts) {
-    if (!await adbReverse(port)) {
+    if (!(await adbReverse(port))) {
       return false;
     }
   }
@@ -300,7 +302,7 @@ export async function stopAdbReverseAsync(projectRoot: string) {
 }
 
 async function adbReverse(port: number) {
-  if (!await _isDeviceAuthorizedAsync()) {
+  if (!(await _isDeviceAuthorizedAsync())) {
     return false;
   }
 
@@ -314,7 +316,7 @@ async function adbReverse(port: number) {
 }
 
 async function adbReverseRemove(port: number) {
-  if (!await _isDeviceAuthorizedAsync()) {
+  if (!(await _isDeviceAuthorizedAsync())) {
     return false;
   }
 

@@ -336,7 +336,7 @@ export default class PackagerLogsStream {
       bundleError = new Error('Failed to build bundle');
       bundleBuildEnd = new Date();
     } else {
-      percentProgress = Math.floor(msg.transformedFileCount / msg.totalFileCount * 100);
+      percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
     }
 
     if (this._bundleBuildChunkID) {
