@@ -85,7 +85,9 @@ export default class AndroidBuilder extends BaseBuilder {
 
   async collectAndValidateCredentials(options = {}) {
     const publicUrl = options.publicUrl;
-    const { args: { username, remoteFullPackageName: experienceName } } = publicUrl
+    const {
+      args: { username, remoteFullPackageName: experienceName },
+    } = publicUrl
       ? await Exp.getThirdPartyInfoAsync(publicUrl)
       : await Exp.getPublishInfoAsync(this.projectDir);
 
@@ -208,7 +210,9 @@ export default class AndroidBuilder extends BaseBuilder {
 
   async validateProject(options) {
     const publicUrl = options.publicUrl;
-    const { args: { sdkVersion } } = publicUrl
+    const {
+      args: { sdkVersion },
+    } = publicUrl
       ? await Exp.getThirdPartyInfoAsync(publicUrl)
       : await Exp.getPublishInfoAsync(this.projectDir);
     await this.checkIfSdkIsSupported(sdkVersion, 'android');

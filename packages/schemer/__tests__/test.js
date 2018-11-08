@@ -70,7 +70,6 @@ describe('Manual Validation Individual Unit Tests', () => {
       expect(e.errors.length).toBe(1);
     }
   });
-
 });
 
 describe('Individual Unit Tests', async () => {

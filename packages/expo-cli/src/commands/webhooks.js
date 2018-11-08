@@ -22,9 +22,9 @@ export default program => {
       const options = _sanitizeOptions(_options);
       const secret = options.secret ? options.secret : await _askForSecret();
       const webhookData = { ...options, secret };
-      const { args: { remoteFullPackageName: experienceName } } = await Exp.getPublishInfoAsync(
-        projectDir
-      );
+      const {
+        args: { remoteFullPackageName: experienceName },
+      } = await Exp.getPublishInfoAsync(projectDir);
       log(`Setting ${webhookData.event} webhook and secret for ${experienceName}`);
       try {
         await Webhooks.setWebhookAsync(experienceName, webhookData);
@@ -40,9 +40,9 @@ export default program => {
     .command('webhooks:show [project-dir]')
     .description(`Show webhooks for the project.`)
     .asyncActionProjectDir(async (projectDir, options) => {
-      const { args: { remoteFullPackageName: experienceName } } = await Exp.getPublishInfoAsync(
-        projectDir
-      );
+      const {
+        args: { remoteFullPackageName: experienceName },
+      } = await Exp.getPublishInfoAsync(projectDir);
 
       log(`Fetching webhooks for ${experienceName}`);
 
@@ -71,9 +71,9 @@ export default program => {
     .description(`Clear a webhook associated with this project.`)
     .asyncActionProjectDir(async (projectDir, options) => {
       const event = _sanitizeEvent(options.event);
-      const { args: { remoteFullPackageName: experienceName } } = await Exp.getPublishInfoAsync(
-        projectDir
-      );
+      const {
+        args: { remoteFullPackageName: experienceName },
+      } = await Exp.getPublishInfoAsync(projectDir);
 
       log(`Clearing webhooks for ${experienceName}`);
 

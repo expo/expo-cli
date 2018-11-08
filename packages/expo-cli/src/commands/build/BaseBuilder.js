@@ -63,14 +63,12 @@ export default class BaseBuilder {
     }
   }
 
-  async checkStatus(
-    {
-      platform = 'all',
-      current = true,
-      publicUrl,
-      sdkVersion,
-    }: { platform: string, current: boolean, publicUrl?: string } = {}
-  ): Promise<void> {
+  async checkStatus({
+    platform = 'all',
+    current = true,
+    publicUrl,
+    sdkVersion,
+  }: { platform: string, current: boolean, publicUrl?: string } = {}): Promise<void> {
     await this._checkProjectConfig();
 
     log('Checking if current build exists...\n');
@@ -187,7 +185,9 @@ ${job.id}
         throw new BuildError('No releases found. Please create one using `exp publish` first.');
       }
       log(
-        `Using existing release on channel "${release.channel}":\n  publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
+        `Using existing release on channel "${release.channel}":\n  publicationId: ${
+          release.publicationId
+        }\n  publishedTime: ${release.publishedTime}`
       );
       return [release.publicationId];
     }

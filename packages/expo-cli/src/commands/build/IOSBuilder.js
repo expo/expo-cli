@@ -433,7 +433,9 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     if (this.options.revokeAppleProvisioningProfile) {
       await new Promise(r => setTimeout(() => r(), 400));
       log.warn(
-        `ATTENTION: Revoking your Apple Provisioning Profile for ${credsMetadata.bundleIdentifier} is permanent`
+        `ATTENTION: Revoking your Apple Provisioning Profile for ${
+          credsMetadata.bundleIdentifier
+        } is permanent`
       );
       const revokeAttempt = await authFuncs.revokeProvisioningProfile(
         appleCredentials,
@@ -627,7 +629,9 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       const creds = { ...credsStarter, ...credentialsCI };
       this._areCredsMissing(creds);
       await Credentials.updateCredentialsForPlatform('ios', creds, credsMetadata);
-      log.warn(`Encrypted ${Object.keys(OBLIGATORY_CREDS_KEYS).join(', ')} and saved to expo servers`);
+      log.warn(
+        `Encrypted ${Object.keys(OBLIGATORY_CREDS_KEYS).join(', ')} and saved to expo servers`
+      );
     } else if (clientHasAllNeededCreds === false) {
       const strategy = await prompt(runAsExpertQuestion);
       const isEnterprise = this.options.appleEnterpriseAccount !== undefined;

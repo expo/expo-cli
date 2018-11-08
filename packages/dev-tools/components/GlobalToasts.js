@@ -104,12 +104,16 @@ export class Toast extends React.Component {
       <div className={STYLES_TOAST} style={this.props.style}>
         <header
           className={`${STYLES_TOAST_TOP} 
-            ${this.props.name === 'notice' || this.props.name === 'info'
-              ? STYLES_TOAST_TOP_NORMAL
-              : ''}
-            ${this.props.name === 'warning' || this.props.name === 'error'
-              ? STYLES_TOAST_TOP_WARNING
-              : ''}
+            ${
+              this.props.name === 'notice' || this.props.name === 'info'
+                ? STYLES_TOAST_TOP_NORMAL
+                : ''
+            }
+            ${
+              this.props.name === 'warning' || this.props.name === 'error'
+                ? STYLES_TOAST_TOP_WARNING
+                : ''
+            }
             ${this.props.name === 'success' ? STYLES_TOAST_TOP_SUCCESS : ''}
             ${this.props.name === 'alert' ? STYLES_TOAST_TOP_ALERT : ''}`}>
           <span className={STYLES_TOAST_TOP_LEFT}>{this.props.name}</span>

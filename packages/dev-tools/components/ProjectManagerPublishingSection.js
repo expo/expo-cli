@@ -267,7 +267,8 @@ export default class ProjectManagerPublishingSection extends React.Component {
           Once you publish your project, you will be able to view it at&nbsp;
           <span className={STYLES_EMPHASIS}>
             https://expo.io/@{this.props.user.username}/{this.state.config.slug}
-          </span>.
+          </span>
+          .
         </p>
         <div className={STYLES_ACTIONS}>
           <PrimaryButtonWithStates
