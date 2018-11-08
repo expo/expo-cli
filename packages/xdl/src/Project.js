@@ -1649,7 +1649,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       await _resolveGoogleServicesFile(projectRoot, manifest);
       const hostUUID = await UserSettings.anonymousIdentifier();
       let currentSession = await UserManager.getSessionAsync();
-      if (!currentSession) {
+      if (!currentSession || Config.offline) {
         manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
       }
       let manifestString = JSON.stringify(manifest);
@@ -1657,7 +1657,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
         } else {
-          if (!currentSession) {
+          if (!currentSession || Config.offline) {
             const unsignedManifest = {
               manifestString,
               signature: 'UNSIGNED',
