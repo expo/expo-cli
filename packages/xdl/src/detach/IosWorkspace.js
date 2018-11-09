@@ -144,17 +144,11 @@ async function _configureVersionsPlistAsync(
   isServiceContext: boolean
 ) {
   await IosPlist.modifyAsync(configFilePath, 'EXSDKVersions', versionConfig => {
-    if (isServiceContext) {
-      delete versionConfig.detachedNativeVersions;
-      // leave versionConfig.sdkVersions unchanged
-      // because the ExpoKit template already contains the list of supported versions.
-    } else {
-      versionConfig.sdkVersions = [standaloneSdkVersion];
-      versionConfig.detachedNativeVersions = {
-        shell: standaloneSdkVersion,
-        kernel: standaloneSdkVersion,
-      };
-    }
+    versionConfig.sdkVersions = [standaloneSdkVersion];
+    versionConfig.detachedNativeVersions = {
+      shell: standaloneSdkVersion,
+      kernel: standaloneSdkVersion,
+    };
     return versionConfig;
   });
 }
