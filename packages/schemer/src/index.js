@@ -200,7 +200,9 @@ export default class Schemer {
             new ValidationError({
               errorCode: ErrorCodes.INVALID_CONTENT_TYPE,
               fieldPath,
-              message: `field '${fieldPath}' should point to ${meta.contentTypeHuman} but the file at '${data}' has type ${type}`,
+              message: `field '${fieldPath}' should point to ${
+                meta.contentTypeHuman
+              } but the file at '${data}' has type ${type}`,
               data,
               meta,
             })
@@ -212,7 +214,9 @@ export default class Schemer {
             new ValidationError({
               errorCode: ErrorCodes.INVALID_DIMENSIONS,
               fieldPath,
-              message: `'${fieldPath}' should have dimensions ${dimensions.width}x${dimensions.height}, but the file at '${data}' has dimensions ${width}x${height}`,
+              message: `'${fieldPath}' should have dimensions ${dimensions.width}x${
+                dimensions.height
+              }, but the file at '${data}' has dimensions ${width}x${height}`,
               data,
               meta,
             })

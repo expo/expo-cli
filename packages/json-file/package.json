@@ -1,6 +1,6 @@
 {
   "name": "@expo/json-file",
-  "version": "8.0.1",
+  "version": "8.1.0",
   "description": "A module for reading, writing, and manipulating JSON files",
   "main": "build/JsonFile.js",
   "scripts": {
@@ -49,5 +49,8 @@
     "mkdirp": "^0.5.1",
     "prettier": "^1.7.4",
     "rimraf": "^2.6.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

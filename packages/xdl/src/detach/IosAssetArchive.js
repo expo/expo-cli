@@ -5,7 +5,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { spawnAsyncThrowError } from './ExponentTools';
+import { spawnAsyncThrowError, parseSdkMajorVersion } from './ExponentTools';
 import * as IosIcons from './IosIcons';
 import StandaloneContext from './StandaloneContext';
 
@@ -41,10 +41,13 @@ async function buildAssetArchiveAsync(
     path.join(intermediatesDirectory, 'Images.xcassets', 'AppIcon.appiconset')
   );
 
+  const sdkMajorVersion = parseSdkMajorVersion(context.data.manifest.sdkVersion);
+  const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0'; // SDK31 drops support for iOS 9.0
+
   // compile asset archive
   let xcrunargs = [].concat(
     ['actool'],
-    ['--minimum-deployment-target', '9.0'],
+    ['--minimum-deployment-target', deploymentTarget],
     ['--platform', 'iphoneos'],
     ['--app-icon', 'AppIcon'],
     ['--output-partial-info-plist', 'assetcatalog_generated_info.plist'],

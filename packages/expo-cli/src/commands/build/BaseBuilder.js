@@ -26,6 +26,14 @@ type BuilderOptions = {
   provisioningProfilePath?: string,
 };
 
+type StatusArgs = {
+  platform: string,
+  current: boolean,
+  publicUrl?: string,
+  releaseChannel?: string,
+  sdkVersion?: string,
+};
+
 export default class BaseBuilder {
   projectDir: string = '';
   options: BuilderOptions = {
@@ -64,13 +72,7 @@ export default class BaseBuilder {
   }
 
   async checkStatus(
-    {
-      platform = 'all',
-      current = true,
-      releaseChannel,
-      publicUrl,
-      sdkVersion,
-    }: { platform: string, current: boolean, publicUrl?: string } = {}
+    { current = true, platform = 'all', publicUrl, releaseChannel, sdkVersion }: StatusArgs = {}
   ): Promise<void> {
     await this._checkProjectConfig();
 

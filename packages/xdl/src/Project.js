@@ -1,7 +1,6 @@
 /**
  * @flow
  */
-import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -177,9 +176,9 @@ async function _resolveGoogleServicesFile(projectRoot, manifest) {
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter(({ fieldPath }) => get(manifest, fieldPath));
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)).filter(
+      ({ fieldPath }) => get(manifest, fieldPath)
+    );
 
     // Get the URLs
     const urls = await Promise.all(
@@ -212,7 +211,9 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
       logMethod(
         projectRoot,
         'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
+        `Unable to resolve asset "${e.localAssetPath}" from "${
+          e.manifestField
+        }" in your app/exp.json.`
       );
     } else {
       logMethod(
@@ -663,7 +664,7 @@ export async function publishAsync(
     // We need to add EmbeddedResponse instances on Android to tell the runtime
     // that the shell app manifest and bundle is packaged.
     if (exp.android && exp.android.publishManifestPath && exp.android.publishBundlePath) {
-      let fullManifestUrl = `${response.url.replace('exp://', 'https://')}/index.exp`;
+      let fullManifestUrl = response.url.replace('exp://', 'https://');
       let constantsPath = path.join(
         projectRoot,
         'android',
@@ -688,7 +689,9 @@ export async function publishAsync(
         // ADD EMBEDDED RESPONSES HERE
         // START EMBEDDED RESPONSES
         embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+        embeddedResponses.add(new Constants.EmbeddedResponse("${
+          androidManifest.bundleUrl
+        }", "assets://shell-app.bundle", "application/javascript"));
         // END EMBEDDED RESPONSES`,
         constantsPath
       );
@@ -1558,6 +1561,7 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
 }
 
 let blacklistedEnvironmentVariables = new Set([
+  'EXPO_APPLE_PASSWORD',
   'EXPO_ANDROID_KEY_PASSWORD',
   'EXPO_ANDROID_KEYSTORE_PASSWORD',
   'EXPO_IOS_DIST_P12_PASSWORD',
@@ -1576,12 +1580,12 @@ export async function startExpoServerAsync(projectRoot: string) {
   await stopExpoServerAsync(projectRoot);
   let app = express();
   app.use(
-    bodyParser.json({
+    express.json({
       limit: '10mb',
     })
   );
   app.use(
-    bodyParser.urlencoded({
+    express.urlencoded({
       limit: '10mb',
       extended: true,
     })
@@ -1645,7 +1649,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       await _resolveGoogleServicesFile(projectRoot, manifest);
       const hostUUID = await UserSettings.anonymousIdentifier();
       let currentSession = await UserManager.getSessionAsync();
-      if (!currentSession) {
+      if (!currentSession || Config.offline) {
         manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
       }
       let manifestString = JSON.stringify(manifest);
@@ -1653,7 +1657,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
         } else {
-          if (!currentSession) {
+          if (!currentSession || Config.offline) {
             const unsignedManifest = {
               manifestString,
               signature: 'UNSIGNED',

@@ -142,7 +142,8 @@ class ProjectManagerSection extends React.Component {
           <LoggerIcon
             type={this.props.data.type}
             style={{ marginRight: '8px', marginBottom: '2px' }}
-          />&nbsp;
+          />
+          &nbsp;
           {this.props.data.name}
         </ProjectManagerSectionHeader>
       );

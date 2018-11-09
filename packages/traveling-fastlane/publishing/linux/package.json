@@ -9,5 +9,8 @@
   },
   "keywords": ["fastlane", "expo", "ruby"],
   "author": "Edgar Aroutiounian",
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -23,20 +23,22 @@ export default function renderIntentFilters(intentFilters) {
       ${renderIntentFilterCategory(intentFilter.category)}
     </intent-filter>`;
   });
-};
+}
 
 function renderIntentFilterDatumEntries(datum) {
-  return _.toPairs(datum).map(entry => `android:${entry[0]}=\"${entry[1]}\"`).join(' ');
+  return _.toPairs(datum)
+    .map(entry => `android:${entry[0]}=\"${entry[1]}\"`)
+    .join(' ');
 }
 
 function renderIntentFilterData(data) {
-  return (Array.isArray(data) ? data : [data]).map(datum =>
-    `<data ${renderIntentFilterDatumEntries(datum)}/>`
-  ).join('\n');
+  return (Array.isArray(data) ? data : [data])
+    .map(datum => `<data ${renderIntentFilterDatumEntries(datum)}/>`)
+    .join('\n');
 }
 
 function renderIntentFilterCategory(category) {
-  return (Array.isArray(category) ? category : [category]).map(cat =>
-    `<category android:name="android.intent.category.${cat}"/>`
-  ).join('\n');
+  return (Array.isArray(category) ? category : [category])
+    .map(cat => `<category android:name="android.intent.category.${cat}"/>`)
+    .join('\n');
 }

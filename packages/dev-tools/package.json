@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.1.6",
+  "version": "0.2.7",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
@@ -20,8 +20,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "body-parser": "1.18.2",
-    "express": "4.16.3",
+    "express": "4.16.4",
     "freeport-async": "1.1.1",
     "graphql": "0.13.2",
     "graphql-tools": "3.0.0",
@@ -70,8 +69,11 @@
     "redux": "^3.7.2",
     "slugify": "^1.0.2",
     "velocity-react": "^1.4.1",
-    "xdl": "^51.4.3"
+    "xdl": "^51.5.7"
   },
   "license": "MIT",
-  "gitHead": "5e6aab74774ccab6b22c4ece13c285022e04bff2"
+  "gitHead": "5e6aab74774ccab6b22c4ece13c285022e04bff2",
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -18,7 +18,9 @@ export default (program: any) => {
 
       log('Reading project configuration...');
 
-      const { args: { remotePackageName } } = await Exp.getPublishInfoAsync(projectDir);
+      const {
+        args: { remotePackageName },
+      } = await Exp.getPublishInfoAsync(projectDir);
 
       log('Logging in...');
 
@@ -38,7 +40,9 @@ export default (program: any) => {
     .command('push:android:show [project-dir]')
     .description('Print the value currently in use for FCM notifications for this project.')
     .asyncActionProjectDir(async (projectDir, options) => {
-      const { args: { remotePackageName } } = await Exp.getPublishInfoAsync(projectDir);
+      const {
+        args: { remotePackageName },
+      } = await Exp.getPublishInfoAsync(projectDir);
       let user = await User.getCurrentUserAsync();
       let apiClient = ApiV2.clientForUser(user);
 
@@ -56,7 +60,9 @@ export default (program: any) => {
     .description('Deletes a previously uploaded FCM credential.')
     .asyncActionProjectDir(async (projectDir, options) => {
       log('Reading project configuration...');
-      const { args: { remotePackageName } } = await Exp.getPublishInfoAsync(projectDir);
+      const {
+        args: { remotePackageName },
+      } = await Exp.getPublishInfoAsync(projectDir);
 
       log('Logging in...');
       let user = await User.getCurrentUserAsync();

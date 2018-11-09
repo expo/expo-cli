@@ -120,7 +120,9 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
   ) {
     if (process.env.EXPO_VIEW_DIR) {
       logger.warn(
-        `Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPO_VIEW_DIR`
+        `Detaching is not supported for SDK ${
+          exp.sdkVersion
+        }; ignoring this because you provided EXPO_VIEW_DIR`
       );
       sdkVersionConfig = {};
     } else {
@@ -385,10 +387,11 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
   // TODO: very brittle hack: the paths here are hard coded to match the single workspace
   // path generated inside IosShellApp. When we support more than one path, this needs to
   // be smarter.
+  const expoRootDir = path.join(projectDir, '..', '..');
   const workspaceSourcePath = path.join(projectDir, 'default');
   const buildFlags = StandaloneBuildFlags.createIos('Release', { workspaceSourcePath });
   const context = StandaloneContext.createServiceContext(
-    path.join(projectDir, '..', '..'),
+    expoRootDir,
     null,
     null,
     null,
@@ -405,6 +408,8 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
+  const { exp } = await ProjectUtils.readConfigJsonAsync(expoRootDir);
+
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project
     const contextType = constantsConfig.STANDALONE_CONTEXT_TYPE;
@@ -420,6 +425,9 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
         : 'https://exp.host/--/api/v2/';
     if (prodApiKeys) {
       constantsConfig.DEFAULT_API_KEYS = prodApiKeys;
+    }
+    if (exp && exp.sdkVersion) {
+      constantsConfig.TEMPORARY_SDK_VERSION = exp.sdkVersion;
     }
     return constantsConfig;
   });
@@ -481,6 +489,9 @@ async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, 
       if (defaultApiKeys) {
         constantsConfig.DEFAULT_API_KEYS = defaultApiKeys;
       }
+      if (exp.sdkVersion) {
+        constantsConfig.TEMPORARY_SDK_VERSION = exp.sdkVersion;
+      }
       return constantsConfig;
     });
   }
@@ -531,7 +542,9 @@ export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsAr
     args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
   if (!publishManifestPath) {
     logger.warn(
-      `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
+      `Skipped assets bundling because the '${
+        args.platform
+      }.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
@@ -541,7 +554,9 @@ export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsAr
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
   } catch (ex) {
     throw new Error(
-      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
+      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${
+        ex.message
+      }`
     );
   }
 
