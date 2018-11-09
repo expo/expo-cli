@@ -9,16 +9,16 @@ console.log(
     `
 ${bold('1) Offline development')}:
   Check that you're logged in (\`expo whoami\`) and then make sure
-  \`expo start\` works without internet connection.
+  \`<repo-dir>/packages/expo-cli/bin/expo.js start --offline\` works without internet connection.
   (Use Network Link Conditioner with the the "100% Loss" profile, or turn off your wi-fi.)
 ${bold('2) Offline development, logged out')}:
-  Same as (1), but first run \`expo logout\`
+  Run \`expo logout\` and then \`<repo-dir>/packages/expo-cli/bin/expo.js start\`.
 ${bold('3) Eject')}: Create an app and eject it immediately. Check that it builds.
 
-    expo init testapp --template blank
+    <repo-dir>/packages/expo-cli/bin/expo.js init testapp --template blank
     cd testapp
-    expo eject --eject-method expoKit
-    expo start
+    <repo-dir>/packages/expo-cli/bin/expo.js eject --eject-method expoKit
+    <repo-dir>/packages/expo-cli/bin/expo.js start
 
     # In another terminal:
     # Test that it builds for iOS
@@ -29,7 +29,7 @@ ${bold('3) Eject')}: Create an app and eject it immediately. Check that it build
 
     # Test that it builds for Android
     cd ../android
-    ./gradlew installDevMinSdkDevKernelDebug`
+    ./run.sh`
 );
 
 let CHECKLIST = ['I have completed all the checks'];
