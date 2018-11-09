@@ -172,7 +172,7 @@ ${job.id}
       const { ids, url, err } = await publishAction(this.projectDir, {
         ...this.options,
         platform,
-        duringBuild: true
+        duringBuild: true,
       });
       if (err) {
         throw new BuildError(`No url was returned from publish. Please try again.\n${err}`);
@@ -190,8 +190,8 @@ ${job.id}
         throw new BuildError('No releases found. Please create one using `exp publish` first.');
       }
       log(
-        `Using existing release on channel "${release.channel}":\n
-          publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
+        `Using existing release on channel "${release.channel}":\n` +
+          `publicationId: ${release.publicationId}\n  publishedTime: ${release.publishedTime}`
       );
       return [release.publicationId];
     }
@@ -290,7 +290,8 @@ ${job.id}
       const storeName = platform === 'ios' ? 'Apple App Store' : 'Google Play Store';
       log.error(
         chalk.red(
-          `Unsupported SDK version: our app builders don't have support for ${sdkVersion} version yet. Submitting the app to the ${storeName} may result in an unexpected behaviour`
+          `Unsupported SDK version: our app builders don't have support for ${sdkVersion} version ` +
+            `yet. Submitting the app to the ${storeName} may result in an unexpected behaviour`
         )
       );
     }
