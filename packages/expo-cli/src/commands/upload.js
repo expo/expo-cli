@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import IOSUploader from './upload/IOSUploader';
+import IOSUploader, { LANGUAGES } from './upload/IOSUploader';
 import AndroidUploader from './upload/AndroidUploader';
 import log from '../log';
 
@@ -11,7 +11,7 @@ export default program => {
   const androidCommand = program.command('upload:android [projectDir]').alias('ua');
   setCommonOptions(androidCommand, '.apk');
   androidCommand
-    .option('--key <key>', 'path to the JSON key used to authenticate with the Google Play Store')
+    .option('--key <key>', 'path to the JSON key used to authenticate with Google Play')
     .option(
       '--track <track>',
       'the track of the application to use, choose from: production, beta, alpha, internal, rollout',
@@ -19,7 +19,7 @@ export default program => {
       'internal'
     )
     .description(
-      'Uploads a standalone android app to the Google Play Store (it works on macOS only). Uploads the latest build by default.'
+      'Uploads a standalone android app to Google Play (it works on macOS only). Uploads the latest build by default.'
     )
     .asyncActionProjectDir(createUploadAction(AndroidUploader, ANDROID_OPTIONS));
 
@@ -50,10 +50,19 @@ export default program => {
       '--sku <sku>',
       'a unique ID for your app that is not visible on the App Store, will be generated unless provided'
     )
-    .option('--language <language>', `primary language (e.g. English, German)`, 'English')
-    .description(
-      'Uploads a standalone app to the TestFlight (it works on macOS only). Uploads the latest build by default.'
+    .option(
+      '--language <language>',
+      `primary language (e.g. English, German; run \`expo upload:ios --help\` to see the list of available languages)`,
+      'English'
     )
+    .description(
+      'Uploads a standalone app to Apple TestFlight (it works on macOS only). Uploads the latest build by default.'
+    )
+    .on('--help', function() {
+      console.log('Available languages:');
+      console.log(`  ${LANGUAGES.join(', ')}`);
+      console.log();
+    })
     .asyncActionProjectDir(createUploadAction(IOSUploader, IOS_OPTIONS));
 };
 
@@ -71,6 +80,9 @@ function createUploadAction(UploaderClass, optionKeys) {
       await ensureOptionsAreValid(command);
 
       const options = _.pick(command, optionKeys);
+      if (UploaderClass.validateOptions) {
+        UploaderClass.validateOptions(options);
+      }
       const uploader = new UploaderClass(projectDir, options);
       await uploader.upload();
     } catch (err) {

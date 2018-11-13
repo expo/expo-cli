@@ -37,7 +37,46 @@ const APP_NAME_QUESTION = {
   },
 };
 
+export const LANGUAGES = [
+  'Brazilian Portuguese',
+  'Danish',
+  'Dutch',
+  'English',
+  'English_Australian',
+  'English_CA',
+  'English_UK',
+  'Finnish',
+  'French',
+  'French_CA',
+  'German',
+  'Greek',
+  'Indonesian',
+  'Italian',
+  'Japanese',
+  'Korean',
+  'Malay',
+  'Norwegian',
+  'Portuguese',
+  'Russian',
+  'Simplified Chinese',
+  'Spanish',
+  'Spanish_MX',
+  'Swedish',
+  'Thai',
+  'Traditional Chinese',
+  'Turkish',
+  'Vietnamese',
+];
+
 export default class IOSUploader extends BaseUploader {
+  static validateOptions(options) {
+    if (!LANGUAGES.includes(options.language)) {
+      throw new Error(
+        `You must specify a supported language. Run  expo upload:ios --help to see the list of supported languages.`
+      );
+    }
+  }
+
   constructor(projectDir, options) {
     super(PLATFORM, projectDir, options);
   }
