@@ -1,7 +1,6 @@
 /**
  * @flow
  */
-import bodyParser from 'body-parser';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -53,7 +52,7 @@ import * as Sentry from './Sentry';
 import StandaloneContext from './detach/StandaloneContext';
 import * as ThirdParty from './ThirdParty';
 import * as UrlUtils from './UrlUtils';
-import UserManager from './User';
+import UserManager, { ANONYMOUS_USERNAME } from './User';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import * as Watchman from './Watchman';
@@ -151,9 +150,9 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
     }
     throw new XDLError(
       errorCode,
-      `Packager URL ${fullUrl} returned unexpected code ${
-        response.statusCode
-      }. Please open your project in the Expo app and see if there are any errors. Also scroll up and make sure there were no errors or warnings when opening your project.`
+      `Packager URL ${fullUrl} returned unexpected code ${response.statusCode}. ` +
+        'Please open your project in the Expo app and see if there are any errors. ' +
+        'Also scroll up and make sure there were no errors or warnings when opening your project.'
     );
   }
 
@@ -451,7 +450,7 @@ export async function exportForAppHosting(
     <script src="${urljoin('bundles', iosBundleUrl)}"></script>
     <script src="${urljoin('bundles', androidBundleUrl)}"></script>
     Open up this file in Chrome. In the Javascript developer console, navigate to the Source tab.
-    You can see a red coloured folder containing the original source code from your bundle. 
+    You can see a red coloured folder containing the original source code from your bundle.
     `;
     await _writeArtifactSafelyAsync(
       projectRoot,
@@ -665,7 +664,7 @@ export async function publishAsync(
     // We need to add EmbeddedResponse instances on Android to tell the runtime
     // that the shell app manifest and bundle is packaged.
     if (exp.android && exp.android.publishManifestPath && exp.android.publishBundlePath) {
-      let fullManifestUrl = `${response.url.replace('exp://', 'https://')}/index.exp`;
+      let fullManifestUrl = response.url.replace('exp://', 'https://');
       let constantsPath = path.join(
         projectRoot,
         'android',
@@ -1166,6 +1165,7 @@ export async function buildAsync(
     releaseChannel?: string,
     bundleIdentifier?: string,
     publicUrl?: string,
+    sdkVersion?: string,
   } = {}
 ) {
   await UserManager.ensureLoggedInAsync();
@@ -1177,7 +1177,7 @@ export async function buildAsync(
     platform: options.platform,
   });
 
-  let schema = joi.object().keys({
+  const schema = joi.object().keys({
     current: joi.boolean(),
     mode: joi.string(),
     platform: joi.any().valid('ios', 'android', 'all'),
@@ -1186,6 +1186,7 @@ export async function buildAsync(
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
     bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-\.]+$/),
     publicUrl: joi.string(),
+    sdkVersion: joi.strict(),
   });
 
   try {
@@ -1216,7 +1217,8 @@ export async function buildAsync(
     if (!exp.ios || !exp.ios.bundleIdentifier) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a bundle identifier in order to build this experience for iOS. Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
+        `Must specify a bundle identifier in order to build this experience for iOS.` +
+          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
       );
     }
   }
@@ -1225,21 +1227,16 @@ export async function buildAsync(
     if (!exp.android || !exp.android.package) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a java package in order to build this experience for Android. Please specify one in ${configName} at "${configPrefix}android.package"`
+        `Must specify a java package in order to build this experience for Android.` +
+          `Please specify one in ${configName} at "${configPrefix}android.package"`
       );
     }
   }
 
-  if (process.env.FORCE_TURTLE_VERSION) {
-    options.forceTurtleVersion = process.env.FORCE_TURTLE_VERSION;
-  }
-
-  let response = await Api.callMethodAsync('build', [], 'put', {
+  return await Api.callMethodAsync('build', [], 'put', {
     manifest: exp,
     options,
   });
-
-  return response;
 }
 
 async function _waitForRunningAsync(url) {
@@ -1452,13 +1449,18 @@ export async function startReactNativeServerAsync(
     'cli.js'
   );
   const cliPath = exp.rnCliPath || defaultCliPath;
-  let nodePath; // When using a custom path for the RN CLI, we want it to use the project // root to look up config files and Node modules
+  let nodePath;
+  // When using a custom path for the RN CLI, we want it to use the project
+  // root to look up config files and Node modules
   if (exp.rnCliPath) {
     nodePath = _nodePathForProjectRoot(projectRoot);
   } else {
     nodePath = null;
   }
-  // Run the copy of Node that's embedded in Electron by setting the // ELECTRON_RUN_AS_NODE environment variable // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the // child process
+  // Run the copy of Node that's embedded in Electron by setting the
+  // ELECTRON_RUN_AS_NODE environment variable
+  // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
+  // child process
   let packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
@@ -1517,7 +1519,11 @@ export async function startReactNativeServerAsync(
     )
   );
   await Promise.race([_waitForRunningAsync(statusUrl), exitPromise, timeoutPromise]);
-} // Simulate the node_modules resolution // If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns // "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
+}
+
+// Simulate the node_modules resolution
+// If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns
+// "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
 function _nodePathForProjectRoot(projectRoot: string): string {
   let paths = [];
   let directory = path.resolve(projectRoot);
@@ -1555,6 +1561,7 @@ export async function stopReactNativeServerAsync(projectRoot: string) {
 }
 
 let blacklistedEnvironmentVariables = new Set([
+  'EXPO_APPLE_PASSWORD',
   'EXPO_ANDROID_KEY_PASSWORD',
   'EXPO_ANDROID_KEYSTORE_PASSWORD',
   'EXPO_IOS_DIST_P12_PASSWORD',
@@ -1573,12 +1580,12 @@ export async function startExpoServerAsync(projectRoot: string) {
   await stopExpoServerAsync(projectRoot);
   let app = express();
   app.use(
-    bodyParser.json({
+    express.json({
       limit: '10mb',
     })
   );
   app.use(
-    bodyParser.urlencoded({
+    express.urlencoded({
       limit: '10mb',
       extended: true,
     })
@@ -1642,15 +1649,15 @@ export async function startExpoServerAsync(projectRoot: string) {
       await _resolveGoogleServicesFile(projectRoot, manifest);
       const hostUUID = await UserSettings.anonymousIdentifier();
       let currentSession = await UserManager.getSessionAsync();
-      if (!currentSession) {
-        manifest.id = `@${UserManager.ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
+      if (!currentSession || Config.offline) {
+        manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
       }
       let manifestString = JSON.stringify(manifest);
       if (req.headers['exponent-accept-signature']) {
         if (_cachedSignedManifest.manifestString === manifestString) {
           manifestString = _cachedSignedManifest.signedManifest;
         } else {
-          if (!currentSession) {
+          if (!currentSession || Config.offline) {
             const unsignedManifest = {
               manifestString,
               signature: 'UNSIGNED',
@@ -1687,7 +1694,8 @@ export async function startExpoServerAsync(projectRoot: string) {
         developerTool: Config.developerTool,
       });
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`); // 5xx = Server Error HTTP code
+      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`);
+      // 5xx = Server Error HTTP code
       res.status(520).send({
         error: e.toString(),
       });
@@ -1789,7 +1797,7 @@ async function _connectToNgrokAsync(
 export async function startTunnelsAsync(projectRoot: string) {
   let username = await UserManager.getCurrentUsernameAsync();
   if (!username) {
-    username = UserManager.ANONYMOUS_USERNAME;
+    username = ANONYMOUS_USERNAME;
   }
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -1892,7 +1900,10 @@ export async function startTunnelsAsync(projectRoot: string) {
           ProjectUtils.logError(
             projectRoot,
             'expo',
-            'We noticed your tunnel is having issues. This may be due to intermittent problems with our tunnel provider. If you have trouble connecting to your app, try to Restart the project, or switch Host to LAN.'
+            'We noticed your tunnel is having issues. ' +
+              'This may be due to intermittent problems with our tunnel provider. ' +
+              'If you have trouble connecting to your app, try to Restart the project, ' +
+              'or switch Host to LAN.'
           );
         } else if (status === 'online') {
           ProjectUtils.logInfo(projectRoot, 'expo', 'Tunnel connected.');
@@ -1902,7 +1913,10 @@ export async function startTunnelsAsync(projectRoot: string) {
   ]);
 }
 export async function stopTunnelsAsync(projectRoot: string) {
-  _assertValidProjectRoot(projectRoot); // This will kill all ngrok tunnels in the process. // We'll need to change this if we ever support more than one project // open at a time in XDE.
+  _assertValidProjectRoot(projectRoot);
+  // This will kill all ngrok tunnels in the process.
+  // We'll need to change this if we ever support more than one project
+  // open at a time in XDE.
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   let ngrokProcess = ngrok.process();
   let ngrokProcessPid = ngrokProcess ? ngrokProcess.pid : null;

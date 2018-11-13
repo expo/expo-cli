@@ -206,9 +206,14 @@ export default class PackagerLogsStream {
   _handleMetroEvent(originalChunk: ChunkT) {
     const chunk = { ...originalChunk };
     let { msg } = chunk;
+
     if (typeof msg === 'string') {
-      // If Metro crashes for some reason, it may log an error message as a plain string to stderr.
-      this._enqueueAppendLogChunk(chunk);
+      if (msg.includes('HTTP/1.1') && process.env.EXPO_DEBUG !== 'true') {
+        // Do nothing with this message - we want to filter out network requests logged by Metro.
+      } else {
+        // If Metro crashes for some reason, it may log an error message as a plain string to stderr.
+        this._enqueueAppendLogChunk(chunk);
+      }
       return;
     }
     if (/^bundle_/.test(msg.type)) {
@@ -331,7 +336,7 @@ export default class PackagerLogsStream {
       bundleError = new Error('Failed to build bundle');
       bundleBuildEnd = new Date();
     } else {
-      percentProgress = Math.floor(msg.transformedFileCount / msg.totalFileCount * 100);
+      percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
     }
 
     if (this._bundleBuildChunkID) {

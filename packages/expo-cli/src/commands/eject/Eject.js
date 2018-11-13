@@ -162,11 +162,10 @@ Ejecting is permanent! Please be careful with your selection.
         // manually gets printed.
         const babelRcJson = JSON.parse(projectBabelRc);
         if (babelRcJson.presets && babelRcJson.presets.includes('babel-preset-expo')) {
-          babelRcJson.presets = babelRcJson.presets.map(
-            preset =>
-              preset === 'babel-preset-expo'
-                ? 'babel-preset-react-native-stage-0/decorator-support'
-                : preset
+          babelRcJson.presets = babelRcJson.presets.map(preset =>
+            preset === 'babel-preset-expo'
+              ? 'babel-preset-react-native-stage-0/decorator-support'
+              : preset
           );
           await fse.writeFile(projectBabelPath, JSON.stringify(babelRcJson, null, 2));
           newDevDependencies.push('babel-preset-react-native-stage-0');
@@ -212,7 +211,11 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
         pkgJson.jest.preset = 'react-native';
       } else {
         log(
-          `${chalk.bold('Warning')}: it looks like you've changed the Jest preset from jest-expo to ${pkgJson.jest.preset}. We recommend you make sure this Jest preset is compatible with ejected apps.`
+          `${chalk.bold(
+            'Warning'
+          )}: it looks like you've changed the Jest preset from jest-expo to ${
+            pkgJson.jest.preset
+          }. We recommend you make sure this Jest preset is compatible with ejected apps.`
         );
       }
     }
@@ -284,14 +287,14 @@ Please consider letting us know why you ejected in this survey:
 async function filesUsingExpoSdk(projectRoot: string): Promise<Array<string>> {
   const projectJsFiles = await findJavaScriptProjectFilesInRoot(projectRoot);
 
-  const jsFileContents = (await Promise.all(
-    projectJsFiles.map(f => fse.readFile(f))
-  )).map((buf, i) => {
-    return {
-      filename: projectJsFiles[i],
-      contents: buf.toString(),
-    };
-  });
+  const jsFileContents = (await Promise.all(projectJsFiles.map(f => fse.readFile(f)))).map(
+    (buf, i) => {
+      return {
+        filename: projectJsFiles[i],
+        contents: buf.toString(),
+      };
+    }
+  );
 
   const filesUsingExpo = [];
 

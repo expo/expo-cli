@@ -239,7 +239,7 @@ export async function constructUrlAsync(
       }
     }
   } else if (opts.hostType === 'localhost' || requestHostname === 'localhost') {
-    hostname = 'localhost';
+    hostname = '127.0.0.1';
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else if (opts.hostType === 'lan' || Config.offline) {
     if (process.env.EXPO_PACKAGER_HOSTNAME) {

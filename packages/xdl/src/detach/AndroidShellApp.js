@@ -218,7 +218,7 @@ export async function copyInitialShellAppFilesAsync(
   shellPath,
   isDetached: boolean = false
 ) {
-  if (androidSrcPath) {
+  if (androidSrcPath && !isDetached) {
     // check if Android template files exist
     // since we take out the prebuild step later on
     // and we should have generated those files earlier

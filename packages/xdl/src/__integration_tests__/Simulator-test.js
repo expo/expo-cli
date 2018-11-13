@@ -7,7 +7,7 @@ const xdl = require('../xdl');
 describe('simulator', () => {
   xit('opens and loads url in expo', async () => {
     let Simulator = xdl.Simulator;
-    if (!await Simulator._isSimulatorInstalledAsync()) {
+    if (!(await Simulator._isSimulatorInstalledAsync())) {
       throw new Error("Simulator isn't installed on this computer; can't run this test.");
     }
 
@@ -23,7 +23,7 @@ describe('simulator', () => {
 
     await delayAsync(9000); // 3 seconds
 
-    if (!await Simulator._isSimulatorRunningAsync()) {
+    if (!(await Simulator._isSimulatorRunningAsync())) {
       throw new Error(
         "Simulator should be running after being opened, but we're detecting that it isn't."
       );
@@ -36,7 +36,7 @@ describe('simulator', () => {
       throw new Error("Expo app shouldn't be installed on this simulator but it is");
     }
     await Simulator._installExpoOnSimulatorAsync();
-    if (!await Simulator._isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+    if (!(await Simulator._isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
       throw new Error("Expo app should be installed on this simulator but it isn't");
     }
 

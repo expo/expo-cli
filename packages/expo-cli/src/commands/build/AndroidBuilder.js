@@ -15,10 +15,10 @@ import prompt from '../../prompt';
 export default class AndroidBuilder extends BaseBuilder {
   async run(options) {
     const buildOptions = options.publicUrl ? { publicUrl: options.publicUrl } : {};
-    // Check the status of any current builds
-    await this.checkStatus({ platform: 'android', ...buildOptions });
     // Validate project
-    await this.validateProject(buildOptions);
+    const sdkVersion = await this.validateProject(buildOptions);
+    // Check the status of any current builds
+    await this.checkStatus({ platform: 'android', sdkVersion, ...buildOptions });
     // Check for existing credentials, collect any missing credentials, and validate them
     await this.collectAndValidateCredentials(buildOptions);
     // Publish the current experience, if necessary
@@ -85,7 +85,9 @@ export default class AndroidBuilder extends BaseBuilder {
 
   async collectAndValidateCredentials(options = {}) {
     const publicUrl = options.publicUrl;
-    const { args: { username, remoteFullPackageName: experienceName } } = publicUrl
+    const {
+      args: { username, remoteFullPackageName: experienceName },
+    } = publicUrl
       ? await Exp.getThirdPartyInfoAsync(publicUrl)
       : await Exp.getPublishInfoAsync(this.projectDir);
 
@@ -208,9 +210,12 @@ export default class AndroidBuilder extends BaseBuilder {
 
   async validateProject(options) {
     const publicUrl = options.publicUrl;
-    const { args: { sdkVersion } } = publicUrl
+    const {
+      args: { sdkVersion },
+    } = publicUrl
       ? await Exp.getThirdPartyInfoAsync(publicUrl)
       : await Exp.getPublishInfoAsync(this.projectDir);
     await this.checkIfSdkIsSupported(sdkVersion, 'android');
+    return sdkVersion;
   }
 }

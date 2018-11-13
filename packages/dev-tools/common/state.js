@@ -379,7 +379,8 @@ export const publishProject = async (options, props) => {
           Successfully published to{' '}
           <a target="_blank" href={url}>
             {url}
-          </a>.
+          </a>
+          .
         </span>
       ),
     },
