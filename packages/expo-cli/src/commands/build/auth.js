@@ -314,9 +314,10 @@ export async function revokeCredentialsOnApple(creds, metadata, ids, teamId) {
 async function spawnAndCollectJSONOutputAsync(program, args) {
   let prgm = program;
   let cmd = args;
+  let timeout;
   return Promise.race([
     new Promise((resolve, reject) => {
-      setTimeout(() => reject(new Error(timeout_msg(prgm, cmd))), TIMEOUT);
+      timeout = setTimeout(() => reject(new Error(timeout_msg(prgm, cmd))), TIMEOUT);
     }),
     new Promise((resolve, reject) => {
       const jsonContent = [];
@@ -333,6 +334,7 @@ async function spawnAndCollectJSONOutputAsync(program, args) {
           var child = child_process.spawn(prgm, wrapped, opts);
         }
       } catch (e) {
+        clearTimeout(timeout);
         return reject(e);
       }
       child.stdout.on('data', d => console.log(d.toString()));
@@ -341,8 +343,10 @@ async function spawnAndCollectJSONOutputAsync(program, args) {
       child.stdout.on('end', () => {
         const rawDump = Buffer.concat(jsonContent).toString();
         try {
+          clearTimeout(timeout);
           resolve(JSON.parse(rawDump));
         } catch (e) {
+          clearTimeout(timeout);
           reject({
             result: 'failure',
             reason: 'Could not understand JSON reply from Ruby based local auth scripts',
