@@ -19,7 +19,7 @@ export default program => {
       'internal'
     )
     .description(
-      'Uploads a standalone android app to Google Play (it works on macOS only). Uploads the latest build by default.'
+      'Uploads a standalone Android app to Google Play (works on macOS only). Uploads the latest build by default.'
     )
     .asyncActionProjectDir(createUploadAction(AndroidUploader, ANDROID_OPTIONS));
 
@@ -56,7 +56,7 @@ export default program => {
       'English'
     )
     .description(
-      'Uploads a standalone app to Apple TestFlight (it works on macOS only). Uploads the latest build by default.'
+      'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
     )
     .on('--help', function() {
       console.log('Available languages:');

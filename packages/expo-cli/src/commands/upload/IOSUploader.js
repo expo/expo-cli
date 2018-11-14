@@ -72,7 +72,7 @@ export default class IOSUploader extends BaseUploader {
   static validateOptions(options) {
     if (!LANGUAGES.includes(options.language)) {
       throw new Error(
-        `You must specify a supported language. Run  expo upload:ios --help to see the list of supported languages.`
+        `You must specify a supported language. Run expo upload:ios --help to see the list of supported languages.`
       );
     }
   }
@@ -143,18 +143,18 @@ export default class IOSUploader extends BaseUploader {
 
     const appleCreds = { appleId, appleIdPassword };
 
-    log('Ensuring the app exists on the App Store Connect, this may take a while...');
+    log('Ensuring the app exists on App Store Connect, this may take a while...');
     await runFastlaneAsync(
       fastlane.app_produce,
       [bundleIdentifier, appName, appleId, language],
       appleCreds
     );
 
-    log('Uploading the app to the Testflight, hold tight...');
+    log('Uploading the app to Testflight, hold tight...');
     await runFastlaneAsync(fastlane.pilot_upload, [buildPath, appleId], appleCreds, true);
 
     log(
-      `All done! You may want to go to the App Store Connect (${chalk.underline(
+      `All done! You may want to go to App Store Connect (${chalk.underline(
         'https://appstoreconnect.apple.com'
       )}) and share your build with your testers.`
     );
