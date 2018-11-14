@@ -16,7 +16,7 @@ SCRIPTS = [
   'validate_apple_credentials',
   'funcs',
   'preload',
-  'app_produce'
+  'app_produce',
   'pilot_upload',
   'supply_android',
 ]
