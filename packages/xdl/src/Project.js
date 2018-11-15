@@ -322,50 +322,61 @@ export async function mergeAppDistributions(
   for (let sourceDir of sourceDirs) {
     const promises = [];
 
-    // copy file over to assetPath
-    const sourceAssetDir = path.resolve(projectRoot, path.join(sourceDir, 'assets'));
-    const outputAssetDir = path.resolve(projectRoot, path.join(outputDir, 'assets'));
-    const assetPromise = fs.copy(sourceAssetDir, outputAssetDir);
-    promises.push(assetPromise);
+    // copy over assets/bundles from other src dirs to the output dir
+    if (sourceDir !== outputDir) {
+      // copy file over to assetPath
+      const sourceAssetDir = path.resolve(projectRoot, path.join(sourceDir, 'assets'));
+      const outputAssetDir = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+      const assetPromise = fs.copy(sourceAssetDir, outputAssetDir);
+      promises.push(assetPromise);
 
-    // copy files over to bundlePath
-    const sourceBundleDir = path.resolve(projectRoot, path.join(sourceDir, 'bundles'));
-    const outputBundleDir = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
-    const bundlePromise = fs.copy(sourceBundleDir, outputBundleDir);
-    promises.push(bundlePromise);
+      // copy files over to bundlePath
+      const sourceBundleDir = path.resolve(projectRoot, path.join(sourceDir, 'bundles'));
+      const outputBundleDir = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+      const bundlePromise = fs.copy(sourceBundleDir, outputBundleDir);
+      promises.push(bundlePromise);
 
-    await Promise.all(promises);
+      await Promise.all(promises);
+    }
 
     // put index.jsons into memory
+    const putJsonInMemory = async (indexPath, accumulator) => {
+      const index = await new JsonFile(indexPath).readAsync();
+      if (!index.sdkVersion) {
+        throw new XDLError(
+          ErrorCode.INVALID_MANIFEST,
+          `Invalid index.json, must specify an sdkVersion at ${indexPath}`
+        );
+      }
+      if (Array.isArray(index)) {
+        // index.json could also be an array
+        accumulator.push(...index);
+      } else {
+        accumulator.push(index);
+      }
+    };
+
     const androidIndexPath = path.resolve(projectRoot, path.join(sourceDir, 'android-index.json'));
-    const androidIndex = await new JsonFile(androidIndexPath).readAsync();
-    if (!androidIndex.sdkVersion) {
-      throw new XDLError(
-        ErrorCode.INVALID_MANIFEST,
-        `Invalid index.json, must specify an sdkVersion at ${androidIndexPath}`
-      );
-    }
-    androidIndexes.push(androidIndex);
+    await putJsonInMemory(androidIndexPath, androidIndexes);
 
     const iosIndexPath = path.resolve(projectRoot, path.join(sourceDir, 'ios-index.json'));
-    const iosIndex = await new JsonFile(iosIndexPath).readAsync();
-    if (!iosIndex.sdkVersion) {
-      throw new XDLError(
-        ErrorCode.INVALID_MANIFEST,
-        `Invalid index.json, must specify an sdkVersion at ${iosIndexPath}`
-      );
-    }
-    iosIndexes.push(iosIndex);
+    await putJsonInMemory(iosIndexPath, iosIndexes);
   }
 
   // sort indexes by descending sdk value
-  const sortedAndroidIndexes = androidIndexes.sort((index1, index2) => {
-    return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
-  });
+  const getSortedIndex = indexes => {
+    return indexes.sort((index1, index2) => {
+      if (semver.eq(index1.sdkVersion, index2.sdkVersion)) {
+        logger.global.error(
+          `Encountered multiple index.json with the same SDK version ${index1.sdkVersion}. This could result in undefined behavior.`
+        );
+      }
+      return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
+    });
+  };
 
-  const sortedIosIndexes = iosIndexes.sort((index1, index2) => {
-    return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
-  });
+  const sortedAndroidIndexes = getSortedIndex(androidIndexes);
+  const sortedIosIndexes = getSortedIndex(iosIndexes);
 
   // Save the json arrays to disk
   await _writeArtifactSafelyAsync(
