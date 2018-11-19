@@ -422,6 +422,7 @@ async function _configureConstantsPlistAsync(context: StandaloneContext) {
     return;
   }
 
+  const { supportingDirectory } = IosWorkspace.getPaths(context);
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     constantsConfig.API_SERVER_ENDPOINT =
       process.env.ENVIRONMENT === 'staging'
