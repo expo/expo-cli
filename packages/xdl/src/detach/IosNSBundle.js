@@ -417,6 +417,19 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
   });
 }
 
+async function _configureConstantsPlistAsync(context: StandaloneContext) {
+  if (context.type === 'user') {
+    return;
+  }
+
+  await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
+    constantsConfig.API_SERVER_ENDPOINT =
+      process.env.ENVIRONMENT === 'staging'
+        ? 'https://staging.exp.host/--/api/v2/'
+        : 'https://exp.host/--/api/v2/';
+  });
+}
+
 async function configureAsync(context: StandaloneContext) {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
@@ -440,6 +453,7 @@ async function configureAsync(context: StandaloneContext) {
     await _configureInfoPlistAsync(context);
     await _configureShellPlistAsync(context);
     await _configureEntitlementsAsync(context);
+    await _configureConstantsPlistAsync(context);
     await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
     await IosLocalization.writeLocalizationResourcesAsync({
       supportingDirectory,
