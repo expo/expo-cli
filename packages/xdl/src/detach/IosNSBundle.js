@@ -428,6 +428,7 @@ async function _configureConstantsPlistAsync(context: StandaloneContext) {
       process.env.ENVIRONMENT === 'staging'
         ? 'https://staging.exp.host/--/api/v2/'
         : 'https://exp.host/--/api/v2/';
+    return constantsConfig;
   });
 }
 
