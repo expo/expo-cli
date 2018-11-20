@@ -78,7 +78,7 @@ export async function action(projectDir: string, options: Options = {}) {
     // delete .tmp if it exists and recreate it anew
     const rimrafP = util.promisify(rimraf);
     const tmpFolder = path.resolve(projectDir, path.join('.tmp'));
-    await rimrafP(tmpFolder); // rm -rf tmpFolder
+    await fs.remove(tmpFolder);
     await fs.ensureDir(tmpFolder);
 
     // Download the urls into a tmp dir
