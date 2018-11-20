@@ -171,7 +171,7 @@ export default (program: any) => {
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('--merge-src-dir [dir]', 'A repeatable source dir to merge in.', collect, [])
-    .option('--merge-src-url [url]', 'A repeatable source tg.gz dir to merge in.', collect, [])
+    .option('--merge-src-url [url]', 'A repeatable source tar.gz file URL to merge in.', collect, [])
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .asyncActionProjectDir(action, false, true);
 };
