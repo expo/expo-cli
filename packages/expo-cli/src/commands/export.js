@@ -1,12 +1,11 @@
 /**
  * @flow
  */
+import axios from 'axios';
 import crypto from 'crypto';
 import fs from 'fs-extra';
 import validator from 'validator';
 import path from 'path';
-import request from 'request';
-import rimraf from 'rimraf';
 import targz from 'targz';
 import util from 'util';
 import { Project, UrlUtils } from 'xdl';
@@ -76,7 +75,6 @@ export async function action(projectDir: string, options: Options = {}) {
   // src urls were specified to merge in, so download and decompress them
   if (options.mergeSrcUrl.length > 0) {
     // delete .tmp if it exists and recreate it anew
-    const rimrafP = util.promisify(rimraf);
     const tmpFolder = path.resolve(projectDir, path.join('.tmp'));
     await fs.remove(tmpFolder);
     await fs.ensureDir(tmpFolder);
@@ -119,7 +117,7 @@ export async function action(projectDir: string, options: Options = {}) {
 
 const download = async (uri, filename) => {
   return new Promise((resolve, reject) => {
-    request(uri)
+    axios(uri)
       .pipe(fs.createWriteStream(filename))
       .on('close', () => resolve(null))
       .on('error', err => {
@@ -171,7 +169,12 @@ export default (program: any) => {
     .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
     .option('--merge-src-dir [dir]', 'A repeatable source dir to merge in.', collect, [])
-    .option('--merge-src-url [url]', 'A repeatable source tar.gz file URL to merge in.', collect, [])
+    .option(
+      '--merge-src-url [url]',
+      'A repeatable source tar.gz file URL to merge in.',
+      collect,
+      []
+    )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .asyncActionProjectDir(action, false, true);
 };

@@ -309,9 +309,9 @@ export async function mergeAppDistributions(
   sourceDirs: Array<string>,
   outputDir: string
 ) {
-  const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+  const assetPathToWrite = path.resolve(projectRoot, outputDir, 'assets');
   await fs.ensureDir(assetPathToWrite);
-  const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+  const bundlesPathToWrite = path.resolve(projectRoot, outputDir, 'bundles');
   await fs.ensureDir(bundlesPathToWrite);
 
   // merge files from bundles and assets
@@ -324,14 +324,14 @@ export async function mergeAppDistributions(
     // copy over assets/bundles from other src dirs to the output dir
     if (sourceDir !== outputDir) {
       // copy file over to assetPath
-      const sourceAssetDir = path.resolve(projectRoot, path.join(sourceDir, 'assets'));
-      const outputAssetDir = path.resolve(projectRoot, path.join(outputDir, 'assets'));
+      const sourceAssetDir = path.resolve(projectRoot, sourceDir, 'assets');
+      const outputAssetDir = path.resolve(projectRoot, outputDir, 'assets');
       const assetPromise = fs.copy(sourceAssetDir, outputAssetDir);
       promises.push(assetPromise);
 
       // copy files over to bundlePath
-      const sourceBundleDir = path.resolve(projectRoot, path.join(sourceDir, 'bundles'));
-      const outputBundleDir = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
+      const sourceBundleDir = path.resolve(projectRoot, sourceDir, 'bundles');
+      const outputBundleDir = path.resolve(projectRoot, outputDir, 'bundles');
       const bundlePromise = fs.copy(sourceBundleDir, outputBundleDir);
       promises.push(bundlePromise);
 
@@ -355,10 +355,10 @@ export async function mergeAppDistributions(
       }
     };
 
-    const androidIndexPath = path.resolve(projectRoot, path.join(sourceDir, 'android-index.json'));
+    const androidIndexPath = path.resolve(projectRoot, sourceDir, 'android-index.json');
     await putJsonInMemory(androidIndexPath, androidIndexes);
 
-    const iosIndexPath = path.resolve(projectRoot, path.join(sourceDir, 'ios-index.json'));
+    const iosIndexPath = path.resolve(projectRoot, sourceDir, 'ios-index.json');
     await putJsonInMemory(iosIndexPath, iosIndexes);
   }
 
