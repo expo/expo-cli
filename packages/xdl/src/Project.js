@@ -340,7 +340,7 @@ export async function mergeAppDistributions(
 
     // put index.jsons into memory
     const putJsonInMemory = async (indexPath, accumulator) => {
-      const index = await new JsonFile(indexPath).readAsync();
+      const index = await JsonFile.readAsync(indexPath);
       if (!index.sdkVersion) {
         throw new XDLError(
           ErrorCode.INVALID_MANIFEST,
