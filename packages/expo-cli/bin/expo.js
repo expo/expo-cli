@@ -7,6 +7,7 @@ var ver = process.versions.node;
 ver = ver.split('-')[0]; // explode and truncate tag from version
 
 if (semver.satisfies(ver, '>=6.0.0')) {
+  require('source-map-support').install();
   require('../build/exp.js').run('expo');
 } else {
   console.log(
