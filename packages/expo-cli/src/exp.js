@@ -33,10 +33,6 @@ import urlOpts from './urlOpts';
 import addCommonOptions from './commonOptions';
 import packageJSON from '../package.json';
 
-if (process.env.NODE_ENV === 'development') {
-  require('source-map-support').install();
-}
-
 // The following prototyped functions are not used here, but within in each file found in `./commands`
 // Extending commander to easily add more options to certain command line arguments
 Command.prototype.urlOpts = function() {
