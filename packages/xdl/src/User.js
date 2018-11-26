@@ -8,7 +8,6 @@ import freeportAsync from 'freeport-async';
 import http from 'http';
 import qs from 'querystring';
 import opn from 'opn';
-import promisify from 'util.promisify';
 
 import ApiV2Client, { ApiV2Error } from './ApiV2';
 import * as Analytics from './Analytics';

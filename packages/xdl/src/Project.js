@@ -22,7 +22,6 @@ import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
 import Request from 'request-promise-native';
-import spawnAsync from '@expo/spawn-async';
 import split from 'split';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
@@ -65,7 +64,6 @@ const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
 const WAIT_FOR_PACKAGER_TIMEOUT = 30 * 1000;
 
-const joiValidateAsync = promisify(joi.validate);
 const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
@@ -757,12 +755,11 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
   });
 
   // Validate schema
-  try {
-    await joiValidateAsync(options, schema);
-    options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
-  } catch (e) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
+  const { error } = joi.validate(options, schema);
+  if (error) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, error.toString());
   }
+  options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
   // Verify that exp/app.json and package.json exist
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
@@ -1189,10 +1186,9 @@ export async function buildAsync(
     sdkVersion: joi.strict(),
   });
 
-  try {
-    await joiValidateAsync(options, schema);
-  } catch (e) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
+  const { error } = joi.validate(options, schema);
+  if (error) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, error.toString());
   }
 
   const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
@@ -1954,10 +1950,9 @@ export async function setOptionsAsync(
   let schema = joi.object().keys({
     packagerPort: joi.number().integer(),
   });
-  try {
-    await joiValidateAsync(options, schema);
-  } catch (e) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, e.toString());
+  const { error } = joi.validate(options, schema);
+  if (error) {
+    throw new XDLError(ErrorCode.INVALID_OPTIONS, error.toString());
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
 }
