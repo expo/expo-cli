@@ -175,9 +175,7 @@ export default class IOSUploader extends BaseUploader {
 
     const appleCreds = { appleId, appleIdPassword, appleTeamId };
 
-    log(
-      'Ensuring the app exists on App Store Connect, this may take a while... (even about half an hour)'
-    );
+    log('Ensuring the app exists on App Store Connect, this may take a while...');
     await runFastlaneAsync(
       fastlane.app_produce,
       [bundleIdentifier, appName, appleId, language],
