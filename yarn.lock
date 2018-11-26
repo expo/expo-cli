@@ -8263,7 +8263,7 @@ jest@^23.4.1:
     import-local "^1.0.0"
     jest-cli "^23.5.0"
 
-joi@^14.0.4:
+joi@14.0.4:
   version "14.0.4"
   resolved "https://registry.yarnpkg.com/joi/-/joi-14.0.4.tgz#f066f79330f6bd6f3dda243be6d2c211f83a5f9b"
   integrity sha512-KUXRcinDUMMbtlOk7YLGHQvG73dLyf8bmgE+6sBTkdJbZpeGVGAlPXEHLiQBV7KinD/VLD5OA0EUgoTTfbRAJQ==
