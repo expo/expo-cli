@@ -241,15 +241,15 @@
   dependencies:
     cross-spawn "^5.1.0"
 
-"@expo/traveling-fastlane-darwin@1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.6.0.tgz#c441e8ff718b88fe13da4bbb4e377c53505b0648"
-  integrity sha512-pVFiJfCgG0sw6s3G83FGu2Bk1C6jOSXfsPrEYXDLggNBmWYHESK2dMPxg+XvIe8fPFKBPATj3CIF96IpOyix0w==
+"@expo/traveling-fastlane-darwin@1.6.1":
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.6.1.tgz#52efaf3da078ecb48c2d6bf5a620e4a5b647b84e"
+  integrity sha512-t4FaxbsdLTLMwFY8eZyPAoedo9RigEL37uyq5FohypnZo7/dRmSFx/LmHf5HeiiSYngf9SUz4R5x2FCXAjfYsQ==
 
-"@expo/traveling-fastlane-linux@1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.6.0.tgz#82604cdd67704075c7985d80693c1e498561deec"
-  integrity sha512-Qw0vUVIjE7rX4AtupUDYH56O5qLOhh4o3/dqRNsFd2QS/DAxQTCug61o3KE/zKJ51kxbqpkKdFiqDpG8BhFtLw==
+"@expo/traveling-fastlane-linux@1.6.1":
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.6.1.tgz#29a7f28082e28c61b7164942792e7892f35799e7"
+  integrity sha512-lGQVG0yWdD/gG8IrPpgK1BYX7p/jCEfQQrkK9lRvDSLm6vMweN1WhSEGJWpqpwUJvMJ1tDxDjuvk4+fir6LzjA==
 
 "@gulp-sourcemaps/map-sources@1.X":
   version "1.0.0"
@@ -1604,6 +1604,14 @@ aws4@^1.6.0, aws4@^1.8.0:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.8.0.tgz#f0e003d9ca9e7f59c7a508945d7b2ef9a04a542f"
   integrity sha512-ReZxvNHIOv88FlT7rxcXIIC0fPt4KZqZbOlivyWtXLt8ESx84zd3kMC6iK5jVeS2qt+g7ftS7ye4fi06X5rtRQ==
+
+axios@^0.18.0:
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.18.0.tgz#32d53e4851efdc0a11993b6cd000789d70c05102"
+  integrity sha1-MtU+SFHv3AoRmTts0AB4nXDAUQI=
+  dependencies:
+    follow-redirects "^1.3.0"
+    is-buffer "^1.1.5"
 
 axios@v0.19.0-beta.1:
   version "0.19.0-beta.1"
@@ -5592,6 +5600,13 @@ follow-redirects@^1.0.0:
   integrity sha512-GHjtHDlY/ehslqv0Gr5N0PUJppgg/q0rOBvX0na1s7y1A3LWxPqCYU76s3Z1bM4+UZB4QF0usaXLT5wFpof5PA==
   dependencies:
     debug "^3.1.0"
+
+follow-redirects@^1.3.0:
+  version "1.5.10"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.5.10.tgz#7b7a9f9aea2fdff36786a94ff643ed07f4ff5e2a"
+  integrity sha512-0V5l4Cizzvqt5D44aTXbFZz+FtyXV1vrDN6qrelxtfYQKW0KO0W2T/hkE8xvGa/540LkZlkaUjO4ailYTFtHVQ==
+  dependencies:
+    debug "=3.1.0"
 
 follow-redirects@^1.4.1:
   version "1.5.9"
