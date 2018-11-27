@@ -108,9 +108,7 @@ function isNonExistentOrEmptyDir(dir) {
 
 async function shouldUseYarnAsync() {
   try {
-    let version = execSync('yarnpkg --version')
-      .toString()
-      .trim();
+    let version = (await spawnAsync('yarnpkg', ['--version'])).stdout.trim();
     if (!semver.valid(version)) {
       return false;
     }
