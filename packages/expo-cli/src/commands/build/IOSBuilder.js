@@ -14,8 +14,7 @@ import prompt from '../../prompt';
 import log from '../../log';
 
 import * as authFuncs from './auth';
-
-const nonEmptyInput = val => val !== '';
+import { nonEmptyInput } from '../utils/validators';
 
 const expertPrompt = `
 WARNING! In this mode, we won't be able to make sure your certificates,

@@ -5,6 +5,9 @@ import BaseUploader from './BaseUploader';
 import log from '../../log';
 import prompt from '../../prompt';
 import { runFastlaneAsync } from './utils';
+import { Credentials, Exp, UrlUtils } from 'xdl';
+import CommandError from '../../CommandError';
+import { nonEmptyInput } from '../utils/validators';
 
 const PLATFORM = 'ios';
 
@@ -13,11 +16,13 @@ const APPLE_CREDS_QUESTIONS = [
     type: 'input',
     name: 'appleId',
     message: `What's your Apple ID?`,
+    validate: nonEmptyInput,
   },
   {
     type: 'password',
     name: 'appleIdPassword',
     message: 'Password?',
+    validate: nonEmptyInput,
   },
 ];
 
@@ -75,6 +80,9 @@ export default class IOSUploader extends BaseUploader {
         `You must specify a supported language. Run expo upload:ios --help to see the list of supported languages.`
       );
     }
+    if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
+      throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
+    }
   }
 
   constructor(projectDir, options) {
@@ -89,13 +97,37 @@ export default class IOSUploader extends BaseUploader {
 
   async _getPlatformSpecificOptions() {
     const appleIdCrentials = await this._getAppleIdCredentials();
+    const appleTeamId = await this._getAppleTeamId();
     const appName = await this._getAppName();
     const otherOptions = _.pick(this.options, ['language', 'sku']);
     return {
       ...appleIdCrentials,
       appName,
       ...otherOptions,
+      appleTeamId,
     };
+  }
+
+  async _getAppleTeamId() {
+    const publicUrl = this.options.publicUrl;
+    const {
+      args: {
+        username,
+        remoteFullPackageName: experienceName,
+        bundleIdentifierIOS: bundleIdentifier,
+      },
+    } = publicUrl
+      ? await Exp.getThirdPartyInfoAsync(publicUrl)
+      : await Exp.getPublishInfoAsync(this.projectDir);
+
+    const { teamId } = await Credentials.getCredentialsForPlatform({
+      username,
+      experienceName,
+      bundleIdentifier,
+      platform: 'ios',
+    });
+
+    return teamId;
   }
 
   async _getAppleIdCredentials() {
@@ -113,7 +145,7 @@ export default class IOSUploader extends BaseUploader {
     if (credsPresent.length !== appleCredsKeys.length) {
       const questions = APPLE_CREDS_QUESTIONS.filter(({ name }) => !credsPresent.includes(name));
       const answers = await prompt(questions);
-      return { ...result, answers };
+      return { ...result, ...answers };
     } else {
       return result;
     }
@@ -138,10 +170,10 @@ export default class IOSUploader extends BaseUploader {
 
   async _uploadToTheStore(platformData, buildPath) {
     const { fastlane } = this;
-    const { appleId, appleIdPassword, appName, language } = platformData;
+    const { appleId, appleIdPassword, appName, language, appleTeamId } = platformData;
     const { bundleIdentifier } = this._exp.ios;
 
-    const appleCreds = { appleId, appleIdPassword };
+    const appleCreds = { appleId, appleIdPassword, appleTeamId };
 
     log('Ensuring the app exists on App Store Connect, this may take a while...');
     await runFastlaneAsync(

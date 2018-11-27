@@ -25,7 +25,7 @@ export async function downloadFile(url, dest) {
 export async function runFastlaneAsync(
   program,
   args,
-  { appleId, appleIdPassword },
+  { appleId, appleIdPassword, appleTeamId },
   pipeToLogger = false
 ) {
   const { stderr } = await spawnAsyncThrowError(program, args, {
@@ -37,6 +37,7 @@ export async function runFastlaneAsync(
           FASTLANE_USER: appleId,
           FASTLANE_PASSWORD: appleIdPassword,
           FASTLANE_DONT_STORE_PASSWORD: '1',
+          FASTLANE_TEAM_ID: appleTeamId,
         }),
     },
   });
