@@ -112,7 +112,6 @@ async function shouldUseYarnAsync() {
       .toString()
       .trim();
     if (!semver.valid(version)) {
-      console.log(`${version} aint valid`);
       return false;
     }
     let answer = await prompt({
