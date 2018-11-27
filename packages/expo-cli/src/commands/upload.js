@@ -30,6 +30,7 @@ export default program => {
     'appName',
     'sku',
     'language',
+    'publicUrl',
   ];
   const iosCommand = program.command('upload:ios [projectDir]').alias('ui');
   setCommonOptions(iosCommand, '.ipa');
@@ -55,6 +56,7 @@ export default program => {
       `primary language (e.g. English, German; run \`expo upload:ios --help\` to see the list of available languages)`,
       'English'
     )
+    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .description(
       'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
     )
