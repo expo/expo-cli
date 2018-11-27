@@ -121,8 +121,6 @@ async function shouldUseYarnAsync() {
     });
     return answer.useYarn;
   } catch (e) {
-    console.log(e);
-
     return false;
   }
 }
