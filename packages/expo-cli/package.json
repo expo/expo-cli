@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -92,8 +92,8 @@
     "xdl": "^51.6.1"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.6.0",
-    "@expo/traveling-fastlane-linux": "1.6.0"
+    "@expo/traveling-fastlane-darwin": "1.6.1",
+    "@expo/traveling-fastlane-linux": "1.6.1"
   },
   "gitHead": "5e6aab74774ccab6b22c4ece13c285022e04bff2"
 }
