@@ -87,7 +87,7 @@ export async function extractTemplateApp(
   // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
   // See: https://github.com/npm/npm/issues/1862
   try {
-    fs.moveSync(path.join(projectRoot, 'gitignore'), path.join(projectRoot, '.gitignore'));
+    await fs.move(path.join(projectRoot, 'gitignore'), path.join(projectRoot, '.gitignore'));
   } catch (error) {
     // Append, if there's already a `.gitignore` file there
     if (error.code === 'EEXIST') {
