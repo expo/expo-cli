@@ -1,10 +1,7 @@
 import fs from 'fs';
-import { execSync } from 'child_process';
-import chalk from 'chalk';
-import ProgressBar from 'progress';
-import { Api, Exp, Logger, NotificationCode, MessageCode } from 'xdl';
-import wordwrap from 'wordwrap';
+import { Exp } from 'xdl';
 import semver from 'semver';
+import spawnAsync from '@expo/spawn-async';
 import npmPackageArg from 'npm-package-arg';
 
 import prompt from '../prompt';
@@ -49,7 +46,6 @@ async function action(projectDir, options) {
       templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
     }
   } else {
-    let wrap = wordwrap(2, process.stdout.columns || 80);
     ({ templateSpec } = await prompt({
       type: 'list',
       name: 'templateSpec',
