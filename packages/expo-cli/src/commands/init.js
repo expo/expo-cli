@@ -1,8 +1,8 @@
 import fs from 'fs';
-import chalk from 'chalk';
-import ProgressBar from 'progress';
-import { Api, Exp, Logger, NotificationCode, MessageCode } from 'xdl';
-import wordwrap from 'wordwrap';
+import { Exp } from 'xdl';
+import semver from 'semver';
+import spawnAsync from '@expo/spawn-async';
+import npmPackageArg from 'npm-package-arg';
 
 import prompt from '../prompt';
 import log from '../log';
@@ -10,14 +10,13 @@ import CommandError from '../CommandError';
 
 import path from 'path';
 
+const FEATURED_TEMPLATES = ['expo-template-blank', 'expo-template-tabs'];
+
 let _downloadIsSlowPrompt = false;
 
 async function action(projectDir, options) {
   let parentDir;
   let name;
-
-  // No `await` here, just start fetching versions in the background and block later.
-  let versionsPromise = Api.versionsAsync();
 
   if (projectDir) {
     let root = path.resolve(projectDir);
@@ -37,24 +36,33 @@ async function action(projectDir, options) {
     }));
   }
 
-  let templateId;
+  let templateSpec;
   if (options.template) {
-    templateId = options.template;
+    templateSpec = npmPackageArg(options.template);
+
+    // For backwards compatibility, 'blank' and 'tabs' are aliases for
+    // 'expo-template-blank' and 'expo-template-tabs', respectively.
+    if ((templateSpec.name === 'blank' || templateSpec.name === 'tabs') && templateSpec.registry) {
+      templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
+    }
   } else {
-    let versions = await versionsPromise;
-    let wrap = wordwrap(2, process.stdout.columns || 80);
-    ({ templateId } = await prompt({
+    ({ templateSpec } = await prompt({
       type: 'list',
-      name: 'templateId',
+      name: 'templateSpec',
       message: 'Choose a template:',
-      choices: versions.templatesv2.map(template => ({
-        value: template.id,
-        name: chalk.bold(template.id) + '\n' + wrap(template.description),
-        short: template.id,
-      })),
+      choices: FEATURED_TEMPLATES,
     }));
   }
-  let projectPath = await downloadAndExtractTemplate(templateId, parentDir, name);
+
+  let packageManager;
+  if (options.yarn) {
+    packageManager = 'yarn';
+  } else if (options.npm) {
+    packageManager = 'npm';
+  } else {
+    packageManager = (await shouldUseYarnAsync()) ? 'yarn' : 'npm';
+  }
+  let projectPath = await downloadAndExtractTemplate(templateSpec, parentDir, name, packageManager);
   let cdPath = path.relative(process.cwd(), projectPath);
   if (cdPath.length > projectPath.length) {
     cdPath = projectPath;
@@ -65,56 +73,11 @@ async function action(projectDir, options) {
     // empty string if project was created in current directory
     log.nested(`  cd ${cdPath}`);
   }
-  log.nested(`  ${options.parent.name} start\n`);
+  log.nested(`  ${packageManager} start\n`);
 }
 
-async function downloadAndExtractTemplate(templateId, parentDir, name) {
-  let bar = new ProgressBar('[:bar] :percent', {
-    total: 100,
-    width: 50,
-    clear: true,
-    complete: '=',
-    incomplete: ' ',
-  });
-  let showProgress = true;
-  let opts = {
-    name,
-    progressFunction: progress => {
-      Logger.notifications.info({ code: NotificationCode.DOWNLOAD_CLI_PROGRESS }, progress + '%');
-      if (showProgress) {
-        bar.update(progress / 100);
-      }
-    },
-    retryFunction: async cancel => {
-      bar.terminate();
-      showProgress = false;
-      let { shouldRestart } = await prompt({
-        type: 'confirm',
-        name: 'shouldRestart',
-        message: MessageCode.DOWNLOAD_IS_SLOW,
-      });
-      if (shouldRestart) {
-        cancel();
-      } else {
-        showProgress = true;
-      }
-    },
-  };
-  try {
-    let templateDownload = await Exp.downloadTemplateApp(templateId, parentDir, opts);
-    return Exp.extractTemplateApp(
-      templateDownload.starterAppPath,
-      templateDownload.name,
-      templateDownload.root
-    );
-  } catch (error) {
-    if (error.__CANCEL__) {
-      log('Download was canceled. Starting again...');
-      return downloadAndExtractTemplate(templateId, parentDir, name);
-    } else {
-      throw error;
-    }
-  }
+async function downloadAndExtractTemplate(templateSpec, parentDir, name, packageManager) {
+  return Exp.extractTemplateApp(templateSpec, name, path.join(parentDir, name), packageManager);
 }
 
 function validateName(parentDir, name) {
@@ -139,6 +102,23 @@ function isNonExistentOrEmptyDir(dir) {
   }
 }
 
+async function shouldUseYarnAsync() {
+  try {
+    let version = (await spawnAsync('yarnpkg', ['--version'])).stdout.trim();
+    if (!semver.valid(version)) {
+      return false;
+    }
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'useYarn',
+      message: `Yarn v${version} found. Use Yarn to install dependencies?`,
+    });
+    return answer.useYarn;
+  } catch (e) {
+    return false;
+  }
+}
+
 export default program => {
   program
     .command('init [project-dir]')
@@ -148,7 +128,9 @@ export default program => {
     )
     .option(
       '-t, --template [name]',
-      'Specify which template to use. Run without this option to see all choices.'
+      'Specify which template to use. Valid options are "blank", "tabs" or any npm package that includes an Expo project template.'
     )
+    .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
+    .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
     .asyncAction(action);
 };

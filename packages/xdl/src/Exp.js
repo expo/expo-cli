@@ -7,6 +7,7 @@ import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
 import rimraf from 'rimraf';
+import pacote from 'pacote';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
@@ -44,87 +45,67 @@ export async function determineEntryPointAsync(root: string) {
   return entryPoint;
 }
 
-function _starterAppCacheDirectory() {
-  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  let dir = path.join(dotExpoHomeDirectory, 'starter-app-cache');
-  fs.mkdirpSync(dir);
-  return dir;
-}
-
-async function _downloadStarterAppAsync(templateId, progressFunction, retryFunction) {
-  let versions = await Api.versionsAsync();
-  let templateApp = versions.templatesv2.find(template => template.id === templateId);
-  if (!templateApp) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, `No template app with id ${templateId}.`);
-  }
-
-  let starterAppPath = path.join(
-    _starterAppCacheDirectory(),
-    `${templateId}-${templateApp.version}.tar.gz`
-  );
-
-  if (await fs.exists(starterAppPath)) {
-    return starterAppPath;
-  }
-
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.DOWNLOADING);
-  await Api.downloadAsync(templateApp.url, starterAppPath, {}, progressFunction, retryFunction);
-  return starterAppPath;
-}
-
-export async function downloadTemplateApp(templateId: string, selectedDir: string, opts: any) {
-  let name = opts.name;
-  let root = path.join(selectedDir, name);
-
-  Analytics.logEvent('New Project', {
-    selectedDir,
-    name,
-  });
-
-  let stats;
-  try {
-    // If file doesn't exist it will throw an error.
-    // Don't want to continue unless there is nothing there.
-    stats = fs.statSync(root);
-  } catch (e) {
-    stats = null;
-  }
-  // This check is required because without it, the retry button would throw an error because the directory already exists,
-  // even though it is empty.
-  if (stats && !(stats.isDirectory() && fs.readdirSync(root).length === 0)) {
-    throw new XDLError(
-      ErrorCode.DIRECTORY_ALREADY_EXISTS,
-      `The path "${root}" already exists.\nPlease choose a different parent directory or project name.`
-    );
-  }
-
-  // Download files
-  let starterAppPath = await _downloadStarterAppAsync(
-    templateId,
-    opts.progressFunction,
-    opts.retryFunction
-  );
-  return { starterAppPath, name, root };
-}
-
-export async function extractTemplateApp(starterAppPath: string, name: string, root: string) {
+export async function extractTemplateApp(
+  templateSpec: string | object,
+  name: string,
+  projectRoot: string,
+  packageManager: 'yarn' | 'npm' = 'npm'
+) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
-  await fs.mkdirp(root);
-  await Extract.extractAsync(starterAppPath, root);
+  await pacote.extract(templateSpec, projectRoot, {
+    cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
+  });
 
   // Update files
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
 
-  // Update app.json
-  let appJson = await fs.readFile(path.join(root, 'app.json'), 'utf8');
-  let customAppJson = appJson
-    .replace(/\"My New Project\"/, `"${name}"`)
-    .replace(/\"my-new-project\"/, `"${name}"`);
-  await fs.writeFile(path.join(root, 'app.json'), customAppJson, 'utf8');
+  let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
+  let appJson = await appFile.readAsync();
+  appJson = {
+    ...appJson,
+    expo: { ...appJson.expo, name, slug: name },
+  };
+  await appFile.writeAsync(appJson);
 
-  await initGitRepo(root);
+  let packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
+  let packageJson = await packageFile.readAsync();
+  // Adding `private` stops npm from complaining about missing `name` and `version` fields.
+  // We don't add a `name` field because it also exists in `app.json`.
+  packageJson = { ...packageJson, private: true };
+  // These are metadata fields related to the template package, let's remove them from the package.json.
+  delete packageJson.name;
+  delete packageJson.version;
+  delete packageJson.description;
+  delete packageJson.tags;
+  delete packageJson.repository;
+  // pacote adds these, but we don't want them in the package.json of the project.
+  delete packageJson._resolved;
+  delete packageJson._integrity;
+  delete packageJson._from;
+  await packageFile.writeAsync(packageJson);
 
-  return root;
+  // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
+  // See: https://github.com/npm/npm/issues/1862
+  try {
+    await fs.move(path.join(projectRoot, 'gitignore'), path.join(projectRoot, '.gitignore'));
+  } catch (error) {
+    // Append, if there's already a `.gitignore` file there
+    if (error.code === 'EEXIST') {
+      let data = fs.readFileSync(path.join(projectRoot, 'gitignore'));
+      fs.appendFileSync(path.join(projectRoot, '.gitignore'), data);
+      fs.unlinkSync(path.join(projectRoot, 'gitignore'));
+    } else if (error.code === 'ENOENT') {
+      // `gitignore` doesn't exist, move on.
+    } else {
+      throw error;
+    }
+  }
+
+  await initGitRepo(projectRoot);
+
+  await installDependencies(projectRoot, packageManager);
+
+  return projectRoot;
 }
 
 async function initGitRepo(root: string) {
@@ -147,9 +128,26 @@ async function initGitRepo(root: string) {
   if (!insideGit) {
     try {
       await spawnAsync('git', ['init'], { cwd: root });
+      Logger.global.info('Initialized a git repository.');
     } catch (e) {
       // no-op -- this is just a convenience and we don't care if it fails
     }
+  }
+}
+
+async function installDependencies(projectRoot, packageManager) {
+  Logger.global.info('Installing dependencies...');
+
+  if (packageManager === 'yarn') {
+    await spawnAsync('yarnpkg', ['install', '--silent'], {
+      cwd: projectRoot,
+      stdio: 'inherit',
+    });
+  } else {
+    await spawnAsync('npm', ['install', '--silent'], {
+      cwd: projectRoot,
+      stdio: 'inherit',
+    });
   }
 }
 
