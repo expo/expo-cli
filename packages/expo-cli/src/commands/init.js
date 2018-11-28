@@ -1,8 +1,10 @@
+import chalk from 'chalk';
 import fs from 'fs';
 import { Exp } from 'xdl';
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
 import npmPackageArg from 'npm-package-arg';
+import wordwrap from 'wordwrap';
 
 import prompt from '../prompt';
 import log from '../log';
@@ -10,7 +12,18 @@ import CommandError from '../CommandError';
 
 import path from 'path';
 
-const FEATURED_TEMPLATES = ['expo-template-blank', 'expo-template-tabs'];
+const FEATURED_TEMPLATES = [
+  {
+    shortName: 'blank',
+    name: 'expo-template-blank',
+    description: 'minimum dependencies to run and an empty root component',
+  },
+  {
+    shortName: 'tabs',
+    name: 'expo-template-tabs',
+    description: 'several example screens and tabs using react-navigation',
+  },
+];
 
 let _downloadIsSlowPrompt = false;
 
@@ -50,7 +63,14 @@ async function action(projectDir, options) {
       type: 'list',
       name: 'templateSpec',
       message: 'Choose a template:',
-      choices: FEATURED_TEMPLATES,
+      choices: FEATURED_TEMPLATES.map(template => ({
+        value: template.name,
+        name:
+          chalk.bold(template.shortName) +
+          '\n' +
+          wordwrap(2, process.stdout.columns || 80)(template.description),
+        short: template.name,
+      })),
     }));
   }
 
