@@ -95,6 +95,10 @@ export default function createIPABuilder(buildParams) {
       buildParams
     );
     logger.info('resigned IPA');
+
+    logger.info('removing provisioning profile from the home directory');
+    await removeProvisioningProfileFromHomedir(provisioningProfilePath, appUUID);
+    logger.info('done removing provisioning profile from the home directory');
   }
 
   async function cleanup() {
@@ -106,9 +110,16 @@ export default function createIPABuilder(buildParams) {
   }
 
   async function copyProvisioningProfileToHomedir(provisioningProfilePath, appUUID) {
-    await fs.mkdirp(getProvisioningProfileDirPath());
+    const provisioningProfileDirPath = getProvisioningProfileDirPath();
+    await fs.remove(provisioningProfileDirPath);
+    await fs.mkdirp(provisioningProfileDirPath);
     const newProvisioningProfilePath = getProvisioningProfilePath(appUUID);
     await fs.copy(provisioningProfilePath, newProvisioningProfilePath);
+  }
+
+  async function removeProvisioningProfileFromHomedir(appUUID) {
+    const provisioningProfilePath = getProvisioningProfilePath(appUUID);
+    await fs.remove(provisioningProfilePath);
   }
 
   async function readCMSMessage(provisioningProfilePath) {
