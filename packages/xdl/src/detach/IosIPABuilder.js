@@ -30,75 +30,77 @@ export default function createIPABuilder(buildParams) {
 
     await copyProvisioningProfileToHomedir(provisioningProfilePath, appUUID);
     logger.info('provisioning profile copied to home directory');
-    const plistData = await readCMSMessage(provisioningProfilePath);
-    logger.info('done retrieving provisioning profile data');
 
-    logger.info('checking if teamID is present in keychain and that certificate is valid...');
-    const codeSignIdentity = await IosCodeSigning.ensureCertificateValid(buildParams);
-    logger.info('ensured certificate is valid');
+    try {
+      const plistData = await readCMSMessage(provisioningProfilePath);
+      logger.info('done retrieving provisioning profile data');
 
-    logger.info('validating provisioning profile...');
-    IosCodeSigning.validateProvisioningProfile(plistData, {
-      distCertFingerprint: codeSignIdentity,
-      teamID,
-      bundleIdentifier,
-    });
-    logger.info('provisioning profile is valid');
+      logger.info('checking if teamID is present in keychain and that certificate is valid...');
+      const codeSignIdentity = await IosCodeSigning.ensureCertificateValid(buildParams);
+      logger.info('ensured certificate is valid');
 
-    logger.info('writing export-options.plist file...');
-    const exportMethod = IosCodeSigning.resolveExportMethod(plistData);
-    const exportOptionsPlistPath = path.join(provisionDir, 'export-options.plist');
-    const exportOptionsData = {
-      bundleIdentifier,
-      provisioningProfileUUID: plistData.UUID,
-      exportMethod,
-      teamID,
-    };
-    await IosCodeSigning.writeExportOptionsPlistFile(exportOptionsPlistPath, exportOptionsData);
-    logger.info('created export-options.plist file');
+      logger.info('validating provisioning profile...');
+      IosCodeSigning.validateProvisioningProfile(plistData, {
+        distCertFingerprint: codeSignIdentity,
+        teamID,
+        bundleIdentifier,
+      });
+      logger.info('provisioning profile is valid');
 
-    logger.info('generating IPA...');
-    const unsignedIpaPath = path.join(buildDir, `${appUUID}-unsigned.ipa`);
-    const ipaBuilderArgs = {
-      ipaPath: unsignedIpaPath,
-      workspace,
-      archivePath: outputPath,
-      codeSignIdentity,
-      exportOptionsPlistPath,
-      plistData,
-      keychainPath,
-      exportMethod,
-    };
-    await IosCodeSigning.buildIPA(ipaBuilderArgs, buildParams, clientBuild);
-    logger.info('generated IPA');
+      logger.info('writing export-options.plist file...');
+      const exportMethod = IosCodeSigning.resolveExportMethod(plistData);
+      const exportOptionsPlistPath = path.join(provisionDir, 'export-options.plist');
+      const exportOptionsData = {
+        bundleIdentifier,
+        provisioningProfileUUID: plistData.UUID,
+        exportMethod,
+        teamID,
+      };
+      await IosCodeSigning.writeExportOptionsPlistFile(exportOptionsPlistPath, exportOptionsData);
+      logger.info('created export-options.plist file');
 
-    logger.info('creating entitlements file...');
-    const generatedEntitlementsPath = path.join(appDir, 'generatedEntitlements.entitlements');
-    await IosCodeSigning.createEntitlementsFile({
-      generatedEntitlementsPath,
-      plistData,
-      archivePath: outputPath,
-      manifest,
-    });
-    logger.info('created entitlements file');
-
-    logger.info('resigning IPA...');
-    await IosCodeSigning.resignIPA(
-      {
+      logger.info('generating IPA...');
+      const unsignedIpaPath = path.join(buildDir, `${appUUID}-unsigned.ipa`);
+      const ipaBuilderArgs = {
+        ipaPath: unsignedIpaPath,
+        workspace,
+        archivePath: outputPath,
         codeSignIdentity,
-        entitlementsPath: generatedEntitlementsPath,
-        provisioningProfilePath,
-        sourceIpaPath: unsignedIpaPath,
-        destIpaPath: uploadPath,
+        exportOptionsPlistPath,
+        plistData,
         keychainPath,
-      },
-      buildParams
-    );
-    logger.info('resigned IPA');
+        exportMethod,
+      };
+      await IosCodeSigning.buildIPA(ipaBuilderArgs, buildParams, clientBuild);
+      logger.info('generated IPA');
 
-    logger.info('removing provisioning profile from the home directory');
-    await removeProvisioningProfileFromHomedir(provisioningProfilePath, appUUID);
-    logger.info('done removing provisioning profile from the home directory');
+      logger.info('creating entitlements file...');
+      const generatedEntitlementsPath = path.join(appDir, 'generatedEntitlements.entitlements');
+      await IosCodeSigning.createEntitlementsFile({
+        generatedEntitlementsPath,
+        plistData,
+        archivePath: outputPath,
+        manifest,
+      });
+      logger.info('created entitlements file');
+
+      logger.info('resigning IPA...');
+      await IosCodeSigning.resignIPA(
+        {
+          codeSignIdentity,
+          entitlementsPath: generatedEntitlementsPath,
+          provisioningProfilePath,
+          sourceIpaPath: unsignedIpaPath,
+          destIpaPath: uploadPath,
+          keychainPath,
+        },
+        buildParams
+      );
+      logger.info('resigned IPA');
+    } finally {
+      await removeProvisioningProfileFromHomedir(provisioningProfilePath, appUUID);
+      logger.info('removed provisioning profile from the home directory');
+    }
   }
 
   async function cleanup() {
@@ -110,9 +112,7 @@ export default function createIPABuilder(buildParams) {
   }
 
   async function copyProvisioningProfileToHomedir(provisioningProfilePath, appUUID) {
-    const provisioningProfileDirPath = getProvisioningProfileDirPath();
-    await fs.remove(provisioningProfileDirPath);
-    await fs.mkdirp(provisioningProfileDirPath);
+    await fs.mkdirp(getProvisioningProfileDirPath());
     const newProvisioningProfilePath = getProvisioningProfilePath(appUUID);
     await fs.copy(provisioningProfilePath, newProvisioningProfilePath);
   }
