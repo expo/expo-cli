@@ -98,7 +98,7 @@ export default function createIPABuilder(buildParams) {
       );
       logger.info('resigned IPA');
     } finally {
-      await removeProvisioningProfileFromHomedir(provisioningProfilePath, appUUID);
+      await removeProvisioningProfileFromHomedir(appUUID);
       logger.info('removed provisioning profile from the home directory');
     }
   }
