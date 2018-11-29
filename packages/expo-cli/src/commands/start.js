@@ -37,9 +37,9 @@ async function action(projectDir, options) {
   const nonInteractive = options.parent && options.parent.nonInteractive;
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
-  if (exp == null) {
+  if (exp === null) {
     log.warn('No Expo configuration found. Are you sure this is a project directory?');
-    process.exit();
+    process.exit(1);
   }
 
   if (!nonInteractive && !exp.isDetached) {
