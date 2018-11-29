@@ -45,7 +45,6 @@
     "es6-error": "^4.0.2",
     "escape-string-regexp": "^1.0.5",
     "express": "4.16.4",
-    "file-type": "^4.0.0",
     "follow-redirects": "^1.4.1",
     "form-data": "^2.1.4",
     "freeport-async": "^1.1.1",
