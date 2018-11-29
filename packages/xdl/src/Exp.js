@@ -139,12 +139,12 @@ async function installDependencies(projectRoot, packageManager) {
   Logger.global.info('Installing dependencies...');
 
   if (packageManager === 'yarn') {
-    await spawnAsync('yarnpkg', ['install', '--silent'], {
+    await spawnAsync('yarnpkg', ['install'], {
       cwd: projectRoot,
       stdio: 'inherit',
     });
   } else {
-    await spawnAsync('npm', ['install', '--silent'], {
+    await spawnAsync('npm', ['install'], {
       cwd: projectRoot,
       stdio: 'inherit',
     });
