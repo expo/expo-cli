@@ -2,10 +2,11 @@
 import path from 'path';
 import escapeStringRegexp from 'escape-string-regexp';
 import chalk from 'chalk';
+import getenv from 'getenv';
+import { trim } from 'lodash';
 
 import * as ProjectUtils from '../project/ProjectUtils';
 import Logger from '../Logger';
-import { trim } from 'lodash';
 import { isNode } from '../tools/EnvironmentHelper';
 
 type ChunkT =
@@ -208,7 +209,7 @@ export default class PackagerLogsStream {
     let { msg } = chunk;
 
     if (typeof msg === 'string') {
-      if (msg.includes('HTTP/1.1') && process.env.EXPO_DEBUG !== 'true') {
+      if (msg.includes('HTTP/1.1') && !getenv.boolish('EXPO_DEBUG', false)) {
         // Do nothing with this message - we want to filter out network requests logged by Metro.
       } else {
         // If Metro crashes for some reason, it may log an error message as a plain string to stderr.
@@ -298,14 +299,14 @@ export default class PackagerLogsStream {
     } else if (msg.type === 'bundle_build_failed') {
       chunk._metroEventType = 'BUILD_FAILED';
       if (!this._bundleBuildChunkID) {
-        return; // maybe?
+        // maybe?
       } else {
         this._handleUpdateBundleTransformProgress(chunk);
       }
     } else if (msg.type === 'bundle_build_done') {
       chunk._metroEventType = 'BUILD_DONE';
       if (!this._bundleBuildChunkID) {
-        return; // maybe?
+        // maybe?
       } else {
         this._handleUpdateBundleTransformProgress(chunk);
       }
@@ -468,9 +469,7 @@ export default class PackagerLogsStream {
   }
 
   _enqueueAppendLogChunk(chunk: ChunkT) {
-    if (chunk.shouldHide) {
-      return;
-    } else {
+    if (!chunk.shouldHide) {
       this._logsToAdd.push(chunk);
       this._enqueueFlushLogsToAdd();
     }

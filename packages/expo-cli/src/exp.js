@@ -11,6 +11,7 @@ import fs from 'fs';
 import path from 'path';
 import simpleSpinner from '@expo/simple-spinner';
 import url from 'url';
+import getenv from 'getenv';
 
 import program, { Command } from 'commander';
 import {
@@ -80,7 +81,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
       } else {
         log.error(err.message);
         // TODO: Is there a better way to do this? EXPO_DEBUG needs to be set to view the stack trace
-        if (process.env.EXPO_DEBUG) {
+        if (getenv.boolish('EXPO_DEBUG', false)) {
           log.error(chalk.gray(err.stack));
         } else {
           log.error(chalk.grey('Set EXPO_DEBUG=true in your env to view the stack trace.'));
@@ -338,16 +339,6 @@ function runAsync(programName) {
           log.error(`'${file}.js' is not a properly formatted command.`);
         }
       });
-
-    if (process.env.EXPO_DEBUG) {
-      glob
-        .sync('debug_commands/*.js', {
-          cwd: __dirname,
-        })
-        .forEach(file => {
-          require(`./${file}`)(program);
-        });
-    }
 
     let subCommand = process.argv[2];
     let argv = process.argv.filter(arg => {

@@ -4,6 +4,7 @@ import slash from 'slash';
 import fs from 'fs-extra';
 import { release, userInfo } from 'os';
 import _ from 'lodash';
+import getenv from 'getenv';
 
 import prompt from '../../prompt';
 import log from '../../log';
@@ -30,7 +31,7 @@ and revoke those credentials manually
 
 export const MULTIPLE_PROFILES = 'Multiple profiles found with the name';
 
-export const DEBUG = process.env.EXPO_DEBUG && process.env.EXPO_DEBUG === 'true';
+export const DEBUG = getenv.boolish('EXPO_DEBUG', false);
 
 const ENABLE_WSL = `
 Does not seem like WSL enabled on this machine. Download from the Windows app
