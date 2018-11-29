@@ -37,6 +37,11 @@ async function action(projectDir, options) {
   const nonInteractive = options.parent && options.parent.nonInteractive;
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
+  if (exp === null) {
+    log.warn('No Expo configuration found. Are you sure this is a project directory?');
+    process.exit(1);
+  }
+
   if (!nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
       log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
