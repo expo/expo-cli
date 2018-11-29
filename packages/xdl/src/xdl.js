@@ -78,9 +78,6 @@ module.exports = {
   get StandaloneBuild() {
     return require('./StandaloneBuild');
   },
-  get Intercom() {
-    return require('./Intercom');
-  },
   get IosIcons() {
     return require('./detach/IosIcons');
   },
