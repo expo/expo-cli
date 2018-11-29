@@ -216,7 +216,8 @@ function shouldShowLoadingView(manifest) {
 export async function copyInitialShellAppFilesAsync(
   androidSrcPath,
   shellPath,
-  isDetached: boolean = false
+  isDetached: boolean,
+  sdkVersion: ?string
 ) {
   if (androidSrcPath && !isDetached) {
     // check if Android template files exist
@@ -258,6 +259,18 @@ export async function copyInitialShellAppFilesAsync(
   await copyToShellApp('debug.keystore');
   await copyToShellApp('run.sh');
   await copyToShellApp('maven'); // this is a symlink
+
+  // kernel.android.bundle isn't ever used in standalone apps (at least in kernel v32)
+  // but in order to not change behavior in older SDKs, we'll remove the file only in 32+.
+  if (parseSdkMajorVersion(sdkVersion) >= 32) {
+    try {
+      await fs.remove(path.join(shellPath, 'app/src/main/assets/kernel.android.bundle'));
+    } catch (e) {
+      initialCopyLogger.warn(
+        'Warning: Could not remove kernel.android.bundle from shell app directory.'
+      );
+    }
+  }
 }
 
 exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(args: any) {
@@ -331,7 +344,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     releaseChannel
   );
 
-  await copyInitialShellAppFilesAsync(androidSrcPath, shellPath);
+  await copyInitialShellAppFilesAsync(androidSrcPath, shellPath, false, sdkVersion);
   await removeObsoleteSdks(shellPath, sdkVersion);
   await runShellAppModificationsAsync(context, false, sdkVersion);
 
