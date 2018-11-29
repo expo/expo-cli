@@ -27,7 +27,7 @@ upload matches that team ID and app ID.
 `;
 
 const produceAbsolutePath = p12Path => {
-  p12Path = untildify(p12Path);
+  p12Path = untildify(p12Path.trim());
   if (!path.isAbsolute(p12Path)) {
     p12Path = path.resolve(p12Path);
   }
