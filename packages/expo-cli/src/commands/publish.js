@@ -20,7 +20,7 @@ type Options = {
 };
 
 export async function action(projectDir: string, options: Options = {}) {
-  let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+  let channelRe = new RegExp(/^[a-z\d][a-z\d\._-]*$/);
   if (options.releaseChannel && !channelRe.test(options.releaseChannel)) {
     log.error(
       'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
