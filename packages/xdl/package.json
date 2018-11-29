@@ -1,6 +1,6 @@
 {
   "name": "xdl",
-  "version": "51.6.4",
+  "version": "52.0.0",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
   "files": [
@@ -33,7 +33,7 @@
     "@expo/json-file": "^8.1.0",
     "@expo/ngrok": "2.4.2",
     "@expo/osascript": "^1.9.0",
-    "@expo/schemer": "^1.2.1",
+    "@expo/schemer": "^1.2.2",
     "@expo/spawn-async": "^1.2.8",
     "analytics-node": "^2.1.0",
     "axios": "v0.19.0-beta.1",
