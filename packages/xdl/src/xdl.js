@@ -42,9 +42,6 @@ module.exports = {
   get Detach() {
     return require('./detach/Detach');
   },
-  get Diagnostics() {
-    return require('./Diagnostics');
-  },
   get Doctor() {
     return require('./project/Doctor');
   },
