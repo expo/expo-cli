@@ -344,7 +344,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
 
   await copyInitialShellAppFilesAsync(androidSrcPath, shellPath, false, sdkVersion);
   await removeObsoleteSdks(shellPath, sdkVersion);
-  await runShellAppModificationsAsync(context, false, sdkVersion);
+  await runShellAppModificationsAsync(context, sdkVersion);
 
   if (!args.skipBuild) {
     await buildShellAppAsync(context, sdkVersion);
@@ -366,7 +366,6 @@ function shellPathForContext(context: StandaloneContext) {
 
 export async function runShellAppModificationsAsync(
   context: StandaloneContext,
-  isDetached: boolean = false,
   sdkVersion: ?string
 ) {
   const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
@@ -375,8 +374,10 @@ export async function runShellAppModificationsAsync(
   let url: string = context.published.url;
   let manifest = context.config; // manifest or app.json
   let releaseChannel = context.published.releaseChannel;
+
+  const isRunningInUserContext = context.type === 'user';
   // In SDK32 we've unified build process for shell and ejected apps
-  const shellAndEjectedAppsAreUnified = ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32;
+  const isDetached = ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32 || isRunningInUserContext;
 
   if (!context.data.privateConfig) {
     fnLogger.warn('Warning: No config file specified.');
@@ -401,7 +402,7 @@ export async function runShellAppModificationsAsync(
   let bundleUrl: ?string = manifest.bundleUrl;
   let isFullManifest = !!bundleUrl;
   let version = manifest.version ? manifest.version : '0.0.0';
-  let backgroundImages = backgroundImagesForApp(shellPath, manifest, isDetached);
+  let backgroundImages = backgroundImagesForApp(shellPath, manifest, isRunningInUserContext);
   let splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
   let updatesDisabled = manifest.updates && manifest.updates.enabled === false;
 
@@ -412,7 +413,7 @@ export async function runShellAppModificationsAsync(
   await fs.remove(path.join(shellPath, 'app', 'src', 'test'));
   await fs.remove(path.join(shellPath, 'app', 'src', 'androidTest'));
 
-  if (isDetached || shellAndEjectedAppsAreUnified) {
+  if (isDetached) {
     let appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
     await regexFileAsync(/\/\* UNCOMMENT WHEN DISTRIBUTING/g, '', appBuildGradle);
     await regexFileAsync(/END UNCOMMENT WHEN DISTRIBUTING \*\//g, '', appBuildGradle);
@@ -492,8 +493,8 @@ export async function runShellAppModificationsAsync(
     path.join(shellPath, 'app', 'build.gradle')
   );
 
-  // Remove Exponent build script
-  if (!isDetached) {
+  // Remove Exponent build script, since SDK32 expoview comes precompiled
+  if (parseSdkMajorVersion(sdkVersion) < 32 && !isRunningInUserContext) {
     await regexFileAsync(
       `preBuild.dependsOn generateDynamicMacros`,
       ``,
@@ -521,7 +522,8 @@ export async function runShellAppModificationsAsync(
     `${javaPackage}.permission.C2D_MESSAGE`,
     path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
   );
-  if (!isDetached && !shellAndEjectedAppsAreUnified) {
+  // Since SDK32 expoview comes precompiled
+  if (parseSdkMajorVersion(sdkVersion) < 32 && !isRunningInUserContext) {
     await regexFileAsync(
       /host\.exp\.exponent\.permission\.C2D_MESSAGE/g,
       `${javaPackage}.permission.C2D_MESSAGE`,
@@ -582,7 +584,8 @@ export async function runShellAppModificationsAsync(
       )
     );
   }
-  if (isDetached) {
+  // In SDK32 this field got removed from AppConstants
+  if (parseSdkMajorVersion(sdkVersion) < 32 && isRunningInUserContext) {
     await regexFileAsync(
       'IS_DETACHED = false',
       `IS_DETACHED = true`,
@@ -672,7 +675,7 @@ export async function runShellAppModificationsAsync(
     path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
   );
 
-  if (isDetached || shellAndEjectedAppsAreUnified) {
+  if (isDetached) {
     // Add LAUNCHER category to MainActivity
     await regexFileAsync(
       '<!-- ADD DETACH INTENT FILTERS HERE -->',
@@ -699,7 +702,7 @@ export async function runShellAppModificationsAsync(
   // Add app-specific intent filters
   const intentFilters = _.get(manifest, 'android.intentFilters');
   if (intentFilters) {
-    if (isDetached || shellAndEjectedAppsAreUnified) {
+    if (isDetached) {
       await regexFileAsync(
         '<!-- ADD DETACH APP SPECIFIC INTENT FILTERS -->',
         renderIntentFilters(intentFilters).join('\n'),
@@ -716,10 +719,9 @@ export async function runShellAppModificationsAsync(
 
   // Add shell app scheme
   if (scheme) {
-    const searchLine =
-      isDetached || shellAndEjectedAppsAreUnified
-        ? '<!-- ADD DETACH SCHEME HERE -->'
-        : '<!-- ADD SHELL SCHEME HERE -->';
+    const searchLine = isDetached
+      ? '<!-- ADD DETACH SCHEME HERE -->'
+      : '<!-- ADD SHELL SCHEME HERE -->';
     await regexFileAsync(
       searchLine,
       `<intent-filter>
@@ -871,7 +873,7 @@ export async function runShellAppModificationsAsync(
   createAndWriteIconsToPathAsync(
     context,
     path.join(shellPath, 'app', 'src', 'main', 'res'),
-    isDetached
+    isRunningInUserContext
   );
 
   // Splash Background
@@ -885,7 +887,7 @@ export async function runShellAppModificationsAsync(
     });
 
     _.forEach(backgroundImages, async image => {
-      if (isDetached) {
+      if (isRunningInUserContext) {
         // local file so just copy it
         await fs.copy(image.url, image.path);
       } else {
@@ -965,7 +967,7 @@ export async function runShellAppModificationsAsync(
     // google-services.json
     // Used for configuring FCM
     let googleServicesFileContents = manifest.android.googleServicesFile;
-    if (isDetached) {
+    if (isRunningInUserContext) {
       googleServicesFileContents = await fs.readFile(
         path.resolve(shellPath, '..', manifest.android.googleServicesFile),
         'utf8'
