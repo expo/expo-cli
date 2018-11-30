@@ -14,8 +14,7 @@ import prompt from '../../prompt';
 import log from '../../log';
 
 import * as authFuncs from './auth';
-
-const nonEmptyInput = val => val !== '';
+import { nonEmptyInput } from '../utils/validators';
 
 const expertPrompt = `
 WARNING! In this mode, we won't be able to make sure your certificates,
@@ -28,7 +27,7 @@ upload matches that team ID and app ID.
 `;
 
 const produceAbsolutePath = p12Path => {
-  p12Path = untildify(p12Path);
+  p12Path = untildify(p12Path.trim());
   if (!path.isAbsolute(p12Path)) {
     p12Path = path.resolve(p12Path);
   }
@@ -157,9 +156,9 @@ export default class IOSBuilder extends BaseBuilder {
 See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
       );
     }
-
+    const { releaseChannel } = this.options;
     // Check the status of any current builds
-    await this.checkStatus({ platform: 'ios', sdkVersion, ...buildOptions });
+    await this.checkStatus({ platform: 'ios', sdkVersion, releaseChannel, ...buildOptions });
     const credentialMetadata = { username, experienceName, bundleIdentifier, platform: 'ios' };
     const clearOnly = {};
     if (this.options.clearCredentials) {

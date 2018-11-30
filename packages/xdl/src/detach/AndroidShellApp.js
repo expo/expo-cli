@@ -333,10 +333,10 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
 
   await copyInitialShellAppFilesAsync(androidSrcPath, shellPath);
   await removeObsoleteSdks(shellPath, sdkVersion);
-  await runShellAppModificationsAsync(context);
+  await runShellAppModificationsAsync(context, false, sdkVersion);
 
   if (!args.skipBuild) {
-    await buildShellAppAsync(context);
+    await buildShellAppAsync(context, sdkVersion);
   }
 };
 
@@ -355,7 +355,8 @@ function shellPathForContext(context: StandaloneContext) {
 
 export async function runShellAppModificationsAsync(
   context: StandaloneContext,
-  isDetached: boolean = false
+  isDetached: boolean = false,
+  sdkVersion: ?string
 ) {
   const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
 
@@ -429,8 +430,10 @@ export async function runShellAppModificationsAsync(
     );
 
     const runShPath = path.join(shellPath, 'run.sh');
-    await regexFileAsync('host.exp.exponent/', `${javaPackage}/`, runShPath);
-    await regexFileAsync('LauncherActivity', 'MainActivity', runShPath);
+    if (await fs.pathExists(runShPath)) {
+      await regexFileAsync('host.exp.exponent/', `${javaPackage}/`, runShPath);
+      await regexFileAsync('LauncherActivity', 'MainActivity', runShPath);
+    }
   }
 
   // Package
@@ -990,7 +993,7 @@ export async function runShellAppModificationsAsync(
   );
 }
 
-async function buildShellAppAsync(context: StandaloneContext) {
+async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string) {
   let shellPath = shellPathForContext(context);
 
   if (context.build.android) {
@@ -1000,7 +1003,13 @@ async function buildShellAppAsync(context: StandaloneContext) {
       await fs.remove(`shell-unaligned.apk`);
       await fs.remove(`shell.apk`);
     } catch (e) {}
-    const gradleArgs = [`assembleProdMinSdkProdKernelRelease`];
+    let gradleBuildCommand;
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
+      gradleBuildCommand = 'assembleProdKernelRelease';
+    } else {
+      gradleBuildCommand = 'assembleProdMinSdkProdKernelRelease';
+    }
+    const gradleArgs = [gradleBuildCommand];
     if (process.env.GRADLE_DAEMON_DISABLED) {
       gradleArgs.unshift('--no-daemon');
     }
@@ -1008,49 +1017,56 @@ async function buildShellAppAsync(context: StandaloneContext) {
       pipeToLogger: true,
       loggerFields: { buildPhase: 'running gradle' },
       cwd: shellPath,
+      env: {
+        ...process.env,
+        ANDROID_KEY_ALIAS: androidBuildConfiguration.keyAlias,
+        ANDROID_KEY_PASSWORD: androidBuildConfiguration.keyPassword,
+        ANDROID_KEYSTORE_PATH: androidBuildConfiguration.keystore,
+        ANDROID_KEYSTORE_PASSWORD: androidBuildConfiguration.keystorePassword,
+      },
     });
-    await fs.copy(
-      path.join(
-        shellPath,
-        'app',
-        'build',
-        'outputs',
-        'apk',
-        'prodMinSdkProdKernel',
-        'release',
-        'app-prodMinSdk-prodKernel-release-unsigned.apk'
-      ),
-      `shell-unaligned.apk`
-    );
-    await spawnAsync(
-      `jarsigner`,
-      [
-        '-verbose',
-        '-sigalg',
-        'SHA1withRSA',
-        '-digestalg',
-        'SHA1',
-        '-storepass',
-        androidBuildConfiguration.keystorePassword,
-        '-keypass',
-        androidBuildConfiguration.keyPassword,
-        '-keystore',
-        androidBuildConfiguration.keystore,
-        'shell-unaligned.apk',
-        androidBuildConfiguration.keyAlias,
-      ],
-      {
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
+      await fs.copy(
+        path.join(
+          shellPath,
+          'app',
+          'build',
+          'outputs',
+          'apk',
+          'prodKernel',
+          'release',
+          'app-prodKernel-release.apk'
+        ),
+        'shell.apk'
+      );
+      // -c means "only verify"
+      await spawnAsync(`zipalign`, ['-c', '-v', '4', 'shell.apk'], {
         pipeToLogger: true,
-        loggerFields: { buildPhase: 'signing created apk' },
-      }
-    );
-    await spawnAsync(`zipalign`, ['-v', '4', 'shell-unaligned.apk', 'shell.apk'], {
-      pipeToLogger: true,
-      loggerFields: { buildPhase: 'verifying apk alignment' },
-    });
-    try {
-      await fs.remove('shell-unaligned.apk');
-    } catch (e) {}
+        loggerFields: { buildPhase: 'verifying apk alignment' },
+      });
+    } else {
+      await fs.copy(
+        path.join(
+          shellPath,
+          'app',
+          'build',
+          'outputs',
+          'apk',
+          'devMinSdk',
+          'prodKernel',
+          'release',
+          'app-devMinSdk-prodKernel-release-unsigned.apk'
+        ),
+        `shell-unaligned.apk`
+      );
+      await spawnAsync(`zipalign`, ['-v', '4', 'shell-unaligned.apk', 'shell.apk'], {
+        pipeToLogger: true,
+        loggerFields: { buildPhase: 'verifying apk alignment' },
+      });
+      try {
+        await fs.remove('shell-unaligned.apk');
+      } catch (e) {}
+    }
     await spawnAsync(
       `jarsigner`,
       [
@@ -1071,13 +1087,31 @@ async function buildShellAppAsync(context: StandaloneContext) {
     try {
       await fs.remove('shell-debug.apk');
     } catch (e) {}
-    await spawnAsyncThrowError(`./gradlew`, ['assembleDevMinSdkDevKernelDebug'], {
+    let gradleBuildCommand;
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
+      gradleBuildCommand = 'assembleDevKernelDebug';
+    } else {
+      gradleBuildCommand = 'assembleDevMinSdkDevKernelDebug';
+    }
+    await spawnAsyncThrowError(`./gradlew`, [gradleBuildCommand], {
       pipeToLogger: true,
       loggerFields: { buildPhase: 'running gradle' },
       cwd: shellPath,
     });
-    await fs.copy(
-      path.join(
+    let apkPath;
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
+      apkPath = path.join(
+        shellPath,
+        'app',
+        'build',
+        'outputs',
+        'apk',
+        'devKernel',
+        'debug',
+        'app-devKernel-debug.apk'
+      );
+    } else {
+      apkPath = path.join(
         shellPath,
         'app',
         'build',
@@ -1086,9 +1120,9 @@ async function buildShellAppAsync(context: StandaloneContext) {
         'devMinSdkDevKernel',
         'debug',
         'app-devMinSdk-devKernel-debug.apk'
-      ),
-      `/tmp/shell-debug.apk`
-    );
+      );
+    }
+    await fs.copy(apkPath, `/tmp/shell-debug.apk`);
   }
 }
 

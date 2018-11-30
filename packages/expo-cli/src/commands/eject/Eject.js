@@ -277,11 +277,7 @@ Android Studio to build the native code for your project.`);
     );
   }
 
-  log(
-    `${chalk.green('Ejected successfully!')}
-Please consider letting us know why you ejected in this survey:
-  ${chalk.cyan('https://goo.gl/forms/iD6pl218r7fn9N0d2')}`
-  );
+  log(chalk.green('Ejected successfully!'));
 }
 
 async function filesUsingExpoSdk(projectRoot: string): Promise<Array<string>> {

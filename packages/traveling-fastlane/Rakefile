@@ -2,7 +2,7 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.5.0"
+VERSION = "1.6.1"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
@@ -15,7 +15,10 @@ SCRIPTS = [
   'app_management',
   'validate_apple_credentials',
   'funcs',
-  'preload'
+  'preload',
+  'app_produce',
+  'pilot_upload',
+  'supply_android',
 ]
 
 desc "Package your app"

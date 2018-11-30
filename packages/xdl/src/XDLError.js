@@ -4,11 +4,7 @@
 
 import ExtendableError from 'es6-error';
 
-import * as Analytics from './Analytics';
-import * as Intercom from './Intercom';
-
 import type { ErrorCodes } from './ErrorCode';
-import * as Sentry from './Sentry';
 
 const ERROR_PREFIX = 'Error: ';
 
@@ -31,18 +27,5 @@ export default class XDLError extends ExtendableError {
 
     this.code = code;
     this.isXDLError = true;
-
-    if (options && !options.noTrack) {
-      // temporarily remove sentry until we can trim events
-      // send error to Sentry
-      // Sentry.logError(message, {
-      //   tags: { code, type: 'XDL Error' },
-      // });
-
-      Intercom.trackEvent('error', {
-        code,
-        message,
-      });
-    }
   }
 }

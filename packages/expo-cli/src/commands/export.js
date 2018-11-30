@@ -1,8 +1,13 @@
 /**
  * @flow
  */
+import axios from 'axios';
+import crypto from 'crypto';
+import fs from 'fs-extra';
 import validator from 'validator';
 import path from 'path';
+import targz from 'targz';
+import util from 'util';
 import { Project, UrlUtils } from 'xdl';
 
 import log from '../log';
@@ -10,6 +15,13 @@ import { installExitHooks } from '../exit';
 import CommandError from '../CommandError';
 
 export async function action(projectDir: string, options: Options = {}) {
+  const outputPath = path.resolve(projectDir, options.outputDir);
+  if (fs.existsSync(outputPath)) {
+    throw new CommandError(
+      'OUTPUT_DIR_EXISTS',
+      `Output directory ${outputPath} already exists. Aborting export.`
+    );
+  }
   if (!options.publicUrl) {
     throw new CommandError('MISSING_PUBLIC_URL', 'Missing required option: --public-url');
   }
@@ -56,7 +68,85 @@ export async function action(projectDir: string, options: Options = {}) {
     log('Terminating server processes.');
     await Project.stopAsync(projectDir);
   }
+
+  // Merge src dirs/urls into a multimanifest if specified
+  const mergeSrcDirs = [];
+
+  // src urls were specified to merge in, so download and decompress them
+  if (options.mergeSrcUrl.length > 0) {
+    // delete .tmp if it exists and recreate it anew
+    const tmpFolder = path.resolve(projectDir, path.join('.tmp'));
+    await fs.remove(tmpFolder);
+    await fs.ensureDir(tmpFolder);
+
+    // Download the urls into a tmp dir
+    const downloadDecompressPromises = options.mergeSrcUrl.map(async url => {
+      // Add the absolute paths to srcDir
+      const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
+        .randomBytes(16)
+        .toString('hex')}`;
+      const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
+      const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
+      await download(url, tmpFileCompressed);
+      await decompress(tmpFileCompressed, tmpFolderUncompressed);
+
+      // add the decompressed folder to be merged
+      mergeSrcDirs.push(tmpFolderUncompressed);
+    });
+
+    await Promise.all(downloadDecompressPromises);
+  }
+
+  // add any local src dirs to be merged
+  mergeSrcDirs.push(...options.mergeSrcDir);
+
+  if (mergeSrcDirs.length > 0) {
+    const srcDirs = options.mergeSrcDir.concat(options.mergeSrcUrl).join(' ');
+    log(`Starting project merge of ${srcDirs} into ${options.outputDir}`);
+
+    // Merge app distributions
+    await Project.mergeAppDistributions(
+      projectDir,
+      [...mergeSrcDirs, options.outputDir], // merge stuff in srcDirs and outputDir together
+      options.outputDir
+    );
+    log(`Project merge was successful. Your merged files can be found in ${options.outputDir}`);
+  }
   log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
+}
+
+const download = async (uri, filename) => {
+  return new Promise((resolve, reject) => {
+    axios(uri)
+      .pipe(fs.createWriteStream(filename))
+      .on('close', () => resolve(null))
+      .on('error', err => {
+        reject(err);
+      });
+  });
+};
+
+const decompress = async (src, dest) => {
+  return new Promise((resolve, reject) => {
+    targz.decompress(
+      {
+        src,
+        dest,
+      },
+      error => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(null);
+        }
+      }
+    );
+  });
+};
+
+function collect(val, memo) {
+  memo.push(val);
+  return memo;
 }
 
 export default (program: any) => {
@@ -76,8 +166,15 @@ export default (program: any) => {
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')
     .option('--dev', 'Configures static files for developing locally using a non-https server')
-    .option('--s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
+    .option('-s, --dump-sourcemap', 'Dump the source map for debugging the JS bundle.')
     .option('-q, --quiet', 'Suppress verbose output from the React Native packager.')
+    .option('--merge-src-dir [dir]', 'A repeatable source dir to merge in.', collect, [])
+    .option(
+      '--merge-src-url [url]',
+      'A repeatable source tar.gz file URL to merge in.',
+      collect,
+      []
+    )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .asyncActionProjectDir(action, false, true);
 };

@@ -7,8 +7,6 @@ import isEmpty from 'lodash/isEmpty';
 import freeportAsync from 'freeport-async';
 import http from 'http';
 import qs from 'querystring';
-import opn from 'opn';
-import promisify from 'util.promisify';
 
 import ApiV2Client, { ApiV2Error } from './ApiV2';
 import * as Analytics from './Analytics';
@@ -17,7 +15,6 @@ import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
 import Logger from './Logger';
 
-import * as Intercom from './Intercom';
 import UserSettings from './UserSettings';
 
 import { Semaphore } from './Utils';
@@ -313,9 +310,6 @@ export class UserManagerInstance {
 
     // Delete saved auth info
     await UserSettings.deleteKeyAsync('auth');
-
-    // Logout of Intercom
-    Intercom.update(null);
   }
 
   /**
@@ -337,7 +331,6 @@ export class UserManagerInstance {
    *  - update the UserSettings store with the current token and user id
    *  - update UserManager._currentUser
    *  - Fire login analytics events
-   *  - Update the currently assigned Intercom user
    *
    * Also updates UserManager._currentUser.
    *
@@ -395,12 +388,6 @@ export class UserManagerInstance {
         currentConnection: user.currentConnection,
         username: user.username,
       });
-
-      if (user.intercomUserHash) {
-        Intercom.update(user);
-      }
-    } else {
-      Intercom.update(null);
     }
 
     this._currentUser = user;
