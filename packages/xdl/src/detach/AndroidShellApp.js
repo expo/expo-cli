@@ -266,9 +266,7 @@ export async function copyInitialShellAppFilesAsync(
     try {
       await fs.remove(path.join(shellPath, 'app/src/main/assets/kernel.android.bundle'));
     } catch (e) {
-      initialCopyLogger.warn(
-        'Warning: Could not remove kernel.android.bundle from shell app directory.'
-      );
+      // let's hope it's just not present in the shell app template
     }
   }
 }
