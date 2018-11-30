@@ -264,8 +264,7 @@ export default class PackagerLogsStream {
       case 'worker_stderr_chunk':
         return;
       default:
-        chunk.msg = `Unrecognized event: ${msg.type}`;
-        chunk.level = Logger.DEBUG;
+        chunk.msg = `Unrecognized event: ${JSON.stringify(msg)}`;
         break;
     }
     this._enqueueAppendLogChunk(chunk);
