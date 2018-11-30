@@ -255,13 +255,26 @@ export default class PackagerLogsStream {
       case 'hmr_client_error':
         chunk.msg = `A WebSocket client got a connection error. Please reload your device to get HMR working again.`;
         break;
+      case 'global_cache_disabled':
+        if (msg.reason === 'too_many_errors') {
+          chunk.msg =
+            'The global cache is now disabled because it has been failing too many times.';
+        } else if (msg.reason === 'too_many_misses') {
+          chunk.msg = `The global cache is now disabled because it has been missing too many consecutive keys.`;
+        } else {
+          chunk.msg = `The global cache is now disabled. Reason: ${msg.reason}`;
+        }
+        break;
+      case 'worker_stdout_chunk':
+        chunk.msg = this._formatWorkerChunk('stdout', msg.chunk);
+        break;
+      case 'worker_stderr_chunk':
+        chunk.msg = this._formatWorkerChunk('stderr', msg.chunk);
+        break;
       // Ignored events.
       case 'dep_graph_loading':
       case 'dep_graph_loaded':
-      case 'global_cache_disabled':
       case 'global_cache_error':
-      case 'worker_stdout_chunk':
-      case 'worker_stderr_chunk':
         return;
       default:
         chunk.msg = `Unrecognized event: ${JSON.stringify(msg)}`;
@@ -444,6 +457,14 @@ export default class PackagerLogsStream {
       message += `\n${snippet}`;
     }
     return message;
+  }
+
+  _formatWorkerChunk(origin: 'stdout' | 'stderr', chunk: string) {
+    const lines = chunk.split('\n');
+    if (lines.length >= 1 && lines[lines.length - 1] === '') {
+      lines.splice(lines.length - 1, 1);
+    }
+    return lines.map(line => `transform[${origin}]: ${line}`).join('\n');
   }
 
   _enqueueAppendLogChunk(chunk: ChunkT) {
