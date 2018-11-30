@@ -49,6 +49,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXAppAuth',
+    libName: 'expo-app-auth',
+    sdkVersions: '>=32.0.0',
+  },
+  {
     podName: 'EXBarCodeScanner',
     libName: 'expo-barcode-scanner',
     sdkVersions: '>=30.0.0',
