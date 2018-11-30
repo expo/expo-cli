@@ -1,7 +1,7 @@
 /**
  * @flow
  */
-import JsonFile from '@expo/json-file';
+import axios from 'axios';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -11,6 +11,7 @@ import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import HashIds from 'hashids';
 import joi from 'joi';
+import JsonFile from '@expo/json-file';
 import promisify from 'util.promisify';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
@@ -64,7 +65,6 @@ import type { User as ExpUser } from './User'; //eslint-disable-line
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
-const WAIT_FOR_PACKAGER_TIMEOUT = 30 * 1000;
 
 const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
@@ -176,9 +176,9 @@ async function _resolveGoogleServicesFile(projectRoot, manifest) {
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter(({ fieldPath }) => get(manifest, fieldPath));
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)).filter(
+      ({ fieldPath }) => get(manifest, fieldPath)
+    );
 
     // Get the URLs
     const urls = await Promise.all(
@@ -211,7 +211,9 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
       logMethod(
         projectRoot,
         'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
+        `Unable to resolve asset "${e.localAssetPath}" from "${
+          e.manifestField
+        }" in your app/exp.json.`
       );
     } else {
       logMethod(
@@ -365,7 +367,9 @@ export async function mergeAppDistributions(
     return indexes.sort((index1, index2) => {
       if (semver.eq(index1.sdkVersion, index2.sdkVersion)) {
         logger.global.error(
-          `Encountered multiple index.json with the same SDK version ${index1.sdkVersion}. This could result in undefined behavior.`
+          `Encountered multiple index.json with the same SDK version ${
+            index1.sdkVersion
+          }. This could result in undefined behavior.`
         );
       }
       return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
@@ -777,7 +781,9 @@ export async function publishAsync(
         // ADD EMBEDDED RESPONSES HERE
         // START EMBEDDED RESPONSES
         embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+        embeddedResponses.add(new Constants.EmbeddedResponse("${
+          androidManifest.bundleUrl
+        }", "assets://shell-app.bundle", "application/javascript"));
         // END EMBEDDED RESPONSES`,
         constantsPath
       );
@@ -1323,26 +1329,37 @@ export async function buildAsync(
   });
 }
 
-async function _waitForRunningAsync(url) {
+async function _waitForRunningAsync(projectRoot, url, retries = 300) {
   try {
-    let response = await request(url);
-    // Looking for "Cached Bundles" string is hacky, but unfortunately
-    // ngrok returns a 200 when it succeeds but the port it's proxying
-    // isn't bound.
-    if (
-      response.statusCode >= 200 &&
-      response.statusCode < 300 &&
-      response.body &&
-      response.body.includes('packager-status:running')
-    ) {
+    let response = await axios.get(url, {
+      responseType: 'text',
+      proxy: false,
+    });
+    if (/packager-status:running/.test(response.data)) {
       return true;
+    } else if (retries === 0) {
+      ProjectUtils.logError(
+        projectRoot,
+        'expo',
+        `Could not get status from Metro bundler. Server response: ${response.data}`
+      );
     }
   } catch (e) {
-    // Try again after delay
+    if (retries === 0) {
+      ProjectUtils.logError(
+        projectRoot,
+        'expo',
+        `Could not get status from Metro bundler. ${e.message}`
+      );
+    }
   }
 
-  await delayAsync(100);
-  return _waitForRunningAsync(url);
+  if (retries <= 0) {
+    throw new Error('Connecting to Metro bundler failed.');
+  } else {
+    await delayAsync(100);
+    return _waitForRunningAsync(projectRoot, url, retries - 1);
+  }
 }
 
 function _stripPackagerOutputBox(output: string) {
@@ -1577,7 +1594,11 @@ export async function startReactNativeServerAsync(
   let exitPromise = new Promise((resolve, reject) => {
     packagerProcess.once('exit', async code => {
       ProjectUtils.logDebug(projectRoot, 'expo', `Metro Bundler process exited with code ${code}`);
-      reject(new Error(`Metro Bundler process exited with code ${code}`));
+      if (code) {
+        reject(new Error(`Metro Bundler process exited with code ${code}`));
+      } else {
+        resolve();
+      }
       try {
         await ProjectSettings.setPackagerInfoAsync(projectRoot, {
           packagerPort: null,
@@ -1590,19 +1611,7 @@ export async function startReactNativeServerAsync(
     urlType: 'http',
     hostType: 'localhost',
   });
-  const statusUrl = `${packagerUrl}/status`;
-  const timeoutPromise = new Promise((resolve, reject) =>
-    setTimeout(
-      () =>
-        reject(
-          new Error(
-            `Could not access packager status at ${statusUrl}. Are you sure the packager is running and reachable?`
-          )
-        ),
-      WAIT_FOR_PACKAGER_TIMEOUT
-    )
-  );
-  await Promise.race([_waitForRunningAsync(statusUrl), exitPromise, timeoutPromise]);
+  await Promise.race([_waitForRunningAsync(projectRoot, `${packagerUrl}/status`), exitPromise]);
 }
 
 // Simulate the node_modules resolution
