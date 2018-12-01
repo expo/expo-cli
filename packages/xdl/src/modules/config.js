@@ -94,6 +94,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXErrors',
+    libName: 'expo-errors',
+    sdkVersions: '>=32.0.0',
+  },
+  {
     podName: 'EXFaceDetector',
     libName: 'expo-face-detector',
     detachable: false,
