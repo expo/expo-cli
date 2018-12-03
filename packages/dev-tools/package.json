@@ -72,7 +72,7 @@
     "xdl": "^52.0.1"
   },
   "license": "MIT",
-  "gitHead": "5e6aab74774ccab6b22c4ece13c285022e04bff2",
+  "gitHead": "47995b5ecb15238c69162c435f31697b304d28a2",
   "publishConfig": {
     "access": "public"
   }
