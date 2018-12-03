@@ -7,7 +7,7 @@
     "bootstrap": "lerna bootstrap",
     "postbootstrap": "lerna run prepare --stream",
     "prebootstrap": "yarn",
-    "publish": "lerna publish --npm-client npm",
+    "publish": "lerna version",
     "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools"
   },
   "husky": {
