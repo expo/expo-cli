@@ -1,20 +1,21 @@
+#!/usr/bin/env node
+
 let readline = require('readline');
-let path = require('path');
 let { spawn } = require('child_process');
 
-let lerna = path.join(__dirname, '../node_modules/.bin/lerna');
-
+console.log('npm two-factor authentication (2FA) is required for publishing');
 let rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
-
-console.log('npm two-factor authentication (2FA) is required for publishing');
 rl.question('npm one-time password: ', password => {
   rl.close();
-
-  spawn(lerna, ['publish', '--npm-client=npm', ...process.argv.slice(2)], {
-    stdio: 'inherit',
-    env: Object.assign({}, process.env, { NPM_CONFIG_OTP: password }),
-  }).on('exit', process.exit);
+  npmPublish(Object.assign({}, process.env, { NPM_CONFIG_OTP: password }));
 });
+
+function npmPublish(env) {
+  spawn('npm', ['publish', ...process.argv.slice(2)], {
+    stdio: 'inherit',
+    env,
+  }).on('exit', process.exit);
+}
