@@ -490,8 +490,11 @@ export async function exportForAppHosting(
       'Must provide a slug field in the app.json manifest.'
     );
   }
-  const user = await UserManager.ensureLoggedInAsync();
-  exp.id = `@${user.username}/${exp.slug}`;
+  let username = await UserManager.getCurrentUsernameAsync();
+  if (!username) {
+    username = ANONYMOUS_USERNAME;
+  }
+  exp.id = `@${username}/${exp.slug}`;
 
   // save the android manifest
   exp.bundleUrl = urljoin(publicUrl, 'bundles', androidBundleUrl);
