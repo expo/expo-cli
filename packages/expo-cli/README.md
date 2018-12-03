@@ -25,7 +25,6 @@ To view this on your phone, do the following:
 
 - Check your e-mail or texts and tap the link. The Expo app should open and you should be able to view your experience there!
 
-
 ## Publishing a Project
 
 To publish something you've made, just follow these steps:
