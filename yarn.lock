@@ -217,10 +217,10 @@
     "@expo/ngrok-bin-win32-ia32" "2.2.8-beta.1"
     "@expo/ngrok-bin-win32-x64" "2.2.8-beta.1"
 
-"@expo/ngrok@2.4.2":
-  version "2.4.2"
-  resolved "https://registry.yarnpkg.com/@expo/ngrok/-/ngrok-2.4.2.tgz#cb304ca49913b8bc23550407fb4f8b25f3e76a9a"
-  integrity sha512-x2VbnHVyaID2zGqfX2fD2Ui8as+bebhV6IFODSVhSSsKTSke+ORviLkvEZJgd5Hlz6WgRzuCAtqMkxXb1G6o6Q==
+"@expo/ngrok@2.4.3":
+  version "2.4.3"
+  resolved "https://registry.yarnpkg.com/@expo/ngrok/-/ngrok-2.4.3.tgz#77e1a7a3e76542358647cd0117c246ea1afe4bc1"
+  integrity sha512-JOct+0BMTOTkTb2RreQc6uzhwCjX8Z/EYRo3EcbHMr5/3Zk+0YuujaM4Z84GeZcWz2sBMhnJj0LeJnhEkmd95Q==
   dependencies:
     "@expo/ngrok-bin" "2.2.8-beta.3"
     async "^0.9.0"
