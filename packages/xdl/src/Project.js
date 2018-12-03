@@ -1303,21 +1303,21 @@ export async function buildAsync(
     exp.slug = pkg.name;
   }
 
-  if (options.platform === 'ios' || options.platform === 'all') {
+  if (options.mode !== 'status' && (options.platform === 'ios' || options.platform === 'all')) {
     if (!exp.ios || !exp.ios.bundleIdentifier) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a bundle identifier in order to build this experience for iOS.` +
+        `Must specify a bundle identifier in order to build this experience for iOS. ` +
           `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
       );
     }
   }
 
-  if (options.platform === 'android' || options.platform === 'all') {
+  if (options.mode !== 'status' && (options.platform === 'android' || options.platform === 'all')) {
     if (!exp.android || !exp.android.package) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a java package in order to build this experience for Android.` +
+        `Must specify a java package in order to build this experience for Android. ` +
           `Please specify one in ${configName} at "${configPrefix}android.package"`
       );
     }
