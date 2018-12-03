@@ -13,7 +13,8 @@ export default program => {
     )
     .option(
       '--eject-method [type]',
-      'Eject method to use. If not specified, the command will ask which one to use. Required when using the --non-interactive option. expoKit, plain'
+      'Eject method to use. If not specified, the command will ask which one to use. Required when using the --non-interactive option. expokit, plain',
+      value => value.toLowerCase()
     )
     .option(
       '-f --force',

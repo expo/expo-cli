@@ -61,7 +61,7 @@ Ejecting is permanent! Please be careful with your selection.
       type: 'list',
       name: 'ejectMethod',
       message: 'How would you like to eject from create-react-native-app?',
-      default: usingExpo ? 'expoKit' : 'plain',
+      default: usingExpo ? 'expokit' : 'plain',
       choices: [
         {
           name: reactNativeOptionMessage,
@@ -70,7 +70,7 @@ Ejecting is permanent! Please be careful with your selection.
         {
           name:
             "ExpoKit: I'll create or log in with an Expo account to use React Native and the Expo SDK.",
-          value: 'expoKit',
+          value: 'expokit',
         },
         {
           name: "Cancel: I'll continue with my current project structure.",
@@ -264,7 +264,7 @@ Android Studio to build the native code for your project.`);
         });
       }
     }
-  } else if (ejectMethod === 'expoKit') {
+  } else if (ejectMethod === 'expokit') {
     await loginOrRegisterIfLoggedOut();
     await Detach.detachAsync(projectRoot, options);
   } else if (ejectMethod === 'cancel') {
@@ -273,7 +273,7 @@ Android Studio to build the native code for your project.`);
     return;
   } else {
     throw new Error(
-      `Unrecognized eject method "${ejectMethod}". Valid options are: expoKit, plain.`
+      `Unrecognized eject method "${ejectMethod}". Valid options are: expokit, plain.`
     );
   }
 
