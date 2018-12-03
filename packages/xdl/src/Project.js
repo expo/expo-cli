@@ -1307,7 +1307,7 @@ export async function buildAsync(
     if (!exp.ios || !exp.ios.bundleIdentifier) {
       throw new XDLError(
         ErrorCode.INVALID_MANIFEST,
-        `Must specify a bundle identifier in order to build this experience for iOS.` +
+        `Must specify a bundle identifier in order to build this experience for iOS. ` +
           `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
       );
     }

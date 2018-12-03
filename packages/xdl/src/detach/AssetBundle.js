@@ -6,10 +6,16 @@
 import _ from 'lodash';
 import fs from 'fs-extra';
 import path from 'path';
+import url from 'url';
 
 import { saveUrlToPathAsync } from './ExponentTools';
+import StandaloneContext from './StandaloneContext';
+
+const EXPO_DOMAIN = 'expo.io';
+const ASSETS_DIR_DEFAULT_URL = 'https://d1wp6m56sqw74a.cloudfront.net/~assets';
 
 export async function bundleAsync(
+  context: StandaloneContext,
   assets: ?(Array<string> | Array<Object>),
   dest: string,
   oldFormat: boolean = false
@@ -28,6 +34,8 @@ export async function bundleAsync(
 
   await fs.ensureDir(dest);
 
+  const urlResolver = createAssetsUrlResolver(context);
+
   const batches = _.chunk(assets, 5);
   for (const batch of batches) {
     await Promise.all(
@@ -39,11 +47,25 @@ export async function bundleAsync(
             ? asset.substring(prefixLength, extensionIndex)
             : asset.substring(prefixLength);
         await saveUrlToPathAsync(
-          'https://d1wp6m56sqw74a.cloudfront.net/~assets/' + hash,
+          urlResolver(hash),
           // For sdk24 the runtime expects only the hash as the filename.
           path.join(dest, oldFormat ? hash : asset)
         );
       })
     );
   }
+}
+
+function createAssetsUrlResolver(context) {
+  let assetsDirUrl = ASSETS_DIR_DEFAULT_URL;
+  if (context) {
+    const { assetUrlOverride = './assets' } = context.config;
+    const publishedUrl = context.published.url;
+    const { host } = url.parse(publishedUrl);
+    const maybeExpoDomain = _.takeRight(host.split('.'), 2).join('.');
+    if (maybeExpoDomain !== EXPO_DOMAIN) {
+      assetsDirUrl = url.resolve(publishedUrl, assetUrlOverride);
+    }
+  }
+  return hash => `${assetsDirUrl}/${hash}`;
 }

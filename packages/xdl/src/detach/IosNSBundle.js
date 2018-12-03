@@ -474,6 +474,7 @@ async function configureAsync(context: StandaloneContext) {
       buildPhaseLogger.info('Bundling assets...');
       try {
         await AssetBundle.bundleAsync(
+          context,
           context.data.manifest.bundledAssets,
           supportingDirectory,
           context.data.manifest.sdkVersion === '24.0.0'
