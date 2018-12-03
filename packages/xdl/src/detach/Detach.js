@@ -337,7 +337,7 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
   }
 
   logger.info('Updating Android app...');
-  await AndroidShellApp.runShellAppModificationsAsync(context, true);
+  await AndroidShellApp.runShellAppModificationsAsync(context, context.data.exp.sdkVersion);
 
   // Clean up
   logger.info('Cleaning up Android...');
