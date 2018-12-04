@@ -153,10 +153,4 @@ module.exports = {
   get XDLError() {
     return require('./XDLError').default;
   },
-  get XDLProvider() {
-    return require('./state/XDLProvider').default;
-  },
-  get XDLState() {
-    return require('./state');
-  },
 };
