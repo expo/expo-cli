@@ -1,4 +1,5 @@
-const path = require('path');
+'use strict';
+
 const gulp = require('gulp');
 const babel = require('gulp-babel');
 const changed = require('gulp-changed');
@@ -6,7 +7,7 @@ const plumber = require('gulp-plumber');
 const sourcemaps = require('gulp-sourcemaps');
 const fs = require('fs-extra');
 
-const package = require('./package.json');
+const packageJSON = require('./package.json');
 
 const paths = {
   source: 'src/**/*.js',
@@ -23,7 +24,8 @@ const tasks = {
       .pipe(babel())
       .pipe(
         sourcemaps.write('__sourcemaps__', {
-          sourceRoot: `/${package.name}@${package.version}/src`,
+          includeContent: false,
+          sourceRoot: `/${packageJSON.name}@${packageJSON.version}/src`,
         })
       )
       .pipe(gulp.dest(paths.build));
