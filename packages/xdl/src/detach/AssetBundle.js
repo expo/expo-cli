@@ -11,7 +11,7 @@ import url from 'url';
 import { saveUrlToPathAsync } from './ExponentTools';
 import StandaloneContext from './StandaloneContext';
 
-const EXPO_DOMAIN = 'expo.io';
+const EXPO_DOMAINS = ['expo.io', 'exp.host'];
 const ASSETS_DIR_DEFAULT_URL = 'https://d1wp6m56sqw74a.cloudfront.net/~assets';
 
 export async function bundleAsync(
@@ -61,9 +61,9 @@ function createAssetsUrlResolver(context) {
   if (context) {
     const { assetUrlOverride = './assets' } = context.config;
     const publishedUrl = context.published.url;
-    const { host } = url.parse(publishedUrl);
-    const maybeExpoDomain = _.takeRight(host.split('.'), 2).join('.');
-    if (maybeExpoDomain !== EXPO_DOMAIN) {
+    const { hostname } = url.parse(publishedUrl);
+    const maybeExpoDomain = _.takeRight(hostname.split('.'), 2).join('.');
+    if (_.includes(EXPO_DOMAINS, maybeExpoDomain)) {
       assetsDirUrl = url.resolve(publishedUrl, assetUrlOverride);
     }
   }
