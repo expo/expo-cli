@@ -132,7 +132,7 @@ Ejecting is permanent! Please be careful with your selection.
     log(chalk.green('Wrote to app.json, please update it manually in the future.'));
     const ejectCommand = 'node';
     const ejectArgs = [
-      path.resolve('node_modules', 'react-native', 'local-cli', 'cli.js'),
+      ProjectUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
       'eject',
     ];
 

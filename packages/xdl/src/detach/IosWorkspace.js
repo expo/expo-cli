@@ -181,7 +181,13 @@ async function _renderPodfileFromTemplateAsync(
   );
   if (context.type === 'user') {
     invariant(iosClientVersion, `The iOS client version must be specified`);
-    reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
+    reactNativeDependencyPath = path.dirname(
+      ProjectUtils.resolveModule(
+        'react-native/package.json',
+        context.data.projectPath,
+        context.data.exp
+      )
+    );
     podfileSubstitutions.EXPOKIT_TAG = `ios/${iosClientVersion}`;
     podfileTemplateFilename = 'ExpoKit-Podfile';
     const expoDependenciesPath = path.join(context.data.projectPath, 'node_modules');

@@ -159,6 +159,12 @@ export async function fileExistsAsync(file: string): Promise<boolean> {
   }
 }
 
+export function resolveModule(request, projectRoot, exp) {
+  return require.resolve(request, {
+    paths: exp.nodeModulesPath ? [exp.nodeModulesPath] : [projectRoot],
+  });
+}
+
 async function _findConfigPathAsync(projectRoot) {
   const appJson = path.join(projectRoot, 'app.json');
   const expJson = path.join(projectRoot, 'exp.json');
@@ -280,6 +286,10 @@ export async function readConfigJsonAsync(
 
   if (exp && !exp.version) {
     exp.version = pkg.version;
+  }
+
+  if (exp.nodeModulesPath) {
+    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }
 
   return { exp, pkg, rootConfig };
