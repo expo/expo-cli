@@ -1072,12 +1072,33 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
           'build',
           'outputs',
           'apk',
-          'devMinSdk',
-          'prodKernel',
+          'prodMinSdkProdKernel',
           'release',
-          'app-devMinSdk-prodKernel-release-unsigned.apk'
+          'app-prodMinSdk-prodKernel-release-unsigned.apk'
         ),
         `shell-unaligned.apk`
+      );
+      await spawnAsync(
+        `jarsigner`,
+        [
+          '-verbose',
+          '-sigalg',
+          'SHA1withRSA',
+          '-digestalg',
+          'SHA1',
+          '-storepass',
+          androidBuildConfiguration.keystorePassword,
+          '-keypass',
+          androidBuildConfiguration.keyPassword,
+          '-keystore',
+          androidBuildConfiguration.keystore,
+          'shell-unaligned.apk',
+          androidBuildConfiguration.keyAlias,
+        ],
+        {
+          pipeToLogger: true,
+          loggerFields: { buildPhase: 'signing created apk' },
+        }
       );
       await spawnAsync(`zipalign`, ['-v', '4', 'shell-unaligned.apk', 'shell.apk'], {
         pipeToLogger: true,
