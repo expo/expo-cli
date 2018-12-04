@@ -23,7 +23,6 @@ import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
-import Request from 'request-promise-native';
 import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
@@ -69,10 +68,6 @@ const TUNNEL_TIMEOUT = 10 * 1000;
 const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
-
-const request = Request.defaults({
-  resolveWithFullResponse: true,
-});
 
 type CachedSignedManifest = {
   manifestString: ?string,
@@ -124,43 +119,54 @@ async function _getForPlatformAsync(projectRoot, url, platform, { errorCode, min
   url = UrlUtils.getPlatformSpecificBundleUrl(url, platform);
 
   let fullUrl = `${url}&platform=${platform}`;
-  let response = await request.get({
-    url: fullUrl,
-    headers: {
-      'Exponent-Platform': platform,
-    },
-  });
+  let response;
 
-  if (response.statusCode !== 200) {
-    if (response.body) {
-      let body;
-      try {
-        body = JSON.parse(response.body);
-      } catch (e) {
-        ProjectUtils.logError(projectRoot, 'expo', response.body);
-      }
+  try {
+    response = await axios.get(fullUrl, {
+      responseType: 'text',
+      // Workaround for https://github.com/axios/axios/issues/907.
+      // Without transformResponse, axios will parse the body as JSON regardless of the responseType/
+      transformResponse: [data => data],
+      proxy: false,
+      validateStatus: status => status === 200,
+      headers: {
+        'Exponent-Platform': platform,
+      },
+    });
+  } catch (error) {
+    if (error.response) {
+      if (error.response.data) {
+        let body;
+        try {
+          body = JSON.parse(error.response.data);
+        } catch (e) {
+          ProjectUtils.logError(projectRoot, 'expo', response.data);
+        }
 
-      if (body !== undefined) {
-        if (body.message) {
-          ProjectUtils.logError(projectRoot, 'expo', body.message);
-        } else {
-          ProjectUtils.logError(projectRoot, 'expo', response.body);
+        if (body) {
+          if (body.message) {
+            ProjectUtils.logError(projectRoot, 'expo', body.message);
+          } else {
+            ProjectUtils.logError(projectRoot, 'expo', response.data);
+          }
         }
       }
+      throw new XDLError(
+        errorCode,
+        `Packager URL ${fullUrl} returned unexpected code ${response.status}. ` +
+          'Please open your project in the Expo app and see if there are any errors. ' +
+          'Also scroll up and make sure there were no errors or warnings when opening your project.'
+      );
+    } else {
+      throw error;
     }
-    throw new XDLError(
-      errorCode,
-      `Packager URL ${fullUrl} returned unexpected code ${response.statusCode}. ` +
-        'Please open your project in the Expo app and see if there are any errors. ' +
-        'Also scroll up and make sure there were no errors or warnings when opening your project.'
-    );
   }
 
-  if (!response.body || (minLength && response.body.length < minLength)) {
-    throw new XDLError(errorCode, `Body is: ${response.body}`);
+  if (!response.data || (minLength && response.data.length < minLength)) {
+    throw new XDLError(errorCode, `Body is: ${response.data}`);
   }
 
-  return response.body;
+  return response.data;
 }
 
 async function _resolveGoogleServicesFile(projectRoot, manifest) {
@@ -1816,7 +1822,7 @@ export async function stopExpoServerAsync(projectRoot: string) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
     try {
-      await request.post(`http://localhost:${packagerInfo.expoServerPort}/shutdown`);
+      await axios.post(`http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`);
     } catch (e) {}
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
