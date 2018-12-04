@@ -75,7 +75,6 @@
     "prop-types": "15.6.2",
     "querystring": "0.2.0",
     "raven": "2.6.3",
-    "raven-js": "3.26.4",
     "react": "16.4.2",
     "react-redux": "5.0.7",
     "read-chunk": "2.1.0",
