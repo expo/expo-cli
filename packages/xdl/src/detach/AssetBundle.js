@@ -63,7 +63,7 @@ function createAssetsUrlResolver(context) {
     const publishedUrl = context.published.url;
     const { hostname } = url.parse(publishedUrl);
     const maybeExpoDomain = _.takeRight(hostname.split('.'), 2).join('.');
-    if (_.includes(EXPO_DOMAINS, maybeExpoDomain)) {
+    if (!_.includes(EXPO_DOMAINS, maybeExpoDomain)) {
       assetsDirUrl = url.resolve(publishedUrl, assetUrlOverride);
     }
   }
