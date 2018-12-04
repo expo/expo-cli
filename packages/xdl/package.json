@@ -20,14 +20,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/exponent/xdl.git"
+    "url": "git+https://github.com/expo/expo-cli.git"
   },
   "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/exponent/xdl/issues"
+    "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/exponent/xdl#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/xdl#readme",
   "dependencies": {
     "@expo/bunyan": "3.0.2",
     "@expo/json-file": "8.1.0",
