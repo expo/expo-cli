@@ -25,15 +25,8 @@ class ConsoleRawStream {
 let logger: any = bunyan.createLogger({
   name: 'expo',
   serializers: bunyan.stdSerializers,
-  streams: [
-    {
-      level: 'debug',
-      type: 'rotating-file',
-      path: path.join(UserSettings.dotExpoHomeDirectory(), 'log'),
-      period: '1d', // daily rotation
-      count: 3, // keep 3 back copies
-    },
-    ...(process.env.DEBUG && process.env.NODE_ENV !== 'production'
+  streams:
+    process.env.DEBUG && process.env.NODE_ENV !== 'production'
       ? [
           {
             type: 'raw',
@@ -42,8 +35,7 @@ let logger: any = bunyan.createLogger({
             level: 'debug',
           },
         ]
-      : []),
-  ],
+      : [],
 });
 
 logger.notifications = logger.child({ type: 'notifications' });
