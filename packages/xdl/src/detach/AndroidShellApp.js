@@ -896,7 +896,11 @@ export async function runShellAppModificationsAsync(
     });
   }
 
-  await AssetBundle.bundleAsync(manifest.bundledAssets, `${shellPath}/app/src/main/assets`);
+  await AssetBundle.bundleAsync(
+    context,
+    manifest.bundledAssets,
+    `${shellPath}/app/src/main/assets`
+  );
 
   let certificateHash = '';
   let googleAndroidApiKey = '';

@@ -561,6 +561,5 @@ export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsAr
       }`
     );
   }
-
-  await AssetBundle.bundleAsync(manifest.bundledAssets, args.dest);
+  await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);
 }
