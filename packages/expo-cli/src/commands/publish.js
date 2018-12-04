@@ -46,7 +46,9 @@ export async function action(projectDir: string, options: Options = {}) {
   let recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
-  const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(projectDir);
+  const {
+    args: { sdkVersion },
+  } = await Exp.getPublishInfoAsync(projectDir);
 
   const buildStatus = await Project.buildAsync(projectDir, {
     mode: 'status',
@@ -68,29 +70,30 @@ export async function action(projectDir: string, options: Options = {}) {
     simpleSpinner.start();
   }
 
-  let result = await Project.publishAsync(projectDir, {
-    releaseChannel: options.releaseChannel,
-  });
+  try {
+    let result = await Project.publishAsync(projectDir, {
+      releaseChannel: options.releaseChannel,
+    });
 
-  let url = result.url;
+    let url = result.url;
 
-  if (options.quiet) {
-    simpleSpinner.stop();
+    if (options.quiet) {
+      simpleSpinner.stop();
+    }
+
+    log('Published');
+    log('Your URL is\n\n' + chalk.underline(url) + '\n');
+    log.raw(url);
+
+    if (recipient) {
+      await sendTo.sendUrlAsync(url, recipient);
+    }
+    return result;
+  } finally {
+    if (startedOurOwn) {
+      await Project.stopAsync(projectDir);
+    }
   }
-
-  log('Published');
-  log('Your URL is\n\n' + chalk.underline(url) + '\n');
-  log.raw(url);
-
-  if (recipient) {
-    await sendTo.sendUrlAsync(url, recipient);
-  }
-
-  if (startedOurOwn) {
-    await Project.stopAsync(projectDir);
-  }
-
-  return result;
 }
 
 export default (program: any) => {
