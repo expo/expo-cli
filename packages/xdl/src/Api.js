@@ -7,7 +7,6 @@ import fs from 'fs-extra';
 import rimraf from 'rimraf';
 import path from 'path';
 import axios from 'axios';
-import followRedirects from 'follow-redirects';
 import concat from 'concat-stream';
 
 import { Cacher } from './tools/FsCache';
@@ -20,7 +19,7 @@ import UserManager from './User';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 
-followRedirects.maxBodyLength = 50 * 1024 * 1024; // 50 MB
+const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
@@ -74,6 +73,7 @@ async function _callMethodAsync(
     url,
     method: method || 'get',
     headers,
+    maxContentLength: MAX_CONTENT_LENGTH,
   };
 
   if (requestBody) {
