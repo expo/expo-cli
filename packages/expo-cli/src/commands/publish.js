@@ -70,8 +70,9 @@ export async function action(projectDir: string, options: Options = {}) {
     simpleSpinner.start();
   }
 
+  let result;
   try {
-    let result = await Project.publishAsync(projectDir, {
+    result = await Project.publishAsync(projectDir, {
       releaseChannel: options.releaseChannel,
     });
 
@@ -88,12 +89,12 @@ export async function action(projectDir: string, options: Options = {}) {
     if (recipient) {
       await sendTo.sendUrlAsync(url, recipient);
     }
-    return result;
   } finally {
     if (startedOurOwn) {
       await Project.stopAsync(projectDir);
     }
   }
+  return result;
 }
 
 export default (program: any) => {
