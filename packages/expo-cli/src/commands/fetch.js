@@ -143,13 +143,19 @@ Push p12 password:         ${chalk.bold(pushPassword)}
           .update(data)
           .digest('hex')
           .toUpperCase();
+        const googleHash256 = crypto
+          .createHash('sha256')
+          .update(data)
+          .digest('hex')
+          .toUpperCase();
         const fbHash = crypto
           .createHash('sha1')
           .update(data)
           .digest('base64');
-        log(`Google Certificate Fingerprint:  ${googleHash.replace(/(.{2}(?!$))/g, '$1:')}`);
-        log(`Google Certificate Hash:         ${googleHash}`);
-        log(`Facebook Key Hash:               ${fbHash}`);
+        log(`Google Certificate Fingerprint:     ${googleHash.replace(/(.{2}(?!$))/g, '$1:')}`);
+        log(`Google Certificate Hash (SHA-1):    ${googleHash}`);
+        log(`Google Certificate Hash (SHA-256):  ${googleHash256}`);
+        log(`Facebook Key Hash:                  ${fbHash}`);
       } catch (err) {
         if (err.code === 'ENOENT') {
           log.warn('Are you sure you have keytool installed?');
