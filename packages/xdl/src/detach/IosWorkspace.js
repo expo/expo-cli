@@ -17,6 +17,7 @@ import {
 import { renderPodfileAsync } from './IosPodsTools.js';
 import * as IosPlist from './IosPlist';
 import logger from './Logger';
+import * as ProjectUtils from '../project/ProjectUtils';
 import * as Utils from '../Utils';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
