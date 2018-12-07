@@ -616,8 +616,10 @@ export async function publishAsync(
     hooks.postPublish.forEach(hook => {
       let { file, config } = hook;
       let fn = _requireFromProject(file, projectRoot, exp);
-      if (fn === null) {
-        logger.global.error(`Unable to load postPublishHook: '${file}'`);
+      if (typeof fn !== 'function') {
+        logger.global.error(
+          `Unable to load postPublishHook: '${file}'. The module does not export a function.`
+        );
       } else {
         hook._fn = fn;
         validPostPublishHooks.push(hook);
