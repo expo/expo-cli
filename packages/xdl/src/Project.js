@@ -5,11 +5,11 @@ import axios from 'axios';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
-import decache from 'decache';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import HashIds from 'hashids';
+import importFresh from 'import-fresh';
 import joi from 'joi';
 import JsonFile from '@expo/json-file';
 import promisify from 'util.promisify';
@@ -240,9 +240,7 @@ function _requireFromProject(modulePath, projectRoot, exp) {
     let fullPath = ProjectUtils.resolveModule(modulePath, projectRoot, exp);
     // Clear the require cache for this module so get a fresh version of it
     // without requiring the user to restart Expo CLI
-    decache(fullPath);
-    // $FlowIssue: doesn't work with dynamic requires
-    return require(fullPath);
+    return importFresh(fullPath);
   } catch (e) {
     return null;
   }

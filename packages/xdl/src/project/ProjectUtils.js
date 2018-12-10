@@ -5,7 +5,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import JsonFile from '@expo/json-file';
+import resolveFrom from 'resolve-from';
 import slug from 'slugify';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 import * as Analytics from '../Analytics';
 import Config from '../Config';
@@ -134,9 +136,8 @@ export async function fileExistsAsync(file: string): Promise<boolean> {
 }
 
 export function resolveModule(request, projectRoot, exp) {
-  return require.resolve(request, {
-    paths: exp.nodeModulesPath ? [exp.nodeModulesPath] : [projectRoot],
-  });
+  const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
+  return resolveFrom(fromDir, request);
 }
 
 async function _findConfigPathAsync(projectRoot) {
