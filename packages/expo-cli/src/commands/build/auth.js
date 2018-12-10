@@ -124,20 +124,26 @@ const NO_TEAM_ID = `You have no team ID associated with your apple account, cann
 (Do you have a paid Apple developer Account?)`;
 
 export async function validateCredentialsProduceTeamId(creds) {
-  const getTeamsAttempt = await spawnAndCollectJSONOutputAsync(
+  const validateAppleCredentialsOutput = await spawnAndCollectJSONOutputAsync(
     FASTLANE.validate_apple_credentials,
     [creds.appleId, creds.password]
   );
-  if (getTeamsAttempt.result === 'failure') {
-    const { reason, rawDump } = getTeamsAttempt;
+  if (validateAppleCredentialsOutput.result === 'failure') {
+    const { reason, rawDump } = validateAppleCredentialsOutput;
     // TODO: remove this after upgrading fastlane in @expo/traveling-fastlane-*
     findCommonFastlaneErrors(rawDump);
     throw new Error(`Reason:${reason}, raw:${JSON.stringify(rawDump)}`);
   }
-  const { teams } = getTeamsAttempt;
+  const { teams, fastlaneSession } = validateAppleCredentialsOutput;
   if (teams.length === 0) {
     throw new Error(NO_TEAM_ID);
   }
+
+  if (fastlaneSession) {
+    // set FASTLANE_SESSION so that if a user has 2FA enbled he will be prompted for a code only once
+    process.env.FASTLANE_SESSION = fastlaneSession;
+  }
+
   if (teams.length === 1) {
     log(`Only 1 team associated with your account, using Team ID: ${teams[0].teamId}`);
     const [team] = teams;
