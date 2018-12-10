@@ -7,7 +7,6 @@ import path from 'path';
 import JsonFile from '@expo/json-file';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 import * as Analytics from '../Analytics';
 import Config from '../Config';
