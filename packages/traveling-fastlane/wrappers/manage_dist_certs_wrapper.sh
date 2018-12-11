@@ -13,7 +13,7 @@ export FASTLANE_DISABLE_COLORS=1
 export FASTLANE_SKIP_UPDATE_CHECK=1
 export FASTLANE_DISABLE_ANIMATION=1
 
-script="$SELFDIR/lib/app/fetch_push_cert.rb"
+script="$SELFDIR/lib/app/manage_dist_certs.rb"
 
 lib_loc="$SELFDIR/lib/app"
 

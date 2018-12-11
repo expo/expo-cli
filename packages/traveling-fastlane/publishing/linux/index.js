@@ -8,15 +8,13 @@ const TRAVELING_FASTLANE = `traveling-fastlane-${version}-linux-x86_64`;
 module.exports = () => {
   let p = join.bind(null, __dirname, TRAVELING_FASTLANE);
   return {
-    app_management: p('app_management'),
-    fetch_cert: p('fetch_cert'),
-    fetch_new_provisioning_profile: p('fetch_new_provisioning_profile'),
-    fetch_push_cert: p('fetch_push_cert'),
-    validate_apple_certs: p('validate_apple_certs'),
-    validate_apple_credentials: p('validate_apple_credentials'),
-    validate_apple_push_certs: p('validate_apple_push_certs'),
-    app_produce: p('app_produce'),
-    pilot_upload: p('pilot_upload'),
-    supply_android: p('supply_android'),
+    authenticate: p('authenticate'),
+    ensureAppExists: p('ensure_app_exists'),
+    manageDistCerts: p('manage_dist_certs'),
+    managePushKeys: p('manage_push_keys'),
+    manageProvisioningProfiles: p('manage_provisioning_profiles'),
+    appProduce: p('app_produce'),
+    pilotUpload: p('pilot_upload'),
+    supplyAndroid: p('supply_android'),
   };
 };

@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import chalk from 'chalk';
 
+import { Credentials, Exp, UrlUtils } from 'xdl';
 import BaseUploader from './BaseUploader';
 import log from '../../log';
 import prompt from '../../prompt';
 import { runFastlaneAsync } from './utils';
-import { Credentials, Exp, UrlUtils } from 'xdl';
 import CommandError from '../../CommandError';
 import { nonEmptyInput } from '../utils/validators';
 
@@ -177,13 +177,13 @@ export default class IOSUploader extends BaseUploader {
 
     log('Ensuring the app exists on App Store Connect, this may take a while...');
     await runFastlaneAsync(
-      fastlane.app_produce,
+      fastlane.appProduce,
       [bundleIdentifier, appName, appleId, language],
       appleCreds
     );
 
     log('Uploading the app to Testflight, hold tight...');
-    await runFastlaneAsync(fastlane.pilot_upload, [buildPath, appleId], appleCreds, true);
+    await runFastlaneAsync(fastlane.pilotUpload, [buildPath, appleId], appleCreds, true);
 
     log(
       `All done! You may want to go to App Store Connect (${chalk.underline(

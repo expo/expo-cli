@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, ProjectUtils, Versions } from 'xdl';
+import { Project, ProjectUtils } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import simpleSpinner from '@expo/simple-spinner';
@@ -72,9 +72,13 @@ export default class BaseBuilder {
     }
   }
 
-  async checkStatus(
-    { current = true, platform = 'all', publicUrl, releaseChannel, sdkVersion }: StatusArgs = {}
-  ): Promise<void> {
+  async checkStatus({
+    current = true,
+    platform = 'all',
+    publicUrl,
+    releaseChannel,
+    sdkVersion,
+  }: StatusArgs = {}): Promise<void> {
     await this._checkProjectConfig();
 
     log('Checking if current build exists...\n');
@@ -166,11 +170,6 @@ ${job.id}
   }
 
   async ensureReleaseExists(platform: string) {
-    if (this.options.hardcodeRevisionId) {
-      // Used for sandbox build
-      return [this.options.hardcodeRevisionId];
-    }
-
     if (this.options.publish) {
       const { ids, url, err } = await publishAction(this.projectDir, {
         ...this.options,
@@ -295,7 +294,7 @@ ${job.id}
     }
   }
 
-  async checkIfSdkIsSupported(sdkVersion: string, platform: string) {
+  async checkIfSdkIsSupported(sdkVersion, platform) {
     const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
     if (!isSupported) {
       const storeName = platform === 'ios' ? 'Apple App Store' : 'Google Play Store';

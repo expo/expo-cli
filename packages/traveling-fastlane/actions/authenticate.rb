@@ -1,12 +1,11 @@
-$LOAD_PATH.unshift File.expand_path(__dir__, __FILE__)
-
-require 'funcs'
 require 'spaceship'
 require 'json'
+require_relative 'funcs'
 
-$appleId, $password = ARGV[0].gsub(/\s+/m, ' ').strip.split(" ")
+$appleId, $password = ARGV
+$result = nil
 
-json_reply = with_captured_stderr{
+with_captured_stderr{
   begin
     account = Spaceship::Portal.login($appleId, $password)
 
@@ -24,24 +23,24 @@ json_reply = with_captured_stderr{
     cookie_yaml = cookies.to_yaml
     # copied from spaceship/lib/spaceship/spaceauth_runner.rb STOP
 
-    $stderr.puts (JSON.generate({
+    $result = JSON.generate({
       result: 'success',
       teams: account.teams,
       fastlaneSession: cookie_yaml
-    }))
+    })
   rescue Spaceship::Client::InvalidUserCredentialsError => invalid_cred
-    $stderr.puts (JSON.generate({
-      result:'failure',
-      reason:'Invalid credentials',
-      rawDump:invalid_cred.message
-    }))
+    $result = JSON.generate({
+      result: 'failure',
+      reason: 'Invalid credentials',
+      rawDump: invalid_cred.message
+    })
   rescue Exception => e
-    $stderr.puts (JSON.generate({
-      result:'failure',
-      reason:'Unknown reason',
-      rawDump:e.message
-    }))
+    $result = JSON.generate({
+      result: 'failure',
+      reason: 'Unknown reason',
+      rawDump: e.message
+    })
   end
 }
 
-$stderr.puts json_reply
+$stderr.puts $result

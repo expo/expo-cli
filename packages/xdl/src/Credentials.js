@@ -41,12 +41,15 @@ export type CredentialMetadata = {
   platform: string,
 };
 
-export type CertObject = {
-  userCredentialId: number,
-  certId: string,
+export type CredObject = {
+  name: string,
+  value: {
+    userCredentialsId?: string,
+    serialNumber?: string,
+  },
 };
 
-export type CertsList = Array<CertObject>;
+export type CredsList = Array<CredObject>;
 
 export async function credentialsExistForPlatformAsync(
   metadata: CredentialMetadata
@@ -90,11 +93,12 @@ async function fetchCredentials(
 export async function updateCredentialsForPlatform(
   platform: string,
   newCredentials: Credentials,
+  userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
-  // this doesn't go through the mac rpc, no request id needed
   const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
     credentials: newCredentials,
+    userCredentialsIds,
     platform,
     ...metadata,
   });
@@ -122,27 +126,66 @@ export async function removeCredentialsForPlatform(
 export async function getExistingDistCerts(
   username: string,
   appleTeamId: string
-): Promise<?CertsList> {
-  const { err, certs } = await Api.callMethodAsync('getExistingDistCerts', [], 'post', {
+): Promise<?CredsList> {
+  const distCerts = await getExistingUserCredentials(username, appleTeamId, 'dist-cert');
+  return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }) => {
+    const serialNumber = IosCodeSigning.findP12CertSerialNumber(certP12, certPassword);
+    let name = `Serial number: ${serialNumber}`;
+    if (certId) {
+      name = `${name}, Certificate ID: ${certId}`;
+    }
+    if (usedByApps) {
+      name = `Used in apps: ${usedByApps.join(', ')} (${name})`;
+    }
+    return {
+      value: {
+        distCertSerialNumber: serialNumber,
+        userCredentialsId: String(userCredentialsId),
+      },
+      name,
+    };
+  });
+}
+
+export async function getExistingPushKeys(
+  username: string,
+  appleTeamId: string
+): Promise<?CredsList> {
+  const pushKeys = await getExistingUserCredentials(username, appleTeamId, 'push-key');
+  return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId }) => {
+    let name = `Key ID: ${apnsKeyId}`;
+    if (usedByApps) {
+      name = `Used in apps: ${usedByApps.join(', ')} (${name})`;
+    }
+    return {
+      value: {
+        userCredentialsId,
+      },
+      name,
+    };
+  });
+}
+
+async function getExistingUserCredentials(
+  username: string,
+  appleTeamId: string,
+  type: string
+): Promise<?CredsList> {
+  const { err, certs } = await Api.callMethodAsync('getExistingUserCredentials', [], 'post', {
     username,
     appleTeamId,
+    type,
   });
 
   if (err) {
     throw new Error('Error getting existing distribution certificates.');
-  }
-
-  return certs.map(({ usedByApps, certP12, certPassword, ...rest }) => {
-    const serialNumber =
-      certP12 !== undefined && certPassword !== undefined
-        ? IosCodeSigning.findP12CertSerialNumber(certP12, certPassword)
-        : null;
-    return {
+  } else {
+    return certs.map(({ usedByApps, userCredentialsId, ...rest }) => ({
       usedByApps: usedByApps && usedByApps.split(';'),
-      serialNumber,
+      userCredentialsId: String(userCredentialsId),
       ...rest,
-    };
-  });
+    }));
+  }
 }
 
 export async function backupExistingAndroidCredentials({

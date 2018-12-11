@@ -17,8 +17,7 @@ const SERVICE_ACCOUNT_JSON_QUESTION = {
   type: 'input',
   validate: function validate(path) {
     const done = this.async();
-    fs
-      .pathExists(path)
+    fs.pathExists(path)
       .then(exists => {
         if (exists) {
           done(null, true);
@@ -67,6 +66,6 @@ export default class AndroidUploader extends BaseUploader {
     const { fastlane } = this;
     const { key, track } = platformData;
     const { package: androidPackage } = this._exp.android;
-    await runFastlaneAsync(fastlane.supply_android, [path, androidPackage, key, track], {}, true);
+    await runFastlaneAsync(fastlane.supplyAndroid, [path, androidPackage, key, track], {}, true);
   }
 }

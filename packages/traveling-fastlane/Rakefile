@@ -3,20 +3,20 @@ require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
 VERSION = "1.6.2"
-TRAVELING_RUBY_VERSION = "20150715-2.2.2"
+TRAVELING_RUBY_VERSION = "20150715-2.2.0"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
 
 # Be sure to add the name of a script here when you add it to actions
 SCRIPTS = [
-  'fetch_cert',
-  'fetch_push_cert',
-  'fetch_new_provisioning_profile',
-  'app_management',
-  'validate_apple_credentials',
   'funcs',
   'preload',
   'app_produce',
+  'authenticate',
+  'ensure_app_exists',
+  'manage_dist_certs',
+  'manage_provisioning_profiles',
+  'manage_push_keys',
   'pilot_upload',
   'supply_android',
 ]
@@ -64,6 +64,7 @@ namespace :package do
     sh "rm -rf packaging/tmp"
     sh "rm -f packaging/vendor/*/*/cache/*"
     sh "rm -rf packaging/vendor/ruby/*/extensions"
+
     sh "find packaging/vendor/ruby/*/gems -name '*.so' | xargs rm -f"
     sh "find packaging/vendor/ruby/*/gems -name '*.bundle' | xargs rm -f"
     sh "find packaging/vendor/ruby/*/gems -name '*.o' | xargs rm -f"
@@ -138,10 +139,10 @@ def create_package target
 
   if target == "osx"
     sh "cp -R #{PACKAGE_NAME}-#{VERSION}-osx publishing/darwin"
-    sh "cd publishing/darwin; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
+    # sh "cd publishing/darwin; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
   else
     sh "cp -R #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 publishing/linux"
-    sh "cd publishing/linux; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
+    # sh "cd publishing/linux; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
   end
 end
 

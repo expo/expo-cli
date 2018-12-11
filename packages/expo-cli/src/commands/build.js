@@ -4,7 +4,7 @@
 
 import { UrlUtils } from 'xdl';
 import BaseBuilder from './build/BaseBuilder';
-import IOSBuilder from './build/IOSBuilder';
+import IOSBuilder from './build/ios/IOSBuilder';
 import AndroidBuilder from './build/AndroidBuilder';
 import BuildError from './build/BuildError';
 import log from '../log';
@@ -14,36 +14,35 @@ export default (program: any) => {
   program
     .command('build:ios [project-dir]')
     .alias('bi')
-    .option('-c, --clear-credentials', 'Clear credentials stored on expo servers')
+    .option('-c, --clear-credentials', 'Clear all credentials stored on Expo servers.')
+    .option('--clear-dist-cert', 'Remove Distribution Certificate stored on Expo servers.')
+    .option('--clear-push-key', 'Remove Push Notifications Key stored on Expo servers.')
     .option(
-      '--clear-app-credentials',
-      'Remove app related credentials stored on expo servers (iOS)'
+      '--clear-push-certificate',
+      'Remove Push Notifications Certificate stored on Expo servers (DEPRECATED).'
     )
-    .option('--clear-dist-cert', 'Remove distribution cert stored on expo servers (iOS)')
-    .option('-e, --apple-enterprise-account', 'Run as Apple Enterprise account')
+    .option('--clear-provisioning-profile', 'Remove Provisioning Profile stored on Expo servers.')
+    .option(
+      '-r --revoke-credentials',
+      'Revoke credentials on developer.apple.com, select appropriate using --clear-* options.'
+    )
     .option(
       '--apple-id <login>',
-      'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable)'
+      'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
     )
     .option(
-      '--revoke-apple-dist-certs',
-      'Revoke distribution certs on developer.apple.com before attempting to make new certs, must use with -c'
+      '-t --type <build>',
+      'Type of build: [archive|simulator].',
+      /^(archive|simulator)$/i,
+      'archive'
     )
-    .option(
-      '--revoke-apple-push-certs',
-      'Revoke push certs on developer.apple.com before attempting to make new certs, must use with -c'
-    )
-    .option(
-      '--revoke-apple-provisioning-profile',
-      'Revoke provisioning profile on developer.apple.com, must use with -c'
-    )
-    .option('-t --type <build>', 'Type of build: [archive|simulator].', /^(archive|simulator)$/i)
     .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
     .option('--no-publish', 'Disable automatic publishing before building.')
-    .option('--no-wait', 'Exit immediately after triggering build.')
+    .option('--no-wait', 'Exit immediately after scheduling build.')
     .option('--team-id <apple-teamId>', 'Apple Team ID.')
     .option('--dist-p12-path <dist.p12>', 'Path to your Distribution Certificate P12.')
-    .option('--push-p12-path <push.p12>', 'Path to your Push Notification Certificate P12.')
+    .option('--push-id <push-id>', 'Push Key ID.')
+    .option('--push-p8-path <push.p12>', 'Path to your Push Key P8.')
     .option('--provisioning-profile-path <.mobileprovision>', 'Path to your Provisioning Profile.')
     .option(
       '--public-url <url>',

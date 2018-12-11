@@ -11,6 +11,7 @@ import log from '../../log';
 
 import BaseBuilder from './BaseBuilder';
 import prompt from '../../prompt';
+import * as utils from './utils';
 
 export default class AndroidBuilder extends BaseBuilder {
   async run(options) {
@@ -216,7 +217,7 @@ export default class AndroidBuilder extends BaseBuilder {
     } = publicUrl
       ? await Exp.getThirdPartyInfoAsync(publicUrl)
       : await Exp.getPublishInfoAsync(this.projectDir);
-    await this.checkIfSdkIsSupported(sdkVersion, 'android');
+    await utils.checkIfSdkIsSupported(sdkVersion, 'android');
     return sdkVersion;
   }
 }
