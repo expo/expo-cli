@@ -178,7 +178,7 @@ async function _renderPodfileFromTemplateAsync(
   let reactNativeDependencyPath;
   const detachableUniversalModules = Modules.getDetachableModulesForPlatformAndSdkVersion(
     'ios',
-    sdkVersion
+    context.data.shellAppSdkVersion || sdkVersion
   );
   if (context.type === 'user') {
     invariant(iosClientVersion, `The iOS client version must be specified`);
