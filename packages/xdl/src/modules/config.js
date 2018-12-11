@@ -146,6 +146,7 @@ const expoSdkUniversalModules = [
     podName: 'EXPaymentsStripe',
     libName: 'expo-payments-stripe',
     sdkVersions: '>=30.0.0',
+    detachable: false,
     config: {
       ios: {
         includeInExpoClient: false,
