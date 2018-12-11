@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, ProjectUtils, Versions } from 'xdl';
+import { Project, ProjectUtils } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import simpleSpinner from '@expo/simple-spinner';
@@ -67,9 +67,8 @@ export default class BaseBuilder {
   async checkStatus({
     platform = 'all',
     current = true,
-    publicUrl,
     sdkVersion,
-  }: { platform: string, current: boolean, publicUrl?: string } = {}): Promise<void> {
+  }: { platform: string, current: boolean } = {}): Promise<void> {
     await this._checkProjectConfig();
 
     log('Checking if current build exists...\n');
@@ -78,7 +77,6 @@ export default class BaseBuilder {
       mode: 'status',
       platform,
       current,
-      ...(publicUrl ? { publicUrl } : {}),
       sdkVersion,
     });
 
@@ -286,18 +284,6 @@ ${job.id}
       log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`);
     } else {
       log('Alternatively, run `exp build:status` to monitor it from the command line.');
-    }
-  }
-
-  async checkIfSdkIsSupported(sdkVersion: string, platform: string) {
-    const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
-    if (!isSupported) {
-      const storeName = platform === 'ios' ? 'Apple App Store' : 'Google Play Store';
-      log.error(
-        chalk.red(
-          `Unsupported SDK version: our app builders don't have support for ${sdkVersion} version yet. Submitting the app to the ${storeName} may result in an unexpected behaviour`
-        )
-      );
     }
   }
 }

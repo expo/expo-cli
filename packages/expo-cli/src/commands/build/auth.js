@@ -100,13 +100,13 @@ export function produceProvisionProfile(
   ]);
 }
 
-export function producePushCerts(credentials, { bundleIdentifier }, teamId, isEnterprise) {
+export function producePushKey(credentials, teamId, name = 'Expo Push Notifications Key') {
+  // TODO: zmien to bo to w sumie nie dziala
   return spawnAndCollectJSONOutputAsync(FASTLANE.fetch_push_cert, [
     credentials.appleId,
     credentials.password,
-    bundleIdentifier,
     teamId,
-    isEnterprise,
+    name,
   ]);
 }
 

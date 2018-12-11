@@ -339,16 +339,6 @@ function runAsync(programName) {
         }
       });
 
-    if (process.env.EXPO_DEBUG) {
-      glob
-        .sync('debug_commands/*.js', {
-          cwd: __dirname,
-        })
-        .forEach(file => {
-          require(`./${file}`)(program);
-        });
-    }
-
     let subCommand = process.argv[2];
     let argv = process.argv.filter(arg => {
       // Remove deprecated `--github` option here in order to fallback to password login/signup.

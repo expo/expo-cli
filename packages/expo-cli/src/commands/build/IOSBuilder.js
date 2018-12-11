@@ -18,21 +18,21 @@ import * as authFuncs from './auth';
 const nonEmptyInput = val => val !== '';
 
 const expertPrompt = `
-WARNING! In this mode, we won't be able to make sure your certificates,
-or provisioning profile are valid. Please double check that you're
-uploading valid files for your app otherwise you may encounter strange errors!
+WARNING! In this mode, we won't be able to make sure your distribution certificate,
+push notification key or provisioning profile are valid. Please double check that
+you're uploading valid files for your app otherwise you may encounter strange errors!
 
 Make sure you've created your app ID on the developer portal, that your app ID
 is in app.json as \`bundleIdentifier\`, and that the provisioning profile you
 upload matches that team ID and app ID.
 `;
 
-const produceAbsolutePath = p12Path => {
-  p12Path = untildify(p12Path);
-  if (!path.isAbsolute(p12Path)) {
-    p12Path = path.resolve(p12Path);
+const produceAbsolutePath = filePath => {
+  let result = untildify(filePath);
+  if (!path.isAbsolute(result)) {
+    result = path.resolve(result);
   }
-  return p12Path;
+  return result;
 };
 
 const runAsExpertQuestion = {
@@ -49,8 +49,8 @@ const runAsExpertQuestion = {
 };
 
 const OBLIGATORY_CREDS_KEYS = {
-  pushP12: 'pushCert',
-  pushPassword: 'pushCert',
+  apnsKeyP8: 'pushKey',
+  apnsKeyId: 'pushKey',
   provisioningProfile: 'provisioningProfile',
   teamId: 'teamId',
 };
@@ -79,7 +79,7 @@ const whatToOverride = [
   {
     type: 'list',
     name: 'pushCert',
-    message: 'Will you provide your own Push Certificate?',
+    message: 'Will you provide your own Push Notifications Key?',
     choices: OVERRIDE_CHOICES,
   },
 ];
@@ -92,7 +92,7 @@ const provisionProfilePath = {
   filter: produceAbsolutePath,
 };
 
-const sharedQuestions = [
+const distributionCertQuestions = [
   {
     type: 'input',
     name: 'pathToP12',
@@ -104,6 +104,22 @@ const sharedQuestions = [
     type: 'password',
     name: 'p12Password',
     message: 'P12 password:',
+    validate: password => password.length > 0,
+  },
+];
+
+const pushKeyQuestions = [
+  {
+    type: 'input',
+    name: 'pathToP8',
+    message: 'Path to P8 file:',
+    validate: authFuncs.doesFileProvidedExist.bind(null, true),
+    filter: produceAbsolutePath,
+  },
+  {
+    type: 'password',
+    name: 'keyId',
+    message: 'Apple Key ID:',
     validate: password => password.length > 0,
   },
 ];
@@ -258,7 +274,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     switch (choice) {
       case 'distCert': {
         log('Please provide your distribution certificate P12:');
-        const distCertValues = await prompt(sharedQuestions);
+        const distCertValues = await prompt(distributionCertQuestions);
         const certP12Buffer = await fs.readFile(distCertValues.pathToP12);
         const certPassword = distCertValues.p12Password;
         const distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
@@ -273,14 +289,14 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           }),
         };
       }
-      case 'pushCert': {
-        log('Please provide the path to your push notification cert P12');
-        const pushCertValues = await prompt(sharedQuestions);
+      case 'pushKey': {
+        log('Please provide the path to your push notification P8 key');
+        const pushKeyValues = await prompt(pushKeyQuestions);
         return {
           metadata: {},
           credentials: this._ensureObjectsHasOnlyStrings({
-            pushP12: (await fs.readFile(pushCertValues.pathToP12)).toString('base64'),
-            pushPassword: pushCertValues.p12Password,
+            apnsKeyP8: await fs.readFile(pushKeyValues.pathToP8),
+            apnsKeyId: pushKeyValues.keyId,
           }),
         };
       }
@@ -300,16 +316,15 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
   }
 
   _ensureObjectsHasOnlyStrings(obj) {
-    const result = {};
-    Object.keys(obj).forEach(k => {
+    return Object.keys(obj).reduce((acc, k) => {
       const isString = typeof obj[k] === 'string';
       if (isString) {
-        result[k] = obj[k];
+        acc[k] = obj[k];
       } else {
-        result[k] = JSON.stringify(obj[k]);
+        acc[k] = JSON.stringify(obj[k]);
       }
-    });
-    return result;
+      return acc;
+    }, {});
   }
 
   async _ensureAppExists(appleCreds, credsMetadata, teamId) {
@@ -366,17 +381,12 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           credentials: this._ensureObjectsHasOnlyStrings(produceCertAttempt),
         };
       }
-      case 'pushCert': {
-        const producePushCertsAttempt = await authFuncs.producePushCerts(
-          appleCreds,
-          credsMetadata,
-          teamId,
-          isEnterprise
-        );
-        this._throwIfFailureWithReasonDump(producePushCertsAttempt);
+      case 'pushKey': {
+        const producePushKeyAttempt = await authFuncs.producePushKey(appleCreds, teamId);
+        this._throwIfFailureWithReasonDump(producePushKeyAttempt);
         return {
           metadata: {},
-          credentials: this._ensureObjectsHasOnlyStrings(producePushCertsAttempt),
+          credentials: this._ensureObjectsHasOnlyStrings(producePushKeyAttempt),
         };
       }
       case 'provisioningProfile':
@@ -426,8 +436,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
 
     if (this.options.revokeApplePushCerts) {
-      log.warn('ATTENTION: Revoking your Apple Push Certificates is permanent');
-      await f('pushCert');
+      log.warn('ATTENTION: Revoking your Apple Push Notifications Key is permanent');
+      await f('pushKey');
     }
 
     if (this.options.revokeAppleProvisioningProfile) {

@@ -99,6 +99,7 @@ async function _callMethodAsync(
       options = { ...options, ...requestOptions };
     }
   }
+  console.log(headers);
   let response = await axios.request(options);
   if (!response) {
     throw new Error('Unexpected error: Request failed.');

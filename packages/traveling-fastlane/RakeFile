@@ -11,6 +11,7 @@ UNF_VERSION = '0.0.6'
 SCRIPTS = [
   'fetch_cert',
   'fetch_push_cert',
+  'fetch_push_key',
   'fetch_new_provisioning_profile',
   'app_management',
   'validate_apple_credentials',
@@ -64,6 +65,7 @@ namespace :package do
     sh "rm -rf packaging/tmp"
     sh "rm -f packaging/vendor/*/*/cache/*"
     sh "rm -rf packaging/vendor/ruby/*/extensions"
+
     sh "find packaging/vendor/ruby/*/gems -name '*.so' | xargs rm -f"
     sh "find packaging/vendor/ruby/*/gems -name '*.bundle' | xargs rm -f"
     sh "find packaging/vendor/ruby/*/gems -name '*.o' | xargs rm -f"

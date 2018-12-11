@@ -12,6 +12,7 @@ module.exports = () => {
     fetch_cert: p('fetch_cert'),
     fetch_new_provisioning_profile: p('fetch_new_provisioning_profile'),
     fetch_push_cert: p('fetch_push_cert'),
+    fetch_push_key: p('fetch_push_key'),
     validate_apple_certs: p('validate_apple_certs'),
     validate_apple_credentials: p('validate_apple_credentials'),
     validate_apple_push_certs: p('validate_apple_push_certs'),

@@ -4,7 +4,7 @@
 
 import { UrlUtils } from 'xdl';
 import BaseBuilder from './build/BaseBuilder';
-import IOSBuilder from './build/IOSBuilder';
+import IOSBuilder from './build/ios/IOSBuilder';
 import AndroidBuilder from './build/AndroidBuilder';
 import BuildError from './build/BuildError';
 import log from '../log';
