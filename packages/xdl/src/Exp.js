@@ -12,6 +12,7 @@ import pacote from 'pacote';
 import * as Analytics from './Analytics';
 import Api from './Api';
 import * as Binaries from './Binaries';
+import * as Detach from './detach/Detach';
 import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import Logger from './Logger';
@@ -49,7 +50,8 @@ export async function extractTemplateApp(
   templateSpec: string | object,
   name: string,
   projectRoot: string,
-  packageManager: 'yarn' | 'npm' = 'npm'
+  packageManager: 'yarn' | 'npm' = 'npm',
+  workflow: 'managed' | 'advanced'
 ) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
   await pacote.extract(templateSpec, projectRoot, {
@@ -103,7 +105,11 @@ export async function extractTemplateApp(
 
   await initGitRepo(projectRoot);
 
-  await installDependencies(projectRoot, packageManager);
+  if (workflow === 'advanced') {
+    await Detach.detachAsync(projectRoot, { packageManager });
+  } else {
+    await installDependencies(projectRoot, packageManager);
+  }
 
   return projectRoot;
 }

@@ -74,6 +74,20 @@ async function action(projectDir, options) {
     }));
   }
 
+  let workflow;
+  if (options.workflow) {
+    if (options.workflow === 'managed' || options.workflow === 'advanced') {
+      workflow = options.workflow;
+    } else {
+      throw new CommandError(
+        'BAD_ARGS',
+        `Invalid --workflow: '${options.workflow}'. Valid choices are: managed, advanced`
+      );
+    }
+  } else {
+    workflow = await promptForWorkflowAsync();
+  }
+
   let packageManager;
   if (options.yarn) {
     packageManager = 'yarn';
@@ -82,7 +96,14 @@ async function action(projectDir, options) {
   } else {
     packageManager = (await shouldUseYarnAsync()) ? 'yarn' : 'npm';
   }
-  let projectPath = await downloadAndExtractTemplate(templateSpec, parentDir, name, packageManager);
+
+  let projectPath = await downloadAndExtractTemplate(
+    templateSpec,
+    parentDir,
+    name,
+    packageManager,
+    workflow
+  );
   let cdPath = path.relative(process.cwd(), projectPath);
   if (cdPath.length > projectPath.length) {
     cdPath = projectPath;
@@ -96,8 +117,14 @@ async function action(projectDir, options) {
   log.nested(`  ${packageManager} start\n`);
 }
 
-async function downloadAndExtractTemplate(templateSpec, parentDir, name, packageManager) {
-  return Exp.extractTemplateApp(templateSpec, name, path.join(parentDir, name), packageManager);
+async function downloadAndExtractTemplate(templateSpec, parentDir, name, packageManager, workflow) {
+  return Exp.extractTemplateApp(
+    templateSpec,
+    name,
+    path.join(parentDir, name),
+    packageManager,
+    workflow
+  );
 }
 
 function validateName(parentDir, name) {
@@ -139,6 +166,40 @@ async function shouldUseYarnAsync() {
   }
 }
 
+async function promptForWorkflowAsync() {
+  let answer = await prompt({
+    type: 'list',
+    name: 'workflow',
+    message: 'Please choose which workflow to use:',
+    choices: [
+      {
+        value: 'managed',
+        name:
+          chalk.bold('managed') +
+          ' (default)' +
+          '\n' +
+          wordwrap(2, process.stdout.columns || 80)(
+            'Build your app with JavaScript with Expo APIs.'
+          ),
+        short: 'managed',
+      },
+
+      {
+        value: 'advanced',
+        name:
+          chalk.bold('advanced') +
+          ' (experimental 🚧)' +
+          '\n' +
+          wordwrap(2, process.stdout.columns || 80)(
+            'Build your app with JavaScript with Expo APIs and custom native modules.'
+          ),
+        short: 'advanced',
+      },
+    ],
+  });
+  return answer.workflow;
+}
+
 export default program => {
   program
     .command('init [project-dir]')
@@ -152,5 +213,6 @@ export default program => {
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
+    .option('--workflow [name]', 'The workflow to use.')
     .asyncAction(action);
 };
