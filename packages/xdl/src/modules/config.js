@@ -335,6 +335,11 @@ const expoSdkUniversalModules = [
     podName: 'EXTaskManagerInterface',
     libName: 'expo-task-manager-interface',
     sdkVersions: '>=32.0.0',
+    config: {
+      android: {
+        versionable: false,
+      },
+    },
   },
 
   // JS-only modules
