@@ -17,19 +17,13 @@ import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
 
-import {
-  isDirectory,
-  parseSdkMajorVersion,
-  rimrafDontThrow,
-  regexFileAsync,
-} from './ExponentTools';
+import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
 
 import * as AssetBundle from './AssetBundle';
 import * as IosPlist from './IosPlist';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
 import * as AndroidShellApp from './AndroidShellApp';
-import * as OldAndroidDetach from './OldAndroidDetach';
 
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';
@@ -106,9 +100,10 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     throw new Error(`${configName} is missing \`sdkVersion\``);
   }
 
-  let majorSdkVersion = parseSdkMajorVersion(exp.sdkVersion);
-  if (majorSdkVersion < 16) {
-    throw new Error(`${configName} must be updated to SDK 16.0.0 or newer to be detached.`);
+  if (!Versions.gteSdkVersion(exp, '24.0.0')) {
+    throw new Error(
+      `The app must be updated to SDK 24.0.0 or newer to be compatible with this tool.`
+    );
   }
 
   const versions = await Versions.versionsAsync();
@@ -217,18 +212,7 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
     let androidDirectory = path.join(expoDirectory, 'android');
     rimraf.sync(androidDirectory);
     fs.mkdirpSync(androidDirectory);
-    if (Versions.gteSdkVersion(exp, '24.0.0')) {
-      await detachAndroidAsync(context, sdkVersionConfig.androidExpoViewUrl);
-    } else {
-      await OldAndroidDetach.detachAndroidAsync(
-        projectRoot,
-        androidDirectory,
-        exp.sdkVersion,
-        experienceUrl,
-        exp,
-        sdkVersionConfig.androidExpoViewUrl
-      );
-    }
+    await detachAndroidAsync(context, sdkVersionConfig.androidExpoViewUrl);
     exp = AndroidShellApp.addDetachedConfigToExp(exp, context);
     exp.detach.androidExpoViewUrl = sdkVersionConfig.androidExpoViewUrl;
   }
@@ -503,14 +487,9 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
   if (args.platform === 'ios') {
     await prepareDetachedBuildIosAsync(projectDir, args);
   } else {
-    let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
-    let buildConstantsFileName = Versions.gteSdkVersion(exp, '24.0.0')
-      ? 'DetachBuildConstants.java'
-      : 'ExponentBuildConstants.java';
-
     let androidProjectDirectory = path.join(projectDir, 'android');
     let expoBuildConstantsMatches = await glob(
-      androidProjectDirectory + '/**/' + buildConstantsFileName
+      androidProjectDirectory + '/**/DetachBuildConstants.java'
     );
     if (expoBuildConstantsMatches && expoBuildConstantsMatches.length) {
       let expoBuildConstants = expoBuildConstantsMatches[0];
