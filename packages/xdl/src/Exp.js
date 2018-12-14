@@ -49,7 +49,6 @@ export async function determineEntryPointAsync(root: string) {
 
 export async function extractTemplateApp(
   templateSpec: string | object,
-  name: string,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
   workflow: 'managed' | 'advanced' = 'managed',
@@ -64,11 +63,7 @@ export async function extractTemplateApp(
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
-  let appJson = merge(
-    await appFile.readAsync(),
-    { expo: { name, slug: name } },
-    { expo: initialConfig }
-  );
+  let appJson = merge(await appFile.readAsync(), { expo: initialConfig });
   await appFile.writeAsync(appJson);
 
   let packageFile = new JsonFile(path.join(projectRoot, 'package.json'));

@@ -1,7 +1,9 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import { Exp } from 'xdl';
+import { Snippet } from 'enquirer';
 import semver from 'semver';
+import set from 'lodash/set';
 import spawnAsync from '@expo/spawn-async';
 import npmPackageArg from 'npm-package-arg';
 import wordwrap from 'wordwrap';
@@ -29,24 +31,18 @@ let _downloadIsSlowPrompt = false;
 
 async function action(projectDir, options) {
   let parentDir;
-  let name;
+  let dirName;
 
   if (projectDir) {
     let root = path.resolve(projectDir);
     parentDir = path.dirname(root);
-    name = path.basename(root);
-    let validationResult = validateName(parentDir, name);
+    dirName = path.basename(root);
+    let validationResult = validateName(parentDir, dirName);
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_DIR', validationResult);
     }
   } else {
     parentDir = process.cwd();
-    ({ name } = await prompt({
-      name: 'name',
-      message: 'Choose a project name:',
-      filter: name => name.trim(),
-      validate: name => validateName(parentDir, name),
-    }));
   }
 
   let templateSpec;
@@ -88,12 +84,7 @@ async function action(projectDir, options) {
     workflow = await promptForWorkflowAsync();
   }
 
-  let initialConfig;
-  if (workflow === 'advanced') {
-    initialConfig = await promptForAdvancedConfig();
-  } else {
-    initialConfig = {};
-  }
+  let initialConfig = await promptForInitialConfig(parentDir, dirName, workflow);
 
   let packageManager;
   if (options.yarn) {
@@ -107,7 +98,7 @@ async function action(projectDir, options) {
   let projectPath = await downloadAndExtractTemplate(
     templateSpec,
     parentDir,
-    name,
+    dirName,
     packageManager,
     workflow,
     initialConfig
@@ -128,15 +119,14 @@ async function action(projectDir, options) {
 async function downloadAndExtractTemplate(
   templateSpec,
   parentDir,
-  name,
+  dirName,
   packageManager,
   workflow,
   initialConfig
 ) {
   return Exp.extractTemplateApp(
     templateSpec,
-    name,
-    path.join(parentDir, name),
+    path.join(parentDir, dirName || initialConfig.slug),
     packageManager,
     workflow,
     initialConfig
@@ -147,9 +137,12 @@ function validateName(parentDir, name) {
   if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
     return 'The project name can only contain URL-friendly characters.';
   }
+  if (typeof name !== 'string' || name === '') {
+    return 'The project name can not be empty.';
+  }
   let dir = path.join(parentDir, name);
   if (!isNonExistentOrEmptyDir(dir)) {
-    return `The path "${dir}" already exists.\nPlease choose a different parent directory or project name.`;
+    return `The path "${dir}" already exists. Please choose a different parent directory or project name.`;
   }
   return true;
 }
@@ -216,26 +209,70 @@ async function promptForWorkflowAsync() {
   return answer.workflow;
 }
 
-async function promptForAdvancedConfig() {
-  return await prompt([
-    {
-      type: 'input',
-      name: 'android.package',
-      message: 'Choose the package name for your Android app:',
-      validate: value =>
-        /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value)
-          ? true
-          : "Invalid Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)",
+async function promptForInitialConfig(parentDir, dirName, workflow) {
+  let template = {
+    expo: {
+      name: '{{name}}',
+      slug: '{{slug}}',
     },
-    {
-      name: 'ios.bundleIdentifier',
-      message: 'Choose the bundle identifier for your iOS app:',
-      validate: value =>
-        /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value)
-          ? true
-          : "Invalid bundleIdentifier (must start with a letter and only alphanumeric characters, '.' and '-' are allowed).",
-    },
-  ]);
+  };
+
+  if (workflow === 'advanced') {
+    template.android = {
+      package: '{{android.package}}',
+    };
+    template.ios = {
+      bundleIdentifier: '{{ios.bundleIdentifier}}',
+    };
+  }
+
+  let { values } = await new Snippet({
+    name: 'expo',
+    message:
+      'Please enter a few initial configuration values.\n  Read more: https://docs.expo.io/versions/latest/workflow/configuration',
+    required: true,
+    fields: [
+      {
+        name: 'name',
+        message: 'The name of your app visible on the home screen',
+        filter: name => name.trim(),
+        required: true,
+      },
+      {
+        name: 'slug',
+        message: 'A URL friendly name for your app',
+        initial: dirName,
+        filter: name => name.trim(),
+        validate: name => validateName(parentDir, name),
+        required: true,
+      },
+      {
+        name: 'android.package',
+        message: 'The package name for your Android app',
+        validate: value =>
+          /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value)
+            ? true
+            : "Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.",
+        required: true,
+      },
+      {
+        name: 'ios.bundleIdentifier',
+        message: 'The bundle identifier for your iOS app',
+        validate: value =>
+          /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value)
+            ? true
+            : "Must start with a letter and only alphanumeric characters, '.' and '-' are allowed.",
+        required: true,
+      },
+    ],
+    initial: 'slug',
+    template: JSON.stringify(template, null, 2),
+  }).run();
+  let config = {};
+  for (let key of Object.keys(values)) {
+    set(config, key, values[key]);
+  }
+  return config;
 }
 
 export default program => {
