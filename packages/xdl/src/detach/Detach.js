@@ -49,6 +49,23 @@ async function yesnoAsync(message) {
 }
 
 export async function detachAsync(projectRoot: string, options: any = {}) {
+  let originalLogger = logger.loggerObj;
+  logger.configure({
+    trace: options.verbose ? console.trace.bind(console) : () => {},
+    debug: options.verbose ? console.debug.bind(console) : () => {},
+    info: options.verbose ? console.info.bind(console) : () => {},
+    warn: console.warn.bind(console),
+    error: console.error.bind(console),
+    fatal: console.error.bind(console),
+  });
+  try {
+    return await _detachAsync(projectRoot, options);
+  } finally {
+    logger.configure(originalLogger);
+  }
+}
+
+async function _detachAsync(projectRoot, options) {
   let user = await UserManager.ensureLoggedInAsync();
 
   if (!user) {
