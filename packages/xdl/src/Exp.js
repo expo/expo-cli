@@ -3,6 +3,7 @@
  */
 
 import fs from 'fs-extra';
+import merge from 'lodash/merge';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
@@ -51,7 +52,8 @@ export async function extractTemplateApp(
   name: string,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
-  workflow: 'managed' | 'advanced'
+  workflow: 'managed' | 'advanced' = 'managed',
+  initialConfig = {}
 ) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
   await pacote.extract(templateSpec, projectRoot, {
@@ -62,11 +64,11 @@ export async function extractTemplateApp(
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
-  let appJson = await appFile.readAsync();
-  appJson = {
-    ...appJson,
-    expo: { ...appJson.expo, name, slug: name },
-  };
+  let appJson = merge(
+    await appFile.readAsync(),
+    { expo: { name, slug: name } },
+    { expo: initialConfig }
+  );
   await appFile.writeAsync(appJson);
 
   let packageFile = new JsonFile(path.join(projectRoot, 'package.json'));

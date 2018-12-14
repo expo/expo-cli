@@ -88,6 +88,13 @@ async function action(projectDir, options) {
     workflow = await promptForWorkflowAsync();
   }
 
+  let initialConfig;
+  if (workflow === 'advanced') {
+    initialConfig = await promptForAdvancedConfig();
+  } else {
+    initialConfig = {};
+  }
+
   let packageManager;
   if (options.yarn) {
     packageManager = 'yarn';
@@ -102,7 +109,8 @@ async function action(projectDir, options) {
     parentDir,
     name,
     packageManager,
-    workflow
+    workflow,
+    initialConfig
   );
   let cdPath = path.relative(process.cwd(), projectPath);
   if (cdPath.length > projectPath.length) {
@@ -117,13 +125,21 @@ async function action(projectDir, options) {
   log.nested(`  ${packageManager} start\n`);
 }
 
-async function downloadAndExtractTemplate(templateSpec, parentDir, name, packageManager, workflow) {
+async function downloadAndExtractTemplate(
+  templateSpec,
+  parentDir,
+  name,
+  packageManager,
+  workflow,
+  initialConfig
+) {
   return Exp.extractTemplateApp(
     templateSpec,
     name,
     path.join(parentDir, name),
     packageManager,
-    workflow
+    workflow,
+    initialConfig
   );
 }
 
@@ -170,7 +186,7 @@ async function promptForWorkflowAsync() {
   let answer = await prompt({
     type: 'list',
     name: 'workflow',
-    message: 'Please choose which workflow to use:',
+    message: 'Choose which workflow to use:',
     choices: [
       {
         value: 'managed',
@@ -198,6 +214,28 @@ async function promptForWorkflowAsync() {
     ],
   });
   return answer.workflow;
+}
+
+async function promptForAdvancedConfig() {
+  return await prompt([
+    {
+      type: 'input',
+      name: 'android.package',
+      message: 'Choose the package name for your Android app:',
+      validate: value =>
+        /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value)
+          ? true
+          : "Invalid Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)",
+    },
+    {
+      name: 'ios.bundleIdentifier',
+      message: 'Choose the bundle identifier for your iOS app:',
+      validate: value =>
+        /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value)
+          ? true
+          : "Invalid bundleIdentifier (must start with a letter and only alphanumeric characters, '.' and '-' are allowed).",
+    },
+  ]);
 }
 
 export default program => {
