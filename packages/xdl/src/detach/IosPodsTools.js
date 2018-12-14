@@ -103,96 +103,69 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
  */
 function _renderUnversionedReactNativeDependency(options, sdkVersion) {
   let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
-  if (sdkMajorVersion < 21) {
-    return indentString(
-      `
+  const glogLibraryName = sdkMajorVersion < 26 ? 'GLog' : 'glog';
+  return indentString(
+    `
 ${_renderUnversionedReactDependency(options, sdkVersion)}
-${_renderUnversionedYogaDependency(options, sdkVersion)}
+${_renderUnversionedYogaDependency(options)}
+${_renderUnversionedThirdPartyDependency(
+      'DoubleConversion',
+      path.join('third-party-podspecs', 'DoubleConversion.podspec'),
+      options
+    )}
+${_renderUnversionedThirdPartyDependency(
+      'Folly',
+      path.join('third-party-podspecs', 'Folly.podspec'),
+      options
+    )}
+${_renderUnversionedThirdPartyDependency(
+      glogLibraryName,
+      path.join('third-party-podspecs', `${glogLibraryName}.podspec`),
+      options
+    )}
 `,
-      2
-    );
-  } else {
-    const glogLibraryName = sdkMajorVersion < 26 ? 'GLog' : 'glog';
-    return indentString(
-      `
-${_renderUnversionedReactDependency(options, sdkVersion)}
-${_renderUnversionedYogaDependency(options, sdkVersion)}
-${_renderUnversionedThirdPartyDependency(
-        'DoubleConversion',
-        path.join('third-party-podspecs', 'DoubleConversion.podspec'),
-        options
-      )}
-${_renderUnversionedThirdPartyDependency(
-        'Folly',
-        path.join('third-party-podspecs', 'Folly.podspec'),
-        options
-      )}
-${_renderUnversionedThirdPartyDependency(
-        glogLibraryName,
-        path.join('third-party-podspecs', `${glogLibraryName}.podspec`),
-        options
-      )}
-`,
-      2
-    );
-  }
+    2
+  );
 }
 
 function _renderUnversionedReactDependency(options, sdkVersion) {
-  let attributes;
-  if (options.reactNativePath) {
-    attributes = {
-      path: options.reactNativePath,
-      inhibit_warnings: true,
-    };
-  } else {
+  if (!options.reactNativePath) {
     throw new Error(`Unsupported options for RN dependency: ${options}`);
   }
-
-  attributes.subspecs = [
-    'Core',
-    'ART',
-    'RCTActionSheet',
-    'RCTAnimation',
-    'RCTCameraRoll',
-    'RCTGeolocation',
-    'RCTImage',
-    'RCTNetwork',
-    'RCTText',
-    'RCTVibration',
-    'RCTWebSocket',
-  ];
-
-  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
-  if (!(sdkMajorVersion < 16)) {
-    attributes.subspecs.push('DevSupport');
-  }
-  if (!(sdkMajorVersion < 21)) {
-    attributes.subspecs.push('CxxBridge');
-  } else if (!(sdkMajorVersion < 18)) {
-    attributes.subspecs.push('BatchedBridge');
-  }
-
+  let attributes = {
+    path: options.reactNativePath,
+    inhibit_warnings: true,
+    subspecs: [
+      'Core',
+      'ART',
+      'RCTActionSheet',
+      'RCTAnimation',
+      'RCTCameraRoll',
+      'RCTGeolocation',
+      'RCTImage',
+      'RCTNetwork',
+      'RCTText',
+      'RCTVibration',
+      'RCTWebSocket',
+      'DevSupport',
+      'CxxBridge',
+    ],
+  };
   return `pod 'React',
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 }
 
-function _renderUnversionedYogaDependency(options, sdkVersion) {
+function _renderUnversionedYogaDependency(options) {
   let attributes;
-  let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
   if (options.reactNativePath) {
     attributes = {
-      path: path.join(
-        options.reactNativePath,
-        'ReactCommon',
-        sdkMajorVersion < 22 ? 'Yoga' : 'yoga'
-      ),
+      path: path.join(options.reactNativePath, 'ReactCommon', 'yoga'),
       inhibit_warnings: true,
     };
   } else {
     throw new Error(`Unsupported options for Yoga dependency: ${options}`);
   }
-  return `pod '${sdkMajorVersion < 22 ? 'Yoga' : 'yoga'}',
+  return `pod 'yoga',
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 }
 
