@@ -238,7 +238,11 @@ export async function copyInitialShellAppFilesAsync(
       await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
     } catch (e) {
       // android.iml is only available locally, not on the builders, so don't crash when this happens
-      initialCopyLogger.warn(`Warning: Could not copy ${fileName} to shell app directory.`);
+      if (e.code === 'ENOENT') {
+        // Some files are not included in all ExpoKit versions, so this error can be ignored.
+      } else {
+        throw new Error(`Could not copy ${fileName} to shell app directory: ${e.message}`);
+      }
     }
   };
 
