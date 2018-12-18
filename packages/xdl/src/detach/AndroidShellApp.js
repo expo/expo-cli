@@ -384,7 +384,7 @@ export async function runShellAppModificationsAsync(
   const isDetached = ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32 || isRunningInUserContext;
 
   if (!context.data.privateConfig) {
-    fnLogger.warn('Warning: No config file specified.');
+    fnLogger.info('No config file specified.');
   }
 
   let fullManifestUrl = url.replace('exp://', 'https://');
