@@ -1,3 +1,6 @@
+<!-- The Expo team will be less responsive to issues during the holiday season through New Year's. For dedicated help, as always we recommend working with consultants or an agency such as the ones here depending on their holiday availability: https://expo.io/consultants. -->
+
+
 # READ THIS FIRST, PLEASE!
 
 We're looking to keep questions on our forums and bug reports on the GitHub repo -- please choose whichever you feel is more appropriate for your issue:
