@@ -7,6 +7,7 @@ import fs from 'fs-extra';
 import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 import semver from 'semver';
+import probeImageSize from 'probe-image-size';
 
 import * as Analytics from './Analytics';
 import * as Binaries from './Binaries';
@@ -327,5 +328,92 @@ async function adbReverseRemove(port: number) {
     // Don't send this to warn because we call this preemptively sometimes
     Logger.global.debug(`Couldn't adb reverse remove: ${e.message}`);
     return false;
+  }
+}
+
+const splashScreenDPIConstraints = [
+  {
+    dpi: 'mdpi',
+    sizeMultiplier: 1,
+  },
+  {
+    dpi: 'hdpi',
+    sizeMultiplier: 1.5,
+  },
+  {
+    dpi: 'xhdpi',
+    sizeMultiplier: 2,
+  },
+  {
+    dpi: 'xxhdpi',
+    sizeMultiplier: 3,
+  },
+  {
+    dpi: 'xxxhdpi',
+    sizeMultiplier: 4,
+  },
+];
+
+async function checkAssetImageSize(
+  projectDir: string,
+  relativePathFromManifest: string
+): Promise<{ width: number, height: number }> {
+  const imagePath = path.resolve(projectDir, relativePathFromManifest);
+  const readStream = fs.createReadStream(imagePath);
+  const { width, height } = await probeImageSize(readStream);
+  readStream.destroy();
+  return { width, height };
+}
+
+export async function checkSplashScreenImages(projectDir: string) {
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  const splashScreenMode = _.get('android.splash.resizeMode') || _.get(exp, 'splash.resizeMode');
+  if (splashScreenMode === 'contain') {
+    return;
+  }
+
+  const generalSplashImageRelativePath = _.get(exp, 'splash.image');
+  const {
+    width: generalSplashImageWidth,
+    height: generalSplashImageHeight,
+  } = await checkAssetImageSize(projectDir, generalSplashImageRelativePath);
+
+  const androidSplash = _.get(exp, 'android.splash');
+  const androidSplashImages = [];
+  for (const { dpi, sizeMultiplier } of splashScreenDPIConstraints) {
+    const imageRelativePath = _.get(androidSplash, dpi);
+    if (imageRelativePath) {
+      const { width, height } = await checkAssetImageSize(projectDir, imageRelativePath);
+      const expectedWidth = sizeMultiplier * generalSplashImageWidth;
+      const expectedHeight = sizeMultiplier * generalSplashImageHeight;
+      androidSplashImages.push({
+        dpi,
+        width,
+        height,
+        expectedWidth,
+        expectedHeight,
+        sizeMatches: width === expectedWidth && height === expectedHeight,
+      });
+    }
+  }
+
+  if (androidSplashImages.length === 0) {
+    Logger.global
+      .warn(`Splash resizeMode is set to 'cover', but you haven't provided any images for different DPIs.
+Be aware that your splash image will be used as xxxhdpi asset and it's ACTUAL SIZE WOULD BE DIFFERENT depending on device's DPI.
+See https://docs.expo.io/versions/latest/guides/splash-screens.html#differences-between-environments-android for more information`);
+    return;
+  }
+
+  if (_.some(androidSplashImages, ({ sizeMatches }) => !sizeMatches)) {
+    Logger.global
+      .warn(`Splash resizeMode is set to 'cover' and you've provided different images for different DPIs,
+but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSplashImages
+      .map(
+        ({ dpi, width, height, expectedWidth, expectedHeight }) =>
+          `${dpi}: ${width}x${height} (${expectedWidth}x${expectedHeight})`
+      )
+      .join(', ')}
+See https://docs.expo.io/versions/latest/guides/splash-screens.html#differences-between-environments-android for more information`);
   }
 }

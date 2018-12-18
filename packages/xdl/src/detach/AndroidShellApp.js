@@ -152,8 +152,8 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
   // ]
   let basePath = path.join(shellPath, 'app', 'src', 'main', 'res');
   if (_.get(manifest, 'android.splash')) {
-    var splash = _.get(manifest, 'android.splash');
-    return _.reduce(
+    const splash = _.get(manifest, 'android.splash');
+    const results = _.reduce(
       imageKeys,
       function(acc, imageKey) {
         let url = getRemoteOrLocalUrl(splash, imageKey, isDetached);
@@ -168,6 +168,11 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
       },
       []
     );
+
+    // No splash screen images declared in 'android.splash' configuration, proceed to general one
+    if (results.length !== 0) {
+      return results;
+    }
   }
 
   let url = getRemoteOrLocalUrl(manifest, 'splash.image', isDetached);
@@ -175,7 +180,7 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
     return [
       {
         url,
-        path: path.join(basePath, 'drawable-xxxhdpi', 'shell_launch_background_image.png'),
+        path: path.join(basePath, 'drawable-mdpi', 'shell_launch_background_image.png'),
       },
     ];
   }
