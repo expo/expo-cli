@@ -890,14 +890,16 @@ export async function runShellAppModificationsAsync(
       fs.removeSync(filePath);
     });
 
-    _.forEach(backgroundImages, async image => {
-      if (isRunningInUserContext) {
-        // local file so just copy it
-        await fs.copy(image.url, image.path);
-      } else {
-        await saveUrlToPathAsync(image.url, image.path);
-      }
-    });
+    await Promise.all(
+      backgroundImages.map(async image => {
+        if (isRunningInUserContext) {
+          // local file so just copy it
+          await fs.copy(path.resolve(context.data.projectPath, image.url), image.path);
+        } else {
+          await saveUrlToPathAsync(image.url, image.path);
+        }
+      })
+    );
   }
 
   await AssetBundle.bundleAsync(
