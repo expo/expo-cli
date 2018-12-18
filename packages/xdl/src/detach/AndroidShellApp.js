@@ -758,11 +758,8 @@ export async function runShellAppModificationsAsync(
       if (s.includes('.')) {
         whitelist.push(s);
       } else {
-        permissions.forEach(identifier => {
-          if (identifier.split('.').pop() === s) {
-            whitelist.push(identifier);
-          }
-        });
+        // If shorthand form like `WRITE_CONTACTS` is provided, expand it to `android.permission.WRITE_CONTACTS`.
+        whitelist.push(`android.permission.${s}`);
       }
     });
 
@@ -773,6 +770,7 @@ export async function runShellAppModificationsAsync(
       'android.permission.CAMERA',
       'android.permission.MANAGE_DOCUMENTS',
       'android.permission.READ_CONTACTS',
+      'android.permission.WRITE_CONTACTS',
       'android.permission.READ_CALENDAR',
       'android.permission.WRITE_CALENDAR',
       'android.permission.READ_EXTERNAL_STORAGE',
