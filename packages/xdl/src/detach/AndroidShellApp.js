@@ -199,7 +199,7 @@ function getSplashScreenBackgroundColor(manifest) {
 }
 
 /*
-  if resizeMode is 'cover' we should show LoadingView:
+  if resizeMode is 'contain' we should show LoadingView:
   using an ImageView, unlike having a BitmapDrawable
   provides a fullscreen image without distortions
 */
@@ -208,8 +208,8 @@ function shouldShowLoadingView(manifest) {
     (manifest.android &&
       manifest.android.splash &&
       manifest.android.splash.resizeMode &&
-      manifest.android.splash.resizeMode === 'cover') ||
-    (manifest.splash && manifest.splash.resizeMode && manifest.splash.resizeMode === 'cover')
+      manifest.android.splash.resizeMode === 'contain') ||
+    (manifest.splash && manifest.splash.resizeMode && manifest.splash.resizeMode === 'contain')
   );
 }
 
@@ -570,6 +570,8 @@ export async function runShellAppModificationsAsync(
       )
     );
   }
+
+  // Handle 'contain' splashScreen mode by showing only background color and then actual splashScreen image inside AppLoadingView
   if (shouldShowLoadingView(manifest)) {
     await regexFileAsync(
       'SHOW_LOADING_VIEW_IN_SHELL_APP = false',
@@ -587,7 +589,15 @@ export async function runShellAppModificationsAsync(
         'AppConstants.java'
       )
     );
+
+    // show only background color if LoadingView will appear
+    await regexFileAsync(
+      /<item>.*<\/item>/,
+      '',
+      path.join(shellPath, 'app', 'src', 'main', 'res', 'drawable', 'splash_background.xml')
+    );
   }
+
   // In SDK32 this field got removed from AppConstants
   if (parseSdkMajorVersion(sdkVersion) < 32 && isRunningInUserContext) {
     await regexFileAsync(
@@ -639,15 +649,6 @@ export async function runShellAppModificationsAsync(
     `"splashBackground">${splashBackgroundColor}`,
     path.join(shellPath, 'app', 'src', 'main', 'res', 'values', 'colors.xml')
   );
-
-  // show only background color if LoadingView will appear
-  if (shouldShowLoadingView(manifest)) {
-    await regexFileAsync(
-      /<item>.*<\/item>/,
-      '',
-      path.join(shellPath, 'app', 'src', 'main', 'res', 'drawable', 'splash_background.xml')
-    );
-  }
 
   // Change stripe schemes and add meta-data
   const randomID = uuid.v4();
