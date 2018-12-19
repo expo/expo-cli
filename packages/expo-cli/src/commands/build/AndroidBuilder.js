@@ -5,7 +5,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import untildify from 'untildify';
-import { Exp, Credentials } from 'xdl';
+import { Exp, Credentials, XDLError, ErrorCode } from 'xdl';
 import chalk from 'chalk';
 import log from '../../log';
 
@@ -212,11 +212,20 @@ export default class AndroidBuilder extends BaseBuilder {
   async validateProject(options) {
     const publicUrl = options.publicUrl;
     const {
-      args: { sdkVersion },
+      args: { sdkVersion, androidPackage },
     } = publicUrl
-      ? await Exp.getThirdPartyInfoAsync(publicUrl)
-      : await Exp.getPublishInfoAsync(this.projectDir);
+      ? await Exp.getThirdPartyInfoAsync(publicUrl, 'android')
+      : await Exp.getPublishInfoAsync(this.projectDir, 'android');
     await this.checkIfSdkIsSupported(sdkVersion, 'android');
+
+    if (!androidPackage) {
+      throw new XDLError(
+        ErrorCode.INVALID_OPTIONS,
+        `Your project must have an Android package set in app.json.
+See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
+      );
+    }
+
     return sdkVersion;
   }
 }

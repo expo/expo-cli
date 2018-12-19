@@ -8,12 +8,10 @@ import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
 import rimraf from 'rimraf';
 import pacote from 'pacote';
+import _ from 'lodash';
 
-import * as Analytics from './Analytics';
 import Api from './Api';
 import * as Binaries from './Binaries';
-import ErrorCode from './ErrorCode';
-import * as Extract from './Extract';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -21,7 +19,6 @@ import * as ThirdParty from './ThirdParty';
 import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
-import XDLError from './XDLError';
 import * as ProjectSettings from './ProjectSettings';
 import MessageCode from './MessageCode';
 
@@ -252,7 +249,10 @@ export async function getThirdPartyInfoAsync(publicUrl: string): Promise<Publish
 }
 
 // TODO: remove / change, no longer publishInfo, this is just used for signing
-export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
+export async function getPublishInfoAsync(
+  root: string,
+  platform: string = 'ios'
+): Promise<PublishInfo> {
   const user = await UserManager.ensureLoggedInAsync();
 
   if (!user) {
@@ -284,7 +284,11 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const remotePackageName = name;
   const remoteUsername = username;
   const remoteFullPackageName = `@${remoteUsername}/${remotePackageName}`;
-  const bundleIdentifierIOS = exp.ios ? exp.ios.bundleIdentifier : null;
+
+  const platformSpecific =
+    platform === 'android'
+      ? { androidPackage: _.get(exp, 'android.package', null) }
+      : { bundleIdentifierIOS: _.get(exp, 'ios.bundleIdentifier', null) };
 
   return {
     args: {
@@ -292,8 +296,8 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
       remoteUsername,
       remotePackageName,
       remoteFullPackageName,
-      bundleIdentifierIOS,
       sdkVersion,
+      ...platformSpecific,
     },
   };
 }
