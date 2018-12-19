@@ -58,7 +58,11 @@ export async function action(projectDir: string, options: Options = {}) {
     sdkVersion,
   });
 
-  if (!buildStatus.userHasBuiltAppBefore && !options.duringBuild) {
+  if (
+    buildStatus.userHasBuiltExperienceBefore &&
+    !buildStatus.userHasBuiltAppBefore &&
+    !options.duringBuild
+  ) {
     log.warn(
       'We noticed you did not build a standalone app with this SDK version and release channel before. ' +
         'Remember that OTA updates will not work with the app built with different SDK version and/or release channel. ' +
