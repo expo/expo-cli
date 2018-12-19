@@ -265,7 +265,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           certPassword
         );
         return {
-          metadata: distCertSerialNumber,
+          metadata: { distCertSerialNumber },
           credentials: this._ensureObjectsHasOnlyStrings({
             certP12: certP12Buffer.toString('base64'),
             certPassword,
@@ -359,9 +359,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
           produceCertAttempt.certPassword
         );
         return {
-          metadata: {
-            distCertSerialNumber,
-          },
+          metadata: { distCertSerialNumber },
           credentials: this._ensureObjectsHasOnlyStrings(produceCertAttempt),
         };
       }
