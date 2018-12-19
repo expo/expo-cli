@@ -103,6 +103,7 @@ export async function extractTemplateApp(
   await initGitRepo(projectRoot);
 
   if (workflow === 'advanced') {
+    Logger.global.info('Installing ExpoKit...');
     await Detach.detachAsync(projectRoot, { packageManager });
   } else {
     await installDependencies(projectRoot, packageManager);
