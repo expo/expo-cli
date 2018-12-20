@@ -3,6 +3,7 @@
  */
 
 import fs from 'fs-extra';
+import merge from 'lodash/merge';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
@@ -12,6 +13,7 @@ import pacote from 'pacote';
 import * as Analytics from './Analytics';
 import Api from './Api';
 import * as Binaries from './Binaries';
+import * as Detach from './detach/Detach';
 import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import Logger from './Logger';
@@ -47,9 +49,10 @@ export async function determineEntryPointAsync(root: string) {
 
 export async function extractTemplateApp(
   templateSpec: string | object,
-  name: string,
   projectRoot: string,
-  packageManager: 'yarn' | 'npm' = 'npm'
+  packageManager: 'yarn' | 'npm' = 'npm',
+  workflow: 'managed' | 'advanced' = 'managed',
+  initialConfig = {}
 ) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
   await pacote.extract(templateSpec, projectRoot, {
@@ -60,11 +63,7 @@ export async function extractTemplateApp(
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
-  let appJson = await appFile.readAsync();
-  appJson = {
-    ...appJson,
-    expo: { ...appJson.expo, name, slug: name },
-  };
+  let appJson = merge(await appFile.readAsync(), { expo: initialConfig });
   await appFile.writeAsync(appJson);
 
   let packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
@@ -103,7 +102,12 @@ export async function extractTemplateApp(
 
   await initGitRepo(projectRoot);
 
-  await installDependencies(projectRoot, packageManager);
+  if (workflow === 'advanced') {
+    Logger.global.info('Installing ExpoKit...');
+    await Detach.detachAsync(projectRoot, { packageManager });
+  } else {
+    await installDependencies(projectRoot, packageManager);
+  }
 
   return projectRoot;
 }

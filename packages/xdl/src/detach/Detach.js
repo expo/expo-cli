@@ -34,7 +34,7 @@ import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 import * as UrlUtils from '../UrlUtils';
 import * as Versions from '../Versions';
-import installPackageAsync from './installPackageAsync';
+import installPackagesAsync from './installPackagesAsync';
 import logger from './Logger';
 
 async function yesnoAsync(message) {
@@ -49,6 +49,23 @@ async function yesnoAsync(message) {
 }
 
 export async function detachAsync(projectRoot: string, options: any = {}) {
+  let originalLogger = logger.loggerObj;
+  logger.configure({
+    trace: options.verbose ? console.trace.bind(console) : () => {},
+    debug: options.verbose ? console.debug.bind(console) : () => {},
+    info: options.verbose ? console.info.bind(console) : () => {},
+    warn: console.warn.bind(console),
+    error: console.error.bind(console),
+    fatal: console.error.bind(console),
+  });
+  try {
+    return await _detachAsync(projectRoot, options);
+  } finally {
+    logger.configure(originalLogger);
+  }
+}
+
+async function _detachAsync(projectRoot, options) {
   let user = await UserManager.ensureLoggedInAsync();
 
   if (!user) {
@@ -223,36 +240,27 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
   const config = configNamespace ? { [configNamespace]: exp } : exp;
   await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 
-  let reactNativeVersion, expoReactNativeTag;
-  if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
-    expoReactNativeTag = sdkVersionConfig.expoReactNativeTag;
-    reactNativeVersion = `https://github.com/expo/react-native/archive/${expoReactNativeTag}.tar.gz`;
-  } else {
-    if (process.env.EXPO_VIEW_DIR) {
-      // ignore, using test directory
-    } else {
-      throw new Error(`Expo's React Native fork does not support this SDK version.`);
-    }
-  }
-
+  const packagesToInstall = [];
   const nodeModulesPath = exp.nodeModulesPath
     ? path.resolve(projectRoot, exp.nodeModulesPath)
     : projectRoot;
-  if (reactNativeVersion && pkg.dependencies['react-native'] !== reactNativeVersion) {
-    logger.info('Installing the Expo fork of react-native...');
-    try {
-      await installPackageAsync(nodeModulesPath, 'react-native', reactNativeVersion, {
-        silent: true,
-      });
-    } catch (e) {
-      logger.warn('Unable to install the Expo fork of react-native.');
-      logger.warn(`Please install react-native@${reactNativeVersion} to complete detaching.`);
-    }
+
+  let reactNativeVersion;
+  if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
+    packagesToInstall.push(
+      `react-native@https://github.com/expo/react-native/archive/${
+        sdkVersionConfig.expoReactNativeTag
+      }.tar.gz`
+    );
+  } else if (process.env.EXPO_VIEW_DIR) {
+    // ignore, using test directory
+  } else {
+    throw new Error(`Expo's React Native fork does not support this SDK version.`);
   }
 
   // Add expokitNpmPackage if it is supported. Was added before SDK 29.
   if (process.env.EXPO_VIEW_DIR) {
-    logger.info(`Installing 'expokit' package...`);
+    logger.info(`Linking 'expokit' package...`);
     await spawnAsync('yarn', ['link'], {
       cwd: path.join(process.env.EXPO_VIEW_DIR, 'expokit-npm-package'),
     });
@@ -260,22 +268,14 @@ export async function detachAsync(projectRoot: string, options: any = {}) {
       cwd: nodeModulesPath,
     });
   } else if (sdkVersionConfig.expokitNpmPackage) {
-    logger.info(`Installing 'expokit' package...`);
-    try {
-      let packageName = sdkVersionConfig.expokitNpmPackage.split('@')[0];
-      let packageVersion = sdkVersionConfig.expokitNpmPackage.split('@')[1];
-      await installPackageAsync(nodeModulesPath, packageName, packageVersion, {
-        silent: true,
-      });
-    } catch (e) {
-      logger.warn(`Unable to install ${sdkVersionConfig.expokitNpmPackage}.`);
-      logger.warn('Please install manually to complete detaching.');
-    }
+    packagesToInstall.push(sdkVersionConfig.expokitNpmPackage);
   }
 
-  logger.info(
-    'Finished detaching your project! Look in the `android` and `ios` directories for the respective native projects. Follow the ExpoKit guide at https://docs.expo.io/versions/latest/guides/expokit.html to get your project running.'
-  );
+  if (packagesToInstall.length) {
+    await installPackagesAsync(projectRoot, packagesToInstall, {
+      packageManager: options.packageManager,
+    });
+  }
   return true;
 }
 

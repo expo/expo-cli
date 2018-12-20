@@ -238,7 +238,11 @@ export async function copyInitialShellAppFilesAsync(
       await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
     } catch (e) {
       // android.iml is only available locally, not on the builders, so don't crash when this happens
-      initialCopyLogger.warn(`Warning: Could not copy ${fileName} to shell app directory.`);
+      if (e.code === 'ENOENT') {
+        // Some files are not included in all ExpoKit versions, so this error can be ignored.
+      } else {
+        throw new Error(`Could not copy ${fileName} to shell app directory: ${e.message}`);
+      }
     }
   };
 
@@ -380,7 +384,7 @@ export async function runShellAppModificationsAsync(
   const isDetached = ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32 || isRunningInUserContext;
 
   if (!context.data.privateConfig) {
-    fnLogger.warn('Warning: No config file specified.');
+    fnLogger.info('No config file specified.');
   }
 
   let fullManifestUrl = url.replace('exp://', 'https://');
@@ -886,14 +890,16 @@ export async function runShellAppModificationsAsync(
       fs.removeSync(filePath);
     });
 
-    _.forEach(backgroundImages, async image => {
-      if (isRunningInUserContext) {
-        // local file so just copy it
-        await fs.copy(image.url, image.path);
-      } else {
-        await saveUrlToPathAsync(image.url, image.path);
-      }
-    });
+    await Promise.all(
+      backgroundImages.map(async image => {
+        if (isRunningInUserContext) {
+          // local file so just copy it
+          await fs.copy(path.resolve(context.data.projectPath, image.url), image.path);
+        } else {
+          await saveUrlToPathAsync(image.url, image.path);
+        }
+      })
+    );
   }
 
   await AssetBundle.bundleAsync(
