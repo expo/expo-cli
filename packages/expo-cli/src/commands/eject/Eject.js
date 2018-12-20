@@ -5,6 +5,7 @@ import fse from 'fs-extra';
 import matchRequire from 'match-require';
 import path from 'path';
 import spawn from 'cross-spawn';
+import spawnAsync from '@expo/spawn-async';
 import { ProjectUtils, Detach, Versions } from 'xdl';
 import log from '../../log';
 
@@ -12,6 +13,15 @@ import prompt from '../../prompt';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 
 export async function ejectAsync(projectRoot: string, options) {
+  let workingTreeStatus = 'unknown';
+  try {
+    let result = await spawnAsync('git', ['status', '--porcelain']);
+    workingTreeStatus = result.stdout === '' ? 'clean' : 'dirty';
+  } catch (e) {
+    // Maybe git is not installed?
+    // Maybe this project is not using git?
+  }
+
   const filesWithExpo = await filesUsingExpoSdk(projectRoot);
   const usingExpo = filesWithExpo.length > 0;
 
@@ -23,58 +33,65 @@ export async function ejectAsync(projectRoot: string, options) {
 `;
 
     for (let filename of filesWithExpo) {
-      expoSdkWarning += `  ${chalk.cyan(filename)}\n`;
+      expoSdkWarning += `  ${chalk.cyan(path.relative(projectRoot, filename))}\n`;
     }
 
-    expoSdkWarning += `
-${chalk.yellow.bold(
-      'If you choose the "plain" React Native option below, these imports will stop working.'
-    )}`;
+    expoSdkWarning += chalk.bold(
+      'If you choose the "plain" React Native option below, these imports will stop working.\n'
+    );
   } else {
-    expoSdkWarning = `\
-We didn't find any uses of the Expo SDK in your project, so you should be fine to eject to
-"Plain" React Native. (This check isn't very sophisticated, though.)`;
+    expoSdkWarning = `We didn't find any uses of the Expo SDK in your project, so you should be fine to eject to "Plain" React Native.\n(This check isn't very sophisticated, though.)\n`;
   }
 
-  log(
-    `
-${expoSdkWarning}
-We ${chalk.italic('strongly')} recommend that you read this document before you proceed:
-  ${chalk.cyan(
-    'https://github.com/react-community/create-react-native-app/blob/master/EJECTING.md'
-  )}
-Ejecting is permanent! Please be careful with your selection.
-`
-  );
+  log.nested(expoSdkWarning);
+
+  if (workingTreeStatus === 'clean') {
+    log.nested(`Your git working tree is ${chalk.green('clean')}`);
+    log.nested('To revert the changes from ejecting later, you can use these commands:');
+    log.nested('  git clean --force && git reset --hard');
+  } else if (workingTreeStatus === 'dirty') {
+    log.nested(`${chalk.bold('Warning!')} Your git working tree is ${chalk.red('dirty')}.`);
+    log.nested(
+      `It's recommended to ${chalk.bold(
+        'commit all your changes before proceeding'
+      )},\nso you can revert the changes made by this command if necessary.`
+    );
+  } else {
+    log.nested("We couldn't find a git repository in your project directory.");
+    log.nested("It's recommended to back up your project before proceeding.");
+  }
+
+  log.nested('');
 
   let reactNativeOptionMessage = "React Native: I'd like a regular React Native project.";
 
   if (usingExpo) {
-    reactNativeOptionMessage =
-      chalk.italic(
-        "(WARNING: See above message for why this option may break your project's build)\n  "
-      ) + reactNativeOptionMessage;
+    reactNativeOptionMessage += chalk.italic(' (See warnings above.)');
   }
 
   const questions = [
     {
       type: 'list',
       name: 'ejectMethod',
-      message: 'How would you like to eject from create-react-native-app?',
+      message:
+        'How would you like to eject your app?\n  Read more: https://docs.expo.io/versions/latest/expokit/eject',
       default: usingExpo ? 'expokit' : 'plain',
       choices: [
         {
           name: reactNativeOptionMessage,
           value: 'plain',
+          short: 'React Native',
         },
         {
           name:
             "ExpoKit: I'll create or log in with an Expo account to use React Native and the Expo SDK.",
           value: 'expokit',
+          short: 'ExpoKit',
         },
         {
           name: "Cancel: I'll continue with my current project structure.",
           value: 'cancel',
+          short: 'cancel',
         },
       ],
     },
