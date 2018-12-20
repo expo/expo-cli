@@ -8,6 +8,7 @@ import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
 import glob from 'glob';
 import fs from 'fs';
+import ora from 'ora';
 import path from 'path';
 import simpleSpinner from '@expo/simple-spinner';
 import url from 'url';
@@ -275,16 +276,16 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     // to rerun Doctor because the directory was already checked previously
     // This is relevant for command such as `send`
     if (!skipProjectValidation && (await Project.currentStatus(projectDir)) !== 'running') {
-      log('Making sure project is set up correctly...');
-      simpleSpinner.start();
+      let spinner = ora('Making sure project is set up correctly...').start();
+      log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
       let status = await Doctor.validateLowLatencyAsync(projectDir);
       if (status === Doctor.FATAL) {
         throw new Error(`There is an error with your project. See above logs for information.`);
       }
-      simpleSpinner.stop();
-      log('Your project looks good!');
+      spinner.stop();
+      log.setSpinner(null);
     }
 
     // the existing CLI modules only pass one argument to this function, so skipProjectValidation

@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 
 let _bundleProgressBar;
+let _oraSpinner;
 
 let _printNewLineBeforeNextLog = false;
 let _isLastLineNewLine = false;
@@ -49,10 +50,17 @@ function respectProgressBars(commitLogs) {
   if (_bundleProgressBar) {
     _bundleProgressBar.terminate();
     _bundleProgressBar.lastDraw = '';
-    commitLogs();
+  }
+  if (_oraSpinner) {
+    _oraSpinner.stop();
+  }
+  commitLogs();
+
+  if (_bundleProgressBar) {
     _bundleProgressBar.render();
-  } else {
-    commitLogs();
+  }
+  if (_oraSpinner) {
+    _oraSpinner.start();
   }
 }
 
@@ -102,6 +110,10 @@ log.printNewLineBeforeNextLog = function printNewLineBeforeNextLog() {
 
 log.setBundleProgressBar = function setBundleProgressBar(bar) {
   _bundleProgressBar = bar;
+};
+
+log.setSpinner = function setSpinner(oraSpinner) {
+  _oraSpinner = oraSpinner;
 };
 
 log.error = function error(...args) {
