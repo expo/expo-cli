@@ -134,25 +134,27 @@ export async function configureAndroid(modulePath, { javaPackage, jsModuleName }
   // Cleunp all empty subdirs up to provided rootDir
   removeUponEmptyOrOnlyEmptySubdirs(path.join(androidPath, 'src', 'main', 'java', 'expo'));
 
+  const moduleName = jsModuleName.startsWith('Expo') ? jsModuleName.substring(4) : jsModuleName;
   replaceContents(androidPath, singleFileContent =>
     singleFileContent
       .replace(/expo\.module\.template/g, javaPackage)
+      .replace(/ModuleTemplate/g, moduleName)
       .replace(/ExpoModuleTemplate/g, jsModuleName)
   );
   replaceContent(path.join(androidPath, 'build.gradle'), gradleContent =>
     gradleContent
-      .replace(/version = '[\w.-]+'/, "version = '1.0.0'")
+      .replace(/version = ['"][\w.-]+['"]/, "version = '1.0.0'")
       .replace(/versionCode \d+/, 'versionCode 1')
-      .replace(/versionName '[\w.-]+'/, "versionName '1.0.0'")
+      .replace(/versionName ['"][\w.-]+['"]/, "versionName '1.0.0'")
   );
   renameFilesWithExtensions(
     destinationFilesPath,
     ['.java'],
     [
-      { from: 'ExpoModuleTemplateModule', to: `${jsModuleName}Module` },
-      { from: 'ExpoModuleTemplatePackage', to: `${jsModuleName}Package` },
-      { from: 'ExpoModuleTemplateView', to: `${jsModuleName}View` },
-      { from: 'ExpoModuleTemplateViewManager', to: `${jsModuleName}ViewManager` },
+      { from: 'ModuleTemplateModule', to: `${moduleName}Module` },
+      { from: 'ModuleTemplatePackage', to: `${moduleName}Package` },
+      { from: 'ModuleTemplateView', to: `${moduleName}View` },
+      { from: 'ModuleTemplateViewManager', to: `${moduleName}ViewManager` },
     ]
   );
 }
