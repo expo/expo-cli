@@ -1653,6 +1653,7 @@ let blacklistedEnvironmentVariables = new Set([
   'EXPO_ANDROID_KEYSTORE_PASSWORD',
   'EXPO_IOS_DIST_P12_PASSWORD',
   'EXPO_IOS_PUSH_P12_PASSWORD',
+  'EXPO_CLI_PASSWORD',
 ]);
 
 function shouldExposeEnvironmentVariableInManifest(key) {
