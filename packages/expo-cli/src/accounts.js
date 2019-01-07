@@ -90,10 +90,12 @@ export async function login(options: CommandOptions) {
     return _usernamePasswordAuth(options.username, options.password);
   } else if (options.username && options.password) {
     return _usernamePasswordAuth(options.username, options.password);
+  } else if (options.username && process.env.EXPO_CLI_PASSWORD) {
+    return _usernamePasswordAuth(options.username, process.env.EXPO_CLI_PASSWORD);
   } else {
     throw new CommandError(
       'NON_INTERACTIVE',
-      'Username and password not provided in non-interactive mode.'
+      "Username and password not provided in non-interactive mode. Set the EXPO_CLI_PASSWORD environment variable if you don't want to pass in passwords through the command line."
     );
   }
 }
