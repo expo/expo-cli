@@ -5,7 +5,7 @@ import path from 'path';
 
 import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
 import StandaloneContext from './StandaloneContext';
-import { getImageDimensionsMacOSAsync, resizeImageAsync } from '../tools/ImageUtils';
+import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
 import logger from './Logger';
 
 function _getAppleIconQualifier(iconSize: number, iconResolution: number): string {
@@ -122,15 +122,13 @@ async function createAndWriteIconsToPathAsync(
           }
 
           // reject non-square icons (because Apple will if we don't)
-          const dims = await getImageDimensionsMacOSAsync(destinationIconPath, iconFilename);
-          if (!dims || dims.length < 2 || dims[0] !== dims[1]) {
-            if (!dims) {
-              throw new Error(`Unable to read the dimensions of ${iconFilename}`);
-            } else {
-              throw new Error(
-                `iOS icons must be square, the dimensions of ${iconFilename} are ${dims}`
-              );
-            }
+          const dims = await getImageDimensionsAsync(destinationIconPath, iconFilename);
+          if (!dims) {
+            throw new Error(`Unable to read the dimensions of ${iconFilename}`);
+          } else if (dims.width !== dims.height) {
+            throw new Error(
+              `iOS icons must be square, the dimensions of ${iconFilename} are ${dims}`
+            );
           }
 
           if (!usesDefault) {
