@@ -151,6 +151,8 @@ async function _findConfigPathAsync(projectRoot) {
   }
 }
 
+let hasWarnedAboutExpJson = false;
+
 export async function findConfigFileAsync(
   projectRoot: string
 ): Promise<{ configPath: string, configName: string, configNamespace: ?string }> {
@@ -162,6 +164,23 @@ export async function findConfigFileAsync(
   }
   const configName = path.basename(configPath);
   const configNamespace = configName !== 'exp.json' ? 'expo' : null;
+
+  if (configName === 'exp.json' && !hasWarnedAboutExpJson) {
+    hasWarnedAboutExpJson = true;
+    logWarning(
+      projectRoot,
+      'expo',
+      `Warning: configuration using exp.json is deprecated.
+Please move your configuration from exp.json to app.json.
+Example app.json:
+{
+  "expo": {
+    (JSON contents from exp.json)
+  }
+}`
+    );
+  }
+
   return { configPath, configName, configNamespace };
 }
 
@@ -240,7 +259,7 @@ export async function readConfigJsonAsync(
   // Grab our exp config from package.json (legacy) or exp.json
   if (!exp && pkg.exp) {
     exp = pkg.exp;
-    logError(projectRoot, 'expo', `Error: Move your "exp" config from package.json to exp.json.`);
+    logError(projectRoot, 'expo', `Error: Move your "exp" config from package.json to app.json.`);
   } else if (!exp && !pkg.exp) {
     logError(projectRoot, 'expo', `Error: Missing ${configName}. See https://docs.expo.io/`);
     return { exp: null, pkg: null };
