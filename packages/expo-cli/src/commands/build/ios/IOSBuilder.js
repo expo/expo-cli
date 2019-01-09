@@ -20,6 +20,7 @@ class IOSBuilder extends BaseBuilder {
 
   async getAppleCtx({ bundleIdentifier, username }) {
     if (!this.appleCtx) {
+      await apple.setup();
       const authData = await apple.authenticate(this.options);
       this.appleCtx = { ...authData, bundleIdentifier, username };
     }
