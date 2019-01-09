@@ -11,7 +11,7 @@ import JsonFile from '@expo/json-file';
 import CommandError from '../CommandError';
 import prompt from '../prompt';
 
-const NPM_TEMPLATE_VERSION = '^1.0.1';
+const NPM_TEMPLATE_VERSION = '^2.0.1';
 const TEMP_DIR_NAME = `temp-expo-module-template`;
 let archive;
 
@@ -92,11 +92,6 @@ export default (program: any) => {
         fs.renameSync(
           path.join(outputDir, `ios`, `EXModuleTemplate`),
           path.join(outputDir, `ios`, `${configuration.podName}`)
-        );
-
-        fs.renameSync(
-          path.join(outputDir, `ios`, `EXModuleTemplate.xcodeproj`),
-          path.join(outputDir, `ios`, `${configuration.podName}.xcodeproj`)
         );
       } else {
         await fs.remove(path.join(outputDir, `ios`));
