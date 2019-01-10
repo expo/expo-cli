@@ -18,8 +18,8 @@ json_reply = with_captured_stderr{
     certs = [];
 
     if $isEnterprise == 'true'
-      Spaceship::Portal.certificate.in_house.production.create!(csr: csr)
-      certs = Spaceship::Portal.certificate.in_house.production.all()
+      Spaceship::Portal.certificate.in_house.create!(csr: csr)
+      certs = Spaceship::Portal.certificate.in_house.all()
     else
       Spaceship::Portal.certificate.production.create!(csr: csr)
       certs = Spaceship::Portal.certificate.production.all()

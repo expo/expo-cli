@@ -17,7 +17,7 @@ json_reply = with_captured_stderr{
     cert = nil
 
     if $isEnterprise == 'true'
-      certs = Spaceship::Portal.certificate.in_house.production.all
+      certs = Spaceship::Portal.certificate.in_house.all
     else
       certs = Spaceship::Portal.certificate.production.all
     end
