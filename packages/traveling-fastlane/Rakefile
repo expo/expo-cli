@@ -139,10 +139,14 @@ def create_package target
 
   if target == "osx"
     sh "cp -R #{PACKAGE_NAME}-#{VERSION}-osx publishing/darwin"
-    # sh "cd publishing/darwin; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
+    if !ENV['NO_PUBLISH']
+      sh "cd publishing/darwin; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
+    end
   else
     sh "cp -R #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 publishing/linux"
-    # sh "cd publishing/linux; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
+    if !ENV['NO_PUBLISH']
+      sh "cd publishing/linux; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
+    end
   end
 end
 

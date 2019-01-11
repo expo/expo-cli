@@ -9,7 +9,7 @@ ENV['FASTLANE_TEAM_ID'] = $teamId
 def list()
   certs = nil
   if $isEnterprise == 'true'
-    certs = Spaceship::Portal.certificate.production.in_house.all
+    certs = Spaceship::Portal.certificate.in_house.all
   else
     certs = Spaceship::Portal.certificate.production.all
   end
@@ -30,7 +30,12 @@ end
 
 def create()
   csr, pkey = Spaceship.certificate.create_certificate_signing_request()
-  cert = Spaceship::Portal.certificate.production.create!(csr: csr)
+  cert = nil
+  if $isEnterprise == 'true'
+    cert = Spaceship::Portal.certificate.in_house.create!(csr: csr)
+  else
+    cert = Spaceship::Portal.certificate.production.create!(csr: csr)
+  end
   cert_content = cert.download()
   certPassword = SecureRandom.base64()
   p12 = OpenSSL::PKCS12.create(certPassword, 'key', pkey, cert_content)

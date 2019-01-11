@@ -9,7 +9,7 @@ ENV['SPACESHIP_AVOID_XCODE_API'] = '1'
 
 def create()
   certs = $isEnterprise == 'true' \
-    ? Spaceship::Portal.certificate.in_house.production.all \
+    ? Spaceship::Portal.certificate.in_house.all \
     : Spaceship::Portal.certificate.production.all
 
   cert = nil
