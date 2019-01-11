@@ -246,10 +246,10 @@
   resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.6.2.tgz#4bc5256423e4fc443b0cb7d9f5d3caa02ddef0db"
   integrity sha512-mFqz2Nm/JME8C+61QlLDV/LY4/7+6SbDAwcSZwbbn6iXTmAfYV4AdQH8Unei56FgrTSosK4ZwMXkSoeCFOpaNA==
 
-"@expo/traveling-fastlane-linux@1.6.2-alpha.1":
-  version "1.6.2-alpha.1"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.6.2-alpha.1.tgz#7718da50a8cbc05734ad22e1b714deae61bdea65"
-  integrity sha512-orwXRLF/wFjil+09bp/6+KoI27eWU//krpRf2YFV6rk+5MRGVskAjXY9XR5oihkOwjbdgQKircFrucdTH4eqOw==
+"@expo/traveling-fastlane-linux@1.6.2":
+  version "1.6.2"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.6.2.tgz#f996f0be73746f371d6d3ca87a83432e7b8962eb"
+  integrity sha512-1V6hN2dEgPxLwSGsT2IsjFyGDUs1k5hBjHs5T9kEbNEcqZkVDiJ9n0bP8JuvNqshu++7eGxqojx0iByYbFqSXw==
 
 "@gulp-sourcemaps/identity-map@1.X":
   version "1.0.2"
