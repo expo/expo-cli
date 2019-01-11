@@ -362,20 +362,42 @@ export async function checkSplashScreenImages(projectDir: string) {
     return;
   }
 
-  const generalSplashImageRelativePath = _.get(exp, 'splash.image');
-  const {
-    width: generalSplashImageWidth,
-    height: generalSplashImageHeight,
-  } = await getImageDimensionsAsync(projectDir, generalSplashImageRelativePath);
+  const generalSplashImagePath = _.get(exp, 'splash.image');
+  if (!generalSplashImagePath) {
+    Logger.global.warn(
+      `Couldn't read '${chalk.italic('splash.image')}' from ${chalk.italic(
+        'app.json'
+      )}. Provide asset that would serve as baseline splash image.`
+    );
+    return;
+  }
+  const generalSplashImage = await getImageDimensionsAsync(projectDir, generalSplashImagePath);
+  if (!generalSplashImage) {
+    Logger.global.warn(
+      `Couldn't read dimensions of provided splash image '${chalk.italic(
+        generalSplashImagePath
+      )}'. Does the file exist?`
+    );
+    return;
+  }
 
   const androidSplash = _.get(exp, 'android.splash');
   const androidSplashImages = [];
   for (const { dpi, sizeMultiplier } of splashScreenDPIConstraints) {
     const imageRelativePath = _.get(androidSplash, dpi);
     if (imageRelativePath) {
-      const { width, height } = await getImageDimensionsAsync(projectDir, imageRelativePath);
-      const expectedWidth = sizeMultiplier * generalSplashImageWidth;
-      const expectedHeight = sizeMultiplier * generalSplashImageHeight;
+      const splashImage = await getImageDimensionsAsync(projectDir, imageRelativePath);
+      if (!splashImage) {
+        Logger.global.warn(
+          `Couldn't read dimensions of provided splash image '${chalk.italic(
+            splashImage
+          )}'. Does the file exist?`
+        );
+        continue;
+      }
+      const { width, height } = splashImage;
+      const expectedWidth = sizeMultiplier * generalSplashImage.width;
+      const expectedHeight = sizeMultiplier * generalSplashImage.height;
       androidSplashImages.push({
         dpi,
         width,

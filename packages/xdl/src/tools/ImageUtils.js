@@ -9,25 +9,26 @@ import fs from 'fs';
 import { spawnAsyncThrowError } from '../detach/ExponentTools';
 import logger from '../detach/Logger';
 
-type NullableDimensionsPromise = Promise<null> | Promise<{ width: number, height: number }>;
-
 /**
- * @param {string} projectBasedir
- * @param {string} relativeFilenamePath
+ * @param {string} projectDirname
+ * @param {string} basename
  * @returns {} { width: number, height: number } image dimensions or null
  */
 async function getImageDimensionsAsync(
-  projectBasedir: string,
-  relativeFilenamePath: string
-): NullableDimensionsPromise {
-  return _getImageDimensionsAsync(projectBasedir, relativeFilenamePath);
+  projectDirname: string,
+  basename: string
+): Promise<?{ width: number, height: number }> {
+  try {
+    return await _getImageDimensionsAsync(projectDirname, basename);
+  } catch (_) {}
+  return null;
 }
 
 async function _getImageDimensionsWithImageProbeAsync(
-  projectBasedir: string,
-  relativePathFromManifest: string
+  projectDirname: string,
+  basename: string
 ): Promise<{ width: number, height: number }> {
-  const imagePath = path.resolve(projectBasedir, relativePathFromManifest);
+  const imagePath = path.resolve(projectDirname, basename);
   const readStream = fs.createReadStream(imagePath);
   const { width, height } = await probeImageSize(readStream);
   readStream.destroy();
@@ -63,12 +64,12 @@ async function _resizeImageWithSipsAsync(
 }
 
 /**
- * Legacy function using `sip` command available on MacOD
+ * Legacy function using `sip` command available on MacOS
  * We're using `probe-imgae-size` nodeJS package
  */
 async function _getImageDimensionsWithSipsAsync(
-  basename: string,
-  dirname: string
+  dirname: string,
+  basename: string
 ): Promise<Array<number>> {
   if (process.platform !== 'darwin') {
     logger.warn('`sips` utility may or may not work outside of macOS');
@@ -107,7 +108,7 @@ function setResizeImageFunction(
 // Allow users to provide an alternate implementation for our image dimensions function.
 // This is used internally in order to use sharp instead of sips in standalone builder.
 function setGetImageDimensionsFunction(
-  fn: (basename: string, dirname: string) => Promise<?Array<number>>
+  fn: (basename: string, dirname: string) => Promise<?{ width: number, height: number }>
 ) {
   _getImageDimensionsAsync = fn;
 }
