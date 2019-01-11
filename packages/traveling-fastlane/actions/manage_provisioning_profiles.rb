@@ -5,6 +5,7 @@ require_relative 'funcs'
 
 $action, $appleId, $password, $teamId, $isEnterprise, $bundleId, $extraArgs = ARGV
 ENV['FASTLANE_TEAM_ID'] = $teamId
+ENV['SPACESHIP_AVOID_XCODE_API'] = '1'
 
 def create()
   certs = $isEnterprise == 'true' \

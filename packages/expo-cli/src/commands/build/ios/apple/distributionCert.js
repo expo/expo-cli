@@ -1,6 +1,17 @@
+import _ from 'lodash';
 import dateformat from 'dateformat';
+import chalk from 'chalk';
 
 import { runAction, travelingFastlane } from './fastlane';
+import log from '../../../../log';
+
+const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
+You can have only ${chalk.underline(
+  'three'
+)} Apple Distribution Certificates generated on your Apple Developer account.
+Please revoke the old ones or reuse existing from your other apps.
+Please remember that Apple Distribution Certificates are not application specific!
+`;
 
 const createManager = ({ appleId, appleIdPassword, team }) => ({
   async list() {
@@ -9,8 +20,16 @@ const createManager = ({ appleId, appleIdPassword, team }) => ({
     return certs;
   },
   async create() {
-    const args = ['create', appleId, appleIdPassword, team.id, team.inHouse];
-    return await runAction(travelingFastlane.manageDistCerts, args);
+    try {
+      const args = ['create', appleId, appleIdPassword, team.id, team.inHouse];
+      return await runAction(travelingFastlane.manageDistCerts, args);
+    } catch (err) {
+      const resultString = _.get(err, 'rawDump.resultString');
+      if (resultString && resultString.match(/Maximum number of certificates generated/)) {
+        log.error(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
+      }
+      throw err;
+    }
   },
   async revoke(ids) {
     const args = ['revoke', appleId, appleIdPassword, team.id, team.inHouse, ids.join(',')];

@@ -18,7 +18,9 @@ async function runAction(fastlaneAction, args) {
     return rest;
   } else {
     const { reason, rawDump } = rest;
-    throw new Error(`Reason: ${reason}, raw: ${JSON.stringify(rawDump)}`);
+    const err = new Error(`Reason: ${reason}, raw: ${JSON.stringify(rawDump)}`);
+    err.rawDump = rawDump;
+    throw err;
   }
 }
 
