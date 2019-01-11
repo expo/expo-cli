@@ -63,36 +63,6 @@ async function _resizeImageWithSipsAsync(
   });
 }
 
-/**
- * Legacy function using `sip` command available on MacOS
- * We're using `probe-imgae-size` nodeJS package
- */
-async function _getImageDimensionsWithSipsAsync(
-  dirname: string,
-  basename: string
-): Promise<Array<number>> {
-  if (process.platform !== 'darwin') {
-    logger.warn('`sips` utility may or may not work outside of macOS');
-  }
-  let childProcess = await spawnAsyncThrowError(
-    'sips',
-    ['-g', 'pixelWidth', '-g', 'pixelHeight', basename],
-    {
-      cwd: dirname,
-    }
-  );
-  // stdout looks something like 'pixelWidth: 1200\n pixelHeight: 800'
-  const components = childProcess.stdout.split(/(\s+)/);
-  const dimensions = components.map(c => parseInt(c, 10)).filter(n => !isNaN(n));
-  if (dimensions.length !== 2) {
-    return null;
-  }
-  return {
-    width: dimensions[0],
-    height: dimensions[1],
-  };
-}
-
 // Allow us to swap out the default implementations of image functions
 let _resizeImageAsync = _resizeImageWithSipsAsync;
 let _getImageDimensionsAsync = _getImageDimensionsWithImageProbeAsync;
