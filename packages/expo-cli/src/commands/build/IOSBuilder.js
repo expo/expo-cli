@@ -158,7 +158,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     }
     const { releaseChannel } = this.options;
     // Check the status of any current builds
-    await this.checkStatus({ platform: 'ios', sdkVersion, releaseChannel, ...buildOptions });
+    await this.checkInProgress({ platform: 'ios', sdkVersion, releaseChannel, ...buildOptions });
     const credentialMetadata = { username, experienceName, bundleIdentifier, platform: 'ios' };
     const clearOnly = {};
     if (this.options.clearCredentials) {
@@ -201,6 +201,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
     const publishedExpIds = this.options.publicUrl
       ? undefined
       : await this.ensureReleaseExists('ios');
+
+    await this.checkBeforeBuild({ platform: 'ios', sdkVersion, releaseChannel });
     // Initiate the build with the published experience
     await this.build(publishedExpIds, 'ios', { bundleIdentifier, ...buildOptions });
   }
