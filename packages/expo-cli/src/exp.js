@@ -327,19 +327,20 @@ function runAsync(programName) {
       );
 
     // Load each module found in ./commands by 'registering' it with our commander instance
-    glob
-      .sync('commands/*.js', { cwd: __dirname })
-      .sort()
-      .forEach(file => {
-        const commandModule = require(`./${file}`);
-        if (typeof commandModule === 'function') {
-          commandModule(program);
-        } else if (typeof commandModule.default === 'function') {
-          commandModule.default(program);
-        } else {
-          log.error(`'${file}.js' is not a properly formatted command.`);
-        }
-      });
+    const commandFiles = [].concat(
+      glob.sync('commands/*.js', { cwd: __dirname }),
+      glob.sync('commands/*/index.js', { cwd: __dirname })
+    );
+    commandFiles.sort().forEach(file => {
+      const commandModule = require(`./${file}`);
+      if (typeof commandModule === 'function') {
+        commandModule(program);
+      } else if (typeof commandModule.default === 'function') {
+        commandModule.default(program);
+      } else {
+        log.error(`'${file}.js' is not a properly formatted command.`);
+      }
+    });
 
     let subCommand = process.argv[2];
     let argv = process.argv.filter(arg => {

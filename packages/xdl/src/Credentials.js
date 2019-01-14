@@ -207,7 +207,7 @@ export async function backupExistingAndroidCredentials({
 
   const storeBuf = Buffer.from(keystore, 'base64');
   log(`Writing keystore to ${outputPath}...`);
-  fs.writeFileSync(outputPath, storeBuf);
+  await fs.writeFile(outputPath, storeBuf);
   if (logSecrets) {
     log('Done writing keystore to disk.');
     log(`Save these important values as well:

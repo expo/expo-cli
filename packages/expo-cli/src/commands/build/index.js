@@ -3,12 +3,12 @@
  */
 
 import { UrlUtils } from 'xdl';
-import BaseBuilder from './build/BaseBuilder';
-import IOSBuilder from './build/ios/IOSBuilder';
-import AndroidBuilder from './build/AndroidBuilder';
-import BuildError from './build/BuildError';
-import log from '../log';
-import CommandError from '../CommandError';
+import BaseBuilder from './BaseBuilder';
+import IOSBuilder from './ios/IOSBuilder';
+import AndroidBuilder from './AndroidBuilder';
+import BuildError from './BuildError';
+import log from '../../log';
+import CommandError from '../../CommandError';
 
 export default (program: any) => {
   program
