@@ -26,12 +26,13 @@ async function getDistributionCertSerialNumber(projectMetadata) {
 }
 
 async function update(projectMetadata, credentials, userCredentialsIds) {
-  return await Credentials.updateCredentialsForPlatform(
+  await Credentials.updateCredentialsForPlatform(
     PLATFORMS.IOS,
     credentials,
     userCredentialsIds,
     projectMetadata
   );
+  log.warn('Encrypted credentials and saved to the Expo servers');
 }
 
 async function clear({ username, experienceName, bundleIdentifier }, only) {

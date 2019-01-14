@@ -40,7 +40,10 @@ export default (program: any) => {
     .option('--no-publish', 'Disable automatic publishing before building.')
     .option('--no-wait', 'Exit immediately after scheduling build.')
     .option('--team-id <apple-teamId>', 'Apple Team ID.')
-    .option('--dist-p12-path <dist.p12>', 'Path to your Distribution Certificate P12.')
+    .option(
+      '--dist-p12-path <dist.p12>',
+      'Path to your Distribution Certificate P12 (set password as EXPO_IOS_DIST_P12_PASSWORD environment variable).'
+    )
     .option('--push-id <push-id>', 'Push Key ID.')
     .option('--push-p8-path <push.p12>', 'Path to your Push Key P8.')
     .option('--provisioning-profile-path <.mobileprovision>', 'Path to your Provisioning Profile.')

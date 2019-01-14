@@ -14,6 +14,13 @@ async function prompt(appleCtx, options, missingCredentials) {
     Object.keys(credentialsFromParams)
   );
 
+  if (stillMissingCredentials.length === 0) {
+    return {
+      credentials: _flattenObject(credentialsFromParams),
+      metadata: {},
+    };
+  }
+
   const names = stillMissingCredentials.map(id => consts.CREDENTIALS[id].name).join(', ');
   log.warn(`We do not have some credentials for you: ${names}`);
 

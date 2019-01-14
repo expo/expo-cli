@@ -6,6 +6,10 @@ import log from '../../../../log';
 import * as apple from '../apple';
 
 async function generate(appleCtx, credentialsToGenerate, metadata) {
+  if (!credentialsToGenerate || credentialsToGenerate.length === 0) {
+    return {};
+  }
+
   log(`We're going to generate:`);
   credentialsToGenerate.forEach(_type => {
     log(`- ${consts.CREDENTIALS[_type].name}`);
