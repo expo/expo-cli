@@ -1,24 +1,34 @@
 import fse from 'fs-extra';
 import path from 'path';
 import walkSync from 'klaw-sync';
-import targz from 'targz';
+
+const asyncForEach = async (array, callback) => {
+  for (let index = 0; index < array.length; index++) {
+    await callback(array[index], index, array);
+  }
+};
 
 /**
  * Renames files names
  * @param {path} directoryPath - directory that holds files to be renamed
  * @param {string[]} extensions - array of extensions for files that would be renamed, must be provided with leading dot or empty for no extension, e.g. ['.html', '']
- * @param {{ from: string, to: stirng }[]} renamings - array of files names and their replacers
+ * @param {{ from: string, to: string }[]} renamings - array of filenames and their replacers
  */
-const renameFilesWithExtensions = (directoryPath, extensions, renamings) => {
-  renamings.forEach(({ from, to }) =>
-    extensions.forEach(extension => {
-      const fromFilename = `${from}${extension}`;
-      if (!fse.existsSync(path.join(directoryPath, fromFilename))) {
-        return;
-      }
-      const toFilename = `${to}${extension}`;
-      fse.renameSync(path.join(directoryPath, fromFilename), path.join(directoryPath, toFilename));
-    })
+const renameFilesWithExtensions = async (directoryPath, extensions, renamings) => {
+  await asyncForEach(
+    renamings,
+    async ({ from, to }) =>
+      await asyncForEach(extensions, async extension => {
+        const fromFilename = `${from}${extension}`;
+        if (!(await fse.exists(path.join(directoryPath, fromFilename)))) {
+          return;
+        }
+        const toFilename = `${to}${extension}`;
+        await fse.rename(
+          path.join(directoryPath, fromFilename),
+          path.join(directoryPath, toFilename)
+        );
+      })
   );
 };
 
@@ -38,11 +48,11 @@ const replaceContents = (directoryPath, replaceFunction) => {
  * @param {path} filePath - provided file
  * @param {(contentOfSingleFile: string) => string} replaceFunction - function that converts current content into something different
  */
-const replaceContent = (filePath, replaceFunction) => {
-  const content = fse.readFileSync(filePath, 'utf8');
+const replaceContent = async (filePath, replaceFunction) => {
+  const content = await fse.readFile(filePath, 'utf8');
   const newContent = replaceFunction(content);
   if (newContent !== content) {
-    fse.writeFileSync(filePath, newContent);
+    await fse.writeFile(filePath, newContent);
   }
 };
 
@@ -52,16 +62,18 @@ const replaceContent = (filePath, replaceFunction) => {
  * @param {path} dirPath - directory path that is being inspected
  * @returns {boolean} whether directory was deleted or not
  */
-const removeUponEmptyOrOnlyEmptySubdirs = dirPath => {
-  const contents = fse.readdirSync(dirPath);
-  const results = contents.map(file => {
-    const filePath = path.join(dirPath, file);
-    const fileStats = fse.lstatSync(filePath);
-    return fileStats.isDirectory() && removeUponEmptyOrOnlyEmptySubdirs(filePath);
-  });
+const removeUponEmptyOrOnlyEmptySubdirs = async dirPath => {
+  const contents = await fse.readdir(dirPath);
+  const results = await Promise.all(
+    contents.map(async file => {
+      const filePath = path.join(dirPath, file);
+      const fileStats = await fse.lstat(filePath);
+      return fileStats.isDirectory() && (await removeUponEmptyOrOnlyEmptySubdirs(filePath));
+    })
+  );
   const isRemovable = results.reduce((acc, current) => acc && current, true);
   if (isRemovable) {
-    fse.removeSync(dirPath);
+    await fse.remove(dirPath);
   }
   return isRemovable;
 };
@@ -73,9 +85,9 @@ const removeUponEmptyOrOnlyEmptySubdirs = dirPath => {
  * @param {string} podName - PodName
  * @param {{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }} configuration - naming configuration
  */
-export async function configureIOS(modulePath, { podName, jsModuleName }) {
+async function configureIOS(modulePath, { podName, jsModuleName }) {
   const iosPath = path.join(modulePath, 'ios');
-  renameFilesWithExtensions(
+  await renameFilesWithExtensions(
     path.join(iosPath, 'EXModuleTemplate'),
     ['.h', '.m'],
     [
@@ -90,12 +102,12 @@ export async function configureIOS(modulePath, { podName, jsModuleName }) {
       },
     ]
   );
-  renameFilesWithExtensions(
+  await renameFilesWithExtensions(
     iosPath,
     ['', '.podspec'],
     [{ from: 'EXModuleTemplate', to: `${podName}` }]
   );
-  replaceContents(iosPath, singleFileContent =>
+  await replaceContents(iosPath, singleFileContent =>
     singleFileContent
       .replace(/EXModuleTemplate/g, podName)
       .replace(/ExpoModuleTemplate/g, jsModuleName)
@@ -108,7 +120,7 @@ export async function configureIOS(modulePath, { podName, jsModuleName }) {
  * @param {path} modulePath - module directory
  * @param {{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }} configuration - naming configuration
  */
-export async function configureAndroid(modulePath, { javaPackage, jsModuleName }) {
+async function configureAndroid(modulePath, { javaPackage, jsModuleName }) {
   const androidPath = path.join(modulePath, 'android');
   const sourceFilesPath = path.join(
     androidPath,
@@ -126,28 +138,28 @@ export async function configureAndroid(modulePath, { javaPackage, jsModuleName }
     'java',
     ...javaPackage.split('.')
   );
-  fse.mkdirpSync(destinationFilesPath);
-  fse.copySync(sourceFilesPath, destinationFilesPath);
+  await fse.mkdirp(destinationFilesPath);
+  await fse.copy(sourceFilesPath, destinationFilesPath);
 
   // Remove leaf directory content
-  fse.removeSync(sourceFilesPath);
+  await fse.remove(sourceFilesPath);
   // Cleunp all empty subdirs up to provided rootDir
-  removeUponEmptyOrOnlyEmptySubdirs(path.join(androidPath, 'src', 'main', 'java', 'expo'));
+  await removeUponEmptyOrOnlyEmptySubdirs(path.join(androidPath, 'src', 'main', 'java', 'expo'));
 
   const moduleName = jsModuleName.startsWith('Expo') ? jsModuleName.substring(4) : jsModuleName;
-  replaceContents(androidPath, singleFileContent =>
+  await replaceContents(androidPath, singleFileContent =>
     singleFileContent
       .replace(/expo\.module\.template/g, javaPackage)
       .replace(/ModuleTemplate/g, moduleName)
       .replace(/ExpoModuleTemplate/g, jsModuleName)
   );
-  replaceContent(path.join(androidPath, 'build.gradle'), gradleContent =>
+  await replaceContent(path.join(androidPath, 'build.gradle'), gradleContent =>
     gradleContent
       .replace(/version = ['"][\w.-]+['"]/, "version = '1.0.0'")
       .replace(/versionCode \d+/, 'versionCode 1')
       .replace(/versionName ['"][\w.-]+['"]/, "versionName '1.0.0'")
   );
-  renameFilesWithExtensions(
+  await renameFilesWithExtensions(
     destinationFilesPath,
     ['.java'],
     [
@@ -164,25 +176,36 @@ export async function configureAndroid(modulePath, { javaPackage, jsModuleName }
  * @param {string} modulePath - module directory
  * @param {{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }} configuration - naming configuration
  */
-export async function configureTS(modulePath, { npmModuleName, podName, jsModuleName }) {
-  replaceContent(path.join(modulePath, 'package.json'), singleFileContent =>
+async function configureTS(modulePath, { npmModuleName, podName, jsModuleName }) {
+  await replaceContent(path.join(modulePath, 'package.json'), singleFileContent =>
     singleFileContent
       .replace(/expo-module-template/g, npmModuleName)
       .replace(/"version": "[\w.-]+"/, '"version": "1.0.0"')
       .replace(/ExpoModuleTemplate/g, jsModuleName)
   );
-  replaceContent(path.join(modulePath, 'README.md'), readmeContent =>
+  await replaceContent(path.join(modulePath, 'README.md'), readmeContent =>
     readmeContent
       .replace(/expo-module-template/g, npmModuleName)
       .replace(/ExpoModuleTemplate/g, jsModuleName)
       .replace(/EXModuleTemplate/g, podName)
   );
-  replaceContents(path.join(modulePath, 'src'), singleFileContent =>
+  await replaceContents(path.join(modulePath, 'src'), singleFileContent =>
     singleFileContent.replace(/ExpoModuleTemplate/g, jsModuleName)
   );
-  renameFilesWithExtensions(
+  await renameFilesWithExtensions(
     path.join(modulePath, 'src'),
     ['.tsx'],
     [{ from: 'ExpoModuleTemplateView', to: `${jsModuleName}View` }]
   );
+}
+
+/**
+ * Configures TS, Android and iOS parts of generated module mostly by applying provided renamings
+ * @param {string} modulePath - module directory
+ * @param {{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }} configuration - naming configuration
+ */
+export default async function configureModule(newModulePath, configuration) {
+  await configureTS(newModulePath, configuration);
+  await configureAndroid(newModulePath, configuration);
+  await configureIOS(newModulePath, configuration);
 }

@@ -2,18 +2,13 @@ import generateModuleAsync from './generate-module/generateModuleAsync';
 
 export default program => {
   program
-    .command('generate-module [new-module-project-directory]')
-    .alias('gm')
+    .command('generate-module [new-module-project]')
     .option(
-      '-t, --template [type]',
-      'Module type to be generated [universal]',
-      /^(universal)$/i,
-      'universal'
+      '--template [localTemplateDirectory]',
+      'Local directory or npm package containing template for universal Expo module'
     )
-    .option(
-      '-td, --template-directory [localTemplateDirectory]',
-      'Local directory containing module template'
+    .description(
+      'Generate an universal module for Expo from a template in [new-module-project] directory.'
     )
-    .description('Generate a module from a template in [new-module-project-directory].')
     .asyncAction(generateModuleAsync);
 };

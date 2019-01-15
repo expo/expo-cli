@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import prompt from '../../prompt';
 
 /**
@@ -16,7 +17,7 @@ const generateCocoaPodDefaultName = moduleName => {
   if (moduleName.toLowerCase().startsWith('expo')) {
     return `EX${wordsToUpperCase(moduleName.substring(4))}`;
   }
-  return wordsToUpperCase(lowerCasesModuleName);
+  return wordsToUpperCase(moduleName);
 };
 
 /**
@@ -50,36 +51,63 @@ const generateInCodeModuleDefaultName = moduleName => {
 
 /**
  * Generates questions
- * @param {string} suggestedModuleName
+ * @param {string} [suggestedModuleName]
  */
 const generateQuestions = suggestedModuleName => [
   {
     name: 'npmModuleName',
     message: 'How would you like to call your module in JS/npm? (eg. expo-camera)',
     default: suggestedModuleName,
+    validate: answer => {
+      return !answer.length
+        ? 'Module name cannot be empty'
+        : /[A-Z]/.test(answer)
+        ? 'Module name connot contain any upper case characters'
+        : /\s/.test(answer)
+        ? 'Module name cannot contain any whitespaces'
+        : true;
+    },
   },
   {
     name: 'podName',
     message: 'How would you like to call your module in CocoaPods? (eg. EXCamera)',
     default: ({ npmModuleName }) => generateCocoaPodDefaultName(npmModuleName),
+    validate: answer =>
+      !answer.length
+        ? 'CocoaPod name cannot be empty'
+        : /\s/.test(answer)
+        ? 'CocoaPod name cannot contain any whitespaces'
+        : true,
   },
   {
     name: 'javaPackage',
     message: 'How would you like to call your module in Java? (eg. expo.modules.camera)',
     default: ({ npmModuleName }) => generateJavaModuleDefaultName(npmModuleName),
+    validate: answer =>
+      !answer.length
+        ? 'Java Package name cannot be empty'
+        : /\s/.test(answer)
+        ? 'Java Package name cannot contain any whitespaces'
+        : true,
   },
   {
     name: 'jsModuleName',
     message: 'How would you like to call your module in JS/TS codebase (eg. ExpoCamera)?',
     default: ({ npmModuleName }) => generateInCodeModuleDefaultName(npmModuleName),
+    validate: answer =>
+      !answer.length
+        ? 'Module name cannot be empty'
+        : /\s/.test(answer)
+        ? 'Module name cannot contain any whitespaces'
+        : true,
   },
 ];
 
 /**
  * Prompt user about new module namings.
- * @param {string} suggestedModuleName - suggested module name that would be used to generate all sugestions for each question
+ * @param {string} [suggestedModuleName] - suggested module name that would be used to generate all sugestions for each question
  * @returns {Promise<{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }>} - user's answers
  */
 export default async function promptQuestionsAsync(suggestedModuleName) {
-  return prompt(generateQuestions(suggestedModuleName));
+  return await prompt(generateQuestions(suggestedModuleName));
 }
