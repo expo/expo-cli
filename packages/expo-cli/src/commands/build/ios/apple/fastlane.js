@@ -10,9 +10,19 @@ const WSL_BASH_PATH = 'C:\\Windows\\system32\\bash.exe';
 const WSL_BASH = 'bash';
 const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
 
-async function runAction(fastlaneAction, args) {
+async function runAction(fastlaneAction, args, options = {}) {
+  const { pipeStdout = false, onStdoutDataReceived } = options;
   const [command, commandArgs] = getCommandAndArgsForPlatform(fastlaneAction, args);
-  const { stderr } = await spawnAsync(command, commandArgs, { stdio: ['inherit', 'pipe', 'pipe'] });
+  const fastlane$ = spawnAsync(command, commandArgs, { stdio: ['inherit', 'pipe', 'pipe'] });
+  if (pipeStdout) {
+    fastlane$.child.stdout.on('data', data => {
+      if (onStdoutDataReceived) {
+        onStdoutDataReceived();
+      }
+      console.log(data.toString());
+    });
+  }
+  const { stderr } = await fastlane$;
   const { result, ...rest } = JSON.parse(stderr.trim());
   if (result === 'success') {
     return rest;

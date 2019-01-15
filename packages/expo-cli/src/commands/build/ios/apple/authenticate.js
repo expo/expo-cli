@@ -12,7 +12,10 @@ export default async function authenticate(options) {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
   const spinner = ora(`Trying to authenticate with Apple Developer Portal...`).start();
   try {
-    const { teams } = await runAction(travelingFastlane.authenticate, [appleId, appleIdPassword]);
+    const { teams } = await runAction(travelingFastlane.authenticate, [appleId, appleIdPassword], {
+      pipeStdout: true,
+      onStdoutDataReceived: () => spinner.stop(),
+    });
     spinner.succeed('Authenticated with Apple Developer Portal successfully!');
     const team = await _chooseTeam(teams, options.teamId);
     return { appleId, appleIdPassword, team };

@@ -18,7 +18,7 @@ export default (program: any) => {
     .option('--clear-dist-cert', 'Remove Distribution Certificate stored on Expo servers.')
     .option('--clear-push-key', 'Remove Push Notifications Key stored on Expo servers.')
     .option(
-      '--clear-push-certificate',
+      '--clear-push-cert',
       'Remove Push Notifications Certificate stored on Expo servers (DEPRECATED).'
     )
     .option('--clear-provisioning-profile', 'Remove Provisioning Profile stored on Expo servers.')
