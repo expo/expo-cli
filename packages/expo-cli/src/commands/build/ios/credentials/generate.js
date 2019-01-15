@@ -11,8 +11,8 @@ async function generate(appleCtx, credentialsToGenerate, metadata) {
   }
 
   log(`We're going to generate:`);
-  credentialsToGenerate.forEach(_type => {
-    log(`- ${constants.CREDENTIALS[_type].name}`);
+  credentialsToGenerate.forEach(type => {
+    log(`- ${constants.CREDENTIALS[type].name}`);
   });
 
   let newCredentials = {};
@@ -31,8 +31,8 @@ async function generate(appleCtx, credentialsToGenerate, metadata) {
   return newCredentials;
 }
 
-async function _create(appleCtx, _type, metadata) {
-  const manager = apple.createManagers(appleCtx)[_type];
+async function _create(appleCtx, type, metadata) {
+  const manager = apple.createManagers(appleCtx)[type];
   return await manager.create(metadata);
 }
 

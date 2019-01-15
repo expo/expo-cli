@@ -3,8 +3,8 @@ import prompt from '../../../../prompt';
 
 async function revoke(appleCtx, typesToRevoke) {
   const managers = apple.createManagers(appleCtx);
-  for (const _type of typesToRevoke) {
-    const manager = managers[_type];
+  for (const type of typesToRevoke) {
+    const manager = managers[type];
     if (manager) {
       await _revokeByType(manager);
     }

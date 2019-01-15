@@ -23,9 +23,9 @@ async function promptForCredentials(appleCtx, types, printWarning = true) {
     log(EXPERT_PROMPT);
   }
   const credentials = {};
-  for (const _type of types) {
+  for (const type of types) {
     const value = {};
-    const { name, required, questions } = constants.CREDENTIALS[_type];
+    const { name, required, questions } = constants.CREDENTIALS[type];
     log(`Please provide your ${name}:`);
     for (const i of required) {
       const question = questions[i];
@@ -33,7 +33,7 @@ async function promptForCredentials(appleCtx, types, printWarning = true) {
       value[i] = answer;
     }
     const valueKeys = Object.keys(value);
-    credentials[_type] = valueKeys.length === 1 ? value[valueKeys[0]] : value;
+    credentials[type] = valueKeys.length === 1 ? value[valueKeys[0]] : value;
   }
 
   const metadata = await _calculateMetadata(credentials);
@@ -47,15 +47,15 @@ async function _askQuestionAndProcessAnswer(definition) {
   return await _processAnswer(definition, input);
 }
 
-function _buildQuestionObject({ type: _type, question }) {
-  const inputType = _type === 'password' ? 'password' : 'input';
+function _buildQuestionObject({ type, question }) {
+  const inputType = type === 'password' ? 'password' : 'input';
   const questionObject = {
     type: inputType,
     name: 'input',
     message: question,
   };
 
-  if (_type === 'file') {
+  if (type === 'file') {
     questionObject.filter = _produceAbsolutePath;
     questionObject.validate = validators.existingFile;
   } else {
@@ -65,8 +65,8 @@ function _buildQuestionObject({ type: _type, question }) {
   return questionObject;
 }
 
-async function _processAnswer({ type: _type, base64Encode }, input) {
-  if (_type === 'file') {
+async function _processAnswer({ type, base64Encode }, input) {
+  if (type === 'file') {
     return readFileIfExists(input, base64Encode);
   } else {
     return input;

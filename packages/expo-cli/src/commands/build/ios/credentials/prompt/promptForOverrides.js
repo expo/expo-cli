@@ -14,8 +14,8 @@ const existingCredsGettersByType = {
 async function promptForOverrides(appleCtx, types) {
   const credentials = {};
   const toAskUserFor = [];
-  for (const _type of types) {
-    const definition = constants.CREDENTIALS[_type];
+  for (const type of types) {
+    const definition = constants.CREDENTIALS[type];
     const { dependsOn, name, canReuse } = definition;
     const shouldBeExpoGenerated =
       dependsOn &&
@@ -27,19 +27,19 @@ async function promptForOverrides(appleCtx, types) {
       // and he let Expo handle generating it
       // we must generate new Provisioning Profile
       // (and the user cannot provide his own file)
-      credentials[_type] = constants.EXPO_WILL_GENERATE;
+      credentials[type] = constants.EXPO_WILL_GENERATE;
     } else if (await _willUserProvideCredentialsType(name)) {
-      toAskUserFor.push(_type);
+      toAskUserFor.push(type);
     } else {
       if (canReuse) {
         const choice = await _askIfWantsToReuse(appleCtx, definition);
         if (choice) {
-          credentials[_type] = { reuse: choice };
+          credentials[type] = { reuse: choice };
         } else {
-          credentials[_type] = constants.EXPO_WILL_GENERATE;
+          credentials[type] = constants.EXPO_WILL_GENERATE;
         }
       } else {
-        credentials[_type] = constants.EXPO_WILL_GENERATE;
+        credentials[type] = constants.EXPO_WILL_GENERATE;
       }
     }
   }
