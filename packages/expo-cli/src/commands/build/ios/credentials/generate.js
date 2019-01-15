@@ -1,7 +1,7 @@
 import ora from 'ora';
 import intersection from 'lodash/intersection';
 
-import * as consts from './constants';
+import * as constants from './constants';
 import log from '../../../../log';
 import * as apple from '../apple';
 
@@ -12,12 +12,12 @@ async function generate(appleCtx, credentialsToGenerate, metadata) {
 
   log(`We're going to generate:`);
   credentialsToGenerate.forEach(_type => {
-    log(`- ${consts.CREDENTIALS[_type].name}`);
+    log(`- ${constants.CREDENTIALS[_type].name}`);
   });
 
   let newCredentials = {};
   for (const id of credentialsToGenerate) {
-    const { name } = consts.CREDENTIALS[id];
+    const { name } = constants.CREDENTIALS[id];
     const spinner = ora(`Generating ${name}...`).start();
     try {
       const generated = await _create(appleCtx, id, metadata);
@@ -38,7 +38,7 @@ async function _create(appleCtx, _type, metadata) {
 
 function determineMissingCredentials(existingCredentials = {}) {
   const existingCredentialsKeys = Object.keys(existingCredentials);
-  const missing = consts.REQUIRED_CREDENTIALS.reduce((acc, ruleOrCondition) => {
+  const missing = constants.REQUIRED_CREDENTIALS.reduce((acc, ruleOrCondition) => {
     const id = _applyRuleOrCondition(existingCredentialsKeys, ruleOrCondition);
     if (id) {
       acc.push(id);

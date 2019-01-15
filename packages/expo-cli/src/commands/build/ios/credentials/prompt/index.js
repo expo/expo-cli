@@ -6,7 +6,7 @@ import merge from 'lodash/merge';
 import getFromParams from './paramsProvided';
 import promptForCredentials from './userProvided';
 import promptForOverrides from './expoManaged';
-import * as consts from '../constants';
+import * as constants from '../constants';
 import log from '../../../../../log';
 import _prompt from '../../../../../prompt';
 
@@ -24,7 +24,7 @@ async function prompt(appleCtx, options, missingCredentials) {
     };
   }
 
-  const names = stillMissingCredentials.map(id => consts.CREDENTIALS[id].name).join(', ');
+  const names = stillMissingCredentials.map(id => constants.CREDENTIALS[id].name).join(', ');
   log.warn(`We do not have some credentials for you: ${names}`);
 
   const [answers, metadata] = (await _shouldExpoGenerateCerts())
@@ -40,11 +40,13 @@ async function prompt(appleCtx, options, missingCredentials) {
     (acc, { userCredentialsId, ...rest }) => ({ ...acc, ...rest }),
     {}
   );
-  const toGenerate = Object.keys(answers).filter(key => answers[key] === consts.EXPO_WILL_GENERATE);
+  const toGenerate = Object.keys(answers).filter(
+    key => answers[key] === constants.EXPO_WILL_GENERATE
+  );
 
   const credentialsFromAnswers = pickBy(
     answers,
-    val => val !== consts.EXPO_WILL_GENERATE && !(isObject(val) && 'reuse' in val)
+    val => val !== constants.EXPO_WILL_GENERATE && !(isObject(val) && 'reuse' in val)
   );
 
   const mergedCredentials = merge({}, credentialsFromParams, credentialsFromAnswers);

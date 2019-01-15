@@ -2,7 +2,7 @@ import { Credentials } from 'xdl';
 import ora from 'ora';
 import isObject from 'lodash/isObject';
 
-import * as consts from '../constants';
+import * as constants from '../constants';
 import promptForCredentials from './userProvided';
 import prompt from '../../../../../prompt';
 
@@ -15,7 +15,7 @@ async function promptForOverrides(appleCtx, types) {
   const credentials = {};
   const toAskUserFor = [];
   for (const _type of types) {
-    const definition = consts.CREDENTIALS[_type];
+    const definition = constants.CREDENTIALS[_type];
     const { dependsOn, name, canReuse } = definition;
     const shouldBeExpoGenerated =
       dependsOn &&
@@ -27,7 +27,7 @@ async function promptForOverrides(appleCtx, types) {
       // and he let Expo handle generating it
       // we must generate new Provisioning Profile
       // (and the user cannot provide his own file)
-      credentials[_type] = consts.EXPO_WILL_GENERATE;
+      credentials[_type] = constants.EXPO_WILL_GENERATE;
     } else if (await _willUserProvideCredentialsType(name)) {
       toAskUserFor.push(_type);
     } else {
@@ -36,10 +36,10 @@ async function promptForOverrides(appleCtx, types) {
         if (choice) {
           credentials[_type] = { reuse: choice };
         } else {
-          credentials[_type] = consts.EXPO_WILL_GENERATE;
+          credentials[_type] = constants.EXPO_WILL_GENERATE;
         }
       } else {
-        credentials[_type] = consts.EXPO_WILL_GENERATE;
+        credentials[_type] = constants.EXPO_WILL_GENERATE;
       }
     }
   }

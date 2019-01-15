@@ -3,7 +3,7 @@ import path from 'path';
 import { IosCodeSigning } from 'xdl';
 
 import { readFileIfExists } from './utils';
-import * as consts from '../constants';
+import * as constants from '../constants';
 import log from '../../../../../log';
 import _prompt from '../../../../../prompt';
 import * as validators from '../../../../utils/validators';
@@ -25,7 +25,7 @@ async function promptForCredentials(appleCtx, types, printWarning = true) {
   const credentials = {};
   for (const _type of types) {
     const value = {};
-    const { name, required, questions } = consts.CREDENTIALS[_type];
+    const { name, required, questions } = constants.CREDENTIALS[_type];
     log(`Please provide your ${name}:`);
     for (const i of required) {
       const question = questions[i];

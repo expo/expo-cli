@@ -4,7 +4,7 @@ import { Exp } from 'xdl';
 
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
-import * as consts from './credentials/constants';
+import * as constants from './credentials/constants';
 import validateProject from './projectValidator';
 import * as credentials from './credentials';
 import * as apple from './apple';
@@ -121,8 +121,8 @@ class IOSBuilder extends BaseBuilder {
     const appleCtx = await this.getAppleCtx(projectMetadata);
     const metadata = {};
     if (
-      missingCredentials.includes(consts.PROVISIONING_PROFILE) &&
-      !missingCredentials.includes(consts.DISTRIBUTION_CERT)
+      missingCredentials.includes(constants.PROVISIONING_PROFILE) &&
+      !missingCredentials.includes(constants.DISTRIBUTION_CERT)
     ) {
       // we need to get distribution certificate serial number
       metadata.distCertSerialNumber = await credentials.getDistributionCertSerialNumber(
