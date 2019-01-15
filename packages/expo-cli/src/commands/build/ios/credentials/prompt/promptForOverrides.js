@@ -3,7 +3,7 @@ import ora from 'ora';
 import isObject from 'lodash/isObject';
 
 import * as constants from '../constants';
-import promptForCredentials from './userProvided';
+import promptForCredentials from './promptForCredentials';
 import prompt from '../../../../../prompt';
 
 const existingCredsGettersByType = {

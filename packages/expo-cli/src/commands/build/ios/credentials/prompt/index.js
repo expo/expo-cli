@@ -3,9 +3,9 @@ import isObject from 'lodash/isObject';
 import pickBy from 'lodash/pickBy';
 import merge from 'lodash/merge';
 
-import getFromParams from './paramsProvided';
-import promptForCredentials from './userProvided';
-import promptForOverrides from './expoManaged';
+import getFromParams from './getFromParams';
+import promptForCredentials from './promptForCredentials';
+import promptForOverrides from './promptForOverrides';
 import * as constants from '../constants';
 import log from '../../../../../log';
 import _prompt from '../../../../../prompt';
