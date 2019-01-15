@@ -7,7 +7,6 @@ import path from 'path';
 import url from 'url';
 
 import ProgressBar from 'progress';
-import includes from 'lodash/includes';
 import last from 'lodash/last';
 import compact from 'lodash/compact';
 import findLastIndex from 'lodash/findLastIndex';
@@ -377,7 +376,7 @@ function runAsync(programName) {
           commands.push(alias);
         }
       });
-      if (!includes(commands, subCommand)) {
+      if (!commands.includes(subCommand)) {
         console.log(
           `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
         );

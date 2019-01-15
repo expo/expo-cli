@@ -1,6 +1,5 @@
 import { Credentials } from 'xdl';
 import ora from 'ora';
-import includes from 'lodash/includes';
 import isObject from 'lodash/isObject';
 
 import * as consts from '../constants';
@@ -20,8 +19,8 @@ async function promptForOverrides(appleCtx, types) {
     const { dependsOn, name, canReuse } = definition;
     const shouldBeExpoGenerated =
       dependsOn &&
-      !includes(toAskUserFor, dependsOn) &&
-      includes(types, dependsOn) &&
+      !toAskUserFor.includes(dependsOn) &&
+      types.includes(dependsOn) &&
       !(isObject(credentials[dependsOn]) && 'reuse' in credentials[dependsOn]);
     if (shouldBeExpoGenerated) {
       // if a user was missing Distribution Certificate

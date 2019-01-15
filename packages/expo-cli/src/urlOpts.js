@@ -1,5 +1,4 @@
 import indentString from 'indent-string';
-import includes from 'lodash/includes';
 import qrcodeTerminal from 'qrcode-terminal';
 
 import { Android, ProjectSettings, Simulator } from 'xdl';
@@ -27,11 +26,11 @@ function addOptions(program) {
 }
 
 function hasBooleanArg(rawArgs, argName) {
-  return includes(rawArgs, '--' + argName) || includes(rawArgs, '--no-' + argName);
+  return rawArgs.includes('--' + argName) || rawArgs.includes('--no-' + argName);
 }
 
 function getBooleanArg(rawArgs, argName) {
-  if (includes(rawArgs, '--' + argName)) {
+  if (rawArgs.includes('--' + argName)) {
     return true;
   } else {
     return false;
