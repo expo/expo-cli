@@ -2,8 +2,7 @@ import mapValues from 'lodash/mapValues';
 import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
-
-import { readFileIfExists } from './utils';
+import fs from 'fs-extra';
 
 async function getFromParams(options) {
   const distPassword = process.env.EXPO_IOS_DIST_P12_PASSWORD;
@@ -21,14 +20,15 @@ async function getFromParams(options) {
 
   const all = {
     distributionCert: {
-      certP12: await readFileIfExists(distP12Path, true),
+      certP12: distP12Path && (await fs.readFile(distP12Path, 'base64')),
       certPassword: distPassword,
     },
     pushKey: {
-      apnsKeyP8: await readFileIfExists(pushP8Path),
+      apnsKeyP8: pushP8Path && (await fs.readFile(pushP8Path, 'utf8')),
       apnsKeyId: pushId,
     },
-    provisioningProfile: await readFileIfExists(provisioningProfilePath, true),
+    provisioningProfile:
+      provisioningProfilePath && (await fs.readFile(provisioningProfilePath, 'base64')),
   };
   const withoutEmptyObjects = mapValues(all, value => {
     if (isObject(value)) {

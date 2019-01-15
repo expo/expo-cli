@@ -1,8 +1,8 @@
 import untildify from 'untildify';
 import path from 'path';
 import { IosCodeSigning } from 'xdl';
+import fs from 'fs-extra';
 
-import { readFileIfExists } from './utils';
 import * as constants from '../constants';
 import log from '../../../../../log';
 import _prompt from '../../../../../prompt';
@@ -67,7 +67,7 @@ function _buildQuestionObject({ type, question }) {
 
 async function _processAnswer({ type, base64Encode }, input) {
   if (type === 'file') {
-    return readFileIfExists(input, base64Encode);
+    return fs.readFile(input, base64Encode ? 'base64' : 'utf8');
   } else {
     return input;
   }
