@@ -1,4 +1,6 @@
-import _ from 'lodash';
+import has from 'lodash/has';
+import pick from 'lodash/pick';
+import intersection from 'lodash/intersection';
 import chalk from 'chalk';
 
 import { Credentials, Exp, UrlUtils } from 'xdl';
@@ -90,7 +92,7 @@ export default class IOSUploader extends BaseUploader {
   }
 
   _ensureExperienceIsValid(exp) {
-    if (!_.has(exp, 'ios.bundleIdentifier')) {
+    if (!has(exp, 'ios.bundleIdentifier')) {
       throw new Error(`You must specify an iOS bundle identifier in app.json.`);
     }
   }
@@ -99,7 +101,7 @@ export default class IOSUploader extends BaseUploader {
     const appleIdCrentials = await this._getAppleIdCredentials();
     const appleTeamId = await this._getAppleTeamId();
     const appName = await this._getAppName();
-    const otherOptions = _.pick(this.options, ['language', 'sku']);
+    const otherOptions = pick(this.options, ['language', 'sku']);
     return {
       ...appleIdCrentials,
       appName,
@@ -132,7 +134,7 @@ export default class IOSUploader extends BaseUploader {
 
   async _getAppleIdCredentials() {
     const appleCredsKeys = ['appleId', 'appleIdPassword'];
-    const result = _.pick(this.options, appleCredsKeys);
+    const result = pick(this.options, appleCredsKeys);
 
     if (process.env.EXPO_APPLE_ID) {
       result.appleId = process.env.EXPO_APPLE_ID;
@@ -141,7 +143,7 @@ export default class IOSUploader extends BaseUploader {
       result.appleIdPassword = process.env.EXPO_APPLE_ID_PASSWORD;
     }
 
-    const credsPresent = _.intersection(Object.keys(result), appleCredsKeys);
+    const credsPresent = intersection(Object.keys(result), appleCredsKeys);
     if (credsPresent.length !== appleCredsKeys.length) {
       const questions = APPLE_CREDS_QUESTIONS.filter(({ name }) => !credsPresent.includes(name));
       const answers = await prompt(questions);

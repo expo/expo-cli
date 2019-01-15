@@ -1,5 +1,5 @@
 import ora from 'ora';
-import _ from 'lodash';
+import intersection from 'lodash/intersection';
 
 import * as consts from './constants';
 import log from '../../../../log';
@@ -74,7 +74,7 @@ function _applyOrCondition(keys, condition) {
 const _applyRule = (keys, rule) => (!_doCredentialsExist(keys, rule) ? rule.id : null);
 
 function _doCredentialsExist(keys, rule) {
-  const common = _.intersection(keys, rule.required);
+  const common = intersection(keys, rule.required);
   return rule.required.length === common.length;
 }
 

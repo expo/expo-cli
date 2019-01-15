@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import get from 'lodash/get';
 import dateformat from 'dateformat';
 import chalk from 'chalk';
 
@@ -24,7 +24,7 @@ const createManager = ({ appleId, appleIdPassword, team }) => ({
       const args = ['create', appleId, appleIdPassword, team.id, team.inHouse];
       return await runAction(travelingFastlane.manageDistCerts, args);
     } catch (err) {
-      const resultString = _.get(err, 'rawDump.resultString');
+      const resultString = get(err, 'rawDump.resultString');
       if (resultString && resultString.match(/Maximum number of certificates generated/)) {
         log.error(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
       }

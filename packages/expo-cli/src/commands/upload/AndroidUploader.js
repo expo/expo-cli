@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import has from 'lodash/has';
 import fs from 'fs-extra';
 
 import BaseUploader from './BaseUploader';
@@ -35,7 +35,7 @@ export default class AndroidUploader extends BaseUploader {
   }
 
   _ensureExperienceIsValid(exp) {
-    if (!_.has(exp, 'android.package')) {
+    if (!has(exp, 'android.package')) {
       throw new Error('You must specify an Android package in app.json.');
     }
   }

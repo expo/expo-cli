@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import get from 'lodash/get';
 import dateformat from 'dateformat';
 import chalk from 'chalk';
 
@@ -22,7 +22,7 @@ const createManager = ({ appleId, appleIdPassword, team }) => ({
       const args = ['create', appleId, appleIdPassword, team.id, name];
       return await runAction(travelingFastlane.managePushKeys, args);
     } catch (err) {
-      const userString = _.get(err, 'rawDump.userString');
+      const userString = get(err, 'rawDump.userString');
       if (userString && userString.match(/maximum allowed number of Keys/)) {
         log.error(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
       }

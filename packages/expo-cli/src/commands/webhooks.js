@@ -1,6 +1,6 @@
 import { Webhooks, Exp } from 'xdl';
 import chalk from 'chalk';
-import _ from 'lodash';
+import includes from 'lodash/includes';
 import inquirer from 'inquirer';
 import validator from 'validator';
 
@@ -126,7 +126,7 @@ function _sanitizeEvent(event, required = false) {
     }
   }
 
-  if (!_.includes(WEBHOOK_TYPES, event)) {
+  if (!includes(WEBHOOK_TYPES, event)) {
     throw new Error(`Unsupported webhook type: ${event}`);
   }
 

@@ -2,18 +2,21 @@
  * @flow
  */
 
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+
 import ProgressBar from 'progress';
-import _ from 'lodash';
+import includes from 'lodash/includes';
+import last from 'lodash/last';
+import compact from 'lodash/compact';
+import findLastIndex from 'lodash/findLastIndex';
 import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
 import glob from 'glob';
-import fs from 'fs';
 import ora from 'ora';
-import path from 'path';
 import simpleSpinner from '@expo/simple-spinner';
-import url from 'url';
 import getenv from 'getenv';
-
 import program, { Command } from 'commander';
 import {
   Analytics,
@@ -59,7 +62,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
     }
 
     try {
-      let options = _.last(args);
+      let options = last(args);
       if (options.output === 'raw') {
         log.config.raw = true;
       }
@@ -148,8 +151,8 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
         return line.startsWith('node_modules');
       };
 
-      let stackFrames = _.compact(stack.split('\n'));
-      let lastAppCodeFrameIndex = _.findLastIndex(stackFrames, line => {
+      let stackFrames = compact(stack.split('\n'));
+      let lastAppCodeFrameIndex = findLastIndex(stackFrames, line => {
         return !isLibraryFrame(line);
       });
       let lastFrameIndexToLog = Math.min(
@@ -374,7 +377,7 @@ function runAsync(programName) {
           commands.push(alias);
         }
       });
-      if (!_.includes(commands, subCommand)) {
+      if (!includes(commands, subCommand)) {
         console.log(
           `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
         );

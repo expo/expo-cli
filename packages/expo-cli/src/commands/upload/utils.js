@@ -1,5 +1,5 @@
 import { ExponentTools } from 'xdl';
-import _ from 'lodash';
+import get from 'lodash/get';
 import fs from 'fs-extra';
 import ProgressBar from 'progress';
 import axios from 'axios';
@@ -49,7 +49,7 @@ export async function runFastlaneAsync(
     const message =
       res.reason !== 'Unknown reason'
         ? res.reason
-        : _.get(res, 'rawDump.message', 'Unknown error when running fastlane');
+        : get(res, 'rawDump.message', 'Unknown error when running fastlane');
     throw new Error(message);
   }
 }

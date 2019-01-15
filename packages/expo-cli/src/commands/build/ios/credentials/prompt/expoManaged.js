@@ -1,6 +1,7 @@
 import { Credentials } from 'xdl';
 import ora from 'ora';
-import _ from 'lodash';
+import includes from 'lodash/includes';
+import isObject from 'lodash/isObject';
 
 import * as consts from '../constants';
 import promptForCredentials from './userProvided';
@@ -19,9 +20,9 @@ async function promptForOverrides(appleCtx, types) {
     const { dependsOn, name, canReuse } = definition;
     const shouldBeExpoGenerated =
       dependsOn &&
-      !_.includes(toAskUserFor, dependsOn) &&
-      _.includes(types, dependsOn) &&
-      !(_.isObject(credentials[dependsOn]) && 'reuse' in credentials[dependsOn]);
+      !includes(toAskUserFor, dependsOn) &&
+      includes(types, dependsOn) &&
+      !(isObject(credentials[dependsOn]) && 'reuse' in credentials[dependsOn]);
     if (shouldBeExpoGenerated) {
       // if a user was missing Distribution Certificate
       // and he let Expo handle generating it

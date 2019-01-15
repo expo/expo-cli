@@ -1,4 +1,5 @@
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty';
+import pickBy from 'lodash/pickBy';
 import { Exp } from 'xdl';
 
 import BaseBuilder from '../BaseBuilder';
@@ -112,8 +113,8 @@ class IOSBuilder extends BaseBuilder {
       pushCert: Boolean(clearCredentials || clearPushCert),
       provisioningProfile: Boolean(clearCredentials || clearProvisioningProfile),
     };
-    const credsToClear = _.pickBy(credsToClearAll);
-    return _.isEmpty(credsToClear) ? null : credsToClear;
+    const credsToClear = pickBy(credsToClearAll);
+    return isEmpty(credsToClear) ? null : credsToClear;
   }
 
   async produceMissingCredentials(projectMetadata, missingCredentials) {

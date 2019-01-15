@@ -1,4 +1,7 @@
-import _ from 'lodash';
+import difference from 'lodash/difference';
+import isObject from 'lodash/isObject';
+import pickBy from 'lodash/pickBy';
+import merge from 'lodash/merge';
 
 import getFromParams from './paramsProvided';
 import promptForCredentials from './userProvided';
@@ -9,7 +12,7 @@ import _prompt from '../../../../../prompt';
 
 async function prompt(appleCtx, options, missingCredentials) {
   const credentialsFromParams = await getFromParams(options);
-  const stillMissingCredentials = _.difference(
+  const stillMissingCredentials = difference(
     missingCredentials,
     Object.keys(credentialsFromParams)
   );
@@ -29,7 +32,7 @@ async function prompt(appleCtx, options, missingCredentials) {
     : await promptForCredentials(appleCtx, stillMissingCredentials);
 
   const reused = Object.values(answers)
-    .filter(i => _.isObject(i) && 'reuse' in i)
+    .filter(i => isObject(i) && 'reuse' in i)
     .map(i => i.reuse);
 
   const userCredentialsIds = reused.map(i => i.userCredentialsId);
@@ -39,12 +42,12 @@ async function prompt(appleCtx, options, missingCredentials) {
   );
   const toGenerate = Object.keys(answers).filter(key => answers[key] === consts.EXPO_WILL_GENERATE);
 
-  const credentialsFromAnswers = _.pickBy(
+  const credentialsFromAnswers = pickBy(
     answers,
-    val => val !== consts.EXPO_WILL_GENERATE && !(_.isObject(val) && 'reuse' in val)
+    val => val !== consts.EXPO_WILL_GENERATE && !(isObject(val) && 'reuse' in val)
   );
 
-  const mergedCredentials = _.merge({}, credentialsFromParams, credentialsFromAnswers);
+  const mergedCredentials = merge({}, credentialsFromParams, credentialsFromAnswers);
   const metadataToReturn = { ...metadata, ...metadataFromReused };
 
   return {
@@ -77,7 +80,7 @@ async function _shouldExpoGenerateCerts() {
 const _flattenObject = obj => {
   return Object.keys(obj).reduce((acc, key) => {
     const value = obj[key];
-    if (_.isObject(value)) {
+    if (isObject(value)) {
       return { ...acc, ..._flattenObject(value) };
     } else {
       return { ...acc, [key]: value };

@@ -1,4 +1,8 @@
-import _ from 'lodash';
+import mapValues from 'lodash/mapValues';
+import isObject from 'lodash/isObject';
+import isEmpty from 'lodash/isEmpty';
+import pickBy from 'lodash/pickBy';
+
 import { readFileIfExists } from './utils';
 
 async function getFromParams(options) {
@@ -26,15 +30,15 @@ async function getFromParams(options) {
     },
     provisioningProfile: await readFileIfExists(provisioningProfilePath, true),
   };
-  const withoutEmptyObjects = _.mapValues(all, value => {
-    if (_.isObject(value)) {
-      const cleanedValue = _.pickBy(value);
-      return _.isEmpty(cleanedValue) ? null : cleanedValue;
+  const withoutEmptyObjects = mapValues(all, value => {
+    if (isObject(value)) {
+      const cleanedValue = pickBy(value);
+      return isEmpty(cleanedValue) ? null : cleanedValue;
     } else {
       return value;
     }
   });
-  return _.pickBy(withoutEmptyObjects);
+  return pickBy(withoutEmptyObjects);
 }
 
 const _isOnlyOneSet = (a, b) => (a && !b) || (b && !a);
