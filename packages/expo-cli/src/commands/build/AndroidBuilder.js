@@ -19,16 +19,24 @@ export default class AndroidBuilder extends BaseBuilder {
     const sdkVersion = await this.validateProject(buildOptions);
     const { releaseChannel } = options;
     // Check the status of any current builds
-    await this.checkStatus({ platform: 'android', sdkVersion, releaseChannel, ...buildOptions });
+    await this.checkForBuildInProgress({
+      platform: 'android',
+      sdkVersion,
+      releaseChannel,
+      ...buildOptions,
+    });
     // Check for existing credentials, collect any missing credentials, and validate them
     await this.collectAndValidateCredentials(buildOptions);
     // Publish the current experience, if necessary
     let publishedExpIds = options.publicUrl ? undefined : await this.ensureReleaseExists('android');
 
+    if (!options.publicUrl) {
+      await this.checkStatusBeforeBuild({ platform: 'android', sdkVersion, releaseChannel });
+    }
+
     // Initiate a build
     await this.build(publishedExpIds, 'android', buildOptions);
   }
-
   async _clearCredentials(options = {}) {
     const publicUrl = options.publicUrl;
     const {

@@ -35,6 +35,7 @@ import readLastLines from 'read-last-lines';
 import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
+import ApiV2 from './ApiV2';
 import Config from './Config';
 import * as Doctor from './project/Doctor';
 import * as DevSession from './DevSession';
@@ -584,6 +585,24 @@ async function _saveAssetAsync(projectRoot, assets, outputDir) {
     await Promise.all(promises);
   }
   logger.global.info('Files successfully saved.');
+}
+
+export async function findReusableBuildAsync(
+  releaseChannel: string,
+  platform: string,
+  sdkVersion: string,
+  slug: string
+): Promise<{ downloadUrl?: string, canReuse: boolean }> {
+  const user = await UserManager.getCurrentUserAsync();
+
+  const buildReuseStatus = await ApiV2.clientForUser(user).postAsync('standalone-build/reuse', {
+    releaseChannel: releaseChannel,
+    platform: platform,
+    sdkVersion: sdkVersion,
+    slug: slug,
+  });
+
+  return buildReuseStatus;
 }
 
 export async function publishAsync(
