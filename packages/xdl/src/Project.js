@@ -587,7 +587,7 @@ async function _saveAssetAsync(projectRoot, assets, outputDir) {
   logger.global.info('Files successfully saved.');
 }
 
-export async function tryReuseBuildAsync(
+export async function findReusableBuildAsync(
   releaseChannel: string,
   platform: string,
   sdkVersion: string,
@@ -595,7 +595,7 @@ export async function tryReuseBuildAsync(
 ): Promise<{ downloadUrl?: string, canReuse: boolean }> {
   const user = await UserManager.getCurrentUserAsync();
 
-  const buildReuseStatus = await ApiV2.clientForUser(user).postAsync('build/reuse', {
+  const buildReuseStatus = await ApiV2.clientForUser(user).postAsync('standalone-build/reuse', {
     releaseChannel: releaseChannel,
     platform: platform,
     sdkVersion: sdkVersion,

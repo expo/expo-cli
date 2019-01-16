@@ -73,7 +73,13 @@ export default class BaseBuilder {
     }
   }
 
-  async checkInProgress({ releaseChannel, platform, publicUrl, sdkVersion }: StatusArgs = {}) {
+  async checkForBuildInProgress({
+    releaseChannel,
+    platform,
+    publicUrl,
+    sdkVersion,
+  }: StatusArgs = {}) {
+    log('Checking if there is build in progress...\n');
     const buildStatus = await Project.buildAsync(this.projectDir, {
       mode: 'status',
       platform,
@@ -83,7 +89,7 @@ export default class BaseBuilder {
       sdkVersion,
     });
     if (buildStatus.jobs && buildStatus.jobs.length) {
-      throw new BuildError('Cannot start new build, as there is a build in progress.');
+      throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
   }
 
@@ -118,19 +124,23 @@ export default class BaseBuilder {
     this.logBuildStatuses(buildStatus);
   }
 
-  async checkBeforeBuild({ platform, releaseChannel, sdkVersion }: StatusArgs = {}): Promise<void> {
+  async checkStatusBeforeBuild({
+    platform,
+    releaseChannel,
+    sdkVersion,
+  }: StatusArgs = {}): Promise<void> {
     await this._checkProjectConfig();
-    log('Checking if current build exists...\n');
+    log('Checking if this build already exists...\n');
 
-    let { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
-    const reuseStatus = await Project.tryReuseBuildAsync(
+    const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
+    const reuseStatus = await Project.findReusableBuildAsync(
       releaseChannel,
       platform,
       sdkVersion,
       exp.slug
     );
     if (reuseStatus.canReuse) {
-      const downloadUrl = reuseStatus.downloadUrl;
+      const { downloadUrl } = reuseStatus;
 
       log.warn(`Did you know that Expo provides over-the-air updates?
 Please see the docs (${chalk.underline(
@@ -138,7 +148,7 @@ Please see the docs (${chalk.underline(
       )}) and check if you can use them instead of building your app binaries again.`);
 
       log.warn(
-        `There were no new changes from the last build, you can download that build here ${chalk.underline(
+        `There were no new changes from the last build, you can download that build from here: ${chalk.underline(
           reuseStatus.downloadUrl
         )}`
       );
@@ -153,7 +163,7 @@ Please see the docs (${chalk.underline(
 
       const answers = await prompt(questions);
       if (!answers.confirm) {
-        log('Stopping build');
+        log('Stopping the build process');
         process.exit(0);
       }
     }

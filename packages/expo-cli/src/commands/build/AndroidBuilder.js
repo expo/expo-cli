@@ -19,7 +19,7 @@ export default class AndroidBuilder extends BaseBuilder {
     const sdkVersion = await this.validateProject(buildOptions);
     const { releaseChannel } = options;
     // Check the status of any current builds
-    await this.checkInProgress({
+    await this.checkForBuildInProgress({
       platform: 'android',
       sdkVersion,
       releaseChannel,
@@ -30,7 +30,9 @@ export default class AndroidBuilder extends BaseBuilder {
     // Publish the current experience, if necessary
     let publishedExpIds = options.publicUrl ? undefined : await this.ensureReleaseExists('android');
 
-    await this.checkBeforeBuild({ platform: 'android', sdkVersion, releaseChannel });
+    if (!options.publicUrl) {
+      await this.checkStatusBeforeBuild({ platform: 'android', sdkVersion, releaseChannel });
+    }
 
     // Initiate a build
     await this.build(publishedExpIds, 'android', buildOptions);
