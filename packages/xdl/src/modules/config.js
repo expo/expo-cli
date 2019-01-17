@@ -306,6 +306,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXImageManipulator',
+    libName: 'expo-image-manipulator',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXImagePicker',
     libName: 'expo-image-picker',
     sdkVersions: '>=33.0.0',
