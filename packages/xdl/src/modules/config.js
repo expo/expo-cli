@@ -271,6 +271,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXMailComposer',
+    libName: 'expo-mail-composer',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXMediaLibrary',
     libName: 'expo-media-library',
     sdkVersions: '>=30.0.0',
