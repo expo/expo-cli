@@ -59,6 +59,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=32.0.0',
   },
   {
+    podName: 'EXAV',
+    libName: 'expo-av',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXBackgroundFetch',
     libName: 'expo-background-fetch',
     sdkVersions: '>=32.0.0',
