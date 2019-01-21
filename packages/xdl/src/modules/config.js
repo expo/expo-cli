@@ -337,6 +337,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXSQLite',
+    libName: 'expo-sqlite',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXTaskManager',
     libName: 'expo-task-manager',
     sdkVersions: '>=32.0.0',
