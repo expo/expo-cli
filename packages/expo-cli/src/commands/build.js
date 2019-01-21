@@ -14,6 +14,7 @@ export default (program: any) => {
   program
     .command('build:ios [project-dir]')
     .alias('bi')
+    .option('-m --managed <whoManges>', 'How would you like to upload your credentials: [expo|me].', /^(expo|me)$/i)
     .option('-c, --clear-credentials', 'Clear credentials stored on expo servers')
     .option(
       '--clear-app-credentials',

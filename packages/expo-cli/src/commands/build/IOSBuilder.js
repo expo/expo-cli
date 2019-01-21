@@ -639,7 +639,8 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
         `Encrypted ${Object.keys(OBLIGATORY_CREDS_KEYS).join(', ')} and saved to expo servers`
       );
     } else if (clientHasAllNeededCreds === false) {
-      const strategy = await prompt(runAsExpertQuestion);
+      const { whoManges } = this.options;
+      const strategy = whoManges?{isExpoManaged:whoManges=="expo"}:await prompt(runAsExpertQuestion);
       const isEnterprise = this.options.appleEnterpriseAccount !== undefined;
       credsStarter.enterpriseAccount = isEnterprise ? 'true' : 'false';
       const { appleCredentials, team } = await this._validateCredsEnsureAppExists(
