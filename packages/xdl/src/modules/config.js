@@ -337,6 +337,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXSpeech',
+    libName: 'expo-speech',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXSQLite',
     libName: 'expo-sqlite',
     sdkVersions: '>=33.0.0',
