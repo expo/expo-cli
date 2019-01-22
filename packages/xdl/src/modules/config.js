@@ -109,6 +109,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXDocumentPicker',
+    libName: 'expo-document-picker',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXErrors',
     libName: 'expo-errors',
     sdkVersions: '>=32.0.0',
