@@ -79,6 +79,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXBlur',
+    libName: 'expo-blur',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXCamera',
     libName: 'expo-camera',
     sdkVersions: '>=29.0.0',
