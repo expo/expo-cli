@@ -124,6 +124,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=32.0.0',
   },
   {
+    podName: 'EXFacebook',
+    libName: 'expo-facebook',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXFaceDetector',
     libName: 'expo-face-detector',
     detachable: false,
@@ -325,6 +330,11 @@ const expoSdkUniversalModules = [
     podName: 'EXReactNativeAdapter',
     libName: 'expo-react-native-adapter',
     sdkVersions: '>=29.0.0',
+  },
+  {
+    podName: 'EXSecureStore',
+    libName: 'expo-secure-store',
+    sdkVersions: '>=33.0.0',
   },
   {
     podName: 'EXSegment',
