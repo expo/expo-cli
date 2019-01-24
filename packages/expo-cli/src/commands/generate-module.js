@@ -8,7 +8,7 @@ export default program => {
       'Local directory or npm package containing template for universal Expo module'
     )
     .description(
-      'Generate an universal module for Expo from a template in [new-module-project] directory.'
+      'Generate a universal module for Expo from a template in [new-module-project] directory.'
     )
     .asyncAction(generateModuleAsync);
 };
