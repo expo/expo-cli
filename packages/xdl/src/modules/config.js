@@ -261,9 +261,14 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXKeepAwake',
+    libName: 'expo-keep-awake',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXLinearGradient',
     libName: 'expo-linear-gradient',
-    sdkVersions: '>=32.0.0',
+    sdkVersions: '>=33.0.0',
   },
   {
     podName: 'EXLocalAuthentication',
@@ -284,16 +289,6 @@ const expoSdkUniversalModules = [
     podName: 'EXMailComposer',
     libName: 'expo-mail-composer',
     sdkVersions: '>=33.0.0',
-  },
-  {
-    podName: 'EXKeepAwake',
-    libName: 'expo-keep-awake',
-    sdkVersions: '>=32.0.0',
-  },
-  {
-    podName: 'EXLinearGradient',
-    libName: 'expo-linear-gradient',
-    sdkVersions: '>=32.0.0',
   },
   {
     podName: 'EXMediaLibrary',
