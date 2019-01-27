@@ -81,6 +81,30 @@ export async function updateAndroidApk(s3Client: any, pathToApp: string, appVers
   await Versions.setVersionsAsync(versions);
 }
 
+export async function updateAndroidTestApk(s3Client: any, pathToApp: string, appVersion: string) {
+  let file = fs.createReadStream(pathToApp);
+
+  console.log('Uploading...');
+
+  await s3Client
+    .putObject({
+      Bucket: 'exp-android-test-apks',
+      Key: `Exponent-Test-${appVersion}.apk`,
+      Body: file,
+      ACL: 'public-read',
+    })
+    .promise();
+
+  console.log('Adding to server config...');
+
+  let versions = await Versions.versionsAsync();
+  versions['androidTestVersion'] = appVersion;
+  versions[
+    'androidTestUrl'
+  ] = `https://d3usx1xji5k1o7.cloudfront.net/Exponent-Test-${appVersion}.apk`;
+  await Versions.setVersionsAsync(versions);
+}
+
 export async function updateTurtleVersionAsync(sdkVersion: string, platform: string) {
   const platforms = platform === 'both' ? ['android', 'ios'] : [platform];
   const versions = await Versions.versionsAsync();
