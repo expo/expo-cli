@@ -7,7 +7,7 @@ import { PLATFORMS } from '../constants';
 import * as constants from './credentials/constants';
 import validateProject from './projectValidator';
 import * as credentials from './credentials';
-import * as apple from './apple';
+import * as apple from './appleApi';
 
 class IOSBuilder extends BaseBuilder {
   async run() {
