@@ -121,7 +121,6 @@ export default (program: any) => {
       try {
         return await builder.checkStatus({
           platform: 'all',
-          current: false,
           ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
         });
       } catch (e) {

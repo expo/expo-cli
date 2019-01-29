@@ -11,6 +11,7 @@ import * as UrlUtils from '../utils/url';
 import log from '../../log';
 import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
+import prompt from '../../prompt';
 
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 const secondsToMilliseconds = seconds => seconds * 1000;
@@ -29,7 +30,7 @@ type BuilderOptions = {
 
 type StatusArgs = {
   platform: string,
-  current: boolean,
+  current?: boolean,
   publicUrl?: string,
   releaseChannel?: string,
   sdkVersion?: string,
@@ -72,13 +73,22 @@ export default class BaseBuilder {
     }
   }
 
-  async checkStatus({
-    current = true,
-    platform = 'all',
-    publicUrl,
-    releaseChannel,
-    sdkVersion,
-  }: StatusArgs = {}): Promise<void> {
+  async checkForBuildInProgress({ platform, publicUrl, sdkVersion }: StatusArgs = {}) {
+    log('Checking if there is build in progress...\n');
+    const buildStatus = await Project.buildAsync(this.projectDir, {
+      mode: 'status',
+      platform,
+      current: true,
+      releaseChannel: this.options.releaseChannel,
+      ...(publicUrl ? { publicUrl } : {}),
+      sdkVersion,
+    });
+    if (buildStatus.jobs && buildStatus.jobs.length) {
+      throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
+    }
+  }
+
+  async checkStatus({ platform = 'all', publicUrl, sdkVersion }: StatusArgs = {}): Promise<void> {
     await this._checkProjectConfig();
 
     log('Checking if current build exists...\n');
@@ -86,8 +96,8 @@ export default class BaseBuilder {
     const buildStatus = await Project.buildAsync(this.projectDir, {
       mode: 'status',
       platform,
-      current,
-      releaseChannel,
+      current: false,
+      releaseChannel: this.options.releaseChannel,
       ...(publicUrl ? { publicUrl } : {}),
       sdkVersion,
     });
@@ -97,16 +107,55 @@ export default class BaseBuilder {
     }
 
     if (!(buildStatus.jobs && buildStatus.jobs.length)) {
-      if (current && buildStatus.userHasBuiltAppBefore) {
-        log.warn(`Did you know that Expo provides over-the-air updates?
-Please see the docs (${chalk.underline(
-          'https://docs.expo.io/versions/latest/guides/configuring-ota-updates'
-        )}) and check if you can use them instead of building your app binaries again.`);
-      }
       log('No currently active or previous builds for this project.');
       return;
     }
 
+    this.logBuildStatuses(buildStatus);
+  }
+
+  async checkStatusBeforeBuild({ platform, sdkVersion }: StatusArgs = {}): Promise<void> {
+    await this._checkProjectConfig();
+    log('Checking if this build already exists...\n');
+
+    const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
+    const reuseStatus = await Project.findReusableBuildAsync(
+      this.options.releaseChannel,
+      platform,
+      sdkVersion,
+      exp.slug
+    );
+    if (reuseStatus.canReuse) {
+      const { downloadUrl } = reuseStatus;
+
+      log.warn(`Did you know that Expo provides over-the-air updates?
+Please see the docs (${chalk.underline(
+        'https://docs.expo.io/versions/latest/guides/configuring-ota-updates'
+      )}) and check if you can use them instead of building your app binaries again.`);
+
+      log.warn(
+        `There were no new changes from the last build, you can download that build from here: ${chalk.underline(
+          reuseStatus.downloadUrl
+        )}`
+      );
+
+      let questions = [
+        {
+          type: 'confirm',
+          name: 'confirm',
+          message: 'Do you want to build app anyway?',
+        },
+      ];
+
+      const answers = await prompt(questions);
+      if (!answers.confirm) {
+        log('Stopping the build process');
+        process.exit(0);
+      }
+    }
+  }
+
+  logBuildStatuses(buildStatus: { jobs: Array<Object> }) {
     log.raw();
     log('=================');
     log(' Builds Statuses ');
@@ -165,8 +214,6 @@ ${job.id}
       }
       log();
     });
-
-    throw new BuildError('Cannot start new build, as there is a build in progress.');
   }
 
   async ensureReleaseExists(platform: string) {

@@ -59,6 +59,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=32.0.0',
   },
   {
+    podName: 'EXAV',
+    libName: 'expo-av',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXBackgroundFetch',
     libName: 'expo-background-fetch',
     sdkVersions: '>=32.0.0',
@@ -72,6 +77,11 @@ const expoSdkUniversalModules = [
     podName: 'EXBarCodeScannerInterface',
     libName: 'expo-barcode-scanner-interface',
     sdkVersions: '>=30.0.0',
+  },
+  {
+    podName: 'EXBlur',
+    libName: 'expo-blur',
+    sdkVersions: '>=33.0.0',
   },
   {
     podName: 'EXCamera',
@@ -104,9 +114,19 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXDocumentPicker',
+    libName: 'expo-document-picker',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXErrors',
     libName: 'expo-errors',
     sdkVersions: '>=32.0.0',
+  },
+  {
+    podName: 'EXFacebook',
+    libName: 'expo-facebook',
+    sdkVersions: '>=33.0.0',
   },
   {
     podName: 'EXFaceDetector',
@@ -256,6 +276,16 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXKeepAwake',
+    libName: 'expo-keep-awake',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'EXLinearGradient',
+    libName: 'expo-linear-gradient',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXLocalAuthentication',
     libName: 'expo-local-authentication',
     sdkVersions: '>=30.0.0',
@@ -269,6 +299,11 @@ const expoSdkUniversalModules = [
     podName: 'EXLocation',
     libName: 'expo-location',
     sdkVersions: '>=30.0.0',
+  },
+  {
+    podName: 'EXMailComposer',
+    libName: 'expo-mail-composer',
+    sdkVersions: '>=33.0.0',
   },
   {
     podName: 'EXMediaLibrary',
@@ -307,6 +342,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXSecureStore',
+    libName: 'expo-secure-store',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXSegment',
     libName: 'expo-analytics-segment',
     sdkVersions: '>=30.0.0',
@@ -325,6 +365,16 @@ const expoSdkUniversalModules = [
     podName: 'EXSMS',
     libName: 'expo-sms',
     sdkVersions: '>=29.0.0',
+  },
+  {
+    podName: 'EXSpeech',
+    libName: 'expo-speech',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'EXSQLite',
+    libName: 'expo-sqlite',
+    sdkVersions: '>=33.0.0',
   },
   {
     podName: 'EXTaskManager',

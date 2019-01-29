@@ -13,9 +13,16 @@ class IOSBuilder extends BaseBuilder {
   async run() {
     const projectMetadata = await this.fetchProjectMetadata();
     await validateProject(projectMetadata);
-    await this.ensureNoInProgressBuildsExist(projectMetadata);
+    await this.checkForBuildInProgress({
+      platform: PLATFORMS.IOS,
+      sdkVersion: projectMetadata.sdkVersion,
+    });
     await this.prepareCredentials(projectMetadata);
     const publishedExpIds = await this.ensureProjectIsPublished();
+    await this.checkStatusBeforeBuild({
+      platform: PLATFORMS.IOS,
+      sdkVersion: projectMetadata.sdkVersion,
+    });
     await this.scheduleBuild(publishedExpIds, projectMetadata.bundleIdentifier);
   }
 
@@ -49,10 +56,6 @@ class IOSBuilder extends BaseBuilder {
       sdkVersion,
       bundleIdentifier,
     };
-  }
-
-  async ensureNoInProgressBuildsExist({ sdkVersion }) {
-    await this.checkStatus({ platform: PLATFORMS.IOS, sdkVersion });
   }
 
   async prepareCredentials(projectMetadata) {
