@@ -25,8 +25,12 @@ export default async function installPackagesAsync(
     const packageLockJsonExists: boolean = await fs.pathExists(
       path.join(projectDir, 'package-lock.json')
     );
-    const yarnExists = await commandExists('yarnpkg');
-    packageManager = yarnExists && !packageLockJsonExists ? 'yarn' : 'npm';
+    try {
+      await commandExists('yarnpkg');
+      packageManager = !packageLockJsonExists ? 'yarn' : 'npm';
+    } catch (err) {
+      // yarnpkg doesn't exist, we're going to use npm
+    }
   }
 
   if (packageManager == 'yarn') {
