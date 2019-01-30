@@ -19,7 +19,7 @@ export default (program: any) => {
     .option('--clear-push-key', 'Remove Push Notifications Key stored on Expo servers.')
     .option(
       '--clear-push-cert',
-      'Remove Push Notifications Certificate stored on Expo servers (DEPRECATED).'
+      'Remove Push Notifications Certificate stored on Expo servers. Use of Push Notifications Certifacates is deprecated.'
     )
     .option('--clear-provisioning-profile', 'Remove Provisioning Profile stored on Expo servers.')
     .option(
@@ -44,8 +44,8 @@ export default (program: any) => {
       '--dist-p12-path <dist.p12>',
       'Path to your Distribution Certificate P12 (set password as EXPO_IOS_DIST_P12_PASSWORD environment variable).'
     )
-    .option('--push-id <push-id>', 'Push Key ID.')
-    .option('--push-p8-path <push.p12>', 'Path to your Push Key P8.')
+    .option('--push-id <push-id>', 'Push Key ID (ex: 123AB4C56D).')
+    .option('--push-p8-path <push.p12>', 'Path to your Push Key .p8 file.')
     .option('--provisioning-profile-path <.mobileprovision>', 'Path to your Provisioning Profile.')
     .option(
       '--public-url <url>',

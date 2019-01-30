@@ -126,9 +126,9 @@ def create_package target
   # https://github.com/phusion/traveling-ruby/issues/38
   sh "mv #{package_dir}/lib/ruby/lib/restore_environment.rb #{package_dir}/lib/ruby/lib/ruby/site_ruby/"
   sh <<-eos
-    sed -i '' -e 's|RUBYOPT=\\\\"-r$ROOT/lib/restore_environment\\\\"|RUBYOPT=\\\\"-rrestore_environment\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
-    sed -i '' -e 's|GEM_HOME="\\(.*\\)"|GEM_HOME=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
-    sed -i '' -e 's|GEM_PATH="\\(.*\\)"|GEM_PATH=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+    sed -i.bak -e 's|RUBYOPT=\\\\"-r$ROOT/lib/restore_environment\\\\"|RUBYOPT=\\\\"-rrestore_environment\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+    sed -i.bak -e 's|GEM_HOME="\\(.*\\)"|GEM_HOME=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+    sed -i.bak -e 's|GEM_PATH="\\(.*\\)"|GEM_PATH=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
   eos
 
   # Put in our native dependencies rather than the one provided by bundle

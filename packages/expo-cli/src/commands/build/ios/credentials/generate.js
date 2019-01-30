@@ -3,7 +3,7 @@ import intersection from 'lodash/intersection';
 
 import * as constants from './constants';
 import log from '../../../../log';
-import * as apple from '../apple';
+import * as apple from '../appleApi';
 
 async function generate(appleCtx, credentialsToGenerate, metadata) {
   if (!credentialsToGenerate || credentialsToGenerate.length === 0) {

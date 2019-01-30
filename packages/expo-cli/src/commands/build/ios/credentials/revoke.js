@@ -1,4 +1,4 @@
-import * as apple from '../apple';
+import * as apple from '../appleApi';
 import prompt from '../../../../prompt';
 
 async function revoke(appleCtx, typesToRevoke) {
