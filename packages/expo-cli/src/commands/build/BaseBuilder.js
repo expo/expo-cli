@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, ProjectUtils, Versions } from 'xdl';
+import { Project, ProjectUtils } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import simpleSpinner from '@expo/simple-spinner';
@@ -30,7 +30,7 @@ type BuilderOptions = {
 
 type StatusArgs = {
   platform: string,
-  current: boolean,
+  current?: boolean,
   publicUrl?: string,
   releaseChannel?: string,
   sdkVersion?: string,
@@ -73,18 +73,13 @@ export default class BaseBuilder {
     }
   }
 
-  async checkForBuildInProgress({
-    releaseChannel,
-    platform,
-    publicUrl,
-    sdkVersion,
-  }: StatusArgs = {}) {
+  async checkForBuildInProgress({ platform, publicUrl, sdkVersion }: StatusArgs = {}) {
     log('Checking if there is build in progress...\n');
     const buildStatus = await Project.buildAsync(this.projectDir, {
       mode: 'status',
       platform,
       current: true,
-      releaseChannel,
+      releaseChannel: this.options.releaseChannel,
       ...(publicUrl ? { publicUrl } : {}),
       sdkVersion,
     });
@@ -93,12 +88,7 @@ export default class BaseBuilder {
     }
   }
 
-  async checkStatus({
-    platform = 'all',
-    publicUrl,
-    releaseChannel,
-    sdkVersion,
-  }: StatusArgs = {}): Promise<void> {
+  async checkStatus({ platform = 'all', publicUrl, sdkVersion }: StatusArgs = {}): Promise<void> {
     await this._checkProjectConfig();
 
     log('Checking if current build exists...\n');
@@ -107,7 +97,7 @@ export default class BaseBuilder {
       mode: 'status',
       platform,
       current: false,
-      releaseChannel,
+      releaseChannel: this.options.releaseChannel,
       ...(publicUrl ? { publicUrl } : {}),
       sdkVersion,
     });
@@ -124,17 +114,13 @@ export default class BaseBuilder {
     this.logBuildStatuses(buildStatus);
   }
 
-  async checkStatusBeforeBuild({
-    platform,
-    releaseChannel,
-    sdkVersion,
-  }: StatusArgs = {}): Promise<void> {
+  async checkStatusBeforeBuild({ platform, sdkVersion }: StatusArgs = {}): Promise<void> {
     await this._checkProjectConfig();
     log('Checking if this build already exists...\n');
 
     const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
     const reuseStatus = await Project.findReusableBuildAsync(
-      releaseChannel,
+      this.options.releaseChannel,
       platform,
       sdkVersion,
       exp.slug
@@ -231,11 +217,6 @@ ${job.id}
   }
 
   async ensureReleaseExists(platform: string) {
-    if (this.options.hardcodeRevisionId) {
-      // Used for sandbox build
-      return [this.options.hardcodeRevisionId];
-    }
-
     if (this.options.publish) {
       const { ids, url, err } = await publishAction(this.projectDir, {
         ...this.options,
@@ -360,7 +341,7 @@ ${job.id}
     }
   }
 
-  async checkIfSdkIsSupported(sdkVersion: string, platform: string) {
+  async checkIfSdkIsSupported(sdkVersion, platform) {
     const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
     if (!isSupported) {
       const storeName = platform === 'ios' ? 'Apple App Store' : 'Google Play Store';

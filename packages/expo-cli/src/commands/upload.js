@@ -1,4 +1,5 @@
-import _ from 'lodash';
+import pick from 'lodash/pick';
+import size from 'lodash/size';
 
 import IOSUploader, { LANGUAGES } from './upload/IOSUploader';
 import AndroidUploader from './upload/AndroidUploader';
@@ -81,7 +82,7 @@ function createUploadAction(UploaderClass, optionKeys) {
       ensurePlatformIsSupported();
       await ensureOptionsAreValid(command);
 
-      const options = _.pick(command, optionKeys);
+      const options = pick(command, optionKeys);
       if (UploaderClass.validateOptions) {
         UploaderClass.validateOptions(options);
       }
@@ -102,8 +103,8 @@ function ensurePlatformIsSupported() {
 }
 
 async function ensureOptionsAreValid(command) {
-  const args = _.pick(command, COMMON_OPTIONS);
-  if (_.size(args) > 1) {
+  const args = pick(command, COMMON_OPTIONS);
+  if (size(args) > 1) {
     throw new Error(`You have to choose only one of --path, --id or --latest parameters`);
   }
 }

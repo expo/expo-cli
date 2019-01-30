@@ -9,14 +9,14 @@ UNF_VERSION = '0.0.6'
 
 # Be sure to add the name of a script here when you add it to actions
 SCRIPTS = [
-  'fetch_cert',
-  'fetch_push_cert',
-  'fetch_new_provisioning_profile',
-  'app_management',
-  'validate_apple_credentials',
   'funcs',
   'preload',
   'app_produce',
+  'authenticate',
+  'ensure_app_exists',
+  'manage_dist_certs',
+  'manage_provisioning_profiles',
+  'manage_push_keys',
   'pilot_upload',
   'supply_android',
 ]
@@ -64,6 +64,7 @@ namespace :package do
     sh "rm -rf packaging/tmp"
     sh "rm -f packaging/vendor/*/*/cache/*"
     sh "rm -rf packaging/vendor/ruby/*/extensions"
+
     sh "find packaging/vendor/ruby/*/gems -name '*.so' | xargs rm -f"
     sh "find packaging/vendor/ruby/*/gems -name '*.bundle' | xargs rm -f"
     sh "find packaging/vendor/ruby/*/gems -name '*.o' | xargs rm -f"
@@ -125,9 +126,9 @@ def create_package target
   # https://github.com/phusion/traveling-ruby/issues/38
   sh "mv #{package_dir}/lib/ruby/lib/restore_environment.rb #{package_dir}/lib/ruby/lib/ruby/site_ruby/"
   sh <<-eos
-    sed -i '' -e 's|RUBYOPT=\\\\"-r$ROOT/lib/restore_environment\\\\"|RUBYOPT=\\\\"-rrestore_environment\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
-    sed -i '' -e 's|GEM_HOME="\\(.*\\)"|GEM_HOME=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
-    sed -i '' -e 's|GEM_PATH="\\(.*\\)"|GEM_PATH=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+    sed -i.bak -e 's|RUBYOPT=\\\\"-r$ROOT/lib/restore_environment\\\\"|RUBYOPT=\\\\"-rrestore_environment\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+    sed -i.bak -e 's|GEM_HOME="\\(.*\\)"|GEM_HOME=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
+    sed -i.bak -e 's|GEM_PATH="\\(.*\\)"|GEM_PATH=\\\\"\\1\\\\"|' #{package_dir}/lib/ruby/bin/ruby_environment
   eos
 
   # Put in our native dependencies rather than the one provided by bundle
@@ -138,10 +139,14 @@ def create_package target
 
   if target == "osx"
     sh "cp -R #{PACKAGE_NAME}-#{VERSION}-osx publishing/darwin"
-    sh "cd publishing/darwin; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
+    if !ENV['NO_PUBLISH']
+      sh "cd publishing/darwin; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-osx"
+    end
   else
     sh "cp -R #{PACKAGE_NAME}-#{VERSION}-linux-x86_64 publishing/linux"
-    sh "cd publishing/linux; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
+    if !ENV['NO_PUBLISH']
+      sh "cd publishing/linux; npm publish --access=public; rm -rf #{PACKAGE_NAME}-#{VERSION}-linux-x86_64"
+    end
   end
 end
 

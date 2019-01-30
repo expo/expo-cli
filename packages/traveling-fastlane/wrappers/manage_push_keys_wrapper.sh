@@ -13,7 +13,7 @@ export FASTLANE_DISABLE_COLORS=1
 export FASTLANE_SKIP_UPDATE_CHECK=1
 export FASTLANE_DISABLE_ANIMATION=1
 
-script="$SELFDIR/lib/app/validate_apple_credentials.rb"
+script="$SELFDIR/lib/app/manage_push_keys.rb"
 
 lib_loc="$SELFDIR/lib/app"
 

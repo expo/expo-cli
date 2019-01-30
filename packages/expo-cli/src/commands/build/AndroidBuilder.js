@@ -7,35 +7,37 @@ import path from 'path';
 import untildify from 'untildify';
 import { Exp, Credentials } from 'xdl';
 import chalk from 'chalk';
-import log from '../../log';
 
+import log from '../../log';
 import BaseBuilder from './BaseBuilder';
 import prompt from '../../prompt';
+import * as utils from './utils';
+import { PLATFORMS } from './constants';
+
+const { ANDROID } = PLATFORMS;
 
 export default class AndroidBuilder extends BaseBuilder {
   async run(options) {
     const buildOptions = options.publicUrl ? { publicUrl: options.publicUrl } : {};
     // Validate project
     const sdkVersion = await this.validateProject(buildOptions);
-    const { releaseChannel } = options;
     // Check the status of any current builds
     await this.checkForBuildInProgress({
-      platform: 'android',
+      platform: ANDROID,
       sdkVersion,
-      releaseChannel,
       ...buildOptions,
     });
     // Check for existing credentials, collect any missing credentials, and validate them
     await this.collectAndValidateCredentials(buildOptions);
     // Publish the current experience, if necessary
-    let publishedExpIds = options.publicUrl ? undefined : await this.ensureReleaseExists('android');
+    let publishedExpIds = options.publicUrl ? undefined : await this.ensureReleaseExists(ANDROID);
 
     if (!options.publicUrl) {
-      await this.checkStatusBeforeBuild({ platform: 'android', sdkVersion, releaseChannel });
+      await this.checkStatusBeforeBuild({ platform: ANDROID, sdkVersion });
     }
 
     // Initiate a build
-    await this.build(publishedExpIds, 'android', buildOptions);
+    await this.build(publishedExpIds, ANDROID, buildOptions);
   }
   async _clearCredentials(options = {}) {
     const publicUrl = options.publicUrl;
@@ -48,7 +50,7 @@ export default class AndroidBuilder extends BaseBuilder {
     const credentialMetadata = {
       username,
       experienceName,
-      platform: 'android',
+      platform: ANDROID,
     };
 
     log.warn(
@@ -87,7 +89,7 @@ export default class AndroidBuilder extends BaseBuilder {
         experienceName,
         log,
       });
-      await Credentials.removeCredentialsForPlatform('android', credentialMetadata);
+      await Credentials.removeCredentialsForPlatform(ANDROID, credentialMetadata);
       log.warn('Removed existing credentials from Expo servers');
     }
   }
@@ -103,7 +105,7 @@ export default class AndroidBuilder extends BaseBuilder {
     const credentialMetadata = {
       username,
       experienceName,
-      platform: 'android',
+      platform: ANDROID,
     };
 
     const credentialsExist = await Credentials.credentialsExistForPlatformAsync(credentialMetadata);
@@ -193,7 +195,7 @@ export default class AndroidBuilder extends BaseBuilder {
           keystorePassword,
           keyPassword,
         };
-        await Credentials.updateCredentialsForPlatform('android', credentials, credentialMetadata);
+        await Credentials.updateCredentialsForPlatform(ANDROID, credentials, credentialMetadata);
       }
     }
   }
@@ -214,7 +216,7 @@ export default class AndroidBuilder extends BaseBuilder {
       keystorePassword: process.env.EXPO_ANDROID_KEYSTORE_PASSWORD,
       keyPassword: process.env.EXPO_ANDROID_KEY_PASSWORD,
     };
-    await Credentials.updateCredentialsForPlatform('android', credentials, credentialMetadata);
+    await Credentials.updateCredentialsForPlatform(ANDROID, credentials, credentialMetadata);
   }
 
   async validateProject(options) {
@@ -224,7 +226,7 @@ export default class AndroidBuilder extends BaseBuilder {
     } = publicUrl
       ? await Exp.getThirdPartyInfoAsync(publicUrl)
       : await Exp.getPublishInfoAsync(this.projectDir);
-    await this.checkIfSdkIsSupported(sdkVersion, 'android');
+    await utils.checkIfSdkIsSupported(sdkVersion, ANDROID);
     return sdkVersion;
   }
 }

@@ -13,7 +13,7 @@ export FASTLANE_DISABLE_COLORS=1
 export FASTLANE_SKIP_UPDATE_CHECK=1
 export FASTLANE_DISABLE_ANIMATION=1
 
-script="$SELFDIR/lib/app/fetch_new_provisioning_profile.rb"
+script="$SELFDIR/lib/app/manage_provisioning_profiles.rb"
 
 lib_loc="$SELFDIR/lib/app"
 
