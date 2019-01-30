@@ -1,6 +1,6 @@
 {
   "name": "@expo/traveling-fastlane-linux",
-  "version": "1.6.2",
+  "version": "1.7.1",
   "description": "Bundled up fastlane",
   "main": "index.js",
   "os": ["win32", "linux"],
