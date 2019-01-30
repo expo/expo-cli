@@ -38,7 +38,6 @@
     "analytics-node": "^2.1.0",
     "axios": "v0.19.0-beta.1",
     "chalk": "2.4.1",
-    "command-exists": "1.2.7",
     "concat-stream": "1.6.2",
     "decache": "4.4.0",
     "delay-async": "1.1.0",

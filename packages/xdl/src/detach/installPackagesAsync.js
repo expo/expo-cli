@@ -1,9 +1,9 @@
 // @flow
 
 import spawnAsync from '@expo/spawn-async';
-import commandExists from 'command-exists';
 import fs from 'fs-extra';
 import path from 'path';
+import semver from 'semver';
 
 import logger from './Logger';
 
@@ -25,7 +25,7 @@ export default async function installPackagesAsync(
     const packageLockJsonExists: boolean = await fs.pathExists(
       path.join(projectDir, 'package-lock.json')
     );
-    const yarnExists = await commandExists('yarnpkg');
+    const yarnExists = await yarnExistsAsync();
     packageManager = yarnExists && !packageLockJsonExists ? 'yarn' : 'npm';
   }
 
@@ -47,5 +47,14 @@ export default async function installPackagesAsync(
       cwd: projectDir,
       stdio: 'inherit',
     });
+  }
+}
+
+async function yarnExistsAsync() {
+  try {
+    let version = (await spawnAsync('yarnpkg', ['--version'])).stdout.trim();
+    return !!semver.valid(version);
+  } catch (e) {
+    return false;
   }
 }
