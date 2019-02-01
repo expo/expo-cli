@@ -92,7 +92,7 @@ async function anonymousIdentifier(): Promise<string> {
   return id;
 }
 
-const UserSettings = userSettingsJsonFile();
+const UserSettings: any = userSettingsJsonFile();
 
 Object.assign(UserSettings, {
   dotExpoHomeDirectory,

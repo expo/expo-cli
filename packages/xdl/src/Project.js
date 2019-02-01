@@ -596,10 +596,10 @@ export async function findReusableBuildAsync(
   const user = await UserManager.getCurrentUserAsync();
 
   const buildReuseStatus = await ApiV2.clientForUser(user).postAsync('standalone-build/reuse', {
-    releaseChannel: releaseChannel,
-    platform: platform,
-    sdkVersion: sdkVersion,
-    slug: slug,
+    releaseChannel,
+    platform,
+    sdkVersion,
+    slug,
   });
 
   return buildReuseStatus;

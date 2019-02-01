@@ -18,9 +18,6 @@ module.exports = {
   get AndroidShellApp() {
     return require('./detach/AndroidShellApp');
   },
-  get AndroidKeystore() {
-    return require('./detach/AndroidKeystore');
-  },
   get Api() {
     return require('./Api').default;
   },
@@ -37,7 +34,7 @@ module.exports = {
     return require('./Config').default;
   },
   get Credentials() {
-    return require('./Credentials');
+    return require('./credentials/Credentials');
   },
   get Detach() {
     return require('./detach/Detach');
