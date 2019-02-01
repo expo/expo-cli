@@ -49,6 +49,21 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXAdsFacebook',
+    libName: 'expo-ads-facebook',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'EXAmplitude',
+    libName: 'expo-analytics-amplitude',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'EXSegment',
+    libName: 'expo-analytics-segment',
+    sdkVersions: '>=30.0.0',
+  },
+  {
     podName: 'EXAppAuth',
     libName: 'expo-app-auth',
     sdkVersions: '>=32.0.0',
@@ -81,6 +96,16 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXBlur',
     libName: 'expo-blur',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'EXBrightness',
+    libName: 'expo-brightness',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'EXCalendar',
+    libName: 'expo-calendar',
     sdkVersions: '>=33.0.0',
   },
   {
@@ -138,6 +163,11 @@ const expoSdkUniversalModules = [
     podName: 'EXFaceDetectorInterface',
     libName: 'expo-face-detector-interface',
     sdkVersions: '>=29.0.0',
+  },
+  {
+    podName: 'EXFacebook',
+    libName: 'expo-facebook',
+    sdkVersions: '>=33.0.0',
   },
   {
     podName: 'EXFileSystem',
@@ -250,11 +280,6 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
-    podName: 'EXGoogleSignIn',
-    libName: 'expo-google-sign-in',
-    sdkVersions: '>=32.0.0',
-  },
-  {
     podName: 'EXGL',
     libName: 'expo-gl',
     sdkVersions: '>=29.0.0',
@@ -271,9 +296,19 @@ const expoSdkUniversalModules = [
     },
   },
   {
+    podName: 'EXGoogleSignIn',
+    libName: 'expo-google-sign-in',
+    sdkVersions: '>=32.0.0',
+  },
+  {
     podName: 'EXImageLoaderInterface',
     libName: 'expo-image-loader-interface',
     sdkVersions: '>=30.0.0',
+  },
+  {
+    podName: 'EXImagePicker',
+    libName: 'expo-image-picker',
+    sdkVersions: '>=33.0.0',
   },
   {
     podName: 'EXKeepAwake',
@@ -347,11 +382,6 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=33.0.0',
   },
   {
-    podName: 'EXSegment',
-    libName: 'expo-analytics-segment',
-    sdkVersions: '>=30.0.0',
-  },
-  {
     podName: 'EXSensors',
     libName: 'expo-sensors',
     sdkVersions: '>=29.0.0',
@@ -390,6 +420,11 @@ const expoSdkUniversalModules = [
         versionable: false,
       },
     },
+  },
+  {
+    podName: 'EXWebBrowser',
+    libName: 'expo-web-browser',
+    sdkVersions: '>=33.0.0',
   },
 
   // JS-only modules
