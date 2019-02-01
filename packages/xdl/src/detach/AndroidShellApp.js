@@ -1028,7 +1028,9 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
       await fs.remove(`shell.apk`);
     } catch (e) {}
     let gradleBuildCommand;
-    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+      gradleBuildCommand = 'assembleRelease';
+    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
       gradleBuildCommand = 'assembleProdKernelRelease';
     } else {
       gradleBuildCommand = 'assembleProdMinSdkProdKernelRelease';
@@ -1050,8 +1052,19 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
       },
     });
     if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      await fs.copy(
-        path.join(
+      let apkPath;
+      if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+        apkPath = path.join(
+          shellPath,
+          'app',
+          'build',
+          'outputs',
+          'apk',
+          'release',
+          'app-release.apk'
+        );
+      } else {
+        apkPath = path.join(
           shellPath,
           'app',
           'build',
@@ -1060,9 +1073,9 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
           'prodKernel',
           'release',
           'app-prodKernel-release.apk'
-        ),
-        'shell.apk'
-      );
+        );
+      }
+      await fs.copy(apkPath, 'shell.apk');
       // -c means "only verify"
       await spawnAsync(`zipalign`, ['-c', '-v', '4', 'shell.apk'], {
         pipeToLogger: true,
@@ -1133,7 +1146,9 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
       await fs.remove('shell-debug.apk');
     } catch (e) {}
     let gradleBuildCommand;
-    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+      gradleBuildCommand = 'assembleDebug';
+    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
       gradleBuildCommand = 'assembleDevKernelDebug';
     } else {
       gradleBuildCommand = 'assembleDevMinSdkDevKernelDebug';
@@ -1144,7 +1159,9 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
       cwd: shellPath,
     });
     let apkPath;
-    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+      apkPath = path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
+    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
       apkPath = path.join(
         shellPath,
         'app',
