@@ -55,6 +55,8 @@ const CREDENTIALS = {
     name: 'Apple Push Notifications certificate',
     required: ['pushP12', 'pushPassword'],
     deprecated: true,
+    migrationDocs:
+      'https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#switch-to-push-notification-key-on-ios',
   },
 };
 

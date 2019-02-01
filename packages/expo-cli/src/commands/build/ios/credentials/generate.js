@@ -1,4 +1,5 @@
 import ora from 'ora';
+import chalk from 'chalk';
 import intersection from 'lodash/intersection';
 
 import * as constants from './constants';
@@ -62,10 +63,12 @@ function _applyOrCondition(keys, condition) {
     const notDeprecatedRule = condition.find(rule => !rule.deprecated);
     return notDeprecatedRule.id;
   } else if (applyingRules.length === 1) {
-    const { deprecated, name } = applyingRules[0];
+    const { deprecated, name, migrationDocs } = applyingRules[0];
     if (deprecated) {
       log.warn(
-        `You're using deprecated ${name}. Read our docs to learn how to use more modern solution.`
+        `You're using deprecated ${name}. Read our docs to learn how to use more modern solution. ${
+          migrationDocs ? chalk.underline(migrationDocs) : ''
+        }`
       );
     }
     return null;
