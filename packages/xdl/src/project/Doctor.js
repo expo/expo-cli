@@ -300,7 +300,13 @@ async function _validateReactNativeVersionAsync(
   sdkVersion
 ): Promise<number> {
   if (Config.validation.reactNativeVersionWarnings) {
-    let reactNative = pkg.dependencies ? pkg.dependencies['react-native'] : null;
+    let reactNative = null;
+    
+    if (pkg.dependencies && pkg.dependencies['react-native']) {
+      reactNative = pkg.dependencies['react-native'];
+    } else if (pkg.devDependencies && pkg.devDependencies['react-native']) {
+      reactNative = pkg.devDependencies['react-native'];      
+    }
 
     // react-native is required
     if (!reactNative) {
@@ -472,9 +478,13 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStat
 
   try {
     let sdkPkg;
-    if (pkg.dependencies['exponent']) {
+    if (pkg.dependencies && pkg.dependencies['exponent']) {
       sdkPkg = 'exponent';
-    } else if (pkg.dependencies['expo']) {
+    } else if (pkg.dependencies && pkg.dependencies['expo']) {
+      sdkPkg = 'expo';
+    } else if (pkg.devDependencies && pkg.devDependencies['exponent']) {
+      sdkPkg = 'exponent';
+    } else if (pkg.devDependencies && pkg.devDependencies['expo']) {
       sdkPkg = 'expo';
     } else {
       return EXPO_SDK_NOT_INSTALLED;
