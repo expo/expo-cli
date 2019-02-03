@@ -304,7 +304,15 @@ async function _validateReactNativeVersionAsync(
   sdkVersion: string
 ): Promise<number> {
   if (Config.validation.reactNativeVersionWarnings) {
-    let reactNative = pkg.dependencies ? pkg.dependencies['react-native'] : null;
+    let reactNative = null;
+
+    if (pkg.dependencies?.['react-native']) {
+      reactNative = pkg.dependencies['react-native'];
+    } else if (pkg.devDependencies?.['react-native']) {
+      reactNative = pkg.devDependencies['react-native'];
+    } else if (pkg.peerDependencies?.['react-native']) {
+      reactNative = pkg.peerDependencies['react-native'];
+    }
 
     // react-native is required
     if (!reactNative) {
@@ -473,12 +481,13 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStat
   let { pkg } = await readConfigJsonAsync(projectRoot);
 
   try {
-    let sdkPkg;
-    if (pkg.dependencies['exponent']) {
-      sdkPkg = 'exponent';
-    } else if (pkg.dependencies['expo']) {
-      sdkPkg = 'expo';
-    } else {
+    if (
+      !(
+        pkg.dependencies?.['expo'] ||
+        pkg.devDependencies?.['expo'] ||
+        pkg.peerDependencies?.['expo']
+      )
+    ) {
       return EXPO_SDK_NOT_INSTALLED;
     }
 
@@ -486,7 +495,7 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStat
     let mainFile = await fs.readFile(mainFilePath, 'utf8');
 
     // TODO: support separate .ios.js and .android.js files
-    if (mainFile.includes(`from '${sdkPkg}'`) || mainFile.includes(`require('${sdkPkg}')`)) {
+    if (mainFile.includes(`from 'expo'`) || mainFile.includes(`require('expo')`)) {
       return EXPO_SDK_INSTALLED_AND_IMPORTED;
     } else {
       return EXPO_SDK_NOT_IMPORTED;
