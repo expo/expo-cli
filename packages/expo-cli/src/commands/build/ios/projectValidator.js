@@ -16,7 +16,7 @@ function ensureBundleIdentifierIsDefined(bundleIdentifier) {
     throw new XDLError(
       ErrorCode.INVALID_OPTIONS,
       `Your project must have a bundleIdentifier set in app.json.
-See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
+See https://docs.expo.io/versions/latest/distribution/building-standalone-apps`
     );
   }
 }
