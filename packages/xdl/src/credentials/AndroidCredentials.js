@@ -8,11 +8,14 @@ import crypto from 'crypto';
 import uuidv4 from 'uuid/v4';
 import spawnAsync from '@expo/spawn-async';
 import axios from 'axios';
-import { spawn as ptySpawn } from 'node-pty';
+import { spawn as ptySpawn } from 'node-pty-prebuilt';
 
 import { getCredentialsForPlatform } from './Credentials';
 import logger from '../Logger';
 import UserSettings from '../UserSettings';
+
+const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
+const javaExecutable = process.platform === 'win32' ? 'java.exe' : 'java';
 
 export type Credentials = {
   keystore: string,
@@ -100,7 +103,7 @@ export async function exportPrivateKey(
   try {
     await new Promise((res, rej) => {
       const child = ptySpawn(
-        'java',
+        javaExecutable,
         [
           '-jar',
           encryptToolPath,
@@ -132,8 +135,8 @@ export async function exportPrivateKey(
           res();
         }
       });
-      child.write(keystorePassword + '\n');
-      child.write(keyPassword + '\n');
+      child.write(keystorePassword + NEWLINE);
+      child.write(keyPassword + NEWLINE);
     });
     log(`Exported and encrypted private app signing key to file ${outputPath}`);
   } catch (error) {
