@@ -26,11 +26,11 @@ class IOSBuilder extends BaseBuilder {
     await this.scheduleBuild(publishedExpIds, projectMetadata.bundleIdentifier);
   }
 
-  async getAppleCtx({ bundleIdentifier, username }) {
+  async getAppleCtx({ bundleIdentifier, username, experienceName }) {
     if (!this.appleCtx) {
       await apple.setup();
       const authData = await apple.authenticate(this.options);
-      this.appleCtx = { ...authData, bundleIdentifier, username };
+      this.appleCtx = { ...authData, bundleIdentifier, username, experienceName };
     }
     return this.appleCtx;
   }
@@ -132,8 +132,6 @@ class IOSBuilder extends BaseBuilder {
         projectMetadata
       );
     }
-
-    await apple.ensureAppExists(appleCtx, projectMetadata.experienceName);
 
     const {
       userCredentialsIds,
