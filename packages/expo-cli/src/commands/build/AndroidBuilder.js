@@ -195,7 +195,12 @@ export default class AndroidBuilder extends BaseBuilder {
           keystorePassword,
           keyPassword,
         };
-        await Credentials.updateCredentialsForPlatform(ANDROID, credentials, credentialMetadata);
+        await Credentials.updateCredentialsForPlatform(
+          ANDROID,
+          credentials,
+          [],
+          credentialMetadata
+        );
       }
     }
   }
@@ -216,7 +221,7 @@ export default class AndroidBuilder extends BaseBuilder {
       keystorePassword: process.env.EXPO_ANDROID_KEYSTORE_PASSWORD,
       keyPassword: process.env.EXPO_ANDROID_KEY_PASSWORD,
     };
-    await Credentials.updateCredentialsForPlatform(ANDROID, credentials, credentialMetadata);
+    await Credentials.updateCredentialsForPlatform(ANDROID, credentials, [], credentialMetadata);
   }
 
   async validateProject(options) {
