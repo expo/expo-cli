@@ -2,8 +2,8 @@ import ora from 'ora';
 
 import { runAction, travelingFastlane } from './fastlane';
 
-export default async function ensureAppExists(appleCtx, experienceName) {
-  const { appleId, appleIdPassword, team, bundleIdentifier } = appleCtx;
+export default async function ensureAppExists(appleCtx) {
+  const { appleId, appleIdPassword, team, bundleIdentifier, experienceName } = appleCtx;
   const spinner = ora(`Ensuring App ID exists on Apple Developer Portal...`).start();
   try {
     await runAction(travelingFastlane.ensureAppExists, [

@@ -11,6 +11,8 @@ async function generate(appleCtx, credentialsToGenerate, metadata) {
     return {};
   }
 
+  await apple.ensureAppExists(appleCtx);
+
   log(`We're going to generate:`);
   credentialsToGenerate.forEach(type => {
     log(`- ${constants.CREDENTIALS[type].name}`);
