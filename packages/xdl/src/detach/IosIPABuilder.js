@@ -11,14 +11,7 @@ import * as IosCodeSigning from './IosCodeSigning';
 const logger = _logger.withFields({ buildPhase: 'building and signing IPA' });
 
 export default function createIPABuilder(buildParams) {
-  const { appUUID, keychainPath, bundleIdentifier, teamID, workingDir, manifest } = buildParams;
-  const workspace = path.join(
-    workingDir,
-    'shellAppWorkspaces',
-    'ios',
-    'default',
-    'ExpoKitApp.xcworkspace'
-  );
+  const { appUUID, keychainPath, bundleIdentifier, teamID, manifest, workspacePath } = buildParams;
   const appDir = path.join('/private/tmp/turtle', appUUID);
   const buildDir = path.join(appDir, 'build');
   const provisionDir = path.join(appDir, 'provisioning');
@@ -63,7 +56,7 @@ export default function createIPABuilder(buildParams) {
       const unsignedIpaPath = path.join(buildDir, `${appUUID}-unsigned.ipa`);
       const ipaBuilderArgs = {
         ipaPath: unsignedIpaPath,
-        workspace,
+        workspacePath,
         archivePath: outputPath,
         codeSignIdentity,
         exportOptionsPlistPath,
