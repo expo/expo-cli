@@ -1,0 +1,25 @@
+{
+  "name": "@expo/webpack-config",
+  "version": "0.1.0",
+  "description": "The default Webpack configuration used to build Expo apps targeting the web.",
+  "main": "webpack.config.js",
+  "repository": "https://github.com/expo/expo-cli",
+  "author": "Expo",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.2.2",
+    "babel-loader": "^8.0.4",
+    "case-sensitive-paths-webpack-plugin": "^2.1.2",
+    "css-loader": "^1.0.1",
+    "file-loader": "^2.0.0",
+    "find-yarn-workspace-root": "^1.2.1",
+    "html-loader": "^0.5.5",
+    "html-webpack-plugin": "4.0.0-alpha.2",
+    "pnp-webpack-plugin": "^1.2.1",
+    "react-dev-utils": "^6.0.5",
+    "style-loader": "^0.23.1",
+    "url-loader": "^1.1.2",
+    "webpack": "^4.24.0",
+    "webpack-manifest-plugin": "^2.0.4"
+  }
+}

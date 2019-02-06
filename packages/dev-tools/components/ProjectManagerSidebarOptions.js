@@ -135,6 +135,10 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           <span className={STYLES_CONTENT_GROUP_LEFT}>Run on iOS simulator</span>
         </div>
 
+        <a className={STYLES_CONTENT_GROUP}>
+          <span className={STYLES_CONTENT_GROUP_LEFT}>Run on web browser</span>
+        </a>
+
         <ContentGroup header={sendHeader} isActive={this.state.isSendFormVisible}>
           <InputWithButton
             placeholder="Enter email or number"

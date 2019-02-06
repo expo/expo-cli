@@ -281,6 +281,10 @@ export async function readConfigJsonAsync(
     exp.version = pkg.version;
   }
 
+  if (exp && !exp.platforms) {
+    exp.platforms = ['android', 'ios'];
+  }
+
   if (exp.nodeModulesPath) {
     exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }

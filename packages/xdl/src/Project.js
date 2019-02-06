@@ -31,6 +31,9 @@ import url from 'url';
 import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
+import webpack from 'webpack';
+import webpackConfig from '@expo/webpack-config';
+import WebpackDevServer from 'webpack-dev-server';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -1839,6 +1842,7 @@ export async function startExpoServerAsync(projectRoot: string) {
   });
   await Exp.saveRecentExpRootAsync(projectRoot);
 }
+
 export async function stopExpoServerAsync(projectRoot: string) {
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -1851,6 +1855,42 @@ export async function stopExpoServerAsync(projectRoot: string) {
     expoServerPort: null,
   });
 }
+
+async function startWebpackServerAsync(projectRoot) {
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  if (!exp.platforms.includes('web')) {
+    return;
+  }
+  let config = webpackConfig(projectRoot);
+  let compiler = webpack(config);
+  let server = new WebpackDevServer(compiler, config.devServer);
+  let webpackServerPort = await _getFreePortAsync(19000);
+  ProjectUtils.logInfo(
+    projectRoot,
+    'expo',
+    `Starting webpack-dev-server on port ${webpackServerPort}...`
+  );
+  await new Promise((resolve, reject) =>
+    server.listen(webpackServerPort, 'localhost', error => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    })
+  );
+  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+    webpackServerPort,
+  });
+}
+
+async function stopWebpackServerAsync(projectRoot) {
+  // TODO
+  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+    webpackServerPort: null,
+  });
+}
+
 async function _connectToNgrokAsync(
   projectRoot: string,
   args: mixed,
@@ -2084,6 +2124,7 @@ export async function startAsync(
   });
   await startExpoServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options, verbose);
+  await startWebpackServerAsync(projectRoot);
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);

@@ -32,9 +32,10 @@
     "@expo/bunyan": "3.0.2",
     "@expo/json-file": "8.1.0",
     "@expo/ngrok": "2.4.3",
-    "@expo/osascript": "^1.9.0",
+    "@expo/osascript": "1.9.0",
     "@expo/schemer": "1.2.2",
     "@expo/spawn-async": "1.3.0",
+    "@expo/webpack-config": "0.1.0",
     "analytics-node": "^2.1.0",
     "axios": "v0.19.0-beta.1",
     "chalk": "2.4.1",
@@ -91,6 +92,8 @@
     "url-join": "4.0.0",
     "util.promisify": "1.0.0",
     "uuid": "3.3.2",
+    "webpack": "4.29.0",
+    "webpack-dev-server": "^3.1.14",
     "xmldom": "0.1.27"
   },
   "devDependencies": {

@@ -503,10 +503,11 @@ const resolvers = {
     projectManagerLayout(parent, args, context) {
       return context.getProjectManagerLayout();
     },
-    processInfo() {
+    async processInfo() {
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
+        webAppUrl: await UrlUtils.constructWebAppUrlAsync(),
       };
     },
     async user() {
