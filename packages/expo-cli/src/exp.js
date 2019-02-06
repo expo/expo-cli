@@ -34,7 +34,6 @@ import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
-import addCommonOptions from './commonOptions';
 import packageJSON from '../package.json';
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
@@ -52,7 +51,6 @@ Command.prototype.allowOffline = function() {
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
-  addCommonOptions(this);
   return this.action(async (...args) => {
     if (!skipUpdateCheck) {
       try {
@@ -107,6 +105,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
 Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
+  this.option('--config [file]', 'Specify a path to app.json');
   return this.asyncAction(async (projectDir, ...args) => {
     const opts = args[0];
 
