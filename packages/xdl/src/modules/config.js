@@ -321,6 +321,17 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=33.0.0',
   },
   {
+    libName: 'expo-intent-launcher',
+    sdkVersions: '>=33.0.0',
+    config: {
+      ios: {
+        versionable: false,
+        detachable: false,
+        includeInExpoClient: false,
+      },
+    },
+  },
+  {
     podName: 'EXKeepAwake',
     libName: 'expo-keep-awake',
     sdkVersions: '>=33.0.0',
