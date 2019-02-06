@@ -2,24 +2,37 @@
  * @flow
  */
 
+import probeImageSize from 'probe-image-size';
+import path from 'path';
+import fs from 'fs';
+
 import { spawnAsyncThrowError } from '../detach/ExponentTools';
 import logger from '../detach/Logger';
 
 /**
- *  @return array [ width, height ] or null if that fails for some reason.
+ * @param {string} projectDirname
+ * @param {string} basename
+ * @returns {} { width: number, height: number } image dimensions or null
  */
-async function getImageDimensionsMacOSAsync(
-  dirname: string,
+async function getImageDimensionsAsync(
+  projectDirname: string,
   basename: string
-): Promise<?Array<number>> {
-  if (process.platform !== 'darwin') {
-    logger.warn('`sips` utility may or may not work outside of macOS');
-  }
-  let dimensions = null;
+): Promise<?{ width: number, height: number }> {
   try {
-    dimensions = await _getImageDimensionsAsync(basename, dirname);
+    return await _getImageDimensionsAsync(projectDirname, basename);
   } catch (_) {}
-  return dimensions;
+  return null;
+}
+
+async function _getImageDimensionsWithImageProbeAsync(
+  projectDirname: string,
+  basename: string
+): Promise<{ width: number, height: number }> {
+  const imagePath = path.resolve(projectDirname, basename);
+  const readStream = fs.createReadStream(imagePath);
+  const { width, height } = await probeImageSize(readStream);
+  readStream.destroy();
+  return { width, height };
 }
 
 let _hasWarned = false;
@@ -50,25 +63,9 @@ async function _resizeImageWithSipsAsync(
   });
 }
 
-async function _getImageDimensionsWithSipsAsync(
-  basename: string,
-  dirname: string
-): Promise<Array<number>> {
-  let childProcess = await spawnAsyncThrowError(
-    'sips',
-    ['-g', 'pixelWidth', '-g', 'pixelHeight', basename],
-    {
-      cwd: dirname,
-    }
-  );
-  // stdout looks something like 'pixelWidth: 1200\n pixelHeight: 800'
-  const components = childProcess.stdout.split(/(\s+)/);
-  return components.map(c => parseInt(c, 10)).filter(n => !isNaN(n));
-}
-
 // Allow us to swap out the default implementations of image functions
 let _resizeImageAsync = _resizeImageWithSipsAsync;
-let _getImageDimensionsAsync = _getImageDimensionsWithSipsAsync;
+let _getImageDimensionsAsync = _getImageDimensionsWithImageProbeAsync;
 
 // Allow users to provide an alternate implementation for our image resize function.
 // This is used internally in order to use sharp instead of sips in standalone builder.
@@ -81,14 +78,14 @@ function setResizeImageFunction(
 // Allow users to provide an alternate implementation for our image dimensions function.
 // This is used internally in order to use sharp instead of sips in standalone builder.
 function setGetImageDimensionsFunction(
-  fn: (basename: string, dirname: string) => Promise<?Array<number>>
+  fn: (basename: string, dirname: string) => Promise<?{ width: number, height: number }>
 ) {
   _getImageDimensionsAsync = fn;
 }
 
 export {
-  getImageDimensionsMacOSAsync,
   resizeImageAsync,
   setResizeImageFunction,
   setGetImageDimensionsFunction,
+  getImageDimensionsAsync,
 };

@@ -12,7 +12,7 @@ import {
   spawnAsyncThrowError,
 } from './ExponentTools';
 import StandaloneContext from './StandaloneContext';
-import { getImageDimensionsMacOSAsync, resizeImageAsync } from '../tools/ImageUtils';
+import { resizeImageAsync, getImageDimensionsAsync } from '../tools/ImageUtils';
 
 const iconScales = {
   mdpi: 1,
@@ -93,19 +93,15 @@ async function _resizeIconsAsync(
       }
 
       // reject non-square icons
-      const dims = await getImageDimensionsMacOSAsync(destinationPath, filename);
-      if (!dims || dims.length < 2 || dims[0] !== dims[1]) {
-        if (!dims) {
-          // Again, only throw this error on Turtle -- we expect that this will fail
-          // for some detach users but we don't want this to stop the whole process.
-          if (!isDetached) {
-            throw new Error(`Unable to read the dimensions of ${filename}`);
-          }
-        } else {
-          throw new Error(
-            `Android icons must be square, the dimensions of ${filename} are ${dims}`
-          );
+      const dims = await getImageDimensionsAsync(destinationPath, filename);
+      if (!dims) {
+        // Again, only throw this error on Turtle -- we expect that this will fail
+        // for some detach users but we don't want this to stop the whole process.
+        if (!isDetached) {
+          throw new Error(`Unable to read the dimensions of ${filename}`);
         }
+      } else if (dims.width !== dims.height) {
+        throw new Error(`Android icons must be square, the dimensions of ${filename} are ${dims}`);
       }
     })
   );

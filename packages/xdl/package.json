@@ -70,6 +70,7 @@
     "p-timeout": "2.0.1",
     "pacote": "9.2.3",
     "plist": "2.1.0",
+    "probe-image-size": "^4.0.0",
     "querystring": "0.2.0",
     "raven": "2.6.3",
     "read-chunk": "2.1.0",

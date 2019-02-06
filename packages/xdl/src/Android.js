@@ -7,6 +7,7 @@ import fs from 'fs-extra';
 import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 import semver from 'semver';
+import chalk from 'chalk';
 
 import * as Analytics from './Analytics';
 import * as Binaries from './Binaries';
@@ -17,6 +18,7 @@ import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import UserSettings from './UserSettings';
 import * as UrlUtils from './UrlUtils';
+import { getImageDimensionsAsync } from './tools/ImageUtils';
 
 let _lastUrl = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -327,5 +329,105 @@ async function adbReverseRemove(port: number) {
     // Don't send this to warn because we call this preemptively sometimes
     Logger.global.debug(`Couldn't adb reverse remove: ${e.message}`);
     return false;
+  }
+}
+
+const splashScreenDPIConstraints = [
+  {
+    dpi: 'mdpi',
+    sizeMultiplier: 1,
+  },
+  {
+    dpi: 'hdpi',
+    sizeMultiplier: 1.5,
+  },
+  {
+    dpi: 'xhdpi',
+    sizeMultiplier: 2,
+  },
+  {
+    dpi: 'xxhdpi',
+    sizeMultiplier: 3,
+  },
+  {
+    dpi: 'xxxhdpi',
+    sizeMultiplier: 4,
+  },
+];
+
+export async function checkSplashScreenImages(projectDir: string) {
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  const splashScreenMode = _.get('android.splash.resizeMode') || _.get(exp, 'splash.resizeMode');
+  if (splashScreenMode === 'contain') {
+    return;
+  }
+
+  const generalSplashImagePath = _.get(exp, 'splash.image');
+  if (!generalSplashImagePath) {
+    Logger.global.warn(
+      `Couldn't read '${chalk.italic('splash.image')}' from ${chalk.italic(
+        'app.json'
+      )}. Provide asset that would serve as baseline splash image.`
+    );
+    return;
+  }
+  const generalSplashImage = await getImageDimensionsAsync(projectDir, generalSplashImagePath);
+  if (!generalSplashImage) {
+    Logger.global.warn(
+      `Couldn't read dimensions of provided splash image '${chalk.italic(
+        generalSplashImagePath
+      )}'. Does the file exist?`
+    );
+    return;
+  }
+
+  const androidSplash = _.get(exp, 'android.splash');
+  const androidSplashImages = [];
+  for (const { dpi, sizeMultiplier } of splashScreenDPIConstraints) {
+    const imageRelativePath = _.get(androidSplash, dpi);
+    if (imageRelativePath) {
+      const splashImage = await getImageDimensionsAsync(projectDir, imageRelativePath);
+      if (!splashImage) {
+        Logger.global.warn(
+          `Couldn't read dimensions of provided splash image '${chalk.italic(
+            splashImage
+          )}'. Does the file exist?`
+        );
+        continue;
+      }
+      const { width, height } = splashImage;
+      const expectedWidth = sizeMultiplier * generalSplashImage.width;
+      const expectedHeight = sizeMultiplier * generalSplashImage.height;
+      androidSplashImages.push({
+        dpi,
+        width,
+        height,
+        expectedWidth,
+        expectedHeight,
+        sizeMatches: width === expectedWidth && height === expectedHeight,
+      });
+    }
+  }
+
+  if (androidSplashImages.length === 0) {
+    Logger.global
+      .warn(`Splash resizeMode is set to 'cover', but you haven't provided any images for different DPIs.
+Be aware that your splash image will be used as xxxhdpi asset and its ${chalk.bold(
+      'actual size will be different'
+    )} depending on device's DPI.
+See https://docs.expo.io/versions/latest/guides/splash-screens.html#differences-between-environments-android for more information`);
+    return;
+  }
+
+  if (_.some(androidSplashImages, ({ sizeMatches }) => !sizeMatches)) {
+    Logger.global
+      .warn(`Splash resizeMode is set to 'cover' and you've provided different images for different DPIs,
+but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSplashImages
+      .map(
+        ({ dpi, width, height, expectedWidth, expectedHeight }) =>
+          `${dpi}: ${width}x${height} (${expectedWidth}x${expectedHeight})`
+      )
+      .join(', ')}
+See https://docs.expo.io/versions/latest/guides/splash-screens.html#differences-between-environments-android for more information`);
   }
 }
