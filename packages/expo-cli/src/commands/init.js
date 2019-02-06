@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import { Exp } from 'xdl';
+import isString from 'lodash/isString';
 import { Snippet } from 'enquirer';
 import semver from 'semver';
 import set from 'lodash/set';
@@ -41,6 +42,11 @@ async function action(projectDir, options) {
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_DIR', validationResult);
     }
+  } else if (options.parent && options.parent.nonInteractive) {
+    throw new CommandError(
+      'NON_INTERACTIVE',
+      'The project dir argument is required in non-interactive mode.'
+    );
   } else {
     parentDir = process.cwd();
   }
@@ -55,19 +61,27 @@ async function action(projectDir, options) {
       templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
     }
   } else {
-    ({ templateSpec } = await prompt({
-      type: 'list',
-      name: 'templateSpec',
-      message: 'Choose a template:',
-      choices: FEATURED_TEMPLATES.map(template => ({
-        value: template.name,
-        name:
-          chalk.bold(template.shortName) +
-          '\n' +
-          wordwrap(2, process.stdout.columns || 80)(template.description),
-        short: template.name,
-      })),
-    }));
+    ({ templateSpec } = await prompt(
+      {
+        type: 'list',
+        name: 'templateSpec',
+        message: 'Choose a template:',
+        choices: FEATURED_TEMPLATES.map(template => ({
+          value: template.name,
+          name:
+            chalk.bold(template.shortName) +
+            '\n' +
+            wordwrap(2, process.stdout.columns || 80)(template.description),
+          short: template.name,
+        })),
+      },
+      {
+        nonInteractiveHelp:
+          '--template: argument is required in non-interactive mode. Valid choices are: ' +
+          FEATURED_TEMPLATES.map(template => `'${template.shortName}'`).join(', ') +
+          ' or any custom template (name of npm package).',
+      }
+    ));
   }
 
   let workflow;
@@ -84,7 +98,7 @@ async function action(projectDir, options) {
     workflow = await promptForWorkflowAsync();
   }
 
-  let initialConfig = await promptForInitialConfig(parentDir, dirName, workflow);
+  let initialConfig = await promptForInitialConfig(parentDir, dirName, workflow, options);
 
   let packageManager;
   if (options.yarn) {
@@ -164,11 +178,17 @@ async function shouldUseYarnAsync() {
     if (!semver.valid(version)) {
       return false;
     }
-    let answer = await prompt({
-      type: 'confirm',
-      name: 'useYarn',
-      message: `Yarn v${version} found. Use Yarn to install dependencies?`,
-    });
+    let answer = await prompt(
+      {
+        type: 'confirm',
+        name: 'useYarn',
+        message: `Yarn v${version} found. Use Yarn to install dependencies?`,
+      },
+      {
+        nonInteractiveHelp:
+          'Please specify either --npm or --yarn to choose the installation method.',
+      }
+    );
     return answer.useYarn;
   } catch (e) {
     return false;
@@ -176,40 +196,90 @@ async function shouldUseYarnAsync() {
 }
 
 async function promptForWorkflowAsync() {
-  let answer = await prompt({
-    type: 'list',
-    name: 'workflow',
-    message: 'Choose which workflow to use:',
-    choices: [
-      {
-        value: 'managed',
-        name:
-          chalk.bold('managed') +
-          ' (default)' +
-          '\n' +
-          wordwrap(2, process.stdout.columns || 80)(
-            'Build your app with JavaScript with Expo APIs.'
-          ),
-        short: 'managed',
-      },
+  let answer = await prompt(
+    {
+      type: 'list',
+      name: 'workflow',
+      message: 'Choose which workflow to use:',
+      choices: [
+        {
+          value: 'managed',
+          name:
+            chalk.bold('managed') +
+            ' (default)' +
+            '\n' +
+            wordwrap(2, process.stdout.columns || 80)(
+              'Build your app with JavaScript with Expo APIs.'
+            ),
+          short: 'managed',
+        },
 
-      {
-        value: 'advanced',
-        name:
-          chalk.bold('advanced') +
-          ' (experimental 🚧)' +
-          '\n' +
-          wordwrap(2, process.stdout.columns || 80)(
-            'Build your app with JavaScript with Expo APIs and custom native modules.'
-          ),
-        short: 'advanced',
-      },
-    ],
-  });
+        {
+          value: 'advanced',
+          name:
+            chalk.bold('advanced') +
+            ' (experimental 🚧)' +
+            '\n' +
+            wordwrap(2, process.stdout.columns || 80)(
+              'Build your app with JavaScript with Expo APIs and custom native modules.'
+            ),
+          short: 'advanced',
+        },
+      ],
+    },
+    {
+      nonInteractiveHelp:
+        '--workflow: argument is required in non-interactive mode. Valid choices are: managed, advanced.',
+    }
+  );
   return answer.workflow;
 }
 
-async function promptForInitialConfig(parentDir, dirName, workflow) {
+async function promptForInitialConfig(parentDir, dirName, workflow, options) {
+  if (options.parent && options.parent.nonInteractive) {
+    let config = {
+      slug: dirName,
+    };
+    if (!isString(options.name) || options.name === '') {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        '--name: argument is required in non-interactive mode.'
+      );
+    } else {
+      config.name = options.name;
+    }
+
+    if (workflow === 'advanced') {
+      if (!isString(options.androidPackage) || options.androidPackage === '') {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          '--android-package: argument is required in non-interactive mode.'
+        );
+      } else if (validateAndroidPackage(options.androidPackage) !== true) {
+        throw new CommandError(
+          'INVALID_ARGUMENT',
+          `--android-package: ${validateAndroidPackage(options.androidPackage)}`
+        );
+      } else {
+        config.android = { package: options.androidPackage };
+      }
+      if (!isString(options.iosBundleIdentifier) || options.iosBundleIdentifier === '') {
+        throw new CommandError(
+          'NON_INTERACTIVE',
+          '--ios-bundle-identifier: argument is required in non-interactive mode.'
+        );
+      } else if (validateIosBundleIdentifier(options.iosBundleIdentifier) !== true) {
+        throw new CommandError(
+          'INVALID_ARGUMENT',
+          `--ios-bundle-identifier: ${validateIosBundleIdentifier(options.iosBundleIdentifier)}`
+        );
+      } else {
+        config.ios = { bundleIdentifier: options.iosBundleIdentifier };
+      }
+    }
+    return config;
+  }
+
   let template = {
     expo: {
       name: '{{name}}',
@@ -235,6 +305,7 @@ async function promptForInitialConfig(parentDir, dirName, workflow) {
       {
         name: 'name',
         message: 'The name of your app visible on the home screen',
+        initial: isString(options.name) ? options.name : undefined,
         filter: name => name.trim(),
         required: true,
       },
@@ -249,19 +320,15 @@ async function promptForInitialConfig(parentDir, dirName, workflow) {
       {
         name: 'android.package',
         message: 'The package name for your Android app',
-        validate: value =>
-          /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value)
-            ? true
-            : "Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.",
+        initial: options.androidPackage,
+        validate: validateAndroidPackage,
         required: true,
       },
       {
         name: 'ios.bundleIdentifier',
         message: 'The bundle identifier for your iOS app',
-        validate: value =>
-          /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value)
-            ? true
-            : "Must start with a letter and only alphanumeric characters, '.' and '-' are allowed.",
+        initial: options.iosBundleIdentifier,
+        validate: validateIosBundleIdentifier,
         required: true,
       },
     ],
@@ -273,6 +340,24 @@ async function promptForInitialConfig(parentDir, dirName, workflow) {
     set(config, key, values[key]);
   }
   return config;
+}
+
+function validateAndroidPackage(value) {
+  if (!isString(value) || value === '') {
+    return 'Android package identifier must not be empty.';
+  }
+  return /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value)
+    ? true
+    : "Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.";
+}
+
+function validateIosBundleIdentifier(value) {
+  if (!isString(value) || value === '') {
+    return 'iOS bundle identifier must not be empty.';
+  }
+  return /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value)
+    ? true
+    : "Must start with a letter and only alphanumeric characters, '.' and '-' are allowed.";
 }
 
 export default program => {
@@ -288,6 +373,9 @@ export default program => {
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
-    .option('--workflow [name]', 'The workflow to use.')
+    .option('--workflow [name]', 'The workflow to use. (managed or advanced)')
+    .option('--name [name]', 'The name of your app visible on the home screen.')
+    .option('--android-package [name]', 'The package name for your Android app.')
+    .option('--ios-bundle-identifier [name]', 'The bundle identifier for your iOS app.')
     .asyncAction(action);
 };
