@@ -346,18 +346,20 @@ function validateAndroidPackage(value) {
   if (!isString(value) || value === '') {
     return 'Android package identifier must not be empty.';
   }
-  return /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value)
-    ? true
-    : "Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter.";
+  return (
+    /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value) ||
+    "Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter."
+  );
 }
 
 function validateIosBundleIdentifier(value) {
   if (!isString(value) || value === '') {
     return 'iOS bundle identifier must not be empty.';
   }
-  return /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value)
-    ? true
-    : "Must start with a letter and only alphanumeric characters, '.' and '-' are allowed.";
+  return (
+    /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value) ||
+    "Must start with a letter and only alphanumeric characters, '.' and '-' are allowed."
+  );
 }
 
 export default program => {
