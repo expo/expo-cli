@@ -5,7 +5,7 @@ import CommandError from './CommandError';
 
 export default function prompt(questions, { nonInteractiveHelp } = {}) {
   if (program.nonInteractive && questions.length !== 0) {
-    let message = `Input is required, but ${program.name} is in non-interactive mode.\n`;
+    let message = `Input is required, but Expo CLI is in non-interactive mode.\n`;
     if (nonInteractiveHelp) {
       message += nonInteractiveHelp;
     } else {
