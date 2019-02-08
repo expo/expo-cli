@@ -61,19 +61,19 @@ export default class AppSignigOptInProcess {
 
   async init(slug: string) {
     log.warn(
-      'Make sure that you are not using google play signing already, this process will remove current keystore from expo servers.'
+      'Make sure you are not using Google Play App Signing already, this process will remove your current keystore from Expo servers.'
     );
     log(
       `You can check it here ${chalk.underline(
         'https://play.google.com/apps/publish'
-      )}, select app and go to \"Release managment\" -> \"App signing\" tab, if you are already using google play signing there will be a message \"App Signing by Google Play is enabled for this app\" at the top of the page.`
+      )}, select app and go to \"Release managment\" -> \"App signing\" tab, if you are already using Google Play App Signing, there will be a message \"App Signing by Google Play is enabled for this app\" at the top of the page.`
     );
     const confirmQuestion = [
-      { type: 'confirm', name: 'confirm', message: 'Is Google Play signing enabled for this app?' },
+      { type: 'confirm', name: 'confirm', message: 'Is Google Play App Signing enabled for this app?' },
     ];
     const { confirm: confirmEnabled } = await prompt(confirmQuestion);
     if (confirmEnabled) {
-      log('Google Play signing already enabled, there is nothing to do here.');
+      log('Google Play App Signing is already enabled, there is nothing to do here.');
       process.exit(0);
     }
 
@@ -151,7 +151,7 @@ export default class AppSignigOptInProcess {
     );
 
     log.warn(
-      `On previously opened Google Play console page, upload ${chalk.underline(
+      `On the previously opened Google Play console page, upload ${chalk.underline(
         this.privateSigningKey
       )} as "${chalk.bold('APP SIGNING PRIVATE KEY')}" and ${chalk.underline(
         this.publicUploadCert
@@ -160,8 +160,8 @@ export default class AppSignigOptInProcess {
 
     log.warn(
       `Next step will ${chalk.red(
-        'remove current keystore from Expo servers'
-      )}, make sure that private key is uploaded successfully and compare hashes displayed above with ones in console.`
+        'remove your current keystore from Expo servers'
+      )}, make sure that private key is uploaded successfully and compare hashes displayed above with the ones printed in console.`
     );
     const { confirm: confirmUpload } = await prompt([
       {
@@ -195,7 +195,7 @@ export default class AppSignigOptInProcess {
     log(
       `Original keystore is stored in ${
         this.signKeystore
-      }, remove it only if you are sure that Google Play signing is enabled on your app`
+      }, remove it only if you are sure that Google Play App Signing is enabled for your app.`
     );
     Credentials.Android.logKeystoreCredentials(
       this.signKeystoreCredentials,
@@ -213,7 +213,7 @@ export default class AppSignigOptInProcess {
     );
 
     log.warn(
-      `On previously opened Google Play console page, upload ${chalk.underline(
+      `On the previously opened Google Play console page, upload ${chalk.underline(
         this.privateSigningKey
       )} as "${chalk.bold('APP SIGNING PRIVATE KEY')}"`
     );
