@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import uuidv4 from 'uuid/v4';
 import spawnAsync from '@expo/spawn-async';
 import axios from 'axios';
+import ProgressBar from 'progress';
 import { spawn as ptySpawn } from 'node-pty-prebuilt';
 
 import { getCredentialsForPlatform } from './Credentials';
@@ -94,7 +95,14 @@ export async function exportPrivateKey(
       'https://www.gstatic.com/play-apps-publisher-rapid/signing-tool/prod/pepk.jar';
     const file = fs.createWriteStream(encryptToolPath);
     const response = await axios({ url: downloadUrl, method: 'GET', responseType: 'stream' });
+    const bar = new ProgressBar('  downloading pepk tool [:bar] :rate/bps :percent :etas', {
+      complete: '=',
+      incomplete: ' ',
+      width: 40,
+      total: parseInt(response.headers['content-length'], 10),
+    });
     response.data.pipe(file);
+    response.data.on('data', chunk => bar.tick(chunk.length));
     await new Promise((resolve, reject) => {
       file.on('finish', resolve);
       file.on('error', reject);

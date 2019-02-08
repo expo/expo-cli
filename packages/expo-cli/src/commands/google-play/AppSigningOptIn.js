@@ -10,15 +10,8 @@ import { Credentials, User, ProjectUtils } from 'xdl';
 import log from '../../log';
 import prompt from '../../prompt';
 
-type Options = {
-  uploadKey: boolean,
-};
-
 export default class AppSignigOptInProcess {
   projectDir: string = '';
-  options: Options = {
-    uploadKey: true,
-  };
 
   // Keystore used to sign production app
   signKeystore: string = '';
@@ -32,9 +25,8 @@ export default class AppSignigOptInProcess {
   uploadKeystoreCredentials: Object = {};
   signKeystoreCredentials: Object = {};
 
-  constructor(projectDir: string, options: Options) {
+  constructor(projectDir: string) {
     this.projectDir = projectDir;
-    this.options = options;
   }
 
   async run() {
@@ -50,13 +42,14 @@ export default class AppSignigOptInProcess {
       experienceName: `@${username}/${exp.slug}`,
     });
 
-    await this.exportPrivateKey();
-
-    if (this.options.uploadKey) {
-      await this.runWithUploadCert(username, exp);
-    } else {
-      await this.runWithoutUploadCert();
+    try {
+      await this.exportPrivateKey();
+      await this.prepareKeystores(username, exp);
+    } catch (error) {
+      log.error(error);
+      await this.cleanup(true);
     }
+    await this.afterStoreSubmit(username, exp);
   }
 
   async init(slug: string) {
@@ -69,7 +62,11 @@ export default class AppSignigOptInProcess {
       )}, select app and go to \"Release managment\" -> \"App signing\" tab, if you are already using Google Play App Signing, there will be a message \"App Signing by Google Play is enabled for this app\" at the top of the page.`
     );
     const confirmQuestion = [
-      { type: 'confirm', name: 'confirm', message: 'Is Google Play App Signing enabled for this app?' },
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Is Google Play App Signing enabled for this app?',
+      },
     ];
     const { confirm: confirmEnabled } = await prompt(confirmQuestion);
     if (confirmEnabled) {
@@ -91,30 +88,26 @@ export default class AppSignigOptInProcess {
       )}" and copy encryption key that is listed in step 1.`
     );
     const encryptKeyQuestion = [
-      { type: 'input', name: 'encryptionKey', message: 'Google Play encryption key' },
+      {
+        type: 'input',
+        name: 'encryptionKey',
+        message: 'Google Play encryption key',
+        validate: value =>
+          (value.length === 136 && /^[A-Fa-f0-9]+$/.test(value)) ||
+          'Encryption key needs to be a hex encoded 68 byte string (a 4-byte identity followed by a 64-byte P256 point).',
+      },
     ];
     const { encryptionKey } = await prompt(encryptKeyQuestion);
-    if (!encryptionKey) {
-      log.error('Encryption key is required');
-      await this.cleanup(true);
-      process.exit(1);
-    }
 
-    try {
-      await Credentials.Android.exportPrivateKey(
-        { keystorePath: this.signKeystore, ...this.signKeystoreCredentials },
-        encryptionKey,
-        this.privateSigningKey,
-        log
-      );
-    } catch (error) {
-      log.error(error);
-      await this.cleanup(true);
-      process.exit(1);
-    }
+    await Credentials.Android.exportPrivateKey(
+      { keystorePath: this.signKeystore, ...this.signKeystoreCredentials },
+      encryptionKey,
+      this.privateSigningKey,
+      log
+    );
   }
 
-  async runWithUploadCert(username: string, exp: Object) {
+  async prepareKeystores(username: string, exp: Object) {
     log(`Saving upload keystore to ${this.uploadKeystore}...`);
     this.uploadKeystoreCredentials = await Credentials.Android.generateUploadKeystore(
       this.uploadKeystore,
@@ -149,7 +142,9 @@ export default class AppSignigOptInProcess {
       { keystorePath: this.uploadKeystore, ...this.uploadKeystoreCredentials },
       log
     );
+  }
 
+  async afterStoreSubmit(username: string, exp: Object) {
     log.warn(
       `On the previously opened Google Play console page, upload ${chalk.underline(
         this.privateSigningKey
@@ -205,50 +200,18 @@ export default class AppSignigOptInProcess {
     await this.cleanup();
   }
 
-  async runWithoutUploadCert() {
-    log('App signing certificate');
-    await Credentials.Android.logKeystoreHashes(
-      { keystorePath: this.signKeystore, ...this.signKeystoreCredentials },
-      log
-    );
-
-    log.warn(
-      `On the previously opened Google Play console page, upload ${chalk.underline(
-        this.privateSigningKey
-      )} as "${chalk.bold('APP SIGNING PRIVATE KEY')}"`
-    );
-
-    const { confirm: confirmUpload } = await prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: 'Is App Signing by Google Play enabled succesfully?',
-        default: false,
-      },
-    ]);
-    if (!confirmUpload) {
-      log.error('Aborting, no changes were applied');
-    }
-    await this.cleanup(true);
-  }
-
   async cleanup(all: boolean = false) {
-    try {
-      fs.unlinkSync(this.privateSigningKey);
-    } catch (err) {}
+    tryUnlink(this.uploadKeystore);
+    tryUnlink(this.publicUploadCert);
+    tryUnlink(this.privateSigningKey);
     if (all) {
-      try {
-        fs.unlinkSync(this.signKeystore);
-      } catch (err) {}
-    }
-
-    if (this.options.uploadKey) {
-      try {
-        fs.unlinkSync(this.publicUploadCert);
-      } catch (err) {}
-      try {
-        fs.unlinkSync(this.uploadKeystore);
-      } catch (err) {}
+      tryUnlink(this.signKeystore);
     }
   }
+}
+
+async function tryUnlink(file: string) {
+  try {
+    await fs.unlink(file);
+  } catch (err) {}
 }
