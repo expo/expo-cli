@@ -306,6 +306,8 @@ async function _validateReactNativeVersionAsync(
       reactNative = pkg.dependencies['react-native'];
     } else if (pkg.devDependencies && pkg.devDependencies['react-native']) {
       reactNative = pkg.devDependencies['react-native'];      
+    } else if (pkg.peerDependencies && pkg.peerDependencies['react-native']) {
+      reactNative = pkg.peerDependencies['react-native'];      
     }
 
     // react-native is required
@@ -485,6 +487,10 @@ export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStat
     } else if (pkg.devDependencies && pkg.devDependencies['exponent']) {
       sdkPkg = 'exponent';
     } else if (pkg.devDependencies && pkg.devDependencies['expo']) {
+      sdkPkg = 'expo';
+    } else if (pkg.peerDependencies && pkg.peerDependencies['exponent']) {
+      sdkPkg = 'exponent';
+    } else if (pkg.peerDependencies && pkg.peerDependencies['expo']) {
       sdkPkg = 'expo';
     } else {
       return EXPO_SDK_NOT_INSTALLED;
