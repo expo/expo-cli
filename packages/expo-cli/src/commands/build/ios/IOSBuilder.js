@@ -154,7 +154,7 @@ class IOSBuilder extends BaseBuilder {
 
   async ensureProjectIsPublished() {
     if (this.options.publicUrl) {
-      return null;
+      return undefined;
     } else {
       return await this.ensureReleaseExists(PLATFORMS.IOS);
     }
