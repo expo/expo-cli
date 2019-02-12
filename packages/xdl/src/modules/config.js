@@ -393,6 +393,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXRandom',
+    libName: 'expo-random',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXReactNativeAdapter',
     libName: 'expo-react-native-adapter',
     sdkVersions: '>=29.0.0',
