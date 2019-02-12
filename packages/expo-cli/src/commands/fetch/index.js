@@ -1,4 +1,8 @@
-import { fetchAndroidKeystoreAsync, fetchAndroidHashesAsync } from './android';
+import {
+  fetchAndroidKeystoreAsync,
+  fetchAndroidHashesAsync,
+  fetchAndroidUploadCertAsync,
+} from './android';
 import fetchIosCerts from './ios';
 
 export default program => {
@@ -19,7 +23,14 @@ export default program => {
   program
     .command('fetch:android:hashes [project-dir]')
     .description(
-      "Fetch this project's Android key hashes needed to setup Google/Facebook authentication."
+      "Fetch this project's Android key hashes needed to set up Google/Facebook authentication. Note: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console."
     )
     .asyncActionProjectDir(fetchAndroidHashesAsync, true);
+
+  program
+    .command('fetch:android:upload-cert [project-dir]')
+    .description(
+      "Fetch this project's upload certificate needed after opting in to app signing by Google Play or after resetting a previous upload certificate."
+    )
+    .asyncActionProjectDir(fetchAndroidUploadCertAsync, true);
 };

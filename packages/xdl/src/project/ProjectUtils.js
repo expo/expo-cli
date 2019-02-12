@@ -211,7 +211,7 @@ export async function setCustomConfigPath(projectRoot: string, configPath: strin
 
 export async function readConfigJsonAsync(
   projectRoot: string
-): Promise<{ exp: ?Object, pkg: ?Object, rootConfig: ?Object }> {
+): Promise<{ exp?: Object, pkg?: Object, rootConfig?: Object }> {
   let exp;
   let pkg;
   let rootConfig;

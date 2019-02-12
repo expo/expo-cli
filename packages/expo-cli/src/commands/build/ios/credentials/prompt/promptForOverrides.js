@@ -7,8 +7,8 @@ import promptForCredentials from './promptForCredentials';
 import prompt from '../../../../../prompt';
 
 const existingCredsGettersByType = {
-  distributionCert: Credentials.getExistingDistCerts,
-  pushKey: Credentials.getExistingPushKeys,
+  distributionCert: Credentials.Ios.getExistingDistCerts,
+  pushKey: Credentials.Ios.getExistingPushKeys,
 };
 
 async function promptForOverrides(appleCtx, types) {

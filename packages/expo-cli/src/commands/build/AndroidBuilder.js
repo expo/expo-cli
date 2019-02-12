@@ -87,12 +87,14 @@ export default class AndroidBuilder extends BaseBuilder {
         this.projectDir,
         `${remotePackageName}.jks.bak`
       );
-      await Credentials.backupExistingAndroidCredentials({
-        outputPath: backupKeystoreOutputPath,
-        username,
-        experienceName,
-        log,
-      });
+      await Credentials.Android.backupExistingCredentials(
+        {
+          outputPath: backupKeystoreOutputPath,
+          username,
+          experienceName,
+        },
+        log
+      );
       await Credentials.removeCredentialsForPlatform(ANDROID, credentialMetadata);
       log.warn('Removed existing credentials from Expo servers');
     }
