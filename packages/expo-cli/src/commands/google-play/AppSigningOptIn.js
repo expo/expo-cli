@@ -54,12 +54,12 @@ export default class AppSignigOptInProcess {
 
   async init(slug: string) {
     log.warn(
-      'Make sure you are not using Google Play App Signing already, this process will remove your current keystore from Expo servers.'
+      'Make sure you are not using Google Play App Signing already as this process will remove your current keystore from Expo servers.'
     );
     log(
-      `You can check it here ${chalk.underline(
+      `You can check whether you are using Google Play App Signing here: ${chalk.underline(
         'https://play.google.com/apps/publish'
-      )}, select app and go to \"Release managment\" -> \"App signing\" tab, if you are already using Google Play App Signing, there will be a message \"App Signing by Google Play is enabled for this app\" at the top of the page.`
+      )}. Select your app and go to "Release management" → "App signing" tab. If you are already using Google Play App Signing, there will be a message that says, "App Signing by Google Play is enabled for this app," at the top of the page.`
     );
     const confirmQuestion = [
       {
@@ -70,7 +70,7 @@ export default class AppSignigOptInProcess {
     ];
     const { confirm: confirmEnabled } = await prompt(confirmQuestion);
     if (confirmEnabled) {
-      log('Google Play App Signing is already enabled, there is nothing to do here.');
+      log('Google Play App Signing is already enabled; there is nothing to do here.');
       process.exit(0);
     }
 
@@ -83,9 +83,9 @@ export default class AppSignigOptInProcess {
 
   async exportPrivateKey() {
     log(
-      `Go to "App signing" tab in Google Play console, select "${chalk.bold(
+      `Go to the "App signing" tab in the Google Play console, select "${chalk.bold(
         'Export and upload a key (not using a Java keystore)'
-      )}" and copy encryption key that is listed in step 1.`
+      )}" and copy the encryption key that is listed in step 1.`
     );
     const encryptKeyQuestion = [
       {
@@ -94,7 +94,7 @@ export default class AppSignigOptInProcess {
         message: 'Google Play encryption key',
         validate: value =>
           (value.length === 136 && /^[A-Fa-f0-9]+$/.test(value)) ||
-          'Encryption key needs to be a hex encoded 68 byte string (a 4-byte identity followed by a 64-byte P256 point).',
+          'Encryption key needs to be a hex-encoded 68-byte string (a 4-byte identity followed by a 64-byte P-256 point).',
       },
     ];
     const { encryptionKey } = await prompt(encryptKeyQuestion);
@@ -154,9 +154,9 @@ export default class AppSignigOptInProcess {
     );
 
     log.warn(
-      `Next step will ${chalk.red(
+      `The next step will ${chalk.red(
         'remove your current keystore from Expo servers'
-      )}, make sure that private key is uploaded successfully and compare hashes displayed above with the ones printed in console.`
+      )}. Make sure that private key is uploaded successfully and compare the hashes displayed above with the ones printed in the console.`
     );
     const { confirm: confirmUpload } = await prompt([
       {
@@ -188,9 +188,9 @@ export default class AppSignigOptInProcess {
     );
 
     log(
-      `Original keystore is stored in ${
+      `The original keystore is stored in ${
         this.signKeystore
-      }, remove it only if you are sure that Google Play App Signing is enabled for your app.`
+      }; remove it only if you are sure that Google Play App Signing is enabled for your app.`
     );
     Credentials.Android.logKeystoreCredentials(
       this.signKeystoreCredentials,

@@ -181,7 +181,7 @@ export async function logKeystoreHashes(
   } catch (err) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
-      log('keytool is part of openJDK: http://openjdk.java.net/');
+      log('keytool is part of OpenJDK: https://openjdk.java.net/');
       log('Also make sure that keytool is in your PATH after installation.');
     }
     if (err.stdout) {
