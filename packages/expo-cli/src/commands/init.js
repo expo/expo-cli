@@ -95,7 +95,7 @@ async function action(projectDir, options) {
       );
     }
   } else {
-    workflow = await promptForWorkflowAsync();
+    workflow = 'managed';
   }
 
   let initialConfig = await promptForInitialConfig(parentDir, dirName, workflow, options);
@@ -193,46 +193,6 @@ async function shouldUseYarnAsync() {
   } catch (e) {
     return false;
   }
-}
-
-async function promptForWorkflowAsync() {
-  let answer = await prompt(
-    {
-      type: 'list',
-      name: 'workflow',
-      message: 'Choose which workflow to use:',
-      choices: [
-        {
-          value: 'managed',
-          name:
-            chalk.bold('managed') +
-            ' (default)' +
-            '\n' +
-            wordwrap(2, process.stdout.columns || 80)(
-              'Build your app with JavaScript with Expo APIs.'
-            ),
-          short: 'managed',
-        },
-
-        {
-          value: 'advanced',
-          name:
-            chalk.bold('advanced') +
-            ' (experimental 🚧)' +
-            '\n' +
-            wordwrap(2, process.stdout.columns || 80)(
-              'Build your app with JavaScript with Expo APIs and custom native modules.'
-            ),
-          short: 'advanced',
-        },
-      ],
-    },
-    {
-      nonInteractiveHelp:
-        '--workflow: argument is required in non-interactive mode. Valid choices are: managed, advanced.',
-    }
-  );
-  return answer.workflow;
 }
 
 async function promptForInitialConfig(parentDir, dirName, workflow, options) {
@@ -375,7 +335,7 @@ export default program => {
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
-    .option('--workflow [name]', 'The workflow to use. (managed or advanced)')
+    .option('--workflow [name]', 'The workflow to use. managed (default) or advanced')
     .option('--name [name]', 'The name of your app visible on the home screen.')
     .option('--android-package [name]', 'The package name for your Android app.')
     .option('--ios-bundle-identifier [name]', 'The bundle identifier for your iOS app.')
