@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import program from 'commander';
 
 let _bundleProgressBar;
 let _oraSpinner;
@@ -69,11 +70,19 @@ function getPrefix(chalkColor) {
 }
 
 function withPrefixAndTextColor(args, chalkColor = chalk.gray) {
-  return [getPrefix(chalkColor), ...args.map(arg => chalkColor(arg))];
+  if (program.nonInteractive) {
+    return [getPrefix(chalkColor), ...args.map(arg => chalkColor(arg))];
+  } else {
+    return args.map(arg => chalkColor(arg));
+  }
 }
 
 function withPrefix(args, chalkColor = chalk.gray) {
-  return [getPrefix(chalkColor), ...args];
+  if (program.nonInteractive) {
+    return [getPrefix(chalkColor), ...args];
+  } else {
+    return args;
+  }
 }
 
 function log(...args) {
