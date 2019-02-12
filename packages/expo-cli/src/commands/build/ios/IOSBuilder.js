@@ -17,7 +17,9 @@ class IOSBuilder extends BaseBuilder {
     await this.checkForBuildInProgress();
     await this.prepareCredentials();
     const publishedExpIds = await this.ensureProjectIsPublished();
-    await this.checkStatusBeforeBuild();
+    if (!this.options.publicUrl) {
+      await this.checkStatusBeforeBuild();
+    }
     await this.build(publishedExpIds);
   }
 

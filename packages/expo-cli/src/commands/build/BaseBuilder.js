@@ -102,11 +102,11 @@ export default class BaseBuilder {
     }
   }
 
-  async checkForBuildInProgress(platform: string) {
+  async checkForBuildInProgress() {
     log('Checking if there is a build in progress...\n');
     const buildStatus = await Project.buildAsync(this.projectDir, {
       mode: 'status',
-      platform,
+      platform: this.platform(),
       current: true,
       releaseChannel: this.options.releaseChannel,
       publicUrl: this.options.publicUrl,

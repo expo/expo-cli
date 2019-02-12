@@ -57,11 +57,12 @@ async function fetchCredentials(
 export async function updateCredentialsForPlatform(
   platform: string,
   newCredentials: Credentials,
+  userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
-  // this doesn't go through the mac rpc, no request id needed
   const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
     credentials: newCredentials,
+    userCredentialsIds,
     platform,
     ...metadata,
   });
