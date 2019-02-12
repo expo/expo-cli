@@ -1,29 +1,38 @@
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
+import get from 'lodash/get';
 import { Exp } from 'xdl';
 
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as constants from './credentials/constants';
 import validateProject from './projectValidator';
+import * as utils from '../utils';
 import * as credentials from './credentials';
 import * as apple from './appleApi';
 
 class IOSBuilder extends BaseBuilder {
   async run() {
-    const projectMetadata = await this.fetchProjectMetadata();
-    await validateProject(projectMetadata);
-    await this.checkForBuildInProgress({
-      platform: PLATFORMS.IOS,
-      sdkVersion: projectMetadata.sdkVersion,
-    });
-    await this.prepareCredentials(projectMetadata);
+    await this.validateProject();
+    await this.checkForBuildInProgress();
+    await this.prepareCredentials();
     const publishedExpIds = await this.ensureProjectIsPublished();
-    await this.checkStatusBeforeBuild({
-      platform: PLATFORMS.IOS,
-      sdkVersion: projectMetadata.sdkVersion,
-    });
-    await this.scheduleBuild(publishedExpIds, projectMetadata.bundleIdentifier);
+    await this.checkStatusBeforeBuild();
+    await this.build(publishedExpIds);
+  }
+
+  async validateProject() {
+    const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
+    const sdkVersion = this.manifest.sdkVersion;
+
+    if (!bundleIdentifier) {
+      throw new XDLError(
+        ErrorCode.INVALID_OPTIONS,
+        `Your project must have a bundleIdentifier set in app.json.
+See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`
+      );
+    }
+    await utils.checkIfSdkIsSupported(sdkVersion, PLATFORMS.IOS);
   }
 
   async getAppleCtx({ bundleIdentifier, username, experienceName }) {
@@ -35,30 +44,13 @@ class IOSBuilder extends BaseBuilder {
     return this.appleCtx;
   }
 
-  async fetchProjectMetadata() {
-    const { publicUrl } = this.options;
-
-    // We fetch project's manifest here (from Expo servers or user's own server).
-    const {
-      args: {
-        username,
-        remoteFullPackageName: experienceName,
-        bundleIdentifierIOS: bundleIdentifier,
-        sdkVersion,
-      },
-    } = publicUrl
-      ? await Exp.getThirdPartyInfoAsync(publicUrl)
-      : await Exp.getPublishInfoAsync(this.projectDir);
-
-    return {
-      username,
-      experienceName,
-      sdkVersion,
-      bundleIdentifier,
+  async prepareCredentials() {
+    const projectMetadata = {
+      username: this.user.username,
+      experienceName: `@${this.user.username}/${this.manifest.slug}`,
+      sdkVersion: this.manifest.sdkVersion,
+      bundleIdentifier: get(this.manifest, 'ios.bundleIdentifier'),
     };
-  }
-
-  async prepareCredentials(projectMetadata) {
     await this.clearAndRevokeCredentialsIfRequested(projectMetadata);
 
     const existingCredentials = await credentials.fetch(projectMetadata);
@@ -160,10 +152,8 @@ class IOSBuilder extends BaseBuilder {
     }
   }
 
-  async scheduleBuild(publishedExpIds, bundleIdentifier) {
-    const { publicUrl } = this.options;
-    const extraArgs = { bundleIdentifier, ...(publicUrl && { publicUrl }) };
-    await this.build(publishedExpIds, PLATFORMS.IOS, extraArgs);
+  platform() {
+    return PLATFORMS.IOS;
   }
 }
 

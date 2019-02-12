@@ -12,7 +12,7 @@ async function fetchIosCerts(projectDir) {
       username,
       remotePackageName,
       remoteFullPackageName: experienceName,
-      bundleIdentifierIOS: bundleIdentifier,
+      iosBundleIdentifier: bundleIdentifier,
     },
   } = await Exp.getPublishInfoAsync(projectDir);
 

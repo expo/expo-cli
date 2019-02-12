@@ -7,8 +7,10 @@ import path from 'path';
 import untildify from 'untildify';
 import { Android, Credentials, Exp } from 'xdl';
 import chalk from 'chalk';
+import get from 'lodash/get';
 
 import log from '../../log';
+import BuildError from './BuildError';
 import BaseBuilder from './BaseBuilder';
 import prompt from '../../prompt';
 import * as utils from './utils';
@@ -17,39 +19,48 @@ import { PLATFORMS } from './constants';
 const { ANDROID } = PLATFORMS;
 
 export default class AndroidBuilder extends BaseBuilder {
-  async run(options) {
-    const buildOptions = options.publicUrl ? { publicUrl: options.publicUrl } : {};
+  async run() {
     // Validate project
-    const sdkVersion = await this.validateProject(buildOptions);
+    await this.validateProject();
 
     // Check SplashScreen images sizes
     await Android.checkSplashScreenImages(this.projectDir);
 
     // Check the status of any current builds
-    await this.checkForBuildInProgress({
-      platform: ANDROID,
-      sdkVersion,
-      ...buildOptions,
-    });
+    await this.checkForBuildInProgress();
     // Check for existing credentials, collect any missing credentials, and validate them
-    await this.collectAndValidateCredentials(buildOptions);
+    await this.collectAndValidateCredentials();
     // Publish the current experience, if necessary
-    let publishedExpIds = options.publicUrl ? undefined : await this.ensureReleaseExists(ANDROID);
+    let publishedExpIds = this.options.publicUrl ? undefined : await this.ensureReleaseExists();
 
-    if (!options.publicUrl) {
-      await this.checkStatusBeforeBuild({ platform: ANDROID, sdkVersion });
+    if (!this.options.publicUrl) {
+      await this.checkStatusBeforeBuild();
     }
 
     // Initiate a build
-    await this.build(publishedExpIds, ANDROID, buildOptions);
+    await this.build(publishedExpIds);
   }
-  async _clearCredentials(options = {}) {
-    const publicUrl = options.publicUrl;
-    const {
-      args: { username, remotePackageName, remoteFullPackageName: experienceName },
-    } = publicUrl
-      ? await Exp.getThirdPartyInfoAsync(publicUrl)
-      : await Exp.getPublishInfoAsync(this.projectDir);
+
+  async validateProject() {
+    await utils.checkIfSdkIsSupported(this.manifest.sdkVersion, ANDROID);
+    if (!get(this.manifest, 'android.package')) {
+      throw new BuildError(`Your project must have an Android package set in app.json
+See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`);
+    }
+    const androidPackage = get(this.manifest, 'android.package');
+    if (!androidPackage) {
+      throw new BuildError('Your project must have an Android package set in app.json.');
+    }
+    if (!/^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(androidPackage)) {
+      throw new BuildError(
+        "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)"
+      );
+    }
+  }
+
+  async _clearCredentials() {
+    const username = this.user.username;
+    const experienceName = `@${username}/${this.manifest.slug}`;
 
     const credentialMetadata = {
       username,
@@ -85,7 +96,7 @@ export default class AndroidBuilder extends BaseBuilder {
       log('Backing up your Android keystore now...');
       const backupKeystoreOutputPath = path.resolve(
         this.projectDir,
-        `${remotePackageName}.jks.bak`
+        `${this.manifest.slug}.jks.bak`
       );
       await Credentials.backupExistingAndroidCredentials({
         outputPath: backupKeystoreOutputPath,
@@ -98,13 +109,9 @@ export default class AndroidBuilder extends BaseBuilder {
     }
   }
 
-  async collectAndValidateCredentials(options = {}) {
-    const publicUrl = options.publicUrl;
-    const {
-      args: { username, remoteFullPackageName: experienceName },
-    } = publicUrl
-      ? await Exp.getThirdPartyInfoAsync(publicUrl)
-      : await Exp.getPublishInfoAsync(this.projectDir);
+  async collectAndValidateCredentials() {
+    const username = this.user.username;
+    const experienceName = `@${username}/${this.manifest.slug}`;
 
     const credentialMetadata = {
       username,
@@ -184,7 +191,7 @@ export default class AndroidBuilder extends BaseBuilder {
 
       if (!answers.uploadKeystore) {
         if (this.options.clearCredentials && credentialsExist) {
-          await this._clearCredentials(options);
+          await this._clearCredentials();
         }
         // just continue
       } else {
@@ -228,14 +235,7 @@ export default class AndroidBuilder extends BaseBuilder {
     await Credentials.updateCredentialsForPlatform(ANDROID, credentials, [], credentialMetadata);
   }
 
-  async validateProject(options) {
-    const publicUrl = options.publicUrl;
-    const {
-      args: { sdkVersion },
-    } = publicUrl
-      ? await Exp.getThirdPartyInfoAsync(publicUrl)
-      : await Exp.getPublishInfoAsync(this.projectDir);
-    await utils.checkIfSdkIsSupported(sdkVersion, ANDROID);
-    return sdkVersion;
+  platform() {
+    return ANDROID;
   }
 }
