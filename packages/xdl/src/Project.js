@@ -415,7 +415,10 @@ export async function exportForAppHosting(
   await fs.ensureDir(bundlesPathToWrite);
 
   // build the bundles
-  let packagerOpts = options.isDev ? { dev: true, minify: false } : { dev: false, minify: true };
+  let packagerOpts = {
+    dev: !!options.isDev,
+    minify: true,
+  };
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
   const iosBundleHash = crypto
     .createHash('md5')
