@@ -116,7 +116,7 @@ export default class IOSUploader extends BaseUploader {
       args: {
         username,
         remoteFullPackageName: experienceName,
-        bundleIdentifierIOS: bundleIdentifier,
+        iosBundleIdentifier: bundleIdentifier,
       },
     } = publicUrl
       ? await Exp.getThirdPartyInfoAsync(publicUrl)

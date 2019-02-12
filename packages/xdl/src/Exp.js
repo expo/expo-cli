@@ -214,7 +214,8 @@ type PublishInfo = {
     remoteUsername: string,
     remotePackageName: string,
     remoteFullPackageName: string,
-    bundleIdentifierIOS: ?string,
+    iosBundleIdentifier: ?string,
+    androidPackage: ?string,
   },
 };
 
@@ -242,15 +243,17 @@ export async function getThirdPartyInfoAsync(publicUrl: string): Promise<Publish
     throw new Error(`Can't get version of package.`);
   }
 
-  const bundleIdentifierIOS = exp.ios ? exp.ios.bundleIdentifier : null;
+  const iosBundleIdentifier = exp.ios ? exp.ios.bundleIdentifier : null;
+  const androidPackage = exp.android ? exp.android.package : null;
   return {
     args: {
       username,
       remoteUsername: username,
       remotePackageName: slug,
       remoteFullPackageName: `@${username}/${slug}`,
-      bundleIdentifierIOS,
       sdkVersion,
+      iosBundleIdentifier,
+      androidPackage,
     },
   };
 }
@@ -288,7 +291,8 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const remotePackageName = name;
   const remoteUsername = username;
   const remoteFullPackageName = `@${remoteUsername}/${remotePackageName}`;
-  const bundleIdentifierIOS = exp.ios ? exp.ios.bundleIdentifier : null;
+  const iosBundleIdentifier = exp.ios ? exp.ios.bundleIdentifier : null;
+  const androidPackage = exp.android ? exp.android.package : null;
 
   return {
     args: {
@@ -296,8 +300,9 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
       remoteUsername,
       remotePackageName,
       remoteFullPackageName,
-      bundleIdentifierIOS,
       sdkVersion,
+      iosBundleIdentifier,
+      androidPackage,
     },
   };
 }

@@ -2,9 +2,10 @@
  * @flow
  */
 
-import { Project, ProjectUtils } from 'xdl';
+import { Project, ProjectUtils, Exp, User } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
+import get from 'lodash/get';
 import simpleSpinner from '@expo/simple-spinner';
 
 import * as UrlUtils from '../utils/url';
@@ -12,6 +13,9 @@ import log from '../../log';
 import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
 import prompt from '../../prompt';
+import { PLATFORMS } from './constants';
+
+const { ANDROID, IOS } = PLATFORMS;
 
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 const secondsToMilliseconds = seconds => seconds * 1000;
@@ -26,6 +30,7 @@ type BuilderOptions = {
   distP12Path?: string,
   pushP12Path?: string,
   provisioningProfilePath?: string,
+  publicUrl?: string,
 };
 
 type StatusArgs = {
@@ -44,17 +49,19 @@ export default class BaseBuilder {
     releaseChannel: 'default',
     publish: false,
   };
+  manifest: Object = {};
+  user: Object;
   run: () => Promise<void>;
 
-  constructor(projectDir: string, options: BuilderOptions) {
+  constructor(projectDir: string, options: BuilderOptions = {}) {
     this.projectDir = projectDir;
     this.options = options;
   }
 
-  async command(options) {
+  async command() {
     try {
-      await this._checkProjectConfig();
-      await this.run(options);
+      await this.prepareProjectInfo();
+      await this.run();
     } catch (e) {
       if (!(e instanceof BuildError)) {
         throw e;
@@ -65,41 +72,58 @@ export default class BaseBuilder {
     }
   }
 
-  async _checkProjectConfig(): Promise<void> {
-    let { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
-    if (exp.isDetached) {
-      log.error(`\`exp build\` is not supported for detached projects.`);
+  async commandCheckStatus() {
+    try {
+      await this.prepareProjectInfo();
+      await this.checkStatus();
+    } catch (e) {
+      if (!(e instanceof BuildError)) {
+        throw e;
+      } else {
+        log.error(e.message);
+        process.exit(1);
+      }
+    }
+  }
+
+  async prepareProjectInfo(): Promise<void> {
+    // always use local json to unify behaviour between regular apps and self hosted ones
+    const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
+    this.manifest = exp;
+    this.user = await User.ensureLoggedInAsync();
+
+    await this.checkProjectConfig();
+  }
+
+  async checkProjectConfig(): Promise<void> {
+    if (this.manifest.isDetached) {
+      log.error(`'expo build:${this.platform()}' is not supported for detached projects.`);
       process.exit(1);
     }
   }
 
-  async checkForBuildInProgress({ platform, publicUrl, sdkVersion }: StatusArgs = {}) {
-    log('Checking if there is build in progress...\n');
+  async checkForBuildInProgress(platform: string) {
+    log('Checking if there is a build in progress...\n');
     const buildStatus = await Project.buildAsync(this.projectDir, {
       mode: 'status',
       platform,
       current: true,
       releaseChannel: this.options.releaseChannel,
-      ...(publicUrl ? { publicUrl } : {}),
-      sdkVersion,
+      publicUrl: this.options.publicUrl,
+      sdkVersion: this.manifest.sdkVersion,
     });
     if (buildStatus.jobs && buildStatus.jobs.length) {
       throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
   }
 
-  async checkStatus({ platform = 'all', publicUrl, sdkVersion }: StatusArgs = {}): Promise<void> {
-    await this._checkProjectConfig();
-
-    log('Checking if current build exists...\n');
-
+  async checkStatus(platform: string = 'all'): Promise<void> {
+    log('Fetching build history...\n');
     const buildStatus = await Project.buildAsync(this.projectDir, {
       mode: 'status',
       platform,
       current: false,
       releaseChannel: this.options.releaseChannel,
-      ...(publicUrl ? { publicUrl } : {}),
-      sdkVersion,
     });
 
     if (buildStatus.err) {
@@ -114,16 +138,14 @@ export default class BaseBuilder {
     this.logBuildStatuses(buildStatus);
   }
 
-  async checkStatusBeforeBuild({ platform, sdkVersion }: StatusArgs = {}): Promise<void> {
-    await this._checkProjectConfig();
+  async checkStatusBeforeBuild(): Promise<void> {
     log('Checking if this build already exists...\n');
 
-    const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
     const reuseStatus = await Project.findReusableBuildAsync(
       this.options.releaseChannel,
-      platform,
-      sdkVersion,
-      exp.slug
+      this.platform(),
+      this.manifest.sdkVersion,
+      this.manifest.slug
     );
     if (reuseStatus.canReuse) {
       const { downloadUrl } = reuseStatus;
@@ -216,11 +238,11 @@ ${job.id}
     });
   }
 
-  async ensureReleaseExists(platform: string) {
+  async ensureReleaseExists() {
     if (this.options.publish) {
       const { ids, url, err } = await publishAction(this.projectDir, {
         ...this.options,
-        platform,
+        platform: this.platform(),
         duringBuild: true,
       });
       if (err) {
@@ -233,7 +255,7 @@ ${job.id}
       log('Looking for releases...');
       const release = await Project.getLatestReleaseAsync(this.projectDir, {
         releaseChannel: this.options.releaseChannel,
-        platform,
+        platform: this.platform(),
       });
       if (!release) {
         throw new BuildError('No releases found. Please create one using `exp publish` first.');
@@ -283,26 +305,25 @@ ${job.id}
     );
   }
 
-  async build(
-    expIds: Array<string>,
-    platform: string,
-    extraArgs: { publicUrl?: string, bundleIdentifier?: string } = {}
-  ) {
+  async build(expIds?: Array<string>) {
     log('Building...');
+    const { publicUrl } = this.options;
+    const platform = this.platform();
+    const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
 
     let opts = {
       mode: 'create',
       expIds,
       platform,
       releaseChannel: this.options.releaseChannel,
-      ...(extraArgs.publicUrl ? { publicUrl: extraArgs.publicUrl } : {}),
+      ...(publicUrl ? { publicUrl } : {}),
     };
 
     if (platform === 'ios') {
       opts = {
         ...opts,
         type: this.options.type,
-        bundleIdentifier: extraArgs.bundleIdentifier,
+        bundleIdentifier,
       };
     }
 
@@ -329,7 +350,7 @@ ${job.id}
 
     if (this.options.wait) {
       simpleSpinner.start();
-      const waitOpts = extraArgs.publicUrl ? { publicUrl: extraArgs.publicUrl } : {};
+      const waitOpts = publicUrl ? { publicUrl } : {};
       const completedJob = await this.wait(buildId, waitOpts);
       simpleSpinner.stop();
       const artifactUrl = completedJob.artifactId
@@ -341,16 +362,7 @@ ${job.id}
     }
   }
 
-  async checkIfSdkIsSupported(sdkVersion, platform) {
-    const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
-    if (!isSupported) {
-      const storeName = platform === 'ios' ? 'Apple App Store' : 'Google Play Store';
-      log.error(
-        chalk.red(
-          `Unsupported SDK version: our app builders don't have support for ${sdkVersion} version ` +
-            `yet. Submitting the app to the ${storeName} may result in an unexpected behaviour`
-        )
-      );
-    }
+  platform() {
+    return 'all';
   }
 }

@@ -74,7 +74,7 @@ export default (program: any) => {
         process.exit(1);
       }
       const iosBuilder = new IOSBuilder(projectDir, options);
-      return iosBuilder.command(options);
+      return iosBuilder.command();
     });
 
   program
@@ -102,7 +102,7 @@ export default (program: any) => {
         process.exit(1);
       }
       const androidBuilder = new AndroidBuilder(projectDir, options);
-      return androidBuilder.command(options);
+      return androidBuilder.command();
     });
 
   program
@@ -118,16 +118,6 @@ export default (program: any) => {
         throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
       }
       const builder = new BaseBuilder(projectDir, options);
-      try {
-        return await builder.checkStatus({
-          platform: 'all',
-          ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-        });
-      } catch (e) {
-        if (e instanceof BuildError) {
-          return;
-        }
-        throw e;
-      }
+      return builder.commandCheckStatus();
     }, /* skipProjectValidation: */ true);
 };
