@@ -1,5 +1,6 @@
 import ora from 'ora';
 import chalk from 'chalk';
+import wordwrap from 'wordwrap';
 
 import { runAction, travelingFastlane } from './fastlane';
 import { nonEmptyInput } from '../../../utils/validators';
@@ -26,7 +27,7 @@ export default async function authenticate(options) {
 }
 
 async function _requestAppleIdCreds(options) {
-  return _getAppleIdFromParams(options) || (await _promptForAppleId());
+  return _getAppleIdFromParams(options) || (await _promptForAppleId(options));
 }
 
 function _getAppleIdFromParams({ appleId }) {
@@ -41,29 +42,34 @@ function _getAppleIdFromParams({ appleId }) {
   }
 }
 
-async function _promptForAppleId() {
-  log(`
-We need your Apple ID/password to manage certificates, keys
-and provisioning profiles from your Apple Developer account.
+async function _promptForAppleId({ appleId }) {
+  let wrap = wordwrap(process.stdout.columns || 80);
+  log(
+    wrap(
+      'Please enter your Apple Developer Program account credentials. ' +
+        'These credentials are needed to manage certificates, keys and provisioning profiles ' +
+        'in your Apple Developer account.'
+    )
+  );
 
-${chalk.blue('Note: Expo does not keep your Apple ID or your Apple ID password.')}
-  `);
+  log(wrap(chalk.bold('The password is only used to authenticate with Apple and never stored.')));
 
   const appleIdQuestions = [
     {
       type: 'input',
       name: 'appleId',
-      message: `What's your Apple ID?`,
+      message: `Apple ID:`,
       validate: nonEmptyInput,
+      when: () => !appleId,
     },
     {
       type: 'password',
       name: 'appleIdPassword',
-      message: `Password?`,
+      message: answer => `Password (for ${appleId || answer.appleId}):`,
       validate: nonEmptyInput,
     },
   ];
-  return await prompt(appleIdQuestions);
+  return { appleId, ...(await prompt(appleIdQuestions)) };
 }
 
 async function _chooseTeam(teams, userProvidedTeamId) {
