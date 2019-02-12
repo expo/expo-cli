@@ -45,13 +45,12 @@ export async function backupExistingCredentials(
   fs.writeFileSync(outputPath, storeBuf);
   if (logSecrets) {
     log('Done writing keystore to disk.');
-    log(`Save these important values as well:
+    log(`${chalk.yellow('Save these important values as well:')}
 
   Keystore password: ${chalk.bold(keystorePassword)}
   Key alias:         ${chalk.bold(keyAlias)}
   Key password:      ${chalk.bold(keyPassword)}
   `);
-    log('Keystore saved!');
   }
   return {
     keystorePassword,

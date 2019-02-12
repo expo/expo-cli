@@ -10,7 +10,7 @@ import { Credentials, User, ProjectUtils } from 'xdl';
 import log from '../../log';
 import prompt from '../../prompt';
 
-export default class AppSignigOptInProcess {
+export default class AppSigningOptInProcess {
   projectDir: string = '';
 
   // Keystore used to sign production app
@@ -59,7 +59,7 @@ export default class AppSignigOptInProcess {
     log(
       `You can check whether you are using Google Play App Signing here: ${chalk.underline(
         'https://play.google.com/apps/publish'
-      )}. Select your app and go to "Release management" → "App signing" tab. If you are already using Google Play App Signing, there will be a message that says, "App Signing by Google Play is enabled for this app," at the top of the page.`
+      )}. Select your app and go to "Release management" → "App signing" tab. If you are already using Google Play App Signing, there will be a message that says, "App Signing by Google Play is enabled for this app", at the top of the page.`
     );
     const confirmQuestion = [
       {
