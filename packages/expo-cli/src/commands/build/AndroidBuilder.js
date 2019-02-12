@@ -45,7 +45,7 @@ export default class AndroidBuilder extends BaseBuilder {
     await utils.checkIfSdkIsSupported(this.manifest.sdkVersion, ANDROID);
     if (!get(this.manifest, 'android.package')) {
       throw new BuildError(`Your project must have an Android package set in app.json
-See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`);
+See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#2-configure-appjson`);
     }
     const androidPackage = get(this.manifest, 'android.package');
     if (!androidPackage) {
@@ -77,7 +77,7 @@ See https://docs.expo.io/versions/latest/guides/building-standalone-apps.html`);
       'Android keystores must be identical to the one previously used to submit your app to the Google Play Store.'
     );
     log.warn(
-      'Please read https://docs.expo.io/versions/latest/distribution/building-standalone-apps#if-you-choose-to-build-for-android for more info before proceeding.'
+      'Please read https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#if-you-choose-to-build-for-android for more info before proceeding.'
     );
     log.warn(
       "We'll store a backup of your Android keystore in this directory in case you decide to delete it from our servers."

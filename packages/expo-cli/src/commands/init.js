@@ -299,7 +299,7 @@ async function promptForInitialConfig(parentDir, dirName, workflow, options) {
   let { values } = await new Snippet({
     name: 'expo',
     message:
-      'Please enter a few initial configuration values.\n  Read more: https://docs.expo.io/versions/latest/workflow/configuration',
+      'Please enter a few initial configuration values.\n  Read more: https://docs.expo.io/versions/latest/workflow/configuration/',
     required: true,
     fields: [
       {

@@ -74,7 +74,7 @@ export async function ejectAsync(projectRoot: string, options) {
       type: 'list',
       name: 'ejectMethod',
       message:
-        'How would you like to eject your app?\n  Read more: https://docs.expo.io/versions/latest/expokit/eject',
+        'How would you like to eject your app?\n  Read more: https://docs.expo.io/versions/latest/expokit/eject/',
       default: usingExpo ? 'expokit' : 'plain',
       choices: [
         {
