@@ -10,6 +10,7 @@ import ProgressBar from 'progress';
 import last from 'lodash/last';
 import compact from 'lodash/compact';
 import findLastIndex from 'lodash/findLastIndex';
+import boxen from 'boxen';
 import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
 import glob from 'glob';
@@ -393,9 +394,12 @@ async function checkForUpdateAsync() {
   let { updateIsAvailable, current, latest } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     log.nestedWarn(
-      chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
+      boxen(
+        chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
-Run \`npm install -g ${packageJSON.name}\` to get the latest version`)
+Run \`npm install -g ${packageJSON.name}\` to get the latest version`),
+        { borderColor: 'green', padding: 1 }
+      )
     );
   }
 }
