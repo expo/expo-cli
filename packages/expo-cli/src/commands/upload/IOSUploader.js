@@ -175,7 +175,7 @@ export default class IOSUploader extends BaseUploader {
     const { appleId, appleIdPassword, appName, language, appleTeamId } = platformData;
     const { bundleIdentifier } = this._exp.ios;
 
-    const appleCreds = { appleId, appleIdPassword, appleTeamId };
+    const appleCreds = { appleId, appleIdPassword, appleTeamId, itcTeamId: this.options.itcTeamId };
 
     log('Ensuring the app exists on App Store Connect, this may take a while...');
     await runFastlaneAsync(
@@ -185,7 +185,7 @@ export default class IOSUploader extends BaseUploader {
     );
 
     log('Uploading the app to Testflight, hold tight...');
-    await runFastlaneAsync(fastlane.pilotUpload, [buildPath, appleId], appleCreds, true);
+    await runFastlaneAsync(fastlane.pilotUpload, [buildPath, appleId], appleCreds);
 
     log(
       `All done! You may want to go to App Store Connect (${chalk.underline(

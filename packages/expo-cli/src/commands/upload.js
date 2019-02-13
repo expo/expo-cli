@@ -28,6 +28,7 @@ export default program => {
     ...COMMON_OPTIONS,
     'appleId',
     'appleIdPassword',
+    'itcTeamId',
     'appName',
     'sku',
     'language',
@@ -39,6 +40,10 @@ export default program => {
     .option(
       '--apple-id <apple-id>',
       'your Apple ID username (you can also set EXPO_APPLE_ID env variable)'
+    )
+    .option(
+      '--itc-team-id <itc-team-id>',
+      'iTunes connect Team ID (optional if there is only one team available)'
     )
     .option(
       '--apple-id-password <apple-id-password>',
