@@ -43,7 +43,7 @@ export default program => {
     )
     .option(
       '--itc-team-id <itc-team-id>',
-      'iTunes connect Team ID (optional if there is only one team available)'
+      'App Store Connect Team ID (optional if there is only one team available)'
     )
     .option(
       '--apple-id-password <apple-id-password>',
