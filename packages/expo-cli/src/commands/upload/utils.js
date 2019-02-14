@@ -25,11 +25,11 @@ export async function downloadFile(url, dest) {
 export async function runFastlaneAsync(
   program,
   args,
-  { appleId, appleIdPassword, appleTeamId },
+  { appleId, appleIdPassword, appleTeamId, itcTeamId },
   pipeToLogger = false
 ) {
   const { stderr } = await spawnAsyncThrowError(program, args, {
-    ...(pipeToLogger ? { pipeToLogger: { stdout: 1 } } : { stdio: 'pipe' }),
+    ...(pipeToLogger ? { pipeToLogger: { stdout: 1 } } : { stdio: [0, 1, 'pipe'] }),
     env: {
       ...process.env,
       ...(appleId &&
@@ -38,6 +38,7 @@ export async function runFastlaneAsync(
           FASTLANE_PASSWORD: appleIdPassword,
           FASTLANE_DONT_STORE_PASSWORD: '1',
           FASTLANE_TEAM_ID: appleTeamId,
+          ...(itcTeamId ? { FASTLANE_ITC_TEAM_ID: itcTeamId } : {}),
         }),
     },
   });
