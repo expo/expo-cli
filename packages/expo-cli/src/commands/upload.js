@@ -41,6 +41,9 @@ export default program => {
       '--apple-id <apple-id>',
       'your Apple ID username (you can also set EXPO_APPLE_ID env variable)'
     )
+    // apple unified App Store Connect and Developer Portal teams, this is temporary solution until fastlane implements those changes
+    // https://github.com/fastlane/fastlane/issues/14229
+    // after updating fastlane this value will be unnecessary
     .option(
       '--itc-team-id <itc-team-id>',
       'App Store Connect Team ID (optional if there is only one team available)'
