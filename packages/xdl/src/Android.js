@@ -415,7 +415,7 @@ export async function checkSplashScreenImages(projectDir: string) {
 Be aware that your splash image will be used as xxxhdpi asset and its ${chalk.bold(
       'actual size will be different'
     )} depending on device's DPI.
-See https://docs.expo.io/versions/latest/guides/splash-screens.html#differences-between-environments-android for more information`);
+See https://docs.expo.io/versions/latest/guides/splash-screens/#differences-between-environments---android for more information`);
     return;
   }
 
@@ -428,6 +428,6 @@ but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSpla
           `${dpi}: ${width}x${height} (${expectedWidth}x${expectedHeight})`
       )
       .join(', ')}
-See https://docs.expo.io/versions/latest/guides/splash-screens.html#differences-between-environments-android for more information`);
+See https://docs.expo.io/versions/latest/guides/splash-screens/#differences-between-environments---android for more information`);
   }
 }

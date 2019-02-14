@@ -97,7 +97,7 @@ function showCompatibilityMessage(packages) {
           return `** ${pkg}: ${unsupportedPackages[pkg]}`;
         })
         .join('\n') +
-      `\n** This may not be an exhaustive list of packages you will need to address -- any package that has a native code dependency will need to be converted to an Expo equivalent or removed. Refer to the SDK API reference here: https://docs.expo.io/versions/latest/sdk/index.html`
+      `\n** This may not be an exhaustive list of packages you will need to address -- any package that has a native code dependency will need to be converted to an Expo equivalent or removed. Refer to the SDK API reference here: https://docs.expo.io/versions/latest/sdk/`
     );
   } else {
     return `We didn't detect any known incompatible packages, but if you have any with native dependencies installed, you will need to remove them from your project.`;

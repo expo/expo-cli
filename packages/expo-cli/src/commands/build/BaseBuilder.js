@@ -152,7 +152,7 @@ export default class BaseBuilder {
 
       log.warn(`Did you know that Expo provides over-the-air updates?
 Please see the docs (${chalk.underline(
-        'https://docs.expo.io/versions/latest/guides/configuring-ota-updates'
+        'https://docs.expo.io/versions/latest/guides/configuring-ota-updates/'
       )}) and check if you can use them instead of building your app binaries again.`);
 
       log.warn(

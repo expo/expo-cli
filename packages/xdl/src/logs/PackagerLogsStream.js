@@ -423,7 +423,7 @@ export default class PackagerLogsStream {
     let relativePath = path.relative(this._projectRoot, originModulePath);
 
     const DOCS_PAGE_URL =
-      'https://docs.expo.io/versions/latest/introduction/faq.html#can-i-use-nodejs-packages-with-expo';
+      'https://docs.expo.io/versions/latest/introduction/faq/#can-i-use-nodejs-packages-with-expo';
 
     if (NODE_STDLIB_MODULES.includes(moduleName)) {
       if (originModulePath.includes('node_modules')) {
