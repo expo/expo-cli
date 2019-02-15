@@ -88,7 +88,7 @@ with_captured_output{
         $result = {
           result: 'success',
           provisioningProfileId: profile[:id],
-          provisioningProfile: Base64.encode64(profile[:content]),
+          provisioningProfile: profile[:content],
         }
       end
     else
@@ -112,7 +112,7 @@ with_captured_output{
         $result = {
           result: 'success',
           provisioningProfileId: profile[:id],
-          provisioningProfile: Base64.encode64(profile[:content]),
+          provisioningProfile: profile[:content],
         }
       end
     end
