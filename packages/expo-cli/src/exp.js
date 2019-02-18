@@ -377,9 +377,12 @@ function runAsync(programName) {
         }
       });
       if (!commands.includes(subCommand)) {
-        console.log(
+        log.warn(
           `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
         );
+        if (subCommand === 'detach') {
+          log('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
+        }
       }
     } else {
       program.help();
