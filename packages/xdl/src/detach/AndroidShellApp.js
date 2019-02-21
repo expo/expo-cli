@@ -144,7 +144,7 @@ function getRemoteOrLocalUrl(manifest, key, isDetached) {
   return _.get(manifest, `${key}Url`);
 }
 
-function backgroundImagesForApp(shellPath, manifest, isDetached) {
+function backgroundImagesForApp(shellPath, manifest, isDetached, sdkVersion) {
   // returns an array like:
   // [
   //   {url: 'urlToDownload', path: 'pathToSaveTo'},
@@ -177,10 +177,17 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
 
   let url = getRemoteOrLocalUrl(manifest, 'splash.image', isDetached);
   if (url) {
+    // since SDK33 background_image placeholder is placed in `mdpi` directory
+    // placeholder is shipped with versioned ExpoView, so we're unable to delete/move it
+    // prior to SDK33 placeholder is in `xxxhdpi` and to be sure that device
+    // is not selecting it as a actual SplashScreen image (according to device's DPI)
+    // we place user-provided image in `xxxhdpi` directory as well
+    const drawableDirectory =
+      parseSdkMajorVersion(sdkVersion) >= 33 ? 'drawable-mdpi' : 'drawable-xxxhdpi';
     return [
       {
         url,
-        path: path.join(basePath, 'drawable-mdpi', 'shell_launch_background_image.png'),
+        path: path.join(basePath, drawableDirectory, 'shell_launch_background_image.png'),
       },
     ];
   }
@@ -204,17 +211,18 @@ function getSplashScreenBackgroundColor(manifest) {
 }
 
 /*
-  if resizeMode is 'contain' we should show LoadingView:
+  if resizeMode is 'contain' (since SDK33) or 'cover' (prior to SDK33) we should show LoadingView:
   using an ImageView, unlike having a BitmapDrawable
   provides a fullscreen image without distortions
 */
-function shouldShowLoadingView(manifest) {
+function shouldShowLoadingView(manifest, sdkVersion) {
+  const resizeMode =
+    (manifest.android && manifest.android.splash && manifest.android.splash.resizeMode) ||
+    (manifest.splash && manifest.splash.resizeMode);
+
   return (
-    (manifest.android &&
-      manifest.android.splash &&
-      manifest.android.splash.resizeMode &&
-      manifest.android.splash.resizeMode === 'contain') ||
-    (manifest.splash && manifest.splash.resizeMode && manifest.splash.resizeMode === 'contain')
+    resizeMode &&
+    (parseSdkMajorVersion(sdkVersion) >= 33 ? resizeMode === 'contain' : resizeMode === 'cover')
   );
 }
 
@@ -411,7 +419,12 @@ export async function runShellAppModificationsAsync(
   let bundleUrl: ?string = manifest.bundleUrl;
   let isFullManifest = !!bundleUrl;
   let version = manifest.version ? manifest.version : '0.0.0';
-  let backgroundImages = backgroundImagesForApp(shellPath, manifest, isRunningInUserContext);
+  let backgroundImages = backgroundImagesForApp(
+    shellPath,
+    manifest,
+    isRunningInUserContext,
+    sdkVersion
+  );
   let splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
   let updatesDisabled = manifest.updates && manifest.updates.enabled === false;
 
@@ -577,7 +590,7 @@ export async function runShellAppModificationsAsync(
   }
 
   // Handle 'contain' splashScreen mode by showing only background color and then actual splashScreen image inside AppLoadingView
-  if (shouldShowLoadingView(manifest)) {
+  if (shouldShowLoadingView(manifest, sdkVersion)) {
     await regexFileAsync(
       'SHOW_LOADING_VIEW_IN_SHELL_APP = false',
       'SHOW_LOADING_VIEW_IN_SHELL_APP = true',
