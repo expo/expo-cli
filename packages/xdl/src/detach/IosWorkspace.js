@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import invariant from 'invariant';
 import path from 'path';
 import rimraf from 'rimraf';
+import get from 'lodash/get';
 
 import Api from '../Api';
 import {
@@ -342,7 +343,10 @@ function getPaths(context: StandaloneContext) {
   let projectName;
   let supportingDirectory;
   let intermediatesDirectory;
-  if (context.isAnonymous()) {
+
+  if (context.build.isExpoClientBuild()) {
+    projectName = 'Exponent';
+  } else if (context.isAnonymous()) {
     projectName = 'ExpoKitApp';
   } else if (context.config && context.config.name) {
     let projectNameLabel = context.config.name;
@@ -366,7 +370,10 @@ function getPaths(context: StandaloneContext) {
   }
   // sandbox intermediates directory by workspace so that concurrently operating
   // contexts do not interfere with one another.
-  intermediatesDirectory = path.join(iosProjectDirectory, 'ExpoKitIntermediates');
+  intermediatesDirectory = path.join(
+    iosProjectDirectory,
+    context.build.isExpoClientBuild() ? 'ExponentIntermediates' : 'ExpoKitIntermediates'
+  );
   return {
     intermediatesDirectory,
     iosProjectDirectory,

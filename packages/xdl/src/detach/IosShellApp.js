@@ -13,8 +13,8 @@ import StandaloneBuildFlags from './StandaloneBuildFlags';
 import StandaloneContext from './StandaloneContext';
 import logger from './Logger';
 
-// TODO: we will need to vary this when we support multiple different build artifacts.
-export const DEFAULT_EXPOKIT_WORKSPACE_NAME = 'ExpoKitApp';
+export const EXPOKIT_APP = 'ExpoKitApp';
+export const EXPONENT_APP = 'Exponent';
 
 function _validateCLIArgs(args) {
   args.type = args.type || 'archive';
@@ -35,6 +35,8 @@ function _validateCLIArgs(args) {
       }
       break;
     }
+    case 'client':
+      break;
     default: {
       throw new Error(`Unsupported build type ${args.type}`);
     }
@@ -42,6 +44,10 @@ function _validateCLIArgs(args) {
 
   switch (args.action) {
     case 'configure': {
+      if (args.type === 'client') {
+        break;
+      }
+
       if (!args.url) {
         throw new Error('Must run with `--url MANIFEST_URL`');
       }
@@ -189,6 +195,7 @@ async function _createStandaloneContextAsync(args) {
   const buildFlags = StandaloneBuildFlags.createIos(args.configuration, {
     workspaceSourcePath,
     appleTeamId: args.appleTeamId,
+    buildType: args.type,
   });
   const context = StandaloneContext.createServiceContext(
     expoSourcePath,
@@ -222,11 +229,11 @@ async function configureAndCopyArchiveAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await IosNSBundle.configureAsync(context);
   if (output) {
-    const archiveName = context.config.slug.replace(/[^0-9a-z_\-]/gi, '_');
-    const appReleasePath = path.resolve(context.data.archivePath, '..');
     if (type === 'simulator') {
+      const archiveName = context.config.slug.replace(/[^0-9a-z_\-]/gi, '_');
+      const appReleasePath = path.resolve(context.data.archivePath, '..');
       await spawnAsync(
-        `mv ${DEFAULT_EXPOKIT_WORKSPACE_NAME}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+        `mv ${EXPOKIT_APP}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
         null,
         {
           stdoutOnly: true,
@@ -236,8 +243,9 @@ async function configureAndCopyArchiveAsync(args) {
           shell: true,
         }
       );
-    } else if (type === 'archive') {
-      await spawnAsync('/bin/mv', [`${DEFAULT_EXPOKIT_WORKSPACE_NAME}.xcarchive`, output], {
+    } else if (type === 'archive' || type === 'client') {
+      const workspaceName = type === 'archive' ? EXPOKIT_APP : EXPONENT_APP;
+      await spawnAsync('/bin/mv', [`${workspaceName}.xcarchive`, output], {
         pipeToLogger: true,
         cwd: `${context.data.archivePath}/../../../..`,
         loggerFields: { buildPhase: 'renaming archive' },

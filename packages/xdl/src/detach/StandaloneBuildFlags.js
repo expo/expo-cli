@@ -1,3 +1,5 @@
+import get from 'lodash/get';
+
 /**
  *  @flow
  *
@@ -26,6 +28,7 @@ class StandaloneBuildFlags {
   static createEmpty = () => {
     let flags = new StandaloneBuildFlags();
     flags.configuration = 'Debug';
+    flags.isExpoClientBuild = () => false;
     return flags;
   };
 
@@ -36,6 +39,7 @@ class StandaloneBuildFlags {
     let flags = new StandaloneBuildFlags();
     flags.configuration = configuration;
     flags.ios = ios;
+    flags.isExpoClientBuild = () => get(ios, 'buildType') === 'client';
     return flags;
   };
 
@@ -46,6 +50,7 @@ class StandaloneBuildFlags {
     let flags = new StandaloneBuildFlags();
     flags.configuration = configuration;
     flags.android = android;
+    flags.isExpoClientBuild = () => false;
     return flags;
   };
 }

@@ -4,6 +4,7 @@
 
 import fs from 'fs-extra';
 import path from 'path';
+import get from 'lodash/get';
 
 import {
   getManifestAsync,
@@ -68,7 +69,9 @@ function _logDeveloperInfoForLocalDevelopment(infoPlist: any) {
 }
 
 async function _cleanPropertyListBackupsAsync(context: StandaloneContext, backupPath: string) {
-  await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
+  if (get(context, 'build.ios.buildType') !== 'client') {
+    await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
+  }
   await IosPlist.cleanBackupAsync(backupPath, 'Info', false);
   // TODO: support this in user contexts as well
   if (context.type === 'service') {
@@ -441,7 +444,7 @@ async function configureAsync(context: StandaloneContext) {
     projectName,
     supportingDirectory,
   } = IosWorkspace.getPaths(context);
-  if (!context.published.url) {
+  if (!context.build.isExpoClientBuild() && !context.published.url) {
     throw new Error(`Can't configure a NSBundle without a published url.`);
   }
 
@@ -453,14 +456,22 @@ async function configureAsync(context: StandaloneContext) {
     // common configuration for all contexts
     buildPhaseLogger.info(`Modifying NSBundle configuration at ${supportingDirectory}...`);
     await _configureInfoPlistAsync(context);
-    await _configureShellPlistAsync(context);
+    if (!context.build.isExpoClientBuild()) {
+      await _configureShellPlistAsync(context);
+    }
     await _configureEntitlementsAsync(context);
     await _configureConstantsPlistAsync(context);
-    await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
-    await IosLocalization.writeLocalizationResourcesAsync({
-      supportingDirectory,
-      context,
-    });
+    if (!context.build.isExpoClientBuild()) {
+      await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
+      await IosLocalization.writeLocalizationResourcesAsync({
+        supportingDirectory,
+        context,
+      });
+    }
+
+    if (context.build.isExpoClientBuild()) {
+      return;
+    }
 
     if (context.type === 'user') {
       const iconPath = path.join(
@@ -501,6 +512,9 @@ async function configureAsync(context: StandaloneContext) {
       'kernel-manifest.json',
       'kernel.ios.bundle'
     );
+  } catch (err) {
+    console.error(err);
+    throw err;
   } finally {
     buildPhaseLogger.info('Cleaning up iOS...');
     await Promise.all([

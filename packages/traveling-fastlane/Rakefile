@@ -14,6 +14,7 @@ SCRIPTS = [
   'app_produce',
   'authenticate',
   'ensure_app_exists',
+  'manage_ad_hoc_provisioning_profile',
   'manage_dist_certs',
   'manage_provisioning_profiles',
   'manage_push_keys',

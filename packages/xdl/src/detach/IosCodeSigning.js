@@ -112,7 +112,14 @@ const createExportOptionsPlist = ({
   provisioningProfileUUID,
   exportMethod,
   teamID,
-}) => `<?xml version="1.0" encoding="UTF-8"?>
+}) => {
+  const disableBitcodeCompiling = `<key>uploadBitcode</key>
+    <false/>
+    <key>compileBitcode</key>
+    <false/>
+    <key>uploadSymbols</key>
+    <false/>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
   <dict>
@@ -125,13 +132,15 @@ const createExportOptionsPlist = ({
       <key>${bundleIdentifier}</key>
       <string>${provisioningProfileUUID}</string>
     </dict>
+    ${exportMethod === 'ad-hoc' ? disableBitcodeCompiling : ''}
   </dict>
 </plist>`;
+};
 
 async function buildIPA(
   {
     ipaPath,
-    workspace,
+    workspacePath,
     archivePath,
     codeSignIdentity,
     exportOptionsPlistPath,
@@ -167,9 +176,7 @@ async function buildIPA(
         '-n',
         path.basename(ipaPath),
         '--workspace',
-        workspace,
-        '--scheme',
-        'ExpoKitApp',
+        workspacePath,
         '--archive_path',
         archivePath,
         '--skip_build_archive',
@@ -246,10 +253,7 @@ async function createEntitlementsFile({
 }) {
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
 
-  const entitlementsPattern = path.join(
-    archivePath,
-    'Products/Applications/ExpoKitApp.app/*.entitlements'
-  );
+  const entitlementsPattern = path.join(archivePath, 'Products/Applications/*.app/*.entitlements');
   const entitlementsPaths = await glob(entitlementsPattern);
   if (entitlementsPaths.length === 0) {
     throw new Error("Didn't find any generated entitlements file in archive.");
