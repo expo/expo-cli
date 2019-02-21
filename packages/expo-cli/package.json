@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "2.11.0",
+  "version": "2.11.1",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
