@@ -180,6 +180,7 @@ export default class AppSigningOptInProcess {
         keyPassword: this.uploadKeystoreCredentials.keyPassword,
         keystore: (await fs.readFile(this.uploadKeystore)).toString('base64'),
       },
+      [],
       {
         platform: 'android',
         username,
