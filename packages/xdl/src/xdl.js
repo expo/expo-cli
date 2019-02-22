@@ -147,6 +147,9 @@ module.exports = {
   get Versions() {
     return require('./Versions');
   },
+  get Web() {
+    return require('./Web');
+  },
   get XDLError() {
     return require('./XDLError').default;
   },
