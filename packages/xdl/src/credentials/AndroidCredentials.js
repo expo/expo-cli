@@ -9,7 +9,6 @@ import uuidv4 from 'uuid/v4';
 import spawnAsync from '@expo/spawn-async';
 import axios from 'axios';
 import ProgressBar from 'progress';
-import { spawn as ptySpawn } from 'node-pty-prebuilt';
 
 import { getCredentialsForPlatform } from './Credentials';
 import logger from '../Logger';
@@ -87,6 +86,13 @@ export async function exportPrivateKey(
   outputPath: string,
   log: any = logger.info.bind(logger)
 ) {
+  let nodePty;
+  try {
+    nodePty = require('node-pty-prebuilt');
+  } catch (err) {
+    throw new Error('Package node-pty-prebuild is required to use PEPK tool');
+  }
+  const ptySpawn = nodePty.spawn;
   const encryptToolPath = path.join(UserSettings.dotExpoHomeDirectory(), 'android_tools_pepk.jar');
   if (!fs.existsSync(encryptToolPath)) {
     log(`Downloading PEPK tool from Google Play to ${encryptToolPath}`);

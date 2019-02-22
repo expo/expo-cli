@@ -48,6 +48,7 @@ export default class AppSigningOptInProcess {
     } catch (error) {
       log.error(error);
       await this.cleanup(true);
+      return;
     }
     await this.afterStoreSubmit(username, exp);
   }

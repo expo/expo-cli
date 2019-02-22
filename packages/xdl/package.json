@@ -66,7 +66,6 @@
     "mv": "2.1.1",
     "ncp": "2.0.0",
     "node-forge": "0.7.6",
-    "node-pty-prebuilt": "^0.7.6",
     "opn": "5.4.0",
     "p-timeout": "2.0.1",
     "pacote": "9.2.3",
@@ -125,6 +124,9 @@
     "prettier": "~1.7.4",
     "promise-print": "^2.3.0",
     "rimraf": "^2.5.4"
+  },
+  "optionalDependencies": {
+    "node-pty-prebuilt": "^0.7.6"
   },
   "gitHead": "656c6a0934b9d8b3bb40872fb65296a7002d64dc"
 }
