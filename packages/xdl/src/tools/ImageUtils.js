@@ -78,7 +78,7 @@ function setResizeImageFunction(
 // Allow users to provide an alternate implementation for our image dimensions function.
 // This is used internally in order to use sharp instead of sips in standalone builder.
 function setGetImageDimensionsFunction(
-  fn: (basename: string, dirname: string) => Promise<?{ width: number, height: number }>
+  fn: (dirname: string, filename: string) => Promise<?{ width: number, height: number }>
 ) {
   _getImageDimensionsAsync = fn;
 }
