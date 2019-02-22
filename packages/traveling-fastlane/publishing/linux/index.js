@@ -1,7 +1,7 @@
 'use strict';
 
 const { join } = require('path');
-const { version } = require('./package');
+const { version } = require('./package.json');
 
 const TRAVELING_FASTLANE = `traveling-fastlane-${version}-linux-x86_64`;
 
