@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import simpleSpinner from '@expo/simple-spinner';
 
-import { Exp, Project } from 'xdl';
+import { Exp, Project, ProjectUtils } from 'xdl';
 
 import log from '../log';
 import sendTo from '../sendTo';
@@ -58,10 +58,13 @@ export async function action(projectDir: string, options: Options = {}) {
     sdkVersion,
   });
 
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+
   if (
     buildStatus.userHasBuiltExperienceBefore &&
     !buildStatus.userHasBuiltAppBefore &&
-    !options.duringBuild
+    !options.duringBuild &&
+    !exp.isDetached
   ) {
     log.warn(
       'We noticed you did not build a standalone app with this SDK version and release channel before. ' +
