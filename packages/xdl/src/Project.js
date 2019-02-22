@@ -1861,7 +1861,8 @@ async function startWebpackServerAsync(projectRoot) {
   if (!exp.platforms.includes('web')) {
     return;
   }
-  let config = webpackConfig(projectRoot);
+  let { dev } = await ProjectSettings.readAsync(projectRoot);
+  let config = webpackConfig({ projectRoot, development: dev, production: !dev });
   let compiler = webpack(config);
   let server = new WebpackDevServer(compiler, config.devServer);
   let webpackServerPort = await _getFreePortAsync(19000);
