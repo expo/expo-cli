@@ -139,6 +139,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXCrypto',
+    libName: 'expo-crypto',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXDocumentPicker',
     libName: 'expo-document-picker',
     sdkVersions: '>=33.0.0',
