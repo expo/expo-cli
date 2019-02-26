@@ -1,12 +1,11 @@
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
-import { Exp } from 'xdl';
+import { XDLError, ErrorCode } from 'xdl';
 
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as constants from './credentials/constants';
-import validateProject from './projectValidator';
 import * as utils from '../utils';
 import * as credentials from './credentials';
 import * as apple from './appleApi';
