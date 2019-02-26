@@ -13,7 +13,6 @@ import Schemer, { SchemerError } from '@expo/schemer';
 
 import * as ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
-import Api from '../Api';
 import * as Binaries from '../Binaries';
 import Config from '../Config';
 import * as Versions from '../Versions';
@@ -252,7 +251,7 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
 
-  let sdkVersions = await Api.sdkVersionsAsync();
+  let sdkVersions = await Versions.sdkVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(
       projectRoot,
