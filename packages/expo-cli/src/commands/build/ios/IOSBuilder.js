@@ -2,6 +2,7 @@ import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
 import { XDLError, ErrorCode } from 'xdl';
+import fs from 'fs-extra';
 
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
@@ -27,6 +28,8 @@ class IOSBuilder extends BaseBuilder {
   async validateProject() {
     const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
     const sdkVersion = this.manifest.sdkVersion;
+
+    await this.validateIcon();
 
     if (!bundleIdentifier) {
       throw new XDLError(
@@ -157,6 +160,30 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
   platform() {
     return PLATFORMS.IOS;
+  }
+
+  // validates whether the icon doesn't have alpha channel
+  // copy-pasted from https://github.com/tj/node-png-has-alpha/blob/master/index.js
+  async validateIcon() {
+    try {
+      const icon = get(this.manifest, 'ios.icon', this.manifest.icon);
+      const buf = new Buffer(1);
+      const fd = await fs.open(icon, 'r');
+      const { buffer } = await fs.read(fd, buf, 0, 1, 25);
+      await fs.close(fd);
+      if (buffer[0] === 6) {
+        throw new XDLError(
+          ErrorCode.INVALID_ASSETS,
+          `Your application icon (${icon}) can't have an alpha channel if you wish to upload your app to Apple Store.`
+        );
+      }
+    } catch (err) {
+      if (err instanceof XDLError) {
+        throw err;
+      } else {
+        // something weird happened, let's assume the icon is correct
+      }
+    }
   }
 }
 
