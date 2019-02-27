@@ -16,3 +16,5 @@ export default function prompt(questions, { nonInteractiveHelp } = {}) {
   }
   return inquirer.prompt(questions);
 }
+
+prompt.separator = (...args) => new inquirer.Separator(...args);

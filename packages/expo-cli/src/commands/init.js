@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import fs from 'fs';
 import { Exp } from 'xdl';
 import isString from 'lodash/isString';
+import padEnd from 'lodash/padEnd';
 import { Snippet } from 'enquirer';
 import semver from 'semver';
 import set from 'lodash/set';
@@ -16,15 +17,22 @@ import CommandError from '../CommandError';
 import path from 'path';
 
 const FEATURED_TEMPLATES = [
+  '----- Expo templates -----',
   {
     shortName: 'blank',
     name: 'expo-template-blank',
-    description: 'minimum dependencies to run and an empty root component',
+    description: 'minimum dependencies to run and an empty root component ',
   },
   {
     shortName: 'tabs',
     name: 'expo-template-tabs',
     description: 'several example screens and tabs using react-navigation',
+  },
+  '----- React Native templates -----',
+  {
+    shortName: 'unimodules',
+    name: 'expo-template-unimodules',
+    description: 'minimal setup for using Unimodules',
   },
 ];
 
@@ -57,7 +65,12 @@ async function action(projectDir, options) {
 
     // For backwards compatibility, 'blank' and 'tabs' are aliases for
     // 'expo-template-blank' and 'expo-template-tabs', respectively.
-    if ((templateSpec.name === 'blank' || templateSpec.name === 'tabs') && templateSpec.registry) {
+    if (
+      (templateSpec.name === 'blank' ||
+        templateSpec.name === 'tabs' ||
+        templateSpec.name === 'unimodules') &&
+      templateSpec.registry
+    ) {
       templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
     }
   } else {
@@ -66,19 +79,30 @@ async function action(projectDir, options) {
         type: 'list',
         name: 'templateSpec',
         message: 'Choose a template:',
-        choices: FEATURED_TEMPLATES.map(template => ({
-          value: template.name,
-          name:
-            chalk.bold(template.shortName) +
-            '\n' +
-            wordwrap(2, process.stdout.columns || 80)(template.description),
-          short: template.name,
-        })),
+        pageSize: 20,
+        choices: FEATURED_TEMPLATES.map(template => {
+          if (typeof template === 'string') {
+            return prompt.separator(template);
+          } else {
+            const startColumn = 12;
+            return {
+              value: template.name,
+              name:
+                chalk.bold(padEnd(template.shortName, startColumn)) +
+                wordwrap(startColumn + 2, process.stdout.columns || 80)(
+                  template.description
+                ).trimStart(),
+              short: template.name,
+            };
+          }
+        }),
       },
       {
         nonInteractiveHelp:
           '--template: argument is required in non-interactive mode. Valid choices are: ' +
-          FEATURED_TEMPLATES.map(template => `'${template.shortName}'`).join(', ') +
+          FEATURED_TEMPLATES.filter(({ shortName }) => shortName)
+            .map(template => `'${template.shortName}'`)
+            .join(', ') +
           ' or any custom template (name of npm package).',
       }
     ));
