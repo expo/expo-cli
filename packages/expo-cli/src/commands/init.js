@@ -17,7 +17,7 @@ import CommandError from '../CommandError';
 import path from 'path';
 
 const FEATURED_TEMPLATES = [
-  '----- Expo templates -----',
+  '----- Managed workflow -----',
   {
     shortName: 'blank',
     name: 'expo-template-blank',
@@ -28,7 +28,7 @@ const FEATURED_TEMPLATES = [
     name: 'expo-template-tabs',
     description: 'several example screens and tabs using react-navigation',
   },
-  '----- React Native templates -----',
+  '----- Bare workflow -----',
   {
     shortName: 'unimodules',
     name: 'expo-template-unimodules',
