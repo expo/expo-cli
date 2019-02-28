@@ -175,6 +175,12 @@ function validateName(parentDir, name) {
   return true;
 }
 
+function validateProjectName(name) {
+  return (
+    /^[a-z0-9]+$/i.test(name) || 'Project name can only include ASCII characters A-Z, a-z and 0-9'
+  );
+}
+
 function isNonExistentOrEmptyDir(dir) {
   try {
     return fs.statSync(dir).isDirectory() && fs.readdirSync(dir).length === 0;
@@ -210,7 +216,16 @@ async function shouldUseYarnAsync() {
 }
 
 async function promptForBareConfig(parentDir, dirName, options) {
-  let projectName = dirName ? dirName.replace('-', '') : undefined;
+  let projectName = undefined;
+  if (dirName) {
+    let validationResult = validateProjectName(dirName);
+    if (validationResult === true) {
+      projectName = dirName;
+    } else {
+      throw new CommandError('INVALID_PROJECT_NAME', validationResult);
+    }
+  }
+
   if (options.parent && options.parent.nonInteractive) {
     let config = {
       name: projectName,
@@ -236,9 +251,7 @@ async function promptForBareConfig(parentDir, dirName, options) {
         message: 'The name of the Android Studio and Xcode projects to be created',
         initial: projectName,
         filter: name => name.trim(),
-        validate: name =>
-          /[a-z0-9]/i.test(projectName) ||
-          'Project name can only include ASCII characters A-Z, a-z and 0-9',
+        validate: name => validateProjectName(name),
         required: true,
       },
       {
