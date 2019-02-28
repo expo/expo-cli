@@ -77,7 +77,7 @@ async function action(projectDir, options) {
     if (
       (templateSpec.name === 'blank' ||
         templateSpec.name === 'tabs' ||
-        templateSpec.name === 'unimodules') &&
+        templateSpec.name === 'bare-minimum') &&
       templateSpec.registry
     ) {
       templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
