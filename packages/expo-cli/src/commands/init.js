@@ -8,6 +8,7 @@ import semver from 'semver';
 import set from 'lodash/set';
 import spawnAsync from '@expo/spawn-async';
 import npmPackageArg from 'npm-package-arg';
+import pacote from 'pacote';
 import wordwrap from 'wordwrap';
 
 import prompt from '../prompt';
@@ -21,7 +22,7 @@ const FEATURED_TEMPLATES = [
   {
     shortName: 'blank',
     name: 'expo-template-blank',
-    description: 'minimum dependencies to run and an empty root component ',
+    description: 'minimal dependencies to run and an empty root component ',
   },
   {
     shortName: 'tabs',
@@ -30,11 +31,19 @@ const FEATURED_TEMPLATES = [
   },
   '----- Bare workflow -----',
   {
-    shortName: 'unimodules',
-    name: 'expo-template-unimodules',
-    description: 'minimal setup for using Unimodules',
+    shortName: 'bare-minimum',
+    name: 'expo-template-bare-minimum',
+    description: 'minimal setup for using unimodules',
+    bare: true,
   },
+  // {
+  //   shortName: 'bare-foundation',
+  //   name: 'expo-template-bare-foundation',
+  //   description: 'all currently available foundation unimodules',
+  // },
 ];
+
+const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-foundation,'];
 
 let _downloadIsSlowPrompt = false;
 
@@ -74,22 +83,23 @@ async function action(projectDir, options) {
       templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
     }
   } else {
-    ({ templateSpec } = await prompt(
+    let descriptionColumn =
+      Math.max(...FEATURED_TEMPLATES.map(t => (t.shortName ? t.shortName.length : 0))) + 2;
+    let { template } = await prompt(
       {
         type: 'list',
-        name: 'templateSpec',
+        name: 'template',
         message: 'Choose a template:',
         pageSize: 20,
         choices: FEATURED_TEMPLATES.map(template => {
           if (typeof template === 'string') {
             return prompt.separator(template);
           } else {
-            const startColumn = 12;
             return {
               value: template.name,
               name:
-                chalk.bold(padEnd(template.shortName, startColumn)) +
-                wordwrap(startColumn + 2, process.stdout.columns || 80)(
+                chalk.bold(padEnd(template.shortName, descriptionColumn)) +
+                wordwrap(descriptionColumn + 2, process.stdout.columns || 80)(
                   template.description
                 ).trimStart(),
               short: template.name,
@@ -105,24 +115,22 @@ async function action(projectDir, options) {
             .join(', ') +
           ' or any custom template (name of npm package).',
       }
-    ));
+    );
+    templateSpec = npmPackageArg(template);
   }
 
-  let workflow;
   if (options.workflow) {
-    if (options.workflow === 'managed' || options.workflow === 'advanced') {
-      workflow = options.workflow;
-    } else {
-      throw new CommandError(
-        'BAD_ARGS',
-        `Invalid --workflow: '${options.workflow}'. Valid choices are: managed, advanced`
-      );
-    }
-  } else {
-    workflow = 'managed';
+    log.warn(
+      `The --workflow flag is deprecated. Workflow is chosen automatically based on the chosen template.`
+    );
   }
-
-  let initialConfig = await promptForInitialConfig(parentDir, dirName, workflow, options);
+  let initialConfig;
+  let templateManifest = await pacote.manifest(templateSpec);
+  if (BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name)) {
+    initialConfig = await promptForBareConfig(parentDir, dirName, options);
+  } else {
+    initialConfig = await promptForManagedConfig(parentDir, dirName, options);
+  }
 
   let packageManager;
   if (options.yarn) {
@@ -133,14 +141,13 @@ async function action(projectDir, options) {
     packageManager = (await shouldUseYarnAsync()) ? 'yarn' : 'npm';
   }
 
-  let projectPath = await downloadAndExtractTemplate(
+  let projectPath = await Exp.extractTemplateApp(
     templateSpec,
-    parentDir,
-    dirName,
+    path.join(parentDir, dirName || initialConfig.name || initialConfig.expo.slug),
     packageManager,
-    workflow,
     initialConfig
   );
+
   let cdPath = path.relative(process.cwd(), projectPath);
   if (cdPath.length > projectPath.length) {
     cdPath = projectPath;
@@ -152,23 +159,6 @@ async function action(projectDir, options) {
     log.nested(`  cd ${cdPath}`);
   }
   log.nested(`  ${packageManager} start\n`);
-}
-
-async function downloadAndExtractTemplate(
-  templateSpec,
-  parentDir,
-  dirName,
-  packageManager,
-  workflow,
-  initialConfig
-) {
-  return Exp.extractTemplateApp(
-    templateSpec,
-    path.join(parentDir, dirName || initialConfig.slug),
-    packageManager,
-    workflow,
-    initialConfig
-  );
 }
 
 function validateName(parentDir, name) {
@@ -219,7 +209,64 @@ async function shouldUseYarnAsync() {
   }
 }
 
-async function promptForInitialConfig(parentDir, dirName, workflow, options) {
+async function promptForBareConfig(parentDir, dirName, options) {
+  let projectName = dirName ? dirName.replace('-', '') : undefined;
+  if (options.parent && options.parent.nonInteractive) {
+    let config = {
+      name: projectName,
+    };
+    if (!isString(options.name) || options.name === '') {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        '--name: argument is required in non-interactive mode.'
+      );
+    } else {
+      config.displayName = options.name;
+      return config;
+    }
+  }
+
+  let { values } = await new Snippet({
+    name: 'app',
+    message: 'Please enter names for your project.',
+    required: true,
+    fields: [
+      {
+        name: 'name',
+        message: 'The name of the Android Studio and Xcode projects to be created',
+        initial: projectName,
+        filter: name => name.trim(),
+        validate: name =>
+          /[a-z0-9]/i.test(projectName) ||
+          'Project name can only include ASCII characters A-Z, a-z and 0-9',
+        required: true,
+      },
+      {
+        name: 'displayName',
+        message: 'The name of your app visible on the home screen',
+        initial: isString(options.name) ? options.name : undefined,
+        filter: name => name.trim(),
+        required: true,
+      },
+    ],
+    initial: 'name',
+    template: JSON.stringify(
+      {
+        name: '{{name}}',
+        displayName: '{{displayName}}',
+      },
+      null,
+      2
+    ),
+  }).run();
+  let config = {};
+  for (let key of Object.keys(values)) {
+    set(config, key, values[key]);
+  }
+  return config;
+}
+
+async function promptForManagedConfig(parentDir, dirName, options) {
   if (options.parent && options.parent.nonInteractive) {
     let config = {
       slug: dirName,
@@ -231,53 +278,8 @@ async function promptForInitialConfig(parentDir, dirName, workflow, options) {
       );
     } else {
       config.name = options.name;
+      return config;
     }
-
-    if (workflow === 'advanced') {
-      if (!isString(options.androidPackage) || options.androidPackage === '') {
-        throw new CommandError(
-          'NON_INTERACTIVE',
-          '--android-package: argument is required in non-interactive mode.'
-        );
-      } else if (validateAndroidPackage(options.androidPackage) !== true) {
-        throw new CommandError(
-          'INVALID_ARGUMENT',
-          `--android-package: ${validateAndroidPackage(options.androidPackage)}`
-        );
-      } else {
-        config.android = { package: options.androidPackage };
-      }
-      if (!isString(options.iosBundleIdentifier) || options.iosBundleIdentifier === '') {
-        throw new CommandError(
-          'NON_INTERACTIVE',
-          '--ios-bundle-identifier: argument is required in non-interactive mode.'
-        );
-      } else if (validateIosBundleIdentifier(options.iosBundleIdentifier) !== true) {
-        throw new CommandError(
-          'INVALID_ARGUMENT',
-          `--ios-bundle-identifier: ${validateIosBundleIdentifier(options.iosBundleIdentifier)}`
-        );
-      } else {
-        config.ios = { bundleIdentifier: options.iosBundleIdentifier };
-      }
-    }
-    return config;
-  }
-
-  let template = {
-    expo: {
-      name: '{{name}}',
-      slug: '{{slug}}',
-    },
-  };
-
-  if (workflow === 'advanced') {
-    template.android = {
-      package: '{{android.package}}',
-    };
-    template.ios = {
-      bundleIdentifier: '{{ios.bundleIdentifier}}',
-    };
   }
 
   let { values } = await new Snippet({
@@ -301,29 +303,24 @@ async function promptForInitialConfig(parentDir, dirName, workflow, options) {
         validate: name => validateName(parentDir, name),
         required: true,
       },
-      {
-        name: 'android.package',
-        message: 'The package name for your Android app',
-        initial: options.androidPackage,
-        validate: validateAndroidPackage,
-        required: true,
-      },
-      {
-        name: 'ios.bundleIdentifier',
-        message: 'The bundle identifier for your iOS app',
-        initial: options.iosBundleIdentifier,
-        validate: validateIosBundleIdentifier,
-        required: true,
-      },
     ],
     initial: 'slug',
-    template: JSON.stringify(template, null, 2),
+    template: JSON.stringify(
+      {
+        expo: {
+          name: '{{name}}',
+          slug: '{{slug}}',
+        },
+      },
+      null,
+      2
+    ),
   }).run();
   let config = {};
   for (let key of Object.keys(values)) {
     set(config, key, values[key]);
   }
-  return config;
+  return { expo: config };
 }
 
 function validateAndroidPackage(value) {
@@ -359,7 +356,7 @@ export default program => {
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
-    .option('--workflow [name]', 'The workflow to use. managed (default) or advanced')
+    .option('--workflow [name]', '(Deprecated) The workflow to use. managed (default) or advanced')
     .option('--name [name]', 'The name of your app visible on the home screen.')
     .option('--android-package [name]', 'The package name for your Android app.')
     .option('--ios-bundle-identifier [name]', 'The bundle identifier for your iOS app.')
