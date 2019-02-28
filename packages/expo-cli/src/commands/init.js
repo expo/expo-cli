@@ -77,7 +77,8 @@ async function action(projectDir, options) {
     if (
       (templateSpec.name === 'blank' ||
         templateSpec.name === 'tabs' ||
-        templateSpec.name === 'bare-minimum') &&
+        templateSpec.name === 'bare-minimum' ||
+        templaceSpec.name === 'bare-foundation') &&
       templateSpec.registry
     ) {
       templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
@@ -126,7 +127,8 @@ async function action(projectDir, options) {
   }
   let initialConfig;
   let templateManifest = await pacote.manifest(templateSpec);
-  if (BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name)) {
+  let isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
+  if (isBare) {
     initialConfig = await promptForBareConfig(parentDir, dirName, options);
   } else {
     initialConfig = await promptForManagedConfig(parentDir, dirName, options);
@@ -153,12 +155,31 @@ async function action(projectDir, options) {
     cdPath = projectPath;
   }
   log.nested(`\nYour project is ready at ${projectPath}`);
-  log.nested(`To get started, you can type:\n`);
-  if (cdPath) {
-    // empty string if project was created in current directory
-    log.nested(`  cd ${cdPath}`);
+  log.nested('');
+  if (isBare) {
+    log.nested(
+      `Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
+    );
+    log.nested(`  cd ${cdPath || '.'}/ios`);
+    log.nested(`  pod install`);
+    log.nested('');
+    log.nested('Then you can run the project:');
+    log.nested('');
+    if (cdPath) {
+      // empty string if project was created in current directory
+      log.nested(`  cd ${cdPath}`);
+    }
+    log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
+    log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
+  } else {
+    log.nested(`To get started, you can type:\n`);
+    if (cdPath) {
+      // empty string if project was created in current directory
+      log.nested(`  cd ${cdPath}`);
+    }
+    log.nested(`  ${packageManager} start`);
   }
-  log.nested(`  ${packageManager} start\n`);
+  log.nested('');
 }
 
 function validateName(parentDir, name) {
@@ -365,7 +386,7 @@ export default program => {
     )
     .option(
       '-t, --template [name]',
-      'Specify which template to use. Valid options are "blank", "tabs" or any npm package that includes an Expo project template.'
+      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or any npm package that includes an Expo project template.'
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
