@@ -160,6 +160,7 @@ async function action(projectDir, options) {
     log.nested(
       `Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
     );
+    log.nested('');
     log.nested(`  cd ${cdPath || '.'}/ios`);
     log.nested(`  pod install`);
     log.nested('');
