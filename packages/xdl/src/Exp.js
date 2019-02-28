@@ -7,8 +7,10 @@ import merge from 'lodash/merge';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
+import Minipass from 'minipass';
 import rimraf from 'rimraf';
 import pacote from 'pacote';
+import tar from 'tar';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
@@ -47,23 +49,79 @@ export async function determineEntryPointAsync(root: string) {
   return entryPoint;
 }
 
+class Transformer extends Minipass {
+  constructor(config) {
+    super();
+    this.data = '';
+    this.config = config;
+    this.displayName = config.displayName || config.name;
+  }
+  write(data) {
+    this.data += data;
+    return true;
+  }
+  end() {
+    let replaced = this.data
+      .replace(/Hello App Display Name/g, this.config.displayName || this.config.name)
+      .replace(/HelloWorld/g, this.config.name)
+      .replace(/helloworld/g, this.config.name.toLowerCase());
+    super.write(replaced);
+    return super.end();
+  }
+}
+
+// Binary files, don't process these (avoid decoding as utf8)
+const binaryExtensions = ['.png', '.jar'];
+
+function createFileTransform(config) {
+  return function transformFile(entry) {
+    if (!binaryExtensions.includes(path.extname(entry.path)) && config.name) {
+      return new Transformer(config);
+    }
+  };
+}
+
 export async function extractTemplateApp(
   templateSpec: string | object,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
-  workflow: 'managed' | 'advanced' = 'managed',
-  initialConfig = {}
+  config = {}
 ) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
-  await pacote.extract(templateSpec, projectRoot, {
+  let tarStream = await pacote.tarball.stream(templateSpec, {
     cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
+  });
+  await fs.mkdirp(projectRoot);
+  await new Promise((resolve, reject) => {
+    const extractStream = tar.x({
+      cwd: projectRoot,
+      strip: 1,
+      transform: createFileTransform(config),
+      onentry(entry) {
+        if (config.name) {
+          // Rewrite paths for bare workflow
+          entry.path = entry.path
+            .replace(/HelloWorld/g, config.name)
+            .replace(/helloworld/g, config.name.toLowerCase());
+        }
+        if (entry.type.toLowerCase() === 'file' && path.basename(entry.path) === 'gitignore') {
+          // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
+          // See: https://github.com/npm/npm/issues/1862
+          entry.path = '.gitignore';
+        }
+      },
+    });
+    tarStream.on('error', reject);
+    extractStream.on('error', reject);
+    extractStream.on('close', resolve);
+    tarStream.pipe(extractStream);
   });
 
   // Update files
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
-  let appJson = merge(await appFile.readAsync(), { expo: initialConfig });
+  let appJson = merge(await appFile.readAsync(), config);
   await appFile.writeAsync(appJson);
 
   let packageFile = new JsonFile(path.join(projectRoot, 'package.json'));
@@ -83,36 +141,13 @@ export async function extractTemplateApp(
   delete packageJson._from;
   await packageFile.writeAsync(packageJson);
 
-  // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
-  // See: https://github.com/npm/npm/issues/1862
-  try {
-    await fs.move(path.join(projectRoot, 'gitignore'), path.join(projectRoot, '.gitignore'));
-  } catch (error) {
-    // Append, if there's already a `.gitignore` file there
-    if (error.code === 'EEXIST') {
-      let data = fs.readFileSync(path.join(projectRoot, 'gitignore'));
-      fs.appendFileSync(path.join(projectRoot, '.gitignore'), data);
-      fs.unlinkSync(path.join(projectRoot, 'gitignore'));
-    } else if (error.code === 'ENOENT') {
-      // `gitignore` doesn't exist, move on.
-    } else {
-      throw error;
-    }
-  }
-
-  await initGitRepo(projectRoot);
-
-  if (workflow === 'advanced') {
-    Logger.global.info('Installing ExpoKit...');
-    await Detach.detachAsync(projectRoot, { packageManager });
-  } else {
-    await installDependencies(projectRoot, packageManager);
-  }
+  await initGitRepoAsync(projectRoot);
+  await installDependenciesAsync(projectRoot, packageManager);
 
   return projectRoot;
 }
 
-async function initGitRepo(root: string) {
+async function initGitRepoAsync(root: string) {
   if (process.platform === 'darwin' && !Binaries.isXcodeInstalled()) {
     Logger.global.warn(`Unable to initialize git repo. \`git\` not installed.`);
     return;
@@ -139,7 +174,7 @@ async function initGitRepo(root: string) {
   }
 }
 
-async function installDependencies(projectRoot, packageManager) {
+async function installDependenciesAsync(projectRoot, packageManager) {
   Logger.global.info('Installing dependencies...');
 
   if (packageManager === 'yarn') {
