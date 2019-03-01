@@ -87,10 +87,25 @@ export async function exportPrivateKey(
   log: any = logger.info.bind(logger)
 ) {
   let nodePty;
+  const ptyTmpDir = '/tmp/pty-tmp-install';
   try {
+    // it's not very pretty solution, but we decided to use it because it's affecting only people using
+    // this command and if node-pty is supported on that system instalation process will be invisble for user.
     nodePty = require('node-pty-prebuilt');
   } catch (err) {
-    throw new Error('Package node-pty-prebuild is required to use PEPK tool');
+    try {
+      log('Installing node-pty-prebuilt in temporary directory');
+      await fs.mkdirp(ptyTmpDir);
+      await spawnAsync('npm', ['init', '--yes'], { cwd: ptyTmpDir });
+      await spawnAsync('npm', ['install', 'node-pty-prebuilt'], {
+        cwd: ptyTmpDir,
+        stdio: ['pipe', 1, 2],
+      });
+      nodePty = require(`${ptyTmpDir}/node_modules/node-pty-prebuilt`);
+    } catch (err) {
+      log(`Run ${chalk.cyan('npm -g install node-pty-prebuilt')} to install node pty`);
+      throw new Error('Package node-pty-prebuilt is required to use PEPK tool');
+    }
   }
   const ptySpawn = nodePty.spawn;
   const encryptToolPath = path.join(UserSettings.dotExpoHomeDirectory(), 'android_tools_pepk.jar');
@@ -154,6 +169,8 @@ export async function exportPrivateKey(
     log(`Exported and encrypted private app signing key to file ${outputPath}`);
   } catch (error) {
     throw new Error(`PEPK tool failed with return code ${error}`);
+  } finally {
+    fs.remove(ptyTmpDir);
   }
 }
 
