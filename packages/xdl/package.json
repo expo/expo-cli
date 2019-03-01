@@ -126,8 +126,5 @@
     "promise-print": "^2.3.0",
     "rimraf": "^2.5.4"
   },
-  "optionalDependencies": {
-    "node-pty-prebuilt": "^0.7.6"
-  },
   "gitHead": "656c6a0934b9d8b3bb40872fb65296a7002d64dc"
 }
