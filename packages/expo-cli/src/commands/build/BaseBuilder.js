@@ -7,7 +7,6 @@ import chalk from 'chalk';
 import fp from 'lodash/fp';
 import get from 'lodash/get';
 import ora from 'ora';
-import simpleSpinner from '@expo/simple-spinner';
 
 import * as UrlUtils from '../utils/url';
 import log from '../../log';
