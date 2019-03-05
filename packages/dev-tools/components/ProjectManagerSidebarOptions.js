@@ -69,6 +69,8 @@ const STYLES_SUBTITLE = css`
 `;
 
 const STYLES_CONTENT_GROUP = css`
+  color: currentColor;
+  text-decoration: none;
   border-bottom: 1px solid ${Constants.colors.border};
   font-family: ${Constants.fontFamilies.demi};
   height: 32px;
@@ -135,9 +137,14 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           <span className={STYLES_CONTENT_GROUP_LEFT}>Run on iOS simulator</span>
         </div>
 
-        <a className={STYLES_CONTENT_GROUP}>
-          <span className={STYLES_CONTENT_GROUP_LEFT}>Run on web browser</span>
-        </a>
+        {this.props.processInfo.webAppUrl ? (
+          <a
+            className={STYLES_CONTENT_GROUP}
+            href={this.props.processInfo.webAppUrl}
+            target="_blank">
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Run on web browser</span>
+          </a>
+        ) : null}
 
         <ContentGroup header={sendHeader} isActive={this.state.isSendFormVisible}>
           <InputWithButton

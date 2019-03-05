@@ -260,6 +260,7 @@ const typeDefs = graphql`
   type ProcessInfo {
     isAndroidSimulatorSupported: Boolean
     isIosSimulatorSupported: Boolean
+    webAppUrl: String
   }
 
   type Query {
@@ -503,11 +504,15 @@ const resolvers = {
     projectManagerLayout(parent, args, context) {
       return context.getProjectManagerLayout();
     },
-    async processInfo() {
+    async processInfo(parent, args, context) {
+      const currentProject = context.getCurrentProject();
+      const { exp } = await ProjectUtils.readConfigJsonAsync(currentProject.projectDir);
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: await UrlUtils.constructWebAppUrlAsync(),
+        webAppUrl: exp.platforms.includes('web')
+          ? await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir)
+          : null,
       };
     },
     async user() {
