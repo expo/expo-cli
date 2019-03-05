@@ -149,6 +149,9 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
 export async function constructWebAppUrlAsync(projectRoot) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
+  if (!packagerInfo.webpackServerPort) {
+    return null;
+  }
   return `http://localhost:${packagerInfo.webpackServerPort}`;
 }
 
