@@ -1869,7 +1869,7 @@ async function startWebpackServerAsync(projectRoot) {
   ProjectUtils.logInfo(
     projectRoot,
     'expo',
-    `Starting webpack-dev-server on port ${webpackServerPort}...`
+    `Starting webpack-dev-server on port ${webpackServerPort}.`
   );
   await new Promise((resolve, reject) =>
     server.listen(webpackServerPort, 'localhost', error => {
