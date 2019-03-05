@@ -4,8 +4,8 @@ function createClientEnvironment(locations) {
   function getAppManifest() {
     if (nativeAppManifest && nativeAppManifest.expo) {
       const { expo } = nativeAppManifest;
-      const PWAManifest = require(locations.template.manifest);
-      const web = PWAManifest || {};
+      const pwaManifest = require(locations.template.manifest);
+      const web = pwaManifest || {};
 
       return {
         // facebookScheme
