@@ -1863,14 +1863,14 @@ async function startWebpackServerAsync(projectRoot) {
   }
   let { dev } = await ProjectSettings.readAsync(projectRoot);
   let config = webpackConfig({ projectRoot, development: dev, production: !dev });
-  let compiler = webpack(config);
-  let server = new WebpackDevServer(compiler, config.devServer);
   let webpackServerPort = await _getFreePortAsync(19000);
   ProjectUtils.logInfo(
     projectRoot,
     'expo',
     `Starting webpack-dev-server on port ${webpackServerPort}.`
   );
+  let compiler = webpack(config);
+  let server = new WebpackDevServer(compiler, config.devServer);
   await new Promise((resolve, reject) =>
     server.listen(webpackServerPort, 'localhost', error => {
       if (error) {
