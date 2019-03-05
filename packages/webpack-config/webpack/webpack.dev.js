@@ -8,10 +8,11 @@ const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware')
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
 
 const common = require('./webpack.common.js');
-const getLocations = require('./getLocations');
+const getLocations = require('./webpackLocations');
 
-module.exports = function(env) {
+module.exports = function(env = {}) {
   const locations = getLocations(env.projectRoot);
+
   return merge(common(env), {
     mode: 'development',
     entry: [require.resolve('react-dev-utils/webpackHotDevClient'), locations.appMain],

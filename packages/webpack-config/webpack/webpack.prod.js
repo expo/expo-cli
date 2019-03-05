@@ -1,18 +1,18 @@
 const merge = require('webpack-merge');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const WorkboxPlugin = require('workbox-webpack-plugin');
-const webpack = require('webpack');
 const CompressionPlugin = require('compression-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const BrotliPlugin = require('brotli-webpack-plugin');
+const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 
-const getLocations = require('./getLocations');
 const common = require('./webpack.common.js');
+const getLocations = require('./webpackLocations');
 
-module.exports = function(env) {
+module.exports = function(env = {}) {
   const locations = getLocations(env.projectRoot);
+
   const appEntry = [locations.appMain];
 
   const usePolyfills = true;
@@ -20,17 +20,46 @@ module.exports = function(env) {
   if (usePolyfills) {
     appEntry.unshift('@babel/polyfill');
   }
+
   return merge(common(env), {
     mode: 'production',
     entry: {
       vendor: ['react', 'react-native-web'],
       app: appEntry,
     },
-    devtool: 'hidden-source-map',
+    devtool: 'source-map',
     plugins: [
-      new CleanWebpackPlugin([locations.production.folder]),
-      new webpack.optimize.OccurrenceOrderPlugin(),
-      new webpack.optimize.ModuleConcatenationPlugin(),
+      /** Delete the build folder  */
+      new CleanWebpackPlugin([locations.production.folder], {
+        root: locations.root,
+        verbose: true,
+        dry: false,
+      }),
+      /** Remove unused import/exports  */
+      new WebpackDeepScopeAnalysisPlugin(),
+
+      new MiniCssExtractPlugin({
+        filename: 'static/css/[contenthash].css',
+        chunkFilename: 'static/css/[contenthash].chunk.css',
+      }),
+
+      /** GZIP files */
+      new CompressionPlugin({
+        test: /\.(js|css)$/,
+        filename: '[path].gz[query]',
+        algorithm: 'gzip',
+        threshold: 1024,
+        minRatio: 0.8,
+      }),
+      /** secondary compression for platforms that load .br  */
+      new BrotliPlugin({
+        asset: '[path].br[query]',
+        test: /\.(js|css)$/,
+        threshold: 1024,
+        minRatio: 0.8,
+      }),
+
+      /** Copy the PWA manifest.json and the caching policy serve.json from the template folder to the build folder  */
       new CopyWebpackPlugin([
         {
           from: locations.template.manifest,
@@ -41,47 +70,13 @@ module.exports = function(env) {
           to: locations.production.serveJson,
         },
       ]),
-      new MiniCssExtractPlugin({
-        filename: 'static/css/[contenthash].css',
-        chunkFilename: 'static/css/[contenthash].chunk.css',
-      }),
-      new CompressionPlugin({
-        test: /\.(js|css)$/,
-        filename: '[path].gz[query]',
-        algorithm: 'gzip',
-        threshold: 1024,
-        minRatio: 0.8,
-      }),
-      new BrotliPlugin({
-        asset: '[path].br[query]',
-        test: /\.(js|css)$/,
-        threshold: 1024,
-        minRatio: 0.8,
-      }),
     ],
-    module: {
-      rules: [
-        {
-          test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-          loader: require.resolve('url-loader'),
-          options: {
-            // Inline resources as Base64 when there is less reason to parallelize their download. The
-            // heuristic we use is whether the resource would fit within a TCP/IP packet that we would
-            // send to request the resource.
-            //
-            // An Ethernet MTU is usually 1500. IP headers are 20 (v4) or 40 (v6) bytes and TCP
-            // headers are 40 bytes. HTTP response headers vary and are around 400 bytes. This leaves
-            // about 1000 bytes for content to fit in a packet.
-            limit: 1000,
-            name: 'static/media/[hash].[ext]',
-          },
-        },
-      ],
-    },
     optimization: {
+      usedExports: true,
+      concatenateModules: true,
+      occurrenceOrder: true,
       minimize: true,
       minimizer: [
-        // we specify a custom TerserPlugin here to get source maps in production
         new TerserPlugin({
           cache: true,
           sourceMap: true,
@@ -106,12 +101,12 @@ module.exports = function(env) {
               comments: false,
               ascii_only: true,
             },
-            // module: false,
-            // toplevel: false,
-            // nameCache: null,
-            // ie8: false,
-            // keep_classnames: undefined,
-            // keep_fnames: false,
+            module: false,
+            toplevel: false,
+            nameCache: null,
+            ie8: false,
+            keep_classnames: undefined,
+            keep_fnames: false,
           },
         }),
       ],

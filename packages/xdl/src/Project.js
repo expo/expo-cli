@@ -2141,6 +2141,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
+  await stopWebpackServerAsync(projectRoot);
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);
@@ -2174,6 +2175,7 @@ export async function stopAsync(projectDir: string): Promise<void> {
       expoServerNgrokUrl: null,
       packagerNgrokUrl: null,
       ngrokPid: null,
+      webpackServerPort: null,
     });
   }
 }

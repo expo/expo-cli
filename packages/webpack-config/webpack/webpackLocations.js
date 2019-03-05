@@ -1,42 +1,47 @@
 const path = require('path');
-
 const findWorkspaceRoot = require('find-yarn-workspace-root');
 
-module.exports = function getLocations(projectRoot) {
-  const packageJsonPath = path.resolve(projectRoot, 'package.json');
-  const appJsonPath = path.resolve(projectRoot, 'app.json');
+function getLocations(inputProjectRoot = '../') {
+  const absolute = (...pathComponents) =>
+    path.resolve(__dirname, inputProjectRoot, ...pathComponents);
+
+  const projectRoot = absolute();
+  const packageJsonPath = absolute('./package.json');
+  const appJsonPath = absolute('./app.json');
 
   const workspaceRoot = findWorkspaceRoot(projectRoot); // Absolute path or null
+
   let modulesPath;
+
   if (workspaceRoot) {
     modulesPath = path.resolve(workspaceRoot, 'node_modules');
   } else {
-    modulesPath = path.resolve(projectRoot, 'node_modules');
+    modulesPath = absolute('node_modules');
   }
 
-  const packageJson = require(packageJsonPath);
+  const pckg = require(packageJsonPath);
   const nativeAppManifest = require(appJsonPath);
 
   const { expo: expoManifest = {} } = nativeAppManifest;
   const { web: expoManifestWebManifest = {} } = expoManifest;
 
   const favicon = expoManifestWebManifest.favicon
-    ? path.resolve(projectRoot, expoManifestWebManifest.favicon)
+    ? absolute(expoManifestWebManifest.favicon)
     : undefined;
 
   const { productionPath: productionPathFolderName = 'web-build' } = expoManifestWebManifest;
 
-  const productionPath = path.resolve(projectRoot, productionPathFolderName);
+  const productionPath = absolute(productionPathFolderName);
 
-  const templatePath = path.resolve(projectRoot, 'web');
+  const templatePath = absolute('web');
 
   return {
-    absolute: (...paths) => path.resolve(projectRoot, ...paths),
-    nodeModulesPath: name => path.resolve(modulesPath, name),
+    absolute,
+    includeModule: (...pathComponents) => path.resolve(modulesPath, ...pathComponents),
     packageJson: packageJsonPath,
     appJson: appJsonPath,
     root: projectRoot,
-    appMain: path.resolve(projectRoot, packageJson.main),
+    appMain: absolute(pckg.main),
     modules: modulesPath,
     template: {
       folder: templatePath,
@@ -52,4 +57,6 @@ module.exports = function getLocations(projectRoot) {
       serveJson: path.resolve(productionPath, 'serve.json'),
     },
   };
-};
+}
+
+module.exports = getLocations;
