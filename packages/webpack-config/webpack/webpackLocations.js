@@ -1,5 +1,6 @@
 const path = require('path');
 const findWorkspaceRoot = require('find-yarn-workspace-root');
+const fs = require('fs');
 
 function getLocations(inputProjectRoot = '../') {
   const absolute = (...pathComponents) =>
@@ -33,7 +34,14 @@ function getLocations(inputProjectRoot = '../') {
 
   const productionPath = absolute(productionPathFolderName);
 
-  const templatePath = absolute('web');
+  const templatePath = (filename = '') => {
+    const overridePath = absolute('web', filename);
+    if (fs.existsSync(overridePath)) {
+      return overridePath;
+    } else {
+      return path.join(__dirname, '../web-default', filename);
+    }
+  };
 
   return {
     absolute,
@@ -44,10 +52,10 @@ function getLocations(inputProjectRoot = '../') {
     appMain: absolute(pckg.main),
     modules: modulesPath,
     template: {
-      folder: templatePath,
-      indexHtml: path.resolve(templatePath, 'index.html'),
-      manifest: path.resolve(templatePath, 'manifest.json'),
-      serveJson: path.resolve(templatePath, 'serve.json'),
+      folder: templatePath(),
+      indexHtml: templatePath('index.html'),
+      manifest: templatePath('manifest.json'),
+      serveJson: templatePath('serve.json'),
       favicon,
     },
     production: {
