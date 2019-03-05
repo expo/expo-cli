@@ -72,6 +72,7 @@ module.exports = function(env) {
       options: {
         cacheDirectory: false,
         babelrc: false,
+        root: locations.root,
       },
     },
   };
