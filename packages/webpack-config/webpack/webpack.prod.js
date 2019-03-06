@@ -33,6 +33,15 @@ module.exports = function(env = {}) {
         dry: false,
       }),
 
+      /** Copy the PWA manifest.json and the caching policy serve.json from the template folder to the build folder  */
+      new CopyWebpackPlugin([
+        {
+          from: locations.template.folder,
+          to: locations.production.folder,
+          ignore: 'index.html',
+        },
+      ]),
+
       new MiniCssExtractPlugin({
         filename: 'static/css/[contenthash].css',
         chunkFilename: 'static/css/[contenthash].chunk.css',
@@ -53,18 +62,6 @@ module.exports = function(env = {}) {
         threshold: 1024,
         minRatio: 0.8,
       }),
-
-      /** Copy the PWA manifest.json and the caching policy serve.json from the template folder to the build folder  */
-      new CopyWebpackPlugin([
-        {
-          from: locations.template.manifest,
-          to: locations.production.manifest,
-        },
-        {
-          from: locations.template.serveJson,
-          to: locations.production.serveJson,
-        },
-      ]),
     ],
   });
 };
