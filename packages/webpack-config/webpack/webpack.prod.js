@@ -23,7 +23,6 @@ module.exports = function(env = {}) {
   return merge(common(env), {
     mode: 'production',
     entry: {
-      vendor: ['react', 'react-native-web'],
       app: appEntry,
     },
     devtool: 'source-map',
