@@ -109,7 +109,7 @@ export default (program: any) => {
   program
     .command('build:web [project-dir]')
     .alias('bw')
-    .description('Build production bundle for your project, compressed and ready for deployment.')
+    .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir((projectDir, options) => {
       let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
       if (!channelRe.test(options.releaseChannel)) {
