@@ -6,10 +6,12 @@ import {
   Exp,
   Project,
   ProjectSettings,
+  ProjectUtils,
   Simulator,
   UrlUtils,
   User,
   UserSettings,
+  Web,
 } from 'xdl';
 
 import chalk from 'chalk';
@@ -38,12 +40,14 @@ const printHelp = () => {
 
 const printUsage = async projectDir => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await User.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
   const iosInfo = process.platform === 'darwin' ? `, or ${b`i`} to run on ${u`i`}OS simulator` : '';
+  const webInfo = exp.platforms.includes('web') ? `, ${b`w`} to run on ${u`w`}eb` : '';
   log.nested(`
- \u203A Press ${b`a`} to run on ${u`A`}ndroid device/emulator${iosInfo}.
+ \u203A Press ${b`a`} to run on ${u`A`}ndroid device/emulator${iosInfo}${webInfo}.
  \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
  \u203A Press ${b`d`} to open DevTools in the default web browser.
  \u203A Press ${b`shift-d`} to ${
@@ -133,6 +137,13 @@ export const startAsync = async projectDir => {
         clearConsole();
         log('Trying to open the project in iOS simulator...');
         const { success, msg } = await Simulator.openProjectAsync(projectDir);
+        printHelp();
+        return;
+      }
+      case 'w': {
+        clearConsole();
+        log('Trying to open the project in a web browser...');
+        await Web.openProjectAsync(projectDir);
         printHelp();
         return;
       }

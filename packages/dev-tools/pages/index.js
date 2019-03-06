@@ -78,6 +78,7 @@ const query = gql`
     processInfo {
       isAndroidSimulatorSupported
       isIosSimulatorSupported
+      webAppUrl
     }
     user {
       username
@@ -119,6 +120,7 @@ const projectPollQuery = gql`
     processInfo {
       isAndroidSimulatorSupported
       isIosSimulatorSupported
+      webAppUrl
     }
     user {
       username

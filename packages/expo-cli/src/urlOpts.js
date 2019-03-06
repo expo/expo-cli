@@ -1,7 +1,7 @@
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
-import { Android, ProjectSettings, Simulator } from 'xdl';
+import { Android, ProjectSettings, Simulator, Web } from 'xdl';
 
 import CommandError from './CommandError';
 
@@ -12,6 +12,7 @@ function addOptions(program) {
       '-i, --ios',
       'Opens your app in Expo in a currently running iOS simulator on your computer'
     )
+    .option('-w, --web', 'Opens your app in a web browser')
     .option(
       '-m, --host [mode]',
       'lan (default), tunnel, localhost. Type of host to use. "tunnel" allows you to view your link on other networks'
@@ -83,6 +84,10 @@ async function handleMobileOptsAsync(projectDir, options) {
 
   if (options.ios) {
     await Simulator.openProjectAsync(projectDir);
+  }
+
+  if (options.web) {
+    await Web.openProjectAsync(projectDir);
   }
 
   return !!options.android || !!options.ios;
