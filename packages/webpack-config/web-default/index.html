@@ -18,6 +18,8 @@
       body,
       #main {
         height: 100%;
+        margin: 0px;
+        padding: 0px;
       }
       #main {
         display: flex;
@@ -31,10 +33,12 @@
     <div id="main"></div>
 
     <script>
-      if ('serviceWorker' in navigator)
+      if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/service-worker.js');
         });
+      }
     </script>
+
   </body>
 </html>

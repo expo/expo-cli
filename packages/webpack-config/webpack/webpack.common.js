@@ -124,7 +124,7 @@ module.exports = function(env) {
     );
   }
 
-  const publicPath = '/';
+  const publicPath = ''.replace(/\/$/, '');
 
   return {
     context: __dirname,
