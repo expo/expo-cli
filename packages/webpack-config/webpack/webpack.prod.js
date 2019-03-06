@@ -5,7 +5,6 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const BrotliPlugin = require('brotli-webpack-plugin');
-const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 
 const common = require('./webpack.common.js');
 const getLocations = require('./webpackLocations');
@@ -35,8 +34,6 @@ module.exports = function(env = {}) {
         verbose: true,
         dry: false,
       }),
-      /** Remove unused import/exports  */
-      new WebpackDeepScopeAnalysisPlugin(),
 
       new MiniCssExtractPlugin({
         filename: 'static/css/[contenthash].css',
