@@ -2,6 +2,7 @@
  * @flow
  */
 import axios from 'axios';
+import bfj from 'bfj';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -410,6 +411,12 @@ export async function exportForAppHosting(
   outputDir: string,
   options: {} = {}
 ) {
+  // build the bundles
+  let packagerOpts = {
+    dev: !!options.isDev,
+    minify: true,
+  };
+
   await _validatePackagerReadyAsync(projectRoot);
 
   // make output dirs if not exists
@@ -418,11 +425,6 @@ export async function exportForAppHosting(
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
-  // build the bundles
-  let packagerOpts = {
-    dev: !!options.isDev,
-    minify: true,
-  };
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
   const iosBundleHash = crypto
     .createHash('md5')
@@ -1890,6 +1892,38 @@ async function stopWebpackServerAsync(projectRoot) {
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort: null,
   });
+}
+
+async function bundleWebpackAsync(projectRoot, packagerOpts) {
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  if (!exp.platforms.includes('web')) {
+    return;
+  }
+  let config = webpackConfig({
+    projectRoot,
+    development: packagerOpts.dev,
+    production: !packagerOpts.dev,
+  });
+  let compiler = webpack(config);
+
+  process.env.BABEL_ENV = 'production';
+  process.env.NODE_ENV = 'production';
+
+  await new Promise((resolve, reject) =>
+    compiler.run((error, stats) => {
+      // TODO: Bacon: account for CI
+      if (error) {
+        // TODO: Bacon: Clean up error messages
+        return reject(error);
+      }
+
+      const statsPath = projectRoot + '/web-build-stats.json';
+      return bfj
+        .write(statsPath, stats.toJson())
+        .then(() => resolve({ stats }))
+        .catch(error => reject(new Error(error)));
+    })
+  );
 }
 
 async function _connectToNgrokAsync(
