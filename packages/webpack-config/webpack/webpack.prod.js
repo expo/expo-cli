@@ -26,14 +26,13 @@ module.exports = function(env = {}) {
     },
     devtool: 'source-map',
     plugins: [
-      /** Delete the build folder  */
+      // Delete the build folder
       new CleanWebpackPlugin([locations.production.folder], {
         root: locations.root,
         verbose: true,
         dry: false,
       }),
 
-      /** Copy the PWA manifest.json and the caching policy serve.json from the template folder to the build folder  */
       new CopyWebpackPlugin([
         {
           from: locations.template.folder,
@@ -47,7 +46,7 @@ module.exports = function(env = {}) {
         chunkFilename: 'static/css/[contenthash].chunk.css',
       }),
 
-      /** GZIP files */
+      // GZIP files
       new CompressionPlugin({
         test: /\.(js|css)$/,
         filename: '[path].gz[query]',
@@ -55,7 +54,7 @@ module.exports = function(env = {}) {
         threshold: 1024,
         minRatio: 0.8,
       }),
-      /** secondary compression for platforms that load .br  */
+      // secondary compression for platforms that load .br
       new BrotliPlugin({
         asset: '[path].br[query]',
         test: /\.(js|css)$/,

@@ -84,7 +84,7 @@ module.exports = function(env) {
   const nativeAppManifest = require(locations.appJson);
 
   const ttfLoaderConfiguration = {
-    test: /\.ttf$/,
+    test: /\.(ttf|otf)$/,
     use: [
       {
         loader: 'url-loader',
