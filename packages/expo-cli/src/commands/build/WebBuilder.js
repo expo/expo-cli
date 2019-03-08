@@ -11,9 +11,7 @@ const { WEB } = PLATFORMS;
 export default class WebBuilder extends BaseBuilder {
   async run() {
     // Check the status of any current builds
-    // await this.checkForBuildInProgress();
-
-    await Project.bundleWebpackAsync(this.projectDir, { dev: false });
+    await Project.bundleWebpackAsync(this.projectDir, this.options);
   }
 
   platform() {

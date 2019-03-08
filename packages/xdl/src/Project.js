@@ -1914,8 +1914,10 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   });
   let compiler = webpack(config);
 
-  process.env.BABEL_ENV = 'production';
-  process.env.NODE_ENV = 'production';
+  const mode = packagerOpts.dev ? 'development' : 'production';
+
+  process.env.BABEL_ENV = mode;
+  process.env.NODE_ENV = mode;
 
   await new Promise((resolve, reject) =>
     compiler.run((error, stats) => {
