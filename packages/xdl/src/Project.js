@@ -1897,6 +1897,14 @@ async function stopWebpackServerAsync(projectRoot) {
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp.platforms.includes('web')) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      'Your project is not setup for web yet. ' +
+        'Please add "web" to the `platforms` array in your `app.json`. ' +
+        'Also ensure `babel-preset-expo` is in your `devDependencies`, and ' +
+        '`react-native-web`, `react-art` are in your `dependencies`.'
+    );
     return;
   }
   let config = webpackConfig({
