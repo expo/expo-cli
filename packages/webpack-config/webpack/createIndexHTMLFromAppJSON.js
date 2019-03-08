@@ -5,17 +5,19 @@ function createIndexHTMLFromAppJSON(locations) {
 
   const { expo: expoManifest = {} } = nativeAppManifest;
 
+  const color = expoManifest.primaryColor || '#000000';
+
   const metaTags = {
     viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no',
     description: expoManifest.description || 'A Neat Expo App',
-    'theme-color': expoManifest.primaryColor || '#000000',
+    'theme-color': color,
     'apple-mobile-web-app-capable': 'yes',
     // default, black, black-translucent
     'apple-mobile-web-app-status-bar-style': 'default',
     'apple-mobile-web-app-title': expoManifest.name,
     'application-name': expoManifest.name,
     // Windows
-    'msapplication-navbutton-color': '',
+    'msapplication-navbutton-color': color,
     'msapplication-TileColor': '',
     'msapplication-TileImage': '',
   };
