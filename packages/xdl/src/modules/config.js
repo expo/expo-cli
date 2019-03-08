@@ -423,6 +423,11 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXSharing',
+    libName: 'expo-sharing',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXSMS',
     libName: 'expo-sms',
     sdkVersions: '>=29.0.0',

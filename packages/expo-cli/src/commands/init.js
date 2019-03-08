@@ -9,6 +9,7 @@ import set from 'lodash/set';
 import spawnAsync from '@expo/spawn-async';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
+import trimStart from 'lodash/trimStart';
 import wordwrap from 'wordwrap';
 
 import prompt from '../prompt';
@@ -78,7 +79,7 @@ async function action(projectDir, options) {
       (templateSpec.name === 'blank' ||
         templateSpec.name === 'tabs' ||
         templateSpec.name === 'bare-minimum' ||
-        templaceSpec.name === 'bare-foundation') &&
+        templateSpec.name === 'bare-foundation') &&
       templateSpec.registry
     ) {
       templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
@@ -100,9 +101,11 @@ async function action(projectDir, options) {
               value: template.name,
               name:
                 chalk.bold(padEnd(template.shortName, descriptionColumn)) +
-                wordwrap(descriptionColumn + 2, process.stdout.columns || 80)(
-                  template.description
-                ).trimStart(),
+                trimStart(
+                  wordwrap(descriptionColumn + 2, process.stdout.columns || 80)(
+                    template.description
+                  )
+                ),
               short: template.name,
             };
           }

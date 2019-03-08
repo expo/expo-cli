@@ -5,6 +5,7 @@ const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
@@ -83,7 +84,7 @@ module.exports = function(env) {
   const nativeAppManifest = require(locations.appJson);
 
   const ttfLoaderConfiguration = {
-    test: /\.ttf$/,
+    test: /\.(ttf|otf)$/,
     use: [
       {
         loader: 'url-loader',
@@ -106,24 +107,7 @@ module.exports = function(env) {
     exclude: locations.template.folder,
   };
 
-  // This method intercepts modules being referenced in react-native
-  // and redirects them to web friendly versions in expo.
-  function getWebModule(initialRoot, moduleName) {
-    return function(res) {
-      if (res.context.includes('node_modules/react-native/')) {
-        res.request = locations.includeModule(initialRoot + moduleName);
-      }
-    };
-  }
-
-  function useWebModule(modulePathToHiJack, redirectPath, initialRoot = 'expo/build/web/') {
-    return new webpack.NormalModuleReplacementPlugin(
-      new RegExp(modulePathToHiJack),
-      getWebModule(initialRoot, redirectPath)
-    );
-  }
-
-  const publicPath = '/';
+  const publicPath = ''.replace(/\/$/, '');
 
   return {
     context: __dirname,
@@ -160,13 +144,9 @@ module.exports = function(env) {
         fileName: 'asset-manifest.json',
         publicPath,
       }),
-
       new webpack.DefinePlugin(clientEnv),
-
-      useWebModule('Performance/Systrace', 'Performance/Systrace'),
-      useWebModule('RCTNetworking', 'Network/RCTNetworking'),
-      useWebModule('Platform', 'Utilities/Platform'),
-      useWebModule('HMRLoadingView', 'Utilities/HMRLoadingView'),
+      // Remove unused import/exports
+      new WebpackDeepScopeAnalysisPlugin(),
 
       new WorkboxPlugin.GenerateSW({
         skipWaiting: true,
