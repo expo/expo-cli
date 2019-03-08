@@ -63,7 +63,7 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import * as Watchman from './Watchman';
 import XDLError from './XDLError';
-
+import * as Web from './Web';
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
@@ -1897,14 +1897,7 @@ async function stopWebpackServerAsync(projectRoot) {
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp.platforms.includes('web')) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      'Your project is not setup for web yet. ' +
-        'Please add "web" to the `platforms` array in your `app.json`. ' +
-        'Also ensure `babel-preset-expo` is in your `devDependencies`, and ' +
-        '`react-native-web`, `react-art` are in your `dependencies`.'
-    );
+    ProjectUtils.logError(projectRoot, 'expo', Web.getWebSetupLogs());
     return;
   }
   let config = webpackConfig({
