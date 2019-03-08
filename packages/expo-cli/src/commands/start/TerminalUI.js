@@ -17,6 +17,7 @@ import {
 import chalk from 'chalk';
 import opn from 'opn';
 import readline from 'readline';
+import trimStart from 'lodash/trimStart';
 import wordwrap from 'wordwrap';
 
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
@@ -71,7 +72,7 @@ export const printServerInfo = async projectDir => {
   urlOpts.printQRCode(url);
   const wrap = wordwrap(2, process.stdout.columns || 80);
   const wrapItem = wordwrap(4, process.stdout.columns || 80);
-  const item = text => '  \u2022 ' + wrapItem(text).trimStart();
+  const item = text => '  \u2022 ' + trimStart(wrapItem(text));
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));
   if (username) {
