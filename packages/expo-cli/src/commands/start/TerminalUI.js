@@ -92,7 +92,7 @@ export const printServerInfo = async projectDir => {
   printHelp();
 };
 
-export const startAsync = async projectDir => {
+export const startAsync = async (projectDir, options) => {
   const { stdin } = process;
   const startWaitingForCommand = () => {
     stdin.setRawMode(true);
@@ -143,7 +143,7 @@ export const startAsync = async projectDir => {
       case 'w': {
         clearConsole();
         log('Trying to open the project in a web browser...');
-        await Web.openProjectAsync(projectDir);
+        await Web.openProjectAsync(projectDir, options);
         printHelp();
         return;
       }

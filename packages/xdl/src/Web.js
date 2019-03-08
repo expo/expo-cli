@@ -3,9 +3,9 @@ import opn from 'opn';
 import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 
-export async function openProjectAsync(projectRoot) {
+export async function openProjectAsync(projectRoot, options) {
   try {
-    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot, options);
     opn(url, { wait: false });
     return { success: true, url };
   } catch (e) {

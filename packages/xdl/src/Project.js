@@ -1858,7 +1858,7 @@ export async function stopExpoServerAsync(projectRoot: string) {
   });
 }
 
-async function startWebpackServerAsync(projectRoot) {
+async function startWebpackServerAsync(projectRoot, options) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp.platforms.includes('web')) {
     return;
@@ -1872,9 +1872,9 @@ async function startWebpackServerAsync(projectRoot) {
     `Starting webpack-dev-server on port ${webpackServerPort}.`
   );
   let compiler = webpack(config);
-  let server = new WebpackDevServer(compiler, config.devServer);
+  let server = new WebpackDevServer(compiler, { ...config.devServer, https: options.https });
   await new Promise((resolve, reject) =>
-    server.listen(webpackServerPort, 'localhost', error => {
+    server.listen(webpackServerPort, options.host || 'localhost', error => {
       if (error) {
         reject(error);
       } else {
@@ -2159,7 +2159,7 @@ export async function startAsync(
   });
   await startExpoServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options, verbose);
-  await startWebpackServerAsync(projectRoot);
+  await startWebpackServerAsync(projectRoot, options);
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);

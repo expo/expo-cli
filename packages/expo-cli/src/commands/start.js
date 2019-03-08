@@ -14,6 +14,7 @@ import sendTo from '../sendTo';
 import { installExitHooks } from '../exit';
 import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+import ip from 'ip';
 
 async function action(projectDir, options) {
   installExitHooks(projectDir);
@@ -26,6 +27,17 @@ async function action(projectDir, options) {
   let startOpts = {};
   if (options.clear) {
     startOpts.reset = true;
+  }
+  if (options.https) {
+    startOpts.https = true;
+  }
+  if (options.host) {
+    if (typeof options.host === 'string') {
+      startOpts.host = options.host;
+    } else {
+      startOpts.host = ip.address();
+    }
+    options.host = startOpts.host;
   }
 
   if (options.maxWorkers) {
@@ -62,10 +74,10 @@ async function action(projectDir, options) {
     await sendTo.sendUrlAsync(url, recipient);
   }
 
-  await urlOpts.handleMobileOptsAsync(projectDir, options);
+  await urlOpts.handleMobileOptsAsync(projectDir, startOpts);
 
   if (!nonInteractive && !exp.isDetachexped) {
-    await TerminalUI.startAsync(projectDir);
+    await TerminalUI.startAsync(projectDir, startOpts);
   } else {
     if (!exp.isDetached) {
       log.newLine();
@@ -84,6 +96,8 @@ export default (program: any) => {
     .description('Starts or restarts a local server for your app and gives you a URL to it')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
+    .option('--https', 'To start webpack with https protocol')
+    .option('-h, --host', 'Define the host or leave undefined to use the system host.')
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .urlOpts()
