@@ -2,7 +2,6 @@
  * @flow
  */
 import axios from 'axios';
-import bfj from 'bfj';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -1896,9 +1895,9 @@ async function stopWebpackServerAsync(projectRoot) {
 
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
   if (!exp.platforms.includes('web')) {
     console.log(projectRoot, 'expo', Web.getWebSetupLogs());
-
     return;
   }
   let config = webpackConfig({
@@ -1914,18 +1913,16 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   process.env.NODE_ENV = mode;
 
   await new Promise((resolve, reject) =>
-    compiler.run((error, stats) => {
+    compiler.run(async (error, stats) => {
       // TODO: Bacon: account for CI
       if (error) {
         // TODO: Bacon: Clean up error messages
         return reject(error);
       }
 
-      const statsPath = projectRoot + '/web-build-stats.json';
-      return bfj
-        .write(statsPath, stats.toJson())
-        .then(() => resolve({ stats }))
-        .catch(error => reject(new Error(error)));
+      const { stats: statsPath = 'web-build-stats.json' } = packagerOpts;
+      await JsonFile.writeAsync(path.join(projectRoot, statsPath), stats.toJson());
+      resolve();
     })
   );
 }

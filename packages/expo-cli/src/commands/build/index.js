@@ -110,6 +110,11 @@ export default (program: any) => {
     .command('build:web [project-dir]')
     .alias('bw')
     .option('-d, --dev', 'Bundle your project using webpack in dev mode.')
+    .option(
+      '--stats <path>',
+      'Output path for webpack stats. Defaults to "web-build-stats.json"',
+      'web-build-stats.json'
+    )
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir((projectDir, options) => {
       let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
