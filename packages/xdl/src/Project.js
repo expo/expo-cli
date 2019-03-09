@@ -1897,7 +1897,8 @@ async function stopWebpackServerAsync(projectRoot) {
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp.platforms.includes('web')) {
-    ProjectUtils.logError(projectRoot, 'expo', Web.getWebSetupLogs());
+    console.log(projectRoot, 'expo', Web.getWebSetupLogs());
+
     return;
   }
   let config = webpackConfig({

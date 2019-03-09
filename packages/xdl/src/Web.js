@@ -20,9 +20,9 @@ export function getWebSetupLogs() {
     `
   ${chalk.whiteBright.bold(`app.json`)}
   {
-    "packages": {
+    "packages": [
   ${chalk.green.bold(`+      "web"`)}
-    }
+    ]
   }`
   );
   const packageJsonRules = chalk.white(
