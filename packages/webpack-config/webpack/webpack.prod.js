@@ -8,12 +8,39 @@ const BrotliPlugin = require('brotli-webpack-plugin');
 const common = require('./webpack.common.js');
 const getLocations = require('./webpackLocations');
 
+function debugTreeshaking() {
+  return {
+    /**
+     * Use the following to Debug:
+     * Runtime TypeError: Cannot read property 'call' of undefined at __webpack_require__
+     * Shaking should still take place with this enabled
+     *
+     * namedModules: true,
+     * namedChunks: true
+     */
+    namedModules: true,
+    namedChunks: true,
+    minimize: false,
+    flagIncludedChunks: false,
+    occurrenceOrder: false,
+    concatenateModules: false,
+    removeEmptyChunks: false,
+    mergeDuplicateChunks: false,
+    splitChunks: {
+      hidePathInfo: false,
+      minSize: 10000,
+      maxAsyncRequests: Infinity,
+      maxInitialRequests: Infinity,
+    },
+  };
+}
+
 module.exports = function(env = {}) {
   const locations = getLocations(env.projectRoot);
 
   const appEntry = [locations.appMain];
 
-  const usePolyfills = true;
+  const usePolyfills = !env.excludePolyfill;
 
   if (usePolyfills) {
     appEntry.unshift('@babel/polyfill');
@@ -29,7 +56,6 @@ module.exports = function(env = {}) {
       // Delete the build folder
       new CleanWebpackPlugin([locations.production.folder], {
         root: locations.root,
-        verbose: true,
         dry: false,
       }),
 
@@ -54,7 +80,7 @@ module.exports = function(env = {}) {
         threshold: 1024,
         minRatio: 0.8,
       }),
-      // secondary compression for platforms that load .br
+      // Secondary compression for systems that serve .br
       new BrotliPlugin({
         asset: '[path].br[query]',
         test: /\.(js|css)$/,

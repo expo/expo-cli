@@ -410,14 +410,13 @@ export async function exportForAppHosting(
   outputDir: string,
   options: {} = {}
 ) {
+  await _validatePackagerReadyAsync(projectRoot);
+
   // build the bundles
   let packagerOpts = {
     dev: !!options.isDev,
     minify: true,
   };
-
-  await _validatePackagerReadyAsync(projectRoot);
-
   // make output dirs if not exists
   const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
   await fs.ensureDir(assetPathToWrite);
@@ -1900,17 +1899,17 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
     console.log(projectRoot, 'expo', Web.getWebSetupLogs());
     return;
   }
+  const mode = packagerOpts.dev ? 'development' : 'production';
+  process.env.BABEL_ENV = mode;
+  process.env.NODE_ENV = mode;
+
   let config = webpackConfig({
     projectRoot,
+    excludePolyfill: packagerOpts.excludePolyfill,
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
   });
   let compiler = webpack(config);
-
-  const mode = packagerOpts.dev ? 'development' : 'production';
-
-  process.env.BABEL_ENV = mode;
-  process.env.NODE_ENV = mode;
 
   await new Promise((resolve, reject) =>
     compiler.run(async (error, stats) => {
