@@ -1,10 +1,15 @@
 import opn from 'opn';
-
+import chalk from 'chalk';
 import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
-import chalk from 'chalk';
+import { readConfigJsonAsync } from './project/ProjectUtils';
 
 export async function openProjectAsync(projectRoot, options) {
+  const hasWebSupport = await hasWebSupportAsync(projectRoot);
+  if (!hasWebSupport) {
+    logWebSetup();
+    return { success: false };
+  }
   try {
     let url = await UrlUtils.constructWebAppUrlAsync(projectRoot, options);
     opn(url, { wait: false });
@@ -15,12 +20,24 @@ export async function openProjectAsync(projectRoot, options) {
   }
 }
 
-export function getWebSetupLogs() {
+export function logWebSetup() {
+  Logger.global.error(getWebSetupLogs());
+}
+
+export async function hasWebSupportAsync(projectRoot) {
+  const { exp } = await readConfigJsonAsync(projectRoot);
+  const isWebConfigured = exp.platforms.includes('web');
+  return isWebConfigured;
+}
+
+function getWebSetupLogs() {
   const appJsonRules = chalk.white(
     `
   ${chalk.whiteBright.bold(`app.json`)}
   {
     "packages": [
+      "android",
+      "ios",
   ${chalk.green.bold(`+      "web"`)}
     ]
   }`

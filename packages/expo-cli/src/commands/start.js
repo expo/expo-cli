@@ -74,7 +74,7 @@ async function action(projectDir, options) {
     await sendTo.sendUrlAsync(url, recipient);
   }
 
-  await urlOpts.handleMobileOptsAsync(projectDir, startOpts);
+  await urlOpts.handleMobileOptsAsync(projectDir, options);
 
   if (!nonInteractive && !exp.isDetachexped) {
     await TerminalUI.startAsync(projectDir, startOpts);

@@ -1893,10 +1893,9 @@ async function stopWebpackServerAsync(projectRoot) {
 }
 
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-
-  if (!exp.platforms.includes('web')) {
-    console.log(projectRoot, 'expo', Web.getWebSetupLogs());
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (!hasWebSupport) {
+    Web.logWebSetup();
     return;
   }
   const mode = packagerOpts.dev ? 'development' : 'production';
@@ -1911,19 +1910,27 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   });
   let compiler = webpack(config);
 
-  await new Promise((resolve, reject) =>
-    compiler.run(async (error, stats) => {
-      // TODO: Bacon: account for CI
-      if (error) {
-        // TODO: Bacon: Clean up error messages
-        return reject(error);
-      }
-
-      const { stats: statsPath = 'web-build-stats.json' } = packagerOpts;
-      await JsonFile.writeAsync(path.join(projectRoot, statsPath), stats.toJson());
-      resolve();
-    })
-  );
+  try {
+    const stats = await new Promise((resolve, reject) =>
+      compiler.run(async (error, stats) => {
+        // TODO: Bacon: account for CI
+        if (error) {
+          // TODO: Bacon: Clean up error messages
+          return reject(error);
+        }
+        resolve(stats);
+      })
+    );
+    const { stats: statsDirectory = 'web-build-stats.json' } = packagerOpts;
+    const statsPath = path.join(projectRoot, statsDirectory);
+    await JsonFile.writeAsync(statsPath, stats.toJson());
+  } catch ({ message }) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      'There was a problem building your web project. ' + message
+    );
+  }
 }
 
 async function _connectToNgrokAsync(

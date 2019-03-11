@@ -142,12 +142,6 @@ export const startAsync = async (projectDir, options) => {
         return;
       }
       case 'w': {
-        const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
-        const isWebConfigured = exp.platforms.includes('web');
-        if (!isWebConfigured) {
-          log(Web.getWebSetupLogs());
-          return;
-        }
         clearConsole();
         log('Trying to open the project in a web browser...');
         await Web.openProjectAsync(projectDir, options);
