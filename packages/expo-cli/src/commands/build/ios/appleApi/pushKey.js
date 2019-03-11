@@ -24,7 +24,9 @@ const createManager = ({ appleId, appleIdPassword, team }) => ({
     } catch (err) {
       const userString = get(err, 'rawDump.userString');
       if (userString && userString.match(/maximum allowed number of Keys/)) {
-        log.error(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
+        let error = new Error(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
+        error.code = 'APPLE_KEYS_TOO_MANY_GENERATED_ERROR';
+        throw error;
       }
       throw err;
     }

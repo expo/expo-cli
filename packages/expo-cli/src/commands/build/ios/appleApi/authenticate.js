@@ -40,7 +40,8 @@ function _getAppleIdFromParams({ appleId }) {
   }
 }
 
-async function _promptForAppleId({ appleId }) {
+async function _promptForAppleId(options) {
+  let appleId = options.appleId;
   let wrap = wordwrap(process.stdout.columns || 80);
   log(
     wrap(
@@ -52,22 +53,32 @@ async function _promptForAppleId({ appleId }) {
 
   log(wrap(chalk.bold('The password is only used to authenticate with Apple and never stored.')));
 
-  const appleIdQuestions = [
-    {
-      type: 'input',
-      name: 'appleId',
-      message: `Apple ID:`,
-      validate: nonEmptyInput,
-      when: () => !appleId,
-    },
+  if (!appleId) {
+    ({ appleId } = await prompt(
+      {
+        type: 'input',
+        name: 'appleId',
+        message: `Apple ID:`,
+        validate: nonEmptyInput,
+      },
+      {
+        nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
+      }
+    ));
+  }
+  let { appleIdPassword } = await prompt(
     {
       type: 'password',
       name: 'appleIdPassword',
-      message: answer => `Password (for ${appleId || answer.appleId}):`,
+      message: answer => `Password (for ${appleId}):`,
       validate: nonEmptyInput,
     },
-  ];
-  return { appleId, ...(await prompt(appleIdQuestions)) };
+    {
+      nonInteractiveHelp:
+        'Pass your Apple ID password using the EXPO_APPLE_PASSWORD environment variable',
+    }
+  );
+  return { appleId, appleIdPassword };
 }
 
 async function _chooseTeam(teams, userProvidedTeamId) {
