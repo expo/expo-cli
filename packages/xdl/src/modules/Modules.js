@@ -19,39 +19,53 @@ type ModuleConfig = {
   includeInExpoClient: boolean,
 };
 
+const HIGHEST_KNOWN_VERSION = '10000.0.0';
+
 function mapForPlatform(platform: Platform): () => ModuleConfig {
   return moduleConfig => ({ ...moduleConfig, ...moduleConfig.config[platform] });
 }
 
-export function getAllForPlatform(platform: Platform): Array<ModuleConfig> {
-  return expoSdkUniversalModulesConfigs.map(mapForPlatform(platform));
+export function getAllForPlatform(platform: Platform, sdkVersion: string): Array<ModuleConfig> {
+  return expoSdkUniversalModulesConfigs
+    .filter(moduleConfig => doesVersionSatisfy(sdkVersion, moduleConfig.sdkVersions))
+    .map(mapForPlatform(platform));
 }
 
-export function getAllNativeForExpoClientOnPlatform(platform: Platform): Array<ModuleConfig> {
-  return getAllForPlatform(platform).filter(
+export function getAllNativeForExpoClientOnPlatform(
+  platform: Platform,
+  sdkVersion: string
+): Array<ModuleConfig> {
+  return getAllForPlatform(platform, sdkVersion).filter(
     moduleConfig => moduleConfig.includeInExpoClient && moduleConfig.isNativeModule
   );
 }
 
-export function getVersionableModulesForPlatform(platform: Platform): Array<ModuleConfig> {
-  return getAllNativeForExpoClientOnPlatform(platform).filter(moduleConfig => {
+export function getVersionableModulesForPlatform(
+  platform: Platform,
+  sdkVersion: string
+): Array<ModuleConfig> {
+  return getAllNativeForExpoClientOnPlatform(platform, sdkVersion).filter(moduleConfig => {
     return moduleConfig.versionable;
   });
 }
 
-export function getDetachableModulesForPlatformAndSdkVersion(
-  platform: Platform,
-  sdkVersion: string
-): Array<ModuleConfig> {
-  return getAllForPlatform(platform).filter(moduleConfig => {
-    return (
-      moduleConfig.isNativeModule &&
-      moduleConfig.detachable &&
-      (sdkVersion === 'UNVERSIONED' || semver.satisfies(sdkVersion, moduleConfig.sdkVersions))
-    );
-  });
+export function getDetachableModules(platform: Platform, sdkVersion: string): Array<ModuleConfig> {
+  return getAllForPlatform(platform, sdkVersion).filter(
+    moduleConfig => moduleConfig.isNativeModule && moduleConfig.detachable
+  );
 }
 
-export function getPublishableModules(): Array<ModuleConfig> {
-  return expoSdkUniversalModulesConfigs.filter(moduleConfig => !!moduleConfig.libName);
+export function getPublishableModules(sdkVersion: string): Array<ModuleConfig> {
+  return expoSdkUniversalModulesConfigs.filter(
+    moduleConfig =>
+      !!moduleConfig.libName && doesVersionSatisfy(sdkVersion, moduleConfig.sdkVersions)
+  );
+}
+
+function doesVersionSatisfy(version: string, versionRequirement: string): boolean {
+  if (version === 'UNVERSIONED') {
+    return semver.satisfies(HIGHEST_KNOWN_VERSION, versionRequirement);
+  }
+
+  return semver.satisfies(version, versionRequirement);
 }
