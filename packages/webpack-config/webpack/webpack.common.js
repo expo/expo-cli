@@ -84,12 +84,12 @@ module.exports = function(env) {
   const nativeAppManifest = require(locations.appJson);
 
   const ttfLoaderConfiguration = {
-    test: /\.(ttf|otf)$/,
+    test: /\.(ttf|otf|woff)$/,
     use: [
       {
         loader: 'url-loader',
-        // loader: 'file-loader',
         options: {
+          limit: 50000,
           name: './fonts/[name].[ext]',
         },
       },
