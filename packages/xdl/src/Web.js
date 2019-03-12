@@ -35,7 +35,7 @@ function getWebSetupLogs() {
     `
   ${chalk.whiteBright.bold(`app.json`)}
   {
-    "packages": [
+    "platforms": [
       "android",
       "ios",
   ${chalk.green.bold(`+      "web"`)}
