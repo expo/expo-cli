@@ -7,7 +7,9 @@ import log from '../../log';
 import prompt from '../../prompt';
 
 export default async function selectDistributionCert(context, options = {}) {
-  let certificates = await Credentials.Ios.getExistingDistCerts(context.username, context.team.id);
+  let certificates = context.username
+    ? await Credentials.Ios.getExistingDistCerts(context.username, context.team.id)
+    : [];
   let choices = [{ name: '[Upload an existing certificate]', value: 'UPLOAD' }, ...certificates];
   if (!options.disableCreate) {
     choices.unshift({ name: '[Create a new certificate]', value: 'GENERATE' });

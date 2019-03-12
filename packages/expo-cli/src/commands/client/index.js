@@ -21,17 +21,15 @@ export default program => {
       let context = { ...authData, username: user ? user.username : null };
       let distributionCert = await selectDistributionCert(context);
       let pushKey = await selectPushKey(context);
-      let { notificationEmail } = await prompt({
-        name: 'notificationEmail',
-        message: 'Email address to notify, when the build is completed:',
-        default: user ? user.email : undefined,
-        filter: value => value.trim(),
-        validate: value =>
-          !value || /@/.test(value) ? true : "That doesn't look like a valid email.",
-      });
-      if (!notificationEmail) {
-        log('Email address was empty, notifications disabled for this build.');
-        notificationEmail = null;
+      let notificationEmail;
+      if (!user) {
+        ({ notificationEmail } = await prompt({
+          name: 'notificationEmail',
+          message: 'Please enter an email address to notify, when the build is completed:',
+          default: user ? user.email : undefined,
+          filter: value => value.trim(),
+          validate: value => (/@/.test(value) ? true : "That doesn't look like a valid email."),
+        }));
       }
     });
 };
