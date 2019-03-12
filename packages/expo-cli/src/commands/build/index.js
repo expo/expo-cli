@@ -6,6 +6,7 @@ import { UrlUtils } from 'xdl';
 import BaseBuilder from './BaseBuilder';
 import IOSBuilder from './ios/IOSBuilder';
 import AndroidBuilder from './AndroidBuilder';
+import WebBuilder from './WebBuilder';
 import BuildError from './BuildError';
 import log from '../../log';
 import CommandError from '../../CommandError';
@@ -103,6 +104,28 @@ export default (program: any) => {
       }
       const androidBuilder = new AndroidBuilder(projectDir, options);
       return androidBuilder.command();
+    });
+
+  program
+    .command('build:web [project-dir]')
+    .option('--no-polyfill', 'Prevent webpack from including @babel/polyfill')
+    .option('-d, --dev', 'Bundle your project using webpack in dev mode.')
+    .option(
+      '--stats <path>',
+      'Output path for webpack stats. Defaults to "web-build-stats.json"',
+      'web-build-stats.json'
+    )
+    .description('Build a production bundle for your project, compressed and ready for deployment.')
+    .asyncActionProjectDir((projectDir, options) => {
+      let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
+      if (!channelRe.test(options.releaseChannel)) {
+        log.error(
+          'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
+        );
+        process.exit(1);
+      }
+      const webBuilder = new WebBuilder(projectDir, options);
+      return webBuilder.command();
     });
 
   program

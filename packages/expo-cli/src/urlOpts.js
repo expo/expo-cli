@@ -87,7 +87,7 @@ async function handleMobileOptsAsync(projectDir, options) {
   }
 
   if (options.web) {
-    await Web.openProjectAsync(projectDir);
+    await Web.openProjectAsync(projectDir, options);
   }
 
   return !!options.android || !!options.ios;

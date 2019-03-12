@@ -62,7 +62,7 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import * as Watchman from './Watchman';
 import XDLError from './XDLError';
-
+import * as Web from './Web';
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
@@ -412,17 +412,17 @@ export async function exportForAppHosting(
 ) {
   await _validatePackagerReadyAsync(projectRoot);
 
+  // build the bundles
+  let packagerOpts = {
+    dev: !!options.isDev,
+    minify: true,
+  };
   // make output dirs if not exists
   const assetPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'assets'));
   await fs.ensureDir(assetPathToWrite);
   const bundlesPathToWrite = path.resolve(projectRoot, path.join(outputDir, 'bundles'));
   await fs.ensureDir(bundlesPathToWrite);
 
-  // build the bundles
-  let packagerOpts = {
-    dev: !!options.isDev,
-    minify: true,
-  };
   const { iosBundle, androidBundle } = await _buildPublishBundlesAsync(projectRoot, packagerOpts);
   const iosBundleHash = crypto
     .createHash('md5')
@@ -1856,7 +1856,7 @@ export async function stopExpoServerAsync(projectRoot: string) {
   });
 }
 
-async function startWebpackServerAsync(projectRoot) {
+async function startWebpackServerAsync(projectRoot, options) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp.platforms.includes('web')) {
     return;
@@ -1870,7 +1870,7 @@ async function startWebpackServerAsync(projectRoot) {
     `Starting webpack-dev-server on port ${webpackServerPort}.`
   );
   let compiler = webpack(config);
-  let server = new WebpackDevServer(compiler, config.devServer);
+  let server = new WebpackDevServer(compiler, { ...config.devServer, https: options.https });
   await new Promise((resolve, reject) =>
     server.listen(webpackServerPort, 'localhost', error => {
       if (error) {
@@ -1890,6 +1890,47 @@ async function stopWebpackServerAsync(projectRoot) {
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort: null,
   });
+}
+
+export async function bundleWebpackAsync(projectRoot, packagerOpts) {
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (!hasWebSupport) {
+    Web.logWebSetup();
+    return;
+  }
+  const mode = packagerOpts.dev ? 'development' : 'production';
+  process.env.BABEL_ENV = mode;
+  process.env.NODE_ENV = mode;
+
+  let config = webpackConfig({
+    projectRoot,
+    noPolyfill: packagerOpts.noPolyfill,
+    development: packagerOpts.dev,
+    production: !packagerOpts.dev,
+  });
+  let compiler = webpack(config);
+
+  try {
+    const stats = await new Promise((resolve, reject) =>
+      compiler.run(async (error, stats) => {
+        // TODO: Bacon: account for CI
+        if (error) {
+          // TODO: Bacon: Clean up error messages
+          return reject(error);
+        }
+        resolve(stats);
+      })
+    );
+    const { stats: statsDirectory = 'web-build-stats.json' } = packagerOpts;
+    const statsPath = path.join(projectRoot, statsDirectory);
+    await JsonFile.writeAsync(statsPath, stats.toJson());
+  } catch ({ message }) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      'There was a problem building your web project. ' + message
+    );
+  }
 }
 
 async function _connectToNgrokAsync(
@@ -2125,7 +2166,7 @@ export async function startAsync(
   });
   await startExpoServerAsync(projectRoot);
   await startReactNativeServerAsync(projectRoot, options, verbose);
-  await startWebpackServerAsync(projectRoot);
+  await startWebpackServerAsync(projectRoot, options);
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);

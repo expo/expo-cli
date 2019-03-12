@@ -147,12 +147,15 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
-export async function constructWebAppUrlAsync(projectRoot) {
+export async function constructWebAppUrlAsync(
+  projectRoot,
+  { https = false, host = 'localhost' } = {}
+) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.webpackServerPort) {
     return null;
   }
-  return `http://localhost:${packagerInfo.webpackServerPort}`;
+  return `http${https ? 's' : ''}://${host}:${packagerInfo.webpackServerPort}`;
 }
 
 export async function constructUrlAsync(
