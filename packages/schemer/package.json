@@ -12,8 +12,16 @@
     "testWatch": "npm run buildbg; jest --watch",
     "buildbg": "babel -w src -d build &"
   },
-  "author": "Wilson Zhao wilson.in@expo.io",
   "license": "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/expo/expo-cli.git",
+    "directory": "packages/schemer"
+  },
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/schemer#readme",
   "files": [
     "build"
   ],

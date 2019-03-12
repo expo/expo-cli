@@ -9,8 +9,9 @@
     "prepare": "npm run build"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/expo/osascript.git"
+    "type" : "git",
+    "url" : "https://github.com/expo/expo-cli.git",
+    "directory": "packages/osascript"
   },
   "keywords": [
     "osascript",
@@ -19,12 +20,11 @@
     "spawn",
     "exec"
   ],
-  "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/expo/osascript/issues"
+    "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/osascript#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/osascript#readme",
   "engines": {
     "node": ">=6"
   },

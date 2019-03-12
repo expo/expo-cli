@@ -21,19 +21,19 @@
     "expo-cli": "./bin/expo.js"
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/expo/expo-cli.git"
+    "type" : "git",
+    "url" : "https://github.com/expo/expo-cli.git",
+    "directory": "packages/expo-cli"
   },
   "keywords": [
     "expo",
     "react-native"
   ],
-  "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"
   },
-  "homepage": "https://github.com/expo/expo-cli#readme",
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/expo-cli#readme",
   "engines": {
     "node": ">=6.9.1"
   },

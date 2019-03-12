@@ -8,8 +8,12 @@
     "preinstall": "node platform.js"
   },
   "keywords": ["fastlane", "expo", "ruby"],
-  "author": "Edgar Aroutiounian",
   "license": "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/expo/expo-cli.git",
+    "directory": "packages/traveling-fastlane"
+  },
   "publishConfig": {
     "access": "public"
   }

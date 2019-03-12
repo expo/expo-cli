@@ -19,10 +19,10 @@
     "flow-typed": "flow-typed install --flowVersion=\"$(flow version | awk '{ print $9 }')\""
   },
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/expo/expo-cli.git"
+    "type" : "git",
+    "url" : "https://github.com/expo/expo-cli.git",
+    "directory": "packages/xdl"
   },
-  "author": "support@expo.io",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/expo/expo-cli/issues"

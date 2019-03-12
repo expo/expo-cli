@@ -72,6 +72,11 @@
     "xdl": "^53.1.5"
   },
   "license": "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/expo/expo-cli.git",
+    "directory": "packages/dev-tools"
+  },
   "gitHead": "656c6a0934b9d8b3bb40872fb65296a7002d64dc",
   "publishConfig": {
     "access": "public"
