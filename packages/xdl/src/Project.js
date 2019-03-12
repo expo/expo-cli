@@ -1904,7 +1904,7 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
 
   let config = webpackConfig({
     projectRoot,
-    excludePolyfill: packagerOpts.excludePolyfill,
+    noPolyfill: packagerOpts.noPolyfill,
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
   });

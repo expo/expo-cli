@@ -40,7 +40,7 @@ module.exports = function(env = {}) {
 
   const appEntry = [locations.appMain];
 
-  const usePolyfills = !env.excludePolyfill;
+  const usePolyfills = !env.noPolyfill;
 
   if (usePolyfills) {
     appEntry.unshift('@babel/polyfill');
@@ -51,7 +51,7 @@ module.exports = function(env = {}) {
     entry: {
       app: appEntry,
     },
-    devtool: 'source-map',
+    devtool: 'cheap-module-source-map',
     plugins: [
       // Delete the build folder
       new CleanWebpackPlugin([locations.production.folder], {
