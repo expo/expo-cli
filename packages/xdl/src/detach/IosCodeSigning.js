@@ -354,7 +354,10 @@ async function runFastlane({ teamID }, fastlaneArgs, loggerFields) {
   };
 
   await spawnAsyncThrowError('fastlane', fastlaneArgs, {
-    env: { ...process.env, ...fastlaneEnvVars },
+    env: {
+      ...process.env,
+      ...fastlaneEnvVars,
+    },
     pipeToLogger: true,
     dontShowStdout: false,
     loggerFields,

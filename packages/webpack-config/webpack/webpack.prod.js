@@ -21,9 +21,7 @@ module.exports = function(env = {}) {
 
   return merge(common(env), {
     mode: 'production',
-    entry: {
-      app: appEntry,
-    },
+    entry: { app: appEntry },
     devtool: 'source-map',
     plugins: [
       // Delete the build folder
