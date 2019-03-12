@@ -1872,7 +1872,7 @@ async function startWebpackServerAsync(projectRoot, options) {
   let compiler = webpack(config);
   let server = new WebpackDevServer(compiler, { ...config.devServer, https: options.https });
   await new Promise((resolve, reject) =>
-    server.listen(webpackServerPort, options.host || 'localhost', error => {
+    server.listen(webpackServerPort, 'localhost', error => {
       if (error) {
         reject(error);
       } else {
