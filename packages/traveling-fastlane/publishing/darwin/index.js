@@ -10,6 +10,7 @@ module.exports = () => {
   return {
     authenticate: p('authenticate'),
     ensureAppExists: p('ensure_app_exists'),
+    listDevices: p('list_devices'),
     manageAdHocProvisioningProfile: p('manage_ad_hoc_provisioning_profile'),
     manageDistCerts: p('manage_dist_certs'),
     managePushKeys: p('manage_push_keys'),

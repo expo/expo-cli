@@ -3,7 +3,9 @@
   "version": "1.8.2",
   "description": "Bundled up fastlane",
   "main": "index.js",
-  "os": ["darwin"],
+  "os": [
+    "darwin"
+  ],
   "scripts": {
     "preinstall": "node platform.js"
   },
