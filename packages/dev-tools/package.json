@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
@@ -69,12 +69,12 @@
     "redux": "^3.7.2",
     "slugify": "^1.0.2",
     "velocity-react": "^1.4.1",
-    "xdl": "^53.1.5"
+    "xdl": "^53.1.6"
   },
   "license": "MIT",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/expo/expo-cli.git",
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/dev-tools"
   },
   "gitHead": "656c6a0934b9d8b3bb40872fb65296a7002d64dc",
