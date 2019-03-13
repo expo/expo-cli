@@ -1,25 +1,51 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+const viewports = {
+  twitter: 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0',
+  /**
+   * To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
+   */
+  optimizedForiPhoneX:
+    'user-scalable=no,initial-scale=1.0001,maximum-scale=1.0001,viewport-fit=cover',
+};
+
 function createIndexHTMLFromAppJSON(locations) {
   const nativeAppManifest = require(locations.appJson);
 
   const { expo: expoManifest = {} } = nativeAppManifest;
-
+  const { web = {} } = expoManifest;
   const color = expoManifest.primaryColor || '#000000';
+  const description = expoManifest.description || 'A Neat Expo App';
 
+  const name = expoManifest.name;
+  // TODO: upstream all metatags
+  const openGraphMetatags = {
+    'og:title': name,
+    'og:site_name': name,
+    'og:description': description,
+    // 'og:type', https://developers.facebook.com/docs/sharing/opengraph#types
+    // 'og:image',
+    // 'og:url'
+  };
   const metaTags = {
-    viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no',
+    ...openGraphMetatags,
+
+    viewport: viewports.optimizedForiPhoneX,
     description: expoManifest.description || 'A Neat Expo App',
-    'theme-color': color,
-    'apple-mobile-web-app-capable': 'yes',
-    // default, black, black-translucent
-    'apple-mobile-web-app-status-bar-style': 'default',
-    'apple-mobile-web-app-title': expoManifest.name,
-    'application-name': expoManifest.name,
+    // 'fb:app_id': expoManifest.facebookAppId,
+    'google-site-verification': web.googleSiteVerification,
+    'mobile-web-app-capable': 'yes',
+    'application-name': name,
     // Windows
-    'msapplication-navbutton-color': color,
-    'msapplication-TileColor': '',
+    // 'msapplication-navbutton-color': color,
+    'msapplication-TileColor': color,
     'msapplication-TileImage': '',
+
+    // WebpackPwaManifest injects these values
+    // 'apple-mobile-web-app-capable': 'yes',
+    // 'apple-mobile-web-app-status-bar-style': 'white',
+    // 'apple-mobile-web-app-title': name,
+    // 'theme-color': color,
   };
 
   // Generates an `index.html` file with the <script> injected.

@@ -8,7 +8,10 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
+const createPWAManifestJSONFromAppJSON = require('./createPWAManifestJSONFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 // Only compile files from react-native, and expo libraries.
 const includeModulesThatContainPaths = [
@@ -51,6 +54,8 @@ const mediaLoaderConfiguration = {
   ],
 };
 
+const noScript = `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>We've detected that JavaScript is disabled in your browser.</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
+
 module.exports = function(env) {
   const locations = getLocations(env.projectRoot);
 
@@ -78,11 +83,13 @@ module.exports = function(env) {
     },
   };
 
-  const indexHTML = createIndexHTMLFromAppJSON(locations);
+  // const indexHTML = createIndexHTMLFromAppJSON(locations);
+  // const manifestJSON = createPWAManifestJSONFromAppJSON(locations, env);
   const clientEnv = createClientEnvironment(locations);
 
   const nativeAppManifest = require(locations.appJson);
-
+  const { expo: expoManifest = {} } = nativeAppManifest;
+  const { web: webManifest = {} } = expoManifest;
   const ttfLoaderConfiguration = {
     test: /\.(ttf|otf|woff)$/,
     use: [
@@ -129,13 +136,31 @@ module.exports = function(env) {
       runtimeChunk: 'single',
     },
     plugins: [
-      // Generates an `index.html` file with the <script> injected.
-      indexHTML,
+      // Delete the build folder
+      new CleanWebpackPlugin([locations.production.folder], {
+        root: locations.root,
+        dry: false,
+      }),
 
+      new CopyWebpackPlugin([
+        {
+          from: locations.template.folder,
+          to: locations.production.folder,
+          ignore: ['index.html', 'icon.png'],
+        },
+      ]),
+
+      // Generates an `index.html` file with the <script> injected.
+      createIndexHTMLFromAppJSON(locations),
+
+      // Manifest must be after index.html
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
-        WEB_TITLE: nativeAppManifest.expo.name,
+        WEB_TITLE: expoManifest.name,
+        NO_SCRIPT: noScript,
+        LANG_ISO_CODE: 'en',
       }),
+      createPWAManifestJSONFromAppJSON(locations, env),
 
       // Generate a manifest file which contains a mapping of all asset filenames
       // to their corresponding output file so that tools can pick it up without
@@ -144,6 +169,9 @@ module.exports = function(env) {
         fileName: 'asset-manifest.json',
         publicPath,
       }),
+
+      // manifestJSON,
+
       new webpack.DefinePlugin(clientEnv),
       // Remove unused import/exports
       new WebpackDeepScopeAnalysisPlugin(),
