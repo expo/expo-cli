@@ -18,6 +18,7 @@ function createIndexHTMLFromAppJSON(locations) {
   const description = expoManifest.description || 'A Neat Expo App';
 
   const name = expoManifest.name;
+
   // TODO: upstream all metatags
   const openGraphMetatags = {
     'og:title': name,
@@ -29,23 +30,16 @@ function createIndexHTMLFromAppJSON(locations) {
   };
   const metaTags = {
     ...openGraphMetatags,
-
     viewport: viewports.optimizedForiPhoneX,
-    description: expoManifest.description || 'A Neat Expo App',
-    // 'fb:app_id': expoManifest.facebookAppId,
+    description: expoManifest.description,
     'google-site-verification': web.googleSiteVerification,
-    'mobile-web-app-capable': 'yes',
-    'application-name': name,
     // Windows
     // 'msapplication-navbutton-color': color,
     'msapplication-TileColor': color,
     'msapplication-TileImage': '',
 
-    // WebpackPwaManifest injects these values
-    // 'apple-mobile-web-app-capable': 'yes',
-    // 'apple-mobile-web-app-status-bar-style': 'white',
-    // 'apple-mobile-web-app-title': name,
-    // 'theme-color': color,
+    // WebpackPwaManifest should inject this
+    'theme-color': color,
   };
 
   // Generates an `index.html` file with the <script> injected.
@@ -78,11 +72,6 @@ function createIndexHTMLFromAppJSON(locations) {
       minifyCSS: true,
       minifyURLs: true,
     },
-    /**
-     * Adds the given favicon path to the output html.
-     * Default: `false`.
-     */
-    favicon: locations.template.favicon,
     /**
      * Allows to inject meta-tags, e.g. meta: `{viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no'}`.
      * Default: `{}`.

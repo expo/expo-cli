@@ -2,8 +2,10 @@ const WebpackPwaManifest = require('webpack-pwa-manifest');
 
 const MAX_SHORT_NAME_LENGTH = 12;
 const DEFAULT_COLOR = '#4630EB';
-const DEFAULT_START_URL = '.'; // './index.html';
-
+const DEFAULT_START_URL = '.';
+const DEFAULT_DISPLAY = 'fullscreen';
+const DEFAULT_STATUS_BAR = 'default';
+const DEFAULT_LANG_DIR = 'auto';
 function getManifests(location) {
   const nativeAppManifest = require(location);
   if (!nativeAppManifest) {
@@ -202,7 +204,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
   // TODO: Bacon: startUrl or startURL ?
   const startUrl = web.startUrl || web.start_url || DEFAULT_START_URL;
   // validation: https://github.com/arthurbergmz/webpack-pwa-manifest/blob/ce46542adef3b91fd65221c586c6e934a3b6a272/src/validators/presets.js#L10
-  const display = web.display;
+  const display = web.display || DEFAULT_DISPLAY;
 
   let orientation = web.orientation || expo.orientation;
   if (orientation && typeof orientation === 'string') {
@@ -214,7 +216,8 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
   // If you don't include a scope in your manifest, then the default implied scope is the directory that your web app manifest is served from.
   const scope = web.scope;
 
-  const barStyle = web.barStyle || web['apple-mobile-web-app-status-bar-style'] || 'default';
+  const barStyle =
+    web.barStyle || web['apple-mobile-web-app-status-bar-style'] || DEFAULT_STATUS_BAR;
   /**
    * https://developer.mozilla.org/en-US/docs/Web/Manifest#related_applications
    * An array of native applications that are installable by, or accessible to, the underlying platform
@@ -235,7 +238,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
    * `ltr`, `rtl`, `auto`
    * validation: https://github.com/arthurbergmz/webpack-pwa-manifest/blob/ce46542adef3b91fd65221c586c6e934a3b6a272/src/validators/presets.js#L4
    */
-  const dir = web.dir || 'auto';
+  const dir = web.dir || DEFAULT_LANG_DIR;
 
   /**
    * https://developer.mozilla.org/en-US/docs/Web/Manifest#prefer_related_applications
@@ -260,6 +263,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
   if (web.icon || expo.icon) {
     icon = locations.absolute(web.icon || expo.icon);
   } else {
+    // Use template icon
     icon = locations.template.get('icon.png');
   }
   icons.push({ src: icon, size: ICON_SIZES });
@@ -319,8 +323,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
   // if the user manually defines this as false, then don't infer native apps.
   if (preferRelatedApplications !== false) {
     const noRelatedApplicationsDefined =
-      !relatedApplications ||
-      (Array.isArray(relatedApplications) && relatedApplications.length === 0);
+      Array.isArray(relatedApplications) && !relatedApplications.length;
 
     if (noRelatedApplicationsDefined) {
       if (ios.bundleIdentifier) {
@@ -349,53 +352,31 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
           relatedApplications.push(androidApp);
         }
       }
-      // TODO: Bacon: Windows I guess...
     }
   }
 
   return new WebpackPwaManifest({
+    background_color: backgroundColor,
+    description: description,
+    dir,
+    display: display,
     filename: locations.production.manifest,
     includeDirectory: false,
-    name: name,
-    short_name: shortName,
-    description: description,
-    background_color: backgroundColor,
-    start_url: startUrl,
-    display: display,
-    orientation,
-    scope,
-    crossorigin,
-    dir,
+    icons: icons,
     lang,
+    name: name,
+    orientation,
+    prefer_related_applications: preferRelatedApplications,
+    related_applications: relatedApplications,
+    scope,
+    short_name: shortName,
+    start_url: startUrl,
+    theme_color: themeColor,
     ios: {
       'apple-mobile-web-app-status-bar-style': barStyle,
     },
-    related_applications: relatedApplications,
-    icons: icons,
+    crossorigin,
   });
-  //   return new FaviconsWebpackPlugin({
-  //     path: '/',
-  //     appName: name,
-  //     appShortName: shortName,
-  //     appDescription: description,
-  //     // developerName
-  //     // developerURL
-  //     background_color: backgroundColor,
-  //     appleStatusBarStyle: barStyle,
-  //     start_url: startUrl,
-  //     theme_color: themeColor,
-  //     display: display,
-  //     // version: '1.0', // Your application's version string. `string`
-  //     logging: false,
-  //     background: backgroundColor,
-  //     orientation,
-  //     scope,
-  //     crossorigin,
-  //     dir,
-  //     lang,
-  //     related_applications: relatedApplications,
-  //     logo: icon,
-  //   });
 }
 
 module.exports = createPWAManifestJSONFromAppJSON;
