@@ -75,11 +75,11 @@ export default program => {
         urlOpts.printQRCode(result.registrationUrl);
         log(
           chalk.green(
-            `Please visit this link on your device to register its UDID and download Expo Client:`
+            `Please visit this link on your device to register its UDID and download Expo Client:\n. ${
+              result.registrationUrl
+            }`
           )
         );
-        log.newLine();
-        log(`  ${result.registrationUrl}`);
         log.newLine();
       } else {
         log(
