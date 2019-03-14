@@ -1,4 +1,3 @@
-// const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 const WebpackPwaManifest = require('webpack-pwa-manifest');
 
 const MAX_SHORT_NAME_LENGTH = 12;
@@ -215,7 +214,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
   // If you don't include a scope in your manifest, then the default implied scope is the directory that your web app manifest is served from.
   const scope = web.scope;
 
-  const barStyle = web.barStyle || web['apple-mobile-web-app-status-bar-style'];
+  const barStyle = web.barStyle || web['apple-mobile-web-app-status-bar-style'] || 'default';
   /**
    * https://developer.mozilla.org/en-US/docs/Web/Manifest#related_applications
    * An array of native applications that are installable by, or accessible to, the underlying platform
@@ -256,11 +255,34 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
 
   // TODO: Bacon: validation doesn't handle platforms: https://github.com/arthurbergmz/webpack-pwa-manifest/blob/master/src/icons/index.js
   // TODO: Bacon: Maybe use android, and iOS icons.
+  let icons = [];
   let icon;
   if (web.icon || expo.icon) {
     icon = locations.absolute(web.icon || expo.icon);
   } else {
     icon = locations.template.get('icon.png');
+  }
+  icons.push({ src: icon, size: ICON_SIZES });
+
+  const iOSIcon = expo.icon || ios.icon;
+  if (iOSIcon) {
+    const iOSIconPath = locations.absolute(iOSIcon);
+    icons.push({
+      ios: true,
+      size: 1024,
+      src: iOSIconPath,
+    });
+
+    const { splash: iOSSplash = {} } = ios;
+    let splashImageSource = iOSIconPath;
+    if (iOSSplash.image || splash.image) {
+      splashImageSource = locations.absolute(iOSSplash.image || splash.image);
+    }
+    icons.push({
+      ios: 'startup',
+      src: splashImageSource,
+      size: ['640x1136', '750x1334', '768x1024'],
+    });
   }
 
   // Validate short name
@@ -334,7 +356,6 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
   return new WebpackPwaManifest({
     filename: locations.production.manifest,
     includeDirectory: false,
-    inject: true,
     name: name,
     short_name: shortName,
     description: description,
@@ -350,7 +371,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
       'apple-mobile-web-app-status-bar-style': barStyle,
     },
     related_applications: relatedApplications,
-    icons: [{ src: icon, size: ICON_SIZES }],
+    icons: icons,
   });
   //   return new FaviconsWebpackPlugin({
   //     path: '/',
