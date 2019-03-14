@@ -48,11 +48,10 @@ function getWebSetupLogs() {
   {
     "dependencies": {
   ${chalk.green.bold(`+      "react-native-web": "^0.11.0",`)}
-  ${chalk.green.bold(`+      "react-art": "^16.7.0",`)}
   ${chalk.green.bold(`+      "react-dom": "^16.7.0"`)}
     },
     "devDependencies": {
-  ${chalk.green.bold(`+      "babel-preset-expo": "^5.0.0"`)}
+  ${chalk.green.bold(`+      "babel-preset-expo": "^5.1.0"`)}
     }
   }`
   );
