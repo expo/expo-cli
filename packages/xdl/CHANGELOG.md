@@ -7,6 +7,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 ### Added
 
 * `expo-av` and `expo-mail-composer` universal modules configuration.
+* required `sdkVersion` argument to `Modules.` methods.
 
 ### Changed
 

@@ -177,7 +177,7 @@ async function _renderPodfileFromTemplateAsync(
     TARGET_NAME: projectName,
   };
   let reactNativeDependencyPath;
-  const detachableUniversalModules = Modules.getDetachableModulesForPlatformAndSdkVersion(
+  const detachableUniversalModules = Modules.getDetachableModules(
     'ios',
     context.data.shellAppSdkVersion || sdkVersion
   );
