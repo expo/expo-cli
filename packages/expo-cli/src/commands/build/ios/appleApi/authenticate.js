@@ -12,12 +12,12 @@ export default async function authenticate(options) {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
   try {
     log('Trying to authenticate with Apple Developer Portal...');
-    const { teams } = await runAction(travelingFastlane.authenticate, [appleId, appleIdPassword], {
+    const { teams, fastlaneSession } = await runAction(travelingFastlane.authenticate, [appleId, appleIdPassword], {
       pipeStdout: true,
     });
     log('Authenticated with Apple Developer Portal successfully!');
     const team = await _chooseTeam(teams, options.teamId);
-    return { appleId, appleIdPassword, team };
+    return { appleId, appleIdPassword, team, fastlaneSession };
   } catch (err) {
     log('Authentication with Apple Developer Portal failed!');
     throw err;
