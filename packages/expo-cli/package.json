@@ -98,8 +98,8 @@
     "xdl": "^53.1.6"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.8.2",
-    "@expo/traveling-fastlane-linux": "1.8.2"
+    "@expo/traveling-fastlane-darwin": "1.9.3",
+    "@expo/traveling-fastlane-linux": "1.9.3"
   },
   "gitHead": "656c6a0934b9d8b3bb40872fb65296a7002d64dc"
 }
