@@ -6,14 +6,18 @@ export default async function ensureAppExists(appleCtx) {
   const { appleId, appleIdPassword, team, bundleIdentifier, experienceName } = appleCtx;
   const spinner = ora(`Ensuring App ID exists on Apple Developer Portal...`).start();
   try {
-    await runAction(travelingFastlane.ensureAppExists, [
+    let { created } = await runAction(travelingFastlane.ensureAppExists, [
       appleId,
       appleIdPassword,
       team.id,
       bundleIdentifier,
       experienceName,
     ]);
-    spinner.succeed('Ensured App ID exists on Apple Developer Portal!');
+    if (created) {
+      spinner.succeed(`App ID created with bundle identifier ${bundleIdentifier}.`);
+    } else {
+      spinner.succeed('App ID found on Apple Developer Portal.');
+    }
   } catch (err) {
     spinner.fail(
       'Something went wrong when trying to ensure App ID exists on Apple Developer Portal!'

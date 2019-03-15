@@ -8,7 +8,12 @@ ENV['FASTLANE_TEAM_ID'] = $teamId
 
 def ensure_app_exists()
   app = Spaceship::Portal.app.find $bundleId
-  Spaceship::Portal.app.create!(bundle_id: $bundleId, name: $name) if app == nil
+  if app == nil
+    Spaceship::Portal.app.create!(bundle_id: $bundleId, name: $name)
+    true
+  else
+    false
+  end
 end
 
 $result = nil
@@ -17,8 +22,8 @@ with_captured_stderr{
   begin
     Spaceship::Portal.login($appleId, $password)
     Spaceship::Portal.client.team_id = $teamId
-    ensure_app_exists()
-    $result = { result: 'success' }
+    created = ensure_app_exists()
+    $result = { result: 'success', created: created }
   rescue Spaceship::Client::UnexpectedResponse => e
     $result = {
       result: 'failure',
