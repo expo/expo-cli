@@ -54,7 +54,7 @@ const printUsage = async projectDir => {
  \u203A Press ${b`shift-d`} to ${
     openDevToolsAtStartup ? 'disable' : 'enable'
   } automatically opening ${u`D`}evTools at startup.
- \u203A Press ${b`e`} to send an app link with ${u`e`}mail/SMS.
+ \u203A Press ${b`e`} to send an app link with ${u`e`}mail.
  \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
  \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
  \u203A Press ${b`s`} to ${u`s`}ign ${
@@ -86,7 +86,7 @@ export const printServerInfo = async projectDir => {
   }
   log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
   log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}.`));
-  log.nested(item(`Press ${b`e`} to send a link to your phone with email/SMS.`));
+  log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
   if (!username) {
     log.nested(item(`Press ${b`s`} to sign in and enable more options.`));
   }
@@ -199,7 +199,7 @@ export const startAsync = async (projectDir, options) => {
         };
         clearConsole();
         process.stdin.addListener('keypress', handleKeypress);
-        log('Please enter your phone number or email address (press ESC to cancel) ');
+        log('Please enter your email address (press ESC to cancel) ');
         rl.question(defaultRecipient ? `[default: ${defaultRecipient}]> ` : '> ', async sendTo => {
           cleanup();
           if (!sendTo && defaultRecipient) {

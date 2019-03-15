@@ -12,7 +12,7 @@ export default async function printRunInstructionsAsync() {
     log(`${chalk.underline('Android devices')}: scan the above QR code.`);
     log(
       `${chalk.underline('iOS devices')}: run ${chalk.bold(
-        'exp send -s <your-phone-number-or-email>'
+        'exp send -s <your-email-address>'
       )} in this project directory in another terminal window to send the URL to your device.`
     );
 

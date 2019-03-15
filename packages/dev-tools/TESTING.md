@@ -14,8 +14,8 @@
   - ✅ Should show a toast that says simulator is opening.
   - ✅ Should replace the toast with success toast when finished.
   - ✅ Should replace the toast with an error toast, if opening failed.
-* Open on a device by sending email/SMS
-  - ✅ Should validate that the recipient (number/address) is not empty.
+* Open on a device by sending email
+  - ✅ Should validate that the recipient (email address) is not empty.
   - ✅ Should show a toast and disable send button when sending.
   - ✅ Should replace the toast with a success toast when sent.
   - ✅ Should show an error if sending failed (e.g. machine not connected to internet).
