@@ -9,15 +9,7 @@ const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').defa
 const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
-
-// Only compile files from react-native, and expo libraries.
-const includeModulesThatContainPaths = [
-  'node_modules/react-native',
-  'node_modules/react-navigation',
-  'node_modules/expo',
-  'node_modules/@react',
-  'node_modules/@expo',
-];
+const createBabelConfig = require('./createBabelConfig');
 
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
@@ -53,31 +45,7 @@ const mediaLoaderConfiguration = {
 
 module.exports = function(env) {
   const locations = getLocations(env.projectRoot);
-
-  const babelLoaderConfiguration = {
-    test: /\.jsx?$/,
-    include(inputPath) {
-      for (const option of includeModulesThatContainPaths) {
-        if (inputPath.includes(option)) {
-          return inputPath;
-        }
-      }
-      // Is inside the project and is not one of designated modules
-      if (!inputPath.includes('node_modules') && inputPath.includes(locations.root)) {
-        return inputPath;
-      }
-      return null;
-    },
-    use: {
-      loader: 'babel-loader',
-      options: {
-        cacheDirectory: false,
-        babelrc: false,
-        root: locations.root,
-      },
-    },
-  };
-
+  const babelConfig = createBabelConfig(locations.root);
   const indexHTML = createIndexHTMLFromAppJSON(locations);
   const clientEnv = createClientEnvironment(locations);
 
@@ -176,7 +144,7 @@ module.exports = function(env) {
         { parser: { requireEnsure: false } },
 
         htmlLoaderConfiguration,
-        babelLoaderConfiguration,
+        babelConfig,
         imageLoaderConfiguration,
         ttfLoaderConfiguration,
         mediaLoaderConfiguration,
@@ -185,6 +153,26 @@ module.exports = function(env) {
     resolve: {
       symlinks: false,
       extensions: ['.web.js', '.js', '.jsx', '.json'],
+      alias: {
+        // Alias direct react-native imports to react-native-web
+        'react-native$': 'react-native-web',
+        // Add polyfills for modules that react-native-web doesn't support
+        // Depends on expo-asset
+        'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
+        'react-native/Libraries/Image/assetPathUtils$': 'expo-asset/build/Image/assetPathUtils',
+        'react-native/Libraries/Image/resolveAssetSource$': 'expo-asset/build/resolveAssetSource',
+        // Alias internal react-native modules to react-native-web
+        'react-native/Libraries/Components/View/ViewStylePropTypes$':
+          'react-native-web/dist/exports/View/ViewStylePropTypes',
+        'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
+          'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
+        'react-native/Libraries/vendor/emitter/EventEmitter$':
+          'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
+        'react-native/Libraries/vendor/emitter/EventSubscriptionVendor$':
+          'react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor',
+        'react-native/Libraries/EventEmitter/NativeEventEmitter$':
+          'react-native-web/dist/vendor/react-native/NativeEventEmitter',
+      },
     },
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
