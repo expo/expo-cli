@@ -9,6 +9,7 @@ import * as credentials from '../build/ios/credentials';
 import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import selectDistributionCert from './selectDistributionCert';
 import selectPushKey from './selectPushKey';
+import generateBundleIdentifier from './generateBundleIdentifier';
 import log from '../../log';
 import prompt from '../../prompt';
 
@@ -22,7 +23,15 @@ export default program => {
     .asyncAction(async options => {
       let authData = await appleApi.authenticate(options);
       let user = await User.getCurrentUserAsync();
-      let context = { ...authData, username: user ? user.username : null };
+      let bundleIdentifier = generateBundleIdentifier(authData.team.id);
+      let context = {
+        ...authData,
+        bundleIdentifier,
+        experienceName: 'Expo',
+        username: user ? user.username : null,
+      };
+      await appleApi.ensureAppExists(context);
+
       let distributionCert = await selectDistributionCert(context);
       let pushKey = await selectPushKey(context);
 
@@ -55,17 +64,19 @@ export default program => {
         type: 'confirm',
         default: true,
       });
+
       let result = await ApiV2.clientForUser(user).postAsync('client-build/create-ios-request', {
-        appleSession: authData.fastlaneSession,
-        appleTeamId: authData.team.id,
-        appleTeamName: authData.team.name,
+        appleSession: context.fastlaneSession,
+        appleTeamId: context.team.id,
+        appleTeamName: context.team.name,
         addUdid,
+        bundleIdentifier: context.bundleIdentifier,
         email,
         credentials: {
           certP12: distributionCert.certP12,
           certPassword: distributionCert.certPassword,
-          teamId: authData.team.id,
-          appleSession: authData.fastlaneSession,
+          teamId: context.team.id,
+          appleSession: context.fastlaneSession,
           udids,
         },
       });
