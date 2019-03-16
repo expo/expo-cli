@@ -70,81 +70,6 @@ function isObject(item) {
   return typeof item === 'object' && !Array.isArray(item) && item !== null;
 }
 
-// function enforceIcon(icon) {
-//     if (!icon || !isObject(icon) || typeof icon.src !== 'string') {return null;}
-//     let warnings = [];
-//     const {
-//         /**
-//          * The platform member represents the platform to which a containing object applies.
-//          * List of known platforms: https://github.com/w3c/manifest/wiki/Platforms
-//          */
-//         platform,
-//         // A string containing space-separated image dimensions.
-//         sizes,
-//         // The path to the image file. If src is a relative URL, the base URL will be the URL of the manifest.
-//         src,
-//         /**
-//          * A hint as to the media type of the image.
-//          * The purpose of this member is to allow a user agent to quickly ignore images of media types it does not support.
-//          */
-//         type,
-//         /**
-//          * Defines the purpose of the image, for example that the image is
-//          * intended to serve some special purpose in the context of the
-//          * host OS (i.e., for better integration).
-//          * `https://w3c.github.io/manifest/#purpose-member`
-//          *
-//          * Must be an **unordered set of unique space-separated tokens**
-//          */
-//         purpose,
-
-//         // TODO: Bacon: Should we allow extra props?
-//         ...props,
-//     } = icon;
-
-//     let strictPurpose = purpose;
-//     if (typeof purpose === 'string' && purpose.length) {
-//         const purposes = [...(new Set(purpose.toLowerCase().split(' ')))];
-//         const filteredPurposes = purposes.filter(purpose => {
-//            if (VALID_ICON_PURPOSE.includes(purpose)) {
-//                return true;
-//            }
-//            warnings.push(`icon.purpose: ${purpose} is not a valid icon purpose`);
-//            return false;
-//         });
-//         strictPurpose = filteredPurposes.join(' ');
-//     }
-
-//     if (typeof platform === 'string' && platform.length && !VALID_MULTI_PURPOSE_PLATFORMS.includes(platform.toLowerCase())) {
-//         warnings.push(`icon.platform: ${platform} is not one of the known platform types: ${VALID_MULTI_PURPOSE_PLATFORMS.join(', ')}`)
-//     }
-
-//     let outputType = type;
-//     const isTypeDefined = typeof type === 'string' && type.length;
-//     if (!isTypeDefined) {
-//         let ext = src.substr(src.lastIndexOf('.') + 1).toLowerCase();
-//         // TODO: Bacon: x-icon is only valid when platform is windows?
-//         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types#Image_types
-//         if (['jpeg', 'png', 'gif', 'webp', 'svg+xml', 'x-icon'].includes(ext)) {
-//             outputType = `image/${ext}`;
-//         } else if (ext === 'jpg') {
-//             outputType = `image/jpeg`;
-//         }
-//     }
-
-//     return {
-//         warnings,
-//         icon: {
-//             platform,
-//             sizes,
-//             src,
-//             type: outputType,
-//             purpose: strictPurpose,
-//             ...props
-//         }
-//     }
-// }
-
 // https://developer.mozilla.org/en-US/docs/Web/Manifest#orientation
 const VALID_ORIENTATIONS = [
   'any',
@@ -157,6 +82,54 @@ const VALID_ORIENTATIONS = [
   'portrait-secondary',
   'omit',
 ];
+
+const PORTRAIT_ORIENTATIONS = [
+  'any',
+  'natural',
+  'portrait',
+  'portrait-primary',
+  'portrait-secondary',
+  'omit',
+];
+const LANDSCAPE_ORIENTATIONS = [
+  'any',
+  'natural',
+  'landscape',
+  'landscape-primary',
+  'landscape-secondary',
+  'omit',
+];
+
+const PORTRAIT_IOS_START_UP_SIZES = [
+  '640x1136',
+  '750x1334',
+  '1242x2208',
+  '1125x2436',
+  '1536x2048',
+  '1668x2224',
+  '2048x2732',
+];
+
+const LANDSCAPE_IOS_START_UP_SIZES = [
+  '1136x640',
+  '1334x750',
+  '2208x1242',
+  '2436x1125',
+  '2048x1536',
+  '2224x1668',
+  '2732x2048',
+];
+
+function sizesForOrientation(orientation) {
+  let sizes = [];
+  if (PORTRAIT_ORIENTATIONS.includes(orientation)) {
+    sizes = sizes.concat(PORTRAIT_IOS_START_UP_SIZES);
+  }
+  if (LANDSCAPE_IOS_START_UP_SIZES.includes(orientation)) {
+    sizes = sizes.concat(LANDSCAPE_IOS_START_UP_SIZES);
+  }
+  return sizes;
+}
 
 // https://developers.google.com/web/fundamentals/web-app-manifest/#icons
 const REQUIRED_ICON_SIZES = [192, 512];
@@ -209,8 +182,12 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
   let orientation = web.orientation || expo.orientation;
   if (orientation && typeof orientation === 'string') {
     orientation = orientation.toLowerCase();
+    // Convert expo value to PWA value
+    if (orientation === 'default') {
+      orientation = 'any';
+    }
   } else {
-    orientation = 'natural';
+    orientation = 'any';
   }
 
   // If you don't include a scope in your manifest, then the default implied scope is the directory that your web app manifest is served from.
@@ -254,7 +231,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
    * ex: `"en-US"`
    */
   // TODO: Bacon: sync with <html/> lang
-  const lang = web.lang;
+  const lang = options.languageISOCode;
 
   // TODO: Bacon: validation doesn't handle platforms: https://github.com/arthurbergmz/webpack-pwa-manifest/blob/master/src/icons/index.js
   // TODO: Bacon: Maybe use android, and iOS icons.
@@ -267,7 +244,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
     icon = locations.template.get('icon.png');
   }
   icons.push({ src: icon, size: ICON_SIZES });
-
+  let startupImages = [];
   const iOSIcon = expo.icon || ios.icon;
   if (iOSIcon) {
     const iOSIconPath = locations.absolute(iOSIcon);
@@ -282,12 +259,22 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
     if (iOSSplash.image || splash.image) {
       splashImageSource = locations.absolute(iOSSplash.image || splash.image);
     }
-    icons.push({
-      ios: 'startup',
+    // <link rel="apple-touch-startup-image" href="images/splash/launch-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    // <link rel="apple-touch-startup-image" href="images/splash/launch-750x1294.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    // <link rel="apple-touch-startup-image" href="images/splash/launch-1242x2148.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    // <link rel="apple-touch-startup-image" href="images/splash/launch-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    // <link rel="apple-touch-startup-image" href="images/splash/launch-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait)">
+    // <link rel="apple-touch-startup-image" href="images/splash/launch-1668x2224.png" media="(min-device-width: 834px) and (max-device-width: 834px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait)">
+    // <link rel="apple-touch-startup-image" href="images/splash/launch-2048x2732.png" media="(min-device-width: 1024px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: portrait)">
+
+    startupImages.push({
       src: splashImageSource,
-      size: ['640x1136', '750x1334', '768x1024'],
+      supportsTablet: ios.supportsTablet,
+      orientation,
+      destination: `assets/splash`,
     });
   }
+  console.log('startupImages', startupImages);
 
   // Validate short name
   if (shortName && shortName.length > MAX_SHORT_NAME_LENGTH) {
@@ -363,6 +350,7 @@ function createPWAManifestJSONFromAppJSON(locations, options) {
     filename: locations.production.manifest,
     includeDirectory: false,
     icons: icons,
+    startupImages,
     lang,
     name: name,
     orientation,

@@ -14,6 +14,9 @@ function createIndexHTMLFromAppJSON(locations) {
 
   const { expo: expoManifest = {} } = nativeAppManifest;
   const { web = {} } = expoManifest;
+  const { metatags = {} } = web;
+  const { twitter = {}, facebook = {}, microsoft = {} } = web;
+
   const color = expoManifest.primaryColor || '#000000';
   const description = expoManifest.description || 'A Neat Expo App';
 
@@ -21,25 +24,54 @@ function createIndexHTMLFromAppJSON(locations) {
 
   // TODO: upstream all metatags
   const openGraphMetatags = {
-    'og:title': name,
-    'og:site_name': name,
-    'og:description': description,
-    // 'og:type', https://developers.facebook.com/docs/sharing/opengraph#types
-    // 'og:image',
-    // 'og:url'
+    // <link rel="canonical" href="Your absolute web path">
+    'og:title': facebook.title,
+    'og:site_name': facebook.siteName,
+    'og:description': facebook.description,
+    'article:author': facebook.author,
+    'og:image': facebook.image,
+    'og:image:width': facebook.imageWidth,
+    'og:image:height': facebook.imageHeight,
+    'og:locale': facebook.locale,
+    // https://developers.facebook.com/docs/sharing/opengraph#types
+    'og:type': facebook.type || 'website',
+    'og:url': facebook.url,
   };
+
+  const twitterMetatags = {
+    'twitter:card': twitter.card,
+    'twitter:title': twitter.title,
+    'twitter:description': twitter.description,
+    'twitter:site': twitter.site,
+    'twitter:image': twitter.image,
+    'twitter:creator': twitter.creator,
+  };
+
+  const microsoftMetatags = {
+    'application-name': microsoft.appName,
+    mssmarttagspreventparsing: microsoft.preventParsing,
+    'msapplication-window': `width=${microsoft.width};height=${microsoft.height}`,
+    'msapplication-navbutton-color': microsoft.buttonColor || color,
+    'msapplication-tooltip': microsoft.tooltip,
+    'msapplication-TileColor': microsoft.tileColor,
+    'msapplication-TileImage': microsoft.tileImage,
+  };
+
+  const appleMetatags = {
+    'format-detection': 'telephone=no',
+    'apple-touch-fullscreen': 'yes',
+  };
+
   const metaTags = {
-    ...openGraphMetatags,
     viewport: viewports.optimizedForiPhoneX,
     description: expoManifest.description,
+    'mobile-web-app-capable': 'yes',
     'google-site-verification': web.googleSiteVerification,
-    // Windows
-    // 'msapplication-navbutton-color': color,
-    'msapplication-TileColor': color,
-    'msapplication-TileImage': '',
-
-    // WebpackPwaManifest should inject this
-    'theme-color': color,
+    ...openGraphMetatags,
+    ...microsoftMetatags,
+    ...twitterMetatags,
+    ...appleMetatags,
+    ...metatags,
   };
 
   // Generates an `index.html` file with the <script> injected.

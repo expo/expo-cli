@@ -51,25 +51,25 @@ module.exports = function(env = {}) {
     },
     devtool: 'cheap-module-source-map',
     plugins: [
-      // new MiniCssExtractPlugin({
-      //   filename: 'static/css/[contenthash].css',
-      //   chunkFilename: 'static/css/[contenthash].chunk.css',
-      // }),
-      // // GZIP files
-      // new CompressionPlugin({
-      //   test: /\.(js|css)$/,
-      //   filename: '[path].gz[query]',
-      //   algorithm: 'gzip',
-      //   threshold: 1024,
-      //   minRatio: 0.8,
-      // }),
-      // // Secondary compression for systems that serve .br
-      // new BrotliPlugin({
-      //   asset: '[path].br[query]',
-      //   test: /\.(js|css)$/,
-      //   threshold: 1024,
-      //   minRatio: 0.8,
-      // }),
+      new MiniCssExtractPlugin({
+        filename: 'static/css/[contenthash].css',
+        chunkFilename: 'static/css/[contenthash].chunk.css',
+      }),
+      // GZIP files
+      new CompressionPlugin({
+        test: /\.(js|css)$/,
+        filename: '[path].gz[query]',
+        algorithm: 'gzip',
+        threshold: 1024,
+        minRatio: 0.8,
+      }),
+      // Secondary compression for systems that serve .br
+      new BrotliPlugin({
+        asset: '[path].br[query]',
+        test: /\.(js|css)$/,
+        threshold: 1024,
+        minRatio: 0.8,
+      }),
     ],
   });
 };

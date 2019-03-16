@@ -54,8 +54,6 @@ const mediaLoaderConfiguration = {
   ],
 };
 
-const noScript = `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>We've detected that JavaScript is disabled in your browser.</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
-
 module.exports = function(env) {
   const locations = getLocations(env.projectRoot);
 
@@ -83,13 +81,20 @@ module.exports = function(env) {
     },
   };
 
-  // const indexHTML = createIndexHTMLFromAppJSON(locations);
-  // const manifestJSON = createPWAManifestJSONFromAppJSON(locations, env);
   const clientEnv = createClientEnvironment(locations);
 
   const nativeAppManifest = require(locations.appJson);
   const { expo: expoManifest = {} } = nativeAppManifest;
   const { web: webManifest = {} } = expoManifest;
+
+  const languageISOCode = webManifest.lang || 'en';
+  const noJavaScriptMessage =
+    webManifest.noJavaScriptMessage ||
+    `Oh no! It looks like JavaScript is not enabled in your browser.`;
+
+  // from twitter.com <3
+  const noScript = `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${noJavaScriptMessage}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
+
   const ttfLoaderConfiguration = {
     test: /\.(ttf|otf|woff)$/,
     use: [
@@ -128,13 +133,13 @@ module.exports = function(env) {
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
     },
-    optimization: {
-      splitChunks: {
-        chunks: 'all',
-        name: false,
-      },
-      runtimeChunk: 'single',
-    },
+    // optimization: {
+    //   splitChunks: {
+    //     chunks: 'all',
+    //     name: false,
+    //   },
+    //   runtimeChunk: 'single',
+    // },
     plugins: [
       // Delete the build folder
       new CleanWebpackPlugin([locations.production.folder], {
@@ -150,17 +155,17 @@ module.exports = function(env) {
         },
       ]),
 
-      // Generates an `index.html` file with the <script> injected.
+      // Generate the `index.html`
       createIndexHTMLFromAppJSON(locations),
 
-      // Manifest must be after index.html
+      // Generate the `manifest.json`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
         WEB_TITLE: expoManifest.name,
         NO_SCRIPT: noScript,
-        LANG_ISO_CODE: 'en',
+        LANG_ISO_CODE: languageISOCode,
       }),
-      createPWAManifestJSONFromAppJSON(locations, env),
+      createPWAManifestJSONFromAppJSON(locations, { ...env, languageISOCode }),
 
       // Generate a manifest file which contains a mapping of all asset filenames
       // to their corresponding output file so that tools can pick it up without
@@ -169,8 +174,6 @@ module.exports = function(env) {
         fileName: 'asset-manifest.json',
         publicPath,
       }),
-
-      // manifestJSON,
 
       new webpack.DefinePlugin(clientEnv),
       // Remove unused import/exports
@@ -196,7 +199,6 @@ module.exports = function(env) {
       }),
       new ProgressBarPlugin(),
     ],
-
     module: {
       strictExportPresence: false,
 
