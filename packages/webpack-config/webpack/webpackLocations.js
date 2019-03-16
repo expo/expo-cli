@@ -20,7 +20,8 @@ function getLocations(inputProjectRoot = '') {
     modulesPath = absolute('node_modules');
   }
 
-  const pckg = require(packageJsonPath);
+  // react-native init projects do not have a main defined by default
+  const { main = 'index' } = require(packageJsonPath);
   const nativeAppManifest = require(appJsonPath);
 
   const { expo: expoManifest = {} } = nativeAppManifest;
@@ -49,7 +50,7 @@ function getLocations(inputProjectRoot = '') {
     packageJson: packageJsonPath,
     appJson: appJsonPath,
     root: projectRoot,
-    appMain: absolute(pckg.main),
+    appMain: absolute(main),
     modules: modulesPath,
     template: {
       folder: templatePath(),

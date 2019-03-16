@@ -10,7 +10,7 @@ const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
-
+const chalk = require('chalk');
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
@@ -50,6 +50,7 @@ module.exports = function(env) {
   const clientEnv = createClientEnvironment(locations);
 
   const nativeAppManifest = require(locations.appJson);
+  const appManifest = nativeAppManifest.expo || nativeAppManifest;
 
   const ttfLoaderConfiguration = {
     test: /\.(ttf|otf|woff)$/,
@@ -102,7 +103,7 @@ module.exports = function(env) {
 
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
-        WEB_TITLE: nativeAppManifest.expo.name,
+        WEB_TITLE: appManifest.name,
       }),
 
       // Generate a manifest file which contains a mapping of all asset filenames
@@ -134,7 +135,10 @@ module.exports = function(env) {
         analyzerMode: 'static',
         openAnalyzer: false,
       }),
-      new ProgressBarPlugin(),
+      new ProgressBarPlugin({
+        format: '  build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds)' + ' :msg',
+        clear: false,
+      }),
     ],
 
     module: {
