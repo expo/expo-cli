@@ -2,9 +2,9 @@ const path = require('path');
 const findWorkspaceRoot = require('find-yarn-workspace-root');
 const fs = require('fs');
 
-function getLocations(inputProjectRoot = '../') {
+function getLocations(inputProjectRoot = '') {
   const absolute = (...pathComponents) =>
-    path.resolve(__dirname, inputProjectRoot, ...pathComponents);
+    path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
 
   const projectRoot = absolute();
   const packageJsonPath = absolute('./package.json');

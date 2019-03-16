@@ -1,6 +1,6 @@
 {
   "name": "@expo/json-file",
-  "version": "8.1.0",
+  "version": "8.1.1",
   "description": "A module for reading, writing, and manipulating JSON files",
   "main": "build/JsonFile.js",
   "scripts": {
@@ -11,8 +11,8 @@
     "test": "jest"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/expo/expo-cli.git",
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/json-file"
   },
   "keywords": [

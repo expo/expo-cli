@@ -1,4 +1,3 @@
-import ora from 'ora';
 import chalk from 'chalk';
 import wordwrap from 'wordwrap';
 
@@ -11,17 +10,16 @@ const APPLE_IN_HOUSE_TEAM_TYPE = 'in-house';
 
 export default async function authenticate(options) {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
-  const spinner = ora(`Trying to authenticate with Apple Developer Portal...`).start();
   try {
+    log('Trying to authenticate with Apple Developer Portal...');
     const { teams } = await runAction(travelingFastlane.authenticate, [appleId, appleIdPassword], {
       pipeStdout: true,
-      onStdoutDataReceived: () => spinner.stop(),
     });
-    spinner.succeed('Authenticated with Apple Developer Portal successfully!');
+    log('Authenticated with Apple Developer Portal successfully!');
     const team = await _chooseTeam(teams, options.teamId);
     return { appleId, appleIdPassword, team };
   } catch (err) {
-    spinner.fail('Authentication with Apple Developer Portal failed!');
+    log('Authentication with Apple Developer Portal failed!');
     throw err;
   }
 }

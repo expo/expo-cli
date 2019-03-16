@@ -91,12 +91,19 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXBarCodeScannerInterface',
     libName: 'expo-barcode-scanner-interface',
-    sdkVersions: '>=30.0.0',
+    sdkVersions: '>=30.0.0 <33.0.0',
   },
   {
     podName: 'EXBlur',
     libName: 'expo-blur',
     sdkVersions: '>=33.0.0',
+    config: {
+      android: {
+        versionable: false,
+        detachable: false,
+        includeInExpoClient: false,
+      },
+    },
   },
   {
     podName: 'EXBrightness',
@@ -116,7 +123,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXCameraInterface',
     libName: 'expo-camera-interface',
-    sdkVersions: '>=29.0.0',
+    sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
     podName: 'EXConstants',
@@ -126,7 +133,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXConstantsInterface',
     libName: 'expo-constants-interface',
-    sdkVersions: '>=29.0.0',
+    sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
     podName: 'EXContacts',
@@ -136,7 +143,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXCore',
     libName: 'expo-core',
-    sdkVersions: '>=29.0.0',
+    sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
     podName: 'EXCrypto',
@@ -151,7 +158,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXErrors',
     libName: 'expo-errors',
-    sdkVersions: '>=32.0.0',
+    sdkVersions: '>=32.0.0 <33.0.0',
   },
   {
     podName: 'EXFacebook',
@@ -167,7 +174,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXFaceDetectorInterface',
     libName: 'expo-face-detector-interface',
-    sdkVersions: '>=29.0.0',
+    sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
     podName: 'EXFacebook',
@@ -182,7 +189,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXFileSystemInterface',
     libName: 'expo-file-system-interface',
-    sdkVersions: '>=29.0.0',
+    sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
     podName: 'EXFirebaseAnalytics',
@@ -282,7 +289,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXFontInterface',
     libName: 'expo-font-interface',
-    sdkVersions: '>=30.0.0',
+    sdkVersions: '>=30.0.0 <33.0.0',
   },
   {
     podName: 'EXGL',
@@ -313,7 +320,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXImageLoaderInterface',
     libName: 'expo-image-loader-interface',
-    sdkVersions: '>=30.0.0',
+    sdkVersions: '>=30.0.0 <33.0.0',
   },
   {
     podName: 'EXImageManipulator',
@@ -390,7 +397,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXPermissionsInterface',
     libName: 'expo-permissions-interface',
-    sdkVersions: '>=29.0.0',
+    sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
     podName: 'EXPrint',
@@ -405,7 +412,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXReactNativeAdapter',
     libName: 'expo-react-native-adapter',
-    sdkVersions: '>=29.0.0',
+    sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
     podName: 'EXSecureStore',
@@ -420,7 +427,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXSensorsInterface',
     libName: 'expo-sensors-interface',
-    sdkVersions: '>=29.0.0',
+    sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
     podName: 'EXSharing',
@@ -450,7 +457,7 @@ const expoSdkUniversalModules = [
   {
     podName: 'EXTaskManagerInterface',
     libName: 'expo-task-manager-interface',
-    sdkVersions: '>=32.0.0',
+    sdkVersions: '>=32.0.0 <33.0.0',
     config: {
       android: {
         versionable: false,
@@ -476,6 +483,74 @@ const expoSdkUniversalModules = [
   },
 ];
 
+const universalModules = [
+  {
+    podName: 'UMCore',
+    libName: '@unimodules/core',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMReactNativeAdapter',
+    libName: '@unimodules/react-native-adapter',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMBarCodeScannerInterface',
+    libName: 'unimodules-barcode-scanner-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMCameraInterface',
+    libName: 'unimodules-camera-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMConstantsInterface',
+    libName: 'unimodules-constants-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMFaceDetectorInterface',
+    libName: 'unimodules-face-detector-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMFileSystemInterface',
+    libName: 'unimodules-file-system-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMFontInterface',
+    libName: 'unimodules-font-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMImageLoaderInterface',
+    libName: 'unimodules-image-loader-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMPermissionsInterface',
+    libName: 'unimodules-permissions-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMSensorsInterface',
+    libName: 'unimodules-sensors-interface',
+    sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'UMTaskManagerInterface',
+    libName: 'unimodules-task-manager-interface',
+    sdkVersions: '>=33.0.0',
+    config: {
+      android: {
+        versionable: false,
+      },
+    },
+  },
+];
+
 function defaults(defaultConfig, ...customConfigs) {
   const config = { ...defaultConfig };
   for (const customConfig of customConfigs) {
@@ -486,7 +561,9 @@ function defaults(defaultConfig, ...customConfigs) {
   return config;
 }
 
-const expoSdkUniversalModulesConfigs = expoSdkUniversalModules.map(
+const expoUniversalModules = [...universalModules, ...expoSdkUniversalModules];
+
+const expoSdkUniversalModulesConfigs = expoUniversalModules.map(
   ({ config, podName, libName, sdkVersions, isNativeModule, ...params }) => {
     return {
       podName,
