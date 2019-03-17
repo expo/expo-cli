@@ -13,6 +13,7 @@ const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const chalk = require('chalk');
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
@@ -54,6 +55,8 @@ module.exports = function(env) {
   const nativeAppManifest = require(locations.appJson);
   const { expo: expoManifest = {} } = nativeAppManifest;
   const { web: webManifest = {} } = expoManifest;
+  // For RN CLI support
+  const appManifest = nativeAppManifest.expo || nativeAppManifest;
 
   const languageISOCode = webManifest.lang || 'en';
   const noJavaScriptMessage =
@@ -129,7 +132,7 @@ module.exports = function(env) {
       // Generate the `manifest.json`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
-        WEB_TITLE: expoManifest.name,
+        WEB_TITLE: appManifest.name,
         NO_SCRIPT: noScript,
         LANG_ISO_CODE: languageISOCode,
       }),
@@ -165,7 +168,10 @@ module.exports = function(env) {
         analyzerMode: 'static',
         openAnalyzer: false,
       }),
-      new ProgressBarPlugin(),
+      new ProgressBarPlugin({
+        format: '  build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds)' + ' :msg',
+        clear: false,
+      }),
     ],
     module: {
       strictExportPresence: false,
