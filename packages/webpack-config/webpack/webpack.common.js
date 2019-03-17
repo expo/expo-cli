@@ -8,7 +8,6 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
-const createPWAManifestJSONFromAppJSON = require('./createPWAManifestJSONFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
@@ -46,17 +45,19 @@ const mediaLoaderConfiguration = {
   ],
 };
 
-module.exports = function(env) {
+module.exports = function(env = {}) {
   const locations = getLocations(env.projectRoot);
   const babelConfig = createBabelConfig(locations.root);
   const indexHTML = createIndexHTMLFromAppJSON(locations);
   const clientEnv = createClientEnvironment(locations);
 
-  const nativeAppManifest = require(locations.appJson);
-  const { expo: expoManifest = {} } = nativeAppManifest;
-  const { web: webManifest = {} } = expoManifest;
+  const appJSON = require(locations.appJson);
+  if (!appJSON) {
+    throw new Error('app.json could not be found at: ' + locations.appJson);
+  }
   // For RN CLI support
-  const appManifest = nativeAppManifest.expo || nativeAppManifest;
+  const appManifest = appJSON.expo || appJSON;
+  const { web: webManifest = {} } = appManifest;
 
   const languageISOCode = webManifest.lang || 'en';
   const noJavaScriptMessage =
@@ -118,6 +119,7 @@ module.exports = function(env) {
         dry: false,
       }),
 
+      // Copy the template files into the build folder / create a new build folder
       new CopyWebpackPlugin([
         {
           from: locations.template.folder,
@@ -129,14 +131,16 @@ module.exports = function(env) {
       // Generate the `index.html`
       createIndexHTMLFromAppJSON(locations),
 
-      // Generate the `manifest.json`
+      // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
         WEB_TITLE: appManifest.name,
         NO_SCRIPT: noScript,
         LANG_ISO_CODE: languageISOCode,
       }),
-      createPWAManifestJSONFromAppJSON(locations, { ...env, languageISOCode }),
+
+      // Generate the `manifest.json`
+      new WebpackPwaManifest(appJSON, { ...env, languageISOCode }),
 
       // Generate a manifest file which contains a mapping of all asset filenames
       // to their corresponding output file so that tools can pick it up without
@@ -147,6 +151,7 @@ module.exports = function(env) {
       }),
 
       new webpack.DefinePlugin(clientEnv),
+
       // Remove unused import/exports
       new WebpackDeepScopeAnalysisPlugin(),
 
@@ -164,10 +169,12 @@ module.exports = function(env) {
           },
         ],
       }),
+
       new BundleAnalyzerPlugin({
         analyzerMode: 'static',
         openAnalyzer: false,
       }),
+
       new ProgressBarPlugin({
         format: '  build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds)' + ' :msg',
         clear: false,
