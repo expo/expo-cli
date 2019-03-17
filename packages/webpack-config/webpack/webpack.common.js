@@ -11,7 +11,8 @@ const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createPWAManifestJSONFromAppJSON = require('./createPWAManifestJSONFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
-
+const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
