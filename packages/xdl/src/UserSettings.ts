@@ -25,9 +25,41 @@ export type UserData = {
 
 const SETTINGS_FILE_NAME = 'state.json';
 
+const ENV_FILE_NAME = '.expo-env.json';
+
+function findExpoEnvFile() {
+  let dir = path.resolve(process.cwd());
+  while (dir != '/') {
+    let env_file = path.join(dir, ENV_FILE_NAME);
+    try {
+      if (fs.statSync(env_file).isFile()) {
+        return env_file;
+      }
+    } catch (e) {
+      // no env file, continue with parent
+    }
+
+    dir = path.dirname(dir);
+  }
+  return null;
+}
+
+function expoEnv() {
+  let envFile = findExpoEnvFile();
+  if (envFile) {
+    try {
+      let envConfig = JSON.parse(fs.readFileSync(envFile).toString());
+      return envConfig['env'];
+    } catch (e) {
+      return null;
+    }
+  }
+}
+
 function userSettingsFile(): string {
   let dir = dotExpoHomeDirectory();
-  let file = path.join(dir, SETTINGS_FILE_NAME);
+  let env = expoEnv();
+  let file = path.join(dir, env ? `${env}-${SETTINGS_FILE_NAME}` : SETTINGS_FILE_NAME);
   try {
     // move exponent.json to state.json
     let oldFile = path.join(dir, 'exponent.json');
