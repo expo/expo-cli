@@ -12,6 +12,7 @@ const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const WebpackPwaManifest = require('webpack-pwa-manifest');
 const chalk = require('chalk');
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
@@ -140,7 +141,12 @@ module.exports = function(env = {}) {
       }),
 
       // Generate the `manifest.json`
-      new WebpackPwaManifest(appJSON, { ...env, languageISOCode }),
+      new WebpackPwaManifest(appJSON, {
+        ...env,
+        languageISOCode,
+        defaultIcon: locations.template.get('icon.png'),
+        filename: locations.production.manifest,
+      }),
 
       // Generate a manifest file which contains a mapping of all asset filenames
       // to their corresponding output file so that tools can pick it up without
