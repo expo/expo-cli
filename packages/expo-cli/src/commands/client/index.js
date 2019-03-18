@@ -42,7 +42,6 @@ export default program => {
         ({ email } = await prompt({
           name: 'email',
           message: 'Please enter an email address to notify, when the build is completed:',
-          default: user ? user.email : undefined,
           filter: value => value.trim(),
           validate: value => (/@/.test(value) ? true : "That doesn't look like a valid email."),
         }));
