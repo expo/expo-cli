@@ -31,13 +31,15 @@ module.exports = function(env = {}) {
       historyApiFallback: {
         disableDotRule: true,
       },
+      https: env.https,
       compress: true,
       disableHostCheck: true,
       contentBase: locations.template.folder,
       inline: true,
       clientLogLevel: 'none',
       overlay: false,
-      host: 'localhost',
+      host: '0.0.0.0',
+      allowedHosts: ['0.0.0.0', 'localhost'],
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',

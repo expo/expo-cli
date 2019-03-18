@@ -27,9 +27,6 @@ async function action(projectDir, options) {
   if (options.clear) {
     startOpts.reset = true;
   }
-  if (options.https) {
-    startOpts.https = true;
-  }
 
   if (options.maxWorkers) {
     startOpts.maxWorkers = options.maxWorkers;
@@ -87,7 +84,6 @@ export default (program: any) => {
     .description('Starts or restarts a local server for your app and gives you a URL to it')
     .option('-s, --send-to [dest]', 'A phone number or e-mail address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
-    .option('--https', 'To start webpack with https protocol')
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .urlOpts()

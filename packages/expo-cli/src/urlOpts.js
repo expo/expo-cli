@@ -23,7 +23,9 @@ function addOptions(program) {
     .option('--dev', 'Turns dev flag on')
     .option('--no-dev', 'Turns dev flag off')
     .option('--minify', 'Turns minify flag on')
-    .option('--no-minify', 'Turns minify flag off');
+    .option('--no-minify', 'Turns minify flag off')
+    .option('--https', 'To start webpack with https protocol')
+    .option('--no-https', 'To start webpack with http protocol');
 }
 
 function hasBooleanArg(rawArgs, argName) {
@@ -67,6 +69,9 @@ async function optsAsync(projectDir, options) {
   if (hasBooleanArg(rawArgs, 'minify')) {
     opts.minify = getBooleanArg(rawArgs, 'minify');
   }
+  if (hasBooleanArg(rawArgs, 'https')) {
+    opts.https = getBooleanArg(rawArgs, 'https');
+  }
 
   await ProjectSettings.setAsync(projectDir, opts);
 
@@ -87,7 +92,7 @@ async function handleMobileOptsAsync(projectDir, options) {
   }
 
   if (options.web) {
-    await Web.openProjectAsync(projectDir, options);
+    await Web.openProjectAsync(projectDir);
   }
 
   return !!options.android || !!options.ios;
