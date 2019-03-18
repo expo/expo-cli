@@ -43,7 +43,7 @@ export default program => {
           name: 'email',
           message: 'Please enter an email address to notify, when the build is completed:',
           filter: value => value.trim(),
-          validate: value => (/@/.test(value) ? true : "That doesn't look like a valid email."),
+          validate: value => (/.+@.+/.test(value) ? true : "That doesn't look like a valid email."),
         }));
       }
 
