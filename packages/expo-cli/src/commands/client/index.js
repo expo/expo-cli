@@ -54,7 +54,7 @@ export default program => {
       ]);
       let udids = devices.map(device => device.deviceNumber);
       log('These devices are currently registered on your Apple Developer account:');
-      let table = new CliTable({ head: ['Name', 'Identifier'] });
+      let table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
       table.push(...devices.map(device => [device.name, device.deviceNumber]));
       log(table.toString());
       let { addUdid } = await prompt({
