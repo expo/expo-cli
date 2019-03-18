@@ -12,9 +12,13 @@ export default async function authenticate(options) {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
   try {
     log('Trying to authenticate with Apple Developer Portal...');
-    const { teams, fastlaneSession } = await runAction(travelingFastlane.authenticate, [appleId, appleIdPassword], {
-      pipeStdout: true,
-    });
+    const { teams, fastlaneSession } = await runAction(
+      travelingFastlane.authenticate,
+      [appleId, appleIdPassword],
+      {
+        pipeStdout: true,
+      }
+    );
     log('Authenticated with Apple Developer Portal successfully!');
     const team = await _chooseTeam(teams, options.teamId);
     return { appleId, appleIdPassword, team, fastlaneSession };
@@ -40,8 +44,7 @@ function _getAppleIdFromParams({ appleId }) {
   }
 }
 
-async function _promptForAppleId(options) {
-  let appleId = options.appleId;
+async function _promptForAppleId({ appleId }) {
   let wrap = wordwrap(process.stdout.columns || 80);
   log(
     wrap(
