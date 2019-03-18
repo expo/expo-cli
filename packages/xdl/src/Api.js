@@ -223,18 +223,6 @@ export default class ApiClient {
   static host: string = Config.api.host;
   static port: number = Config.api.port || 80;
 
-  static _versionCache = new Cacher(
-    () =>
-      ApiClient.callPathAsync('/--/api/v2/versions', null, null, {
-        headers: {
-          'Expo-Session': '',
-        },
-      }),
-    'versions.json',
-    0,
-    path.join(__dirname, '../caches/versions.json')
-  );
-
   static _schemaCaches = {};
 
   static async callMethodAsync(
@@ -264,10 +252,6 @@ export default class ApiClient {
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
-  static async versionsAsync() {
-    return await ApiClient._versionCache.getAsync();
-  }
-
   static async xdlSchemaAsync(sdkVersion) {
     if (!ApiClient._schemaCaches.hasOwnProperty(sdkVersion)) {
       ApiClient._schemaCaches[sdkVersion] = new Cacher(
@@ -281,16 +265,6 @@ export default class ApiClient {
     }
 
     return await ApiClient._schemaCaches[sdkVersion].getAsync();
-  }
-
-  static async sdkVersionsAsync() {
-    const { sdkVersions } = await ApiClient.versionsAsync();
-    return sdkVersions;
-  }
-
-  static async turtleSdkVersionsAsync() {
-    const { turtleSdkVersions } = await ApiClient.versionsAsync();
-    return turtleSdkVersions;
   }
 
   static async downloadAsync(url, outputPath, options = {}, progressFunction, retryFunction) {

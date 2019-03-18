@@ -3,16 +3,35 @@
  */
 
 import _ from 'lodash';
+import path from 'path';
 import semver from 'semver';
 
 import Api from './Api';
 import ApiV2Client from './ApiV2';
+import { Cacher } from './tools/FsCache';
 import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
 import UserManager from './User';
 
 export async function versionsAsync() {
-  return await Api.versionsAsync();
+  const api = new ApiV2Client();
+  const versionCache = new Cacher(
+    () => api.getAsync('versions/latest'),
+    'versions.json',
+    0,
+    path.join(__dirname, '../caches/versions.json')
+  );
+  return await versionCache.getAsync();
+}
+
+export async function sdkVersionsAsync() {
+  const { sdkVersions } = await versionsAsync();
+  return sdkVersions;
+}
+
+export async function turtleSdkVersionsAsync() {
+  const { turtleSdkVersions } = await versionsAsync();
+  return turtleSdkVersions;
 }
 
 export async function setVersionsAsync(value: any) {
@@ -52,7 +71,7 @@ export function parseSdkVersionFromTag(tag: string) {
 }
 
 export async function newestSdkVersionAsync() {
-  let sdkVersions = await Api.sdkVersionsAsync();
+  let sdkVersions = await sdkVersionsAsync();
   let result = {};
   let highestMajorVersion = '0.0.0';
   _.forEach(sdkVersions, (value, key) => {
@@ -66,7 +85,7 @@ export async function newestSdkVersionAsync() {
 }
 
 export async function facebookReactNativeVersionsAsync(): Promise<Array<string>> {
-  let sdkVersions = await Api.sdkVersionsAsync();
+  let sdkVersions = await sdkVersionsAsync();
   let facebookReactNativeVersions = new Set();
 
   _.forEach(sdkVersions, value => {
@@ -88,7 +107,7 @@ export async function facebookReactNativeVersionToExpoVersionAsync(
     );
   }
 
-  let sdkVersions = await Api.sdkVersionsAsync();
+  let sdkVersions = await sdkVersionsAsync();
   let currentSdkVersion = null;
 
   _.forEach(sdkVersions, (value, key) => {
@@ -116,8 +135,8 @@ export async function canTurtleBuildSdkVersion(sdkVersion, platform) {
     );
   }
 
-  const turtleSdkVersions = await Api.turtleSdkVersionsAsync();
-  const expoSdkVersion = (await Api.sdkVersionsAsync())[sdkVersion];
+  const turtleSdkVersions = await turtleSdkVersionsAsync();
+  const expoSdkVersion = (await sdkVersionsAsync())[sdkVersion];
 
   if (expoSdkVersion === undefined) {
     throw new XDLError(
