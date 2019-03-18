@@ -147,15 +147,34 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
-export async function constructWebAppUrlAsync(
-  projectRoot,
-  { https = false, host = 'localhost' } = {}
-) {
+export async function getHostnameForWebAppAsync(projectRoot) {
+  const { lanType } = await ProjectSettings.readAsync(projectRoot);
+
+  let hostname = 'localhost';
+  if (lanType === 'ip') {
+    hostname = ip.address();
+  } else if (lanType === 'lan') {
+    // Some old versions of OSX work with hostname but not local ip address.
+    hostname = os.hostname();
+  }
+  return hostname;
+}
+
+export async function constructWebAppUrlAsync(projectRoot) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.webpackServerPort) {
     return null;
   }
-  return `http${https ? 's' : ''}://${host}:${packagerInfo.webpackServerPort}`;
+
+  const hostname = await getHostnameForWebAppAsync(projectRoot);
+
+  const { https } = await ProjectSettings.readAsync(projectRoot);
+  let urlType = 'http';
+  if (https === true) {
+    urlType = 'https';
+  }
+
+  return `${urlType}://${hostname}:${packagerInfo.webpackServerPort}`;
 }
 
 export async function constructUrlAsync(

@@ -144,7 +144,7 @@ export const startAsync = async (projectDir, options) => {
       case 'w': {
         clearConsole();
         log('Trying to open the project in a web browser...');
-        await Web.openProjectAsync(projectDir, options);
+        await Web.openProjectAsync(projectDir);
         printHelp();
         return;
       }

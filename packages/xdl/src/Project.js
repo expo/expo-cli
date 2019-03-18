@@ -1861,7 +1861,7 @@ async function startWebpackServerAsync(projectRoot, options) {
   if (!exp.platforms.includes('web')) {
     return;
   }
-  let { dev } = await ProjectSettings.readAsync(projectRoot);
+  let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   let config = webpackConfig({ projectRoot, development: dev, production: !dev });
   let webpackServerPort = await _getFreePortAsync(19000);
   ProjectUtils.logInfo(
@@ -1870,9 +1870,10 @@ async function startWebpackServerAsync(projectRoot, options) {
     `Starting webpack-dev-server on port ${webpackServerPort}.`
   );
   let compiler = webpack(config);
-  let server = new WebpackDevServer(compiler, { ...config.devServer, https: options.https });
+  const hostname = await UrlUtils.getHostnameForWebAppAsync(projectRoot);
+  let server = new WebpackDevServer(compiler, { ...config.devServer, https });
   await new Promise((resolve, reject) =>
-    server.listen(webpackServerPort, 'localhost', error => {
+    server.listen(webpackServerPort, hostname, error => {
       if (error) {
         reject(error);
       } else {

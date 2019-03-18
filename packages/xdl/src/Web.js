@@ -4,14 +4,14 @@ import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 import { readConfigJsonAsync } from './project/ProjectUtils';
 
-export async function openProjectAsync(projectRoot, options) {
+export async function openProjectAsync(projectRoot) {
   const hasWebSupport = await hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
     logWebSetup();
     return { success: false };
   }
   try {
-    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot, options);
+    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
     opn(url, { wait: false });
     return { success: true, url };
   } catch (e) {

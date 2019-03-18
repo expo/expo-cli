@@ -60,6 +60,12 @@ async function optsAsync(projectDir, options) {
     opts.hostType = 'lan';
   }
 
+  if (options.https !== undefined) {
+    opts.https = true;
+  } else if (options.noHttps !== undefined) {
+    opts.https = false;
+  }
+
   let rawArgs = options.parent.rawArgs;
   if (hasBooleanArg(rawArgs, 'dev')) {
     opts.dev = getBooleanArg(rawArgs, 'dev');
@@ -87,7 +93,7 @@ async function handleMobileOptsAsync(projectDir, options) {
   }
 
   if (options.web) {
-    await Web.openProjectAsync(projectDir, options);
+    await Web.openProjectAsync(projectDir);
   }
 
   return !!options.android || !!options.ios;
