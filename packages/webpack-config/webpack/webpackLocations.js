@@ -2,9 +2,9 @@ const path = require('path');
 const findWorkspaceRoot = require('find-yarn-workspace-root');
 const fs = require('fs');
 
-function getLocations(inputProjectRoot = '../') {
+function getLocations(inputProjectRoot = '') {
   const absolute = (...pathComponents) =>
-    path.resolve(__dirname, inputProjectRoot, ...pathComponents);
+    path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
 
   const projectRoot = absolute();
   const packageJsonPath = absolute('./package.json');
@@ -20,7 +20,8 @@ function getLocations(inputProjectRoot = '../') {
     modulesPath = absolute('node_modules');
   }
 
-  const pckg = require(packageJsonPath);
+  // react-native init projects do not have a main defined by default
+  const { main = 'index' } = require(packageJsonPath);
   const nativeAppManifest = require(appJsonPath);
 
   const { expo: expoManifest = {} } = nativeAppManifest;
@@ -49,7 +50,7 @@ function getLocations(inputProjectRoot = '../') {
     packageJson: packageJsonPath,
     appJson: appJsonPath,
     root: projectRoot,
-    appMain: absolute(pckg.main),
+    appMain: absolute(main),
     modules: modulesPath,
     template: {
       folder: templatePath(),
