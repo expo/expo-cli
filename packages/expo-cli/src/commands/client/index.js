@@ -1,15 +1,15 @@
 import chalk from 'chalk';
 import CliTable from 'cli-table';
-import { Credentials, User, ApiV2 } from 'xdl';
+import { Credentials, User } from 'xdl';
 
 import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';
 import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
 import * as credentials from '../build/ios/credentials';
-import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import selectDistributionCert from './selectDistributionCert';
 import selectPushKey from './selectPushKey';
 import generateBundleIdentifier from './generateBundleIdentifier';
+import createClientBuildRequest from './createClientBuildRequest';
 import log from '../../log';
 import prompt from '../../prompt';
 
@@ -64,20 +64,13 @@ export default program => {
         default: true,
       });
 
-      let result = await ApiV2.clientForUser(user).postAsync('client-build/create-ios-request', {
-        appleSession: context.fastlaneSession,
-        appleTeamId: context.team.id,
-        appleTeamName: context.team.name,
+      let result = await createClientBuildRequest({
+        user,
+        context,
+        distributionCert,
+        udids,
         addUdid,
-        bundleIdentifier: context.bundleIdentifier,
         email,
-        credentials: {
-          certP12: distributionCert.certP12,
-          certPassword: distributionCert.certPassword,
-          teamId: context.team.id,
-          appleSession: context.fastlaneSession,
-          udids,
-        },
       });
 
       log.newLine();
