@@ -23,7 +23,9 @@ function addOptions(program) {
     .option('--dev', 'Turns dev flag on')
     .option('--no-dev', 'Turns dev flag off')
     .option('--minify', 'Turns minify flag on')
-    .option('--no-minify', 'Turns minify flag off');
+    .option('--no-minify', 'Turns minify flag off')
+    .option('--https', 'To start webpack with https protocol')
+    .option('--no-https', 'To start webpack with http protocol');
 }
 
 function hasBooleanArg(rawArgs, argName) {
@@ -60,18 +62,15 @@ async function optsAsync(projectDir, options) {
     opts.hostType = 'lan';
   }
 
-  if (options.https !== undefined) {
-    opts.https = true;
-  } else if (options.noHttps !== undefined) {
-    opts.https = false;
-  }
-
   let rawArgs = options.parent.rawArgs;
   if (hasBooleanArg(rawArgs, 'dev')) {
     opts.dev = getBooleanArg(rawArgs, 'dev');
   }
   if (hasBooleanArg(rawArgs, 'minify')) {
     opts.minify = getBooleanArg(rawArgs, 'minify');
+  }
+  if (hasBooleanArg(rawArgs, 'https')) {
+    opts.https = getBooleanArg(rawArgs, 'https');
   }
 
   await ProjectSettings.setAsync(projectDir, opts);
