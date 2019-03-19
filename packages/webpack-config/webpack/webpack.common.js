@@ -12,7 +12,7 @@ const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const WebpackPwaManifest = require('webpack-pwa-manifest');
+const WebpackPWAManifestPlugin = require('@expo/webpack-pwa-manifest-plugin');
 const chalk = require('chalk');
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
@@ -49,8 +49,6 @@ const mediaLoaderConfiguration = {
 module.exports = function(env = {}) {
   const locations = getLocations(env.projectRoot);
   const babelConfig = createBabelConfig(locations.root);
-  const indexHTML = createIndexHTMLFromAppJSON(locations);
-  const clientEnv = createClientEnvironment(locations);
 
   const appJSON = require(locations.appJson);
   if (!appJSON) {
@@ -60,11 +58,8 @@ module.exports = function(env = {}) {
   const appManifest = appJSON.expo || appJSON;
   const { web: webManifest = {} } = appManifest;
 
-  let displayName = appManifest.name;
   // rn-cli apps use a displayName value as well.
-  if (!isExpoConfig && appManifest.displayName) {
-    displayName = appManifest.displayName;
-  }
+  const displayName = webManifest.name || appManifest.displayName || appManifest.name;
 
   const languageISOCode = webManifest.lang || 'en';
   const noJavaScriptMessage =
@@ -140,7 +135,7 @@ module.exports = function(env = {}) {
       }),
 
       // Generate the `manifest.json`
-      new WebpackPwaManifest(appJSON, {
+      new WebpackPWAManifestPlugin(appJSON, {
         ...env,
         languageISOCode,
         defaultIcon: locations.template.get('icon.png'),
@@ -155,7 +150,7 @@ module.exports = function(env = {}) {
         publicPath,
       }),
 
-      new webpack.DefinePlugin(clientEnv),
+      new webpack.DefinePlugin(createClientEnvironment(locations)),
 
       // Remove unused import/exports
       new WebpackDeepScopeAnalysisPlugin(),

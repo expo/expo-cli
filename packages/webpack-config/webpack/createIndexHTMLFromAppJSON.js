@@ -23,12 +23,67 @@ const DEFAULT_MINIFY = {
   minifyURLs: true,
 };
 
-function createIndexHTMLFromAppJSON({ displayName }, locations) {
-  const appJSON = require(locations.appJson);
+const ogTags = [
+  // <link rel="canonical" href="absolute-path">
+  { name: 'og:title', propNames: ['title'] },
+  { name: 'og:site_name', propNames: ['siteName'] },
+  { name: 'og:description', propNames: ['description'] },
+  { name: 'article:author', propNames: ['author'] },
+  { name: 'og:image', propNames: ['image'] },
+  { name: 'og:image:width', propNames: ['imageWidth'] },
+  { name: 'og:image:height', propNames: ['imageHeight'] },
+  { name: 'og:locale', propNames: ['locale'] },
+  // https://developers.facebook.com/docs/sharing/opengraph#types
+  { name: 'og:type', propNames: ['type'], fallback: 'website' },
+  { name: 'og:url', propNames: ['url'] },
+];
 
-  const nativeAppManifest = appJSON.expo || appJSON;
+const twitterTags = [
+  { name: 'twitter:card', propNames: ['card'] },
+  { name: 'twitter:title', propNames: ['title'] },
+  { name: 'twitter:description', propNames: ['description'] },
+  { name: 'twitter:site', propNames: ['site'] },
+  { name: 'twitter:image', propNames: ['image'] },
+  { name: 'twitter:creator', propNames: ['creator'] },
+];
+
+const msTags = [
+  // 'msapplication-window': `width=${microsoft.width};height=${microsoft.height}`,
+  { name: 'mssmarttagspreventparsing', propNames: ['preventParsing'] },
+  { name: 'msapplication-navbutton-color', propNames: ['buttonColor'] },
+  { name: 'application-name', propNames: ['appName'] },
+  { name: 'msapplication-tooltip', propNames: ['tooltip'] },
+  { name: 'msapplication-TileColor', propNames: ['tileColor'] },
+  { name: 'msapplication-TileImage', propNames: ['tileImage'] },
+];
+
+function possibleProperty(input, possiblePropertyNames, fallback) {
+  for (const propertyName of possiblePropertyNames) {
+    if (input[propertyName] !== undefined) {
+      return input[propertyName];
+    }
+  }
+  return fallback;
+}
+
+function populateMetatagObject(schema, input) {
+  let output = {};
+  for (const item of schema) {
+    // Check the list of propNames and the tag name
+    const value = possibleProperty(input, item.propNames.concat([item.name]), item.fallback);
+    if (value !== undefined) {
+      output[item.name] = value;
+    }
+  }
+  return output;
+}
+
+function createIndexHTMLFromAppJSON({ displayName }, locations) {
+  const appJson = require(locations.appJson);
+
+  const nativeAppManifest = appJson.expo || appJson;
   // Is the app.json from expo-cli or react-native-cli
-  const isExpoConfig = !!appJSON.expo;
+  const isExpoConfig = !!appJson.expo;
   const { web = {} } = nativeAppManifest;
   const { metatags = {} } = web;
   const { minifyHTML } = web;
@@ -37,39 +92,9 @@ function createIndexHTMLFromAppJSON({ displayName }, locations) {
   const color = nativeAppManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = nativeAppManifest.description || DEFAULT_DESCRIPTION;
 
-  const openGraphMetatags = {
-    // <link rel="canonical" href="absolute-path">
-    'og:title': facebook.title,
-    'og:site_name': facebook.siteName,
-    'og:description': facebook.description,
-    'article:author': facebook.author,
-    'og:image': facebook.image,
-    'og:image:width': facebook.imageWidth,
-    'og:image:height': facebook.imageHeight,
-    'og:locale': facebook.locale,
-    // https://developers.facebook.com/docs/sharing/opengraph#types
-    'og:type': facebook.type || 'website',
-    'og:url': facebook.url,
-  };
-
-  const twitterMetatags = {
-    'twitter:card': twitter.card,
-    'twitter:title': twitter.title,
-    'twitter:description': twitter.description,
-    'twitter:site': twitter.site,
-    'twitter:image': twitter.image,
-    'twitter:creator': twitter.creator,
-  };
-
-  const microsoftMetatags = {
-    'application-name': microsoft.appName,
-    mssmarttagspreventparsing: microsoft.preventParsing,
-    'msapplication-window': `width=${microsoft.width};height=${microsoft.height}`,
-    'msapplication-navbutton-color': microsoft.buttonColor || color,
-    'msapplication-tooltip': microsoft.tooltip,
-    'msapplication-TileColor': microsoft.tileColor,
-    'msapplication-TileImage': microsoft.tileImage,
-  };
+  const openGraphMetatags = populateMetatagObject(ogTags, facebook);
+  const twitterMetatags = populateMetatagObject(twitterTags, twitter);
+  const microsoftMetatags = populateMetatagObject(msTags, microsoft);
 
   const appleMetatags = {
     'format-detection': 'telephone=no',
@@ -78,15 +103,18 @@ function createIndexHTMLFromAppJSON({ displayName }, locations) {
 
   const metaTags = {
     viewport: viewports.optimizedForiPhoneX,
-    description: nativeAppManifest.description,
+    description: description,
     'mobile-web-app-capable': 'yes',
-    'google-site-verification': web.googleSiteVerification,
     ...openGraphMetatags,
     ...microsoftMetatags,
     ...twitterMetatags,
     ...appleMetatags,
     ...metatags,
   };
+
+  if (web.googleSiteVerification !== undefined) {
+    metaTags['google-site-verification'] = web.googleSiteVerification;
+  }
 
   let minify = DEFAULT_MINIFY;
   /**

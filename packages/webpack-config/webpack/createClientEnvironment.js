@@ -1,42 +1,40 @@
-function createClientEnvironment(locations) {
-  const nativeAppManifest = require(locations.appJson);
-
+function createClientEnvironment(locations, PWAManifest) {
   function getAppManifest() {
-    if (nativeAppManifest && nativeAppManifest.expo) {
-      const { expo } = nativeAppManifest;
-      let web;
-      try {
-        web = require(locations.template.manifest);
-      } catch (e) {
-        web = {};
-      }
+    const appJSON = require(locations.appJson);
+    const appManifest = appJSON.expo || appJSON;
 
-      return {
-        /**
-         * Omit app.json properties that get removed during the native turtle build
-         *
-         * `facebookScheme`
-         * `facebookAppId`
-         * `facebookDisplayName`
-         */
-        name: expo.name,
-        description: expo.description,
-        slug: expo.slug,
-        sdkVersion: expo.sdkVersion,
-        version: expo.version,
-        githubUrl: expo.githubUrl,
-        orientation: expo.orientation,
-        primaryColor: expo.primaryColor,
-        privacy: expo.privacy,
-        icon: expo.icon,
-        scheme: expo.scheme,
-        notification: expo.notification,
-        splash: expo.splash,
-        androidShowExponentNotificationInShellApp: expo.androidShowExponentNotificationInShellApp,
-        web,
-      };
+    let web;
+    try {
+      web = require(locations.production.manifest);
+    } catch (e) {
+      web = {};
     }
-    return {};
+
+    return {
+      /**
+       * Omit app.json properties that get removed during the native turtle build
+       *
+       * `facebookScheme`
+       * `facebookAppId`
+       * `facebookDisplayName`
+       */
+      name: appManifest.displayName || appManifest.name,
+      description: appManifest.description,
+      slug: appManifest.slug,
+      sdkVersion: appManifest.sdkVersion,
+      version: appManifest.version,
+      githubUrl: appManifest.githubUrl,
+      orientation: appManifest.orientation,
+      primaryColor: appManifest.primaryColor,
+      privacy: appManifest.privacy,
+      icon: appManifest.icon,
+      scheme: appManifest.scheme,
+      notification: appManifest.notification,
+      splash: appManifest.splash,
+      androidShowExponentNotificationInShellApp:
+        appManifest.androidShowExponentNotificationInShellApp,
+      web,
+    };
   }
   const environment = process.env.NODE_ENV || 'development';
   const __DEV__ = environment !== 'production';
