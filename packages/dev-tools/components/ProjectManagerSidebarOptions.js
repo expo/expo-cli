@@ -123,7 +123,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
 
     const sendHeader = (
       <div className={STYLES_CONTENT_GROUP} onClick={this._handleSendHeaderClick}>
-        <span className={STYLES_CONTENT_GROUP_LEFT}>Send link with email/SMS…</span>
+        <span className={STYLES_CONTENT_GROUP_LEFT}>Send link with email…</span>
       </div>
     );
 
@@ -148,7 +148,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
 
         <ContentGroup header={sendHeader} isActive={this.state.isSendFormVisible}>
           <InputWithButton
-            placeholder="Enter email or number"
+            placeholder="Enter email address"
             value={this.props.recipient}
             onChange={this.props.onRecipientChange}
             onValidation={this.props.onEmailOrNumberValidation}
