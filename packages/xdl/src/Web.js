@@ -4,12 +4,23 @@ import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 import { readConfigJsonAsync } from './project/ProjectUtils';
 
+function logPreviewNotice() {
+  console.log();
+  console.log(
+    chalk.bold.yellow(
+      'Web support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
+    )
+  );
+  console.log();
+}
+
 export async function openProjectAsync(projectRoot) {
   const hasWebSupport = await hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
     logWebSetup();
     return { success: false };
   }
+  logPreviewNotice();
   try {
     let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
     opn(url, { wait: false });
