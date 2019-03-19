@@ -3,6 +3,7 @@
  */
 import axios from 'axios';
 import child_process from 'child_process';
+import chalk from 'chalk';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
 import decache from 'decache';
@@ -23,6 +24,9 @@ import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
+import clearConsole from 'react-dev-utils/clearConsole';
+import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
+import { prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
@@ -34,12 +38,13 @@ import readLastLines from 'read-last-lines';
 import webpack from 'webpack';
 import webpackConfig from '@expo/webpack-config';
 import WebpackDevServer from 'webpack-dev-server';
-import chalk from 'chalk';
+import address from 'address';
 import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import Config from './Config';
+import createCompiler from './createCompiler';
 import * as Doctor from './project/Doctor';
 import * as DevSession from './DevSession';
 import ErrorCode from './ErrorCode';
@@ -1865,147 +1870,22 @@ function getWebpackInstance(projectRoot) {
   return webpackDevServerInstance;
 }
 
-const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
-const paths = {
-  yarnLockFile: resolveApp('yarn.lock'),
-  appTsConfig: resolveApp('tsconfig.json'),
-  appPackageJson: resolveApp('package.json'),
-};
-
-const devSocket = {
-  warnings: warnings => ProjectUtils.logInfo(projectRoot, 'warnings', warnings),
-  errors: errors => ProjectUtils.logInfo(projectRoot, 'errors', errors),
-};
-const useYarn = fs.existsSync(paths.yarnLockFile);
-const appName = require(paths.appPackageJson).name;
-
-import address from 'address';
-import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import clearConsole from 'react-dev-utils/clearConsole';
-import { prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
-
-/**
- * Copyright (c) 2015-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-('use strict');
-
-const isInteractive = true; //process.stdout.isTTY;
-
-function printInstructions(appName, urls, useYarn) {
-  console.log();
-  console.log(`You can now view ${chalk.bold(appName)} in the browser.`);
-  console.log();
-
-  if (urls.lanUrlForTerminal) {
-    console.log(`  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}`);
-    console.log(`  ${chalk.bold('On Your Network:')}  ${chalk.underline(urls.lanUrlForTerminal)}`);
-  } else {
-    console.log(`  ${urls.localUrlForTerminal}`);
-  }
-
-  console.log();
-  console.log('Note that the development build is not optimized.');
-  console.log(`To create a production build, use ` + `${chalk.cyan(`expo build:web`)}.`);
-  console.log();
-}
-
-function createCompiler({ appName, config, devSocket, urls, useYarn, webpack, onFinished }) {
-  // "Compiler" is a low-level interface to Webpack.
-  // It lets us listen to some events and provide our own custom messages.
-  let compiler;
-  try {
-    compiler = webpack(config);
-  } catch (err) {
-    console.log(chalk.red('Failed to compile.'));
-    console.log();
-    console.log(err.message || err);
-    console.log();
-    process.exit(1);
-  }
-
-  // "invalid" event fires when you have changed a file, and Webpack is
-  // recompiling a bundle. WebpackDevServer takes care to pause serving the
-  // bundle, so if you refresh, it'll wait instead of serving the old one.
-  // "invalid" is short for "bundle invalidated", it doesn't imply any errors.
-  compiler.hooks.invalid.tap('invalid', () => {
-    if (isInteractive) {
-      clearConsole();
-    }
-    console.log(chalk.white('Compiling...'));
-  });
-
-  let isFirstCompile = true;
-
-  // "done" event fires when Webpack has finished recompiling the bundle.
-  // Whether or not you have warnings or errors, you will get this event.
-  compiler.hooks.done.tap('done', async stats => {
-    if (isInteractive) {
-      // clearConsole();
-    }
-
-    // We have switched off the default Webpack output in WebpackDevServer
-    // options so we are going to "massage" the warnings and errors and present
-    // them in a readable focused way.
-    // We only construct the warnings and errors for speed:
-    // https://github.com/facebook/create-react-app/issues/4492#issuecomment-421959548
-    const statsData = stats.toJson({
-      all: false,
-      warnings: true,
-      errors: true,
-    });
-
-    const messages = formatWebpackMessages(statsData);
-    const isSuccessful = !messages.errors.length && !messages.warnings.length;
-    if (isSuccessful) {
-      console.log(chalk.bold.cyan('Compiled successfully!'));
-    }
-    if (isSuccessful && (isInteractive || isFirstCompile)) {
-      printInstructions(appName, urls, useYarn);
-    }
-    onFinished();
-    isFirstCompile = false;
-
-    // If errors exist, only show errors.
-    if (messages.errors.length) {
-      // Only keep the first error. Others are often indicative
-      // of the same problem, but confuse the reader with noise.
-      if (messages.errors.length > 1) {
-        messages.errors.length = 1;
-      }
-      console.log(chalk.red('Failed to compile.\n'));
-      console.log(messages.errors.join('\n\n'));
-      return;
-    }
-
-    // Show warnings if no errors were found.
-    if (messages.warnings.length) {
-      console.log(chalk.yellow('Compiled with warnings.\n'));
-      console.log(messages.warnings.join('\n\n'));
-
-      // Teach some ESLint tricks.
-      console.log(
-        '\nSearch for the ' +
-          chalk.underline(chalk.yellow('keywords')) +
-          ' to learn more about each warning.'
-      );
-      console.log(
-        'To ignore, add ' + chalk.cyan('// eslint-disable-next-line') + ' to the line before.\n'
-      );
-    }
-  });
-
-  return compiler;
-}
-
 async function startWebpackServerAsync(projectRoot, options, verbose) {
   const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
     return;
   }
+  const appDirectory = fs.realpathSync(projectRoot);
+  const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
+  const paths = {
+    yarnLockFile: resolveApp('yarn.lock'),
+    appTsConfig: resolveApp('tsconfig.json'),
+    appPackageJson: resolveApp('package.json'),
+  };
+
+  const useYarn = fs.existsSync(paths.yarnLockFile);
+  // TODO: Bacon: fix name getter
+  const appName = require(paths.appPackageJson).name;
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   let config = webpackConfig({ projectRoot, development: dev, production: !dev, https });
   let webpackServerPort = await _getFreePortAsync(19000);
@@ -2016,24 +1896,23 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
 
   await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
-    // const compiler = createCompiler(webpack, config, appName, urls, useYarn);
     const compiler = createCompiler({
+      projectRoot,
       webpack,
       appName,
       config,
-      devSocket,
       urls,
       useYarn,
       onFinished: resolve,
     });
     webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
     // Launch WebpackDevServer.
-    webpackDevServerInstance.listen(webpackServerPort, '0.0.0.0', err => {
-      if (err) {
-        return console.log(err);
+    webpackDevServerInstance.listen(webpackServerPort, '0.0.0.0', error => {
+      if (error) {
+        ProjectUtils.logError(projectRoot, 'expo', error);
       }
       clearConsole();
-      console.log(chalk.cyan('Starting the development server...\n'));
+      ProjectUtils.logInfo(projectRoot, 'expo', chalk.cyan('Starting the development server...\n'));
     });
   });
 
