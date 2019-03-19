@@ -8,6 +8,8 @@ const viewports = {
     'user-scalable=no,initial-scale=1.0001,maximum-scale=1.0001,viewport-fit=cover',
 };
 
+const DEFAULT_THEME_COLOR = '#4630EB';
+const DEFAULT_DESCRIPTION = 'A Neat Expo App';
 const DEFAULT_MINIFY = {
   removeComments: true,
   collapseWhitespace: true,
@@ -32,8 +34,8 @@ function createIndexHTMLFromAppJSON({ displayName }, locations) {
   const { minifyHTML } = web;
   const { twitter = {}, facebook = {}, microsoft = {} } = web;
 
-  const color = nativeAppManifest.primaryColor || '#000000';
-  const description = nativeAppManifest.description || 'A Neat Expo App';
+  const color = nativeAppManifest.primaryColor || DEFAULT_THEME_COLOR;
+  const description = nativeAppManifest.description || DEFAULT_DESCRIPTION;
 
   const openGraphMetatags = {
     // <link rel="canonical" href="absolute-path">
