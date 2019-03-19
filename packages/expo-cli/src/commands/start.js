@@ -3,7 +3,7 @@
  */
 
 import { DevToolsServer } from '@expo/dev-tools';
-import { ProjectUtils, ProjectSettings, Project, UserSettings, UrlUtils } from 'xdl';
+import { ProjectUtils, ProjectSettings, Web, Project, UserSettings, UrlUtils } from 'xdl';
 import chalk from 'chalk';
 import opn from 'opn';
 import path from 'path';
@@ -30,6 +30,12 @@ async function action(projectDir, options) {
 
   if (options.maxWorkers) {
     startOpts.maxWorkers = options.maxWorkers;
+  }
+
+  if (options.webOnly) {
+    startOpts.webOnly = options.webOnly;
+  } else {
+    startOpts.webOnly = await Web.onlySupportsWebAsync(projectDir);
   }
 
   let devToolsUrl = await DevToolsServer.startAsync(root);
@@ -84,6 +90,7 @@ export default (program: any) => {
     .description('Starts or restarts a local server for your app and gives you a URL to it')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
+    .option('--web-only', 'Only start the webpack server')
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .urlOpts()
