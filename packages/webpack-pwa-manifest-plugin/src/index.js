@@ -1,7 +1,7 @@
 import path from 'path';
-import validatePresets from './validators/presets';
-import validateColors from './validators/colors';
-import checkDeprecated from './validators/versioning';
+import validatePresets from './validators/Presets';
+import validateColors from './validators/Colors';
+import checkDeprecated from './validators/Versioning';
 import {
   buildResources,
   injectResources,

@@ -1,4 +1,3 @@
-// @ts-ignore
 import cssColorNames from 'css-color-names';
 import PresetError from '../errors/PresetError';
 
