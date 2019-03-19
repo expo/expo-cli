@@ -16,7 +16,7 @@ function invokePossibleFunction(objectOrMethod, ...args) {
 
 export function invokeWebpackConfig(env, argv) {
   // Check if the project has a webpack.config.js in the root.
-  const projectWebpackConfig = path.resolve(process.cwd(), 'webpack.config.js');
+  const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
   if (fs.existsSync(projectWebpackConfig)) {
     const webpackConfig = require(projectWebpackConfig);
     return invokePossibleFunction(webpackConfig, env, argv);
