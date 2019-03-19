@@ -4,12 +4,23 @@ import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 import { readConfigJsonAsync } from './project/ProjectUtils';
 
+function logPreviewNotice() {
+  console.log();
+  console.log(
+    chalk.bold.yellow(
+      'Web support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
+    )
+  );
+  console.log();
+}
+
 export async function openProjectAsync(projectRoot) {
   const hasWebSupport = await hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
     logWebSetup();
     return { success: false };
   }
+  logPreviewNotice();
   try {
     let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
     opn(url, { wait: false });
@@ -28,6 +39,15 @@ export async function hasWebSupportAsync(projectRoot) {
   const { exp } = await readConfigJsonAsync(projectRoot);
   const isWebConfigured = exp.platforms.includes('web');
   return isWebConfigured;
+}
+
+// If platforms only contains the "web" field
+export async function onlySupportsWebAsync(projectRoot) {
+  const { exp } = await readConfigJsonAsync(projectRoot);
+  if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
+    return exp.platforms[0] === 'web';
+  }
+  return false;
 }
 
 function getWebSetupLogs() {

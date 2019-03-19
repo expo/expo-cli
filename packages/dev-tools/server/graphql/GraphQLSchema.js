@@ -281,7 +281,7 @@ const typeDefs = graphql`
     openSimulator(platform: Platform!): OpenSimulatorResult
     # Publishes the current project to expo.io
     publishProject(releaseChannel: String): PublishProjectResult
-    # Sends the project URL by email or SMS.
+    # Sends the project URL by email.
     sendProjectUrl(recipient: String!): SendProjectResult
     # Updates specified project settings.
     setProjectSettings(settings: ProjectSettingsInput!): Project

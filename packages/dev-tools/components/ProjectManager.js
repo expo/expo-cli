@@ -112,7 +112,7 @@ class ProjectManager extends React.Component {
       toast: {
         id: 'send-email-or-number',
         name: 'error',
-        text: `Please provide a valid email or phone number.`,
+        text: `Please provide a valid email address.`,
       },
     });
 
