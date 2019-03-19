@@ -63,6 +63,15 @@ export async function hasWebSupportAsync(projectRoot) {
   return isWebConfigured;
 }
 
+// If platforms only contains the "web" field
+export async function onlySupportsWebAsync(projectRoot) {
+  const { exp } = await readConfigJsonAsync(projectRoot);
+  if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
+    return exp.platforms[0] === 'web';
+  }
+  return false;
+}
+
 function getWebSetupLogs() {
   const appJsonRules = chalk.white(
     `
