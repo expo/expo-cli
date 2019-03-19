@@ -12,9 +12,13 @@ function createClientEnvironment(locations) {
       }
 
       return {
-        // facebookScheme
-        // facebookAppId
-        // facebookDisplayName
+        /**
+         * Omit app.json properties that get removed during the native turtle build
+         *
+         * `facebookScheme`
+         * `facebookAppId`
+         * `facebookDisplayName`
+         */
         name: expo.name,
         description: expo.description,
         slug: expo.slug,

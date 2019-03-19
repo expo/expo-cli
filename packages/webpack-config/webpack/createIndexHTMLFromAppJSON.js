@@ -1,7 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const viewports = {
-  twitter: 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0',
   /**
    * To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
    */
@@ -9,22 +8,35 @@ const viewports = {
     'user-scalable=no,initial-scale=1.0001,maximum-scale=1.0001,viewport-fit=cover',
 };
 
-function createIndexHTMLFromAppJSON(locations) {
-  const nativeAppManifest = require(locations.appJson);
+const DEFAULT_MINIFY = {
+  removeComments: true,
+  collapseWhitespace: true,
+  removeRedundantAttributes: true,
+  useShortDoctype: true,
+  removeEmptyAttributes: true,
+  removeStyleLinkTypeAttributes: true,
+  keepClosingSlash: true,
+  minifyJS: true,
+  minifyCSS: true,
+  minifyURLs: true,
+};
 
-  const { expo: expoManifest = {} } = nativeAppManifest;
-  const { web = {} } = expoManifest;
+function createIndexHTMLFromAppJSON({ displayName }, locations) {
+  const appJSON = require(locations.appJson);
+
+  const nativeAppManifest = appJSON.expo || appJSON;
+  // Is the app.json from expo-cli or react-native-cli
+  const isExpoConfig = !!appJSON.expo;
+  const { web = {} } = nativeAppManifest;
   const { metatags = {} } = web;
+  const { minifyHTML } = web;
   const { twitter = {}, facebook = {}, microsoft = {} } = web;
 
-  const color = expoManifest.primaryColor || '#000000';
-  const description = expoManifest.description || 'A Neat Expo App';
+  const color = nativeAppManifest.primaryColor || '#000000';
+  const description = nativeAppManifest.description || 'A Neat Expo App';
 
-  const name = expoManifest.name;
-
-  // TODO: upstream all metatags
   const openGraphMetatags = {
-    // <link rel="canonical" href="Your absolute web path">
+    // <link rel="canonical" href="absolute-path">
     'og:title': facebook.title,
     'og:site_name': facebook.siteName,
     'og:description': facebook.description,
@@ -64,7 +76,7 @@ function createIndexHTMLFromAppJSON(locations) {
 
   const metaTags = {
     viewport: viewports.optimizedForiPhoneX,
-    description: expoManifest.description,
+    description: nativeAppManifest.description,
     'mobile-web-app-capable': 'yes',
     'google-site-verification': web.googleSiteVerification,
     ...openGraphMetatags,
@@ -74,45 +86,30 @@ function createIndexHTMLFromAppJSON(locations) {
     ...metatags,
   };
 
+  let minify = DEFAULT_MINIFY;
+  /**
+   * The user can disable minify with
+   * `web.minifyHTML = false || {}`
+   */
+  if (
+    minifyHTML === false ||
+    (minifyHTML && typeof minifyHTML === 'object' && !Array.isArray(minifyHTML))
+  ) {
+    minify = minifyHTML;
+  }
+
   // Generates an `index.html` file with the <script> injected.
   return new HtmlWebpackPlugin({
-    /**
-     * The file to write the HTML to.
-     * Default: `'index.html'`.
-     */
+    // The file to write the HTML to.
     filename: locations.production.indexHtml,
-    /**
-     * The title to use for the generated HTML document.
-     * Default: `'Webpack App'`.
-     */
-    title: expoManifest.name,
-    /**
-     * Pass a html-minifier options object to minify the output.
-     * https://github.com/kangax/html-minifier#options-quick-reference
-     * Default: `false`.
-     */
-    minify: {
-      removeComments: true,
-      /* Prod */
-      collapseWhitespace: true,
-      removeRedundantAttributes: true,
-      useShortDoctype: true,
-      removeEmptyAttributes: true,
-      removeStyleLinkTypeAttributes: true,
-      keepClosingSlash: true,
-      minifyJS: true,
-      minifyCSS: true,
-      minifyURLs: true,
-    },
-    /**
-     * Allows to inject meta-tags, e.g. meta: `{viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no'}`.
-     * Default: `{}`.
-     */
+    // The title to use for the generated HTML document.
+    title: displayName,
+    // Pass a html-minifier options object to minify the output.
+    // https://github.com/kangax/html-minifier#options-quick-reference
+    minify,
+    // Allows to inject meta-tags, e.g. meta: `{viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no'}`.
     meta: metaTags,
-    /**
-     * The `webpack` require path to the template.
-     * @see https://github.com/jantimon/html-webpack-plugin/blob/master/docs/template-option.md
-     */
+    // The `webpack` require path to the template.
     template: locations.template.indexHtml,
   });
 }

@@ -60,6 +60,12 @@ module.exports = function(env = {}) {
   const appManifest = appJSON.expo || appJSON;
   const { web: webManifest = {} } = appManifest;
 
+  let displayName = appManifest.name;
+  // rn-cli apps use a displayName value as well.
+  if (!isExpoConfig && appManifest.displayName) {
+    displayName = appManifest.displayName;
+  }
+
   const languageISOCode = webManifest.lang || 'en';
   const noJavaScriptMessage =
     webManifest.noJavaScriptMessage ||
@@ -106,13 +112,6 @@ module.exports = function(env = {}) {
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
     },
-    // optimization: {
-    //   splitChunks: {
-    //     chunks: 'all',
-    //     name: false,
-    //   },
-    //   runtimeChunk: 'single',
-    // },
     plugins: [
       // Delete the build folder
       new CleanWebpackPlugin([locations.production.folder], {
@@ -130,12 +129,12 @@ module.exports = function(env = {}) {
       ]),
 
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON(locations),
+      createIndexHTMLFromAppJSON({ displayName }, locations),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
-        WEB_TITLE: appManifest.name,
+        WEB_TITLE: displayName,
         NO_SCRIPT: noScript,
         LANG_ISO_CODE: languageISOCode,
       }),
@@ -186,6 +185,7 @@ module.exports = function(env = {}) {
         clear: false,
       }),
     ],
+
     module: {
       strictExportPresence: false,
 
