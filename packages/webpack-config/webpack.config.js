@@ -1,7 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const developmentConfig = require('./webpack/webpack.dev');
-const productionConfig = require('./webpack/webpack.prod');
 
 function invokePossibleFunction(objectOrMethod, ...args) {
   if (typeof objectOrMethod === 'function') {
