@@ -2,12 +2,11 @@
  * @flow
  */
 
-import ip from './ip';
 import os from 'os';
 import Segment from 'analytics-node';
+import ip from './ip';
 
 let _segmentNodeInstance;
-let _segmentWebInstance;
 let _userId;
 let _version;
 const PLATFORM_TO_ANALYTICS_PLATFORM = {
@@ -17,17 +16,12 @@ const PLATFORM_TO_ANALYTICS_PLATFORM = {
 };
 
 export function flush(cb) {
-  if (_segmentWebInstance) _segmentWebInstance.flush(cb);
   if (_segmentNodeInstance) _segmentNodeInstance.flush(cb);
 }
 
 export function setSegmentNodeKey(key: string) {
   // Do not wait before flushing, we want node to close immediately if the programs ends
   _segmentNodeInstance = new Segment(key, { flushAfter: 300 });
-}
-
-export function setSegmentWebInstance(instance: any) {
-  _segmentWebInstance = instance;
 }
 
 export function setUserProperties(userId: string, traits: any) {
@@ -40,29 +34,10 @@ export function setUserProperties(userId: string, traits: any) {
       context: _getContext(),
     });
   }
-
-  if (_segmentWebInstance) {
-    // The Amplitude SDK isn't initialized right away, so call setVersion before every call to make sure it's actually updated.
-    setVersionName(_version);
-
-    window.analytics.identify(userId, traits, {
-      context: _getContext(),
-    });
-  }
 }
 
 export function setVersionName(version: string) {
   _version = version;
-
-  if (
-    _segmentWebInstance &&
-    window.amplitude &&
-    window.amplitude.getInstance &&
-    window.amplitude.getInstance()
-  ) {
-    // Segment injects amplitude into the window. Call this manually because Segment isn't passing it along.
-    window.amplitude.getInstance().setVersionName(version);
-  }
 }
 
 export function logEvent(name: string, properties: any = {}) {
@@ -71,15 +46,6 @@ export function logEvent(name: string, properties: any = {}) {
       userId: _userId,
       event: name,
       properties,
-      context: _getContext(),
-    });
-  }
-
-  if (_segmentWebInstance) {
-    // The Amplitude SDK isn't initialized right away, so call setVersion before every call to make sure it's actually updated.
-    setVersionName(_version);
-
-    window.analytics.track(name, properties, {
       context: _getContext(),
     });
   }

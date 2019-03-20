@@ -18,7 +18,6 @@ import Logger from './Logger';
 import UserSettings from './UserSettings';
 
 import { Semaphore } from './Utils';
-import { isNode } from './tools/EnvironmentHelper';
 
 export type User = {
   kind: 'user',

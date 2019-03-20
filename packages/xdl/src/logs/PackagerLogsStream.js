@@ -7,7 +7,6 @@ import { trim } from 'lodash';
 
 import * as ProjectUtils from '../project/ProjectUtils';
 import Logger from '../Logger';
-import { isNode } from '../tools/EnvironmentHelper';
 
 type ChunkT =
   | {
@@ -487,12 +486,7 @@ export default class PackagerLogsStream {
         return nextLogs;
       });
     };
-
-    if (isNode()) {
-      func();
-    } else {
-      setImmediate(func);
-    }
+    func();
   };
 
   _maybeParseMsgJSON(chunk: ChunkT) {
