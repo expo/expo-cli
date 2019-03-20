@@ -52,6 +52,8 @@ function getLocations(inputProjectRoot = '') {
         'Could not determine the main file in your project (index, src/index). Please define it with the `main` field in your `package.json`'
       );
     }
+  } else {
+    appMain = main;
   }
 
   const nativeAppManifest = require(appJsonPath);
