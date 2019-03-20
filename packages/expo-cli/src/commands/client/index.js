@@ -21,10 +21,10 @@ export default program => {
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
     )
     .asyncAction(async options => {
-      let authData = await appleApi.authenticate(options);
-      let user = await User.getCurrentUserAsync();
-      let bundleIdentifier = generateBundleIdentifier(authData.team.id);
-      let context = {
+      const authData = await appleApi.authenticate(options);
+      const user = await User.getCurrentUserAsync();
+      const bundleIdentifier = generateBundleIdentifier(authData.team.id);
+      const context = {
         ...authData,
         bundleIdentifier,
         experienceName: 'Expo',
@@ -32,8 +32,8 @@ export default program => {
       };
       await appleApi.ensureAppExists(context);
 
-      let distributionCert = await selectDistributionCert(context);
-      let pushKey = await selectPushKey(context);
+      const distributionCert = await selectDistributionCert(context);
+      const pushKey = await selectPushKey(context);
 
       let email;
       if (user) {
@@ -47,24 +47,24 @@ export default program => {
         }));
       }
 
-      let { devices } = await runAction(travelingFastlane.listDevices, [
+      const { devices } = await runAction(travelingFastlane.listDevices, [
         context.appleId,
         context.appleIdPassword,
         context.team.id,
       ]);
-      let udids = devices.map(device => device.deviceNumber);
+      const udids = devices.map(device => device.deviceNumber);
       log('These devices are currently registered on your Apple Developer account:');
-      let table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
+      const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
       table.push(...devices.map(device => [device.name, device.deviceNumber]));
       log(table.toString());
-      let { addUdid } = await prompt({
+      const { addUdid } = await prompt({
         name: 'addUdid',
         message: 'Would you like to register new devices to use Expo Client with?',
         type: 'confirm',
         default: true,
       });
 
-      let result = await createClientBuildRequest({
+      const result = await createClientBuildRequest({
         user,
         context,
         distributionCert,

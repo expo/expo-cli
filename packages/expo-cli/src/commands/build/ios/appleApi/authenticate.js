@@ -45,7 +45,7 @@ function _getAppleIdFromParams({ appleId }) {
 }
 
 async function _promptForAppleId({ appleId }) {
-  let wrap = wordwrap(process.stdout.columns || 80);
+  const wrap = wordwrap(process.stdout.columns || 80);
   log(
     wrap(
       'Please enter your Apple Developer Program account credentials. ' +
@@ -69,7 +69,7 @@ async function _promptForAppleId({ appleId }) {
       }
     ));
   }
-  let { appleIdPassword } = await prompt(
+  const { appleIdPassword } = await prompt(
     {
       type: 'password',
       name: 'appleIdPassword',

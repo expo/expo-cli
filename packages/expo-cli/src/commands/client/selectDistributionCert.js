@@ -7,10 +7,10 @@ import log from '../../log';
 import prompt from '../../prompt';
 
 export default async function selectDistributionCert(context, options = {}) {
-  let certificates = context.username
+  const certificates = context.username
     ? await Credentials.Ios.getExistingDistCerts(context.username, context.team.id)
     : [];
-  let choices = [{ name: '[Upload an existing certificate]', value: 'UPLOAD' }, ...certificates];
+  const choices = [{ name: '[Upload an existing certificate]', value: 'UPLOAD' }, ...certificates];
   if (!options.disableCreate) {
     choices.unshift({ name: '[Create a new certificate]', value: 'GENERATE' });
   }
@@ -31,14 +31,14 @@ export default async function selectDistributionCert(context, options = {}) {
 }
 
 async function generateDistributionCert(context) {
-  let manager = appleApi.createManagers(context).distributionCert;
+  const manager = appleApi.createManagers(context).distributionCert;
   try {
     return await manager.create({});
   } catch (e) {
     if (e.code === 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR') {
-      let certificates = await manager.list();
+      const certificates = await manager.list();
       log.warn(`Maximum number (${certificates.length}) of certificates generated.`);
-      let { answer } = await prompt({
+      const { answer } = await prompt({
         type: 'list',
         name: 'answer',
         message: 'Please revoke or reuse an existing certificate:',

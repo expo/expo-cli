@@ -6,12 +6,12 @@ export default function generateBundleIdentifier(teamId) {
 }
 
 function sha(data) {
-  let hash = crypto.createHash('sha224');
+  const hash = crypto.createHash('sha224');
   return hash.update(data).digest();
 }
 
 function base32(buffer) {
-  let encoder = new Base32Encoder({
+  const encoder = new Base32Encoder({
     type: 'rfc4648',
     lc: true /* lowercase */,
   });

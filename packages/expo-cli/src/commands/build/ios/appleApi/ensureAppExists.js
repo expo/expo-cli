@@ -6,7 +6,7 @@ export default async function ensureAppExists(appleCtx) {
   const { appleId, appleIdPassword, team, bundleIdentifier, experienceName } = appleCtx;
   const spinner = ora(`Ensuring App ID exists on Apple Developer Portal...`).start();
   try {
-    let { created } = await runAction(travelingFastlane.ensureAppExists, [
+    const { created } = await runAction(travelingFastlane.ensureAppExists, [
       appleId,
       appleIdPassword,
       team.id,

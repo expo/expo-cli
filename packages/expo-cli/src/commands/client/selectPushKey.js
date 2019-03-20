@@ -7,11 +7,10 @@ import log from '../../log';
 import prompt from '../../prompt';
 
 export default async function selectPushKey(context, options = {}) {
-  let manager = appleApi.createManagers(context).pushKey;
-  let pushKeys = context.username
+  const pushKeys = context.username
     ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id)
     : [];
-  let choices = [{ name: '[Upload an existing key]', value: 'UPLOAD' }, ...pushKeys];
+  const choices = [{ name: '[Upload an existing key]', value: 'UPLOAD' }, ...pushKeys];
   if (!options.disableCreate) {
     choices.unshift({ name: '[Create a new key]', value: 'GENERATE' });
   }
@@ -31,14 +30,14 @@ export default async function selectPushKey(context, options = {}) {
 }
 
 async function generatePushKey(context) {
-  let manager = appleApi.createManagers(context).pushKey;
+  const manager = appleApi.createManagers(context).pushKey;
   try {
     return await manager.create({});
   } catch (e) {
     if (e.code === 'APPLE_KEYS_TOO_MANY_GENERATED_ERROR') {
-      let keys = await manager.list();
+      const keys = await manager.list();
       log.warn(`Maximum number (${keys.length}) of keys generated.`);
-      let { answer } = await prompt({
+      const { answer } = await prompt({
         type: 'list',
         name: 'answer',
         message: 'Please revoke or reuse an existing key:',
