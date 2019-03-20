@@ -28,7 +28,6 @@
     "prepare": "yarn build",
     "pkg": "pkg ."
   },
-  "author": "Arthur A. Bergamaschi <arthurbergmz@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "css-color-names": "^1.0.1",
