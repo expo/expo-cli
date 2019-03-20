@@ -6,7 +6,10 @@ import promptForCredentials from '../build/ios/credentials/prompt/promptForCrede
 import log from '../../log';
 import prompt from '../../prompt';
 
-export default async function selectDistributionCert(context, options = {}) {
+// XXX: workaround for https://github.com/babel/babel/issues/6262
+export default selectDistributionCert;
+
+async function selectDistributionCert(context, options = {}) {
   const certificates = context.username
     ? await Credentials.Ios.getExistingDistCerts(context.username, context.team.id)
     : [];

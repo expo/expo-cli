@@ -6,7 +6,10 @@ import promptForCredentials from '../build/ios/credentials/prompt/promptForCrede
 import log from '../../log';
 import prompt from '../../prompt';
 
-export default async function selectPushKey(context, options = {}) {
+// XXX: workaround for https://github.com/babel/babel/issues/6262
+export default selectPushKey;
+
+async function selectPushKey(context, options = {}) {
   const pushKeys = context.username
     ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id)
     : [];
