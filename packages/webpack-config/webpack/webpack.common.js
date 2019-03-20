@@ -37,10 +37,15 @@ const mediaLoaderConfiguration = {
     {
       loader: 'file-loader',
       options: {
-        name: '[path][name].[ext]',
+        name: 'static/assets/[path][name].[ext]',
       },
     },
   ],
+};
+
+const styleLoaderConfiguration = {
+  test: /\.(css)$/,
+  use: ['style-loader', 'css-loader'],
 };
 
 module.exports = function(env) {
@@ -104,6 +109,7 @@ module.exports = function(env) {
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
         WEB_TITLE: appManifest.name,
+        ROOT_ID: appManifest.rootId || 'root',
       }),
 
       // Generate a manifest file which contains a mapping of all asset filenames
@@ -152,6 +158,7 @@ module.exports = function(env) {
         imageLoaderConfiguration,
         ttfLoaderConfiguration,
         mediaLoaderConfiguration,
+        styleLoaderConfiguration,
       ],
     },
     resolve: {
