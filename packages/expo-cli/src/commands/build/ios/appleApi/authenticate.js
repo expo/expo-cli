@@ -12,12 +12,16 @@ export default async function authenticate(options) {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
   try {
     log('Trying to authenticate with Apple Developer Portal...');
-    const { teams } = await runAction(travelingFastlane.authenticate, [appleId, appleIdPassword], {
-      pipeStdout: true,
-    });
+    const { teams, fastlaneSession } = await runAction(
+      travelingFastlane.authenticate,
+      [appleId, appleIdPassword],
+      {
+        pipeStdout: true,
+      }
+    );
     log('Authenticated with Apple Developer Portal successfully!');
     const team = await _chooseTeam(teams, options.teamId);
-    return { appleId, appleIdPassword, team };
+    return { appleId, appleIdPassword, team, fastlaneSession };
   } catch (err) {
     log('Authentication with Apple Developer Portal failed!');
     throw err;
@@ -41,7 +45,7 @@ function _getAppleIdFromParams({ appleId }) {
 }
 
 async function _promptForAppleId({ appleId }) {
-  let wrap = wordwrap(process.stdout.columns || 80);
+  const wrap = wordwrap(process.stdout.columns || 80);
   log(
     wrap(
       'Please enter your Apple Developer Program account credentials. ' +
@@ -52,22 +56,32 @@ async function _promptForAppleId({ appleId }) {
 
   log(wrap(chalk.bold('The password is only used to authenticate with Apple and never stored.')));
 
-  const appleIdQuestions = [
-    {
-      type: 'input',
-      name: 'appleId',
-      message: `Apple ID:`,
-      validate: nonEmptyInput,
-      when: () => !appleId,
-    },
+  if (!appleId) {
+    ({ appleId } = await prompt(
+      {
+        type: 'input',
+        name: 'appleId',
+        message: `Apple ID:`,
+        validate: nonEmptyInput,
+      },
+      {
+        nonInteractiveHelp: 'Pass your Apple ID using the --apple-id flag.',
+      }
+    ));
+  }
+  const { appleIdPassword } = await prompt(
     {
       type: 'password',
       name: 'appleIdPassword',
-      message: answer => `Password (for ${appleId || answer.appleId}):`,
+      message: answer => `Password (for ${appleId}):`,
       validate: nonEmptyInput,
     },
-  ];
-  return { appleId, ...(await prompt(appleIdQuestions)) };
+    {
+      nonInteractiveHelp:
+        'Pass your Apple ID password using the EXPO_APPLE_PASSWORD environment variable',
+    }
+  );
+  return { appleId, appleIdPassword };
 }
 
 async function _chooseTeam(teams, userProvidedTeamId) {

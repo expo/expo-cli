@@ -68,6 +68,7 @@ export async function getExistingPushKeys(
         userCredentialsId,
       },
       name,
+      short: apnsKeyId,
     };
   });
 }
