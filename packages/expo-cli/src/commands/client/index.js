@@ -52,6 +52,7 @@ export default program => {
         context.team.id,
       ]);
       const udids = devices.map(device => device.deviceNumber);
+      log.newLine();
       log('These devices are currently registered on your Apple Developer account:');
       const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
       table.push(...devices.map(device => [device.name, device.deviceNumber]));
@@ -77,16 +78,16 @@ export default program => {
         urlOpts.printQRCode(result.registrationUrl);
         log(
           chalk.green(
-            `Please visit this link on your device to register its UDID and download Expo Client:\n. ${
+            `Open this link on iOS to register the device and install the client:\n\n${
               result.registrationUrl
             }`
           )
         );
         log.newLine();
       } else {
-        log(
-          chalk.green(`Build started! You will receive an email to ${email} when it's finished.`)
-        );
+        urlOpts.printQRCode(result.statusUrl);
+        log(chalk.green(`Open this link on iOS to install the client:\n\n${result.statusUrl}`));
       }
+      log.newLine();
     });
 };
