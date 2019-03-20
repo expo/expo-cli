@@ -130,7 +130,7 @@ export class Toast extends React.Component {
     toasts: state.toasts,
   };
 })
-export default class GlobalToasts extends React.Component {
+class GlobalToasts extends React.Component {
   _handleDismiss = id => {
     this.props.dispatch({
       type: 'REMOVE_TOAST',
@@ -152,3 +152,5 @@ export default class GlobalToasts extends React.Component {
     );
   }
 }
+
+export default GlobalToasts;
