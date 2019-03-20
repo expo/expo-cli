@@ -32,7 +32,6 @@ import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
 import webpack from 'webpack';
-import webpackConfig from '@expo/webpack-config';
 import WebpackDevServer from 'webpack-dev-server';
 
 import * as Analytics from './Analytics';
@@ -1875,7 +1874,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
     return;
   }
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
-  let config = webpackConfig({ projectRoot, development: dev, production: !dev, https });
+  let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
   let webpackServerPort = await _getFreePortAsync(19000);
   ProjectUtils.logInfo(
     projectRoot,
@@ -1920,7 +1919,7 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 
-  let config = webpackConfig({
+  let config = Web.invokeWebpackConfig({
     projectRoot,
     noPolyfill: packagerOpts.noPolyfill,
     development: packagerOpts.dev,
