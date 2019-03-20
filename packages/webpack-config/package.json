@@ -35,5 +35,6 @@
     "webpack-manifest-plugin": "^2.0.4",
     "webpack-merge": "^4.2.1",
     "workbox-webpack-plugin": "^3.6.3"
-  }
+  },
+  "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }
