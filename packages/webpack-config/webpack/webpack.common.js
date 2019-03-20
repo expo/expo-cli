@@ -109,7 +109,7 @@ module.exports = function(env) {
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
         WEB_TITLE: appManifest.name,
-        ROOT_TAG: appManifest.rootTag || 'root',
+        ROOT_ID: appManifest.rootId || 'root',
       }),
 
       // Generate a manifest file which contains a mapping of all asset filenames
