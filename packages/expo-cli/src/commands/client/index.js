@@ -1,11 +1,10 @@
 import chalk from 'chalk';
 import CliTable from 'cli-table';
-import { Credentials, User } from 'xdl';
+import { User } from 'xdl';
 
 import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';
 import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
-import * as credentials from '../build/ios/credentials';
 import selectDistributionCert from './selectDistributionCert';
 import selectPushKey from './selectPushKey';
 import generateBundleIdentifier from './generateBundleIdentifier';
