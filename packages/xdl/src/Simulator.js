@@ -19,6 +19,7 @@ import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectUtils from './project/ProjectUtils';
 import UserSettings from './UserSettings';
+import * as Versions from './Versions';
 import XDLError from './XDLError';
 import * as UrlUtils from './UrlUtils';
 
@@ -237,7 +238,7 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
 }
 
 export async function _checkExpoUpToDateAsync() {
-  let versions = await Api.versionsAsync();
+  let versions = await Versions.versionsAsync();
   let installedVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
 
   if (!installedVersion || semver.lt(installedVersion, versions.iosVersion)) {
@@ -256,7 +257,7 @@ export async function _downloadSimulatorAppAsync(url) {
     return dir;
   }
 
-  let versions = await Api.versionsAsync();
+  let versions = await Versions.versionsAsync();
   let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
   if (await fs.exists(dir)) {
