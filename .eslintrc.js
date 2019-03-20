@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['universe/node', 'universe/web'],
+  extends: ['universe/node'],
   globals: {
     jasmine: false,
   },
