@@ -6,14 +6,14 @@ const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
-const getLocations = require('./webpackLocations');
-const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
-const createClientEnvironment = require('./createClientEnvironment');
-const createBabelConfig = require('./createBabelConfig');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const WebpackPWAManifestPlugin = require('@expo/webpack-pwa-manifest-plugin');
 const chalk = require('chalk');
+const getLocations = require('./webpackLocations');
+const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
+const createClientEnvironment = require('./createClientEnvironment');
+const createBabelConfig = require('./createBabelConfig');
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
