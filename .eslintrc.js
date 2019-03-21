@@ -4,7 +4,7 @@ module.exports = {
     jasmine: false,
   },
   rules: {
-    'no-constant-condition': ['error', { checkLoops: false }],
+    'no-constant-condition': ['warn', { checkLoops: false }],
   },
   settings: {
     react: {
