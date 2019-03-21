@@ -117,48 +117,48 @@ export const startAsync = async (projectDir, options) => {
       case CTRL_C:
       case CTRL_D: {
         process.emit('SIGINT');
-        return;
+        break;
       }
       case CTRL_L: {
         clearConsole();
-        return;
+        break;
       }
       case '?': {
         await printUsage(projectDir);
-        return;
+        break;
       }
       case 'a': {
         clearConsole();
         log('Trying to open the project on Android...');
         const { success, error } = await Android.openProjectAsync(projectDir);
         printHelp();
-        return;
+        break;
       }
       case 'i': {
         clearConsole();
         log('Trying to open the project in iOS simulator...');
         const { success, msg } = await Simulator.openProjectAsync(projectDir);
         printHelp();
-        return;
+        break;
       }
       case 'w': {
         clearConsole();
         log('Trying to open the project in a web browser...');
         await Web.openProjectAsync(projectDir);
         printHelp();
-        return;
+        break;
       }
       case 'c': {
         clearConsole();
         await printServerInfo(projectDir);
-        return;
+        break;
       }
       case 'd': {
         const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
         log('Opening DevTools in the browser...');
         opn(`http://localhost:${devToolsPort}`, { wait: false });
         printHelp();
-        return;
+        break;
       }
       case 'D': {
         clearConsole();
@@ -170,7 +170,7 @@ export const startAsync = async (projectDir, options) => {
           )}.\nPress ${b`d`} to open DevTools now.`
         );
         printHelp();
-        return;
+        break;
       }
       case 'e': {
         stopWaitingForCommand();
@@ -225,7 +225,7 @@ export const startAsync = async (projectDir, options) => {
             await UserSettings.setAsync('sendTo', sendTo);
           }
         });
-        return;
+        break;
       }
       case 'p': {
         clearConsole();
@@ -239,7 +239,7 @@ export const startAsync = async (projectDir, options) => {
 Please reload the project in the Expo app for the change to take effect.`
         );
         printHelp();
-        return;
+        break;
       }
       case 'r':
       case 'R': {
@@ -251,7 +251,7 @@ Please reload the project in the Expo app for the change to take effect.`
           log('Restarting Metro Bundler...');
         }
         Project.startAsync(projectDir, { reset });
-        return;
+        break;
       }
       case 's': {
         const authSession = await User.getSessionAsync();
@@ -269,7 +269,7 @@ Please reload the project in the Expo app for the change to take effect.`
           }
         }
         printHelp();
-        return;
+        break;
       }
     }
   }
