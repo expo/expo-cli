@@ -27,7 +27,6 @@ import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
-import url from 'url';
 import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
@@ -634,7 +633,7 @@ export async function publishAsync(
   let validPostPublishHooks = [];
   if (hooks && hooks.postPublish) {
     hooks.postPublish.forEach(hook => {
-      let { file, config } = hook;
+      let { file } = hook;
       let fn = _requireFromProject(file, projectRoot, exp);
       if (typeof fn !== 'function') {
         logger.global.error(
@@ -1360,16 +1359,6 @@ async function _waitForRunningAsync(projectRoot, url, retries = 300) {
   } else {
     await delayAsync(100);
     return _waitForRunningAsync(projectRoot, url, retries - 1);
-  }
-}
-
-function _stripPackagerOutputBox(output: string) {
-  let re = /Running packager on port (\d+)/;
-  let found = output.match(re);
-  if (found && found.length >= 2) {
-    return `Running packager on port ${found[1]}\n`;
-  } else {
-    return null;
   }
 }
 

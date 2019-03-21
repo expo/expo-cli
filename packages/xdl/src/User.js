@@ -58,15 +58,6 @@ export type UserOrLegacyUser = User | LegacyUser;
 
 type ConnectionType = 'Username-Password-Authentication' | 'facebook' | 'google-oauth2' | 'github';
 
-type LoginOptions = {
-  connection: ConnectionType,
-  device: string,
-  responseType: string,
-  responseMode: string,
-  username?: string,
-  password?: string,
-};
-
 export type RegistrationData = {
   username: string,
   password: string,
