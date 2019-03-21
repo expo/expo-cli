@@ -7,7 +7,6 @@ import fs from 'fs-extra';
 import validator from 'validator';
 import path from 'path';
 import targz from 'targz';
-import util from 'util';
 import { Project, UrlUtils } from 'xdl';
 
 import log from '../log';

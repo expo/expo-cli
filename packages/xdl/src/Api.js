@@ -11,7 +11,6 @@ import concat from 'concat-stream';
 
 import { Cacher } from './tools/FsCache';
 import Config from './Config';
-import { isNode } from './tools/EnvironmentHelper';
 import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import * as Session from './Session';
@@ -85,15 +84,12 @@ async function _callMethodAsync(
 
   if (requestOptions) {
     if (requestOptions.formData) {
-      let data = requestOptions.formData;
-      if (isNode()) {
-        let convertedFormData = await _convertFormDataToBuffer(requestOptions.formData);
-        data = convertedFormData.data;
-        options.headers = {
-          ...options.headers,
-          ...requestOptions.formData.getHeaders(),
-        };
-      }
+      let convertedFormData = await _convertFormDataToBuffer(requestOptions.formData);
+      let { data } = convertedFormData;
+      options.headers = {
+        ...options.headers,
+        ...requestOptions.formData.getHeaders(),
+      };
       options = { ...options, data };
     } else {
       options = { ...options, ...requestOptions };
@@ -146,15 +142,20 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
     promptShown = true;
   }, TIMER_DURATION);
 
-  let config;
-  // Checks if the call is being made in XDE or exp. (If XDE = XHR, if exp = HTTP);
-  if (!isNode()) {
-    config = {
-      timeout: TIMEOUT,
-      responseType: 'arraybuffer',
-      cancelToken: token,
-      onDownloadProgress: progressEvent => {
-        const roundedProgress = Math.floor((progressEvent.loaded / progressEvent.total) * 100);
+  const tmpPath = `${outputPath}.download`;
+  const config = {
+    timeout: TIMEOUT,
+    responseType: 'stream',
+    cancelToken: token,
+  };
+  let response = await axios(url, config);
+  await new Promise(resolve => {
+    let totalDownloadSize = response.data.headers['content-length'];
+    let downloadProgress = 0;
+    response.data
+      .on('data', chunk => {
+        downloadProgress += chunk.length;
+        const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);
@@ -166,57 +167,21 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
               promptShown = true;
             }, TIMER_DURATION);
           }
-        }
-        if (progressFunction) {
-          progressFunction(roundedProgress);
-        }
-      },
-    };
-    let response = await axios(url, config);
-    await fs.writeFile(outputPath, Buffer.from(response.data));
-    clearTimeout(warningTimer);
-  } else {
-    const tmpPath = `${outputPath}.download`;
-    config = {
-      timeout: TIMEOUT,
-      responseType: 'stream',
-      cancelToken: token,
-    };
-    let response = await axios(url, config);
-    await new Promise(resolve => {
-      let totalDownloadSize = response.data.headers['content-length'];
-      let downloadProgress = 0;
-      response.data
-        .on('data', chunk => {
-          downloadProgress += chunk.length;
-          const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
-          if (currentProgress !== roundedProgress) {
-            currentProgress = roundedProgress;
-            clearTimeout(warningTimer);
-            if (!promptShown) {
-              warningTimer = setTimeout(() => {
-                if (retryFunction) {
-                  retryFunction(cancel);
-                }
-                promptShown = true;
-              }, TIMER_DURATION);
-            }
-            if (progressFunction) {
-              progressFunction(roundedProgress);
-            }
+          if (progressFunction) {
+            progressFunction(roundedProgress);
           }
-        })
-        .on('end', () => {
-          clearTimeout(warningTimer);
-          if (progressFunction && currentProgress !== 100) {
-            progressFunction(100);
-          }
-          resolve();
-        })
-        .pipe(fs.createWriteStream(tmpPath));
-    });
-    await fs.rename(tmpPath, outputPath);
-  }
+        }
+      })
+      .on('end', () => {
+        clearTimeout(warningTimer);
+        if (progressFunction && currentProgress !== 100) {
+          progressFunction(100);
+        }
+        resolve();
+      })
+      .pipe(fs.createWriteStream(tmpPath));
+  });
+  await fs.rename(tmpPath, outputPath);
 }
 
 export default class ApiClient {

@@ -1,9 +1,8 @@
-import styled, { css } from 'react-emotion';
+import { css } from 'react-emotion';
 
 import * as React from 'react';
 import * as SVG from 'app/common/svg';
 
-import SmallButton from 'app/components/SmallButton';
 import SmallSquareButton from 'app/components/SmallSquareButton';
 
 const STYLES_TOOLBAR = css`

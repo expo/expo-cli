@@ -17,6 +17,16 @@ function getLocations(inputProjectRoot = '') {
   const absolute = (...pathComponents) =>
     path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
 
+  function findMainFile() {
+    for (const fileName of possibleMainFiles) {
+      const filePath = absolute(fileName);
+      if (fs.existsSync(filePath)) {
+        return filePath;
+      }
+    }
+    return null;
+  }
+
   const projectRoot = absolute();
   const packageJsonPath = absolute('./package.json');
   const appJsonPath = absolute('./app.json');
@@ -34,19 +44,8 @@ function getLocations(inputProjectRoot = '') {
   const { main } = require(packageJsonPath);
   let appMain;
   if (!main) {
-    function findMainFile() {
-      let exists;
-      for (const fileName of possibleMainFiles) {
-        const filePath = absolute(fileName);
-        if (fs.existsSync(filePath)) {
-          return filePath;
-        }
-      }
-      return null;
-    }
-
     // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
-    appMain = findMainFile(possibleMainFiles);
+    appMain = findMainFile();
     if (!appMain) {
       throw new Error(
         'Could not determine the main file in your project (index, src/index). Please define it with the `main` field in your `package.json`'

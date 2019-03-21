@@ -4,11 +4,10 @@
 
 import fs from 'fs';
 import path from 'path';
+import Schemer from '@expo/schemer';
 import Api from '../Api';
 import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from './ProjectUtils';
-
-import Schemer from '@expo/schemer';
 
 let _xdlSchemaJson = {};
 

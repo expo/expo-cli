@@ -228,7 +228,7 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
     return null;
   }
 
-  let regex = /Exponent\-([0-9\.]+)\.app/;
+  let regex = /Exponent-([0-9.]+)\.app/;
   let regexMatch = regex.exec(matches[0]);
   if (regexMatch.length < 2) {
     return null;

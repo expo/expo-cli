@@ -3,7 +3,6 @@ import dateformat from 'dateformat';
 import chalk from 'chalk';
 
 import { runAction, travelingFastlane } from './fastlane';
-import log from '../../../../log';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline(

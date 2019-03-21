@@ -2,8 +2,7 @@
  * @flow
  */
 
-import { Api, Project, FormData } from 'xdl';
-import { ApiV2, User } from 'xdl';
+import { ApiV2, Project, User } from 'xdl';
 import log from '../log';
 import * as table from '../commands/utils/cli-table';
 

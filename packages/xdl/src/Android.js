@@ -85,7 +85,7 @@ async function _isExpoInstalledAsync() {
 async function _expoVersionAsync() {
   let info = await _getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
-  let regex = /versionName\=([0-9\.]+)/;
+  let regex = /versionName=([0-9.]+)/;
   let regexMatch = regex.exec(info);
   if (regexMatch.length < 2) {
     return null;

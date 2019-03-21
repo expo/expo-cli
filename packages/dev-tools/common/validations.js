@@ -1,6 +1,6 @@
 import * as Strings from 'app/common/strings';
 
-export const EMAIL_REGEX = /^[a-z0-9\u007F-\uffff!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9\u007F-\uffff!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
+export const EMAIL_REGEX = /^[a-z0-9\u007F-\uffff!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9\u007F-\uffff!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i;
 
 export const PHONE_REGEX = /^\d{5,}$/;
 
@@ -13,7 +13,7 @@ export const isPhoneNumber = phoneNumber => {
     return false;
   }
 
-  const testCase = phoneNumber.replace(/[\s()+\-\.]|ext/gi, '');
+  const testCase = phoneNumber.replace(/[\s()+\-.]|ext/gi, '');
 
   if (!PHONE_REGEX.test(testCase)) {
     return false;

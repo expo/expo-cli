@@ -193,7 +193,7 @@ async function _detachAsync(projectRoot, options) {
         {
           name: 'iosBundleIdentifier',
           message: 'What would you like your iOS bundle identifier to be?',
-          validate: value => /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value),
+          validate: value => /^[a-zA-Z][a-zA-Z0-9\-.]+$/.test(value),
         },
       ]);
       exp.ios.bundleIdentifier = iosBundleIdentifier;
@@ -218,7 +218,7 @@ async function _detachAsync(projectRoot, options) {
           name: 'androidPackage',
           message: 'What would you like your Android package name to be?',
           validate: value =>
-            /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value)
+            /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(value)
               ? true
               : "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)",
         },
@@ -245,7 +245,6 @@ async function _detachAsync(projectRoot, options) {
     ? path.resolve(projectRoot, exp.nodeModulesPath)
     : projectRoot;
 
-  let reactNativeVersion;
   if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
     packagesToInstall.push(
       `react-native@https://github.com/expo/react-native/archive/${
@@ -348,7 +347,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory: string)
   const podfileLockPath = path.join(iosProjectDirectory, 'Podfile.lock');
   try {
     const podfileLock = await fs.readFile(podfileLockPath, 'utf8');
-    const expoKitVersionRegex = /ExpoKit\/Core\W?\(([0-9\.]+)\)/gi;
+    const expoKitVersionRegex = /ExpoKit\/Core\W?\(([0-9.]+)\)/gi;
     let match = expoKitVersionRegex.exec(podfileLock);
     expoKitVersion = match[1];
   } catch (e) {
@@ -495,7 +494,7 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
       let expoBuildConstants = expoBuildConstantsMatches[0];
       let devUrl = await UrlUtils.constructManifestUrlAsync(projectDir);
       await regexFileAsync(
-        /DEVELOPMENT_URL \= \"[^\"]*\"\;/,
+        /DEVELOPMENT_URL = "[^"]*";/,
         `DEVELOPMENT_URL = "${devUrl}";`,
         expoBuildConstants
       );

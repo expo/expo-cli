@@ -214,7 +214,8 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     };
 
     let bar;
-    let packagerLogsStream = new PackagerLogsStream({
+    // eslint-disable-next-line no-new
+    new PackagerLogsStream({
       projectRoot: projectDir,
       onStartBuildBundle: () => {
         bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {

@@ -1,3 +1,5 @@
+/* @flow */
+
 export function getExpoDomainUrl() {
   if (process.env.EXPO_STAGING) {
     return `https://staging.expo.io`;

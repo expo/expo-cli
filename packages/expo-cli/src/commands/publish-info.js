@@ -3,7 +3,6 @@
  */
 
 import { Api, Project, FormData, User } from 'xdl';
-import log from '../log';
 import * as table from '../commands/utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
@@ -84,9 +83,11 @@ export default (program: any) => {
         let colWidths = [];
         let bigCells = new Set(['publicationId', 'channelId', 'publishedTime']);
         headers.forEach(header => {
-          bigCells.has(header)
-            ? colWidths.push(HORIZ_CELL_WIDTH_BIG)
-            : colWidths.push(HORIZ_CELL_WIDTH_SMALL);
+          if (bigCells.has(header)) {
+            colWidths.push(HORIZ_CELL_WIDTH_BIG);
+          } else {
+            colWidths.push(HORIZ_CELL_WIDTH_SMALL);
+          }
         });
         let tableString = table.printTableJsonArray(headers, result.queryResult, colWidths);
         console.log(tableString);

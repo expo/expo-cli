@@ -230,7 +230,7 @@ async function configureAndCopyArchiveAsync(args) {
   await IosNSBundle.configureAsync(context);
   if (output) {
     if (type === 'simulator') {
-      const archiveName = context.config.slug.replace(/[^0-9a-z_\-]/gi, '_');
+      const archiveName = context.config.slug.replace(/[^0-9a-z_-]/gi, '_');
       const appReleasePath = path.resolve(context.data.archivePath, '..');
       await spawnAsync(
         `mv ${EXPOKIT_APP}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,

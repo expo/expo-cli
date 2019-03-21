@@ -68,7 +68,7 @@ async function createAndWriteIconsToPathAsync(
       if (iconSize === 76) {
         // iPad has 1x and 2x icons for this size only
         iconResolutions = [1, 2];
-      } else if (iconSize == 1024) {
+      } else if (iconSize === 1024) {
         // marketing icon is weird
         iconResolutions = [1];
       } else if (iconSize === 83.5) {

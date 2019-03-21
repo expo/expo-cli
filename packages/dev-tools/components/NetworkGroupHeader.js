@@ -1,8 +1,7 @@
-import styled, { css } from 'react-emotion';
+import { css } from 'react-emotion';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
-import * as SVG from 'app/common/svg';
 
 const STYLES_CONTAINER = css`
   font-family: ${Constants.fontFamilies.regular};

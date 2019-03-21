@@ -4,9 +4,6 @@
 
 import _ from 'lodash';
 import isEmpty from 'lodash/isEmpty';
-import freeportAsync from 'freeport-async';
-import http from 'http';
-import qs from 'querystring';
 
 import ApiV2Client, { ApiV2Error } from './ApiV2';
 import * as Analytics from './Analytics';
@@ -18,7 +15,6 @@ import Logger from './Logger';
 import UserSettings from './UserSettings';
 
 import { Semaphore } from './Utils';
-import { isNode } from './tools/EnvironmentHelper';
 
 export type User = {
   kind: 'user',
@@ -61,15 +57,6 @@ export type LegacyUser = {
 export type UserOrLegacyUser = User | LegacyUser;
 
 type ConnectionType = 'Username-Password-Authentication' | 'facebook' | 'google-oauth2' | 'github';
-
-type LoginOptions = {
-  connection: ConnectionType,
-  device: string,
-  responseType: string,
-  responseMode: string,
-  username?: string,
-  password?: string,
-};
 
 export type RegistrationData = {
   username: string,
