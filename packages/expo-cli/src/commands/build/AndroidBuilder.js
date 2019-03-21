@@ -5,7 +5,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import untildify from 'untildify';
-import { Android, Credentials, Exp } from 'xdl';
+import { Android, Credentials } from 'xdl';
 import chalk from 'chalk';
 import get from 'lodash/get';
 
@@ -51,7 +51,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     if (!androidPackage) {
       throw new BuildError('Your project must have an Android package set in app.json.');
     }
-    if (!/^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(androidPackage)) {
+    if (!/^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/.test(androidPackage)) {
       throw new BuildError(
         "Invalid format of Android package name (only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter)"
       );

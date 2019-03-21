@@ -6,7 +6,6 @@ import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';
 import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
 import selectDistributionCert from './selectDistributionCert';
-import selectPushKey from './selectPushKey';
 import generateBundleIdentifier from './generateBundleIdentifier';
 import createClientBuildRequest from './createClientBuildRequest';
 import log from '../../log';
@@ -32,7 +31,8 @@ export default program => {
       await appleApi.ensureAppExists(context);
 
       const distributionCert = await selectDistributionCert(context);
-      const pushKey = await selectPushKey(context);
+      // TODO(fson): Select and save a push key.
+      // const pushKey = await selectPushKey(context);
 
       let email;
       if (user) {

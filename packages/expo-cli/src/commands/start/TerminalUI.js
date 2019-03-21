@@ -2,7 +2,6 @@
 
 import {
   Android,
-  Config,
   Exp,
   Project,
   ProjectSettings,
@@ -130,14 +129,14 @@ export const startAsync = async (projectDir, options) => {
       case 'a': {
         clearConsole();
         log('Trying to open the project on Android...');
-        const { success, error } = await Android.openProjectAsync(projectDir);
+        await Android.openProjectAsync(projectDir);
         printHelp();
         break;
       }
       case 'i': {
         clearConsole();
         log('Trying to open the project in iOS simulator...');
-        const { success, msg } = await Simulator.openProjectAsync(projectDir);
+        await Simulator.openProjectAsync(projectDir);
         printHelp();
         break;
       }

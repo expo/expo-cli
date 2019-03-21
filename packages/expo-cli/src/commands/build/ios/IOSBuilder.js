@@ -167,7 +167,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   async validateIcon() {
     try {
       const icon = get(this.manifest, 'ios.icon', this.manifest.icon);
-      const buf = new Buffer(1);
+      const buf = Buffer.alloc(1);
       const fd = await fs.open(icon, 'r');
       const { buffer } = await fs.read(fd, buf, 0, 1, 25);
       await fs.close(fd);

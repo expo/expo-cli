@@ -79,7 +79,8 @@ async function action(projectDir, options) {
         templateSpec.name === 'bare-foundation') &&
       templateSpec.registry
     ) {
-      templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
+      templateSpec.escapedName = `expo-template-${templateSpec.name}`;
+      templateSpec.name = templateSpec.escapedName;
     }
   } else {
     let descriptionColumn =
