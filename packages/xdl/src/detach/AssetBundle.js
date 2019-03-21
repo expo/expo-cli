@@ -11,7 +11,7 @@ import url from 'url';
 import { saveUrlToPathAsync } from './ExponentTools';
 import StandaloneContext from './StandaloneContext';
 
-const EXPO_DOMAINS = ['expo.io', 'exp.host'];
+const EXPO_DOMAINS = ['expo.io', 'exp.host', 'expo.test', 'localhost'];
 const ASSETS_DIR_DEFAULT_URL = 'https://d1wp6m56sqw74a.cloudfront.net/~assets';
 
 export async function bundleAsync(

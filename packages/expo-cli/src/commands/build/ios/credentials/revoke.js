@@ -30,6 +30,7 @@ async function _askWhatToRevoke(choices) {
     type: 'checkbox',
     name: 'ids',
     message: `What would you like to revoke?`,
+    pageSize: Infinity,
     choices,
   });
   return ids;

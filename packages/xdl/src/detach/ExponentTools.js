@@ -73,8 +73,8 @@ function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
   });
 }
 
-async function getManifestAsync(url, headers) {
-  const buildPhaseLogger = logger.withFields({ buildPhase: 'reading manifest' });
+async function getManifestAsync(url, headers, options = {}) {
+  const buildPhaseLogger = options.logger || logger.withFields({ buildPhase: 'reading manifest' });
   const requestOptions = {
     url: url.replace('exp://', 'http://'),
     headers,

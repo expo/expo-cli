@@ -1,17 +1,50 @@
+import fs from 'fs';
+import path from 'path';
 import opn from 'opn';
 import chalk from 'chalk';
 import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 import { readConfigJsonAsync } from './project/ProjectUtils';
 
-export async function openProjectAsync(projectRoot, options) {
+function invokePossibleFunction(objectOrMethod, ...args) {
+  if (typeof objectOrMethod === 'function') {
+    return objectOrMethod(...args);
+  } else {
+    return objectOrMethod;
+  }
+}
+
+export function invokeWebpackConfig(env, argv) {
+  // Check if the project has a webpack.config.js in the root.
+  const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
+  if (fs.existsSync(projectWebpackConfig)) {
+    const webpackConfig = require(projectWebpackConfig);
+    return invokePossibleFunction(webpackConfig, env, argv);
+  }
+  // Fallback to the default expo webpack config.
+  const config = require('@expo/webpack-config');
+  return config(env, argv);
+}
+
+function logPreviewNotice() {
+  console.log();
+  console.log(
+    chalk.bold.yellow(
+      'Web support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
+    )
+  );
+  console.log();
+}
+
+export async function openProjectAsync(projectRoot) {
   const hasWebSupport = await hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
     logWebSetup();
     return { success: false };
   }
+  logPreviewNotice();
   try {
-    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot, options);
+    let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
     opn(url, { wait: false });
     return { success: true, url };
   } catch (e) {
@@ -28,6 +61,15 @@ export async function hasWebSupportAsync(projectRoot) {
   const { exp } = await readConfigJsonAsync(projectRoot);
   const isWebConfigured = exp.platforms.includes('web');
   return isWebConfigured;
+}
+
+// If platforms only contains the "web" field
+export async function onlySupportsWebAsync(projectRoot) {
+  const { exp } = await readConfigJsonAsync(projectRoot);
+  if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
+    return exp.platforms[0] === 'web';
+  }
+  return false;
 }
 
 function getWebSetupLogs() {

@@ -21,9 +21,9 @@ To view this on your phone, do the following:
 
 - Go get the Expo app on your Android or iOS device. It's available [on the Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent) and [on the iOS App Store](https://itunes.com/apps/exponent).
 
-- Run `expo send` to send a link via email or text. You can also use the `--send-to` option when running `expo start`.
+- Run `expo send` to send a link via email. You can also use the `--send-to` option when running `expo start`.
 
-- Check your e-mail or texts and tap the link. The Expo app should open and you should be able to view your experience there!
+- Check your e-mail and tap the link. The Expo app should open and you should be able to view your experience there!
 
 ## Publishing a Project
 

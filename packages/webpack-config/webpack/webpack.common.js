@@ -40,10 +40,15 @@ const mediaLoaderConfiguration = {
     {
       loader: 'file-loader',
       options: {
-        name: '[path][name].[ext]',
+        name: 'static/assets/[path][name].[ext]',
       },
     },
   ],
+};
+
+const styleLoaderConfiguration = {
+  test: /\.(css)$/,
+  use: ['style-loader', 'css-loader'],
 };
 
 module.exports = function(env = {}) {
@@ -132,6 +137,7 @@ module.exports = function(env = {}) {
         WEB_TITLE: displayName,
         NO_SCRIPT: noScript,
         LANG_ISO_CODE: languageISOCode,
+        ROOT_ID: appManifest.rootId || 'root',
       }),
 
       // Generate the `manifest.json`
@@ -192,6 +198,7 @@ module.exports = function(env = {}) {
         imageLoaderConfiguration,
         ttfLoaderConfiguration,
         mediaLoaderConfiguration,
+        styleLoaderConfiguration,
       ],
     },
     resolve: {

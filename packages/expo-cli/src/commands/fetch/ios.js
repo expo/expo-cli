@@ -20,7 +20,7 @@ async function fetchIosCerts(projectDir) {
 
   const credentialMetadata = { username, experienceName, platform: 'ios', bundleIdentifier };
 
-  log(`Retreiving iOS credentials for ${experienceName}`);
+  log(`Retrieving iOS credentials for ${experienceName}`);
 
   try {
     const {

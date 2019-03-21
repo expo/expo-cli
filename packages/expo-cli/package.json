@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "2.11.9",
+  "version": "2.13.0",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -48,7 +48,6 @@
     "babel-plugin-transform-runtime": "^6.9.0",
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-stage-1": "^6.5.0",
-    "boxen": "^2.0.0",
     "eslint": "^4.12.0",
     "eslint-config-universe": "^1.0.6",
     "gulp": "^4.0.0",
@@ -56,17 +55,17 @@
     "gulp-changed": "^1.3.0",
     "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^2.6.4",
-    "pkg": "^4.2.1",
-    "prettier": "~1.7.4"
+    "pkg": "^4.2.1"
   },
   "dependencies": {
     "@expo/bunyan": "3.0.2",
-    "@expo/dev-tools": "^0.3.6",
+    "@expo/dev-tools": "^0.5.0",
     "@expo/json-file": "^8.1.1",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.3.0",
     "axios": "0.18.0",
     "babel-runtime": "6.26.0",
+    "base32.js": "0.1.0",
     "boxen": "2.1.0",
     "chalk": "2.4.1",
     "cli-table": "0.3.1",
@@ -96,11 +95,11 @@
     "untildify": "3.0.3",
     "validator": "10.5.0",
     "wordwrap": "1.0.0",
-    "xdl": "^53.1.6"
+    "xdl": "^53.3.0"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.8.2",
-    "@expo/traveling-fastlane-linux": "1.8.2"
+    "@expo/traveling-fastlane-darwin": "1.9.3",
+    "@expo/traveling-fastlane-linux": "1.9.3"
   },
-  "gitHead": "656c6a0934b9d8b3bb40872fb65296a7002d64dc"
+  "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }

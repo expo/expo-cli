@@ -32,7 +32,6 @@ import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
 import webpack from 'webpack';
-import webpackConfig from '@expo/webpack-config';
 import WebpackDevServer from 'webpack-dev-server';
 
 import * as Analytics from './Analytics';
@@ -1856,13 +1855,26 @@ export async function stopExpoServerAsync(projectRoot: string) {
   });
 }
 
-async function startWebpackServerAsync(projectRoot, options) {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (!exp.platforms.includes('web')) {
+let webpackDevServerInstance;
+
+function getWebpackInstance(projectRoot) {
+  if (webpackDevServerInstance == null) {
+    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is not running.');
+  }
+  return webpackDevServerInstance;
+}
+
+async function startWebpackServerAsync(projectRoot, options, verbose) {
+  if (webpackDevServerInstance) {
+    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
     return;
   }
-  let { dev } = await ProjectSettings.readAsync(projectRoot);
-  let config = webpackConfig({ projectRoot, development: dev, production: !dev });
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (!hasWebSupport) {
+    return;
+  }
+  let { dev, https } = await ProjectSettings.readAsync(projectRoot);
+  let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
   let webpackServerPort = await _getFreePortAsync(19000);
   ProjectUtils.logInfo(
     projectRoot,
@@ -1870,9 +1882,9 @@ async function startWebpackServerAsync(projectRoot, options) {
     `Starting webpack-dev-server on port ${webpackServerPort}.`
   );
   let compiler = webpack(config);
-  let server = new WebpackDevServer(compiler, { ...config.devServer, https: options.https });
+  webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
   await new Promise((resolve, reject) =>
-    server.listen(webpackServerPort, 'localhost', error => {
+    webpackDevServerInstance.listen(webpackServerPort, '0.0.0.0', error => {
       if (error) {
         reject(error);
       } else {
@@ -1886,10 +1898,15 @@ async function startWebpackServerAsync(projectRoot, options) {
 }
 
 async function stopWebpackServerAsync(projectRoot) {
-  // TODO
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    webpackServerPort: null,
-  });
+  const devServer = getWebpackInstance(projectRoot);
+  if (devServer) {
+    await new Promise(resolve => devServer.close(() => resolve()));
+    webpackDevServerInstance = null;
+    // TODO
+    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+      webpackServerPort: null,
+    });
+  }
 }
 
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
@@ -1902,7 +1919,7 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 
-  let config = webpackConfig({
+  let config = Web.invokeWebpackConfig({
     projectRoot,
     noPolyfill: packagerOpts.noPolyfill,
     development: packagerOpts.dev,
@@ -2164,9 +2181,11 @@ export async function startAsync(
     projectRoot,
     developerTool: Config.developerTool,
   });
-  await startExpoServerAsync(projectRoot);
-  await startReactNativeServerAsync(projectRoot, options, verbose);
-  await startWebpackServerAsync(projectRoot, options);
+  if (!options.webOnly) {
+    await startExpoServerAsync(projectRoot);
+    await startReactNativeServerAsync(projectRoot, options, verbose);
+  }
+  await startWebpackServerAsync(projectRoot, options, verbose);
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);

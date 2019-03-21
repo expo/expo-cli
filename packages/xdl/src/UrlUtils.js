@@ -147,15 +147,21 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
-export async function constructWebAppUrlAsync(
-  projectRoot,
-  { https = false, host = 'localhost' } = {}
-) {
+export async function constructWebAppUrlAsync(projectRoot) {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.webpackServerPort) {
     return null;
   }
-  return `http${https ? 's' : ''}://${host}:${packagerInfo.webpackServerPort}`;
+
+  const host = ip.address();
+
+  const { https } = await ProjectSettings.readAsync(projectRoot);
+  let urlType = 'http';
+  if (https === true) {
+    urlType = 'https';
+  }
+
+  return `${urlType}://${host}:${packagerInfo.webpackServerPort}`;
 }
 
 export async function constructUrlAsync(

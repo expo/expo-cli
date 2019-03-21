@@ -26,7 +26,9 @@ const createManager = ({ appleId, appleIdPassword, team }) => ({
     } catch (err) {
       const resultString = get(err, 'rawDump.resultString');
       if (resultString && resultString.match(/Maximum number of certificates generated/)) {
-        log.error(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
+        const error = new Error(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
+        error.code = 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR';
+        throw error;
       }
       throw err;
     }

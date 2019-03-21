@@ -39,7 +39,12 @@ async function action(projectDir, options) {
       `Project is not running. Please start it with \`${options.parent.name} start\`.`
     );
   }
-  const url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  let url;
+  if (options.web) {
+    url = await UrlUtils.constructWebAppUrlAsync(projectDir);
+  } else {
+    url = await UrlUtils.constructManifestUrlAsync(projectDir);
+  }
 
   log.newLine();
   urlOpts.printQRCode(url);
@@ -47,14 +52,17 @@ async function action(projectDir, options) {
   log('Your URL is\n\n' + chalk.underline(url) + '\n');
   log.raw(url);
 
-  await printRunInstructionsAsync();
-  await urlOpts.handleMobileOptsAsync(projectDir, options);
+  if (!options.web) {
+    await printRunInstructionsAsync();
+    await urlOpts.handleMobileOptsAsync(projectDir, options);
+  }
 }
 
 export default program => {
   program
     .command('url [project-dir]')
     .alias('u')
+    .option('-w, --web', 'Return the URL of the web app')
     .description('Displays the URL you can use to view your project in Expo')
     .urlOpts()
     .allowOffline()
