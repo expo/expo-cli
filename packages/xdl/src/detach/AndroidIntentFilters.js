@@ -27,7 +27,7 @@ export default function renderIntentFilters(intentFilters) {
 
 function renderIntentFilterDatumEntries(datum) {
   return _.toPairs(datum)
-    .map(entry => `android:${entry[0]}=\"${entry[1]}\"`)
+    .map(entry => `android:${entry[0]}="${entry[1]}"`)
     .join(' ');
 }
 

@@ -348,7 +348,7 @@ function getPaths(context: StandaloneContext) {
     projectName = 'ExpoKitApp';
   } else if (context.config && context.config.name) {
     let projectNameLabel = context.config.name;
-    projectName = projectNameLabel.replace(/[^a-z0-9_\-]/gi, '-').toLowerCase();
+    projectName = projectNameLabel.replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
   } else {
     throw new Error('Cannot configure an Expo project with no name.');
   }

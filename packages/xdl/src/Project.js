@@ -617,7 +617,7 @@ export async function publishAsync(
   });
 
   const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot);
-  if (validationStatus == Doctor.ERROR || validationStatus === Doctor.FATAL) {
+  if (validationStatus === Doctor.ERROR || validationStatus === Doctor.FATAL) {
     throw new XDLError(
       ErrorCode.PUBLISH_VALIDATION_ERROR,
       "Couldn't publish because errors were found. (See logs above.) Please fix the errors and try again."
@@ -1275,7 +1275,7 @@ export async function buildAsync(
     expIds: joi.array(),
     type: joi.any().valid('archive', 'simulator', 'client'),
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
-    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-\.]+$/),
+    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
     publicUrl: joi.string(),
     sdkVersion: joi.strict(),
   });

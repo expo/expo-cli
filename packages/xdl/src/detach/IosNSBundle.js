@@ -396,7 +396,7 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
     if (config.ios && config.ios.permissions) {
       shellPlist.permissions = config.ios.permissions;
     }
-    if (context.type == 'user') {
+    if (context.type === 'user') {
       // disable manifest verification on detached apps until
       // the developer adds the correct entitlements to their bundle id.
       shellPlist.isManifestVerificationBypassed = true;

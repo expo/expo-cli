@@ -462,7 +462,7 @@ async function renderPodfileAsync(
   for (let key in substitutions) {
     if (substitutions.hasOwnProperty(key)) {
       let replacement = substitutions[key];
-      result = result.replace(new RegExp(`\\\$\\\{${key}\\\}`, 'g'), replacement);
+      result = result.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), replacement);
     }
   }
 
