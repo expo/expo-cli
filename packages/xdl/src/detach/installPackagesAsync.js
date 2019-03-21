@@ -7,12 +7,6 @@ import semver from 'semver';
 
 import logger from './Logger';
 
-type InstallResult = {
-  code: number,
-  command: string,
-  args: Array<string>,
-};
-
 export default async function installPackagesAsync(
   projectDir: string,
   packages: string[],

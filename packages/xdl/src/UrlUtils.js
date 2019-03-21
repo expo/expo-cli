@@ -4,7 +4,6 @@
 
 import joi from 'joi';
 import os from 'os';
-import path from 'path';
 import url from 'url';
 import validator from 'validator';
 
@@ -131,7 +130,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   queryParams += '&hot=false';
 
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
   // Use an absolute path here so that we can not worry about symlinks/relative requires
   let pluginModule = ProjectUtils.resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);

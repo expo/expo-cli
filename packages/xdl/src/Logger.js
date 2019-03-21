@@ -3,9 +3,6 @@
  */
 
 import bunyan from '@expo/bunyan';
-import path from 'path';
-
-import UserSettings from './UserSettings';
 
 class ConsoleRawStream {
   write(rec) {

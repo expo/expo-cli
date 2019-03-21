@@ -5,7 +5,6 @@ import fs from 'fs-extra';
 import invariant from 'invariant';
 import path from 'path';
 import rimraf from 'rimraf';
-import get from 'lodash/get';
 
 import Api from '../Api';
 import {
@@ -18,7 +17,6 @@ import {
 import { renderPodfileAsync } from './IosPodsTools.js';
 import * as IosPlist from './IosPlist';
 import logger from './Logger';
-import * as ProjectUtils from '../project/ProjectUtils';
 import * as Utils from '../Utils';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';

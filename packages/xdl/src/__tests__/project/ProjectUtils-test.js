@@ -5,7 +5,6 @@ jest.mock('analytics-node');
 jest.mock('fs');
 
 const mockfs = require('mock-fs');
-const path = require('path');
 const slugify = require('slugify');
 
 const packageJson = {

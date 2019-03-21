@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import program from 'commander';
 
 import { User as UserManager } from 'xdl';
-import type { LoginType, User } from 'xdl/build/User';
+import type { User } from 'xdl/build/User';
 import CommandError from './CommandError';
 import prompt from './prompt';
 import log from './log';

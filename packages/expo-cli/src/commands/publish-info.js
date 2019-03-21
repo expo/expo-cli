@@ -3,7 +3,6 @@
  */
 
 import { Api, Project, FormData, User } from 'xdl';
-import log from '../log';
 import * as table from '../commands/utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;

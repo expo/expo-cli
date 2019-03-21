@@ -32,8 +32,6 @@ ${bold('3) Eject')}: Create an app and eject it immediately. Check that it build
     ./run.sh`
 );
 
-let CHECKLIST = ['I have completed all the checks'];
-
 inquirer
   .prompt({
     type: 'confirm',

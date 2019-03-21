@@ -114,7 +114,7 @@ export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
 ): Promise<{ schemaErrorMessage: ?string, assetsErrorMessage: ?string }> {
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
@@ -373,7 +373,7 @@ async function _validateReactNativeVersionAsync(
 }
 
 async function _validateNodeModulesAsync(projectRoot): Promise<number> {
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);

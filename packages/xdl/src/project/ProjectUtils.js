@@ -9,11 +9,7 @@ import resolveFrom from 'resolve-from';
 import slug from 'slugify';
 
 import * as Analytics from '../Analytics';
-import Config from '../Config';
 import Logger from '../Logger';
-import * as state from '../state';
-
-import * as Sentry from '../Sentry';
 
 const MAX_MESSAGE_LENGTH = 200;
 let _projectRootToLogger = {};

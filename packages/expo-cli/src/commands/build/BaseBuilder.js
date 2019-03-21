@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, ProjectUtils, Exp, User } from 'xdl';
+import { Project, ProjectUtils, User } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import get from 'lodash/get';
@@ -13,9 +13,6 @@ import log from '../../log';
 import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
 import prompt from '../../prompt';
-import { PLATFORMS } from './constants';
-
-const { ANDROID, IOS } = PLATFORMS;
 
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 const secondsToMilliseconds = seconds => seconds * 1000;
@@ -31,14 +28,6 @@ type BuilderOptions = {
   pushP12Path?: string,
   provisioningProfilePath?: string,
   publicUrl?: string,
-};
-
-type StatusArgs = {
-  platform: string,
-  current?: boolean,
-  publicUrl?: string,
-  releaseChannel?: string,
-  sdkVersion?: string,
 };
 
 export default class BaseBuilder {
@@ -148,8 +137,6 @@ export default class BaseBuilder {
       this.manifest.slug
     );
     if (reuseStatus.canReuse) {
-      const { downloadUrl } = reuseStatus;
-
       log.warn(`Did you know that Expo provides over-the-air updates?
 Please see the docs (${chalk.underline(
         'https://docs.expo.io/versions/latest/guides/configuring-ota-updates/'

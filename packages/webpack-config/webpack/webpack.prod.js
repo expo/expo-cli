@@ -8,33 +8,6 @@ const BrotliPlugin = require('brotli-webpack-plugin');
 const common = require('./webpack.common.js');
 const getLocations = require('./webpackLocations');
 
-function debugTreeshaking() {
-  return {
-    /**
-     * Use the following to Debug:
-     * Runtime TypeError: Cannot read property 'call' of undefined at __webpack_require__
-     * Shaking should still take place with this enabled
-     *
-     * namedModules: true,
-     * namedChunks: true
-     */
-    namedModules: true,
-    namedChunks: true,
-    minimize: false,
-    flagIncludedChunks: false,
-    occurrenceOrder: false,
-    concatenateModules: false,
-    removeEmptyChunks: false,
-    mergeDuplicateChunks: false,
-    splitChunks: {
-      hidePathInfo: false,
-      minSize: 10000,
-      maxAsyncRequests: Infinity,
-      maxInitialRequests: Infinity,
-    },
-  };
-}
-
 module.exports = function(env = {}) {
   const locations = getLocations(env.projectRoot);
 

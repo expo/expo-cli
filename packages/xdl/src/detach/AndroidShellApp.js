@@ -761,20 +761,6 @@ export async function runShellAppModificationsAsync(
 
   // Add permissions
   if (manifest.android && manifest.android.permissions) {
-    const content = await fs.readFileSync(
-      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml'),
-      'utf-8'
-    );
-
-    // Get the list of optional permissions form manifest
-    const permissions = content
-      .replace(
-        /(([\s\S]*<!-- BEGIN OPTIONAL PERMISSIONS -->)|(<!-- END OPTIONAL PERMISSIONS -->[\s\S]*))/g,
-        ''
-      )
-      .match(/android:name=".+"/g)
-      .map(p => p.replace(/(android:name=|")/g, ''));
-
     const whitelist = [];
 
     manifest.android.permissions.forEach(s => {

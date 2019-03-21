@@ -7,7 +7,6 @@ import BaseBuilder from './BaseBuilder';
 import IOSBuilder from './ios/IOSBuilder';
 import AndroidBuilder from './AndroidBuilder';
 import WebBuilder from './WebBuilder';
-import BuildError from './BuildError';
 import log from '../../log';
 import CommandError from '../../CommandError';
 

@@ -3,7 +3,6 @@ import dateformat from 'dateformat';
 import chalk from 'chalk';
 
 import { runAction, travelingFastlane } from './fastlane';
-import log from '../../../../log';
 
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline('two')} Apple Keys generated on your Apple Developer account.
