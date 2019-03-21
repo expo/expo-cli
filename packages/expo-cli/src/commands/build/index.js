@@ -2,11 +2,10 @@
  * @flow
  */
 
-import { UrlUtils } from 'xdl';
+import { UrlUtils, Project } from 'xdl';
 import BaseBuilder from './BaseBuilder';
 import IOSBuilder from './ios/IOSBuilder';
 import AndroidBuilder from './AndroidBuilder';
-import WebBuilder from './WebBuilder';
 import log from '../../log';
 import CommandError from '../../CommandError';
 
@@ -115,17 +114,11 @@ export default (program: any) => {
       'web-build-stats.json'
     )
     .description('Build a production bundle for your project, compressed and ready for deployment.')
-    .asyncActionProjectDir((projectDir, options) => {
-      let channelRe = new RegExp(/^[a-z\d][a-z\d._-]*$/);
-      if (!channelRe.test(options.releaseChannel)) {
-        log.error(
-          'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
-        );
-        process.exit(1);
-      }
-      const webBuilder = new WebBuilder(projectDir, options);
-      return webBuilder.command();
-    });
+    .asyncActionProjectDir(
+      (projectDir, options) => Project.bundleWebpackAsync(projectDir, options),
+      /* skipProjectValidation: */ false,
+      /* skipAuthCheck: */ true
+    );
 
   program
     .command('build:status [project-dir]')
