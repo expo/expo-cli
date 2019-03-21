@@ -11,9 +11,7 @@ module.exports = function(env = {}) {
 
   const appEntry = [locations.appMain];
 
-  const usePolyfills = !env.noPolyfill;
-
-  if (usePolyfills) {
+  if (env.polyfill) {
     appEntry.unshift('@babel/polyfill');
   }
 

@@ -1886,13 +1886,14 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
     Web.logWebSetup();
     return;
   }
+
   const mode = packagerOpts.dev ? 'development' : 'production';
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 
   let config = Web.invokeWebpackConfig({
     projectRoot,
-    noPolyfill: packagerOpts.noPolyfill,
+    polyfill: packagerOpts.polyfill,
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
   });
