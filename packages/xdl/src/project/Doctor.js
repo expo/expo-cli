@@ -417,7 +417,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
       );
       return FATAL;
     } else {
-      throw error;
+      throw e;
     }
   }
   return NO_ISSUES;

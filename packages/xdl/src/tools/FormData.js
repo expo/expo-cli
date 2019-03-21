@@ -1,5 +1,6 @@
 /*
  * @flow
  */
+import FormData from 'form-data';
 
-export default (typeof FormData !== 'undefined' ? FormData : require('form-data'));
+export default FormData;

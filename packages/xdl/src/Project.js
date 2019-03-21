@@ -49,7 +49,6 @@ import * as ExpSchema from './project/ExpSchema';
 import FormData from './tools/FormData';
 import * as IosPlist from './detach/IosPlist';
 import * as IosWorkspace from './detach/IosWorkspace';
-import { isNode } from './tools/EnvironmentHelper';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as Sentry from './Sentry';
@@ -838,8 +837,8 @@ async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options })
   let formData = new FormData();
 
   formData.append('expJson', JSON.stringify(exp));
-  formData.append('iosBundle', _createBlob(iosBundle), 'iosBundle');
-  formData.append('androidBundle', _createBlob(androidBundle), 'androidBundle');
+  formData.append('iosBundle', iosBundle, 'iosBundle');
+  formData.append('androidBundle', androidBundle, 'androidBundle');
   formData.append('options', JSON.stringify(options));
   let response = await Api.callMethodAsync('publish', null, 'put', null, {
     formData,
@@ -1206,28 +1205,11 @@ async function uploadAssetsAsync(projectRoot, assets) {
         let relativePath = paths[key].replace(projectRoot, '');
         logger.global.info({ quiet: true }, `Uploading ${relativePath}`);
 
-        formData.append(key, await _readFileForUpload(paths[key]), paths[key]);
+        formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
       await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
     })
   );
-}
-
-function _createBlob(string) {
-  if (isNode()) {
-    return string;
-  } else {
-    return new Blob([string]);
-  }
-}
-
-async function _readFileForUpload(path) {
-  if (isNode()) {
-    return fs.createReadStream(path);
-  } else {
-    const data = await fs.readFile(path);
-    return new Blob([data]);
-  }
 }
 
 async function getConfigAsync(

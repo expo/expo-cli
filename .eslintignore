@@ -1,0 +1,10 @@
+# Ignore all node_modules and vendored Ruby
+node_modules
+vendor
+
+# Ignore Flow library definitions
+flow-typed
+
+# Ignore build artifacts
+/packages/*/build
+.next
