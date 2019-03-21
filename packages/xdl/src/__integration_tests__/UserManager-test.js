@@ -9,9 +9,9 @@ import uuid from 'uuid';
 import ApiV2Client from '../ApiV2';
 import { UserManagerInstance } from '../User';
 
-const XDL_TEST_CLIENT_ID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y';
-
 import type { User } from '../User';
+
+const XDL_TEST_CLIENT_ID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y';
 
 const _makeShortId = (salt: string, minLength: number = 10): string => {
   const hashIds = new HashIds(salt, minLength);

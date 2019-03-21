@@ -1,9 +1,9 @@
+import * as Exp from '../Exp';
+
 jest.mock('fs');
 
 const fs = require('fs');
 const mockfs = require('mock-fs');
-
-import * as Exp from '../Exp';
 
 describe('determineEntryPointAsync', () => {
   beforeEach(() => {

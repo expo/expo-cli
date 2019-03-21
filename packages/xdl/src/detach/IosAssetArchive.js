@@ -68,8 +68,6 @@ async function buildAssetArchiveAsync(
     stdio: ['ignore', 'ignore', 'inherit'], // only stderr
     cwd: intermediatesDirectory,
   });
-
-  return;
 }
 
 export { buildAssetArchiveAsync };

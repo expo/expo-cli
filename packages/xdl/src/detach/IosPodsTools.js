@@ -109,20 +109,20 @@ function _renderUnversionedReactNativeDependency(options, sdkVersion) {
 ${_renderUnversionedReactDependency(options, sdkVersion)}
 ${_renderUnversionedYogaDependency(options)}
 ${_renderUnversionedThirdPartyDependency(
-      'DoubleConversion',
-      path.join('third-party-podspecs', 'DoubleConversion.podspec'),
-      options
-    )}
+  'DoubleConversion',
+  path.join('third-party-podspecs', 'DoubleConversion.podspec'),
+  options
+)}
 ${_renderUnversionedThirdPartyDependency(
-      'Folly',
-      path.join('third-party-podspecs', 'Folly.podspec'),
-      options
-    )}
+  'Folly',
+  path.join('third-party-podspecs', 'Folly.podspec'),
+  options
+)}
 ${_renderUnversionedThirdPartyDependency(
-      glogLibraryName,
-      path.join('third-party-podspecs', `${glogLibraryName}.podspec`),
-      options
-    )}
+  glogLibraryName,
+  path.join('third-party-podspecs', `${glogLibraryName}.podspec`),
+  options
+)}
 `,
     2
   );
