@@ -82,7 +82,7 @@ async function chooseAppAsync(listOfAppNames) {
   }
 
   for (i = 0; i < listOfAppNames.length; i++) {
-    if (!!appIds[i]) {
+    if (appIds[i]) {
       return listOfAppNames[i];
     }
   }

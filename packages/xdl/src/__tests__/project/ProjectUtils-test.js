@@ -1,12 +1,12 @@
+import * as ProjectUtils from '../../project/ProjectUtils';
+import Config from '../../Config';
+
 jest.mock('analytics-node');
 jest.mock('fs');
 
 const mockfs = require('mock-fs');
 const path = require('path');
 const slugify = require('slugify');
-
-import * as ProjectUtils from '../../project/ProjectUtils';
-import Config from '../../Config';
 
 const packageJson = {
   name: 'testing123',

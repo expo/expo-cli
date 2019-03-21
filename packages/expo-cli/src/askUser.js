@@ -1,5 +1,5 @@
-import prompt from './prompt';
 import { UserSettings } from 'xdl';
+import prompt from './prompt';
 
 async function askForSendToAsync() {
   var sendToFromSettings = await UserSettings.getAsync('sendTo', null);

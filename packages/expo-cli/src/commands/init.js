@@ -12,11 +12,10 @@ import pacote from 'pacote';
 import trimStart from 'lodash/trimStart';
 import wordwrap from 'wordwrap';
 
+import path from 'path';
 import prompt from '../prompt';
 import log from '../log';
 import CommandError from '../CommandError';
-
-import path from 'path';
 
 const FEATURED_TEMPLATES = [
   '----- Managed workflow -----',

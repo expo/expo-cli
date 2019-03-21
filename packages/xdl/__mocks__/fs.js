@@ -11,7 +11,7 @@ const container = {
 };
 
 const proxyfs = new Proxy(container, {
-  get: function(target, property, receiver) {
+  get(target, property, receiver) {
     if (target.hasOwnProperty(property)) {
       return target[property];
     } else {
