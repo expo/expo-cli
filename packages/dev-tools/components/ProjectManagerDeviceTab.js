@@ -1,9 +1,8 @@
-import styled, { css } from 'react-emotion';
+import { css } from 'react-emotion';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
 import * as Strings from 'app/common/strings';
-import * as SVG from 'app/common/svg';
 
 import { DragSource } from 'react-dnd';
 
@@ -31,20 +30,6 @@ const STYLES_TAB_SECTION_CONTAINER = css`
   position: relative;
 `;
 
-const STYLES_UNREAD_COUNT = css`
-  flex: 0 0 20px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${Constants.colors.primaryAccent};
-  text-align: center;
-  color: ${Constants.colors.white};
-  width: 20px;
-  height: 20px;
-  border-radius: 20px;
-`;
-
 const STYLES_TAB_SECTION_CONTAINER_TITLE = css`
   font-family: ${Constants.fontFamilies.mono};
   text-transform: uppercase;
@@ -59,13 +44,6 @@ const STYLES_TAB_SECTION_CONTAINER_DESCRIPTION = css`
   font-size: 14px;
   line-height: 18px;
   margin-bottom: 8px;
-`;
-
-const STYLES_INDICATOR = css`
-  color: ${Constants.colors.primary};
-  font-family: ${Constants.fontFamilies.mono};
-  text-transform: uppercase;
-  font-size: 10px;
 `;
 
 function colorFromIssueLevel(messages) {

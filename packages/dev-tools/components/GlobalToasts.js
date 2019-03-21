@@ -1,11 +1,9 @@
-import styled, { css } from 'react-emotion';
+import { css } from 'react-emotion';
 import { connect } from 'react-redux';
 
 import * as React from 'react';
 import * as SVG from 'app/common/svg';
 import * as Constants from 'app/common/constants';
-
-import withRedux from 'app/higher-order/withRedux';
 
 const STYLES_TOAST_CONTAINER = css`
   max-width: ${Constants.breakpoints.sidebar}px;

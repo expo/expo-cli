@@ -1,8 +1,7 @@
-import styled, { css } from 'react-emotion';
+import { css } from 'react-emotion';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
-import * as SVG from 'app/common/svg';
 
 import Loader from 'app/components/Loader';
 
@@ -86,15 +85,6 @@ const STYLES_BUTTON_ACTIVE = css`
 
   :hover {
     background: ${Constants.colors.primary};
-  }
-`;
-
-const STYLES_BUTTON_DISABLED = css`
-  color: ${Constants.colors.border};
-  cursor: default;
-
-  :hover {
-    background: none;
   }
 `;
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import styled, { hydrate, keyframes, css, injectGlobal } from 'react-emotion';
+import { hydrate, injectGlobal } from 'react-emotion';
 
 import * as Constants from 'app/common/constants';
 
@@ -9,6 +9,7 @@ if (typeof window !== 'undefined') {
   hydrate(window.__NEXT_DATA__.ids);
 }
 
+// eslint-disable-next-line no-unused-expressions
 injectGlobal`
   html, body, div, span, applet, object, iframe,
   h1, h2, h3, h4, h5, h6, p, blockquote, pre,

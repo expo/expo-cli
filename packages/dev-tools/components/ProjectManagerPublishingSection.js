@@ -1,4 +1,4 @@
-import styled, { css } from 'react-emotion';
+import { css } from 'react-emotion';
 
 import * as React from 'react';
 import * as Constants from 'app/common/constants';
@@ -59,14 +59,6 @@ const STYLES_PARAGRAPH = css`
   max-width: ${Constants.breakpoints.medium}px;
   overflow-wrap: break-word;
   font-size: 14px;
-  line-height: 1.5;
-  width: 100%;
-`;
-
-const STYLES_SMALL_PARAGRAPH = css`
-  font-family: ${Constants.fontFamilies.regular};
-  max-width: ${Constants.breakpoints.medium}px;
-  font-size: 12px;
   line-height: 1.5;
   width: 100%;
 `;

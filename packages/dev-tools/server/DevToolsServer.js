@@ -8,7 +8,7 @@ import http from 'http';
 
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
 import GraphQLSchema from './graphql/GraphQLSchema';
-import createContext, { ISSUES_SOURCE, PROCESS_SOURCE } from './graphql/createContext';
+import createContext, { PROCESS_SOURCE } from './graphql/createContext';
 import Issues from './graphql/Issues';
 
 const serverStartTimeUTCString = new Date().toUTCString();
@@ -94,7 +94,8 @@ function createLayout() {
 function createMessageBuffer(projectRoot, issues) {
   const buffer = new AsyncIterableRingBuffer(10000);
 
-  const packagerLogsStream = new PackagerLogsStream({
+  // eslint-disable-next-line no-new
+  new PackagerLogsStream({
     projectRoot,
     updateLogs: updater => {
       const chunks = updater([]);
