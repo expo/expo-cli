@@ -4,8 +4,8 @@ const viewports = {
   /**
    * To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
    */
-  optimizedForiPhoneX:
-    'user-scalable=no,initial-scale=1.0001,maximum-scale=1.0001,viewport-fit=cover',
+  optimizedForiPhoneX: 'width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover',
+  // 'user-scalable=no,initial-scale=1.0001,maximum-scale=1.0001,viewport-fit=cover',
 };
 
 const DEFAULT_THEME_COLOR = '#4630EB';
@@ -103,7 +103,7 @@ function createIndexHTMLFromAppJSON({ displayName }, locations) {
 
   const metaTags = {
     viewport: viewports.optimizedForiPhoneX,
-    description: description,
+    description,
     'mobile-web-app-capable': 'yes',
     ...openGraphMetatags,
     ...microsoftMetatags,
