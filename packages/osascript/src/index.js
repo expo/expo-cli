@@ -184,12 +184,10 @@ async function openFolderInTerminalAppAsync(dir, inTab = false) {
   switch (program) {
     case 'iTerm':
       return await openItermToSpecificFolderAsync(dir, inTab);
-      break;
 
     case 'Terminal':
     default:
       return await openTerminalToSpecificFolderAsync(dir, inTab);
-      break;
   }
 }
 

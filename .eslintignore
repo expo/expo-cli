@@ -7,4 +7,5 @@ flow-typed
 
 # Ignore build artifacts
 /packages/*/build
+/packages/osascript/lib
 .next

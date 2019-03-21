@@ -209,7 +209,7 @@ export default class Schemer {
           );
         }
 
-        if (dimensions && (dimensions.height !== height || dimensions.width != width)) {
+        if (dimensions && (dimensions.height !== height || dimensions.width !== width)) {
           this.manualValidationErrors.push(
             new ValidationError({
               errorCode: ErrorCodes.INVALID_DIMENSIONS,
