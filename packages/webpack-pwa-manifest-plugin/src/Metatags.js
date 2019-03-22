@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   // Facebook
   openGraph: [
     // <link rel="canonical" href="absolute-path">

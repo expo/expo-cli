@@ -1,5 +1,4 @@
-import { applyTag } from './injector';
-const Metatags = require('./Metatags');
+import Metatags from './Metatags';
 
 function possibleProperty(input, possiblePropertyNames, fallback) {
   for (const propertyName of possiblePropertyNames) {
@@ -22,7 +21,7 @@ function populateMetatagObject(schema, input) {
   return output;
 }
 
-function createMetatagsFromConfig(config) {
+export default function createMetatagsFromConfig(config) {
   const { web = {} } = config || config.expo || {};
   const {
     googleSiteVerification,
@@ -62,5 +61,3 @@ function createMetatagsFromConfig(config) {
   }
   return metaTags;
 }
-
-module.exports = createMetatagsFromConfig;

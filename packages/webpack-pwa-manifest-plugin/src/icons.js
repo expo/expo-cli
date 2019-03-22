@@ -57,42 +57,15 @@ function processIcon(width, height, icon, buffer, mimeType, publicPath, shouldFi
   };
 }
 
-function processImg(
-  sizes,
-  icon,
-  cachedIconsCopy,
-  icons,
-  assets,
-  fingerprint,
-  publicPath,
-  callback
-) {
+async function processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath) {
   const processNext = function() {
     if (sizes.length > 0) {
-      return processImg(
-        sizes,
-        icon,
-        cachedIconsCopy,
-        icons,
-        assets,
-        fingerprint,
-        publicPath,
-        callback
-      ); // next size
+      return processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath); // next size
     } else if (cachedIconsCopy.length > 0) {
       const next = cachedIconsCopy.pop();
-      return processImg(
-        next.sizes,
-        next,
-        cachedIconsCopy,
-        icons,
-        assets,
-        fingerprint,
-        publicPath,
-        callback
-      ); // next icon
+      return processImg(next.sizes, next, cachedIconsCopy, icons, assets, fingerprint, publicPath); // next icon
     } else {
-      return callback(null, { icons, assets }); // there are no more icons left
+      return { icons, assets }; // there are no more icons left
     }
   };
 
@@ -138,25 +111,33 @@ function processImg(
       return processNext();
     }
 
-    jimp.read(icon.src, (err, img) => {
-      if (err) throw new IconError(`It was not possible to read '${icon.src}'.`);
+    const buffer = await resize(icon.src, mimeType, width, height);
+
+    const processedIcon = processIcon(
+      width,
+      height,
+      icon,
+      buffer,
+      mimeType,
+      publicPath,
+      fingerprint
+    );
+    icons.push(processedIcon.manifestIcon);
+    assets.push(processedIcon.webpackAsset);
+    return processNext();
+  }
+}
+
+function resize(img, mimeType, width, height) {
+  return new Promise((resolve, reject) => {
+    jimp.read(img, (err, img) => {
+      if (err) throw new IconError(`It was not possible to read '${img}'.`);
       img.cover(width, height).getBuffer(mimeType, (err, buffer) => {
-        if (err) throw new IconError(`It was not possible to retrieve buffer of '${icon.src}'.`);
-        const processedIcon = processIcon(
-          width,
-          height,
-          icon,
-          buffer,
-          mimeType,
-          publicPath,
-          fingerprint
-        );
-        icons.push(processedIcon.manifestIcon);
-        assets.push(processedIcon.webpackAsset);
-        return processNext();
+        if (err) throw new IconError(`It was not possible to retrieve buffer of '${img}'.`);
+        resolve(buffer);
       });
     });
-  }
+  });
 }
 
 export function retrieveIcons(options) {
@@ -180,11 +161,12 @@ export function retrieveIcons(options) {
   return response;
 }
 
-export function parseIcons(fingerprint, publicPath, icons, callback) {
+export async function parseIcons(fingerprint, publicPath, icons, callback) {
   if (icons.length === 0) {
     callback(null, {});
   } else {
     const first = icons.pop();
-    processImg(first.sizes, first, icons, [], [], fingerprint, publicPath, callback);
+    const data = await processImg(first.sizes, first, icons, [], [], fingerprint, publicPath);
+    callback(null, data);
   }
 }
