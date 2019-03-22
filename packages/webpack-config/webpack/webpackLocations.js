@@ -86,6 +86,7 @@ function getLocations(inputProjectRoot = '') {
     appMain: absolute(appMain),
     modules: modulesPath,
     template: {
+      get: templatePath,
       folder: templatePath(),
       indexHtml: templatePath('index.html'),
       manifest: templatePath('manifest.json'),
