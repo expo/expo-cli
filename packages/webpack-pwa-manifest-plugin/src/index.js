@@ -62,11 +62,7 @@ class WebpackPwaManifest {
       throw new Error('app.json must be an object');
     }
     const nativeManifest = appJson.expo || appJson;
-
-    const web = nativeManifest.web || {};
-    const splash = nativeManifest.splash || {};
-    const ios = nativeManifest.ios || {};
-    const android = nativeManifest.android || {};
+    const { web = {}, splash = {}, ios = {}, android = {} } = nativeManifest;
 
     const name = web.name || nativeManifest.displayName || nativeManifest.name;
     const shortName = web.shortName || web.short_name || name;
@@ -136,13 +132,6 @@ class WebpackPwaManifest {
      */
     const preferRelatedApplications =
       web.recommendNativeApp || web.preferRelatedApplications || web.prefer_related_applications;
-    /**
-     * Specifies the primary language for the values in the `name` and `short_name` members.
-     * This value is a string containing a single language tag.
-     * ex: `"en-US"`
-     */
-    // TODO: Bacon: sync with <html/> lang
-    const lang = options.languageISOCode;
 
     // TODO: Bacon: Maybe use android, and iOS icons.
     let icons = [];
@@ -255,7 +244,7 @@ class WebpackPwaManifest {
       includeDirectory: false,
       icons,
       startupImages,
-      lang,
+      lang: web.lang,
       name,
       orientation,
       prefer_related_applications: preferRelatedApplications,
@@ -314,7 +303,7 @@ class WebpackPwaManifest {
         }
 
         let tags = generateAppleTags(self.options, self.assets);
-        const themeContent = self.options['theme-color'] || self.options.theme_color;
+        const themeContent = self.options.theme_color;
         if (themeContent) {
           const themeColorTag = {
             name: 'theme-color',
