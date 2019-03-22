@@ -212,18 +212,8 @@ module.exports = function(env = {}) {
       new WebpackDeepScopeAnalysisPlugin(),
 
       new WorkboxPlugin.GenerateSW({
-        skipWaiting: true,
-        clientsClaim: true,
         exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
-        importWorkboxFrom: 'cdn',
         navigateFallback: `${publicPath}index.html`,
-        navigateFallbackBlacklist: [new RegExp('^/_'), new RegExp('/[^/]+\\.[^/]+$')],
-        runtimeCaching: [
-          {
-            urlPattern: /(.*?)/,
-            handler: 'staleWhileRevalidate',
-          },
-        ],
       }),
 
       new BundleAnalyzerPlugin({
