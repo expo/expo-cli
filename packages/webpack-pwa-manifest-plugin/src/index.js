@@ -1,6 +1,5 @@
 import validatePresets from './validators/Presets';
 import validateColors from './validators/Colors';
-import checkDeprecated from './validators/Versioning';
 import {
   buildResources,
   injectResources,
@@ -33,38 +32,42 @@ class WebpackPwaManifest {
 
     const metatags = createMetatagsFromConfig(appJson);
 
-    this._parseOptions({
-      ...web,
-      metatags,
-      filename: options.filename,
-      includeDirectory: false,
-      // PWA
-      background_color: web.backgroundColor,
-      description: web.description,
-      dir: web.dir,
-      display: web.display,
-      icons: web.icons,
-      startupImages: web.startupImages,
-      lang: web.lang,
-      name: web.name,
-      orientation: web.orientation,
-      prefer_related_applications: web.preferRelatedApplications,
-      related_applications: web.relatedApplications,
-      scope: web.scope,
-      short_name: web.shortName,
-      start_url: web.startUrl,
-      theme_color: web.themeColor,
-      ios: {
-        'apple-mobile-web-app-status-bar-style': web.barStyle,
+    this._parseOptions(
+      {
+        ...options,
+        filename: options.filename,
+        includeDirectory: false,
+        metatags,
       },
-      crossorigin: web.crossorigin,
-    });
+      {
+        ...web,
+        // PWA
+        background_color: web.backgroundColor,
+        description: web.description,
+        dir: web.dir,
+        display: web.display,
+        icons: web.icons,
+        startupImages: web.startupImages,
+        lang: web.lang,
+        name: web.name,
+        orientation: web.orientation,
+        prefer_related_applications: web.preferRelatedApplications,
+        related_applications: web.relatedApplications,
+        scope: web.scope,
+        short_name: web.shortName,
+        start_url: web.startUrl,
+        theme_color: web.themeColor,
+        ios: {
+          'apple-mobile-web-app-status-bar-style': web.barStyle,
+        },
+        crossorigin: web.crossorigin,
+      }
+    );
   }
 
-  _parseOptions(options) {
-    validatePresets(options, 'dir', 'display', 'orientation', 'crossorigin');
-    validateColors(options, 'background_color', 'theme_color');
-    checkDeprecated(options, 'useWebpackPublicPath');
+  _parseOptions(options, manifest) {
+    validatePresets(manifest, 'dir', 'display', 'orientation', 'crossorigin');
+    validateColors(manifest, 'background_color', 'theme_color');
     this.assets = null;
     this.htmlPlugin = false;
     // const shortName = options.short_name || options.name || 'App';
@@ -82,7 +85,13 @@ class WebpackPwaManifest {
       includeDirectory: true,
       crossorigin: null,
       ...options,
+      ...manifest,
     };
+    this.manifest = manifest;
+  }
+
+  getManifest() {
+    return this.manifest;
   }
 
   apply(compiler) {
