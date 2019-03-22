@@ -10,6 +10,7 @@ import * as constants from './credentials/constants';
 import * as utils from '../utils';
 import * as credentials from './credentials';
 import * as apple from './appleApi';
+import { ensurePNGIsNotTransparent } from './utils/image';
 
 class IOSBuilder extends BaseBuilder {
   async run() {
@@ -162,21 +163,11 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     return PLATFORMS.IOS;
   }
 
-  // validates whether the icon doesn't have alpha channel
-  // copy-pasted from https://github.com/tj/node-png-has-alpha/blob/master/index.js
+  // validates whether the icon doesn't have transparency
   async validateIcon() {
     try {
       const icon = get(this.manifest, 'ios.icon', this.manifest.icon);
-      const buf = Buffer.alloc(1);
-      const fd = await fs.open(icon, 'r');
-      const { buffer } = await fs.read(fd, buf, 0, 1, 25);
-      await fs.close(fd);
-      if (buffer[0] === 6) {
-        throw new XDLError(
-          ErrorCode.INVALID_ASSETS,
-          `Your application icon (${icon}) can't have an alpha channel if you wish to upload your app to Apple Store.`
-        );
-      }
+      await ensurePNGIsNotTransparent(icon);
     } catch (err) {
       if (err instanceof XDLError) {
         throw err;

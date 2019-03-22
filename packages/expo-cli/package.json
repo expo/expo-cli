@@ -84,6 +84,7 @@
     "opn": "5.4.0",
     "ora": "1.4.0",
     "pacote": "9.3.0",
+    "pngjs": "^3.4.0",
     "progress": "2.0.0",
     "qrcode-terminal": "0.11.0",
     "semver": "5.5.0",
