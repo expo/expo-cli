@@ -1,5 +1,4 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const createMetatagsFromConfig = require('./createMetatagsFromConfig');
 
 const DEFAULT_MINIFY = {
   removeComments: true,
@@ -26,8 +25,6 @@ function createIndexHTMLFromAppJSON(appManifest, locations) {
   const { web = {} } = appManifest;
   const { minifyHTML } = web;
 
-  const meta = createMetatagsFromConfig(appManifest);
-
   let minify = DEFAULT_MINIFY;
   /**
    * The user can disable minify with
@@ -46,8 +43,6 @@ function createIndexHTMLFromAppJSON(appManifest, locations) {
     // Pass a html-minifier options object to minify the output.
     // https://github.com/kangax/html-minifier#options-quick-reference
     minify,
-    // Allows to inject meta-tags, e.g. meta: `{viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no'}`.
-    meta,
     // The `webpack` require path to the template.
     template: locations.template.indexHtml,
   });

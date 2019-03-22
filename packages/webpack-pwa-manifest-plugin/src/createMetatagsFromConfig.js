@@ -1,9 +1,5 @@
+import { applyTag } from './injector';
 const Metatags = require('./Metatags');
-
-/**
- * To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
- */
-const DEFAULT_VIEWPORT = 'width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover';
 
 function possibleProperty(input, possiblePropertyNames, fallback) {
   for (const propertyName of possiblePropertyNames) {
@@ -27,7 +23,7 @@ function populateMetatagObject(schema, input) {
 }
 
 function createMetatagsFromConfig(config) {
-  const { web = {} } = config;
+  const { web = {} } = config || config.expo || {};
   const {
     googleSiteVerification,
     themeColor,
@@ -47,7 +43,7 @@ function createMetatagsFromConfig(config) {
   };
 
   const metaTags = {
-    viewport: DEFAULT_VIEWPORT,
+    viewport: web.viewport,
     description: config.description,
     'mobile-web-app-capable': 'yes',
     ...openGraphMetatags,

@@ -13,6 +13,8 @@ const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
 
+// To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
+const DEFAULT_VIEWPORT = 'width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover';
 // Use root to work better with create-react-app
 const DEFAULT_ROOT_ID = `root`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
@@ -20,6 +22,14 @@ const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in
 const DEFAULT_NAME = 'Expo App';
 const DEFAULT_THEME_COLOR = '#4630EB';
 const DEFAULT_DESCRIPTION = 'A Neat Expo App';
+const DEFAULT_BACKGROUND_COLOR = '#ffffff';
+const DEFAULT_START_URL = '.';
+const DEFAULT_DISPLAY = 'fullscreen';
+const DEFAULT_STATUS_BAR = 'default';
+const DEFAULT_LANG_DIR = 'auto';
+const DEFAULT_ORIENTATION = 'any';
+const ICON_SIZES = [96, 128, 192, 256, 384, 512];
+const MAX_SHORT_NAME_LENGTH = 12;
 
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
@@ -115,7 +125,7 @@ module.exports = function(env = {}) {
   }
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
-  const { web: webManifest = {} } = appManifest;
+  const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
 
   // rn-cli apps use a displayName value as well.
   const appName =
@@ -129,7 +139,140 @@ module.exports = function(env = {}) {
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = appManifest.description || DEFAULT_DESCRIPTION;
+  // The theme_color sets the color of the tool bar, and may be reflected in the app's preview in task switchers.
   const webThemeColor = webManifest.themeColor || webManifest.theme_color || primaryColor;
+  const dir = webManifest.dir || DEFAULT_LANG_DIR;
+  const shortName = webManifest.shortName || webManifest.short_name || webName;
+  const display = webManifest.display || DEFAULT_DISPLAY;
+  const startUrl = webManifest.startUrl || webManifest.start_url || DEFAULT_START_URL;
+  const webViewport = webManifest.viewport || DEFAULT_VIEWPORT;
+  /**
+   * https://developer.mozilla.org/en-US/docs/Web/Manifest#prefer_related_applications
+   * Specifies a boolean value that hints for the user agent to indicate
+   * to the user that the specified native applications (see below) are recommended over the website.
+   * This should only be used if the related native apps really do offer something that the website can't... like Expo ;)
+   */
+
+  const preferRelatedApplications =
+    webManifest.preferRelatedApplications || webManifest.prefer_related_applications;
+
+  const barStyle =
+    webManifest.barStyle ||
+    webManifest['apple-mobile-web-app-status-bar-style'] ||
+    DEFAULT_STATUS_BAR;
+
+  let webOrientation = webManifest.orientation || appManifest.orientation;
+  if (webOrientation && typeof orientation === 'string') {
+    webOrientation = webOrientation.toLowerCase();
+    // Convert expo value to PWA value
+    if (webOrientation === 'default') {
+      webOrientation = DEFAULT_ORIENTATION;
+    }
+  } else {
+    webOrientation = DEFAULT_ORIENTATION;
+  }
+
+  /**
+   * **Splash screen background color**
+   * `https://developers.google.com/web/fundamentals/web-app-manifest/#splash-screen`
+   * The background_color should be the same color as the load page,
+   * to provide a smooth transition from the splash screen to your app.
+   */
+  const backgroundColor =
+    webManifest.backgroundColor ||
+    webManifest.background_color ||
+    splash.backgroundColor ||
+    DEFAULT_BACKGROUND_COLOR; // No default background color
+
+  /**
+   * https://developer.mozilla.org/en-US/docs/Web/Manifest#related_applications
+   * An array of native applications that are installable by, or accessible to, the underlying platform
+   * for example, a native Android application obtainable through the Google Play Store.
+   * Such applications are intended to be alternatives to the
+   * website that provides similar/equivalent functionality — like the native app version of the website.
+   */
+  let relatedApplications =
+    webManifest.relatedApplications || webManifest.related_applications || [];
+
+  // if the user manually defines this as false, then don't infer native apps.
+  if (preferRelatedApplications !== false) {
+    const noRelatedApplicationsDefined =
+      Array.isArray(relatedApplications) && !relatedApplications.length;
+
+    if (noRelatedApplicationsDefined) {
+      if (ios.bundleIdentifier) {
+        const alreadyHasIOSApp = relatedApplications.some(app => app.platform === 'itunes');
+        if (!alreadyHasIOSApp) {
+          const iosApp = {
+            platform: 'itunes',
+            url: ios.appStoreUrl,
+            id: ios.bundleIdentifier,
+          };
+          relatedApplications.push(iosApp);
+        }
+      }
+      if (android.package) {
+        const alreadyHasAndroidApp = relatedApplications.some(app => app.platform === 'play');
+        if (!alreadyHasAndroidApp) {
+          let androidUrl = android.playStoreUrl;
+          if (!androidUrl && android.package) {
+            androidUrl = `http://play.google.com/store/apps/details?id=${android.package}`;
+          }
+          const androidApp = {
+            platform: 'play',
+            url: androidUrl,
+            id: android.package,
+          };
+          relatedApplications.push(androidApp);
+        }
+      }
+    }
+  }
+
+  let icons = [];
+  let icon;
+  if (webManifest.icon || appManifest.icon) {
+    icon = locations.absolute(webManifest.icon || appManifest.icon);
+  } else {
+    // Use template icon
+    icon = locations.template.get('icon.png');
+  }
+  icons.push({ src: icon, size: ICON_SIZES });
+  let startupImages = [];
+  const iOSIcon = appManifest.icon || ios.icon;
+  if (iOSIcon) {
+    const iOSIconPath = locations.absolute(iOSIcon);
+    icons.push({
+      ios: true,
+      size: 1024,
+      src: iOSIconPath,
+    });
+
+    const { splash: iOSSplash = {} } = ios;
+    let splashImageSource = iOSIconPath;
+    if (iOSSplash.image || splash.image) {
+      splashImageSource = locations.absolute(iOSSplash.image || splash.image);
+    }
+    startupImages.push({
+      src: splashImageSource,
+      supportsTablet: ios.supportsTablet,
+      orientation: webOrientation,
+      destination: `assets/splash`,
+    });
+  }
+
+  // Validate short name
+  if (shortName.length > MAX_SHORT_NAME_LENGTH) {
+    if (webManifest.shortName) {
+      console.warn(
+        `web.shortName should be 12 characters or less, otherwise it'll be curtailed on the mobile device homepage.`
+      );
+    } else {
+      console.warn(
+        `name should be 12 characters or less, otherwise it'll be curtailed on the mobile device homepage. You should define web.shortName in your app.json as a string that is ${MAX_SHORT_NAME_LENGTH} or less characters.`
+      );
+    }
+  }
 
   const processedAppManifest = {
     ...appManifest,
@@ -139,6 +282,19 @@ module.exports = function(env = {}) {
     rootId,
     web: {
       ...webManifest,
+      viewport: webViewport,
+      description,
+      icons,
+      startupImages,
+      preferRelatedApplications,
+      relatedApplications,
+      startUrl,
+      shortName,
+      display,
+      orientation: webOrientation,
+      dir,
+      barStyle,
+      backgroundColor,
       themeColor: webThemeColor,
       lang: languageISOCode,
       name: webName,
@@ -204,8 +360,6 @@ module.exports = function(env = {}) {
       // Generate the `manifest.json`
       new WebpackPWAManifestPlugin(processedAppManifest, {
         ...env,
-        languageISOCode,
-        defaultIcon: locations.template.get('icon.png'),
         filename: locations.production.manifest,
       }),
 
