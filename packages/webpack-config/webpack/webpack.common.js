@@ -129,6 +129,7 @@ module.exports = function(env = {}) {
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = appManifest.description || DEFAULT_DESCRIPTION;
+  const webThemeColor = webManifest.themeColor || webManifest.theme_color || primaryColor;
 
   const processedAppManifest = {
     ...appManifest,
@@ -138,6 +139,7 @@ module.exports = function(env = {}) {
     rootId,
     web: {
       ...webManifest,
+      themeColor: webThemeColor,
       lang: languageISOCode,
       name: webName,
       noJavaScriptMessage,
@@ -200,7 +202,7 @@ module.exports = function(env = {}) {
       }),
 
       // Generate the `manifest.json`
-      new WebpackPWAManifestPlugin(appJSON, {
+      new WebpackPWAManifestPlugin(processedAppManifest, {
         ...env,
         languageISOCode,
         defaultIcon: locations.template.get('icon.png'),

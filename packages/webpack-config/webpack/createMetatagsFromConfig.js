@@ -30,6 +30,7 @@ function createMetatagsFromConfig(config) {
   const { web = {} } = config;
   const {
     googleSiteVerification,
+    themeColor,
     twitter = {},
     facebook = {},
     microsoft = {},
@@ -58,6 +59,10 @@ function createMetatagsFromConfig(config) {
 
   if (googleSiteVerification !== undefined) {
     metaTags['google-site-verification'] = googleSiteVerification;
+  }
+
+  if (themeColor !== undefined) {
+    metaTags['theme-color'] = themeColor;
   }
   return metaTags;
 }
