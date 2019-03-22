@@ -161,12 +161,12 @@ export function retrieveIcons(options) {
   return response;
 }
 
-export async function parseIcons(fingerprint, publicPath, icons, callback) {
+export async function parseIcons(fingerprint, publicPath, icons) {
   if (icons.length === 0) {
-    callback(null, {});
+    return {};
   } else {
     const first = icons.pop();
     const data = await processImg(first.sizes, first, icons, [], [], fingerprint, publicPath);
-    callback(null, data);
+    return data;
   }
 }

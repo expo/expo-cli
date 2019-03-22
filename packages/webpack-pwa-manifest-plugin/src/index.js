@@ -96,42 +96,42 @@ class WebpackPwaManifest {
   apply(compiler) {
     // Hook into the html-webpack-plugin processing
     // and add the html
-    const injectToHtml = (htmlPluginData, compilation, callback) => {
+    const injectToHtml = async (htmlPluginData, compilation, callback) => {
       if (!this.htmlPlugin) {
         this.htmlPlugin = true;
       }
       const publicPath = this.options.publicPath || compilation.options.output.publicPath;
-      buildResources(this, publicPath, () => {
-        if (!this.options.inject) {
-          callback(null, htmlPluginData);
-          return;
-        }
+      await buildResources(this, publicPath);
 
-        let tags = generateAppleTags(this.options, this.assets);
-
-        for (const metatagName of Object.keys(this.options.metatags)) {
-          const content = this.options.metatags[metatagName];
-          tags = applyTag(tags, 'meta', {
-            name: metatagName,
-            content,
-          });
-        }
-
-        const manifestLink = {
-          rel: 'manifest',
-          href: this.manifest.url,
-        };
-        if (this.options.crossorigin) {
-          manifestLink.crossorigin = this.options.crossorigin;
-        }
-        applyTag(tags, 'link', manifestLink);
-        tags = generateMaskIconLink(tags, this.assets);
-
-        const tagsHTML = generateHtmlTags(tags);
-        htmlPluginData.html = htmlPluginData.html.replace(/(<\/head>)/i, `${tagsHTML}</head>`);
-
+      if (!this.options.inject) {
         callback(null, htmlPluginData);
-      });
+        return;
+      }
+
+      let tags = generateAppleTags(this.options, this.assets);
+
+      for (const metatagName of Object.keys(this.options.metatags)) {
+        const content = this.options.metatags[metatagName];
+        tags = applyTag(tags, 'meta', {
+          name: metatagName,
+          content,
+        });
+      }
+
+      const manifestLink = {
+        rel: 'manifest',
+        href: this.manifest.url,
+      };
+      if (this.options.crossorigin) {
+        manifestLink.crossorigin = this.options.crossorigin;
+      }
+      applyTag(tags, 'link', manifestLink);
+      tags = generateMaskIconLink(tags, this.assets);
+
+      const tagsHTML = generateHtmlTags(tags);
+      htmlPluginData.html = htmlPluginData.html.replace(/(<\/head>)/i, `${tagsHTML}</head>`);
+
+      callback(null, htmlPluginData);
     };
 
     // webpack 4

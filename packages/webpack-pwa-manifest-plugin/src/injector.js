@@ -81,27 +81,19 @@ function manifest(options, publicPath, icons, callback) {
   };
 }
 
-export function buildResources(self, publicPath = '', callback) {
-  if (self.assets && self.options.inject) {
-    // already cached and ready to inject
-    callback();
-  } else {
+export async function buildResources(self, publicPath = '') {
+  if (!self.assets || !self.options.inject) {
     publicPath = publicPath || '';
-    parseIcons(
+    const parsedIconsResult = await parseIcons(
       self.options.fingerprints,
       publicPath,
-      retrieveIcons(self.options),
-      (err, result) => {
-        if (err) {
-          return;
-        }
-        const { icons, assets = [] } = result;
-        const results = manifest(self.options, publicPath, icons);
-        self.manifest = results;
-        self.assets = [results, ...assets];
-        callback();
-      }
+      retrieveIcons(self.options)
     );
+
+    const { icons, assets = [] } = parsedIconsResult;
+    const results = manifest(self.options, publicPath, icons);
+    self.manifest = results;
+    self.assets = [results, ...assets];
   }
 }
 
