@@ -74,12 +74,11 @@ class WebpackPwaManifest {
     // fingerprints is true by default, but we want it to be false even if users
     // set it to undefined or null.
     if (!options.hasOwnProperty('fingerprints')) {
-      options.fingerprints = true;
+      options.fingerprints = false;
     }
     this.options = {
       filename: options.fingerprints ? '[name].[hash].[ext]' : '[name].[ext]',
       inject: true,
-      fingerprints: true,
       ios: false,
       publicPath: null,
       includeDirectory: true,
@@ -95,25 +94,23 @@ class WebpackPwaManifest {
   }
 
   apply(compiler) {
-    const self = this;
-
     // Hook into the html-webpack-plugin processing
     // and add the html
-    const injectToHtml = function(htmlPluginData, compilation, callback) {
-      if (!self.htmlPlugin) {
-        self.htmlPlugin = true;
+    const injectToHtml = (htmlPluginData, compilation, callback) => {
+      if (!this.htmlPlugin) {
+        this.htmlPlugin = true;
       }
-      const publicPath = self.options.publicPath || compilation.options.output.publicPath;
-      buildResources(self, publicPath, () => {
-        if (!self.options.inject) {
+      const publicPath = this.options.publicPath || compilation.options.output.publicPath;
+      buildResources(this, publicPath, () => {
+        if (!this.options.inject) {
           callback(null, htmlPluginData);
           return;
         }
 
-        let tags = generateAppleTags(self.options, self.assets);
+        let tags = generateAppleTags(this.options, this.assets);
 
-        for (const metatagName of Object.keys(self.options.metatags)) {
-          const content = self.options.metatags[metatagName];
+        for (const metatagName of Object.keys(this.options.metatags)) {
+          const content = this.options.metatags[metatagName];
           tags = applyTag(tags, 'meta', {
             name: metatagName,
             content,
@@ -122,13 +119,13 @@ class WebpackPwaManifest {
 
         const manifestLink = {
           rel: 'manifest',
-          href: self.manifest.url,
+          href: this.manifest.url,
         };
-        if (self.options.crossorigin) {
-          manifestLink.crossorigin = self.options.crossorigin;
+        if (this.options.crossorigin) {
+          manifestLink.crossorigin = this.options.crossorigin;
         }
         applyTag(tags, 'link', manifestLink);
-        tags = generateMaskIconLink(tags, self.assets);
+        tags = generateMaskIconLink(tags, this.assets);
 
         const tagsHTML = generateHtmlTags(tags);
         htmlPluginData.html = htmlPluginData.html.replace(/(<\/head>)/i, `${tagsHTML}</head>`);
@@ -139,7 +136,7 @@ class WebpackPwaManifest {
 
     // webpack 4
     if (compiler.hooks) {
-      compiler.hooks.compilation.tap(TAP, function(cmpp) {
+      compiler.hooks.compilation.tap(TAP, cmpp => {
         // This is set in html-webpack-plugin pre-v4.
         let hook = cmpp.hooks.htmlWebpackPluginAfterHtmlProcessing;
         if (!hook) {
@@ -149,12 +146,12 @@ class WebpackPwaManifest {
 
         hook.tapAsync(TAP_CMD, (htmlPluginData, cb) => {
           injectToHtml(htmlPluginData, cmpp, () => {
-            injectResources(cmpp, self.assets, cb);
+            injectResources(cmpp, this.assets, cb);
           });
         });
       });
     } else {
-      compiler.plugin('compilation', function(compilation) {
+      compiler.plugin('compilation', compilation => {
         compilation.plugin(
           'html-webpack-plugin-before-html-processing',
           (htmlPluginData, callback) => injectToHtml(htmlPluginData, compilation, callback)
