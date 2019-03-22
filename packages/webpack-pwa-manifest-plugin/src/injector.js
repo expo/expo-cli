@@ -73,12 +73,12 @@ function manifest(options, publicPath, icons, callback) {
   const file = path.parse(options.filename);
   const filename = createFilename(file.base, json, options.fingerprints);
   const output = options.includeDirectory ? path.join(file.dir, filename) : filename;
-  callback(null, {
+  return {
     output,
     url: joinURI(publicPath, output),
     source: json,
     size: json.length,
-  });
+  };
 }
 
 export function buildResources(self, publicPath = '', callback) {
@@ -96,14 +96,10 @@ export function buildResources(self, publicPath = '', callback) {
           return;
         }
         const { icons, assets = [] } = result;
-        manifest(self.options, publicPath, icons, (fail, manifest) => {
-          if (fail) {
-            return;
-          }
-          self.manifest = manifest;
-          self.assets = [manifest, ...assets];
-          callback();
-        });
+        const results = manifest(self.options, publicPath, icons);
+        self.manifest = results;
+        self.assets = [results, ...assets];
+        callback();
       }
     );
   }
