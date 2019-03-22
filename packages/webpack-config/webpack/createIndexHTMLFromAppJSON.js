@@ -1,9 +1,5 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const Metatags = require('./Metatags');
-/**
- * To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
- */
-const DEFAULT_VIEWPORT = 'width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover';
+const createMetatagsFromConfig = require('./createMetatagsFromConfig');
 
 const DEFAULT_MINIFY = {
   removeComments: true,
@@ -18,72 +14,26 @@ const DEFAULT_MINIFY = {
   minifyURLs: true,
 };
 
-function possibleProperty(input, possiblePropertyNames, fallback) {
-  for (const propertyName of possiblePropertyNames) {
-    if (input[propertyName] !== undefined) {
-      return input[propertyName];
-    }
+function isObject(val) {
+  if (val === null) {
+    return false;
   }
-  return fallback;
-}
-
-function populateMetatagObject(schema, input) {
-  let output = {};
-  for (const item of schema) {
-    // Check the list of propNames and the tag name
-    const value = possibleProperty(input, item.propNames.concat([item.name]), item.fallback);
-    if (value !== undefined) {
-      output[item.name] = value;
-    }
-  }
-  return output;
+  return typeof val === 'function' || typeof val === 'object';
 }
 
 function createIndexHTMLFromAppJSON(appManifest, locations) {
   // Is the app.json from expo-cli or react-native-cli
   const { web = {} } = appManifest;
-  const {
-    minifyHTML,
-    googleSiteVerification,
-    twitter = {},
-    facebook = {},
-    microsoft = {},
-    metatags = {},
-  } = web;
+  const { minifyHTML } = web;
 
-  const openGraphMetatags = populateMetatagObject(Metatags.openGraph, facebook);
-  const twitterMetatags = populateMetatagObject(Metatags.twitter, twitter);
-  const microsoftMetatags = populateMetatagObject(Metatags.microsoft, microsoft);
-
-  const appleMetatags = {
-    'format-detection': 'telephone=no',
-    'apple-touch-fullscreen': 'yes',
-  };
-
-  const metaTags = {
-    viewport: DEFAULT_VIEWPORT,
-    description: appManifest.description,
-    'mobile-web-app-capable': 'yes',
-    ...openGraphMetatags,
-    ...microsoftMetatags,
-    ...twitterMetatags,
-    ...appleMetatags,
-    ...metatags,
-  };
-
-  if (googleSiteVerification !== undefined) {
-    metaTags['google-site-verification'] = googleSiteVerification;
-  }
+  const meta = createMetatagsFromConfig(appManifest);
 
   let minify = DEFAULT_MINIFY;
   /**
    * The user can disable minify with
    * `web.minifyHTML = false || {}`
    */
-  if (
-    minifyHTML === false ||
-    (minifyHTML && typeof minifyHTML === 'object' && !Array.isArray(minifyHTML))
-  ) {
+  if (minifyHTML === false || isObject(minifyHTML)) {
     minify = minifyHTML;
   }
 
@@ -97,7 +47,7 @@ function createIndexHTMLFromAppJSON(appManifest, locations) {
     // https://github.com/kangax/html-minifier#options-quick-reference
     minify,
     // Allows to inject meta-tags, e.g. meta: `{viewport: 'width=device-width, initial-scale=1, shrink-to-fit=no'}`.
-    meta: metaTags,
+    meta,
     // The `webpack` require path to the template.
     template: locations.template.indexHtml,
   });
