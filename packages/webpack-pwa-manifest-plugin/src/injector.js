@@ -231,7 +231,7 @@ function formatAppleTag(tag, content) {
 }
 
 export function applyTag(obj, tag, content) {
-  if (!content) return;
+  if (!content) return obj;
   if (obj[tag]) {
     if (Array.isArray(obj[tag])) {
       obj[tag].push(content);
@@ -241,6 +241,7 @@ export function applyTag(obj, tag, content) {
   } else {
     obj[tag] = content;
   }
+  return obj;
 }
 
 export function generateHtmlTags(tags) {
