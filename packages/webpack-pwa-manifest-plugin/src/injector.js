@@ -54,7 +54,7 @@ function createFilename(filenameTemplate, json, shouldFingerprint) {
   return formatters.reduce((acc, curr) => acc.replace(curr.pattern, curr.value), filenameTemplate);
 }
 
-function manifest(options, publicPath, icons, callback) {
+function manifest(options, publicPath, icons) {
   const content = except(Object.assign({ icons }, options), [
     'filename',
     'inject',
