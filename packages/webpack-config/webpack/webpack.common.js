@@ -6,14 +6,21 @@ const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const WebpackPWAManifestPlugin = require('@expo/webpack-pwa-manifest-plugin');
 const chalk = require('chalk');
 const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
+
+// Use root to work better with create-react-app
+const DEFAULT_ROOT_ID = `root`;
+const DEFAULT_LANGUAGE_ISO_CODE = `en`;
+const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
+const DEFAULT_NAME = 'Expo App';
+const DEFAULT_THEME_COLOR = '#4630EB';
+const DEFAULT_DESCRIPTION = 'A Neat Expo App';
+
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
@@ -51,6 +58,53 @@ const styleLoaderConfiguration = {
   use: ['style-loader', 'css-loader'],
 };
 
+function createNoJSComponent(message) {
+  // from twitter.com
+  return `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
+}
+
+function sanitizePublicPath(publicPath) {
+  if (typeof publicPath !== 'string' || !publicPath.length) {
+    return '';
+  }
+  return publicPath.replace(/\/$/, '');
+}
+
+function stripSensitiveConstantsFromAppManifest(appManifest, pwaManifestLocation) {
+  let web;
+  try {
+    web = require(pwaManifestLocation);
+  } catch (e) {
+    web = {};
+  }
+
+  return {
+    /**
+     * Omit app.json properties that get removed during the native turtle build
+     *
+     * `facebookScheme`
+     * `facebookAppId`
+     * `facebookDisplayName`
+     */
+    name: appManifest.displayName || appManifest.name,
+    description: appManifest.description,
+    slug: appManifest.slug,
+    sdkVersion: appManifest.sdkVersion,
+    version: appManifest.version,
+    githubUrl: appManifest.githubUrl,
+    orientation: appManifest.orientation,
+    primaryColor: appManifest.primaryColor,
+    privacy: appManifest.privacy,
+    icon: appManifest.icon,
+    scheme: appManifest.scheme,
+    notification: appManifest.notification,
+    splash: appManifest.splash,
+    androidShowExponentNotificationInShellApp:
+      appManifest.androidShowExponentNotificationInShellApp,
+    web,
+  };
+}
+
 module.exports = function(env = {}) {
   const locations = getLocations(env.projectRoot);
   const babelConfig = createBabelConfig(locations.root);
@@ -64,15 +118,37 @@ module.exports = function(env = {}) {
   const { web: webManifest = {} } = appManifest;
 
   // rn-cli apps use a displayName value as well.
-  const displayName = webManifest.name || appManifest.displayName || appManifest.name;
+  const appName =
+    appJSON.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
+  const webName = webManifest.name || appName;
 
-  const languageISOCode = webManifest.lang || 'en';
-  const noJavaScriptMessage =
-    webManifest.noJavaScriptMessage ||
-    `Oh no! It looks like JavaScript is not enabled in your browser.`;
+  const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
+  const noJavaScriptMessage = webManifest.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
+  const rootId = appManifest.rootId || DEFAULT_ROOT_ID;
+  const noJSComponent = createNoJSComponent(noJavaScriptMessage);
+  const publicPath = sanitizePublicPath(webManifest.publicPath);
+  const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
+  const description = appManifest.description || DEFAULT_DESCRIPTION;
 
-  // from twitter.com <3
-  const noScript = `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${noJavaScriptMessage}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
+  const processedAppManifest = {
+    ...appManifest,
+    name: appName,
+    description,
+    primaryColor,
+    rootId,
+    web: {
+      ...webManifest,
+      lang: languageISOCode,
+      name: webName,
+      noJavaScriptMessage,
+      publicPath,
+    },
+  };
+
+  const publicAppManifest = stripSensitiveConstantsFromAppManifest(
+    processedAppManifest,
+    locations.production.manifest
+  );
 
   const ttfLoaderConfiguration = {
     test: /\.(ttf|otf|woff)$/,
@@ -98,8 +174,6 @@ module.exports = function(env = {}) {
     exclude: locations.template.folder,
   };
 
-  const publicPath = ''.replace(/\/$/, '');
-
   return {
     context: __dirname,
     // configures where the build ends up
@@ -113,31 +187,16 @@ module.exports = function(env = {}) {
       publicPath,
     },
     plugins: [
-      // Delete the build folder
-      new CleanWebpackPlugin([locations.production.folder], {
-        root: locations.root,
-        dry: false,
-      }),
-
-      // Copy the template files into the build folder / create a new build folder
-      new CopyWebpackPlugin([
-        {
-          from: locations.template.folder,
-          to: locations.production.folder,
-          ignore: ['index.html', 'icon.png'],
-        },
-      ]),
-
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON({ displayName }, locations),
+      createIndexHTMLFromAppJSON(processedAppManifest, locations),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
-        WEB_TITLE: displayName,
-        NO_SCRIPT: noScript,
+        WEB_TITLE: webName,
+        NO_SCRIPT: noJSComponent,
         LANG_ISO_CODE: languageISOCode,
-        ROOT_ID: appManifest.rootId || 'root',
+        ROOT_ID: rootId,
       }),
 
       // Generate the `manifest.json`
@@ -156,7 +215,7 @@ module.exports = function(env = {}) {
         publicPath,
       }),
 
-      new webpack.DefinePlugin(createClientEnvironment(locations)),
+      new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),
 
       // Remove unused import/exports
       new WebpackDeepScopeAnalysisPlugin(),

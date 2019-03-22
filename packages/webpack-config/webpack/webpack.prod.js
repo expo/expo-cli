@@ -1,5 +1,7 @@
 const merge = require('webpack-merge');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const BrotliPlugin = require('brotli-webpack-plugin');
 
@@ -22,10 +24,25 @@ module.exports = function(env = {}) {
     },
     devtool: 'cheap-module-source-map',
     plugins: [
+      // Delete the build folder
+      new CleanWebpackPlugin([locations.production.folder], {
+        root: locations.root,
+        dry: false,
+      }),
+
+      new CopyWebpackPlugin([
+        {
+          from: locations.template.folder,
+          to: locations.production.folder,
+          ignore: 'index.html',
+        },
+      ]),
+
       new MiniCssExtractPlugin({
         filename: 'static/css/[contenthash].css',
         chunkFilename: 'static/css/[contenthash].chunk.css',
       }),
+
       // GZIP files
       new CompressionPlugin({
         test: /\.(js|css)$/,
