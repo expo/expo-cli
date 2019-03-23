@@ -31,6 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "css-color-names": "^1.0.1",
+    "dot-object": "^1.7.1",
     "jimp": "^0.6.0",
     "mime": "^2.4.0"
   },
@@ -44,19 +45,19 @@
     "babel-preset-stage-1": "^6.5.0",
     "boxen": "^2.0.0",
     "eslint": "^5.15.1",
-    "extract-text-webpack-plugin": "^3.0.2",
-    "html-webpack-plugin": "4.0.0-alpha.2",
-    "list-directory-contents": "0.0.3",
-    "rimraf": "^2.6.3",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.2.3",
     "eslint-config-universe": "^1.0.6",
+    "extract-text-webpack-plugin": "^3.0.2",
     "gulp": "^4.0.0",
     "gulp-babel": "^7.0.1",
     "gulp-changed": "^1.3.0",
     "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^2.6.4",
-    "pkg": "^4.2.1"
+    "html-webpack-plugin": "4.0.0-alpha.2",
+    "list-directory-contents": "0.0.3",
+    "pkg": "^4.2.1",
+    "rimraf": "^2.6.3",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.2.3"
   },
   "files": [
     "src",

@@ -1,4 +1,49 @@
+import Dot from 'dot-object';
 import Metatags from './Metatags';
+
+const deliminator = ':';
+const dot = new Dot(deliminator);
+
+function getMetaArrayFromObject(obj, format, prefix) {
+  const output = dot.dot(obj);
+  let parsed = [];
+  for (const key of Object.keys(output)) {
+    let components = key.split(deliminator);
+    if (prefix != null) {
+      components.unshift(prefix);
+    }
+    if (components[components.length - 1] === 'default') {
+      components.pop();
+    }
+    if (format != null) {
+      components = components.map(input => withFormat(input, format));
+    }
+    parsed.push({ property: components.join(deliminator), content: output[key] });
+  }
+  return parsed;
+}
+
+function withFormat(input, format) {
+  switch (format) {
+    case '-':
+      return pascalToKebab(input);
+    case '_':
+      return pascalToSnake(input);
+  }
+  return input;
+}
+
+function pascalToSnake(input) {
+  return input
+    .replace(/(?:^|\.?)([A-Z])/g, function(x, y) {
+      return '_' + y.toLowerCase();
+    })
+    .replace(/^_/, '');
+}
+
+function pascalToKebab(input) {
+  return input.replace(/(?:^|\.?)([A-Z])/g, (x, y) => '-' + y.toLowerCase()).replace(/^-/, '');
+}
 
 function possibleProperty(input, possiblePropertyNames, fallback) {
   for (const propertyName of possiblePropertyNames) {
@@ -37,6 +82,7 @@ export default function createMetatagsFromConfig(config) {
   const microsoftMetatags = populateMetatagObject(Metatags.microsoft, microsoft);
 
   const appleMetatags = {
+    // Disable automatic phone number detection.
     'format-detection': 'telephone=no',
     'apple-touch-fullscreen': 'yes',
   };
