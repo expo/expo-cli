@@ -7,7 +7,6 @@ import path from 'path';
 import JsonFile from '@expo/json-file';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
-import ConfigError from './ConfigError';
 
 export async function fileExistsAsync(file: string): Promise<boolean> {
   try {
@@ -50,7 +49,7 @@ export async function findConfigFileAsync(
 
   if (configName === 'exp.json' && !hasWarnedAboutExpJson) {
     hasWarnedAboutExpJson = true;
-    throw new ConfigError(`configuration using exp.json is deprecated.
+    throw new Error(`configuration using exp.json is deprecated.
     Please move your configuration from exp.json to app.json.
     Example app.json:
     {
@@ -200,5 +199,3 @@ export async function writeConfigJsonAsync(
     rootConfig,
   };
 }
-
-export { ConfigError };

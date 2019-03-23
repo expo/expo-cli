@@ -4,13 +4,14 @@
       "env",
       {
         "targets": {
-          "node": "7"
+          "node": "6.0.0"
         }
       }
-    ],
-    "stage-1"
+    ]
   ],
   "plugins": [
-    "transform-flow-comments"
+    "transform-runtime",
+    ["transform-object-rest-spread", { "useBuiltins": true }],
+    "transform-flow-strip-types"
   ]
 }

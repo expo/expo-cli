@@ -126,11 +126,7 @@ export async function findConfigFileAsync(
   try {
     return await ConfigUtils.findConfigFileAsync(projectRoot);
   } catch (error) {
-    if (error instanceof ConfigUtils.ConfigError) {
-      logWarning(projectRoot, 'expo', error.message);
-    } else {
-      throw error;
-    }
+    throw error;
   }
 }
 

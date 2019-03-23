@@ -30,7 +30,7 @@ import {
   ProjectUtils,
   User as UserManager,
 } from 'xdl';
-import * as ConfigUtils from '@epxo/config';
+import * as ConfigUtils from '@expo/config';
 
 import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
