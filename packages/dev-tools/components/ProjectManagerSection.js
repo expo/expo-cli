@@ -1,5 +1,5 @@
 import React from 'react';
-import styled, { css } from 'react-emotion';
+import { css } from 'react-emotion';
 import { DropTarget } from 'react-dnd';
 
 import * as Constants from 'app/common/constants';

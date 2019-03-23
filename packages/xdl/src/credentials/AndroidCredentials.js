@@ -157,7 +157,7 @@ export async function exportPrivateKey(
         rej(err);
       });
       child.on('exit', exitCode => {
-        if (exitCode != 0) {
+        if (exitCode !== 0) {
           rej(exitCode);
         } else {
           res();

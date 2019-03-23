@@ -1,5 +1,5 @@
 import React from 'react';
-import styled, { css, cx } from 'react-emotion';
+import { css, cx } from 'react-emotion';
 import hasAnsi from 'has-ansi';
 import { ansiToJson } from 'anser';
 

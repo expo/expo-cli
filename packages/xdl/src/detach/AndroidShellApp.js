@@ -79,8 +79,8 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
   );
 
   await deleteLinesInFileAsync(
-    `START\ EMBEDDED\ RESPONSES`,
-    `END\ EMBEDDED\ RESPONSES`,
+    `START EMBEDDED RESPONSES`,
+    `END EMBEDDED RESPONSES`,
     path.join(
       shellPath,
       'app',
@@ -243,8 +243,6 @@ export async function copyInitialShellAppFilesAsync(
       env: process.env,
     });
   }
-
-  const initialCopyLogger = logger.withFields({ buildPhase: 'copying initial shell app files' });
 
   const copyToShellApp = async fileName => {
     try {
@@ -504,8 +502,8 @@ export async function runShellAppModificationsAsync(
     )
   );
   await deleteLinesInFileAsync(
-    `BEGIN\ VERSIONS`,
-    `END\ VERSIONS`,
+    `BEGIN VERSIONS`,
+    `END VERSIONS`,
     path.join(shellPath, 'app', 'build.gradle')
   );
   await regexFileAsync(
@@ -686,15 +684,15 @@ export async function runShellAppModificationsAsync(
 
   // Remove exp:// scheme from LauncherActivity
   await deleteLinesInFileAsync(
-    `START\ LAUNCHER\ INTENT\ FILTERS`,
-    `END\ LAUNCHER\ INTENT\ FILTERS`,
+    `START LAUNCHER INTENT FILTERS`,
+    `END LAUNCHER INTENT FILTERS`,
     path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
   );
 
   // Remove LAUNCHER category from HomeActivity
   await deleteLinesInFileAsync(
-    `START\ HOME\ INTENT\ FILTERS`,
-    `END\ HOME\ INTENT\ FILTERS`,
+    `START HOME INTENT FILTERS`,
+    `END HOME INTENT FILTERS`,
     path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
   );
 
@@ -761,20 +759,6 @@ export async function runShellAppModificationsAsync(
 
   // Add permissions
   if (manifest.android && manifest.android.permissions) {
-    const content = await fs.readFileSync(
-      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml'),
-      'utf-8'
-    );
-
-    // Get the list of optional permissions form manifest
-    const permissions = content
-      .replace(
-        /(([\s\S]*<!-- BEGIN OPTIONAL PERMISSIONS -->)|(<!-- END OPTIONAL PERMISSIONS -->[\s\S]*))/g,
-        ''
-      )
-      .match(/android:name=".+"/g)
-      .map(p => p.replace(/(android:name=|")/g, ''));
-
     const whitelist = [];
 
     manifest.android.permissions.forEach(s => {
@@ -817,8 +801,8 @@ export async function runShellAppModificationsAsync(
     ].filter(p => !whitelist.includes(p));
 
     await deleteLinesInFileAsync(
-      `BEGIN\ OPTIONAL\ PERMISSIONS`,
-      `END\ OPTIONAL\ PERMISSIONS`,
+      `BEGIN OPTIONAL PERMISSIONS`,
+      `END OPTIONAL PERMISSIONS`,
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
 
@@ -954,8 +938,8 @@ export async function runShellAppModificationsAsync(
       );
 
       await deleteLinesInFileAsync(
-        `BEGIN\ FABRIC\ CONFIG`,
-        `END\ FABRIC\ CONFIG`,
+        `BEGIN FABRIC CONFIG`,
+        `END FABRIC CONFIG`,
         path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
       );
       await regexFileAsync(
@@ -970,8 +954,8 @@ export async function runShellAppModificationsAsync(
     // Google Maps
     if (googleMaps) {
       await deleteLinesInFileAsync(
-        `BEGIN\ GOOGLE\ MAPS\ CONFIG`,
-        `END\ GOOGLE\ MAPS\ CONFIG`,
+        `BEGIN GOOGLE MAPS CONFIG`,
+        `END GOOGLE MAPS CONFIG`,
         path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
       );
       await regexFileAsync(

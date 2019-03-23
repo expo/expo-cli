@@ -12,8 +12,6 @@ import { UserManagerInstance } from '../User';
 import UserSettings from '../UserSettings';
 import FormData from '../tools/FormData';
 
-const XDL_TEST_CLIENT_ID = 'o0YygTgKhOTdoWj10Yl9nY2P0SMTw38Y';
-
 const _makeShortId = (salt: string, minLength: number = 10): string => {
   const hashIds = new HashIds(salt, minLength);
   return hashIds.encode(Date.now());

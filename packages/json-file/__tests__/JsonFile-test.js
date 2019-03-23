@@ -105,22 +105,6 @@ it(`deletes another key from the file`, async () => {
   await expect(file.readAsync()).resolves.toEqual({});
 });
 
-xit('Multiple updates to the same file from different processes are atomic', async () => {
-  let file = new JsonFile(path.join(FIXTURES, 'atomic-test.json'), { json5: true });
-  let baseObj = {};
-  for (var i = 0; i < 20; i++) {
-    const k = i.toString();
-    const v = i.toString();
-    baseObj = { ...baseObj, [k]: v };
-    cp.fork('./test-worker.js', ['./atomic-test.json', k, v]);
-  }
-  // The following worker does a setAsync
-  //cp.fork('./JsonFileWorker', [filename, key, value])
-  const json = await file.readAsync();
-  console.log(json);
-  expect(json).toEqual(baseObj);
-});
-
 // This fails when i is high, around 200. However, no realistic use case would have the user
 // constantly update a file that often
 it('Multiple updates to the same file have no race conditions', async () => {

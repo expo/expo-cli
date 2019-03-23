@@ -7,7 +7,6 @@ import { trim } from 'lodash';
 
 import * as ProjectUtils from '../project/ProjectUtils';
 import Logger from '../Logger';
-import { isNode } from '../tools/EnvironmentHelper';
 
 type ChunkT =
   | {
@@ -293,9 +292,11 @@ export default class PackagerLogsStream {
       this._handleNewBundleTransformStarted(chunk);
     } else if (msg.type === 'bundle_transform_progressed') {
       chunk._metroEventType = 'BUILD_PROGRESS';
-      this._bundleBuildChunkID
-        ? this._handleUpdateBundleTransformProgress(chunk)
-        : this._handleNewBundleTransformStarted(chunk);
+      if (this._bundleBuildChunkID) {
+        this._handleUpdateBundleTransformProgress(chunk);
+      } else {
+        this._handleNewBundleTransformStarted(chunk);
+      }
     } else if (msg.type === 'bundle_build_failed') {
       chunk._metroEventType = 'BUILD_FAILED';
       if (!this._bundleBuildChunkID) {
@@ -487,12 +488,7 @@ export default class PackagerLogsStream {
         return nextLogs;
       });
     };
-
-    if (isNode()) {
-      func();
-    } else {
-      setImmediate(func);
-    }
+    func();
   };
 
   _maybeParseMsgJSON(chunk: ChunkT) {
@@ -537,7 +533,7 @@ export default class PackagerLogsStream {
 
     if (chunk.msg.match(/Looking for JS files in/)) {
       chunk.msg = '';
-    } else if (chunk.msg.match(/^[\u001b]/)) {
+    } else if (chunk.msg.startsWith('\u001b')) {
       chunk.msg = '';
     }
 

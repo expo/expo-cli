@@ -27,7 +27,6 @@ import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
-import url from 'url';
 import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
@@ -50,7 +49,6 @@ import * as ExpSchema from './project/ExpSchema';
 import FormData from './tools/FormData';
 import * as IosPlist from './detach/IosPlist';
 import * as IosWorkspace from './detach/IosWorkspace';
-import { isNode } from './tools/EnvironmentHelper';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as Sentry from './Sentry';
@@ -620,7 +618,7 @@ export async function publishAsync(
   });
 
   const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot);
-  if (validationStatus == Doctor.ERROR || validationStatus === Doctor.FATAL) {
+  if (validationStatus === Doctor.ERROR || validationStatus === Doctor.FATAL) {
     throw new XDLError(
       ErrorCode.PUBLISH_VALIDATION_ERROR,
       "Couldn't publish because errors were found. (See logs above.) Please fix the errors and try again."
@@ -636,7 +634,7 @@ export async function publishAsync(
   let validPostPublishHooks = [];
   if (hooks && hooks.postPublish) {
     hooks.postPublish.forEach(hook => {
-      let { file, config } = hook;
+      let { file } = hook;
       let fn = _requireFromProject(file, projectRoot, exp);
       if (typeof fn !== 'function') {
         logger.global.error(
@@ -839,8 +837,8 @@ async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options })
   let formData = new FormData();
 
   formData.append('expJson', JSON.stringify(exp));
-  formData.append('iosBundle', _createBlob(iosBundle), 'iosBundle');
-  formData.append('androidBundle', _createBlob(androidBundle), 'androidBundle');
+  formData.append('iosBundle', iosBundle, 'iosBundle');
+  formData.append('androidBundle', androidBundle, 'androidBundle');
   formData.append('options', JSON.stringify(options));
   let response = await Api.callMethodAsync('publish', null, 'put', null, {
     formData,
@@ -1207,28 +1205,11 @@ async function uploadAssetsAsync(projectRoot, assets) {
         let relativePath = paths[key].replace(projectRoot, '');
         logger.global.info({ quiet: true }, `Uploading ${relativePath}`);
 
-        formData.append(key, await _readFileForUpload(paths[key]), paths[key]);
+        formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
       await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
     })
   );
-}
-
-function _createBlob(string) {
-  if (isNode()) {
-    return string;
-  } else {
-    return new Blob([string]);
-  }
-}
-
-async function _readFileForUpload(path) {
-  if (isNode()) {
-    return fs.createReadStream(path);
-  } else {
-    const data = await fs.readFile(path);
-    return new Blob([data]);
-  }
 }
 
 async function getConfigAsync(
@@ -1295,7 +1276,7 @@ export async function buildAsync(
     expIds: joi.array(),
     type: joi.any().valid('archive', 'simulator', 'client'),
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
-    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-\.]+$/),
+    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
     publicUrl: joi.string(),
     sdkVersion: joi.strict(),
   });
@@ -1379,16 +1360,6 @@ async function _waitForRunningAsync(projectRoot, url, retries = 300) {
   } else {
     await delayAsync(100);
     return _waitForRunningAsync(projectRoot, url, retries - 1);
-  }
-}
-
-function _stripPackagerOutputBox(output: string) {
-  let re = /Running packager on port (\d+)/;
-  let found = output.match(re);
-  if (found && found.length >= 2) {
-    return `Running packager on port ${found[1]}\n`;
-  } else {
-    return null;
   }
 }
 
@@ -1916,13 +1887,14 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
     Web.logWebSetup();
     return;
   }
+
   const mode = packagerOpts.dev ? 'development' : 'production';
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 
   let config = Web.invokeWebpackConfig({
     projectRoot,
-    noPolyfill: packagerOpts.noPolyfill,
+    polyfill: packagerOpts.polyfill,
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
   });

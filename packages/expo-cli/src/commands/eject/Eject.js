@@ -359,7 +359,7 @@ async function findJavaScriptProjectFilesInRoot(root: string): Promise<Array<str
       children.map(f => findJavaScriptProjectFilesInRoot(path.join(root, f)))
     );
 
-    return [].concat.apply([], jsFilesInChildren);
+    return [].concat(...jsFilesInChildren);
   } else {
     // lol it's not a file or directory, we can't return a honey badger, 'cause it don't give a
     return [];

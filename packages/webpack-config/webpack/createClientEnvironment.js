@@ -1,45 +1,8 @@
-function createClientEnvironment(locations) {
-  const nativeAppManifest = require(locations.appJson);
-
-  function getAppManifest() {
-    if (nativeAppManifest && nativeAppManifest.expo) {
-      const { expo } = nativeAppManifest;
-      let web;
-      try {
-        web = require(locations.template.manifest);
-      } catch (e) {
-        web = {};
-      }
-
-      return {
-        // facebookScheme
-        // facebookAppId
-        // facebookDisplayName
-        name: expo.name,
-        description: expo.description,
-        slug: expo.slug,
-        sdkVersion: expo.sdkVersion,
-        version: expo.version,
-        githubUrl: expo.githubUrl,
-        orientation: expo.orientation,
-        primaryColor: expo.primaryColor,
-        privacy: expo.privacy,
-        icon: expo.icon,
-        scheme: expo.scheme,
-        notification: expo.notification,
-        splash: expo.splash,
-        androidShowExponentNotificationInShellApp: expo.androidShowExponentNotificationInShellApp,
-        web,
-      };
-    }
-    return {};
-  }
+function createClientEnvironment(locations, publicPath, nativeAppManifest) {
   const environment = process.env.NODE_ENV || 'development';
   const __DEV__ = environment !== 'production';
 
   const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_)/i;
-
-  const publicUrl = '';
 
   let processEnv = Object.keys(process.env)
     .filter(key => ENV_VAR_REGEX.test(key))
@@ -57,10 +20,10 @@ function createClientEnvironment(locations) {
         // For example, <img src={process.env.PUBLIC_URL + '/img/logo.png'} />.
         // This should only be used as an escape hatch. Normally you would put
         // images into the root folder and `import` them in code to get their paths.
-        PUBLIC_URL: JSON.stringify(publicUrl),
+        PUBLIC_URL: JSON.stringify(publicPath),
 
         // Surface the manifest for use in expo-constants
-        APP_MANIFEST: JSON.stringify(getAppManifest()),
+        APP_MANIFEST: JSON.stringify(nativeAppManifest),
       }
     );
   return {

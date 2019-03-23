@@ -1,11 +1,10 @@
+/* @flow */
+import { Cacher } from '../../tools/FsCache';
+
 jest.mock('analytics-node');
 
 const fs = require('fs-extra');
 const path = require('path');
-const pathExists = require('path-exists');
-
-import { Cacher, getCacheDir } from '../../tools/FsCache';
-import Config from '../../Config';
 
 describe('Cacher', () => {
   it('works without a bootstrap file', async () => {

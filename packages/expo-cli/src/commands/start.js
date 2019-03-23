@@ -3,12 +3,11 @@
  */
 
 import { DevToolsServer } from '@expo/dev-tools';
-import { ProjectUtils, ProjectSettings, Web, Project, UserSettings, UrlUtils } from 'xdl';
+import { ProjectUtils, Web, Project, UserSettings, UrlUtils } from 'xdl';
 import chalk from 'chalk';
 import opn from 'opn';
 import path from 'path';
 
-import prompt from '../prompt';
 import log from '../log';
 import sendTo from '../sendTo';
 import { installExitHooks } from '../exit';

@@ -9,7 +9,7 @@ const request = require('request');
 const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
 
-const package = require('../package.json');
+const packageJson = require('../package.json');
 
 const paths = {
   source: {
@@ -33,7 +33,7 @@ const tasks = {
       .pipe(babel())
       .pipe(
         sourcemaps.write('__sourcemaps__', {
-          sourceRoot: `/${package.name}@${package.version}/src`,
+          sourceRoot: `/${packageJson.name}@${packageJson.version}/src`,
         })
       )
       .pipe(gulp.dest(paths.build));

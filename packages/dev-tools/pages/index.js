@@ -3,8 +3,6 @@ import gql from 'graphql-tag';
 import { ApolloProvider, Query } from 'react-apollo';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
-import * as Constants from 'app/common/constants';
-import * as Strings from 'app/common/strings';
 import * as State from 'app/common/state';
 import createApolloClient from 'app/common/createApolloClient';
 import { initStore } from 'app/common/store';

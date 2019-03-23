@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import prompt from '../../prompt';
 
 /**
