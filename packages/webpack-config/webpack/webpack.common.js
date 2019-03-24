@@ -11,6 +11,7 @@ const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
+const { overrideWithPropertyOrConfig } = require('./utils/config');
 
 // Use root to work better with create-react-app
 const DEFAULT_ROOT_ID = `root`;
@@ -19,6 +20,8 @@ const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in
 const DEFAULT_NAME = 'Expo App';
 const DEFAULT_THEME_COLOR = '#4630EB';
 const DEFAULT_DESCRIPTION = 'A Neat Expo App';
+
+const DEFAULT_SERVICE_WORKER = {};
 
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
@@ -173,6 +176,25 @@ module.exports = function(env = {}) {
     exclude: locations.template.folder,
   };
 
+  const middlewarePlugins = [
+    // Remove unused import/exports
+    new WebpackDeepScopeAnalysisPlugin(),
+  ];
+
+  const serviceWorker = overrideWithPropertyOrConfig(
+    webManifest.serviceWorker,
+    DEFAULT_SERVICE_WORKER
+  );
+  if (serviceWorker) {
+    middlewarePlugins.push(
+      new WorkboxPlugin.GenerateSW({
+        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
+        navigateFallback: `${publicPath}index.html`,
+        ...serviceWorker,
+      })
+    );
+  }
+
   return {
     context: __dirname,
     // configures where the build ends up
@@ -208,13 +230,7 @@ module.exports = function(env = {}) {
 
       new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),
 
-      // Remove unused import/exports
-      new WebpackDeepScopeAnalysisPlugin(),
-
-      new WorkboxPlugin.GenerateSW({
-        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
-        navigateFallback: `${publicPath}index.html`,
-      }),
+      ...middlewarePlugins,
 
       new BundleAnalyzerPlugin({
         analyzerMode: 'static',

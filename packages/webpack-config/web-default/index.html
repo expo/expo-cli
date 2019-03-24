@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="%LANG_ISO_CODE%" style="font-size: 14px;">
   <head>
     <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <title>%WEB_TITLE%</title>
     <!--
       manifest.json provides metadata used when your web app is added to the
@@ -14,23 +15,36 @@
     <link rel="mask-icon" href="" color="" />
 
     <style>
-      html,
-      body,
-      #main {
-        height: 100%;
-        margin: 0px;
-        padding: 0px;
+      html {
+        position: relative;
+        overflow: hidden;
+        /*
+         * Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138
+         */
+        -webkit-text-size-adjust: 100%;
       }
-      #main {
-        display: flex;
-        flex-direction: column;
+      html,
+      body {
+        width: 100%;
+        /* Allows content to fill the viewport and go beyond the bottom */
+        height: 100%;
+        /* To smooth any scrolling behavior */
+        -webkit-overflow-scrolling: touch;
+      }
+      body {
+        -ms-overflow-style: scrollbar;
+        /* Allows you to scroll below the viewport; default value is visible */
+        overflow-y: scroll;
+        overscroll-behavior-y: none;
+        margin: 0px;
+        -webkit-overflow-scrolling: touch;
       }
     </style>
   </head>
 
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="%ROOT_ID%"></div>
+    <noscript>%NO_SCRIPT%</noscript>
+    <div id="%ROOT_ID%" style="display:flex;height:100%"></div>
 
     <script>
       if ('serviceWorker' in navigator) {
