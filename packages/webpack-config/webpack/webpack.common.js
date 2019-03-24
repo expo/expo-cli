@@ -11,6 +11,7 @@ const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
+const { overrideWithPropertyOrConfig } = require('./utils/config');
 
 // Use root to work better with create-react-app
 const DEFAULT_ROOT_ID = `root`;
@@ -130,7 +131,7 @@ module.exports = function(env = {}) {
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = appManifest.description || DEFAULT_DESCRIPTION;
-  const serviceWorker = webManifest.serviceWorker || DEFAULT_SERVICE_WORKER;
+
   const processedAppManifest = {
     ...appManifest,
     name: appName,
@@ -175,6 +176,25 @@ module.exports = function(env = {}) {
     exclude: locations.template.folder,
   };
 
+  const middlewarePlugins = [
+    // Remove unused import/exports
+    new WebpackDeepScopeAnalysisPlugin(),
+  ];
+
+  const serviceWorker = overrideWithPropertyOrConfig(
+    webManifest.serviceWorker,
+    DEFAULT_SERVICE_WORKER
+  );
+  if (serviceWorker) {
+    middlewarePlugins.push(
+      new WorkboxPlugin.GenerateSW({
+        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
+        navigateFallback: `${publicPath}index.html`,
+        ...serviceWorker,
+      })
+    );
+  }
+
   return {
     context: __dirname,
     // configures where the build ends up
@@ -210,14 +230,7 @@ module.exports = function(env = {}) {
 
       new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),
 
-      // Remove unused import/exports
-      new WebpackDeepScopeAnalysisPlugin(),
-
-      new WorkboxPlugin.GenerateSW({
-        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
-        navigateFallback: `${publicPath}index.html`,
-        ...serviceWorker,
-      }),
+      ...middlewarePlugins,
 
       new BundleAnalyzerPlugin({
         analyzerMode: 'static',
