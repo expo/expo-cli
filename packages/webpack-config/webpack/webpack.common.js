@@ -20,6 +20,8 @@ const DEFAULT_NAME = 'Expo App';
 const DEFAULT_THEME_COLOR = '#4630EB';
 const DEFAULT_DESCRIPTION = 'A Neat Expo App';
 
+const DEFAULT_SERVICE_WORKER = {};
+
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
@@ -128,7 +130,7 @@ module.exports = function(env = {}) {
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = appManifest.description || DEFAULT_DESCRIPTION;
-
+  const serviceWorker = webManifest.serviceWorker || DEFAULT_SERVICE_WORKER;
   const processedAppManifest = {
     ...appManifest,
     name: appName,
@@ -214,6 +216,7 @@ module.exports = function(env = {}) {
       new WorkboxPlugin.GenerateSW({
         exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
         navigateFallback: `${publicPath}index.html`,
+        ...serviceWorker,
       }),
 
       new BundleAnalyzerPlugin({
