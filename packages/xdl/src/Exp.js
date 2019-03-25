@@ -102,7 +102,7 @@ export async function extractTemplateApp(
         if (entry.type.toLowerCase() === 'file' && path.basename(entry.path) === 'gitignore') {
           // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
           // See: https://github.com/npm/npm/issues/1862
-          entry.path = '.gitignore';
+          entry.path = entry.path.replace(/gitignore$/, '.gitignore');
         }
       },
     });
