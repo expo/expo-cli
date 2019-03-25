@@ -6,6 +6,7 @@ import joi from 'joi';
 import os from 'os';
 import url from 'url';
 import validator from 'validator';
+import * as ConfigUtils from '@expo/config';
 
 import ip from './ip';
 import Config from './Config';
@@ -133,7 +134,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
   // Use an absolute path here so that we can not worry about symlinks/relative requires
-  let pluginModule = ProjectUtils.resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+  let pluginModule = ConfigUtils.resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
   queryParams += `&assetPlugin=${encodeURIComponent(pluginModule)}`;
 
   // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the

@@ -33,6 +33,7 @@ import readLastLines from 'read-last-lines';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
+import * as ConfigUtils from '@expo/config';
 import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
@@ -238,7 +239,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
 
 function _requireFromProject(modulePath, projectRoot, exp) {
   try {
-    let fullPath = ProjectUtils.resolveModule(modulePath, projectRoot, exp);
+    let fullPath = ConfigUtils.resolveModule(modulePath, projectRoot, exp);
     // Clear the require cache for this module so get a fresh version of it
     // without requiring the user to restart Expo CLI
     decache(fullPath);
@@ -253,7 +254,7 @@ export async function getSlugAsync(projectRoot: string, options: Object = {}) {
   // Verify that exp/app.json exist
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp || !pkg) {
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
       ErrorCode.NO_PACKAGE_JSON,
       `Couldn't read ${configName} file in project at ${projectRoot}`
@@ -263,7 +264,7 @@ export async function getSlugAsync(projectRoot: string, options: Object = {}) {
   if (!exp.slug && pkg.name) {
     exp.slug = pkg.name;
   } else if (!exp.slug) {
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
       ErrorCode.INVALID_MANIFEST,
       `${configName} in ${projectRoot} must contain the slug field`
@@ -875,7 +876,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
   // Verify that exp/app.json and package.json exist
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp || !pkg) {
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
       ErrorCode.NO_PACKAGE_JSON,
       `Couldn't read ${configName} file in project at ${projectRoot}`
@@ -1227,11 +1228,11 @@ async function getConfigAsync(
   if (!options.publicUrl) {
     // get the manifest from the project directory
     const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     return {
       exp,
       pkg,
-      configName: await ProjectUtils.configFilenameAsync(projectRoot),
+      configName: await ConfigUtils.configFilenameAsync(projectRoot),
       configPrefix: configName === 'app.json' ? 'expo.' : '',
     };
   } else {
@@ -1478,7 +1479,7 @@ export async function startReactNativeServerAsync(
 
   let packagerOpts = {
     port: packagerPort,
-    customLogReporterPath: ProjectUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
+    customLogReporterPath: ConfigUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
     assetExts: ['ttf'],
     nonPersistent: !!options.nonPersistent,
   };
@@ -1681,7 +1682,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       Doctor.validateWithNetworkAsync(projectRoot);
       let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(projectRoot);
       if (!manifest) {
-        const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+        const configName = await ConfigUtils.configFilenameAsync(projectRoot);
         throw new Error(`No ${configName} file found`);
       } // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
@@ -2000,7 +2001,7 @@ export async function startTunnelsAsync(projectRoot: string) {
     );
   }
   let packageShortName = path.parse(projectRoot).base;
-  let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+  let expRc = await ConfigUtils.readExpRcAsync(projectRoot);
 
   let startedTunnelsSuccessfully = false;
 
