@@ -120,16 +120,6 @@ export function attachLoggerStream(projectRoot: string, stream: any) {
 
 // Wrap with logger
 
-export async function findConfigFileAsync(
-  projectRoot: string
-): Promise<{ configPath: string, configName: string, configNamespace: ?string }> {
-  try {
-    return await ConfigUtils.findConfigFileAsync(projectRoot);
-  } catch (error) {
-    throw error;
-  }
-}
-
 export async function readExpRcAsync(projectRoot: string): Promise<any> {
   try {
     return await ConfigUtils.readExpRcAsync(projectRoot);
@@ -148,30 +138,4 @@ export async function readConfigJsonAsync(
     logError(projectRoot, 'expo', error.message);
     return { exp: null, pkg: null };
   }
-}
-
-// Legacy implementation
-// TODO: Bacon: Deprecate
-
-export async function writeConfigJsonAsync(
-  projectRoot: string,
-  options: Object
-): Promise<{ exp: ?Object, pkg: ?Object, rootConfig: ?Object }> {
-  return await ConfigUtils.writeConfigJsonAsync(projectRoot, options);
-}
-
-export function resolveModule(request, projectRoot, exp) {
-  return ConfigUtils.resolveModule(request, projectRoot, exp);
-}
-
-export function setCustomConfigPath(projectRoot: string, configPath: string): void {
-  return ConfigUtils.setCustomConfigPath(projectRoot, configPath);
-}
-
-export async function configFilenameAsync(projectRoot: string): Promise<string> {
-  return await ConfigUtils.configFilenameAsync(projectRoot);
-}
-
-export async function fileExistsAsync(file: string): Promise<boolean> {
-  return await ConfigUtils.fileExistsAsync(file);
 }

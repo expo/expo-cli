@@ -1531,11 +1531,7 @@ export async function startReactNativeServerAsync(
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
-  let defaultCliPath = ProjectUtils.resolveModule(
-    'react-native/local-cli/cli.js',
-    projectRoot,
-    exp
-  );
+  let defaultCliPath = ConfigUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
   const cliPath = exp.rnCliPath || defaultCliPath;
   let nodePath;
   // When using a custom path for the RN CLI, we want it to use the project

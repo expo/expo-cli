@@ -7,9 +7,9 @@ import path from 'path';
 import spawn from 'cross-spawn';
 import spawnAsync from '@expo/spawn-async';
 import { ProjectUtils, Detach, Versions } from 'xdl';
-import log from '../../log';
 import * as ConfigUtils from '@expo/config';
 
+import log from '../../log';
 import prompt from '../../prompt';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 
@@ -108,7 +108,7 @@ export async function ejectAsync(projectRoot: string, options) {
   if (ejectMethod === 'plain') {
     const useYarn = await fse.exists(path.resolve('yarn.lock'));
     const npmOrYarn = useYarn ? 'yarn' : 'npm';
-    const { configPath, configName } = await ProjectUtils.findConfigFileAsync(projectRoot);
+    const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
     const { exp, pkg: pkgJson } = await ProjectUtils.readConfigJsonAsync(projectRoot);
     const appJson = configName === 'app.json' ? JSON.parse(await fse.readFile(configPath)) : {};
     if (!exp) throw new Error(`Couldn't read ${configName}`);

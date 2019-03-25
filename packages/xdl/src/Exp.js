@@ -2,6 +2,7 @@
  * @flow
  */
 
+import * as ConfigUtils from '@expo/config';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import path from 'path';
@@ -303,7 +304,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const name = exp.slug;
   const { version, sdkVersion } = exp;
 
-  const configName = await ProjectUtils.configFilenameAsync(root);
+  const configName = await ConfigUtils.configFilenameAsync(root);
 
   if (!sdkVersion) {
     throw new Error(`sdkVersion is missing from ${configName}`);

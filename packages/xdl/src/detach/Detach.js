@@ -16,6 +16,7 @@ import glob from 'glob-promise';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
+import * as ConfigUtils from '@expo/config';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
 
@@ -73,7 +74,7 @@ async function _detachAsync(projectRoot, options) {
   }
 
   let username = user.username;
-  const { configName, configPath, configNamespace } = await ProjectUtils.findConfigFileAsync(
+  const { configName, configPath, configNamespace } = await ConfigUtils.findConfigFileAsync(
     projectRoot
   );
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
