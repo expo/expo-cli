@@ -19,7 +19,7 @@ export async function ensurePNGIsNotTransparent(imagePath) {
         }
         for (let y = 0; y < this.height; y++) {
           for (let x = 0; x < this.width; x++) {
-            let idx = (this.width * y + x) << 2;
+            let idx = (this.width * y + x) * 4;
 
             if (this.data[idx + 3] !== 255) {
               const err = new XDLError(
