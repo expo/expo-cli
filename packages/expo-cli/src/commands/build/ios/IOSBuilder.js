@@ -2,7 +2,6 @@ import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
 import { XDLError, ErrorCode } from 'xdl';
-import fs from 'fs-extra';
 
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';

@@ -10,7 +10,7 @@ async function ensurePNGIsNotTransparent(imagePath) {
     stream
       .pipe(new PNG({ filterType: 4 }))
       .on('metadata', ({ colorType }) => {
-        if (colorType !== 6) {
+        if (![4, 6].includes(colorType)) {
           hasAlreadyResolved = true;
           stream.close();
           res();
@@ -22,10 +22,10 @@ async function ensurePNGIsNotTransparent(imagePath) {
         }
         try {
           valideAlphaChannelIsEmpty(this.data, pick(this, ['width', 'height']));
+          res();
         } catch (err) {
-          return rej(err);
+          rej(err);
         }
-        res();
       })
       .on('error', err => rej(err));
   });
