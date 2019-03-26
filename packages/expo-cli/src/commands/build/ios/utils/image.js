@@ -21,7 +21,7 @@ async function ensurePNGIsNotTransparent(imagePath) {
           return;
         }
         try {
-          valideAlphaChannelIsEmpty(this.data, pick(this, ['width', 'height']));
+          validateAlphaChannelIsEmpty(this.data, pick(this, ['width', 'height']));
           res();
         } catch (err) {
           rej(err);
@@ -31,7 +31,7 @@ async function ensurePNGIsNotTransparent(imagePath) {
   });
 }
 
-function valideAlphaChannelIsEmpty(data, { width, height }) {
+function validateAlphaChannelIsEmpty(data, { width, height }) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       let idx = (width * y + x) * 4;
