@@ -9,8 +9,8 @@ async function ensurePNGIsNotTransparent(imagePath) {
     const stream = fs.createReadStream(imagePath);
     stream
       .pipe(new PNG({ filterType: 4 }))
-      .on('metadata', ({ colorType }) => {
-        if (![4, 6].includes(colorType)) {
+      .on('metadata', ({ alpha }) => {
+        if (!alpha) {
           hasAlreadyResolved = true;
           stream.close();
           res();
