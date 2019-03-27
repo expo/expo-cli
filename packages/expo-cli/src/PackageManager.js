@@ -19,16 +19,14 @@ const yarnPeerDependencyWarningPattern = new RegExp(
 
 class NpmStderrTransform extends Transform {
   _transform(chunk, encoding, callback) {
-    let line = chunk.toString();
-    this.push(line.replace(npmPeerDependencyWarningPattern, ''));
+    this.push(chunk.toString().replace(npmPeerDependencyWarningPattern, ''));
     callback();
   }
 }
 
 class YarnStderrTransform extends Transform {
   _transform(chunk, encoding, callback) {
-    let line = chunk.toString();
-    this.push(line.replace(yarnPeerDependencyWarningPattern, ''));
+    this.push(chunk.toString().replace(yarnPeerDependencyWarningPattern, ''));
     callback();
   }
 }
