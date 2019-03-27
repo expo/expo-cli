@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import CliTable from 'cli-table';
-import { User } from 'xdl';
+import { Android, Simulator, User } from 'xdl';
 
 import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';
@@ -91,4 +91,24 @@ export default program => {
       }
       log.newLine();
     });
+
+  program
+    .command('client:install:ios')
+    .description('Install the latest version of Expo Client for iOS on the simulator')
+    .asyncAction(async () => {
+      if (await Simulator.upgradeExpoAsync()) {
+        log('Done!');
+      }
+    }, true);
+
+  program
+    .command('client:install:android')
+    .description(
+      'Install the latest version of Expo Client for Android on a connected device or emulator'
+    )
+    .asyncAction(async () => {
+      if (await Android.upgradeExpoAsync()) {
+        log('Done!');
+      }
+    }, true);
 };
