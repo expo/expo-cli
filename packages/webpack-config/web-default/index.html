@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="%LANG_ISO_CODE%" style="font-size: 14px;">
+<html lang="%LANG_ISO_CODE%">
   <head>
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
@@ -8,43 +8,56 @@
       manifest.json provides metadata used when your web app is added to the
       homescreen on Android. See https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/
     -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="manifest" href="%PUBLIC_URL%manifest.json" />
     <!-- iOS icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
-    <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%apple-touch-icon.png" />
+    <link rel="apple-touch-startup-image" href="%PUBLIC_URL%apple-touch-icon.png" />
     <link rel="mask-icon" href="" color="" />
 
     <style>
-      html {
-        position: relative;
-        overflow: hidden;
-        /*
-         * Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138
-         */
-        -webkit-text-size-adjust: 100%;
-      }
       html,
-      body {
+      body,
+      body > div {
         width: 100%;
-        /* Allows content to fill the viewport and go beyond the bottom */
-        height: 100%;
         /* To smooth any scrolling behavior */
         -webkit-overflow-scrolling: touch;
+        margin: 0px;
+        padding: 0px;
+        /* Allows content to fill the viewport and go beyond the bottom */
+        min-height: 100%;
       }
+      body > div {
+        flex-shrink: 0;
+        flex-basis: auto;
+        flex-grow: 1;
+        display: flex;
+        flex: 1;
+      }
+
+      html {
+        font-size: 14px;
+        scroll-behavior: smooth;
+        /* Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138 */
+        -webkit-text-size-adjust: 100%;
+        height: 100%;
+      }
+
       body {
-        -ms-overflow-style: scrollbar;
+        display: flex;
         /* Allows you to scroll below the viewport; default value is visible */
         overflow-y: scroll;
         overscroll-behavior-y: none;
-        margin: 0px;
-        -webkit-overflow-scrolling: touch;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        -ms-overflow-style: scrollbar;
       }
     </style>
   </head>
 
   <body>
     <noscript>%NO_SCRIPT%</noscript>
-    <div id="%ROOT_ID%" style="display:flex;height:100%"></div>
+    <div id="%ROOT_ID%"></div>
 
     <script>
       if ('serviceWorker' in navigator) {
