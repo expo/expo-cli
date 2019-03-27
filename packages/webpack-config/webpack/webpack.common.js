@@ -67,9 +67,12 @@ function createNoJSComponent(message) {
 
 function sanitizePublicPath(publicPath) {
   if (typeof publicPath !== 'string' || !publicPath.length) {
-    return '';
+    return '/';
   }
-  return publicPath.replace(/\/$/, '');
+  if (publicPath.endsWith('/')) {
+    return publicPath;
+  }
+  return publicPath + '/';
 }
 
 function stripSensitiveConstantsFromAppManifest(appManifest, pwaManifestLocation) {
