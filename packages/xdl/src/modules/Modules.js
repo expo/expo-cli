@@ -21,6 +21,10 @@ type ModuleConfig = {
 
 const HIGHEST_KNOWN_VERSION = '10000.0.0';
 
+export function getAllNativeModules() {
+  return expoSdkUniversalModulesConfigs.filter(moduleConfig => moduleConfig.isNativeModule);
+}
+
 function mapForPlatform(platform: Platform): () => ModuleConfig {
   return moduleConfig => ({ ...moduleConfig, ...moduleConfig.config[platform] });
 }
@@ -62,7 +66,7 @@ export function getPublishableModules(sdkVersion: string): Array<ModuleConfig> {
   );
 }
 
-function doesVersionSatisfy(version: string, versionRequirement: string): boolean {
+export function doesVersionSatisfy(version: string, versionRequirement: string): boolean {
   if (version === 'UNVERSIONED') {
     return semver.satisfies(HIGHEST_KNOWN_VERSION, versionRequirement);
   }
