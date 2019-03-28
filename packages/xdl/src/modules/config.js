@@ -551,6 +551,20 @@ const universalModules = [
   },
 ];
 
+const vendoredNativeModules = [
+  { libName: '@expo/vector-icons', sdkVersions: '>=26.0.0', isNativeModule: true },
+  { libName: '@react-native-community/netinfo', sdkVersions: '>=33.0.0', isNativeModule: true },
+  { libName: 'lottie-react-native', sdkVersions: '>=26.0.0', isNativeModule: true },
+  { libName: 'react-native-branch', sdkVersions: '>=26.0.0', isNativeModule: true },
+  { libName: 'react-native-gesture-handler', sdkVersions: '>=26.0.0', isNativeModule: true },
+  { libName: 'react-native-maps', sdkVersions: '>=26.0.0', isNativeModule: true },
+  { libName: 'react-native-reanimated', sdkVersions: '>=28.0.0', isNativeModule: true },
+  { libName: 'react-native-screens', sdkVersions: '>=30.0.0', isNativeModule: true },
+  { libName: 'react-native-svg', sdkVersions: '>=26.0.0', isNativeModule: true },
+  { libName: 'react-native-view-shot', sdkVersions: '>=26.0.0', isNativeModule: true },
+  { libName: 'react-native-webview', sdkVersions: '>=33.0.0', isNativeModule: true },
+];
+
 function defaults(defaultConfig, ...customConfigs) {
   const config = { ...defaultConfig };
   for (const customConfig of customConfigs) {
@@ -580,4 +594,5 @@ const expoSdkUniversalModulesConfigs = expoUniversalModules.map(
 
 module.exports = {
   expoSdkUniversalModulesConfigs,
+  vendoredNativeModules,
 };
