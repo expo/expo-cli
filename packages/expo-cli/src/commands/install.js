@@ -26,12 +26,10 @@ async function installAsync(packages, options) {
     await packageManager.installAsync();
   }
 
-  const {
-    compatible,
-    incompatible,
-    dependencies,
-    sdkVersion,
-  } = await listBundledNativeModulesAsync(projectRoot, exp);
+  const { compatible, incompatible, dependencies } = await listBundledNativeModulesAsync(
+    projectRoot,
+    exp
+  );
 
   const nativeModules = [];
   const others = [];
@@ -52,7 +50,7 @@ async function installAsync(packages, options) {
       } else {
         throw new CommandError(
           'INCOMPATIBLE_NATIVE_MODULE',
-          `'${name}' is incompatible with Expo SDK ${sdkVersion}.\nSupported SDK versions: ${
+          `'${name}' is incompatible with Expo SDK ${exp.sdkVersion}.\nSupported SDK versions: ${
             incompatible[name].sdkVersions
           }`
         );
@@ -66,7 +64,7 @@ async function installAsync(packages, options) {
   const messages = [];
   if (nativeModules.length > 0) {
     messages.push(
-      `${nativeModules.length} SDK ${sdkVersion} compatible native ${inflect(
+      `${nativeModules.length} SDK ${exp.sdkVersion} compatible native ${inflect(
         'modules',
         nativeModules.length
       )}`
@@ -103,19 +101,17 @@ async function listBundledNativeModulesAsync(projectRoot, exp) {
     );
   }
   const packageJson = await JsonFile.readAsync(packageJsonPath);
-  const sdkVersion = packageJson.version;
   const nativeModules = Modules.getAllNativeModules();
   const [compatibleModules, incompatibleModules] = partition(
     nativeModules,
     moduleConfig =>
-      Modules.doesVersionSatisfy(sdkVersion, moduleConfig.sdkVersions) &&
+      Modules.doesVersionSatisfy(exp.sdkVersion, moduleConfig.sdkVersions) &&
       packageJson.dependencies[moduleConfig.libName]
   );
   return {
     compatible: keyBy(compatibleModules, moduleConfig => moduleConfig.libName),
     incompatible: keyBy(incompatibleModules, moduleConfig => moduleConfig.libName),
     dependencies: packageJson.dependencies,
-    sdkVersion,
   };
 }
 
