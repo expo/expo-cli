@@ -1,4 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const createMetatagsFromConfig = require('./createMetatagsFromConfig');
+const { overrideWithPropertyOrConfig } = require('./utils/config');
 
 const DEFAULT_MINIFY = {
   removeComments: true,
@@ -13,26 +15,14 @@ const DEFAULT_MINIFY = {
   minifyURLs: true,
 };
 
-function isObject(val) {
-  if (val === null) {
-    return false;
-  }
-  return typeof val === 'function' || typeof val === 'object';
-}
-
 function createIndexHTMLFromAppJSON(appManifest, locations) {
   // Is the app.json from expo-cli or react-native-cli
   const { web = {} } = appManifest;
-  const { minifyHTML } = web;
-
-  let minify = DEFAULT_MINIFY;
   /**
    * The user can disable minify with
    * `web.minifyHTML = false || {}`
    */
-  if (minifyHTML === false || isObject(minifyHTML)) {
-    minify = minifyHTML;
-  }
+  const minify = overrideWithPropertyOrConfig(web.minifyHTML, DEFAULT_MINIFY);
 
   // Generates an `index.html` file with the <script> injected.
   return new HtmlWebpackPlugin({

@@ -7,6 +7,7 @@ import path from 'path';
 import spawn from 'cross-spawn';
 import spawnAsync from '@expo/spawn-async';
 import { ProjectUtils, Detach, Versions } from 'xdl';
+import * as ConfigUtils from '@expo/config';
 import log from '../../log';
 
 import prompt from '../../prompt';
@@ -149,7 +150,7 @@ export async function ejectAsync(projectRoot: string, options) {
     log(chalk.green('Wrote to app.json, please update it manually in the future.'));
     const ejectCommand = 'node';
     const ejectArgs = [
-      ProjectUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp),
+      ConfigUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp),
       'eject',
     ];
 

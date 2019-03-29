@@ -1,12 +1,14 @@
+const path = require('path');
+
 // Only compile files from the react ecosystem.
 const includeModulesThatContainPaths = [
-  'node_modules/react-native',
-  'node_modules/react-navigation',
-  'node_modules/expo',
-  'node_modules/unimodules',
-  'node_modules/@react',
-  'node_modules/@expo',
-  'node_modules/@unimodules',
+  path.join('node_modules', 'react-native'),
+  path.join('node_modules', 'react-navigation'),
+  path.join('node_modules', 'expo'),
+  path.join('node_modules', 'unimodules'),
+  path.join('node_modules', '@react'),
+  path.join('node_modules', '@expo'),
+  path.join('node_modules', '@unimodules'),
 ];
 
 module.exports = function(babelRoot, { pathsToInclude = [], ...options } = {}) {

@@ -12,6 +12,7 @@ const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
+const { overrideWithPropertyOrConfig } = require('./utils/config');
 
 // To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
 const DEFAULT_VIEWPORT = 'width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover';
@@ -30,6 +31,8 @@ const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
 const ICON_SIZES = [96, 128, 192, 256, 384, 512];
 const MAX_SHORT_NAME_LENGTH = 12;
+
+const DEFAULT_SERVICE_WORKER = {};
 
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
@@ -75,9 +78,12 @@ function createNoJSComponent(message) {
 
 function sanitizePublicPath(publicPath) {
   if (typeof publicPath !== 'string' || !publicPath.length) {
-    return '';
+    return '/';
   }
-  return publicPath.replace(/\/$/, '');
+  if (publicPath.endsWith('/')) {
+    return publicPath;
+  }
+  return publicPath + '/';
 }
 
 function stripSensitiveConstantsFromAppManifest(appManifest, pwaManifestLocation) {
@@ -332,6 +338,25 @@ module.exports = function(env = {}) {
     exclude: locations.template.folder,
   };
 
+  const middlewarePlugins = [
+    // Remove unused import/exports
+    new WebpackDeepScopeAnalysisPlugin(),
+  ];
+
+  const serviceWorker = overrideWithPropertyOrConfig(
+    webManifest.serviceWorker,
+    DEFAULT_SERVICE_WORKER
+  );
+  if (serviceWorker) {
+    middlewarePlugins.push(
+      new WorkboxPlugin.GenerateSW({
+        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
+        navigateFallback: `${publicPath}index.html`,
+        ...serviceWorker,
+      })
+    );
+  }
+
   return {
     context: __dirname,
     // configures where the build ends up
@@ -373,13 +398,7 @@ module.exports = function(env = {}) {
 
       new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),
 
-      // Remove unused import/exports
-      new WebpackDeepScopeAnalysisPlugin(),
-
-      new WorkboxPlugin.GenerateSW({
-        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
-        navigateFallback: `${publicPath}index.html`,
-      }),
+      ...middlewarePlugins,
 
       new BundleAnalyzerPlugin({
         analyzerMode: 'static',

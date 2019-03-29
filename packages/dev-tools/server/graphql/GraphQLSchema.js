@@ -15,6 +15,7 @@ import {
   UserSettings,
   User,
 } from 'xdl';
+import * as ConfigUtils from '@expo/config';
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
 // for prettier
@@ -562,7 +563,7 @@ const resolvers = {
         ...input,
         githubUrl: input.githubUrl.match(/^https:\/\/github.com\//) ? input.githubUrl : undefined,
       };
-      let { exp } = await ProjectUtils.writeConfigJsonAsync(
+      let { exp } = await ConfigUtils.writeConfigJsonAsync(
         currentProject.projectDir,
         filteredInput
       );
