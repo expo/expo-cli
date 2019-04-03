@@ -1841,10 +1841,6 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
     ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
     return;
   }
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
-  if (!hasWebSupport) {
-    return;
-  }
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
   let webpackServerPort = await _getFreePortAsync(19000);
@@ -2158,7 +2154,10 @@ export async function startAsync(
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
   }
-  await startWebpackServerAsync(projectRoot, options, verbose);
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    await startWebpackServerAsync(projectRoot, options, verbose);
+  }
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);
@@ -2174,7 +2173,10 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
-  await stopWebpackServerAsync(projectRoot);
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    await stopWebpackServerAsync(projectRoot);
+  }
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);
