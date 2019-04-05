@@ -71,7 +71,7 @@ export async function _isSimulatorInstalledAsync() {
     Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
-  if (result !== 'com.apple.iphonesimulator') {
+  if (result !== 'com.apple.iphonesimulator' && result !== 'com.apple.CoreSimulator.SimulatorTrampoline') {
     console.warn(
       "Simulator is installed but is identified as '" + result + "'; don't know what that is."
     );
