@@ -34,6 +34,7 @@ function withFormat(input, format) {
 }
 
 function pascalToSnake(pascalValue) {
+  // https://stackoverflow.com/a/30521308/4047926
   return pascalValue
     .replace(/(?:^|\.?)([A-Z])/g, (searchValue, replaceValue) => '_' + replaceValue.toLowerCase())
     .replace(/^_/, '');
