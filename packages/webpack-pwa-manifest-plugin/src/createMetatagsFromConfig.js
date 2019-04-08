@@ -33,16 +33,16 @@ function withFormat(input, format) {
   return input;
 }
 
-function pascalToSnake(input) {
-  return input
-    .replace(/(?:^|\.?)([A-Z])/g, function(x, y) {
-      return '_' + y.toLowerCase();
-    })
+function pascalToSnake(pascalValue) {
+  return pascalValue
+    .replace(/(?:^|\.?)([A-Z])/g, (searchValue, replaceValue) => '_' + replaceValue.toLowerCase())
     .replace(/^_/, '');
 }
 
-function pascalToKebab(input) {
-  return input.replace(/(?:^|\.?)([A-Z])/g, (x, y) => '-' + y.toLowerCase()).replace(/^-/, '');
+function pascalToKebab(pascalValue) {
+  return pascalValue
+    .replace(/(?:^|\.?)([A-Z])/g, (searchValue, replaceValue) => '-' + replaceValue.toLowerCase())
+    .replace(/^-/, '');
 }
 
 function possibleProperty(input, possiblePropertyNames, fallback) {
