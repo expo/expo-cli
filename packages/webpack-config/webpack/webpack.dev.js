@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const PnpWebpackPlugin = require('pnp-webpack-plugin');
 
+const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
@@ -24,19 +25,21 @@ module.exports = function(env = {}) {
       chunkFilename: 'static/[id].[chunkhash].js',
     },
     devServer: {
-      stats: {
-        colors: true,
-      },
       progress: false,
       historyApiFallback: {
         disableDotRule: true,
       },
       https: env.https,
+      // GZip compressed files
       compress: true,
-      disableHostCheck: true,
-      contentBase: locations.template.folder,
-      inline: true,
+      // Disable logs
       clientLogLevel: 'none',
+      quiet: true,
+      contentBase: locations.template.folder,
+      watchContentBase: true,
+      hot: true,
+      disableHostCheck: true,
+      inline: true,
       overlay: false,
       host: '0.0.0.0',
       allowedHosts: ['0.0.0.0', 'localhost'],
@@ -45,7 +48,9 @@ module.exports = function(env = {}) {
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
         'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
       },
-      before(app) {
+      before(app, server) {
+        // This lets us fetch source contents from webpack for the error overlay
+        app.use(evalSourceMapMiddleware(server));
         // This lets us open files from the runtime error overlay.
         app.use(errorOverlayMiddleware());
         // This service worker file is effectively a 'no-op' that will reset any
