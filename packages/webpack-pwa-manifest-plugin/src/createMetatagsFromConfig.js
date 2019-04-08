@@ -1,14 +1,14 @@
 import Dot from 'dot-object';
 import Metatags from './Metatags';
 
-const deliminator = ':';
-const dot = new Dot(deliminator);
+const delimiter = ':';
+const dot = new Dot(delimiter);
 
 function getMetaArrayFromObject(obj, format, prefix) {
   const output = dot.dot(obj);
   let parsed = [];
   for (const key of Object.keys(output)) {
-    let components = key.split(deliminator);
+    let components = key.split(delimiter);
     if (prefix != null) {
       components.unshift(prefix);
     }
@@ -18,7 +18,7 @@ function getMetaArrayFromObject(obj, format, prefix) {
     if (format != null) {
       components = components.map(input => withFormat(input, format));
     }
-    parsed.push({ property: components.join(deliminator), content: output[key] });
+    parsed.push({ property: components.join(delimiter), content: output[key] });
   }
   return parsed;
 }
