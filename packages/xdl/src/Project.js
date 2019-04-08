@@ -25,20 +25,18 @@ import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
 import clearConsole from 'react-dev-utils/clearConsole';
-import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
-import url from 'url';
 import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
 import webpack from 'webpack';
-import webpackConfig from '@expo/webpack-config';
 import WebpackDevServer from 'webpack-dev-server';
-import address from 'address';
+
+import * as ConfigUtils from '@expo/config';
 import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
@@ -55,7 +53,6 @@ import * as ExpSchema from './project/ExpSchema';
 import FormData from './tools/FormData';
 import * as IosPlist from './detach/IosPlist';
 import * as IosWorkspace from './detach/IosWorkspace';
-import { isNode } from './tools/EnvironmentHelper';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as Sentry from './Sentry';
@@ -246,7 +243,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
 
 function _requireFromProject(modulePath, projectRoot, exp) {
   try {
-    let fullPath = ProjectUtils.resolveModule(modulePath, projectRoot, exp);
+    let fullPath = ConfigUtils.resolveModule(modulePath, projectRoot, exp);
     // Clear the require cache for this module so get a fresh version of it
     // without requiring the user to restart Expo CLI
     decache(fullPath);
@@ -261,7 +258,7 @@ export async function getSlugAsync(projectRoot: string, options: Object = {}) {
   // Verify that exp/app.json exist
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp || !pkg) {
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
       ErrorCode.NO_PACKAGE_JSON,
       `Couldn't read ${configName} file in project at ${projectRoot}`
@@ -271,7 +268,7 @@ export async function getSlugAsync(projectRoot: string, options: Object = {}) {
   if (!exp.slug && pkg.name) {
     exp.slug = pkg.name;
   } else if (!exp.slug) {
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
       ErrorCode.INVALID_MANIFEST,
       `${configName} in ${projectRoot} must contain the slug field`
@@ -625,7 +622,7 @@ export async function publishAsync(
   });
 
   const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot);
-  if (validationStatus == Doctor.ERROR || validationStatus === Doctor.FATAL) {
+  if (validationStatus === Doctor.ERROR || validationStatus === Doctor.FATAL) {
     throw new XDLError(
       ErrorCode.PUBLISH_VALIDATION_ERROR,
       "Couldn't publish because errors were found. (See logs above.) Please fix the errors and try again."
@@ -641,7 +638,7 @@ export async function publishAsync(
   let validPostPublishHooks = [];
   if (hooks && hooks.postPublish) {
     hooks.postPublish.forEach(hook => {
-      let { file, config } = hook;
+      let { file } = hook;
       let fn = _requireFromProject(file, projectRoot, exp);
       if (typeof fn !== 'function') {
         logger.global.error(
@@ -844,8 +841,8 @@ async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options })
   let formData = new FormData();
 
   formData.append('expJson', JSON.stringify(exp));
-  formData.append('iosBundle', _createBlob(iosBundle), 'iosBundle');
-  formData.append('androidBundle', _createBlob(androidBundle), 'androidBundle');
+  formData.append('iosBundle', iosBundle, 'iosBundle');
+  formData.append('androidBundle', androidBundle, 'androidBundle');
   formData.append('options', JSON.stringify(options));
   let response = await Api.callMethodAsync('publish', null, 'put', null, {
     formData,
@@ -883,7 +880,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
   // Verify that exp/app.json and package.json exist
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp || !pkg) {
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
       ErrorCode.NO_PACKAGE_JSON,
       `Couldn't read ${configName} file in project at ${projectRoot}`
@@ -1212,28 +1209,11 @@ async function uploadAssetsAsync(projectRoot, assets) {
         let relativePath = paths[key].replace(projectRoot, '');
         logger.global.info({ quiet: true }, `Uploading ${relativePath}`);
 
-        formData.append(key, await _readFileForUpload(paths[key]), paths[key]);
+        formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
       await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
     })
   );
-}
-
-function _createBlob(string) {
-  if (isNode()) {
-    return string;
-  } else {
-    return new Blob([string]);
-  }
-}
-
-async function _readFileForUpload(path) {
-  if (isNode()) {
-    return fs.createReadStream(path);
-  } else {
-    const data = await fs.readFile(path);
-    return new Blob([data]);
-  }
 }
 
 async function getConfigAsync(
@@ -1252,11 +1232,11 @@ async function getConfigAsync(
   if (!options.publicUrl) {
     // get the manifest from the project directory
     const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-    const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     return {
       exp,
       pkg,
-      configName: await ProjectUtils.configFilenameAsync(projectRoot),
+      configName: await ConfigUtils.configFilenameAsync(projectRoot),
       configPrefix: configName === 'app.json' ? 'expo.' : '',
     };
   } else {
@@ -1300,7 +1280,7 @@ export async function buildAsync(
     expIds: joi.array(),
     type: joi.any().valid('archive', 'simulator', 'client'),
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
-    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-\.]+$/),
+    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
     publicUrl: joi.string(),
     sdkVersion: joi.strict(),
   });
@@ -1384,16 +1364,6 @@ async function _waitForRunningAsync(projectRoot, url, retries = 300) {
   } else {
     await delayAsync(100);
     return _waitForRunningAsync(projectRoot, url, retries - 1);
-  }
-}
-
-function _stripPackagerOutputBox(output: string) {
-  let re = /Running packager on port (\d+)/;
-  let found = output.match(re);
-  if (found && found.length >= 2) {
-    return `Running packager on port ${found[1]}\n`;
-  } else {
-    return null;
   }
 }
 
@@ -1513,7 +1483,7 @@ export async function startReactNativeServerAsync(
 
   let packagerOpts = {
     port: packagerPort,
-    customLogReporterPath: ProjectUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
+    customLogReporterPath: ConfigUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
     assetExts: ['ttf'],
     nonPersistent: !!options.nonPersistent,
   };
@@ -1565,11 +1535,7 @@ export async function startReactNativeServerAsync(
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
-  let defaultCliPath = ProjectUtils.resolveModule(
-    'react-native/local-cli/cli.js',
-    projectRoot,
-    exp
-  );
+  let defaultCliPath = ConfigUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
   const cliPath = exp.rnCliPath || defaultCliPath;
   let nodePath;
   // When using a custom path for the RN CLI, we want it to use the project
@@ -1716,7 +1682,7 @@ export async function startExpoServerAsync(projectRoot: string) {
       Doctor.validateWithNetworkAsync(projectRoot);
       let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(projectRoot);
       if (!manifest) {
-        const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+        const configName = await ConfigUtils.configFilenameAsync(projectRoot);
         throw new Error(`No ${configName} file found`);
       } // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
@@ -1871,6 +1837,10 @@ function getWebpackInstance(projectRoot) {
 }
 
 async function startWebpackServerAsync(projectRoot, options, verbose) {
+  if (webpackDevServerInstance) {
+    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
+    return;
+  }
   const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
     return;
@@ -1886,8 +1856,9 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
   const useYarn = fs.existsSync(paths.yarnLockFile);
   // TODO: Bacon: fix name getter
   const appName = require(paths.appPackageJson).name;
+
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
-  let config = webpackConfig({ projectRoot, development: dev, production: !dev, https });
+  let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
   let webpackServerPort = await _getFreePortAsync(19000);
   ProjectUtils.logInfo(projectRoot, 'expo', `Starting Webpack on port ${webpackServerPort}.`);
 
@@ -1939,13 +1910,14 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
     Web.logWebSetup();
     return;
   }
+
   const mode = packagerOpts.dev ? 'development' : 'production';
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 
-  let config = webpackConfig({
+  let config = Web.invokeWebpackConfig({
     projectRoot,
-    noPolyfill: packagerOpts.noPolyfill,
+    polyfill: packagerOpts.polyfill,
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
   });
@@ -2052,7 +2024,7 @@ export async function startTunnelsAsync(projectRoot: string) {
     );
   }
   let packageShortName = path.parse(projectRoot).base;
-  let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+  let expRc = await ConfigUtils.readExpRcAsync(projectRoot);
 
   let startedTunnelsSuccessfully = false;
 
@@ -2209,7 +2181,10 @@ export async function startAsync(
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
   }
-  await startWebpackServerAsync(projectRoot, options, verbose);
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    await startWebpackServerAsync(projectRoot, options, verbose);
+  }
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);
@@ -2225,7 +2200,10 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
-  await stopWebpackServerAsync(projectRoot);
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    await stopWebpackServerAsync(projectRoot);
+  }
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);

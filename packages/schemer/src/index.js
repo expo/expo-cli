@@ -178,7 +178,7 @@ export default class Schemer {
     meta: Meta,
   }) {
     if (meta && meta.asset && data) {
-      const { asset, dimensions, square, contentTypePattern, contentTypeHuman }: Meta = meta;
+      const { dimensions, square, contentTypePattern }: Meta = meta;
       // filePath could be an URL
       const filePath = path.resolve(this.rootDir, data);
       try {
@@ -193,7 +193,7 @@ export default class Schemer {
           ? imageProbe.sync(await readChunk(filePath, 0, 4100))
           : await imageProbe(data, { useElectronNet: false });
 
-        const { width, height, type, mime, wUnits, hUnits } = probeResult;
+        const { width, height, type, mime } = probeResult;
 
         if (contentTypePattern && !mime.match(new RegExp(contentTypePattern))) {
           this.manualValidationErrors.push(
@@ -209,7 +209,7 @@ export default class Schemer {
           );
         }
 
-        if (dimensions && (dimensions.height !== height || dimensions.width != width)) {
+        if (dimensions && (dimensions.height !== height || dimensions.width !== width)) {
           this.manualValidationErrors.push(
             new ValidationError({
               errorCode: ErrorCodes.INVALID_DIMENSIONS,

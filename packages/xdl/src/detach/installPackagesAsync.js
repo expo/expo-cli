@@ -7,12 +7,6 @@ import semver from 'semver';
 
 import logger from './Logger';
 
-type InstallResult = {
-  code: number,
-  command: string,
-  args: Array<string>,
-};
-
 export default async function installPackagesAsync(
   projectDir: string,
   packages: string[],
@@ -29,7 +23,7 @@ export default async function installPackagesAsync(
     packageManager = yarnExists && !packageLockJsonExists ? 'yarn' : 'npm';
   }
 
-  if (packageManager == 'yarn') {
+  if (packageManager === 'yarn') {
     logger.info(`Installing dependencies using Yarn...`);
     await spawnAsync('yarnpkg', ['add', '--silent', ...packages], {
       cwd: projectDir,

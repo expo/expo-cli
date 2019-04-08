@@ -1,8 +1,30 @@
+import fs from 'fs';
+import path from 'path';
 import opn from 'opn';
 import chalk from 'chalk';
 import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 import { readConfigJsonAsync } from './project/ProjectUtils';
+
+function invokePossibleFunction(objectOrMethod, ...args) {
+  if (typeof objectOrMethod === 'function') {
+    return objectOrMethod(...args);
+  } else {
+    return objectOrMethod;
+  }
+}
+
+export function invokeWebpackConfig(env, argv) {
+  // Check if the project has a webpack.config.js in the root.
+  const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
+  if (fs.existsSync(projectWebpackConfig)) {
+    const webpackConfig = require(projectWebpackConfig);
+    return invokePossibleFunction(webpackConfig, env, argv);
+  }
+  // Fallback to the default expo webpack config.
+  const config = require('@expo/webpack-config');
+  return config(env, argv);
+}
 
 function logPreviewNotice() {
   console.log();

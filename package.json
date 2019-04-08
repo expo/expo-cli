@@ -11,16 +11,22 @@
     "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools"
   },
   "husky": {
-    "hooks": {  
+    "hooks": {
       "pre-commit": "lint-staged"
     }
   },
   "lint-staged": {
-    "*.js": ["prettier --write", "git add"]
+    "*.js": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ]
   },
   "devDependencies": {
+    "eslint": "^5.15.3",
+    "eslint-config-universe": "^2.0.0-alpha.0",
     "husky": "^1.1.3",
-    "lerna": "^3.4.1",
+    "lerna": "3.4.1",
     "lint-staged": "^8.0.4",
     "prettier": "^1.16.4"
   }

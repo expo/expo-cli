@@ -6,11 +6,23 @@ const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
+const chalk = require('chalk');
 const getLocations = require('./webpackLocations');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const createClientEnvironment = require('./createClientEnvironment');
 const createBabelConfig = require('./createBabelConfig');
-const chalk = require('chalk');
+const { overrideWithPropertyOrConfig } = require('./utils/config');
+
+// Use root to work better with create-react-app
+const DEFAULT_ROOT_ID = `root`;
+const DEFAULT_LANGUAGE_ISO_CODE = `en`;
+const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
+const DEFAULT_NAME = 'Expo App';
+const DEFAULT_THEME_COLOR = '#4630EB';
+const DEFAULT_DESCRIPTION = 'A Neat Expo App';
+
+const DEFAULT_SERVICE_WORKER = {};
+
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
@@ -37,20 +49,111 @@ const mediaLoaderConfiguration = {
     {
       loader: 'file-loader',
       options: {
-        name: '[path][name].[ext]',
+        name: 'static/assets/[path][name].[ext]',
       },
     },
   ],
 };
 
-module.exports = function(env) {
+const styleLoaderConfiguration = {
+  test: /\.(css)$/,
+  use: ['style-loader', 'css-loader'],
+};
+
+function createNoJSComponent(message) {
+  // from twitter.com
+  return `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
+}
+
+function sanitizePublicPath(publicPath) {
+  if (typeof publicPath !== 'string' || !publicPath.length) {
+    return '/';
+  }
+  if (publicPath.endsWith('/')) {
+    return publicPath;
+  }
+  return publicPath + '/';
+}
+
+function stripSensitiveConstantsFromAppManifest(appManifest, pwaManifestLocation) {
+  let web;
+  try {
+    web = require(pwaManifestLocation);
+  } catch (e) {
+    web = {};
+  }
+
+  return {
+    /**
+     * Omit app.json properties that get removed during the native turtle build
+     *
+     * `facebookScheme`
+     * `facebookAppId`
+     * `facebookDisplayName`
+     */
+    name: appManifest.displayName || appManifest.name,
+    description: appManifest.description,
+    slug: appManifest.slug,
+    sdkVersion: appManifest.sdkVersion,
+    version: appManifest.version,
+    githubUrl: appManifest.githubUrl,
+    orientation: appManifest.orientation,
+    primaryColor: appManifest.primaryColor,
+    privacy: appManifest.privacy,
+    icon: appManifest.icon,
+    scheme: appManifest.scheme,
+    notification: appManifest.notification,
+    splash: appManifest.splash,
+    androidShowExponentNotificationInShellApp:
+      appManifest.androidShowExponentNotificationInShellApp,
+    web,
+  };
+}
+
+module.exports = function(env = {}) {
   const locations = getLocations(env.projectRoot);
   const babelConfig = createBabelConfig(locations.root);
-  const indexHTML = createIndexHTMLFromAppJSON(locations);
-  const clientEnv = createClientEnvironment(locations);
 
-  const nativeAppManifest = require(locations.appJson);
-  const appManifest = nativeAppManifest.expo || nativeAppManifest;
+  const appJSON = require(locations.appJson);
+  if (!appJSON) {
+    throw new Error('app.json could not be found at: ' + locations.appJson);
+  }
+  // For RN CLI support
+  const appManifest = appJSON.expo || appJSON;
+  const { web: webManifest = {} } = appManifest;
+
+  // rn-cli apps use a displayName value as well.
+  const appName =
+    appJSON.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
+  const webName = webManifest.name || appName;
+
+  const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
+  const noJavaScriptMessage = webManifest.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
+  const rootId = appManifest.rootId || DEFAULT_ROOT_ID;
+  const noJSComponent = createNoJSComponent(noJavaScriptMessage);
+  const publicPath = sanitizePublicPath(webManifest.publicPath);
+  const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
+  const description = appManifest.description || DEFAULT_DESCRIPTION;
+
+  const processedAppManifest = {
+    ...appManifest,
+    name: appName,
+    description,
+    primaryColor,
+    rootId,
+    web: {
+      ...webManifest,
+      lang: languageISOCode,
+      name: webName,
+      noJavaScriptMessage,
+      publicPath,
+    },
+  };
+
+  const publicAppManifest = stripSensitiveConstantsFromAppManifest(
+    processedAppManifest,
+    locations.production.manifest
+  );
 
   const ttfLoaderConfiguration = {
     test: /\.(ttf|otf|woff)$/,
@@ -76,7 +179,24 @@ module.exports = function(env) {
     exclude: locations.template.folder,
   };
 
-  const publicPath = ''.replace(/\/$/, '');
+  const middlewarePlugins = [
+    // Remove unused import/exports
+    new WebpackDeepScopeAnalysisPlugin(),
+  ];
+
+  const serviceWorker = overrideWithPropertyOrConfig(
+    webManifest.serviceWorker,
+    DEFAULT_SERVICE_WORKER
+  );
+  if (serviceWorker) {
+    middlewarePlugins.push(
+      new WorkboxPlugin.GenerateSW({
+        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
+        navigateFallback: `${publicPath}index.html`,
+        ...serviceWorker,
+      })
+    );
+  }
 
   return {
     context: __dirname,
@@ -90,20 +210,17 @@ module.exports = function(env) {
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
     },
-    optimization: {
-      splitChunks: {
-        chunks: 'all',
-        name: false,
-      },
-      runtimeChunk: 'single',
-    },
     plugins: [
-      // Generates an `index.html` file with the <script> injected.
-      indexHTML,
+      // Generate the `index.html`
+      createIndexHTMLFromAppJSON(processedAppManifest, locations),
 
+      // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
-        WEB_TITLE: appManifest.name,
+        WEB_TITLE: webName,
+        NO_SCRIPT: noJSComponent,
+        LANG_ISO_CODE: languageISOCode,
+        ROOT_ID: rootId,
       }),
 
       // Generate a manifest file which contains a mapping of all asset filenames
@@ -113,28 +230,16 @@ module.exports = function(env) {
         fileName: 'asset-manifest.json',
         publicPath,
       }),
-      new webpack.DefinePlugin(clientEnv),
-      // Remove unused import/exports
-      new WebpackDeepScopeAnalysisPlugin(),
 
-      new WorkboxPlugin.GenerateSW({
-        skipWaiting: true,
-        clientsClaim: true,
-        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
-        importWorkboxFrom: 'cdn',
-        navigateFallback: `${publicPath}index.html`,
-        navigateFallbackBlacklist: [new RegExp('^/_'), new RegExp('/[^/]+\\.[^/]+$')],
-        runtimeCaching: [
-          {
-            urlPattern: /(.*?)/,
-            handler: 'staleWhileRevalidate',
-          },
-        ],
-      }),
+      new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),
+
+      ...middlewarePlugins,
+
       new ProgressBarPlugin({
-        format: '  build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds)' + ' :msg',
+        format: '  build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds) :msg',
         clear: false,
       }),
+
       new BundleAnalyzerPlugin({
         analyzerMode: 'static',
         openAnalyzer: false,
@@ -152,6 +257,7 @@ module.exports = function(env) {
         imageLoaderConfiguration,
         ttfLoaderConfiguration,
         mediaLoaderConfiguration,
+        styleLoaderConfiguration,
       ],
     },
     resolve: {

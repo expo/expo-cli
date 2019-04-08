@@ -82,7 +82,7 @@ async function chooseAppAsync(listOfAppNames) {
   }
 
   for (i = 0; i < listOfAppNames.length; i++) {
-    if (!!appIds[i]) {
+    if (appIds[i]) {
       return listOfAppNames[i];
     }
   }
@@ -184,12 +184,10 @@ async function openFolderInTerminalAppAsync(dir, inTab = false) {
   switch (program) {
     case 'iTerm':
       return await openItermToSpecificFolderAsync(dir, inTab);
-      break;
 
     case 'Terminal':
     default:
       return await openTerminalToSpecificFolderAsync(dir, inTab);
-      break;
   }
 }
 

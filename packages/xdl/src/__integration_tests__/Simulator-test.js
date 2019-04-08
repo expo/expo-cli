@@ -1,6 +1,6 @@
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
-
 import delayAsync from 'delay-async';
+
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 40000;
 
 const xdl = require('../xdl');
 

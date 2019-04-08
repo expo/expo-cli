@@ -1,9 +1,12 @@
 {
   "name": "@expo/traveling-fastlane-linux",
-  "version": "1.8.2",
+  "version": "1.9.3",
   "description": "Bundled up fastlane",
   "main": "index.js",
-  "os": ["win32", "linux"],
+  "os": [
+    "win32",
+    "linux"
+  ],
   "scripts": {
     "preinstall": "node platform.js"
   },

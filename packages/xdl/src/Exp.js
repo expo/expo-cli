@@ -2,6 +2,7 @@
  * @flow
  */
 
+import * as ConfigUtils from '@expo/config';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import path from 'path';
@@ -12,12 +13,8 @@ import rimraf from 'rimraf';
 import pacote from 'pacote';
 import tar from 'tar';
 
-import * as Analytics from './Analytics';
 import Api from './Api';
 import * as Binaries from './Binaries';
-import * as Detach from './detach/Detach';
-import ErrorCode from './ErrorCode';
-import * as Extract from './Extract';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -25,7 +22,6 @@ import * as ThirdParty from './ThirdParty';
 import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
-import XDLError from './XDLError';
 import * as ProjectSettings from './ProjectSettings';
 import MessageCode from './MessageCode';
 
@@ -107,7 +103,7 @@ export async function extractTemplateApp(
         if (entry.type.toLowerCase() === 'file' && path.basename(entry.path) === 'gitignore') {
           // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
           // See: https://github.com/npm/npm/issues/1862
-          entry.path = '.gitignore';
+          entry.path = entry.path.replace(/gitignore$/, '.gitignore');
         }
       },
     });
@@ -308,7 +304,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const name = exp.slug;
   const { version, sdkVersion } = exp;
 
-  const configName = await ProjectUtils.configFilenameAsync(root);
+  const configName = await ConfigUtils.configFilenameAsync(root);
 
   if (!sdkVersion) {
     throw new Error(`sdkVersion is missing from ${configName}`);

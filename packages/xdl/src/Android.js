@@ -18,6 +18,7 @@ import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import UserSettings from './UserSettings';
 import * as UrlUtils from './UrlUtils';
+import * as Versions from './Versions';
 import { getImageDimensionsAsync } from './tools/ImageUtils';
 
 let _lastUrl = null;
@@ -84,7 +85,7 @@ async function _isExpoInstalledAsync() {
 async function _expoVersionAsync() {
   let info = await _getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
-  let regex = /versionName\=([0-9\.]+)/;
+  let regex = /versionName=([0-9.]+)/;
   let regexMatch = regex.exec(info);
   if (regexMatch.length < 2) {
     return null;
@@ -94,7 +95,7 @@ async function _expoVersionAsync() {
 }
 
 async function _checkExpoUpToDateAsync() {
-  let versions = await Api.versionsAsync();
+  let versions = await Versions.versionsAsync();
   let installedVersion = await _expoVersionAsync();
 
   if (!installedVersion || semver.lt(installedVersion, versions.androidVersion)) {
@@ -113,7 +114,7 @@ function _apkCacheDirectory() {
 }
 
 async function _downloadApkAsync() {
-  let versions = await Api.versionsAsync();
+  let versions = await Versions.versionsAsync();
   let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
   if (await fs.exists(apkPath)) {

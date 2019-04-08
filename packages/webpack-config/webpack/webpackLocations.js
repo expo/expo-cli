@@ -2,9 +2,30 @@ const path = require('path');
 const findWorkspaceRoot = require('find-yarn-workspace-root');
 const fs = require('fs');
 
+const possibleMainFiles = [
+  'index.web.js',
+  'index.js',
+  'index.web.jsx',
+  'index.jsx',
+  'src/index.web.js',
+  'src/index.js',
+  'src/index.web.jsx',
+  'src/index.jsx',
+];
+
 function getLocations(inputProjectRoot = '') {
   const absolute = (...pathComponents) =>
     path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
+
+  function findMainFile() {
+    for (const fileName of possibleMainFiles) {
+      const filePath = absolute(fileName);
+      if (fs.existsSync(filePath)) {
+        return filePath;
+      }
+    }
+    return null;
+  }
 
   const projectRoot = absolute();
   const packageJsonPath = absolute('./package.json');
@@ -20,8 +41,20 @@ function getLocations(inputProjectRoot = '') {
     modulesPath = absolute('node_modules');
   }
 
-  // react-native init projects do not have a main defined by default
-  const { main = 'index' } = require(packageJsonPath);
+  const { main } = require(packageJsonPath);
+  let appMain;
+  if (!main) {
+    // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
+    appMain = findMainFile();
+    if (!appMain) {
+      throw new Error(
+        'Could not determine the main file in your project (index, src/index). Please define it with the `main` field in your `package.json`'
+      );
+    }
+  } else {
+    appMain = main;
+  }
+
   const nativeAppManifest = require(appJsonPath);
 
   const { expo: expoManifest = {} } = nativeAppManifest;
@@ -50,9 +83,10 @@ function getLocations(inputProjectRoot = '') {
     packageJson: packageJsonPath,
     appJson: appJsonPath,
     root: projectRoot,
-    appMain: absolute(main),
+    appMain: absolute(appMain),
     modules: modulesPath,
     template: {
+      get: templatePath,
       folder: templatePath(),
       indexHtml: templatePath('index.html'),
       manifest: templatePath('manifest.json'),

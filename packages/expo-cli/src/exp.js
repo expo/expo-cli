@@ -30,6 +30,7 @@ import {
   ProjectUtils,
   User as UserManager,
 } from 'xdl';
+import * as ConfigUtils from '@expo/config';
 
 import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
@@ -121,7 +122,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
       if (!fs.existsSync(pathToConfig)) {
         throw new Error(`File at provide config path does not exist: ${pathToConfig}`);
       }
-      ProjectUtils.setCustomConfigPath(projectDir, pathToConfig);
+      ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
 
     const logLines = (msg, logFn) => {
@@ -214,7 +215,8 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     };
 
     let bar;
-    let packagerLogsStream = new PackagerLogsStream({
+    // eslint-disable-next-line no-new
+    new PackagerLogsStream({
       projectRoot: projectDir,
       onStartBuildBundle: () => {
         bar = new ProgressBar('Building JavaScript bundle [:bar] :percent', {

@@ -1,5 +1,6 @@
 /* @flow */
 
+import * as ConfigUtils from '@expo/config';
 import { $$asyncIterator } from 'iterall';
 import { makeExecutableSchema } from 'graphql-tools';
 import {
@@ -562,7 +563,7 @@ const resolvers = {
         ...input,
         githubUrl: input.githubUrl.match(/^https:\/\/github.com\//) ? input.githubUrl : undefined,
       };
-      let { exp } = await ProjectUtils.writeConfigJsonAsync(
+      let { exp } = await ConfigUtils.writeConfigJsonAsync(
         currentProject.projectDir,
         filteredInput
       );

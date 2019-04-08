@@ -3,7 +3,6 @@ import dateformat from 'dateformat';
 import chalk from 'chalk';
 
 import { runAction, travelingFastlane } from './fastlane';
-import log from '../../../../log';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline(
@@ -26,7 +25,9 @@ const createManager = ({ appleId, appleIdPassword, team }) => ({
     } catch (err) {
       const resultString = get(err, 'rawDump.resultString');
       if (resultString && resultString.match(/Maximum number of certificates generated/)) {
-        log.error(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
+        const error = new Error(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
+        error.code = 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR';
+        throw error;
       }
       throw err;
     }

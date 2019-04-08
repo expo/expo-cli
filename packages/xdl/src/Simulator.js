@@ -19,6 +19,7 @@ import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectUtils from './project/ProjectUtils';
 import UserSettings from './UserSettings';
+import * as Versions from './Versions';
 import XDLError from './XDLError';
 import * as UrlUtils from './UrlUtils';
 
@@ -70,7 +71,10 @@ export async function _isSimulatorInstalledAsync() {
     Logger.global.error(XCODE_NOT_INSTALLED_ERROR);
     return false;
   }
-  if (result !== 'com.apple.iphonesimulator') {
+  if (
+    result !== 'com.apple.iphonesimulator' &&
+    result !== 'com.apple.CoreSimulator.SimulatorTrampoline'
+  ) {
     console.warn(
       "Simulator is installed but is identified as '" + result + "'; don't know what that is."
     );
@@ -227,7 +231,7 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
     return null;
   }
 
-  let regex = /Exponent\-([0-9\.]+)\.app/;
+  let regex = /Exponent-([0-9.]+)\.app/;
   let regexMatch = regex.exec(matches[0]);
   if (regexMatch.length < 2) {
     return null;
@@ -237,7 +241,7 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
 }
 
 export async function _checkExpoUpToDateAsync() {
-  let versions = await Api.versionsAsync();
+  let versions = await Versions.versionsAsync();
   let installedVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
 
   if (!installedVersion || semver.lt(installedVersion, versions.iosVersion)) {
@@ -256,7 +260,7 @@ export async function _downloadSimulatorAppAsync(url) {
     return dir;
   }
 
-  let versions = await Api.versionsAsync();
+  let versions = await Versions.versionsAsync();
   let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
   if (await fs.exists(dir)) {

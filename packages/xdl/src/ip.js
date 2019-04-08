@@ -59,7 +59,6 @@ function loopback(family) {
 
 function address(name, family) {
   var interfaces = os.networkInterfaces();
-  var all;
 
   // Default to `ipv4`
   //

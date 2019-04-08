@@ -2,7 +2,7 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.8.2"
+VERSION = "1.9.3"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
@@ -14,6 +14,7 @@ SCRIPTS = [
   'app_produce',
   'authenticate',
   'ensure_app_exists',
+  'list_devices',
   'manage_ad_hoc_provisioning_profile',
   'manage_dist_certs',
   'manage_provisioning_profiles',

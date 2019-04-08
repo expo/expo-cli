@@ -6,7 +6,6 @@ import _ from 'lodash';
 import path from 'path';
 import semver from 'semver';
 
-import Api from './Api';
 import ApiV2Client from './ApiV2';
 import { Cacher } from './tools/FsCache';
 import ErrorCode from './ErrorCode';

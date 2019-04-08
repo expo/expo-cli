@@ -1,4 +1,4 @@
-import styled, { css } from 'react-emotion';
+import { css } from 'react-emotion';
 import copyToClipboard from 'copy-to-clipboard';
 
 import * as React from 'react';
@@ -6,7 +6,6 @@ import * as SVG from 'app/common/svg';
 import * as Constants from 'app/common/constants';
 
 import ContentGroup from 'app/components/ContentGroup';
-import ContentGroupHeader from 'app/components/ContentGroupHeader';
 import NetworkGroupButton from 'app/components/NetworkGroupButton';
 import InputWithButton from 'app/components/InputWithButton';
 import SettingsControl from 'app/components/SettingsControl';

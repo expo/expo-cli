@@ -15,7 +15,6 @@ export const PROCESS_SOURCE = {
 const DEFAULT_SOURCES = [ISSUES_SOURCE, PROCESS_SOURCE];
 
 export default function createContext({ projectDir, messageBuffer, layout, issues }) {
-  let flattenedMessages;
   return {
     getCurrentProject() {
       return {

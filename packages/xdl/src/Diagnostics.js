@@ -17,7 +17,6 @@ import Api from './Api';
 import * as Binaries from './Binaries';
 import * as Env from './Env';
 import FormData from './tools/FormData';
-import { isNode } from './tools/EnvironmentHelper';
 import UserManager, { ANONYMOUS_USERNAME } from './User';
 import UserSettings from './UserSettings';
 import * as Utils from './Utils';
@@ -72,14 +71,8 @@ async function _uploadLogsAsync(info: any): Promise<boolean | string> {
   rimraf.sync(tempDir);
 
   // upload
-  let file;
-  if (isNode()) {
-    file = fs.createReadStream(archivePath);
-  } else {
-    file = new Blob([await fs.readFile(archivePath)]);
-  }
   let formData = new FormData();
-  formData.append('archive', file);
+  formData.append('archive', fs.createReadStream(archivePath));
 
   let response = await Api.callMethodAsync('uploadDiagnostics', [{}], 'put', null, { formData });
   return response.url;

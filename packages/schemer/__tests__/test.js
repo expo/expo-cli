@@ -1,6 +1,5 @@
 import Schemer from '../src/index';
-import { pathToSchema, pathToSchemaPath, schemaPointerToPath } from '../src/Util';
-import { SchemerError, ValidationError, ErrorCodes } from '../src/Error.js';
+import { ErrorCodes } from '../src/Error.js';
 
 describe('Sanity Tests', () => {
   it('is a class', () => {

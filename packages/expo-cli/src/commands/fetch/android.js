@@ -1,8 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import crypto from 'crypto';
 
-import spawnAsync from '@expo/spawn-async';
 import { Credentials, Exp } from 'xdl';
 
 import log from '../../log';

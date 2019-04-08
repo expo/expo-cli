@@ -8,6 +8,7 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
+import * as ConfigUtils from '@expo/config';
 
 import Schemer, { SchemerError } from '@expo/schemer';
 
@@ -114,7 +115,7 @@ export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
 ): Promise<{ schemaErrorMessage: ?string, assetsErrorMessage: ?string }> {
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
@@ -182,8 +183,8 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-watchman-version');
 
-  const expJsonExists = await ProjectUtils.fileExistsAsync(path.join(projectRoot, 'exp.json'));
-  const appJsonExists = await ProjectUtils.fileExistsAsync(path.join(projectRoot, 'app.json'));
+  const expJsonExists = await ConfigUtils.fileExistsAsync(path.join(projectRoot, 'exp.json'));
+  const appJsonExists = await ConfigUtils.fileExistsAsync(path.join(projectRoot, 'app.json'));
 
   if (expJsonExists && appJsonExists) {
     ProjectUtils.logWarning(
@@ -197,7 +198,7 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
   ProjectUtils.clearNotification(projectRoot, 'doctor-both-app-and-exp-json');
 
   let sdkVersion = exp.sdkVersion;
-  const configName = await ProjectUtils.configFilenameAsync(projectRoot);
+  const configName = await ConfigUtils.configFilenameAsync(projectRoot);
 
   // Skip validation if the correct token is set in env
   if (!(sdkVersion === 'UNVERSIONED' && process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN)) {
@@ -373,7 +374,7 @@ async function _validateReactNativeVersionAsync(
 }
 
 async function _validateNodeModulesAsync(projectRoot): Promise<number> {
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
@@ -405,7 +406,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
 
   // Check to make sure react native is installed
   try {
-    ProjectUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+    ConfigUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
     ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
@@ -417,7 +418,7 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
       );
       return FATAL;
     } else {
-      throw error;
+      throw e;
     }
   }
   return NO_ISSUES;

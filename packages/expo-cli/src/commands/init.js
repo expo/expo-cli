@@ -12,11 +12,10 @@ import pacote from 'pacote';
 import trimStart from 'lodash/trimStart';
 import wordwrap from 'wordwrap';
 
+import path from 'path';
 import prompt from '../prompt';
 import log from '../log';
 import CommandError from '../CommandError';
-
-import path from 'path';
 
 const FEATURED_TEMPLATES = [
   '----- Managed workflow -----',
@@ -45,8 +44,6 @@ const FEATURED_TEMPLATES = [
 ];
 
 const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-foundation,'];
-
-let _downloadIsSlowPrompt = false;
 
 async function action(projectDir, options) {
   let parentDir;
@@ -82,7 +79,8 @@ async function action(projectDir, options) {
         templateSpec.name === 'bare-foundation') &&
       templateSpec.registry
     ) {
-      templateSpec.name = templateSpec.escapedName = `expo-template-${templateSpec.name}`;
+      templateSpec.escapedName = `expo-template-${templateSpec.name}`;
+      templateSpec.name = templateSpec.escapedName;
     }
   } else {
     let descriptionColumn =
@@ -359,26 +357,6 @@ async function promptForManagedConfig(parentDir, dirName, options) {
     set(config, key, values[key]);
   }
   return { expo: config };
-}
-
-function validateAndroidPackage(value) {
-  if (!isString(value) || value === '') {
-    return 'Android package identifier must not be empty.';
-  }
-  return (
-    /^[a-zA-Z][a-zA-Z0-9\_]*(\.[a-zA-Z][a-zA-Z0-9\_]*)+$/.test(value) ||
-    "Only alphanumeric characters, '.' and '_' are allowed, and each '.' must be followed by a letter."
-  );
-}
-
-function validateIosBundleIdentifier(value) {
-  if (!isString(value) || value === '') {
-    return 'iOS bundle identifier must not be empty.';
-  }
-  return (
-    /^[a-zA-Z][a-zA-Z0-9\-\.]+$/.test(value) ||
-    "Must start with a letter and only alphanumeric characters, '.' and '-' are allowed."
-  );
 }
 
 export default program => {

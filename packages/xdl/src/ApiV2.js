@@ -48,8 +48,6 @@ type APIV2ClientOptions = {
   sessionSecret?: string,
 };
 
-type UserOrSession = ?{ sessionSecret: ?string };
-
 export default class ApiV2Client {
   sessionSecret: ?string = null;
 
