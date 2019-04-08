@@ -1531,11 +1531,7 @@ export async function startReactNativeServerAsync(
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
-  let defaultCliPath = ProjectUtils.resolveModule(
-    'react-native/local-cli/cli.js',
-    projectRoot,
-    exp
-  );
+  let defaultCliPath = ConfigUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
   const cliPath = exp.rnCliPath || defaultCliPath;
   let nodePath;
   // When using a custom path for the RN CLI, we want it to use the project
@@ -1839,10 +1835,6 @@ function getWebpackInstance(projectRoot) {
 async function startWebpackServerAsync(projectRoot, options, verbose) {
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
-    return;
-  }
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
-  if (!hasWebSupport) {
     return;
   }
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
@@ -2158,7 +2150,10 @@ export async function startAsync(
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
   }
-  await startWebpackServerAsync(projectRoot, options, verbose);
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    await startWebpackServerAsync(projectRoot, options, verbose);
+  }
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);
@@ -2174,7 +2169,10 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
-  await stopWebpackServerAsync(projectRoot);
+  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    await stopWebpackServerAsync(projectRoot);
+  }
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);

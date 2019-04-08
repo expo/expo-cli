@@ -1,5 +1,6 @@
 /* @flow */
 
+import * as ConfigUtils from '@expo/config';
 import { $$asyncIterator } from 'iterall';
 import { makeExecutableSchema } from 'graphql-tools';
 import {
@@ -15,7 +16,6 @@ import {
   UserSettings,
   User,
 } from 'xdl';
-import * as ConfigUtils from '@expo/config';
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
 // for prettier

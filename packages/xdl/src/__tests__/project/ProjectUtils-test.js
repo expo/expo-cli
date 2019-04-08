@@ -1,5 +1,4 @@
 import * as ProjectUtils from '../../project/ProjectUtils';
-import Config from '../../Config';
 
 jest.mock('analytics-node');
 jest.mock('fs');
@@ -58,36 +57,6 @@ function setupDirs() {
     '/home/mocky/expjson-with-node-modules/node-modules-path/package.json': packageJsonString,
   });
 }
-
-describe('configFilenameAsync', () => {
-  beforeEach(async () => {
-    setupDirs();
-  });
-
-  afterEach(() => {
-    mockfs.restore();
-  });
-
-  it('checks configfile heuristics are correct', async () => {
-    const appJson = await ProjectUtils.configFilenameAsync('/home/mocky/appjson');
-    expect(appJson).toEqual('app.json');
-
-    const expJson = await ProjectUtils.configFilenameAsync('/home/mocky/expjson');
-    expect(expJson).toEqual('exp.json');
-
-    const prevDevTool = Config.developerTool;
-
-    Config.developerTool = 'exp';
-    const noExpJson = await ProjectUtils.configFilenameAsync('/doesntexist');
-    expect(noExpJson).toEqual('exp.json');
-
-    Config.developerTool = 'crna';
-    const noAppJson = await ProjectUtils.configFilenameAsync('/doesntexist');
-    expect(noAppJson).toEqual('app.json');
-
-    Config.developerTool = prevDevTool;
-  });
-});
 
 describe('readConfigJsonAsync', () => {
   beforeEach(async () => {
