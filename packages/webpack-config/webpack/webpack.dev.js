@@ -3,8 +3,6 @@ const webpack = require('webpack');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const PnpWebpackPlugin = require('pnp-webpack-plugin');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
-
-const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
