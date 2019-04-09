@@ -144,14 +144,14 @@ module.exports = function(env = {}, argv) {
 
       ...middlewarePlugins,
 
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        openAnalyzer: false,
-      }),
-
       new ProgressBarPlugin({
         format: '  build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds) :msg',
         clear: false,
+      }),
+
+      new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        openAnalyzer: false,
       }),
     ],
 
@@ -175,6 +175,7 @@ module.exports = function(env = {}, argv) {
       alias: {
         // Alias direct react-native imports to react-native-web
         'react-native$': 'react-native-web',
+        '@react-native-community/netinfo': 'react-native-web/dist/exports/NetInfo',
         // Add polyfills for modules that react-native-web doesn't support
         // Depends on expo-asset
         'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
