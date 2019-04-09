@@ -1,25 +1,17 @@
+const { createEnvironmentConstants } = require('@expo/config');
+const WebpackPWAManifestPlugin = require('@expo/webpack-pwa-manifest-plugin');
+const chalk = require('chalk');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
-const webpack = require('webpack');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
-const WorkboxPlugin = require('workbox-webpack-plugin');
+const webpack = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
-const chalk = require('chalk');
-const getLocations = require('./webpackLocations');
-const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
+const WorkboxPlugin = require('workbox-webpack-plugin');
 const createClientEnvironment = require('./createClientEnvironment');
-const createBabelConfig = require('./createBabelConfig');
+const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const { overrideWithPropertyOrConfig } = require('./utils/config');
-
-// Use root to work better with create-react-app
-const DEFAULT_ROOT_ID = `root`;
-const DEFAULT_LANGUAGE_ISO_CODE = `en`;
-const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
-const DEFAULT_NAME = 'Expo App';
-const DEFAULT_THEME_COLOR = '#4630EB';
-const DEFAULT_DESCRIPTION = 'A Neat Expo App';
+const getLocations = require('./webpackLocations');
 
 const DEFAULT_SERVICE_WORKER = {};
 
@@ -65,95 +57,11 @@ function createNoJSComponent(message) {
   return `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
 }
 
-function sanitizePublicPath(publicPath) {
-  if (typeof publicPath !== 'string' || !publicPath.length) {
-    return '/';
-  }
-  if (publicPath.endsWith('/')) {
-    return publicPath;
-  }
-  return publicPath + '/';
-}
-
-function stripSensitiveConstantsFromAppManifest(appManifest, pwaManifestLocation) {
-  let web;
-  try {
-    web = require(pwaManifestLocation);
-  } catch (e) {
-    web = {};
-  }
-
-  return {
-    /**
-     * Omit app.json properties that get removed during the native turtle build
-     *
-     * `facebookScheme`
-     * `facebookAppId`
-     * `facebookDisplayName`
-     */
-    name: appManifest.displayName || appManifest.name,
-    description: appManifest.description,
-    slug: appManifest.slug,
-    sdkVersion: appManifest.sdkVersion,
-    version: appManifest.version,
-    githubUrl: appManifest.githubUrl,
-    orientation: appManifest.orientation,
-    primaryColor: appManifest.primaryColor,
-    privacy: appManifest.privacy,
-    icon: appManifest.icon,
-    scheme: appManifest.scheme,
-    notification: appManifest.notification,
-    splash: appManifest.splash,
-    androidShowExponentNotificationInShellApp:
-      appManifest.androidShowExponentNotificationInShellApp,
-    web,
-  };
-}
-
-module.exports = function(env = {}) {
+module.exports = function(env = {}, argv) {
   const locations = getLocations(env.projectRoot);
-  const babelConfig = createBabelConfig(locations.root);
-
-  const appJSON = require(locations.appJson);
-  if (!appJSON) {
-    throw new Error('app.json could not be found at: ' + locations.appJson);
-  }
-  // For RN CLI support
-  const appManifest = appJSON.expo || appJSON;
-  const { web: webManifest = {} } = appManifest;
-
-  // rn-cli apps use a displayName value as well.
-  const appName =
-    appJSON.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
-  const webName = webManifest.name || appName;
-
-  const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
-  const noJavaScriptMessage = webManifest.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
-  const rootId = appManifest.rootId || DEFAULT_ROOT_ID;
-  const noJSComponent = createNoJSComponent(noJavaScriptMessage);
-  const publicPath = sanitizePublicPath(webManifest.publicPath);
-  const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
-  const description = appManifest.description || DEFAULT_DESCRIPTION;
-
-  const processedAppManifest = {
-    ...appManifest,
-    name: appName,
-    description,
-    primaryColor,
-    rootId,
-    web: {
-      ...webManifest,
-      lang: languageISOCode,
-      name: webName,
-      noJavaScriptMessage,
-      publicPath,
-    },
-  };
-
-  const publicAppManifest = stripSensitiveConstantsFromAppManifest(
-    processedAppManifest,
-    locations.production.manifest
-  );
+  // const babelConfig = createBabelConfig(locations.root);
+  const { babelConfig, config } = env;
+  const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
   const ttfLoaderConfiguration = {
     test: /\.(ttf|otf|woff)$/,
@@ -184,8 +92,11 @@ module.exports = function(env = {}) {
     new WebpackDeepScopeAnalysisPlugin(),
   ];
 
+  const { publicPath, rootId, noJavaScriptMessage, lang } = config.web;
+  const noJSComponent = createNoJSComponent(noJavaScriptMessage);
+
   const serviceWorker = overrideWithPropertyOrConfig(
-    webManifest.serviceWorker,
+    config.web.serviceWorker,
     DEFAULT_SERVICE_WORKER
   );
   if (serviceWorker) {
@@ -212,23 +123,21 @@ module.exports = function(env = {}) {
     },
     plugins: [
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON(processedAppManifest, locations),
+      createIndexHTMLFromAppJSON(config, locations),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
         PUBLIC_URL: publicPath,
-        WEB_TITLE: webName,
+        WEB_TITLE: config.web.name,
         NO_SCRIPT: noJSComponent,
-        LANG_ISO_CODE: languageISOCode,
+        LANG_ISO_CODE: lang,
         ROOT_ID: rootId,
       }),
 
-      // Generate a manifest file which contains a mapping of all asset filenames
-      // to their corresponding output file so that tools can pick it up without
-      // having to parse `index.html`.
-      new ManifestPlugin({
-        fileName: 'asset-manifest.json',
-        publicPath,
+      // Generate the `manifest.json`
+      new WebpackPWAManifestPlugin(config, {
+        ...env,
+        filename: locations.production.manifest,
       }),
 
       new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),

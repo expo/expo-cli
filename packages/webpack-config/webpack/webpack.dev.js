@@ -7,14 +7,13 @@ const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-
 const common = require('./webpack.common.js');
 const getLocations = require('./webpackLocations');
 
-module.exports = function(env = {}) {
+module.exports = function(env = {}, argv) {
   const locations = getLocations(env.projectRoot);
 
-  return merge(common(env), {
+  return merge(common(env, argv), {
     mode: 'development',
     entry: [require.resolve('react-dev-utils/webpackHotDevClient'), locations.appMain],
     devtool: 'cheap-module-source-map',
