@@ -3,6 +3,14 @@ const findWorkspaceRoot = require('find-yarn-workspace-root');
 const fs = require('fs');
 
 const possibleMainFiles = [
+  'index.web.ts',
+  'index.ts',
+  'index.web.tsx',
+  'index.tsx',
+  'src/index.web.ts',
+  'src/index.ts',
+  'src/index.web.tsx',
+  'src/index.tsx',
   'index.web.js',
   'index.js',
   'index.web.jsx',
