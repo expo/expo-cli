@@ -8,6 +8,7 @@ import spawn from 'cross-spawn';
 import spawnAsync from '@expo/spawn-async';
 import { ProjectUtils, Detach, Versions } from 'xdl';
 import * as ConfigUtils from '@expo/config';
+
 import log from '../../log';
 import prompt from '../../prompt';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
