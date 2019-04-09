@@ -14,7 +14,7 @@ const includeModulesThatContainPaths = [
 module.exports = function(babelRoot, { pathsToInclude = [], ...options } = {}) {
   const modules = [...includeModulesThatContainPaths, ...pathsToInclude];
   return {
-    test: /\.jsx?$/,
+    test: /\.[jt]sx?$/,
     include(inputPath) {
       for (const option of modules) {
         if (inputPath.includes(option)) {

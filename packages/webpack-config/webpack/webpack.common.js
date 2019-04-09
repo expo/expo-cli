@@ -262,7 +262,7 @@ module.exports = function(env = {}) {
     },
     resolve: {
       symlinks: false,
-      extensions: ['.web.js', '.js', '.jsx', '.json'],
+      extensions: ['.web.ts', '.ts', '.tsx', '.web.js', '.js', '.jsx', '.json'],
       alias: {
         // Alias direct react-native imports to react-native-web
         'react-native$': 'react-native-web',
