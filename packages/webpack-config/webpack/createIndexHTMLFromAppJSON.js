@@ -1,5 +1,4 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const createMetatagsFromConfig = require('./createMetatagsFromConfig');
 const { overrideWithPropertyOrConfig } = require('./utils/config');
 
 const DEFAULT_MINIFY = {

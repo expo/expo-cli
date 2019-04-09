@@ -196,7 +196,7 @@ function sanitizePublicPath(publicPath) {
 
 export function getConfigForPWA(projectRoot: string, getAbsolutePath: Function, options: Object) {
   const config = readConfigJson(projectRoot);
-  return ensurePWAConfig(config);
+  return ensurePWAConfig(config, getAbsolutePath, options);
 }
 
 export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, options: Object) {
@@ -388,14 +388,14 @@ export function readConfigJson(projectRoot: string) {
 
   exp = require(configPath);
 
-  if (!rootConfig) {
-    throw new Error('app.json could not be found at: ' + configPath);
-  }
-
   if (configNamespace) {
     // if we're not using exp.json, then we've stashed everything under an expo key
     rootConfig = exp;
     exp = exp[configNamespace];
+  }
+
+  if (!rootConfig) {
+    throw new Error('app.json could not be found at: ' + configPath);
   }
 
   return exp;
