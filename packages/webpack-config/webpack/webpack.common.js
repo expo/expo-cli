@@ -266,6 +266,7 @@ module.exports = function(env = {}) {
       alias: {
         // Alias direct react-native imports to react-native-web
         'react-native$': 'react-native-web',
+        '@react-native-community/netinfo': 'react-native-web/dist/exports/NetInfo',
         // Add polyfills for modules that react-native-web doesn't support
         // Depends on expo-asset
         'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
