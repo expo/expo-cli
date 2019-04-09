@@ -1,4 +1,6 @@
 export default {
+  openGraph: [],
+  twitter: [],
   microsoft: [
     // 'msapplication-window': `width=${microsoft.width};height=${microsoft.height}`,
     { tag: 'meta', name: 'mssmarttagspreventparsing', propNames: ['preventParsing'] },

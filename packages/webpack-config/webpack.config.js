@@ -1,15 +1,15 @@
+const { getConfigForPWA } = require('@expo/config');
 const developmentConfig = require('./webpack/webpack.dev');
 const productionConfig = require('./webpack/webpack.prod');
-const getLocations = require('./webpackLocations');
-const createBabelConfig = require('./createBabelConfig');
-const { getConfigForPWA } = require('@expo/config');
+const getLocations = require('./webpack/webpackLocations');
+const createBabelConfig = require('./webpack/createBabelConfig');
 
 module.exports = function(env = {}, argv) {
   const locations = getLocations(env.projectRoot);
   const babelConfig = createBabelConfig(locations.root);
   env.babelConfig = babelConfig;
   // Fill all config values with PWA defaults
-  env.config = getConfigForPWA(env.projectRoot, locations.get, {
+  env.config = getConfigForPWA(env.projectRoot, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),
   });
 
