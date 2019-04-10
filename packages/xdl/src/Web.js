@@ -26,6 +26,11 @@ export function invokeWebpackConfig(env, argv) {
   return config(env, argv);
 }
 
+export async function logURL(projectRoot) {
+  let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+  console.log(`Expo Web is running at ${chalk.underline(url)}`);
+}
+
 function logPreviewNotice() {
   console.log();
   console.log(

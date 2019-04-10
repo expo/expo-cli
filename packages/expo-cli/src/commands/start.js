@@ -65,6 +65,7 @@ async function action(projectDir, options) {
   const startOpts = await parseStartOptionsAsync(projectDir, options);
 
   await Project.startAsync(rootPath, startOpts);
+  await Web.logURL(projectDir);
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
@@ -77,14 +78,12 @@ async function action(projectDir, options) {
 
   if (!nonInteractive && !exp.isDetachexped) {
     await TerminalUI.startAsync(projectDir, startOpts);
-  } else {
-    if (!options.webOnly) {
-      if (!exp.isDetached) {
-        log.newLine();
-        urlOpts.printQRCode(url);
-      }
-      log(`Your app is running at ${chalk.underline(url)}`);
+  } else if (!options.webOnly) {
+    if (!exp.isDetached) {
+      log.newLine();
+      urlOpts.printQRCode(url);
     }
+    log(`Your app is running at ${chalk.underline(url)}`);
   }
 
   log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
