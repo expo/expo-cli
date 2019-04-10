@@ -69,7 +69,7 @@ async function action(projectDir, options) {
 
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
-  if (!nonInteractive && !exp.isDetachexped) {
+  if (!nonInteractive && !exp.isDetached) {
     await TerminalUI.startAsync(projectDir, startOpts);
   } else {
     if (!exp.isDetached) {
