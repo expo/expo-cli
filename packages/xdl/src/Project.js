@@ -1914,12 +1914,13 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
     const { stats: statsDirectory = 'web-build-stats.json' } = packagerOpts;
     const statsPath = path.join(projectRoot, statsDirectory);
     await JsonFile.writeAsync(statsPath, stats.toJson());
-  } catch ({ message }) {
+  } catch (error) {
     ProjectUtils.logError(
       projectRoot,
       'expo',
-      'There was a problem building your web project. ' + message
+      'There was a problem building your web project. ' + error.message
     );
+    throw error;
   }
 }
 
