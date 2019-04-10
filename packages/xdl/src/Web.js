@@ -2,9 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import opn from 'opn';
 import chalk from 'chalk';
+import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 import { readConfigJsonAsync } from './project/ProjectUtils';
+import XDLError from './XDLError';
 
 function invokePossibleFunction(objectOrMethod, ...args) {
   if (typeof objectOrMethod === 'function') {
@@ -70,6 +72,13 @@ export async function onlySupportsWebAsync(projectRoot) {
     return exp.platforms[0] === 'web';
   }
   return false;
+}
+
+export async function ensureWebSupportAsync(projectRoot) {
+  const hasWebSupport = await hasWebSupportAsync(projectRoot);
+  if (!hasWebSupport) {
+    throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, getWebSetupLogs());
+  }
 }
 
 function getWebSetupLogs() {

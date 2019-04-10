@@ -1882,12 +1882,7 @@ async function stopWebpackServerAsync(projectRoot) {
 }
 
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
-  if (!hasWebSupport) {
-    Web.logWebSetup();
-    return;
-  }
-
+  await Web.ensureWebSupportAsync(projectRoot);
   const mode = packagerOpts.dev ? 'development' : 'production';
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
