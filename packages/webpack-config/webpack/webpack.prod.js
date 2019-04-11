@@ -34,7 +34,7 @@ module.exports = function(env = {}, argv) {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
   const { web = {} } = appManifest;
-  const { build: buildConfig = {} } = web;
+  const { build: buildConfig = { verbose: false } } = web;
   /**
    * build: {
    *   verbose: boolean,

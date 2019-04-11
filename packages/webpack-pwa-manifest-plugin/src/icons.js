@@ -140,10 +140,10 @@ function resize(img, mimeType, width, height) {
   });
 }
 
-export function retrieveIcons(options) {
-  const startupImages = parseArray(options.startupImages);
+export function retrieveIcons(manifest) {
+  const startupImages = parseArray(manifest.startupImages);
 
-  let icons = parseArray(options.icon || options.icons);
+  let icons = parseArray(manifest.icon || manifest.icons);
 
   if (startupImages.length) {
     const startupImage = startupImages[0];
@@ -155,9 +155,9 @@ export function retrieveIcons(options) {
     response.push(sanitizeIcon(icon));
   }
 
-  delete options.startupImages;
-  delete options.icon;
-  delete options.icons;
+  delete manifest.startupImages;
+  delete manifest.icon;
+  delete manifest.icons;
   return response;
 }
 
