@@ -1884,11 +1884,6 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
         ProjectUtils.logError(projectRoot, 'webpack', error);
       }
       // clearConsole();
-      ProjectUtils.logInfo(
-        projectRoot,
-        'webpack',
-        chalk.cyan('Starting the development server...\n')
-      );
     });
   });
 
