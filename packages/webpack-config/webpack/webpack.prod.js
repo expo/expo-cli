@@ -86,6 +86,9 @@ module.exports = function(env = {}, argv) {
     entry: {
       app: appEntry,
     },
+    output: {
+      path: locations.production.folder,
+    },
     plugins,
   });
 };

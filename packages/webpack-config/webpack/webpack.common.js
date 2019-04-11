@@ -165,7 +165,6 @@ module.exports = function(env = {}, argv) {
     context: __dirname,
     // configures where the build ends up
     output: {
-      path: locations.production.folder,
       filename: 'static/[chunkhash].js',
       sourceMapFilename: '[chunkhash].map',
       // There are also additional JS chunk files if you use code splitting.
