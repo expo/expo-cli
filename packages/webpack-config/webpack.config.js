@@ -6,7 +6,7 @@ const createBabelConfig = require('./webpack/createBabelConfig');
 
 module.exports = function(env = {}, argv) {
   const locations = getLocations(env.projectRoot);
-  const babelConfig = createBabelConfig(locations.root);
+  const babelConfig = createBabelConfig(env, locations.root);
   env.babelConfig = babelConfig;
   // Fill all config values with PWA defaults
   env.config = getConfigForPWA(env.projectRoot, locations.absolute, {
