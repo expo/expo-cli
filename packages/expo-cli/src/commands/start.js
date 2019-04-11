@@ -83,7 +83,7 @@ async function action(projectDir, options) {
       log.newLine();
       urlOpts.printQRCode(url);
     }
-    log(`Your app is running at ${chalk.underline(url)}`);
+    log(`Your native app is running at ${chalk.underline(url)}`);
   }
 
   log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
