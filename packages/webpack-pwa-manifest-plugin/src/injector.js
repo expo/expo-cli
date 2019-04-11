@@ -84,13 +84,16 @@ function manifest(options, publicPath, icons) {
 export async function buildResources(self, publicPath = '') {
   if (!self.assets || !self.options.inject) {
     publicPath = publicPath || '';
-    const parsedIconsResult = await parseIcons(
-      self.options.fingerprints,
-      publicPath,
-      retrieveIcons(self.options)
-    );
+    let parsedIconsResult = {};
+    if (!self.options.noResources) {
+      parsedIconsResult = await parseIcons(
+        self.options.fingerprints,
+        publicPath,
+        retrieveIcons(self.options)
+      );
+    }
 
-    const { icons, assets = [] } = parsedIconsResult;
+    const { icons = {}, assets = [] } = parsedIconsResult;
     const results = manifest(self.options, publicPath, icons);
     self.manifest = results;
     self.assets = [results, ...assets];

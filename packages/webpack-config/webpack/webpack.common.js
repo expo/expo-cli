@@ -137,6 +137,7 @@ module.exports = function(env = {}, argv) {
       // Generate the `manifest.json`
       new WebpackPWAManifestPlugin(config, {
         ...env,
+        noResources: env.development,
         filename: locations.production.manifest,
       }),
 

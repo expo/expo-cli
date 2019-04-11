@@ -1,14 +1,14 @@
-import validatePresets from './validators/Presets';
-import validateColors from './validators/Colors';
-import {
-  buildResources,
-  injectResources,
-  generateHtmlTags,
-  generateAppleTags,
-  generateMaskIconLink,
-  applyTag,
-} from './injector';
 import createMetatagsFromConfig from './createMetatagsFromConfig';
+import {
+  applyTag,
+  buildResources,
+  generateAppleTags,
+  generateHtmlTags,
+  generateMaskIconLink,
+  injectResources,
+} from './injector';
+import validateColors from './validators/Colors';
+import validatePresets from './validators/Presets';
 
 const TAP_CMD = 'webpack-pwa-manifest-plugin';
 const TAP = 'WebpackPWAManifestPlugin';
@@ -74,7 +74,7 @@ class WebpackPwaManifest {
     // fingerprints is true by default, but we want it to be false even if users
     // set it to undefined or null.
     if (!options.hasOwnProperty('fingerprints')) {
-      options.fingerprints = false;
+      options.fingerprints = true;
     }
     this.options = {
       filename: options.fingerprints ? '[name].[hash].[ext]' : '[name].[ext]',
