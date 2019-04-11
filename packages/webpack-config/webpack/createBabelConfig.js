@@ -1,20 +1,21 @@
 const path = require('path');
+const getModule = name => path.join('node_modules', name);
 
 // Only compile files from the react ecosystem.
 const includeModulesThatContainPaths = [
-  path.join('node_modules', 'react-native'),
-  path.join('node_modules', 'react-navigation'),
-  path.join('node_modules', 'expo'),
-  path.join('node_modules', 'unimodules'),
-  path.join('node_modules', '@react'),
-  path.join('node_modules', '@expo'),
-  path.join('node_modules', '@unimodules'),
+  getModule('react-native'),
+  getModule('react-navigation'),
+  getModule('expo'),
+  getModule('unimodules'),
+  getModule('@react'),
+  getModule('@expo'),
+  getModule('@unimodules'),
 ];
 
 module.exports = function(babelRoot, { pathsToInclude = [], ...options } = {}) {
   const modules = [...includeModulesThatContainPaths, ...pathsToInclude];
   return {
-    test: /\.jsx?$/,
+    test: /\.[jt]sx?$/,
     include(inputPath) {
       for (const option of modules) {
         if (inputPath.includes(option)) {

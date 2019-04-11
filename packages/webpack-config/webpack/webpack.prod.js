@@ -24,7 +24,7 @@ const DEFAULT_BROTLI = {
   minRatio: 0.8,
 };
 
-module.exports = function(env = {}) {
+module.exports = function(env = {}, argv) {
   const locations = getLocations(env.projectRoot);
 
   const appJSON = require(locations.appJson);
@@ -35,6 +35,13 @@ module.exports = function(env = {}) {
   const appManifest = appJSON.expo || appJSON;
   const { web = {} } = appManifest;
   const { build: buildConfig = {} } = web;
+  /**
+   * build: {
+   *   verbose: boolean,
+   *   brotli: boolean | {}, // (Brotli Options)
+   *   gzip: boolean | CompressionPlugin.Options<O>,
+   * }
+   */
 
   const appEntry = [locations.appMain];
 
@@ -47,6 +54,7 @@ module.exports = function(env = {}) {
     new CleanWebpackPlugin([locations.production.folder], {
       root: locations.root,
       dry: false,
+      verbose: buildConfig.verbose,
     }),
     // Copy the template files over
     new CopyWebpackPlugin([
@@ -73,7 +81,7 @@ module.exports = function(env = {}) {
     plugins.push(new BrotliPlugin(brotliConfig));
   }
 
-  return merge(common(env), {
+  return merge(common(env, argv), {
     mode: 'production',
     entry: {
       app: appEntry,

@@ -14,15 +14,9 @@ import { installExitHooks } from '../exit';
 import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 
-async function action(projectDir, options) {
-  installExitHooks(projectDir);
-
-  await urlOpts.optsAsync(projectDir, options);
-
-  log(chalk.gray('Starting project at', projectDir));
-
-  let root = path.resolve(projectDir);
+async function parseStartOptionsAsync(projectDir: string, options: Object): Promise<Object> {
   let startOpts = {};
+
   if (options.clear) {
     startOpts.reset = true;
   }
@@ -36,17 +30,27 @@ async function action(projectDir, options) {
   } else {
     startOpts.webOnly = await Web.onlySupportsWebAsync(projectDir);
   }
+  return startOpts;
+}
 
-  let devToolsUrl = await DevToolsServer.startAsync(root);
+async function action(projectDir, options) {
+  installExitHooks(projectDir);
+
+  await urlOpts.optsAsync(projectDir, options);
+
+  log(chalk.gray('Starting project at', projectDir));
+
+  let rootPath = path.resolve(projectDir);
+  let devToolsUrl = await DevToolsServer.startAsync(rootPath);
   log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
-  const nonInteractive = options.parent && options.parent.nonInteractive;
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
 
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
   if (exp === null) {
     log.warn('No Expo configuration found. Are you sure this is a project directory?');
     process.exit(1);
   }
 
+  const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
       log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
@@ -58,7 +62,10 @@ async function action(projectDir, options) {
     }
   }
 
-  await Project.startAsync(root, startOpts);
+  const startOpts = await parseStartOptionsAsync(projectDir, options);
+
+  await Project.startAsync(rootPath, startOpts);
+  await Web.logURL(projectDir);
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
@@ -69,14 +76,14 @@ async function action(projectDir, options) {
 
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
-  if (!nonInteractive && !exp.isDetachexped) {
+  if (!nonInteractive && !exp.isDetached) {
     await TerminalUI.startAsync(projectDir, startOpts);
-  } else {
+  } else if (!options.webOnly) {
     if (!exp.isDetached) {
       log.newLine();
       urlOpts.printQRCode(url);
     }
-    log(`Your app is running at ${chalk.underline(url)}`);
+    log(`Your native app is running at ${chalk.underline(url)}`);
   }
 
   log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
