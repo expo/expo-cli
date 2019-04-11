@@ -153,6 +153,17 @@ export async function _isSimulatorRunningAsync() {
   }
 
   let bootedDevice = await _bootedSimulatorDeviceAsync();
+  
+  if (!bootedDevice) {
+    Logger.global.info(`Booting device in iOS simulator...`);
+    try {
+      return await _xcrunAsync(['simctl', 'boot', '5E560ABA-4019-4A8E-A1BB-F01C15533F0F']);
+    } catch (e) {
+      Logger.global.error(`There was a problem booting a device in iOS Simulator. Quit Simulator, and try again.`);
+      throw e;
+    }
+  }
+  
   return !!bootedDevice;
 }
 
