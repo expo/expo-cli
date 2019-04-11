@@ -42,7 +42,7 @@ import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import Config from './Config';
-import createCompiler from './createCompiler';
+import createWebpackCompiler from './createWebpackCompiler';
 import * as Doctor from './project/Doctor';
 import * as DevSession from './DevSession';
 import ErrorCode from './ErrorCode';
@@ -1867,7 +1867,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
 
   await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
-    const compiler = createCompiler({
+    const compiler = createWebpackCompiler({
       projectRoot,
       webpack,
       appName,

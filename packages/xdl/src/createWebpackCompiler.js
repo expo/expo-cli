@@ -22,7 +22,7 @@ function logToConsole(message) {
 
 function log(projectRoot, message) {
   logToConsole(message);
-  ProjectUtils.logDebug(projectRoot, CONSOLE_TAG, message);
+  ProjectUtils.logInfo(projectRoot, CONSOLE_TAG, message);
 }
 
 function logWarning(projectRoot, message) {
@@ -32,7 +32,7 @@ function logWarning(projectRoot, message) {
 
 function logError(projectRoot, message) {
   logToConsole(message);
-  ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
+  // ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
 }
 
 function printInstructions(projectRoot, appName, urls, useYarn) {
@@ -52,7 +52,7 @@ function printInstructions(projectRoot, appName, urls, useYarn) {
   log(projectRoot, ``);
 }
 
-export default function createCompiler({
+export default function createWebpackCompiler({
   projectRoot,
   appName,
   config,
@@ -112,6 +112,13 @@ export default function createCompiler({
     });
 
     const messages = formatWebpackMessages(statsData);
+
+    // if (messages.errors.length > 0) {
+    //   devSocket.errors(messages.errors);
+    // } else if (messages.warnings.length > 0) {
+    //   devSocket.warnings(messages.warnings);
+    // }
+
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
     if (isSuccessful) {
       log(projectRoot, chalk.bold.cyan('Compiled successfully!'));
