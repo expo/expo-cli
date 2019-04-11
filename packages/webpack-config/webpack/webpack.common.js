@@ -58,8 +58,26 @@ function createNoJSComponent(message) {
   return `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
 }
 
+function getDevtool(env, webConfig) {
+  if (env.production) {
+    // string or false
+    if (webConfig.devtool !== undefined) {
+      // When big assets are involved sources maps can become expensive and cause your process to run out of memory.
+      return webConfig.devtool;
+    }
+    return 'source-map';
+  }
+  if (env.development) {
+    return 'cheap-module-source-map';
+  }
+}
+
 module.exports = function(env = {}, argv) {
   const locations = getLocations(env.projectRoot);
+
+  const isDevelopment = env.development;
+  const isProduction = env.production;
+
   // const babelConfig = createBabelConfig(locations.root);
   const { babelConfig, config } = env;
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
@@ -139,7 +157,11 @@ module.exports = function(env = {}, argv) {
     }),
   ];
 
+  const devtool = getDevtool(env, config.web);
   return {
+    // Fail out on the first error instead of tolerating it. https://webpack.js.org/configuration/other-options/#bail
+    bail: isProduction,
+    devtool,
     context: __dirname,
     // configures where the build ends up
     output: {

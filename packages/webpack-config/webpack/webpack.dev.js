@@ -15,7 +15,6 @@ module.exports = function(env = {}, argv) {
   return merge(common(env, argv), {
     mode: 'development',
     entry: [require.resolve('react-dev-utils/webpackHotDevClient'), locations.appMain],
-    devtool: 'cheap-module-source-map',
     output: {
       filename: 'static/[hash].js',
       sourceMapFilename: '[hash].map',

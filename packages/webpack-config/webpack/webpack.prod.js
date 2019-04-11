@@ -86,7 +86,6 @@ module.exports = function(env = {}, argv) {
     entry: {
       app: appEntry,
     },
-    devtool: 'cheap-module-source-map',
     plugins,
   });
 };
