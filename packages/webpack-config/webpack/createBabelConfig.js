@@ -31,9 +31,9 @@ module.exports = function(env, babelRoot, { pathsToInclude = [], ...options } = 
     use: {
       loader: 'babel-loader',
       options: {
-        cacheDirectory: true,
+        cacheDirectory: false,
         babelrc: false,
-        configFile: false,
+        configFile: true,
         root: babelRoot,
         cacheCompression: env.production,
         compact: env.production,

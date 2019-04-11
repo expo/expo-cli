@@ -9,19 +9,25 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
 const createClientEnvironment = require('./createClientEnvironment');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const { overrideWithPropertyOrConfig } = require('./utils/config');
 const getLocations = require('./webpackLocations');
 
 const DEFAULT_SERVICE_WORKER = {};
+const DEFAULT_REPORT_CONFIG = {
+  verbose: false,
+  path: 'web-report',
+  statsFilename: 'stats.json',
+  reportFilename: 'report.html',
+};
 
 // This is needed for webpack to import static images in JavaScript files.
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
   use: {
     loader: 'url-loader',
-    // loader: 'file-loader',
     options: {
       // Inline resources as Base64 when there is less reason to parallelize their download. The
       // heuristic we use is whether the resource would fit within a TCP/IP packet that we would
@@ -31,21 +37,19 @@ const imageLoaderConfiguration = {
       // headers are 40 bytes. HTTP response headers vary and are around 400 bytes. This leaves
       // about 1000 bytes for content to fit in a packet.
       limit: 1000,
-      name: 'static/media/[hash].[ext]',
+      name: 'static/media/[name].[hash:8].[ext]',
     },
   },
 };
 
 const mediaLoaderConfiguration = {
   test: /\.(mov|mp4|mp3|wav|webm|db)$/,
-  use: [
-    {
-      loader: 'file-loader',
-      options: {
-        name: 'static/assets/[path][name].[ext]',
-      },
+  use: {
+    loader: 'file-loader',
+    options: {
+      name: 'static/media/[name].[hash:8].[ext]',
     },
-  ],
+  },
 };
 
 const styleLoaderConfiguration = {
@@ -75,10 +79,8 @@ function getDevtool(env, webConfig) {
 module.exports = function(env = {}, argv) {
   const locations = getLocations(env.projectRoot);
 
-  const isDevelopment = env.development;
   const isProduction = env.production;
 
-  // const babelConfig = createBabelConfig(locations.root);
   const { babelConfig, config } = env;
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
@@ -111,22 +113,43 @@ module.exports = function(env = {}, argv) {
     new WebpackDeepScopeAnalysisPlugin(),
   ];
 
-  const { publicPath, rootId, noJavaScriptMessage, lang, report: reportConfig = {} } = config.web;
+  const { publicPath, rootId, noJavaScriptMessage, lang } = config.web;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
   const serviceWorker = overrideWithPropertyOrConfig(
-    config.web.serviceWorker,
+    // Prevent service worker in development mode
+    env.production ? config.web.serviceWorker : false,
     DEFAULT_SERVICE_WORKER
   );
   if (serviceWorker) {
+    // Generate a service worker script that will precache, and keep up to date,
+    // the HTML & assets that are part of the Webpack build.
     middlewarePlugins.push(
       new WorkboxPlugin.GenerateSW({
         exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
         navigateFallback: `${publicPath}index.html`,
+        clientsClaim: true,
+        importWorkboxFrom: 'cdn',
+        navigateFallbackBlacklist: [
+          // Exclude URLs starting with /_, as they're likely an API call
+          new RegExp('^/_'),
+          // Exclude URLs containing a dot, as they're likely a resource in
+          // public/ and not a SPA route
+          new RegExp('/[^/]+\\.[^/]+$'),
+        ],
         ...serviceWorker,
       })
     );
   }
+
+  // Generate the `manifest.json`
+  middlewarePlugins.push(
+    new WebpackPWAManifestPlugin(config, {
+      ...env,
+      noResources: env.development,
+      filename: locations.production.manifest,
+    })
+  );
 
   /**
    * report: {
@@ -136,42 +159,51 @@ module.exports = function(env = {}, argv) {
    *   reportFilename: "report.html"
    * }
    */
-  const reportDir = reportConfig.path || 'web-report';
-  const reportPlugins = [
-    // Delete the report folder
-    new CleanWebpackPlugin([locations.absolute(reportDir)], {
-      root: locations.root,
-      dry: false,
-      verbose: reportConfig.verbose,
-    }),
-    // Generate the report.html and stats.json
-    new BundleAnalyzerPlugin({
-      analyzerMode: 'static',
-      defaultSizes: 'gzip',
-      generateStatsFile: true,
-      openAnalyzer: false,
-      logLevel: reportConfig.verbose ? 'info' : 'silent',
-      statsFilename: locations.absolute(reportDir, reportConfig.statsFilename || 'stats.json'),
-      reportFilename: locations.absolute(reportDir, reportConfig.reportFilename || 'report.html'),
-      ...reportConfig,
-    }),
-  ];
+  let reportPlugins = [];
+
+  const reportConfig = overrideWithPropertyOrConfig(config.web.report, DEFAULT_REPORT_CONFIG);
+
+  if (reportConfig) {
+    const reportDir = reportConfig.path || 'web-report';
+    reportPlugins = [
+      // Delete the report folder
+      new CleanWebpackPlugin([locations.absolute(reportDir)], {
+        root: locations.root,
+        dry: false,
+        verbose: reportConfig.verbose,
+      }),
+      // Generate the report.html and stats.json
+      new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        defaultSizes: 'gzip',
+        generateStatsFile: true,
+        openAnalyzer: false,
+        logLevel: reportConfig.verbose ? 'info' : 'silent',
+        statsFilename: locations.absolute(reportDir, reportConfig.statsFilename || 'stats.json'),
+        reportFilename: locations.absolute(reportDir, reportConfig.reportFilename || 'report.html'),
+        ...reportConfig,
+      }),
+    ];
+  }
 
   const devtool = getDevtool(env, config.web);
+
   return {
-    // Fail out on the first error instead of tolerating it. https://webpack.js.org/configuration/other-options/#bail
+    // https://webpack.js.org/configuration/other-options/#bail
+    // Fail out on the first error instead of tolerating it.
     bail: isProduction,
     devtool,
     context: __dirname,
     // configures where the build ends up
     output: {
+      path: locations.production.folder,
       sourceMapFilename: '[chunkhash].map',
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
     },
     plugins: [
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON(config, locations),
+      createIndexHTMLFromAppJSON(env, config, locations),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
@@ -182,16 +214,13 @@ module.exports = function(env = {}, argv) {
         ROOT_ID: rootId,
       }),
 
-      // Generate the `manifest.json`
-      new WebpackPWAManifestPlugin(config, {
-        ...env,
-        noResources: env.development,
-        filename: locations.production.manifest,
-      }),
-
       new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),
 
       ...middlewarePlugins,
+
+      // This gives some necessary context to module not found errors, such as
+      // the requesting resource.
+      new ModuleNotFoundPlugin(locations.root),
 
       new ProgressBarPlugin({
         format:
@@ -210,8 +239,10 @@ module.exports = function(env = {}, argv) {
       strictExportPresence: false,
 
       rules: [
+        // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
 
+        // TODO: Bacon: Run linter
         htmlLoaderConfiguration,
         babelConfig,
         imageLoaderConfiguration,
@@ -248,14 +279,17 @@ module.exports = function(env = {}, argv) {
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
     node: {
+      module: 'empty',
       dgram: 'empty',
+      dns: 'mock',
       fs: 'empty',
+      http2: 'empty',
       net: 'empty',
       tls: 'empty',
       child_process: 'empty',
     },
     // Turn off performance processing because we utilize
-    // our own hints via the FileSizeReporter
+    // our own (CRA) hints via the FileSizeReporter
     performance: false,
   };
 };
