@@ -165,10 +165,7 @@ module.exports = function(env = {}, argv) {
     context: __dirname,
     // configures where the build ends up
     output: {
-      filename: 'static/[chunkhash].js',
       sourceMapFilename: '[chunkhash].map',
-      // There are also additional JS chunk files if you use code splitting.
-      chunkFilename: 'static/[id].[chunkhash].js',
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
     },

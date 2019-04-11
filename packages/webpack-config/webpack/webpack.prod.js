@@ -88,6 +88,12 @@ module.exports = function(env = {}, argv) {
     },
     output: {
       path: locations.production.folder,
+      filename: 'static/js/[name].[contenthash:8].js',
+      // There are also additional JS chunk files if you use code splitting.
+      chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
+      // Point sourcemap entries to original disk location (format as URL on Windows)
+      devtoolModuleFilenameTemplate: info =>
+        locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/'),
     },
     plugins,
   });

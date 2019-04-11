@@ -6,6 +6,7 @@ const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
+const path = require('path');
 const common = require('./webpack.common.js');
 const getLocations = require('./webpackLocations');
 
@@ -31,10 +32,18 @@ module.exports = function(env = {}, argv) {
     ],
     output: {
       path: undefined,
-      filename: 'static/[hash].js',
+      // Add comments that describe the file import/exports.
+      // This will make it easier to debug.
+      pathinfo: true,
+      // Give the output bundle a constant name to prevent caching.
+      // Also there are no actual files generated in dev.
+      filename: 'static/js/bundle.js',
       sourceMapFilename: '[hash].map',
       // There are also additional JS chunk files if you use code splitting.
-      chunkFilename: 'static/[id].[chunkhash].js',
+      chunkFilename: 'static/js/[name].chunk.js',
+      // Point sourcemap entries to original disk location (format as URL on Windows)
+      devtoolModuleFilenameTemplate: info =>
+        path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
     },
     devServer: {
       progress: false,
