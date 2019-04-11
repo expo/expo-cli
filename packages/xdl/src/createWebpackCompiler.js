@@ -9,7 +9,6 @@ import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import clearConsole from 'react-dev-utils/clearConsole';
 import * as ProjectUtils from './project/ProjectUtils';
-
 const isInteractive = true; //process.stdout.isTTY;
 const CONSOLE_TAG = 'expo';
 
@@ -32,7 +31,7 @@ function logWarning(projectRoot, message) {
 
 function logError(projectRoot, message) {
   logToConsole(message);
-  // ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
+  ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
 }
 
 function printInstructions(projectRoot, appName, urls, useYarn) {
@@ -50,6 +49,16 @@ function printInstructions(projectRoot, appName, urls, useYarn) {
   log(projectRoot, `Note that the development build is not optimized.`);
   log(projectRoot, `To create a production build, use ${chalk.bold(`expo build:web`)}.`);
   log(projectRoot, ``);
+}
+
+export function logPreviewNotice() {
+  console.log('');
+  console.log(
+    chalk.bold.yellow(
+      `Web support in Expo is experimental and subject to breaking changes. 
+      Do not use this in production yet.`
+    )
+  );
 }
 
 export default function createWebpackCompiler({
@@ -113,15 +122,16 @@ export default function createWebpackCompiler({
 
     const messages = formatWebpackMessages(statsData);
 
-    // if (messages.errors.length > 0) {
-    //   devSocket.errors(messages.errors);
-    // } else if (messages.warnings.length > 0) {
-    //   devSocket.warnings(messages.warnings);
-    // }
+    if (messages.errors.length > 0) {
+      devSocket.errors(messages.errors);
+    } else if (messages.warnings.length > 0) {
+      devSocket.warnings(messages.warnings);
+    }
 
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
     if (isSuccessful) {
       log(projectRoot, chalk.bold.cyan('Compiled successfully!'));
+      logPreviewNotice();
     }
     if (isSuccessful && (isInteractive || isFirstCompile)) {
       printInstructions(projectRoot, appName, urls, useYarn);

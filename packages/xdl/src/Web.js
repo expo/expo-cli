@@ -26,28 +26,12 @@ export function invokeWebpackConfig(env, argv) {
   return config(env, argv);
 }
 
-export async function logURL(projectRoot) {
-  let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
-  console.log(`Expo Web is running at ${chalk.underline(url)}`);
-}
-
-function logPreviewNotice() {
-  console.log();
-  console.log(
-    chalk.bold.yellow(
-      'Web support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
-    )
-  );
-  console.log();
-}
-
 export async function openProjectAsync(projectRoot) {
   const hasWebSupport = await hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
     logWebSetup();
     return { success: false };
   }
-  logPreviewNotice();
   try {
     let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
     opn(url, { wait: false });
