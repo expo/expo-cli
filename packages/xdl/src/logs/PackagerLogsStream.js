@@ -186,7 +186,6 @@ export default class PackagerLogsStream {
           }
 
           chunk = this._maybeParseMsgJSON(chunk);
-          chunk = this._formatMsg(chunk);
           chunk = this._cleanUpNodeErrors(chunk);
           if (chunk.tag === 'metro') {
             this._handleMetroEvent(chunk);
@@ -522,26 +521,6 @@ export default class PackagerLogsStream {
 
     return chunk;
   };
-
-  // This message is just noise
-  // Fall back to the same formatting we did on SDK <= 15 before we had a custom
-  // reporter class.
-  _formatMsg(chunk) {
-    if (typeof chunk.msg === 'object') {
-      return chunk;
-    }
-
-    if (chunk.msg.match(/Looking for JS files in/)) {
-      chunk.msg = '';
-    } else if (chunk.msg.startsWith('\u001b')) {
-      chunk.msg = '';
-    }
-
-    chunk.msg = chunk.msg.replace(/\[\w{2}m/g, '');
-    chunk.msg = chunk.msg.replace(/\[2K/g, '');
-    chunk.msg = trim(chunk.msg);
-    return chunk;
-  }
 }
 
 const NODE_STDLIB_MODULES = [
