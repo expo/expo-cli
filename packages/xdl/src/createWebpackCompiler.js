@@ -149,18 +149,6 @@ export default function createWebpackCompiler({
     if (messages.warnings.length) {
       logWarning(projectRoot, chalk.yellow('Compiled with warnings.\n'));
       logWarning(projectRoot, messages.warnings.join('\n\n'));
-
-      // Teach some ESLint tricks.
-      logWarning(
-        projectRoot,
-        '\nSearch for the ' +
-          chalk.underline(chalk.yellow('keywords')) +
-          ' to learn more about each warning.'
-      );
-      logWarning(
-        projectRoot,
-        'To ignore, add ' + chalk.cyan('// eslint-disable-next-line') + ' to the line before.\n'
-      );
     }
   });
 
