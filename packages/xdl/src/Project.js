@@ -1910,12 +1910,7 @@ async function stopWebpackServerAsync(projectRoot) {
 }
 
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
-  if (!hasWebSupport) {
-    Web.logWebSetup();
-    return;
-  }
-
+  await Web.ensureWebSupportAsync(projectRoot);
   const mode = packagerOpts.dev ? 'development' : 'production';
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
@@ -1942,12 +1937,13 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
     const { stats: statsDirectory = 'web-build-stats.json' } = packagerOpts;
     const statsPath = path.join(projectRoot, statsDirectory);
     await JsonFile.writeAsync(statsPath, stats.toJson());
-  } catch ({ message }) {
+  } catch (error) {
     ProjectUtils.logError(
       projectRoot,
       'webpack',
-      'There was a problem building your web project. ' + message
+      'There was a problem building your web project. ' + error.message
     );
+    throw error;
   }
 }
 
