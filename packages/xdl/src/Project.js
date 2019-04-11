@@ -1427,7 +1427,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
   for (let i = 0; i < logs.length; i++) {
     let log = logs[i];
     let body = typeof log.body === 'string' ? [log.body] : log.body;
-    let level = log.level;
+    let { level } = log;
 
     if (_isIgnorableBugReportingExtraData(body)) {
       level = logger.DEBUG;
