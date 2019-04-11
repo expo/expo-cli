@@ -26,29 +26,33 @@ function logError(projectRoot, message) {
 function printInstructions(projectRoot, appName, urls, useYarn) {
   const _log = message => log(projectRoot, message);
 
-  _log(` `);
+  console.log('');
   _log(`You can now view ${chalk.bold(appName)} in the browser.`);
-  _log(` `);
+  console.log('');
   if (urls.lanUrlForTerminal) {
     _log(`  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}`);
     _log(`  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}`);
-    _log(` `);
+    console.log('');
   } else {
     _log(`  ${urls.localUrlForTerminal}`);
   }
 
-  _log(`Note that the development build is not optimized.`);
-  _log(`To create a production build, use ${chalk.bold(`expo build:web`)}.`);
-  _log(` `);
+  _log(
+    `Note that the development build is not optimized. To create a production build, use ${chalk.bold(
+      `expo build:web`
+    )}.`
+  );
+  console.log('');
 }
 
 export function printPreviewNotice(projectRoot) {
-  log(projectRoot, ` `);
+  console.log('');
   log(
     projectRoot,
-    chalk.underline.yellow('Web support in Expo is experimental and subject to breaking changes.')
+    chalk.underline.yellow(
+      'Web support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
+    )
   );
-  log(projectRoot, chalk.underline.yellow('Do not use this in production yet.'));
 }
 
 export default function createWebpackCompiler({
@@ -72,11 +76,10 @@ export default function createWebpackCompiler({
   try {
     compiler = webpack(config);
   } catch (err) {
-    logError(projectRoot, ' ');
+    console.log('');
     logError(projectRoot, 'Failed to compile');
-    logError(projectRoot, ' ');
+    console.log('');
     logError(projectRoot, err.message || err);
-    logError(projectRoot, ' ');
     process.exit(1);
   }
 
@@ -88,7 +91,8 @@ export default function createWebpackCompiler({
     if (!nonInteractive) {
       clearConsole();
     }
-    log(projectRoot, chalk.white('\nCompiling...'));
+    console.log('');
+    log(projectRoot, chalk.white('Compiling...'));
   });
 
   let isFirstCompile = true;
@@ -119,9 +123,6 @@ export default function createWebpackCompiler({
       devSocket.warnings(messages.warnings);
     }
 
-    // New line after the bundle analyzer finishes
-    log(projectRoot, ` `);
-
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
     if (isSuccessful) {
       log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
@@ -129,6 +130,10 @@ export default function createWebpackCompiler({
     }
     if (isSuccessful && (!nonInteractive || isFirstCompile)) {
       printInstructions(projectRoot, appName, urls, useYarn);
+    }
+    if (!isFirstCompile) {
+      log(projectRoot, `Press ${chalk.bold('?')} to show a list of all available commands.`);
+      console.log('');
     }
     onFinished();
     isFirstCompile = false;
