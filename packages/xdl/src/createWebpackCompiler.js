@@ -9,56 +9,46 @@ import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import clearConsole from 'react-dev-utils/clearConsole';
 import * as ProjectUtils from './project/ProjectUtils';
-const isInteractive = true; //process.stdout.isTTY;
-const CONSOLE_TAG = 'expo';
-
-function logToConsole(message) {
-  // Prevent double messaging
-  if (!process.env.DEBUG) {
-    console.log(message);
-  }
-}
+const CONSOLE_TAG = 'webpack';
 
 function log(projectRoot, message) {
-  logToConsole(message);
   ProjectUtils.logInfo(projectRoot, CONSOLE_TAG, message);
 }
 
 function logWarning(projectRoot, message) {
-  logToConsole(message);
   ProjectUtils.logWarning(projectRoot, CONSOLE_TAG, message);
 }
 
 function logError(projectRoot, message) {
-  logToConsole(message);
   ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
 }
 
 function printInstructions(projectRoot, appName, urls, useYarn) {
-  log(projectRoot, '');
-  log(projectRoot, chalk`You can now view {bold ${appName} } {reset in the browser.}`);
-  log(projectRoot, '');
+  const _log = message => log(projectRoot, message);
+
+  _log(` `);
+  _log(`You can now view ${chalk.bold(appName)} in the browser.`);
+  _log(` `);
   if (urls.lanUrlForTerminal) {
-    log(projectRoot, chalk`  {bold Local:}            {reset ${urls.localUrlForTerminal}}`);
-    log(projectRoot, chalk`  {bold On Your Network:}  {reset ${urls.lanUrlForTerminal}}`);
-    log(projectRoot, '');
+    _log(`  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}`);
+    _log(`  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}`);
+    _log(` `);
   } else {
-    log(projectRoot, chalk`  ${urls.localUrlForTerminal}`);
+    _log(`  ${urls.localUrlForTerminal}`);
   }
 
-  log(projectRoot, `Note that the development build is not optimized.`);
-  log(projectRoot, `To create a production build, use ${chalk.bold(`expo build:web`)}.`);
-  log(projectRoot, ``);
+  _log(`Note that the development build is not optimized.`);
+  _log(`To create a production build, use ${chalk.bold(`expo build:web`)}.`);
+  _log(` `);
 }
 
-export function logPreviewNotice() {
-  console.log('');
-  console.log(
-    chalk.bold.yellow(
-      `Web support in Expo is experimental and subject to breaking changes. 
-      Do not use this in production yet.`
-    )
+export function printPreviewNotice(projectRoot) {
+  log(projectRoot, ` `);
+  log(
+    projectRoot,
+    chalk.underline.yellow('Web support in Expo is experimental and subject to breaking changes.')
   );
+  log(projectRoot, chalk.underline.yellow('Do not use this in production yet.'));
 }
 
 export default function createWebpackCompiler({
@@ -66,6 +56,7 @@ export default function createWebpackCompiler({
   appName,
   config,
   urls,
+  nonInteractive,
   useYarn,
   webpack,
   onFinished,
@@ -81,11 +72,11 @@ export default function createWebpackCompiler({
   try {
     compiler = webpack(config);
   } catch (err) {
-    logError(projectRoot, '');
+    logError(projectRoot, ' ');
     logError(projectRoot, 'Failed to compile');
-    logError(projectRoot, '');
+    logError(projectRoot, ' ');
     logError(projectRoot, err.message || err);
-    logError(projectRoot, '');
+    logError(projectRoot, ' ');
     process.exit(1);
   }
 
@@ -94,10 +85,10 @@ export default function createWebpackCompiler({
   // bundle, so if you refresh, it'll wait instead of serving the old one.
   // "invalid" is short for "bundle invalidated", it doesn't imply any errors.
   compiler.hooks.invalid.tap('invalid', () => {
-    if (isInteractive) {
+    if (!nonInteractive) {
       clearConsole();
     }
-    log(projectRoot, chalk.white('Compiling...'));
+    log(projectRoot, chalk.white('\nCompiling...'));
   });
 
   let isFirstCompile = true;
@@ -105,8 +96,8 @@ export default function createWebpackCompiler({
   // "done" event fires when Webpack has finished recompiling the bundle.
   // Whether or not you have warnings or errors, you will get this event.
   compiler.hooks.done.tap('done', async stats => {
-    if (isInteractive) {
-      // clearConsole();
+    if (!nonInteractive) {
+      clearConsole();
     }
 
     // We have switched off the default Webpack output in WebpackDevServer
@@ -128,12 +119,15 @@ export default function createWebpackCompiler({
       devSocket.warnings(messages.warnings);
     }
 
+    // New line after the bundle analyzer finishes
+    log(projectRoot, ` `);
+
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
     if (isSuccessful) {
-      log(projectRoot, chalk.bold.cyan('Compiled successfully!'));
-      logPreviewNotice();
+      log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
+      printPreviewNotice(projectRoot);
     }
-    if (isSuccessful && (isInteractive || isFirstCompile)) {
+    if (isSuccessful && (!nonInteractive || isFirstCompile)) {
       printInstructions(projectRoot, appName, urls, useYarn);
     }
     onFinished();

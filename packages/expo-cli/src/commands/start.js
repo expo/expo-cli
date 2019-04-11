@@ -21,6 +21,10 @@ async function parseStartOptionsAsync(projectDir: string, options: Object): Prom
     startOpts.reset = true;
   }
 
+  if (options.parent && options.parent.nonInteractive) {
+    startOpts.nonInteractive = true;
+  }
+
   if (options.maxWorkers) {
     startOpts.maxWorkers = options.maxWorkers;
   }

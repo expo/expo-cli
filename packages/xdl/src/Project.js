@@ -1831,14 +1831,14 @@ let webpackDevServerInstance;
 
 function getWebpackInstance(projectRoot) {
   if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is not running.');
+    ProjectUtils.logError(projectRoot, 'webpack', 'Webpack is not running.');
   }
   return webpackDevServerInstance;
 }
 
 async function startWebpackServerAsync(projectRoot, options, verbose) {
   if (webpackDevServerInstance) {
-    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
+    ProjectUtils.logError(projectRoot, 'webpack', 'Webpack is already running.');
     return;
   }
   const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
@@ -1860,7 +1860,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
   let webpackServerPort = await _getFreePortAsync(19000);
-  ProjectUtils.logInfo(projectRoot, 'expo', `Starting Webpack on port ${webpackServerPort}.`);
+  ProjectUtils.logInfo(projectRoot, 'webpack', `Starting Webpack on port ${webpackServerPort}.`);
 
   const protocol = https ? 'https' : 'http';
   const urls = prepareUrls(protocol, '::', webpackServerPort);
@@ -1869,6 +1869,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
     // Create a webpack compiler that is configured with custom messages.
     const compiler = createWebpackCompiler({
       projectRoot,
+      nonInteractive: options.nonInteractive,
       webpack,
       appName,
       config,
@@ -1880,10 +1881,14 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
     // Launch WebpackDevServer.
     webpackDevServerInstance.listen(webpackServerPort, '0.0.0.0', error => {
       if (error) {
-        ProjectUtils.logError(projectRoot, 'expo', error);
+        ProjectUtils.logError(projectRoot, 'webpack', error);
       }
       clearConsole();
-      ProjectUtils.logInfo(projectRoot, 'expo', chalk.cyan('Starting the development server...\n'));
+      ProjectUtils.logInfo(
+        projectRoot,
+        'webpack',
+        chalk.cyan('Starting the development server...\n')
+      );
     });
   });
 
@@ -1940,7 +1945,7 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   } catch ({ message }) {
     ProjectUtils.logError(
       projectRoot,
-      'expo',
+      'webpack',
       'There was a problem building your web project. ' + message
     );
   }
@@ -2196,6 +2201,7 @@ export async function startAsync(
   DevSession.startSession(projectRoot, exp);
   return exp;
 }
+
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);

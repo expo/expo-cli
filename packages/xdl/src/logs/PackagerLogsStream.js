@@ -177,11 +177,18 @@ export default class PackagerLogsStream {
     ProjectUtils.attachLoggerStream(this._projectRoot, {
       stream: {
         write: chunk => {
-          if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
-            return;
-          } else if (this._getCurrentOpenProjectId() !== projectId) {
+          if (this._getCurrentOpenProjectId() !== projectId) {
             // TODO: We should be confident that we are properly unsubscribing
             // from the stream rather than doing a defensive check like this.
+            return;
+          }
+
+          if (chunk.tag === 'webpack') {
+            this._enqueueAppendLogChunk(chunk);
+            return;
+          }
+
+          if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
             return;
           }
 
