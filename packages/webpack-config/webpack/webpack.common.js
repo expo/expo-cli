@@ -12,7 +12,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
 const createClientEnvironment = require('./createClientEnvironment');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
-const { overrideWithPropertyOrConfig } = require('./utils/config');
+const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
 const getLocations = require('./webpackLocations');
 
 const DEFAULT_SERVICE_WORKER = {};
@@ -74,6 +74,7 @@ function getDevtool(env, webConfig) {
   if (env.development) {
     return 'cheap-module-source-map';
   }
+  return false;
 }
 
 module.exports = function(env = {}, argv) {
@@ -161,7 +162,7 @@ module.exports = function(env = {}, argv) {
    */
   let reportPlugins = [];
 
-  const reportConfig = overrideWithPropertyOrConfig(config.web.report, DEFAULT_REPORT_CONFIG);
+  const reportConfig = enableWithPropertyOrConfig(config.web.report, DEFAULT_REPORT_CONFIG);
 
   if (reportConfig) {
     const reportDir = reportConfig.path || 'web-report';
