@@ -11,8 +11,12 @@ import clearConsole from 'react-dev-utils/clearConsole';
 import * as ProjectUtils from './project/ProjectUtils';
 const CONSOLE_TAG = 'webpack';
 
-function log(projectRoot, message) {
-  ProjectUtils.logInfo(projectRoot, CONSOLE_TAG, message);
+function log(projectRoot, message, showInDevtools = true) {
+  if (showInDevtools) {
+    ProjectUtils.logInfo(projectRoot, CONSOLE_TAG, message);
+  } else {
+    console.log(message);
+  }
 }
 
 function logWarning(projectRoot, message) {
@@ -23,8 +27,8 @@ function logError(projectRoot, message) {
   ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
 }
 
-function printInstructions(projectRoot, appName, urls, useYarn) {
-  const _log = message => log(projectRoot, message);
+function printInstructions(projectRoot, appName, urls, showInDevtools) {
+  const _log = message => log(projectRoot, message, showInDevtools);
 
   console.log('');
   _log(`You can now view ${chalk.bold(appName)} in the browser.`);
@@ -45,13 +49,14 @@ function printInstructions(projectRoot, appName, urls, useYarn) {
   console.log('');
 }
 
-export function printPreviewNotice(projectRoot) {
+export function printPreviewNotice(projectRoot, showInDevtools) {
   console.log('');
   log(
     projectRoot,
     chalk.underline.yellow(
       'Web support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
-    )
+    ),
+    showInDevtools
   );
 }
 
@@ -126,13 +131,13 @@ export default function createWebpackCompiler({
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
     if (isSuccessful) {
       log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
-      printPreviewNotice(projectRoot);
+      printPreviewNotice(projectRoot, isFirstCompile);
     }
     if (isSuccessful && (!nonInteractive || isFirstCompile)) {
-      printInstructions(projectRoot, appName, urls, useYarn);
+      printInstructions(projectRoot, appName, urls, isFirstCompile);
     }
     if (!isFirstCompile) {
-      log(projectRoot, `Press ${chalk.bold('?')} to show a list of all available commands.`);
+      console.log(`Press ${chalk.bold('?')} to show a list of all available commands.`);
       console.log('');
     }
     onFinished();
