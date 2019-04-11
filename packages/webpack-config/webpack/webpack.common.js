@@ -145,7 +145,7 @@ module.exports = function(env = {}, argv) {
       ...middlewarePlugins,
 
       new ProgressBarPlugin({
-        format: '  build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds) :msg',
+        format: 'build [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds) :msg',
         clear: false,
       }),
 
