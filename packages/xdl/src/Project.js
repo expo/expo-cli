@@ -1883,7 +1883,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
       if (error) {
         ProjectUtils.logError(projectRoot, 'webpack', error);
       }
-      clearConsole();
+      // clearConsole();
       ProjectUtils.logInfo(
         projectRoot,
         'webpack',
