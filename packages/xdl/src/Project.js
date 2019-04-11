@@ -1924,7 +1924,8 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   let compiler = webpack(config);
 
   try {
-    const stats = await new Promise((resolve, reject) =>
+    // We generate the stats.json file in the webpack-config
+    await new Promise((resolve, reject) =>
       compiler.run(async (error, stats) => {
         // TODO: Bacon: account for CI
         if (error) {
@@ -1934,9 +1935,6 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
         resolve(stats);
       })
     );
-    const { stats: statsDirectory = 'web-build-stats.json' } = packagerOpts;
-    const statsPath = path.join(projectRoot, statsDirectory);
-    await JsonFile.writeAsync(statsPath, stats.toJson());
   } catch (error) {
     ProjectUtils.logError(
       projectRoot,

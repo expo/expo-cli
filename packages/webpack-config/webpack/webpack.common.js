@@ -8,6 +8,7 @@ const webpack = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 const WorkboxPlugin = require('workbox-webpack-plugin');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 const createClientEnvironment = require('./createClientEnvironment');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const { overrideWithPropertyOrConfig } = require('./utils/config');
@@ -92,7 +93,7 @@ module.exports = function(env = {}, argv) {
     new WebpackDeepScopeAnalysisPlugin(),
   ];
 
-  const { publicPath, rootId, noJavaScriptMessage, lang } = config.web;
+  const { publicPath, rootId, noJavaScriptMessage, lang, report: reportConfig = {} } = config.web;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
   const serviceWorker = overrideWithPropertyOrConfig(
@@ -108,6 +109,35 @@ module.exports = function(env = {}, argv) {
       })
     );
   }
+
+  /**
+   * report: {
+   *   verbose: false,
+   *   path: "web-report",
+   *   statsFilename: "stats.json",
+   *   reportFilename: "report.html"
+   * }
+   */
+  const reportDir = reportConfig.path || 'web-report';
+  const reportPlugins = [
+    // Delete the report folder
+    new CleanWebpackPlugin([locations.absolute(reportDir)], {
+      root: locations.root,
+      dry: false,
+      verbose: reportConfig.verbose,
+    }),
+    // Generate the report.html and stats.json
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      defaultSizes: 'gzip',
+      generateStatsFile: true,
+      openAnalyzer: false,
+      logLevel: reportConfig.verbose ? 'info' : 'silent',
+      statsFilename: locations.absolute(reportDir, reportConfig.statsFilename || 'stats.json'),
+      reportFilename: locations.absolute(reportDir, reportConfig.reportFilename || 'report.html'),
+      ...reportConfig,
+    }),
+  ];
 
   return {
     context: __dirname,
@@ -155,10 +185,7 @@ module.exports = function(env = {}, argv) {
         incomplete: ' ',
       }),
 
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        openAnalyzer: false,
-      }),
+      ...reportPlugins,
     ],
 
     module: {
