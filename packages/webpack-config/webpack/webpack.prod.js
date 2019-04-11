@@ -27,7 +27,7 @@ const DEFAULT_BROTLI = {
 module.exports = function(env = {}, argv) {
   const locations = getLocations(env.projectRoot);
 
-  const appJSON = require(locations.appJson);
+  const appJSON = env.config || require(locations.appJson);
   if (!appJSON) {
     throw new Error('app.json could not be found at: ' + locations.appJson);
   }
@@ -66,8 +66,10 @@ module.exports = function(env = {}, argv) {
     ]),
 
     new MiniCssExtractPlugin({
-      filename: 'static/css/[contenthash].css',
-      chunkFilename: 'static/css/[contenthash].chunk.css',
+      // Options similar to the same options in webpackOptions.output
+      // both options are optional
+      filename: 'static/css/[name].[contenthash:8].css',
+      chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
     }),
   ];
 
