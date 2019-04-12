@@ -1840,6 +1840,8 @@ function getWebpackInstance(projectRoot) {
 }
 
 async function startWebpackServerAsync(projectRoot, options, verbose) {
+  await Web.ensureWebSupportAsync(projectRoot);
+
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
     return;
@@ -2168,6 +2170,14 @@ export async function startAsync(
   DevSession.startSession(projectRoot, exp);
   return exp;
 }
+
+export async function openWebProjectAsync(projectRoot: string, options = {}, verbose = true) {
+  if (!webpackDevServerInstance) {
+    await startWebpackServerAsync(projectRoot, options, verbose);
+  }
+  await Web.openProjectAsync(projectRoot);
+}
+
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
