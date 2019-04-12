@@ -108,7 +108,7 @@ export function generateAppleTags(manifest, assets) {
   let tags = {};
   if (manifest.ios) {
     let apple = {
-      'apple-mobile-web-app-title': manifest.name,
+      'apple-mobile-web-app-title': 'Expo PWA',
       'apple-mobile-web-app-capable': 'yes',
       'apple-mobile-web-app-status-bar-style': 'default',
     };

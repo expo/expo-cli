@@ -21,7 +21,10 @@ function createIndexHTMLFromAppJSON({ development, production }, appManifest, lo
    * The user can disable minify with
    * `web.minifyHTML = false || {}`
    */
-  const minify = overrideWithPropertyOrConfig(production ? web.minifyHTML : false, DEFAULT_MINIFY);
+  const minify = overrideWithPropertyOrConfig(
+    production ? web.build.minifyHTML : false,
+    DEFAULT_MINIFY
+  );
 
   // Generates an `index.html` file with the <script> injected.
   return new HtmlWebpackPlugin({

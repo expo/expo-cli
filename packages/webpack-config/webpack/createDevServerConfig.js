@@ -10,7 +10,9 @@ module.exports = function(env = {}, argv, allowedHost, proxy = undefined) {
     https = false,
     projectRoot,
     config: {
-      web: { publicPath },
+      web: {
+        build: { publicPath },
+      },
     },
   } = env;
   const locations = getLocations(projectRoot);

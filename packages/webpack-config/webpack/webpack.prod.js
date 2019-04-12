@@ -39,7 +39,7 @@ module.exports = function(env = {}, argv) {
   const appManifest = appJSON.expo || appJSON;
   const { web = {} } = appManifest;
   const { build: buildConfig = { verbose: false } } = web;
-  const shouldUseSourceMap = web.devtool !== undefined && web.devtool;
+  const shouldUseSourceMap = buildConfig.devtool !== undefined && buildConfig.devtool;
   /**
    * build: {
    *   verbose: boolean,

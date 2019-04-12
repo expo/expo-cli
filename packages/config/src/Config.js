@@ -148,6 +148,7 @@ const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
 const ICON_SIZES = [96, 128, 192, 256, 384, 512];
 const MAX_SHORT_NAME_LENGTH = 12;
+const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
 
 export function createEnvironmentConstants(appManifest, pwaManifestLocation) {
   let web;
@@ -188,6 +189,7 @@ function sanitizePublicPath(publicPath) {
   if (typeof publicPath !== 'string' || !publicPath.length) {
     return '/';
   }
+
   if (publicPath.endsWith('/')) {
     return publicPath;
   }
@@ -215,28 +217,26 @@ function applyWebDefaults(appJSON: Object) {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
   const { web: webManifest = {}, splash = {} } = appManifest;
+  const { build: webBuild = {}, webDangerous = {} } = webManifest;
 
   // rn-cli apps use a displayName value as well.
   const { name: appName, webName } = getNameForAppJSON(appJSON);
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
-  const noJavaScriptMessage = webManifest.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
-  const rootId = webManifest.rootId || DEFAULT_ROOT_ID;
+  const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
+  const rootId = webBuild.rootId || DEFAULT_ROOT_ID;
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = appManifest.description || DEFAULT_DESCRIPTION;
   // The theme_color sets the color of the tool bar, and may be reflected in the app's preview in task switchers.
-  const webThemeColor = webManifest.themeColor || webManifest.theme_color || primaryColor;
+  const webThemeColor = webManifest.themeColor || primaryColor;
   const dir = webManifest.dir || DEFAULT_LANG_DIR;
-  const shortName = webManifest.shortName || webManifest.short_name || webName;
+  const shortName = webManifest.shortName || webName;
   const display = webManifest.display || DEFAULT_DISPLAY;
-  const startUrl = webManifest.startUrl || webManifest.start_url || DEFAULT_START_URL;
-  const webViewport = webManifest.viewport || DEFAULT_VIEWPORT;
-
-  const barStyle =
-    webManifest.barStyle ||
-    webManifest['apple-mobile-web-app-status-bar-style'] ||
-    DEFAULT_STATUS_BAR;
+  const startUrl = webManifest.startUrl || DEFAULT_START_URL;
+  const webViewport = webDangerous.viewport || DEFAULT_VIEWPORT;
+  const { scope, crossorigin } = webManifest;
+  const barStyle = webManifest.barStyle || DEFAULT_STATUS_BAR;
 
   let webOrientation = webManifest.orientation || appManifest.orientation;
   if (webOrientation && typeof orientation === 'string') {
@@ -256,10 +256,7 @@ function applyWebDefaults(appJSON: Object) {
    * to provide a smooth transition from the splash screen to your app.
    */
   const backgroundColor =
-    webManifest.backgroundColor ||
-    webManifest.background_color ||
-    splash.backgroundColor ||
-    DEFAULT_BACKGROUND_COLOR; // No default background color
+    webManifest.backgroundColor || splash.backgroundColor || DEFAULT_BACKGROUND_COLOR; // No default background color
 
   /**
    * https://developer.mozilla.org/en-US/docs/Web/Manifest#prefer_related_applications
@@ -269,7 +266,7 @@ function applyWebDefaults(appJSON: Object) {
    */
 
   const preferRelatedApplications =
-    webManifest.preferRelatedApplications || webManifest.prefer_related_applications;
+    webManifest.preferRelatedApplications || DEFAULT_PREFER_RELATED_APPLICATIONS;
 
   const relatedApplications = inferWebRelatedApplicationsFromConfig(appManifest);
 
@@ -294,6 +291,8 @@ function applyWebDefaults(appJSON: Object) {
     web: {
       ...webManifest,
       rootId,
+      scope,
+      crossorigin,
       viewport: webViewport,
       description,
       preferRelatedApplications,
@@ -321,41 +320,45 @@ function applyWebDefaults(appJSON: Object) {
  * Such applications are intended to be alternatives to the
  * website that provides similar/equivalent functionality — like the native app version of the website.
  */
-function inferWebRelatedApplicationsFromConfig(config: Object) {
-  const { web = {}, ios = {}, android = {} } = config;
-
-  const relatedApplications = web.relatedApplications || web.related_applications || [];
+function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {} }: Object) {
+  const relatedApplications = web.relatedApplications || [];
 
   const { bundleIdentifier, appStoreUrl } = ios;
   if (bundleIdentifier) {
-    const alreadyHasIOSApp = relatedApplications.some(({ platform }) => platform === 'itunes');
-    if (!alreadyHasIOSApp) {
-      const iosApp = {
-        platform: 'itunes',
+    const PLATFORM_ITUNES = 'itunes';
+    let iosApp = relatedApplications.some(({ platform }) => platform === PLATFORM_ITUNES);
+    if (!iosApp) {
+      relatedApplications.push({
+        platform: PLATFORM_ITUNES,
         url: appStoreUrl,
         id: bundleIdentifier,
-      };
-      relatedApplications.push(iosApp);
+      });
     }
   }
 
   const { package: androidPackage, playStoreUrl } = android;
   if (androidPackage) {
-    const alreadyHasAndroidApp = relatedApplications.some(({ platform }) => platform === 'play');
+    const PLATFORM_PLAY = 'play';
+
+    const alreadyHasAndroidApp = relatedApplications.some(
+      ({ platform }) => platform === PLATFORM_PLAY
+    );
     if (!alreadyHasAndroidApp) {
-      const androidApp = {
-        platform: 'play',
+      relatedApplications.push({
+        platform: PLATFORM_PLAY,
         url: playStoreUrl || `http://play.google.com/store/apps/details?id=${androidPackage}`,
         id: androidPackage,
-      };
-      relatedApplications.push(androidApp);
+      });
     }
   }
 
   return relatedApplications;
 }
 
-function applyPWAIconsAndSplashScreens(config, getAbsolutePath: Function, options: Object) {
+function inferWebHomescreenIcons(config: Object, getAbsolutePath: Function, options: Object) {
+  if (Array.isArray(config.web.icons)) {
+    return config.web.icons;
+  }
   let icons = [];
   let icon;
   if (config.web.icon || config.icon) {
@@ -365,7 +368,6 @@ function applyPWAIconsAndSplashScreens(config, getAbsolutePath: Function, option
     icon = options.templateIcon;
   }
   icons.push({ src: icon, size: ICON_SIZES });
-  let startupImages = [];
   const iOSIcon = config.icon || config.ios.icon;
   if (iOSIcon) {
     const iOSIconPath = getAbsolutePath(iOSIcon);
@@ -374,12 +376,22 @@ function applyPWAIconsAndSplashScreens(config, getAbsolutePath: Function, option
       size: 1024,
       src: iOSIconPath,
     });
+  }
+  return icons;
+}
 
-    const { splash: iOSSplash = {} } = config.ios;
-    let splashImageSource = iOSIconPath;
-    if (iOSSplash.image || config.splash.image) {
-      splashImageSource = getAbsolutePath(iOSSplash.image || config.splash.image);
-    }
+function inferWebStartupImages(config: Object, getAbsolutePath: Function, options: Object) {
+  if (Array.isArray(config.web.startupImages)) {
+    return config.web.startupImages;
+  }
+
+  const { splash: iOSSplash = {} } = config.ios;
+  const { splash: webSplash = {} } = config.web;
+  let startupImages = [];
+
+  let splashImageSource;
+  if (webSplash.image || iOSSplash.image || config.splash.image) {
+    splashImageSource = getAbsolutePath(webSplash.image || iOSSplash.image || config.splash.image);
     startupImages.push({
       src: splashImageSource,
       supportsTablet: config.ios.supportsTablet,
@@ -387,21 +399,14 @@ function applyPWAIconsAndSplashScreens(config, getAbsolutePath: Function, option
       destination: `assets/splash`,
     });
   }
-
-  return {
-    ...config,
-    web: {
-      ...config.web,
-      icons,
-      startupImages,
-    },
-  };
+  return startupImages;
 }
 
 export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, options: Object) {
   const config = applyWebDefaults(appJSON);
-  const configWithImages = applyPWAIconsAndSplashScreens(config, getAbsolutePath, options);
-  return configWithImages;
+  config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
+  config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
+  return config;
 }
 
 export function readConfigJson(projectRoot: string) {

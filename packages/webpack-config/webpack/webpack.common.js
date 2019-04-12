@@ -78,12 +78,12 @@ function createNoJSComponent(message) {
   return `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
 }
 
-function getDevtool(env, webConfig) {
+function getDevtool(env, { devtool }) {
   if (env.production) {
     // string or false
-    if (webConfig.devtool !== undefined) {
+    if (devtool !== undefined) {
       // When big assets are involved sources maps can become expensive and cause your process to run out of memory.
-      return webConfig.devtool;
+      return devtool;
     }
     return 'source-map';
   }
@@ -130,12 +130,14 @@ module.exports = function(env = {}, argv) {
     new WebpackDeepScopeAnalysisPlugin(),
   ];
 
-  const { publicPath, rootId, noJavaScriptMessage, lang } = config.web;
+  const { lang } = config.web;
+  const { publicPath, rootId } = config.web.build;
+  const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
   const serviceWorker = overrideWithPropertyOrConfig(
     // Prevent service worker in development mode
-    env.production ? config.web.serviceWorker : false,
+    env.production ? config.web.build.serviceWorker : false,
     DEFAULT_SERVICE_WORKER
   );
   if (serviceWorker) {
@@ -178,7 +180,11 @@ module.exports = function(env = {}, argv) {
    */
   let reportPlugins = [];
 
-  const reportConfig = enableWithPropertyOrConfig(config.web.report, DEFAULT_REPORT_CONFIG, true);
+  const reportConfig = enableWithPropertyOrConfig(
+    config.web.build.report,
+    DEFAULT_REPORT_CONFIG,
+    true
+  );
 
   if (reportConfig) {
     const reportDir = reportConfig.path;
@@ -203,7 +209,7 @@ module.exports = function(env = {}, argv) {
     ];
   }
 
-  const devtool = getDevtool(env, config.web);
+  const devtool = getDevtool(env, config.web.build);
 
   return {
     // https://webpack.js.org/configuration/other-options/#bail

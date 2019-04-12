@@ -1,7 +1,7 @@
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
-import { Android, ProjectSettings, Simulator, Web, Project } from 'xdl';
+import { Android, ProjectSettings, Simulator, Project } from 'xdl';
 
 import CommandError from './CommandError';
 

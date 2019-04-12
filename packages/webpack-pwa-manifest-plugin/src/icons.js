@@ -143,9 +143,10 @@ function resize(img, mimeType, width, height) {
 export function retrieveIcons(manifest) {
   const startupImages = parseArray(manifest.startupImages);
 
-  let icons = parseArray(manifest.icon || manifest.icons);
+  let icons = parseArray(manifest.icons);
 
   if (startupImages.length) {
+    // TODO: Bacon: use all of the startup images
     const startupImage = startupImages[0];
     icons = icons.concat(fromStartupImage(startupImage));
   }

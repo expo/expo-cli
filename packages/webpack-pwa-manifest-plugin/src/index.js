@@ -69,6 +69,7 @@ class WebpackPwaManifest {
       start_url: web.startUrl,
       theme_color: web.themeColor,
       ios: {
+        'apple-mobile-web-app-title': web.short_name,
         'apple-mobile-web-app-status-bar-style': web.barStyle,
       },
       crossorigin: web.crossorigin,
