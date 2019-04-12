@@ -14,7 +14,7 @@ const createClientEnvironment = require('./createClientEnvironment');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
 const getLocations = require('./webpackLocations');
-
+const path = require('path');
 const DEFAULT_SERVICE_WORKER = {};
 const DEFAULT_REPORT_CONFIG = {
   verbose: false,
@@ -162,10 +162,10 @@ module.exports = function(env = {}, argv) {
    */
   let reportPlugins = [];
 
-  const reportConfig = enableWithPropertyOrConfig(config.web.report, DEFAULT_REPORT_CONFIG);
+  const reportConfig = enableWithPropertyOrConfig(config.web.report, DEFAULT_REPORT_CONFIG, true);
 
   if (reportConfig) {
-    const reportDir = reportConfig.path || 'web-report';
+    const reportDir = reportConfig.path;
     reportPlugins = [
       // Delete the report folder
       new CleanWebpackPlugin([locations.absolute(reportDir)], {
@@ -179,10 +179,10 @@ module.exports = function(env = {}, argv) {
         defaultSizes: 'gzip',
         generateStatsFile: true,
         openAnalyzer: false,
-        logLevel: reportConfig.verbose ? 'info' : 'silent',
-        statsFilename: locations.absolute(reportDir, reportConfig.statsFilename || 'stats.json'),
-        reportFilename: locations.absolute(reportDir, reportConfig.reportFilename || 'report.html'),
         ...reportConfig,
+        logLevel: reportConfig.verbose ? 'info' : 'silent',
+        statsFilename: locations.absolute(reportDir, reportConfig.statsFilename),
+        reportFilename: locations.absolute(reportDir, reportConfig.reportFilename),
       }),
     ];
   }
