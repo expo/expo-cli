@@ -62,7 +62,7 @@ async function getMissingReactNativeWebPackagesMessageAsync(projectRoot) {
   const { pkg } = await readConfigJsonAsync(projectRoot);
   const dependencies = await getMissingReactNativeWebPackagesAsync(projectRoot, pkg);
   if (dependencies.length) {
-    const commandPrefix = isUsingYarn(projectRoot) ? 'yarn add ' : 'npm install ';
+    const commandPrefix = ConfigUtils.isUsingYarn(projectRoot) ? 'yarn add ' : 'npm install ';
     const command = commandPrefix + dependencies.join(' ');
     return {
       message: `* Install these packages: ${chalk.yellow(command)}`,
@@ -122,19 +122,13 @@ export async function onlySupportsWebAsync(projectRoot) {
 }
 
 async function promptToAddWebPlatform() {
-  // clearConsole();
-  const question = {
-    type: 'confirm',
-    name: 'should',
-    message: `It appears you don't explicitly define "${chalk.underline(
+  return await promptAsync(
+    `It appears you don't explicitly define "${chalk.underline(
       `web`
-    )}" as one of the supported "${chalk.underline(`platforms`)}" in your project's ${chalk.white(
+    )}" as one of the supported "${chalk.underline(`platforms`)}" in your project's ${chalk.green(
       `app.json`
-    )}. \n  Would you like to add it?`,
-    default: true,
-  };
-  const answer = await inquirer.prompt(question);
-  return !!answer.should;
+    )}. \n  Would you like to add it?`
+  );
 }
 
 async function addWebPlatformToAppConfig(projectRoot) {
@@ -151,18 +145,13 @@ async function addWebPlatformToAppConfig(projectRoot) {
   await ConfigUtils.writeConfigJsonAsync(projectRoot, { platforms: [...currentPlatforms, 'web'] });
 }
 
-function isUsingYarn(projectRoot) {
-  const yarnLockPath = path.resolve(projectRoot, 'yarn.lock');
-  return fs.existsSync(yarnLockPath);
-}
-
 async function installAsync(projectRoot, libraries = []) {
   const options = {
     cwd: projectRoot,
     stdio: 'inherit',
   };
   try {
-    if (await isUsingYarn(projectRoot)) {
+    if (await ConfigUtils.isUsingYarn(projectRoot)) {
       await spawnAsync('yarn', ['add', ...libraries], options);
     } else {
       await spawnAsync('npm', ['install', '--save', ...libraries], options);
@@ -175,31 +164,21 @@ async function installAsync(projectRoot, libraries = []) {
   }
 }
 
-function getModulesPath(projectRoot) {
-  const workspaceRoot = findWorkspaceRoot(projectRoot); // Absolute path or null
-  return path.resolve(workspaceRoot || projectRoot, 'node_modules');
-}
-
-function areModulesInstalled(projectRoot) {
-  const modulesPath = getModulesPath(projectRoot);
+function areModulesInstalled(projectRoot, exp) {
+  const modulesPath = ConfigUtils.resolveModule(``, projectRoot, exp);
   return fs.existsSync(modulesPath);
 }
 
-async function attemptToGetPackageVersionAtPathAsync(modulesPath, moduleName) {
-  const possibleModulePath = path.resolve(modulesPath, moduleName, 'package.json');
+async function getLibraryVersionAsync(projectRoot, exp, packageName) {
+  const possibleModulePath = ConfigUtils.resolveModule(
+    `${packageName}/package.json`,
+    projectRoot,
+    exp
+  );
   if (fs.existsSync(possibleModulePath)) {
     const packageJson = await JsonFile.readAsync(possibleModulePath);
     return packageJson.version;
   }
-}
-
-async function getLibraryVersionAsync(projectRoot, packageName) {
-  const modulesPath = getModulesPath(projectRoot);
-  const possiblePackageVersion = await attemptToGetPackageVersionAtPathAsync(
-    modulesPath,
-    packageName
-  );
-  return possiblePackageVersion;
 }
 
 export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
@@ -217,10 +196,7 @@ export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
 
   const results = await getMissingReactNativeWebPackagesMessageAsync(projectRoot);
   if (results) {
-    if (
-      isInteractive &&
-      (await promptToInstallReactNativeWeb(results.dependencies, results.command))
-    ) {
+    if (isInteractive && (await promptToInstallReactNativeWeb(results.dependencies))) {
       try {
         await installAsync(projectRoot, results.dependencies);
         // In the case where the package.json value is different from the installed value
@@ -251,22 +227,28 @@ export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
   }
 }
 
-async function promptToInstallReactNativeWeb(dependencies, command) {
+async function promptToInstallReactNativeWeb(dependencies) {
+  return await promptAsync(
+    `It appears you don't have all of the required packages installed. \n  Would you like to install: ${chalk.underline(
+      dependencies.join(', ')
+    )}?`
+  );
+}
+
+async function promptAsync(message: string): Promise<boolean> {
   // clearConsole();
   const question = {
     type: 'confirm',
     name: 'should',
-    message: `It appears you don't have all of the required packages installed. \n  Would you like to install: ${chalk.white.underline(
-      dependencies.join(', ')
-    )}?`,
+    message,
     default: true,
   };
-  const answer = await inquirer.prompt(question);
-  return !!answer.should;
+  const { should } = await inquirer.prompt(question);
+  return should;
 }
 
 function getWebSetupLogs() {
-  const appJsonRules = chalk.white(`
+  const appJsonRules = chalk.green(`
   {
     "platforms": [
   ${chalk.green.bold(`+      "web"`)}
