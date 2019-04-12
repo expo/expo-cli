@@ -83,6 +83,16 @@ export async function newestSdkVersionAsync() {
   return result;
 }
 
+export async function nextDeprecatedSdkVersionAsync() {
+  const sdkVersions = await sdkVersionsAsync();
+  const supportedVersions =  _.pickBy(sdkVersions, v => v.isDeprecated === undefined);
+  let versionNumbers = [];
+  _.forEach(supportedVersions, (value, key) => {
+    versionNumbers.push(semver.major(key))
+  });
+  return Math.min(...versionNumbers);
+}
+
 export async function facebookReactNativeVersionsAsync(): Promise<Array<string>> {
   let sdkVersions = await sdkVersionsAsync();
   let facebookReactNativeVersions = new Set();
