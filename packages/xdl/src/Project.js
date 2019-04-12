@@ -1421,10 +1421,23 @@ function _isIgnorableBugReportingExtraData(body) {
   return body.length === 2 && body[0] === 'BugReporting extraData:';
 }
 
+function _isAppRegistryStartupMessage(body) {
+  return body.length === 1 && /^Running application "main" with appParams:/.test(body[0]);
+}
+
 function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
   for (let i = 0; i < logs.length; i++) {
     let log = logs[i];
     let body = typeof log.body === 'string' ? [log.body] : log.body;
+    let { level } = log;
+
+    if (_isIgnorableBugReportingExtraData(body)) {
+      level = logger.DEBUG;
+    }
+    if (_isAppRegistryStartupMessage(body)) {
+      body = [`Running application on ${deviceName}.`];
+    }
+
     let string = body
       .map(obj => {
         if (typeof obj === 'undefined') {
@@ -1443,13 +1456,7 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
         }
       })
       .join(' ');
-    let level = log.level;
-    if (_isIgnorableBugReportingExtraData(body)) {
-      level = logger.DEBUG;
-    }
-    let groupDepth = log.groupDepth;
-    let shouldHide = log.shouldHide;
-    let includesStack = log.includesStack;
+
     ProjectUtils.logWithLevel(
       projectRoot,
       level,
@@ -1457,9 +1464,9 @@ function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: st
         tag: 'device',
         deviceId,
         deviceName,
-        groupDepth,
-        shouldHide,
-        includesStack,
+        groupDepth: log.groupDepth,
+        shouldHide: log.shouldHide,
+        includesStack: log.includesStack,
       },
       string
     );

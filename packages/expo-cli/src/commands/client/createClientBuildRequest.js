@@ -4,6 +4,7 @@ export default async function createClientBuildRequest({
   user = null,
   context,
   distributionCert,
+  pushKey,
   udids,
   addUdid,
   email,
@@ -16,6 +17,8 @@ export default async function createClientBuildRequest({
     bundleIdentifier: context.bundleIdentifier,
     email,
     credentials: {
+      apnsKeyP8: pushKey.apnsKeyP8,
+      apnsKeyId: pushKey.apnsKeyId,
       certP12: distributionCert.certP12,
       certPassword: distributionCert.certPassword,
       teamId: context.team.id,
