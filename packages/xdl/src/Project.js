@@ -1835,14 +1835,13 @@ function getWebpackInstance(projectRoot) {
 }
 
 async function startWebpackServerAsync(projectRoot, options, verbose) {
+  await Web.ensureWebSupportAsync(projectRoot);
+
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, 'webpack', 'Webpack is already running.');
     return;
   }
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
-  if (!hasWebSupport) {
-    return;
-  }
+
   const appDirectory = fs.realpathSync(projectRoot);
   const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
   const paths = {
@@ -1859,7 +1858,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
   let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
 
   const HOST = '0.0.0.0';
-  const DEFAULT_PORT = 19000;
+  const DEFAULT_PORT = 19006;
 
   let webpackServerPort;
   try {
@@ -2197,6 +2196,13 @@ export async function startAsync(
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   DevSession.startSession(projectRoot, exp);
   return exp;
+}
+
+export async function openWebProjectAsync(projectRoot: string, options = {}, verbose = true) {
+  if (!webpackDevServerInstance) {
+    await startWebpackServerAsync(projectRoot, options, verbose);
+  }
+  await Web.openProjectAsync(projectRoot);
 }
 
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
