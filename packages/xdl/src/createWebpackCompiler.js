@@ -97,7 +97,7 @@ export default function createWebpackCompiler({
       clearConsole();
     }
     console.log('');
-    log(projectRoot, chalk.white('Compiling...'));
+    log(projectRoot, 'Compiling...');
   });
 
   let isFirstCompile = true;
