@@ -180,7 +180,7 @@ async function _getDefaultSimulatorDeviceUDIDAsync() {
     const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', ['read', 'com.apple.iphonesimulator', 'CurrentDeviceUDID']);
     return defaultDeviceUDID.trim();
   } catch (e) {
-    return false;
+    return null;
   }
 }
 
