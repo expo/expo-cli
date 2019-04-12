@@ -10,7 +10,6 @@ import {
   UrlUtils,
   User,
   UserSettings,
-  Web,
 } from 'xdl';
 
 import chalk from 'chalk';
@@ -143,7 +142,7 @@ export const startAsync = async (projectDir, options) => {
       case 'w': {
         clearConsole();
         log('Trying to open the project in a web browser...');
-        await Web.openProjectAsync(projectDir);
+        await Project.openWebProjectAsync(projectDir);
         printHelp();
         break;
       }
