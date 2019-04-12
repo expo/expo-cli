@@ -6,6 +6,8 @@ import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
 import clearConsole from 'react-dev-utils/clearConsole';
 import * as ConfigUtils from '@expo/config';
+import semver from 'semver';
+import JsonFile from '@expo/json-file';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
@@ -60,9 +62,9 @@ function isUsingYarn(projectRoot) {
   return fs.existsSync(yarnLockPath);
 }
 
-async function getMissingReactNativeWebPackagesMessage(projectRoot) {
+async function getMissingReactNativeWebPackagesMessageAsync(projectRoot) {
   const { pkg } = await readConfigJsonAsync(projectRoot);
-  const dependencies = getMissingReactNativeWebPackages(pkg);
+  const dependencies = await getMissingReactNativeWebPackagesAsync(projectRoot, pkg);
   if (dependencies.length) {
     const commandPrefix = isUsingYarn(projectRoot) ? 'yarn add ' : 'npm install ';
     const command = commandPrefix + dependencies.join(' ');
@@ -74,13 +76,42 @@ async function getMissingReactNativeWebPackagesMessage(projectRoot) {
   }
 }
 
-function getMissingReactNativeWebPackages(appPackage) {
+function formatPackage({ name, version }) {
+  if (!version || version === '*') {
+    return name;
+  }
+  return `${name}@${version}`;
+}
+
+async function getMissingReactNativeWebPackagesAsync(projectRoot, appPackage) {
   const { dependencies = {} } = appPackage;
-  const requiredPackages = ['react', 'react-dom', 'react-native-web'];
+  const requiredPackages = [
+    { name: 'react', version: '*' },
+    { name: 'react-dom', version: '*' },
+    { name: 'react-native-web', version: '^0.11.2' },
+    { name: 'expo', version: '^33.0.0-alpha.web.1' },
+  ];
   let missingPackages = [];
+
+  // If the user hasn't installed node_modules yet, return every library.
+  // This will ensure that all further tests are being performed against valid modules.
+  if (!areModulesInstalled(projectRoot)) {
+    return requiredPackages;
+  }
+
   for (const dependency of requiredPackages) {
-    if (typeof dependencies[dependency] === 'undefined') {
-      missingPackages.push(dependency);
+    const projectVersion = await getLibraryVersionAsync(projectRoot, dependency.name);
+    // If we couldn't find the package, it may be because the library is linked from elsewhere.
+    // It also could be that the modules haven't been installed yet.
+    console.log('CHECK: ', dependency, dependencies[dependency.name], projectVersion);
+    if (
+      !projectVersion ||
+      !semver.satisfies(projectVersion, dependency.version) ||
+      // In the case that the library is installed but the entry was removed from the package.json
+      // This mostly applies to testing :)
+      !dependencies[dependency.name]
+    ) {
+      missingPackages.push(formatPackage(dependency));
     }
   }
   return missingPackages;
@@ -144,6 +175,50 @@ async function installAsync(projectRoot, libraries = []) {
   }
 }
 
+const findWorkspaceRoot = require('find-yarn-workspace-root');
+
+function getModulesPath(projectRoot) {
+  const workspaceRoot = findWorkspaceRoot(projectRoot); // Absolute path or null
+  return path.resolve(workspaceRoot || projectRoot, 'node_modules');
+}
+
+function areModulesInstalled(projectRoot) {
+  const modulesPath = getModulesPath(projectRoot);
+  return fs.existsSync(modulesPath);
+}
+
+async function attemptToGetPackageVersionAtPathAsync(modulesPath, moduleName) {
+  const possibleModulePath = path.resolve(modulesPath, moduleName, 'package.json');
+  if (fs.existsSync(possibleModulePath)) {
+    const packageJson = await JsonFile.readAsync(possibleModulePath);
+    return packageJson.version;
+  }
+}
+
+async function getLibraryVersionAsync(projectRoot, packageName) {
+  const modulesPath = getModulesPath(projectRoot);
+  const possiblePackageVersion = await attemptToGetPackageVersionAtPathAsync(
+    modulesPath,
+    packageName
+  );
+  if (possiblePackageVersion) {
+    return possiblePackageVersion;
+  }
+  const options = {
+    cwd: projectRoot,
+    // stdio: 'inherit',
+  };
+  try {
+    const { stdout } = await spawnAsync('npm', ['info', packageName, 'version'], options);
+    return stdout.trim();
+  } catch (error) {
+    throw new XDLError(
+      XDLError.WEB_NOT_CONFIGURED,
+      'Failed to get package version for: ' + packageName + ' ' + error.message
+    );
+  }
+}
+
 // TODO: Bacon: ensure expo is v33+
 export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
   let errors = [];
@@ -158,13 +233,31 @@ export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
     }
   }
 
-  const results = await getMissingReactNativeWebPackagesMessage(projectRoot);
+  const results = await getMissingReactNativeWebPackagesMessageAsync(projectRoot);
   if (results) {
     if (
       isInteractive &&
       (await promptToInstallReactNativeWeb(results.dependencies, results.command))
     ) {
-      await installAsync(projectRoot, results.dependencies);
+      try {
+        await installAsync(projectRoot, results.dependencies);
+        // In the case where the package.json value is different from the installed value
+        // and the installed value is valid, but the package.json version is not,
+        // then the initial install would have synchronized the values but downloaded an
+        // invalid package version. Running this twice is the only way to catch this.
+        // To test install all of the valid versions, then set expo version to 29.0.0, and delete react.
+        // Starting the flow over again will prompt to install react, then the second pass will catch expo.
+        const postResults = await getMissingReactNativeWebPackagesMessageAsync(projectRoot);
+        if (postResults) {
+          // TODO: Bacon: Maybe we should warn that there was a problem with the first pass.
+          await installAsync(projectRoot, postResults.dependencies);
+        }
+      } catch (error) {
+        throw new XDLError(
+          ErrorCode.WEB_NOT_CONFIGURED,
+          'Failed to install the required packages: ' + error.message
+        );
+      }
     } else {
       errors.push(results.message);
     }
@@ -177,7 +270,7 @@ export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
 }
 
 async function promptToInstallReactNativeWeb(dependencies, command) {
-  clearConsole();
+  // clearConsole();
   const question = {
     type: 'confirm',
     name: 'should',
