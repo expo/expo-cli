@@ -199,15 +199,25 @@ export function getConfigForPWA(projectRoot: string, getAbsolutePath: Function, 
   return ensurePWAConfig(config, getAbsolutePath, options);
 }
 
-export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, options: Object) {
+export function getNameForAppJSON(appJSON: Object) {
+  const appManifest = appJSON.expo || appJSON;
+  const { web = {} } = appManifest;
+  // rn-cli apps use a displayName value as well.
+  const name = appJSON.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
+  const webName = web.name || name;
+  return {
+    name,
+    webName,
+  };
+}
+
+function applyWebDefaults(appJSON: Object) {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
-  const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
+  const { web: webManifest = {}, splash = {} } = appManifest;
 
   // rn-cli apps use a displayName value as well.
-  const appName =
-    appJSON.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
-  const webName = webManifest.name || appName;
+  const { name: appName, webName } = getNameForAppJSON(appJSON);
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webManifest.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
@@ -222,15 +232,6 @@ export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, opti
   const display = webManifest.display || DEFAULT_DISPLAY;
   const startUrl = webManifest.startUrl || webManifest.start_url || DEFAULT_START_URL;
   const webViewport = webManifest.viewport || DEFAULT_VIEWPORT;
-  /**
-   * https://developer.mozilla.org/en-US/docs/Web/Manifest#prefer_related_applications
-   * Specifies a boolean value that hints for the user agent to indicate
-   * to the user that the specified native applications (see below) are recommended over the website.
-   * This should only be used if the related native apps really do offer something that the website can't... like Expo ;)
-   */
-
-  const preferRelatedApplications =
-    webManifest.preferRelatedApplications || webManifest.prefer_related_applications;
 
   const barStyle =
     webManifest.barStyle ||
@@ -261,81 +262,16 @@ export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, opti
     DEFAULT_BACKGROUND_COLOR; // No default background color
 
   /**
-   * https://developer.mozilla.org/en-US/docs/Web/Manifest#related_applications
-   * An array of native applications that are installable by, or accessible to, the underlying platform
-   * for example, a native Android application obtainable through the Google Play Store.
-   * Such applications are intended to be alternatives to the
-   * website that provides similar/equivalent functionality — like the native app version of the website.
+   * https://developer.mozilla.org/en-US/docs/Web/Manifest#prefer_related_applications
+   * Specifies a boolean value that hints for the user agent to indicate
+   * to the user that the specified native applications (see below) are recommended over the website.
+   * This should only be used if the related native apps really do offer something that the website can't... like Expo ;)
    */
-  let relatedApplications =
-    webManifest.relatedApplications || webManifest.related_applications || [];
 
-  // if the user manually defines this as false, then don't infer native apps.
-  if (preferRelatedApplications !== false) {
-    const noRelatedApplicationsDefined =
-      Array.isArray(relatedApplications) && !relatedApplications.length;
+  const preferRelatedApplications =
+    webManifest.preferRelatedApplications || webManifest.prefer_related_applications;
 
-    if (noRelatedApplicationsDefined) {
-      if (ios.bundleIdentifier) {
-        const alreadyHasIOSApp = relatedApplications.some(app => app.platform === 'itunes');
-        if (!alreadyHasIOSApp) {
-          const iosApp = {
-            platform: 'itunes',
-            url: ios.appStoreUrl,
-            id: ios.bundleIdentifier,
-          };
-          relatedApplications.push(iosApp);
-        }
-      }
-      if (android.package) {
-        const alreadyHasAndroidApp = relatedApplications.some(app => app.platform === 'play');
-        if (!alreadyHasAndroidApp) {
-          let androidUrl = android.playStoreUrl;
-          if (!androidUrl && android.package) {
-            androidUrl = `http://play.google.com/store/apps/details?id=${android.package}`;
-          }
-          const androidApp = {
-            platform: 'play',
-            url: androidUrl,
-            id: android.package,
-          };
-          relatedApplications.push(androidApp);
-        }
-      }
-    }
-  }
-
-  let icons = [];
-  let icon;
-  if (webManifest.icon || appManifest.icon) {
-    icon = getAbsolutePath(webManifest.icon || appManifest.icon);
-  } else {
-    // Use template icon
-    icon = options.templateIcon;
-  }
-  icons.push({ src: icon, size: ICON_SIZES });
-  let startupImages = [];
-  const iOSIcon = appManifest.icon || ios.icon;
-  if (iOSIcon) {
-    const iOSIconPath = getAbsolutePath(iOSIcon);
-    icons.push({
-      ios: true,
-      size: 1024,
-      src: iOSIconPath,
-    });
-
-    const { splash: iOSSplash = {} } = ios;
-    let splashImageSource = iOSIconPath;
-    if (iOSSplash.image || splash.image) {
-      splashImageSource = getAbsolutePath(iOSSplash.image || splash.image);
-    }
-    startupImages.push({
-      src: splashImageSource,
-      supportsTablet: ios.supportsTablet,
-      orientation: webOrientation,
-      destination: `assets/splash`,
-    });
-  }
+  const relatedApplications = inferWebRelatedApplicationsFromConfig(appManifest);
 
   // Validate short name
   if (shortName.length > MAX_SHORT_NAME_LENGTH) {
@@ -360,8 +296,6 @@ export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, opti
       rootId,
       viewport: webViewport,
       description,
-      icons,
-      startupImages,
       preferRelatedApplications,
       relatedApplications,
       startUrl,
@@ -378,6 +312,96 @@ export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, opti
       publicPath,
     },
   };
+}
+
+/**
+ * https://developer.mozilla.org/en-US/docs/Web/Manifest#related_applications
+ * An array of native applications that are installable by, or accessible to, the underlying platform
+ * for example, a native Android application obtainable through the Google Play Store.
+ * Such applications are intended to be alternatives to the
+ * website that provides similar/equivalent functionality — like the native app version of the website.
+ */
+function inferWebRelatedApplicationsFromConfig(config: Object) {
+  const { web = {}, ios = {}, android = {} } = config;
+
+  const relatedApplications = web.relatedApplications || web.related_applications || [];
+
+  const { bundleIdentifier, appStoreUrl } = ios;
+  if (bundleIdentifier) {
+    const alreadyHasIOSApp = relatedApplications.some(({ platform }) => platform === 'itunes');
+    if (!alreadyHasIOSApp) {
+      const iosApp = {
+        platform: 'itunes',
+        url: appStoreUrl,
+        id: bundleIdentifier,
+      };
+      relatedApplications.push(iosApp);
+    }
+  }
+
+  const { package: androidPackage, playStoreUrl } = android;
+  if (androidPackage) {
+    const alreadyHasAndroidApp = relatedApplications.some(({ platform }) => platform === 'play');
+    if (!alreadyHasAndroidApp) {
+      const androidApp = {
+        platform: 'play',
+        url: playStoreUrl || `http://play.google.com/store/apps/details?id=${androidPackage}`,
+        id: androidPackage,
+      };
+      relatedApplications.push(androidApp);
+    }
+  }
+
+  return relatedApplications;
+}
+
+function applyPWAIconsAndSplashScreens(config, getAbsolutePath: Function, options: Object) {
+  let icons = [];
+  let icon;
+  if (config.web.icon || config.icon) {
+    icon = getAbsolutePath(config.web.icon || config.icon);
+  } else {
+    // Use template icon
+    icon = options.templateIcon;
+  }
+  icons.push({ src: icon, size: ICON_SIZES });
+  let startupImages = [];
+  const iOSIcon = config.icon || config.ios.icon;
+  if (iOSIcon) {
+    const iOSIconPath = getAbsolutePath(iOSIcon);
+    icons.push({
+      ios: true,
+      size: 1024,
+      src: iOSIconPath,
+    });
+
+    const { splash: iOSSplash = {} } = config.ios;
+    let splashImageSource = iOSIconPath;
+    if (iOSSplash.image || config.splash.image) {
+      splashImageSource = getAbsolutePath(iOSSplash.image || config.splash.image);
+    }
+    startupImages.push({
+      src: splashImageSource,
+      supportsTablet: config.ios.supportsTablet,
+      orientation: config.web.orientation,
+      destination: `assets/splash`,
+    });
+  }
+
+  return {
+    ...config,
+    web: {
+      ...config.web,
+      icons,
+      startupImages,
+    },
+  };
+}
+
+export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, options: Object) {
+  const config = applyWebDefaults(appJSON);
+  const configWithImages = applyPWAIconsAndSplashScreens(config, getAbsolutePath, options);
+  return configWithImages;
 }
 
 export function readConfigJson(projectRoot: string) {

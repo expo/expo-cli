@@ -4,7 +4,7 @@ import opn from 'opn';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
-import clearConsole from 'react-dev-utils/clearConsole';
+// import clearConsole from 'react-dev-utils/clearConsole';
 import * as ConfigUtils from '@expo/config';
 import semver from 'semver';
 import JsonFile from '@expo/json-file';
@@ -99,7 +99,6 @@ async function getMissingReactNativeWebPackagesAsync(projectRoot, appPackage) {
     const projectVersion = await getLibraryVersionAsync(projectRoot, dependency.name);
     // If we couldn't find the package, it may be because the library is linked from elsewhere.
     // It also could be that the modules haven't been installed yet.
-    console.log('CHECK: ', dependency, dependencies[dependency.name], projectVersion);
     if (
       !projectVersion ||
       !semver.satisfies(projectVersion, dependency.version) ||
@@ -123,7 +122,7 @@ export async function onlySupportsWebAsync(projectRoot) {
 }
 
 async function promptToAddWebPlatform() {
-  clearConsole();
+  // clearConsole();
   const question = {
     type: 'confirm',
     name: 'should',

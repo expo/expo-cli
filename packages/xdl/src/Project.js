@@ -1851,8 +1851,9 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
   };
 
   const useYarn = fs.existsSync(paths.yarnLockFile);
-  // TODO: Bacon: fix name getter
-  const appName = require(paths.appPackageJson).name;
+
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { webName } = await ConfigUtils.getNameForAppJSON(exp);
 
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
@@ -1878,7 +1879,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
       projectRoot,
       nonInteractive: options.nonInteractive,
       webpack,
-      appName,
+      appName: webName,
       config,
       urls,
       useYarn,
