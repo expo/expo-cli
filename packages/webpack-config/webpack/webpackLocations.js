@@ -77,8 +77,16 @@ function getLocations(inputProjectRoot = '') {
   const productionPath = absolute(productionPathFolderName);
 
   const templatePath = (filename = '') => {
-    const overridePath = absolute('web', filename);
-    if (fs.existsSync(overridePath)) {
+    let overridePath;
+    // TODO: Bacon: Add override in expo.web.staticTemplate.path
+    for (const possibleOverridePathComponent of ['web', 'public']) {
+      const possibleOverridePath = absolute(possibleOverridePathComponent, filename);
+      if (fs.existsSync(possibleOverridePath)) {
+        overridePath = possibleOverridePath;
+        break;
+      }
+    }
+    if (overridePath) {
       return overridePath;
     } else {
       return path.join(__dirname, '../web-default', filename);
