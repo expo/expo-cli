@@ -8,7 +8,6 @@ import spawnAsync from '@expo/spawn-async';
 import * as ConfigUtils from '@expo/config';
 import semver from 'semver';
 import JsonFile from '@expo/json-file';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
@@ -88,15 +87,16 @@ async function getMissingReactNativeWebPackagesAsync(projectRoot, appPackage) {
     { name: 'expo', version: '^33.0.0-alpha.web.1' },
   ];
   let missingPackages = [];
+  const { exp } = await readConfigJsonAsync(projectRoot);
 
   // If the user hasn't installed node_modules yet, return every library.
   // This will ensure that all further tests are being performed against valid modules.
-  if (!areModulesInstalled(projectRoot)) {
+  if (!areModulesInstalled(projectRoot, exp)) {
     return requiredPackages;
   }
 
   for (const dependency of requiredPackages) {
-    const projectVersion = await getLibraryVersionAsync(projectRoot, dependency.name);
+    const projectVersion = await getLibraryVersionAsync(projectRoot, exp, dependency.name);
     // If we couldn't find the package, it may be because the library is linked from elsewhere.
     // It also could be that the modules haven't been installed yet.
     if (
@@ -131,20 +131,6 @@ async function promptToAddWebPlatform() {
   );
 }
 
-async function addWebPlatformToAppConfig(projectRoot) {
-  const { exp } = await readConfigJsonAsync(projectRoot);
-
-  let currentPlatforms = [];
-  if (Array.isArray(exp.platforms) && exp.platforms.length) {
-    currentPlatforms = exp.platforms;
-  }
-  if (currentPlatforms.includes('web')) {
-    return;
-  }
-
-  await ConfigUtils.writeConfigJsonAsync(projectRoot, { platforms: [...currentPlatforms, 'web'] });
-}
-
 async function installAsync(projectRoot, libraries = []) {
   const options = {
     cwd: projectRoot,
@@ -165,7 +151,7 @@ async function installAsync(projectRoot, libraries = []) {
 }
 
 function areModulesInstalled(projectRoot, exp) {
-  const modulesPath = ConfigUtils.resolveModule(``, projectRoot, exp);
+  const modulesPath = ConfigUtils.resolveModule(`.`, projectRoot, exp);
   return fs.existsSync(modulesPath);
 }
 
@@ -187,7 +173,7 @@ export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
   const hasWebSupport = await hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
     if (isInteractive && (await promptToAddWebPlatform())) {
-      await addWebPlatformToAppConfig(projectRoot);
+      await ConfigUtils.addPlatform(projectRoot, 'web');
     } else {
       errors.push(getWebSetupLogs());
       isInteractive = false;

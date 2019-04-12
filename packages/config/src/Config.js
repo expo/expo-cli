@@ -7,8 +7,24 @@ import path from 'path';
 import JsonFile from '@expo/json-file';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
-import findWorkspaceRoot from 'findWorkspaceRoot';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 
+export async function addPlatform(
+  projectRoot: string,
+  platform: 'ios' | 'android' | 'web'
+): Promise<any> {
+  const { exp } = await readConfigJsonAsync(projectRoot);
+
+  let currentPlatforms = [];
+  if (Array.isArray(exp.platforms) && exp.platforms.length) {
+    currentPlatforms = exp.platforms;
+  }
+  if (currentPlatforms.includes(platform)) {
+    return;
+  }
+
+  return await writeConfigJsonAsync(projectRoot, { platforms: [...currentPlatforms, platform] });
+}
 export function isUsingYarn(projectRoot) {
   const workspaceRoot = findWorkspaceRoot(projectRoot);
   if (workspaceRoot) {
@@ -299,10 +315,18 @@ function applyWebDefaults(appJSON: Object) {
     primaryColor,
     web: {
       ...webManifest,
-      rootId,
+      build: {
+        ...webBuild,
+        rootId,
+        publicPath,
+      },
+      dangerous: {
+        ...webDangerous,
+        noJavaScriptMessage,
+        viewport: webViewport,
+      },
       scope,
       crossorigin,
-      viewport: webViewport,
       description,
       preferRelatedApplications,
       relatedApplications,
@@ -316,8 +340,6 @@ function applyWebDefaults(appJSON: Object) {
       themeColor: webThemeColor,
       lang: languageISOCode,
       name: webName,
-      noJavaScriptMessage,
-      publicPath,
     },
   };
 }
