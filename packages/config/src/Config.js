@@ -7,7 +7,16 @@ import path from 'path';
 import JsonFile from '@expo/json-file';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
+import findWorkspaceRoot from 'findWorkspaceRoot';
 
+export function isUsingYarn(projectRoot) {
+  const workspaceRoot = findWorkspaceRoot(projectRoot);
+  if (workspaceRoot) {
+    return fs.existsSync(path.join(workspaceRoot, 'yarn.lock'));
+  } else {
+    return fs.existsSync(path.join(projectRoot, 'yarn.lock'));
+  }
+}
 export async function fileExistsAsync(file: string): Promise<boolean> {
   try {
     return (await fs.stat(file)).isFile();
