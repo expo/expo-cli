@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, ProjectUtils, User } from 'xdl';
+import { Project, ProjectUtils, User, Versions } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import get from 'lodash/get';
@@ -88,6 +88,13 @@ export default class BaseBuilder {
     if (this.manifest.isDetached) {
       log.error(`'expo build:${this.platform()}' is not supported for detached projects.`);
       process.exit(1);
+    }
+    
+    // Warn user if building a project using the next deprecated SDK version
+    let nextDeprecatedVersion = await Versions.nextDeprecatedSdkVersionAsync();
+    if (this.manifest.sdkVersion.substring(0, 2) === nextDeprecatedVersion.toString()) {
+      let {version} = await Versions.newestSdkVersionAsync();
+      log.warn(`\nSDK${nextDeprecatedVersion} will be DEPRECATED soon! We recommend upgrading versions, ideally to the latest (SDK${version.substring(0, 2)}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`);
     }
   }
 
