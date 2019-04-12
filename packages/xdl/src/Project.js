@@ -1836,7 +1836,7 @@ let webpackDevServerInstance;
 
 function getWebpackInstance(projectRoot) {
   if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, 'webpack', 'Webpack is not running.');
+    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is not running.');
   }
   return webpackDevServerInstance;
 }
@@ -1845,7 +1845,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
   await Web.ensureWebSupportAsync(projectRoot);
 
   if (webpackDevServerInstance) {
-    ProjectUtils.logError(projectRoot, 'webpack', 'Webpack is already running.');
+    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
     return;
   }
 
@@ -1875,7 +1875,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
     throw new XDLError(ErrorCode.NO_PORT_FOUND, 'No available port found: ' + error.message);
   }
 
-  ProjectUtils.logInfo(projectRoot, 'webpack', `Starting Webpack on port ${webpackServerPort}.`);
+  ProjectUtils.logInfo(projectRoot, 'expo', `Starting Webpack on port ${webpackServerPort}.`);
 
   const protocol = https ? 'https' : 'http';
   const urls = prepareUrls(protocol, '::', webpackServerPort);
@@ -1896,7 +1896,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
     // Launch WebpackDevServer.
     webpackDevServerInstance.listen(webpackServerPort, HOST, error => {
       if (error) {
-        ProjectUtils.logError(projectRoot, 'webpack', error);
+        ProjectUtils.logError(projectRoot, 'expo', error);
       }
       // clearConsole();
     });
@@ -1948,7 +1948,7 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   } catch (error) {
     ProjectUtils.logError(
       projectRoot,
-      'webpack',
+      'expo',
       'There was a problem building your web project. ' + error.message
     );
     throw error;
