@@ -2,8 +2,6 @@ const path = require('path');
 const merge = require('webpack-merge');
 const webpack = require('webpack');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
-const PnpWebpackPlugin = require('pnp-webpack-plugin');
-const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
 const common = require('./webpack.common.js');
 const getLocations = require('./webpackLocations');
@@ -44,26 +42,7 @@ module.exports = function(env = {}, argv) {
         path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
     },
     devServer,
-    resolve: {
-      plugins: [
-        // Adds support for installing with Plug'n'Play, leading to faster installs and adding
-        // guards against forgotten dependencies and such.
-        PnpWebpackPlugin,
-        // Prevents users from importing files from outside of node_modules/.
-        // This often causes confusion because we only process files within the root folder with babel.
-        // To fix this, we prevent you from importing files out of the root folder -- if you'd like to,
-        // please link the files into your node_modules/ and let module-resolution kick in.
-        // Make sure your source files are compiled, as they will not be processed in any way.
-        new ModuleScopePlugin(locations.template.folder, [locations.packageJson]),
-      ],
-    },
-    resolveLoader: {
-      plugins: [
-        // Also related to Plug'n'Play, but this time it tells Webpack to load its loaders
-        // from the current package.
-        PnpWebpackPlugin.moduleLoader(module),
-      ],
-    },
+
     plugins: [
       // This is necessary to emit hot updates (currently CSS only):
       new webpack.HotModuleReplacementPlugin(),
