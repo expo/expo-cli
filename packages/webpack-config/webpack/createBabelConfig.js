@@ -12,7 +12,7 @@ const includeModulesThatContainPaths = [
   getModule('@unimodules'),
 ];
 
-module.exports = function(env, babelRoot, { pathsToInclude = [], ...options } = {}) {
+module.exports = function(babelRoot, { pathsToInclude = [], ...options } = {}) {
   const modules = [...includeModulesThatContainPaths, ...pathsToInclude];
   return {
     test: /\.[jt]sx?$/,
@@ -33,10 +33,7 @@ module.exports = function(env, babelRoot, { pathsToInclude = [], ...options } = 
       options: {
         cacheDirectory: false,
         babelrc: false,
-        configFile: true,
         root: babelRoot,
-        cacheCompression: env.production,
-        compact: env.production,
       },
     },
     ...options,

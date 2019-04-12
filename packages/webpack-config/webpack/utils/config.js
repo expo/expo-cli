@@ -12,15 +12,9 @@ function isObject(val) {
  * `polyfill: {}` returns `{}`
  */
 
-function enableWithPropertyOrConfig(prop, config, merge = false) {
+function enableWithPropertyOrConfig(prop, config) {
   // Value is truthy but not a replacement config.
-  if (prop) {
-    if (isObject(prop) && merge) {
-      return {
-        ...config,
-        ...prop,
-      };
-    }
+  if (prop && !isObject(prop)) {
     // Return the default config
     return config;
   }
@@ -31,11 +25,11 @@ function enableWithPropertyOrConfig(prop, config, merge = false) {
 /**
  * Used for features that are enabled by default unless specified otherwise.
  */
-function overrideWithPropertyOrConfig(prop, config, merge = false) {
+function overrideWithPropertyOrConfig(prop, config) {
   if (prop === undefined) {
     return config;
   }
-  return enableWithPropertyOrConfig(prop, config, merge);
+  return enableWithPropertyOrConfig(prop, config);
 }
 
 module.exports = {
