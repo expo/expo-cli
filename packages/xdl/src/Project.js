@@ -1840,6 +1840,8 @@ function getWebpackInstance(projectRoot) {
 }
 
 async function startWebpackServerAsync(projectRoot, options, verbose) {
+  await Web.ensureWebSupportAsync(projectRoot);
+
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
     return;
@@ -1895,7 +1897,8 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
   let compiler = webpack(config);
 
   try {
-    const stats = await new Promise((resolve, reject) =>
+    // We generate the stats.json file in the webpack-config
+    await new Promise((resolve, reject) =>
       compiler.run(async (error, stats) => {
         // TODO: Bacon: account for CI
         if (error) {
@@ -1905,9 +1908,6 @@ export async function bundleWebpackAsync(projectRoot, packagerOpts) {
         resolve(stats);
       })
     );
-    const { stats: statsDirectory = 'web-build-stats.json' } = packagerOpts;
-    const statsPath = path.join(projectRoot, statsDirectory);
-    await JsonFile.writeAsync(statsPath, stats.toJson());
   } catch (error) {
     ProjectUtils.logError(
       projectRoot,
@@ -2168,6 +2168,14 @@ export async function startAsync(
   DevSession.startSession(projectRoot, exp);
   return exp;
 }
+
+export async function openWebProjectAsync(projectRoot: string, options = {}, verbose = true) {
+  if (!webpackDevServerInstance) {
+    await startWebpackServerAsync(projectRoot, options, verbose);
+  }
+  await Web.openProjectAsync(projectRoot);
+}
+
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
