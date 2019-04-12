@@ -8,6 +8,7 @@ import clearConsole from 'react-dev-utils/clearConsole';
 import * as ConfigUtils from '@expo/config';
 import semver from 'semver';
 import JsonFile from '@expo/json-file';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import * as UrlUtils from './UrlUtils';
@@ -55,11 +56,6 @@ export async function hasWebSupportAsync(projectRoot) {
   const { exp } = await readConfigJsonAsync(projectRoot);
   const isWebConfigured = exp.platforms.includes('web');
   return isWebConfigured;
-}
-
-function isUsingYarn(projectRoot) {
-  const yarnLockPath = path.resolve(projectRoot, 'yarn.lock');
-  return fs.existsSync(yarnLockPath);
 }
 
 async function getMissingReactNativeWebPackagesMessageAsync(projectRoot) {
@@ -156,6 +152,11 @@ async function addWebPlatformToAppConfig(projectRoot) {
   await ConfigUtils.writeConfigJsonAsync(projectRoot, { platforms: [...currentPlatforms, 'web'] });
 }
 
+function isUsingYarn(projectRoot) {
+  const yarnLockPath = path.resolve(projectRoot, 'yarn.lock');
+  return fs.existsSync(yarnLockPath);
+}
+
 async function installAsync(projectRoot, libraries = []) {
   const options = {
     cwd: projectRoot,
@@ -174,8 +175,6 @@ async function installAsync(projectRoot, libraries = []) {
     );
   }
 }
-
-const findWorkspaceRoot = require('find-yarn-workspace-root');
 
 function getModulesPath(projectRoot) {
   const workspaceRoot = findWorkspaceRoot(projectRoot); // Absolute path or null
@@ -206,7 +205,6 @@ async function getLibraryVersionAsync(projectRoot, packageName) {
   }
   const options = {
     cwd: projectRoot,
-    // stdio: 'inherit',
   };
   try {
     const { stdout } = await spawnAsync('npm', ['info', packageName, 'version'], options);
@@ -219,7 +217,6 @@ async function getLibraryVersionAsync(projectRoot, packageName) {
   }
 }
 
-// TODO: Bacon: ensure expo is v33+
 export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
   let errors = [];
 
