@@ -32,7 +32,6 @@ export default program => {
       await appleApi.ensureAppExists(context);
 
       const distributionCert = await selectDistributionCert(context);
-      // TODO(fson): Select and save a push key.
       const pushKey = await selectPushKey(context);
 
       let email;
