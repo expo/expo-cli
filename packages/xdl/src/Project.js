@@ -3,7 +3,6 @@
  */
 import axios from 'axios';
 import child_process from 'child_process';
-import chalk from 'chalk';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
 import decache from 'decache';
@@ -24,8 +23,7 @@ import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
-import clearConsole from 'react-dev-utils/clearConsole';
-import { prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
+import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
@@ -1859,7 +1857,17 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
 
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
-  let webpackServerPort = await _getFreePortAsync(19000);
+
+  const HOST = '0.0.0.0';
+  const DEFAULT_PORT = 19000;
+
+  let webpackServerPort;
+  try {
+    webpackServerPort = await choosePort(HOST, DEFAULT_PORT);
+  } catch (error) {
+    throw new XDLError(ErrorCode.NO_PORT_FOUND, 'No available port found: ' + error.message);
+  }
+
   ProjectUtils.logInfo(projectRoot, 'webpack', `Starting Webpack on port ${webpackServerPort}.`);
 
   const protocol = https ? 'https' : 'http';
@@ -1879,7 +1887,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
     });
     webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
     // Launch WebpackDevServer.
-    webpackDevServerInstance.listen(webpackServerPort, '0.0.0.0', error => {
+    webpackDevServerInstance.listen(webpackServerPort, HOST, error => {
       if (error) {
         ProjectUtils.logError(projectRoot, 'webpack', error);
       }
