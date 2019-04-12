@@ -177,23 +177,15 @@ export default class PackagerLogsStream {
     ProjectUtils.attachLoggerStream(this._projectRoot, {
       stream: {
         write: chunk => {
-          if (this._getCurrentOpenProjectId() !== projectId) {
+          if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
+            return;
+          } else if (this._getCurrentOpenProjectId() !== projectId) {
             // TODO: We should be confident that we are properly unsubscribing
             // from the stream rather than doing a defensive check like this.
             return;
           }
 
-          if (chunk.tag === 'webpack') {
-            this._enqueueAppendLogChunk(chunk);
-            return;
-          }
-
-          if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
-            return;
-          }
-
           chunk = this._maybeParseMsgJSON(chunk);
-          chunk = this._formatMsg(chunk);
           chunk = this._cleanUpNodeErrors(chunk);
           if (chunk.tag === 'metro') {
             this._handleMetroEvent(chunk);
@@ -529,26 +521,6 @@ export default class PackagerLogsStream {
 
     return chunk;
   };
-
-  // This message is just noise
-  // Fall back to the same formatting we did on SDK <= 15 before we had a custom
-  // reporter class.
-  _formatMsg(chunk) {
-    if (typeof chunk.msg === 'object') {
-      return chunk;
-    }
-
-    if (chunk.msg.match(/Looking for JS files in/)) {
-      chunk.msg = '';
-    } else if (chunk.msg.startsWith('\u001b')) {
-      chunk.msg = '';
-    }
-
-    chunk.msg = chunk.msg.replace(/\[\w{2}m/g, '');
-    chunk.msg = chunk.msg.replace(/\[2K/g, '');
-    chunk.msg = trim(chunk.msg);
-    return chunk;
-  }
 }
 
 const NODE_STDLIB_MODULES = [
