@@ -29,11 +29,8 @@ export function invokeWebpackConfig(env, argv) {
 }
 
 export async function openProjectAsync(projectRoot) {
-  const hasWebSupport = await hasWebSupportAsync(projectRoot);
-  if (!hasWebSupport) {
-    logWebSetup();
-    return { success: false };
-  }
+  await ensureWebSupportAsync(projectRoot);
+
   try {
     let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
     opn(url, { wait: false });
@@ -54,6 +51,41 @@ export async function hasWebSupportAsync(projectRoot) {
   return isWebConfigured;
 }
 
+function isUsingYarn(projectRoot) {
+  const yarnLockPath = path.resolve(projectRoot, 'yarn.lock');
+  return fs.existsSync(yarnLockPath);
+}
+
+function getAppPackageJson(projectRoot) {
+  const packagePath = path.resolve(projectRoot, 'package.json');
+  if (fs.existsSync(packagePath)) {
+    return require(packagePath);
+  }
+  throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, 'Missing package.json');
+}
+
+function getMissingReactNativeWebPackagesMessage(projectRoot) {
+  const appPackage = getAppPackageJson(projectRoot);
+  const missingPackages = getMissingReactNativeWebPackages(appPackage);
+  if (missingPackages.length) {
+    const commandPrefix = isUsingYarn(projectRoot) ? 'yarn add ' : 'npm install ';
+    const command = commandPrefix + missingPackages.join(' ');
+    return `\Install React Native for Web: ${chalk.yellow(command)}`;
+  }
+}
+
+function getMissingReactNativeWebPackages(appPackage) {
+  const { dependencies = {} } = appPackage;
+  const required = ['react', 'react-dom', 'react-native-web'];
+  let missingPackages = [];
+  for (const dependency of required) {
+    if (typeof dependencies[dependency] === 'undefined') {
+      missingPackages.push(dependency);
+    }
+  }
+  return missingPackages;
+}
+
 // If platforms only contains the "web" field
 export async function onlySupportsWebAsync(projectRoot) {
   const { exp } = await readConfigJsonAsync(projectRoot);
@@ -64,38 +96,30 @@ export async function onlySupportsWebAsync(projectRoot) {
 }
 
 export async function ensureWebSupportAsync(projectRoot) {
+  let errors = [];
+  const message = getMissingReactNativeWebPackagesMessage(projectRoot);
+  if (message) {
+    errors.push(message);
+  }
   const hasWebSupport = await hasWebSupportAsync(projectRoot);
   if (!hasWebSupport) {
-    throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, getWebSetupLogs());
+    errors.push(getWebSetupLogs());
+  }
+  if (errors.length) {
+    errors.unshift(chalk.bold(`\nTo use Expo in the browser you'll need to:`));
+    throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, errors.join('\n\n'));
   }
 }
 
 function getWebSetupLogs() {
-  const appJsonRules = chalk.white(
-    `
-  ${chalk.whiteBright.bold(`app.json`)}
-  {
-    "platforms": [
-      "android",
-      "ios",
-  ${chalk.green.bold(`+      "web"`)}
-    ]
-  }`
-  );
-  const packageJsonRules = chalk.white(
-    `
-  ${chalk.whiteBright.bold(`package.json`)}
-  {
-    "dependencies": {
-  ${chalk.green.bold(`+      "react-native-web": "^0.11.0",`)}
-  ${chalk.green.bold(`+      "react-dom": "^16.7.0"`)}
-    },
-    "devDependencies": {
-  ${chalk.green.bold(`+      "babel-preset-expo": "^5.1.0"`)}
-    }
-  }`
-  );
-  return `${chalk.red.bold('Your project is not configured to support web yet!')}
-  ${packageJsonRules}
+  const appJsonRules = chalk.white(`\n${chalk.whiteBright.bold(`app.json`)}
+{
+  "platforms": [
+${chalk.green.bold(`+      "web"`)}
+  ]
+}`);
+  return `${chalk.red(
+    `Add "web" to the "platforms" array in your project's ${chalk.bold(`app.json`)}`
+  )}
     ${appJsonRules}`;
 }
