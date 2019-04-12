@@ -465,6 +465,11 @@ const expoSdkUniversalModules = [
     },
   },
   {
+    podName: 'EXVideoThumbnails',
+    libName: 'expo-video-thumbnails',
+    sdkVersions: '>=33.0.0',
+  },
+  {
     podName: 'EXWebBrowser',
     libName: 'expo-web-browser',
     sdkVersions: '>=33.0.0',
