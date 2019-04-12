@@ -204,7 +204,7 @@ async function _getFirstAvailableDeviceAsync() {
       }
     }
   }
-  console.warn('No iPhone devices available in Simulator.')
+  Logger.global.warn('No iPhone devices available in Simulator.')
   return null;
 }
 
