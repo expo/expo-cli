@@ -200,21 +200,7 @@ async function getLibraryVersionAsync(projectRoot, packageName) {
     modulesPath,
     packageName
   );
-  if (possiblePackageVersion) {
-    return possiblePackageVersion;
-  }
-  const options = {
-    cwd: projectRoot,
-  };
-  try {
-    const { stdout } = await spawnAsync('npm', ['info', packageName, 'version'], options);
-    return stdout.trim();
-  } catch (error) {
-    throw new XDLError(
-      XDLError.WEB_NOT_CONFIGURED,
-      'Failed to get package version for: ' + packageName + ' ' + error.message
-    );
-  }
+  return possiblePackageVersion;
 }
 
 export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
