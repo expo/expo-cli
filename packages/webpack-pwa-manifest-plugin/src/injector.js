@@ -54,11 +54,19 @@ function createFilename(filenameTemplate, json, shouldFingerprint) {
   return formatters.reduce((acc, curr) => acc.replace(curr.pattern, curr.value), filenameTemplate);
 }
 
-// Create `manifest.json`
-function manifest(manifest, options, publicPath, icons) {
-  const content = { ...manifest };
-
-  if (content.orientation === 'omit') {
+function manifest(options, publicPath, icons) {
+  const content = except(Object.assign({ icons }, options), [
+    'filename',
+    'inject',
+    'fingerprints',
+    'ios',
+    'publicPath',
+    'icon',
+    'useWebpackPublicPath',
+    'includeDirectory',
+    'crossorigin',
+  ]);
+  if (options.orientation === 'omit') {
     delete content.orientation;
   }
   const json = JSON.stringify(content, null, 2);
@@ -76,17 +84,14 @@ function manifest(manifest, options, publicPath, icons) {
 export async function buildResources(self, publicPath = '') {
   if (!self.assets || !self.options.inject) {
     publicPath = publicPath || '';
-    let parsedIconsResult = {};
-    if (!self.options.noResources) {
-      parsedIconsResult = await parseIcons(
-        self.options.fingerprints,
-        publicPath,
-        retrieveIcons(self.manifest)
-      );
-    }
+    const parsedIconsResult = await parseIcons(
+      self.options.fingerprints,
+      publicPath,
+      retrieveIcons(self.options)
+    );
 
-    const { icons = {}, assets = [] } = parsedIconsResult;
-    const results = manifest(self.manifest, self.options, publicPath, icons);
+    const { icons, assets = [] } = parsedIconsResult;
+    const results = manifest(self.options, publicPath, icons);
     self.manifest = results;
     self.assets = [results, ...assets];
   }
@@ -104,38 +109,37 @@ export function injectResources(compilation, assets, callback) {
   callback();
 }
 
-export function generateAppleTags(manifest, assets) {
+export function generateAppleTags(options, assets) {
   let tags = {};
-  if (manifest.ios) {
+  if (options.ios) {
     let apple = {
-      'apple-mobile-web-app-title': 'Expo PWA',
+      'apple-mobile-web-app-title': options.name,
       'apple-mobile-web-app-capable': 'yes',
       'apple-mobile-web-app-status-bar-style': 'default',
     };
-    if (typeof manifest.ios === 'object') {
+    if (typeof options.ios === 'object') {
       apple = {
         ...apple,
-        ...manifest.ios,
+        ...options.ios,
       };
     }
 
     for (let tag in apple) {
       const type = appleTags[tag];
-      if (type) {
-        tags = applyTag(tags, type, formatAppleTag(tag, apple[tag]));
-      }
+      if (!type) continue; // not a valid apple tag
+      applyTag(tags, type, formatAppleTag(tag, apple[tag]));
     }
     if (assets) {
       for (let asset of assets) {
         if (asset.ios && asset.ios.valid) {
           if (asset.ios.valid === 'startup') {
-            tags = applyTag(tags, 'link', {
+            applyTag(tags, 'link', {
               rel: 'apple-touch-startup-image',
               media: asset.ios.media,
               href: asset.ios.href,
             });
           } else {
-            tags = applyTag(tags, 'link', {
+            applyTag(tags, 'link', {
               // apple-touch-icon-precomposed
               rel: 'apple-touch-icon',
               sizes: asset.ios.size,
@@ -152,7 +156,7 @@ export function generateAppleTags(manifest, assets) {
 export function generateMaskIconLink(tags, assets) {
   const svgAsset = assets.find(asset => /[^.]+$/.exec(asset.output)[0] === 'svg');
   if (svgAsset) {
-    tags = applyTag(
+    applyTag(
       tags,
       'link',
       Object.assign(
@@ -215,21 +219,17 @@ function formatAppleTag(tag, content) {
 }
 
 export function applyTag(obj, tag, content) {
-  if (!content) {
-    return obj;
-  }
-  const tags = { ...obj };
-  if (tags[tag]) {
-    if (Array.isArray(tags[tag])) {
-      tags[tag].push(content);
-      return tags;
+  if (!content) return obj;
+  if (obj[tag]) {
+    if (Array.isArray(obj[tag])) {
+      obj[tag].push(content);
+    } else {
+      obj[tag] = [obj[tag], content];
     }
-    tags[tag] = [tags[tag], content];
-    return tags;
+  } else {
+    obj[tag] = content;
   }
-
-  tags[tag] = content;
-  return tags;
+  return obj;
 }
 
 export function generateHtmlTags(tags) {
