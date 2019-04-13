@@ -1860,7 +1860,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
   const useYarn = fs.existsSync(paths.yarnLockFile);
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  const { webName } = await ConfigUtils.getNameForAppJSON(exp);
+  const { webName } = ConfigUtils.getNameFromConfig(exp);
 
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
