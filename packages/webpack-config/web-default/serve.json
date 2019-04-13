@@ -1,7 +1,7 @@
 {
     "headers":[
        {
-          "source":"static/*.js",
+          "source":"static/**/*.js",
           "headers":[
              {
                 "key":"Cache-Control",
