@@ -32,18 +32,18 @@ const DEFAULT_OPTIONS = {
  * To test PWAs in chrome visit `chrome://flags#enable-desktop-pwas`
  */
 class WebpackPwaManifest {
-  constructor(appJson, { noResources, filename }) {
+  constructor(appJson, { noResources, filename, publicPath }) {
     if (!isObject(appJson)) {
       throw new Error('app.json must be an object');
     }
     const { web = {} } = appJson.expo || appJson || {};
-
     this.assets = null;
     this.htmlPlugin = false;
     this.config = appJson;
 
     this.options = {
       ...DEFAULT_OPTIONS,
+      publicPath,
       // filename: options.fingerprints ? '[name].[hash].[ext]' : '[name].[ext]',
       noResources,
       filename,
