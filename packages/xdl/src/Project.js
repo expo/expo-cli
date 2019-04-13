@@ -1834,7 +1834,7 @@ export async function stopExpoServerAsync(projectRoot: string) {
 
 let webpackDevServerInstance;
 
-function getWebpackInstance(projectRoot) {
+export function getWebpackInstance(projectRoot) {
   if (webpackDevServerInstance == null) {
     ProjectUtils.logError(projectRoot, 'expo', 'Webpack is not running.');
   }
@@ -1844,7 +1844,7 @@ function getWebpackInstance(projectRoot) {
 const HOST = '0.0.0.0';
 const DEFAULT_PORT = 19006;
 
-async function startWebpackServerAsync(projectRoot, options, verbose) {
+export async function startWebpackServerAsync(projectRoot, options, verbose) {
   await Web.ensureWebSupportAsync(projectRoot);
 
   if (webpackDevServerInstance) {
@@ -1899,7 +1899,7 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
   });
 }
 
-async function stopWebpackServerAsync(projectRoot) {
+export async function stopWebpackServerAsync(projectRoot) {
   const devServer = getWebpackInstance(projectRoot);
   if (devServer) {
     await new Promise(resolve => devServer.close(() => resolve()));
