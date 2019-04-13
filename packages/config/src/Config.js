@@ -18,6 +18,7 @@ const APP_JSON_FILE_NAME = 'app.json';
 const DEFAULT_VIEWPORT = 'width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover';
 // Use root to work better with create-react-app
 const DEFAULT_ROOT_ID = `root`;
+const DEFAULT_BUILD_PATH = `web-build`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
 const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
 const DEFAULT_NAME = 'Expo App';
@@ -242,11 +243,21 @@ export function getNameForAppJSON(appJSON: Object) {
   };
 }
 
+export async function validateShortName(shortName: string): void {
+  // Validate short name
+  if (shortName.length > MAX_SHORT_NAME_LENGTH) {
+    console.warn(
+      `PWA short name should be 12 characters or less, otherwise it'll be curtailed on the mobile device homepage. You should define web.shortName in your ${APP_JSON_FILE_NAME} as a string that is ${MAX_SHORT_NAME_LENGTH} or less characters.`
+    );
+  }
+}
+
 function applyWebDefaults(appJSON: Object) {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
   const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
-  const { build: webBuild = {}, webDangerous = {} } = webManifest;
+  const { build: webBuild = {}, webDangerous = {}, meta = {} } = webManifest;
+  const { apple = {} } = meta;
 
   // rn-cli apps use a displayName value as well.
   const { name: appName, webName } = getNameForAppJSON(appJSON);
@@ -254,6 +265,7 @@ function applyWebDefaults(appJSON: Object) {
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
   const rootId = webBuild.rootId || DEFAULT_ROOT_ID;
+  const buildOutputPath = webBuild.output || DEFAULT_BUILD_PATH;
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = appManifest.description || DEFAULT_DESCRIPTION;
@@ -263,9 +275,9 @@ function applyWebDefaults(appJSON: Object) {
   const shortName = webManifest.shortName || webName;
   const display = webManifest.display || DEFAULT_DISPLAY;
   const startUrl = webManifest.startUrl || DEFAULT_START_URL;
-  const webViewport = webDangerous.viewport || DEFAULT_VIEWPORT;
+  const webViewport = meta.viewport || DEFAULT_VIEWPORT;
   const { scope, crossorigin } = webManifest;
-  const barStyle = webManifest.barStyle || DEFAULT_STATUS_BAR;
+  const barStyle = apple.barStyle || webManifest.barStyle || DEFAULT_STATUS_BAR;
 
   let webOrientation = webManifest.orientation || appManifest.orientation;
   if (webOrientation && typeof orientation === 'string') {
@@ -299,19 +311,6 @@ function applyWebDefaults(appJSON: Object) {
 
   const relatedApplications = inferWebRelatedApplicationsFromConfig(appManifest);
 
-  // Validate short name
-  if (shortName.length > MAX_SHORT_NAME_LENGTH) {
-    if (webManifest.shortName) {
-      console.warn(
-        `web.shortName should be 12 characters or less, otherwise it'll be curtailed on the mobile device homepage.`
-      );
-    } else {
-      console.warn(
-        `name should be 12 characters or less, otherwise it'll be curtailed on the mobile device homepage. You should define web.shortName in your ${APP_JSON_FILE_NAME} as a string that is ${MAX_SHORT_NAME_LENGTH} or less characters.`
-      );
-    }
-  }
-
   return {
     ...appManifest,
     name: appName,
@@ -326,15 +325,26 @@ function applyWebDefaults(appJSON: Object) {
     },
     web: {
       ...webManifest,
+      meta: {
+        ...meta,
+        apple: {
+          ...apple,
+          formatDetection: apple.formatDetection || 'telephone=no',
+          mobileWebAppCapable: apple.mobileWebAppCapable || 'yes',
+          touchFullscreen: apple.touchFullscreen || 'yes',
+          barStyle,
+        },
+        viewport: webViewport,
+      },
       build: {
         ...webBuild,
+        output: buildOutputPath,
         rootId,
         publicPath,
       },
       dangerous: {
         ...webDangerous,
         noJavaScriptMessage,
-        viewport: webViewport,
       },
       scope,
       crossorigin,
@@ -448,8 +458,10 @@ function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, o
 
 export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, options: Object) {
   const config = applyWebDefaults(appJSON);
-  config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
-  config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
+  if (getAbsolutePath) {
+    config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
+    config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
+  }
   return config;
 }
 
