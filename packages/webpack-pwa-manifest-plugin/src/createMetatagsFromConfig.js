@@ -69,34 +69,27 @@ function populateMetatagObject(schema, input) {
 
 export default function createMetatagsFromConfig(config) {
   const { web = {} } = config || config.expo || {};
-  const {
-    googleSiteVerification,
-    themeColor,
-    twitter = {},
-    facebook = {},
-    microsoft = {},
-    metatags = {},
-  } = web;
+  const { themeColor, meta = {} } = web;
+  const { googleSiteVerification, apple = {}, twitter = {}, openGraph = {}, microsoft = {} } = meta;
 
-  const openGraphMetatags = populateMetatagObject(Metatags.openGraph, facebook);
+  const openGraphMetatags = populateMetatagObject(Metatags.openGraph, openGraph);
   const twitterMetatags = populateMetatagObject(Metatags.twitter, twitter);
   const microsoftMetatags = populateMetatagObject(Metatags.microsoft, microsoft);
 
   const appleMetatags = {
     // Disable automatic phone number detection.
-    'format-detection': 'telephone=no',
-    'apple-touch-fullscreen': 'yes',
+    'format-detection': apple.formatDetection || 'telephone=no',
+    'apple-touch-fullscreen': apple.touchFullscreen || 'yes',
+    'mobile-web-app-capable': apple.mobileWebAppCapable || 'yes',
   };
 
   const metaTags = {
     viewport: web.viewport,
     description: config.description,
-    'mobile-web-app-capable': 'yes',
     ...openGraphMetatags,
     ...microsoftMetatags,
     ...twitterMetatags,
     ...appleMetatags,
-    ...metatags,
   };
 
   if (googleSiteVerification !== undefined) {
