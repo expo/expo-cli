@@ -165,6 +165,7 @@ module.exports = function(env = {}, argv) {
   middlewarePlugins.push(
     new WebpackPWAManifestPlugin(config, {
       ...env,
+      publicPath,
       noResources: env.development,
       filename: locations.production.manifest,
     })

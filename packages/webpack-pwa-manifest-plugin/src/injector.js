@@ -55,8 +55,8 @@ function createFilename(filenameTemplate, json, shouldFingerprint) {
 }
 
 // Create `manifest.json`
-function manifest(manifest, options, publicPath, icons) {
-  const content = { ...manifest };
+function writeManifestToFile(manifest, options, publicPath, icons) {
+  const content = { ...manifest, icons };
 
   if (content.orientation === 'omit') {
     delete content.orientation;
@@ -86,7 +86,7 @@ export async function buildResources(self, publicPath = '') {
     }
 
     const { icons = {}, assets = [] } = parsedIconsResult;
-    const results = manifest(self.manifest, self.options, publicPath, icons);
+    const results = writeManifestToFile(self.manifest, self.options, publicPath, icons);
     self.manifest = results;
     self.assets = [results, ...assets];
   }
