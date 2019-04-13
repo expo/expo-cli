@@ -188,6 +188,7 @@ export function createEnvironmentConstants(appManifest, pwaManifestLocation) {
     web = {};
   }
 
+  // TODO: Bacon: use web values here
   return {
     /**
      * Omit app.json properties that get removed during the native turtle build
@@ -252,6 +253,17 @@ export async function validateShortName(shortName: string): void {
   }
 }
 
+// Convert expo value to PWA value
+function ensurePWAorientation(orientation: string): string {
+  if (orientation && typeof orientation === 'string') {
+    let webOrientation = webOrientation.toLowerCase();
+    if (webOrientation !== 'default') {
+      return webOrientation;
+    }
+  }
+  return DEFAULT_ORIENTATION;
+}
+
 function applyWebDefaults(appJSON: Object) {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
@@ -279,16 +291,7 @@ function applyWebDefaults(appJSON: Object) {
   const { scope, crossorigin } = webManifest;
   const barStyle = apple.barStyle || webManifest.barStyle || DEFAULT_STATUS_BAR;
 
-  let webOrientation = webManifest.orientation || appManifest.orientation;
-  if (webOrientation && typeof orientation === 'string') {
-    webOrientation = webOrientation.toLowerCase();
-    // Convert expo value to PWA value
-    if (webOrientation === 'default') {
-      webOrientation = DEFAULT_ORIENTATION;
-    }
-  } else {
-    webOrientation = DEFAULT_ORIENTATION;
-  }
+  const orientation = ensurePWAorientation(webManifest.orientation || appManifest.orientation);
 
   /**
    * **Splash screen background color**
@@ -354,7 +357,7 @@ function applyWebDefaults(appJSON: Object) {
       startUrl,
       shortName,
       display,
-      orientation: webOrientation,
+      orientation,
       dir,
       barStyle,
       backgroundColor,
