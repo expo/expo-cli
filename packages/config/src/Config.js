@@ -229,19 +229,20 @@ export function getConfigForPWA(projectRoot: string, getAbsolutePath: Function, 
   const config = readConfigJson(projectRoot);
   return ensurePWAConfig(config, getAbsolutePath, options);
 }
-
-export function getNameForAppJSON(appJSON: Object) {
-  const appManifest = appJSON.expo || appJSON;
+export function getNameFromConfig(exp: Object = {}) {
+  // For RN CLI support
+  const appManifest = exp.expo || exp;
   const { web = {} } = appManifest;
+
   // rn-cli apps use a displayName value as well.
-  const name = appJSON.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
-  const webName = web.name || name;
+  const appName = exp.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
+  const webName = web.name || appName;
+
   return {
-    name,
+    appName,
     webName,
   };
 }
-
 function applyWebDefaults(appJSON: Object) {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
@@ -249,7 +250,7 @@ function applyWebDefaults(appJSON: Object) {
   const { build: webBuild = {}, webDangerous = {} } = webManifest;
 
   // rn-cli apps use a displayName value as well.
-  const { name: appName, webName } = getNameForAppJSON(appJSON);
+  const { name: appName, webName } = getNameFromConfig(appJSON);
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;

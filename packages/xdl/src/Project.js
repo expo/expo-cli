@@ -1841,6 +1841,9 @@ function getWebpackInstance(projectRoot) {
   return webpackDevServerInstance;
 }
 
+const HOST = '0.0.0.0';
+const DEFAULT_PORT = 19006;
+
 async function startWebpackServerAsync(projectRoot, options, verbose) {
   await Web.ensureWebSupportAsync(projectRoot);
 
@@ -1849,24 +1852,13 @@ async function startWebpackServerAsync(projectRoot, options, verbose) {
     return;
   }
 
-  const appDirectory = fs.realpathSync(projectRoot);
-  const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
-  const paths = {
-    yarnLockFile: resolveApp('yarn.lock'),
-    appTsConfig: resolveApp('tsconfig.json'),
-    appPackageJson: resolveApp('package.json'),
-  };
-
-  const useYarn = fs.existsSync(paths.yarnLockFile);
+  const useYarn = ConfigUtils.isUsingYarn(projectRoot);
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   const { webName } = ConfigUtils.getNameFromConfig(exp);
 
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
-
-  const HOST = '0.0.0.0';
-  const DEFAULT_PORT = 19006;
 
   let webpackServerPort;
   try {
