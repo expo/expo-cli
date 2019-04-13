@@ -14,14 +14,17 @@ const DEFAULT_MINIFY = {
   minifyURLs: true,
 };
 
-function createIndexHTMLFromAppJSON(appManifest, locations) {
+function createIndexHTMLFromAppJSON({ development, production }, appManifest, locations) {
   // Is the app.json from expo-cli or react-native-cli
   const { web = {} } = appManifest;
   /**
    * The user can disable minify with
    * `web.minifyHTML = false || {}`
    */
-  const minify = overrideWithPropertyOrConfig(web.minifyHTML, DEFAULT_MINIFY);
+  const minify = overrideWithPropertyOrConfig(
+    production ? web.build.minifyHTML : false,
+    DEFAULT_MINIFY
+  );
 
   // Generates an `index.html` file with the <script> injected.
   return new HtmlWebpackPlugin({
