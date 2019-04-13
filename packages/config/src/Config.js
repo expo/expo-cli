@@ -245,7 +245,7 @@ export function getNameForAppJSON(appJSON: Object) {
 function applyWebDefaults(appJSON: Object) {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
-  const { web: webManifest = {}, splash = {} } = appManifest;
+  const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
   const { build: webBuild = {}, webDangerous = {} } = webManifest;
 
   // rn-cli apps use a displayName value as well.
@@ -317,6 +317,13 @@ function applyWebDefaults(appJSON: Object) {
     name: appName,
     description,
     primaryColor,
+    // Ensure these objects exist
+    ios: {
+      ...ios,
+    },
+    android: {
+      ...android,
+    },
     web: {
       ...webManifest,
       build: {
@@ -390,20 +397,21 @@ function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {
   return relatedApplications;
 }
 
-function inferWebHomescreenIcons(config: Object, getAbsolutePath: Function, options: Object) {
-  if (Array.isArray(config.web.icons)) {
-    return config.web.icons;
+function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function, options: Object) {
+  const { web = {}, ios = {} } = config;
+  if (Array.isArray(web.icons)) {
+    return web.icons;
   }
   let icons = [];
   let icon;
-  if (config.web.icon || config.icon) {
-    icon = getAbsolutePath(config.web.icon || config.icon);
+  if (web.icon || config.icon) {
+    icon = getAbsolutePath(web.icon || config.icon);
   } else {
     // Use template icon
     icon = options.templateIcon;
   }
   icons.push({ src: icon, size: ICON_SIZES });
-  const iOSIcon = config.icon || config.ios.icon;
+  const iOSIcon = config.icon || ios.icon;
   if (iOSIcon) {
     const iOSIconPath = getAbsolutePath(iOSIcon);
     icons.push({
@@ -415,22 +423,23 @@ function inferWebHomescreenIcons(config: Object, getAbsolutePath: Function, opti
   return icons;
 }
 
-function inferWebStartupImages(config: Object, getAbsolutePath: Function, options: Object) {
-  if (Array.isArray(config.web.startupImages)) {
-    return config.web.startupImages;
+function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, options: Object) {
+  const { web = {}, ios = {}, splash = {} } = config;
+  if (Array.isArray(web.startupImages)) {
+    return web.startupImages;
   }
 
-  const { splash: iOSSplash = {} } = config.ios;
-  const { splash: webSplash = {} } = config.web;
+  const { splash: iOSSplash = {} } = ios;
+  const { splash: webSplash = {} } = web;
   let startupImages = [];
 
   let splashImageSource;
-  if (webSplash.image || iOSSplash.image || config.splash.image) {
-    splashImageSource = getAbsolutePath(webSplash.image || iOSSplash.image || config.splash.image);
+  if (webSplash.image || iOSSplash.image || splash.image) {
+    splashImageSource = getAbsolutePath(webSplash.image || iOSSplash.image || splash.image);
     startupImages.push({
       src: splashImageSource,
-      supportsTablet: config.ios.supportsTablet,
-      orientation: config.web.orientation,
+      supportsTablet: ios.supportsTablet,
+      orientation: web.orientation,
       destination: `assets/splash`,
     });
   }
