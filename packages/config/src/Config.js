@@ -258,7 +258,7 @@ export async function validateShortName(shortName: string): void {
 // Convert expo value to PWA value
 function ensurePWAorientation(orientation: string): string {
   if (orientation && typeof orientation === 'string') {
-    let webOrientation = webOrientation.toLowerCase();
+    let webOrientation = orientation.toLowerCase();
     if (webOrientation !== 'default') {
       return webOrientation;
     }
