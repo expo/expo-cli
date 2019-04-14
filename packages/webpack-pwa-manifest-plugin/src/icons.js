@@ -24,15 +24,10 @@ export async function createBaseImageAsync(width, height, color) {
   );
 }
 
-async function ensureImageAsync(image) {
-  return await Jimp.read(image);
-}
-
-async function compositeImagesAsync(image, props) {
-  const images = parseArray(props);
+async function compositeImagesAsync(image, ...images) {
   for (const imageProps of images) {
-    const childImage = await ensureImageAsync(imageProps.image);
-    image.composite(childImage, imageProps.x || 0, imageProps.y || 0);
+    const childImage = await Jimp.read(imageProps);
+    image.composite(childImage, 0, 0);
   }
   return image;
 }
@@ -108,50 +103,26 @@ function parseSize(size) {
   return { width, height };
 }
 
-function processNext(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath) {
-  if (sizes.length > 0) {
-    return processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath); // next size
-  } else if (cachedIconsCopy.length > 0) {
-    const next = cachedIconsCopy.pop();
-    return processImg(next.sizes, next, cachedIconsCopy, icons, assets, fingerprint, publicPath); // next icon
-  } else {
-    return { icons, assets }; // there are no more icons left
-  }
-}
-
-async function getBufferWithMimeAsync(icon, mimeType, { width, height }) {
+async function getBufferWithMimeAsync({ src, resizeMode, color }, mimeType, { width, height }) {
   if (!supportedMimeTypes.includes(mimeType)) {
     try {
-      return fs.readFileSync(icon.src);
+      return fs.readFileSync(src);
     } catch (err) {
-      throw new IconError(`It was not possible to read '${icon.src}'.`);
+      throw new IconError(`It was not possible to read '${src}'.`);
     }
   } else {
-    return await resize(icon.src, mimeType, width, height, icon.resizeMode, icon.color);
+    return await resize(src, mimeType, width, height, resizeMode, color);
   }
 }
 
-async function processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath) {
-  const { width, height } = parseSize(sizes.pop());
-
+async function processImage(size, icon, fingerprint, publicPath) {
+  const { width, height } = parseSize(size);
   if (width <= 0 || height <= 0) {
     return;
   }
-
   const mimeType = mime.getType(icon.src);
   const _buffer = await getBufferWithMimeAsync(icon, mimeType, { width, height });
-  const { manifestIcon, webpackAsset } = processIcon(
-    width,
-    height,
-    icon,
-    _buffer,
-    mimeType,
-    publicPath,
-    fingerprint
-  );
-  icons.push(manifestIcon);
-  assets.push(webpackAsset);
-  return processNext(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath);
+  return processIcon(width, height, icon, _buffer, mimeType, publicPath, fingerprint);
 }
 const log = (...p) => console.log('Splashscreen:', ...p);
 
@@ -172,7 +143,7 @@ async function resize(img, mimeType, width, height, resizeMode = 'contain', colo
       }
 
       const splashScreen = await createBaseImageAsync(width, height, color);
-      const combinedImage = await compositeImagesAsync(splashScreen, [{ image: resizedImage }]);
+      const combinedImage = await compositeImagesAsync(splashScreen, resizedImage);
       return combinedImage.getBufferAsync(mimeType);
     } else {
       throw new IconError(
@@ -200,12 +171,38 @@ export function retrieveIcons(manifest) {
   return [response, config];
 }
 
-export async function parseIcons(fingerprint, publicPath, icons) {
-  if (icons.length === 0) {
+export async function parseIcons(inputIcons, fingerprint, publicPath) {
+  if (!inputIcons.length) {
     return {};
-  } else {
-    const first = icons.pop();
-    const data = await processImg(first.sizes, first, icons, [], [], fingerprint, publicPath);
-    return data;
   }
+
+  let icons = [];
+  let assets = [];
+
+  let promises = [];
+  console.log('processImages');
+  for (const icon of inputIcons) {
+    console.log('processImage.icon');
+    const { sizes } = icon;
+    promises = [
+      ...promises,
+      ...sizes.map(async size => {
+        const { manifestIcon, webpackAsset } = await processImage(
+          size,
+          icon,
+          fingerprint,
+          publicPath
+        );
+        console.log('processImage.size: ', size);
+        icons.push(manifestIcon);
+        assets.push(webpackAsset);
+      }),
+    ];
+  }
+  await Promise.all(promises);
+
+  return {
+    icons,
+    assets,
+  };
 }

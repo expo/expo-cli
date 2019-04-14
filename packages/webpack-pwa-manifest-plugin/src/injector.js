@@ -79,7 +79,7 @@ export async function buildResources(self, publicPath = '') {
     if (!self.options.noResources) {
       const [results, config] = retrieveIcons(self.manifest);
       self.manifest = config;
-      parsedIconsResult = await parseIcons(self.options.fingerprints, publicPath, results);
+      parsedIconsResult = await parseIcons(results, self.options.fingerprints, publicPath);
     }
 
     const { icons = {}, assets = [] } = parsedIconsResult;
