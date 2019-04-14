@@ -11,6 +11,8 @@ const supportedMimeTypes = [Jimp.MIME_PNG, Jimp.MIME_JPEG, Jimp.MIME_BMP];
 const ASPECT_FILL = 'cover';
 const ASPECT_FIT = 'contain';
 
+const log = (...p) => console.log('Icons:', ...p);
+
 export async function createBaseImageAsync(width, height, color) {
   return new Promise(
     (resolve, reject) =>
@@ -124,12 +126,10 @@ async function processImage(size, icon, fingerprint, publicPath) {
   const _buffer = await getBufferWithMimeAsync(icon, mimeType, { width, height });
   return processIcon(width, height, icon, _buffer, mimeType, publicPath, fingerprint);
 }
-const log = (...p) => console.log('Splashscreen:', ...p);
 
 async function resize(img, mimeType, width, height, resizeMode = 'contain', color) {
   try {
     const initialImage = await Jimp.read(img);
-    log({ resizeMode });
     const center = Jimp.VERTICAL_ALIGN_MIDDLE | Jimp.HORIZONTAL_ALIGN_CENTER;
     if (resizeMode === ASPECT_FILL) {
       return await initialImage
@@ -180,9 +180,7 @@ export async function parseIcons(inputIcons, fingerprint, publicPath) {
   let assets = [];
 
   let promises = [];
-  console.log('processImages');
   for (const icon of inputIcons) {
-    console.log('processImage.icon');
     const { sizes } = icon;
     promises = [
       ...promises,
@@ -193,7 +191,6 @@ export async function parseIcons(inputIcons, fingerprint, publicPath) {
           fingerprint,
           publicPath
         );
-        console.log('processImage.size: ', size);
         icons.push(manifestIcon);
         assets.push(webpackAsset);
       }),
