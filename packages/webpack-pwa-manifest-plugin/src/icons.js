@@ -88,20 +88,7 @@ function processIcon(width, height, icon, buffer, mimeType, publicPath, shouldFi
   };
 }
 
-async function processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath) {
-  const processNext = function() {
-    if (sizes.length > 0) {
-      return processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath); // next size
-    } else if (cachedIconsCopy.length > 0) {
-      const next = cachedIconsCopy.pop();
-      return processImg(next.sizes, next, cachedIconsCopy, icons, assets, fingerprint, publicPath); // next icon
-    } else {
-      return { icons, assets }; // there are no more icons left
-    }
-  };
-
-  const size = sizes.pop();
-
+function parseSize(size) {
   let width;
   let height;
   if (Array.isArray(size) && size.length) {
@@ -118,45 +105,53 @@ async function processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerpri
     width = dimensions[0];
     height = dimensions[1];
   }
+  return { width, height };
+}
 
-  if (width > 0 && height > 0) {
-    const mimeType = mime.getType(icon.src);
-    if (!supportedMimeTypes.includes(mimeType)) {
-      let buffer;
-      try {
-        buffer = fs.readFileSync(icon.src);
-      } catch (err) {
-        throw new IconError(`It was not possible to read '${icon.src}'.`);
-      }
-      const processedIcon = processIcon(
-        width,
-        height,
-        icon,
-        buffer,
-        mimeType,
-        publicPath,
-        fingerprint
-      );
-      icons.push(processedIcon.manifestIcon);
-      assets.push(processedIcon.webpackAsset);
-      return processNext();
-    }
-
-    const buffer = await resize(icon.src, mimeType, width, height, icon.resizeMode, icon.color);
-
-    const processedIcon = processIcon(
-      width,
-      height,
-      icon,
-      buffer,
-      mimeType,
-      publicPath,
-      fingerprint
-    );
-    icons.push(processedIcon.manifestIcon);
-    assets.push(processedIcon.webpackAsset);
-    return processNext();
+function processNext(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath) {
+  if (sizes.length > 0) {
+    return processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath); // next size
+  } else if (cachedIconsCopy.length > 0) {
+    const next = cachedIconsCopy.pop();
+    return processImg(next.sizes, next, cachedIconsCopy, icons, assets, fingerprint, publicPath); // next icon
+  } else {
+    return { icons, assets }; // there are no more icons left
   }
+}
+
+async function getBufferWithMimeAsync(icon, mimeType, { width, height }) {
+  if (!supportedMimeTypes.includes(mimeType)) {
+    try {
+      return fs.readFileSync(icon.src);
+    } catch (err) {
+      throw new IconError(`It was not possible to read '${icon.src}'.`);
+    }
+  } else {
+    return await resize(icon.src, mimeType, width, height, icon.resizeMode, icon.color);
+  }
+}
+
+async function processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath) {
+  const { width, height } = parseSize(sizes.pop());
+
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+
+  const mimeType = mime.getType(icon.src);
+  const _buffer = await getBufferWithMimeAsync(icon, mimeType, { width, height });
+  const { manifestIcon, webpackAsset } = processIcon(
+    width,
+    height,
+    icon,
+    _buffer,
+    mimeType,
+    publicPath,
+    fingerprint
+  );
+  icons.push(manifestIcon);
+  assets.push(webpackAsset);
+  return processNext(sizes, icon, cachedIconsCopy, icons, assets, fingerprint, publicPath);
 }
 const log = (...p) => console.log('Splashscreen:', ...p);
 
