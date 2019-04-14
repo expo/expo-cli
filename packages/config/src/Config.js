@@ -423,7 +423,8 @@ function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function,
     // Use template icon
     icon = options.templateIcon;
   }
-  icons.push({ src: icon, size: ICON_SIZES });
+  const destination = `assets/icons`;
+  icons.push({ src: icon, size: ICON_SIZES, destination });
   const iOSIcon = config.icon || ios.icon;
   if (iOSIcon) {
     const iOSIconPath = getAbsolutePath(iOSIcon);
@@ -431,13 +432,14 @@ function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function,
       ios: true,
       size: 1024,
       src: iOSIconPath,
+      destination,
     });
   }
   return icons;
 }
 
 function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, options: Object) {
-  const { web = {}, ios = {}, splash = {} } = config;
+  const { web = {}, ios = {}, splash = {}, primaryColor } = config;
   if (Array.isArray(web.startupImages)) {
     return web.startupImages;
   }
@@ -448,8 +450,18 @@ function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, o
 
   let splashImageSource;
   if (webSplash.image || iOSSplash.image || splash.image) {
+    const resizeMode =
+      webSplash.resizeMode || iOSSplash.resizeMode || splash.resizeMode || 'contain';
+    const backgroundColor =
+      webSplash.backgroundColor ||
+      iOSSplash.backgroundColor ||
+      splash.backgroundColor ||
+      primaryColor ||
+      '#ffffff';
     splashImageSource = getAbsolutePath(webSplash.image || iOSSplash.image || splash.image);
     startupImages.push({
+      resizeMode,
+      color: backgroundColor,
       src: splashImageSource,
       supportsTablet: ios.supportsTablet,
       orientation: web.orientation,

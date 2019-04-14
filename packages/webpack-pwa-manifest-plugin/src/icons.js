@@ -1,12 +1,41 @@
-import fs from 'fs';
-import jimp from 'jimp';
+import fs from 'fs-extra';
+import Jimp from 'jimp';
 import mime from 'mime';
 import { joinURI } from './helpers/uri';
 import generateFingerprint from './helpers/fingerprint';
 import IconError from './errors/IconError';
 import { fromStartupImage } from './validators/Apple';
 
-const supportedMimeTypes = [jimp.MIME_PNG, jimp.MIME_JPEG, jimp.MIME_BMP];
+const supportedMimeTypes = [Jimp.MIME_PNG, Jimp.MIME_JPEG, Jimp.MIME_BMP];
+
+const ASPECT_FILL = 'cover';
+const ASPECT_FIT = 'contain';
+
+export async function createBaseImageAsync(width, height, color) {
+  return new Promise(
+    (resolve, reject) =>
+      new Jimp(width, height, color, (err, image) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(image);
+      })
+  );
+}
+
+async function ensureImageAsync(image) {
+  return await Jimp.read(image);
+}
+
+async function compositeImagesAsync(image, props) {
+  const images = parseArray(props);
+  for (const imageProps of images) {
+    const childImage = await ensureImageAsync(imageProps.image);
+    image.composite(childImage, imageProps.x || 0, imageProps.y || 0);
+  }
+  return image;
+}
 
 function parseArray(i) {
   if (i == null) return [];
@@ -23,6 +52,7 @@ function sanitizeIcon(iconSnippet) {
   }
   return {
     src: iconSnippet.src,
+    resizeMode: iconSnippet.resizeMode,
     sizes,
     media: iconSnippet.media,
     destination: iconSnippet.destination,
@@ -52,6 +82,7 @@ function processIcon(width, height, icon, buffer, mimeType, publicPath, shouldFi
       ios: icon.ios
         ? { valid: icon.ios, media: icon.media, size: dimensions, href: iconPublicUrl }
         : false,
+      resizeMode: icon.resizeMode,
       color: icon.color,
     },
   };
@@ -111,7 +142,7 @@ async function processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerpri
       return processNext();
     }
 
-    const buffer = await resize(icon.src, mimeType, width, height);
+    const buffer = await resize(icon.src, mimeType, width, height, icon.resizeMode, icon.color);
 
     const processedIcon = processIcon(
       width,
@@ -127,39 +158,51 @@ async function processImg(sizes, icon, cachedIconsCopy, icons, assets, fingerpri
     return processNext();
   }
 }
+const log = (...p) => console.log('Splashscreen:', ...p);
 
-function resize(img, mimeType, width, height) {
-  return new Promise((resolve, reject) => {
-    jimp.read(img, (err, img) => {
-      if (err) throw new IconError(`It was not possible to read '${img}'.`);
-      img.cover(width, height).getBuffer(mimeType, (err, buffer) => {
-        if (err) throw new IconError(`It was not possible to retrieve buffer of '${img}'.`);
-        resolve(buffer);
-      });
-    });
-  });
+async function resize(img, mimeType, width, height, resizeMode = 'contain', color) {
+  try {
+    const initialImage = await Jimp.read(img);
+    log({ resizeMode });
+    const center = Jimp.VERTICAL_ALIGN_MIDDLE | Jimp.HORIZONTAL_ALIGN_CENTER;
+    if (resizeMode === ASPECT_FILL) {
+      return await initialImage
+        .cover(width, height, center)
+        .quality(100)
+        .getBufferAsync(mimeType);
+    } else if (resizeMode === ASPECT_FIT) {
+      const resizedImage = await initialImage.contain(width, height, center).quality(100);
+      if (!color) {
+        return resizedImage.getBufferAsync(mimeType);
+      }
+
+      const splashScreen = await createBaseImageAsync(width, height, color);
+      const combinedImage = await compositeImagesAsync(splashScreen, [{ image: resizedImage }]);
+      return combinedImage.getBufferAsync(mimeType);
+    } else {
+      throw new IconError(
+        `Unsupported resize mode: ${resizeMode}. Please choose either 'cover', or 'contain'`
+      );
+    }
+  } catch ({ message }) {
+    throw new IconError(`It was not possible to generate splash screen '${img}'. ${message}`);
+  }
 }
 
 export function retrieveIcons(manifest) {
-  const startupImages = parseArray(manifest.startupImages);
+  const { startupImages, icon, icons, ...config } = manifest;
+  const parsedStartupImages = parseArray(startupImages);
 
-  let icons = parseArray(manifest.icons);
+  let parsedIcons = parseArray(icons);
 
-  if (startupImages.length) {
+  if (parsedStartupImages.length) {
     // TODO: Bacon: use all of the startup images
-    const startupImage = startupImages[0];
-    icons = icons.concat(fromStartupImage(startupImage));
-  }
-  const response = [];
-
-  for (let icon of icons) {
-    response.push(sanitizeIcon(icon));
+    const startupImage = parsedStartupImages[0];
+    parsedIcons = [...parsedIcons, ...fromStartupImage(startupImage)];
   }
 
-  delete manifest.startupImages;
-  delete manifest.icon;
-  delete manifest.icons;
-  return response;
+  const response = parsedIcons.map(icon => sanitizeIcon(icon));
+  return [response, config];
 }
 
 export async function parseIcons(fingerprint, publicPath, icons) {
