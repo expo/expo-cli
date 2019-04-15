@@ -151,19 +151,28 @@ async function installAsync(projectRoot, libraries = []) {
 }
 
 function areModulesInstalled(projectRoot, exp) {
-  const modulesPath = ConfigUtils.resolveModule(`.`, projectRoot, exp);
-  return fs.existsSync(modulesPath);
+  try {
+    const modulesPath = ConfigUtils.resolveModule(`.`, projectRoot, exp);
+    return fs.existsSync(modulesPath);
+  } catch (error) {
+    return false;
+  }
 }
 
 async function getLibraryVersionAsync(projectRoot, exp, packageName) {
-  const possibleModulePath = ConfigUtils.resolveModule(
-    `${packageName}/package.json`,
-    projectRoot,
-    exp
-  );
-  if (fs.existsSync(possibleModulePath)) {
-    const packageJson = await JsonFile.readAsync(possibleModulePath);
-    return packageJson.version;
+  try {
+    const possibleModulePath = ConfigUtils.resolveModule(
+      `${packageName}/package.json`,
+      projectRoot,
+      exp
+    );
+    if (fs.existsSync(possibleModulePath)) {
+      const packageJson = await JsonFile.readAsync(possibleModulePath);
+      return packageJson.version;
+    }
+  } catch (error) {
+    // Throws if the file doesn't exist.
+    return null;
   }
 }
 
@@ -182,9 +191,10 @@ export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
 
   const results = await getMissingReactNativeWebPackagesMessageAsync(projectRoot);
   if (results) {
-    if (isInteractive && (await promptToInstallReactNativeWeb(results.dependencies))) {
+    const dependencies = results.dependencies.map(lib => formatPackage(lib));
+    if (isInteractive && (await promptToInstallReactNativeWeb(dependencies))) {
       try {
-        await installAsync(projectRoot, results.dependencies);
+        await installAsync(projectRoot, dependencies);
         // In the case where the package.json value is different from the installed value
         // and the installed value is valid, but the package.json version is not,
         // then the initial install would have synchronized the values but downloaded an
@@ -193,8 +203,9 @@ export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
         // Starting the flow over again will prompt to install react, then the second pass will catch expo.
         const postResults = await getMissingReactNativeWebPackagesMessageAsync(projectRoot);
         if (postResults) {
+          const postResultsDependencies = results.dependencies.map(lib => formatPackage(lib));
           // TODO: Bacon: Maybe we should warn that there was a problem with the first pass.
-          await installAsync(projectRoot, postResults.dependencies);
+          await installAsync(projectRoot, postResultsDependencies);
         }
       } catch (error) {
         throw new XDLError(
@@ -214,9 +225,10 @@ export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
 }
 
 async function promptToInstallReactNativeWeb(dependencies) {
+  const librariesMessage = dependencies.join(', ');
   return await promptAsync(
     `It appears you don't have all of the required packages installed. \n  Would you like to install: ${chalk.underline(
-      dependencies.join(', ')
+      librariesMessage
     )}?`
   );
 }
