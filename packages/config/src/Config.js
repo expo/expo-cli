@@ -443,7 +443,7 @@ function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function,
 }
 
 function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, options: Object) {
-  const { icon, web = {}, ios = {}, splash = {}, primaryColor } = config;
+  const { icon, web = {}, splash = {}, primaryColor } = config;
   if (Array.isArray(web.startupImages)) {
     return web.startupImages;
   }
