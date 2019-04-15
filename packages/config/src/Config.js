@@ -462,7 +462,7 @@ function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, o
       resizeMode,
       color: backgroundColor,
       src: splashImageSource,
-      supportsTablet: ios.supportsTablet,
+      supportsTablet: webSplash.supportsTablet === undefined ? true : webSplash.supportsTablet,
       orientation: web.orientation,
       destination: `assets/splash`,
     });
