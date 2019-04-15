@@ -448,21 +448,15 @@ function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, o
     return web.startupImages;
   }
 
-  const { splash: iOSSplash = {} } = ios;
   const { splash: webSplash = {} } = web;
   let startupImages = [];
 
   let splashImageSource;
-  const possibleIconSrc = webSplash.image || iOSSplash.image || splash.image || icon;
+  const possibleIconSrc = webSplash.image || splash.image || icon;
   if (possibleIconSrc) {
-    const resizeMode =
-      webSplash.resizeMode || iOSSplash.resizeMode || splash.resizeMode || 'contain';
+    const resizeMode = webSplash.resizeMode || splash.resizeMode || 'contain';
     const backgroundColor =
-      webSplash.backgroundColor ||
-      iOSSplash.backgroundColor ||
-      splash.backgroundColor ||
-      primaryColor ||
-      '#ffffff';
+      webSplash.backgroundColor || splash.backgroundColor || primaryColor || '#ffffff';
     splashImageSource = getAbsolutePath(possibleIconSrc);
     startupImages.push({
       resizeMode,
