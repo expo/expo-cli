@@ -303,10 +303,14 @@ function applyWebDefaults(appJSON: Object) {
     webManifest.backgroundColor || splash.backgroundColor || DEFAULT_BACKGROUND_COLOR; // No default background color
 
   /**
+   *
    * https://developer.mozilla.org/en-US/docs/Web/Manifest#prefer_related_applications
    * Specifies a boolean value that hints for the user agent to indicate
    * to the user that the specified native applications (see below) are recommended over the website.
    * This should only be used if the related native apps really do offer something that the website can't... like Expo ;)
+   *
+   * >> The banner won't show up if the app is already installed:
+   * https://github.com/GoogleChrome/samples/issues/384#issuecomment-326387680
    */
 
   const preferRelatedApplications =
@@ -430,7 +434,7 @@ function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function,
     const iOSIconPath = getAbsolutePath(iOSIcon);
     icons.push({
       ios: true,
-      size: 1024,
+      sizes: [72, 114],
       src: iOSIconPath,
       destination,
     });
@@ -439,7 +443,7 @@ function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function,
 }
 
 function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, options: Object) {
-  const { web = {}, ios = {}, splash = {}, primaryColor } = config;
+  const { icon, web = {}, ios = {}, splash = {}, primaryColor } = config;
   if (Array.isArray(web.startupImages)) {
     return web.startupImages;
   }
@@ -449,7 +453,8 @@ function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, o
   let startupImages = [];
 
   let splashImageSource;
-  if (webSplash.image || iOSSplash.image || splash.image) {
+  const possibleIconSrc = webSplash.image || iOSSplash.image || splash.image || icon;
+  if (possibleIconSrc) {
     const resizeMode =
       webSplash.resizeMode || iOSSplash.resizeMode || splash.resizeMode || 'contain';
     const backgroundColor =
@@ -458,7 +463,7 @@ function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, o
       splash.backgroundColor ||
       primaryColor ||
       '#ffffff';
-    splashImageSource = getAbsolutePath(webSplash.image || iOSSplash.image || splash.image);
+    splashImageSource = getAbsolutePath(possibleIconSrc);
     startupImages.push({
       resizeMode,
       color: backgroundColor,

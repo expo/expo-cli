@@ -11,8 +11,6 @@ const supportedMimeTypes = [Jimp.MIME_PNG, Jimp.MIME_JPEG, Jimp.MIME_BMP];
 const ASPECT_FILL = 'cover';
 const ASPECT_FIT = 'contain';
 
-const log = (...p) => console.log('Icons:', ...p);
-
 export async function createBaseImageAsync(width, height, color) {
   return new Promise(
     (resolve, reject) =>
@@ -156,7 +154,8 @@ async function resize(img, mimeType, width, height, resizeMode = 'contain', colo
 }
 
 export function retrieveIcons(manifest) {
-  const { startupImages, icon, icons, ...config } = manifest;
+  // Remove these items so they aren't written to disk.
+  const { startupImages, apple, icon, icons, ...config } = manifest;
   const parsedStartupImages = parseArray(startupImages);
 
   let parsedIcons = parseArray(icons);

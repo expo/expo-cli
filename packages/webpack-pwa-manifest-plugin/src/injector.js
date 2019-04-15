@@ -84,8 +84,8 @@ export async function buildResources(self, publicPath = '') {
 
     const { icons = {}, assets = [] } = parsedIconsResult;
     const results = writeManifestToFile(self.manifest, self.options, publicPath, icons);
-    self.manifest = results;
     self.assets = [results, ...assets];
+    return results;
   }
 }
 
