@@ -54,19 +54,11 @@ function createFilename(filenameTemplate, json, shouldFingerprint) {
   return formatters.reduce((acc, curr) => acc.replace(curr.pattern, curr.value), filenameTemplate);
 }
 
-function manifest(options, publicPath, icons) {
-  const content = except(Object.assign({ icons }, options), [
-    'filename',
-    'inject',
-    'fingerprints',
-    'ios',
-    'publicPath',
-    'icon',
-    'useWebpackPublicPath',
-    'includeDirectory',
-    'crossorigin',
-  ]);
-  if (options.orientation === 'omit') {
+// Create `manifest.json`
+function writeManifestToFile(manifest, options, publicPath, icons) {
+  const content = { ...manifest, icons };
+
+  if (content.orientation === 'omit') {
     delete content.orientation;
   }
   const json = JSON.stringify(content, null, 2);
@@ -84,14 +76,17 @@ function manifest(options, publicPath, icons) {
 export async function buildResources(self, publicPath = '') {
   if (!self.assets || !self.options.inject) {
     publicPath = publicPath || '';
-    const parsedIconsResult = await parseIcons(
-      self.options.fingerprints,
-      publicPath,
-      retrieveIcons(self.options)
-    );
+    let parsedIconsResult = {};
+    if (!self.options.noResources) {
+      parsedIconsResult = await parseIcons(
+        self.options.fingerprints,
+        publicPath,
+        retrieveIcons(self.manifest)
+      );
+    }
 
-    const { icons, assets = [] } = parsedIconsResult;
-    const results = manifest(self.options, publicPath, icons);
+    const { icons = {}, assets = [] } = parsedIconsResult;
+    const results = writeManifestToFile(self.manifest, self.options, publicPath, icons);
     self.manifest = results;
     self.assets = [results, ...assets];
   }
@@ -109,37 +104,38 @@ export function injectResources(compilation, assets, callback) {
   callback();
 }
 
-export function generateAppleTags(options, assets) {
+export function generateAppleTags(manifest, assets) {
   let tags = {};
-  if (options.ios) {
+  if (manifest.ios) {
     let apple = {
-      'apple-mobile-web-app-title': options.name,
+      'apple-mobile-web-app-title': 'Expo PWA',
       'apple-mobile-web-app-capable': 'yes',
       'apple-mobile-web-app-status-bar-style': 'default',
     };
-    if (typeof options.ios === 'object') {
+    if (typeof manifest.ios === 'object') {
       apple = {
         ...apple,
-        ...options.ios,
+        ...manifest.ios,
       };
     }
 
     for (let tag in apple) {
       const type = appleTags[tag];
-      if (!type) continue; // not a valid apple tag
-      applyTag(tags, type, formatAppleTag(tag, apple[tag]));
+      if (type) {
+        tags = applyTag(tags, type, formatAppleTag(tag, apple[tag]));
+      }
     }
     if (assets) {
       for (let asset of assets) {
         if (asset.ios && asset.ios.valid) {
           if (asset.ios.valid === 'startup') {
-            applyTag(tags, 'link', {
+            tags = applyTag(tags, 'link', {
               rel: 'apple-touch-startup-image',
               media: asset.ios.media,
               href: asset.ios.href,
             });
           } else {
-            applyTag(tags, 'link', {
+            tags = applyTag(tags, 'link', {
               // apple-touch-icon-precomposed
               rel: 'apple-touch-icon',
               sizes: asset.ios.size,
@@ -156,7 +152,7 @@ export function generateAppleTags(options, assets) {
 export function generateMaskIconLink(tags, assets) {
   const svgAsset = assets.find(asset => /[^.]+$/.exec(asset.output)[0] === 'svg');
   if (svgAsset) {
-    applyTag(
+    tags = applyTag(
       tags,
       'link',
       Object.assign(
@@ -219,17 +215,21 @@ function formatAppleTag(tag, content) {
 }
 
 export function applyTag(obj, tag, content) {
-  if (!content) return obj;
-  if (obj[tag]) {
-    if (Array.isArray(obj[tag])) {
-      obj[tag].push(content);
-    } else {
-      obj[tag] = [obj[tag], content];
-    }
-  } else {
-    obj[tag] = content;
+  if (!content) {
+    return obj;
   }
-  return obj;
+  const tags = { ...obj };
+  if (tags[tag]) {
+    if (Array.isArray(tags[tag])) {
+      tags[tag].push(content);
+      return tags;
+    }
+    tags[tag] = [tags[tag], content];
+    return tags;
+  }
+
+  tags[tag] = content;
+  return tags;
 }
 
 export function generateHtmlTags(tags) {

@@ -1,7 +1,7 @@
 const path = require('path');
 const findWorkspaceRoot = require('find-yarn-workspace-root');
 const fs = require('fs');
-
+const ConfigUtils = require('@expo/config');
 const possibleMainFiles = [
   'index.web.ts',
   'index.ts',
@@ -21,9 +21,16 @@ const possibleMainFiles = [
   'src/index.jsx',
 ];
 
-function getLocations(inputProjectRoot = '') {
-  const absolute = (...pathComponents) =>
-    path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
+const appDirectory = fs.realpathSync(process.cwd());
+
+function getLocations(_inputProjectRoot) {
+  const inputProjectRoot = _inputProjectRoot || appDirectory;
+
+  function absolute(...pathComponents) {
+    return path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
+  }
+
+  const projectRoot = absolute();
 
   function findMainFile() {
     for (const fileName of possibleMainFiles) {
@@ -35,19 +42,18 @@ function getLocations(inputProjectRoot = '') {
     return null;
   }
 
-  const projectRoot = absolute();
-  const packageJsonPath = absolute('./package.json');
-  const appJsonPath = absolute('./app.json');
-
-  const workspaceRoot = findWorkspaceRoot(projectRoot); // Absolute path or null
-
-  let modulesPath;
-
-  if (workspaceRoot) {
-    modulesPath = path.resolve(workspaceRoot, 'node_modules');
-  } else {
-    modulesPath = absolute('node_modules');
+  function getModulesPath() {
+    const workspaceRoot = findWorkspaceRoot(projectRoot); // Absolute path or null
+    if (workspaceRoot) {
+      return path.resolve(workspaceRoot, 'node_modules');
+    } else {
+      return absolute('node_modules');
+    }
   }
+
+  const packageJsonPath = absolute('package.json');
+  const appJsonPath = absolute('app.json');
+  const modulesPath = getModulesPath();
 
   const { main } = require(packageJsonPath);
   let appMain;
@@ -64,30 +70,30 @@ function getLocations(inputProjectRoot = '') {
   }
 
   const nativeAppManifest = require(appJsonPath);
+  const config = ConfigUtils.ensurePWAConfig(nativeAppManifest);
 
-  const { expo: expoManifest = {} } = nativeAppManifest;
-  const { web: expoManifestWebManifest = {} } = expoManifest;
+  const productionPath = absolute(config.web.build.output);
 
-  const favicon = expoManifestWebManifest.favicon
-    ? absolute(expoManifestWebManifest.favicon)
-    : undefined;
-
-  const { productionPath: productionPathFolderName = 'web-build' } = expoManifestWebManifest;
-
-  const productionPath = absolute(productionPathFolderName);
-
-  const templatePath = (filename = '') => {
+  function templatePath(filename = '') {
     const overridePath = absolute('web', filename);
     if (fs.existsSync(overridePath)) {
       return overridePath;
     } else {
       return path.join(__dirname, '../web-default', filename);
     }
-  };
+  }
+
+  function getProductionPath(...props) {
+    return path.resolve(productionPath, ...props);
+  }
+
+  function getIncludeModule(...pathComponents) {
+    return path.resolve(modulesPath, ...pathComponents);
+  }
 
   return {
     absolute,
-    includeModule: (...pathComponents) => path.resolve(modulesPath, ...pathComponents),
+    includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     appJson: appJsonPath,
     root: projectRoot,
@@ -99,13 +105,13 @@ function getLocations(inputProjectRoot = '') {
       indexHtml: templatePath('index.html'),
       manifest: templatePath('manifest.json'),
       serveJson: templatePath('serve.json'),
-      favicon,
     },
     production: {
-      folder: productionPath,
-      indexHtml: path.resolve(productionPath, 'index.html'),
-      manifest: path.resolve(productionPath, 'manifest.json'),
-      serveJson: path.resolve(productionPath, 'serve.json'),
+      get: getProductionPath,
+      folder: getProductionPath(),
+      indexHtml: getProductionPath('index.html'),
+      manifest: getProductionPath('manifest.json'),
+      serveJson: getProductionPath('serve.json'),
     },
   };
 }

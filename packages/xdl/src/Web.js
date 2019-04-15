@@ -53,7 +53,7 @@ export function logWebSetup() {
 
 export async function hasWebSupportAsync(projectRoot) {
   const { exp } = await readConfigJsonAsync(projectRoot);
-  const isWebConfigured = exp.platforms.includes('web');
+  const isWebConfigured = exp.platforms.includes('all') || exp.platforms.includes('web');
   return isWebConfigured;
 }
 
