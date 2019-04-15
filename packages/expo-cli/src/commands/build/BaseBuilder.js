@@ -6,7 +6,7 @@ import { Project, ProjectUtils, User } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import get from 'lodash/get';
-import simpleSpinner from '@expo/simple-spinner';
+import ora from 'ora';
 
 import * as UrlUtils from '../utils/url';
 import log from '../../log';
@@ -336,10 +336,10 @@ ${job.id}
     }
 
     if (this.options.wait) {
-      simpleSpinner.start();
+      let spinner = ora(`Waiting for build to finish...`).start();
       const waitOpts = publicUrl ? { publicUrl } : {};
       const completedJob = await this.wait(buildId, waitOpts);
-      simpleSpinner.stop();
+      spinner.stop();
       const artifactUrl = completedJob.artifactId
         ? UrlUtils.constructArtifactUrl(completedJob.artifactId)
         : completedJob.artifacts.url;
