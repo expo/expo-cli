@@ -30,7 +30,7 @@ const DEFAULT_DISPLAY = 'fullscreen';
 const DEFAULT_STATUS_BAR = 'default';
 const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
-const ICON_SIZES = [96, 128, 192, 256, 384, 512];
+const ICON_SIZES = [192, 512];
 const MAX_SHORT_NAME_LENGTH = 12;
 const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
 
@@ -434,7 +434,7 @@ function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function,
     const iOSIconPath = getAbsolutePath(iOSIcon);
     icons.push({
       ios: true,
-      sizes: [72, 114],
+      sizes: 180,
       src: iOSIconPath,
       destination,
     });
