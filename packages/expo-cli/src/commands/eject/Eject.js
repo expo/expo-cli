@@ -124,7 +124,7 @@ export async function ejectAsync(projectRoot: string, options) {
             message: "What should your app appear as on a user's home screen?",
             default: name || exp.name,
             validate: s => {
-              return s.length > 0;
+              return s.length > 0 ? true : 'App display name cannot be empty.';
             },
           },
           {
@@ -132,7 +132,12 @@ export async function ejectAsync(projectRoot: string, options) {
             message: 'What should your Android Studio and Xcode projects be called?',
             default: pkgJson.name ? stripDashes(pkgJson.name) : undefined,
             validate: s => {
-              return s.length > 0 && s.indexOf('-') === -1 && s.indexOf(' ') === -1;
+              if (s.length === 0) {
+                return 'Project name cannot be empty.';
+              } else if (s.indexOf('-') !== -1 || s.indexOf(' ') !== -1) {
+                return 'Project name cannot contain hyphens or spaces.';
+              }
+              return true;
             },
           },
         ],
