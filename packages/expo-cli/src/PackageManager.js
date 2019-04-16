@@ -1,6 +1,8 @@
 import ansiRegex from 'ansi-regex';
 import fs from 'fs-extra';
 import path from 'path';
+
+import { isUsingYarn } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import split from 'split';
 import { Transform } from 'stream';
@@ -89,9 +91,7 @@ export function createForProject(projectRoot, options) {
     PackageManager = NpmPackageManager;
   } else if (options.yarn) {
     PackageManager = YarnPackageManager;
-  } else if (fs.existsSync(path.join(projectRoot, 'package-lock.json'))) {
-    PackageManager = NpmPackageManager;
-  } else if (fs.existsSync(path.join(projectRoot, 'yarn.lock'))) {
+  } else if (isUsingYarn(projectRoot)) {
     PackageManager = YarnPackageManager;
   } else {
     PackageManager = NpmPackageManager;
