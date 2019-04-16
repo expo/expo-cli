@@ -4,7 +4,6 @@ import opn from 'opn';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
-// import clearConsole from 'react-dev-utils/clearConsole';
 import * as ConfigUtils from '@expo/config';
 import semver from 'semver';
 import JsonFile from '@expo/json-file';
@@ -234,7 +233,6 @@ async function promptToInstallReactNativeWeb(dependencies) {
 }
 
 async function promptAsync(message: string): Promise<boolean> {
-  // clearConsole();
   const question = {
     type: 'confirm',
     name: 'should',
