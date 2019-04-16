@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import fp from 'lodash/fp';
 import get from 'lodash/get';
 import simpleSpinner from '@expo/simple-spinner';
-import semver from 'semver;
+import semver from 'semver';
 
 import * as UrlUtils from '../utils/url';
 import log from '../../log';
