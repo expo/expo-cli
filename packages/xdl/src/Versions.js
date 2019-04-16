@@ -85,7 +85,7 @@ export async function newestSdkVersionAsync() {
 
 export async function nextDeprecatedSdkVersionAsync() {
   const sdkVersions = await sdkVersionsAsync();
-  const supportedVersions =  _.pickBy(sdkVersions, v => v.isDeprecated === undefined);
+  const supportedVersions =  _.pickBy(sdkVersions, v => !v.isDeprecated);
   let versionNumbers = [];
   _.forEach(supportedVersions, (value, key) => {
     versionNumbers.push(semver.major(key))
