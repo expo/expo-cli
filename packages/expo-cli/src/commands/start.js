@@ -65,7 +65,6 @@ async function action(projectDir, options) {
   const startOpts = await parseStartOptionsAsync(projectDir, options);
 
   await Project.startAsync(rootPath, startOpts);
-  await Web.logURL(projectDir);
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
