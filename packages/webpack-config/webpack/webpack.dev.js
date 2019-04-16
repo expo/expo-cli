@@ -5,9 +5,16 @@ const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
 const common = require('./webpack.common.js');
 const getLocations = require('./webpackLocations');
+const getConfig = require('./getConfig');
+
 const createDevServerConfig = require('./createDevServerConfig');
 
 module.exports = function(env = {}, argv) {
+  if (!env.config) {
+    // Fill all config values with PWA defaults
+    env.config = getConfig(env);
+  }
+
   const locations = getLocations(env.projectRoot);
 
   const devServer = createDevServerConfig(env, argv);

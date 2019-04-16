@@ -8,7 +8,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const isWsl = require('is-wsl');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const safePostCssParser = require('postcss-safe-parser');
-
+const getConfig = require('./getConfig');
 const common = require('./webpack.common.js');
 const getLocations = require('./webpackLocations');
 const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
@@ -29,6 +29,11 @@ const DEFAULT_BROTLI = {
 };
 
 module.exports = function(env = {}, argv) {
+  if (!env.config) {
+    // Fill all config values with PWA defaults
+    env.config = getConfig(env);
+  }
+
   const locations = getLocations(env.projectRoot);
 
   const appJSON = env.config || require(locations.appJson);

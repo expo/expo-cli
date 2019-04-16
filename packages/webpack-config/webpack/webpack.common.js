@@ -10,14 +10,13 @@ const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').defa
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
+const PnpWebpackPlugin = require('pnp-webpack-plugin');
+const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const createClientEnvironment = require('./createClientEnvironment');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
 const getLocations = require('./webpackLocations');
-const path = require('path');
-const PnpWebpackPlugin = require('pnp-webpack-plugin');
-const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
-
+const createBabelConfig = require('./createBabelConfig');
 const DEFAULT_SERVICE_WORKER = {};
 const DEFAULT_REPORT_CONFIG = {
   verbose: false,
@@ -98,7 +97,9 @@ module.exports = function(env = {}, argv) {
 
   const isProduction = env.production;
 
-  const { babelConfig, config } = env;
+  const babelConfig = createBabelConfig(env, locations.root);
+
+  const { config } = env;
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
   const fontLoaderConfiguration = {
