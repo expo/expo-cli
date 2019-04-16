@@ -7,6 +7,7 @@ import chalk from 'chalk';
 import fp from 'lodash/fp';
 import get from 'lodash/get';
 import simpleSpinner from '@expo/simple-spinner';
+import semver from 'semver;
 
 import * as UrlUtils from '../utils/url';
 import log from '../../log';
@@ -91,10 +92,10 @@ export default class BaseBuilder {
     }
     
     // Warn user if building a project using the next deprecated SDK version
-    let nextDeprecatedVersion = await Versions.nextDeprecatedSdkVersionAsync();
-    if (this.manifest.sdkVersion.substring(0, 2) === nextDeprecatedVersion.toString()) {
+    let oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
+    if (semver.major(this.manifest.sdkVersion) === oldestSupportedMajorVersion) {
       let {version} = await Versions.newestSdkVersionAsync();
-      log.warn(`\nSDK${nextDeprecatedVersion} will be DEPRECATED soon! We recommend upgrading versions, ideally to the latest (SDK${version.substring(0, 2)}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`);
+      log.warn(`\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold('deprecated')} soon! We recommend upgrading versions, ideally to the latest (SDK${semver.major(version)}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`);
     }
   }
 
