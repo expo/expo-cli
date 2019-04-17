@@ -10,7 +10,7 @@ import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 
 import * as ProjectUtils from './project/ProjectUtils';
 
-const CONSOLE_TAG = 'webpack';
+const CONSOLE_TAG = 'expo';
 
 function log(projectRoot, message, showInDevtools = true) {
   if (showInDevtools) {
@@ -37,7 +37,7 @@ function printInstructions(projectRoot, appName, urls, showInDevtools) {
     message += `  ${urls.localUrlForTerminal}\n`;
   }
 
-  message += `Note that the development build is not optimized. To create a production build, use ${chalk.bold(
+  message += `\nNote that the development build is not optimized. To create a production build, use ${chalk.bold(
     `expo build:web`
   )}.`;
   log(projectRoot, message, showInDevtools);
