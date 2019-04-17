@@ -75,20 +75,17 @@ function writeManifestToFile(manifest, options, publicPath, icons) {
 
 export async function buildResources(self, publicPath = '') {
   if (!self.assets || !self.options.inject) {
-    publicPath = publicPath || '';
     let parsedIconsResult = {};
     if (!self.options.noResources) {
-      parsedIconsResult = await parseIcons(
-        self.options.fingerprints,
-        publicPath,
-        retrieveIcons(self.manifest)
-      );
+      const [results, config] = retrieveIcons(self.manifest);
+      self.manifest = config;
+      parsedIconsResult = await parseIcons(results, self.options.fingerprints, publicPath);
     }
 
     const { icons = {}, assets = [] } = parsedIconsResult;
     const results = writeManifestToFile(self.manifest, self.options, publicPath, icons);
-    self.manifest = results;
     self.assets = [results, ...assets];
+    return results;
   }
 }
 
