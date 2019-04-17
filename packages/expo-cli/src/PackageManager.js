@@ -1,7 +1,4 @@
 import ansiRegex from 'ansi-regex';
-import fs from 'fs-extra';
-import path from 'path';
-
 import { isUsingYarn } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import split from 'split';
@@ -79,7 +76,7 @@ export class YarnPackageManager {
   // Private
   async _runAsync(args) {
     log(`> yarn ${args.join(' ')}`);
-    const promise = spawnAsync('yarnpkg', [...args], this.options);
+    const promise = spawnAsync('yarnpkg', args, this.options);
     promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
     await promise;
   }
