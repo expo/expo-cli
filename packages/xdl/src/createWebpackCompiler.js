@@ -4,11 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
 import chalk from 'chalk';
-import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import clearConsole from 'react-dev-utils/clearConsole';
+import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
+
 import * as ProjectUtils from './project/ProjectUtils';
+
 const CONSOLE_TAG = 'webpack';
 
 function log(projectRoot, message, showInDevtools = true) {
@@ -28,33 +29,25 @@ function logError(projectRoot, message) {
 }
 
 function printInstructions(projectRoot, appName, urls, showInDevtools) {
-  const _log = message => log(projectRoot, message, showInDevtools);
-
-  console.log('');
-  _log(`You can now view ${chalk.bold(appName)} in the browser.`);
-  console.log('');
+  let message = `You can now view ${chalk.bold(appName)} in the browser.\n\n`;
   if (urls.lanUrlForTerminal) {
-    _log(`  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}`);
-    _log(`  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}`);
-    console.log('');
+    message += `  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}\n`;
+    message += `  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}\n`;
   } else {
-    _log(`  ${urls.localUrlForTerminal}`);
+    message += `  ${urls.localUrlForTerminal}\n`;
   }
 
-  _log(
-    `Note that the development build is not optimized. To create a production build, use ${chalk.bold(
-      `expo build:web`
-    )}.`
-  );
-  console.log('');
+  message += `Note that the development build is not optimized. To create a production build, use ${chalk.bold(
+    `expo build:web`
+  )}.`;
+  log(projectRoot, message, showInDevtools);
 }
 
 export function printPreviewNotice(projectRoot, showInDevtools) {
-  console.log('');
   log(
     projectRoot,
     chalk.underline.yellow(
-      'Web support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
+      '\nWeb support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
     ),
     showInDevtools
   );
@@ -81,10 +74,7 @@ export default function createWebpackCompiler({
   try {
     compiler = webpack(config);
   } catch (err) {
-    console.log('');
-    logError(projectRoot, 'Failed to compile');
-    console.log('');
-    logError(projectRoot, err.message || err);
+    logError(projectRoot, '\nFailed to compile\n' + err.message || err);
     process.exit(1);
   }
 
@@ -96,8 +86,7 @@ export default function createWebpackCompiler({
     if (!nonInteractive) {
       clearConsole();
     }
-    console.log('');
-    log(projectRoot, 'Compiling...');
+    log(projectRoot, '\nCompiling...');
   });
 
   let isFirstCompile = true;
@@ -137,8 +126,11 @@ export default function createWebpackCompiler({
       printInstructions(projectRoot, appName, urls, isFirstCompile);
     }
     if (!isFirstCompile) {
-      console.log(`Press ${chalk.bold('?')} to show a list of all available commands.`);
-      console.log('');
+      log(
+        projectRoot,
+        `Press ${chalk.bold('?')} to show a list of all available commands.\n`,
+        false
+      );
     }
     onFinished();
     isFirstCompile = false;
@@ -150,15 +142,16 @@ export default function createWebpackCompiler({
       if (messages.errors.length > 1) {
         messages.errors.length = 1;
       }
-      logError(projectRoot, chalk.red('Failed to compile.\n'));
-      logError(projectRoot, messages.errors.join('\n\n'));
+      logError(projectRoot, chalk.red('Failed to compile.\n') + messages.errors.join('\n\n'));
       return;
     }
 
     // Show warnings if no errors were found.
     if (messages.warnings.length) {
-      logWarning(projectRoot, chalk.yellow('Compiled with warnings.\n'));
-      logWarning(projectRoot, messages.warnings.join('\n\n'));
+      logWarning(
+        projectRoot,
+        chalk.yellow('Compiled with warnings.\n') + messages.warnings.join('\n\n')
+      );
     }
   });
 
