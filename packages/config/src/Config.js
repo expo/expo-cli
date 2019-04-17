@@ -569,7 +569,7 @@ export async function readConfigJsonAsync(
   }
 
   if (exp && !exp.platforms) {
-    exp.platforms = ['android', 'ios', 'web'];
+    exp.platforms = ['android', 'ios'];
   }
 
   if (exp.nodeModulesPath) {
