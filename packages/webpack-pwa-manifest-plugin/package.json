@@ -66,5 +66,9 @@
     "package.json",
     "yarn.lock",
     "README.md"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "ab8735bcc46a024a1bb910ca4d1af203e77aca64"
 }
