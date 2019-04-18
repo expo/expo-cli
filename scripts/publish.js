@@ -4,7 +4,7 @@ let spawnAsync = require('@expo/spawn-async');
 let lerna = path.join(__dirname, '../node_modules/.bin/lerna');
 
 async function run() {
-  //spawnSync(lerna, ['version', ...process.argv.slice(2)], { stdio: 'inherit' });
+  await spawnAsync(lerna, ['version', ...process.argv.slice(2)], { stdio: 'inherit' });
 
   let packages = JSON.parse(
     (await spawnAsync(lerna, ['ls', '--toposort', '--json'], {
@@ -24,6 +24,11 @@ async function run() {
       toPublish.push({ name, location });
       console.log(`* ${name}`);
     }
+  }
+
+  if (toPublish.length === 0) {
+    console.log('✅ No packages left to publish');
+    return;
   }
 
   for (const { name, location } of toPublish) {
