@@ -34,7 +34,7 @@ async function run() {
   for (const { name, location } of toPublish) {
     console.log();
     console.log('🚢 Publishing', name);
-    await spawnAsync('npm', ['publish'], {
+    await spawnAsync('npm', ['publish', '--access', 'public'], {
       cwd: location,
       stdio: 'inherit',
     });
