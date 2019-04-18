@@ -7,6 +7,7 @@
     "bootstrap": "lerna bootstrap",
     "postbootstrap": "lerna run prepare --stream",
     "prebootstrap": "yarn",
+    "publish": "echo \"This script is deprecated. Run \\\"node ./scripts/publish.js\\\" instead.\"; exit 1",
     "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools"
   },
   "husky": {
