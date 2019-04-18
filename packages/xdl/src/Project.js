@@ -1840,7 +1840,7 @@ function getWebpackInstance(projectRoot) {
 }
 
 async function startWebpackServerAsync(projectRoot, options, verbose) {
-  await Web.ensureWebSupportAsync(projectRoot);
+  await Doctor.ensureWebSupportAsync(projectRoot);
 
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
@@ -1883,7 +1883,7 @@ async function stopWebpackServerAsync(projectRoot) {
 }
 
 export async function bundleWebpackAsync(projectRoot, packagerOpts) {
-  await Web.ensureWebSupportAsync(projectRoot);
+  await Doctor.ensureWebSupportAsync(projectRoot);
   const mode = packagerOpts.dev ? 'development' : 'production';
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
@@ -2153,7 +2153,7 @@ export async function startAsync(
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
   }
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  const hasWebSupport = await Doctor.hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
     await startWebpackServerAsync(projectRoot, options, verbose);
   }
@@ -2180,7 +2180,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  const hasWebSupport = await Doctor.hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
     await stopWebpackServerAsync(projectRoot);
   }

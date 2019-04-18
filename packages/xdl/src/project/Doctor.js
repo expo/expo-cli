@@ -9,8 +9,10 @@ import getenv from 'getenv';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import * as ConfigUtils from '@expo/config';
-
+import chalk from 'chalk';
+import inquirer from 'inquirer';
 import Schemer, { SchemerError } from '@expo/schemer';
+import JsonFile from '@expo/json-file';
 
 import * as ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
@@ -18,6 +20,8 @@ import * as Binaries from '../Binaries';
 import Config from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
+import XDLError from '../XDLError';
+import ErrorCode from '../ErrorCode';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -430,6 +434,216 @@ export async function validateLowLatencyAsync(projectRoot: string): Promise<numb
 
 export async function validateWithNetworkAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, true);
+}
+
+export async function hasWebSupportAsync(projectRoot, exp) {
+  let inputExp = exp;
+  if (!exp) {
+    inputExp = (await ProjectUtils.readConfigJsonAsync(projectRoot)).exp;
+  }
+  const isWebConfigured = inputExp.platforms.includes('all') || inputExp.platforms.includes('web');
+  return isWebConfigured;
+}
+
+function getWebSetupLogs(): string {
+  const appJsonRules = chalk.green(`
+  {
+    "platforms": [
+  ${chalk.green.bold(`+      "web"`)}
+    ]
+  }`);
+  return `${chalk.red(
+    `* Add "web" to the "platforms" array in your project's ${chalk.bold(`app.json`)}`
+  )} ${appJsonRules}`;
+}
+
+export async function ensureWebSupportAsync(projectRoot, isInteractive = true) {
+  await validateWebPlatformAddedAsync(projectRoot, isInteractive);
+  await validateReactNativeWebInstalledAsync(projectRoot, isInteractive);
+}
+
+async function getMissingReactNativeWebPackagesMessageAsync(projectRoot) {
+  const { pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const dependencies = await getMissingReactNativeWebPackagesAsync(projectRoot, pkg);
+  if (dependencies.length) {
+    const commandPrefix = ConfigUtils.isUsingYarn(projectRoot) ? 'yarn add ' : 'npm install ';
+    const command = commandPrefix + dependencies.join(' ');
+    return {
+      message: `* Install these packages: ${chalk.yellow(command)}`,
+      command,
+      dependencies,
+    };
+  }
+}
+
+function formatPackage({ name, version }) {
+  if (!version || version === '*') {
+    return name;
+  }
+  return `${name}@${version}`;
+}
+
+async function installAsync(projectRoot, libraries = []) {
+  const options = {
+    cwd: projectRoot,
+    stdio: 'inherit',
+  };
+  try {
+    if (await ConfigUtils.isUsingYarn(projectRoot)) {
+      await spawnAsync('yarn', ['add', ...libraries], options);
+    } else {
+      await spawnAsync('npm', ['install', '--save', ...libraries], options);
+    }
+  } catch (error) {
+    throw new XDLError(
+      XDLError.WEB_NOT_CONFIGURED,
+      'Failed to install libraries: ' + error.message
+    );
+  }
+}
+
+function areModulesInstalled(projectRoot, exp) {
+  try {
+    const modulesPath = ConfigUtils.resolveModule(`.`, projectRoot, exp);
+    return fs.existsSync(modulesPath);
+  } catch (error) {
+    return false;
+  }
+}
+
+async function getLibraryVersionAsync(projectRoot, exp, packageName) {
+  try {
+    const possibleModulePath = ConfigUtils.resolveModule(
+      `${packageName}/package.json`,
+      projectRoot,
+      exp
+    );
+    if (fs.existsSync(possibleModulePath)) {
+      // let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+      const packageJson = await JsonFile.readAsync(possibleModulePath);
+      return packageJson.version;
+    }
+  } catch (error) {
+    // Throws if the file doesn't exist.
+    return null;
+  }
+}
+
+async function getMissingReactNativeWebPackagesAsync(projectRoot, appPackage) {
+  const { dependencies = {} } = appPackage;
+  const requiredPackages = [
+    { name: 'react', version: '*' },
+    { name: 'react-dom', version: '*' },
+    { name: 'react-native-web', version: '^0.11.2' },
+    { name: 'expo', version: '^33.0.0-alpha.web.1' },
+  ];
+  let missingPackages = [];
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+
+  // If the user hasn't installed node_modules yet, return every library.
+  // This will ensure that all further tests are being performed against valid modules.
+  if (!areModulesInstalled(projectRoot, exp)) {
+    return requiredPackages;
+  }
+
+  for (const dependency of requiredPackages) {
+    const projectVersion = await getLibraryVersionAsync(projectRoot, exp, dependency.name);
+    // If we couldn't find the package, it may be because the library is linked from elsewhere.
+    // It also could be that the modules haven't been installed yet.
+    if (
+      !projectVersion ||
+      !semver.satisfies(projectVersion, dependency.version) ||
+      // In the case that the library is installed but the entry was removed from the package.json
+      // This mostly applies to testing :)
+      !dependencies[dependency.name]
+    ) {
+      missingPackages.push(formatPackage(dependency));
+    }
+  }
+  return missingPackages;
+}
+
+async function promptToInstallReactNativeWeb(dependencies) {
+  const librariesMessage = dependencies.join(', ');
+  return await promptAsync(
+    `It appears you don't have all of the required packages installed. \n  Would you like to install: ${chalk.underline(
+      librariesMessage
+    )}?`
+  );
+}
+
+export async function validateReactNativeWebInstalledAsync(
+  projectRoot: string,
+  isInteractive: boolean = true
+): Promise<void> {
+  const results = await getMissingReactNativeWebPackagesMessageAsync(projectRoot);
+  if (!results) {
+    return true;
+  }
+
+  const dependencies = results.dependencies.map(lib => formatPackage(lib));
+  if (isInteractive && (await promptToInstallReactNativeWeb(dependencies))) {
+    try {
+      await installAsync(projectRoot, dependencies);
+      // In the case where the package.json value is different from the installed value
+      // and the installed value is valid, but the package.json version is not,
+      // then the initial install would have synchronized the values but downloaded an
+      // invalid package version. Running this twice is the only way to catch this.
+      // To test install all of the valid versions, then set expo version to 29.0.0, and delete react.
+      // Starting the flow over again will prompt to install react, then the second pass will catch expo.
+      const postResults = await getMissingReactNativeWebPackagesMessageAsync(projectRoot);
+      if (postResults) {
+        const postResultsDependencies = results.dependencies.map(lib => formatPackage(lib));
+        // TODO: Bacon: Maybe we should warn that there was a problem with the first pass.
+        await installAsync(projectRoot, postResultsDependencies);
+      }
+      return true;
+    } catch (error) {
+      throw new XDLError(
+        ErrorCode.WEB_NOT_CONFIGURED,
+        'Failed to install the required packages: ' + error.message
+      );
+    }
+  }
+
+  throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, results.message);
+}
+
+export async function validateWebPlatformAddedAsync(
+  projectRoot: string,
+  isInteractive: boolean = true
+): Promise<void> {
+  const hasWebSupport = await hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    return true;
+  }
+
+  if (isInteractive && (await promptToAddWebPlatform())) {
+    await ConfigUtils.addPlatform(projectRoot, 'web');
+    return true;
+  }
+  throw new Error(getWebSetupLogs());
+}
+
+async function promptAsync(message: string): Promise<boolean> {
+  const question = {
+    type: 'confirm',
+    name: 'should',
+    message,
+    default: true,
+  };
+  const { should } = await inquirer.prompt(question);
+  return should;
+}
+
+async function promptToAddWebPlatform(): Promise<boolean> {
+  return await promptAsync(
+    `It appears you don't explicitly define "${chalk.underline(
+      `web`
+    )}" as one of the supported "${chalk.underline(`platforms`)}" in your project's ${chalk.green(
+      `app.json`
+    )}. \n  Would you like to add it?`
+  );
 }
 
 async function validateAsync(projectRoot: string, allowNetwork: boolean): Promise<number> {
