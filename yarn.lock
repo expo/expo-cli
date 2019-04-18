@@ -364,7 +364,7 @@
   dependencies:
     cross-spawn "^5.1.0"
 
-"@expo/spawn-async@^1.2.8":
+"@expo/spawn-async@^1.2.8", "@expo/spawn-async@^1.4.0":
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@expo/spawn-async/-/spawn-async-1.4.0.tgz#39f7777bdee22e1f48d03898c9ed2f150a7f4cbd"
   integrity sha512-jE9zSZ14eOfKxXs+WJZofweKtsAeuQiOpntsb+zp8Ti9/wk+9ZjKkffdld7UfANr8asmzuJYnEoVyL+hMy3SWw==
