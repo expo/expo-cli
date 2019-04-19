@@ -1,7 +1,7 @@
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
-import { Android, ProjectSettings, Simulator, Project } from 'xdl';
+import { Android, ProjectSettings, Simulator, Project, Webpack } from 'xdl';
 
 import CommandError from './CommandError';
 
@@ -92,7 +92,7 @@ async function handleMobileOptsAsync(projectDir, options) {
   }
 
   if (options.web) {
-    await Project.openWebProjectAsync(projectDir);
+    await Webpack.openAsync(projectDir);
   }
 
   return !!options.android || !!options.ios;

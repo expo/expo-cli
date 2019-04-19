@@ -95,7 +95,10 @@ class WebpackPwaManifest {
       }
 
       const publicPath = this.options.publicPath || compilation.options.output.publicPath;
-      await buildResources(this, publicPath);
+
+      // The manifest (this.manifest) should be ready by this point.
+      // It will be written to disk here.
+      const manifestFile = await buildResources(this, publicPath);
 
       if (!this.options.inject) {
         callback(null, htmlPluginData);
@@ -112,14 +115,17 @@ class WebpackPwaManifest {
         });
       }
 
-      const manifestLink = {
-        rel: 'manifest',
-        href: this.manifest.url,
-      };
-      if (this.manifest.crossorigin) {
-        manifestLink.crossorigin = this.manifest.crossorigin;
+      if (manifestFile) {
+        const manifestLink = {
+          rel: 'manifest',
+          href: manifestFile.url,
+        };
+        if (this.manifest.crossorigin) {
+          manifestLink.crossorigin = this.manifest.crossorigin;
+        }
+        tags = applyTag(tags, 'link', manifestLink);
       }
-      tags = applyTag(tags, 'link', manifestLink);
+
       tags = generateMaskIconLink(tags, this.assets);
 
       const tagsHTML = generateHtmlTags(tags);
