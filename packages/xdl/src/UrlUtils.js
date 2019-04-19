@@ -133,15 +133,20 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
 
-  // Use an absolute path here so that we can not worry about symlinks/relative requires
-  let pluginModule = ConfigUtils.resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
-  queryParams += `&assetPlugin=${encodeURIComponent(pluginModule)}`;
-
-  // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
-  // major version in the sdkVersion field, so check for 11.0.0 to be sure.
+  // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
+  // needed with SDK33+
   let supportsAssetPlugins = Versions.gteSdkVersion(exp, '11.0.0');
-  if (!supportsAssetPlugins) {
-    queryParams += '&includeAssetFileHashes=true';
+  let usesAssetPluginsQueryParam = supportsAssetPlugins && Versions.lteSdkVersion(exp, '32.0.0');
+  if (usesAssetPluginsQueryParam) {
+    // Use an absolute path here so that we can not worry about symlinks/relative requires
+    let pluginModule = ConfigUtils.resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    queryParams += `&assetPlugin=${encodeURIComponent(pluginModule)}`;
+  } else if (!supportsAssetPlugins) {
+    // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
+    // major version in the sdkVersion field, so check for 11.0.0 to be sure.
+    if (!supportsAssetPlugins) {
+      queryParams += '&includeAssetFileHashes=true';
+    }
   }
 
   return queryParams;

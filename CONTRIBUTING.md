@@ -55,7 +55,7 @@ To submit a pull request:
 To publish a new release, run this command (you must have two-factor authentication enabled for npm):
 
 ```
-yarn run publish
+node ./scripts/publish.js
 ```
 
 The command will bump the versions of all packages with changes since the previous release and publish them in the correct order. For each changed package, it will ask, if the changes require a new _major_ version (breaking changes), _minor_ version (new backwards compatible functionality) or just a _patch_ version (backwards compatible bug fixes).

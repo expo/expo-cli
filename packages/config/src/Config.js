@@ -30,7 +30,7 @@ const DEFAULT_DISPLAY = 'fullscreen';
 const DEFAULT_STATUS_BAR = 'default';
 const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
-const ICON_SIZES = [96, 128, 192, 256, 384, 512];
+const ICON_SIZES = [192, 512];
 const MAX_SHORT_NAME_LENGTH = 12;
 const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
 
@@ -231,15 +231,17 @@ export function getConfigForPWA(projectRoot: string, getAbsolutePath: Function, 
   const config = readConfigJson(projectRoot);
   return ensurePWAConfig(config, getAbsolutePath, options);
 }
-
-export function getNameForAppJSON(appJSON: Object) {
-  const appManifest = appJSON.expo || appJSON;
+export function getNameFromConfig(exp: Object = {}) {
+  // For RN CLI support
+  const appManifest = exp.expo || exp;
   const { web = {} } = appManifest;
+
   // rn-cli apps use a displayName value as well.
-  const name = appJSON.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
-  const webName = web.name || name;
+  const appName = exp.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
+  const webName = web.name || appName;
+
   return {
-    name,
+    appName,
     webName,
   };
 }
@@ -272,7 +274,7 @@ function applyWebDefaults(appJSON: Object) {
   const { apple = {} } = meta;
 
   // rn-cli apps use a displayName value as well.
-  const { name: appName, webName } = getNameForAppJSON(appJSON);
+  const { name: appName, webName } = getNameFromConfig(appJSON);
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
@@ -303,10 +305,14 @@ function applyWebDefaults(appJSON: Object) {
     webManifest.backgroundColor || splash.backgroundColor || DEFAULT_BACKGROUND_COLOR; // No default background color
 
   /**
+   *
    * https://developer.mozilla.org/en-US/docs/Web/Manifest#prefer_related_applications
    * Specifies a boolean value that hints for the user agent to indicate
    * to the user that the specified native applications (see below) are recommended over the website.
    * This should only be used if the related native apps really do offer something that the website can't... like Expo ;)
+   *
+   * >> The banner won't show up if the app is already installed:
+   * https://github.com/GoogleChrome/samples/issues/384#issuecomment-326387680
    */
 
   const preferRelatedApplications =
@@ -423,35 +429,42 @@ function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function,
     // Use template icon
     icon = options.templateIcon;
   }
-  icons.push({ src: icon, size: ICON_SIZES });
+  const destination = `assets/icons`;
+  icons.push({ src: icon, size: ICON_SIZES, destination });
   const iOSIcon = config.icon || ios.icon;
   if (iOSIcon) {
     const iOSIconPath = getAbsolutePath(iOSIcon);
     icons.push({
       ios: true,
-      size: 1024,
+      sizes: 180,
       src: iOSIconPath,
+      destination,
     });
   }
   return icons;
 }
 
 function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, options: Object) {
-  const { web = {}, ios = {}, splash = {} } = config;
+  const { icon, web = {}, splash = {}, primaryColor } = config;
   if (Array.isArray(web.startupImages)) {
     return web.startupImages;
   }
 
-  const { splash: iOSSplash = {} } = ios;
   const { splash: webSplash = {} } = web;
   let startupImages = [];
 
   let splashImageSource;
-  if (webSplash.image || iOSSplash.image || splash.image) {
-    splashImageSource = getAbsolutePath(webSplash.image || iOSSplash.image || splash.image);
+  const possibleIconSrc = webSplash.image || splash.image || icon;
+  if (possibleIconSrc) {
+    const resizeMode = webSplash.resizeMode || splash.resizeMode || 'contain';
+    const backgroundColor =
+      webSplash.backgroundColor || splash.backgroundColor || primaryColor || '#ffffff';
+    splashImageSource = getAbsolutePath(possibleIconSrc);
     startupImages.push({
+      resizeMode,
+      color: backgroundColor,
       src: splashImageSource,
-      supportsTablet: ios.supportsTablet,
+      supportsTablet: webSplash.supportsTablet === undefined ? true : webSplash.supportsTablet,
       orientation: web.orientation,
       destination: `assets/splash`,
     });
@@ -558,7 +571,7 @@ export async function readConfigJsonAsync(
   }
 
   if (exp && !exp.platforms) {
-    exp.platforms = ['android', 'ios', 'web'];
+    exp.platforms = ['android', 'ios'];
   }
 
   if (exp.nodeModulesPath) {
