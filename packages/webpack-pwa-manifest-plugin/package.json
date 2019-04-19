@@ -60,11 +60,9 @@
     "webpack-cli": "^3.2.3"
   },
   "files": [
-    "src",
+    "build",
     "index.js",
     "LICENSE-webpack-pwa-manifest",
-    "package.json",
-    "yarn.lock",
     "README.md"
   ],
   "publishConfig": {
