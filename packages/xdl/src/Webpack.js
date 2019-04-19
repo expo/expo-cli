@@ -11,6 +11,7 @@ import ErrorCode from './ErrorCode';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
+import * as Doctor from './project/Doctor';
 import XDLError from './XDLError';
 import ip from './ip';
 
@@ -43,7 +44,7 @@ export async function startAsync(
   { nonInteractive }: Object,
   verbose: boolean
 ): Promise<{ url: string, server: WebpackDevServer }> {
-  await Web.ensureWebSupportAsync(projectRoot);
+  await Doctor.validateWebSupportAsync(projectRoot);
 
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is already running.');
@@ -138,7 +139,7 @@ export async function stopAsync(projectRoot: string): Promise<void> {
 }
 
 export async function bundleAsync(projectRoot: string, packagerOpts: Object): Promise<void> {
-  await Web.ensureWebSupportAsync(projectRoot);
+  await Doctor.validateWebSupportAsync(projectRoot);
   const mode = packagerOpts.dev ? 'development' : 'production';
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;

@@ -10,6 +10,8 @@ import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import * as ConfigUtils from '@expo/config';
 
+import chalk from 'chalk';
+import inquirer from 'inquirer';
 import Schemer, { SchemerError } from '@expo/schemer';
 
 import * as ExpSchema from './ExpSchema';
@@ -18,6 +20,8 @@ import * as Binaries from '../Binaries';
 import Config from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
+import XDLError from '../XDLError';
+import ErrorCode from '../ErrorCode';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -430,6 +434,72 @@ export async function validateLowLatencyAsync(projectRoot: string): Promise<numb
 
 export async function validateWithNetworkAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, true);
+}
+
+export async function hasWebSupportAsync(projectRoot, exp) {
+  let inputExp = exp;
+  if (!exp) {
+    inputExp = (await ProjectUtils.readConfigJsonAsync(projectRoot)).exp;
+  }
+  const isWebConfigured = inputExp.platforms.includes('all') || inputExp.platforms.includes('web');
+  return isWebConfigured;
+}
+
+function getWebSetupLogs(): string {
+  const appJsonRules = chalk.green(`
+  {
+    "platforms": [
+  ${chalk.green.bold(`+      "web"`)}
+    ]
+  }`);
+  return `${chalk.red(
+    `* Add "web" to the "platforms" array in your project's ${chalk.bold(`app.json`)}`
+  )} ${appJsonRules}`;
+}
+
+export async function validateWebSupportAsync(projectRoot) {
+  const isInteractive = process.stdout.isTTY;
+
+  await validateWebPlatformAddedAsync(projectRoot, isInteractive);
+
+  // TODO: Bacon: Add package validation
+}
+
+export async function validateWebPlatformAddedAsync(
+  projectRoot: string,
+  isInteractive: boolean = true
+): Promise<void> {
+  const hasWebSupport = await hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    return true;
+  }
+
+  if (isInteractive && (await promptToAddWebPlatform())) {
+    await ConfigUtils.addPlatform(projectRoot, 'web');
+    return true;
+  }
+  throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, getWebSetupLogs());
+}
+
+async function promptAsync(message: string): Promise<boolean> {
+  const question = {
+    type: 'confirm',
+    name: 'should',
+    message,
+    default: true,
+  };
+  const { should } = await inquirer.prompt(question);
+  return should;
+}
+
+async function promptToAddWebPlatform(): Promise<boolean> {
+  return await promptAsync(
+    `It appears you don't explicitly define "${chalk.green.underline(
+      `web`
+    )}" as one of the supported "${chalk.green.underline(
+      `platforms`
+    )}" in your project's ${chalk.green(`app.json`)}. \n  Would you like to add it?`
+  );
 }
 
 async function validateAsync(projectRoot: string, allowNetwork: boolean): Promise<number> {
