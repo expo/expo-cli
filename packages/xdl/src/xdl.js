@@ -150,6 +150,9 @@ module.exports = {
   get Web() {
     return require('./Web');
   },
+  get Webpack() {
+    return require('./Webpack');
+  },
   get XDLError() {
     return require('./XDLError').default;
   },

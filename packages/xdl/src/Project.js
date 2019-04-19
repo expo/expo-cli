@@ -23,6 +23,7 @@ import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
+import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
@@ -39,6 +40,7 @@ import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import Config from './Config';
+import createWebpackCompiler from './createWebpackCompiler';
 import * as Doctor from './project/Doctor';
 import * as DevSession from './DevSession';
 import ErrorCode from './ErrorCode';
@@ -62,7 +64,7 @@ import * as Watchman from './Watchman';
 import XDLError from './XDLError';
 import * as Web from './Web';
 import type { User as ExpUser } from './User'; //eslint-disable-line
-
+import * as Webpack from './Webpack';
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
@@ -1839,94 +1841,6 @@ export async function stopExpoServerAsync(projectRoot: string) {
   });
 }
 
-let webpackDevServerInstance;
-
-function getWebpackInstance(projectRoot) {
-  if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is not running.');
-  }
-  return webpackDevServerInstance;
-}
-
-async function startWebpackServerAsync(projectRoot, options, verbose) {
-  await Web.ensureWebSupportAsync(projectRoot);
-
-  if (webpackDevServerInstance) {
-    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
-    return;
-  }
-  let { dev, https } = await ProjectSettings.readAsync(projectRoot);
-  let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
-  let webpackServerPort = await _getFreePortAsync(19000);
-  ProjectUtils.logInfo(
-    projectRoot,
-    'expo',
-    `Starting webpack-dev-server on port ${webpackServerPort}.`
-  );
-  let compiler = webpack(config);
-  webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
-  await new Promise((resolve, reject) =>
-    webpackDevServerInstance.listen(webpackServerPort, '0.0.0.0', error => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    })
-  );
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    webpackServerPort,
-  });
-}
-
-async function stopWebpackServerAsync(projectRoot) {
-  const devServer = getWebpackInstance(projectRoot);
-  if (devServer) {
-    await new Promise(resolve => devServer.close(() => resolve()));
-    webpackDevServerInstance = null;
-    // TODO
-    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-      webpackServerPort: null,
-    });
-  }
-}
-
-export async function bundleWebpackAsync(projectRoot, packagerOpts) {
-  await Web.ensureWebSupportAsync(projectRoot);
-  const mode = packagerOpts.dev ? 'development' : 'production';
-  process.env.BABEL_ENV = mode;
-  process.env.NODE_ENV = mode;
-
-  let config = Web.invokeWebpackConfig({
-    projectRoot,
-    polyfill: packagerOpts.polyfill,
-    development: packagerOpts.dev,
-    production: !packagerOpts.dev,
-  });
-  let compiler = webpack(config);
-
-  try {
-    // We generate the stats.json file in the webpack-config
-    await new Promise((resolve, reject) =>
-      compiler.run(async (error, stats) => {
-        // TODO: Bacon: account for CI
-        if (error) {
-          // TODO: Bacon: Clean up error messages
-          return reject(error);
-        }
-        resolve(stats);
-      })
-    );
-  } catch (error) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      'There was a problem building your web project. ' + error.message
-    );
-    throw error;
-  }
-}
-
 async function _connectToNgrokAsync(
   projectRoot: string,
   args: mixed,
@@ -2095,6 +2009,7 @@ export async function startTunnelsAsync(projectRoot: string) {
     })(),
   ]);
 }
+
 export async function stopTunnelsAsync(projectRoot: string) {
   _assertValidProjectRoot(projectRoot);
   // This will kill all ngrok tunnels in the process.
@@ -2164,7 +2079,7 @@ export async function startAsync(
   }
   const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
-    await startWebpackServerAsync(projectRoot, options, verbose);
+    await Webpack.startAsync(projectRoot, options, verbose);
   }
   if (!Config.offline) {
     try {
@@ -2178,20 +2093,13 @@ export async function startAsync(
   return exp;
 }
 
-export async function openWebProjectAsync(projectRoot: string, options = {}, verbose = true) {
-  if (!webpackDevServerInstance) {
-    await startWebpackServerAsync(projectRoot, options, verbose);
-  }
-  await Web.openProjectAsync(projectRoot);
-}
-
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
-    await stopWebpackServerAsync(projectRoot);
+    await Webpack.stopAsync(projectRoot);
   }
   if (!Config.offline) {
     try {
@@ -2201,6 +2109,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
     }
   }
 }
+
 export async function stopAsync(projectDir: string): Promise<void> {
   const result = await Promise.race([
     _stopInternalAsync(projectDir),
