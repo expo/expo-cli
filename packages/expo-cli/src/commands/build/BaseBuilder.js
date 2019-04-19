@@ -257,7 +257,6 @@ ${job.id}
 
   async wait(buildId, { timeout = 1200, interval = 60, publicUrl } = {}) {
     let time = new Date().getTime();
-    log(`Waiting for build to complete. You can press Ctrl+C to exit.`);
     await sleep(secondsToMilliseconds(interval));
     const endTime = time + secondsToMilliseconds(timeout);
     while (time <= endTime) {
@@ -336,7 +335,7 @@ ${job.id}
     }
 
     if (this.options.wait) {
-      let spinner = ora(`Waiting for build to finish...`).start();
+      let spinner = ora(`Waiting for build to complete. You can press Ctrl+C to exit.`).start();
       const waitOpts = publicUrl ? { publicUrl } : {};
       const completedJob = await this.wait(buildId, waitOpts);
       spinner.stop();

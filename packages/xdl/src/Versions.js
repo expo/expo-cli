@@ -61,6 +61,25 @@ export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
   }
 }
 
+export function lteSdkVersion(expJson: any, sdkVersion: string): boolean {
+  if (!expJson.sdkVersion) {
+    return false;
+  }
+
+  if (expJson.sdkVersion === 'UNVERSIONED') {
+    return false;
+  }
+
+  try {
+    return semver.lte(expJson.sdkVersion, sdkVersion);
+  } catch (e) {
+    throw new XDLError(
+      ErrorCode.INVALID_VERSION,
+      `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
+    );
+  }
+}
+
 export function parseSdkVersionFromTag(tag: string) {
   if (tag.startsWith('sdk-')) {
     return tag.substring(4);

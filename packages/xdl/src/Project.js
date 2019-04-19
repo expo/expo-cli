@@ -1493,6 +1493,14 @@ export async function startReactNativeServerAsync(
     nonPersistent: !!options.nonPersistent,
   };
 
+  if (Versions.gteSdkVersion(exp, '33.0.0')) {
+    packagerOpts.assetPlugins = ConfigUtils.resolveModule(
+      'expo/tools/hashAssetFiles',
+      projectRoot,
+      exp
+    );
+  }
+
   if (options.maxWorkers) {
     packagerOpts['max-workers'] = options.maxWorkers;
   }
@@ -1537,6 +1545,7 @@ export async function startReactNativeServerAsync(
     },
     ['start']
   );
+
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
