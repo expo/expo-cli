@@ -299,7 +299,7 @@ module.exports = function(env = {}, argv) {
         new ModuleScopePlugin(locations.template.folder, [locations.packageJson]),
       ],
       symlinks: false,
-      extensions: ['.web.ts', '.ts', '.tsx', '.web.js', '.js', '.jsx', '.json'],
+      extensions: ['.web.ts', 'web.tsx', '.ts', '.tsx', '.web.js', 'web.jsx', '.js', '.jsx', '.json'],
       alias: {
         // Alias direct react-native imports to react-native-web
         'react-native$': 'react-native-web',
