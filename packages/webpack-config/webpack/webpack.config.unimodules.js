@@ -128,7 +128,17 @@ module.exports = function(env = {}, argv = {}) {
     resolve: {
       symlinks: false,
       alias,
-      extensions: ['.web.ts', '.ts', '.tsx', '.web.js', '.js', '.jsx', '.json'],
+      extensions: [
+        '.web.ts',
+        '.web.tsx',
+        '.ts',
+        '.tsx',
+        '.web.js',
+        '.web.jsx',
+        '.js',
+        '.jsx',
+        '.json',
+      ],
     },
   };
 };
