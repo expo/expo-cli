@@ -8,9 +8,9 @@ const TerserPlugin = require('terser-webpack-plugin');
 const isWsl = require('is-wsl');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const safePostCssParser = require('postcss-safe-parser');
-const getConfig = require('./getConfig');
+const getConfig = require('./utils/getConfig');
+const getPaths = require('./utils/getPaths');
 const common = require('./webpack.common.js');
-const getLocations = require('./webpackLocations');
 const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
 
 const DEFAULT_GZIP = {
@@ -34,7 +34,7 @@ module.exports = function(env = {}, argv) {
     env.config = getConfig(env);
   }
 
-  const locations = getLocations(env.projectRoot);
+  const locations = getPaths(env);
 
   const appJSON = env.config || require(locations.appJson);
   if (!appJSON) {

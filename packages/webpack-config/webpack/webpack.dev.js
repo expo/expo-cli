@@ -4,8 +4,8 @@ const webpack = require('webpack');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
 const common = require('./webpack.common.js');
-const getLocations = require('./webpackLocations');
-const getConfig = require('./getConfig');
+const getPaths = require('./utils/getPaths');
+const getConfig = require('./utils/getConfig');
 
 const createDevServerConfig = require('./createDevServerConfig');
 
@@ -15,7 +15,7 @@ module.exports = function(env = {}, argv) {
     env.config = getConfig(env);
   }
 
-  const locations = getLocations(env.projectRoot);
+  const locations = getPaths(env);
 
   const devServer = createDevServerConfig(env, argv);
   return merge(common(env, argv), {

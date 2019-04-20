@@ -1,8 +1,11 @@
 const { getConfigForPWA } = require('@expo/config');
-const getLocations = require('./webpackLocations');
+const getPaths = require('./getPaths');
 
 module.exports = function(env) {
-  const locations = getLocations(env.projectRoot);
+  if (env.config) {
+    return env.config;
+  }
+  const locations = getPaths(env);
   // Fill all config values with PWA defaults
   return getConfigForPWA(env.projectRoot, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),
