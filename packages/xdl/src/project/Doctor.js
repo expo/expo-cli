@@ -441,7 +441,12 @@ export async function hasWebSupportAsync(projectRoot, exp) {
   if (!exp) {
     inputExp = (await ProjectUtils.readConfigJsonAsync(projectRoot)).exp;
   }
-  const isWebConfigured = inputExp.platforms.includes('all') || inputExp.platforms.includes('web');
+  const { platforms } = inputExp;
+  if (!Array.isArray(platforms)) {
+    return false;
+  }
+
+  const isWebConfigured = platforms.includes('all') || platforms.includes('web');
   return isWebConfigured;
 }
 
