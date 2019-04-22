@@ -1,4 +1,5 @@
 import glob from 'glob';
+import sharp from 'sharp';
 import { ProjectUtils } from 'xdl';
 import log from '../log';
 
@@ -18,7 +19,29 @@ async function action(projectDir = './', options) {
   // Filter out images
   const regex = /\.(png|jpg|jpeg)/;
   const images = files.filter(file => file.toLowerCase().match(regex));
+  for (const image of images) {
+    const buffer = await sharp(image).toBuffer();
+    const metadata = await sharp(buffer).metadata();
+    const outputName = generateOutputFilename(image);
+    if (metadata.format === 'jpeg') {
+      sharp(image)
+        .jpeg({ quality: 75 })
+        .toFile(outputName);
+    } else {
+      const outputFile = await sharp(image)
+        .png({ quality: 75 })
+        .toFile(outputName);
+    }
+  }
 }
+
+const generateOutputFilename = image => {
+  const path = image.split('/');
+  const filename = path.pop();
+  const [base, extension] = filename.split('.');
+  const output = base + '-output.' + extension;
+  return path.join('/') + '/' + output;
+};
 
 export default program => {
   program
