@@ -16,34 +16,50 @@ async function action(projectDir = './', options) {
   }
 
   const [assetJson, assetInfo] = await readAssetJsonAsync(projectDir);
+  // Keep track of which hash values in assets.json are no longer in use
+  const outdated = new Set();
+  for (const fileHash in assetInfo) outdated.add(fileHash);
 
   // Filter out image assets
+  let optimized = false;
   const files = getAssetFiles(exp);
   const regex = /\.(png|jpg|jpeg)$/;
   const images = files.filter(file => regex.test(file.toLowerCase()));
   for (const image of images) {
     const hash = calculateHash(image);
-    if (!assetInfo[hash]) {
-      const newName = createNewFilename(image);
-      await optimizeImage(image, newName);
+    if (assetInfo[hash]) {
+      outdated.delete(hash);
+      continue;
+    }
 
-      // Recalculate hash since the image has changed
-      const newHash = calculateHash(image);
-      assetInfo[newHash] = true;
+    const newName = createNewFilename(image);
+    await optimizeImage(image, newName);
+    optimized = true;
 
-      if (options.save) {
+    // Recalculate hash since the image has changed
+    const newHash = calculateHash(image);
+    assetInfo[newHash] = true;
+
+    if (options.save) {
+      if (hash === newHash) {
+        log.warn(`Compressed asset ${image} is identical to the original.`);
+        fs.unlinkSync(newName);
+      } else {
         // Save the old hash to prevent reoptimizing
         assetInfo[hash] = true;
-        if (hash === newHash) {
-          log.warn(`Compressed asset ${image} is identical to original.`);
-          fs.unlinkSync(newName);
-        }
-      } else {
-        // Delete the renamed original asset
-        fs.unlinkSync(newName);
       }
+    } else {
+      // Delete the renamed original asset
+      fs.unlinkSync(newName);
     }
   }
+  if (!optimized) {
+    log('No assets optimized! Everything is fully compressed.');
+  }
+  // Remove assets that have been deleted/modified from assets.json
+  outdated.forEach(outdatedHash => {
+    delete assetInfo[outdatedHash];
+  });
   assetJson.writeAsync(assetInfo);
 }
 
