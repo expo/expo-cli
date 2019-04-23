@@ -1943,22 +1943,6 @@ export async function stopReactNativeServerAsync(projectRoot: string): Promise<v
   });
 }
 
-let blacklistedEnvironmentVariables = new Set([
-  'EXPO_APPLE_PASSWORD',
-  'EXPO_ANDROID_KEY_PASSWORD',
-  'EXPO_ANDROID_KEYSTORE_PASSWORD',
-  'EXPO_IOS_DIST_P12_PASSWORD',
-  'EXPO_IOS_PUSH_P12_PASSWORD',
-  'EXPO_CLI_PASSWORD',
-]);
-
-function shouldExposeEnvironmentVariableInManifest(key: string) {
-  if (blacklistedEnvironmentVariables.has(key.toUpperCase())) {
-    return false;
-  }
-  return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
-}
-
 export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
@@ -2002,12 +1986,6 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
         projectRoot,
       };
       manifest.packagerOpts = packagerOpts;
-      manifest.env = {};
-      for (let key of Object.keys(process.env)) {
-        if (shouldExposeEnvironmentVariableInManifest(key)) {
-          manifest.env[key] = process.env[key];
-        }
-      }
       let platform = (req.headers['exponent-platform'] || 'ios').toString();
       let entryPoint = Exp.determineEntryPoint(projectRoot, platform);
       let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
