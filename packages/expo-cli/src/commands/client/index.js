@@ -89,9 +89,6 @@ export default program => {
         log(chalk.green(`${result.registrationUrl}`));
         log.newLine();
         log(
-          "Nothing will be saved on your device, but this step is necessary to get your device's unique identifier (UDID)."
-        );
-        log(
           "After you register your device, we'll start building your client, and you'll receive an email when it's ready to install."
         );
       } else {
