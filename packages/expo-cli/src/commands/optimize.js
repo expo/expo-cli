@@ -1,8 +1,9 @@
 import glob from 'glob';
 import sharp from 'sharp';
 import path from 'path';
+import crypto from 'crypto';
 import fs from 'fs';
-import { ProjectUtils, ProjectSettings } from 'xdl';
+import { ProjectUtils } from 'xdl';
 import JsonFile from '@expo/json-file';
 import log from '../log';
 
@@ -21,31 +22,68 @@ async function action(projectDir = './', options) {
   const regex = /\.(png|jpg|jpeg)$/;
   const images = files.filter(file => regex.test(file.toLowerCase()));
   for (const image of images) {
-    const buffer = await sharp(image).toBuffer();
-    const metadata = await sharp(buffer).metadata();
-    const newName = createOutputFilename(image);
+    const hash = calculateHash(image);
+    if (!assetInfo[hash]) {
+      const newName = createNewFilename(image);
+      await optimizeImage(image, newName);
 
-    const { mTimeMS: lastModified, ino: inode } = fs.statSync(image);
-    if (!assetInfo[inode] || assetInfo[inode] < lastModified) {
-      // Store as inode: timeCompressed
-      assetInfo[inode] = Date.now();
-      assetJson.writeAsync(assetInfo);
+      // Recalculate hash since the image has changed
+      const newHash = calculateHash(image);
+      assetInfo[newHash] = true;
 
-      if (metadata.format === 'jpeg') {
-        sharp(image)
-          .jpeg({ quality: 75 })
-          .toFile(newName);
+      if (options.save) {
+        // Save the old hash to prevent reoptimizing
+        assetInfo[hash] = true;
+        if (hash === newHash) {
+          log.warn(`Compressed asset ${image} is identical to original.`);
+          fs.unlinkSync(newName);
+        }
       } else {
-        const outputFile = await sharp(image)
-          .png({ quality: 75 })
-          .toFile(newName);
+        // Delete the renamed original asset
+        fs.unlinkSync(newName);
       }
     }
   }
+  assetJson.writeAsync(assetInfo);
 }
 
 /*
- * Find all assets under assetBundlePatterns in app.json
+ * Calculate SHA256 Checksum value of a file based on its contents
+ */
+const calculateHash = file => {
+  const contents = fs.readFileSync(file);
+  return crypto
+    .createHash('sha256')
+    .update(contents)
+    .digest('hex');
+};
+
+/*
+ * Compress an inputted jpg or png and save original copy with .expo extension
+ */
+const optimizeImage = async (image, newName) => {
+  log('Optimizing', image);
+  // Rename the file with .expo extension
+  fs.copyFileSync(image, newName);
+
+  // Extract the format and compress
+  const buffer = await sharp(image).toBuffer();
+  const { format } = await sharp(buffer).metadata();
+  if (format === 'jpeg') {
+    await sharp(newName)
+      .jpeg({ quality: 75 })
+      .toFile(image)
+      .catch(err => log.error(err));
+  } else {
+    await sharp(newName)
+      .png({ quality: 75 })
+      .toFile(image)
+      .catch(err => log.error(err));
+  }
+};
+
+/*
+ * Find all assets under assetBundlePatterns in app.json excluding node_modules
  */
 const getAssetFiles = exp => {
   const { assetBundlePatterns } = exp;
@@ -57,11 +95,15 @@ const getAssetFiles = exp => {
 };
 
 /*
- * Read the contents of assets.json under .expo folder. Create the file if it doesn't exist.
+ * Read the contents of assets.json under .expo-shared folder. Create the file/directory if they don't exist.
  */
 const readAssetJsonAsync = async projectDir => {
-  const { dotExpoProjectDirectory } = ProjectSettings;
-  const assetJson = new JsonFile(path.join(dotExpoProjectDirectory(projectDir), 'assets.json'));
+  const dirPath = path.join(projectDir, '.expo-shared');
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath);
+  }
+
+  const assetJson = new JsonFile(path.join(dirPath, 'assets.json'));
   if (!fs.existsSync(assetJson.file)) {
     await assetJson.writeAsync({});
   }
@@ -69,19 +111,20 @@ const readAssetJsonAsync = async projectDir => {
   return [assetJson, assetInfo];
 };
 
-const createOutputFilename = image => {
-  const path = image.split('/');
-  const filename = path.pop();
-  const [base, extension] = filename.split('.');
-  const output = base + '-output.' + extension;
-  return path.join('/') + '/' + output;
+/*
+ * Add .expo extension to a filename in a path string
+ */
+const createNewFilename = image => {
+  const { dir, name, ext } = path.parse(image);
+  return dir + '/' + name + '.expo' + ext;
 };
 
 export default program => {
   program
     .command('optimize [project-dir]')
     .alias('o')
-    .description('Compresses the assets in your expo project')
+    .description('Compress the assets in your expo project')
+    .option('-s, --save', 'Save the original assets with the extension .expo')
     .allowOffline()
     .asyncAction(action);
 };
