@@ -445,7 +445,7 @@ export async function exportForAppHosting(
   // save the assets
   // Get project config
   const publishOptions = options.publishOptions || {};
-  const exp = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
   const { assets } = await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
 
   if (options.dumpAssetmap) {
@@ -628,7 +628,7 @@ export async function publishAsync(
   }
 
   // Get project config
-  let exp = await _getPublishExpConfigAsync(projectRoot, options);
+  let { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, options);
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   let { hooks } = exp;
@@ -669,6 +669,7 @@ export async function publishAsync(
   let response;
   try {
     response = await _uploadArtifactsAsync({
+      pkg,
       exp,
       iosBundle,
       androidBundle,
@@ -834,11 +835,12 @@ export async function publishAsync(
   };
 }
 
-async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options }) {
+async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options, pkg }) {
   logger.global.info('Uploading JavaScript bundles');
   let formData = new FormData();
 
   formData.append('expJson', JSON.stringify(exp));
+  formData.append('packageJson', JSON.stringify(pkg));
   formData.append('iosBundle', iosBundle, 'iosBundle');
   formData.append('androidBundle', androidBundle, 'androidBundle');
   formData.append('options', JSON.stringify(options));
@@ -908,7 +910,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
-  return exp;
+  return { exp, pkg };
 }
 
 // Fetch iOS and Android bundles for publishing
