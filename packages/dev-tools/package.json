@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
@@ -20,7 +20,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@expo/config": "^1.0.2",
+    "@expo/config": "^1.0.3",
     "express": "4.16.4",
     "freeport-async": "1.1.1",
     "graphql": "0.13.2",
@@ -70,7 +70,7 @@
     "redux": "^3.7.2",
     "slugify": "^1.0.2",
     "velocity-react": "^1.4.1",
-    "xdl": "^53.5.3"
+    "xdl": "^53.5.4"
   },
   "license": "MIT",
   "repository": {

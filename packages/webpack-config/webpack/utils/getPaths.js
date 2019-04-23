@@ -23,14 +23,18 @@ const possibleMainFiles = [
 
 const appDirectory = fs.realpathSync(process.cwd());
 
-function getLocations(_inputProjectRoot) {
-  const inputProjectRoot = _inputProjectRoot || appDirectory;
+module.exports = function getPaths({ locations, projectRoot }) {
+  // Recycle locations
+  if (locations) {
+    return locations;
+  }
+  const inputProjectRoot = projectRoot || appDirectory;
 
   function absolute(...pathComponents) {
     return path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
   }
 
-  const projectRoot = absolute();
+  const absoluteProjectRoot = absolute();
 
   function findMainFile() {
     for (const fileName of possibleMainFiles) {
@@ -43,7 +47,7 @@ function getLocations(_inputProjectRoot) {
   }
 
   function getModulesPath() {
-    const workspaceRoot = findWorkspaceRoot(projectRoot); // Absolute path or null
+    const workspaceRoot = findWorkspaceRoot(absoluteProjectRoot); // Absolute path or null
     if (workspaceRoot) {
       return path.resolve(workspaceRoot, 'node_modules');
     } else {
@@ -79,7 +83,7 @@ function getLocations(_inputProjectRoot) {
     if (fs.existsSync(overridePath)) {
       return overridePath;
     } else {
-      return path.join(__dirname, '../web-default', filename);
+      return path.join(__dirname, '../../web-default', filename);
     }
   }
 
@@ -96,7 +100,7 @@ function getLocations(_inputProjectRoot) {
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     appJson: appJsonPath,
-    root: projectRoot,
+    root: absoluteProjectRoot,
     appMain: absolute(appMain),
     modules: modulesPath,
     template: {
@@ -114,6 +118,4 @@ function getLocations(_inputProjectRoot) {
       serveJson: getProductionPath('serve.json'),
     },
   };
-}
-
-module.exports = getLocations;
+};
