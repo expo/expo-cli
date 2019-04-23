@@ -1,6 +1,7 @@
 import glob from 'glob';
 import sharp from 'sharp';
 import path from 'path';
+import chalk from 'chalk';
 import crypto from 'crypto';
 import fs from 'fs';
 import { ProjectUtils } from 'xdl';
@@ -8,7 +9,7 @@ import JsonFile from '@expo/json-file';
 import log from '../log';
 
 async function action(projectDir = './', options) {
-  log('Optimizing assets...');
+  log(chalk.green('Optimizing assets...'));
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
   if (exp === null) {
     log.warn('No Expo configuration found. Are you sure this is a project directory?');
@@ -22,7 +23,7 @@ async function action(projectDir = './', options) {
 
   // Filter out image assets
   let optimized = false;
-  const files = getAssetFiles(exp);
+  const files = getAssetFiles(exp, projectDir);
   const regex = /\.(png|jpg|jpeg)$/;
   const images = files.filter(file => regex.test(file.toLowerCase()));
   for (const image of images) {
@@ -45,6 +46,7 @@ async function action(projectDir = './', options) {
         log.warn(`Compressed asset ${image} is identical to the original.`);
         fs.unlinkSync(newName);
       } else {
+        log(`Saving original asset to ${newName}`);
         // Save the old hash to prevent reoptimizing
         assetInfo[hash] = true;
       }
@@ -78,7 +80,7 @@ const calculateHash = file => {
  * Compress an inputted jpg or png and save original copy with .expo extension
  */
 const optimizeImage = async (image, newName) => {
-  log('Optimizing', image);
+  log(`Optimizing ${image}`);
   // Rename the file with .expo extension
   fs.copyFileSync(image, newName);
 
@@ -99,15 +101,16 @@ const optimizeImage = async (image, newName) => {
 };
 
 /*
- * Find all assets under assetBundlePatterns in app.json excluding node_modules
+ * Find all project assets under assetBundlePatterns in app.json excluding node_modules
  */
-const getAssetFiles = exp => {
+const getAssetFiles = (exp, projectDir) => {
   const { assetBundlePatterns } = exp;
+  const options = { cwd: projectDir, ignore: '**/node_modules/**' };
   const files = [];
   assetBundlePatterns.forEach(pattern => {
-    files.push(...glob.sync(pattern, { ignore: '**/node_modules/**' }));
+    files.push(...glob.sync(pattern, options));
   });
-  return files;
+  return files.map(file => `${projectDir}/${file}`.replace('//', '/'));
 };
 
 /*
