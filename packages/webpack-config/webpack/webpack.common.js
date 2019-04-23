@@ -10,14 +10,12 @@ const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').defa
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
+const PnpWebpackPlugin = require('pnp-webpack-plugin');
+const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const createClientEnvironment = require('./createClientEnvironment');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
-const getLocations = require('./webpackLocations');
-const path = require('path');
-const PnpWebpackPlugin = require('pnp-webpack-plugin');
-const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
-
+const getPaths = require('./utils/getPaths');
 const DEFAULT_SERVICE_WORKER = {};
 const DEFAULT_REPORT_CONFIG = {
   verbose: false,
@@ -93,37 +91,18 @@ function getDevtool(env, { devtool }) {
   return false;
 }
 
+const getMode = require('./utils/getMode');
+const getConfig = require('./utils/getConfig');
+// const createFontLoader = require('./loaders/createFontLoader');
+// const createBabelLoader = require('./loaders/createBabelLoader');
+const webpackConfigUnimodules = require('./webpack.config.unimodules');
+const merge = require('webpack-merge');
+
 module.exports = function(env = {}, argv) {
-  const locations = getLocations(env.projectRoot);
-
-  const isProduction = env.production;
-
-  const { babelConfig, config } = env;
+  const config = getConfig(env);
+  const mode = getMode(env);
+  const locations = getPaths(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
-
-  const fontLoaderConfiguration = {
-    test: /\.(ttf|otf|woff)$/,
-    use: [
-      {
-        loader: 'url-loader',
-        options: {
-          limit: 50000,
-          name: './fonts/[name].[ext]',
-        },
-      },
-    ],
-    include: [
-      locations.root,
-      locations.includeModule('react-native-vector-icons'),
-      locations.includeModule('@expo/vector-icons'),
-    ],
-  };
-
-  const htmlLoaderConfiguration = {
-    test: /\.html$/,
-    use: ['html-loader'],
-    exclude: locations.template.folder,
-  };
 
   const middlewarePlugins = [
     // Remove unused import/exports
@@ -212,10 +191,23 @@ module.exports = function(env = {}, argv) {
 
   const devtool = getDevtool(env, config.web.build);
 
-  return {
+  const unimodulesConfig = webpackConfigUnimodules(env, argv);
+
+  const allLoaders = [
+    imageLoaderConfiguration,
+    ...unimodulesConfig.module.rules,
+    styleLoaderConfiguration,
+    // This needs to be the last loader
+    fallbackLoaderConfiguration,
+  ];
+
+  // Clear all loaders
+  unimodulesConfig.module.rules = [];
+
+  return merge(unimodulesConfig, {
     // https://webpack.js.org/configuration/other-options/#bail
     // Fail out on the first error instead of tolerating it.
-    bail: isProduction,
+    bail: mode === 'production',
     devtool,
     context: __dirname,
     // configures where the build ends up
@@ -227,7 +219,7 @@ module.exports = function(env = {}, argv) {
     },
     plugins: [
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON(env, config, locations),
+      createIndexHTMLFromAppJSON(env),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
@@ -260,25 +252,15 @@ module.exports = function(env = {}, argv) {
     ],
 
     module: {
-      strictExportPresence: false,
-
       rules: [
         // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
         {
-          oneOf: [
-            imageLoaderConfiguration,
-            // Process application JS with Babel.
-            babelConfig,
-            styleLoaderConfiguration,
-            fontLoaderConfiguration,
-            htmlLoaderConfiguration,
-            // This needs to be the last loader
-            fallbackLoaderConfiguration,
-          ],
+          oneOf: allLoaders,
         },
       ],
     },
+
     resolveLoader: {
       plugins: [
         // Also related to Plug'n'Play, but this time it tells Webpack to load its loaders
@@ -286,6 +268,7 @@ module.exports = function(env = {}, argv) {
         PnpWebpackPlugin.moduleLoader(module),
       ],
     },
+
     resolve: {
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
@@ -299,29 +282,8 @@ module.exports = function(env = {}, argv) {
         new ModuleScopePlugin(locations.template.folder, [locations.packageJson]),
       ],
       symlinks: false,
-      extensions: ['.web.ts', 'web.tsx', '.ts', '.tsx', '.web.js', 'web.jsx', '.js', '.jsx', '.json'],
-      alias: {
-        // Alias direct react-native imports to react-native-web
-        'react-native$': 'react-native-web',
-        '@react-native-community/netinfo': 'react-native-web/dist/exports/NetInfo',
-        // Add polyfills for modules that react-native-web doesn't support
-        // Depends on expo-asset
-        'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
-        'react-native/Libraries/Image/assetPathUtils$': 'expo-asset/build/Image/assetPathUtils',
-        'react-native/Libraries/Image/resolveAssetSource$': 'expo-asset/build/resolveAssetSource',
-        // Alias internal react-native modules to react-native-web
-        'react-native/Libraries/Components/View/ViewStylePropTypes$':
-          'react-native-web/dist/exports/View/ViewStylePropTypes',
-        'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
-          'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
-        'react-native/Libraries/vendor/emitter/EventEmitter$':
-          'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
-        'react-native/Libraries/vendor/emitter/EventSubscriptionVendor$':
-          'react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor',
-        'react-native/Libraries/EventEmitter/NativeEventEmitter$':
-          'react-native-web/dist/vendor/react-native/NativeEventEmitter',
-      },
     },
+
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
     node: {
@@ -337,5 +299,5 @@ module.exports = function(env = {}, argv) {
     // Turn off performance processing because we utilize
     // our own (CRA) hints via the FileSizeReporter
     performance: false,
-  };
+  });
 };
