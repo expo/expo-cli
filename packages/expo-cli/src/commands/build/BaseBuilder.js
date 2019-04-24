@@ -2,11 +2,12 @@
  * @flow
  */
 
-import { Project, ProjectUtils, User } from 'xdl';
+import { Project, ProjectUtils, User, Versions } from 'xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import get from 'lodash/get';
 import ora from 'ora';
+import semver from 'semver';
 
 import * as UrlUtils from '../utils/url';
 import log from '../../log';
@@ -88,6 +89,13 @@ export default class BaseBuilder {
     if (this.manifest.isDetached) {
       log.error(`'expo build:${this.platform()}' is not supported for detached projects.`);
       process.exit(1);
+    }
+    
+    // Warn user if building a project using the next deprecated SDK version
+    let oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
+    if (semver.major(this.manifest.sdkVersion) === oldestSupportedMajorVersion) {
+      let {version} = await Versions.newestSdkVersionAsync();
+      log.warn(`\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold('deprecated')} soon! We recommend upgrading versions, ideally to the latest (SDK${semver.major(version)}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`);
     }
   }
 
