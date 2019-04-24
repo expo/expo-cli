@@ -9,7 +9,7 @@ import JsonFile from '@expo/json-file';
 import prompt from '../prompt';
 import log from '../log';
 
-async function action(projectDir = './', options) {
+export async function action(projectDir = './', options = {}) {
   log(chalk.green('Optimizing assets...'));
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
   if (exp === null) {
@@ -19,14 +19,13 @@ async function action(projectDir = './', options) {
 
   if (!options.save) {
     log.warn('Running this command will overwrite the original assets.');
-    log.warn('If you want to keep a copy of each file pass in the --save flag.');
-    const { userAccepted } = await prompt({
+    const { saveOriginals } = await prompt({
       type: 'confirm',
-      name: 'userAccepted',
-      message: 'Continue?',
+      name: 'saveOriginals',
+      message: 'Do you want to save a copy of each file instead?',
     });
-    if (!userAccepted) {
-      process.exit(0);
+    if (saveOriginals) {
+      options.save = true;
     }
   }
 
@@ -132,12 +131,12 @@ const optimizeImage = async (image, newName) => {
   const { format } = await sharp(buffer).metadata();
   if (format === 'jpeg') {
     await sharp(newName)
-      .jpeg({ quality: 75 })
+      .jpeg({ quality: 60 })
       .toFile(image)
       .catch(err => log.error(err));
   } else {
     await sharp(newName)
-      .png({ quality: 75 })
+      .png({ quality: 60 })
       .toFile(image)
       .catch(err => log.error(err));
   }
