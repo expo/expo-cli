@@ -19,6 +19,9 @@ export default program => {
       '--apple-id <login>',
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
     )
+    .description(
+      'Build a custom version of the Expo Client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
+    )
     .asyncAction(async options => {
       const authData = await appleApi.authenticate(options);
       const user = await User.getCurrentUserAsync();
@@ -53,13 +56,16 @@ export default program => {
       ]);
       const udids = devices.map(device => device.deviceNumber);
       log.newLine();
+      log(
+        'Custom builds of the Expo Client can only be installed on devices which have been registered with Apple at build-time.'
+      );
       log('These devices are currently registered on your Apple Developer account:');
       const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
       table.push(...devices.map(device => [device.name, device.deviceNumber]));
       log(table.toString());
       const { addUdid } = await prompt({
         name: 'addUdid',
-        message: 'Would you like to register new devices to use Expo Client with?',
+        message: 'Would you like to register new devices to use the Expo Client with?',
         type: 'confirm',
         default: true,
       });
@@ -78,16 +84,22 @@ export default program => {
       if (addUdid) {
         urlOpts.printQRCode(result.registrationUrl);
         log(
-          chalk.green(
-            `Open this link on iOS to register the device and install the client:\n\n${
-              result.registrationUrl
-            }`
-          )
+          'Open the following link on your iOS device (or scan the QR code) and follow the instructions to install the development profile:'
         );
         log.newLine();
+        log(chalk.green(`${result.registrationUrl}`));
+        log.newLine();
+        log(
+          "After you register your device, we'll start building your client, and you'll receive an email when it's ready to install."
+        );
       } else {
         urlOpts.printQRCode(result.statusUrl);
-        log(chalk.green(`Open this link on iOS to install the client:\n\n${result.statusUrl}`));
+        log('Your custom Expo Client is being built! 🛠');
+        log(
+          'Open this link on your iOS device (or scan the QR code) to view build logs and install the client:'
+        );
+        log.newLine();
+        log(chalk.green(`${result.statusUrl}`));
       }
       log.newLine();
     });
