@@ -39,14 +39,14 @@ async function action(projectDir = './', options) {
 
     const { size: newSize } = fs.statSync(image);
     const amountSaved = prevSize - newSize;
-    if (amountSaved <= 0) {
+    if (amountSaved < 0) {
       // Delete the optimized version and revert changes
       fs.renameSync(newName, image);
       assetInfo[hash] = true;
-      log.warn(`Compressed version of ${image} was larger than original.`);
+      log.warn(`Compressed version of ${image} was larger than original. Using original instead.`);
       continue;
     }
-    log.warn(`Saved ${toKB(amountSaved)}KB`);
+    log.warn(`Saved ${toReadableValue(amountSaved)}`);
     totalSaved += amountSaved;
 
     // Recalculate hash since the image has changed
@@ -55,7 +55,7 @@ async function action(projectDir = './', options) {
 
     if (options.save) {
       if (hash === newHash) {
-        log.warn(`Compressed asset ${image} is identical to the original.`);
+        log.warn(`Compressed asset ${image} is identical to the original. Using original instead.`);
         fs.unlinkSync(newName);
       } else {
         log(`Saving original asset to ${newName}`);
@@ -70,7 +70,7 @@ async function action(projectDir = './', options) {
   if (totalSaved === 0) {
     log('No assets optimized. Everything is fully compressed!');
   } else {
-    log(`Finished compressing assets. ${chalk.green(toKB(totalSaved) + 'KB')} saved.`);
+    log(`Finished compressing assets. ${chalk.green(toReadableValue(totalSaved))} saved.`);
   }
   // Remove assets that have been deleted/modified from assets.json
   outdated.forEach(outdatedHash => {
@@ -79,7 +79,13 @@ async function action(projectDir = './', options) {
   assetJson.writeAsync(assetInfo);
 }
 
-const toKB = bytes => (bytes / 1024).toFixed(2);
+const toReadableValue = bytes => {
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const index = Math.floor(Math.log(bytes) / Math.log(1024));
+  const reduced = (bytes / Math.pow(1024, index)).toFixed(2) * 1;
+
+  return `${reduced} ${sizes[index]}`;
+};
 
 /*
  * Calculate SHA256 Checksum value of a file based on its contents
