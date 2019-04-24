@@ -56,14 +56,22 @@ function getDevices({ orientation = 'natural', supportsTablet = true }) {
   return devices.map(device => ({ ...device, orientations }));
 }
 
-export function fromStartupImage({ orientation, supportsTablet, src, destination, color }) {
-  const devices = getDevices({ orientation, supportsTablet });
+export function fromStartupImage({
+  // You cannot lock iOS PWA orientation, we should produce every splash screen.
+  // orientation,
+  supportsTablet,
+  src,
+  resizeMode,
+  destination,
+  color,
+}) {
+  const devices = getDevices({ orientation: 'any', supportsTablet });
 
-  let startupImages = [];
+  const startupImages = [];
   for (const device of devices) {
     const { width, height } = device;
     for (const orientation of device.orientations) {
-      let size = orientation === 'portrait' ? [width, height] : [height, width];
+      const size = orientation === 'portrait' ? [width, height] : [height, width];
       startupImages.push({
         ios: 'startup',
         src,
@@ -71,6 +79,7 @@ export function fromStartupImage({ orientation, supportsTablet, src, destination
         scale: device.scale,
         media: assembleOrientationMedia(device.width, device.height, device.scale, orientation),
         destination,
+        resizeMode,
         color,
       });
     }

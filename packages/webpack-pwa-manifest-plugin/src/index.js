@@ -1,14 +1,14 @@
-import validatePresets from './validators/Presets';
-import validateColors from './validators/Colors';
-import {
-  buildResources,
-  injectResources,
-  generateHtmlTags,
-  generateAppleTags,
-  generateMaskIconLink,
-  applyTag,
-} from './injector';
 import createMetatagsFromConfig from './createMetatagsFromConfig';
+import {
+  applyTag,
+  buildResources,
+  generateAppleTags,
+  generateHtmlTags,
+  generateMaskIconLink,
+  injectResources,
+} from './injector';
+import validateColors from './validators/Colors';
+import validatePresets from './validators/Presets';
 
 const TAP_CMD = 'webpack-pwa-manifest-plugin';
 const TAP = 'WebpackPWAManifestPlugin';
@@ -17,6 +17,14 @@ function isObject(item) {
   return typeof item === 'object' && !Array.isArray(item) && item !== null;
 }
 
+const DEFAULT_OPTIONS = {
+  fingerprints: true,
+  inject: true,
+  ios: false,
+  publicPath: null,
+  includeDirectory: true,
+};
+
 /**
  * Generate a `manifest.json` for your PWA based on the `app.json`.
  * This plugin must be **after HtmlWebpackPlugin**.
@@ -24,69 +32,54 @@ function isObject(item) {
  * To test PWAs in chrome visit `chrome://flags#enable-desktop-pwas`
  */
 class WebpackPwaManifest {
-  constructor(appJson, options) {
+  constructor(appJson, { noResources, filename, publicPath }) {
     if (!isObject(appJson)) {
       throw new Error('app.json must be an object');
     }
     const { web = {} } = appJson.expo || appJson || {};
-
-    const metatags = createMetatagsFromConfig(appJson);
-
-    this._parseOptions(
-      {
-        ...options,
-        filename: options.filename,
-        includeDirectory: false,
-        metatags,
-      },
-      {
-        ...web,
-        // PWA
-        background_color: web.backgroundColor,
-        description: web.description,
-        dir: web.dir,
-        display: web.display,
-        icons: web.icons,
-        startupImages: web.startupImages,
-        lang: web.lang,
-        name: web.name,
-        orientation: web.orientation,
-        prefer_related_applications: web.preferRelatedApplications,
-        related_applications: web.relatedApplications,
-        scope: web.scope,
-        short_name: web.shortName,
-        start_url: web.startUrl,
-        theme_color: web.themeColor,
-        ios: {
-          'apple-mobile-web-app-status-bar-style': web.barStyle,
-        },
-        crossorigin: web.crossorigin,
-      }
-    );
-  }
-
-  _parseOptions(options, manifest) {
-    validatePresets(manifest, 'dir', 'display', 'orientation', 'crossorigin');
-    validateColors(manifest, 'background_color', 'theme_color');
     this.assets = null;
     this.htmlPlugin = false;
-    // const shortName = options.short_name || options.name || 'App';
-    // fingerprints is true by default, but we want it to be false even if users
-    // set it to undefined or null.
-    if (!options.hasOwnProperty('fingerprints')) {
-      options.fingerprints = false;
-    }
+    this.config = appJson;
+
     this.options = {
-      filename: options.fingerprints ? '[name].[hash].[ext]' : '[name].[ext]',
-      inject: true,
-      ios: false,
-      publicPath: null,
-      includeDirectory: true,
-      crossorigin: null,
-      ...options,
-      ...manifest,
+      ...DEFAULT_OPTIONS,
+      publicPath,
+      // filename: options.fingerprints ? '[name].[hash].[ext]' : '[name].[ext]',
+      noResources,
+      filename,
+      includeDirectory: false,
+      metatags: createMetatagsFromConfig(appJson),
     };
-    this.manifest = manifest;
+
+    this.manifest = {
+      // PWA
+      background_color: web.backgroundColor,
+      description: web.description,
+      dir: web.dir,
+      display: web.display,
+      icons: web.icons,
+      startupImages: web.startupImages,
+      lang: web.lang,
+      name: web.name,
+      orientation: web.orientation,
+      prefer_related_applications: web.preferRelatedApplications,
+      related_applications: web.relatedApplications,
+      scope: web.scope,
+      short_name: web.shortName,
+      start_url: web.startUrl,
+      theme_color: web.themeColor,
+      ios: {
+        'apple-mobile-web-app-title': web.short_name,
+        'apple-mobile-web-app-status-bar-style': web.barStyle,
+      },
+      crossorigin: web.crossorigin,
+    };
+    this.validateManifest(this.manifest);
+  }
+
+  validateManifest(manifest) {
+    validatePresets(manifest, 'dir', 'display', 'orientation', 'crossorigin');
+    validateColors(manifest, 'background_color', 'theme_color');
   }
 
   getManifest() {
@@ -100,15 +93,19 @@ class WebpackPwaManifest {
       if (!this.htmlPlugin) {
         this.htmlPlugin = true;
       }
+
       const publicPath = this.options.publicPath || compilation.options.output.publicPath;
-      await buildResources(this, publicPath);
+
+      // The manifest (this.manifest) should be ready by this point.
+      // It will be written to disk here.
+      const manifestFile = await buildResources(this, publicPath);
 
       if (!this.options.inject) {
         callback(null, htmlPluginData);
         return;
       }
 
-      let tags = generateAppleTags(this.options, this.assets);
+      let tags = generateAppleTags(this.manifest, this.assets);
 
       for (const metatagName of Object.keys(this.options.metatags)) {
         const content = this.options.metatags[metatagName];
@@ -118,14 +115,17 @@ class WebpackPwaManifest {
         });
       }
 
-      const manifestLink = {
-        rel: 'manifest',
-        href: this.manifest.url,
-      };
-      if (this.options.crossorigin) {
-        manifestLink.crossorigin = this.options.crossorigin;
+      if (manifestFile) {
+        const manifestLink = {
+          rel: 'manifest',
+          href: manifestFile.url,
+        };
+        if (this.manifest.crossorigin) {
+          manifestLink.crossorigin = this.manifest.crossorigin;
+        }
+        tags = applyTag(tags, 'link', manifestLink);
       }
-      applyTag(tags, 'link', manifestLink);
+
       tags = generateMaskIconLink(tags, this.assets);
 
       const tagsHTML = generateHtmlTags(tags);

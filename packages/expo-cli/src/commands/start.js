@@ -21,6 +21,10 @@ async function parseStartOptionsAsync(projectDir: string, options: Object): Prom
     startOpts.reset = true;
   }
 
+  if (options.parent && options.parent.nonInteractive) {
+    startOpts.nonInteractive = true;
+  }
+
   if (options.maxWorkers) {
     startOpts.maxWorkers = options.maxWorkers;
   }
@@ -65,7 +69,6 @@ async function action(projectDir, options) {
   const startOpts = await parseStartOptionsAsync(projectDir, options);
 
   await Project.startAsync(rootPath, startOpts);
-  await Web.logURL(projectDir);
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 
