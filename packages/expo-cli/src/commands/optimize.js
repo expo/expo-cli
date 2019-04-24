@@ -22,7 +22,7 @@ async function action(projectDir = './', options) {
   for (const fileHash in assetInfo) outdated.add(fileHash);
 
   // Filter out image assets
-  let optimized = false;
+  let totalSaved = 0;
   const files = getAssetFiles(exp, projectDir);
   const regex = /\.(png|jpg|jpeg)$/;
   const images = files.filter(file => regex.test(file.toLowerCase()));
@@ -32,10 +32,22 @@ async function action(projectDir = './', options) {
       outdated.delete(hash);
       continue;
     }
+    const { size: prevSize } = fs.statSync(image);
 
     const newName = createNewFilename(image);
     await optimizeImage(image, newName);
-    optimized = true;
+
+    const { size: newSize } = fs.statSync(image);
+    const amountSaved = prevSize - newSize;
+    if (amountSaved <= 0) {
+      // Delete the optimized version and revert changes
+      fs.renameSync(newName, image);
+      assetInfo[hash] = true;
+      log.warn(`Compressed version of ${image} was larger than original.`);
+      continue;
+    }
+    log.warn(`Saved ${toKB(amountSaved)}KB`);
+    totalSaved += amountSaved;
 
     // Recalculate hash since the image has changed
     const newHash = calculateHash(image);
@@ -55,8 +67,10 @@ async function action(projectDir = './', options) {
       fs.unlinkSync(newName);
     }
   }
-  if (!optimized) {
-    log('No assets optimized! Everything is fully compressed.');
+  if (totalSaved === 0) {
+    log('No assets optimized. Everything is fully compressed!');
+  } else {
+    log(`Finished compressing assets. ${chalk.green(toKB(totalSaved) + 'KB')} saved.`);
   }
   // Remove assets that have been deleted/modified from assets.json
   outdated.forEach(outdatedHash => {
@@ -64,6 +78,8 @@ async function action(projectDir = './', options) {
   });
   assetJson.writeAsync(assetInfo);
 }
+
+const toKB = bytes => (bytes / 1024).toFixed(2);
 
 /*
  * Calculate SHA256 Checksum value of a file based on its contents
