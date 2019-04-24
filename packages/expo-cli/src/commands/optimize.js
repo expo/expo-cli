@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import { ProjectUtils } from 'xdl';
 import JsonFile from '@expo/json-file';
+import prompt from '../prompt';
 import log from '../log';
 
 async function action(projectDir = './', options) {
@@ -14,6 +15,19 @@ async function action(projectDir = './', options) {
   if (exp === null) {
     log.warn('No Expo configuration found. Are you sure this is a project directory?');
     process.exit(1);
+  }
+
+  if (!options.save) {
+    log.warn('Running this command will overwrite the original assets.');
+    log.warn('If you want to keep a copy of each file pass in the --save flag.');
+    const { userAccepted } = await prompt({
+      type: 'confirm',
+      name: 'userAccepted',
+      message: 'Continue?',
+    });
+    if (!userAccepted) {
+      process.exit(0);
+    }
   }
 
   const [assetJson, assetInfo] = await readAssetJsonAsync(projectDir);
@@ -43,22 +57,27 @@ async function action(projectDir = './', options) {
       // Delete the optimized version and revert changes
       fs.renameSync(newName, image);
       assetInfo[hash] = true;
-      log.warn(`Compressed version of ${image} was larger than original. Using original instead.`);
+      log(
+        chalk.gray(
+          `Compressed version of ${image} was larger than original. Using original instead.`
+        )
+      );
       continue;
     }
-    log.warn(`Saved ${toReadableValue(amountSaved)}`);
-    totalSaved += amountSaved;
-
     // Recalculate hash since the image has changed
     const newHash = calculateHash(image);
     assetInfo[newHash] = true;
 
     if (options.save) {
       if (hash === newHash) {
-        log.warn(`Compressed asset ${image} is identical to the original. Using original instead.`);
+        log(
+          chalk.gray(
+            `Compressed asset ${image} is identical to the original. Using original instead.`
+          )
+        );
         fs.unlinkSync(newName);
       } else {
-        log(`Saving original asset to ${newName}`);
+        log(chalk.gray(`Saving original asset to ${newName}`));
         // Save the old hash to prevent reoptimizing
         assetInfo[hash] = true;
       }
@@ -66,6 +85,8 @@ async function action(projectDir = './', options) {
       // Delete the renamed original asset
       fs.unlinkSync(newName);
     }
+    totalSaved += amountSaved;
+    log.warn(`Saved ${toReadableValue(amountSaved)}`);
   }
   if (totalSaved === 0) {
     log('No assets optimized. Everything is fully compressed!');
