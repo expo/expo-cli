@@ -141,6 +141,14 @@ export async function _openSimulatorAsync() {
     Logger.global.info('Opening iOS simulator');
     await spawnAsync('open', ['-a', 'Simulator']);
     await _waitForSimulatorRunningAsync();
+    await _waitForDeviceToBoot();
+  }
+  else {
+    let bootedDevice = await _bootedSimulatorDeviceAsync();
+    if (!bootedDevice) {
+      await _bootDefaultSimulatorDeviceAsync();
+      await _waitForSimulatorRunningAsync();
+    }
   }
 }
 
@@ -152,13 +160,7 @@ export async function _isSimulatorRunningAsync() {
     return false;
   }
 
-  let bootedDevice = await _bootedSimulatorDeviceAsync();
-  
-  if (!bootedDevice) {
-    return await _bootDefaultSimulatorDeviceAsync();
-  }
-  
-  return !!bootedDevice;
+  return true;
 }
 
 async function _bootDefaultSimulatorDeviceAsync() {
@@ -212,6 +214,13 @@ async function _listSimulatorDevicesAsync() {
   let infoJson = await _xcrunAsync(['simctl', 'list', 'devices', '--json']);
   let info = JSON.parse(infoJson.stdout);
   return info;
+}
+
+async function _waitForDeviceToBoot() {
+  let bootedDevice = await _bootedSimulatorDeviceAsync();
+  while (!bootedDevice) {
+    bootedDevice = await _bootedSimulatorDeviceAsync();
+  }
 }
 
 async function _bootedSimulatorDeviceAsync() {
@@ -399,7 +408,7 @@ export async function openUrlInSimulatorSafeAsync(
 
   try {
     await _openSimulatorAsync();
-
+    
     if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
