@@ -2079,7 +2079,7 @@ export async function startAsync(
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
   }
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  const hasWebSupport = await Doctor.hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
     await Webpack.startAsync(projectRoot, options, verbose);
   }
@@ -2099,7 +2099,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  const hasWebSupport = await Doctor.hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
     await Webpack.stopAsync(projectRoot);
   }
