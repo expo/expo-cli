@@ -446,7 +446,7 @@ export async function hasWebSupportAsync(projectRoot, exp) {
     return false;
   }
 
-  const isWebConfigured = platforms.includes('all') || platforms.includes('web');
+  const isWebConfigured = platforms.includes('web');
   return isWebConfigured;
 }
 
