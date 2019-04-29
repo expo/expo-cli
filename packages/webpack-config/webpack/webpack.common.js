@@ -140,15 +140,17 @@ module.exports = function(env = {}, argv) {
     );
   }
 
-  // Generate the `manifest.json`
-  middlewarePlugins.push(
-    new WebpackPWAManifestPlugin(config, {
-      ...env,
-      publicPath,
-      noResources: env.development,
-      filename: locations.production.manifest,
-    })
-  );
+  if (env.pwa) {
+    // Generate the `manifest.json`
+    middlewarePlugins.push(
+      new WebpackPWAManifestPlugin(config, {
+        ...env,
+        publicPath,
+        noResources: env.development,
+        filename: locations.production.manifest,
+      })
+    );
+  }
 
   /**
    * report: {

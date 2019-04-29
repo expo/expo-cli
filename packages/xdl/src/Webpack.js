@@ -59,6 +59,7 @@ export async function startAsync(
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   const config = Web.invokeWebpackConfig({
     projectRoot,
+    pwa: true,
     development: dev,
     production: !dev,
     https,
@@ -146,6 +147,7 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
 
   let config = Web.invokeWebpackConfig({
     projectRoot,
+    pwa: packagerOpts.pwa,
     polyfill: packagerOpts.polyfill,
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
