@@ -2,6 +2,7 @@
  * @flow
  */
 import axios from 'axios';
+import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -16,8 +17,10 @@ import promisify from 'util.promisify';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
+import glob from 'glob';
 import reduce from 'lodash/reduce';
 import set from 'lodash/set';
+import sharp from 'sharp';
 import uniq from 'lodash/uniq';
 import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
@@ -2138,6 +2141,163 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
   _assertValidProjectRoot(projectRoot);
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
+
+export async function optimizeAsync(projectRoot: string = './', options: Object = {}) {
+  logger.global.info(chalk.green('Optimizing assets...'));
+
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const [assetJson, assetInfo] = await readAssetJsonAsync(projectRoot);
+  // Keep track of which hash values in assets.json are no longer in use
+  const outdated = new Set();
+  for (const fileHash in assetInfo) outdated.add(fileHash);
+
+  // Filter out image assets
+  let totalSaved = 0;
+  const files = getAssetFiles(exp, projectRoot);
+  const regex = /\.(png|jpg|jpeg)$/;
+  const images = files.filter(file => regex.test(file.toLowerCase()));
+  for (const image of images) {
+    const hash = calculateHash(image);
+    if (assetInfo[hash]) {
+      outdated.delete(hash);
+      continue;
+    }
+    const { size: prevSize } = fs.statSync(image);
+
+    const newName = createNewFilename(image);
+    await optimizeImage(image, newName);
+
+    const { size: newSize } = fs.statSync(image);
+    const amountSaved = prevSize - newSize;
+    if (amountSaved < 0) {
+      // Delete the optimized version and revert changes
+      fs.renameSync(newName, image);
+      assetInfo[hash] = true;
+      logger.global.info(
+        chalk.gray(
+          `Compressed version of ${image} was larger than original. Using original instead.`
+        )
+      );
+      continue;
+    }
+    // Recalculate hash since the image has changed
+    const newHash = calculateHash(image);
+    assetInfo[newHash] = true;
+
+    if (options.save) {
+      if (hash === newHash) {
+        logger.global.info(
+          chalk.gray(
+            `Compressed asset ${image} is identical to the original. Using original instead.`
+          )
+        );
+        fs.unlinkSync(newName);
+      } else {
+        logger.global.info(chalk.gray(`Saving original asset to ${newName}`));
+        // Save the old hash to prevent reoptimizing
+        assetInfo[hash] = true;
+      }
+    } else {
+      // Delete the renamed original asset
+      fs.unlinkSync(newName);
+    }
+    totalSaved += amountSaved;
+    logger.global.info(chalk.yellow(`Saved ${toReadableValue(amountSaved)}`));
+  }
+  if (totalSaved === 0) {
+    logger.global.info('No assets optimized. Everything is fully compressed!');
+  } else {
+    logger.global.info(
+      `Finished compressing assets. ${chalk.green(toReadableValue(totalSaved))} saved.`
+    );
+  }
+  // Remove assets that have been deleted/modified from assets.json
+  outdated.forEach(outdatedHash => {
+    delete assetInfo[outdatedHash];
+  });
+  assetJson.writeAsync(assetInfo);
+}
+
+const toReadableValue = bytes => {
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const index = Math.floor(Math.log(bytes) / Math.log(1024));
+  const reduced = (bytes / Math.pow(1024, index)).toFixed(2) * 1;
+
+  return `${reduced} ${sizes[index]}`;
+};
+
+/*
+ * Calculate SHA256 Checksum value of a file based on its contents
+ */
+const calculateHash = file => {
+  const contents = fs.readFileSync(file);
+  return crypto
+    .createHash('sha256')
+    .update(contents)
+    .digest('hex');
+};
+
+/*
+ * Compress an inputted jpg or png and save original copy with .expo extension
+ */
+const optimizeImage = async (image, newName) => {
+  logger.global.info(`Optimizing ${image}`);
+  // Rename the file with .expo extension
+  fs.copyFileSync(image, newName);
+
+  // Extract the format and compress
+  const buffer = await sharp(image).toBuffer();
+  const { format } = await sharp(buffer).metadata();
+  if (format === 'jpeg') {
+    await sharp(newName)
+      .jpeg({ quality: 60 })
+      .toFile(image)
+      .catch(err => logger.global.error(err));
+  } else {
+    await sharp(newName)
+      .png({ quality: 60 })
+      .toFile(image)
+      .catch(err => logger.global.error(err));
+  }
+};
+
+/*
+ * Find all project assets under assetBundlePatterns in app.json excluding node_modules
+ */
+const getAssetFiles = (exp, projectDir) => {
+  const { assetBundlePatterns } = exp;
+  const options = { cwd: projectDir, ignore: '**/node_modules/**' };
+  const files = [];
+  assetBundlePatterns.forEach(pattern => {
+    files.push(...glob.sync(pattern, options));
+  });
+  return files.map(file => `${projectDir}/${file}`.replace('//', '/'));
+};
+
+/*
+ * Read the contents of assets.json under .expo-shared folder. Create the file/directory if they don't exist.
+ */
+const readAssetJsonAsync = async projectDir => {
+  const dirPath = path.join(projectDir, '.expo-shared');
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath);
+  }
+
+  const assetJson = new JsonFile(path.join(dirPath, 'assets.json'));
+  if (!fs.existsSync(assetJson.file)) {
+    await assetJson.writeAsync({});
+  }
+  const assetInfo = await assetJson.readAsync();
+  return [assetJson, assetInfo];
+};
+
+/*
+ * Add .expo extension to a filename in a path string
+ */
+const createNewFilename = image => {
+  const { dir, name, ext } = path.parse(image);
+  return dir + '/' + name + '.expo' + ext;
+};
 
 export async function startAsync(
   projectRoot: string,

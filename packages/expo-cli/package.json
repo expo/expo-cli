@@ -89,7 +89,6 @@
     "progress": "2.0.0",
     "qrcode-terminal": "0.11.0",
     "semver": "5.5.0",
-    "sharp": "^0.22.0",
     "slash": "1.0.0",
     "source-map-support": "0.5.9",
     "untildify": "3.0.3",
