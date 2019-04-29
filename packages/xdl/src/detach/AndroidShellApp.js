@@ -437,6 +437,15 @@ export async function runShellAppModificationsAsync(
 
   if (isDetached) {
     let appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
+    if (isRunningInUserContext) {
+      await regexFileAsync(/\/\* UNCOMMENT WHEN DETACHING/g, '', appBuildGradle);
+      await regexFileAsync(/END UNCOMMENT WHEN DETACHING \*\//g, '', appBuildGradle);
+      await deleteLinesInFileAsync(
+        'WHEN_DETACHING_REMOVE_FROM_HERE',
+        'WHEN_DETACHING_REMOVE_TO_HERE',
+        appBuildGradle
+      );
+    }
     await regexFileAsync(/\/\* UNCOMMENT WHEN DISTRIBUTING/g, '', appBuildGradle);
     await regexFileAsync(/END UNCOMMENT WHEN DISTRIBUTING \*\//g, '', appBuildGradle);
     await deleteLinesInFileAsync(
