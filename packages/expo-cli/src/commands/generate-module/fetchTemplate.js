@@ -25,6 +25,13 @@ export default async function fetchTemplate(destinationPath, template) {
     Logger.global.info(`Using default NPM package as template: ${chalk.bold(DEFAULT_TEMPLATE)}`);
     await pacote.extract(DEFAULT_TEMPLATE, destinationPath);
   }
+
+  if (await fse.pathExists(path.join(destinationPath, 'template-unimodule.json'))) {
+    await fse.move(
+      path.join(destinationPath, 'template-unimodule.json'),
+      path.join(destinationPath, 'unimodule.json')
+    );
+  }
 }
 
 function isNpmPackage(template) {
