@@ -3,6 +3,7 @@
  */
 
 import fs from 'fs';
+import path from 'path';
 import chalk from 'chalk';
 import simpleSpinner from '@expo/simple-spinner';
 
@@ -30,7 +31,7 @@ export async function action(projectDir: string, options: Options = {}) {
     );
     process.exit(1);
   }
-  const hasOptimized = fs.existsSync(projectDir + '/.expo-shared/assets.json');
+  const hasOptimized = fs.existsSync(path.join(projectDir, '/.expo-shared/assets.json'));
   if (!hasOptimized) {
     log.warn('It seems your assets have not been optimized yet.');
     const { allowOptimization } = await prompt({
