@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import CliTable from 'cli-table';
-import { User } from 'xdl';
+import { User, IosCodeSigning } from 'xdl';
 
 import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';
@@ -55,6 +55,26 @@ export default program => {
         context.team.id,
       ]);
       const udids = devices.map(device => device.deviceNumber);
+
+      const certSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        distributionCert.certP12,
+        distributionCert.certPassword
+      );
+      const args = [
+        context.team.id,
+        udids.join(','),
+        bundleIdentifier,
+        certSerialNumber || '__last__',
+      ];
+
+      const foo = await runAction(travelingFastlane.manageAdHocProvisioningProfile, args, {
+        env: { FASTLANE_SESSION: context.fastlaneSession },
+      });
+
+      console.log(`GOT RESULT: ${JSON.stringify(foo)}`);
+
+      process.exit(1);
+
       log.newLine();
       log(
         'Custom builds of the Expo Client can only be installed on devices which have been registered with Apple at build-time.'

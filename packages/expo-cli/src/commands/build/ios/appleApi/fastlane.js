@@ -11,10 +11,11 @@ const WSL_BASH = 'bash';
 const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
 
 async function runAction(fastlaneAction, args, options = {}) {
-  const { pipeStdout = false } = options;
+  const { pipeStdout = false, env } = options;
   const [command, commandArgs] = getCommandAndArgsForPlatform(fastlaneAction, args);
   const { stderr } = await spawnAsync(command, commandArgs, {
     stdio: ['inherit', pipeStdout ? 'inherit' : 'pipe', 'pipe'],
+    ...(env ? { env: { ...env, ...process.env } } : null),
   });
   const { result, ...rest } = JSON.parse(stderr.trim());
   if (result === 'success') {
