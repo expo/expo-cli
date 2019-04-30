@@ -77,7 +77,12 @@ with_captured_output{
       device_udids_in_profile = Set.new(existing_profile.devices.map { |d| d.udid })
       all_device_udids = Set.new($udids)
       if device_udids_in_profile == all_device_udids and existing_profile.valid?
-        $result = { result: 'success' }
+        profile = download_provisioning_profile(existing_profile)
+        $result = { 
+          result: 'success',
+          provisioningProfileId: profile[:id],
+          provisioningProfile: profile[:content],
+        }
       else
         # We need to add new devices to the list and create a new provisioning profile.
         existing_profile.devices = devices
