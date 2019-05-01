@@ -90,12 +90,18 @@ export default class BaseBuilder {
       log.error(`'expo build:${this.platform()}' is not supported for detached projects.`);
       process.exit(1);
     }
-    
+
     // Warn user if building a project using the next deprecated SDK version
     let oldestSupportedMajorVersion = await Versions.oldestSupportedMajorVersionAsync();
     if (semver.major(this.manifest.sdkVersion) === oldestSupportedMajorVersion) {
-      let {version} = await Versions.newestSdkVersionAsync();
-      log.warn(`\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold('deprecated')} soon! We recommend upgrading versions, ideally to the latest (SDK${semver.major(version)}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`);
+      let { version } = await Versions.newestSdkVersionAsync();
+      log.warn(
+        `\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold(
+          'deprecated'
+        )} soon! We recommend upgrading versions, ideally to the latest (SDK${semver.major(
+          version
+        )}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`
+      );
     }
   }
 
@@ -172,7 +178,7 @@ Please see the docs (${chalk.underline(
     }
   }
 
-  logBuildStatuses(buildStatus: { jobs: Array<Object> }) {
+  logBuildStatuses(buildStatus: { jobs: Array<Object>, canPurchasePriorityBuilds: boolean }) {
     log.raw();
     log('=================');
     log(' Builds Statuses ');
@@ -189,21 +195,44 @@ Please see the docs (${chalk.underline(
 
       log(`### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl(job.id)} ###`);
 
+      const hasPriorityBuilds =
+        buildStatus.numberOfRemainingPriorityBuilds > 0 || buildStatus.hasUnlimitedPriorityBuilds;
+      const shouldShowUpgradeInfo =
+        !hasPriorityBuilds &&
+        i === 0 &&
+        job.priority === 'normal' &&
+        buildStatus.canPurchasePriorityBuilds;
       let status;
       switch (job.status) {
         case 'pending':
         case 'sent-to-queue':
-          status = `Build waiting in queue...
-You can check the queue length at ${chalk.underline(UrlUtils.constructTurtleStatusUrl())}`;
+          status = `Build waiting in queue...\nQueue length: ${chalk.underline(
+            UrlUtils.constructTurtleStatusUrl()
+          )}`;
+          if (shouldShowUpgradeInfo) {
+            status += `\nWant to wait less? Get priority builds at ${chalk.underline(
+              'https://expo.io/settings/billing'
+            )}.`;
+          }
           break;
         case 'started':
           status = 'Build started...';
           break;
         case 'in-progress':
           status = 'Build in progress...';
+          if (shouldShowUpgradeInfo) {
+            status += `\nWant to wait less? Get priority builds at ${chalk.underline(
+              'https://expo.io/settings/billing'
+            )}.`;
+          }
           break;
         case 'finished':
           status = 'Build finished.';
+          if (shouldShowUpgradeInfo) {
+            status += `\nLooks like this build could have been faster.\nRead more about priority builds at ${chalk.underline(
+              'https://expo.io/settings/billing'
+            )}.`;
+          }
           break;
         case 'errored':
           status = 'There was an error with this build.';
@@ -263,9 +292,10 @@ ${job.id}
     }
   }
 
-  async wait(buildId, { timeout = 1200, interval = 60, publicUrl } = {}) {
+  async wait(buildId, { timeout = 1200, interval = 30, publicUrl } = {}) {
+    log(`Waiting for build to complete. You can press Ctrl+C to exit.`);
+    let spinner = ora().start();
     let time = new Date().getTime();
-    await sleep(secondsToMilliseconds(interval));
     const endTime = time + secondsToMilliseconds(timeout);
     while (time <= endTime) {
       const res = await Project.buildAsync(this.projectDir, {
@@ -278,29 +308,36 @@ ${job.id}
         fp.filter(job => buildId && job.id === buildId),
         fp.getOr([], 'jobs')
       )(res);
+
       switch (job.status) {
         case 'finished':
+          spinner.succeed('Build finished.');
           return job;
         case 'pending':
         case 'sent-to-queue':
+          spinner.text = 'Build queued...';
+          break;
         case 'started':
         case 'in-progress':
+          spinner.text = 'Build in progress...';
           break;
         case 'errored':
+          spinner.fail('Build failed.');
           throw new BuildError(`Standalone build failed!`);
         default:
+          spinner.warn('Unknown status.');
           throw new BuildError(`Unknown status: ${job.status} - aborting!`);
       }
       time = new Date().getTime();
       await sleep(secondsToMilliseconds(interval));
     }
+    spinner.warn('Timed out.');
     throw new BuildError(
       'Timeout reached! Project is taking longer than expected to finish building, aborting wait...'
     );
   }
 
   async build(expIds?: Array<string>) {
-    log('Building...');
     const { publicUrl } = this.options;
     const platform = this.platform();
     const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
@@ -322,15 +359,18 @@ ${job.id}
     }
 
     // call out to build api here with url
-    const { id: buildId } = await Project.buildAsync(this.projectDir, opts);
+    const { id: buildId, priority, canPurchasePriorityBuilds } = await Project.buildAsync(
+      this.projectDir,
+      opts
+    );
 
     log('Build started, it may take a few minutes to complete.');
-
-    if (buildId) {
+    log(
+      `You can check the queue length at ${chalk.underline(UrlUtils.constructTurtleStatusUrl())}\n`
+    );
+    if (priority === 'normal' && canPurchasePriorityBuilds) {
       log(
-        `You can check the queue length at\n ${chalk.underline(
-          UrlUtils.constructTurtleStatusUrl()
-        )}\n`
+        'You can make this faster. 🐢\nGet priority builds at: https://expo.io/settings/billing\n'
       );
     }
 
@@ -343,10 +383,8 @@ ${job.id}
     }
 
     if (this.options.wait) {
-      let spinner = ora(`Waiting for build to complete. You can press Ctrl+C to exit.`).start();
       const waitOpts = publicUrl ? { publicUrl } : {};
       const completedJob = await this.wait(buildId, waitOpts);
-      spinner.stop();
       const artifactUrl = completedJob.artifactId
         ? UrlUtils.constructArtifactUrl(completedJob.artifactId)
         : completedJob.artifacts.url;
