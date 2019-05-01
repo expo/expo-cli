@@ -6,6 +6,7 @@ import sharp from 'sharp';
 import glob from 'glob';
 import JsonFile from '@expo/json-file';
 import logger from './Logger';
+import { readConfigJsonAsync } from './project/ProjectUtils';
 
 /*
  * Converts a raw number of bytes into a human readable value
@@ -32,7 +33,7 @@ export const calculateHash = file => {
 /*
  * Compress an inputted jpg or png and save original copy with .expo extension
  */
-export const optimizeImage = async (image, newName) => {
+export const optimizeImageAsync = async (image, newName) => {
   logger.global.info(`Optimizing ${image}`);
   // Rename the file with .expo extension
   fs.copyFileSync(image, newName);
@@ -54,16 +55,42 @@ export const optimizeImage = async (image, newName) => {
 };
 
 /*
- * Find all project assets under assetBundlePatterns in app.json excluding node_modules
+ * Find all project assets under assetBundlePatterns in app.json excluding node_modules.
+ * If --include of --exclude flags were passed in those results are filtered out.
  */
-export const getAssetFiles = (exp, projectDir) => {
+export const getAssetFilesAsync = async (projectDir, options) => {
+  const { exp } = await readConfigJsonAsync(projectDir);
   const { assetBundlePatterns } = exp;
-  const options = { cwd: projectDir, ignore: '**/node_modules/**' };
-  const files = [];
+  const globOptions = { cwd: projectDir, ignore: '**/node_modules/**' };
+
+  // All files must be returned even if flags are passed in to properly update assets.json
+  const allFiles = [];
   assetBundlePatterns.forEach(pattern => {
-    files.push(...glob.sync(pattern, options));
+    allFiles.push(...glob.sync(pattern, globOptions));
   });
-  return files.map(file => `${projectDir}/${file}`.replace('//', '/'));
+  // If --include is passed in, only return files matching that pattern
+  const included = options.include ? [...glob.sync(options.include, globOptions)] : allFiles;
+  const toExclude = new Set();
+  if (options.exclude) {
+    glob.sync(options.exclude, globOptions).forEach(file => toExclude.add(file));
+  }
+  // If --exclude is passed in, filter out files matching that pattern
+  const excluded = included.filter(file => !toExclude.has(file));
+  const filtered = options.exclude ? excluded : included;
+  return {
+    allFiles: filterImages(allFiles, projectDir),
+    selectedFiles: filterImages(filtered, projectDir),
+  };
+};
+
+/*
+ * Formats an array of files to include the project directory and filters out PNGs and JPGs.
+ */
+const filterImages = (files, projectDir) => {
+  const regex = /\.(png|jpg|jpeg)$/;
+  const withDirectory = files.map(file => `${projectDir}/${file}`.replace('//', '/'));
+  const allImages = withDirectory.filter(file => regex.test(file.toLowerCase()));
+  return allImages;
 };
 
 /*
@@ -88,7 +115,7 @@ export const readAssetJsonAsync = async projectDir => {
     await assetJson.writeAsync({});
   }
   const assetInfo = await assetJson.readAsync();
-  return [assetJson, assetInfo];
+  return { assetJson, assetInfo };
 };
 
 /*

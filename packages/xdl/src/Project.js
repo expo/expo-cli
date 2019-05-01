@@ -2145,34 +2145,43 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
   logger.global.info(chalk.green('Optimizing assets...'));
   const {
     readAssetJsonAsync,
-    getAssetFiles,
+    getAssetFilesAsync,
+    optimizeImageAsync,
     calculateHash,
-    optimizeImage,
     createNewFilename,
     toReadableValue,
   } = AssetUtils;
 
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  const [assetJson, assetInfo] = await readAssetJsonAsync(projectRoot);
+  const { assetJson, assetInfo } = await readAssetJsonAsync(projectRoot);
   // Keep track of which hash values in assets.json are no longer in use
   const outdated = new Set();
   for (const fileHash in assetInfo) outdated.add(fileHash);
 
-  // Filter out image assets
   let totalSaved = 0;
-  const files = getAssetFiles(exp, projectRoot);
-  const regex = /\.(png|jpg|jpeg)$/;
-  const images = files.filter(file => regex.test(file.toLowerCase()));
-  for (const image of images) {
+  const { allFiles, selectedFiles } = await getAssetFilesAsync(projectRoot, options);
+  const hashes = {};
+  // Remove assets that have been deleted/modified from assets.json
+  allFiles.forEach(image => {
     const hash = calculateHash(image);
     if (assetInfo[hash]) {
       outdated.delete(hash);
+    }
+    hashes[image] = hash;
+  });
+  outdated.forEach(outdatedHash => {
+    delete assetInfo[outdatedHash];
+  });
+
+  const images = options.include || options.exclude ? selectedFiles : allFiles;
+  for (const image of images) {
+    const hash = hashes[image];
+    if (assetInfo[hash]) {
       continue;
     }
     const { size: prevSize } = fs.statSync(image);
 
     const newName = createNewFilename(image);
-    await optimizeImage(image, newName);
+    await optimizeImageAsync(image, newName);
 
     const { size: newSize } = fs.statSync(image);
     const amountSaved = prevSize - newSize;
@@ -2218,10 +2227,6 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
       `Finished compressing assets. ${chalk.green(toReadableValue(totalSaved))} saved.`
     );
   }
-  // Remove assets that have been deleted/modified from assets.json
-  outdated.forEach(outdatedHash => {
-    delete assetInfo[outdatedHash];
-  });
   assetJson.writeAsync(assetInfo);
 }
 
