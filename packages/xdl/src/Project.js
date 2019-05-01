@@ -1672,6 +1672,44 @@ function shouldExposeEnvironmentVariableInManifest(key) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
+// SDK 33 will not have a compatible version on the app store for a while, so we
+// need to make sure we show a reasonable error message in this case.
+function _isCompatibleAppStoreClientAvailable(headers, appSdkVersion) {
+  // Bail out early if app is SDK 32 or earlier
+  if (semver.lte(appSdkVersion, '32.0.0')) {
+    return true;
+  }
+
+  let sdkVersions = _parseSDKVersions(
+    headers['expo-sdk-version'] || headers['exponent-sdk-version']
+  );
+  let latestDeviceSdkVersion = sdkVersions[sdkVersions.length - 1];
+
+  // If the device tells us that it has SDK 33 then we're good to go!
+  if (semver.gte(latestDeviceSdkVersion, '33.0.0')) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Parse SDK versions from a string that looks like:
+ * "5.0.0,7.0.0,10.0.0"
+ */
+function _parseSDKVersions(sdkVersionString: string) {
+  let sdkVersions = sdkVersionString;
+  if (sdkVersions) {
+    sdkVersions = sdkVersions
+      .split(',')
+      .map(x => x.trim())
+      .filter(x => !!x);
+  } else {
+    sdkVersions = [];
+  }
+  return uniq(sdkVersions);
+}
+
 export async function startExpoServerAsync(projectRoot: string) {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
@@ -1697,6 +1735,10 @@ export async function startExpoServerAsync(projectRoot: string) {
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
       let { exp: manifest } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+
+      let platform = req.headers['exponent-platform'] || 'ios';
+      let isDevice = req.headers['expo-client-environment'] === 'EXPO_DEVICE';
+
       if (!manifest) {
         const configName = await ConfigUtils.configFilenameAsync(projectRoot);
         throw new Error(`No ${configName} file found`);
@@ -1707,6 +1749,34 @@ export async function startExpoServerAsync(projectRoot: string) {
       if (bundleUrlPackagerOpts.hostType === 'redirect') {
         bundleUrlPackagerOpts.hostType = 'tunnel';
       }
+
+      // We need to bail out of sending the manifest if the user is on an iOS device without SDK 33,
+      // because the client may not be available on the app store and the default error message tells
+      // users to update on the app store.
+      if (
+        platform === 'ios' &&
+        !_isCompatibleAppStoreClientAvailable(req.headers, manifest.sdkVersion)
+      ) {
+        if (isDevice) {
+          // We should update this message when SDK 33 is available on the app store
+          let message =
+            'IMPORTANT: This project uses SDK 33, and a compatible Expo client is not currently available in the App Store. ' +
+            'To get the latest version of the iOS client on your device, please create an ad-hoc build as described here: https://expo.io/ad-hoc';
+          res
+            .status(403)
+            .send(JSON.stringify({ message, errorCode: 'NO_COMPATIBLE_EXPERIENCE_FOUND' }));
+        } else {
+          res.status(403).send(
+            JSON.stringify({
+              message:
+                'This project requires a new version of the Expo client app. You can install it by running "expo client:ios" in your terminal, or uninstall the app from your simulator and use expo-cli to open it again.',
+              errorCode: 'NO_COMPATIBLE_EXPERIENCE_FOUND',
+            })
+          );
+        }
+        return;
+      }
+
       manifest.xde = true; // deprecated
       manifest.developer = {
         tool: Config.developerTool,
@@ -1720,7 +1790,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         }
       }
       let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-      let platform = req.headers['exponent-platform'] || 'ios';
+
       entryPoint = UrlUtils.getPlatformSpecificBundleUrl(entryPoint, platform);
       let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
       let queryParams = await UrlUtils.constructBundleQueryParamsAsync(
