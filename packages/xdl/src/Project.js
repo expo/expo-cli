@@ -2075,14 +2075,13 @@ export async function startAsync(
     projectRoot,
     developerTool: Config.developerTool,
   });
-  if (!options.webOnly) {
+  if (options.webOnly) {
+    await Webpack.startAsync(projectRoot, options, verbose);
+  } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
   }
-  const hasWebSupport = await Doctor.hasWebSupportAsync(projectRoot);
-  if (hasWebSupport) {
-    await Webpack.startAsync(projectRoot, options, verbose);
-  }
+
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);
