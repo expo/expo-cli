@@ -7,8 +7,8 @@ import {
   generateMaskIconLink,
   injectResources,
 } from './injector';
-import validateColors from './validators/colors';
-import validatePresets from './validators/presets';
+import validateColors from './validators/Colors';
+import validatePresets from './validators/Presets';
 
 const TAP_CMD = 'webpack-pwa-manifest-plugin';
 const TAP = 'WebpackPWAManifestPlugin';
