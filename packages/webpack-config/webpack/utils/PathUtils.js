@@ -21,17 +21,26 @@ const possibleMainFiles = [
   'src/index.jsx',
 ];
 
-const appDirectory = fs.realpathSync(process.cwd());
+function ensureAppDirectory(projectRoot) {
+  if (typeof projectRoot === 'string') {
+    return projectRoot;
+  }
+  return fs.realpathSync(process.cwd());
+}
 
-module.exports = function getPaths({ locations, projectRoot }) {
+function ensureProjectRoot(projectRoot) {
+  return path.resolve(process.cwd(), ensureAppDirectory(projectRoot));
+}
+
+async function getPathsAsync({ locations, projectRoot }) {
   // Recycle locations
   if (locations) {
     return locations;
   }
-  const inputProjectRoot = projectRoot || appDirectory;
+  const inputProjectRoot = ensureProjectRoot(projectRoot);
 
   function absolute(...pathComponents) {
-    return path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
+    return path.resolve(inputProjectRoot, ...pathComponents);
   }
 
   const absoluteProjectRoot = absolute();
@@ -59,7 +68,14 @@ module.exports = function getPaths({ locations, projectRoot }) {
   const appJsonPath = absolute('app.json');
   const modulesPath = getModulesPath();
 
-  const { main } = require(packageJsonPath);
+  const { exp: nativeAppManifest, pkg } = await ConfigUtils.readConfigJsonAsync(
+    absoluteProjectRoot,
+    {
+      isConfigOptional: true,
+    }
+  );
+
+  const { main } = pkg;
   let appMain;
   if (!main) {
     // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
@@ -72,8 +88,6 @@ module.exports = function getPaths({ locations, projectRoot }) {
   } else {
     appMain = main;
   }
-
-  const nativeAppManifest = ConfigUtils.unsafeReadConfigJsonSync(absoluteProjectRoot);
   const config = ConfigUtils.ensurePWAConfig(nativeAppManifest);
 
   const productionPath = absolute(config.web.build.output);
@@ -118,4 +132,10 @@ module.exports = function getPaths({ locations, projectRoot }) {
       serveJson: getProductionPath('serve.json'),
     },
   };
+}
+
+module.exports = {
+  getPathsAsync,
+  ensureProjectRoot,
+  ensureAppDirectory,
 };

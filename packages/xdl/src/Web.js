@@ -20,7 +20,7 @@ export async function invokeWebpackConfigAsync(env, argv) {
   const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
   if (fs.existsSync(projectWebpackConfig)) {
     const webpackConfig = require(projectWebpackConfig);
-    return invokePossibleFunction(webpackConfig, env, argv);
+    return await invokePossibleFunction(webpackConfig, env, argv);
   }
   // Fallback to the default expo webpack config.
   const config = require('@expo/webpack-config');

@@ -10,9 +10,13 @@ const ManifestPlugin = require('webpack-manifest-plugin');
 const { createEnvironmentConstants } = require('@expo/config');
 const { DefinePlugin } = require('webpack');
 const createClientEnvironment = require('./createClientEnvironment');
-const getPaths = require('./utils/getPaths');
+const createFontLoader = require('./loaders/createFontLoader');
+const createBabelLoader = require('./loaders/createBabelLoader');
+const { getPathsAsync } = require('./utils/PathUtils');
 const { overrideWithPropertyOrConfig } = require('./utils/config');
+const getConfigAsync = require('./utils/getConfigAsync');
 const getMode = require('./utils/getMode');
+
 const DEFAULT_ALIAS = {
   // Alias direct react-native imports to react-native-web
   'react-native$': 'react-native-web',
@@ -35,12 +39,8 @@ const DEFAULT_ALIAS = {
     'react-native-web/dist/vendor/react-native/NativeEventEmitter',
 };
 
-const createFontLoader = require('./loaders/createFontLoader');
-const createBabelLoader = require('./loaders/createBabelLoader');
-const getConfig = require('./utils/getConfig');
-
 // { production, development, mode, projectRoot }
-module.exports = function(env = {}, argv = {}) {
+module.exports = async function(env = {}, argv = {}) {
   const {
     /**
      * **Dangerously** disable, extend, or clobber the default alias.
@@ -65,17 +65,21 @@ module.exports = function(env = {}, argv = {}) {
      * otherwise icons won't work as expected.
      */
     supportsFontLoading = true,
+
+    // An array of paths for babel to compile.
+    extraModules,
   } = argv;
 
-  const config = expoConfig || getConfig(env);
+  const config = expoConfig || (await getConfigAsync(env));
   const alias = overrideWithPropertyOrConfig(aliasProp, DEFAULT_ALIAS, true);
 
-  const locations = getPaths(env);
+  const locations = await getPathsAsync(env);
   const mode = getMode(env);
 
   const babelConfig = createBabelLoader({
     mode,
     babelProjectRoot: locations.root,
+    extraModules,
   });
 
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);

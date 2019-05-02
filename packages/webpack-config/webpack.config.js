@@ -1,4 +1,4 @@
-const getConfig = require('./webpack/utils/getConfig');
+const getConfigAsync = require('./webpack/utils/getConfigAsync');
 const developmentConfig = require('./webpack/webpack.dev');
 const productionConfig = require('./webpack/webpack.prod');
 const getMode = require('./webpack/utils/getMode');
@@ -6,14 +6,14 @@ const getMode = require('./webpack/utils/getMode');
 module.exports = async function(env = {}, argv) {
   // Fill all config values with PWA defaults
   if (!env.config) {
-    env.config = await getConfig(env);
+    env.config = await getConfigAsync(env);
   }
 
   const mode = getMode(env);
 
   if (mode === 'development') {
-    return developmentConfig(env, argv);
+    return await developmentConfig(env, argv);
   } else {
-    return productionConfig(env, argv);
+    return await productionConfig(env, argv);
   }
 };

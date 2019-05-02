@@ -8,8 +8,9 @@ const TerserPlugin = require('terser-webpack-plugin');
 const isWsl = require('is-wsl');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const safePostCssParser = require('postcss-safe-parser');
-const getConfig = require('./utils/getConfig');
-const getPaths = require('./utils/getPaths');
+const getConfigAsync = require('./utils/getConfigAsync');
+const { getPathsAsync } = require('./utils/PathUtils');
+const getDevtool = require('./utils/getDevtool');
 const common = require('./webpack.common.js');
 const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
 
@@ -28,23 +29,18 @@ const DEFAULT_BROTLI = {
   minRatio: 0.8,
 };
 
-module.exports = function(env = {}, argv) {
+module.exports = async function(env = {}, argv) {
   if (!env.config) {
     // Fill all config values with PWA defaults
-    env.config = getConfig(env);
-  }
-
-  const locations = getPaths(env);
-
-  const appJSON = env.config || require(locations.appJson);
-  if (!appJSON) {
-    throw new Error('app.json could not be found at: ' + locations.appJson);
+    env.config = await getConfigAsync(env);
   }
   // For RN CLI support
-  const appManifest = appJSON.expo || appJSON;
-  const { web = {} } = appManifest;
+  const { web = {} } = env.config;
   const { build: buildConfig = { verbose: false } } = web;
-  const shouldUseSourceMap = buildConfig.devtool !== undefined && buildConfig.devtool;
+  // const shouldUseSourceMap = buildConfig.devtool !== undefined && buildConfig.devtool;
+  const shouldUseSourceMap = getDevtool(env, buildConfig);
+
+  const locations = await getPathsAsync(env);
   /**
    * build: {
    *   verbose: boolean,
@@ -94,8 +90,7 @@ module.exports = function(env = {}, argv) {
     plugins.push(new BrotliPlugin(brotliConfig));
   }
 
-  return merge(common(env, argv), {
-    mode: 'production',
+  return merge(await common(env, argv), {
     entry: {
       app: appEntry,
     },

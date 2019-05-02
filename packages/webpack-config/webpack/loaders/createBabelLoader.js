@@ -1,5 +1,5 @@
 const path = require('path');
-const getPaths = require('../utils/getPaths');
+const { ensureProjectRoot } = require('../utils/PathUtils');
 
 const getModule = name => path.join('node_modules', name);
 
@@ -14,12 +14,6 @@ const includeModulesThatContainPaths = [
   getModule('@unimodules'),
 ];
 
-function ensureRoot(possibleProjectRoot) {
-  if (typeof possibleProjectRoot === 'string') {
-    return possibleProjectRoot;
-  }
-  return getPaths().root;
-}
 /**
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
@@ -30,11 +24,11 @@ module.exports = function({
    */
   mode,
   babelProjectRoot,
-  pathsToInclude = [],
+  extraModules = [],
   ...options
 } = {}) {
-  const ensuredProjectRoot = ensureRoot(babelProjectRoot);
-  const modules = [...includeModulesThatContainPaths, ...pathsToInclude];
+  const ensuredProjectRoot = ensureProjectRoot(babelProjectRoot);
+  const modules = [...includeModulesThatContainPaths, ...extraModules];
   const customUse = options.use || {};
   const customUseOptions = customUse.options || {};
 

@@ -4,22 +4,21 @@ const webpack = require('webpack');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
 const common = require('./webpack.common.js');
-const getPaths = require('./utils/getPaths');
-const getConfig = require('./utils/getConfig');
+const { getPathsAsync } = require('./utils/PathUtils');
+const getConfigAsync = require('./utils/getConfigAsync');
 
 const createDevServerConfig = require('./createDevServerConfig');
 
-module.exports = function(env = {}, argv) {
+module.exports = async function(env = {}, argv) {
   if (!env.config) {
     // Fill all config values with PWA defaults
-    env.config = getConfig(env);
+    env.config = await getConfigAsync(env);
   }
 
-  const locations = getPaths(env);
+  const locations = await getPathsAsync(env);
 
-  const devServer = createDevServerConfig(env, argv);
-  return merge(common(env, argv), {
-    mode: 'development',
+  const devServer = await createDevServerConfig(env, argv);
+  return merge(await common(env, argv), {
     entry: [
       // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
       // Include an alternative client for WebpackDevServer. A client's job is to

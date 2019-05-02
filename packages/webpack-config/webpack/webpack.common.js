@@ -12,10 +12,19 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
 const PnpWebpackPlugin = require('pnp-webpack-plugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
+const merge = require('webpack-merge');
 const createClientEnvironment = require('./createClientEnvironment');
 const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
 const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
-const getPaths = require('./utils/getPaths');
+const { getPathsAsync } = require('./utils/PathUtils');
+const getDevtool = require('./utils/getDevtool');
+
+const getMode = require('./utils/getMode');
+const getConfigAsync = require('./utils/getConfigAsync');
+// const createFontLoader = require('./loaders/createFontLoader');
+// const createBabelLoader = require('./loaders/createBabelLoader');
+const webpackConfigUnimodules = require('./webpack.config.unimodules');
+
 const DEFAULT_SERVICE_WORKER = {};
 const DEFAULT_REPORT_CONFIG = {
   verbose: false,
@@ -76,32 +85,10 @@ function createNoJSComponent(message) {
   return `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
 }
 
-function getDevtool(env, { devtool }) {
-  if (env.production) {
-    // string or false
-    if (devtool !== undefined) {
-      // When big assets are involved sources maps can become expensive and cause your process to run out of memory.
-      return devtool;
-    }
-    return 'source-map';
-  }
-  if (env.development) {
-    return 'cheap-module-source-map';
-  }
-  return false;
-}
-
-const getMode = require('./utils/getMode');
-const getConfig = require('./utils/getConfig');
-// const createFontLoader = require('./loaders/createFontLoader');
-// const createBabelLoader = require('./loaders/createBabelLoader');
-const webpackConfigUnimodules = require('./webpack.config.unimodules');
-const merge = require('webpack-merge');
-
-module.exports = function(env = {}, argv) {
-  const config = getConfig(env);
+module.exports = async function(env = {}, argv) {
+  const config = await getConfigAsync(env);
   const mode = getMode(env);
-  const locations = getPaths(env);
+  const locations = await getPathsAsync(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
   const middlewarePlugins = [
@@ -193,7 +180,7 @@ module.exports = function(env = {}, argv) {
 
   const devtool = getDevtool(env, config.web.build);
 
-  const unimodulesConfig = webpackConfigUnimodules(env, argv);
+  const unimodulesConfig = await webpackConfigUnimodules(env, argv);
 
   const allLoaders = [
     imageLoaderConfiguration,
@@ -221,7 +208,7 @@ module.exports = function(env = {}, argv) {
     },
     plugins: [
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON(env),
+      await createIndexHTMLFromAppJSON(env),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
