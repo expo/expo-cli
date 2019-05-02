@@ -50,6 +50,10 @@ Command.prototype.allowOffline = function() {
   return this;
 };
 
+program.on('--help', () => {
+  log(`To learn more about a specific command and its options use 'expo [command] --help'\n`);
+});
+
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
 Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
