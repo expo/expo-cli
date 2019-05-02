@@ -227,9 +227,13 @@ function sanitizePublicPath(publicPath) {
   return publicPath + '/';
 }
 
-export function getConfigForPWA(projectRoot: string, getAbsolutePath: Function, options: Object) {
-  const config = unsafeReadConfigJsonSync(projectRoot);
-  return ensurePWAConfig(config, getAbsolutePath, options);
+export async function getConfigForPWA(
+  projectRoot: string,
+  getAbsolutePath: Function,
+  options: Object
+) {
+  const { exp } = await readConfigJsonAsync(projectRoot, { isConfigOptional: true });
+  return ensurePWAConfig(exp, getAbsolutePath, options);
 }
 export function getNameFromConfig(exp: Object = {}) {
   // For RN CLI support
@@ -511,31 +515,6 @@ function applyRequiredConfigFields(projectRoot: string, exp: Object, pkg: Object
   }
 
   return outputExp;
-}
-
-export function unsafeReadConfigJsonSync(projectRoot: string) {
-  const { configPath, configNamespace } = findConfigFile(projectRoot);
-
-  let exp;
-  let rootConfig;
-
-  try {
-    exp = require(configPath);
-  } catch (error) {}
-
-  exp = exp || { expo: { platforms: ['android', 'ios', 'web'] } };
-
-  if (configNamespace) {
-    // if we're not using exp.json, then we've stashed everything under an expo key
-    rootConfig = exp;
-    exp = exp[configNamespace];
-  }
-
-  if (!rootConfig) {
-    throw new Error(`${APP_JSON_FILE_NAME} could not be found at: ${configPath}`);
-  }
-
-  return exp;
 }
 
 export async function readConfigJsonAsync(
