@@ -55,6 +55,26 @@ export const optimizeImageAsync = async (image, newName) => {
 };
 
 /*
+ * Returns a boolean indicating whether or not there are assets to optimize
+ */
+export const hasUnoptimizedAssetsAsync = async (projectDir, options) => {
+  if (!fs.existsSync(path.join(projectDir, '.expo-shared/assets.json'))) {
+    return true;
+  }
+  const { selectedFiles } = await getAssetFilesAsync(projectDir, options);
+  const { assetInfo } = await readAssetJsonAsync(projectDir);
+
+  for (const file of selectedFiles) {
+    const hash = calculateHash(file);
+    if (!assetInfo[hash]) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/*
  * Find all project assets under assetBundlePatterns in app.json excluding node_modules.
  * If --include of --exclude flags were passed in those results are filtered out.
  */

@@ -1,4 +1,4 @@
-import { Project, ProjectUtils } from 'xdl';
+import { Project, ProjectUtils, AssetUtils } from 'xdl';
 import prompt from '../prompt';
 import log from '../log';
 
@@ -9,7 +9,8 @@ export async function action(projectDir = './', options = {}) {
     process.exit(1);
   }
 
-  if (!options.save) {
+  const hasUnoptimizedAssets = await AssetUtils.hasUnoptimizedAssetsAsync(projectDir, options);
+  if (!options.save && hasUnoptimizedAssets) {
     log.warn('Running this command will overwrite the original assets.');
     const { saveOriginals } = await prompt({
       type: 'confirm',
