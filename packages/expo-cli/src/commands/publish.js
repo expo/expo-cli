@@ -37,7 +37,7 @@ export async function action(projectDir: string, options: Options = {}) {
     const { allowOptimization } = await prompt({
       type: 'confirm',
       name: 'allowOptimization',
-      message: 'Do you want to do this now?',
+      message: 'Do you want to optimize assets now?',
     });
     if (allowOptimization) {
       await optimize(projectDir);
