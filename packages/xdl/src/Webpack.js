@@ -127,9 +127,8 @@ export async function getProtocolAsync(projectRoot: string): Promise<'http' | 'h
 }
 
 export async function stopAsync(projectRoot: string): Promise<void> {
-  const devServer = getServer(projectRoot);
-  if (devServer) {
-    await new Promise(resolve => devServer.close(() => resolve()));
+  if (webpackDevServerInstance) {
+    await new Promise(resolve => webpackDevServerInstance.close(() => resolve()));
     webpackDevServerInstance = null;
     webpackServerPort = null;
     // TODO
