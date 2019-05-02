@@ -130,10 +130,11 @@ export async function readExpRcAsync(projectRoot: string): Promise<any> {
 }
 
 export async function readConfigJsonAsync(
-  projectRoot: string
+  projectRoot: string,
+  options: Object
 ): Promise<{ exp?: Object, pkg?: Object, rootConfig?: Object }> {
   try {
-    return await ConfigUtils.readConfigJsonAsync(projectRoot);
+    return await ConfigUtils.readConfigJsonAsync(projectRoot, options);
   } catch (error) {
     logError(projectRoot, 'expo', error.message);
     return { exp: null, pkg: null };

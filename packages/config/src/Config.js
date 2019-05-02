@@ -228,7 +228,7 @@ function sanitizePublicPath(publicPath) {
 }
 
 export function getConfigForPWA(projectRoot: string, getAbsolutePath: Function, options: Object) {
-  const config = readConfigJson(projectRoot);
+  const config = unsafeReadConfigJsonSync(projectRoot);
   return ensurePWAConfig(config, getAbsolutePath, options);
 }
 export function getNameFromConfig(exp: Object = {}) {
@@ -481,13 +481,49 @@ export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, opti
   return config;
 }
 
-export function readConfigJson(projectRoot: string) {
+function applyRequiredConfigFields(projectRoot: string, exp: Object, pkg: Object): Object {
+  if (!exp) {
+    throw new Error(`Missing ${APP_JSON_FILE_NAME}. See https://docs.expo.io/`);
+  }
+  const outputExp = { ...exp };
+  // fill any required fields we might care about
+
+  // TODO(adam) decide if there are other fields we want to provide defaults for
+
+  if (!outputExp.name) {
+    outputExp.name = pkg.name;
+  }
+
+  if (!outputExp.slug) {
+    outputExp.slug = slug(outputExp.name.toLowerCase());
+  }
+
+  if (!outputExp.version) {
+    outputExp.version = pkg.version;
+  }
+
+  if (!outputExp.platforms) {
+    outputExp.platforms = ['android', 'ios'];
+  }
+
+  if (outputExp.nodeModulesPath) {
+    outputExp.nodeModulesPath = path.resolve(projectRoot, outputExp.nodeModulesPath);
+  }
+
+  return outputExp;
+}
+
+export function unsafeReadConfigJsonSync(projectRoot: string) {
   const { configPath, configNamespace } = findConfigFile(projectRoot);
 
   let exp;
   let rootConfig;
 
-  exp = require(configPath);
+  try {
+    exp = require(configPath);
+  } catch (error) {}
+
+  exp = exp || { expo: { platforms: ['android', 'ios', 'web'] } };
 
   if (configNamespace) {
     // if we're not using exp.json, then we've stashed everything under an expo key
@@ -496,14 +532,15 @@ export function readConfigJson(projectRoot: string) {
   }
 
   if (!rootConfig) {
-    throw new Error('app.json could not be found at: ' + configPath);
+    throw new Error(`${APP_JSON_FILE_NAME} could not be found at: ${configPath}`);
   }
 
   return exp;
 }
 
 export async function readConfigJsonAsync(
-  projectRoot: string
+  projectRoot: string,
+  options: { isConfigOptional?: boolean } = {}
 ): Promise<{ exp?: Object, pkg?: Object, rootConfig?: Object }> {
   let exp;
   let pkg;
@@ -551,34 +588,21 @@ export async function readConfigJsonAsync(
     exp = pkg.exp;
     throw new Error(`Move your "exp" config from package.json to ${APP_JSON_FILE_NAME}.`);
   } else if (!exp && !pkg.exp) {
-    throw new Error(`Missing ${configName}. See https://docs.expo.io/`);
+    if (options.isConfigOptional) {
+      // For use in projects like CRA where an app.json isn't present.
+      setCustomConfigPath(projectRoot, path.resolve(projectRoot, '.expo', APP_JSON_FILE_NAME));
+      // Save a temporary app.json to the .expo folder. This will prevent further warnings.
+      await overwriteConfigJsonAsync(projectRoot, { expo: { platforms: ['web'] } });
+      console.warn(
+        `Config not found. Using virtual ${APP_JSON_FILE_NAME}, it's recommended that you create an ${APP_JSON_FILE_NAME} in the root of your project.`
+      );
+      return readConfigJsonAsync(projectRoot, options);
+    } else {
+      throw new Error(`Missing ${configName}. See https://docs.expo.io/`);
+    }
   }
 
-  // fill any required fields we might care about
-
-  // TODO(adam) decide if there are other fields we want to provide defaults for
-
-  if (exp && !exp.name) {
-    exp.name = pkg.name;
-  }
-
-  if (exp && !exp.slug) {
-    exp.slug = slug(exp.name.toLowerCase());
-  }
-
-  if (exp && !exp.version) {
-    exp.version = pkg.version;
-  }
-
-  if (exp && !exp.platforms) {
-    exp.platforms = ['android', 'ios'];
-  }
-
-  if (exp.nodeModulesPath) {
-    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
-  }
-
-  return { exp, pkg, rootConfig };
+  return { exp: applyRequiredConfigFields(projectRoot, exp, pkg), pkg, rootConfig };
 }
 
 export async function writeConfigJsonAsync(
@@ -614,4 +638,9 @@ export async function writeConfigJsonAsync(
     pkg,
     rootConfig,
   };
+}
+
+export async function overwriteConfigJsonAsync(projectRoot: string, exp: Object): Promise<void> {
+  const { configPath } = await findConfigFileAsync(projectRoot);
+  await JsonFile.writeAsync(configPath, exp, { json5: false });
 }

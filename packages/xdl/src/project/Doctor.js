@@ -439,7 +439,8 @@ export async function validateWithNetworkAsync(projectRoot: string): Promise<num
 export async function hasWebSupportAsync(projectRoot, exp) {
   let inputExp = exp;
   if (!exp) {
-    inputExp = (await ProjectUtils.readConfigJsonAsync(projectRoot)).exp;
+    inputExp = (await ProjectUtils.readConfigJsonAsync(projectRoot, { isConfigOptional: true }))
+      .exp;
   }
   const { platforms } = inputExp;
   if (!Array.isArray(platforms)) {

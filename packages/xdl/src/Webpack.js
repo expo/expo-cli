@@ -53,7 +53,7 @@ export async function startAsync(
 
   const useYarn = ConfigUtils.isUsingYarn(projectRoot);
 
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot, { isConfigOptional: true });
   const { webName } = ConfigUtils.getNameFromConfig(exp);
 
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);

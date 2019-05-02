@@ -73,7 +73,7 @@ module.exports = function getPaths({ locations, projectRoot }) {
     appMain = main;
   }
 
-  const nativeAppManifest = require(appJsonPath);
+  const nativeAppManifest = ConfigUtils.unsafeReadConfigJsonSync(absoluteProjectRoot);
   const config = ConfigUtils.ensurePWAConfig(nativeAppManifest);
 
   const productionPath = absolute(config.web.build.output);

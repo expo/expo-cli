@@ -42,7 +42,7 @@ export async function openProjectAsync(projectRoot) {
 
 // If platforms only contains the "web" field
 export async function onlySupportsWebAsync(projectRoot) {
-  const { exp } = await readConfigJsonAsync(projectRoot);
+  const { exp } = await readConfigJsonAsync(projectRoot, { isConfigOptional: true });
   if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
     return exp.platforms[0] === 'web';
   }
