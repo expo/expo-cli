@@ -118,9 +118,9 @@ export const readAssetJsonAsync = async projectDir => {
 };
 
 /*
- * Add .expo extension to a filename in a path string
+ * Add .orig extension to a filename in a path string
  */
 export const createNewFilename = image => {
   const { dir, name, ext } = path.parse(image);
-  return dir + '/' + name + '.expo' + ext;
+  return dir + '/' + name + '.orig' + ext;
 };
