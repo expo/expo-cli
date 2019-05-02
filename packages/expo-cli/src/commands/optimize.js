@@ -15,7 +15,7 @@ export async function action(projectDir = './', options = {}) {
     const { saveOriginals } = await prompt({
       type: 'confirm',
       name: 'saveOriginals',
-      message: 'Do you want to backup each file instead?',
+      message: 'Do you want to save a backup of each file?',
     });
     if (saveOriginals) {
       options.save = true;
