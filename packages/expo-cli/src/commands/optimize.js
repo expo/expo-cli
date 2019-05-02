@@ -28,9 +28,15 @@ export default program => {
     .command('optimize [project-dir]')
     .alias('o')
     .description('Compress the assets in your Expo project')
-    .option('-s, --save', 'Save the original assets with the extension .expo')
-    .option('--include [pattern]', 'Include only assets that match this glob pattern')
-    .option('--exclude [pattern]', 'Exclude all assets that match this glob pattern')
+    .option('-s, --save', 'Save the original assets with a .expo extension')
+    .option(
+      '--include [pattern]',
+      'Include only assets that match this glob pattern relative to the project root'
+    )
+    .option(
+      '--exclude [pattern]',
+      'Exclude all assets that match this glob pattern relative to the project root'
+    )
     .allowOffline()
     .asyncAction(action);
 };
