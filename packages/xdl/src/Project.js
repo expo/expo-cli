@@ -2218,7 +2218,7 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
       fs.unlinkSync(newName);
     }
     totalSaved += amountSaved;
-    logger.global.info(chalk.yellow(`Saved ${toReadableValue(amountSaved)}`));
+    logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
   }
   if (totalSaved === 0) {
     logger.global.info('No assets optimized. Everything is fully compressed!');
