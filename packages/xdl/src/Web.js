@@ -1,5 +1,5 @@
 import fs from 'fs';
-import opn from 'opn';
+import openBrowser from 'react-dev-utils/openBrowser';
 import path from 'path';
 
 import Logger from './Logger';
@@ -32,7 +32,7 @@ export async function openProjectAsync(projectRoot) {
 
   try {
     let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
-    opn(url, { wait: false });
+    openBrowser(url);
     return { success: true, url };
   } catch (e) {
     Logger.global.error(`Couldn't start project on web: ${e.message}`);
