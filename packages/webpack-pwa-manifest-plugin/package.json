@@ -26,10 +26,14 @@
     "build": "gulp clean && gulp build",
     "watch": "gulp watch",
     "prepare": "yarn build",
-    "pkg": "pkg ."
+    "pkg": "pkg .",
+    "test": "npm run build && node tests/index.js",
+    "test:debug": "npm run build && node --inspect-brk ./tests/index.js",
+    "test:fast": "node ./tests/index.js"
   },
   "license": "MIT",
   "dependencies": {
+    "@expo/config": "^1.0.3",
     "css-color-names": "^1.0.1",
     "dot-object": "^1.7.1",
     "jimp": "^0.6.0",

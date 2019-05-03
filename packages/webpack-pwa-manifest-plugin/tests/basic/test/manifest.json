@@ -1,0 +1,39 @@
+{
+  "background_color": "#4d5fab",
+  "description": "Official app for things.",
+  "dir": "auto",
+  "display": "fullscreen",
+  "icons": {},
+  "startupImages": [
+    {
+      "resizeMode": "contain",
+      "color": "#4d5fab",
+      "src": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-pwa-manifest-plugin/tests/icon.png",
+      "supportsTablet": true,
+      "orientation": "portrait",
+      "destination": "assets/splash"
+    }
+  ],
+  "lang": "en",
+  "name": "Demo App",
+  "orientation": "portrait",
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "itunes",
+      "id": "com.expo.demoapp"
+    },
+    {
+      "platform": "play",
+      "url": "http://play.google.com/store/apps/details?id=com.expo.demoapp",
+      "id": "com.expo.demoapp"
+    }
+  ],
+  "short_name": "Demo",
+  "start_url": ".",
+  "theme_color": "#4d5fab",
+  "ios": {
+    "apple-mobile-web-app-title": "Demo",
+    "apple-mobile-web-app-status-bar-style": "default"
+  }
+}

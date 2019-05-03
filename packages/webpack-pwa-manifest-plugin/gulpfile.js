@@ -12,6 +12,7 @@ const packageJSON = require('./package.json');
 const paths = {
   source: 'src/**/*.js',
   build: 'build',
+  snapshots: 'tests/*/output',
 };
 
 const tasks = {
@@ -41,6 +42,7 @@ gulp.task('build', tasks.babel);
 gulp.task('watch', tasks.watchBabel);
 gulp.task('clean', done => {
   fs.remove(paths.build, done);
+  fs.remove(paths.snapshots, done);
 });
 
 gulp.task('default', gulp.series('watch'));
