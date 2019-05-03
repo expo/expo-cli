@@ -41,6 +41,8 @@ Keeping the `master` releasable means that changes merged to it need to be:
 
 You can then run `yarn start` in the root folder to start watching and automatically re-building packages when there are new changes.
 
+To use the local development version Expo CLI, you can run `local-expo`.
+
 ## Submitting a pull request
 
 To submit a pull request:
