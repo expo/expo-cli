@@ -31,7 +31,8 @@ export type CredsList = Array<CredObject>;
 
 export async function getExistingDistCerts(
   username: string,
-  appleTeamId: string
+  appleTeamId: string,
+  options: { provideFullCertificate?: boolean } = {}
 ): Promise<?CredsList> {
   const distCerts = await getExistingUserCredentials(username, appleTeamId, 'dist-cert');
   return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }) => {
@@ -46,7 +47,9 @@ export async function getExistingDistCerts(
     return {
       value: {
         distCertSerialNumber: serialNumber,
-        userCredentialsId: String(userCredentialsId),
+        ...(options.provideFullCertificate
+          ? { certP12, certId, certPassword }
+          : { userCredentialsId: String(userCredentialsId) }),
       },
       name,
     };
