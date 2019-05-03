@@ -227,6 +227,13 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
     pkgJson.scripts.ios = 'react-native run-ios';
     pkgJson.scripts.android = 'react-native run-android';
 
+    const { sdkVersion } = exp;
+    const versions = await Versions.versionsAsync();
+    const reactNativeVersion = versions['sdkVersions'][sdkVersion]['facebookReactNativeVersion'];
+
+    pkgJson.dependencies['@babel/runtime'] = 'latest';
+    pkgJson.dependencies['react-native'] = reactNativeVersion;
+
     if (pkgJson.jest !== undefined) {
       newDevDependencies.push('jest');
 
