@@ -232,7 +232,8 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
     const versions = await Versions.versionsAsync();
     const reactNativeVersion = versions['sdkVersions'][sdkVersion]['facebookReactNativeVersion'];
 
-    if (semver.satisfies(sdkVersion, '31 - 32')) {
+    // React Native 0.59 (shipped with sdk 33) adds @babel/runtime to dependencies
+    if (semver.lte(sdkVersion, '32.0.0')) {
       pkgJson.dependencies['@babel/runtime'] = '^7.0.0';
     }
     pkgJson.dependencies['react-native'] = reactNativeVersion;
