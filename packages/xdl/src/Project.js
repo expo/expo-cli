@@ -2,6 +2,7 @@
  * @flow
  */
 import axios from 'axios';
+import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -39,6 +40,7 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
+import * as AssetUtils from './AssetUtils';
 import Config from './Config';
 import createWebpackCompiler from './createWebpackCompiler';
 import * as Doctor from './project/Doctor';
@@ -2063,6 +2065,95 @@ export async function setOptionsAsync(
 export async function getUrlAsync(projectRoot: string, options: Object = {}) {
   _assertValidProjectRoot(projectRoot);
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
+}
+
+export async function optimizeAsync(projectRoot: string = './', options: Object = {}) {
+  logger.global.info(chalk.green('Optimizing assets...'));
+  const {
+    readAssetJsonAsync,
+    getAssetFilesAsync,
+    optimizeImageAsync,
+    calculateHash,
+    createNewFilename,
+    toReadableValue,
+  } = AssetUtils;
+
+  const { assetJson, assetInfo } = await readAssetJsonAsync(projectRoot);
+  // Keep track of which hash values in assets.json are no longer in use
+  const outdated = new Set();
+  for (const fileHash in assetInfo) outdated.add(fileHash);
+
+  let totalSaved = 0;
+  const { allFiles, selectedFiles } = await getAssetFilesAsync(projectRoot, options);
+  const hashes = {};
+  // Remove assets that have been deleted/modified from assets.json
+  allFiles.forEach(image => {
+    const hash = calculateHash(image);
+    if (assetInfo[hash]) {
+      outdated.delete(hash);
+    }
+    hashes[image] = hash;
+  });
+  outdated.forEach(outdatedHash => {
+    delete assetInfo[outdatedHash];
+  });
+
+  const images = options.include || options.exclude ? selectedFiles : allFiles;
+  for (const image of images) {
+    const hash = hashes[image];
+    if (assetInfo[hash]) {
+      continue;
+    }
+    const { size: prevSize } = fs.statSync(image);
+
+    const newName = createNewFilename(image);
+    await optimizeImageAsync(image, newName);
+
+    const { size: newSize } = fs.statSync(image);
+    const amountSaved = prevSize - newSize;
+    if (amountSaved < 0) {
+      // Delete the optimized version and revert changes
+      fs.renameSync(newName, image);
+      assetInfo[hash] = true;
+      logger.global.info(
+        chalk.gray(
+          `Compressed version of ${image} was larger than original. Using original instead.`
+        )
+      );
+      continue;
+    }
+    // Recalculate hash since the image has changed
+    const newHash = calculateHash(image);
+    assetInfo[newHash] = true;
+
+    if (options.save) {
+      if (hash === newHash) {
+        logger.global.info(
+          chalk.gray(
+            `Compressed asset ${image} is identical to the original. Using original instead.`
+          )
+        );
+        fs.unlinkSync(newName);
+      } else {
+        logger.global.info(chalk.gray(`Saving original asset to ${newName}`));
+        // Save the old hash to prevent reoptimizing
+        assetInfo[hash] = true;
+      }
+    } else {
+      // Delete the renamed original asset
+      fs.unlinkSync(newName);
+    }
+    totalSaved += amountSaved;
+    logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
+  }
+  if (totalSaved === 0) {
+    logger.global.info('No assets optimized. Everything is fully compressed!');
+  } else {
+    logger.global.info(
+      `Finished compressing assets. ${chalk.green(toReadableValue(totalSaved))} saved.`
+    );
+  }
+  assetJson.writeAsync(assetInfo);
 }
 
 export async function startAsync(

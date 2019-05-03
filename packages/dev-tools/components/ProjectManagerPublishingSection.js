@@ -6,6 +6,7 @@ import * as Strings from 'app/common/strings';
 import * as SVG from 'app/common/svg';
 
 import InputWithLabel from 'app/components/InputWithLabel';
+import SettingsControl from 'app/components/SettingsControl';
 import TextareaWithLabel from 'app/components/TextareaWithLabel';
 import PrimaryButtonWithStates from 'app/components/PrimaryButtonWithStates';
 
@@ -79,10 +80,22 @@ const STYLES_CANCEL = css`
   cursor: pointer;
 `;
 
+const STYLES_TOGGLE = css`
+  max-width: ${Constants.breakpoints.smallSidebar}px;
+  margin-bottom: 24px;
+`;
+
+const STYLES_SETTINGS_CONTROL = css`
+  font-family: ${Constants.fontFamilies.mono};
+  color: ${Constants.colors.darkBorder};
+  font-size: 10px;
+`;
+
 // TODO(jim): Controls for privacy.
 export default class ProjectManagerPublishingSection extends React.Component {
   state = {
     isPublishing: false,
+    optimize: true,
     config: getConfigFromProps(this.props),
     errors: {},
   };
@@ -167,6 +180,12 @@ export default class ProjectManagerPublishingSection extends React.Component {
     });
   };
 
+  _handleOptimizeToggle = () => {
+    this.setState(state => ({
+      optimize: !state.optimize,
+    }));
+  };
+
   _handleCancel = () => {
     this.props.onUpdateState({
       isPublishing: false,
@@ -179,6 +198,7 @@ export default class ProjectManagerPublishingSection extends React.Component {
     });
     await this.props.onPublish({
       config: this.state.config,
+      optimize: this.state.optimize,
     });
   };
 
@@ -254,7 +274,14 @@ export default class ProjectManagerPublishingSection extends React.Component {
           onChange={this._handleChangeDescription}
         />
 
+        <div className={STYLES_TOGGLE}>
+          <SettingsControl onClick={this._handleOptimizeToggle} isActive={this.state.optimize}>
+            <span className={STYLES_SETTINGS_CONTROL}>Optimize Assets</span>
+          </SettingsControl>
+        </div>
+
         <h2 className={STYLES_HEADING}>Confirm changes</h2>
+
         <p className={STYLES_PARAGRAPH}>
           Once you publish your project, you will be able to view it at&nbsp;
           <span className={STYLES_EMPHASIS}>

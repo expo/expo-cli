@@ -24,6 +24,9 @@ module.exports = {
   get ApiV2() {
     return require('./ApiV2').default;
   },
+  get AssetUtils() {
+    return require('./AssetUtils');
+  },
   get Binaries() {
     return require('./Binaries');
   },

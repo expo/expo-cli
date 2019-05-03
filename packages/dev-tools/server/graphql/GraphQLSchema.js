@@ -284,6 +284,8 @@ const typeDefs = graphql`
     publishProject(releaseChannel: String): PublishProjectResult
     # Sends the project URL by email.
     sendProjectUrl(recipient: String!): SendProjectResult
+    # Compresses the images in a project
+    optimizeAssets: Project
     # Updates specified project settings.
     setProjectSettings(settings: ProjectSettingsInput!): Project
     # Update projectConfig
@@ -555,6 +557,13 @@ const resolvers = {
       return {
         ...currentProject,
         settings: updatedSettings,
+      };
+    },
+    async optimizeAssets(parent, { settings }, context) {
+      const currentProject = context.getCurrentProject();
+      await Project.optimizeAsync(currentProject.projectDir);
+      return {
+        ...currentProject,
       };
     },
     async setProjectConfig(parent, { input }, context) {

@@ -2,13 +2,17 @@
  * @flow
  */
 
+import fs from 'fs';
+import path from 'path';
 import chalk from 'chalk';
 import simpleSpinner from '@expo/simple-spinner';
 
 import { Exp, Project, ProjectUtils } from 'xdl';
 
 import log from '../log';
+import prompt from '../prompt';
 import sendTo from '../sendTo';
+import { action as optimize } from './optimize';
 import { installExitHooks } from '../exit';
 
 type Options = {
@@ -26,6 +30,18 @@ export async function action(projectDir: string, options: Options = {}) {
       'Release channel name can only contain lowercase letters, numbers and special characters . _ and -'
     );
     process.exit(1);
+  }
+  const hasOptimized = fs.existsSync(path.join(projectDir, '/.expo-shared/assets.json'));
+  if (!hasOptimized) {
+    log.warn('It seems your assets have not been optimized yet.');
+    const { allowOptimization } = await prompt({
+      type: 'confirm',
+      name: 'allowOptimization',
+      message: 'Do you want to optimize assets now?',
+    });
+    if (allowOptimization) {
+      await optimize(projectDir);
+    }
   }
   const status = await Project.currentStatus(projectDir);
 
