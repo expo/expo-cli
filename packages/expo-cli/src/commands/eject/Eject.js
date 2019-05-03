@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import fse from 'fs-extra';
 import matchRequire from 'match-require';
 import path from 'path';
+import semver from 'semver';
 import spawn from 'cross-spawn';
 import spawnAsync from '@expo/spawn-async';
 import { ProjectUtils, Detach, Versions } from 'xdl';
