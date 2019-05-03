@@ -71,7 +71,7 @@ async function getPathsAsync({ locations, projectRoot }) {
   const { exp: nativeAppManifest, pkg } = await ConfigUtils.readConfigJsonAsync(
     absoluteProjectRoot,
     {
-      isConfigOptional: true,
+      isConfigOptional: false,
     }
   );
 

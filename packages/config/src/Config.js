@@ -232,7 +232,7 @@ export async function getConfigForPWA(
   getAbsolutePath: Function,
   options: Object
 ) {
-  const { exp } = await readConfigJsonAsync(projectRoot, { isConfigOptional: true });
+  const { exp } = await readConfigJsonAsync(projectRoot, { isConfigOptional: false });
   return ensurePWAConfig(exp, getAbsolutePath, options);
 }
 export function getNameFromConfig(exp: Object = {}) {
