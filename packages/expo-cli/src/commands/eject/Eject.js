@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import fse from 'fs-extra';
 import matchRequire from 'match-require';
 import path from 'path';
+import semver from 'semver';
 import spawn from 'cross-spawn';
 import spawnAsync from '@expo/spawn-async';
 import { ProjectUtils, Detach, Versions } from 'xdl';
@@ -227,6 +228,15 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
     pkgJson.scripts.ios = 'react-native run-ios';
     pkgJson.scripts.android = 'react-native run-android';
 
+    const { sdkVersion } = exp;
+    const versions = await Versions.versionsAsync();
+    const reactNativeVersion = versions['sdkVersions'][sdkVersion]['facebookReactNativeVersion'];
+
+    if (semver.satisfies(sdkVersion, '31 - 32')) {
+      pkgJson.dependencies['@babel/runtime'] = '^7.0.0';
+    }
+    pkgJson.dependencies['react-native'] = reactNativeVersion;
+
     if (pkgJson.jest !== undefined) {
       newDevDependencies.push('jest');
 
@@ -252,16 +262,14 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
 
     log(chalk.green('Your package.json is up to date!'));
 
-    // Starting from react-native 0.49.x (SDK 22), react-native eject template includes this out of the box.
-    if (!Versions.gteSdkVersion(exp, '22.0.0')) {
-      log(`Adding entry point...`);
-      const lolThatsSomeComplexCode = `import { AppRegistry } from 'react-native';
+    log(`Adding entry point...`);
+    const indexjs = `import { AppRegistry } from 'react-native';
 import App from './App';
+
 AppRegistry.registerComponent('${appJson.name}', () => App);
 `;
-      await fse.writeFile(path.resolve('index.js'), lolThatsSomeComplexCode);
-      log(chalk.green('Added new entry points!'));
-    }
+    await fse.writeFile(path.resolve('index.js'), indexjs);
+    log(chalk.green('Added new entry points!'));
 
     log(`
 Note that using \`${npmOrYarn} start\` will now require you to run Xcode and/or
