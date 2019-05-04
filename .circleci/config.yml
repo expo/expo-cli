@@ -22,3 +22,6 @@ jobs:
       - run:
           working_directory: ~/expo-dev-tools/packages/dev-tools
           command: yarn test
+      - run:
+          working_directory: ~/expo-dev-tools/packages/webpack-pwa-manifest-plugin
+          command: yarn test
