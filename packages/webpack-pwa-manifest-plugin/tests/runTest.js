@@ -5,7 +5,10 @@ const fs = require('fs');
 const assert = require('assert');
 
 function run(name, next) {
-  if (!name) return console.log('End.');
+  console.time(name);
+  if (!name) {
+    return console.log('End.');
+  }
   const config = require(path.resolve(`./tests/${name}/build/webpack.config.js`));
   console.log(`"${name}": building...`);
   webpack(config, (err, stats) => {
@@ -34,16 +37,19 @@ function run(name, next) {
           }, 0);
           if (result === testContentLength) {
             console.log(`Test "${name}" passed.`);
+            console.timeEnd(name);
             run(next.shift(), next);
           } else {
             console.log('There are files missing or with different content.');
             console.log(`Test "${name}" failedon file ${outputContent}.`);
+            console.timeEnd(name);
             assert(result === testContentLength);
           }
         } else {
           console.log(`Expected ${testContentLength} file(s).`);
           console.log(`Found ${outputContentLength} file(s).`);
           console.log(`Test "${name}" failed.`);
+          console.timeEnd(name);
           assert(testContentLength === outputContentLength);
         }
       });

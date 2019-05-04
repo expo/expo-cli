@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Demo App",
+    "description": "Official app for things.",
+    "slug": "demo-app",
+    "privacy": "public",
+    "version": "2.3.5",
+    "primaryColor": "#4d5fab",
+    "icon": "./tests/icon.png",
+    "orientation": "portrait",
+    "sdkVersion": "32.0.0",
+    "splash": {
+      "image": "./tests/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4d5fab"
+    },
+    "android": {
+      "package": "com.expo.demoapp",
+      "icon": "./tests/icon.png",
+      "versionCode": 5
+    },
+    "ios": {
+      "bundleIdentifier": "com.expo.demoapp",
+      "supportsTablet": true
+    },
+    "platforms": ["android", "ios", "web"],
+    "web": {
+      "shortName": "Demo",
+      "build": {
+        "report": false
+      }
+    }
+  }
+}

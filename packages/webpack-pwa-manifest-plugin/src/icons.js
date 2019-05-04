@@ -198,7 +198,16 @@ export async function parseIcons(inputIcons, fingerprint, publicPath) {
   await Promise.all(promises);
 
   return {
-    icons,
-    assets,
+    // Sort the icons so the tests match.
+    icons: sorted(icons, 'sizes'),
+    assets: sorted(assets, 'size'),
   };
+}
+
+function sorted(arr, key) {
+  return arr.sort((a, b) => {
+    if (a[key] > b[key]) return 1;
+    if (a[key] < b[key]) return -1;
+    return 0;
+  });
 }
