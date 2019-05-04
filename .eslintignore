@@ -9,3 +9,6 @@ flow-typed
 /packages/*/build
 /packages/osascript/lib
 .next
+
+/packages/webpack-pwa-manifest-plugin/tests/**/test
+/packages/webpack-pwa-manifest-plugin/tests/**/output

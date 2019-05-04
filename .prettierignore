@@ -6,3 +6,6 @@
 /packages/xdl/flow-typed
 /packages/xdl/build
 package.json
+
+/packages/webpack-pwa-manifest-plugin/tests/**/test
+/packages/webpack-pwa-manifest-plugin/tests/**/output
