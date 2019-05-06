@@ -5,7 +5,7 @@ import * as ConfigUtils from '@expo/config';
 import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-
+import chalk from 'chalk';
 import createWebpackCompiler from './createWebpackCompiler';
 import ErrorCode from './ErrorCode';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -57,6 +57,8 @@ export async function startAsync(
   const { webName } = ConfigUtils.getNameFromConfig(exp);
 
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
+  const mode = dev ? 'development' : 'production';
+
   const config = Web.invokeWebpackConfig({
     projectRoot,
     pwa: true,
@@ -69,7 +71,7 @@ export async function startAsync(
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    `Starting Webpack on port ${webpackServerPort}.`
+    `Starting Webpack on port ${webpackServerPort} in ${chalk.underline(mode)} mode.`
   );
 
   const protocol = https ? 'https' : 'http';
