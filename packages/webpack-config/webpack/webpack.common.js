@@ -152,9 +152,9 @@ module.exports = function(env = {}, argv) {
 
   const middlewarePlugins = [];
 
-  const { build: buildConfig = { verbose: false } } = config.web;
+  const { build: buildConfig } = config.web;
   const { lang } = config.web;
-  const { publicPath, rootId } = config.web.build;
+  const { publicPath, rootId, babel: babelAppConfig = {} } = config.web.build;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
@@ -238,7 +238,7 @@ module.exports = function(env = {}, argv) {
     createBabelLoader({
       mode,
       babelProjectRoot: locations.root,
-      pathsToInclude: (config.build.babel || {}).include,
+      pathsToInclude: babelAppConfig.include,
     }),
     createFontLoader({ locations }),
 
