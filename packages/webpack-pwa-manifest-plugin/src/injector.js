@@ -104,45 +104,23 @@ export function injectResources(compilation, assets, callback) {
   callback();
 }
 
-export function generateAppleTags(manifest, assets) {
+export function generateAppleSplashAndIconTags(assets) {
   let tags = {};
-  if (manifest.ios) {
-    let apple = {
-      'apple-mobile-web-app-title': 'Expo PWA',
-      'apple-mobile-web-app-capable': 'yes',
-      'apple-mobile-web-app-status-bar-style': 'default',
-    };
-    if (typeof manifest.ios === 'object') {
-      apple = {
-        ...apple,
-        ...manifest.ios,
-      };
-    }
-
-    for (let tag in apple) {
-      const type = appleTags[tag];
-      if (type) {
-        tags = applyTag(tags, type, formatAppleTag(tag, apple[tag]));
-      }
-    }
-    if (assets) {
-      for (let asset of assets) {
-        if (asset.ios && asset.ios.valid) {
-          if (asset.ios.valid === 'startup') {
-            tags = applyTag(tags, 'link', {
-              rel: 'apple-touch-startup-image',
-              media: asset.ios.media,
-              href: asset.ios.href,
-            });
-          } else {
-            tags = applyTag(tags, 'link', {
-              // apple-touch-icon-precomposed
-              rel: 'apple-touch-icon',
-              sizes: asset.ios.size,
-              href: asset.ios.href,
-            });
-          }
-        }
+  for (let asset of assets) {
+    if (asset.ios && asset.ios.valid) {
+      if (asset.ios.valid === 'startup') {
+        tags = applyTag(tags, 'link', {
+          rel: 'apple-touch-startup-image',
+          media: asset.ios.media,
+          href: asset.ios.href,
+        });
+      } else {
+        tags = applyTag(tags, 'link', {
+          // apple-touch-icon-precomposed
+          rel: 'apple-touch-icon',
+          sizes: asset.ios.size,
+          href: asset.ios.href,
+        });
       }
     }
   }

@@ -2,7 +2,7 @@ import createMetatagsFromConfig from './createMetatagsFromConfig';
 import {
   applyTag,
   buildResources,
-  generateAppleTags,
+  generateAppleSplashAndIconTags,
   generateHtmlTags,
   generateMaskIconLink,
   injectResources,
@@ -71,7 +71,7 @@ class WebpackPwaManifest {
     };
     if (!noResources) {
       this.manifest.startupImages = web.startupImages;
-      this.icons = web.icons;
+      this.manifest.icons = web.icons;
     }
     this.validateManifest(this.manifest);
   }
@@ -104,7 +104,7 @@ class WebpackPwaManifest {
         return;
       }
 
-      let tags = generateAppleTags(this.manifest, this.assets);
+      let tags = generateAppleSplashAndIconTags(this.assets);
 
       for (const metatagName of Object.keys(this.options.metatags)) {
         const content = this.options.metatags[metatagName];
