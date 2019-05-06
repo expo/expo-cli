@@ -61,7 +61,7 @@ def find_profile_by_bundle_id(bundle_id)
     # append the certificate and update the profile 
     dist_cert = find_dist_cert($certSerialNumber, in_house?($teamId))
     profile = expo_profiles.sort_by{|profile| profile.expires}.last
-    profile.certificates.push(dist_cert)
+    profile.certificates = [dist_cert]
     profile.update!
   else
      # there is no valid provisioning profile available
@@ -133,7 +133,7 @@ with_captured_output{
       else
         # If the provisioning profile for the App ID doesn't exist, we just need to create a new one!
         new_profile = Spaceship::Portal.provisioning_profile.ad_hoc.create!(
-          name: "*[expo] #{$bundleId} AdHoc", # apple drops [ if its the first char (!!)
+          name: "*[expo] #{$bundleId} AdHoc #{DateTime.now.to_s()}", # apple drops [ if its the first char (!!)
           bundle_id: $bundleId,
           certificate: dist_cert,
           devices: devices
