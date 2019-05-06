@@ -125,7 +125,7 @@ class WebpackPwaManifest {
         tags = applyTag(tags, 'link', manifestLink);
       }
 
-      tags = generateMaskIconLink(tags, this.assets);
+      // tags = generateMaskIconLink(tags, this.assets);
 
       const tagsHTML = generateHtmlTags(tags);
       htmlPluginData.html = htmlPluginData.html.replace(/(<\/head>)/i, `${tagsHTML}</head>`);
