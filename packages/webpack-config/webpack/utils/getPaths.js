@@ -31,7 +31,7 @@ module.exports = function getPaths({ locations, projectRoot }) {
   const inputProjectRoot = projectRoot || appDirectory;
 
   function absolute(...pathComponents) {
-    return path.resolve(process.cwd(), inputProjectRoot, ...pathComponents);
+    return path.resolve(inputProjectRoot, ...pathComponents);
   }
 
   const absoluteProjectRoot = absolute();
