@@ -63,12 +63,17 @@ function processIcon(width, height, icon, buffer, mimeType, publicPath, shouldFi
     : `icon_${dimensions}.${mime.getExtension(mimeType)}`;
   const iconOutputDir = icon.destination ? joinURI(icon.destination, fileName) : fileName;
   const iconPublicUrl = joinURI(publicPath, iconOutputDir);
-  return {
-    manifestIcon: {
+
+  let manifestIcon = null;
+  if (width === height) {
+    manifestIcon = {
       src: iconPublicUrl,
       sizes: dimensions,
       type: mimeType,
-    },
+    };
+  }
+  return {
+    manifestIcon,
     webpackAsset: {
       output: iconOutputDir,
       url: iconPublicUrl,
@@ -198,7 +203,14 @@ export async function parseIcons(inputIcons, fingerprint, publicPath) {
   await Promise.all(promises);
 
   return {
-    icons,
+    icons: icons
+      .filter(icon => icon)
+      .sort(({ sizes }, { sizes: sizesB }) => {
+        if (sizes < sizesB) return -1;
+        else if (sizes > sizesB) return 1;
+        return 0;
+      }),
+    // startupImages: icons.filter(({ isStartupImage }) => isStartupImage),
     assets,
   };
 }

@@ -15,7 +15,8 @@ const EXP_JSON_FILE_NAME = 'exp.json';
 const APP_JSON_FILE_NAME = 'app.json';
 
 // To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
-const DEFAULT_VIEWPORT = 'width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover';
+const DEFAULT_VIEWPORT =
+  'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover';
 // Use root to work better with create-react-app
 const DEFAULT_ROOT_ID = `root`;
 const DEFAULT_BUILD_PATH = `web-build`;
@@ -26,7 +27,7 @@ const DEFAULT_THEME_COLOR = '#4630EB';
 const DEFAULT_DESCRIPTION = 'A Neat Expo App';
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
-const DEFAULT_DISPLAY = 'fullscreen';
+const DEFAULT_DISPLAY = 'standalone';
 const DEFAULT_STATUS_BAR = 'default';
 const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
