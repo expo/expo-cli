@@ -55,12 +55,15 @@ function createFilename(filenameTemplate, json, shouldFingerprint) {
 }
 
 // Create `manifest.json`
-function writeManifestToFile(manifest, options, publicPath, icons) {
-  const content = { ...manifest, icons };
+function writeManifestToFile(manifest, options, publicPath) {
+  let content = { ...manifest };
 
   if (content.orientation === 'omit') {
     delete content.orientation;
   }
+
+  // Object.keys(content).forEach(key => content[key] == null && delete content[key]);
+
   const json = JSON.stringify(content, null, 2);
   const file = path.parse(options.filename);
   const filename = createFilename(file.base, json, options.fingerprints);
@@ -82,8 +85,8 @@ export async function buildResources(self, publicPath = '') {
       parsedIconsResult = await parseIcons(results, self.options.fingerprints, publicPath);
     }
 
-    const { icons = {}, assets = [] } = parsedIconsResult;
-    const results = writeManifestToFile(self.manifest, self.options, publicPath, icons);
+    const { icons, assets = [] } = parsedIconsResult;
+    const results = writeManifestToFile({ ...self.manifest, icons }, self.options, publicPath);
     self.assets = [results, ...assets];
     return results;
   }
