@@ -43,7 +43,31 @@ def register_missing_devices(udids)
 end
 
 def find_profile_by_bundle_id(bundle_id)
-  Spaceship::Portal.provisioning_profile.ad_hoc.find_by_bundle_id(bundle_id: bundle_id).first
+  expo_profiles = Spaceship::Portal.provisioning_profile.ad_hoc.find_by_bundle_id(bundle_id: bundle_id)
+  expo_profiles = expo_profiles.select{ |profile|
+    profile.name.start_with?('*[expo]') and profile.expires.to_datetime > DateTime.now
+  }
+  # find profiles associated with our development cert
+  expo_profiles_with_cert = expo_profiles.select{ |profile|
+    profile.certificates.any?{|cert| cert.raw_data['serialNumber'] == $certSerialNumber} # this api only returns field 'serialNumber', but not 'serialNum'
+  }
+
+  if !expo_profiles_with_cert.empty?
+    # there is an expo managed profile with our desired certificate
+    # return the profile that will be valid for the longest duration
+    expo_profiles_with_cert.sort_by{|profile| profile.expires}.last  
+  elsif !expo_profiles.empty? 
+    # there is an expo managed profile, but it doesnt have our desired certificate
+    # append the certificate and update the profile 
+    dist_cert = find_dist_cert($certSerialNumber, in_house?($teamId))
+    profile = expo_profiles.sort_by{|profile| profile.expires}.last
+    profile.certificates = [dist_cert]
+    profile.update!
+  else
+     # there is no valid provisioning profile available
+    nil 
+  end
+
 end
 
 def download_provisioning_profile(profile)
@@ -109,6 +133,7 @@ with_captured_output{
       else
         # If the provisioning profile for the App ID doesn't exist, we just need to create a new one!
         new_profile = Spaceship::Portal.provisioning_profile.ad_hoc.create!(
+          name: "*[expo] #{$bundleId} AdHoc #{DateTime.now.to_s()}", # apple drops [ if its the first char (!!)
           bundle_id: $bundleId,
           certificate: dist_cert,
           devices: devices
