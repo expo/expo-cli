@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import fse from 'fs-extra';
 import matchRequire from 'match-require';
 import path from 'path';
-import semver from 'semver';
 import spawn from 'cross-spawn';
 import spawnAsync from '@expo/spawn-async';
 import { ProjectUtils, Detach, Versions } from 'xdl';
@@ -230,10 +229,10 @@ from \`babel-preset-expo\` to \`babel-preset-react-native-stage-0/decorator-supp
 
     const { sdkVersion } = exp;
     const versions = await Versions.versionsAsync();
-    const reactNativeVersion = versions['sdkVersions'][sdkVersion]['facebookReactNativeVersion'];
+    const reactNativeVersion = versions.sdkVersions[sdkVersion].facebookReactNativeVersion;
 
     // React Native 0.59 (shipped with sdk 33) adds @babel/runtime to dependencies
-    if (semver.lte(sdkVersion, '32.0.0')) {
+    if (Versions.lteSdkVersion(exp, '32.0.0')) {
       pkgJson.dependencies['@babel/runtime'] = '^7.0.0';
     }
     pkgJson.dependencies['react-native'] = reactNativeVersion;
