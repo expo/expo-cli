@@ -1,3 +1,4 @@
+import ora from 'ora';
 import { Credentials } from 'xdl';
 
 import * as appleApi from '../build/ios/appleApi';
@@ -10,9 +11,7 @@ import prompt from '../../prompt';
 export default selectDistributionCert;
 
 async function selectDistributionCert(context, options = {}) {
-  const certificates = context.username
-    ? await Credentials.Ios.getExistingDistCerts(context.username, context.team.id)
-    : [];
+  const certificates = context.username ? await chooseUnrevokedDistributionCert(context) : [];
   const choices = [{ name: '[Upload an existing certificate]', value: 'UPLOAD' }, ...certificates];
   if (!options.disableCreate) {
     choices.unshift({ name: '[Create a new certificate]', value: 'GENERATE' });
@@ -31,6 +30,46 @@ async function selectDistributionCert(context, options = {}) {
       .distributionCert;
   }
   return distributionCert;
+}
+
+async function chooseUnrevokedDistributionCert(context) {
+  let certsOnExpoServer = await Credentials.Ios.getExistingDistCerts(
+    context.username,
+    context.team.id,
+    { provideFullCertificate: true }
+  );
+
+  if (certsOnExpoServer.length === 0) {
+    return []; // no certs stored on server
+  }
+  const spinner = ora(
+    `Checking validity of distribution certificates on Apple Developer Portal...`
+  ).start();
+
+  // if the credentials are valid, check it against apple to make sure it hasnt been revoked
+  const distCertManager = appleApi.createManagers(context).distributionCert;
+  const certsOnAppleServer = await distCertManager.list();
+  const validCertSerialsOnAppleServer = certsOnAppleServer
+    .filter(
+      // remove expired certs
+      cert => cert.expires > Math.floor(Date.now() / 1000)
+    )
+    .map(cert => cert.serialNumber);
+
+  const validCertsOnExpoServer = certsOnExpoServer.filter(cert => {
+    const serialNumber = cert.value && cert.value.distCertSerialNumber;
+    return validCertSerialsOnAppleServer.includes(serialNumber);
+  });
+
+  const numValidCerts = validCertsOnExpoServer.length;
+  const numRevokedCerts = certsOnExpoServer.length - validCertsOnExpoServer.length;
+  const statusToDisplay = `Distribution Certificate: You have ${numValidCerts} valid and ${numRevokedCerts} revoked certificates on file.`;
+  if (numValidCerts > 0) {
+    spinner.succeed(statusToDisplay);
+  } else {
+    spinner.warn(statusToDisplay);
+  }
+  return validCertsOnExpoServer;
 }
 
 async function generateDistributionCert(context) {
