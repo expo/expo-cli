@@ -68,7 +68,7 @@ const DEFAULT_BROTLI = {
 const DEFAULT_SERVICE_WORKER = {};
 
 const DEFAULT_REPORT_CONFIG = {
-  verbose: false,
+  verbose: true,
   path: 'web-report',
   statsFilename: 'stats.json',
   reportFilename: 'report.html',
@@ -144,6 +144,9 @@ function getDevtool(env, { devtool }) {
 module.exports = function(env = {}, argv) {
   const config = getConfig(env);
   const mode = getMode(env);
+  const isDev = mode === 'development';
+  const isProd = mode === 'production';
+
   const locations = getPaths(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
@@ -198,6 +201,9 @@ module.exports = function(env = {}, argv) {
   );
 
   if (reportConfig) {
+    if (isDev && reportConfig.verbose) {
+      console.log('Generating a report, this will add noticeably more time to rebuilds.');
+    }
     const reportDir = reportConfig.path;
     reportPlugins = [
       // Delete the report folder
@@ -232,22 +238,22 @@ module.exports = function(env = {}, argv) {
     createBabelLoader({
       mode,
       babelProjectRoot: locations.root,
+      pathsToInclude: (config.build.babel || {}).include,
     }),
     createFontLoader({ locations }),
 
     styleLoaderConfiguration,
     // This needs to be the last loader
     fallbackLoaderConfiguration,
-  ];
-
-  const isDev = mode === 'development';
-  const isProd = mode === 'production';
+  ].filter(Boolean);
 
   /**
-   * build: {
-   *   verbose: boolean,
-   *   brotli: boolean | {}, // (Brotli Options)
-   *   gzip: boolean | CompressionPlugin.Options<O>,
+   * web: {
+   *   build: {
+   *     verbose: boolean,
+   *     brotli: boolean | {}, // (Brotli Options)
+   *     gzip: boolean | CompressionPlugin.Options<O>,
+   *   }
    * }
    */
   const gzipConfig = isProd && overrideWithPropertyOrConfig(buildConfig.gzip, DEFAULT_GZIP);
@@ -367,7 +373,7 @@ module.exports = function(env = {}, argv) {
       }),
 
       // Remove unused import/exports
-      new WebpackDeepScopeAnalysisPlugin(),
+      isProd && new WebpackDeepScopeAnalysisPlugin(),
 
       ...middlewarePlugins,
 
