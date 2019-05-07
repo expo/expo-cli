@@ -238,7 +238,9 @@ module.exports = function(env = {}, argv) {
     createBabelLoader({
       mode,
       babelProjectRoot: locations.root,
-      pathsToInclude: babelAppConfig.include,
+      verbose: babelAppConfig.verbose,
+      include: babelAppConfig.include,
+      use: babelAppConfig.use,
     }),
     createFontLoader({ locations }),
 
@@ -314,7 +316,15 @@ module.exports = function(env = {}, argv) {
             from: locations.template.folder,
             to: locations.production.folder,
             // We generate new versions of these based on the templates
-            ignore: ['index.html', 'icon.png'],
+            ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
+          },
+          {
+            from: locations.template.serveJson,
+            to: locations.production.serveJson,
+          },
+          {
+            from: locations.template.favicon,
+            to: locations.production.favicon,
           },
         ]),
 
