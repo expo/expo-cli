@@ -31,7 +31,7 @@ export const calculateHash = file => {
 };
 
 /*
- * Compress an inputted jpg or png and save original copy with .expo extension
+ * Compress an inputted jpg or png
  */
 export const optimizeImageAsync = async (image, newName, quality) => {
   logger.global.info(`Optimizing ${image}`);
