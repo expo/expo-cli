@@ -231,6 +231,7 @@ async function _waitForDeviceToBoot() {
       Logger.global.error(
         `iOS Simulator device failed to boot. Try opening Simulator first, then running your app.`
       );
+      throw 'Timed out waiting for iOS Simulator device to boot.';
     }
   } while (!bootedDevice);
 }
