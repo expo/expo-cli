@@ -31,9 +31,9 @@ export const calculateHash = file => {
 };
 
 /*
- * Compress an inputted jpg or png and save original copy with .expo extension
+ * Compress an inputted jpg or png
  */
-export const optimizeImageAsync = async (image, newName) => {
+export const optimizeImageAsync = async (image, newName, quality) => {
   logger.global.info(`Optimizing ${image}`);
   fs.copyFileSync(image, newName);
 
@@ -42,12 +42,12 @@ export const optimizeImageAsync = async (image, newName) => {
   const { format } = await sharp(buffer).metadata();
   if (format === 'jpeg') {
     await sharp(newName)
-      .jpeg({ quality: 60 })
+      .jpeg({ quality })
       .toFile(image)
       .catch(err => logger.global.error(err));
   } else {
     await sharp(newName)
-      .png({ quality: 60 })
+      .png({ quality })
       .toFile(image)
       .catch(err => logger.global.error(err));
   }

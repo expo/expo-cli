@@ -31,7 +31,11 @@ export default program => {
     .command('optimize [project-dir]')
     .alias('o')
     .description('Compress the assets in your Expo project')
-    .option('-s, --save', 'Save the original assets with a .expo extension')
+    .option('-s, --save', 'Save the original assets with a .orig extension')
+    .option(
+      '--quality [number]',
+      'Specify the quality the compressed image is reduced to. Default is 60'
+    )
     .option(
       '--include [pattern]',
       'Include only assets that match this glob pattern relative to the project root'

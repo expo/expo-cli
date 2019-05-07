@@ -2098,7 +2098,16 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
     delete assetInfo[outdatedHash];
   });
 
-  const images = options.include || options.exclude ? selectedFiles : allFiles;
+  // Check for custom quality value
+  const { quality: strQuality, include, exclude, save } = options;
+  const quality = Number(strQuality);
+  const validQuality = Number.isInteger(quality) && quality > 0 && quality <= 100;
+  if (strQuality !== undefined && !validQuality) {
+    logger.global.warn('Invalid quality entered. Using default of 60.');
+  }
+  const outputQuality = validQuality ? quality : 60;
+
+  const images = include || exclude ? selectedFiles : allFiles;
   for (const image of images) {
     const hash = hashes[image];
     if (assetInfo[hash]) {
@@ -2107,7 +2116,7 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
     const { size: prevSize } = fs.statSync(image);
 
     const newName = createNewFilename(image);
-    await optimizeImageAsync(image, newName);
+    await optimizeImageAsync(image, newName, outputQuality);
 
     const { size: newSize } = fs.statSync(image);
     const amountSaved = prevSize - newSize;
@@ -2126,7 +2135,7 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
     const newHash = calculateHash(image);
     assetInfo[newHash] = true;
 
-    if (options.save) {
+    if (save) {
       if (hash === newHash) {
         logger.global.info(
           chalk.gray(
