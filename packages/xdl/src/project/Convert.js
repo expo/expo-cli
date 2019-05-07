@@ -64,8 +64,6 @@ export default (async function convertProjectAsync(
   console.log('Updated package.json');
 
   // TODO: Add import Expo from 'expo'; at the top of main file
-  // TODO: Add .expo/* to gitignore
-
   // Copy babelrc
   await JsonFile.writeAsync(babelRcTargetPath, babelRcTemplate);
   console.log('Updated .babelrc');
