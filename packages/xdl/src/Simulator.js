@@ -142,8 +142,7 @@ export async function _openSimulatorAsync() {
     await spawnAsync('open', ['-a', 'Simulator']);
     await _waitForSimulatorRunningAsync();
     await _waitForDeviceToBoot();
-  }
-  else {
+  } else {
     let bootedDevice = await _bootedSimulatorDeviceAsync();
     if (!bootedDevice) {
       await _bootDefaultSimulatorDeviceAsync();
@@ -172,14 +171,20 @@ async function _bootDefaultSimulatorDeviceAsync() {
     }
     return await _xcrunAsync(['simctl', 'boot', defaultDeviceUDID]);
   } catch (e) {
-    Logger.global.error(`There was a problem booting a device in iOS Simulator. Quit Simulator, and try again.`);
+    Logger.global.error(
+      `There was a problem booting a device in iOS Simulator. Quit Simulator, and try again.`
+    );
     throw e;
   }
 }
 
 async function _getDefaultSimulatorDeviceUDIDAsync() {
   try {
-    const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', ['read', 'com.apple.iphonesimulator', 'CurrentDeviceUDID']);
+    const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', [
+      'read',
+      'com.apple.iphonesimulator',
+      'CurrentDeviceUDID',
+    ]);
     return defaultDeviceUDID.trim();
   } catch (e) {
     return null;
@@ -206,7 +211,7 @@ async function _getFirstAvailableDeviceAsync() {
       }
     }
   }
-  Logger.global.warn('No iPhone devices available in Simulator.')
+  Logger.global.warn('No iPhone devices available in Simulator.');
   return null;
 }
 
@@ -217,10 +222,17 @@ async function _listSimulatorDevicesAsync() {
 }
 
 async function _waitForDeviceToBoot() {
-  let bootedDevice = await _bootedSimulatorDeviceAsync();
-  while (!bootedDevice) {
+  let bootedDevice;
+  const start = Date.now();
+  do {
+    await delayAsync(100);
     bootedDevice = await _bootedSimulatorDeviceAsync();
-  }
+    if (Date.now() - start > 10000) {
+      Logger.global.error(
+        `iOS Simulator device failed to boot. Try opening Simulator first, then running your app.`
+      );
+    }
+  } while (!bootedDevice);
 }
 
 async function _bootedSimulatorDeviceAsync() {
@@ -408,7 +420,7 @@ export async function openUrlInSimulatorSafeAsync(
 
   try {
     await _openSimulatorAsync();
-    
+
     if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
