@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 let path = require('path');
 let spawnAsync = require('@expo/spawn-async');
 
