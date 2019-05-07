@@ -35,7 +35,6 @@ export const calculateHash = file => {
  */
 export const optimizeImageAsync = async (image, newName) => {
   logger.global.info(`Optimizing ${image}`);
-  // Rename the file with .expo extension
   fs.copyFileSync(image, newName);
 
   // Extract the format and compress
@@ -81,7 +80,10 @@ export const hasUnoptimizedAssetsAsync = async (projectDir, options) => {
 export const getAssetFilesAsync = async (projectDir, options) => {
   const { exp } = await readConfigJsonAsync(projectDir);
   const { assetBundlePatterns } = exp;
-  const globOptions = { cwd: projectDir, ignore: '**/node_modules/**' };
+  const globOptions = {
+    cwd: projectDir,
+    ignore: ['**/node_modules/**', '**/ios/**', '**/android/**'],
+  };
 
   // All files must be returned even if flags are passed in to properly update assets.json
   const allFiles = [];

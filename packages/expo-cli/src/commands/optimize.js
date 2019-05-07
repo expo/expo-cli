@@ -10,7 +10,9 @@ export async function action(projectDir = './', options = {}) {
   }
 
   const hasUnoptimizedAssets = await AssetUtils.hasUnoptimizedAssetsAsync(projectDir, options);
-  if (!options.save && hasUnoptimizedAssets) {
+  const nonInteractive = options.parent && options.parent.nonInteractive;
+  const shouldPromptUser = !options.save && !nonInteractive && hasUnoptimizedAssets;
+  if (shouldPromptUser) {
     log.warn('Running this command will overwrite the original assets.');
     const { saveOriginals } = await prompt({
       type: 'confirm',

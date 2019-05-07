@@ -32,7 +32,8 @@ export async function action(projectDir: string, options: Options = {}) {
     process.exit(1);
   }
   const hasOptimized = fs.existsSync(path.join(projectDir, '/.expo-shared/assets.json'));
-  if (!hasOptimized) {
+  const nonInteractive = options.parent && options.parent.nonInteractive;
+  if (!hasOptimized && !nonInteractive) {
     log.warn('It seems your assets have not been optimized yet.');
     const { allowOptimization } = await prompt({
       type: 'confirm',
