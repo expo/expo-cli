@@ -1,6 +1,6 @@
 const path = require('path');
+const chalk = require('chalk');
 const getPaths = require('../utils/getPaths');
-
 const getModule = name => path.join('node_modules', name);
 
 // Only compile files from the react ecosystem.
@@ -13,6 +13,26 @@ const includeModulesThatContainPaths = [
   getModule('@expo'),
   getModule('@unimodules'),
 ];
+
+const parsedPackageNames = [];
+// TODO: Bacon: Support internal packages. ex: react/fbjs
+function packageNameFromPath(inputPath) {
+  const modules = inputPath.split('node_modules/');
+  const libAndFile = modules.pop();
+  if (libAndFile.charAt(0) === '@') {
+    const [org, lib] = libAndFile.split('/');
+    return org + '/' + lib;
+  } else {
+    return libAndFile.split('/').shift();
+  }
+}
+
+function logPackage(packageName) {
+  if (!parsedPackageNames.includes(packageName)) {
+    parsedPackageNames.push(packageName);
+    console.log(chalk.cyan('\nCompiling module: ' + chalk.bold(packageName)));
+  }
+}
 
 function ensureRoot(possibleProjectRoot) {
   if (typeof possibleProjectRoot === 'string') {
@@ -30,11 +50,12 @@ module.exports = function({
    */
   mode,
   babelProjectRoot,
-  pathsToInclude = [],
+  include = [],
+  verbose,
   ...options
 } = {}) {
   const ensuredProjectRoot = ensureRoot(babelProjectRoot);
-  const modules = [...includeModulesThatContainPaths, ...pathsToInclude];
+  const modules = [...includeModulesThatContainPaths, ...include];
   const customUse = options.use || {};
   const customUseOptions = customUse.options || {};
 
@@ -48,6 +69,10 @@ module.exports = function({
     include(inputPath) {
       for (const possibleModule of modules) {
         if (inputPath.includes(possibleModule)) {
+          if (verbose) {
+            const packageName = packageNameFromPath(inputPath);
+            logPackage(packageName);
+          }
           return inputPath;
         }
       }
