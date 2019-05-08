@@ -2,11 +2,18 @@ import fs from 'fs-extra';
 import { PNG } from 'pngjs';
 import pick from 'lodash/pick';
 import { XDLError, ErrorCode } from 'xdl';
+import request from 'request';
+import validator from 'validator';
 
-async function ensurePNGIsNotTransparent(imagePath) {
+async function ensurePNGIsNotTransparent(imagePathOrURL) {
   let hasAlreadyResolved = false;
+  const stream = validator.isURL(imagePathOrURL, {
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  })
+    ? request(imagePathOrURL)
+    : fs.createReadStream(imagePathOrURL);
   return new Promise((res, rej) => {
-    const stream = fs.createReadStream(imagePath);
     stream
       .pipe(new PNG({ filterType: 4 }))
       .on('metadata', ({ alpha }) => {
