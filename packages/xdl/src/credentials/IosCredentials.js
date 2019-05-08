@@ -35,6 +35,10 @@ export async function getExistingDistCerts(
   options: { provideFullCertificate?: boolean } = {}
 ): Promise<?CredsList> {
   const distCerts = await getExistingUserCredentials(username, appleTeamId, 'dist-cert');
+  return formatDistCerts(distCerts, options);
+}
+
+export function formatDistCerts(distCerts, options) {
   return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }) => {
     const serialNumber = IosCodeSigning.findP12CertSerialNumber(certP12, certPassword);
     let name = `Serial number: ${serialNumber}`;
