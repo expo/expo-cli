@@ -14,6 +14,21 @@ async function selectPushKey(context, options = {}) {
     ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id)
     : [];
   const choices = [...pushKeys];
+
+  if (pushKeys.length > 0 && !options.disableAutoSelectExisting) {
+    const autoselectedPushkey = pushKeys[0];
+    const { useAutoselected } = await prompt({
+      name: 'useAutoselected',
+      message: `Let Expo automatically select your push credentials?`,
+      type: 'confirm',
+      default: true,
+    });
+    if (useAutoselected) {
+      log(`Using Push Key: ${autoselectedPushkey.name}`);
+      return autoselectedPushkey;
+    }
+  }
+
   if (!options.disableCreate) {
     choices.push({ name: '[Create a new key]', value: 'GENERATE' });
   }
@@ -63,7 +78,10 @@ async function generatePushKey(context) {
         await credentials.revoke(context, ['pushKey']);
         return await generatePushKey(context);
       } else if (answer === 'USE_EXISTING') {
-        return await selectPushKey(context, { disableCreate: true });
+        return await selectPushKey(context, {
+          disableCreate: true,
+          disableAutoSelectExisting: true,
+        });
       }
     }
   }

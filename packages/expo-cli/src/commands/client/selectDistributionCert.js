@@ -13,6 +13,21 @@ export default selectDistributionCert;
 async function selectDistributionCert(context, options = {}) {
   const certificates = context.username ? await chooseUnrevokedDistributionCert(context) : [];
   const choices = [...certificates];
+
+  if (certificates.length > 0 && !options.disableAutoSelectExisting) {
+    const autoselectedCertificate = certificates[0];
+    const { useAutoselected } = await prompt({
+      name: 'useAutoselected',
+      message: `Let Expo automatically select a distribution certificate?`,
+      type: 'confirm',
+      default: true,
+    });
+    if (useAutoselected) {
+      log(`Using Distribution Certificate: ${autoselectedCertificate.name}`);
+      return autoselectedCertificate;
+    }
+  }
+
   if (!options.disableCreate) {
     choices.push({ name: '[Create a new certificate]', value: 'GENERATE' });
   }
@@ -135,7 +150,10 @@ async function generateDistributionCert(context) {
         await credentials.revoke(context, ['distributionCert']);
         return await generateDistributionCert(context);
       } else if (answer === 'USE_EXISTING') {
-        return await selectDistributionCert(context, { disableCreate: true });
+        return await selectDistributionCert(context, {
+          disableCreate: true,
+          disableAutoSelectExisting: true,
+        });
       }
     }
   }
