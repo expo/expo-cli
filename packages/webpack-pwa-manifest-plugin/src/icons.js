@@ -160,7 +160,7 @@ async function resize(img, mimeType, width, height, resizeMode = 'contain', colo
 
 export function retrieveIcons(manifest) {
   // Remove these items so they aren't written to disk.
-  const { startupImages, apple, icon, icons, ...config } = manifest;
+  const { startupImages, icons, ...config } = manifest;
   const parsedStartupImages = parseArray(startupImages);
 
   let parsedIcons = parseArray(icons);

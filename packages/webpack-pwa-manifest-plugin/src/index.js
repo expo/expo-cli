@@ -4,7 +4,6 @@ import {
   buildResources,
   generateAppleSplashAndIconTags,
   generateHtmlTags,
-  generateMaskIconLink,
   injectResources,
 } from './injector';
 import validateColors from './validators/Colors';
@@ -124,8 +123,6 @@ class WebpackPwaManifest {
         }
         tags = applyTag(tags, 'link', manifestLink);
       }
-
-      // tags = generateMaskIconLink(tags, this.assets);
 
       const tagsHTML = generateHtmlTags(tags);
       htmlPluginData.html = htmlPluginData.html.replace(/(<\/head>)/i, `${tagsHTML}</head>`);

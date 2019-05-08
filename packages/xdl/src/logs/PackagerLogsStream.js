@@ -3,7 +3,6 @@ import path from 'path';
 import escapeStringRegexp from 'escape-string-regexp';
 import chalk from 'chalk';
 import getenv from 'getenv';
-import { trim } from 'lodash';
 
 import * as ProjectUtils from '../project/ProjectUtils';
 import Logger from '../Logger';

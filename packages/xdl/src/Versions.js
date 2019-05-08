@@ -104,10 +104,10 @@ export async function newestSdkVersionAsync() {
 
 export async function oldestSupportedMajorVersionAsync() {
   const sdkVersions = await sdkVersionsAsync();
-  const supportedVersions =  _.pickBy(sdkVersions, v => !v.isDeprecated);
+  const supportedVersions = _.pickBy(sdkVersions, v => !v.isDeprecated);
   let versionNumbers = [];
   _.forEach(supportedVersions, (value, key) => {
-    versionNumbers.push(semver.major(key))
+    versionNumbers.push(semver.major(key));
   });
   return Math.min(...versionNumbers);
 }

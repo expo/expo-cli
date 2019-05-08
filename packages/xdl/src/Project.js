@@ -24,7 +24,6 @@ import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
-import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
@@ -32,8 +31,6 @@ import md5hex from 'md5hex';
 import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
-import webpack from 'webpack';
-import WebpackDevServer from 'webpack-dev-server';
 
 import * as ConfigUtils from '@expo/config';
 import * as Analytics from './Analytics';
@@ -42,7 +39,6 @@ import Api from './Api';
 import ApiV2 from './ApiV2';
 import * as AssetUtils from './AssetUtils';
 import Config from './Config';
-import createWebpackCompiler from './createWebpackCompiler';
 import * as Doctor from './project/Doctor';
 import * as DevSession from './DevSession';
 import ErrorCode from './ErrorCode';
@@ -64,7 +60,6 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import * as Watchman from './Watchman';
 import XDLError from './XDLError';
-import * as Web from './Web';
 import type { User as ExpUser } from './User'; //eslint-disable-line
 import * as Webpack from './Webpack';
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
@@ -447,7 +442,7 @@ export async function exportForAppHosting(
   // save the assets
   // Get project config
   const publishOptions = options.publishOptions || {};
-  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+  const { exp } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
   const { assets } = await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
 
   if (options.dumpAssetmap) {
