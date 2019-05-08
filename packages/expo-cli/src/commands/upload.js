@@ -33,6 +33,7 @@ export default program => {
     'sku',
     'language',
     'publicUrl',
+    'changelog'
   ];
   const iosCommand = program.command('upload:ios [projectDir]').alias('ui');
   setCommonOptions(iosCommand, '.ipa');
