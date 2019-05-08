@@ -109,6 +109,7 @@ module.exports = function getPaths({ locations, projectRoot }) {
       indexHtml: templatePath('index.html'),
       manifest: templatePath('manifest.json'),
       serveJson: templatePath('serve.json'),
+      favicon: templatePath('favicon.ico'),
     },
     production: {
       get: getProductionPath,
@@ -116,6 +117,7 @@ module.exports = function getPaths({ locations, projectRoot }) {
       indexHtml: getProductionPath('index.html'),
       manifest: getProductionPath('manifest.json'),
       serveJson: getProductionPath('serve.json'),
+      favicon: getProductionPath('favicon.ico'),
     },
   };
 };
