@@ -13,10 +13,12 @@ async function selectPushKey(context, options = {}) {
   const pushKeys = context.username
     ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id)
     : [];
-  const choices = [{ name: '[Upload an existing key]', value: 'UPLOAD' }, ...pushKeys];
+  const choices = [...pushKeys];
   if (!options.disableCreate) {
-    choices.unshift({ name: '[Create a new key]', value: 'GENERATE' });
+    choices.push({ name: '[Create a new key]', value: 'GENERATE' });
   }
+  choices.push({ name: '[Upload an existing key]', value: 'UPLOAD' });
+
   let { pushKey } = await prompt({
     type: 'list',
     name: 'pushKey',

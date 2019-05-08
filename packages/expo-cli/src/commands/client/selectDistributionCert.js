@@ -12,10 +12,12 @@ export default selectDistributionCert;
 
 async function selectDistributionCert(context, options = {}) {
   const certificates = context.username ? await chooseUnrevokedDistributionCert(context) : [];
-  const choices = [{ name: '[Upload an existing certificate]', value: 'UPLOAD' }, ...certificates];
+  const choices = [...certificates];
   if (!options.disableCreate) {
-    choices.unshift({ name: '[Create a new certificate]', value: 'GENERATE' });
+    choices.push({ name: '[Create a new certificate]', value: 'GENERATE' });
   }
+  choices.push({ name: '[Upload an existing certificate]', value: 'UPLOAD' });
+
   let { distributionCert } = await prompt({
     type: 'list',
     name: 'distributionCert',
