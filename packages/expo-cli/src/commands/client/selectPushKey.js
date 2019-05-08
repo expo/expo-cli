@@ -15,18 +15,11 @@ async function selectPushKey(context, options = {}) {
     : [];
   const choices = [...pushKeys];
 
+  // autoselect creds if we find valid ones
   if (pushKeys.length > 0 && !options.disableAutoSelectExisting) {
     const autoselectedPushkey = pushKeys[0];
-    const { useAutoselected } = await prompt({
-      name: 'useAutoselected',
-      message: `Let Expo automatically select your push credentials?`,
-      type: 'confirm',
-      default: true,
-    });
-    if (useAutoselected) {
-      log(`Using Push Key: ${autoselectedPushkey.name}`);
-      return autoselectedPushkey;
-    }
+    log(`Using Push Key: ${autoselectedPushkey.name}`);
+    return autoselectedPushkey;
   }
 
   if (!options.disableCreate) {

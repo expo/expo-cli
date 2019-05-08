@@ -14,18 +14,11 @@ async function selectDistributionCert(context, options = {}) {
   const certificates = context.username ? await chooseUnrevokedDistributionCert(context) : [];
   const choices = [...certificates];
 
+  // autoselect creds if we find valid ones
   if (certificates.length > 0 && !options.disableAutoSelectExisting) {
     const autoselectedCertificate = certificates[0];
-    const { useAutoselected } = await prompt({
-      name: 'useAutoselected',
-      message: `Let Expo automatically select a distribution certificate?`,
-      type: 'confirm',
-      default: true,
-    });
-    if (useAutoselected) {
-      log(`Using Distribution Certificate: ${autoselectedCertificate.name}`);
-      return autoselectedCertificate;
-    }
+    log(`Using Distribution Certificate: ${autoselectedCertificate.name}`);
+    return autoselectedCertificate;
   }
 
   if (!options.disableCreate) {
