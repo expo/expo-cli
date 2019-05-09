@@ -6,6 +6,8 @@ import promptForCredentials from '../build/ios/credentials/prompt/promptForCrede
 import log from '../../log';
 import prompt from '../../prompt';
 
+import { choosePreferredCreds } from './selectUtils';
+
 // XXX: workaround for https://github.com/babel/babel/issues/6262
 export default selectPushKey;
 
@@ -17,7 +19,7 @@ async function selectPushKey(context, options = {}) {
 
   // autoselect creds if we find valid ones
   if (pushKeys.length > 0 && !options.disableAutoSelectExisting) {
-    const autoselectedPushkey = pushKeys[0];
+    const autoselectedPushkey = choosePreferredCreds(context, pushKeys);
     log(`Using Push Key: ${autoselectedPushkey.name}`);
     return autoselectedPushkey;
   }

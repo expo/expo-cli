@@ -7,6 +7,8 @@ import promptForCredentials from '../build/ios/credentials/prompt/promptForCrede
 import log from '../../log';
 import prompt from '../../prompt';
 
+import { choosePreferredCreds } from './selectUtils';
+
 // XXX: workaround for https://github.com/babel/babel/issues/6262
 export default selectDistributionCert;
 
@@ -16,7 +18,7 @@ async function selectDistributionCert(context, options = {}) {
 
   // autoselect creds if we find valid ones
   if (certificates.length > 0 && !options.disableAutoSelectExisting) {
-    const autoselectedCertificate = certificates[0];
+    const autoselectedCertificate = choosePreferredCreds(context, certificates);
     log(`Using Distribution Certificate: ${autoselectedCertificate.name}`);
     return autoselectedCertificate;
   }
@@ -40,7 +42,7 @@ async function selectDistributionCert(context, options = {}) {
       .distributionCert;
     const isValid = await validateUploadedCertificate(context, distributionCert);
     if (!isValid) {
-      return await selectDistributionCert(context);
+      return await selectDistributionCert(context, { disableAutoSelectExisting: true });
     }
   }
   return distributionCert;
