@@ -1,0 +1,27 @@
+{
+  "name": "expo-codemod",
+  "version": "0.0.1",
+  "description": "Codemod scripts for Expo apps",
+  "main": "build/index.js",
+  "author": "Expo",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "rootDir": "src"
+  },
+  "dependencies": {
+    "camelcase": "5.3.1",
+    "jscodeshift": "0.6.4",
+    "typescript": "3.4.5"
+  },
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.3.3",
+    "@types/jscodeshift": "^0.6.0",
+    "jest": "^24.8.0"
+  }
+}
