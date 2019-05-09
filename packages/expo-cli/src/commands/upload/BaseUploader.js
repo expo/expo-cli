@@ -80,7 +80,7 @@ export default class BaseUploader {
     const filename = path.basename(urlOrPath);
     const destinationPath = `/tmp/${filename}`;
     if (await fs.exists(destinationPath)) {
-      return destinationPath;
+      await fs.remove(destinationPath);
     }
     if (urlOrPath.startsWith('/')) {
       await fs.copy(urlOrPath, destinationPath);
