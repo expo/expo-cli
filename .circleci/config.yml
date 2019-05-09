@@ -13,7 +13,6 @@ jobs:
       - checkout
       - restore_cache:
           key: yarn-v3-{{ checksum "yarn.lock" }}
-      - run: yarn
       - run: yarn bootstrap
       - save_cache:
           key: yarn-v3-{{ checksum "yarn.lock" }}
@@ -21,4 +20,7 @@ jobs:
             - ~/yarn_cache
       - run:
           working_directory: ~/expo-dev-tools/packages/dev-tools
+          command: yarn test
+      - run:
+          working_directory: ~/expo-dev-tools/packages/expo-codemod
           command: yarn test
