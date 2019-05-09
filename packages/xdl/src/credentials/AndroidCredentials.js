@@ -58,7 +58,7 @@ export async function backupExistingCredentials(
   };
 }
 
-export async function exportCert(
+export async function exportCertBinary(
   keystorePath: string,
   keystorePassword: string,
   keyAlias: string,
@@ -66,6 +66,29 @@ export async function exportCert(
 ) {
   return spawnAsync('keytool', [
     '-exportcert',
+    '-keystore',
+    keystorePath,
+    '-storepass',
+    keystorePassword,
+    '-alias',
+    keyAlias,
+    '-file',
+    certFile,
+    '-noprompt',
+    '-storetype',
+    'JKS',
+  ]);
+}
+
+export async function exportCertBase64(
+  keystorePath: string,
+  keystorePassword: string,
+  keyAlias: string,
+  certFile: string
+) {
+  return spawnAsync('keytool', [
+    '-export',
+    '-rfc',
     '-keystore',
     keystorePath,
     '-storepass',
@@ -180,7 +203,7 @@ export async function logKeystoreHashes(
 ) {
   const certFile = `${keystorePath}.cer`;
   try {
-    await exportCert(keystorePath, keystorePassword, keyAlias, certFile);
+    await exportCertBinary(keystorePath, keystorePassword, keyAlias, certFile);
     const data = fs.readFileSync(certFile);
     const googleHash = crypto
       .createHash('sha1')
