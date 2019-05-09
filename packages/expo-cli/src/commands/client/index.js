@@ -8,7 +8,7 @@ import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
 import selectDistributionCert from './selectDistributionCert';
 import selectPushKey from './selectPushKey';
 import generateBundleIdentifier from './generateBundleIdentifier';
-import createClientBuildRequest from './createClientBuildRequest';
+import { createClientBuildRequest, getExperienceName } from './clientBuildApi';
 import log from '../../log';
 import prompt from '../../prompt';
 
@@ -26,10 +26,11 @@ export default program => {
       const authData = await appleApi.authenticate(options);
       const user = await User.getCurrentUserAsync();
       const bundleIdentifier = generateBundleIdentifier(authData.team.id);
+      const experienceName = await getExperienceName({ user, appleTeamId: authData.team.id });
       const context = {
         ...authData,
         bundleIdentifier,
-        experienceName: 'Expo',
+        experienceName,
         username: user ? user.username : null,
       };
       await appleApi.ensureAppExists(context);

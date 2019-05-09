@@ -7,12 +7,22 @@ import promptForCredentials from '../build/ios/credentials/prompt/promptForCrede
 import log from '../../log';
 import prompt from '../../prompt';
 
+import { choosePreferredCreds } from './selectUtils';
+
 // XXX: workaround for https://github.com/babel/babel/issues/6262
 export default selectDistributionCert;
 
 async function selectDistributionCert(context, options = {}) {
   const certificates = context.username ? await chooseUnrevokedDistributionCert(context) : [];
   const choices = [...certificates];
+
+  // autoselect creds if we find valid ones
+  if (certificates.length > 0 && !options.disableAutoSelectExisting) {
+    const autoselectedCertificate = choosePreferredCreds(context, certificates);
+    log(`Using Distribution Certificate: ${autoselectedCertificate.name}`);
+    return autoselectedCertificate;
+  }
+
   if (!options.disableCreate) {
     choices.push({ name: '[Create a new certificate]', value: 'GENERATE' });
   }
@@ -32,7 +42,7 @@ async function selectDistributionCert(context, options = {}) {
       .distributionCert;
     const isValid = await validateUploadedCertificate(context, distributionCert);
     if (!isValid) {
-      return await selectDistributionCert(context);
+      return await selectDistributionCert(context, { disableAutoSelectExisting: true });
     }
   }
   return distributionCert;
@@ -135,7 +145,10 @@ async function generateDistributionCert(context) {
         await credentials.revoke(context, ['distributionCert']);
         return await generateDistributionCert(context);
       } else if (answer === 'USE_EXISTING') {
-        return await selectDistributionCert(context, { disableCreate: true });
+        return await selectDistributionCert(context, {
+          disableCreate: true,
+          disableAutoSelectExisting: true,
+        });
       }
     }
   }

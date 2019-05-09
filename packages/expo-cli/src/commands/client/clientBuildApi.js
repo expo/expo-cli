@@ -1,6 +1,6 @@
 import { ApiV2 } from 'xdl';
 
-export default async function createClientBuildRequest({
+async function createClientBuildRequest({
   user = null,
   context,
   distributionCert,
@@ -27,3 +27,15 @@ export default async function createClientBuildRequest({
     },
   });
 }
+
+async function getExperienceName({ user = null, appleTeamId }) {
+  const { experienceName } = await ApiV2.clientForUser(user).postAsync(
+    'client-build/experience-name',
+    {
+      appleTeamId,
+    }
+  );
+  return experienceName;
+}
+
+export { createClientBuildRequest, getExperienceName };
