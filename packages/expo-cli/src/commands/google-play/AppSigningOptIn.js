@@ -117,7 +117,7 @@ export default class AppSigningOptInProcess {
     );
 
     log(`Saving upload certificate to ${this.publicUploadCert}`);
-    await Credentials.Android.exportCert(
+    await Credentials.Android.exportCertBase64(
       this.uploadKeystore,
       this.uploadKeystoreCredentials.keystorePassword,
       this.uploadKeystoreCredentials.keyAlias,
