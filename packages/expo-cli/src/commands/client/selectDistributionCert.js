@@ -30,12 +30,39 @@ async function selectDistributionCert(context, options = {}) {
   } else if (distributionCert === 'UPLOAD') {
     distributionCert = (await promptForCredentials(context, ['distributionCert']))[0]
       .distributionCert;
+    const isValid = await validateUploadedCertificate(context, distributionCert);
+    if (!isValid) {
+      return await selectDistributionCert(context);
+    }
   }
   return distributionCert;
 }
 
+async function validateUploadedCertificate(context, distributionCert) {
+  const spinner = ora(
+    `Checking validity of distribution certificate on Apple Developer Portal...`
+  ).start();
+
+  const formattedDistCertArray = Credentials.Ios.formatDistCerts([distributionCert], {
+    provideFullCertificate: true,
+  });
+  const filteredFormattedDistCertArray = await filterRevokedDistributionCerts(
+    context,
+    formattedDistCertArray
+  );
+  const isValidCert = filteredFormattedDistCertArray.length > 0;
+  if (isValidCert) {
+    const successMsg = `Successfully validated Distribution Certificate you uploaded against Apple Servers`;
+    spinner.succeed(successMsg);
+  } else {
+    const failureMsg = `The Distribution Certificate you uploaded is not valid. Please check that you uploaded your certificate to the Apple Servers. See docs.expo.io/versions/latest/guides/adhoc-builds for more details on uploading your credentials.`;
+    spinner.fail(failureMsg);
+  }
+  return isValidCert;
+}
+
 async function chooseUnrevokedDistributionCert(context) {
-  let certsOnExpoServer = await Credentials.Ios.getExistingDistCerts(
+  const certsOnExpoServer = await Credentials.Ios.getExistingDistCerts(
     context.username,
     context.team.id,
     { provideFullCertificate: true }
@@ -48,20 +75,7 @@ async function chooseUnrevokedDistributionCert(context) {
     `Checking validity of distribution certificates on Apple Developer Portal...`
   ).start();
 
-  // if the credentials are valid, check it against apple to make sure it hasnt been revoked
-  const distCertManager = appleApi.createManagers(context).distributionCert;
-  const certsOnAppleServer = await distCertManager.list();
-  const validCertSerialsOnAppleServer = certsOnAppleServer
-    .filter(
-      // remove expired certs
-      cert => cert.expires > Math.floor(Date.now() / 1000)
-    )
-    .map(cert => cert.serialNumber);
-
-  const validCertsOnExpoServer = certsOnExpoServer.filter(cert => {
-    const serialNumber = cert.value && cert.value.distCertSerialNumber;
-    return validCertSerialsOnAppleServer.includes(serialNumber);
-  });
+  const validCertsOnExpoServer = await filterRevokedDistributionCerts(context, certsOnExpoServer);
 
   const numValidCerts = validCertsOnExpoServer.length;
   const numRevokedCerts = certsOnExpoServer.length - validCertsOnExpoServer.length;
@@ -71,6 +85,24 @@ async function chooseUnrevokedDistributionCert(context) {
   } else {
     spinner.warn(statusToDisplay);
   }
+
+  return validCertsOnExpoServer;
+}
+
+async function filterRevokedDistributionCerts(context, distributionCerts) {
+  // if the credentials are valid, check it against apple to make sure it hasnt been revoked
+  const distCertManager = appleApi.createManagers(context).distributionCert;
+  const certsOnAppleServer = await distCertManager.list();
+  const validCertSerialsOnAppleServer = certsOnAppleServer
+    .filter(
+      // remove expired certs
+      cert => cert.expires > Math.floor(Date.now() / 1000)
+    )
+    .map(cert => cert.serialNumber);
+  const validCertsOnExpoServer = distributionCerts.filter(cert => {
+    const serialNumber = cert.value && cert.value.distCertSerialNumber;
+    return validCertSerialsOnAppleServer.includes(serialNumber);
+  });
   return validCertsOnExpoServer;
 }
 
