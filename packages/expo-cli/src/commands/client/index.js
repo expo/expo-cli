@@ -57,19 +57,30 @@ export default program => {
       ]);
       const udids = devices.map(device => device.deviceNumber);
       log.newLine();
-      log(
-        'Custom builds of the Expo Client can only be installed on devices which have been registered with Apple at build-time.'
-      );
-      log('These devices are currently registered on your Apple Developer account:');
-      const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
-      table.push(...devices.map(device => [device.name, device.deviceNumber]));
-      log(table.toString());
-      const { addUdid } = await prompt({
-        name: 'addUdid',
-        message: 'Would you like to register new devices to use the Expo Client with?',
-        type: 'confirm',
-        default: true,
-      });
+
+      let addUdid;
+      if (udids.length === 0) {
+        log(
+          'There are no devices registered to your Apple Developer account. Please follow the instructions below to register an iOS device.'
+        );
+        addUdid = true;
+      } else {
+        log(
+          'Custom builds of the Expo Client can only be installed on devices which have been registered with Apple at build-time.'
+        );
+        log('These devices are currently registered on your Apple Developer account:');
+        const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
+        table.push(...devices.map(device => [device.name, device.deviceNumber]));
+        log(table.toString());
+
+        const udidPrompt = await prompt({
+          name: 'addUdid',
+          message: 'Would you like to register new devices to use the Expo Client with?',
+          type: 'confirm',
+          default: true,
+        });
+        addUdid = udidPrompt.addUdid;
+      }
 
       const result = await createClientBuildRequest({
         user,
