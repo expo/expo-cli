@@ -13,7 +13,9 @@ export default selectPushKey;
 
 async function selectPushKey(context, options = {}) {
   const pushKeys = context.username
-    ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id)
+    ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id, {
+        provideFullPushKey: true,
+      })
     : [];
   const choices = [...pushKeys];
 

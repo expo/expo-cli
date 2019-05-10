@@ -62,17 +62,20 @@ export function formatDistCerts(distCerts, options) {
 
 export async function getExistingPushKeys(
   username: string,
-  appleTeamId: string
+  appleTeamId: string,
+  options: { provideFullPushKey?: boolean } = {}
 ): Promise<?CredsList> {
   const pushKeys = await getExistingUserCredentials(username, appleTeamId, 'push-key');
-  return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId }) => {
+  return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId, apnsKeyP8 }) => {
     let name = `Key ID: ${apnsKeyId}`;
     if (usedByApps) {
       name = `Used in apps: ${usedByApps.join(', ')} (${name})`;
     }
     return {
       value: {
-        userCredentialsId,
+        ...(options.provideFullPushKey
+          ? { apnsKeyId, apnsKeyP8 }
+          : { userCredentialsId: String(userCredentialsId) }),
       },
       name,
       short: apnsKeyId,
