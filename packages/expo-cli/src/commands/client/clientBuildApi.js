@@ -22,7 +22,7 @@ async function createClientBuildRequest({
       certPassword: distributionCert.certPassword,
       teamId: context.team.id,
       appleSession: context.fastlaneSession,
-      udids,
+      udidsString: JSON.stringify(udids),
     },
   });
 }
