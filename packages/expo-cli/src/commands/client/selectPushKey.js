@@ -21,7 +21,7 @@ async function selectPushKey(context, options = {}) {
   if (pushKeys.length > 0 && !options.disableAutoSelectExisting) {
     const autoselectedPushkey = choosePreferredCreds(context, pushKeys);
     log(`Using Push Key: ${autoselectedPushkey.name}`);
-    return autoselectedPushkey;
+    return autoselectedPushkey.value;
   }
 
   if (!options.disableCreate) {

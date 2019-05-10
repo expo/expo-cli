@@ -20,7 +20,7 @@ async function selectDistributionCert(context, options = {}) {
   if (certificates.length > 0 && !options.disableAutoSelectExisting) {
     const autoselectedCertificate = choosePreferredCreds(context, certificates);
     log(`Using Distribution Certificate: ${autoselectedCertificate.name}`);
-    return autoselectedCertificate;
+    return autoselectedCertificate.value;
   }
 
   if (!options.disableCreate) {
