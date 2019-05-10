@@ -64,12 +64,24 @@ export default program => {
       const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
       table.push(...devices.map(device => [device.name, device.deviceNumber]));
       log(table.toString());
-      const { addUdid } = await prompt({
-        name: 'addUdid',
-        message: 'Would you like to register new devices to use the Expo Client with?',
-        type: 'confirm',
-        default: true,
-      });
+
+      const promptToRegisterUdid = async () => {
+        const { addUdid } = await prompt({
+          name: 'addUdid',
+          message: 'Would you like to register new devices to use the Expo Client with?',
+          type: 'confirm',
+          default: true,
+        });
+
+        if (udids.length === 0 && !addUdid) {
+          log.error(
+            'There are no devices registered to your Apple Developer account. You must register at least one device.'
+          );
+          return await promptToRegisterUdid();
+        }
+        return { addUdid };
+      };
+      const { addUdid } = await promptToRegisterUdid();
 
       const result = await createClientBuildRequest({
         user,
