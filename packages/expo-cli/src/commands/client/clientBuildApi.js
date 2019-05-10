@@ -10,7 +10,6 @@ async function createClientBuildRequest({
   email,
 }) {
   return await ApiV2.clientForUser(user).postAsync('client-build/create-ios-request', {
-    appleSession: context.fastlaneSession,
     appleTeamId: context.team.id,
     appleTeamName: context.team.name,
     addUdid,
