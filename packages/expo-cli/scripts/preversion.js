@@ -29,7 +29,7 @@ ${bold('3) Eject')}: Create an app and eject it immediately. Check that it build
 
     # Test that it builds for Android
     cd ../android
-    ./run.sh`
+    ./gradlew installDevKernelDebug`
 );
 
 inquirer
