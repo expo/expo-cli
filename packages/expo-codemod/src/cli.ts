@@ -74,8 +74,7 @@ async function transformAsync({
   transform: string;
 }) {
   transform = path.join(transformDir, `${transform}.js`);
-  const args = ['--parser', parser, '--transform', transform, ...files];
-  //console.log('jscodeshift', args.join(' '));
+  const args = ['--parser', parser, '--transform', transform, '--no-babel', ...files];
   return await spawnAsync(jscodeshift, args, { stdio: 'inherit' });
 }
 
