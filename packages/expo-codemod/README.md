@@ -36,7 +36,7 @@ yarn global add jscodeshift
 You can pass the transform filename to jscodeshift using the `--transform` option:
 
 ```sh
-jscodeshift --transform ./node_modules/expo-codemod/build/transforms/sdk33-imports.js --parser ts src/**/*.ts
+jscodeshift --transform ./node_modules/expo-codemod/build/transforms/sdk33-imports.js --no-babel --parser ts src/**/*.ts
 ```
 
 ## Transforms
