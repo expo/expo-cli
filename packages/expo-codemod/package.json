@@ -1,6 +1,6 @@
 {
   "name": "expo-codemod",
-  "version": "0.0.1",
+  "version": "0.0.1-beta.1",
   "description": "Codemod scripts for Expo apps",
   "author": "Expo",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "expo-codemod": "./bin/expo-codemod"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rm -rf ./build && tsc",
     "watch": "tsc --watch",
     "test": "jest",
     "test:watch": "jest --watch"
