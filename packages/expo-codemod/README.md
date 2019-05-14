@@ -18,7 +18,7 @@ Options:
                                    files in .gitignore are ignored by default
   -h, --help                       print this help message
   -p, --parser <babel|flow|ts|tsx> parser to use to parse the source files
-                                   (default: babel, ts or tsx based on the file extension)'
+                                   (default: babel, ts or tsx based on the file extension)
 
 Transforms available:
   sdk33-imports
