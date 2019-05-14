@@ -2,7 +2,6 @@
   "name": "expo-codemod",
   "version": "0.0.1",
   "description": "Codemod scripts for Expo apps",
-  "main": "build/index.js",
   "author": "Expo",
   "license": "MIT",
   "bin": {
