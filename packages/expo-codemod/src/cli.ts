@@ -42,7 +42,7 @@ Transforms available:
     );
   }
 
-  const allFiles = await globby(paths, { gitignore: true });
+  const allFiles = await globby(paths, { gitignore: true, ignore: ['**/node_modules/**'] });
 
   if (parser) {
     console.log(`Transforming ${allFiles.length} files using parser '${parser}'...`);
