@@ -146,6 +146,8 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
     if (!info) {
       return;
     }
+    api.stats(info.packageName);
+
     let specifier;
     if (info.type === 'ImportSpecifier') {
       specifier = j.importSpecifier(j.identifier(importedName), local);

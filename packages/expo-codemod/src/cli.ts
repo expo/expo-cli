@@ -3,12 +3,16 @@ import parse from 'yargs-parser';
 import globby from 'globby';
 import multimatch from 'multimatch';
 import spawnAsync from '@expo/spawn-async';
+// @ts-ignore
+import Runner from 'jscodeshift/src/Runner';
 
 const jscodeshift = require.resolve('jscodeshift/bin/jscodeshift.js');
 const transformDir = path.join(__dirname, 'transforms');
 
+const totalStats: { [key: string]: number } = {};
+
 export async function runAsync(argv: string[]) {
-  const options = parse(argv, { alias: { transform: ['t'] } });
+  const options = parse(argv);
   const [transform, ...paths] = options._.slice(2);
   const parser = options.parser;
 
@@ -62,6 +66,19 @@ Transforms available:
       await transformAsync({ files: tsxFiles, parser: 'tsx', transform });
     }
   }
+
+  if (transform === 'sdk33-imports') {
+    const packages = Object.keys(totalStats).sort();
+    if (packages.length) {
+      console.log(
+        `Added imports from ${
+          packages.length
+        } packages.\nTo install the correct versions of these packages you can run this expo-cli command:`
+      );
+      console.log();
+      console.log(`expo install ${packages.join(' ')}`);
+    }
+  }
 }
 
 async function transformAsync({
@@ -73,8 +90,21 @@ async function transformAsync({
   parser: 'babel' | 'flow' | 'ts' | 'tsx';
   transform: string;
 }) {
-  transform = path.join(transformDir, `${transform}.js`);
-  const args = ['--parser', parser, '--transform', transform, '--no-babel', ...files];
+  const transformFile = path.join(transformDir, `${transform}.js`);
+  if (transform === 'sdk33-imports') {
+    // Dry run to gather stats about which packages need to be installed.
+    const { stats } = await Runner.run(transformFile, files, {
+      dry: true,
+      silent: true,
+      babel: false,
+      parser,
+    });
+    Object.keys(stats).forEach(key => {
+      totalStats[key] = (totalStats[key] || 0) + stats[key];
+    });
+  }
+
+  const args = ['--parser', parser, '--transform', transformFile, '--no-babel', ...files];
   return await spawnAsync(jscodeshift, args, { stdio: 'inherit' });
 }
 
