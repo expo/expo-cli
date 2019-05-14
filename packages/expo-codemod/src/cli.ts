@@ -4,7 +4,7 @@ import globby from 'globby';
 import multimatch from 'multimatch';
 import spawnAsync from '@expo/spawn-async';
 
-const jscodeshift = path.join(__dirname, '../../node_modules/.bin/jscodeshift');
+const jscodeshift = require.resolve('jscodeshift/bin/jscodeshift.js');
 const transformDir = path.join(__dirname, 'transforms');
 
 export async function runAsync(argv: string[]) {
