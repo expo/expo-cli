@@ -10,10 +10,11 @@ import {
   UrlUtils,
   User,
   UserSettings,
+  Webpack,
 } from 'xdl';
 
 import chalk from 'chalk';
-import opn from 'opn';
+import openBrowser from 'react-dev-utils/openBrowser';
 import readline from 'readline';
 import trimStart from 'lodash/trimStart';
 import wordwrap from 'wordwrap';
@@ -142,7 +143,7 @@ export const startAsync = async (projectDir, options) => {
       case 'w': {
         clearConsole();
         log('Trying to open the project in a web browser...');
-        await Project.openWebProjectAsync(projectDir);
+        await Webpack.openAsync(projectDir);
         printHelp();
         break;
       }
@@ -154,7 +155,7 @@ export const startAsync = async (projectDir, options) => {
       case 'd': {
         const { devToolsPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
         log('Opening DevTools in the browser...');
-        opn(`http://localhost:${devToolsPort}`, { wait: false });
+        openBrowser(`http://localhost:${devToolsPort}`);
         printHelp();
         break;
       }

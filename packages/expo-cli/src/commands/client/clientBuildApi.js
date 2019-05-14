@@ -1,6 +1,6 @@
 import { ApiV2 } from 'xdl';
 
-export default async function createClientBuildRequest({
+async function createClientBuildRequest({
   user = null,
   context,
   distributionCert,
@@ -10,7 +10,6 @@ export default async function createClientBuildRequest({
   email,
 }) {
   return await ApiV2.clientForUser(user).postAsync('client-build/create-ios-request', {
-    appleSession: context.fastlaneSession,
     appleTeamId: context.team.id,
     appleTeamName: context.team.name,
     addUdid,
@@ -23,7 +22,19 @@ export default async function createClientBuildRequest({
       certPassword: distributionCert.certPassword,
       teamId: context.team.id,
       appleSession: context.fastlaneSession,
-      udids,
+      udidsString: JSON.stringify(udids),
     },
   });
 }
+
+async function getExperienceName({ user = null, appleTeamId }) {
+  const { experienceName } = await ApiV2.clientForUser(user).postAsync(
+    'client-build/experience-name',
+    {
+      appleTeamId,
+    }
+  );
+  return experienceName;
+}
+
+export { createClientBuildRequest, getExperienceName };

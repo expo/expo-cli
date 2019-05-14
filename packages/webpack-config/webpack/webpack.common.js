@@ -4,23 +4,71 @@ const chalk = require('chalk');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
-const webpack = require('webpack');
+const { DefinePlugin, HotModuleReplacementPlugin } = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 const WorkboxPlugin = require('workbox-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
-const createClientEnvironment = require('./createClientEnvironment');
-const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
-const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
-const getLocations = require('./webpackLocations');
-const path = require('path');
 const PnpWebpackPlugin = require('pnp-webpack-plugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
+const ManifestPlugin = require('webpack-manifest-plugin');
+const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
+const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
+const BrotliPlugin = require('brotli-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
+const createClientEnvironment = require('./createClientEnvironment');
+const getPaths = require('./utils/getPaths');
+const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
+const createFontLoader = require('./loaders/createFontLoader');
+const createBabelLoader = require('./loaders/createBabelLoader');
+const getMode = require('./utils/getMode');
+const getConfig = require('./utils/getConfig');
+
+const DEFAULT_ALIAS = {
+  // Alias direct react-native imports to react-native-web
+  'react-native$': 'react-native-web',
+  '@react-native-community/netinfo': 'react-native-web/dist/exports/NetInfo',
+  // Add polyfills for modules that react-native-web doesn't support
+  // Depends on expo-asset
+  'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
+  'react-native/Libraries/Image/assetPathUtils$': 'expo-asset/build/Image/assetPathUtils',
+  'react-native/Libraries/Image/resolveAssetSource$': 'expo-asset/build/resolveAssetSource',
+  // Alias internal react-native modules to react-native-web
+  'react-native/Libraries/Components/View/ViewStylePropTypes$':
+    'react-native-web/dist/exports/View/ViewStylePropTypes',
+  'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
+    'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
+  'react-native/Libraries/vendor/emitter/EventEmitter$':
+    'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
+  'react-native/Libraries/vendor/emitter/EventSubscriptionVendor$':
+    'react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor',
+  'react-native/Libraries/EventEmitter/NativeEventEmitter$':
+    'react-native-web/dist/vendor/react-native/NativeEventEmitter',
+};
+
+const DEFAULT_GZIP = {
+  test: /\.(js|css)$/,
+  filename: '[path].gz[query]',
+  algorithm: 'gzip',
+  threshold: 1024,
+  minRatio: 0.8,
+};
+
+const DEFAULT_BROTLI = {
+  asset: '[path].br[query]',
+  test: /\.(js|css)$/,
+  threshold: 1024,
+  minRatio: 0.8,
+};
 
 const DEFAULT_SERVICE_WORKER = {};
+
 const DEFAULT_REPORT_CONFIG = {
-  verbose: false,
+  verbose: true,
   path: 'web-report',
   statsFilename: 'stats.json',
   reportFilename: 'report.html',
@@ -94,44 +142,19 @@ function getDevtool(env, { devtool }) {
 }
 
 module.exports = function(env = {}, argv) {
-  const locations = getLocations(env.projectRoot);
+  const config = getConfig(env);
+  const mode = getMode(env);
+  const isDev = mode === 'development';
+  const isProd = mode === 'production';
 
-  const isProduction = env.production;
-
-  const { babelConfig, config } = env;
+  const locations = getPaths(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
-  const fontLoaderConfiguration = {
-    test: /\.(ttf|otf|woff)$/,
-    use: [
-      {
-        loader: 'url-loader',
-        options: {
-          limit: 50000,
-          name: './fonts/[name].[ext]',
-        },
-      },
-    ],
-    include: [
-      locations.root,
-      locations.includeModule('react-native-vector-icons'),
-      locations.includeModule('@expo/vector-icons'),
-    ],
-  };
+  const middlewarePlugins = [];
 
-  const htmlLoaderConfiguration = {
-    test: /\.html$/,
-    use: ['html-loader'],
-    exclude: locations.template.folder,
-  };
-
-  const middlewarePlugins = [
-    // Remove unused import/exports
-    new WebpackDeepScopeAnalysisPlugin(),
-  ];
-
+  const { build: buildConfig } = config.web;
   const { lang } = config.web;
-  const { publicPath, rootId } = config.web.build;
+  const { publicPath, rootId, babel: babelAppConfig = {} } = config.web.build;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
@@ -161,16 +184,6 @@ module.exports = function(env = {}, argv) {
     );
   }
 
-  // Generate the `manifest.json`
-  middlewarePlugins.push(
-    new WebpackPWAManifestPlugin(config, {
-      ...env,
-      publicPath,
-      noResources: env.development,
-      filename: locations.production.manifest,
-    })
-  );
-
   /**
    * report: {
    *   verbose: false,
@@ -188,6 +201,9 @@ module.exports = function(env = {}, argv) {
   );
 
   if (reportConfig) {
+    if (isDev && reportConfig.verbose) {
+      console.log('Generating a report, this will add noticeably more time to rebuilds.');
+    }
     const reportDir = reportConfig.path;
     reportPlugins = [
       // Delete the report folder
@@ -212,10 +228,70 @@ module.exports = function(env = {}, argv) {
 
   const devtool = getDevtool(env, config.web.build);
 
+  const allLoaders = [
+    {
+      test: /\.html$/,
+      use: ['html-loader'],
+      exclude: locations.template.folder,
+    },
+    imageLoaderConfiguration,
+    createBabelLoader({
+      mode,
+      babelProjectRoot: locations.root,
+      verbose: babelAppConfig.verbose,
+      include: babelAppConfig.include,
+      use: babelAppConfig.use,
+    }),
+    createFontLoader({ locations }),
+
+    styleLoaderConfiguration,
+    // This needs to be the last loader
+    fallbackLoaderConfiguration,
+  ].filter(Boolean);
+
+  /**
+   * web: {
+   *   build: {
+   *     verbose: boolean,
+   *     brotli: boolean | {}, // (Brotli Options)
+   *     gzip: boolean | CompressionPlugin.Options<O>,
+   *   }
+   * }
+   */
+  const gzipConfig = isProd && overrideWithPropertyOrConfig(buildConfig.gzip, DEFAULT_GZIP);
+  const brotliConfig = isProd && enableWithPropertyOrConfig(buildConfig.brotli, DEFAULT_BROTLI);
+
+  const appEntry = [locations.appMain];
+
+  if (isProd) {
+    if (env.polyfill) {
+      appEntry.unshift('@babel/polyfill');
+    }
+  } else {
+    // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
+    // Include an alternative client for WebpackDevServer. A client's job is to
+    // connect to WebpackDevServer by a socket and get notified about changes.
+    // When you save a file, the client will either apply hot updates (in case
+    // of CSS changes), or refresh the page (in case of JS changes). When you
+    // make a syntax error, this client will display a syntax error overlay.
+    // Note: instead of the default WebpackDevServer client, we use a custom one
+    // to bring better experience for Create React App users. You can replace
+    // the line below with these two lines if you prefer the stock client:
+    // require.resolve('webpack-dev-server/client') + '?/',
+    // require.resolve('webpack/hot/dev-server'),
+    appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+  }
+
+  const environmentVariables = createClientEnvironment(mode, publicPath, publicAppManifest);
+
   return {
+    mode,
+    entry: {
+      app: appEntry,
+    },
     // https://webpack.js.org/configuration/other-options/#bail
     // Fail out on the first error instead of tolerating it.
-    bail: isProduction,
+    bail: isProd,
     devtool,
     context: __dirname,
     // configures where the build ends up
@@ -226,8 +302,34 @@ module.exports = function(env = {}, argv) {
       publicPath,
     },
     plugins: [
+      // Delete the build folder
+      isProd &&
+        new CleanWebpackPlugin([locations.production.folder], {
+          root: locations.root,
+          dry: false,
+          verbose: buildConfig.verbose,
+        }),
+      // Copy the template files over
+      isProd &&
+        new CopyWebpackPlugin([
+          {
+            from: locations.template.folder,
+            to: locations.production.folder,
+            // We generate new versions of these based on the templates
+            ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
+          },
+          {
+            from: locations.template.serveJson,
+            to: locations.production.serveJson,
+          },
+          {
+            from: locations.template.favicon,
+            to: locations.production.favicon,
+          },
+        ]),
+
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON(env, config, locations),
+      createIndexHTMLFromAppJSON(env),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
@@ -238,13 +340,55 @@ module.exports = function(env = {}, argv) {
         ROOT_ID: rootId,
       }),
 
-      new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),
-
-      ...middlewarePlugins,
+      new WebpackPWAManifestPlugin(config, {
+        publicPath,
+        noResources: isDev || !env.pwa,
+        filename: locations.production.manifest,
+        HtmlWebpackPlugin,
+      }),
 
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
       new ModuleNotFoundPlugin(locations.root),
+
+      new DefinePlugin(environmentVariables),
+
+      // This is necessary to emit hot updates (currently CSS only):
+      isDev && new HotModuleReplacementPlugin(),
+      // Watcher doesn't work well if you mistype casing in a path so we use
+      // a plugin that prints an error when you attempt to do this.
+      // See https://github.com/facebook/create-react-app/issues/240
+      isDev && new CaseSensitivePathsPlugin(),
+
+      // If you require a missing module and then `npm install` it, you still have
+      // to restart the development server for Webpack to discover it. This plugin
+      // makes the discovery automatic so you don't have to restart.
+      // See https://github.com/facebook/create-react-app/issues/186
+      isDev && new WatchMissingNodeModulesPlugin(locations.absolute('node_modules')),
+
+      isProd &&
+        new MiniCssExtractPlugin({
+          // Options similar to the same options in webpackOptions.output
+          // both options are optional
+          filename: 'static/css/[name].[contenthash:8].css',
+          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+        }),
+
+      // Generate a manifest file which contains a mapping of all asset filenames
+      // to their corresponding output file so that tools can pick it up without
+      // having to parse `index.html`.
+      new ManifestPlugin({
+        fileName: 'asset-manifest.json',
+        publicPath,
+      }),
+
+      // Remove unused import/exports
+      isProd && new WebpackDeepScopeAnalysisPlugin(),
+
+      ...middlewarePlugins,
+
+      gzipConfig && new CompressionPlugin(gzipConfig),
+      brotliConfig && new BrotliPlugin(brotliConfig),
 
       new ProgressBarPlugin({
         format:
@@ -257,28 +401,18 @@ module.exports = function(env = {}, argv) {
       }),
 
       ...reportPlugins,
-    ],
-
+    ].filter(Boolean),
     module: {
       strictExportPresence: false,
-
       rules: [
         // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
         {
-          oneOf: [
-            imageLoaderConfiguration,
-            // Process application JS with Babel.
-            babelConfig,
-            styleLoaderConfiguration,
-            fontLoaderConfiguration,
-            htmlLoaderConfiguration,
-            // This needs to be the last loader
-            fallbackLoaderConfiguration,
-          ],
+          oneOf: allLoaders,
         },
       ],
     },
+
     resolveLoader: {
       plugins: [
         // Also related to Plug'n'Play, but this time it tells Webpack to load its loaders
@@ -287,6 +421,18 @@ module.exports = function(env = {}, argv) {
       ],
     },
     resolve: {
+      alias: DEFAULT_ALIAS,
+      extensions: [
+        '.web.ts',
+        '.web.tsx',
+        '.ts',
+        '.tsx',
+        '.web.js',
+        '.web.jsx',
+        '.js',
+        '.jsx',
+        '.json',
+      ],
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
         // guards against forgotten dependencies and such.
@@ -299,29 +445,8 @@ module.exports = function(env = {}, argv) {
         new ModuleScopePlugin(locations.template.folder, [locations.packageJson]),
       ],
       symlinks: false,
-      extensions: ['.web.ts', '.ts', '.tsx', '.web.js', '.js', '.jsx', '.json'],
-      alias: {
-        // Alias direct react-native imports to react-native-web
-        'react-native$': 'react-native-web',
-        '@react-native-community/netinfo': 'react-native-web/dist/exports/NetInfo',
-        // Add polyfills for modules that react-native-web doesn't support
-        // Depends on expo-asset
-        'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
-        'react-native/Libraries/Image/assetPathUtils$': 'expo-asset/build/Image/assetPathUtils',
-        'react-native/Libraries/Image/resolveAssetSource$': 'expo-asset/build/resolveAssetSource',
-        // Alias internal react-native modules to react-native-web
-        'react-native/Libraries/Components/View/ViewStylePropTypes$':
-          'react-native-web/dist/exports/View/ViewStylePropTypes',
-        'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
-          'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
-        'react-native/Libraries/vendor/emitter/EventEmitter$':
-          'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
-        'react-native/Libraries/vendor/emitter/EventSubscriptionVendor$':
-          'react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor',
-        'react-native/Libraries/EventEmitter/NativeEventEmitter$':
-          'react-native-web/dist/vendor/react-native/NativeEventEmitter',
-      },
     },
+
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
     node: {

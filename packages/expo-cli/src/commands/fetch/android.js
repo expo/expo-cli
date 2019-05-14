@@ -75,7 +75,12 @@ async function fetchAndroidUploadCertAsync(projectDir) {
     );
 
     log(`Writing upload key to ${uploadKeyPath}`);
-    await Credentials.Android.exportCert(keystorePath, keystorePassword, keyAlias, uploadKeyPath);
+    await Credentials.Android.exportCertBase64(
+      keystorePath,
+      keystorePassword,
+      keyAlias,
+      uploadKeyPath
+    );
   } finally {
     try {
       fs.unlinkSync(keystorePath);

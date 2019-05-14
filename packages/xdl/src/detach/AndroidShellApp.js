@@ -299,6 +299,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     keyPassword,
     outputFile,
     workingDir,
+    modules,
   } = args;
 
   const exponentDir = exponentDirectory(workingDir);
@@ -360,6 +361,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   await copyInitialShellAppFilesAsync(androidSrcPath, shellPath, false, sdkVersion);
   await removeObsoleteSdks(shellPath, sdkVersion);
   await runShellAppModificationsAsync(context, sdkVersion);
+  await prepareEnabledModules(shellPath, modules);
 
   if (!args.skipBuild) {
     await buildShellAppAsync(context, sdkVersion);
@@ -435,6 +437,15 @@ export async function runShellAppModificationsAsync(
 
   if (isDetached) {
     let appBuildGradle = path.join(shellPath, 'app', 'build.gradle');
+    if (isRunningInUserContext) {
+      await regexFileAsync(/\/\* UNCOMMENT WHEN DETACHING/g, '', appBuildGradle);
+      await regexFileAsync(/END UNCOMMENT WHEN DETACHING \*\//g, '', appBuildGradle);
+      await deleteLinesInFileAsync(
+        'WHEN_DETACHING_REMOVE_FROM_HERE',
+        'WHEN_DETACHING_REMOVE_TO_HERE',
+        appBuildGradle
+      );
+    }
     await regexFileAsync(/\/\* UNCOMMENT WHEN DISTRIBUTING/g, '', appBuildGradle);
     await regexFileAsync(/END UNCOMMENT WHEN DISTRIBUTING \*\//g, '', appBuildGradle);
     await deleteLinesInFileAsync(
@@ -1306,4 +1317,26 @@ async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string)
       removeInvalidSdkLinesWhenPreparingShell(effectiveSdkVersion, filePath)
     )
   );
+}
+
+async function prepareEnabledModules(
+  shellPath: string,
+  modules?: Array<{ name: string, version: string, dirname: string }>
+) {
+  const enabledModulesDir = path.join(shellPath, 'enabled-modules');
+  const packagesDir = path.join(shellPath, '..', 'packages');
+  await fs.remove(enabledModulesDir);
+  if (!modules) {
+    await fs.ensureSymlink(packagesDir, enabledModulesDir);
+  } else {
+    await fs.mkdirp(enabledModulesDir);
+    await Promise.all(
+      modules.map(mod =>
+        fs.ensureSymlink(
+          path.join(packagesDir, mod.dirname),
+          path.join(enabledModulesDir, mod.dirname)
+        )
+      )
+    );
+  }
 }

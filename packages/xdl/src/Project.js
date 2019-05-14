@@ -2,6 +2,7 @@
  * @flow
  */
 import axios from 'axios';
+import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -30,14 +31,13 @@ import md5hex from 'md5hex';
 import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
-import webpack from 'webpack';
-import WebpackDevServer from 'webpack-dev-server';
 
 import * as ConfigUtils from '@expo/config';
 import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
+import * as AssetUtils from './AssetUtils';
 import Config from './Config';
 import * as Doctor from './project/Doctor';
 import * as DevSession from './DevSession';
@@ -60,9 +60,8 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import * as Watchman from './Watchman';
 import XDLError from './XDLError';
-import * as Web from './Web';
 import type { User as ExpUser } from './User'; //eslint-disable-line
-
+import * as Webpack from './Webpack';
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
@@ -443,7 +442,7 @@ export async function exportForAppHosting(
   // save the assets
   // Get project config
   const publishOptions = options.publishOptions || {};
-  const exp = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+  const { exp } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
   const { assets } = await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
 
   if (options.dumpAssetmap) {
@@ -626,7 +625,7 @@ export async function publishAsync(
   }
 
   // Get project config
-  let exp = await _getPublishExpConfigAsync(projectRoot, options);
+  let { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, options);
 
   // TODO: refactor this out to a function, throw error if length doesn't match
   let { hooks } = exp;
@@ -667,6 +666,7 @@ export async function publishAsync(
   let response;
   try {
     response = await _uploadArtifactsAsync({
+      pkg,
       exp,
       iosBundle,
       androidBundle,
@@ -832,11 +832,12 @@ export async function publishAsync(
   };
 }
 
-async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options }) {
+async function _uploadArtifactsAsync({ exp, iosBundle, androidBundle, options, pkg }) {
   logger.global.info('Uploading JavaScript bundles');
   let formData = new FormData();
 
   formData.append('expJson', JSON.stringify(exp));
+  formData.append('packageJson', JSON.stringify(pkg));
   formData.append('iosBundle', iosBundle, 'iosBundle');
   formData.append('androidBundle', androidBundle, 'androidBundle');
   formData.append('options', JSON.stringify(options));
@@ -906,7 +907,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
     throw new XDLError(ErrorCode.INVALID_OPTIONS, 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
-  return exp;
+  return { exp, pkg };
 }
 
 // Fetch iOS and Android bundles for publishing
@@ -1491,6 +1492,14 @@ export async function startReactNativeServerAsync(
     nonPersistent: !!options.nonPersistent,
   };
 
+  if (Versions.gteSdkVersion(exp, '33.0.0')) {
+    packagerOpts.assetPlugins = ConfigUtils.resolveModule(
+      'expo/tools/hashAssetFiles',
+      projectRoot,
+      exp
+    );
+  }
+
   if (options.maxWorkers) {
     packagerOpts['max-workers'] = options.maxWorkers;
   }
@@ -1535,6 +1544,7 @@ export async function startReactNativeServerAsync(
     },
     ['start']
   );
+
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
@@ -1830,94 +1840,6 @@ export async function stopExpoServerAsync(projectRoot: string) {
   });
 }
 
-let webpackDevServerInstance;
-
-function getWebpackInstance(projectRoot) {
-  if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is not running.');
-  }
-  return webpackDevServerInstance;
-}
-
-async function startWebpackServerAsync(projectRoot, options, verbose) {
-  await Web.ensureWebSupportAsync(projectRoot);
-
-  if (webpackDevServerInstance) {
-    ProjectUtils.logError(projectRoot, 'expo', 'Webpack is already running.');
-    return;
-  }
-  let { dev, https } = await ProjectSettings.readAsync(projectRoot);
-  let config = Web.invokeWebpackConfig({ projectRoot, development: dev, production: !dev, https });
-  let webpackServerPort = await _getFreePortAsync(19000);
-  ProjectUtils.logInfo(
-    projectRoot,
-    'expo',
-    `Starting webpack-dev-server on port ${webpackServerPort}.`
-  );
-  let compiler = webpack(config);
-  webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
-  await new Promise((resolve, reject) =>
-    webpackDevServerInstance.listen(webpackServerPort, '0.0.0.0', error => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve();
-      }
-    })
-  );
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    webpackServerPort,
-  });
-}
-
-async function stopWebpackServerAsync(projectRoot) {
-  const devServer = getWebpackInstance(projectRoot);
-  if (devServer) {
-    await new Promise(resolve => devServer.close(() => resolve()));
-    webpackDevServerInstance = null;
-    // TODO
-    await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-      webpackServerPort: null,
-    });
-  }
-}
-
-export async function bundleWebpackAsync(projectRoot, packagerOpts) {
-  await Web.ensureWebSupportAsync(projectRoot);
-  const mode = packagerOpts.dev ? 'development' : 'production';
-  process.env.BABEL_ENV = mode;
-  process.env.NODE_ENV = mode;
-
-  let config = Web.invokeWebpackConfig({
-    projectRoot,
-    polyfill: packagerOpts.polyfill,
-    development: packagerOpts.dev,
-    production: !packagerOpts.dev,
-  });
-  let compiler = webpack(config);
-
-  try {
-    // We generate the stats.json file in the webpack-config
-    await new Promise((resolve, reject) =>
-      compiler.run(async (error, stats) => {
-        // TODO: Bacon: account for CI
-        if (error) {
-          // TODO: Bacon: Clean up error messages
-          return reject(error);
-        }
-        resolve(stats);
-      })
-    );
-  } catch (error) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      'There was a problem building your web project. ' + error.message
-    );
-    throw error;
-  }
-}
-
 async function _connectToNgrokAsync(
   projectRoot: string,
   args: mixed,
@@ -2086,6 +2008,7 @@ export async function startTunnelsAsync(projectRoot: string) {
     })(),
   ]);
 }
+
 export async function stopTunnelsAsync(projectRoot: string) {
   _assertValidProjectRoot(projectRoot);
   // This will kill all ngrok tunnels in the process.
@@ -2139,6 +2062,104 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
 
+export async function optimizeAsync(projectRoot: string = './', options: Object = {}) {
+  logger.global.info(chalk.green('Optimizing assets...'));
+  const {
+    readAssetJsonAsync,
+    getAssetFilesAsync,
+    optimizeImageAsync,
+    calculateHash,
+    createNewFilename,
+    toReadableValue,
+  } = AssetUtils;
+
+  const { assetJson, assetInfo } = await readAssetJsonAsync(projectRoot);
+  // Keep track of which hash values in assets.json are no longer in use
+  const outdated = new Set();
+  for (const fileHash in assetInfo) outdated.add(fileHash);
+
+  let totalSaved = 0;
+  const { allFiles, selectedFiles } = await getAssetFilesAsync(projectRoot, options);
+  const hashes = {};
+  // Remove assets that have been deleted/modified from assets.json
+  allFiles.forEach(image => {
+    const hash = calculateHash(image);
+    if (assetInfo[hash]) {
+      outdated.delete(hash);
+    }
+    hashes[image] = hash;
+  });
+  outdated.forEach(outdatedHash => {
+    delete assetInfo[outdatedHash];
+  });
+
+  // Check for custom quality value
+  const { quality: strQuality, include, exclude, save } = options;
+  const quality = Number(strQuality);
+  const validQuality = Number.isInteger(quality) && quality > 0 && quality <= 100;
+  if (strQuality !== undefined && !validQuality) {
+    logger.global.warn('Invalid quality entered. Using default of 60.');
+  }
+  const outputQuality = validQuality ? quality : 60;
+
+  const images = include || exclude ? selectedFiles : allFiles;
+  for (const image of images) {
+    const hash = hashes[image];
+    if (assetInfo[hash]) {
+      continue;
+    }
+    const { size: prevSize } = fs.statSync(image);
+
+    const newName = createNewFilename(image);
+    await optimizeImageAsync(image, newName, outputQuality);
+
+    const { size: newSize } = fs.statSync(image);
+    const amountSaved = prevSize - newSize;
+    if (amountSaved < 0) {
+      // Delete the optimized version and revert changes
+      fs.renameSync(newName, image);
+      assetInfo[hash] = true;
+      logger.global.info(
+        chalk.gray(
+          `Compressed version of ${image} was larger than original. Using original instead.`
+        )
+      );
+      continue;
+    }
+    // Recalculate hash since the image has changed
+    const newHash = calculateHash(image);
+    assetInfo[newHash] = true;
+
+    if (save) {
+      if (hash === newHash) {
+        logger.global.info(
+          chalk.gray(
+            `Compressed asset ${image} is identical to the original. Using original instead.`
+          )
+        );
+        fs.unlinkSync(newName);
+      } else {
+        logger.global.info(chalk.gray(`Saving original asset to ${newName}`));
+        // Save the old hash to prevent reoptimizing
+        assetInfo[hash] = true;
+      }
+    } else {
+      // Delete the renamed original asset
+      fs.unlinkSync(newName);
+    }
+    totalSaved += amountSaved;
+    logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
+  }
+  if (totalSaved === 0) {
+    logger.global.info('No assets optimized. Everything is fully compressed!');
+  } else {
+    logger.global.info(
+      `Finished compressing assets. ${chalk.green(toReadableValue(totalSaved))} saved.`
+    );
+  }
+  assetJson.writeAsync(assetInfo);
+}
+
 export async function startAsync(
   projectRoot: string,
   options: Object = {},
@@ -2149,14 +2170,13 @@ export async function startAsync(
     projectRoot,
     developerTool: Config.developerTool,
   });
-  if (!options.webOnly) {
+  if (options.webOnly) {
+    await Webpack.startAsync(projectRoot, options, verbose);
+  } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
   }
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
-  if (hasWebSupport) {
-    await startWebpackServerAsync(projectRoot, options, verbose);
-  }
+
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);
@@ -2169,20 +2189,13 @@ export async function startAsync(
   return exp;
 }
 
-export async function openWebProjectAsync(projectRoot: string, options = {}, verbose = true) {
-  if (!webpackDevServerInstance) {
-    await startWebpackServerAsync(projectRoot, options, verbose);
-  }
-  await Web.openProjectAsync(projectRoot);
-}
-
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  const hasWebSupport = await Doctor.hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
-    await stopWebpackServerAsync(projectRoot);
+    await Webpack.stopAsync(projectRoot);
   }
   if (!Config.offline) {
     try {
@@ -2192,6 +2205,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
     }
   }
 }
+
 export async function stopAsync(projectDir: string): Promise<void> {
   const result = await Promise.race([
     _stopInternalAsync(projectDir),

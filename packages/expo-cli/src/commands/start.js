@@ -5,7 +5,7 @@
 import { DevToolsServer } from '@expo/dev-tools';
 import { ProjectUtils, Web, Project, UserSettings, UrlUtils } from 'xdl';
 import chalk from 'chalk';
-import opn from 'opn';
+import openBrowser from 'react-dev-utils/openBrowser';
 import path from 'path';
 
 import log from '../log';
@@ -19,6 +19,10 @@ async function parseStartOptionsAsync(projectDir: string, options: Object): Prom
 
   if (options.clear) {
     startOpts.reset = true;
+  }
+
+  if (options.parent && options.parent.nonInteractive) {
+    startOpts.nonInteractive = true;
   }
 
   if (options.maxWorkers) {
@@ -54,7 +58,7 @@ async function action(projectDir, options) {
   if (!nonInteractive && !exp.isDetached) {
     if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
       log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
-      opn(devToolsUrl, { wait: false });
+      openBrowser(devToolsUrl);
     } else {
       log(
         `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
@@ -65,7 +69,6 @@ async function action(projectDir, options) {
   const startOpts = await parseStartOptionsAsync(projectDir, options);
 
   await Project.startAsync(rootPath, startOpts);
-  await Web.logURL(projectDir);
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 

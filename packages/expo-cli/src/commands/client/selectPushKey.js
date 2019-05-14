@@ -6,17 +6,31 @@ import promptForCredentials from '../build/ios/credentials/prompt/promptForCrede
 import log from '../../log';
 import prompt from '../../prompt';
 
+import { choosePreferredCreds } from './selectUtils';
+
 // XXX: workaround for https://github.com/babel/babel/issues/6262
 export default selectPushKey;
 
 async function selectPushKey(context, options = {}) {
   const pushKeys = context.username
-    ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id)
+    ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id, {
+        provideFullPushKey: true,
+      })
     : [];
-  const choices = [{ name: '[Upload an existing key]', value: 'UPLOAD' }, ...pushKeys];
-  if (!options.disableCreate) {
-    choices.unshift({ name: '[Create a new key]', value: 'GENERATE' });
+  const choices = [...pushKeys];
+
+  // autoselect creds if we find valid ones
+  if (pushKeys.length > 0 && !options.disableAutoSelectExisting) {
+    const autoselectedPushkey = choosePreferredCreds(context, pushKeys);
+    log(`Using Push Key: ${autoselectedPushkey.name}`);
+    return autoselectedPushkey.value;
   }
+
+  if (!options.disableCreate) {
+    choices.push({ name: '[Create a new key]', value: 'GENERATE' });
+  }
+  choices.push({ name: '[Upload an existing key]', value: 'UPLOAD' });
+
   let { pushKey } = await prompt({
     type: 'list',
     name: 'pushKey',
@@ -61,7 +75,10 @@ async function generatePushKey(context) {
         await credentials.revoke(context, ['pushKey']);
         return await generatePushKey(context);
       } else if (answer === 'USE_EXISTING') {
-        return await selectPushKey(context, { disableCreate: true });
+        return await selectPushKey(context, {
+          disableCreate: true,
+          disableAutoSelectExisting: true,
+        });
       }
     }
   }

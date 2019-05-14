@@ -153,11 +153,11 @@ export async function _isSimulatorRunningAsync() {
   }
 
   let bootedDevice = await _bootedSimulatorDeviceAsync();
-  
+
   if (!bootedDevice) {
     return await _bootDefaultSimulatorDeviceAsync();
   }
-  
+
   return !!bootedDevice;
 }
 
@@ -170,14 +170,20 @@ async function _bootDefaultSimulatorDeviceAsync() {
     }
     return await _xcrunAsync(['simctl', 'boot', defaultDeviceUDID]);
   } catch (e) {
-    Logger.global.error(`There was a problem booting a device in iOS Simulator. Quit Simulator, and try again.`);
+    Logger.global.error(
+      `There was a problem booting a device in iOS Simulator. Quit Simulator, and try again.`
+    );
     throw e;
   }
 }
 
 async function _getDefaultSimulatorDeviceUDIDAsync() {
   try {
-    const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', ['read', 'com.apple.iphonesimulator', 'CurrentDeviceUDID']);
+    const { stdout: defaultDeviceUDID } = await spawnAsync('defaults', [
+      'read',
+      'com.apple.iphonesimulator',
+      'CurrentDeviceUDID',
+    ]);
     return defaultDeviceUDID.trim();
   } catch (e) {
     return null;
@@ -204,7 +210,7 @@ async function _getFirstAvailableDeviceAsync() {
       }
     }
   }
-  Logger.global.warn('No iPhone devices available in Simulator.')
+  Logger.global.warn('No iPhone devices available in Simulator.');
   return null;
 }
 
@@ -328,11 +334,11 @@ export async function _downloadSimulatorAppAsync(url) {
 
 // url: Optional URL of Exponent.app tarball to download
 export async function _installExpoOnSimulatorAsync(url) {
-  Logger.global.info(`Downloading latest version of Expo`);
+  Logger.global.info(`Downloading the latest version of Expo client app`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let dir = await _downloadSimulatorAppAsync(url);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
-  Logger.global.info('Installing Expo on iOS simulator');
+  Logger.global.info('Installing Expo client on iOS simulator');
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
@@ -341,7 +347,7 @@ export async function _installExpoOnSimulatorAsync(url) {
 
 export async function _uninstallExpoAppFromSimulatorAsync() {
   try {
-    Logger.global.info('Uninstalling Expo from iOS simulator.');
+    Logger.global.info('Uninstalling Expo client from iOS simulator.');
     await _xcrunAsync(['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
   } catch (e) {
     if (e.message && e.message.includes('No devices are booted.')) {

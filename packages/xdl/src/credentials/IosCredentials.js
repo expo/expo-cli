@@ -31,9 +31,14 @@ export type CredsList = Array<CredObject>;
 
 export async function getExistingDistCerts(
   username: string,
-  appleTeamId: string
+  appleTeamId: string,
+  options: { provideFullCertificate?: boolean } = {}
 ): Promise<?CredsList> {
   const distCerts = await getExistingUserCredentials(username, appleTeamId, 'dist-cert');
+  return formatDistCerts(distCerts, options);
+}
+
+export function formatDistCerts(distCerts, options) {
   return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }) => {
     const serialNumber = IosCodeSigning.findP12CertSerialNumber(certP12, certPassword);
     let name = `Serial number: ${serialNumber}`;
@@ -46,7 +51,9 @@ export async function getExistingDistCerts(
     return {
       value: {
         distCertSerialNumber: serialNumber,
-        userCredentialsId: String(userCredentialsId),
+        ...(options.provideFullCertificate
+          ? { certP12, certId, certPassword }
+          : { userCredentialsId: String(userCredentialsId) }),
       },
       name,
     };
@@ -55,17 +62,20 @@ export async function getExistingDistCerts(
 
 export async function getExistingPushKeys(
   username: string,
-  appleTeamId: string
+  appleTeamId: string,
+  options: { provideFullPushKey?: boolean } = {}
 ): Promise<?CredsList> {
   const pushKeys = await getExistingUserCredentials(username, appleTeamId, 'push-key');
-  return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId }) => {
+  return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId, apnsKeyP8 }) => {
     let name = `Key ID: ${apnsKeyId}`;
     if (usedByApps) {
       name = `Used in apps: ${usedByApps.join(', ')} (${name})`;
     }
     return {
       value: {
-        userCredentialsId,
+        ...(options.provideFullPushKey
+          ? { apnsKeyId, apnsKeyP8 }
+          : { userCredentialsId: String(userCredentialsId) }),
       },
       name,
       short: apnsKeyId,

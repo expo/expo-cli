@@ -24,6 +24,9 @@ module.exports = {
   get ApiV2() {
     return require('./ApiV2').default;
   },
+  get AssetUtils() {
+    return require('./AssetUtils');
+  },
   get Binaries() {
     return require('./Binaries');
   },
@@ -149,6 +152,9 @@ module.exports = {
   },
   get Web() {
     return require('./Web');
+  },
+  get Webpack() {
+    return require('./Webpack');
   },
   get XDLError() {
     return require('./XDLError').default;

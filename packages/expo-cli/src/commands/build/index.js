@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { UrlUtils, Project } from 'xdl';
+import { UrlUtils, Webpack } from 'xdl';
 import BaseBuilder from './BaseBuilder';
 import IOSBuilder from './ios/IOSBuilder';
 import AndroidBuilder from './AndroidBuilder';
@@ -107,15 +107,14 @@ export default (program: any) => {
   program
     .command('build:web [project-dir]')
     .option('--no-polyfill', 'Prevent webpack from including @babel/polyfill')
-    .option('-d, --dev', 'Bundle your project using webpack in dev mode.')
     .option(
-      '--stats <path>',
-      'Output path for webpack stats. Defaults to "web-build-stats.json"',
-      'web-build-stats.json'
+      '--no-pwa',
+      'Prevent webpack from generating the manifest.json and injecting meta into the index.html head.'
     )
+    .option('-d, --dev', 'Bundle your project using webpack in dev mode.')
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir(
-      (projectDir, options) => Project.bundleWebpackAsync(projectDir, options),
+      (projectDir, options) => Webpack.bundleAsync(projectDir, options),
       /* skipProjectValidation: */ false,
       /* skipAuthCheck: */ true
     );

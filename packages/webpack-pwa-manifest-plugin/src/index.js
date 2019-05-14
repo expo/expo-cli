@@ -2,9 +2,8 @@ import createMetatagsFromConfig from './createMetatagsFromConfig';
 import {
   applyTag,
   buildResources,
-  generateAppleTags,
+  generateAppleSplashAndIconTags,
   generateHtmlTags,
-  generateMaskIconLink,
   injectResources,
 } from './injector';
 import validateColors from './validators/Colors';
@@ -32,7 +31,8 @@ const DEFAULT_OPTIONS = {
  * To test PWAs in chrome visit `chrome://flags#enable-desktop-pwas`
  */
 class WebpackPwaManifest {
-  constructor(appJson, { noResources, filename, publicPath }) {
+  constructor(appJson, { noResources, filename, publicPath, HtmlWebpackPlugin }) {
+    this.HtmlWebpackPlugin = HtmlWebpackPlugin;
     if (!isObject(appJson)) {
       throw new Error('app.json must be an object');
     }
@@ -57,8 +57,6 @@ class WebpackPwaManifest {
       description: web.description,
       dir: web.dir,
       display: web.display,
-      icons: web.icons,
-      startupImages: web.startupImages,
       lang: web.lang,
       name: web.name,
       orientation: web.orientation,
@@ -68,12 +66,12 @@ class WebpackPwaManifest {
       short_name: web.shortName,
       start_url: web.startUrl,
       theme_color: web.themeColor,
-      ios: {
-        'apple-mobile-web-app-title': web.short_name,
-        'apple-mobile-web-app-status-bar-style': web.barStyle,
-      },
       crossorigin: web.crossorigin,
     };
+    if (!noResources) {
+      this.manifest.startupImages = web.startupImages;
+      this.manifest.icons = web.icons;
+    }
     this.validateManifest(this.manifest);
   }
 
@@ -95,14 +93,17 @@ class WebpackPwaManifest {
       }
 
       const publicPath = this.options.publicPath || compilation.options.output.publicPath;
-      await buildResources(this, publicPath);
+
+      // The manifest (this.manifest) should be ready by this point.
+      // It will be written to disk here.
+      const manifestFile = await buildResources(this, publicPath);
 
       if (!this.options.inject) {
         callback(null, htmlPluginData);
         return;
       }
 
-      let tags = generateAppleTags(this.manifest, this.assets);
+      let tags = generateAppleSplashAndIconTags(this.assets);
 
       for (const metatagName of Object.keys(this.options.metatags)) {
         const content = this.options.metatags[metatagName];
@@ -112,15 +113,16 @@ class WebpackPwaManifest {
         });
       }
 
-      const manifestLink = {
-        rel: 'manifest',
-        href: this.manifest.url,
-      };
-      if (this.manifest.crossorigin) {
-        manifestLink.crossorigin = this.manifest.crossorigin;
+      if (manifestFile) {
+        const manifestLink = {
+          rel: 'manifest',
+          href: manifestFile.url,
+        };
+        if (this.manifest.crossorigin) {
+          manifestLink.crossorigin = this.manifest.crossorigin;
+        }
+        tags = applyTag(tags, 'link', manifestLink);
       }
-      tags = applyTag(tags, 'link', manifestLink);
-      tags = generateMaskIconLink(tags, this.assets);
 
       const tagsHTML = generateHtmlTags(tags);
       htmlPluginData.html = htmlPluginData.html.replace(/(<\/head>)/i, `${tagsHTML}</head>`);
@@ -134,7 +136,7 @@ class WebpackPwaManifest {
         // This is set in html-webpack-plugin pre-v4.
         let hook = cmpp.hooks.htmlWebpackPluginAfterHtmlProcessing;
         if (!hook) {
-          const HtmlWebpackPlugin = require('html-webpack-plugin');
+          const HtmlWebpackPlugin = this.HtmlWebpackPlugin || require('html-webpack-plugin');
           hook = HtmlWebpackPlugin.getHooks(cmpp).beforeEmit;
         }
 

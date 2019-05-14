@@ -7,7 +7,7 @@
     "bootstrap": "lerna bootstrap",
     "postbootstrap": "lerna run prepare --stream",
     "prebootstrap": "yarn",
-    "publish": "node scripts/publish.js",
+    "publish": "echo \"This script is deprecated. Run \\\"node ./scripts/publish.js\\\" instead.\"; exit 1",
     "start": "yarn run bootstrap && lerna run watch --parallel --ignore @expo/dev-tools"
   },
   "husky": {
@@ -23,6 +23,7 @@
     ]
   },
   "devDependencies": {
+    "@expo/spawn-async": "^1.4.2",
     "eslint": "^5.15.3",
     "eslint-config-universe": "^2.0.0-alpha.0",
     "husky": "^1.1.3",
