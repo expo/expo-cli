@@ -5,6 +5,9 @@
   "main": "build/index.js",
   "author": "Expo",
   "license": "MIT",
+  "bin": {
+    "expo-codemod": "./bin/expo-codemod"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
@@ -15,13 +18,21 @@
     "rootDir": "src"
   },
   "dependencies": {
+    "@expo/spawn-async": "^1.4.2",
     "camelcase": "5.3.1",
+    "globby": "^9.2.0",
     "jscodeshift": "0.6.4",
-    "typescript": "3.4.5"
+    "multimatch": "^4.0.0",
+    "semver": "^6.0.0",
+    "typescript": "3.4.5",
+    "yargs-parser": "^13.1.0"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.3.3",
+    "@types/globby": "^9.1.0",
     "@types/jscodeshift": "^0.6.0",
+    "@types/multimatch": "^2.1.3",
+    "@types/yargs-parser": "^13.0.0",
     "jest": "^24.8.0"
   }
 }
