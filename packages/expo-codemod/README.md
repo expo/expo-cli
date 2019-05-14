@@ -24,10 +24,19 @@ Transforms available:
   sdk33-imports
 ```
 
-The CLI is a wrapper over [jscodeshift](https://github.com/facebook/jscodeshift). If you need more fine grained control of jscodeshift or parser options, you can also use the jscodeshift CLI directly, for example:
+### Advanced usage
+
+The CLI is a wrapper over [jscodeshift](https://github.com/facebook/jscodeshift). If you need more fine grained control of jscodeshift or parser options, you can also use the jscodeshift CLI directly. First install `expo-codemod` and `jscodeshift`:
 
 ```sh
-jscodeshift --transform https://unpkg.com/expo-codemod@latest/build/transforms/sdk33-imports.js --parser ts src/**/*.ts
+yarn add --dev expo-codemod
+yarn global add jscodeshift
+```
+
+You can pass the transform filename to jscodeshift using the `--transform` option:
+
+```sh
+jscodeshift --transform ./node_modules/expo-codemod/build/transforms/sdk33-imports.js --parser ts src/**/*.ts
 ```
 
 ## Transforms
