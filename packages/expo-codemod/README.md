@@ -14,7 +14,7 @@ npx expo-codemod <transform> <paths...>
 Options:
   <transform>                      (required) name of transform to apply to files
                                    (see a list of transforms available below)
-  <paths...>                       one or more file paths or globs (e.g. ./src/**/*.js) of sources to transform
+  <paths...>                       one or more paths or globs (e.g. ./src/**/*.js) of sources to transform
                                    files in .gitignore are ignored by default
   -h, --help                       print this help message
   -p, --parser <babel|flow|ts|tsx> parser to use to parse the source files
