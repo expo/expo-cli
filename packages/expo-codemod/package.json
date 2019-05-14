@@ -13,6 +13,10 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
+  "files": [
+    "bin",
+    "build"
+  ],
   "jest": {
     "rootDir": "src"
   },

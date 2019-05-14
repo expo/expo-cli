@@ -11,5 +11,6 @@
     "strict": true,
     "target": "ES2016",
     "outDir": "build"
-  }
+  },
+  "include": ["src/**/*"]
 }

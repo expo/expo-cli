@@ -3,7 +3,7 @@ var semver = require('semver');
 var version = process.versions.node;
 
 if (semver.satisfies(version, '8.x.x || >=10.0.0')) {
-  require('../build/src/cli.js')
+  require('../build/cli.js')
     .runAsync(process.argv)
     .catch(error => {
       console.error(error);

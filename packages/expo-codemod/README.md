@@ -6,7 +6,7 @@ The codemods can be used to transform JavaScript (.js, .jsx) and TypeScript (.ts
 
 ## Usage
 
-```
+```sh
 npx expo-codemod <transform> <paths...>
 ```
 
@@ -25,8 +25,8 @@ Transforms available:
 
 The CLI is a wrapper over [jscodeshift](https://github.com/facebook/jscodeshift). If you need more fine grained control of jscodeshift or parser options, you can also use the jscodeshift CLI directly, for example:
 
-```
-jscodeshift --transform https://unpkg.com/expo-codemod@latest/build/src/transforms/sdk33-imports.js --parser ts src/**/*.ts
+```sh
+jscodeshift --transform https://unpkg.com/expo-codemod@latest/build/transforms/sdk33-imports.js --parser ts src/**/*.ts
 ```
 
 ## Transforms
