@@ -16,8 +16,8 @@ async function createClientBuildRequest({
     bundleIdentifier: context.bundleIdentifier,
     email,
     credentials: {
-      apnsKeyP8: pushKey.apnsKeyP8,
-      apnsKeyId: pushKey.apnsKeyId,
+      ...(pushKey && pushKey.apnsKeyP8 ? { apnsKeyP8: pushKey.apnsKeyP8 } : null),
+      ...(pushKey && pushKey.apnsKeyId ? { apnsKeyId: pushKey.apnsKeyId } : null),
       certP12: distributionCert.certP12,
       certPassword: distributionCert.certPassword,
       teamId: context.team.id,
