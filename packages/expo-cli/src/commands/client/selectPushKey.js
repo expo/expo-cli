@@ -1,3 +1,4 @@
+import ora from 'ora';
 import { Credentials } from 'xdl';
 
 import * as appleApi from '../build/ios/appleApi';
@@ -12,11 +13,7 @@ import { choosePreferredCreds } from './selectUtils';
 export default selectPushKey;
 
 async function selectPushKey(context, options = {}) {
-  const pushKeys = context.username
-    ? await Credentials.Ios.getExistingPushKeys(context.username, context.team.id, {
-        provideFullPushKey: true,
-      })
-    : [];
+  const pushKeys = context.username ? await chooseUnrevokedPushKey(context) : [];
   const choices = [...pushKeys];
 
   // autoselect creds if we find valid ones
@@ -42,8 +39,70 @@ async function selectPushKey(context, options = {}) {
     pushKey = await generatePushKey(context);
   } else if (pushKey === 'UPLOAD') {
     pushKey = (await promptForCredentials(context, ['pushKey']))[0].pushKey;
+    const isValid = await validateUploadedPushKey(context, pushKey);
+    if (!isValid) {
+      return await selectPushKey(context, { disableAutoSelectExisting: true });
+    }
   }
   return pushKey;
+}
+
+async function validateUploadedPushKey(context, pushKey) {
+  const spinner = ora(`Checking validity of push key on Apple Developer Portal...`).start();
+
+  const formattedPushKeyArray = Credentials.Ios.formatPushKeys([pushKey], {
+    provideFullPushKey: true,
+  });
+  const filteredFormattedPushKeyArray = await filterRevokedPushKeys(context, formattedPushKeyArray);
+  const isValidPushKey = filteredFormattedPushKeyArray.length > 0;
+  if (isValidPushKey) {
+    const successMsg = `Successfully validated the Push Key you uploaded against Apple Servers`;
+    spinner.succeed(successMsg);
+  } else {
+    const failureMsg = `The Push Key you uploaded is not valid. Please check that it was not revoked on the Apple Servers. See docs.expo.io/versions/latest/guides/adhoc-builds for more details on uploading your credentials.`;
+    spinner.fail(failureMsg);
+  }
+  return isValidPushKey;
+}
+
+async function chooseUnrevokedPushKey(context) {
+  const pushKeysOnExpoServer = await Credentials.Ios.getExistingPushKeys(
+    context.username,
+    context.team.id,
+    {
+      provideFullPushKey: true,
+    }
+  );
+
+  if (pushKeysOnExpoServer.length === 0) {
+    return []; // no keys stored on server
+  }
+
+  const spinner = ora(`Checking validity of push keys on Apple Developer Portal...`).start();
+  const validPushKeysOnExpoServer = await filterRevokedPushKeys(context, pushKeysOnExpoServer);
+
+  const numValidKeys = validPushKeysOnExpoServer.length;
+  const numRevokedKeys = pushKeysOnExpoServer.length - validPushKeysOnExpoServer.length;
+  const statusToDisplay = `Push Keys: You have ${numValidKeys} valid and ${numRevokedKeys} revoked push keys on file.`;
+  if (numValidKeys > 0) {
+    spinner.succeed(statusToDisplay);
+  } else {
+    spinner.warn(statusToDisplay);
+  }
+
+  return validPushKeysOnExpoServer;
+}
+
+async function filterRevokedPushKeys(context, pushKeys) {
+  // if the credentials are valid, check it against apple to make sure it hasnt been revoked
+  const pushKeyManager = appleApi.createManagers(context).pushKey;
+  const pushKeysOnAppleServer = await pushKeyManager.list();
+  const validKeyIdsOnAppleServer = pushKeysOnAppleServer.map(pushKey => pushKey.id);
+  const validPushKeysOnExpoServer = pushKeys.filter(pushKey => {
+    const apnsKeyId = pushKey.value && pushKey.value.apnsKeyId;
+    return validKeyIdsOnAppleServer.includes(apnsKeyId);
+  });
+  return validPushKeysOnExpoServer;
 }
 
 async function generatePushKey(context) {
