@@ -66,6 +66,10 @@ export async function getExistingPushKeys(
   options: { provideFullPushKey?: boolean } = {}
 ): Promise<?CredsList> {
   const pushKeys = await getExistingUserCredentials(username, appleTeamId, 'push-key');
+  return formatPushKeys(pushKeys, options);
+}
+
+export function formatPushKeys(pushKeys, options) {
   return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId, apnsKeyP8 }) => {
     let name = `Key ID: ${apnsKeyId}`;
     if (usedByApps) {
