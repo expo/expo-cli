@@ -6,6 +6,7 @@ import * as credentials from '../build/ios/credentials';
 import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import log from '../../log';
 import prompt from '../../prompt';
+import { tagForUpdate } from './tagger';
 
 import { choosePreferredCreds } from './selectUtils';
 
@@ -43,6 +44,9 @@ async function selectPushKey(context, options = {}) {
     if (!isValid) {
       return await selectPushKey(context, { disableAutoSelectExisting: true });
     }
+
+    // tag for updating to Expo servers
+    tagForUpdate(pushKey);
   }
   return pushKey;
 }
@@ -108,7 +112,12 @@ async function filterRevokedPushKeys(context, pushKeys) {
 async function generatePushKey(context) {
   const manager = appleApi.createManagers(context).pushKey;
   try {
-    return await manager.create({});
+    const pushKey = await manager.create({});
+
+    // tag for updating to Expo servers
+    tagForUpdate(pushKey);
+
+    return pushKey;
   } catch (e) {
     if (e.code === 'APPLE_KEYS_TOO_MANY_GENERATED_ERROR') {
       const keys = await manager.list();

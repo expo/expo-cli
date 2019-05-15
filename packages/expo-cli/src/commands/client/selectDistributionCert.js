@@ -6,6 +6,7 @@ import * as credentials from '../build/ios/credentials';
 import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import log from '../../log';
 import prompt from '../../prompt';
+import { tagForUpdate } from './tagger';
 
 import { choosePreferredCreds } from './selectUtils';
 
@@ -44,6 +45,9 @@ async function selectDistributionCert(context, options = {}) {
     if (!isValid) {
       return await selectDistributionCert(context, { disableAutoSelectExisting: true });
     }
+
+    // tag for updating to Expo servers
+    tagForUpdate(distributionCert);
   }
   return distributionCert;
 }
@@ -119,7 +123,12 @@ async function filterRevokedDistributionCerts(context, distributionCerts) {
 async function generateDistributionCert(context) {
   const manager = appleApi.createManagers(context).distributionCert;
   try {
-    return await manager.create({});
+    const distributionCert = await manager.create({});
+
+    // tag for updating to Expo servers
+    tagForUpdate(distributionCert);
+
+    return distributionCert;
   } catch (e) {
     if (e.code === 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR') {
       const certificates = await manager.list();

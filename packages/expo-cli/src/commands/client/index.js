@@ -1,9 +1,10 @@
 import chalk from 'chalk';
 import CliTable from 'cli-table';
-import { Android, Simulator, User } from 'xdl';
+import { Android, Simulator, User, Credentials } from 'xdl';
 
 import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';
+import { PLATFORMS } from '../build/constants';
 import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
 import selectDistributionCert from './selectDistributionCert';
 import selectPushKey from './selectPushKey';
@@ -11,6 +12,9 @@ import generateBundleIdentifier from './generateBundleIdentifier';
 import { createClientBuildRequest, getExperienceName } from './clientBuildApi';
 import log from '../../log';
 import prompt from '../../prompt';
+import { Updater, clearTags } from './tagger';
+
+const { IOS } = PLATFORMS;
 
 export default program => {
   program
@@ -37,6 +41,30 @@ export default program => {
 
       const distributionCert = await selectDistributionCert(context);
       const pushKey = await selectPushKey(context);
+
+      // if user is logged in, then we should update credentials
+      const credentialsList = [distributionCert, pushKey];
+      if (user) {
+        // store all the credentials that we mark for update
+        const updateCredentialsFn = async listOfCredentials => {
+          if (listOfCredentials.length === 0) {
+            return;
+          }
+          const credentials = listOfCredentials.reduce((acc, credential) => {
+            return { ...acc, ...credential };
+          });
+          await Credentials.updateCredentialsForPlatform(IOS, credentials, [], {
+            username: user.username,
+            experienceName,
+            bundleIdentifier,
+          });
+        };
+        const CredentialsUpdater = new Updater(updateCredentialsFn);
+        await CredentialsUpdater.updateAllAsync(credentialsList);
+      } else {
+        // clear update tags, we dont store credentials for anonymous users
+        clearTags(credentialsList);
+      }
 
       let email;
       if (user) {
