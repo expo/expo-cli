@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "2.17.2",
+  "version": "2.17.3",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -57,7 +57,7 @@
   "dependencies": {
     "@expo/bunyan": "3.0.2",
     "@expo/config": "^1.0.4",
-    "@expo/dev-tools": "^0.5.10",
+    "@expo/dev-tools": "^0.5.11",
     "@expo/json-file": "^8.1.2",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.4.2",
@@ -98,7 +98,7 @@
     "untildify": "3.0.3",
     "validator": "10.5.0",
     "wordwrap": "1.0.0",
-    "xdl": "^53.7.2"
+    "xdl": "^53.7.3"
   },
   "optionalDependencies": {
     "@expo/traveling-fastlane-darwin": "1.9.4",
