@@ -50,7 +50,7 @@ function saveUrlToPathAsync(url, path) {
       resolve();
     });
     stream.on('error', reject);
-    pipeRequest(url).pipe(stream);
+    pipeRequest({ url, timeout: 20000 }).pipe(stream);
   });
 }
 
