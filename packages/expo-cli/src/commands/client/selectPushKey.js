@@ -87,7 +87,7 @@ async function chooseUnrevokedPushKey(context) {
 
   const numValidKeys = validPushKeysOnExpoServer.length;
   const numRevokedKeys = pushKeysOnExpoServer.length - validPushKeysOnExpoServer.length;
-  const statusToDisplay = `Push Keys: You have ${numValidKeys} valid and ${numRevokedKeys} revoked push keys on file.`;
+  const statusToDisplay = `Push Keys: You have ${numValidKeys} valid and ${numRevokedKeys} revoked push keys on the Expo servers.`;
   if (numValidKeys > 0) {
     spinner.succeed(statusToDisplay);
   } else {

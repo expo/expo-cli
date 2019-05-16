@@ -93,7 +93,7 @@ async function chooseUnrevokedDistributionCert(context) {
 
   const numValidCerts = validCertsOnExpoServer.length;
   const numRevokedCerts = certsOnExpoServer.length - validCertsOnExpoServer.length;
-  const statusToDisplay = `Distribution Certificate: You have ${numValidCerts} valid and ${numRevokedCerts} revoked certificates on file.`;
+  const statusToDisplay = `Distribution Certificate: You have ${numValidCerts} valid and ${numRevokedCerts} revoked certificates on the Expo servers.`;
   if (numValidCerts > 0) {
     spinner.succeed(statusToDisplay);
   } else {
