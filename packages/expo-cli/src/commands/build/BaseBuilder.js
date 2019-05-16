@@ -98,7 +98,7 @@ export default class BaseBuilder {
       log.warn(
         `\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold(
           'deprecated'
-        )} soon! We recommend upgrading versions, ideally to the latest (SDK${semver.major(
+        )} next! We recommend upgrading versions, ideally to the latest (SDK${semver.major(
           version
         )}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`
       );
