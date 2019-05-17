@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import * as constants from '../constants';
 import log from '../../../../../log';
 import _prompt from '../../../../../prompt';
-import * as validators from '../../../../utils/validators';
+import * as validators from '../../../../../validators';
 
 const EXPERT_PROMPT = `
 WARNING! In this mode, we won't be able to make sure your Distribution Certificate,

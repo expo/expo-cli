@@ -9,7 +9,7 @@ import log from '../../log';
 import prompt from '../../prompt';
 import { runFastlaneAsync } from './utils';
 import CommandError from '../../CommandError';
-import { nonEmptyInput } from '../utils/validators';
+import { nonEmptyInput } from '../../validators';
 
 const PLATFORM = 'ios';
 
