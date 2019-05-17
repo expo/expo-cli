@@ -28,7 +28,7 @@ async function selectPushKey(context, options = {}) {
     choices.push({ name: '[Create a new key]', value: 'GENERATE' });
   }
   choices.push({ name: '[Upload an existing key]', value: 'UPLOAD' });
-  choices.push({ name: '[Skip this for now, you can upload them later]', value: 'SKIP' });
+  choices.push({ name: '[Skip. This will disable push notifications.]', value: 'SKIP' });
 
   let { pushKey } = await prompt({
     type: 'list',
@@ -142,7 +142,7 @@ async function generatePushKey(context) {
           },
           {
             key: 's',
-            name: '[Skip this for now, you can upload them later]',
+            name: '[Skip. This will disable push notifications.]',
             value: 'SKIP',
           },
         ],
