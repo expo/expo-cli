@@ -177,11 +177,6 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
-    podName: 'EXFacebook',
-    libName: 'expo-facebook',
-    sdkVersions: '>=33.0.0',
-  },
-  {
     podName: 'EXFileSystem',
     libName: 'expo-file-system',
     sdkVersions: '>=29.0.0',
