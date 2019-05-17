@@ -49,6 +49,19 @@ defineInlineTest(
 `,
   'expo import should remain'
 );
+defineInlineTest(
+  transform,
+  {},
+  `
+  // @flow
+  import { Camera } from 'expo';
+  `,
+  `
+  // @flow
+  import { Camera } from 'expo-camera';
+`,
+  'retain comment on first line'
+);
 
 // All deprecated modules
 defineInlineTest(
