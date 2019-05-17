@@ -103,7 +103,7 @@ export default program => {
 
         const udidPrompt = await prompt({
           name: 'addUdid',
-          message: 'Would you like to register new devices to use the Expo Client with?',
+          message: 'Would you like to register a new device to use the Expo Client with?',
           type: 'confirm',
           default: true,
         });
@@ -129,6 +129,7 @@ export default program => {
         log.newLine();
         log(chalk.green(`${result.registrationUrl}`));
         log.newLine();
+        log('Please note that you can only register one iOS device per request.');
         log(
           "After you register your device, we'll start building your client, and you'll receive an email when it's ready to install."
         );
