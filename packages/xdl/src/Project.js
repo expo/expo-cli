@@ -2170,11 +2170,15 @@ export async function startAsync(
     projectRoot,
     developerTool: Config.developerTool,
   });
+
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (options.webOnly) {
     await Webpack.startAsync(projectRoot, options, verbose);
+    DevSession.startSession(projectRoot, exp, 'web');
   } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
+    DevSession.startSession(projectRoot, exp, 'native');
   }
 
   if (!Config.offline) {
@@ -2184,8 +2188,6 @@ export async function startAsync(
       ProjectUtils.logDebug(projectRoot, 'expo', `Error starting tunnel ${e.message}`);
     }
   }
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  DevSession.startSession(projectRoot, exp);
   return exp;
 }
 
