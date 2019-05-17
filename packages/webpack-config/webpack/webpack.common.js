@@ -421,7 +421,7 @@ module.exports = function(env = {}, argv) {
       ],
     },
     resolve: {
-      alias: DEFAULT_ALIAS,
+      alias: { ...DEFAULT_ALIAS, ...config.web.build.alias },
       extensions: [
         '.web.ts',
         '.web.tsx',
