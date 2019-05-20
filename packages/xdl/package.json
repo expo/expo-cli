@@ -1,5 +1,5 @@
 {
-  "name": "xdl",
+  "name": "@expo/xdl",
   "version": "53.8.0",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",

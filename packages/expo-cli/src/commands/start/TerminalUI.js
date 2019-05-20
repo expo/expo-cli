@@ -11,7 +11,7 @@ import {
   User,
   UserSettings,
   Webpack,
-} from 'xdl';
+} from '@expo/xdl';
 
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';

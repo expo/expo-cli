@@ -1,4 +1,4 @@
-import { ModuleVersion } from 'xdl';
+import { ModuleVersion } from '@expo/xdl';
 
 import packageJSON from '../package.json';
 

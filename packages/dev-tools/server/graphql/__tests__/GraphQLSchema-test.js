@@ -4,7 +4,7 @@ import createContext from '../createContext';
 import AsyncIterableRingBuffer from '../AsyncIterableRingBuffer';
 import Issues from '../Issues';
 
-jest.mock('xdl');
+jest.mock('@expo/xdl');
 
 const MOCK_LOGS = [
   {

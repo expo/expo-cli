@@ -15,7 +15,7 @@ import {
   UrlUtils,
   UserSettings,
   User,
-} from 'xdl';
+} from '@expo/xdl';
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
 // for prettier

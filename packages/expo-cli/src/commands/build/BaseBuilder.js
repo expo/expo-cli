@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, ProjectUtils, User, Versions } from 'xdl';
+import { Project, ProjectUtils, User, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
 import get from 'lodash/get';

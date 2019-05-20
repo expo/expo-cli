@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
-import { Exp } from 'xdl';
+import { Exp } from '@expo/xdl';
 import isString from 'lodash/isString';
 import padEnd from 'lodash/padEnd';
 import { Snippet } from 'enquirer';

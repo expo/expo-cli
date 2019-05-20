@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import { PNG } from 'pngjs';
 import pick from 'lodash/pick';
-import { XDLError, ErrorCode } from 'xdl';
+import { XDLError, ErrorCode } from '@expo/xdl';
 import request from 'request';
 import validator from 'validator';
 

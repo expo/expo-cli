@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import _ from 'lodash';
 
-import { Credentials, User, ProjectUtils } from 'xdl';
+import { Credentials, User, ProjectUtils } from '@expo/xdl';
 
 import log from '../../log';
 import prompt from '../../prompt';

@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { UrlUtils, Webpack } from 'xdl';
+import { UrlUtils, Webpack } from '@expo/xdl';
 import BaseBuilder from './BaseBuilder';
 import IOSBuilder from './ios/IOSBuilder';
 import AndroidBuilder from './AndroidBuilder';

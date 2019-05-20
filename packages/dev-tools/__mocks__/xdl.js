@@ -1,4 +1,4 @@
-const xdl = jest.genMockFromModule('xdl');
+const xdl = jest.genMockFromModule('@expo/xdl');
 
 xdl.UrlUtils = {
   constructManifestUrlAsync(projectDir) {

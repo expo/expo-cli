@@ -5,7 +5,7 @@ import { inflect } from 'inflection';
 import JsonFile from '@expo/json-file';
 import npmPackageArg from 'npm-package-arg';
 import path from 'path';
-import { Versions } from 'xdl';
+import { Versions } from '@expo/xdl';
 
 import CommandError from '../CommandError';
 import * as PackageManager from '../PackageManager';

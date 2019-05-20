@@ -2,7 +2,7 @@ import path from 'path';
 
 import fs from 'fs-extra';
 import chalk from 'chalk';
-import { Credentials, Exp } from 'xdl';
+import { Credentials, Exp } from '@expo/xdl';
 
 import log from '../../log';
 

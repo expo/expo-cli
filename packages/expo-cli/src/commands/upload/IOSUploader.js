@@ -3,7 +3,7 @@ import pick from 'lodash/pick';
 import intersection from 'lodash/intersection';
 import chalk from 'chalk';
 
-import { Credentials, Exp, UrlUtils } from 'xdl';
+import { Credentials, Exp, UrlUtils } from '@expo/xdl';
 import BaseUploader from './BaseUploader';
 import log from '../../log';
 import prompt from '../../prompt';

@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { User } from 'xdl';
+import { User } from '@expo/xdl';
 import chalk from 'chalk';
 
 import log from '../log';

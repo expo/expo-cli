@@ -1,4 +1,4 @@
-import { Simulator } from 'xdl';
+import { Simulator } from '@expo/xdl';
 
 async function action(projectDir, options) {
   await Simulator.openProjectAsync(projectDir);

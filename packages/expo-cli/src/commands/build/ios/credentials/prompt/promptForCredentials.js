@@ -1,6 +1,6 @@
 import untildify from 'untildify';
 import path from 'path';
-import { IosCodeSigning } from 'xdl';
+import { IosCodeSigning } from '@expo/xdl';
 import fs from 'fs-extra';
 
 import * as constants from '../constants';

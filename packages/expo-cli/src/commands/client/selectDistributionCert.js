@@ -1,5 +1,5 @@
 import ora from 'ora';
-import { Credentials } from 'xdl';
+import { Credentials } from '@expo/xdl';
 
 import * as appleApi from '../build/ios/appleApi';
 import * as credentials from '../build/ios/credentials';

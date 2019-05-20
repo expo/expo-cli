@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import CliTable from 'cli-table';
-import { Android, Simulator, User, Credentials } from 'xdl';
+import { Android, Simulator, User, Credentials } from '@expo/xdl';
 
 import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';

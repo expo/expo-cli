@@ -29,7 +29,7 @@ import {
   Project,
   ProjectUtils,
   User as UserManager,
-} from 'xdl';
+} from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
 import { loginOrRegisterIfLoggedOut } from './accounts';

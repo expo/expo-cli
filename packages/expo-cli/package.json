@@ -61,6 +61,7 @@
     "@expo/json-file": "^8.1.2",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.4.2",
+    "@expo/xdl": "^53.7.4",
     "ansi-regex": "^4.1.0",
     "axios": "0.18.0",
     "babel-runtime": "6.26.0",
@@ -97,8 +98,7 @@
     "split": "1.0.1",
     "untildify": "3.0.3",
     "validator": "10.5.0",
-    "wordwrap": "1.0.0",
-    "xdl": "^53.7.4"
+    "wordwrap": "1.0.0"
   },
   "optionalDependencies": {
     "@expo/traveling-fastlane-darwin": "1.9.4",

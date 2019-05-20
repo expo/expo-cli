@@ -1,7 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
-import { XDLError, ErrorCode } from 'xdl';
+import { XDLError, ErrorCode } from '@expo/xdl';
 
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';

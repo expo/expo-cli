@@ -1,6 +1,6 @@
 import simpleSpinner from '@expo/simple-spinner';
 
-import { Exp, UserSettings } from 'xdl';
+import { Exp, UserSettings } from '@expo/xdl';
 
 import askUser from './askUser';
 import log from './log';

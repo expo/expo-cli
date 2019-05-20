@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { ApiV2, Exp, User } from 'xdl';
+import { ApiV2, Exp, User } from '@expo/xdl';
 
 import log from '../log';
 
