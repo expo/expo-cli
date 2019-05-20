@@ -41,6 +41,7 @@ export class CreateIosPush extends View {
       ...newPushKey,
       type: 'push-key',
       teamId: context.appleCtx.team.id,
+      teamName: context.appleCtx.team.name,
     });
     return id;
   }
@@ -75,7 +76,7 @@ export class CreateIosPush extends View {
           type: 'list',
           name: 'revoke',
           message:
-            'Do you want to revoke existing Push Notifictions Key from your Apple Developer Portal?',
+            'Do you want to revoke existing Push Notifictions Key from Apple Developer Portal?',
           choices: [
             { value: 'norevoke', name: "Don't revoke any keys." },
             ...keys.map((key, index) => ({ value: index, name: manager.format(key) })),
@@ -156,10 +157,8 @@ export class RemoveIosPush extends View {
       },
     ]);
     if (revoke || this.shouldRevoke) {
-      if (selected.type === 'push-key') {
-        await context.ensureAppleCtx();
-        await pushKeyManager(context.appleCtx).revoke([selected.apnsKeyId]);
-      }
+      await context.ensureAppleCtx();
+      await pushKeyManager(context.appleCtx).revoke([selected.apnsKeyId]);
     }
   }
 }

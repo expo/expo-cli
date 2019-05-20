@@ -79,6 +79,8 @@ export type IosDistCredentials = {
   teamName?: string,
   certId: string,
   certP12: string,
+  certPassword: string,
+  certPrivateSigningKey: string,
 };
 
 export type AndroidCredentials = {

@@ -3,7 +3,8 @@
 import prompt from '../../prompt';
 
 import { View } from './View';
-import * as iosUserCredentials from './UserCredentialsIos';
+import * as iosPushCredentials from './PushCredentialsIos';
+import * as iosDistCredentials from './DistCredentialsIos';
 import { Context } from '../schema';
 import type { IosCredentials } from '../schema';
 import { getIosCredentials, displayIosCredentials } from '../actions/list';
@@ -80,11 +81,17 @@ export class SummaryIos extends View {
   handleAction(context: Context, action: string): ?View {
     switch (action) {
       case 'create-ios-push':
-        return new iosUserCredentials.CreateIosPush(this.iosCred);
+        return new iosPushCredentials.CreateIosPush(this.iosCred);
       case 'update-ios-push':
-        return new iosUserCredentials.UpdateIosPush(this.iosCred);
+        return new iosPushCredentials.UpdateIosPush(this.iosCred);
       case 'remove-ios-push':
-        return new iosUserCredentials.RemoveIosPush(this.iosCred);
+        return new iosPushCredentials.RemoveIosPush(this.iosCred);
+      case 'create-ios-dist':
+        return new iosDistCredentials.CreateIosDist(this.iosCred);
+      case 'update-ios-dist':
+        return new iosDistCredentials.UpdateIosDist(this.iosCred);
+      case 'remove-ios-dist':
+        return new iosDistCredentials.RemoveIosDist(this.iosCred);
       default:
         return null;
     }
@@ -98,8 +105,6 @@ export class SummaryAndroid extends View {
     //this.androidCred = await getAndroidCredentials(context.apiClient);
 
     await displayIosCredentials(this.androidCred);
-
-    const projectSpecificActions = context.hasProjectContext ? [] : [];
 
     const question = {
       type: 'list',
