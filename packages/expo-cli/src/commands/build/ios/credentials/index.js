@@ -1,4 +1,4 @@
-import { Credentials, IosCodeSigning } from 'xdl';
+import { Credentials, IosCodeSigning } from '@expo/xdl';
 
 import prompt from './prompt';
 import revoke from './revoke';

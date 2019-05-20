@@ -1,4 +1,4 @@
-import { Project, ProjectUtils, AssetUtils } from 'xdl';
+import { Project, ProjectUtils, AssetUtils } from '@expo/xdl';
 import prompt from '../prompt';
 import log from '../log';
 

@@ -1,5 +1,5 @@
 {
-  "name": "xdl",
+  "name": "@expo/xdl",
   "version": "53.8.0",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
@@ -127,6 +127,9 @@
     "prettier": "~1.7.4",
     "promise-print": "^2.3.0",
     "rimraf": "^2.5.4"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }

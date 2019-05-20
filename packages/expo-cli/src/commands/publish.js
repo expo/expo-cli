@@ -7,7 +7,7 @@ import path from 'path';
 import chalk from 'chalk';
 import simpleSpinner from '@expo/simple-spinner';
 
-import { Exp, Project, ProjectUtils } from 'xdl';
+import { Exp, Project, ProjectUtils } from '@expo/xdl';
 
 import log from '../log';
 import prompt from '../prompt';

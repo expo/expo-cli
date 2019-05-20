@@ -1,4 +1,4 @@
-import { ApiV2 } from 'xdl';
+import { ApiV2 } from '@expo/xdl';
 
 async function createClientBuildRequest({
   user = null,

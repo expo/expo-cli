@@ -1,4 +1,4 @@
-import { Android } from 'xdl';
+import { Android } from '@expo/xdl';
 
 async function action(projectDir, options) {
   await Android.openProjectAsync(projectDir);

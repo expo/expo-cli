@@ -2,7 +2,7 @@ import path from 'path';
 import fse from 'fs-extra';
 import pacote from 'pacote';
 import chalk from 'chalk';
-import { Logger } from 'xdl';
+import { Logger } from '@expo/xdl';
 
 const DEFAULT_TEMPLATE = 'expo-module-template@latest';
 

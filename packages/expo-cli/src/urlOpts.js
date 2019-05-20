@@ -1,7 +1,7 @@
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
-import { Android, ProjectSettings, Simulator, Webpack } from 'xdl';
+import { Android, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
 
 import CommandError from './CommandError';
 

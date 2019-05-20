@@ -1,7 +1,7 @@
 // @flow
 
 import chalk from 'chalk';
-import { Project } from 'xdl';
+import { Project } from '@expo/xdl';
 
 export function installExitHooks(projectDir: string) {
   // install ctrl+c handler that writes non-running state to directory

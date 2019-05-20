@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Android, Simulator } from 'xdl';
+import { Android, Simulator } from '@expo/xdl';
 import log from '../log';
 
 export default (program: any) => {

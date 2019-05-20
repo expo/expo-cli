@@ -6,7 +6,7 @@ import matchRequire from 'match-require';
 import path from 'path';
 import spawn from 'cross-spawn';
 import spawnAsync from '@expo/spawn-async';
-import { ProjectUtils, Detach, Versions } from 'xdl';
+import { ProjectUtils, Detach, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
 import log from '../../log';

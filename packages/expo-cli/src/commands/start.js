@@ -3,7 +3,7 @@
  */
 
 import { DevToolsServer } from '@expo/dev-tools';
-import { ProjectUtils, Web, Project, UserSettings, UrlUtils } from 'xdl';
+import { ProjectUtils, Web, Project, UserSettings, UrlUtils } from '@expo/xdl';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import path from 'path';

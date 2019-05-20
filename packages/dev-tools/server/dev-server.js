@@ -1,5 +1,5 @@
 import { graphiqlExpress } from 'apollo-server-express';
-import { Project } from 'xdl';
+import { Project } from '@expo/xdl';
 import express from 'express';
 import http from 'http';
 import next from 'next';

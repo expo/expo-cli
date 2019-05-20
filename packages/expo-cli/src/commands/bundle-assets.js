@@ -1,4 +1,4 @@
-import { Detach } from 'xdl';
+import { Detach } from '@expo/xdl';
 
 async function action(projectDir, options) {
   await Detach.bundleAssetsAsync(projectDir, options);

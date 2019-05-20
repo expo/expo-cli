@@ -1,4 +1,4 @@
-import { Doctor } from 'xdl';
+import { Doctor } from '@expo/xdl';
 
 import log from '../log';
 
