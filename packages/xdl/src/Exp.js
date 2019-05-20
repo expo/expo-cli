@@ -23,7 +23,6 @@ import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
-import MessageCode from './MessageCode';
 
 // FIXME(perry) eliminate usage of this template
 export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
@@ -83,7 +82,7 @@ export async function extractTemplateApp(
   packageManager: 'yarn' | 'npm' = 'npm',
   config = {}
 ) {
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
   let tarStream = await pacote.tarball.stream(templateSpec, {
     cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
   });
@@ -114,7 +113,7 @@ export async function extractTemplateApp(
   });
 
   // Update files
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Customizing project...');
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
   let appJson = merge(await appFile.readAsync(), config);

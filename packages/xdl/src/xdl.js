@@ -96,9 +96,6 @@ module.exports = {
   get IosCodeSigning() {
     return require('./detach/IosCodeSigning');
   },
-  get MessageCode() {
-    return require('./MessageCode').default;
-  },
   get Logger() {
     return require('./Logger').default;
   },
