@@ -272,6 +272,7 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
           ${maybeDetachedServiceDef}
           # Enable Google Maps support
           config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'HAVE_GOOGLE_MAPS=1'
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'HAVE_GOOGLE_MAPS_UTILS=1'
           ${maybeFrameworkSearchPathDef}
         end
       end
