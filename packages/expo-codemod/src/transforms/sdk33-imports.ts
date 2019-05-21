@@ -97,6 +97,9 @@ for (const [name, packageName] of namespaceImports) {
 export default function transform(fileInfo: FileInfo, api: API, options: object) {
   const j = api.jscodeshift;
   const root = j(fileInfo.source);
+  const getFirstNode = () => root.find(j.Program).get('body', 0).node;
+  const originalFirstNode = getFirstNode();
+  const originalComments = originalFirstNode.comments;
 
   // import { Name } from 'expo';
   const expoImports = root
@@ -170,6 +173,11 @@ export default function transform(fileInfo: FileInfo, api: API, options: object)
 
   const emptyImports = expoImports.filter(path => path.node.specifiers.length === 0);
   emptyImports.remove();
+  // If the first node has been modified or deleted, reattach the comments
+  const firstNode = getFirstNode();
+  if (firstNode !== originalFirstNode) {
+    firstNode.comments = originalComments;
+  }
 
   return root.toSource({ quote: 'single' });
 }
