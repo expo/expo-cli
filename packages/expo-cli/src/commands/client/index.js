@@ -49,10 +49,7 @@ export default program => {
       }
 
       // if user is logged in, then we should update credentials
-      const credentialsList = [distributionCert, pushKey].filter(
-        // https://stackoverflow.com/questions/18808226/why-is-typeof-null-object
-        cred => typeof cred === 'object' && cred !== null
-      );
+      const credentialsList = [distributionCert, pushKey].filter(i => i);
       if (user) {
         // store all the credentials that we mark for update
         const updateCredentialsFn = async listOfCredentials => {
