@@ -42,8 +42,17 @@ export default program => {
       const distributionCert = await selectDistributionCert(context);
       const pushKey = await selectPushKey(context);
 
+      if (pushKey === null) {
+        log(
+          `Push notifications will be disabled until you upload your push credentials. See https://docs.expo.io/versions/latest/guides/adhoc-builds/#push-notifications-arent-working for more details.`
+        );
+      }
+
       // if user is logged in, then we should update credentials
-      const credentialsList = [distributionCert, pushKey];
+      const credentialsList = [distributionCert, pushKey].filter(
+        // https://stackoverflow.com/questions/18808226/why-is-typeof-null-object
+        cred => typeof cred === 'object' && cred !== null
+      );
       if (user) {
         // store all the credentials that we mark for update
         const updateCredentialsFn = async listOfCredentials => {

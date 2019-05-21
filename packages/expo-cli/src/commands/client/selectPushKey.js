@@ -28,6 +28,7 @@ async function selectPushKey(context, options = {}) {
     choices.push({ name: '[Create a new key]', value: 'GENERATE' });
   }
   choices.push({ name: '[Upload an existing key]', value: 'UPLOAD' });
+  choices.push({ name: '[Skip. This will disable push notifications.]', value: 'SKIP' });
 
   let { pushKey } = await prompt({
     type: 'list',
@@ -47,6 +48,8 @@ async function selectPushKey(context, options = {}) {
 
     // tag for updating to Expo servers
     tagForUpdate(pushKey);
+  } else if (pushKey === 'SKIP') {
+    pushKey = null;
   }
   return pushKey;
 }
@@ -137,6 +140,11 @@ async function generatePushKey(context) {
             name: 'Use an existing key',
             value: 'USE_EXISTING',
           },
+          {
+            key: 's',
+            name: '[Skip. This will disable push notifications.]',
+            value: 'SKIP',
+          },
         ],
       });
       if (answer === 'REVOKE') {
@@ -147,6 +155,8 @@ async function generatePushKey(context) {
           disableCreate: true,
           disableAutoSelectExisting: true,
         });
+      } else if (answer === 'SKIP') {
+        return null;
       }
     }
   }
