@@ -1,33 +1,34 @@
-/**
- * @flow
- */
-
 import fs from 'fs';
+import { promisify } from 'util';
+
 import get from 'lodash/get';
 import has from 'lodash/has';
 import set from 'lodash/set';
 import JSON5 from 'json5';
 import writeFileAtomic from 'write-file-atomic';
-import promisify from 'util.promisify';
 import { codeFrameColumns } from '@babel/code-frame';
 
 import JsonFileError from './JsonFileError';
 
 const readFileAsync = promisify(fs.readFile);
-const writeFileAtomicAsync = promisify(writeFileAtomic);
+const writeFileAtomicAsync: (
+  filename: string,
+  data: string | Buffer,
+  options: writeFileAtomic.Options
+) => void = promisify(writeFileAtomic);
 
-type JSONT = Object;
+type JSONT = { [key: string]: any };
 
-type Options<JSONObject: JSONT> = {
-  badJsonDefault?: JSONObject,
-  jsonParseErrorDefault?: JSONObject,
-  cantReadFileDefault?: JSONObject,
-  default?: JSONObject,
-  json5?: boolean,
-  space?: number,
+type Options<JSONObject extends JSONT> = {
+  badJsonDefault?: JSONObject;
+  jsonParseErrorDefault?: JSONObject;
+  cantReadFileDefault?: JSONObject;
+  default?: JSONObject;
+  json5?: boolean;
+  space?: number;
 };
 
-const DEFAULT_OPTIONS: Options<*> = {
+const DEFAULT_OPTIONS = {
   badJsonDefault: undefined,
   jsonParseErrorDefault: undefined,
   cantReadFileDefault: undefined,
@@ -43,7 +44,7 @@ const DEFAULT_OPTIONS: Options<*> = {
  * and object with string keys and either objects or primitive types as values.
  * @type {[type]}
  */
-export default class JsonFile<JSONObject: JSONT> {
+export default class JsonFile<JSONObject extends JSONT> {
   file: string;
   options: Options<JSONObject>;
 
@@ -56,7 +57,7 @@ export default class JsonFile<JSONObject: JSONT> {
   static deleteKeysAsync = deleteKeysAsync;
   static rewriteAsync = rewriteAsync;
 
-  constructor(file: string, options?: Options<JSONObject> = {}) {
+  constructor(file: string, options: Options<JSONObject> = {}) {
     this.file = file;
     this.options = options;
   }
@@ -69,15 +70,15 @@ export default class JsonFile<JSONObject: JSONT> {
     return writeAsync(this.file, object, this._getOptions(options));
   }
 
-  async getAsync<K: string, DefaultValue>(
+  async getAsync<K extends keyof JSONObject, DefaultValue>(
     key: K,
     defaultValue: DefaultValue,
     options?: Options<JSONObject>
-  ): $ElementType<JSONObject, K> | DefaultValue {
+  ): Promise<JSONObject[K] | DefaultValue> {
     return getAsync(this.file, key, defaultValue, this._getOptions(options));
   }
 
-  async setAsync(key: string, value: mixed, options?: Options<JSONObject>) {
+  async setAsync(key: string, value: unknown, options?: Options<JSONObject>) {
     return setAsync(this.file, key, value, this._getOptions(options));
   }
 
@@ -105,7 +106,7 @@ export default class JsonFile<JSONObject: JSONT> {
   }
 }
 
-async function readAsync<JSONObject: JSONT>(
+async function readAsync<JSONObject extends JSONT>(
   file: string,
   options?: Options<JSONObject>
 ): Promise<JSONObject> {
@@ -142,7 +143,7 @@ async function readAsync<JSONObject: JSONT>(
   }
 }
 
-async function getAsync<JSONObject: JSONT, K: $Keys<JSONObject>, DefaultValue>(
+async function getAsync<JSONObject extends JSONT, K extends keyof JSONObject, DefaultValue>(
   file: string,
   key: K,
   defaultValue: DefaultValue,
@@ -155,7 +156,7 @@ async function getAsync<JSONObject: JSONT, K: $Keys<JSONObject>, DefaultValue>(
   return get(object, key, defaultValue);
 }
 
-async function writeAsync<JSONObject: JSONT>(
+async function writeAsync<JSONObject extends JSONT>(
   file: string,
   object: JSONObject,
   options?: Options<JSONObject>
@@ -176,10 +177,10 @@ async function writeAsync<JSONObject: JSONT>(
   return object;
 }
 
-async function setAsync<JSONObject: JSONT>(
+async function setAsync<JSONObject extends JSONT>(
   file: string,
   key: string,
-  value: mixed,
+  value: unknown,
   options?: Options<JSONObject>
 ): Promise<JSONObject> {
   // TODO: Consider implementing some kind of locking mechanism, but
@@ -189,7 +190,7 @@ async function setAsync<JSONObject: JSONT>(
   return writeAsync(file, object, options);
 }
 
-async function mergeAsync<JSONObject: JSONT>(
+async function mergeAsync<JSONObject extends JSONT>(
   file: string,
   sources: Array<JSONObject> | JSONObject,
   options?: Options<JSONObject>
@@ -203,7 +204,7 @@ async function mergeAsync<JSONObject: JSONT>(
   return writeAsync(file, object, options);
 }
 
-async function deleteKeyAsync<JSONObject: JSONT>(
+async function deleteKeyAsync<JSONObject extends JSONT>(
   file: string,
   key: string,
   options?: Options<JSONObject>
@@ -211,7 +212,7 @@ async function deleteKeyAsync<JSONObject: JSONT>(
   return deleteKeysAsync(file, [key], options);
 }
 
-async function deleteKeysAsync<JSONObject: JSONT>(
+async function deleteKeysAsync<JSONObject extends JSONT>(
   file: string,
   keys: Array<string>,
   options?: Options<JSONObject>
@@ -233,7 +234,7 @@ async function deleteKeysAsync<JSONObject: JSONT>(
   return object;
 }
 
-async function rewriteAsync<JSONObject: JSONT>(
+async function rewriteAsync<JSONObject extends JSONT>(
   file: string,
   options?: Options<JSONObject>
 ): Promise<JSONObject> {
@@ -241,8 +242,8 @@ async function rewriteAsync<JSONObject: JSONT>(
   return writeAsync(file, object, options);
 }
 
-function jsonParseErrorDefault<JSONObject: JSONT>(
-  options?: Options<JSONObject> = {}
+function jsonParseErrorDefault<JSONObject extends JSONT>(
+  options: Options<JSONObject> = {}
 ): JSONObject | void {
   if (options.jsonParseErrorDefault === undefined) {
     return options.default;
@@ -251,8 +252,8 @@ function jsonParseErrorDefault<JSONObject: JSONT>(
   }
 }
 
-function cantReadFileDefault<JSONObject: JSONT>(
-  options?: Options<JSONObject> = {}
+function cantReadFileDefault<JSONObject extends JSONT>(
+  options: Options<JSONObject> = {}
 ): JSONObject | void {
   if (options.cantReadFileDefault === undefined) {
     return options.default;
@@ -261,10 +262,10 @@ function cantReadFileDefault<JSONObject: JSONT>(
   }
 }
 
-function _getOption<JSONObject: JSONT, X: $Subtype<$Keys<Options<JSONObject>>>>(
-  options?: Options<JSONObject>,
-  field: X
-): $ElementType<Options<JSONObject>, X> {
+function _getOption<JSONObject extends JSONT, K extends keyof Options<JSONObject>>(
+  options: Options<JSONObject> | undefined,
+  field: K
+): Options<JSONObject>[K] {
   if (options) {
     if (options[field] !== undefined) {
       return options[field];
@@ -273,7 +274,7 @@ function _getOption<JSONObject: JSONT, X: $Subtype<$Keys<Options<JSONObject>>>>(
   return DEFAULT_OPTIONS[field];
 }
 
-function locationFromSyntaxError(error, sourceString) {
+function locationFromSyntaxError(error: any, sourceString: string) {
   // JSON5 SyntaxError has lineNumber and columnNumber.
   if ('lineNumber' in error && 'columnNumber' in error) {
     return { line: error.lineNumber, column: error.columnNumber };

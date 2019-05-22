@@ -14,12 +14,10 @@
     "test:watch": "jest --watch",
     "watch": "tsc --watch"
   },
-  "files": [
-    "bin",
-    "build"
-  ],
+  "files": ["bin", "build"],
   "jest": {
-    "rootDir": "src"
+    "rootDir": "src",
+    "testEnvironment": "node"
   },
   "dependencies": {
     "@expo/spawn-async": "^1.4.2",
@@ -32,7 +30,7 @@
     "yargs-parser": "^13.1.0"
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.3.3",
+    "@expo/babel-preset-cli": "0.1.0",
     "@types/globby": "^9.1.0",
     "@types/jscodeshift": "^0.6.0",
     "@types/multimatch": "^2.1.3",
