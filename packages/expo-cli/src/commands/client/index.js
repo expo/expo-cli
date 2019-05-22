@@ -9,7 +9,7 @@ import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
 import selectDistributionCert from './selectDistributionCert';
 import selectPushKey from './selectPushKey';
 import generateBundleIdentifier from './generateBundleIdentifier';
-import { createClientBuildRequest, getExperienceName } from './clientBuildApi';
+import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import log from '../../log';
 import prompt from '../../prompt';
 import { Updater, clearTags } from './tagger';
@@ -29,6 +29,18 @@ export default program => {
     .asyncAction(async options => {
       const authData = await appleApi.authenticate(options);
       const user = await User.getCurrentUserAsync();
+
+      // check if any builds are in flight
+      const { isAllowed, errorMessage } = await isAllowedToBuild({
+        user,
+        appleTeamId: authData.team.id,
+      });
+
+      if (!isAllowed) {
+        log.error(`New Expo client build request disallowed. Reason: ${errorMessage}`);
+        return;
+      }
+
       const bundleIdentifier = generateBundleIdentifier(authData.team.id);
       const experienceName = await getExperienceName({ user, appleTeamId: authData.team.id });
       const context = {
