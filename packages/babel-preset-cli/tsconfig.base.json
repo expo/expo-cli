@@ -9,7 +9,6 @@
     "noImplicitReturns": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2016",
-    "outDir": "build"
+    "target": "ES2016"
   }
 }
