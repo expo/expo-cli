@@ -8,7 +8,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:10
-    working_directory: ~/expo-dev-tools
+    working_directory: ~/expo-cli
     steps:
       - checkout
       - restore_cache:
@@ -19,8 +19,14 @@ jobs:
           paths:
             - ~/yarn_cache
       - run:
-          working_directory: ~/expo-dev-tools/packages/dev-tools
+          name: 'dev-tools tests'
+          working_directory: ~/expo-cli/packages/dev-tools
           command: yarn test
       - run:
-          working_directory: ~/expo-dev-tools/packages/expo-codemod
+          name: 'json-file tests'
+          working_directory: ~/expo-cli/packages/json-file
+          command: yarn test
+      - run:
+          name: 'expo-codemod tests'
+          working_directory: ~/expo-cli/packages/expo-codemod
           command: yarn test
