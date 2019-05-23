@@ -1,6 +1,6 @@
 {
   "name": "@expo/babel-preset-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The Babel preset for Expo CLI packages",
   "main": "index.js",
   "repository": {
@@ -8,7 +8,9 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/babel-preset-expo-cli"
   },
-  "keywords": ["babel-preset"],
+  "keywords": [
+    "babel-preset"
+  ],
   "author": "Expo <support@expo.io>",
   "license": "MIT",
   "bugs": {
