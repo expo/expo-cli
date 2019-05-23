@@ -87,7 +87,8 @@ export const getAssetFilesAsync = async (projectDir, options) => {
 
   // All files must be returned even if flags are passed in to properly update assets.json
   const allFiles = [];
-  assetBundlePatterns.forEach(pattern => {
+  const patterns = assetBundlePatterns || ['**/*'];
+  patterns.forEach(pattern => {
     allFiles.push(...glob.sync(pattern, globOptions));
   });
   // If --include is passed in, only return files matching that pattern
