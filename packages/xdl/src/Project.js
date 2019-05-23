@@ -2094,13 +2094,14 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
   });
 
   // Check for custom quality value
+  const defaultQuality = 60;
   const { quality: strQuality, include, exclude, save } = options;
   const quality = Number(strQuality);
   const validQuality = Number.isInteger(quality) && quality > 0 && quality <= 100;
   if (strQuality !== undefined && !validQuality) {
-    logger.global.warn('Invalid quality entered. Using default of 60.');
+    logger.global.warn(`Invalid quality entered. Using default of ${defaultQuality}.`);
   }
-  const outputQuality = validQuality ? quality : 60;
+  const outputQuality = validQuality ? quality : defaultQuality;
 
   const images = include || exclude ? selectedFiles : allFiles;
   for (const image of images) {
