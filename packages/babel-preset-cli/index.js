@@ -4,7 +4,7 @@ module.exports = () => ({
       '@babel/preset-env',
       {
         targets: {
-          node: '8.0.0',
+          node: '8.9.0',
         },
       },
     ],
