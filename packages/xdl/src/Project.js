@@ -2148,8 +2148,12 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
       // Delete the renamed original asset
       fs.unlinkSync(newName);
     }
-    totalSaved += amountSaved;
-    logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
+    if (amountSaved) {
+      totalSaved += amountSaved;
+      logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
+    } else {
+      logger.global.info(chalk.gray(`Nothing to compress.`));
+    }
   }
   if (totalSaved === 0) {
     logger.global.info('No assets optimized. Everything is fully compressed!');
