@@ -1,9 +1,7 @@
-import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-import rimraf from 'rimraf';
-import mkdirp from 'mkdirp';
+import fs from 'fs-extra';
 
 import JsonFile from '../src/JsonFile';
 
@@ -11,8 +9,8 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 20 * 1000;
 
 const FIXTURES = path.join(os.tmpdir(), 'json-file-fixtures');
 
-beforeAll(done => mkdirp(FIXTURES, done));
-afterAll(done => rimraf(FIXTURES, done));
+beforeAll(() => fs.ensureDir(FIXTURES));
+afterAll(() => fs.remove(FIXTURES));
 
 it(`is a class`, () => {
   let file = new JsonFile(path.join(__dirname, '../package.json'));
