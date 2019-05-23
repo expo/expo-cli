@@ -17,13 +17,17 @@ const writeFileAtomicAsync: (
   options: writeFileAtomic.Options
 ) => void = promisify(writeFileAtomic);
 
-type JSONT = { [key: string]: any };
+type JSONValue = boolean | number | string | null | JSONArray | JSONObject;
+interface JSONArray extends Array<JSONValue> {}
+interface JSONObject {
+  [key: string]: JSONValue;
+}
 
-type Options<JSONObject extends JSONT> = {
-  badJsonDefault?: JSONObject;
-  jsonParseErrorDefault?: JSONObject;
-  cantReadFileDefault?: JSONObject;
-  default?: JSONObject;
+type Options<TJSONObject extends JSONObject> = {
+  badJsonDefault?: TJSONObject;
+  jsonParseErrorDefault?: TJSONObject;
+  cantReadFileDefault?: TJSONObject;
+  default?: TJSONObject;
   json5?: boolean;
   space?: number;
 };
@@ -40,13 +44,13 @@ const DEFAULT_OPTIONS = {
 /**
  * The JsonFile class represents the contents of json file.
  *
- * It's polymorphic on "JSONT", which is a simple type representing
+ * It's polymorphic on "JSONObject", which is a simple type representing
  * and object with string keys and either objects or primitive types as values.
  * @type {[type]}
  */
-export default class JsonFile<JSONObject extends JSONT> {
+export default class JsonFile<TJSONObject extends JSONObject> {
   file: string;
-  options: Options<JSONObject>;
+  options: Options<TJSONObject>;
 
   static readAsync = readAsync;
   static writeAsync = writeAsync;
@@ -57,48 +61,48 @@ export default class JsonFile<JSONObject extends JSONT> {
   static deleteKeysAsync = deleteKeysAsync;
   static rewriteAsync = rewriteAsync;
 
-  constructor(file: string, options: Options<JSONObject> = {}) {
+  constructor(file: string, options: Options<TJSONObject> = {}) {
     this.file = file;
     this.options = options;
   }
 
-  async readAsync(options?: Options<JSONObject>): Promise<JSONObject> {
+  async readAsync(options?: Options<TJSONObject>): Promise<TJSONObject> {
     return readAsync(this.file, this._getOptions(options));
   }
 
-  async writeAsync(object: JSONObject, options?: Options<JSONObject>) {
+  async writeAsync(object: TJSONObject, options?: Options<TJSONObject>) {
     return writeAsync(this.file, object, this._getOptions(options));
   }
 
-  async getAsync<K extends keyof JSONObject, DefaultValue>(
+  async getAsync<K extends keyof TJSONObject, DefaultValue>(
     key: K,
     defaultValue: DefaultValue,
-    options?: Options<JSONObject>
-  ): Promise<JSONObject[K] | DefaultValue> {
+    options?: Options<TJSONObject>
+  ): Promise<TJSONObject[K] | DefaultValue> {
     return getAsync(this.file, key, defaultValue, this._getOptions(options));
   }
 
-  async setAsync(key: string, value: unknown, options?: Options<JSONObject>) {
+  async setAsync(key: string, value: unknown, options?: Options<TJSONObject>) {
     return setAsync(this.file, key, value, this._getOptions(options));
   }
 
-  async mergeAsync(sources: JSONObject | Array<JSONObject>, options?: Options<JSONObject>) {
+  async mergeAsync(sources: TJSONObject | Array<TJSONObject>, options?: Options<TJSONObject>) {
     return mergeAsync(this.file, sources, this._getOptions(options));
   }
 
-  async deleteKeyAsync(key: string, options?: Options<JSONObject>) {
+  async deleteKeyAsync(key: string, options?: Options<TJSONObject>) {
     return deleteKeyAsync(this.file, key, this._getOptions(options));
   }
 
-  async deleteKeysAsync(keys: Array<string>, options?: Options<JSONObject>) {
+  async deleteKeysAsync(keys: Array<string>, options?: Options<TJSONObject>) {
     return deleteKeysAsync(this.file, keys, this._getOptions(options));
   }
 
-  async rewriteAsync(options?: Options<JSONObject>) {
+  async rewriteAsync(options?: Options<TJSONObject>) {
     return rewriteAsync(this.file, this._getOptions(options));
   }
 
-  _getOptions(options?: Options<JSONObject>): Options<JSONObject> {
+  _getOptions(options?: Options<TJSONObject>): Options<TJSONObject> {
     return {
       ...this.options,
       ...options,
@@ -106,10 +110,10 @@ export default class JsonFile<JSONObject extends JSONT> {
   }
 }
 
-async function readAsync<JSONObject extends JSONT>(
+async function readAsync<TJSONObject extends JSONObject>(
   file: string,
-  options?: Options<JSONObject>
-): Promise<JSONObject> {
+  options?: Options<TJSONObject>
+): Promise<TJSONObject> {
   let json;
   try {
     json = await readFileAsync(file, 'utf8');
@@ -143,11 +147,11 @@ async function readAsync<JSONObject extends JSONT>(
   }
 }
 
-async function getAsync<JSONObject extends JSONT, K extends keyof JSONObject, DefaultValue>(
+async function getAsync<TJSONObject extends JSONObject, K extends keyof TJSONObject, DefaultValue>(
   file: string,
   key: K,
   defaultValue: DefaultValue,
-  options?: Options<JSONObject>
+  options?: Options<TJSONObject>
 ): Promise<any> {
   const object = await readAsync(file, options);
   if (defaultValue === undefined && !has(object, key)) {
@@ -156,11 +160,11 @@ async function getAsync<JSONObject extends JSONT, K extends keyof JSONObject, De
   return get(object, key, defaultValue);
 }
 
-async function writeAsync<JSONObject extends JSONT>(
+async function writeAsync<TJSONObject extends JSONObject>(
   file: string,
-  object: JSONObject,
-  options?: Options<JSONObject>
-): Promise<JSONObject> {
+  object: TJSONObject,
+  options?: Options<TJSONObject>
+): Promise<TJSONObject> {
   const space = _getOption(options, 'space');
   const json5 = _getOption(options, 'json5');
   let json;
@@ -177,12 +181,12 @@ async function writeAsync<JSONObject extends JSONT>(
   return object;
 }
 
-async function setAsync<JSONObject extends JSONT>(
+async function setAsync<TJSONObject extends JSONObject>(
   file: string,
   key: string,
   value: unknown,
-  options?: Options<JSONObject>
-): Promise<JSONObject> {
+  options?: Options<TJSONObject>
+): Promise<TJSONObject> {
   // TODO: Consider implementing some kind of locking mechanism, but
   // it's not critical for our use case, so we'll leave it out for now
   let object = await readAsync(file, options);
@@ -190,11 +194,11 @@ async function setAsync<JSONObject extends JSONT>(
   return writeAsync(file, object, options);
 }
 
-async function mergeAsync<JSONObject extends JSONT>(
+async function mergeAsync<TJSONObject extends JSONObject>(
   file: string,
-  sources: Array<JSONObject> | JSONObject,
-  options?: Options<JSONObject>
-): Promise<JSONObject> {
+  sources: Array<TJSONObject> | TJSONObject,
+  options?: Options<TJSONObject>
+): Promise<TJSONObject> {
   const object = await readAsync(file, options);
   if (Array.isArray(sources)) {
     Object.assign(object, ...sources);
@@ -204,19 +208,19 @@ async function mergeAsync<JSONObject extends JSONT>(
   return writeAsync(file, object, options);
 }
 
-async function deleteKeyAsync<JSONObject extends JSONT>(
+async function deleteKeyAsync<TJSONObject extends JSONObject>(
   file: string,
   key: string,
-  options?: Options<JSONObject>
-): Promise<JSONObject> {
+  options?: Options<TJSONObject>
+): Promise<TJSONObject> {
   return deleteKeysAsync(file, [key], options);
 }
 
-async function deleteKeysAsync<JSONObject extends JSONT>(
+async function deleteKeysAsync<TJSONObject extends JSONObject>(
   file: string,
   keys: Array<string>,
-  options?: Options<JSONObject>
-): Promise<JSONObject> {
+  options?: Options<TJSONObject>
+): Promise<TJSONObject> {
   const object = await readAsync(file, options);
   let didDelete = false;
 
@@ -234,17 +238,17 @@ async function deleteKeysAsync<JSONObject extends JSONT>(
   return object;
 }
 
-async function rewriteAsync<JSONObject extends JSONT>(
+async function rewriteAsync<TJSONObject extends JSONObject>(
   file: string,
-  options?: Options<JSONObject>
-): Promise<JSONObject> {
+  options?: Options<TJSONObject>
+): Promise<TJSONObject> {
   const object = await readAsync(file, options);
   return writeAsync(file, object, options);
 }
 
-function jsonParseErrorDefault<JSONObject extends JSONT>(
-  options: Options<JSONObject> = {}
-): JSONObject | void {
+function jsonParseErrorDefault<TJSONObject extends JSONObject>(
+  options: Options<TJSONObject> = {}
+): TJSONObject | void {
   if (options.jsonParseErrorDefault === undefined) {
     return options.default;
   } else {
@@ -252,9 +256,9 @@ function jsonParseErrorDefault<JSONObject extends JSONT>(
   }
 }
 
-function cantReadFileDefault<JSONObject extends JSONT>(
-  options: Options<JSONObject> = {}
-): JSONObject | void {
+function cantReadFileDefault<TJSONObject extends JSONObject>(
+  options: Options<TJSONObject> = {}
+): TJSONObject | void {
   if (options.cantReadFileDefault === undefined) {
     return options.default;
   } else {
@@ -262,10 +266,10 @@ function cantReadFileDefault<JSONObject extends JSONT>(
   }
 }
 
-function _getOption<JSONObject extends JSONT, K extends keyof Options<JSONObject>>(
-  options: Options<JSONObject> | undefined,
+function _getOption<TJSONObject extends JSONObject, K extends keyof Options<TJSONObject>>(
+  options: Options<TJSONObject> | undefined,
   field: K
-): Options<JSONObject>[K] {
+): Options<TJSONObject>[K] {
   if (options) {
     if (options[field] !== undefined) {
       return options[field];
