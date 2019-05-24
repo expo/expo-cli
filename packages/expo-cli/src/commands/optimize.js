@@ -12,6 +12,18 @@ export async function action(projectDir = './', options = {}) {
   if (!options.save && hasUnoptimizedAssets) {
     log.warn('This will overwrite the original assets.');
   }
+
+  // Validate custom quality
+  const defaultQuality = 60;
+  const { quality: strQuality } = options;
+
+  const quality = Number(strQuality);
+  const validQuality = Number.isInteger(quality) && quality > 0 && quality <= 100;
+  if (strQuality !== undefined && !validQuality) {
+    throw new Error('Invalid value for --quality flag. Must be an integer between 1 and 100.');
+  }
+  const outputQuality = validQuality ? quality : defaultQuality;
+  options.quality = outputQuality;
   await Project.optimizeAsync(projectDir, options);
 }
 
