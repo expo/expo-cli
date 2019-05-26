@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import CliTable from 'cli-table';
 import { Android, Simulator, User, Credentials } from '@expo/xdl';
 
+import CommandError from '../../CommandError';
 import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';
 import { PLATFORMS } from '../build/constants';
@@ -37,8 +38,10 @@ export default program => {
       });
 
       if (!isAllowed) {
-        log.error(`New Expo client build request disallowed. Reason: ${errorMessage}`);
-        return;
+        throw new CommandError(
+          'CLIENT_BUILD_REQUEST_NOT_ALLOWED',
+          `New Expo client build request disallowed. Reason: ${errorMessage}`
+        );
       }
 
       const bundleIdentifier = generateBundleIdentifier(authData.team.id);
