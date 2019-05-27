@@ -40,7 +40,7 @@ export default program => {
       if (!isAllowed) {
         throw new CommandError(
           'CLIENT_BUILD_REQUEST_NOT_ALLOWED',
-          `New Expo client build request disallowed. Reason: ${errorMessage}`
+          `New Expo Client build request disallowed. Reason: ${errorMessage}`
         );
       }
 
