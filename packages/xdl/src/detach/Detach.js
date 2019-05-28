@@ -271,6 +271,13 @@ async function _detachAsync(projectRoot, options) {
     packagesToInstall.push(sdkVersionConfig.expokitNpmPackage);
   }
 
+  const { packagesToInstallWhenEjecting } = sdkVersionConfig;
+  if (packagesToInstallWhenEjecting && typeof packagesToInstallWhenEjecting === 'object') {
+    Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
+      packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
+    });
+  }
+
   if (packagesToInstall.length) {
     await installPackagesAsync(projectRoot, packagesToInstall, {
       packageManager: options.packageManager,
