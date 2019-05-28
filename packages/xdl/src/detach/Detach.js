@@ -17,6 +17,7 @@ import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
 import * as ConfigUtils from '@expo/config';
+import isPlainObject from 'lodash/isPlainObject';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
 
@@ -269,6 +270,13 @@ async function _detachAsync(projectRoot, options) {
     });
   } else if (sdkVersionConfig.expokitNpmPackage) {
     packagesToInstall.push(sdkVersionConfig.expokitNpmPackage);
+  }
+
+  const { packagesToInstallWhenEjecting } = sdkVersionConfig;
+  if (isPlainObject(packagesToInstallWhenEjecting)) {
+    Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
+      packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
+    });
   }
 
   if (packagesToInstall.length) {
