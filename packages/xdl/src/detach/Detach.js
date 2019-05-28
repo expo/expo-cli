@@ -17,6 +17,7 @@ import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
 import * as ConfigUtils from '@expo/config';
+import isPlainObject from 'lodash/isPlainObject';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
 
@@ -272,7 +273,7 @@ async function _detachAsync(projectRoot, options) {
   }
 
   const { packagesToInstallWhenEjecting } = sdkVersionConfig;
-  if (packagesToInstallWhenEjecting && typeof packagesToInstallWhenEjecting === 'object') {
+  if (isPlainObject(packagesToInstallWhenEjecting)) {
     Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
       packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
     });
