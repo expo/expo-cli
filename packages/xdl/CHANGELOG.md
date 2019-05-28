@@ -8,6 +8,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 * `expo-av` and `expo-mail-composer` universal modules configuration.
 * required `sdkVersion` argument to `Modules.` methods.
+* added support for `packagesToInstallWhenEjecting` dictionary used to get a list of packages to install when ejecting
 
 ### Changed
 
