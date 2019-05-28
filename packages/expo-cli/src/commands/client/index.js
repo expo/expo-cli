@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import CliTable from 'cli-table';
 import { Android, Simulator, User, Credentials } from '@expo/xdl';
 
+import CommandError from '../../CommandError';
 import urlOpts from '../../urlOpts';
 import * as appleApi from '../build/ios/appleApi';
 import { PLATFORMS } from '../build/constants';
@@ -9,7 +10,7 @@ import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
 import selectDistributionCert from './selectDistributionCert';
 import selectPushKey from './selectPushKey';
 import generateBundleIdentifier from './generateBundleIdentifier';
-import { createClientBuildRequest, getExperienceName } from './clientBuildApi';
+import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import log from '../../log';
 import prompt from '../../prompt';
 import { Updater, clearTags } from './tagger';
@@ -29,6 +30,20 @@ export default program => {
     .asyncAction(async options => {
       const authData = await appleApi.authenticate(options);
       const user = await User.getCurrentUserAsync();
+
+      // check if any builds are in flight
+      const { isAllowed, errorMessage } = await isAllowedToBuild({
+        user,
+        appleTeamId: authData.team.id,
+      });
+
+      if (!isAllowed) {
+        throw new CommandError(
+          'CLIENT_BUILD_REQUEST_NOT_ALLOWED',
+          `New Expo Client build request disallowed. Reason: ${errorMessage}`
+        );
+      }
+
       const bundleIdentifier = generateBundleIdentifier(authData.team.id);
       const experienceName = await getExperienceName({ user, appleTeamId: authData.team.id });
       const context = {

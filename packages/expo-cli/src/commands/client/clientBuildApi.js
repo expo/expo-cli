@@ -37,4 +37,10 @@ async function getExperienceName({ user = null, appleTeamId }) {
   return experienceName;
 }
 
-export { createClientBuildRequest, getExperienceName };
+async function isAllowedToBuild({ user = null, appleTeamId }) {
+  return await ApiV2.clientForUser(user).postAsync('client-build/allowed-to-build', {
+    appleTeamId,
+  });
+}
+
+export { createClientBuildRequest, getExperienceName, isAllowedToBuild };
