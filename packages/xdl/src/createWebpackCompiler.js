@@ -63,11 +63,6 @@ export default function createWebpackCompiler({
   webpack,
   onFinished,
 }) {
-  const devSocket = {
-    warnings: warnings => logWarning(projectRoot, warnings),
-    errors: errors => logError(projectRoot, errors),
-  };
-
   // "Compiler" is a low-level interface to Webpack.
   // It lets us listen to some events and provide our own custom messages.
   let compiler;
@@ -110,12 +105,6 @@ export default function createWebpackCompiler({
     });
 
     const messages = formatWebpackMessages(statsData);
-
-    if (messages.errors.length > 0) {
-      devSocket.errors(messages.errors);
-    } else if (messages.warnings.length > 0) {
-      devSocket.warnings(messages.warnings);
-    }
 
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
     if (isSuccessful) {
