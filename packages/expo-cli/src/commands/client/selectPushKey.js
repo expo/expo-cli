@@ -159,5 +159,6 @@ async function generatePushKey(context) {
         return null;
       }
     }
+    throw new Error(e);
   }
 }

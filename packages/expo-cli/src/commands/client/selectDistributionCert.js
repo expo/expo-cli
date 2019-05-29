@@ -160,5 +160,6 @@ async function generateDistributionCert(context) {
         });
       }
     }
+    throw new Error(e);
   }
 }
