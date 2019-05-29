@@ -328,6 +328,19 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=33.0.0',
   },
   {
+    podName: 'EXInAppPurchases',
+    libName: 'expo-in-app-purchases',
+    sdkVersions: '>=33.0.0',
+    config: {
+      ios: {
+        includeInExpoClient: false,
+      },
+      android: {
+        includeInExpoClient: false,
+      },
+    },
+  },
+  {
     libName: 'expo-intent-launcher',
     sdkVersions: '>=33.0.0',
     config: {
