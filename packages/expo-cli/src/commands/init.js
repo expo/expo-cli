@@ -25,6 +25,12 @@ const FEATURED_TEMPLATES = [
     description: 'minimal dependencies to run and an empty root component ',
   },
   {
+    shortName: 'blank-ts',
+    name: 'expo-template-blank-typescript',
+    description:
+      'minimal dependencies to run and an empty root component; includes typescript support',
+  },
+  {
     shortName: 'tabs',
     name: 'expo-template-tabs',
     description: 'several example screens and tabs using react-navigation',
