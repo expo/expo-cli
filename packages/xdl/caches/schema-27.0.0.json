@@ -16,6 +16,10 @@
         "type": "string",
         "pattern": "^[a-zA-Z0-9_\\-]+$"
       },
+      "owner": {
+        "description": "The username of the account under which this app is published. If not specified, the app is published as the currently signed-in user.",
+        "type": "string"
+      },
       "privacy": {
         "description":
           "Either `public` or `unlisted`. If not provided, defaults to `unlisted`. In the future `private` will be supported. `unlisted` hides the experience from search results.",
