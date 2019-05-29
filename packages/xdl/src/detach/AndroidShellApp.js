@@ -454,9 +454,18 @@ export async function runShellAppModificationsAsync(
       appBuildGradle
     );
 
-    // Don't need to compile expoview or ReactAndroid
-    // react-native link looks for a \n so we need that. See https://github.com/facebook/react-native/blob/master/local-cli/link/android/patches/makeSettingsPatch.js
-    await fs.writeFile(path.join(shellPath, 'settings.gradle'), `include ':app'\n`);
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+      let settingsGradle = path.join(shellPath, 'settings.gradle');
+      await deleteLinesInFileAsync(
+        'WHEN_DISTRIBUTING_REMOVE_FROM_HERE',
+        'WHEN_DISTRIBUTING_REMOVE_TO_HERE',
+        settingsGradle
+      );
+    } else {
+      // Don't need to compile expoview or ReactAndroid
+      // react-native link looks for a \n so we need that. See https://github.com/facebook/react-native/blob/master/local-cli/link/android/patches/makeSettingsPatch.js
+      await fs.writeFile(path.join(shellPath, 'settings.gradle'), `include ':app'\n`);
+    }
 
     await regexFileAsync(
       'TEMPLATE_INITIAL_URL',
