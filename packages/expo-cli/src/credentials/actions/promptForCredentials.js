@@ -10,11 +10,10 @@ import * as validators from '../../validators';
 import type { Question, CredentialSchema, Context } from '../schema';
 
 const EXPERT_PROMPT = `
-WARNING! In this mode, we won't be able to make sure your Distribution Certificate,
-Push Notifications service key or Provisioning Profile are valid. Please double check
-that you're uploading valid files for your app otherwise you may encounter strange errors!
+WARNING! In this mode, we won't be able to make sure tahat your crdentials are valid.
+Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!
 
-Make sure you've created your app ID on the developer portal, that your app ID
+When building for ios make sure you've created your app ID on the developer portal, that your app ID
 is in app.json as \`bundleIdentifier\`, and that the provisioning profile you
 upload matches that team ID and app ID.
 `;
@@ -29,8 +28,9 @@ export async function askForUserProvided(ctx: Context, credentialType: Credentia
 async function getCredentialsFromUser(credentialType: CredentialSchema) {
   const results = {};
   for (const field of credentialType.required) {
-    results[field] = askQuestionAndProcessAnswer(get(credentialType, `questions.${field}`));
+    results[field] = await askQuestionAndProcessAnswer(get(credentialType, `questions.${field}`));
   }
+  return results;
 }
 
 async function willUserProvideCredentialsType(name: string) {

@@ -1,6 +1,7 @@
 /* @flow */
 
 import { authenticate } from '../appleApi';
+import { View } from './views/View';
 
 export type Question = {
   question: string,
@@ -28,6 +29,10 @@ export class Context {
 
   apiClient: any;
   appleCtx: any;
+
+  changeMainpage(view: View) {
+    throw new Error('not implemented');
+  }
 
   async ensureAppleCtx() {
     if (!this.appleCtx) {
@@ -83,19 +88,24 @@ export type IosDistCredentials = {
   certPrivateSigningKey: string,
 };
 
-export type AndroidCredentials = {
-  experienceName: string,
-
+export type Keystore = {
   keystore: string,
   keystorePassword: string,
   keyAlias: string,
   keyPassword: string,
 };
 
+export type AndroidCredentials = {
+  appCredentialsId: number,
+  experienceName: string,
+  credentials: Keystore & { fcmApiKey: string },
+};
+
 export const DISTRIBUTION_CERT = 'distributionCert';
 export const PUSH_KEY = 'pushKey';
 export const PUSH_CERT = 'pushCert';
 export const PROVISIONING_PROFILE = 'provisioningProfile';
+export const KEYSTORE = 'keystore';
 
 export const credentialTypes: { [key: string]: CredentialSchema } = {
   [DISTRIBUTION_CERT]: {
@@ -151,6 +161,30 @@ export const credentialTypes: { [key: string]: CredentialSchema } = {
     deprecated: true,
     migrationDocs:
       'https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#switch-to-push-notification-key-on-ios',
+  },
+  [KEYSTORE]: {
+    id: KEYSTORE,
+    name: 'Android keystore',
+    required: ['keystore', 'keystorePassword', 'keyAlias', 'keyPassword'],
+    questions: {
+      keystore: {
+        question: 'Path to keystore file.',
+        type: 'file',
+        base64Encode: true,
+      },
+      keystorePassword: {
+        question: 'Keystore password',
+        type: 'password',
+      },
+      keyAlias: {
+        question: 'Key alias',
+        type: 'string',
+      },
+      keyPassword: {
+        question: 'Key password',
+        type: 'password',
+      },
+    },
   },
 };
 

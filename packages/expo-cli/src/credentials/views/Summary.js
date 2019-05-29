@@ -5,10 +5,15 @@ import prompt from '../../prompt';
 import { View } from './View';
 import * as iosPushCredentials from './PushCredentialsIos';
 import * as iosDistCredentials from './DistCredentialsIos';
+import * as androidCredentials from './AndroidCredentials';
 import { Context } from '../schema';
-import type { IosCredentials } from '../schema';
-import { getIosCredentials, displayIosCredentials } from '../actions/list';
-// import { getAndroidCredentials, displayAndroidCredentials } from '../actions/list';
+import type { IosCredentials, AndroidCredentials } from '../schema';
+import {
+  getIosCredentials,
+  displayIosCredentials,
+  getAndroidCredentials,
+  displayAndroidCredentials,
+} from '../actions/list';
 
 export class Summary extends View {
   async open(context: Context): Promise<?View> {
@@ -43,18 +48,18 @@ export class SummaryIos extends View {
             value: 'use-existing-dist-ios',
             name: 'Use existing Distribution Certificate in current project',
           },
-          {
-            value: 'current-remove-push-ios',
-            name: 'Remove Push Notifactions credentials for current project',
-          },
-          {
-            value: 'current-remove-dist-ios',
-            name: 'Remove Distribution Certificate for current project',
-          },
-          {
-            value: 'current-remove-app-ios',
-            name: 'Remove all credentials for current project',
-          },
+          // {
+          //   value: 'current-remove-push-ios',
+          //   name: 'Remove Push Notifactions credentials for current project',
+          // },
+          // {
+          //   value: 'current-remove-dist-ios',
+          //   name: 'Remove Distribution Certificate for current project',
+          // },
+          // {
+          //   value: 'current-remove-app-ios',
+          //   name: 'Remove all credentials for current project',
+          // },
         ]
       : [];
 
@@ -92,37 +97,56 @@ export class SummaryIos extends View {
         return new iosDistCredentials.UpdateIosDist(this.iosCred);
       case 'remove-ios-dist':
         return new iosDistCredentials.RemoveIosDist(this.iosCred);
-      default:
-        return null;
+      case 'use-existing-push-ios':
+        return new iosPushCredentials.UseExistingPushNotification(this.iosCred);
+      case 'use-existing-dist-ios':
+        return new iosDistCredentials.UseExistingDistributionCert(this.iosCred);
     }
   }
 }
 
 export class SummaryAndroid extends View {
-  androidCred: any = {};
-
   async open(context: Context): Promise<?View> {
-    //this.androidCred = await getAndroidCredentials(context.apiClient);
+    if (context.hasProjectContext) {
+      const experienceName = `@${context.user.username}/${context.manifest.slug}`;
+      const { runProjectContext } = await prompt([
+        {
+          type: 'confirm',
+          name: 'runProjectContext',
+          message: `You are currently in a directory with ${experienceName} experience. Do you want to select it?`,
+          default: false,
+        },
+      ]);
+      if (runProjectContext) {
+        const view = new androidCredentials.ExperienceView(context.manifest.slug, null);
+        context.changeMainpage(view);
+        return view;
+      }
+    }
+    const { appCredentials } = await getAndroidCredentials(context.apiClient);
 
-    await displayIosCredentials(this.androidCred);
+    await displayAndroidCredentials(appCredentials);
 
     const question = {
       type: 'list',
-      name: 'action',
-      message: 'What do you want to do?',
-      choices: [],
+      name: 'appIndex',
+      message: 'Select application',
+      choices: appCredentials.map((cred, index) => ({
+        name: cred.experienceName,
+        value: index,
+      })),
       pageSize: Infinity,
     };
 
-    const { action } = await prompt([question]);
-    return this.handleAction(context, action);
-  }
+    const { appIndex } = await prompt([question]);
 
-  handleAction(context: Context, action: string): ?View {
-    switch (action) {
-      default:
-        return null;
-    }
+    const matchName = appCredentials[appIndex].experienceName.match(/@[\w.-]+\/([\w.-]+)/);
+    const view = new androidCredentials.ExperienceView(
+      matchName && matchName[1],
+      appCredentials[appIndex]
+    );
+    context.changeMainpage(view);
+    return view;
   }
 }
 

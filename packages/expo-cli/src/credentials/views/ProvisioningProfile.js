@@ -32,9 +32,7 @@ export class RemoveProvisioningProfile extends View {
     log(
       `Removing provisioning profile for ${selected.experienceName} ${selected.bundleIdentifier}`
     );
-    await context.apiClient.deleteAsync(
-      `credentials/ios/app/provisioning/${selected.appCredentialsId}`
-    );
+    await context.apiClient.deleteAsync(`credentials/ios/app/profile/${selected.appCredentialsId}`);
 
     const { revoke } = await prompt([
       {

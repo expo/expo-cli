@@ -15,6 +15,10 @@ export class CredentialsManager extends Context {
     this.options = options;
   }
 
+  changeMainpage(view: View) {
+    this.mainpage = view;
+  }
+
   async init() {
     if (true /* TODO has project context */) {
       /* This manager does not need to work in project context */

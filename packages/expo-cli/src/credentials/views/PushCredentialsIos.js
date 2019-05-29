@@ -1,8 +1,10 @@
 /* @flow */
 
 import chalk from 'chalk';
+import get from 'lodash/get';
 
 import { View } from './View';
+import { CreateAppCredentialsIos } from './AppCredentialsIos';
 import { Context, credentialTypes, PUSH_KEY } from '../schema';
 import type { IosCredentials, IosPushCredentials, IosAppCredentials } from '../schema';
 import { askForUserProvided } from '../actions/promptForCredentials';
@@ -276,9 +278,51 @@ export class UpdateIosPush extends View {
   }
 }
 
-async function selectPushCredFromList(iosCredentials: IosCredentials) {
+export class UseExistingPushNotification extends View {
+  iosCredentials: IosCredentials;
+
+  constructor(iosCredentials: IosCredentials) {
+    super();
+    this.iosCredentials = iosCredentials;
+  }
+
+  async open(context: Context) {
+    if (!context.hasProjectContext) {
+      log.error('Can only be used in project context');
+      return;
+    }
+    const experience = get(context, 'manifest.slug');
+    const experienceName = `@${context.user.username}/${experience}`;
+    const bundleIdentifier = get(context, 'manifest.ios.bundleIdentifier');
+    if (!experience || !bundleIdentifier) {
+      log.error(`slug and ios.bundleIdentifier needs to be defined`);
+      return;
+    }
+
+    const filtered = this.iosCredentials.appCredentials.filter(
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
+    );
+
+    const appCredentialsId =
+      filtered.length > 0
+        ? filtered[0].appCredentialsId
+        : await new CreateAppCredentialsIos().create(context, experience, bundleIdentifier);
+
+    const selected = await selectPushCredFromList(this.iosCredentials, false);
+    if (selected) {
+      context.apiClient.postAsync('credentials/ios/use/user', {
+        userCredentialsId: selected.userCredentialsId,
+        appCredentialsId,
+      });
+    }
+  }
+}
+
+async function selectPushCredFromList(iosCredentials: IosCredentials, allowLegacy: boolean = true) {
   const pushKeys = iosCredentials.userCredentials.filter(cred => cred.type === 'push-key');
-  const pushCerts = iosCredentials.appCredentials.filter(cred => cred.pushP12 && cred.pushPassword);
+  const pushCerts = allowLegacy
+    ? iosCredentials.appCredentials.filter(cred => cred.pushP12 && cred.pushPassword)
+    : [];
   const pushCredentials = [...pushCerts, ...pushKeys];
   if (pushCredentials.length === 0) {
     log.warn('There are no push credentials available in your account');

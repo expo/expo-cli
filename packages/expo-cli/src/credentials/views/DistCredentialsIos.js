@@ -1,6 +1,7 @@
 /* @flow */
 
 import chalk from 'chalk';
+import get from 'lodash/get';
 
 import { View } from './View';
 import { Context, credentialTypes, DISTRIBUTION_CERT } from '../schema';
@@ -9,8 +10,9 @@ import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
 import prompt from '../../prompt';
 import log from '../../log';
-import { distributionCertManager, provisioningProfileManager } from '../../appleApi';
+import { distributionCertManager } from '../../appleApi';
 import { RemoveProvisioningProfile } from './ProvisioningProfile';
+import { CreateAppCredentialsIos } from './AppCredentialsIos';
 
 type DistCert = {
   id: string,
@@ -268,6 +270,46 @@ export class UpdateIosDist extends View {
       }
     }
     return await manager.create();
+  }
+}
+
+export class UseExistingDistributionCert extends View {
+  iosCredentials: IosCredentials;
+
+  constructor(iosCredentials: IosCredentials) {
+    super();
+    this.iosCredentials = iosCredentials;
+  }
+
+  async open(context: Context) {
+    if (!context.hasProjectContext) {
+      log.error('Can only be used in project context');
+      return;
+    }
+    const experience = get(context, 'manifest.slug');
+    const experienceName = `@${context.user.username}/${experience}`;
+    const bundleIdentifier = get(context, 'manifest.ios.bundleIdentifier');
+    if (!experience || !bundleIdentifier) {
+      log.error(`slug and ios.bundleIdentifier needs to be defined`);
+      return;
+    }
+
+    const filtered = this.iosCredentials.appCredentials.filter(
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
+    );
+
+    const appCredentialsId =
+      filtered.length > 0
+        ? filtered[0].appCredentialsId
+        : await new CreateAppCredentialsIos().create(context, experience, bundleIdentifier);
+
+    const selected = await selectDistCertFromList(this.iosCredentials);
+    if (selected) {
+      context.apiClient.postAsync('credentials/ios/use/user', {
+        userCredentialsId: selected.userCredentialsId,
+        appCredentialsId,
+      });
+    }
   }
 }
 

@@ -21,7 +21,7 @@ export type Credentials = {
   keystore: string,
   keystorePassword: string,
   keyPassword: string,
-  keystoreAlias: string,
+  keyAlias: string,
 };
 
 export async function backupExistingCredentials(
@@ -37,7 +37,7 @@ export async function backupExistingCredentials(
   if (!credentials) {
     throw new Error('Unable to fetch credentials for this project. Are you sure they exist?');
   }
-  const { keystore, keystorePassword, keystoreAlias: keyAlias, keyPassword } = credentials;
+  const { keystore, keystorePassword, keyAlias, keyPassword } = credentials;
 
   const storeBuf = Buffer.from(keystore, 'base64');
   log(`Writing keystore to ${outputPath}...`);
@@ -62,45 +62,65 @@ export async function exportCertBinary(
   keystorePath: string,
   keystorePassword: string,
   keyAlias: string,
-  certFile: string
+  certFile: string,
+  log: any = logger.info.bind(logger)
 ) {
-  return spawnAsync('keytool', [
-    '-exportcert',
-    '-keystore',
-    keystorePath,
-    '-storepass',
-    keystorePassword,
-    '-alias',
-    keyAlias,
-    '-file',
-    certFile,
-    '-noprompt',
-    '-storetype',
-    'JKS',
-  ]);
+  try {
+    return spawnAsync('keytool', [
+      '-exportcert',
+      '-keystore',
+      keystorePath,
+      '-storepass',
+      keystorePassword,
+      '-alias',
+      keyAlias,
+      '-file',
+      certFile,
+      '-noprompt',
+      '-storetype',
+      'JKS',
+    ]);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      log.warn('Are you sure you have keytool installed?');
+      log('keytool is part of OpenJDK: https://openjdk.java.net/');
+      log('Also make sure that keytool is in your PATH after installation.');
+    }
+    throw err;
+  }
 }
 
 export async function exportCertBase64(
   keystorePath: string,
   keystorePassword: string,
   keyAlias: string,
-  certFile: string
+  certFile: string,
+  log: any = logger.info.bind(logger)
 ) {
-  return spawnAsync('keytool', [
-    '-export',
-    '-rfc',
-    '-keystore',
-    keystorePath,
-    '-storepass',
-    keystorePassword,
-    '-alias',
-    keyAlias,
-    '-file',
-    certFile,
-    '-noprompt',
-    '-storetype',
-    'JKS',
-  ]);
+  try {
+    return spawnAsync('keytool', [
+      '-export',
+      '-rfc',
+      '-keystore',
+      keystorePath,
+      '-storepass',
+      keystorePassword,
+      '-alias',
+      keyAlias,
+      '-file',
+      certFile,
+      '-noprompt',
+      '-storetype',
+      'JKS',
+    ]);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      log.warn('Are you sure you have keytool installed?');
+      log('keytool is part of OpenJDK: https://openjdk.java.net/');
+      log('Also make sure that keytool is in your PATH after installation.');
+    }
+    throw err;
+  }
 }
 
 export async function exportPrivateKey(
@@ -261,34 +281,45 @@ export function logKeystoreCredentials(
 
 export async function createKeystore(
   { keystorePath, keystorePassword, keyAlias, keyPassword }: Object,
-  androidPackage: string
+  androidPackage: string,
+  log: any = logger.info.bind(logger)
 ): Promise<> {
-  return spawnAsync('keytool', [
-    '-genkey',
-    '-v',
-    '-storepass',
-    keystorePassword,
-    '-keypass',
-    keyPassword,
-    '-keystore',
-    keystorePath,
-    '-alias',
-    keyAlias,
-    '-keyalg',
-    'RSA',
-    '-keysize',
-    '2048',
-    '-validity',
-    '10000',
-    '-dname',
-    `CN=${androidPackage},OU=,O=,L=,S=,C=US`,
-  ]);
+  try {
+    return spawnAsync('keytool', [
+      '-genkey',
+      '-v',
+      '-storepass',
+      keystorePassword,
+      '-keypass',
+      keyPassword,
+      '-keystore',
+      keystorePath,
+      '-alias',
+      keyAlias,
+      '-keyalg',
+      'RSA',
+      '-keysize',
+      '2048',
+      '-validity',
+      '10000',
+      '-dname',
+      `CN=${androidPackage},OU=,O=,L=,S=,C=US`,
+    ]);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      log.warn('Are you sure you have keytool installed?');
+      log('keytool is part of OpenJDK: https://openjdk.java.net/');
+      log('Also make sure that keytool is in your PATH after installation.');
+    }
+    throw error;
+  }
 }
 
 export async function generateUploadKeystore(
   uploadKeystorePath: string,
   androidPackage: string,
-  experienceName: string
+  experienceName: string,
+  log: any = logger.info.bind(logger)
 ): Promise<Object> {
   const keystoreData = {
     keystorePassword: uuidv4().replace(/-/g, ''),

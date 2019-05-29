@@ -2,6 +2,9 @@
 
 import chalk from 'chalk';
 import uniq from 'lodash/uniq';
+import fs from 'fs-extra';
+import get from 'lodash/get';
+import { Credentials } from 'xdl';
 
 import log from '../../log';
 import type {
@@ -9,6 +12,7 @@ import type {
   IosPushCredentials,
   IosDistCredentials,
   IosAppCredentials,
+  AndroidCredentials,
 } from '../schema';
 
 export async function getIosCredentials(apiClient: any): Promise<IosCredentials> {
@@ -87,5 +91,55 @@ export function displayIosUserCredentials(
     ).join(', ');
     const usedByAppsText = usedByApps ? `used by ${usedByApps}` : 'not used by any apps';
     log(`    ${chalk.gray(usedByAppsText)}`);
+  }
+}
+
+export async function getAndroidCredentials(
+  apiClient: any
+): Promise<{ appCredentials: Array<AndroidCredentials> }> {
+  return await apiClient.getAsync('credentials/android');
+}
+
+export async function displayAndroidCredentials(appCredentials: Array<AndroidCredentials>) {
+  log(chalk.bold('Available android credentials'));
+  log();
+  for (const cred of appCredentials) {
+    await displayAndroidAppCredentials(cred);
+  }
+}
+
+export async function displayAndroidAppCredentials(cred: AndroidCredentials) {
+  const tmpFilename = `expo_tmp_keystore_file.jks`;
+  try {
+    if (await fs.exists(tmpFilename)) {
+      await fs.unlink(tmpFilename);
+    }
+    log(chalk.green(cred.experienceName));
+    log(chalk.bold('  Keystore hashes'));
+    if (get(cred, 'credentials.keystore')) {
+      const storeBuf = Buffer.from(get(cred, 'credentials.keystore'), 'base64');
+      await fs.writeFile(tmpFilename, storeBuf);
+
+      await Credentials.Android.logKeystoreHashes(
+        {
+          keystorePath: tmpFilename,
+          keystorePassword: get(cred, 'credentials.keystorePassword'),
+          keyAlias: get(cred, 'credentials.keyAlias'),
+        },
+        (...args) => log('   ', ...args)
+      );
+    } else {
+      log('    -----------------------');
+    }
+    log(chalk.bold('  Push Notifications credentials'));
+    log(`    FCM api key: ${get(cred, 'credentials.fcmApiKey', '-------')}`);
+    log('\n');
+  } catch (error) {
+    log.error('  Failed to parse keystore', error);
+    log('\n');
+  } finally {
+    if (await fs.exists(tmpFilename)) {
+      await fs.unlink(tmpFilename);
+    }
   }
 }
