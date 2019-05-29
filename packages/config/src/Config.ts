@@ -117,7 +117,7 @@ export async function findConfigFileAsync(
 
 export function findConfigFile(
   projectRoot: string
-): { configPath: string; configName: string; configNamespace: string | null } {
+): { configPath: string; configName: string; configNamespace: 'expo' } {
   let configPath;
   if (customConfigPaths[projectRoot]) {
     configPath = customConfigPaths[projectRoot];
@@ -196,7 +196,7 @@ function sanitizePublicPath(publicPath: unknown): string {
 export function getConfigForPWA(
   projectRoot: string,
   getAbsolutePath: (...pathComponents: string[]) => string,
-  options: Object
+  options: object
 ) {
   const config = readConfigJson(projectRoot);
   return ensurePWAConfig(config, getAbsolutePath, options);
@@ -454,9 +454,9 @@ function inferWebStartupImages(
 }
 
 export function ensurePWAConfig(
-  appJSON: Object,
+  appJSON: object,
   getAbsolutePath: ((...pathComponents: string[]) => string) | undefined,
-  options: Object
+  options: object
 ) {
   const config = applyWebDefaults(appJSON);
   if (getAbsolutePath) {
