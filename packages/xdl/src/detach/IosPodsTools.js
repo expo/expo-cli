@@ -308,7 +308,7 @@ function _renderUnversionedPostinstall(sdkVersion) {
           config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
         end
       end
-    
+
       # Can't specify this in the React podspec because we need to use those podspecs for detached
       # projects which don't reference ExponentCPP.
       if ${podNameExpression}.start_with?('React')
@@ -371,14 +371,30 @@ async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubst
 }
 
 function _renderUnversionedUniversalModulesDependencies(universalModules, sdkVersion) {
-  return indentString(
-    universalModules
-      .map(moduleInfo =>
-        _renderUnversionedUniversalModuleDependency(moduleInfo.podName, moduleInfo.path, sdkVersion)
-      )
-      .join('\n'),
-    2
-  );
+  const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+
+  if (sdkMajorVersion >= 33) {
+    return indentString(
+      `
+# Install unimodules
+require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
+use_unimodules!`,
+      2
+    );
+  } else {
+    return indentString(
+      universalModules
+        .map(moduleInfo =>
+          _renderUnversionedUniversalModuleDependency(
+            moduleInfo.podName,
+            moduleInfo.path,
+            sdkVersion
+          )
+        )
+        .join('\n'),
+      2
+    );
+  }
 }
 
 function _renderUnversionedUniversalModuleDependency(podName, path, sdkVersion) {
