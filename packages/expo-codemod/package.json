@@ -23,7 +23,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@expo/spawn-async": "^1.4.2",
+    "@expo/spawn-async": "^1.5.0",
     "camelcase": "5.3.1",
     "globby": "^9.2.0",
     "jscodeshift": "0.6.4",

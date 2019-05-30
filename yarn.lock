@@ -1191,19 +1191,18 @@
   resolved "https://registry.yarnpkg.com/@expo/simple-spinner/-/simple-spinner-1.0.2.tgz#b31447de60e5102837a4edf702839fcc8f7f31f3"
   integrity sha1-sxRH3mDlECg3pO33AoOfzI9/MfM=
 
-"@expo/spawn-async@1.4.2", "@expo/spawn-async@^1.4.2":
+"@expo/spawn-async@1.4.2":
   version "1.4.2"
   resolved "https://registry.yarnpkg.com/@expo/spawn-async/-/spawn-async-1.4.2.tgz#334b28215e3850071cede3a23d898f977904e01a"
   integrity sha512-afevfRz0S/R63MfAVQstrowC/M5cwWdIKkim4wqFSYmnvOejq8B8RAeWZ0lKimPmP2QfuvA/FG2L0SzonrHTKQ==
   dependencies:
     cross-spawn "^6.0.5"
 
-"@expo/spawn-async@^1.2.8":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@expo/spawn-async/-/spawn-async-1.4.0.tgz#39f7777bdee22e1f48d03898c9ed2f150a7f4cbd"
-  integrity sha512-jE9zSZ14eOfKxXs+WJZofweKtsAeuQiOpntsb+zp8Ti9/wk+9ZjKkffdld7UfANr8asmzuJYnEoVyL+hMy3SWw==
+"@expo/spawn-async@1.5.0", "@expo/spawn-async@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@expo/spawn-async/-/spawn-async-1.5.0.tgz#799827edd8c10ef07eb1a2ff9dcfe081d596a395"
+  integrity sha512-LB7jWkqrHo+5fJHNrLAFdimuSXQ2MQ4lA7SQW5bf/HbsXuV2VrT/jN/M8f/KoWt0uJMGN4k/j7Opx4AvOOxSew==
   dependencies:
-    "@types/cross-spawn" "^6.0.0"
     cross-spawn "^6.0.5"
 
 "@expo/traveling-fastlane-darwin@1.9.4":
@@ -2384,13 +2383,6 @@
   integrity sha512-XYVgHF2sQ0YblLRMLNPB3CkFMewzFmlDsH/TneZFHUXDlABQgh88uOxuez7ZcXxayLFrqLwtDH1t+FmlFwNZxw==
   dependencies:
     "@babel/types" "^7.3.0"
-
-"@types/cross-spawn@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@types/cross-spawn/-/cross-spawn-6.0.0.tgz#320aaf1d1a12979f1b84fe7a5590a7e860bf3a80"
-  integrity sha512-evp2ZGsFw9YKprDbg8ySgC9NA15g3YgiI8ANkGmKKvvi0P2aDGYLPxQIC5qfeKNUOe3TjABVGuah6omPRpIYhg==
-  dependencies:
-    "@types/node" "*"
 
 "@types/events@*":
   version "3.0.0"
