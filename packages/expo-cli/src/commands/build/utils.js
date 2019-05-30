@@ -1,7 +1,7 @@
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
 
-import log from '../../../log';
+import log from '../../log';
 
 async function checkIfSdkIsSupported(sdkVersion, platform) {
   const isSupported = await Versions.canTurtleBuildSdkVersion(sdkVersion, platform);
