@@ -45,7 +45,7 @@ function saveUrlToPathAsync(url, path) {
     let stream = fs.createWriteStream(path);
     stream.on('close', () => {
       if (_getFilesizeInBytes(path) < 10) {
-        throw new Error(`{filename} is too small`);
+        reject(new Error(`${url} is too small`));
       }
       resolve();
     });
