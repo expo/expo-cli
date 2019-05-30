@@ -6,9 +6,6 @@ import resolveFrom from 'resolve-from';
 import slug from 'slugify';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 
-let hasWarnedAboutExpJson = false;
-
-const EXP_JSON_FILE_NAME = 'exp.json';
 const APP_JSON_FILE_NAME = 'app.json';
 
 // To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
@@ -79,40 +76,11 @@ export function resolveModule(request: string, projectRoot: string, exp: any): s
   return resolveFrom(fromDir, request);
 }
 
-async function _findConfigPathAsync(projectRoot: string) {
-  const appJson = path.join(projectRoot, APP_JSON_FILE_NAME);
-  const expJson = path.join(projectRoot, EXP_JSON_FILE_NAME);
-  if (await fileExistsAsync(appJson)) {
-    return appJson;
-  } else if (await fileExistsAsync(expJson)) {
-    return expJson;
-  } else {
-    return appJson;
-  }
-}
-
-function _findConfigPath(projectRoot: string): string {
-  const appJson = path.join(projectRoot, APP_JSON_FILE_NAME);
-  const expJson = path.join(projectRoot, EXP_JSON_FILE_NAME);
-  if (fileExists(appJson)) {
-    return appJson;
-  } else if (fileExists(expJson)) {
-    return expJson;
-  } else {
-    return appJson;
-  }
-}
-
+// DEPRECATED: Use findConfigFile
 export async function findConfigFileAsync(
   projectRoot: string
 ): Promise<{ configPath: string; configName: string; configNamespace: 'expo' }> {
-  let configPath;
-  if (customConfigPaths[projectRoot]) {
-    configPath = customConfigPaths[projectRoot];
-  } else {
-    configPath = await _findConfigPathAsync(projectRoot);
-  }
-  return { configPath, configName: APP_JSON_FILE_NAME, configNamespace: 'expo' };
+  return findConfigFile(projectRoot);
 }
 
 export function findConfigFile(
@@ -122,13 +90,14 @@ export function findConfigFile(
   if (customConfigPaths[projectRoot]) {
     configPath = customConfigPaths[projectRoot];
   } else {
-    configPath = _findConfigPath(projectRoot);
+    configPath = path.join(projectRoot, APP_JSON_FILE_NAME);
   }
   return { configPath, configName: APP_JSON_FILE_NAME, configNamespace: 'expo' };
 }
 
+// DEPRECATED: Use configFilename
 export async function configFilenameAsync(projectRoot: string): Promise<string> {
-  return (await findConfigFileAsync(projectRoot)).configName;
+  return findConfigFile(projectRoot).configName;
 }
 
 export function configFilename(projectRoot: string): string {
@@ -502,7 +471,7 @@ export function readConfigJson(projectRoot: string) {
 export async function readConfigJsonAsync(
   projectRoot: string
 ): Promise<{ exp: any; pkg: any; rootConfig: any }> {
-  const { configPath } = await findConfigFileAsync(projectRoot);
+  const { configPath } = findConfigFile(projectRoot);
   const rootConfig = await JsonFile.readAsync(configPath, { json5: true });
   if (rootConfig === null || typeof rootConfig !== 'object') {
     throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
@@ -548,7 +517,7 @@ export async function writeConfigJsonAsync(
   projectRoot: string,
   options: Object
 ): Promise<{ exp: any; pkg: any; rootConfig: any }> {
-  const { configName, configPath } = await findConfigFileAsync(projectRoot);
+  const { configPath } = findConfigFile(projectRoot);
   let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
   exp = { ...exp, ...options };
   rootConfig = { ...rootConfig, expo: exp };
