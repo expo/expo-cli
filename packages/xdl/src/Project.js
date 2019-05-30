@@ -2093,14 +2093,7 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
     delete assetInfo[outdatedHash];
   });
 
-  // Check for custom quality value
-  const { quality: strQuality, include, exclude, save } = options;
-  const quality = Number(strQuality);
-  const validQuality = Number.isInteger(quality) && quality > 0 && quality <= 100;
-  if (strQuality !== undefined && !validQuality) {
-    logger.global.warn('Invalid quality entered. Using default of 60.');
-  }
-  const outputQuality = validQuality ? quality : 60;
+  const { quality, include, exclude, save } = options;
 
   const images = include || exclude ? selectedFiles : allFiles;
   for (const image of images) {
@@ -2111,7 +2104,7 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
     const { size: prevSize } = fs.statSync(image);
 
     const newName = createNewFilename(image);
-    await optimizeImageAsync(image, newName, outputQuality);
+    await optimizeImageAsync(image, newName, quality);
 
     const { size: newSize } = fs.statSync(image);
     const amountSaved = prevSize - newSize;
@@ -2147,8 +2140,12 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
       // Delete the renamed original asset
       fs.unlinkSync(newName);
     }
-    totalSaved += amountSaved;
-    logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
+    if (amountSaved) {
+      totalSaved += amountSaved;
+      logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
+    } else {
+      logger.global.info(chalk.gray(`Nothing to compress.`));
+    }
   }
   if (totalSaved === 0) {
     logger.global.info('No assets optimized. Everything is fully compressed!');

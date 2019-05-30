@@ -10,9 +10,7 @@ import simpleSpinner from '@expo/simple-spinner';
 import { Exp, Project, ProjectUtils } from '@expo/xdl';
 
 import log from '../log';
-import prompt from '../prompt';
 import sendTo from '../sendTo';
-import { action as optimize } from './optimize';
 import { installExitHooks } from '../exit';
 
 type Options = {
@@ -35,14 +33,7 @@ export async function action(projectDir: string, options: Options = {}) {
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!hasOptimized && !nonInteractive) {
     log.warn('It seems your assets have not been optimized yet.');
-    const { allowOptimization } = await prompt({
-      type: 'confirm',
-      name: 'allowOptimization',
-      message: 'Do you want to optimize assets now?',
-    });
-    if (allowOptimization) {
-      await optimize(projectDir);
-    }
+    log.warn('To compress the images in your project run `expo optimize`');
   }
   const status = await Project.currentStatus(projectDir);
 
