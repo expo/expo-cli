@@ -1,17 +1,24 @@
-/**
- * @flow
- */
+import path from 'path';
 
 import fs from 'fs-extra';
-import path from 'path';
-import JsonFile from '@expo/json-file';
+import JsonFile, { JSONValue } from '@expo/json-file';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 
-let hasWarnedAboutExpJson = false;
+export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
+export type ExpoConfig = {
+  name?: string;
+  slug?: string;
+  sdkVersion?: string;
+  platforms?: Array<Platform>;
+  nodeModulesPath?: string;
+  [key: string]: any;
+};
+export type Platform = 'android' | 'ios' | 'web';
 
-const EXP_JSON_FILE_NAME = 'exp.json';
+type PackageJSONConfig = { [key: string]: any };
+
 const APP_JSON_FILE_NAME = 'app.json';
 
 // To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
@@ -38,15 +45,15 @@ const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
 export async function addPlatform(
   projectRoot: string,
   platform: 'ios' | 'android' | 'web'
-): Promise<{ exp: ?Object, pkg: ?Object, rootConfig: ?Object }> {
-  const { exp } = await readConfigJsonAsync(projectRoot);
+): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig }> {
+  const { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
 
-  let currentPlatforms = [];
+  let currentPlatforms: Platform[] = [];
   if (Array.isArray(exp.platforms) && exp.platforms.length) {
     currentPlatforms = exp.platforms;
   }
   if (currentPlatforms.includes(platform)) {
-    return;
+    return { exp, pkg, rootConfig };
   }
 
   return await writeConfigJsonAsync(projectRoot, { platforms: [...currentPlatforms, platform] });
@@ -77,111 +84,51 @@ export function fileExists(file: string): boolean {
   }
 }
 
-export function resolveModule(request, projectRoot, exp) {
+export function resolveModule(request: string, projectRoot: string, exp: ExpoConfig): string {
   const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
   return resolveFrom(fromDir, request);
 }
 
-async function _findConfigPathAsync(projectRoot: string) {
-  const appJson = path.join(projectRoot, APP_JSON_FILE_NAME);
-  const expJson = path.join(projectRoot, EXP_JSON_FILE_NAME);
-  if (await fileExistsAsync(appJson)) {
-    return appJson;
-  } else if (await fileExistsAsync(expJson)) {
-    return expJson;
-  } else {
-    return appJson;
-  }
-}
-
-function _findConfigPath(projectRoot: string) {
-  const appJson = path.join(projectRoot, APP_JSON_FILE_NAME);
-  const expJson = path.join(projectRoot, EXP_JSON_FILE_NAME);
-  if (fileExists(appJson)) {
-    return appJson;
-  } else if (fileExists(expJson)) {
-    return expJson;
-  } else {
-    return appJson;
-  }
-}
-
+// DEPRECATED: Use findConfigFile
 export async function findConfigFileAsync(
   projectRoot: string
-): Promise<{ configPath: string, configName: string, configNamespace: ?string }> {
-  let configPath;
-  if (customConfigPaths[projectRoot]) {
-    configPath = customConfigPaths[projectRoot];
-  } else {
-    configPath = await _findConfigPathAsync(projectRoot);
-  }
-  return getConfigPaths(configPath);
+): Promise<{ configPath: string; configName: string; configNamespace: 'expo' }> {
+  return findConfigFile(projectRoot);
 }
 
 export function findConfigFile(
   projectRoot: string
-): Promise<{ configPath: string, configName: string, configNamespace: ?string }> {
+): { configPath: string; configName: string; configNamespace: 'expo' } {
   let configPath;
   if (customConfigPaths[projectRoot]) {
     configPath = customConfigPaths[projectRoot];
   } else {
-    configPath = _findConfigPath(projectRoot);
+    configPath = path.join(projectRoot, APP_JSON_FILE_NAME);
   }
-  return getConfigPaths(configPath);
+  return { configPath, configName: APP_JSON_FILE_NAME, configNamespace: 'expo' };
 }
 
-function getConfigPaths(configPath: string) {
-  const configName = path.basename(configPath);
-  const configNamespace = configName !== EXP_JSON_FILE_NAME ? 'expo' : null;
-
-  guardConfigName(configName);
-
-  return { configPath, configName, configNamespace };
-}
-
-function guardConfigName(configName: string) {
-  if (configName === EXP_JSON_FILE_NAME && !hasWarnedAboutExpJson) {
-    hasWarnedAboutExpJson = true;
-    throw new Error(`configuration using ${EXP_JSON_FILE_NAME} is deprecated.
-    Please move your configuration from ${EXP_JSON_FILE_NAME} to ${APP_JSON_FILE_NAME}.
-    Example ${APP_JSON_FILE_NAME}:
-    {
-      "expo": {
-        (JSON contents from ${EXP_JSON_FILE_NAME})
-      }
-    }`);
-  }
-}
-
+// DEPRECATED: Use configFilename
 export async function configFilenameAsync(projectRoot: string): Promise<string> {
-  return (await findConfigFileAsync(projectRoot)).configName;
+  return findConfigFile(projectRoot).configName;
 }
 
 export function configFilename(projectRoot: string): string {
   return findConfigFile(projectRoot).configName;
 }
 
-export async function readExpRcAsync(projectRoot: string): Promise<any> {
+export async function readExpRcAsync(projectRoot: string): Promise<object> {
   const expRcPath = path.join(projectRoot, '.exprc');
-
-  if (!fs.existsSync(expRcPath)) {
-    return {};
-  }
-
-  try {
-    return await JsonFile.readAsync(expRcPath, { json5: true });
-  } catch (e) {
-    throw new Error(`Failed to parse JSON file: ${e.toString()}`);
-  }
+  return await JsonFile.readAsync(expRcPath, { json5: true, cantReadFileDefault: {} });
 }
 
-let customConfigPaths = {};
+const customConfigPaths: { [projectRoot: string]: string } = {};
 
 export function setCustomConfigPath(projectRoot: string, configPath: string): void {
   customConfigPaths[projectRoot] = configPath;
 }
 
-export function createEnvironmentConstants(appManifest, pwaManifestLocation) {
+export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestLocation: string) {
   let web;
   try {
     web = require(pwaManifestLocation);
@@ -217,7 +164,7 @@ export function createEnvironmentConstants(appManifest, pwaManifestLocation) {
   };
 }
 
-function sanitizePublicPath(publicPath) {
+function sanitizePublicPath(publicPath: unknown): string {
   if (typeof publicPath !== 'string' || !publicPath.length) {
     return '/';
   }
@@ -228,11 +175,16 @@ function sanitizePublicPath(publicPath) {
   return publicPath + '/';
 }
 
-export function getConfigForPWA(projectRoot: string, getAbsolutePath: Function, options: Object) {
+export function getConfigForPWA(
+  projectRoot: string,
+  getAbsolutePath: (...pathComponents: string[]) => string,
+  options: object
+) {
   const config = readConfigJson(projectRoot);
   return ensurePWAConfig(config, getAbsolutePath, options);
 }
-export function getNameFromConfig(exp: Object = {}) {
+
+export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
   // For RN CLI support
   const appManifest = exp.expo || exp;
   const { web = {} } = appManifest;
@@ -247,7 +199,7 @@ export function getNameFromConfig(exp: Object = {}) {
   };
 }
 
-export async function validateShortName(shortName: string): void {
+export async function validateShortName(shortName: string): Promise<void> {
   // Validate short name
   if (shortName.length > MAX_SHORT_NAME_LENGTH) {
     console.warn(
@@ -267,7 +219,7 @@ function ensurePWAorientation(orientation: string): string {
   return DEFAULT_ORIENTATION;
 }
 
-function applyWebDefaults(appJSON: Object) {
+function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   // For RN CLI support
   const appManifest = appJSON.expo || appJSON;
   const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
@@ -275,7 +227,7 @@ function applyWebDefaults(appJSON: Object) {
   const { apple = {} } = meta;
 
   // rn-cli apps use a displayName value as well.
-  const { name: appName, webName } = getNameFromConfig(appJSON);
+  const { appName, webName } = getNameFromConfig(appJSON);
 
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
@@ -382,13 +334,15 @@ function applyWebDefaults(appJSON: Object) {
  * Such applications are intended to be alternatives to the
  * website that provides similar/equivalent functionality — like the native app version of the website.
  */
-function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {} }: Object) {
+function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {} }: any) {
   const relatedApplications = web.relatedApplications || [];
 
   const { bundleIdentifier, appStoreUrl } = ios;
   if (bundleIdentifier) {
     const PLATFORM_ITUNES = 'itunes';
-    let iosApp = relatedApplications.some(({ platform }) => platform === PLATFORM_ITUNES);
+    let iosApp = relatedApplications.some(
+      ({ platform }: { platform: string }) => platform === PLATFORM_ITUNES
+    );
     if (!iosApp) {
       relatedApplications.push({
         platform: PLATFORM_ITUNES,
@@ -403,7 +357,7 @@ function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {
     const PLATFORM_PLAY = 'play';
 
     const alreadyHasAndroidApp = relatedApplications.some(
-      ({ platform }) => platform === PLATFORM_PLAY
+      ({ platform }: { platform: string }) => platform === PLATFORM_PLAY
     );
     if (!alreadyHasAndroidApp) {
       relatedApplications.push({
@@ -417,7 +371,11 @@ function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {
   return relatedApplications;
 }
 
-function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function, options: Object) {
+function inferWebHomescreenIcons(
+  config: any = {},
+  getAbsolutePath: (...pathComponents: string[]) => string,
+  options: any
+) {
   const { web = {}, ios = {} } = config;
   if (Array.isArray(web.icons)) {
     return web.icons;
@@ -445,7 +403,11 @@ function inferWebHomescreenIcons(config: Object = {}, getAbsolutePath: Function,
   return icons;
 }
 
-function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, options: Object) {
+function inferWebStartupImages(
+  config: ExpoConfig,
+  getAbsolutePath: (...pathComponents: string[]) => string,
+  options: Object
+) {
   const { icon, web = {}, splash = {}, primaryColor } = config;
   if (Array.isArray(web.startupImages)) {
     return web.startupImages;
@@ -473,7 +435,11 @@ function inferWebStartupImages(config: Object = {}, getAbsolutePath: Function, o
   return startupImages;
 }
 
-export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, options: Object) {
+export function ensurePWAConfig(
+  appJSON: AppJSONConfig | ExpoConfig,
+  getAbsolutePath: ((...pathComponents: string[]) => string) | undefined,
+  options: object
+): ExpoConfig {
   const config = applyWebDefaults(appJSON);
   if (getAbsolutePath) {
     config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
@@ -482,88 +448,66 @@ export function ensurePWAConfig(appJSON: Object, getAbsolutePath: Function, opti
   return config;
 }
 
-export function readConfigJson(projectRoot: string) {
-  const { configPath, configNamespace } = findConfigFile(projectRoot);
+type ConfigErrorCode = 'NO_APP_JSON' | 'NOT_OBJECT' | 'NO_EXPO';
 
-  let exp;
-  let rootConfig;
+class ConfigError extends Error {
+  code: ConfigErrorCode;
 
-  exp = require(configPath);
-
-  if (configNamespace) {
-    // if we're not using exp.json, then we've stashed everything under an expo key
-    rootConfig = exp;
-    exp = exp[configNamespace];
+  constructor(message: string, code: ConfigErrorCode) {
+    super(message);
+    this.code = code;
   }
+}
 
-  if (!rootConfig) {
-    throw new Error('app.json could not be found at: ' + configPath);
+const APP_JSON_EXAMPLE = JSON.stringify({
+  expo: {
+    name: 'My app',
+    slug: 'my-app',
+    sdkVersion: '...',
+  },
+});
+
+export function readConfigJson(projectRoot: string): ExpoConfig {
+  const { configPath } = findConfigFile(projectRoot);
+
+  const rootConfig = require(configPath);
+  const exp = rootConfig.expo;
+  if (!exp) {
+    throw new ConfigError(
+      `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
+      'NO_EXPO'
+    );
   }
-
-  return exp;
+  return rootConfig.expo;
 }
 
 export async function readConfigJsonAsync(
   projectRoot: string
-): Promise<{ exp?: Object, pkg?: Object, rootConfig?: Object }> {
-  let exp;
-  let pkg;
-  let rootConfig;
-
-  const { configPath, configName, configNamespace } = await findConfigFileAsync(projectRoot);
-
-  try {
-    exp = await JsonFile.readAsync(configPath, { json5: true });
-
-    if (configNamespace) {
-      // if we're not using exp.json, then we've stashed everything under an expo key
-      rootConfig = exp;
-      exp = exp[configNamespace];
-    }
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      // config missing. might be in package.json
-    } else if (e.isJsonFileError) {
-      throw e;
-    }
+): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig }> {
+  const { configPath } = findConfigFile(projectRoot);
+  const rootConfig = await JsonFile.readAsync(configPath, { json5: true });
+  if (rootConfig === null || typeof rootConfig !== 'object') {
+    throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+  }
+  const exp = rootConfig.expo as ExpoConfig;
+  if (exp === null || typeof exp !== 'object') {
+    throw new ConfigError(
+      `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
+      'NO_EXPO'
+    );
   }
 
-  try {
-    const packageJsonPath =
-      exp && exp.nodeModulesPath
-        ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
-        : path.join(projectRoot, 'package.json');
-    pkg = await JsonFile.readAsync(packageJsonPath);
-  } catch (e) {
-    if (e.isJsonFileError) {
-      throw e;
-    }
+  const packageJsonPath =
+    'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
+      ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
+      : path.join(projectRoot, 'package.json');
+  const pkg = await JsonFile.readAsync(packageJsonPath);
 
-    // pkg missing
-  }
-
-  // Easiest bail-out: package.json is missing
-  if (!pkg) {
-    throw new Error(`Can't find package.json`);
-  }
-
-  // Grab our exp config from package.json (legacy) or exp.json
-  if (!exp && pkg.exp) {
-    exp = pkg.exp;
-    throw new Error(`Move your "exp" config from package.json to ${APP_JSON_FILE_NAME}.`);
-  } else if (!exp && !pkg.exp) {
-    throw new Error(`Missing ${configName}. See https://docs.expo.io/`);
-  }
-
-  // fill any required fields we might care about
-
-  // TODO(adam) decide if there are other fields we want to provide defaults for
-
-  if (exp && !exp.name) {
+  if (exp && !exp.name && typeof pkg.name === 'string') {
     exp.name = pkg.name;
   }
 
-  if (exp && !exp.slug) {
+  if (exp && !exp.slug && typeof exp.name === 'string') {
     exp.slug = slug(exp.name.toLowerCase());
   }
 
@@ -579,36 +523,19 @@ export async function readConfigJsonAsync(
     exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }
 
-  return { exp, pkg, rootConfig };
+  return { exp, pkg, rootConfig: rootConfig as AppJSONConfig };
 }
 
 export async function writeConfigJsonAsync(
   projectRoot: string,
   options: Object
-): Promise<{ exp: ?Object, pkg: ?Object, rootConfig: ?Object }> {
-  const { configName, configPath, configNamespace } = await findConfigFileAsync(projectRoot);
+): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig }> {
+  const { configPath } = findConfigFile(projectRoot);
   let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
-  let config = rootConfig || {};
+  exp = { ...exp, ...options };
+  rootConfig = { ...rootConfig, expo: exp };
 
-  if (!exp) {
-    throw new Error(`Couldn't read ${configName}`);
-  }
-  if (!pkg) {
-    throw new Error(`Couldn't read package.json`);
-  }
-
-  exp = {
-    ...exp,
-    ...options,
-  };
-
-  if (configNamespace) {
-    config[configNamespace] = exp;
-  } else {
-    config = exp;
-  }
-
-  await JsonFile.writeAsync(configPath, config, { json5: false });
+  await JsonFile.writeAsync(configPath, rootConfig, { json5: false });
 
   return {
     exp,
