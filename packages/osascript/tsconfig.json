@@ -1,0 +1,8 @@
+{
+  "extends": "@expo/babel-preset-cli/tsconfig.base",
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "outDir": "lib",
+    "typeRoots": ["./ts-declarations", "node_modules/@types"]
+  }
+}

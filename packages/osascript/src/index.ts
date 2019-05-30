@@ -3,12 +3,12 @@
  */
 'use strict';
 
-import execAsync from 'exec-async';
+import execAsync, { ExecAsyncOptions } from 'exec-async';
 import path from 'path';
-import spawnAsync from '@expo/spawn-async';
+import spawnAsync, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
 import util from 'util';
 
-function osascriptArgs(script) {
+function osascriptArgs(script: string | string[]): string[] {
   if (!util.isArray(script)) {
     script = [script];
   }
@@ -22,7 +22,10 @@ function osascriptArgs(script) {
   return args;
 }
 
-async function osascriptExecAsync(script, opts) {
+async function osascriptExecAsync(
+  script: string | string[],
+  opts?: ExecAsyncOptions
+): Promise<string> {
   return await execAsync(
     'osascript',
     osascriptArgs(script),
@@ -30,18 +33,21 @@ async function osascriptExecAsync(script, opts) {
   );
 }
 
-async function osascriptSpawnAsync(script, opts) {
+async function osascriptSpawnAsync(
+  script: string | string[],
+  opts?: SpawnOptions
+): Promise<SpawnResult> {
   return await spawnAsync('osascript', osascriptArgs(script), opts);
 }
 
-async function isAppRunningAsync(appName) {
+async function isAppRunningAsync(appName: string): Promise<boolean> {
   let zeroMeansNo = (await osascriptExecAsync(
     'tell app "System Events" to count processes whose name is ' + JSON.stringify(appName)
   )).trim();
   return zeroMeansNo !== '0';
 }
 
-async function safeIdOfAppAsync(appName) {
+async function safeIdOfAppAsync(appName: string): Promise<string | null> {
   try {
     return (await osascriptExecAsync('id of app ' + JSON.stringify(appName))).trim();
   } catch (e) {
@@ -49,7 +55,7 @@ async function safeIdOfAppAsync(appName) {
   }
 }
 
-async function openFinderToFolderAsync(dir, activate = true) {
+async function openFinderToFolderAsync(dir: string, activate = true): Promise<void> {
   await osascriptSpawnAsync([
     'tell application "Finder"',
     'open POSIX file ' + JSON.stringify(dir),
@@ -58,13 +64,13 @@ async function openFinderToFolderAsync(dir, activate = true) {
   ]);
 }
 
-async function openInAppAsync(appName, pth) {
+async function openInAppAsync(appName: string, pth: string): Promise<SpawnResult> {
   let cmd = 'tell app ' + JSON.stringify(appName) + ' to open ' + JSON.stringify(path.resolve(pth));
   // console.log("cmd=", cmd);
   return await osascriptSpawnAsync(cmd);
 }
 
-async function chooseAppAsync(listOfAppNames) {
+async function chooseAppAsync(listOfAppNames: string[]): Promise<string | null> {
   let runningAwaitables = [];
   let appIdAwaitables = [];
   for (let appName of listOfAppNames) {
@@ -90,7 +96,7 @@ async function chooseAppAsync(listOfAppNames) {
   return null;
 }
 
-async function chooseEditorAppAsync(preferredEditor) {
+async function chooseEditorAppAsync(preferredEditor?: string): Promise<string | null> {
   if (preferredEditor) {
     // Make sure this editor exists
     let appId = await safeIdOfAppAsync(preferredEditor);
@@ -122,7 +128,7 @@ async function chooseEditorAppAsync(preferredEditor) {
   return await chooseAppAsync(editorsToTry);
 }
 
-async function chooseTerminalAppAsync() {
+async function chooseTerminalAppAsync(): Promise<string | null> {
   return await chooseAppAsync([
     'iTerm 3',
     'iTerm 2',
@@ -135,13 +141,16 @@ async function chooseTerminalAppAsync() {
   ]);
 }
 
-async function openInEditorAsync(pth, preferredEditor) {
+async function openInEditorAsync(pth: string, preferredEditor?: string): Promise<SpawnResult> {
   let appName = await chooseEditorAppAsync(preferredEditor);
+  if (!appName) {
+    throw new Error('No editor found.');
+  }
   console.log('Will open in ' + appName + ' -- ' + pth);
   return await openInAppAsync(appName, pth);
 }
 
-async function openItermToSpecificFolderAsync(dir) {
+async function openItermToSpecificFolderAsync(dir: string): Promise<SpawnResult> {
   return await osascriptSpawnAsync([
     'tell application "iTerm"',
     'make new terminal',
@@ -158,7 +167,7 @@ async function openItermToSpecificFolderAsync(dir) {
   // exec("osascript -e 'tell application \"iTerm\"' -e 'make new terminal' -e 'tell the first terminal' -e 'activate current session' -e 'launch session \"Default Session\"' -e 'tell the last session' -e 'write text \"cd #{value}\"' -e 'write text \"clear\"' -e 'end tell' -e 'end tell' -e 'end tell' > /dev/null 2>&1")
 }
 
-async function openTerminalToSpecificFolderAsync(dir, inTab = false) {
+async function openTerminalToSpecificFolderAsync(dir: string, inTab = false): Promise<SpawnResult> {
   if (inTab) {
     return await osascriptSpawnAsync([
       'tell application "terminal"',
@@ -178,12 +187,12 @@ async function openTerminalToSpecificFolderAsync(dir, inTab = false) {
   }
 }
 
-async function openFolderInTerminalAppAsync(dir, inTab = false) {
+async function openFolderInTerminalAppAsync(dir: string, inTab = false): Promise<SpawnResult> {
   let program = await chooseTerminalAppAsync();
 
   switch (program) {
     case 'iTerm':
-      return await openItermToSpecificFolderAsync(dir, inTab);
+      return await openItermToSpecificFolderAsync(dir);
 
     case 'Terminal':
     default:
@@ -191,11 +200,11 @@ async function openFolderInTerminalAppAsync(dir, inTab = false) {
   }
 }
 
-module.exports = {
+export {
   chooseAppAsync,
   chooseEditorAppAsync,
   chooseTerminalAppAsync,
-  execAsync: osascriptExecAsync,
+  osascriptExecAsync as execAsync,
   isAppRunningAsync,
   openFinderToFolderAsync,
   openFolderInTerminalAppAsync,
@@ -204,5 +213,5 @@ module.exports = {
   openItermToSpecificFolderAsync,
   openTerminalToSpecificFolderAsync,
   safeIdOfAppAsync,
-  spawnAsync: osascriptSpawnAsync,
+  osascriptSpawnAsync as spawnAsync,
 };
