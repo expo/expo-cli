@@ -91,14 +91,15 @@ export const getAssetFilesAsync = async (projectDir, options) => {
     allFiles.push(...glob.sync(pattern, globOptions));
   });
   // If --include is passed in, only return files matching that pattern
-  const included = options.include ? [...glob.sync(options.include, globOptions)] : allFiles;
+  const included =
+    options && options.include ? [...glob.sync(options.include, globOptions)] : allFiles;
   const toExclude = new Set();
-  if (options.exclude) {
+  if (options && options.exclude) {
     glob.sync(options.exclude, globOptions).forEach(file => toExclude.add(file));
   }
   // If --exclude is passed in, filter out files matching that pattern
   const excluded = included.filter(file => !toExclude.has(file));
-  const filtered = options.exclude ? excluded : included;
+  const filtered = options && options.exclude ? excluded : included;
   return {
     allFiles: filterImages(allFiles, projectDir),
     selectedFiles: filterImages(filtered, projectDir),
