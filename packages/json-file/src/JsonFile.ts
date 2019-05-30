@@ -17,9 +17,9 @@ const writeFileAtomicAsync: (
   options: writeFileAtomic.Options
 ) => void = promisify(writeFileAtomic);
 
-type JSONValue = boolean | number | string | null | JSONArray | JSONObject;
-interface JSONArray extends Array<JSONValue> {}
-interface JSONObject {
+export type JSONValue = boolean | number | string | null | JSONArray | JSONObject;
+export interface JSONArray extends Array<JSONValue> {}
+export interface JSONObject {
   [key: string]: JSONValue;
 }
 
