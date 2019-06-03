@@ -6,6 +6,8 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Added
 
+* Added new blank template with TypeScript configuration.
+
 ### Changed
 
 ### Removed

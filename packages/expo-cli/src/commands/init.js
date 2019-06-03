@@ -22,7 +22,12 @@ const FEATURED_TEMPLATES = [
   {
     shortName: 'blank',
     name: 'expo-template-blank',
-    description: 'minimal dependencies to run and an empty root component ',
+    description: 'minimal dependencies to run and an empty root component',
+  },
+  {
+    shortName: 'blank (TypeScript)',
+    name: 'expo-template-blank-typescript',
+    description: 'same as blank but with TypeScript configuration',
   },
   {
     shortName: 'tabs',
