@@ -1,16 +1,13 @@
-/**
- * @flow
- */
 import * as ConfigUtils from '@expo/config';
 import path from 'path';
 
 import * as Analytics from '../Analytics';
-import Logger from '../Logger';
+import Logger, { LogStream, Log } from '../Logger';
 
 const MAX_MESSAGE_LENGTH = 200;
-let _projectRootToLogger = {};
+let _projectRootToLogger: { [projectRoot: string]: Log } = {};
 
-function _getLogger(projectRoot: string) {
+function _getLogger(projectRoot: string): Log {
   let logger = _projectRootToLogger[projectRoot];
   if (!logger) {
     logger = Logger.child({
@@ -23,55 +20,62 @@ function _getLogger(projectRoot: string) {
   return logger;
 }
 
+export type LogTag = 'expo' | 'metro' | 'device';
+export type LogFields = {
+  tag: LogTag;
+  issueId?: string;
+  issueCleared?: boolean;
+};
+
 export function logWithLevel(
   projectRoot: string,
   level: string,
-  object: any,
+  fields: LogFields,
   msg: string,
-  id: ?string
+  id?: string
 ) {
   if (id) {
-    object.issueId = id;
+    fields.issueId = id;
   }
 
   let logger = _getLogger(projectRoot);
   switch (level) {
     case 'debug':
-      logger.debug(object, msg);
+      logger.debug(fields, msg);
       break;
     case 'info':
-      logger.info(object, msg);
+      logger.info(fields, msg);
       break;
     case 'warn':
-      logger.warn(object, msg);
+      logger.warn(fields, msg);
       break;
     case 'error':
-      logger.error(object, msg);
+      logger.error(fields, msg);
       break;
     default:
-      logger.debug(object, msg);
+      logger.debug(fields, msg);
       break;
   }
 }
 
-export function logDebug(projectRoot: string, tag: string, message: string, id: ?string) {
+export function logDebug(projectRoot: string, tag: LogTag, message: string, id?: string) {
   _getLogger(projectRoot).debug({ tag }, message.toString());
 }
 
-export function logInfo(projectRoot: string, tag: string, message: string, id: ?string) {
-  const object = { tag };
+export function logInfo(projectRoot: string, tag: LogTag, message: string, id?: string) {
+  const fields: LogFields = { tag };
   if (id) {
-    object.issueId = id;
+    fields.issueId = id;
   }
-  _getLogger(projectRoot).info(object, message.toString());
+  _getLogger(projectRoot).info(fields, message.toString());
 }
 
-export function logError(projectRoot: string, tag: string, message: string, id: ?string) {
-  const object = { tag };
+export function logError(projectRoot: string, tag: LogTag, message: string, id?: string) {
+  const fields: LogFields = { tag };
   if (id) {
-    object.issueId = id;
+    fields.issueId = id;
   }
-  _getLogger(projectRoot).error(object, message.toString());
+  _getLogger(projectRoot).error(fields, message.toString());
 
   let truncatedMessage = message.toString();
   if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
@@ -85,12 +89,12 @@ export function logError(projectRoot: string, tag: string, message: string, id: 
   // });
 }
 
-export function logWarning(projectRoot: string, tag: string, message: string, id: ?string) {
-  const object = { tag };
+export function logWarning(projectRoot: string, tag: LogTag, message: string, id?: string) {
+  const fields: LogFields = { tag };
   if (id) {
-    object.issueId = id;
+    fields.issueId = id;
   }
-  _getLogger(projectRoot).warn(object, message.toString());
+  _getLogger(projectRoot).warn(fields, message.toString());
 
   let truncatedMessage = message.toString();
   if (truncatedMessage.length > MAX_MESSAGE_LENGTH) {
@@ -114,8 +118,8 @@ export function clearNotification(projectRoot: string, id: string) {
   );
 }
 
-export function attachLoggerStream(projectRoot: string, stream: any) {
-  _getLogger(projectRoot).addStream(stream);
+export function attachLoggerStream(projectRoot: string, stream: LogStream) {
+  _getLogger(projectRoot).addStream(stream as LogStream);
 }
 
 // Wrap with logger
@@ -131,7 +135,7 @@ export async function readExpRcAsync(projectRoot: string): Promise<any> {
 
 export async function readConfigJsonAsync(
   projectRoot: string
-): Promise<{ exp?: Object, pkg?: Object, rootConfig?: Object }> {
+): Promise<ConfigUtils.ProjectConfig | { exp: null; pkg: null }> {
   try {
     return await ConfigUtils.readConfigJsonAsync(projectRoot);
   } catch (error) {

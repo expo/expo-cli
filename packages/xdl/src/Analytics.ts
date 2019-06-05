@@ -6,22 +6,22 @@ import os from 'os';
 import Segment from 'analytics-node';
 import ip from './ip';
 
-let _segmentNodeInstance;
-let _userId;
-let _version;
-const PLATFORM_TO_ANALYTICS_PLATFORM = {
+let _segmentNodeInstance: Segment | undefined;
+let _userId: string | undefined;
+let _version: string | undefined;
+const PLATFORM_TO_ANALYTICS_PLATFORM: { [platform: string]: string } = {
   darwin: 'Mac',
   win32: 'Windows',
   linux: 'Linux',
 };
 
-export function flush(cb) {
-  if (_segmentNodeInstance) _segmentNodeInstance.flush(cb);
+export function flush() {
+  if (_segmentNodeInstance) _segmentNodeInstance.flush();
 }
 
 export function setSegmentNodeKey(key: string) {
   // Do not wait before flushing, we want node to close immediately if the programs ends
-  _segmentNodeInstance = new Segment(key, { flushAfter: 300 });
+  _segmentNodeInstance = new Segment(key, { flushInterval: 300 });
 }
 
 export function setUserProperties(userId: string, traits: any) {
@@ -52,7 +52,7 @@ export function logEvent(name: string, properties: any = {}) {
 }
 
 function _getContext() {
-  let platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()];
+  let platform = PLATFORM_TO_ANALYTICS_PLATFORM[os.platform()] || os.platform();
   let context = {
     ip: ip.address(),
     device: {

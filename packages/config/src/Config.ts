@@ -6,6 +6,7 @@ import resolveFrom from 'resolve-from';
 import slug from 'slugify';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 
+export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
 export type ExpoConfig = {
   name?: string;
@@ -17,7 +18,7 @@ export type ExpoConfig = {
 };
 export type Platform = 'android' | 'ios' | 'web';
 
-type PackageJSONConfig = { [key: string]: any };
+export type PackageJSONConfig = { [key: string]: any };
 
 const APP_JSON_FILE_NAME = 'app.json';
 
@@ -45,7 +46,7 @@ const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
 export async function addPlatform(
   projectRoot: string,
   platform: 'ios' | 'android' | 'web'
-): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig }> {
+): Promise<ProjectConfig> {
   const { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
 
   let currentPlatforms: Platform[] = [];
@@ -481,9 +482,7 @@ export function readConfigJson(projectRoot: string): ExpoConfig {
   return rootConfig.expo;
 }
 
-export async function readConfigJsonAsync(
-  projectRoot: string
-): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig }> {
+export async function readConfigJsonAsync(projectRoot: string): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
   const rootConfig = await JsonFile.readAsync(configPath, { json5: true });
   if (rootConfig === null || typeof rootConfig !== 'object') {
@@ -529,7 +528,7 @@ export async function readConfigJsonAsync(
 export async function writeConfigJsonAsync(
   projectRoot: string,
   options: Object
-): Promise<{ exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig }> {
+): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
   let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
   exp = { ...exp, ...options };
