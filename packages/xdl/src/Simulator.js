@@ -5,7 +5,7 @@
 import delayAsync from 'delay-async';
 import glob from 'glob-promise';
 import homeDir from 'home-dir';
-import osascript from '@expo/osascript';
+import * as osascript from '@expo/osascript';
 import path from 'path';
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
