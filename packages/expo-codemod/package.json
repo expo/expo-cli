@@ -4,6 +4,11 @@
   "description": "Codemod scripts for Expo apps",
   "author": "Expo",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/expo-codemod"
+  },
   "bin": {
     "expo-codemod": "./bin/expo-codemod.js"
   },
