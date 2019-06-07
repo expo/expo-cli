@@ -190,6 +190,12 @@ function rimrafDontThrow(directory) {
   }
 }
 
+async function removeIfExists(file) {
+  try {
+    await fs.unlink(file);
+  } catch (e) {}
+}
+
 function isDirectory(dir) {
   try {
     if (fs.statSync(dir).isDirectory()) {
@@ -253,6 +259,7 @@ export {
   saveImageToPathAsync,
   getManifestAsync,
   rimrafDontThrow,
+  removeIfExists,
   spawnAsyncThrowError,
   spawnAsync,
   transformFileContentsAsync,
