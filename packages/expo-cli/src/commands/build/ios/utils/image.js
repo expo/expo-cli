@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import { PNG } from 'pngjs';
 import pick from 'lodash/pick';
-import { XDLError, ErrorCode } from '@expo/xdl';
+import { XDLError } from '@expo/xdl';
 import request from 'request';
 import validator from 'validator';
 
@@ -44,7 +44,7 @@ function validateAlphaChannelIsEmpty(data, { width, height }) {
       let idx = (width * y + x) * 4;
       if (data[idx + 3] !== 255) {
         throw new XDLError(
-          ErrorCode.INVALID_ASSETS,
+          'INVALID_ASSETS',
           `Your application icon can't have transparency if you wish to upload your app to Apple Store.`
         );
       }

@@ -14,7 +14,6 @@ import _ from 'lodash';
 
 import logger, { pipeOutputToLogger } from './Logger';
 import XDLError from '../XDLError';
-import ErrorCode from '../ErrorCode';
 
 const request = Request.defaults({
   resolveWithFullResponse: true,
@@ -216,7 +215,7 @@ async function getResolvedLocalesAsync(inMemoryManifest) {
       try {
         locales[lang] = JSON.parse(s);
       } catch (e) {
-        throw new XDLError(ErrorCode.INVALID_JSON, JSON.stringify(e));
+        throw new XDLError('INVALID_JSON', JSON.stringify(e));
       }
     }
   }

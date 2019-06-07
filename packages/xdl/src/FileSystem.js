@@ -6,7 +6,6 @@ import child_process from 'child_process';
 import spawnAsync from '@expo/spawn-async';
 
 import * as Binaries from './Binaries';
-import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
 
 let osascript;
@@ -53,7 +52,7 @@ export async function openFileInEditorAsync(path: string) {
     await Binaries.sourceBashLoginScriptsAsync();
     return await osascript.openInEditorAsync(path, process.env.EXPO_EDITOR);
   } else if (process.platform === 'win32') {
-    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'openFileInEditorAsync not supported');
+    throw new XDLError('PLATFORM_NOT_SUPPORTED', 'openFileInEditorAsync not supported');
   }
 }
 
@@ -64,6 +63,6 @@ export async function openProjectInEditorAsync(dir: string) {
     await Binaries.sourceBashLoginScriptsAsync();
     return await osascript.openInEditorAsync(dir, process.env.EXPO_EDITOR);
   } else if (process.platform === 'win32') {
-    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'openProjectInEditorAsync not supported');
+    throw new XDLError('PLATFORM_NOT_SUPPORTED', 'openProjectInEditorAsync not supported');
   }
 }

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import ErrorCode from './ErrorCode';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 
@@ -16,14 +15,14 @@ export async function getManifest(publicUrl, opts = {}) {
     exp = resp.data;
   } catch (e) {
     throw new XDLError(
-      ErrorCode.INVALID_MANIFEST,
+      'INVALID_MANIFEST',
       `Unable to fetch manifest from ${publicUrl}. ` + e.toString()
     );
   }
   exp = await _extractManifest(exp, publicUrl);
   if (opts.platform && exp.platform !== opts.platform && opts.platform !== 'all') {
     throw new XDLError(
-      ErrorCode.INVALID_MANIFEST,
+      'INVALID_MANIFEST',
       `Manifest from ${publicUrl} is not compatible with the ${opts.platform} platform`
     );
   }
@@ -57,7 +56,7 @@ async function _extractManifest(expOrArray, publicUrl) {
   }
   const supportedVersions = Object.keys(sdkVersions);
   throw new XDLError(
-    ErrorCode.INVALID_MANIFEST,
+    'INVALID_MANIFEST',
     `No compatible manifest found at ${publicUrl}. Please use one of the SDK versions supported: ${JSON.stringify(
       supportedVersions
     )}`

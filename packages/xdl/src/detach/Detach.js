@@ -28,7 +28,6 @@ import * as IosWorkspace from './IosWorkspace';
 import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
-import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
 import UserManager from '../User';
 import XDLError from '../XDLError';
@@ -90,7 +89,7 @@ async function _detachAsync(projectRoot, options) {
 
   if (hasIosDirectory && hasAndroidDirectory) {
     throw new XDLError(
-      ErrorCode.DIRECTORY_ALREADY_EXISTS,
+      'DIRECTORY_ALREADY_EXISTS',
       'Error detaching. `ios` and `android` directories already exist.'
     );
   }

@@ -11,7 +11,6 @@ import concat from 'concat-stream';
 
 import { Cacher } from './tools/FsCache';
 import Config from './Config';
-import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import * as Session from './Session';
 import UserManager from './User';
@@ -106,7 +105,7 @@ async function _callMethodAsync(
       responseObj = JSON.parse(responseBody);
     } catch (e) {
       throw new XDLError(
-        ErrorCode.INVALID_JSON,
+        'INVALID_JSON',
         'Invalid JSON returned from API: ' + e + '. Response body: ' + responseBody
       );
     }
