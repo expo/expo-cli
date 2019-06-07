@@ -1,139 +1,165 @@
-/* @flow */
 import path from 'path';
-import escapeStringRegexp from 'escape-string-regexp';
+
 import chalk from 'chalk';
 import getenv from 'getenv';
+import idx from 'idx';
+import { JSONObject } from '@expo/json-file';
 
 import * as ProjectUtils from '../project/ProjectUtils';
 import Logger from '../Logger';
 
-type ChunkT =
-  | {
-      tag: 'expo' | 'device',
-      id: string,
-      shouldHide: boolean,
-      msg: any,
-      level: number,
-    }
-  | {
-      tag: 'metro',
-      id: string,
-      shouldHide: boolean,
-      msg: ReportableEvent,
-      level: number,
-    };
+type BuildEventType =
+  | 'METRO_INITIALIZE_STARTED'
+  | 'BUILD_STARTED'
+  | 'BUILD_PROGRESS'
+  | 'BUILD_FAILED'
+  | 'BUILD_DONE';
+type MetroLogRecord = {
+  tag: 'metro';
+  id: string;
+  shouldHide: boolean;
+  msg: ReportableEvent | string;
+  level: number;
+  _metroEventType?: BuildEventType;
+};
+type ExpoLogRecord = {
+  tag: 'expo';
+  id: string;
+  shouldHide: boolean;
+  msg: any;
+  level: number;
+};
+type DeviceLogRecord = {
+  tag: 'device';
+  id: string;
+  shouldHide: boolean;
+  msg: any;
+  level: number;
+};
+type LogRecord = MetroLogRecord | ExpoLogRecord | DeviceLogRecord;
 
-type LogUpdater = (logState: Array<ChunkT>) => Array<ChunkT>;
+type LogUpdater = (logState: Array<LogRecord>) => Array<LogRecord>;
 
-type Error =
+type ErrorObject = {
+  name?: string;
+  stack?: string;
+  message?: string;
+  code?: string;
+} & JSONObject;
+
+type MetroError =
   | {
-      originModulePath: string,
-      message: string,
-      errors: Array<Object>,
-    }
+      originModulePath: string;
+      message: string;
+      errors: Array<Object>;
+    } & ErrorObject
   | {
-      type: 'TransformError',
-      snippet: string,
-      lineNumber: number,
-      column: number,
-      filename: string,
-      errors: Array<Object>,
-    };
+      type: 'TransformError';
+      snippet: string;
+      lineNumber: number;
+      column: number;
+      filename: string;
+      errors: Array<Object>;
+    } & ErrorObject
+  | ErrorObject;
 
 // Metro reporter types
 // https://github.com/facebook/metro/blob/2a327fb19dd62169ab3ae9069011d8a599cfcf3e/packages/metro/src/lib/reporting.js
 type GlobalCacheDisabledReason = 'too_many_errors' | 'too_many_misses';
 type BundleDetails = {
-  entryFile: string,
-  platform: string,
-  dev: boolean,
-  minify: boolean,
-  bundleType: string,
+  entryFile: string;
+  platform: string;
+  dev: boolean;
+  minify: boolean;
+  bundleType: string;
 };
 type ReportableEvent =
   | {
-      port: ?number,
-      // $FlowFixMe: $ReadOnlyArray not recognized
-      projectRoots: $ReadOnlyArray<string>,
-      type: 'initialize_started',
+      port: number | undefined;
+      projectRoots: ReadonlyArray<string>;
+      type: 'initialize_started';
     }
   | {
-      type: 'initialize_done',
+      type: 'initialize_done';
     }
   | {
-      type: 'initialize_failed',
-      port: number,
-      error: Error,
+      type: 'initialize_failed';
+      port: number;
+      error: MetroError;
     }
   | {
-      buildID: string,
-      type: 'bundle_build_done',
+      buildID: string;
+      type: 'bundle_build_done';
     }
   | {
-      buildID: string,
-      type: 'bundle_build_failed',
+      buildID: string;
+      type: 'bundle_build_failed';
     }
   | {
-      buildID: string,
-      bundleDetails: BundleDetails,
-      type: 'bundle_build_started',
+      buildID: string;
+      bundleDetails: BundleDetails;
+      type: 'bundle_build_started';
     }
   | {
-      error: Error,
-      type: 'bundling_error',
+      error: MetroError;
+      type: 'bundling_error';
     }
   | {
-      type: 'dep_graph_loading',
+      type: 'dep_graph_loading';
     }
   | {
-      type: 'dep_graph_loaded',
+      type: 'dep_graph_loaded';
     }
   | {
-      buildID: string,
-      type: 'bundle_transform_progressed',
-      transformedFileCount: number,
-      totalFileCount: number,
+      buildID: string;
+      type: 'bundle_transform_progressed';
+      transformedFileCount: number;
+      totalFileCount: number;
     }
   | {
-      type: 'global_cache_error',
-      error: Error,
+      type: 'global_cache_error';
+      error: MetroError;
     }
   | {
-      type: 'global_cache_disabled',
-      reason: GlobalCacheDisabledReason,
+      type: 'global_cache_disabled';
+      reason: GlobalCacheDisabledReason;
     }
   | {
-      type: 'transform_cache_reset',
+      type: 'transform_cache_reset';
     }
   | {
-      type: 'worker_stdout_chunk',
-      chunk: string,
+      type: 'worker_stdout_chunk';
+      chunk: string;
     }
   | {
-      type: 'worker_stderr_chunk',
-      chunk: string,
+      type: 'worker_stderr_chunk';
+      chunk: string;
     }
   | {
-      type: 'hmr_client_error',
-      error: Error,
+      type: 'hmr_client_error';
+      error: MetroError;
     };
+
+type StartBuildBundleCallback = (chunk: LogRecord) => void;
+type ProgressBuildBundleCallback = (progress: number, start: Date | null, chunk: any) => void;
+type FinishBuildBundleCallback = (
+  error: string | null,
+  start: Date | null,
+  end: Date | null,
+  chunk: MetroLogRecord
+) => void;
 
 export default class PackagerLogsStream {
   _projectRoot: string;
   _getCurrentOpenProjectId: () => any;
   _updateLogs: (updater: LogUpdater) => void;
-  _logsToAdd: Array<ChunkT>;
-  _bundleBuildChunkID: ?number;
-  _onStartBuildBundle: ?Function;
-  _onProgressBuildBundle: ?Function;
-  _onFinishBuildBundle: ?Function;
-  _onFailBuildBundle: ?Function;
-  _getSnippetForError: ?(error: Error) => ?string;
-  _bundleBuildStart: ?Date;
-
-  _resetState = () => {
-    this._logsToAdd = [];
-  };
+  _logsToAdd: Array<LogRecord> = [];
+  _bundleBuildChunkID: string | null = null;
+  _onStartBuildBundle?: StartBuildBundleCallback;
+  _onProgressBuildBundle?: ProgressBuildBundleCallback;
+  _onFinishBuildBundle?: FinishBuildBundleCallback;
+  _bundleBuildStart: Date | null = null;
+  _getSnippetForError?: (error: MetroError) => string | null;
 
   constructor({
     projectRoot,
@@ -144,15 +170,14 @@ export default class PackagerLogsStream {
     onFinishBuildBundle,
     getSnippetForError,
   }: {
-    projectRoot: string,
-    getCurrentOpenProjectId?: () => any,
-    updateLogs: (updater: LogUpdater) => void,
-    onStartBuildBundle?: (chunk: any) => void,
-    onProgressBuildBundle?: (progress: number, start: Date, chunk: any) => void,
-    onFinishBuildBundle?: (error: ?string, start: ?Date, end: Date, chunk: any) => void,
-    getSnippetForError?: (error: Error) => ?string,
+    projectRoot: string;
+    getCurrentOpenProjectId?: () => any;
+    updateLogs: (updater: LogUpdater) => void;
+    onStartBuildBundle?: StartBuildBundleCallback;
+    onProgressBuildBundle?: ProgressBuildBundleCallback;
+    onFinishBuildBundle?: FinishBuildBundleCallback;
+    getSnippetForError?: (error: MetroError) => string | null;
   }) {
-    this._resetState();
     this._projectRoot = projectRoot;
     this._getCurrentOpenProjectId = getCurrentOpenProjectId || (() => 1);
     this._updateLogs = updateLogs;
@@ -201,12 +226,12 @@ export default class PackagerLogsStream {
     });
   }
 
-  _handleMetroEvent(originalChunk: ChunkT) {
+  _handleMetroEvent(originalChunk: MetroLogRecord) {
     const chunk = { ...originalChunk };
     let { msg } = chunk;
 
     if (typeof msg === 'string') {
-      if (msg.includes('HTTP/1.1') && !getenv.boolish('EXPO_DEBUG', false)) {
+      if ((msg as string).includes('HTTP/1.1') && !getenv.boolish('EXPO_DEBUG', false)) {
         // Do nothing with this message - we want to filter out network requests logged by Metro.
       } else {
         // If Metro crashes for some reason, it may log an error message as a plain string to stderr.
@@ -214,24 +239,25 @@ export default class PackagerLogsStream {
       }
       return;
     }
-    if (/^bundle_/.test(msg.type)) {
-      this._handleBundleTransformEvent(chunk);
-      return;
-    }
     switch (msg.type) {
-      case 'initialize_started': // SDK >=23 (changed in Metro v0.17.0)
-      case 'initialize_packager_started': // SDK <=22
+      // Bundle transform events
+      case 'bundle_build_started':
+      case 'bundle_transform_progressed':
+      case 'bundle_build_failed':
+      case 'bundle_build_done':
+        this._handleBundleTransformEvent(chunk);
+        return;
+
+      case 'initialize_started':
         chunk._metroEventType = 'METRO_INITIALIZE_STARTED';
         chunk.msg = msg.port
           ? `Starting Metro Bundler on port ${msg.port}.`
           : 'Starting Metro Bundler.';
         break;
-      case 'initialize_done': // SDK >=23 (changed in Metro v0.17.0)
-      case 'initialize_packager_done': // SDK <=22
+      case 'initialize_done':
         chunk.msg = `Metro Bundler ready.`;
         break;
-      case 'initialize_failed': // SDK >=23 (changed in Metro v0.17.0)
-      case 'initialize_packager_failed': {
+      case 'initialize_failed': {
         // SDK <=22
         // $FlowFixMe
         let code = msg.error.code;
@@ -243,7 +269,9 @@ export default class PackagerLogsStream {
       }
       case 'bundling_error':
         chunk.msg =
-          this._formatModuleResolutionError(msg.error) || this._formatBundlingError(msg.error);
+          this._formatModuleResolutionError(msg.error) ||
+          this._formatBundlingError(msg.error) ||
+          msg;
         chunk.level = Logger.ERROR;
         break;
       case 'transform_cache_reset':
@@ -282,8 +310,8 @@ export default class PackagerLogsStream {
   }
 
   // Any event related to bundle building is handled here
-  _handleBundleTransformEvent = (chunk: any) => {
-    let { msg } = chunk;
+  _handleBundleTransformEvent = (chunk: MetroLogRecord) => {
+    const msg = chunk.msg as ReportableEvent;
 
     if (msg.type === 'bundle_build_started') {
       chunk._metroEventType = 'BUILD_STARTED';
@@ -309,13 +337,10 @@ export default class PackagerLogsStream {
       } else {
         this._handleUpdateBundleTransformProgress(chunk);
       }
-    } else {
-      // Unrecognized bundle_* message!
-      console.log('Unrecognized bundle_* message!', msg);
     }
   };
 
-  _handleNewBundleTransformStarted(chunk: any) {
+  _handleNewBundleTransformStarted(chunk: MetroLogRecord) {
     if (this._bundleBuildChunkID) {
       return;
     }
@@ -331,63 +356,48 @@ export default class PackagerLogsStream {
     }
   }
 
-  _handleUpdateBundleTransformProgress(progressChunk: any) {
-    let { msg } = progressChunk;
+  _handleUpdateBundleTransformProgress(progressChunk: MetroLogRecord) {
+    const msg = progressChunk.msg as ReportableEvent;
+
     let percentProgress;
     let bundleComplete = false;
-    let bundleError = false;
-    let bundleBuildEnd;
+    let bundleBuildEnd = null;
 
     if (msg.type === 'bundle_build_done') {
       percentProgress = 100;
       bundleComplete = true;
       bundleBuildEnd = new Date();
+      if (this._bundleBuildStart) {
+        const duration = bundleBuildEnd.getTime() - this._bundleBuildStart.getTime();
+        progressChunk.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
+      } else {
+        progressChunk.msg = `Building JavaScript bundle: finished.`;
+      }
     } else if (msg.type === 'bundle_build_failed') {
       percentProgress = -1;
       bundleComplete = true;
-      bundleError = new Error('Failed to build bundle');
       bundleBuildEnd = new Date();
-    } else {
+      progressChunk.msg = `Building JavaScript bundle: error`;
+      progressChunk.level = Logger.ERROR;
+    } else if (msg.type === 'bundle_transform_progressed') {
       percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
+      progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
+    } else {
+      return;
     }
 
     if (this._bundleBuildChunkID) {
       progressChunk.id = this._bundleBuildChunkID;
-    }
-    if (bundleError) {
-      progressChunk.msg = `Building JavaScript bundle: error`;
-      progressChunk.level = Logger.ERROR;
-      if (msg.error) {
-        progressChunk.msg += '\n' + (msg.error.description || msg.error.message);
-      }
-    } else {
-      if (bundleComplete) {
-        let duration;
-        if (this._bundleBuildStart) {
-          duration = bundleBuildEnd - this._bundleBuildStart;
-        }
-
-        if (duration) {
-          progressChunk.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
-        } else {
-          progressChunk.msg = `Building JavaScript bundle: finished.`;
-        }
-      } else {
-        progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
-      }
     }
 
     if (this._onProgressBuildBundle) {
       this._onProgressBuildBundle(percentProgress, this._bundleBuildStart, progressChunk);
 
       if (bundleComplete) {
-        this._onFinishBuildBundle &&
-          this._onFinishBuildBundle(
-            bundleError,
-            this._bundleBuildStart,
-            bundleBuildEnd,
-            progressChunk
-          );
+        if (this._onFinishBuildBundle) {
+          const error = msg.type === 'bundle_build_failed' ? 'Build failed' : null;
+          this._onFinishBuildBundle(error, this._bundleBuildStart, bundleBuildEnd, progressChunk);
+        }
         this._bundleBuildStart = null;
         this._bundleBuildChunkID = null;
       }
@@ -412,14 +422,17 @@ export default class PackagerLogsStream {
     }
   }
 
-  _formatModuleResolutionError(error: any) {
-    let match = /^Unable to resolve module `(.+?)`/.exec(error.message);
-    let { originModulePath } = error;
+  _formatModuleResolutionError(error: MetroError): string | null {
+    if (!error.message) {
+      return null;
+    }
+    const match = /^Unable to resolve module `(.+?)`/.exec(error.message);
+    const originModulePath = error.originModulePath as (string | null);
     if (!match || !originModulePath) {
       return null;
     }
-    let moduleName = match[1];
-    let relativePath = path.relative(this._projectRoot, originModulePath);
+    const moduleName = match[1];
+    const relativePath = path.relative(this._projectRoot, originModulePath);
 
     const DOCS_PAGE_URL =
       'https://docs.expo.io/versions/latest/introduction/faq/#can-i-use-nodejs-packages-with-expo';
@@ -434,20 +447,13 @@ export default class PackagerLogsStream {
     return `Unable to resolve "${moduleName}" from "${relativePath}"`;
   }
 
-  _formatBundlingError(error: any) {
+  _formatBundlingError(error: MetroError): string | null {
     let message = error.message;
-    if (!message && error.errors && error.errors.length) {
-      message = error.errors[0].description;
+    if (!message && Array.isArray(error.errors) && error.errors.length) {
+      message = (error.errors[0] as any).description;
     }
-
-    // Before metro@0.29.0 the message may include the filename twice.
-    // TODO(ville): Remove this once we drop support for react-native v0.54.4 or older.
-    if (message && error.filename) {
-      let escapedFilename = escapeStringRegexp(error.filename);
-      message = message.replace(
-        new RegExp(`Error in ${escapedFilename}: ${escapedFilename}:`),
-        `Error in ${error.filename}:`
-      );
+    if (!message) {
+      return null;
     }
 
     message = chalk.red(message);
@@ -467,7 +473,7 @@ export default class PackagerLogsStream {
     return lines.map(line => `transform[${origin}]: ${line}`).join('\n');
   }
 
-  _enqueueAppendLogChunk(chunk: ChunkT) {
+  _enqueueAppendLogChunk(chunk: LogRecord) {
     if (!chunk.shouldHide) {
       this._logsToAdd.push(chunk);
       this._enqueueFlushLogsToAdd();
@@ -489,7 +495,7 @@ export default class PackagerLogsStream {
     func();
   };
 
-  _maybeParseMsgJSON(chunk: ChunkT) {
+  _maybeParseMsgJSON(chunk: LogRecord) {
     try {
       let parsedMsg = JSON.parse(chunk.msg);
       chunk.msg = parsedMsg;
@@ -500,7 +506,7 @@ export default class PackagerLogsStream {
     return chunk;
   }
 
-  _cleanUpNodeErrors = (chunk: ChunkT) => {
+  _cleanUpNodeErrors = (chunk: LogRecord) => {
     if (typeof chunk.msg === 'object') {
       return chunk;
     }
