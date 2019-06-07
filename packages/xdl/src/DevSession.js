@@ -7,7 +7,6 @@ import Config from './Config';
 import logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 import UserManager from './User';
-import * as ProjectSettings from './ProjectSettings';
 
 const UPDATE_FREQUENCY_SECS = 20;
 
