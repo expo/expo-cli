@@ -24,6 +24,7 @@
     "compression-webpack-plugin": "^2.0.0",
     "copy-webpack-plugin": "^5.0.0",
     "css-loader": "^2.1.1",
+    "deep-diff": "^1.0.2",
     "file-loader": "^3.0.1",
     "find-yarn-workspace-root": "^1.2.1",
     "html-loader": "^0.5.5",
