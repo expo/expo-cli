@@ -356,6 +356,11 @@ ${job.id}
         type: this.options.type,
         bundleIdentifier,
       };
+    } else if (platform === 'android') {
+      opts = {
+        ...opts,
+        type: this.options.type,
+      };
     }
 
     // call out to build api here with url
