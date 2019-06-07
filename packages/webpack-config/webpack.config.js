@@ -18,7 +18,7 @@ module.exports = function(env = {}, argv) {
     config = productionConfig(env, argv);
   }
 
-  Diagnosis.report(config, env);
+  Diagnosis.reportAsync(config, env);
 
   return config;
 };
