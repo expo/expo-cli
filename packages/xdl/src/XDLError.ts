@@ -6,7 +6,7 @@ const ERROR_PREFIX = 'Error: ';
 
 export default class XDLError extends ExtendableError {
   code: string;
-  isXDLError: boolean;
+  isXDLError: true;
 
   constructor(
     code: ErrorCode,
