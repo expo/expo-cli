@@ -1295,6 +1295,8 @@ async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string)
     appBuildGradle: path.join(shellPath, 'app/build.gradle'),
     // Remove obsolete `host.exp.exponent:reactandroid:XX.X.X` dependencies from expoview
     expoviewBuildGradle: path.join(shellPath, 'expoview/build.gradle'),
+    // Remove obsolete includeUnimodulesProjects
+    settingsBuildGradle: path.join(shellPath, 'settings.gradle'),
     // Remove no-longer-valid interfaces from MultipleVersionReactNativeActivity
     multipleVersionReactNativeActivity: path.join(
       shellPath,
