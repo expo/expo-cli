@@ -60,7 +60,7 @@ export async function action(projectDir = './', options = {}) {
   let templateFolder = require.resolve('@expo/webpack-config/web-default/index.html');
   templateFolder = templateFolder.substring(0, templateFolder.lastIndexOf('/'));
 
-  const files = await fse.readdir(templateFolder);
+  const files = (await fse.readdir(templateFolder)).filter(item => item !== 'icon.png');
   // { expo: { web: { staticPath: ... } } }
   const { web: { staticPath = 'web' } = {} } = exp;
 
