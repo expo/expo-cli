@@ -10,6 +10,7 @@ import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import getenv from 'getenv';
 
 import * as ProjectUtils from './project/ProjectUtils';
+import { logEnvironmentInfo } from './Web';
 
 const CONSOLE_TAG = 'expo';
 
@@ -113,10 +114,13 @@ export default function createWebpackCompiler({
     if (isSuccessful) {
       log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
       printPreviewNotice(projectRoot, isFirstCompile);
+      logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
     }
+
     if (isSuccessful && (!nonInteractive || isFirstCompile)) {
       printInstructions(projectRoot, appName, urls, isFirstCompile);
     }
+
     if (!isFirstCompile) {
       log(
         projectRoot,
@@ -124,6 +128,7 @@ export default function createWebpackCompiler({
         false
       );
     }
+
     onFinished();
     isFirstCompile = false;
 
