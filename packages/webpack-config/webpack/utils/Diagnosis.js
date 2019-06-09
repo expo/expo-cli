@@ -41,7 +41,7 @@ function shouldDiagnose() {
   return getenv.boolish('EXPO_DEBUG', false);
 }
 
-function logTitle(title) {
+function logHeader(title) {
   console.log(
     chalk.hidden('<details><summary>\n') +
       chalk.bgGreen.black(`[${title}]\n`) +
@@ -58,7 +58,7 @@ function logFooter() {
 
 // Log the main risky parts of webpack.config
 function logWebpackConfigComponents(webpackConfig) {
-  logTitle('Webpack Info');
+  logHeader('Webpack Info');
   const {
     mode,
     resolve: { alias = {} } = {},
@@ -86,7 +86,7 @@ function logWebpackConfigComponents(webpackConfig) {
 }
 
 function logStatics(env = {}) {
-  logTitle('Statics Info');
+  logHeader('Statics Info');
 
   const paths = getPaths(env);
 
@@ -112,7 +112,7 @@ function logStatics(env = {}) {
 }
 
 function logEnvironment({ config, ...env } = {}) {
-  logTitle('Environment Info');
+  logHeader('Environment Info');
   logMdHelper('```json');
   console.log(colorizeKeys(env));
   logMdHelper('```');
@@ -163,7 +163,7 @@ function logAutoConfigValues(env) {
     }
   }
 
-  logTitle('App.json');
+  logHeader('App.json');
   logMdHelper('```json');
   // TODO: Bacon: Diff block
   console.log(colorizeKeys(obj));
@@ -191,7 +191,7 @@ async function reportAsync(webpackConfig, { config, ...env } = {}) {
 }
 
 async function testBabelPreset(locations) {
-  logTitle('Babel Preset');
+  logHeader('Babel Preset');
 
   const babelrc = locations.absolute('.babelrc');
   const babelConfig = locations.absolute('babel.config.js');
