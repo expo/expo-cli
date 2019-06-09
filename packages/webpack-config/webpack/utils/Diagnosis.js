@@ -36,11 +36,6 @@ function colorizeKeys(json) {
   );
 }
 
-// Only diagnose the project if EXPO_DEBUG=true is set. ex: EXPO_DEBUG=true expo start
-function shouldDiagnose() {
-  return getenv.boolish('EXPO_DEBUG', false);
-}
-
 function logHeader(title) {
   console.log(
     chalk.hidden('<details><summary>\n') +
@@ -287,6 +282,5 @@ function isFunction(functionToCheck) {
 }
 
 module.exports = {
-  shouldDiagnose,
   reportAsync,
 };
