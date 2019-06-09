@@ -59,7 +59,7 @@ export async function startAsync(
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   const mode = dev ? 'development' : 'production';
 
-  const config = Web.invokeWebpackConfig({
+  const config = await Web.invokeWebpackConfigAsync({
     projectRoot,
     pwa: true,
     development: dev,
@@ -146,7 +146,7 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 
-  let config = Web.invokeWebpackConfig({
+  let config = await Web.invokeWebpackConfigAsync({
     projectRoot,
     pwa: packagerOpts.pwa,
     polyfill: packagerOpts.polyfill,
