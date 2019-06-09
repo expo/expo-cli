@@ -28,9 +28,9 @@ export function logEnvironmentInfo(projectRoot, tag, config) {
   }
 }
 
-function invokePossibleFunction(objectOrMethod, ...args) {
+async function invokePossibleFunctionAsync(objectOrMethod, ...args) {
   if (typeof objectOrMethod === 'function') {
-    return objectOrMethod(...args);
+    return await objectOrMethod(...args);
   } else {
     return objectOrMethod;
   }
@@ -53,17 +53,17 @@ function applyEnvironmentVariables(config) {
   return config;
 }
 
-export function invokeWebpackConfig(env, argv) {
+export async function invokeWebpackConfigAsync(env, argv) {
   // Check if the project has a webpack.config.js in the root.
   const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
   let config;
   if (fs.existsSync(projectWebpackConfig)) {
     const webpackConfig = require(projectWebpackConfig);
-    config = invokePossibleFunction(webpackConfig, env, argv);
+    config = await invokePossibleFunctionAsync(webpackConfig, env, argv);
   } else {
     // Fallback to the default expo webpack config.
-    const createExpoWebpackConfig = require('@expo/webpack-config');
-    config = createExpoWebpackConfig(env, argv);
+    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+    config = await createExpoWebpackConfigAsync(env, argv);
   }
   return applyEnvironmentVariables(config);
 }
