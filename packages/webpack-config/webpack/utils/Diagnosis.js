@@ -172,10 +172,6 @@ function logAutoConfigValues(env) {
 }
 
 async function reportAsync(webpackConfig, { config, ...env } = {}) {
-  if (!shouldDiagnose()) {
-    return;
-  }
-
   console.log(chalk.bold('\n\nStart Copy\n\n'));
 
   logWebpackConfigComponents(webpackConfig);
