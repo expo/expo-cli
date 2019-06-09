@@ -300,6 +300,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     outputFile,
     workingDir,
     modules,
+    buildType,
   } = args;
 
   const exponentDir = exponentDirectory(workingDir);
@@ -364,7 +365,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   await prepareEnabledModules(shellPath, modules);
 
   if (!args.skipBuild) {
-    await buildShellAppAsync(context, sdkVersion);
+    await buildShellAppAsync(context, sdkVersion, buildType);
   }
 };
 
@@ -1040,24 +1041,83 @@ export async function runShellAppModificationsAsync(
   );
 }
 
-async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string) {
+async function buildShellAppAsync(
+  context: StandaloneContext,
+  sdkVersion: string,
+  buildType: string
+) {
   let shellPath = shellPathForContext(context);
+  const ext = buildType === 'app-bundle' ? 'aab' : 'apk';
 
-  if (context.build.android) {
-    let androidBuildConfiguration = context.build.android;
+  const isRelease = !!context.build.android;
+  // concat on those strings is not very readable, but only alternative here is huge if statement
+  const debugOrRelease = isRelease ? 'Release' : 'Debug';
+  const devOrProd = isRelease ? 'Prod' : 'Dev';
+  const debugOrReleaseL = isRelease ? 'release' : 'debug';
+  const devOrProdL = isRelease ? 'prod' : 'dev';
 
-    try {
-      await fs.remove(`shell-unaligned.apk`);
-      await fs.remove(`shell.apk`);
-    } catch (e) {}
-    let gradleBuildCommand;
+  const shellFile = `shell.${ext}`;
+  const shellUnalignedFile = `shell-unaligned.${ext}`;
+
+  const outputDirPath = path.join(
+    shellPath,
+    'app',
+    'build',
+    'outputs',
+    buildType === 'app-bundle' ? 'bundle' : 'apk'
+  );
+
+  let gradleBuildCommand;
+  let outputPath;
+  if (buildType === 'app-bundle') {
     if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
-      gradleBuildCommand = 'assembleRelease';
+      gradleBuildCommand = `bundle${debugOrRelease}`;
+      outputPath = path.join(outputDirPath, debugOrReleaseL, `app.aab`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      gradleBuildCommand = 'assembleProdKernelRelease';
+      gradleBuildCommand = `bundle${devOrProd}Kernel${debugOrRelease}`;
+      outputPath = path.join(outputDirPath, `${devOrProdL}Kernel${debugOrRelease}`, `app.aab`);
     } else {
-      gradleBuildCommand = 'assembleProdMinSdkProdKernelRelease';
+      // gradleBuildCommand = `bundle${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
+      // outputPath = path.join(
+      //   outputDirPath,
+      //   `${devOrProdL}MinSdk${devOrProd}Kernel`,
+      //   debugOrReleaseL,
+      //   `app.aab`
+      // );
+
+      // TODO (wkozyra95) debug building app bundles for sdk 31 and older
+      // for now it has low priority
+      throw new Error('Android App Bundles are not supported for sdk31 and lower');
     }
+  } else {
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+      gradleBuildCommand = `assemble${debugOrRelease}`;
+      outputPath = path.join(outputDirPath, debugOrReleaseL, `app-${debugOrReleaseL}.apk`);
+    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
+      gradleBuildCommand = `assemble${devOrProd}Kernel${debugOrRelease}`;
+      outputPath = path.join(
+        outputDirPath,
+        `${devOrProdL}Kernel`,
+        debugOrReleaseL,
+        `app-${devOrProdL}Kernel-${debugOrReleaseL}.apk`
+      );
+    } else {
+      gradleBuildCommand = `assemble${devOrProd}MinSdk${devOrProd}Kernel${debugOrRelease}`;
+      outputPath = path.join(
+        outputDirPath,
+        `${devOrProdL}MinSdk${devOrProd}Kernel`,
+        debugOrReleaseL,
+        `app-${devOrProdL}MinSdk-${devOrProdL}Kernel-${debugOrReleaseL}-unsigned.apk`
+      );
+    }
+  }
+
+  await ExponentTools.removeIfExists(shellUnalignedFile);
+  await ExponentTools.removeIfExists(shellFile);
+  await ExponentTools.removeIfExists(outputPath);
+  if (isRelease) {
+    const androidBuildConfiguration = context.build.android;
+
     const gradleArgs = [gradleBuildCommand];
     if (process.env.GRADLE_DAEMON_DISABLED) {
       gradleArgs.unshift('--no-daemon');
@@ -1074,50 +1134,16 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
         ANDROID_KEYSTORE_PASSWORD: androidBuildConfiguration.keystorePassword,
       },
     });
+
     if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      let apkPath;
-      if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
-        apkPath = path.join(
-          shellPath,
-          'app',
-          'build',
-          'outputs',
-          'apk',
-          'release',
-          'app-release.apk'
-        );
-      } else {
-        apkPath = path.join(
-          shellPath,
-          'app',
-          'build',
-          'outputs',
-          'apk',
-          'prodKernel',
-          'release',
-          'app-prodKernel-release.apk'
-        );
-      }
-      await fs.copy(apkPath, 'shell.apk');
+      await fs.copy(outputPath, shellFile);
       // -c means "only verify"
-      await spawnAsync(`zipalign`, ['-c', '-v', '4', 'shell.apk'], {
+      await spawnAsync(`zipalign`, ['-c', '-v', '4', shellFile], {
         pipeToLogger: true,
         loggerFields: { buildPhase: 'verifying apk alignment' },
       });
     } else {
-      await fs.copy(
-        path.join(
-          shellPath,
-          'app',
-          'build',
-          'outputs',
-          'apk',
-          'prodMinSdkProdKernel',
-          'release',
-          'app-prodMinSdk-prodKernel-release-unsigned.apk'
-        ),
-        `shell-unaligned.apk`
-      );
+      await fs.copy(outputPath, shellUnalignedFile);
       await spawnAsync(
         `jarsigner`,
         [
@@ -1132,7 +1158,7 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
           androidBuildConfiguration.keyPassword,
           '-keystore',
           androidBuildConfiguration.keystore,
-          'shell-unaligned.apk',
+          shellUnalignedFile,
           androidBuildConfiguration.keyAlias,
         ],
         {
@@ -1140,74 +1166,29 @@ async function buildShellAppAsync(context: StandaloneContext, sdkVersion: string
           loggerFields: { buildPhase: 'signing created apk' },
         }
       );
-      await spawnAsync(`zipalign`, ['-v', '4', 'shell-unaligned.apk', 'shell.apk'], {
+      await spawnAsync(`zipalign`, ['-v', '4', shellUnalignedFile, shellFile], {
         pipeToLogger: true,
         loggerFields: { buildPhase: 'verifying apk alignment' },
       });
-      try {
-        await fs.remove('shell-unaligned.apk');
-      } catch (e) {}
+      await ExponentTools.removeIfExists(shellUnalignedFile);
     }
     await spawnAsync(
       `jarsigner`,
-      [
-        '-verify',
-        '-verbose',
-        '-certs',
-        '-keystore',
-        androidBuildConfiguration.keystore,
-        'shell.apk',
-      ],
+      ['-verify', '-verbose', '-certs', '-keystore', androidBuildConfiguration.keystore, shellFile],
       {
         pipeToLogger: true,
         loggerFields: { buildPhase: 'verifying apk' },
       }
     );
-    await fs.copy('shell.apk', androidBuildConfiguration.outputFile || '/tmp/shell-signed.apk');
+    await fs.copy(shellFile, androidBuildConfiguration.outputFile || `/tmp/shell-signed.${ext}`);
+    await ExponentTools.removeIfExists(shellFile);
   } else {
-    try {
-      await fs.remove('shell-debug.apk');
-    } catch (e) {}
-    let gradleBuildCommand;
-    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
-      gradleBuildCommand = 'assembleDebug';
-    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      gradleBuildCommand = 'assembleDevKernelDebug';
-    } else {
-      gradleBuildCommand = 'assembleDevMinSdkDevKernelDebug';
-    }
     await spawnAsyncThrowError(`./gradlew`, [gradleBuildCommand], {
       pipeToLogger: true,
       loggerFields: { buildPhase: 'running gradle' },
       cwd: shellPath,
     });
-    let apkPath;
-    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
-      apkPath = path.join(shellPath, 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk');
-    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
-      apkPath = path.join(
-        shellPath,
-        'app',
-        'build',
-        'outputs',
-        'apk',
-        'devKernel',
-        'debug',
-        'app-devKernel-debug.apk'
-      );
-    } else {
-      apkPath = path.join(
-        shellPath,
-        'app',
-        'build',
-        'outputs',
-        'apk',
-        'devMinSdkDevKernel',
-        'debug',
-        'app-devMinSdk-devKernel-debug.apk'
-      );
-    }
-    await fs.copy(apkPath, `/tmp/shell-debug.apk`);
+    await fs.copy(outputPath, `/tmp/shell-debug.${ext}`);
   }
 }
 
@@ -1295,6 +1276,8 @@ async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string)
     appBuildGradle: path.join(shellPath, 'app/build.gradle'),
     // Remove obsolete `host.exp.exponent:reactandroid:XX.X.X` dependencies from expoview
     expoviewBuildGradle: path.join(shellPath, 'expoview/build.gradle'),
+    // Remove obsolete includeUnimodulesProjects
+    settingsBuildGradle: path.join(shellPath, 'settings.gradle'),
     // Remove no-longer-valid interfaces from MultipleVersionReactNativeActivity
     multipleVersionReactNativeActivity: path.join(
       shellPath,

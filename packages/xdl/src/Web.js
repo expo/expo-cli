@@ -15,16 +15,16 @@ function invokePossibleFunction(objectOrMethod, ...args) {
   }
 }
 
-export function invokeWebpackConfig(env, argv) {
+export async function invokeWebpackConfigAsync(env, argv) {
   // Check if the project has a webpack.config.js in the root.
   const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
   if (fs.existsSync(projectWebpackConfig)) {
     const webpackConfig = require(projectWebpackConfig);
-    return invokePossibleFunction(webpackConfig, env, argv);
+    return await invokePossibleFunction(webpackConfig, env, argv);
   }
   // Fallback to the default expo webpack config.
   const config = require('@expo/webpack-config');
-  return config(env, argv);
+  return await config(env, argv);
 }
 
 export async function openProjectAsync(projectRoot) {

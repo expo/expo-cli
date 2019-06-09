@@ -1,9 +1,14 @@
 {
   "name": "expo-codemod",
-  "version": "0.0.1-beta.7",
+  "version": "1.0.0",
   "description": "Codemod scripts for Expo apps",
   "author": "Expo",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/expo-codemod"
+  },
   "bin": {
     "expo-codemod": "./bin/expo-codemod.js"
   },

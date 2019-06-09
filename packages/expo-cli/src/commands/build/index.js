@@ -86,8 +86,9 @@ export default (program: any) => {
     .option('--keystore-path <app.jks>', 'Path to your Keystore.')
     .option('--keystore-alias <alias>', 'Keystore Alias')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
+    .option('-t --type <build>', 'Type of build: [app-bundle|apk].', /^(app-bundle|apk)$/i, 'apk')
     .description(
-      'Build a standalone APK for your project, signed and ready for submission to the Google Play Store.'
+      'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
     .asyncActionProjectDir((projectDir, options) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
