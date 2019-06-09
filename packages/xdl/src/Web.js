@@ -17,7 +17,7 @@ export function isDebugModeEnabled() {
 }
 
 export function logEnvironmentInfo(projectRoot, tag, config) {
-  if (isDebugModeEnabled()) {
+  if (isDebugModeEnabled() && config.mode === 'production') {
     logWarning(
       projectRoot,
       tag,
@@ -40,7 +40,7 @@ function applyEnvironmentVariables(config) {
   // Use EXPO_DEBUG_WEB=true to enable debugging features for cases where the prod build
   // has errors that aren't caught in development mode.
   // Related: https://github.com/expo/expo-cli/issues/614
-  if (isDebugModeEnabled()) {
+  if (isDebugModeEnabled() && config.mode === 'production') {
     // TODO: Bacon: Should this throw if not running in prod mode?
 
     // Add comments that describe the file import/exports.
