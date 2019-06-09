@@ -65,6 +65,7 @@ export async function startAsync(
     development: dev,
     production: !dev,
     https,
+    info: Web.isInfoEnabled(),
   });
 
   webpackServerPort = await choosePortAsync();
@@ -152,6 +153,7 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
     polyfill: packagerOpts.polyfill,
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
+    info: Web.isInfoEnabled(),
   });
   let compiler = webpack(config);
 

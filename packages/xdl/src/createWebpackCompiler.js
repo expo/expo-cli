@@ -7,14 +7,13 @@
 import chalk from 'chalk';
 import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import getenv from 'getenv';
 
 import * as ProjectUtils from './project/ProjectUtils';
-import { logEnvironmentInfo } from './Web';
+import { logEnvironmentInfo, shouldWebpackClearLogs } from './Web';
 
 const CONSOLE_TAG = 'expo';
 
-const SHOULD_CLEAR_CONSOLE = !getenv.boolish('EXPO_DEBUG', false);
+const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
 
 function log(projectRoot, message, showInDevtools = true) {
   if (showInDevtools) {

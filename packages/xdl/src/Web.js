@@ -16,6 +16,14 @@ export function isDebugModeEnabled() {
   return getenv.boolish('EXPO_WEB_DEBUG', false);
 }
 
+export function isInfoEnabled() {
+  return getenv.boolish('EXPO_WEB_INFO', false);
+}
+
+export function shouldWebpackClearLogs() {
+  return !isInfoEnabled() && !getenv.boolish('EXPO_DEBUG', false);
+}
+
 export function logEnvironmentInfo(projectRoot, tag, config) {
   if (isDebugModeEnabled() && config.mode === 'production') {
     logWarning(

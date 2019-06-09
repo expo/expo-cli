@@ -18,7 +18,7 @@ module.exports = function(env = {}, argv) {
     config = productionConfig(env, argv);
   }
 
-  if (env.diagnose) {
+  if (env.info) {
     Diagnosis.reportAsync(config, env);
   }
 
