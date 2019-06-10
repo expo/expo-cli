@@ -4,12 +4,14 @@ import chalk from 'chalk';
 import { MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
+
+import log from '../log';
 import * as PackageManager from '../PackageManager';
 
-async function maybeWarnToCommitAsync() {
+async function maybeWarnToCommitAsync(projectRoot) {
   let workingTreeStatus = 'unknown';
   try {
-    let result = await spawnAsync('git', ['status', '--porcelain']);
+    const result = await spawnAsync('git', ['status', '--porcelain']);
     workingTreeStatus = result.stdout === '' ? 'clean' : 'dirty';
   } catch (e) {
     // Maybe git is not installed?
@@ -17,7 +19,7 @@ async function maybeWarnToCommitAsync() {
   }
 
   if (workingTreeStatus === 'dirty') {
-    console.log(
+    log(
       chalk.yellow(
         'You should commit your changes before generating code into the root of your project.'
       )
@@ -81,7 +83,7 @@ export async function action(projectDir = './', options = {}) {
   }
 
   if (!values.filter(({ disabled }) => !disabled).length) {
-    console.log(
+    log(
       chalk.yellow('\nAll of the custom web files already exist.') +
         '\nTo regenerate the files run:' +
         chalk.bold(' expo customize:web --force\n')
@@ -89,7 +91,7 @@ export async function action(projectDir = './', options = {}) {
     return;
   }
 
-  await maybeWarnToCommitAsync();
+  await maybeWarnToCommitAsync(projectDir);
 
   const prompt = new MultiSelect({
     hint: '(Use <space> to select, <return> to submit)',
