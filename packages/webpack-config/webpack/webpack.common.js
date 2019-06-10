@@ -160,7 +160,7 @@ module.exports = function(env = {}, argv) {
 
   const serviceWorker = overrideWithPropertyOrConfig(
     // Prevent service worker in development mode
-    env.production ? config.web.build.serviceWorker : false,
+    config.web.build.serviceWorker,
     DEFAULT_SERVICE_WORKER
   );
   if (serviceWorker) {
@@ -179,6 +179,11 @@ module.exports = function(env = {}, argv) {
           // public/ and not a SPA route
           new RegExp('/[^/]+\\.[^/]+$'),
         ],
+        ...(isDev
+          ? {
+              include: [], // Don't cache any assets in dev mode.
+            }
+          : {}),
         ...serviceWorker,
       })
     );
