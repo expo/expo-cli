@@ -1,6 +1,6 @@
-import fs from 'fs';
-import openBrowser from 'react-dev-utils/openBrowser';
+import fs from 'fs-extra';
 import path from 'path';
+import openBrowser from 'react-dev-utils/openBrowser';
 
 import getenv from 'getenv';
 import chalk from 'chalk';
