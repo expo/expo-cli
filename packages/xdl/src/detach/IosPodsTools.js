@@ -378,7 +378,12 @@ function _renderUnversionedUniversalModulesDependencies(universalModules, sdkVer
       `
 # Install unimodules
 require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
-use_unimodules!`,
+use_unimodules!(
+  exclude: [
+    'expo-face-detector',
+    'expo-payments',
+  ],
+)`,
       2
     );
   } else {
