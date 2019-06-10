@@ -14,7 +14,6 @@ import fs from 'fs-extra';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
-import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -48,7 +47,7 @@ async function _xcrunAsync(args) {
   } catch (e) {
     if (_isLicenseOutOfDate(e.stdout) || _isLicenseOutOfDate(e.stderr)) {
       throw new XDLError(
-        ErrorCode.XCODE_LICENSE_NOT_ACCEPTED,
+        'XCODE_LICENSE_NOT_ACCEPTED',
         'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
       );
     } else {

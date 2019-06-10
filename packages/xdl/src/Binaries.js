@@ -8,7 +8,6 @@ import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 
 import Config from './Config';
-import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
@@ -34,7 +33,7 @@ export function getBinariesPath(): string {
   } else if (process.platform === 'linux') {
     return path.join(__dirname, '..', 'binaries', 'linux');
   } else {
-    throw new XDLError(ErrorCode.PLATFORM_NOT_SUPPORTED, 'Platform not supported.');
+    throw new XDLError('PLATFORM_NOT_SUPPORTED', 'Platform not supported.');
   }
 }
 

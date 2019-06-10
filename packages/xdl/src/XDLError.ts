@@ -1,19 +1,15 @@
-/**
- * @flow
- */
-
 import ExtendableError from 'es6-error';
 
-import type { ErrorCodes } from './ErrorCode';
+import ErrorCode from './ErrorCode';
 
 const ERROR_PREFIX = 'Error: ';
 
 export default class XDLError extends ExtendableError {
   code: string;
-  isXDLError: boolean;
+  isXDLError: true;
 
   constructor(
-    code: $Keys<ErrorCodes>,
+    code: ErrorCode,
     message: string,
     options: { noTrack: boolean } = { noTrack: false }
   ) {

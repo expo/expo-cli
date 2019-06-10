@@ -8,7 +8,6 @@ import semver from 'semver';
 
 import ApiV2Client from './ApiV2';
 import { Cacher } from './tools/FsCache';
-import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
 import UserManager from './User';
 
@@ -55,7 +54,7 @@ export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
     return semver.gte(expJson.sdkVersion, sdkVersion);
   } catch (e) {
     throw new XDLError(
-      ErrorCode.INVALID_VERSION,
+      'INVALID_VERSION',
       `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
     );
   }
@@ -74,7 +73,7 @@ export function lteSdkVersion(expJson: any, sdkVersion: string): boolean {
     return semver.lte(expJson.sdkVersion, sdkVersion);
   } catch (e) {
     throw new XDLError(
-      ErrorCode.INVALID_VERSION,
+      'INVALID_VERSION',
       `${expJson.sdkVersion} is not a valid version. Must be in the form of x.y.z`
     );
   }
@@ -130,7 +129,7 @@ export async function facebookReactNativeVersionToExpoVersionAsync(
 ): Promise<?string> {
   if (!semver.valid(facebookReactNativeVersion)) {
     throw new XDLError(
-      ErrorCode.INVALID_VERSION,
+      'INVALID_VERSION',
       `${facebookReactNativeVersion} is not a valid version. Must be in the form of x.y.z`
     );
   }
@@ -158,7 +157,7 @@ export async function canTurtleBuildSdkVersion(sdkVersion, platform) {
 
   if (semver.valid(sdkVersion) == null) {
     throw new XDLError(
-      ErrorCode.INVALID_VERSION,
+      'INVALID_VERSION',
       `"${sdkVersion}" is not a valid version. Must be in the form of x.y.z`
     );
   }
@@ -167,13 +166,10 @@ export async function canTurtleBuildSdkVersion(sdkVersion, platform) {
   const expoSdkVersion = (await sdkVersionsAsync())[sdkVersion];
 
   if (expoSdkVersion === undefined) {
-    throw new XDLError(
-      ErrorCode.INVALID_VERSION,
-      `"${sdkVersion}" is not a valid Expo SDK version.`
-    );
+    throw new XDLError('INVALID_VERSION', `"${sdkVersion}" is not a valid Expo SDK version.`);
   } else if (expoSdkVersion.isDeprecated) {
     throw new XDLError(
-      ErrorCode.INVALID_VERSION,
+      'INVALID_VERSION',
       `"${sdkVersion}" is deprecated. Please update Expo SDK version.`
     );
   }

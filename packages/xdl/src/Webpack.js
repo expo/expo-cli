@@ -7,7 +7,6 @@ import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import chalk from 'chalk';
 import createWebpackCompiler from './createWebpackCompiler';
-import ErrorCode from './ErrorCode';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
@@ -35,7 +34,7 @@ async function choosePortAsync(): Promise<number | null> {
   try {
     return await choosePort(HOST, DEFAULT_PORT);
   } catch (error) {
-    throw new XDLError(ErrorCode.NO_PORT_FOUND, 'No available port found: ' + error.message);
+    throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
   }
 }
 

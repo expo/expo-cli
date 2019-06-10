@@ -1,7 +1,7 @@
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
-import { XDLError, ErrorCode } from '@expo/xdl';
+import { XDLError } from '@expo/xdl';
 
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
@@ -33,7 +33,7 @@ class IOSBuilder extends BaseBuilder {
 
     if (!bundleIdentifier) {
       throw new XDLError(
-        ErrorCode.INVALID_OPTIONS,
+        'INVALID_OPTIONS',
         `Your project must have a bundleIdentifier set in app.json.
 See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#2-configure-appjson`
       );

@@ -8,7 +8,6 @@ import isEmpty from 'lodash/isEmpty';
 import ApiV2Client, { ApiV2Error } from './ApiV2';
 import * as Analytics from './Analytics';
 import Config from './Config';
-import ErrorCode from './ErrorCode';
 import XDLError from './XDLError';
 import Logger from './Logger';
 
@@ -112,7 +111,7 @@ export class UserManagerInstance {
         password: loginArgs.password,
       });
       if (loginResp.error) {
-        throw new XDLError(ErrorCode.INVALID_USERNAME_PASSWORD, loginResp['error_description']);
+        throw new XDLError('INVALID_USERNAME_PASSWORD', loginResp['error_description']);
       }
       return this._getProfileAsync({
         currentConnection: 'Username-Password-Authentication',
@@ -152,7 +151,7 @@ export class UserManagerInstance {
       return registeredUser;
     } catch (e) {
       console.error(e);
-      throw new XDLError(ErrorCode.REGISTRATION_ERROR, 'Error registering user: ' + e.message);
+      throw new XDLError('REGISTRATION_ERROR', 'Error registering user: ' + e.message);
     }
   }
 
@@ -171,7 +170,7 @@ export class UserManagerInstance {
       user = await this._interactiveAuthenticationCallbackAsync();
     }
     if (!user) {
-      throw new XDLError(ErrorCode.NOT_LOGGED_IN, 'Not logged in');
+      throw new XDLError('NOT_LOGGED_IN', 'Not logged in');
     }
     return user;
   }

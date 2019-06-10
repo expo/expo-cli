@@ -22,7 +22,6 @@ import Config from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
 import XDLError from '../XDLError';
-import ErrorCode from '../ErrorCode';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -498,7 +497,7 @@ export async function validateWebPlatformAddedAsync(
     await ConfigUtils.addPlatform(projectRoot, 'web');
     return true;
   }
-  throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, getWebSetupLogs());
+  throw new XDLError('WEB_NOT_CONFIGURED', getWebSetupLogs());
 }
 
 async function promptAsync(message: string): Promise<boolean> {
