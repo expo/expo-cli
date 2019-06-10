@@ -23,6 +23,7 @@ async function promptForCredentials(appleCtx, types, printWarning = true) {
     log(EXPERT_PROMPT);
   }
   const credentials = {};
+  let metadata = {};
   for (const type of types) {
     const value = {};
     const { name, required, questions } = constants.CREDENTIALS[type];
@@ -34,9 +35,8 @@ async function promptForCredentials(appleCtx, types, printWarning = true) {
     }
     const valueKeys = Object.keys(value);
     credentials[type] = valueKeys.length === 1 ? value[valueKeys[0]] : value;
+    metadata = Object.assign(metadata, await _calculateMetadata(credentials[type]));
   }
-
-  const metadata = await _calculateMetadata(credentials);
 
   return [credentials, metadata];
 }
