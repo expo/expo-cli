@@ -1,5 +1,3 @@
-import * as ConfigUtils from '@expo/config';
-import spawn from 'cross-spawn';
 import fs from 'fs-extra';
 import path from 'path';
 import openBrowser from 'react-dev-utils/openBrowser';
@@ -14,38 +12,6 @@ function invokePossibleFunction(objectOrMethod, ...args) {
     return objectOrMethod(...args);
   } else {
     return objectOrMethod;
-  }
-}
-
-export async function ensureDevPackagesInstalledAsync(projectRoot, ...newDevDependencies) {
-  const { exp } = await readConfigJsonAsync(projectRoot);
-
-  // Filter out packages that are already installed.
-  let modulesToInstall = [];
-  for (const module of newDevDependencies) {
-    if (!(await ConfigUtils.resolveModule(module, projectRoot, exp))) {
-      modulesToInstall.push(module);
-    }
-  }
-
-  const useYarn = await fs.exists(path.resolve('yarn.lock'));
-  if (useYarn) {
-    console.log('Installing packages with yarn...');
-    const args = modulesToInstall.length > 0 ? ['add', '--dev', ...modulesToInstall] : [];
-    spawn.sync('yarnpkg', args, { stdio: 'inherit' });
-  } else {
-    // npm prints the whole package tree to stdout unless we ignore it.
-    const stdio = [process.stdin, 'ignore', process.stderr];
-
-    console.log('Installing existing packages with npm...');
-    spawn.sync('npm', ['install'], { stdio });
-
-    if (modulesToInstall.length > 0) {
-      console.log('Installing new packages with npm...');
-      spawn.sync('npm', ['install', '--save-dev', ...modulesToInstall], {
-        stdio,
-      });
-    }
   }
 }
 

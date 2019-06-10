@@ -1,10 +1,10 @@
 import spawnAsync from '@expo/spawn-async';
-import { ProjectUtils, Web } from '@expo/xdl';
+import { ProjectUtils } from '@expo/xdl';
 import chalk from 'chalk';
 import { MultiSelect } from 'enquirer';
-import fs from 'fs';
-import fse from 'fs-extra';
+import fs from 'fs-extra';
 import path from 'path';
+import * as PackageManager from '../PackageManager';
 
 async function maybeWarnToCommitAsync() {
   let workingTreeStatus = 'unknown';
@@ -33,19 +33,21 @@ async function generateFilesAsync({ projectDir, staticPath, options, answer, tem
       const projectWebpackConfig = path.resolve(projectDir, file);
       // copy the file from template
       promises.push(
-        fse.copy(
+        fs.copy(
           require.resolve('@expo/webpack-config/template/webpack.config.js'),
           projectWebpackConfig,
           { overwrite: true, recursive: true }
         )
       );
-      promises.push(Web.ensureDevPackagesInstalledAsync(projectDir, '@expo/webpack-config'));
+
+      const packageManager = PackageManager.createForProject(projectDir);
+      promises.push(packageManager.addDevAsync('@expo/webpack-config'));
     } else {
       const fileName = path.basename(file);
       const src = path.resolve(templateFolder, fileName);
       const dest = path.resolve(projectDir, staticPath, fileName);
-      if (await fse.exists(src)) {
-        promises.push(fse.copy(src, dest, { overwrite: true, recursive: true }));
+      if (await fs.exists(src)) {
+        promises.push(fs.copy(src, dest, { overwrite: true, recursive: true }));
       } else {
         throw new Error(`Expected template file for ${fileName} doesn't exist at path: ${src}`);
       }
@@ -60,7 +62,7 @@ export async function action(projectDir = './', options = {}) {
   let templateFolder = require.resolve('@expo/webpack-config/web-default/index.html');
   templateFolder = templateFolder.substring(0, templateFolder.lastIndexOf('/'));
 
-  const files = (await fse.readdir(templateFolder)).filter(item => item !== 'icon.png');
+  const files = (await fs.readdir(templateFolder)).filter(item => item !== 'icon.png');
   // { expo: { web: { staticPath: ... } } }
   const { web: { staticPath = 'web' } = {} } = exp;
 

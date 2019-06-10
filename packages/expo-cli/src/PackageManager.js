@@ -43,6 +43,9 @@ export class NpmPackageManager {
   async addAsync(...names) {
     await this._runAsync(['install', '--save', ...names]);
   }
+  async addDevAsync(...names) {
+    await this._runAsync(['install', '--save-dev', ...names]);
+  }
 
   // Private
   async _runAsync(args) {
@@ -72,6 +75,9 @@ export class YarnPackageManager {
   async addAsync(...names) {
     await this._runAsync(['add', ...names]);
   }
+  async addDevAsync(...names) {
+    await this._runAsync(['add', '--dev', ...names]);
+  }
 
   // Private
   async _runAsync(args) {
@@ -82,7 +88,7 @@ export class YarnPackageManager {
   }
 }
 
-export function createForProject(projectRoot, options) {
+export function createForProject(projectRoot, options = {}) {
   let PackageManager;
   if (options.npm) {
     PackageManager = NpmPackageManager;
