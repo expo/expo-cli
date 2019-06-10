@@ -1,6 +1,4 @@
 const chalk = require('chalk');
-const getenv = require('getenv');
-
 const diff = require('deep-diff');
 const { ensurePWAConfig, readConfigJson } = require('@expo/config');
 const fs = require('fs');
