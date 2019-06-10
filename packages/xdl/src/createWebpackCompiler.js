@@ -7,10 +7,13 @@
 import chalk from 'chalk';
 import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
+
 import * as ProjectUtils from './project/ProjectUtils';
-import { logEnvironmentInfo } from './Web';
+import { logEnvironmentInfo, shouldWebpackClearLogs } from './Web';
 
 const CONSOLE_TAG = 'expo';
+
+const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
 
 function log(projectRoot, message, showInDevtools = true) {
   if (showInDevtools) {
@@ -78,7 +81,7 @@ export default function createWebpackCompiler({
   // bundle, so if you refresh, it'll wait instead of serving the old one.
   // "invalid" is short for "bundle invalidated", it doesn't imply any errors.
   compiler.hooks.invalid.tap('invalid', () => {
-    if (!nonInteractive) {
+    if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
       clearConsole();
     }
     log(projectRoot, '\nCompiling...');
@@ -89,7 +92,7 @@ export default function createWebpackCompiler({
   // "done" event fires when Webpack has finished recompiling the bundle.
   // Whether or not you have warnings or errors, you will get this event.
   compiler.hooks.done.tap('done', async stats => {
-    if (!nonInteractive) {
+    if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
       clearConsole();
     }
 
