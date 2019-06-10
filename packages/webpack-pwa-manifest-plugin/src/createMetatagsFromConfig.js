@@ -28,6 +28,7 @@ export default function createMetatagsFromConfig(config) {
     viewport,
     googleSiteVerification,
     apple = {},
+    android = {},
     twitter = {},
     openGraph = {},
     microsoft = {},
@@ -46,6 +47,11 @@ export default function createMetatagsFromConfig(config) {
     'apple-mobile-web-app-title': web.shortName,
   };
 
+  const androidMetatags = {
+    // [Android Chrome] To enable multi-resolution icons of size [196x196]
+    'mobile-web-app-capable': android.mobileWebAppCapable || apple.mobileWebAppCapable,
+  };
+
   const metaTags = {
     viewport,
     description: config.description,
@@ -53,6 +59,7 @@ export default function createMetatagsFromConfig(config) {
     ...microsoftMetatags,
     ...twitterMetatags,
     ...appleMetatags,
+    ...androidMetatags,
   };
 
   if (googleSiteVerification !== undefined) {
