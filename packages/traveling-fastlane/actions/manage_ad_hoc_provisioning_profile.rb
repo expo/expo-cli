@@ -152,7 +152,7 @@ with_captured_output{
         existing_profile.devices = devices
         existing_profile.update!
 
-        updated_profile = find_profile_by_bundle_id($bundleId)
+        updated_profile = find_profile_by_bundle_id($bundleId)[:profile]
         profile = download_provisioning_profile(updated_profile)
         $result = {
           result: 'success',
