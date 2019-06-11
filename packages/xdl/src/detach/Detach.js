@@ -381,7 +381,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
   // path generated inside IosShellApp. When we support more than one path, this needs to
   // be smarter.
   const expoRootDir = path.join(projectDir, '..', '..');
-  const workspaceSourcePath = path.join(projectDir, 'default');
+  const workspaceSourcePath = path.join(projectDir, 'ios');
   const buildFlags = StandaloneBuildFlags.createIos('Release', { workspaceSourcePath });
   const context = StandaloneContext.createServiceContext(
     expoRootDir,

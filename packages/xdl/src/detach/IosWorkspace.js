@@ -176,6 +176,8 @@ async function _renderPodfileFromTemplateAsync(
     TARGET_NAME: projectName,
   };
   let reactNativeDependencyPath;
+  let modulesPath;
+
   const detachableUniversalModules = Modules.getDetachableModules(
     'ios',
     context.data.shellAppSdkVersion || sdkVersion
@@ -183,19 +185,18 @@ async function _renderPodfileFromTemplateAsync(
   if (context.type === 'user') {
     invariant(iosClientVersion, `The iOS client version must be specified`);
     reactNativeDependencyPath = path.join(context.data.projectPath, 'node_modules', 'react-native');
+    modulesPath = path.join(context.data.projectPath, 'node_modules');
+
     podfileSubstitutions.EXPOKIT_TAG = `ios/${iosClientVersion}`;
     podfileTemplateFilename = 'ExpoKit-Podfile';
-    const expoDependenciesPath = path.join(context.data.projectPath, 'node_modules');
-    podfileSubstitutions.UNIVERSAL_MODULES = detachableUniversalModules.map(module => ({
-      ...module,
-      path: path.join(expoDependenciesPath, module.libName, module.subdirectory),
-    }));
   } else if (context.type === 'service') {
     reactNativeDependencyPath = path.join(
       expoRootTemplateDirectory,
       'react-native-lab',
       'react-native'
     );
+    modulesPath = path.join(expoRootTemplateDirectory, 'packages');
+
     podfileSubstitutions.EXPOKIT_PATH = path.relative(
       iosProjectDirectory,
       expoRootTemplateDirectory
@@ -204,11 +205,6 @@ async function _renderPodfileFromTemplateAsync(
       iosProjectDirectory,
       path.join(expoRootTemplateDirectory, 'ios', 'versioned-react-native')
     );
-    const modulesPath = path.join(expoRootTemplateDirectory, 'packages');
-    podfileSubstitutions.UNIVERSAL_MODULES = detachableUniversalModules.map(module => ({
-      ...module,
-      path: path.join(modulesPath, module.libName, module.subdirectory),
-    }));
     podfileTemplateFilename = 'ExpoKit-Podfile-versioned';
   } else {
     throw new Error(`Unsupported context type: ${context.type}`);
@@ -217,9 +213,14 @@ async function _renderPodfileFromTemplateAsync(
     iosProjectDirectory,
     reactNativeDependencyPath
   );
-  podfileSubstitutions.UNIVERSAL_MODULES = podfileSubstitutions.UNIVERSAL_MODULES.map(module => ({
+  podfileSubstitutions.UNIVERSAL_MODULES_PATH = path.relative(iosProjectDirectory, modulesPath);
+  podfileSubstitutions.UNIVERSAL_MODULES = detachableUniversalModules.map(module => ({
     ...module,
-    path: path.relative(iosProjectDirectory, module.path),
+    path: path.join(
+      podfileSubstitutions.UNIVERSAL_MODULES_PATH,
+      module.libName,
+      module.subdirectory
+    ),
   }));
 
   // env flags for testing
