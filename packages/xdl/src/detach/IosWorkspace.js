@@ -21,6 +21,7 @@ import * as Utils from '../Utils';
 import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
 import * as Modules from '../modules/Modules';
+import installPackagesAsync from './installPackagesAsync';
 
 async function _getVersionedExpoKitConfigAsync(
   sdkVersion: string,
@@ -256,7 +257,9 @@ async function _renderPodfileFromTemplateAsync(
 }
 
 async function createDetachedAsync(context: StandaloneContext) {
-  const { iosProjectDirectory, projectName, supportingDirectory } = getPaths(context);
+  const { iosProjectDirectory, projectName, supportingDirectory, projectRootDirectory } = getPaths(
+    context
+  );
   logger.info(`Creating ExpoKit workspace at ${iosProjectDirectory}...`);
 
   const isServiceContext = context.type === 'service';
@@ -286,6 +289,19 @@ async function createDetachedAsync(context: StandaloneContext) {
     iosProjectDirectory
   );
 
+  const projectPackageJsonPath = path.join(projectRootDirectory, 'package.json');
+
+  if (!(await fs.exists(projectPackageJsonPath))) {
+    logger.info('Copying blank package.json...');
+    await fs.copy(
+      path.join(expoRootTemplateDirectory, 'exponent-view-template', 'package.json'),
+      projectPackageJsonPath
+    );
+  }
+
+  logger.info('Installing required packages...');
+  await _installRequiredPackagesAsync(projectRootDirectory, standaloneSdkVersion);
+
   logger.info('Naming iOS project...');
   await _renameAndMoveProjectFilesAsync(context, iosProjectDirectory, projectName);
 
@@ -306,6 +322,25 @@ async function createDetachedAsync(context: StandaloneContext) {
       rimrafDontThrow(expoRootTemplateDirectory);
     }
     await IosPlist.cleanBackupAsync(supportingDirectory, 'EXSDKVersions', false);
+  }
+}
+
+async function _getPackagesToInstallWhenEjecting(sdkVersion) {
+  const versions = await Versions.versionsAsync();
+  return versions.sdkVersions[sdkVersion].packagesToInstallWhenEjecting;
+}
+
+async function _installRequiredPackagesAsync(projectRoot, sdkVersion) {
+  const packagesToInstallWhenEjecting = await _getPackagesToInstallWhenEjecting(sdkVersion);
+  const packagesToInstall = [];
+
+  if (packagesToInstallWhenEjecting && typeof packagesToInstallWhenEjecting === 'object') {
+    Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
+      packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
+    });
+  }
+  if (packagesToInstall.length) {
+    await installPackagesAsync(projectRoot, packagesToInstall);
   }
 }
 
@@ -341,6 +376,7 @@ function getPaths(context: StandaloneContext) {
   let projectName;
   let supportingDirectory;
   let intermediatesDirectory;
+  let projectRootDirectory;
 
   if (context.build.isExpoClientBuild()) {
     projectName = 'Exponent';
@@ -353,9 +389,11 @@ function getPaths(context: StandaloneContext) {
     throw new Error('Cannot configure an Expo project with no name.');
   }
   if (context.type === 'user') {
+    projectRootDirectory = context.data.projectPath;
     iosProjectDirectory = path.join(context.data.projectPath, 'ios');
     supportingDirectory = path.join(iosProjectDirectory, projectName, 'Supporting');
   } else if (context.type === 'service') {
+    projectRootDirectory = path.dirname(context.build.ios.workspaceSourcePath);
     iosProjectDirectory = context.build.ios.workspaceSourcePath;
     if (context.data.archivePath) {
       // compiled archive has a flat NSBundle
@@ -373,6 +411,7 @@ function getPaths(context: StandaloneContext) {
     context.build.isExpoClientBuild() ? 'ExponentIntermediates' : 'ExpoKitIntermediates'
   );
   return {
+    projectRootDirectory,
     intermediatesDirectory,
     iosProjectDirectory,
     projectName,
