@@ -211,9 +211,9 @@ function getSplashScreenBackgroundColor(manifest) {
 }
 
 /*
-  if resizeMode is 'contain' (since SDK33) or 'cover' (prior to SDK33) we should show LoadingView:
-  using an ImageView, unlike having a BitmapDrawable
-  provides a fullscreen image without distortions
+  if resizeMode is 'contain' or 'cover' (since SDK33) or 'cover' (prior to SDK33) we should show LoadingView
+  that is presenting splash image in ImageView what allows full control over image sizing unlike
+  ImageDrawable that is provided by Android native splash screen API
 */
 function shouldShowLoadingView(manifest, sdkVersion) {
   const resizeMode =
@@ -222,7 +222,9 @@ function shouldShowLoadingView(manifest, sdkVersion) {
 
   return (
     resizeMode &&
-    (parseSdkMajorVersion(sdkVersion) >= 33 ? resizeMode === 'contain' : resizeMode === 'cover')
+    (parseSdkMajorVersion(sdkVersion) >= 33
+      ? resizeMode === 'contain' || resizeMode === 'cover'
+      : resizeMode === 'cover')
   );
 }
 
@@ -608,7 +610,7 @@ export async function runShellAppModificationsAsync(
     );
   }
 
-  // Handle 'contain' splashScreen mode by showing only background color and then actual splashScreen image inside AppLoadingView
+  // Handle 'contain' and 'cover' splashScreen mode by showing only background color and then actual splashScreen image inside AppLoadingView
   if (shouldShowLoadingView(manifest, sdkVersion)) {
     await regexFileAsync(
       'SHOW_LOADING_VIEW_IN_SHELL_APP = false',
