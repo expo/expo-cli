@@ -100,6 +100,7 @@ export default program => {
       }
 
       const { devices } = await runAction(travelingFastlane.listDevices, [
+        '--all-ios-profile-devices',
         context.appleId,
         context.appleIdPassword,
         context.team.id,
