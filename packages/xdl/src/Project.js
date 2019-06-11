@@ -441,7 +441,7 @@ export async function exportForAppHosting(
   // save the assets
   // Get project config
   const publishOptions = options.publishOptions || {};
-  const { exp } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
+  const { exp, pkg } = await _getPublishExpConfigAsync(projectRoot, publishOptions);
   const { assets } = await _fetchAndSaveAssetsAsync(projectRoot, exp, publicUrl, outputDir);
 
   if (options.dumpAssetmap) {
@@ -493,7 +493,7 @@ export async function exportForAppHosting(
     projectRoot,
     null,
     path.join(outputDir, 'android-index.json'),
-    JSON.stringify(exp)
+    JSON.stringify({ ...exp, dependencies: Object.keys(pkg.dependencies) })
   );
 
   // save the ios manifest
