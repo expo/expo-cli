@@ -28,15 +28,15 @@ def find_dist_cert(serialNumber, isEnterprise)
 end
 
 def register_missing_devices(udids)
-  all_iphones = Spaceship.device.all_iphones
-  already_added = all_iphones.select { |d| d.enabled? and udids.include?(d.udid) }
+  all_ios_profile_devices = Spaceship.device.all_ios_profile_devices
+  already_added = all_ios_profile_devices.select { |d| udids.include?(d.udid) }
   already_added_udids = already_added.map { |i| i.udid }
 
   devices = [*already_added]
 
   udids_to_add = udids - already_added_udids
   udids_to_add.each { |udid|
-    devices.push Spaceship.device.create!(name: "iPhone (added by Expo)", udid: udid)
+    devices.push Spaceship.device.create!(name: "iOS Device (added by Expo)", udid: udid)
   }
 
   devices
