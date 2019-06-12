@@ -1,3 +1,4 @@
+import open from 'open';
 import ora from 'ora';
 import { Credentials } from '@expo/xdl';
 
@@ -25,9 +26,10 @@ async function selectDistributionCert(context, options = {}) {
   }
 
   if (!options.disableCreate) {
-    choices.push({ name: '[Create a new certificate]', value: 'GENERATE' });
+    choices.push({ name: '[Create a new certificate] (Recommended)', value: 'GENERATE' });
   }
   choices.push({ name: '[Upload an existing certificate]', value: 'UPLOAD' });
+  choices.push({ name: '[Show me more info about these choices] ℹ️', value: 'INFO' });
 
   let { distributionCert } = await prompt({
     type: 'list',
@@ -48,6 +50,11 @@ async function selectDistributionCert(context, options = {}) {
 
     // tag for updating to Expo servers
     tagForUpdate(distributionCert);
+  } else if (distributionCert === 'INFO') {
+    open(
+      'https://docs.expo.io/versions/latest/guides/adhoc-builds/#distribution-certificate-cli-options'
+    );
+    distributionCert = await selectDistributionCert(context);
   }
   return distributionCert;
 }
@@ -148,6 +155,7 @@ async function generateDistributionCert(context) {
             name: 'Use an existing certificate',
             value: 'USE_EXISTING',
           },
+          { name: '[Show me more info about these choices] ℹ️', value: 'INFO' },
         ],
       });
       if (answer === 'REVOKE') {
@@ -158,6 +166,11 @@ async function generateDistributionCert(context) {
           disableCreate: true,
           disableAutoSelectExisting: true,
         });
+      } else if (answer === 'INFO') {
+        open(
+          'https://docs.expo.io/versions/latest/guides/adhoc-builds/#distribution-certificate-cli-options'
+        );
+        return await generateDistributionCert(context);
       }
     }
     throw new Error(e);
