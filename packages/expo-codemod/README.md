@@ -4,6 +4,18 @@
 
 The codemods can be used to transform JavaScript (.js, .jsx) and TypeScript (.ts, .tsx) files.
 
+## Installation
+
+You can run `expo-codemod` using `npx` without having to install it (Node.js 8.x, 10.x or 12.x is required):
+```
+npx expo-codemod
+```
+Alternatively, you can install it globally:
+```
+npm install --global expo-codemod
+```
+(Installing with `yarn global add` works too.)
+
 ## Usage
 
 ```sh
@@ -23,21 +35,30 @@ Options:
 Transforms available:
   sdk33-imports
 ```
+For example, to apply the `sdk33-imports` transform to all source files in the `src` folder, run:
+```
+npx expo-codemod sdk33-imports src
+```
+You can also use glob patterns (make sure to wrap the patterns in quotes):
+```
+npx expo-codemod sdk33-imports '**/*.js' '**/*.{ts,tsx}'
+```
 
-### Advanced usage
+### Advanced usage with jscodeshift
 
 The CLI is a wrapper over [jscodeshift](https://github.com/facebook/jscodeshift). If you need more fine grained control of jscodeshift or parser options, you can also use the jscodeshift CLI directly. First install `expo-codemod` and `jscodeshift`:
 
 ```sh
-yarn add --dev expo-codemod
-yarn global add jscodeshift
+npm install --save-dev expo-codemod
+npm install --global jscodeshift
 ```
 
-You can pass the transform filename to jscodeshift using the `--transform` option:
+You can pass the transform filename to jscodeshift using the `--transform` option, for example:
 
 ```sh
-jscodeshift --transform ./node_modules/expo-codemod/build/transforms/sdk33-imports.js --no-babel --parser ts src/**/*.ts
+jscodeshift --transform ./node_modules/expo-codemod/build/transforms/sdk33-imports.js --no-babel --ignore-config .gitignore .
 ```
+Read more about jscodeshift options [here](https://github.com/facebook/jscodeshift#usage-cli).
 
 ## Transforms
 
