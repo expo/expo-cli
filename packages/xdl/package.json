@@ -105,6 +105,7 @@
     "@expo/babel-preset-cli": "^0.1.1",
     "@types/analytics-node": "^3.1.1",
     "@types/getenv": "^0.7.0",
+    "@types/semver": "^6.0.0",
     "babel-jest": "^23.4.0",
     "concurrently": "^4.1.0",
     "cross-env": "^3.1.3",
