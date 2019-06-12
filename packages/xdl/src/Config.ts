@@ -1,12 +1,10 @@
-/**
- * @flow
- */
+import getenv from 'getenv';
 
 import * as Env from './Env';
 
-let scheme = process.env.XDL_SCHEME || 'https';
-let host = process.env.XDL_HOST || 'exp.host';
-let port: ?number = parseInt(process.env.XDL_PORT, 10) || null;
+let scheme = getenv.string('XDL_SCHEME', 'https');
+let host = getenv.string('XDL_HOST', 'exp.host');
+let port = getenv.int('XDL_PORT', 0) || null;
 
 if (Env.isStaging()) {
   host = 'staging.exp.host';
@@ -16,20 +14,20 @@ if (Env.isStaging()) {
   port = 3000;
 }
 
-declare interface XDLConfig {
+interface XDLConfig {
   api: {
-    scheme: string,
-    host: string,
-    port: ?number,
+    scheme: string;
+    host: string;
+    port: number | null;
   };
   ngrok: {
-    authToken: string,
-    authTokenPublicId: string,
-    domain: string,
+    authToken: string;
+    authTokenPublicId: string;
+    domain: string;
   };
-  developerTool: ?string;
+  developerTool: string | null;
   validation: {
-    reactNativeVersionWarnings: boolean,
+    reactNativeVersionWarnings: boolean;
   };
   helpUrl: string;
   offline: boolean;
@@ -46,7 +44,7 @@ const config: XDLConfig = {
     authTokenPublicId: '5W1bR67GNbWcXqmxZzBG1',
     domain: 'exp.direct',
   },
-  developerTool: (null: ?string),
+  developerTool: null,
   validation: {
     reactNativeVersionWarnings: true,
   },
