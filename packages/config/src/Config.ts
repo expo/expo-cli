@@ -389,7 +389,7 @@ function inferWebHomescreenIcons(
     // Use template icon
     icon = options.templateIcon;
   }
-  const destination = `assets/icons`;
+  const destination = `apple/icons`;
   icons.push({ src: icon, size: ICON_SIZES, destination });
   const iOSIcon = config.icon || ios.icon;
   if (iOSIcon) {
@@ -430,7 +430,7 @@ function inferWebStartupImages(
       src: splashImageSource,
       supportsTablet: webSplash.supportsTablet === undefined ? true : webSplash.supportsTablet,
       orientation: web.orientation,
-      destination: `assets/splash`,
+      destination: `apple/splash`,
     });
   }
   return startupImages;

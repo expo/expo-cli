@@ -160,7 +160,7 @@ module.exports = function(env = {}, argv) {
 
   const serviceWorker = overrideWithPropertyOrConfig(
     // Prevent service worker in development mode
-    env.production ? config.web.build.serviceWorker : false,
+    config.web.build.serviceWorker,
     DEFAULT_SERVICE_WORKER
   );
   if (serviceWorker) {
@@ -168,8 +168,15 @@ module.exports = function(env = {}, argv) {
     // the HTML & assets that are part of the Webpack build.
     middlewarePlugins.push(
       new WorkboxPlugin.GenerateSW({
-        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
-        navigateFallback: `${publicPath}index.html`,
+        exclude: [
+          /\.LICENSE$/,
+          /\.map$/,
+          /asset-manifest\.json$/,
+          // Exclude all apple touch images as they are cached locally after the PWA is added.
+          /^\bapple.*\.png$/,
+        ],
+        /// SINGLE PAGE:
+        // navigateFallback: `${publicPath}index.html`,
         clientsClaim: true,
         importWorkboxFrom: 'cdn',
         navigateFallbackBlacklist: [

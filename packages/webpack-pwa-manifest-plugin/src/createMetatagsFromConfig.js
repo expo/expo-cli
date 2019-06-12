@@ -42,6 +42,7 @@ export default function createMetatagsFromConfig(config) {
     'format-detection': apple.formatDetection,
     'apple-touch-fullscreen': apple.touchFullscreen,
     'mobile-web-app-capable': apple.mobileWebAppCapable,
+    'apple-mobile-web-app-capable': apple.mobileWebAppCapable,
     'apple-mobile-web-app-status-bar-style': apple.barStyle,
     'apple-mobile-web-app-title': web.shortName,
   };
