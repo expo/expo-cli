@@ -144,7 +144,7 @@ function getRemoteOrLocalUrl(manifest, key, isDetached) {
   return _.get(manifest, `${key}Url`);
 }
 
-function backgroundImagesForApp(shellPath, manifest, isDetached, sdkVersion) {
+function backgroundImagesForApp(shellPath, manifest, isDetached) {
   // returns an array like:
   // [
   //   {url: 'urlToDownload', path: 'pathToSaveTo'},
@@ -177,17 +177,10 @@ function backgroundImagesForApp(shellPath, manifest, isDetached, sdkVersion) {
 
   let url = getRemoteOrLocalUrl(manifest, 'splash.image', isDetached);
   if (url) {
-    // since SDK33 background_image placeholder is placed in `mdpi` directory
-    // placeholder is shipped with versioned ExpoView, so we're unable to delete/move it
-    // prior to SDK33 placeholder is in `xxxhdpi` and to be sure that device
-    // is not selecting it as a actual SplashScreen image (according to device's DPI)
-    // we place user-provided image in `xxxhdpi` directory as well
-    const drawableDirectory =
-      parseSdkMajorVersion(sdkVersion) >= 33 ? 'drawable-mdpi' : 'drawable-xxxhdpi';
     return [
       {
         url,
-        path: path.join(basePath, drawableDirectory, 'shell_launch_background_image.png'),
+        path: path.join(basePath, 'drawable-xxxhdpi', 'shell_launch_background_image.png'),
       },
     ];
   }
@@ -422,12 +415,7 @@ export async function runShellAppModificationsAsync(
   let bundleUrl: ?string = manifest.bundleUrl;
   let isFullManifest = !!bundleUrl;
   let version = manifest.version ? manifest.version : '0.0.0';
-  let backgroundImages = backgroundImagesForApp(
-    shellPath,
-    manifest,
-    isRunningInUserContext,
-    sdkVersion
-  );
+  let backgroundImages = backgroundImagesForApp(shellPath, manifest, isRunningInUserContext);
   let splashBackgroundColor = getSplashScreenBackgroundColor(manifest);
   let updatesDisabled = manifest.updates && manifest.updates.enabled === false;
 
