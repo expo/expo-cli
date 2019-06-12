@@ -14,7 +14,7 @@ export async function action(projectDir = './', options = {}) {
   }
 
   // Validate custom quality
-  const defaultQuality = 60;
+  const defaultQuality = 80;
   const { quality: strQuality } = options;
 
   const quality = Number(strQuality);
