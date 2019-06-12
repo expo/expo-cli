@@ -20,6 +20,7 @@ import UserSettings from './UserSettings';
 import * as UrlUtils from './UrlUtils';
 import * as Versions from './Versions';
 import { getImageDimensionsAsync } from './tools/ImageUtils';
+import { parseSdkMajorVersion } from './detach/ExponentTools';
 
 let _lastUrl = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -356,10 +357,25 @@ const splashScreenDPIConstraints = [
   },
 ];
 
+/**
+ * Checks whether `resizeMode` is set to `native` and if `true` analyzes provided images for splashscreen
+ * providing `Logger` feedback upon problems.
+ * @param projectDir - directory of the expo project
+ * @since SDK33
+ */
 export async function checkSplashScreenImages(projectDir: string) {
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
-  const splashScreenMode = _.get('android.splash.resizeMode') || _.get(exp, 'splash.resizeMode');
-  if (splashScreenMode === 'contain') {
+
+  // return before SDK33
+  if (parseSdkMajorVersion(exp.sdkVersion) < 33) {
+    return;
+  }
+
+  const splashScreenMode =
+    _.get(exp, 'android.splash.resizeMode') || _.get(exp, 'splash.resizeMode');
+
+  // only mode `native` is handled by this check
+  if (splashScreenMode === 'contain' || splashScreenMode === 'cover') {
     return;
   }
 
@@ -412,7 +428,7 @@ export async function checkSplashScreenImages(projectDir: string) {
 
   if (androidSplashImages.length === 0) {
     Logger.global
-      .warn(`Splash resizeMode is set to 'cover', but you haven't provided any images for different DPIs.
+      .warn(`Splash resizeMode is set to 'native', but you haven't provided any images for different DPIs.
 Be aware that your splash image will be used as xxxhdpi asset and its ${chalk.bold(
       'actual size will be different'
     )} depending on device's DPI.
@@ -422,7 +438,7 @@ See https://docs.expo.io/versions/latest/guides/splash-screens/#differences-betw
 
   if (_.some(androidSplashImages, ({ sizeMatches }) => !sizeMatches)) {
     Logger.global
-      .warn(`Splash resizeMode is set to 'cover' and you've provided different images for different DPIs,
+      .warn(`Splash resizeMode is set to 'native' and you've provided different images for different DPIs,
 but their sizes mismatch expected ones: [dpi: provided (expected)] ${androidSplashImages
       .map(
         ({ dpi, width, height, expectedWidth, expectedHeight }) =>
