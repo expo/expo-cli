@@ -31,7 +31,7 @@
   "license": "MIT",
   "dependencies": {
     "css-color-names": "^1.0.1",
-    "jimp": "^0.6.0",
+    "sharp": "^0.22.1",
     "mime": "^2.4.0"
   },
   "devDependencies": {
