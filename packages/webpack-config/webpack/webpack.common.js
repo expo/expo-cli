@@ -65,7 +65,7 @@ const DEFAULT_BROTLI = {
   minRatio: 0.8,
 };
 
-const DEFAULT_SERVICE_WORKER = {};
+const DEFAULT_WORKBOX = {};
 
 const DEFAULT_REPORT_CONFIG = {
   verbose: true,
@@ -158,12 +158,12 @@ module.exports = function(env = {}, argv) {
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
-  const serviceWorker = overrideWithPropertyOrConfig(
-    // Prevent service worker in development mode
-    config.web.build.serviceWorker,
-    DEFAULT_SERVICE_WORKER
+  const workbox = overrideWithPropertyOrConfig(
+    // Prevent workbox in development mode
+    config.web.build.workbox,
+    DEFAULT_WORKBOX
   );
-  if (serviceWorker) {
+  if (workbox) {
     // Generate a service worker script that will precache, and keep up to date,
     // the HTML & assets that are part of the Webpack build.
     middlewarePlugins.push(
@@ -186,7 +186,7 @@ module.exports = function(env = {}, argv) {
           // public/ and not a SPA route
           new RegExp('/[^/]+\\.[^/]+$'),
         ],
-        ...serviceWorker,
+        ...workbox,
       })
     );
   }
