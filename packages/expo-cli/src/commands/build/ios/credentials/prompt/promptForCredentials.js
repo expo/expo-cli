@@ -35,7 +35,7 @@ async function promptForCredentials(appleCtx, types, printWarning = true) {
     }
     const valueKeys = Object.keys(value);
     credentials[type] = valueKeys.length === 1 ? value[valueKeys[0]] : value;
-    metadata = Object.assign(metadata, await _calculateMetadata(credentials[type]));
+    Object.assign(metadata, await _calculateMetadata(credentials[type]));
   }
 
   return [credentials, metadata];
