@@ -85,7 +85,7 @@
     "lodash": "4.17.10",
     "match-require": "2.1.0",
     "npm-package-arg": "6.1.0",
-    "opn": "5.4.0",
+    "open": "6.3.0",
     "ora": "1.4.0",
     "pacote": "9.3.0",
     "pngjs": "3.4.0",

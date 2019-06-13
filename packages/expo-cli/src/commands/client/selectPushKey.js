@@ -1,3 +1,4 @@
+import open from 'open';
 import ora from 'ora';
 import { Credentials } from '@expo/xdl';
 
@@ -25,10 +26,11 @@ async function selectPushKey(context, options = {}) {
   }
 
   if (!options.disableCreate) {
-    choices.push({ name: '[Create a new key]', value: 'GENERATE' });
+    choices.push({ name: '[Create a new key] (Recommended)', value: 'GENERATE' });
   }
   choices.push({ name: '[Upload an existing key]', value: 'UPLOAD' });
   choices.push({ name: '[Skip. This will disable push notifications.]', value: 'SKIP' });
+  choices.push({ name: '[Show me more info about these choices] ℹ️', value: 'INFO' });
 
   let { pushKey } = await prompt({
     type: 'list',
@@ -50,6 +52,9 @@ async function selectPushKey(context, options = {}) {
     tagForUpdate(pushKey);
   } else if (pushKey === 'SKIP') {
     pushKey = null;
+  } else if (pushKey === 'INFO') {
+    open('https://docs.expo.io/versions/latest/guides/adhoc-builds/#push-key-cli-options');
+    pushKey = await selectPushKey(context);
   }
   return pushKey;
 }
@@ -145,6 +150,7 @@ async function generatePushKey(context) {
             name: '[Skip. This will disable push notifications.]',
             value: 'SKIP',
           },
+          { name: '[Show me more info about these choices] ℹ️', value: 'INFO' },
         ],
       });
       if (answer === 'REVOKE') {
@@ -157,6 +163,9 @@ async function generatePushKey(context) {
         });
       } else if (answer === 'SKIP') {
         return null;
+      } else if (answer === 'INFO') {
+        open('https://docs.expo.io/versions/latest/guides/adhoc-builds/#push-key-cli-options');
+        return await generatePushKey(context);
       }
     }
     throw new Error(e);
