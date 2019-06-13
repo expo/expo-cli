@@ -27,8 +27,6 @@ import * as ProjectSettings from './ProjectSettings';
 // FIXME(perry) eliminate usage of this template
 export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 
-export { default as convertProjectAsync } from './project/Convert';
-
 export async function determineEntryPointAsync(root: string) {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(root);
 
