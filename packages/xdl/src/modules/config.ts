@@ -1,3 +1,21 @@
+export type ModuleConfig = {
+  podName?: string;
+  libName: string;
+  sdkVersions: string;
+  isNativeModule: boolean;
+  config: {
+    android: NativeConfig;
+    ios: NativeConfig;
+  };
+};
+
+export type NativeConfig = {
+  subdirectory: string;
+  versionable: boolean;
+  detachable: boolean;
+  includeInExpoClient: boolean;
+};
+
 const defaultUniversalModuleConfig = {
   ios: {
     // subdirectory in which the module podspec is placed.
@@ -41,7 +59,7 @@ const firebaseModuleConfig = {
   },
 };
 
-const expoSdkUniversalModules = [
+const expoUniversalModules = [
   // native modules
   {
     podName: 'EXAdsAdMob',
@@ -494,9 +512,6 @@ const expoSdkUniversalModules = [
     sdkVersions: '>=29.0.0',
     isNativeModule: false,
   },
-];
-
-const universalModules = [
   {
     podName: 'UMCore',
     libName: '@unimodules/core',
@@ -564,7 +579,7 @@ const universalModules = [
   },
 ];
 
-const vendoredNativeModules = [
+export const vendoredNativeModules = [
   { libName: '@expo/vector-icons', sdkVersions: '>=26.0.0', isNativeModule: true },
   { libName: '@react-native-community/netinfo', sdkVersions: '>=33.0.0', isNativeModule: true },
   { libName: 'lottie-react-native', sdkVersions: '>=26.0.0', isNativeModule: true },
@@ -578,34 +593,32 @@ const vendoredNativeModules = [
   { libName: 'react-native-webview', sdkVersions: '>=33.0.0', isNativeModule: true },
 ];
 
-function defaults(defaultConfig, ...customConfigs) {
-  const config = { ...defaultConfig };
-  for (const customConfig of customConfigs) {
-    if (customConfig) {
-      Object.assign(config, customConfig || {});
-    }
-  }
-  return config;
+function defaults(
+  defaultConfig: NativeConfig,
+  ...customConfigs: (Partial<NativeConfig> | undefined)[]
+) {
+  return Object.assign({}, defaultConfig, ...customConfigs);
 }
 
-const expoUniversalModules = [...universalModules, ...expoSdkUniversalModules];
-
-const expoSdkUniversalModulesConfigs = expoUniversalModules.map(
-  ({ config, podName, libName, sdkVersions, isNativeModule, ...params }) => {
+export const expoSdkUniversalModulesConfigs: ModuleConfig[] = expoUniversalModules.map(
+  ({ config = {}, podName, libName, sdkVersions, isNativeModule = true, ...params }) => {
     return {
       podName,
       libName,
       sdkVersions,
-      isNativeModule: isNativeModule == null ? true : isNativeModule,
+      isNativeModule,
       config: {
-        ios: defaults(defaultUniversalModuleConfig.ios, params, config && config.ios),
-        android: defaults(defaultUniversalModuleConfig.android, params, config && config.android),
+        ios: defaults(
+          defaultUniversalModuleConfig.ios,
+          params,
+          'ios' in config ? config.ios : undefined
+        ),
+        android: defaults(
+          defaultUniversalModuleConfig.android,
+          params,
+          'android' in config ? config.android : undefined
+        ),
       },
     };
   }
 );
-
-module.exports = {
-  expoSdkUniversalModulesConfigs,
-  vendoredNativeModules,
-};

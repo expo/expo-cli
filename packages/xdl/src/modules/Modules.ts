@@ -1,23 +1,14 @@
-/**
- * @flow
- */
-
 import semver from 'semver';
 
-import { expoSdkUniversalModulesConfigs, vendoredNativeModules } from './config';
+import {
+  expoSdkUniversalModulesConfigs,
+  vendoredNativeModules,
+  ModuleConfig,
+  NativeConfig,
+} from './config';
 
+type PlatformSpecificModuleConfig = ModuleConfig & NativeConfig;
 type Platform = 'ios' | 'android';
-
-type ModuleConfig = {
-  podName: string,
-  libName: string,
-  sdkVersions: string,
-  detachable: boolean,
-  isNativeModule: boolean,
-  subdirectory: string,
-  versionable: boolean,
-  includeInExpoClient: boolean,
-};
 
 const HIGHEST_KNOWN_VERSION = '10000.0.0';
 
@@ -27,20 +18,24 @@ export function getAllNativeModules() {
   );
 }
 
-function mapForPlatform(platform: Platform): () => ModuleConfig {
-  return moduleConfig => ({ ...moduleConfig, ...moduleConfig.config[platform] });
-}
-
-export function getAllForPlatform(platform: Platform, sdkVersion: string): Array<ModuleConfig> {
+export function getAllForPlatform(
+  platform: Platform,
+  sdkVersion: string
+): PlatformSpecificModuleConfig[] {
   return expoSdkUniversalModulesConfigs
-    .filter(moduleConfig => doesVersionSatisfy(sdkVersion, moduleConfig.sdkVersions))
-    .map(mapForPlatform(platform));
+    .filter((moduleConfig: ModuleConfig) =>
+      doesVersionSatisfy(sdkVersion, moduleConfig.sdkVersions)
+    )
+    .map((moduleConfig: ModuleConfig) => ({
+      ...moduleConfig,
+      ...moduleConfig.config[platform],
+    }));
 }
 
 export function getAllNativeForExpoClientOnPlatform(
   platform: Platform,
   sdkVersion: string
-): Array<ModuleConfig> {
+): PlatformSpecificModuleConfig[] {
   return getAllForPlatform(platform, sdkVersion).filter(
     moduleConfig => moduleConfig.includeInExpoClient && moduleConfig.isNativeModule
   );
@@ -49,21 +44,24 @@ export function getAllNativeForExpoClientOnPlatform(
 export function getVersionableModulesForPlatform(
   platform: Platform,
   sdkVersion: string
-): Array<ModuleConfig> {
+): PlatformSpecificModuleConfig[] {
   return getAllNativeForExpoClientOnPlatform(platform, sdkVersion).filter(moduleConfig => {
     return moduleConfig.versionable;
   });
 }
 
-export function getDetachableModules(platform: Platform, sdkVersion: string): Array<ModuleConfig> {
+export function getDetachableModules(
+  platform: Platform,
+  sdkVersion: string
+): PlatformSpecificModuleConfig[] {
   return getAllForPlatform(platform, sdkVersion).filter(
     moduleConfig => moduleConfig.isNativeModule && moduleConfig.detachable
   );
 }
 
-export function getPublishableModules(sdkVersion: string): Array<ModuleConfig> {
+export function getPublishableModules(sdkVersion: string): ModuleConfig[] {
   return expoSdkUniversalModulesConfigs.filter(
-    moduleConfig =>
+    (moduleConfig: ModuleConfig) =>
       !!moduleConfig.libName && doesVersionSatisfy(sdkVersion, moduleConfig.sdkVersions)
   );
 }
