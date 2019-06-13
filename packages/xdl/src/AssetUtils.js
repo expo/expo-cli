@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import chalk from 'chalk';
-import sharp from 'sharp';
 import glob from 'glob';
 import JsonFile from '@expo/json-file';
+import * as Sharp from './Sharp';
 import logger from './Logger';
 import { readConfigJsonAsync } from './project/ProjectUtils';
 
@@ -35,21 +35,18 @@ export const calculateHash = file => {
  */
 export const optimizeImageAsync = async (image, newName, quality) => {
   logger.global.info(`Optimizing ${image}`);
+
+  // Copy the image to back it up
   fs.copyFileSync(image, newName);
 
-  // Extract the format and compress
-  const buffer = await sharp(image).toBuffer();
-  const { format } = await sharp(buffer).metadata();
-  if (format === 'jpeg') {
-    await sharp(newName)
-      .jpeg({ quality })
-      .toFile(image)
-      .catch(err => logger.global.error(err));
+  if (await Sharp.isAvailableAsync()) {
+    try {
+      await Sharp.compressAsync({ input: newName, output: image, quality });
+    } catch (e) {
+      logger.global.error(e);
+    }
   } else {
-    await sharp(newName)
-      .png({ quality })
-      .toFile(image)
-      .catch(err => logger.global.error(err));
+    logger.global.warn('Unable to optimize images. Please install @expo/sharp-cli globally.');
   }
 };
 
