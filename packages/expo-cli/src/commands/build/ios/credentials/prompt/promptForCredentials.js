@@ -23,7 +23,7 @@ async function promptForCredentials(appleCtx, types, printWarning = true) {
     log(EXPERT_PROMPT);
   }
   const credentials = {};
-  let metadata = {};
+  const metadata = {};
   for (const type of types) {
     const value = {};
     const { name, required, questions } = constants.CREDENTIALS[type];
