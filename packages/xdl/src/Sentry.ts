@@ -1,6 +1,3 @@
-/**
- * @flow
- */
 import Raven from 'raven';
 import Config from './Config';
 
@@ -9,17 +6,17 @@ const SENTRY_DSN =
 
 Raven.config(SENTRY_DSN).install();
 
-export function logError(message: string, options?: Object): void {
+export function logError(message: string, options?: any): void {
   // send error to Sentry
   // add `testing: true` to tags to avoid sending an email when testing
   Raven.captureMessage(message, getOptions(options));
 }
 
-export function captureException(ex: Error, options?: Object) {
+export function captureException(ex: Error, options?: any) {
   Raven.captureException(ex, getOptions(options));
 }
 
-function getOptions(options = {}) {
+function getOptions(options: any = {}) {
   return {
     ...options,
     tags: {

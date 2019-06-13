@@ -17,7 +17,7 @@ const writeFileAtomicAsync: (
   options: writeFileAtomic.Options
 ) => void = promisify(writeFileAtomic);
 
-export type JSONValue = boolean | number | string | null | JSONArray | JSONObject;
+export type JSONValue = boolean | number | string | null | JSONArray | JSONObject | undefined;
 export interface JSONArray extends Array<JSONValue> {}
 export interface JSONObject {
   [key: string]: JSONValue;
@@ -74,11 +74,11 @@ export default class JsonFile<TJSONObject extends JSONObject> {
     return writeAsync(this.file, object, this._getOptions(options));
   }
 
-  async getAsync<K extends keyof TJSONObject, DefaultValue>(
+  async getAsync<K extends keyof TJSONObject, TDefault extends TJSONObject[K] | null>(
     key: K,
-    defaultValue: DefaultValue,
+    defaultValue: TDefault,
     options?: Options<TJSONObject>
-  ): Promise<TJSONObject[K] | DefaultValue> {
+  ): Promise<TJSONObject[K] | TDefault> {
     return getAsync(this.file, key, defaultValue, this._getOptions(options));
   }
 

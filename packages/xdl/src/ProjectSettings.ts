@@ -1,8 +1,4 @@
-/**
- * @flow
- */
-
-import _ from 'lodash';
+import defaults from 'lodash/defaults';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';
@@ -47,7 +43,7 @@ export async function readAsync(projectRoot: string) {
   }
 
   // Set defaults for any missing fields
-  _.defaults(projectSettings, projectSettingsDefaults);
+  defaults(projectSettings, projectSettingsDefaults);
   return projectSettings;
 }
 
@@ -58,7 +54,7 @@ export async function setAsync(projectRoot: string, json: any) {
     });
   } catch (e) {
     return await projectSettingsJsonFile(projectRoot, projectSettingsFile).writeAsync(
-      _.defaults(json, projectSettingsDefaults)
+      defaults(json, projectSettingsDefaults)
     );
   }
 }
