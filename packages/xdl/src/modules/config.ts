@@ -310,8 +310,8 @@ const expoUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
-    podName: 'EXDeviceInfo',
-    libName: 'expo-device-info',
+    podName: 'EXDevice',
+    libName: 'expo-device',
     sdkVersions: '>=34.0.0',
   },
   {
