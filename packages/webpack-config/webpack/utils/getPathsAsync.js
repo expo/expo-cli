@@ -23,7 +23,7 @@ const possibleMainFiles = [
 
 const appDirectory = fs.realpathSync(process.cwd());
 
-module.exports = function getPaths({ locations, projectRoot }) {
+module.exports = async function getPaths({ locations, projectRoot }) {
   // Recycle locations
   if (locations) {
     return locations;
@@ -55,11 +55,12 @@ module.exports = function getPaths({ locations, projectRoot }) {
     }
   }
 
+  const { exp: nativeAppManifest, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+
   const packageJsonPath = absolute('package.json');
-  const appJsonPath = absolute('app.json');
   const modulesPath = getModulesPath();
 
-  const { main } = require(packageJsonPath);
+  const { main } = pkg;
   let appMain;
   if (!main) {
     // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
@@ -73,7 +74,6 @@ module.exports = function getPaths({ locations, projectRoot }) {
     appMain = main;
   }
 
-  const nativeAppManifest = require(appJsonPath);
   const config = ConfigUtils.ensurePWAConfig(nativeAppManifest);
 
   const productionPath = absolute(config.web.build.output);
@@ -99,7 +99,6 @@ module.exports = function getPaths({ locations, projectRoot }) {
     absolute,
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
-    appJson: appJsonPath,
     root: absoluteProjectRoot,
     appMain: absolute(appMain),
     modules: modulesPath,

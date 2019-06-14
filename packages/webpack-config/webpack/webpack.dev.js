@@ -1,18 +1,18 @@
 const path = require('path');
 const merge = require('webpack-merge');
 const common = require('./webpack.common.js');
-const getConfig = require('./utils/getConfig');
+const getConfigAsync = require('./utils/getConfigAsync');
 
-const createDevServerConfig = require('./createDevServerConfig');
+const createDevServerConfigAsync = require('./createDevServerConfigAsync');
 
-module.exports = function(env = {}, argv) {
+module.exports = async function(env = {}, argv) {
   if (!env.config) {
     // Fill all config values with PWA defaults
-    env.config = getConfig(env);
+    env.config = await getConfigAsync(env);
   }
 
-  const devServer = createDevServerConfig(env, argv);
-  return merge(common(env, argv), {
+  const devServer = await createDevServerConfigAsync(env, argv);
+  return merge(await common(env, argv), {
     output: {
       // Add comments that describe the file import/exports.
       // This will make it easier to debug.

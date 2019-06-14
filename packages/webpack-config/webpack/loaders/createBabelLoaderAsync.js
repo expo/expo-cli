@@ -1,6 +1,6 @@
 const path = require('path');
 const chalk = require('chalk');
-const getPaths = require('../utils/getPaths');
+const getPathsAsync = require('../utils/getPathsAsync');
 const getModule = name => path.join('node_modules', name);
 
 // Only compile files from the react ecosystem.
@@ -34,17 +34,17 @@ function logPackage(packageName) {
   }
 }
 
-function ensureRoot(possibleProjectRoot) {
+async function ensureRootAsync(possibleProjectRoot) {
   if (typeof possibleProjectRoot === 'string') {
     return possibleProjectRoot;
   }
-  return getPaths().root;
+  return (await getPathsAsync()).root;
 }
 /**
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
  */
-module.exports = function({
+module.exports = async function({
   /**
    * The webpack mode: `"production" | "development"`
    */
@@ -54,7 +54,7 @@ module.exports = function({
   verbose,
   ...options
 } = {}) {
-  const ensuredProjectRoot = ensureRoot(babelProjectRoot);
+  const ensuredProjectRoot = await ensureRootAsync(babelProjectRoot);
   const modules = [...includeModulesThatContainPaths, ...include];
   const customUse = options.use || {};
   const customUseOptions = customUse.options || {};

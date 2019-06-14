@@ -10,7 +10,7 @@ const ManifestPlugin = require('webpack-manifest-plugin');
 const { createEnvironmentConstants } = require('@expo/config');
 const { DefinePlugin } = require('webpack');
 const createClientEnvironment = require('./createClientEnvironment');
-const getPaths = require('./utils/getPaths');
+const getPathsAsync = require('./utils/getPathsAsync');
 const { overrideWithPropertyOrConfig } = require('./utils/config');
 const getMode = require('./utils/getMode');
 const DEFAULT_ALIAS = {
@@ -36,11 +36,11 @@ const DEFAULT_ALIAS = {
 };
 
 const createFontLoader = require('./loaders/createFontLoader');
-const createBabelLoader = require('./loaders/createBabelLoader');
-const getConfig = require('./utils/getConfig');
+const createBabelLoaderAsync = require('./loaders/createBabelLoaderAsync');
+const getConfigAsync = require('./utils/getConfigAsync');
 
 // { production, development, mode, projectRoot }
-module.exports = function(env = {}, argv = {}) {
+module.exports = async function(env = {}, argv = {}) {
   const {
     /**
      * **Dangerously** disable, extend, or clobber the default alias.
@@ -67,13 +67,13 @@ module.exports = function(env = {}, argv = {}) {
     supportsFontLoading = true,
   } = argv;
 
-  const config = expoConfig || getConfig(env);
+  const config = expoConfig || (await getConfigAsync(env));
   const alias = overrideWithPropertyOrConfig(aliasProp, DEFAULT_ALIAS, true);
 
-  const locations = getPaths(env);
+  const locations = await getPathsAsync(env);
   const mode = getMode(env);
 
-  const babelConfig = createBabelLoader({
+  const babelConfig = await createBabelLoaderAsync({
     mode,
     babelProjectRoot: locations.root,
   });

@@ -1,13 +1,13 @@
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-const getPaths = require('./utils/getPaths');
+const getPathsAsync = require('./utils/getPathsAsync');
 
 const host = process.env.HOST || '0.0.0.0';
 
-module.exports = function(env = {}, argv, allowedHost, proxy = undefined) {
+module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) {
   const { https = false, config: { web: { build: { publicPath = '/' } = {} } = {} } = {} } = env;
-  const locations = getPaths(env);
+  const locations = await getPathsAsync(env);
   // https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpackDevServer.config.js
   const CRA = {
     // Enable gzip compression of generated files.

@@ -1,11 +1,11 @@
 const { getConfigForPWA } = require('@expo/config');
-const getPaths = require('./getPaths');
+const getPathsAsync = require('./getPathsAsync');
 
-module.exports = function(env) {
+module.exports = async function(env) {
   if (env.config) {
     return env.config;
   }
-  const locations = getPaths(env);
+  const locations = await getPathsAsync(env);
   // Fill all config values with PWA defaults
   return getConfigForPWA(env.projectRoot, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),

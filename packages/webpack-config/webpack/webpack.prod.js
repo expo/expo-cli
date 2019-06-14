@@ -3,22 +3,22 @@ const TerserPlugin = require('terser-webpack-plugin');
 const isWsl = require('is-wsl');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const safePostCssParser = require('postcss-safe-parser');
-const getConfig = require('./utils/getConfig');
-const getPaths = require('./utils/getPaths');
+const getConfigAsync = require('./utils/getConfigAsync');
+const getPathsAsync = require('./utils/getPathsAsync');
 const common = require('./webpack.common.js');
 
-module.exports = function(env = {}, argv) {
+module.exports = async function(env = {}, argv) {
   if (!env.config) {
     // Fill all config values with PWA defaults
-    env.config = getConfig(env);
+    env.config = await getConfigAsync(env);
   }
 
-  const locations = getPaths(env);
+  const locations = await getPathsAsync(env);
 
   const shouldUseSourceMap =
     env.config.web.build.devtool !== undefined && env.config.web.build.devtool;
 
-  return merge(common(env, argv), {
+  return merge(await common(env, argv), {
     output: {
       path: locations.production.folder,
       filename: 'static/js/[name].[contenthash:8].js',
