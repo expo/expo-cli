@@ -18,19 +18,11 @@ $appleId, $password, $teamId = ARGV
 ENV['FASTLANE_TEAM_ID'] = $teamId
 
 def get_devices(options)
-  # if no options were specified, return all devices by default
-  if options.empty?
-    return Spaceship::Portal.device.all.map { |device| device.raw_data }
-  end
-
-  # merge devices from all options
-  devices = Set.new()
   if options[:iosProfileDevices]
-    ios_profile_devices = Spaceship::Portal.device.all_ios_profile_devices.map { |device| device.raw_data }
-    devices.merge(ios_profile_devices)
+    Spaceship::Portal.device.all_ios_profile_devices.map { |device| device.raw_data }
+  else
+    Spaceship::Portal.device.all.map { |device| device.raw_data }
   end
-
-  return devices.to_a
 end
 
 def list_devices(options)
