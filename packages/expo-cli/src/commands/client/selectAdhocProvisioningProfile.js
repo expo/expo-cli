@@ -3,10 +3,12 @@ import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
 import { tagForUpdate } from './tagger';
 import log from '../../log';
 
-// XXX: workaround for https://github.com/babel/babel/issues/6262
-export default selectAdhocProvisioningProfile;
-
-async function selectAdhocProvisioningProfile(context, udids, distCertSerialNumber, options = {}) {
+export default async function selectAdhocProvisioningProfile(
+  context,
+  udids,
+  distCertSerialNumber,
+  options = {}
+) {
   const spinner = ora(`Handling Adhoc provisioning profiles on Apple Developer Portal...`).start();
   const args = [
     '--apple-id',
