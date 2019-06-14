@@ -107,7 +107,7 @@ export default (program: any) => {
 
   program
     .command('build:web [project-dir]')
-    .option('--no-polyfill', 'Prevent webpack from including @babel/polyfill')
+    .option('--polyfill', 'Include @babel/polyfill')
     .option(
       '--no-pwa',
       'Prevent webpack from generating the manifest.json and injecting meta into the index.html head.'
