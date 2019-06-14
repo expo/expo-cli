@@ -310,6 +310,11 @@ const expoUniversalModules = [
     sdkVersions: '>=29.0.0',
   },
   {
+    podName: 'EXDevice',
+    libName: 'expo-device',
+    sdkVersions: '>=34.0.0',
+  },
+  {
     podName: 'EXGL-CPP',
     libName: 'expo-gl-cpp',
     sdkVersions: '>=29.0.0',
