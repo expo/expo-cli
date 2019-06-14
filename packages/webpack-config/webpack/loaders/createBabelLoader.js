@@ -61,7 +61,7 @@ module.exports = function({
 
   const isProduction = mode === 'production';
   return {
-    test: /\.[jt]sx?$/,
+    test: /\.(js|mjs|jsx|ts|tsx)$/,
     // Can only clobber test
     // Prevent clobbering the `include` and `use` values.
     ...options,

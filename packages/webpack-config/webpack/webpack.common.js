@@ -115,7 +115,7 @@ const fallbackLoaderConfiguration = {
   // by webpacks internal loaders.
 
   // Excludes: js, jsx, ts, tsx, html, json
-  exclude: [/\.jsx?$/, /\.tsx?$/, /\.html$/, /\.json$/],
+  exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
   options: {
     name: 'static/media/[name].[hash:8].[ext]',
   },
@@ -146,7 +146,7 @@ module.exports = function(env = {}, argv) {
   const mode = getMode(env);
   const isDev = mode === 'development';
   const isProd = mode === 'production';
-
+  const useTypeScript = true;
   const locations = getPaths(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
@@ -429,17 +429,9 @@ module.exports = function(env = {}, argv) {
     },
     resolve: {
       alias: DEFAULT_ALIAS,
-      extensions: [
-        '.web.ts',
-        '.web.tsx',
-        '.ts',
-        '.tsx',
-        '.web.js',
-        '.web.jsx',
-        '.js',
-        '.jsx',
-        '.json',
-      ],
+      extensions: locations.extensions
+        .map(ext => `.${ext}`)
+        .filter(ext => useTypeScript || !ext.includes('ts')),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
         // guards against forgotten dependencies and such.

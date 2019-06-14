@@ -2,24 +2,43 @@ const path = require('path');
 const findWorkspaceRoot = require('find-yarn-workspace-root');
 const fs = require('fs');
 const ConfigUtils = require('@expo/config');
-const possibleMainFiles = [
-  'index.web.ts',
-  'index.ts',
-  'index.web.tsx',
-  'index.tsx',
-  'src/index.web.ts',
-  'src/index.ts',
-  'src/index.web.tsx',
-  'src/index.tsx',
-  'index.web.js',
-  'index.js',
-  'index.web.jsx',
-  'index.jsx',
-  'src/index.web.js',
-  'src/index.js',
-  'src/index.web.jsx',
-  'src/index.jsx',
+
+const possibleMainFiles = ['index', 'src/index'];
+
+const extensions = [
+  'web.mjs',
+  'mjs',
+  'web.js',
+  'js',
+  'web.ts',
+  'ts',
+  'web.tsx',
+  'tsx',
+  'json',
+  'web.jsx',
+  'jsx',
 ];
+
+const resolveModuleExists = (resolveFn, filePath) => {
+  const extension = extensions.find(extension =>
+    fs.existsSync(resolveFn(`${filePath}.${extension}`))
+  );
+
+  if (extension) {
+    return resolveFn(`${filePath}.${extension}`);
+  }
+
+  return null;
+};
+const resolveModule = (resolveFn, filePath) => {
+  const file = resolveModuleExists(resolveFn, filePath);
+
+  if (file) {
+    return file;
+  }
+
+  return resolveFn(`${filePath}.js`);
+};
 
 const appDirectory = fs.realpathSync(process.cwd());
 
@@ -38,8 +57,8 @@ module.exports = function getPaths({ locations, projectRoot }) {
 
   function findMainFile() {
     for (const fileName of possibleMainFiles) {
-      const filePath = absolute(fileName);
-      if (fs.existsSync(filePath)) {
+      const filePath = resolveModuleExists(absolute, fileName);
+      if (filePath) {
         return filePath;
       }
     }
@@ -76,10 +95,11 @@ module.exports = function getPaths({ locations, projectRoot }) {
   const nativeAppManifest = require(appJsonPath);
   const config = ConfigUtils.ensurePWAConfig(nativeAppManifest);
 
-  const productionPath = absolute(config.web.build.output);
+  const productionPath = absolute(config.web.build.output || 'web-build');
+  const staticPath = absolute(config.web.build.static || 'web');
 
   function templatePath(filename = '') {
-    const overridePath = absolute('web', filename);
+    const overridePath = absolute(staticPath, filename);
     if (fs.existsSync(overridePath)) {
       return overridePath;
     } else {
@@ -97,6 +117,7 @@ module.exports = function getPaths({ locations, projectRoot }) {
 
   return {
     absolute,
+    extensions,
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     appJson: appJsonPath,
