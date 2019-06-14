@@ -66,7 +66,7 @@ export async function action(projectDir = './', options = {}) {
 
   const files = (await fs.readdir(templateFolder)).filter(item => item !== 'icon.png');
   // { expo: { web: { staticPath: ... } } }
-  const { web: { staticPath = 'web' } = {} } = exp;
+  const { web: { build: { static: staticPath = 'web' } = {} } = {} } = exp;
 
   const allFiles = ['webpack.config.js', ...files.map(file => path.join(staticPath, file))];
   let values = [];
