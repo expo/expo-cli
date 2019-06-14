@@ -22,6 +22,8 @@ const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
 
+let exponentClient = 'xdl';
+
 function ApiError(code, message) {
   let err = new Error(message);
   // $FlowFixMe error has no property code
@@ -57,6 +59,7 @@ async function _callMethodAsync(
 
   let headers: any = {
     'Exp-ClientId': clientId,
+    'Exponent-Client': exponentClient,
   };
 
   if (skipValidationToken) {
@@ -154,7 +157,7 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
     response.data
       .on('data', chunk => {
         downloadProgress += chunk.length;
-        const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
+        const roundedProgress = Math.floor(downloadProgress / totalDownloadSize * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);
@@ -188,6 +191,10 @@ export default class ApiClient {
   static port: number = Config.api.port || 80;
 
   static _schemaCaches = {};
+
+  static setClientName(name: string) {
+    exponentClient = name;
+  }
 
   static async callMethodAsync(
     methodName: string,
