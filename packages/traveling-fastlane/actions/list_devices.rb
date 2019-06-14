@@ -6,7 +6,7 @@ require_relative 'funcs'
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = "Usage: example.rb [options]"
+  opts.banner = "Usage: list_devices.rb [options] appleId password teamId"
 
   opts.on("-p", "--all-ios-profile-devices", "all devices that can be used for iOS profiles") do |ios_profile_devices|
     options[:iosProfileDevices] = ios_profile_devices
