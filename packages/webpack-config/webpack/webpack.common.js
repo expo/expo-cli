@@ -186,6 +186,11 @@ module.exports = async function(env = {}, argv) {
           // public/ and not a SPA route
           new RegExp('/[^/]+\\.[^/]+$'),
         ],
+        ...(isDev
+          ? {
+              include: [], // Don't cache any assets in dev mode.
+            }
+          : {}),
         ...serviceWorker,
       })
     );
