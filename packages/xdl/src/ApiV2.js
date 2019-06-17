@@ -50,6 +50,7 @@ type APIV2ClientOptions = {
 
 export default class ApiV2Client {
   sessionSecret: ?string = null;
+  static exponentClient: string = 'xdl';
 
   static clientForUser(user): ApiV2Client {
     if (user && user.sessionSecret) {
@@ -57,6 +58,10 @@ export default class ApiV2Client {
     }
 
     return new ApiV2Client();
+  }
+
+  static setClientName(name: string) {
+    ApiV2Client.exponentClient = name;
   }
 
   constructor(options: APIV2ClientOptions = {}) {
@@ -145,7 +150,7 @@ export default class ApiV2Client {
       url,
       method: options.httpMethod,
       headers: {
-        'Exponent-Client': 'xdl',
+        'Exponent-Client': ApiV2Client.exponentClient,
       },
       json: typeof options.json !== 'undefined' ? options.json : false,
     };

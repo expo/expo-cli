@@ -19,6 +19,8 @@ import simpleSpinner from '@expo/simple-spinner';
 import getenv from 'getenv';
 import program, { Command } from 'commander';
 import {
+  Api,
+  ApiV2,
   Analytics,
   Binaries,
   Config,
@@ -37,6 +39,9 @@ import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import packageJSON from '../package.json';
+
+Api.setClientName(packageJSON.version);
+ApiV2.setClientName(packageJSON.version);
 
 // The following prototyped functions are not used here, but within in each file found in `./commands`
 // Extending commander to easily add more options to certain command line arguments
@@ -60,7 +65,7 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
   return this.action(async (...args) => {
     if (!skipUpdateCheck) {
       try {
-        await checkForUpdateAsync();
+        await checkCliVersionAsync();
       } catch (e) {}
     }
 
@@ -399,8 +404,8 @@ function runAsync(programName) {
   }
 }
 
-async function checkForUpdateAsync() {
-  let { updateIsAvailable, current, latest } = await update.checkForUpdateAsync();
+async function checkCliVersionAsync() {
+  let { updateIsAvailable, current, latest, deprecated } = await update.checkForUpdateAsync();
   if (updateIsAvailable) {
     log.nestedWarn(
       boxen(
@@ -408,6 +413,21 @@ async function checkForUpdateAsync() {
 You are currently using ${packageJSON.name} ${current}
 Run \`npm install -g ${packageJSON.name}\` to get the latest version`),
         { borderColor: 'green', padding: 1 }
+      )
+    );
+  }
+
+  if (deprecated) {
+    log.nestedWarn(
+      boxen(
+        chalk.red(
+          `This version of expo-cli is not supported anymore. 
+It's highly recommended to update to the newest version.
+
+Api endpoints used in this version of expo-cli might not exist,
+any interaction with expo servers may result in unexpected behaviour.`
+        ),
+        { borderColor: 'red', padding: 1 }
       )
     );
   }

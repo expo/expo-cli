@@ -71,6 +71,7 @@
     "ncp": "2.0.0",
     "node-forge": "0.7.6",
     "p-timeout": "2.0.1",
+    "package-json": "^6.4.0",
     "pacote": "9.3.0",
     "plist": "2.1.0",
     "probe-image-size": "^4.0.0",
