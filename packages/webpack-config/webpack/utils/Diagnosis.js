@@ -2,7 +2,7 @@ const chalk = require('chalk');
 const diff = require('deep-diff');
 const { ensurePWAConfig, readConfigJson } = require('@expo/config');
 const fs = require('fs');
-const getPaths = require('./getPaths');
+const getPathsAsync = require('./getPathsAsync');
 
 // https://stackoverflow.com/a/51319962/4047926
 function colorizeKeys(json) {
@@ -78,10 +78,10 @@ function logWebpackConfigComponents(webpackConfig) {
   logFooter();
 }
 
-function logStatics(env = {}) {
+async function logStaticsAsync(env = {}) {
   logHeader('Statics Info');
 
-  const paths = getPaths(env);
+  const paths = await getPathsAsync(env);
 
   // Detect if the default template files aren't being used.
   const { template: statics = {} } = paths;
@@ -131,8 +131,8 @@ function setDeepValue(pathComponents, object, value) {
   setDeepValue(pathComponents, object[key], value);
 }
 
-function logAutoConfigValues(env) {
-  const locations = getPaths(env);
+async function logAutoConfigValuesAsync(env) {
+  const locations = await getPathsAsync(env);
 
   const config = readConfigJson(env.projectRoot);
 
@@ -169,10 +169,10 @@ async function reportAsync(webpackConfig, { config, ...env } = {}) {
 
   logWebpackConfigComponents(webpackConfig);
   logEnvironment(env);
-  logStatics(env);
-  logAutoConfigValues(env);
+  await logStaticsAsync(env);
+  await logAutoConfigValuesAsync(env);
 
-  const locations = getPaths(env);
+  const locations = await getPathsAsync(env);
 
   await testBabelPreset(locations);
 
