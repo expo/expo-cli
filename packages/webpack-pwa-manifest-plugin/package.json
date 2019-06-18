@@ -30,9 +30,10 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@expo/image-utils": "0.1.0",
     "css-color-names": "^1.0.1",
     "mime": "^2.4.0",
-    "sharp": "^0.22.1"
+    "tempy": "^0.3.0"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.2",
@@ -58,12 +59,7 @@
     "webpack": "^4.29.6",
     "webpack-cli": "^3.2.3"
   },
-  "files": [
-    "build",
-    "index.js",
-    "LICENSE-webpack-pwa-manifest",
-    "README.md"
-  ],
+  "files": ["build", "index.js", "LICENSE-webpack-pwa-manifest", "README.md"],
   "publishConfig": {
     "access": "public"
   },

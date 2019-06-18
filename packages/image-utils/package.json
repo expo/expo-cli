@@ -1,0 +1,41 @@
+{
+  "name": "@expo/image-utils",
+  "version": "0.1.0",
+  "description": "A package used by Expo CLI for processing images",
+  "main": "build/index.js",
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "yarn build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/image-utils"
+  },
+  "keywords": ["json"],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/image-utils#readme",
+  "files": ["build"],
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@expo/spawn-async": "1.5.0",
+    "semver": "6.1.1"
+  },
+  "optionalDependencies": {
+    "sharp-cli": "1.9.0"
+  },
+  "devDependencies": {
+    "@expo/babel-preset-cli": "^0.1.1",
+    "@types/semver": "^6.0.0",
+    "typescript": "3.4.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

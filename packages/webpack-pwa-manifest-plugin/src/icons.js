@@ -1,6 +1,9 @@
 import fs from 'fs-extra';
-import sharp from 'sharp';
 import mime from 'mime';
+import path from 'path';
+import temporary from 'tempy';
+import { sharpAsync } from '@expo/image-utils';
+
 import { joinURI } from './helpers/uri';
 import generateFingerprint from './helpers/fingerprint';
 import IconError from './errors/IconError';
@@ -85,14 +88,16 @@ function parseSize(size) {
 }
 
 async function getBufferWithMimeAsync({ src, resizeMode, color }, mimeType, { width, height }) {
+  let imagePath;
   if (!supportedMimeTypes.includes(mimeType)) {
-    try {
-      return fs.readFileSync(src);
-    } catch (err) {
-      throw new IconError(`It was not possible to read '${src}'.`);
-    }
+    imagePath = src;
   } else {
-    return await resize(src, mimeType, width, height, resizeMode, color);
+    imagePath = await resize(src, mimeType, width, height, resizeMode, color);
+  }
+  try {
+    return await fs.readFile(imagePath);
+  } catch (err) {
+    throw new IconError(`It was not possible to read '${src}'.`);
   }
 }
 
@@ -106,14 +111,28 @@ async function processImage(size, icon, fingerprint, publicPath) {
   return processIcon(width, height, icon, _buffer, mimeType, publicPath, fingerprint);
 }
 
-async function resize(img, mimeType, width, height, fit = 'contain', background) {
+async function resize(inputPath, mimeType, width, height, fit = 'contain', background) {
   try {
-    return sharp(img)
-      .resize(width, height, { fit, background })
-      .toFormat(mimeType.split('/')[1])
-      .toBuffer();
+    const outputPath = temporary.directory();
+    await sharpAsync(
+      {
+        input: inputPath,
+        output: outputPath,
+        format: mimeType.split('/')[1],
+      },
+      [
+        {
+          operation: 'resize',
+          width,
+          height,
+          fit,
+          background,
+        },
+      ]
+    );
+    return path.join(outputPath, path.basename(inputPath));
   } catch ({ message }) {
-    throw new IconError(`It was not possible to generate splash screen '${img}'. ${message}`);
+    throw new IconError(`It was not possible to generate splash screen '${inputPath}'. ${message}`);
   }
 }
 
