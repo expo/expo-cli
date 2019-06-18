@@ -48,6 +48,8 @@ function _validatePodfileSubstitutions(substitutions) {
     'PODFILE_UNVERSIONED_EXPO_MODULES_DEPENDENCIES',
     // Universal modules configurations to be included in the Podfile
     'UNIVERSAL_MODULES',
+    // Relative path from iOS project directory to folder where unimodules are installed.
+    'UNIVERSAL_MODULES_PATH',
   ];
 
   for (const key in substitutions) {
@@ -370,7 +372,11 @@ async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubst
   await fs.writeFile(pathToOutput, result);
 }
 
-function _renderUnversionedUniversalModulesDependencies(universalModules, sdkVersion) {
+function _renderUnversionedUniversalModulesDependencies(
+  universalModules,
+  universalModulesPath,
+  sdkVersion
+) {
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
 
   if (sdkMajorVersion >= 33) {
@@ -379,6 +385,7 @@ function _renderUnversionedUniversalModulesDependencies(universalModules, sdkVer
 # Install unimodules
 require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
 use_unimodules!(
+  modules_paths: ['${universalModulesPath}'],
   exclude: [
     'expo-face-detector',
     'expo-payments-stripe',
@@ -480,6 +487,7 @@ async function renderPodfileAsync(
     EXPOKIT_DEPENDENCY: _renderExpoKitDependency(expoKitDependencyOptions, sdkVersion),
     PODFILE_UNVERSIONED_EXPO_MODULES_DEPENDENCIES: _renderUnversionedUniversalModulesDependencies(
       universalModules,
+      moreSubstitutions.UNIVERSAL_MODULES_PATH,
       sdkVersion
     ),
     PODFILE_UNVERSIONED_RN_DEPENDENCY: _renderUnversionedReactNativeDependency(

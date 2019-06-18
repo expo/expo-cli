@@ -164,7 +164,7 @@ async function _createStandaloneContextAsync(args) {
   if (args.workspacePath) {
     workspaceSourcePath = args.workspacePath;
   } else {
-    workspaceSourcePath = path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'ios', 'default');
+    workspaceSourcePath = path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'default', 'ios');
   }
   let { privateConfigFile, privateConfigData } = args;
 
