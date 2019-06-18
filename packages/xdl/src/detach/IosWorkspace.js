@@ -292,7 +292,7 @@ async function createDetachedAsync(context: StandaloneContext) {
 
   const projectPackageJsonPath = path.join(projectRootDirectory, 'package.json');
 
-  if (!(await fs.exists(projectPackageJsonPath))) {
+  if (!await fs.exists(projectPackageJsonPath)) {
     logger.info('Copying blank package.json...');
     await fs.copy(
       path.join(expoRootTemplateDirectory, 'exponent-view-template', 'package.json'),
@@ -331,6 +331,8 @@ async function _getPackagesToInstallWhenEjecting(sdkVersion) {
   return versions.sdkVersions[sdkVersion].packagesToInstallWhenEjecting;
 }
 
+// @tsapeta: Temporarily copied from Detach._detachAsync. This needs to be invoked also when creating a shell app workspace
+// and not only when ejecting. These copies can be moved to one place if we decide to have just one flow for these two processes.
 async function _installRequiredPackagesAsync(projectRoot, sdkVersion) {
   const packagesToInstallWhenEjecting = await _getPackagesToInstallWhenEjecting(sdkVersion);
   const packagesToInstall = [];
