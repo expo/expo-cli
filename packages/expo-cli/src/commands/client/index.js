@@ -71,28 +71,12 @@ export default program => {
           if (listOfCredentials.length === 0) {
             return;
           }
-          const credentials = listOfCredentials.reduce(
-            (acc, credential) => {
-              return { ...acc, ...credential };
-            },
-            { teamId: context.team.id }
-          );
-          const { userCredentialsIds } = await Credentials.updateCredentialsForPlatform(
-            IOS,
-            credentials,
-            [],
-            {
-              username: user.username,
-              experienceName,
-              bundleIdentifier,
-            }
-          );
-
-          // Put an empty entry in AppCredentials model that we can look up by just the bundleIdentifier
-          // This AppCredential entry will be linked with all our UserCredential entries
-          // We need this because push notification credential lookup for Expo clients only uses `bundleIdentifier`
-          await Credentials.updateCredentialsForPlatform(IOS, {}, userCredentialsIds, {
+          const credentials = listOfCredentials.reduce((acc, credential) => {
+            return { ...acc, ...credential };
+          });
+          await Credentials.updateCredentialsForPlatform(IOS, credentials, [], {
             username: user.username,
+            experienceName,
             bundleIdentifier,
           });
         };
