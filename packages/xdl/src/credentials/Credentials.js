@@ -59,17 +59,18 @@ export async function updateCredentialsForPlatform(
   newCredentials: Credentials,
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
-): Promise<void> {
-  const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
+): Promise<Credentials> {
+  const { err, ...rest } = await Api.callMethodAsync('updateCredentials', [], 'post', {
     credentials: newCredentials,
     userCredentialsIds,
     platform,
     ...metadata,
   });
 
-  if (err || !credentials) {
+  if (err || !rest) {
     throw new Error('Error updating credentials.');
   }
+  return rest;
 }
 
 export async function removeCredentialsForPlatform(
