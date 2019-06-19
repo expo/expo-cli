@@ -71,9 +71,12 @@ export default program => {
           if (listOfCredentials.length === 0) {
             return;
           }
-          const credentials = listOfCredentials.reduce((acc, credential) => {
-            return { ...acc, ...credential };
-          });
+          const credentials = listOfCredentials.reduce(
+            (acc, credential) => {
+              return { ...acc, ...credential };
+            },
+            { teamId: context.team.id }
+          );
           await Credentials.updateCredentialsForPlatform(IOS, credentials, [], {
             username: user.username,
             experienceName,
