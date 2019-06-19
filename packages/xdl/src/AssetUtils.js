@@ -1,10 +1,12 @@
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'crypto';
 import chalk from 'chalk';
-import sharp from 'sharp';
 import glob from 'glob';
+import { sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
+import temporary from 'tempy';
+
 import logger from './Logger';
 import { readConfigJsonAsync } from './project/ProjectUtils';
 
@@ -33,24 +35,15 @@ export const calculateHash = file => {
 /*
  * Compress an inputted jpg or png
  */
-export const optimizeImageAsync = async (image, newName, quality) => {
-  logger.global.info(`Optimizing ${image}`);
-  fs.copyFileSync(image, newName);
-
-  // Extract the format and compress
-  const buffer = await sharp(image).toBuffer();
-  const { format } = await sharp(buffer).metadata();
-  if (format === 'jpeg') {
-    await sharp(newName)
-      .jpeg({ quality })
-      .toFile(image)
-      .catch(err => logger.global.error(err));
-  } else {
-    await sharp(newName)
-      .png({ quality })
-      .toFile(image)
-      .catch(err => logger.global.error(err));
-  }
+export const optimizeImageAsync = async (inputPath, quality) => {
+  logger.global.info(`Optimizing ${inputPath}`);
+  const outputPath = temporary.directory();
+  await sharpAsync({
+    input: inputPath,
+    output: outputPath,
+    quality,
+  });
+  return path.join(outputPath, path.basename(inputPath));
 };
 
 /*
@@ -146,5 +139,5 @@ export const readAssetJsonAsync = async projectDir => {
  */
 export const createNewFilename = image => {
   const { dir, name, ext } = path.parse(image);
-  return dir + '/' + name + '.orig' + ext;
+  return path.join(dir, name + '.orig' + ext);
 };

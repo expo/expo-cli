@@ -37,7 +37,14 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
-import * as AssetUtils from './AssetUtils';
+import {
+  readAssetJsonAsync,
+  getAssetFilesAsync,
+  optimizeImageAsync,
+  calculateHash,
+  createNewFilename,
+  toReadableValue,
+} from './AssetUtils';
 import Config from './Config';
 import * as Doctor from './project/Doctor';
 import * as DevSession from './DevSession';
@@ -2057,14 +2064,6 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
 
 export async function optimizeAsync(projectRoot: string = './', options: Object = {}) {
   logger.global.info(chalk.green('Optimizing assets...'));
-  const {
-    readAssetJsonAsync,
-    getAssetFilesAsync,
-    optimizeImageAsync,
-    calculateHash,
-    createNewFilename,
-    toReadableValue,
-  } = AssetUtils;
 
   const { assetJson, assetInfo } = await readAssetJsonAsync(projectRoot);
   // Keep track of which hash values in assets.json are no longer in use
@@ -2097,17 +2096,20 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
     const { size: prevSize } = fs.statSync(image);
 
     const newName = createNewFilename(image);
-    await optimizeImageAsync(image, newName, quality);
+    const optimizedImage = await optimizeImageAsync(image, quality);
 
-    const { size: newSize } = fs.statSync(image);
+    const { size: newSize } = fs.statSync(optimizedImage);
     const amountSaved = prevSize - newSize;
-    if (amountSaved < 0) {
-      // Delete the optimized version and revert changes
-      fs.renameSync(newName, image);
+    if (amountSaved > 0) {
+      await fs.move(image, newName);
+      await fs.move(optimizedImage, image);
+    } else {
       assetInfo[hash] = true;
       logger.global.info(
         chalk.gray(
-          `Compressed version of ${image} was larger than original. Using original instead.`
+          amountSaved === 0
+            ? `Compressed version of ${image} same size as original. Using original instead.`
+            : `Compressed version of ${image} was larger than original. Using original instead.`
         )
       );
       continue;
