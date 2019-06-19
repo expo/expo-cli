@@ -2107,7 +2107,9 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
       assetInfo[hash] = true;
       logger.global.info(
         chalk.gray(
-          `Compressed version of ${image} was larger than original. Using original instead.`
+          amountSaved === 0
+            ? `Compressed version of ${image} same size as original. Using original instead.`
+            : `Compressed version of ${image} was larger than original. Using original instead.`
         )
       );
       continue;
