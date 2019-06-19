@@ -22,7 +22,7 @@ def ensure_app_exists()
   if app == nil
     {created: true, app: Spaceship::Portal.app.create!(bundle_id: $bundleId, name: $name)}
   else
-    {created: false , app: app}
+    {created: false, app: app}
   end
 end
 
