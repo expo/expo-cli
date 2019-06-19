@@ -424,8 +424,8 @@ Run \`npm install -g ${packageJSON.name}\` to get the latest version`),
           `This version of expo-cli is not supported anymore. 
 It's highly recommended to update to the newest version.
 
-Api endpoints used in this version of expo-cli might not exist,
-any interaction with expo servers may result in unexpected behaviour.`
+The API endpoints used in this version of expo-cli might not exist,
+any interaction with Expo servers may result in unexpected behaviour.`
         ),
         { borderColor: 'red', padding: 1 }
       )
