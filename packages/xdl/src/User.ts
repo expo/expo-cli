@@ -15,7 +15,6 @@ import { Semaphore } from './Utils';
 export type User = {
   kind: 'user';
   // required
-  name: string;
   username: string;
   nickname: string;
   userId: string;
@@ -25,18 +24,10 @@ export type User = {
   emailVerified?: boolean;
   givenName?: string;
   familyName?: string;
-  loginsCount?: number;
-  intercomUserHash: string;
   userMetadata: {
     onboarded: boolean;
     legacy?: boolean;
   };
-  identities: Array<{
-    connection: ConnectionType;
-    isSocial: boolean;
-    provider: string;
-    userId: string;
-  }>;
   currentConnection: ConnectionType;
   sessionSecret: string;
 };
