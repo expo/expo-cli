@@ -47,7 +47,8 @@ function userSettingsJsonFile() {
 }
 
 function recentExpsJsonFile() {
-  // @ts-ignore
+  // TODO(ville): Add array support to JsonFile.
+  // @ts-ignore JsonFile doesn't officially support arrays, only objects
   return new JsonFile<JSONArray>(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'), {
     jsonParseErrorDefault: [],
     cantReadFileDefault: [],
