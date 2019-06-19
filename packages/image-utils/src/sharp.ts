@@ -66,10 +66,15 @@ const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
 export async function sharpAsync(
   options: SharpGlobalOptions,
   commands: SharpCommandOptions[] = []
-) {
+): Promise<string[]> {
   const bin = await findSharpBinAsync();
   try {
-    return await spawnAsync(bin, [...getOptions(options), ...getCommandOptions(commands)]);
+    const { stdout } = await spawnAsync(bin, [
+      ...getOptions(options),
+      ...getCommandOptions(commands),
+    ]);
+    const outputFilePaths = stdout.trim().split('\n');
+    return outputFilePaths;
   } catch (error) {
     if (error.stderr) {
       throw new Error(
@@ -84,8 +89,8 @@ export async function sharpAsync(
   }
 }
 
-function getOptions(options: Options) {
-  const args: string[] = [];
+function getOptions(options: Options): string[] {
+  const args = [];
   for (const [key, value] of Object.entries(options)) {
     if (value != null && value !== false) {
       if (typeof value === 'boolean') {
@@ -100,7 +105,7 @@ function getOptions(options: Options) {
   return args;
 }
 
-function getCommandOptions(commands: SharpCommandOptions[]) {
+function getCommandOptions(commands: SharpCommandOptions[]): string[] {
   const args: string[] = [];
   for (const command of commands) {
     if (command.operation === 'resize') {
@@ -150,7 +155,7 @@ async function findSharpBinAsync(): Promise<string> {
   }
 }
 
-function notFoundError() {
+function notFoundError(): Error {
   return new Error(
     `This command requires version ${requiredCliVersion} of \`sharp-cli\`. \n` +
       `You can install it using \`npm install -g sharp-cli@${requiredCliVersion}\`. \n` +
@@ -159,7 +164,7 @@ function notFoundError() {
   );
 }
 
-function versionMismatchError(installedCliVersion: string) {
+function versionMismatchError(installedCliVersion: string): Error {
   return new Error(
     `This command requires version ${requiredCliVersion} of \`sharp-cli\`. \n` +
       `Currently installed version: "${installedCliVersion}" \n` +
