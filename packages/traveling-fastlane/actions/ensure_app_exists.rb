@@ -20,7 +20,7 @@ ENV['FASTLANE_TEAM_ID'] = $teamId
 def ensure_app_exists()
   app = Spaceship::Portal.app.find $bundleId
   if app == nil
-    {created: true , app: Spaceship::Portal.app.create!(bundle_id: $bundleId, name: $name)}
+    {created: true, app: Spaceship::Portal.app.create!(bundle_id: $bundleId, name: $name)}
   else
     {created: false , app: app}
   end
