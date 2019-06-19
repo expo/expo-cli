@@ -296,6 +296,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
     workingDir,
     modules,
     buildType,
+    buildMode,
   } = args;
 
   const exponentDir = exponentDirectory(workingDir);
@@ -360,7 +361,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   await prepareEnabledModules(shellPath, modules);
 
   if (!args.skipBuild) {
-    await buildShellAppAsync(context, sdkVersion, buildType);
+    await buildShellAppAsync(context, sdkVersion, buildType, buildMode);
   }
 };
 
@@ -1034,12 +1035,13 @@ export async function runShellAppModificationsAsync(
 async function buildShellAppAsync(
   context: StandaloneContext,
   sdkVersion: string,
-  buildType: string
+  buildType: string,
+  buildMode: 'debug' | 'release'
 ) {
   let shellPath = shellPathForContext(context);
   const ext = buildType === 'app-bundle' ? 'aab' : 'apk';
 
-  const isRelease = !!context.build.android;
+  const isRelease = !!context.build.android && buildMode === 'release';
   // concat on those strings is not very readable, but only alternative here is huge if statement
   const debugOrRelease = isRelease ? 'Release' : 'Debug';
   const devOrProd = isRelease ? 'Prod' : 'Dev';
@@ -1178,7 +1180,11 @@ async function buildShellAppAsync(
       loggerFields: { buildPhase: 'running gradle' },
       cwd: shellPath,
     });
-    await fs.copy(outputPath, `/tmp/shell-debug.${ext}`);
+    await fs.copy(
+      outputPath,
+      _.get(context, 'build.android.outputFile') || `/tmp/shell-debug.${ext}`
+    );
+    await ExponentTools.removeIfExists(outputPath);
   }
 }
 
