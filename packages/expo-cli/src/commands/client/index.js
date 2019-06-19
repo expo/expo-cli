@@ -52,7 +52,7 @@ export default program => {
         experienceName,
         username: user ? user.username : null,
       };
-      await appleApi.ensureAppExists(context);
+      await appleApi.ensureAppExists(context, { enablePushNotifications: true });
 
       const distributionCert = await selectDistributionCert(context);
       const pushKey = await selectPushKey(context);
