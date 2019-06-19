@@ -1,68 +1,60 @@
-/**
- * @flow
- */
-
-import _ from 'lodash';
 import isEmpty from 'lodash/isEmpty';
+import camelCase from 'lodash/camelCase';
+import snakeCase from 'lodash/snakeCase';
 
 import ApiV2Client, { ApiV2Error } from './ApiV2';
 import * as Analytics from './Analytics';
 import Config from './Config';
 import XDLError from './XDLError';
 import Logger from './Logger';
-
-import UserSettings from './UserSettings';
+import idx from 'idx';
+import UserSettings, { UserSettingsData, UserData } from './UserSettings';
 
 import { Semaphore } from './Utils';
 
 export type User = {
-  kind: 'user',
+  kind: 'user';
   // required
-  name: string,
-  username: string,
-  nickname: string,
-  userId: string,
-  picture: string,
+  username: string;
+  nickname: string;
+  userId: string;
+  picture: string;
   // optional
-  email?: string,
-  emailVerified?: boolean,
-  givenName?: string,
-  familyName?: string,
-  loginsCount?: number,
-  intercomUserHash: string,
+  email?: string;
+  emailVerified?: boolean;
+  givenName?: string;
+  familyName?: string;
   userMetadata: {
-    onboarded: boolean,
-    legacy?: boolean,
-  },
-  identities: Array<{
-    connection: ConnectionType,
-    isSocial: boolean,
-    provider: string,
-    userId: string,
-  }>,
-  currentConnection: ConnectionType,
-  sessionSecret: string,
+    onboarded: boolean;
+    legacy?: boolean;
+  };
+  currentConnection: ConnectionType;
+  sessionSecret: string;
 };
 
 export type LegacyUser = {
-  kind: 'legacyUser',
-  username: string,
+  kind: 'legacyUser';
+  username: string;
   userMetadata: {
-    legacy: boolean,
-    needsPasswordMigration: boolean,
-  },
+    legacy: boolean;
+    needsPasswordMigration: boolean;
+  };
 };
 
 export type UserOrLegacyUser = User | LegacyUser;
 
-type ConnectionType = 'Username-Password-Authentication' | 'facebook' | 'google-oauth2' | 'github';
+export type ConnectionType =
+  | 'Username-Password-Authentication'
+  | 'facebook'
+  | 'google-oauth2'
+  | 'github';
 
 export type RegistrationData = {
-  username: string,
-  password: string,
-  email?: string,
-  givenName?: string,
-  familyName?: string,
+  username: string;
+  password: string;
+  email?: string;
+  givenName?: string;
+  familyName?: string;
 };
 
 export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
@@ -70,10 +62,9 @@ export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
 export const ANONYMOUS_USERNAME = 'anonymous';
 
 export class UserManagerInstance {
-  loginServer = null;
-  refreshSessionThreshold = 60 * 60; // 1 hour
-  _currentUser: ?User = null;
+  _currentUser: User | null = null;
   _getSessionLock = new Semaphore();
+  _interactiveAuthenticationCallbackAsync?: () => Promise<User>;
 
   static getGlobalInstance() {
     if (!__globalInstance) {
@@ -83,7 +74,6 @@ export class UserManagerInstance {
   }
 
   initialize() {
-    this.loginServer = null;
     this._currentUser = null;
     this._getSessionLock = new Semaphore();
   }
@@ -99,7 +89,7 @@ export class UserManagerInstance {
    */
   async loginAsync(
     loginType: LoginType,
-    loginArgs?: { username: string, password: string }
+    loginArgs?: { username: string; password: string }
   ): Promise<User> {
     if (loginType === 'user-pass') {
       if (!loginArgs) {
@@ -122,7 +112,7 @@ export class UserManagerInstance {
     }
   }
 
-  async registerAsync(userData: RegistrationData, user: ?UserOrLegacyUser): Promise<User> {
+  async registerAsync(userData: RegistrationData, user: UserOrLegacyUser | null): Promise<User> {
     if (!user) {
       user = await this.getCurrentUserAsync();
     }
@@ -160,7 +150,7 @@ export class UserManagerInstance {
    *
    * If there are any issues with the login, this method throws.
    */
-  async ensureLoggedInAsync(): Promise<?User> {
+  async ensureLoggedInAsync(): Promise<User | null> {
     if (Config.offline) {
       return null;
     }
@@ -175,12 +165,12 @@ export class UserManagerInstance {
     return user;
   }
 
-  setInteractiveAuthenticationCallback(callback) {
+  setInteractiveAuthenticationCallback(callback: () => Promise<User>) {
     this._interactiveAuthenticationCallbackAsync = callback;
   }
 
-  async _readUserData() {
-    let auth = await UserSettings.getAsync('auth', {});
+  async _readUserData(): Promise<UserData | null> {
+    let auth = await UserSettings.getAsync('auth', null);
     if (isEmpty(auth)) {
       // XXX(ville):
       // We sometimes read an empty string from ~/.expo/state.json,
@@ -188,7 +178,10 @@ export class UserManagerInstance {
       // We don't know why.
       // An empty string can't be parsed as JSON, so an empty default object is returned.
       // In this case, retrying usually helps.
-      auth = await UserSettings.getAsync('auth', {});
+      auth = await UserSettings.getAsync('auth', null);
+    }
+    if (typeof auth === 'undefined') {
+      return null;
     }
     return auth;
   }
@@ -197,7 +190,7 @@ export class UserManagerInstance {
    * Get the current user based on the available token.
    * If there is no current token, returns null.
    */
-  async getCurrentUserAsync(): Promise<?User> {
+  async getCurrentUserAsync(): Promise<User | null> {
     await this._getSessionLock.acquire();
 
     try {
@@ -210,17 +203,17 @@ export class UserManagerInstance {
         return null;
       }
 
-      let { currentConnection, sessionSecret } = await this._readUserData();
+      const data = await this._readUserData();
 
       // No session, no current user. Need to login
-      if (!sessionSecret) {
+      if (!data || !data.sessionSecret) {
         return null;
       }
 
       try {
         return await this._getProfileAsync({
-          currentConnection,
-          sessionSecret,
+          currentConnection: data.currentConnection,
+          sessionSecret: data.sessionSecret,
         });
       } catch (e) {
         Logger.global.warn('Fetching the user profile failed');
@@ -232,17 +225,17 @@ export class UserManagerInstance {
     }
   }
 
-  async getCurrentUsernameAsync(): Promise<?string> {
-    let data = await this._readUserData();
-    if (!data.username) {
+  async getCurrentUsernameAsync(): Promise<string | null> {
+    const data = await this._readUserData();
+    if (!data || !data.username) {
       return null;
     }
     return data.username;
   }
 
-  async getSessionAsync(): Promise<?string> {
-    let data = await this._readUserData();
-    if (!data.sessionSecret) {
+  async getSessionAsync(): Promise<{ sessionSecret: string } | null> {
+    const data = await this._readUserData();
+    if (!data || !data.sessionSecret) {
       return null;
     }
     return { sessionSecret: data.sessionSecret };
@@ -251,35 +244,25 @@ export class UserManagerInstance {
   /**
    * Create or update a user.
    */
-  async createOrUpdateUserAsync(userData: Object): Promise<User> {
+  async createOrUpdateUserAsync(userData: object): Promise<User | null> {
     let currentUser = this._currentUser;
     if (!currentUser) {
       // attempt to get the current user
       currentUser = await this.getCurrentUserAsync();
     }
 
-    try {
-      const api = ApiV2Client.clientForUser(currentUser);
+    const api = ApiV2Client.clientForUser(currentUser);
 
-      const { user: updatedUser } = await api.postAsync('auth/createOrUpdateUser', {
-        userData: _prepareAuth0Profile(userData),
-      });
+    const { user: updatedUser } = await api.postAsync('auth/createOrUpdateUser', {
+      userData: _prepareAuth0Profile(userData),
+    });
 
-      this._currentUser = {
-        ...(this._currentUser || {}),
-        ..._parseAuth0Profile(updatedUser),
-      };
-      return {
-        kind: 'user',
-        ...this._currentUser,
-      };
-    } catch (e) {
-      const err: ApiV2Error = (e: any);
-      if (err.code === 'AUTHENTICATION_ERROR') {
-        throw new Error(err.details.message);
-      }
-      throw e;
-    }
+    this._currentUser = {
+      ...this._currentUser,
+      ..._parseAuth0Profile(updatedUser),
+      kind: 'user',
+    };
+    return this._currentUser;
   }
 
   /**
@@ -326,8 +309,8 @@ export class UserManagerInstance {
     currentConnection,
     sessionSecret,
   }: {
-    currentConnection: ConnectionType,
-    sessionSecret: string,
+    currentConnection?: ConnectionType;
+    sessionSecret: string;
   }): Promise<User> {
     let user;
     let api = ApiV2Client.clientForUser({
@@ -347,13 +330,11 @@ export class UserManagerInstance {
       sessionSecret,
     };
 
-    await UserSettings.mergeAsync({
-      auth: {
-        userId: user.userId,
-        username: user.username,
-        currentConnection,
-        sessionSecret,
-      },
+    await UserSettings.setAsync('auth', {
+      userId: user.userId,
+      username: user.username,
+      currentConnection,
+      sessionSecret,
     });
 
     // If no currentUser, or currentUser.id differs from profiles
@@ -382,27 +363,33 @@ export class UserManagerInstance {
   }
 }
 
-let __globalInstance;
+let __globalInstance: UserManagerInstance | undefined;
 export default UserManagerInstance.getGlobalInstance();
 
 /** Private Methods **/
-function _parseAuth0Profile(rawProfile: any): User {
+function _parseAuth0Profile(rawProfile: any) {
   if (!rawProfile || typeof rawProfile !== 'object') {
     return rawProfile;
   }
-  return ((Object.keys(rawProfile).reduce((p, key) => {
-    p[_.camelCase(key)] = _parseAuth0Profile(rawProfile[key]);
-    return p;
-  }, {}): any): User);
+  return Object.keys(rawProfile).reduce(
+    (p, key) => {
+      p[camelCase(key)] = _parseAuth0Profile(rawProfile[key]);
+      return p;
+    },
+    {} as any
+  );
 }
 
-function _prepareAuth0Profile(niceProfile: any): Object {
+function _prepareAuth0Profile(niceProfile: any) {
   if (typeof niceProfile !== 'object') {
     return niceProfile;
   }
 
-  return ((Object.keys(niceProfile).reduce((p, key) => {
-    p[_.snakeCase(key)] = _prepareAuth0Profile(niceProfile[key]);
-    return p;
-  }, {}): any): User);
+  return Object.keys(niceProfile).reduce(
+    (p, key) => {
+      p[snakeCase(key)] = _prepareAuth0Profile(niceProfile[key]);
+      return p;
+    },
+    {} as any
+  );
 }

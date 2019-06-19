@@ -1,14 +1,26 @@
-/**
- * @flow
- */
-
 import fs from 'fs-extra';
 import uuid from 'uuid';
-import JsonFile from '@expo/json-file';
-
+import JsonFile, { JSONArray } from '@expo/json-file';
 import path from 'path';
 
+import { ConnectionType } from './User';
+
 import * as Env from './Env';
+
+export type UserSettingsData = {
+  auth?: UserData | null;
+  openDevToolsAtStartup?: boolean;
+  PATH?: string;
+  sendTo?: string;
+  uuid?: string;
+};
+
+export type UserData = {
+  userId?: string;
+  username?: string;
+  currentConnection?: ConnectionType;
+  sessionSecret?: string;
+};
 
 const SETTINGS_FILE_NAME = 'state.json';
 
@@ -28,14 +40,16 @@ function userSettingsFile() {
 }
 
 function userSettingsJsonFile() {
-  return new JsonFile(userSettingsFile(), {
+  return new JsonFile<UserSettingsData>(userSettingsFile(), {
     jsonParseErrorDefault: {},
     cantReadFileDefault: {},
   });
 }
 
 function recentExpsJsonFile() {
-  return new JsonFile(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'), {
+  // TODO(ville): Add array support to JsonFile.
+  // @ts-ignore JsonFile doesn't officially support arrays, only objects
+  return new JsonFile<JSONArray>(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'), {
     jsonParseErrorDefault: [],
     cantReadFileDefault: [],
   });
@@ -92,7 +106,7 @@ async function anonymousIdentifier(): Promise<string> {
   return id;
 }
 
-const UserSettings: any = userSettingsJsonFile();
+const UserSettings = userSettingsJsonFile();
 
 Object.assign(UserSettings, {
   dotExpoHomeDirectory,

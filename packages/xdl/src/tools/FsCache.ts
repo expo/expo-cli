@@ -26,17 +26,17 @@ See src/__tests__/tools/FsCache-test.js for usage examples.
 class Cacher<T> {
   refresher: () => Promise<T>;
   filename: string;
-  bootstrapFile: ?string;
+  bootstrapFile?: string;
   ttlMilliseconds: number;
 
-  readError: ?any;
-  writeError: ?any;
+  readError?: any;
+  writeError?: any;
 
   constructor(
     refresher: () => Promise<T>,
     filename: string,
-    ttlMilliseconds: ?number,
-    bootstrapFile: ?string
+    ttlMilliseconds?: number,
+    bootstrapFile?: string
   ) {
     this.refresher = refresher;
     this.filename = path.join(getCacheDir(), filename);
@@ -64,11 +64,11 @@ class Cacher<T> {
       mtime = new Date(1989, 10, 19);
     }
 
-    let fromCache: ?T;
+    let fromCache: T | null = null;
     let failedRefresh = null;
 
     // if mtime + ttl >= now, attempt to fetch the value, otherwise read from disk
-    if (new Date() - mtime > this.ttlMilliseconds) {
+    if (new Date().getTime() - mtime.getTime() > this.ttlMilliseconds) {
       try {
         fromCache = await this.refresher();
 
@@ -85,7 +85,7 @@ class Cacher<T> {
 
     if (!fromCache) {
       try {
-        fromCache = JSON.parse(await fs.readFile(this.filename));
+        fromCache = JSON.parse(await fs.readFile(this.filename, 'utf8'));
       } catch (e) {
         this.readError = e;
         // if this fails then we've exhausted our options and it should remain null

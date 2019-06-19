@@ -1,12 +1,9 @@
-/**
- * @flow
- */
-
-import _ from 'lodash';
+import merge from 'lodash/merge';
 import ExtendableError from 'es6-error';
 import QueryString from 'querystring';
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import idx from 'idx';
+import { JSONObject, JSONValue } from '@expo/json-file';
 
 import Config from './Config';
 
@@ -25,34 +22,33 @@ function _apiBaseUrl() {
 
 export class ApiV2Error extends ExtendableError {
   code: string;
-  details: Object;
-  serverStack: ?string;
+  details?: JSONValue;
+  serverStack?: string;
+  readonly _isApiError = true;
 
   constructor(message: string, code: string = 'UNKNOWN') {
     super(message);
     this.code = code;
-    this._isApiError = true;
   }
 }
 
 type RequestOptions = {
-  httpMethod: 'get' | 'post' | 'put',
-  queryParameters?: ?QueryParameters,
-  body?: ?Object,
-  json?: boolean,
+  httpMethod: 'get' | 'post' | 'put' | 'delete';
+  queryParameters?: QueryParameters;
+  body?: JSONObject;
 };
 
-type QueryParameters = { [key: string]: ?(string | number | boolean) };
+type QueryParameters = { [key: string]: string | number | boolean | null };
 
 type APIV2ClientOptions = {
-  sessionSecret?: string,
+  sessionSecret?: string;
 };
 
 export default class ApiV2Client {
-  sessionSecret: ?string = null;
   static exponentClient: string = 'xdl';
+  sessionSecret: string | null = null;
 
-  static clientForUser(user): ApiV2Client {
+  static clientForUser(user?: APIV2ClientOptions | null): ApiV2Client {
     if (user && user.sessionSecret) {
       return new ApiV2Client({ sessionSecret: user.sessionSecret });
     }
@@ -73,15 +69,14 @@ export default class ApiV2Client {
   async getAsync(
     methodName: string,
     args: QueryParameters = {},
-    extraOptions: Object = {},
+    extraOptions?: Partial<RequestOptions>,
     returnEntireResponse: boolean = false
-  ): Promise<*> {
+  ) {
     return this._requestAsync(
       methodName,
       {
         httpMethod: 'get',
         queryParameters: args,
-        json: true,
       },
       extraOptions,
       returnEntireResponse
@@ -90,10 +85,10 @@ export default class ApiV2Client {
 
   async postAsync(
     methodName: string,
-    data: Object = {},
-    extraOptions: Object = {},
+    data?: JSONObject,
+    extraOptions?: Partial<RequestOptions>,
     returnEntireResponse: boolean = false
-  ): Promise<*> {
+  ) {
     return this._requestAsync(
       methodName,
       {
@@ -107,10 +102,10 @@ export default class ApiV2Client {
 
   async putAsync(
     methodName: string,
-    data: Object = {},
-    extraOptions: Object = {},
+    data: JSONObject,
+    extraOptions?: Partial<RequestOptions>,
     returnEntireResponse: boolean = false
-  ): Promise<*> {
+  ) {
     return this._requestAsync(
       methodName,
       {
@@ -124,15 +119,13 @@ export default class ApiV2Client {
 
   async deleteAsync(
     methodName: string,
-    data: Object = {},
-    extraOptions: Object = {},
+    extraOptions?: Partial<RequestOptions>,
     returnEntireResponse: boolean = false
-  ): Promise<*> {
+  ) {
     return this._requestAsync(
       methodName,
       {
         httpMethod: 'delete',
-        body: data,
       },
       extraOptions,
       returnEntireResponse
@@ -142,17 +135,16 @@ export default class ApiV2Client {
   async _requestAsync(
     methodName: string,
     options: RequestOptions,
-    extraRequestOptions: Object,
+    extraRequestOptions?: Partial<RequestOptions>,
     returnEntireResponse: boolean = false
-  ): Promise<*> {
+  ) {
     const url = `${_apiBaseUrl()}/${methodName}`;
-    let reqOptions: Object = {
+    let reqOptions: AxiosRequestConfig = {
       url,
       method: options.httpMethod,
       headers: {
         'Exponent-Client': ApiV2Client.exponentClient,
       },
-      json: typeof options.json !== 'undefined' ? options.json : false,
     };
 
     if (this.sessionSecret) {
@@ -170,7 +162,7 @@ export default class ApiV2Client {
       reqOptions.data = options.body;
     }
 
-    reqOptions = _.merge({}, reqOptions, extraRequestOptions);
+    reqOptions = merge({}, reqOptions, extraRequestOptions);
     let response;
     let result;
     try {
