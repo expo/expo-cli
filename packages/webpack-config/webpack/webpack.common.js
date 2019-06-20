@@ -249,7 +249,7 @@ module.exports = async function(env = {}, argv) {
     imageLoaderConfiguration,
     await createBabelLoaderAsync({
       mode,
-      babelProjectRoot: locations.root,
+      babelProjectRoot: babelAppConfig.root || locations.root,
       verbose: babelAppConfig.verbose,
       include: babelAppConfig.include,
       use: babelAppConfig.use,
