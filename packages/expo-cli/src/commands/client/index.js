@@ -1,5 +1,9 @@
 import chalk from 'chalk';
+import idx from 'idx';
+import ora from 'ora';
+import path from 'path';
 import CliTable from 'cli-table';
+import * as ConfigUtils from '@expo/config';
 import { Android, Simulator, User, Credentials } from '@expo/xdl';
 
 import CommandError from '../../CommandError';
@@ -19,7 +23,7 @@ const { IOS } = PLATFORMS;
 
 export default program => {
   program
-    .command('client:ios')
+    .command('client:ios [project-dir]')
     .option(
       '--apple-id <login>',
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
@@ -27,7 +31,31 @@ export default program => {
     .description(
       'Build a custom version of the Expo Client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
-    .asyncAction(async options => {
+    .asyncActionProjectDir(async (projectDir, options) => {
+      const servicesDisabled = {
+        push_notifications:
+          'not yet available until API tokens are supported for the Push Notification system',
+      };
+
+      // get custom project manifest if it exists
+      // Note: this is some random user's project, NOT the expo client manifest
+      const spinner = ora(`Finding a valid app.json..`).start();
+      const appJsonPath = options.config || path.join(projectDir, 'app.json');
+      const appJsonExists = await ConfigUtils.fileExistsAsync(appJsonPath);
+      const { exp } = appJsonExists ? await ConfigUtils.readConfigJsonAsync(projectDir) : {};
+
+      if (exp) {
+        spinner.succeed(`Found app.json at ${appJsonPath}`);
+      } else {
+        spinner.warn(`Unable to find app.json.`);
+      }
+      if (!idx(exp, _ => _.ios.config.googleMapsApiKey)) {
+        const disabledReason = exp
+          ? 'ios.config.googleMapsApiKey does not exist in app.json'
+          : 'no app.json could be found';
+        servicesDisabled.google_maps = disabledReason;
+      }
+
       const authData = await appleApi.authenticate(options);
       const user = await User.getCurrentUserAsync();
 
@@ -57,9 +85,33 @@ export default program => {
       const distributionCert = await selectDistributionCert(context);
       const pushKey = await selectPushKey(context);
 
-      if (pushKey === null) {
+      // push notifications won't work if we dont have any push creds
+      // we also dont store anonymous creds, so user needs to be logged in
+      if (pushKey === null || !user) {
+        const disabledReason =
+          pushKey === null
+            ? 'you did not upload your push credentials'
+            : 'we require you to be logged in to store push credentials';
+        // keep the default push notification reason if we havent implmeneted API tokens
+        servicesDisabled.push_notifications = servicesDisabled.push_notifications || disabledReason;
+      }
+
+      if (Object.keys(servicesDisabled).length > 0) {
+        log.newLine();
+        log.warn('These services will be disabled in your custom Expo Client:');
+        const table = new CliTable({ head: ['Service', 'Reason'], style: { head: ['cyan'] } });
+        table.push(
+          ...Object.keys(servicesDisabled).map(service => {
+            const prettyService = service
+              .split('_')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+            return [prettyService, servicesDisabled[service]];
+          })
+        );
+        log(table.toString());
         log(
-          `Push notifications will be disabled until you upload your push credentials. See https://docs.expo.io/versions/latest/guides/adhoc-builds/#push-notifications-arent-working for more details.`
+          'See https://docs.expo.io/versions/latest/guides/adhoc-builds/#fixing-disabled-services for more details.'
         );
       }
 
@@ -143,6 +195,7 @@ export default program => {
         udids,
         addUdid,
         email,
+        customProjectManifest: exp,
       });
 
       log.newLine();
@@ -168,7 +221,7 @@ export default program => {
         log(chalk.green(`${result.statusUrl}`));
       }
       log.newLine();
-    });
+    }, true);
 
   program
     .command('client:install:ios')
