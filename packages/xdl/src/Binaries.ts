@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import fs from 'fs-extra';
 import hasbin from 'hasbin';
 import spawnAsync from '@expo/spawn-async';
@@ -17,7 +13,7 @@ let hasSourcedBashLoginScripts = false;
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const ERROR_MESSAGE = '\nPlease run `npm install -g exp && exp path`';
 
-function _hasbinAsync(name) {
+function _hasbinAsync(name: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     hasbin(name, result => {
       resolve(result);
@@ -37,7 +33,7 @@ export function getBinariesPath(): string {
   }
 }
 
-export async function addToPathAsync(name: string) {
+export async function addToPathAsync(name: string): Promise<void> {
   await sourceBashLoginScriptsAsync();
 
   if (await _hasbinAsync(name)) {
@@ -45,7 +41,7 @@ export async function addToPathAsync(name: string) {
   }
 
   // Users can set {ignoreBundledBinaries: ["watchman"]} to tell us to never use our version
-  let ignoreBundledBinaries = await UserSettings.getAsync('ignoreBundledBinaries', []);
+  let ignoreBundledBinaries = await UserSettings.getAsync('ignoreBundledBinaries', [] as string[]);
   if (ignoreBundledBinaries.includes(name)) {
     return;
   }
@@ -54,7 +50,7 @@ export async function addToPathAsync(name: string) {
   _prependToPath(binariesPath);
 }
 
-function _expoRCFileExists() {
+function _expoRCFileExists(): boolean {
   try {
     return fs.statSync(path.join(UserSettings.dotExpoHomeDirectory(), 'bashrc')).isFile();
   } catch (e) {
@@ -62,7 +58,7 @@ function _expoRCFileExists() {
   }
 }
 
-function _prependToPath(newPath) {
+function _prependToPath(newPath: string): void {
   let currentPath = process.env.PATH ? process.env.PATH : '';
   if (currentPath.length > 0) {
     let delimiter = process.platform === 'win32' ? ';' : ':';
@@ -72,7 +68,7 @@ function _prependToPath(newPath) {
   process.env.PATH = `${newPath}${currentPath}`;
 }
 
-export async function sourceBashLoginScriptsAsync() {
+export async function sourceBashLoginScriptsAsync(): Promise<void> {
   if (hasSourcedBashLoginScripts || process.platform === 'win32') {
     return;
   }
@@ -90,7 +86,7 @@ export async function sourceBashLoginScriptsAsync() {
   } else if (_expoRCFileExists()) {
     try {
       // User has a ~/.expo/bashrc. Run that and grab PATH.
-      let result = await spawnAsync(path.join(getBinariesPath(), `get-path-bash`), {
+      let result = await spawnAsync(path.join(getBinariesPath(), `get-path-bash`), [], {
         env: {
           PATH: '',
         },
@@ -135,7 +131,7 @@ export async function sourceBashLoginScriptsAsync() {
       if (result.stdout) {
         let regexResult = result.stdout.match(/(^|\n)PATH=(.+)/);
 
-        if (regexResult.length >= 3) {
+        if (regexResult && regexResult.length >= 3) {
           _prependToPath(regexResult[2]);
         } else {
           Logger.global.warn(
@@ -149,7 +145,7 @@ export async function sourceBashLoginScriptsAsync() {
   }
 }
 
-export async function writePathToUserSettingsAsync() {
+export async function writePathToUserSettingsAsync(): Promise<void> {
   await UserSettings.setAsync('PATH', process.env.PATH);
 
   // Used in detach app
@@ -157,7 +153,7 @@ export async function writePathToUserSettingsAsync() {
   await fs.writeFile(pathFile, process.env.PATH);
 }
 
-function _isDirectory(dir) {
+function _isDirectory(dir: string): boolean {
   try {
     if (fs.statSync(dir).isDirectory()) {
       return true;
@@ -169,6 +165,6 @@ function _isDirectory(dir) {
   }
 }
 
-export function isXcodeInstalled() {
+export function isXcodeInstalled(): boolean {
   return _isDirectory('/Applications/Xcode.app/');
 }
