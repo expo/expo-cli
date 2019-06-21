@@ -36,7 +36,7 @@ function logPackage(packageName) {
 
 async function ensureRootAsync(possibleProjectRoot) {
   if (typeof possibleProjectRoot === 'string') {
-    return possibleProjectRoot;
+    return path.resolve(possibleProjectRoot);
   }
   return (await getPathsAsync()).root;
 }
