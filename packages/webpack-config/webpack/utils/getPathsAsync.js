@@ -60,18 +60,28 @@ module.exports = async function getPaths({ locations, projectRoot }) {
   const packageJsonPath = absolute('package.json');
   const modulesPath = getModulesPath();
 
-  const { main } = pkg;
+  /**
+   *  The main file is resolved like so:
+   * * `app.json` -> `expo.entryPoint`
+   * * `package.json` -> `"main"`
+   * * `possibleMainFiles`
+   */
   let appMain;
-  if (!main) {
-    // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
-    appMain = findMainFile();
-    if (!appMain) {
-      throw new Error(
-        'Could not determine the main file in your project (index, src/index). Please define it with the `main` field in your `package.json`'
-      );
-    }
+  if (nativeAppManifest.entryPoint) {
+    appMain = nativeAppManifest.entryPoint;
   } else {
-    appMain = main;
+    const { main } = pkg;
+    if (!main) {
+      // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
+      appMain = findMainFile();
+      if (!appMain) {
+        throw new Error(
+          'Could not determine the main file in your project (index, src/index). Please define it with the `main` field in your `package.json`'
+        );
+      }
+    } else {
+      appMain = main;
+    }
   }
 
   const config = ConfigUtils.ensurePWAConfig(nativeAppManifest);
