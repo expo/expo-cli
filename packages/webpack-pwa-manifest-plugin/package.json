@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-pwa-manifest-plugin",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Generates a progressive web app (PWA) manifest.json from a React Native app.json",
   "main": "build/index.js",
   "repository": {
@@ -30,7 +30,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@expo/image-utils": "0.1.0",
+    "@expo/image-utils": "^0.1.1",
     "css-color-names": "^1.0.1",
     "mime": "^2.4.0",
     "tempy": "^0.3.0"
@@ -59,7 +59,12 @@
     "webpack": "^4.29.6",
     "webpack-cli": "^3.2.3"
   },
-  "files": ["build", "index.js", "LICENSE-webpack-pwa-manifest", "README.md"],
+  "files": [
+    "build",
+    "index.js",
+    "LICENSE-webpack-pwa-manifest",
+    "README.md"
+  ],
   "publishConfig": {
     "access": "public"
   },
