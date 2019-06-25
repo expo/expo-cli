@@ -9,7 +9,6 @@ import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
-import rimraf from 'rimraf';
 import pacote from 'pacote';
 import tar from 'tar';
 
@@ -212,9 +211,9 @@ function makePathReadable(pth) {
 
 export async function expInfoSafeAsync(root: string) {
   try {
-    let {
-      exp: { name, description, icon, iconUrl },
-    } = await ProjectUtils.readConfigJsonAsync(root);
+    let { exp: { name, description, icon, iconUrl } } = await ProjectUtils.readConfigJsonAsync(
+      root
+    );
     let pathOrUrl =
       icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
     let resolvedPath = path.resolve(root, pathOrUrl);
@@ -368,8 +367,8 @@ export async function resetProjectRandomnessAsync(projectRoot: string) {
 
 export async function clearXDLCacheAsync() {
   let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  rimraf.sync(path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache'));
-  rimraf.sync(path.join(dotExpoHomeDirectory, 'android-apk-cache'));
-  rimraf.sync(path.join(dotExpoHomeDirectory, 'starter-app-cache'));
+  fs.removeSync(path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache'));
+  fs.removeSync(path.join(dotExpoHomeDirectory, 'android-apk-cache'));
+  fs.removeSync(path.join(dotExpoHomeDirectory, 'starter-app-cache'));
   Logger.notifications.info(`Cleared cache`);
 }

@@ -4,7 +4,6 @@
 
 import _ from 'lodash';
 import fs from 'fs-extra';
-import rimraf from 'rimraf';
 import path from 'path';
 import axios from 'axios';
 import concat from 'concat-stream';
@@ -244,7 +243,7 @@ export default class ApiClient {
       let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
       await _downloadAsync(url, tmpPath);
       await Extract.extractAsync(tmpPath, outputPath);
-      rimraf.sync(tmpPath);
+      fs.removeSync(tmpPath);
     } else {
       await _downloadAsync(url, outputPath, progressFunction, retryFunction);
     }
