@@ -158,6 +158,14 @@ module.exports = async function(env = {}, argv) {
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
+  if (
+    (isProd && config.web.build.deepScopeAnalysis !== false) ||
+    (isDev && config.web.build.deepScopeAnalysis != null)
+  ) {
+    // Remove unused import/exports
+    middlewarePlugins.push(new WebpackDeepScopeAnalysisPlugin());
+  }
+
   const serviceWorker = overrideWithPropertyOrConfig(
     // Prevent service worker in development mode
     config.web.build.serviceWorker,
@@ -393,9 +401,6 @@ module.exports = async function(env = {}, argv) {
         fileName: 'asset-manifest.json',
         publicPath,
       }),
-
-      // Remove unused import/exports
-      isProd && new WebpackDeepScopeAnalysisPlugin(),
 
       ...middlewarePlugins,
 
