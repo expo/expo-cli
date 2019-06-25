@@ -18396,6 +18396,11 @@ validator@10.5.0:
   resolved "https://registry.yarnpkg.com/validator/-/validator-10.5.0.tgz#1debbe1e6f5fd0c920ed2af47516f3762033939c"
   integrity sha512-6OOi+eV2mOxCFLq0f2cJDrdB6lrtLXEUxabhNRGjgOLT/l3SSll9J49Cl+LIloUqkWWTPraK/mucEQ3dc2jStQ==
 
+validator@11.0.0:
+  version "11.0.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-11.0.0.tgz#fb10128bfb1fd14ce4ed36b79fc94289eae70667"
+  integrity sha512-+wnGLYqaKV2++nUv60uGzUJyJQwYVOin6pn1tgEiFCeCQO60yeu3Og9/yPccbBX574kxIcEJicogkzx6s6eyag==
+
 value-or-function@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/value-or-function/-/value-or-function-3.0.0.tgz#1c243a50b595c1be54a754bfece8563b9ff8d813"
