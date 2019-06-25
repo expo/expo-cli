@@ -1,31 +1,53 @@
+import { Readable } from 'stream';
+
 import bunyan from '@expo/bunyan';
 import _ from 'lodash';
 
-const PRINT_JSON_LOGS = process.env.JSON_LOGS === '1';
-const LOGGER_NAME = 'xdl-detach';
-const LEVELS = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
+export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
-const logger = {
-  init(levels) {
-    this.loggerObj = PRINT_JSON_LOGS ? bunyan.createLogger({ name: LOGGER_NAME }) : console;
-    this.configured = PRINT_JSON_LOGS;
+export class Logger {
+  loggerObj: any;
+  configured: boolean;
+  selfConfigured: boolean;
+  extraFields: any;
+
+  constructor() {
+    this.configured = process.env.JSON_LOGS === '1';
+    this.loggerObj = this.configured ? bunyan.createLogger({ name: 'xdl-detach' }) : console;
     this.selfConfigured = this.configured && true;
     this.extraFields = {};
-    levels.forEach(level => {
-      this[level] = function(...args) {
-        this.logLine(level, ...args);
-      };
-    });
-  },
-  configure(loggerObj) {
+  }
+
+  configure(loggerObj: Console | bunyan) {
     this.loggerObj = loggerObj;
     this.configured = true;
     this.selfConfigured = false;
-  },
-  withFields(extraFields) {
+  }
+
+  withFields(extraFields: any) {
     return Object.assign({}, this, { extraFields: { ...this.extraFields, ...extraFields } });
-  },
-  logLine(level, ...args) {
+  }
+
+  trace(...args: any[]) {
+    this.logLine('trace', ...args);
+  }
+  debug(...args: any[]) {
+    this.logLine('debug', ...args);
+  }
+  info(...args: any[]) {
+    this.logLine('info', ...args);
+  }
+  warn(...args: any[]) {
+    this.logLine('warn', ...args);
+  }
+  error(...args: any[]) {
+    this.logLine('error', ...args);
+  }
+  fatal(...args: any[]) {
+    this.logLine('fatal', ...args);
+  }
+
+  logLine(level: LogLevel, ...args: any[]) {
     const argsToLog = [...args];
     const extraFieldsFromArgsExist = _.isPlainObject(_.first(args));
     const extraFieldsFromArgs = extraFieldsFromArgsExist ? args[0] : {};
@@ -37,20 +59,22 @@ const logger = {
       argsToLog.unshift(extraFields);
     }
     this.loggerObj[level](...argsToLog);
-  },
-};
+  }
+}
 
-logger.init(LEVELS);
-
-export default logger;
+const LoggerDetach = new Logger();
+export default LoggerDetach;
 
 export function pipeOutputToLogger(
-  { stdout, stderr } = {},
+  { stdout, stderr }: { stdout?: Readable | null; stderr?: Readable | null } = {
+    stdout: null,
+    stderr: null,
+  },
   extraFields = {},
   { stdoutOnly = false, dontShowStdout = false } = {}
 ) {
   if (stdout) {
-    const stdoutExtraFields = { ...extraFields };
+    const stdoutExtraFields = { ...extraFields, dontShowStdout: false };
     if (dontShowStdout) {
       stdoutExtraFields.dontShowStdout = true;
     }
@@ -62,7 +86,7 @@ export function pipeOutputToLogger(
   }
 }
 
-function logMultiline(data, extraFields) {
+function logMultiline(data: any, extraFields: any) {
   if (!data) {
     return;
   }
@@ -70,16 +94,16 @@ function logMultiline(data, extraFields) {
   lines.forEach(line => {
     if (line) {
       const args = [line];
-      if (logger.configured) {
+      if (LoggerDetach.configured) {
         args.unshift(extraFields);
       }
       const shouldntLogMessage =
         extraFields.source === 'stdout' &&
         extraFields.dontShowStdout &&
-        logger.configured &&
-        !logger.selfConfigured;
+        LoggerDetach.configured &&
+        !LoggerDetach.selfConfigured;
       if (!shouldntLogMessage) {
-        logger.info(...args);
+        LoggerDetach.info(...args);
       }
     }
   });
