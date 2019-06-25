@@ -1,9 +1,9 @@
-/**
- * @flow
- */
-
-import _ from 'lodash';
 import path from 'path';
+
+import { ExpoConfig, Platform } from '@expo/config';
+import { JSONObject } from '@expo/json-file';
+import forEach from 'lodash/forEach';
+import pickBy from 'lodash/pickBy';
 import semver from 'semver';
 
 import ApiV2Client from './ApiV2';
@@ -11,7 +11,37 @@ import { Cacher } from './tools/FsCache';
 import XDLError from './XDLError';
 import UserManager from './User';
 
-export async function versionsAsync() {
+type SDKVersion = {
+  androidExpoViewUrl?: string;
+  expoReactNativeTag: string;
+  /* deprecated */ exponentReactNativeTag?: string;
+  expokitNpmPackage?: string;
+  facebookReactNativeVersion: string;
+  facebookReactVersion?: string;
+  iosExpoViewUrl?: string;
+  /* deprecated */ iosExponentViewUrl?: string;
+  iosVersion?: string;
+  isDeprecated?: boolean;
+  packagesToInstallWhenEjecting?: { [name: string]: string };
+  releaseNoteUrl?: string;
+};
+
+type SDKVersions = { [version: string]: SDKVersion };
+type TurtleSDKVersions = { android: string; ios: string };
+
+type Versions = {
+  androidUrl: 'https://d1ahtucjixef4r.cloudfront.net/Exponent-2.11.4.apk';
+  androidVersion: '2.11.4';
+  iosUrl: 'https://dpq5q02fu5f55.cloudfront.net/Exponent-2.11.1.tar.gz';
+  iosVersion: '2.11.1';
+  sdkVersions: SDKVersions;
+  /* deprecated */ starterApps: unknown;
+  /* deprecated */ templates: unknown[];
+  /* deprecated */ templatesv2: unknown[];
+  turtleSdkVersions: TurtleSDKVersions;
+};
+
+export async function versionsAsync(): Promise<Versions> {
   const api = new ApiV2Client();
   const versionCache = new Cacher(
     () => api.getAsync('versions/latest'),
@@ -22,26 +52,31 @@ export async function versionsAsync() {
   return await versionCache.getAsync();
 }
 
-export async function sdkVersionsAsync() {
+export async function sdkVersionsAsync(): Promise<SDKVersions> {
   const { sdkVersions } = await versionsAsync();
   return sdkVersions;
 }
 
-export async function turtleSdkVersionsAsync() {
+export async function turtleSdkVersionsAsync(): Promise<TurtleSDKVersions> {
   const { turtleSdkVersions } = await versionsAsync();
   return turtleSdkVersions;
 }
 
-export async function setVersionsAsync(value: any) {
+export async function setVersionsAsync(value: any): Promise<void> {
   const user = await UserManager.getCurrentUserAsync();
   const api = ApiV2Client.clientForUser(user);
-  return await api.postAsync('versions/update', {
-    value,
-    secret: process.env.EXPO_VERSIONS_SECRET,
+  const secret = process.env.EXPO_VERSIONS_SECRET;
+  if (!secret)
+    throw new Error(
+      'Versions.setVersionsAsync: EXPO_VERSIONS_SECRET environment variable is required'
+    );
+  await api.postAsync('versions/update', {
+    value: value as JSONObject,
+    secret,
   });
 }
 
-export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
+export function gteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }
@@ -60,7 +95,7 @@ export function gteSdkVersion(expJson: any, sdkVersion: string): boolean {
   }
 }
 
-export function lteSdkVersion(expJson: any, sdkVersion: string): boolean {
+export function lteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }
@@ -79,7 +114,7 @@ export function lteSdkVersion(expJson: any, sdkVersion: string): boolean {
   }
 }
 
-export function parseSdkVersionFromTag(tag: string) {
+export function parseSdkVersionFromTag(tag: string): string {
   if (tag.startsWith('sdk-')) {
     return tag.substring(4);
   }
@@ -87,35 +122,40 @@ export function parseSdkVersionFromTag(tag: string) {
   return tag;
 }
 
-export async function newestSdkVersionAsync() {
+export async function newestSdkVersionAsync(): Promise<{
+  version: string;
+  data: SDKVersion | null;
+}> {
   let sdkVersions = await sdkVersionsAsync();
-  let result = {};
+  let result = null;
   let highestMajorVersion = '0.0.0';
-  _.forEach(sdkVersions, (value, key) => {
+  forEach(sdkVersions, (value, key) => {
     if (semver.major(key) > semver.major(highestMajorVersion)) {
       highestMajorVersion = key;
       result = value;
     }
   });
-  result.version = highestMajorVersion;
-  return result;
+  return {
+    version: highestMajorVersion,
+    data: result,
+  };
 }
 
-export async function oldestSupportedMajorVersionAsync() {
+export async function oldestSupportedMajorVersionAsync(): Promise<number> {
   const sdkVersions = await sdkVersionsAsync();
-  const supportedVersions = _.pickBy(sdkVersions, v => !v.isDeprecated);
-  let versionNumbers = [];
-  _.forEach(supportedVersions, (value, key) => {
+  const supportedVersions = pickBy(sdkVersions, v => !v.isDeprecated);
+  let versionNumbers: number[] = [];
+  forEach(supportedVersions, (value, key) => {
     versionNumbers.push(semver.major(key));
   });
   return Math.min(...versionNumbers);
 }
 
-export async function facebookReactNativeVersionsAsync(): Promise<Array<string>> {
+export async function facebookReactNativeVersionsAsync(): Promise<string[]> {
   let sdkVersions = await sdkVersionsAsync();
-  let facebookReactNativeVersions = new Set();
+  let facebookReactNativeVersions = new Set<string>();
 
-  _.forEach(sdkVersions, value => {
+  forEach(sdkVersions, value => {
     if (value.facebookReactNativeVersion) {
       facebookReactNativeVersions.add(value.facebookReactNativeVersion);
     }
@@ -126,7 +166,7 @@ export async function facebookReactNativeVersionsAsync(): Promise<Array<string>>
 
 export async function facebookReactNativeVersionToExpoVersionAsync(
   facebookReactNativeVersion: string
-): Promise<?string> {
+): Promise<string | null> {
   if (!semver.valid(facebookReactNativeVersion)) {
     throw new XDLError(
       'INVALID_VERSION',
@@ -135,9 +175,9 @@ export async function facebookReactNativeVersionToExpoVersionAsync(
   }
 
   let sdkVersions = await sdkVersionsAsync();
-  let currentSdkVersion = null;
+  let currentSdkVersion: string | null = null;
 
-  _.forEach(sdkVersions, (value, key) => {
+  forEach(sdkVersions, (value, key) => {
     if (
       semver.major(value.facebookReactNativeVersion) === semver.major(facebookReactNativeVersion) &&
       semver.minor(value.facebookReactNativeVersion) === semver.minor(facebookReactNativeVersion) &&
@@ -150,7 +190,10 @@ export async function facebookReactNativeVersionToExpoVersionAsync(
   return currentSdkVersion;
 }
 
-export async function canTurtleBuildSdkVersion(sdkVersion, platform) {
+export async function canTurtleBuildSdkVersion(
+  sdkVersion: string,
+  platform: keyof TurtleSDKVersions
+): Promise<boolean> {
   if (sdkVersion === 'UNVERSIONED') {
     return true;
   }
