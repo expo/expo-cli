@@ -9,6 +9,7 @@ import * as Env from './Env';
 
 export type UserSettingsData = {
   auth?: UserData | null;
+  ignoreBundledBinaries?: string[];
   openDevToolsAtStartup?: boolean;
   PATH?: string;
   sendTo?: string;
@@ -24,7 +25,7 @@ export type UserData = {
 
 const SETTINGS_FILE_NAME = 'state.json';
 
-function userSettingsFile() {
+function userSettingsFile(): string {
   let dir = dotExpoHomeDirectory();
   let file = path.join(dir, SETTINGS_FILE_NAME);
   try {
@@ -39,7 +40,7 @@ function userSettingsFile() {
   return file;
 }
 
-function userSettingsJsonFile() {
+function userSettingsJsonFile(): JsonFile<UserSettingsData> {
   return new JsonFile<UserSettingsData>(userSettingsFile(), {
     jsonParseErrorDefault: {},
     cantReadFileDefault: {},
@@ -106,9 +107,7 @@ async function anonymousIdentifier(): Promise<string> {
   return id;
 }
 
-const UserSettings = userSettingsJsonFile();
-
-Object.assign(UserSettings, {
+const UserSettings = Object.assign(userSettingsJsonFile(), {
   dotExpoHomeDirectory,
   recentExpsJsonFile,
   userSettingsFile,

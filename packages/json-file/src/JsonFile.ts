@@ -23,6 +23,8 @@ export interface JSONObject {
   [key: string]: JSONValue | undefined;
 }
 
+type Defined<T> = T extends undefined ? never : T;
+
 type Options<TJSONObject extends JSONObject> = {
   badJsonDefault?: TJSONObject;
   jsonParseErrorDefault?: TJSONObject;
@@ -78,7 +80,7 @@ export default class JsonFile<TJSONObject extends JSONObject> {
     key: K,
     defaultValue: TDefault,
     options?: Options<TJSONObject>
-  ): Promise<TJSONObject[K] | TDefault> {
+  ): Promise<Defined<TJSONObject[K]> | TDefault> {
     return getAsync(this.file, key, defaultValue, this._getOptions(options));
   }
 
