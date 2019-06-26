@@ -41,7 +41,7 @@ export default program => {
       };
 
       // get custom project manifest if it exists
-      // Note: this is some random user's project, NOT the expo client manifest
+      // Note: this is the current developer's project, NOT the Expo client's manifest
       const spinner = ora(`Finding custom configuration for the Expo client...`).start();
       const appJsonPath = options.config || path.join(projectDir, 'app.json');
       const appJsonExists = await ConfigUtils.fileExistsAsync(appJsonPath);
