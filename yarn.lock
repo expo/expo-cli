@@ -1198,15 +1198,15 @@
   dependencies:
     cross-spawn "^6.0.5"
 
-"@expo/traveling-fastlane-darwin@1.9.6":
-  version "1.9.6"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.9.6.tgz#f17065afd43b89c156b200e41f3898740d0835a9"
-  integrity sha512-MT603eBETkbbeK7CFDwvSNxdC549CudByIbBhrzosNg5zH9n2p/7zV6DSbYMRrFxapCniwHFYWVbaYrPO9gnlw==
+"@expo/traveling-fastlane-darwin@1.9.7":
+  version "1.9.7"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.9.7.tgz#ee2210baa4e94bfd74ec9df6768331467bafadc7"
+  integrity sha512-J7oWQO0UDBc5H70L87CmvERRpV+ZH/wUIAwZvwePUGqYC7ucB9iXzxP9j0niE+RAMATFvtm1bRF8XGTTf9WeUA==
 
-"@expo/traveling-fastlane-linux@1.9.6":
-  version "1.9.6"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.9.6.tgz#c1aeaeff4bad3d78fea76c9d6fb66b56849af13c"
-  integrity sha512-zIDY3Ed3/VPLC9Xo9y/0qPJUOTqEV/zIhEjR6eOAeQOl1yoT6EHMhYwdMDG/jQSeqyELtKnswKa8iN64VaPzPA==
+"@expo/traveling-fastlane-linux@1.9.7":
+  version "1.9.7"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.9.7.tgz#a19d16daff739ea997cee4e87fd26dc4391f0f72"
+  integrity sha512-qmO4Y/kaiD66Dk/O006UfdUNcJtCMAl9fjFPOBQHsiD35yL4lMQjxrfJLOxJzd+URugkOcYJyj69ykFy/mbSxw==
 
 "@gulp-sourcemaps/identity-map@1.X":
   version "1.0.2"
