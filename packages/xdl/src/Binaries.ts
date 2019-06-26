@@ -13,7 +13,7 @@ let hasSourcedBashLoginScripts = false;
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
 const ERROR_MESSAGE = '\nPlease run `npm install -g exp && exp path`';
 
-function _hasbinAsync(name: string): Promise<boolean> {
+function _hasbinAsync(name: string) {
   return new Promise((resolve, reject) => {
     hasbin(name, result => {
       resolve(result);
@@ -50,7 +50,7 @@ export async function addToPathAsync(name: string): Promise<void> {
   _prependToPath(binariesPath);
 }
 
-function _expoRCFileExists(): boolean {
+function _expoRCFileExists() {
   try {
     return fs.statSync(path.join(UserSettings.dotExpoHomeDirectory(), 'bashrc')).isFile();
   } catch (e) {
@@ -58,7 +58,7 @@ function _expoRCFileExists(): boolean {
   }
 }
 
-function _prependToPath(newPath: string): void {
+function _prependToPath(newPath: string) {
   let currentPath = process.env.PATH ? process.env.PATH : '';
   if (currentPath.length > 0) {
     let delimiter = process.platform === 'win32' ? ';' : ':';
@@ -153,7 +153,7 @@ export async function writePathToUserSettingsAsync(): Promise<void> {
   await fs.writeFile(pathFile, process.env.PATH);
 }
 
-function _isDirectory(dir: string): boolean {
+function _isDirectory(dir: string) {
   try {
     if (fs.statSync(dir).isDirectory()) {
       return true;
