@@ -147,6 +147,14 @@ module.exports = async function(env = {}, argv) {
   const isDev = mode === 'development';
   const isProd = mode === 'production';
 
+  // Enables deep scope analysis in production mode.
+  // Remove unused import/exports
+  // override: `env.deepScopeAnalysis`
+  const deepScopeAnalysisEnabled = overrideWithPropertyOrConfig(
+    env.removeUnusedImportExports,
+    isProd
+  );
+
   const locations = await getPathsAsync(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
@@ -158,11 +166,7 @@ module.exports = async function(env = {}, argv) {
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
-  if (
-    (isProd && config.web.build.deepScopeAnalysis !== false) ||
-    (isDev && config.web.build.deepScopeAnalysis != null)
-  ) {
-    // Remove unused import/exports
+  if (deepScopeAnalysisEnabled) {
     middlewarePlugins.push(new WebpackDeepScopeAnalysisPlugin());
   }
 
