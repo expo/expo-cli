@@ -78,7 +78,7 @@ export async function sharpAsync(
   } catch (error) {
     if (error.stderr) {
       throw new Error(
-        +'\nProcessing images using sharp-cli failed: ' +
+        '\nProcessing images using sharp-cli failed: ' +
           error.message +
           '\nOutput: ' +
           error.stderr.replace(SHARP_HELP_PATTERN, '')
