@@ -52,7 +52,7 @@ export default program => {
       } else {
         spinner.warn(`Unable to find custom configuration for the Expo client`);
       }
-      if (!_.has(exp, 'ios.config.googleMapsApiKey') && !_.has(exp, 'ios.config.googleApiKey')) {
+      if (!_.has(exp, 'ios.config.googleMapsApiKey')) {
         const disabledReason = exp
           ? `ios.config.googleMapsApiKey does not exist in configuration file found in ${appJsonPath}`
           : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
