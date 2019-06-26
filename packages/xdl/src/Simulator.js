@@ -5,7 +5,7 @@
 import delayAsync from 'delay-async';
 import glob from 'glob-promise';
 import homeDir from 'home-dir';
-import osascript from '@expo/osascript';
+import * as osascript from '@expo/osascript';
 import path from 'path';
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
@@ -14,7 +14,6 @@ import fs from 'fs-extra';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
-import ErrorCode from './ErrorCode';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -48,7 +47,7 @@ async function _xcrunAsync(args) {
   } catch (e) {
     if (_isLicenseOutOfDate(e.stdout) || _isLicenseOutOfDate(e.stderr)) {
       throw new XDLError(
-        ErrorCode.XCODE_LICENSE_NOT_ACCEPTED,
+        'XCODE_LICENSE_NOT_ACCEPTED',
         'Xcode license is not accepted. Please run `sudo xcodebuild -license`.'
       );
     } else {
@@ -158,7 +157,6 @@ export async function _isSimulatorRunningAsync() {
   if (zeroMeansNo === '0') {
     return false;
   }
-
   return true;
 }
 
@@ -350,11 +348,11 @@ export async function _downloadSimulatorAppAsync(url) {
 
 // url: Optional URL of Exponent.app tarball to download
 export async function _installExpoOnSimulatorAsync(url) {
-  Logger.global.info(`Downloading latest version of Expo`);
+  Logger.global.info(`Downloading the latest version of Expo client app`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let dir = await _downloadSimulatorAppAsync(url);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
-  Logger.global.info('Installing Expo on iOS simulator');
+  Logger.global.info('Installing Expo client on iOS simulator');
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
@@ -363,7 +361,7 @@ export async function _installExpoOnSimulatorAsync(url) {
 
 export async function _uninstallExpoAppFromSimulatorAsync() {
   try {
-    Logger.global.info('Uninstalling Expo from iOS simulator.');
+    Logger.global.info('Uninstalling Expo client from iOS simulator.');
     await _xcrunAsync(['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
   } catch (e) {
     if (e.message && e.message.includes('No devices are booted.')) {

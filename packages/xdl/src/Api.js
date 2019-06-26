@@ -4,14 +4,12 @@
 
 import _ from 'lodash';
 import fs from 'fs-extra';
-import rimraf from 'rimraf';
 import path from 'path';
 import axios from 'axios';
 import concat from 'concat-stream';
 
 import { Cacher } from './tools/FsCache';
 import Config from './Config';
-import ErrorCode from './ErrorCode';
 import * as Extract from './Extract';
 import * as Session from './Session';
 import UserManager from './User';
@@ -22,6 +20,8 @@ const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;
+
+let exponentClient = 'xdl';
 
 function ApiError(code, message) {
   let err = new Error(message);
@@ -58,6 +58,7 @@ async function _callMethodAsync(
 
   let headers: any = {
     'Exp-ClientId': clientId,
+    'Exponent-Client': exponentClient,
   };
 
   if (skipValidationToken) {
@@ -106,7 +107,7 @@ async function _callMethodAsync(
       responseObj = JSON.parse(responseBody);
     } catch (e) {
       throw new XDLError(
-        ErrorCode.INVALID_JSON,
+        'INVALID_JSON',
         'Invalid JSON returned from API: ' + e + '. Response body: ' + responseBody
       );
     }
@@ -155,7 +156,7 @@ async function _downloadAsync(url, outputPath, progressFunction, retryFunction) 
     response.data
       .on('data', chunk => {
         downloadProgress += chunk.length;
-        const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
+        const roundedProgress = Math.floor(downloadProgress / totalDownloadSize * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);
@@ -189,6 +190,10 @@ export default class ApiClient {
   static port: number = Config.api.port || 80;
 
   static _schemaCaches = {};
+
+  static setClientName(name: string) {
+    exponentClient = name;
+  }
 
   static async callMethodAsync(
     methodName: string,
@@ -238,7 +243,7 @@ export default class ApiClient {
       let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
       await _downloadAsync(url, tmpPath);
       await Extract.extractAsync(tmpPath, outputPath);
-      rimraf.sync(tmpPath);
+      fs.removeSync(tmpPath);
     } else {
       await _downloadAsync(url, outputPath, progressFunction, retryFunction);
     }

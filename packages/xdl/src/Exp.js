@@ -9,7 +9,6 @@ import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
-import rimraf from 'rimraf';
 import pacote from 'pacote';
 import tar from 'tar';
 
@@ -23,12 +22,9 @@ import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
-import MessageCode from './MessageCode';
 
 // FIXME(perry) eliminate usage of this template
 export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
-
-export { default as convertProjectAsync } from './project/Convert';
 
 export async function determineEntryPointAsync(root: string) {
   let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(root);
@@ -83,7 +79,7 @@ export async function extractTemplateApp(
   packageManager: 'yarn' | 'npm' = 'npm',
   config = {}
 ) {
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.EXTRACTING);
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
   let tarStream = await pacote.tarball.stream(templateSpec, {
     cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
   });
@@ -114,7 +110,7 @@ export async function extractTemplateApp(
   });
 
   // Update files
-  Logger.notifications.info({ code: NotificationCode.PROGRESS }, MessageCode.CUSTOMIZING);
+  Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Customizing project...');
 
   let appFile = new JsonFile(path.join(projectRoot, 'app.json'));
   let appJson = merge(await appFile.readAsync(), config);
@@ -215,9 +211,9 @@ function makePathReadable(pth) {
 
 export async function expInfoSafeAsync(root: string) {
   try {
-    let {
-      exp: { name, description, icon, iconUrl },
-    } = await ProjectUtils.readConfigJsonAsync(root);
+    let { exp: { name, description, icon, iconUrl } } = await ProjectUtils.readConfigJsonAsync(
+      root
+    );
     let pathOrUrl =
       icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
     let resolvedPath = path.resolve(root, pathOrUrl);
@@ -371,8 +367,8 @@ export async function resetProjectRandomnessAsync(projectRoot: string) {
 
 export async function clearXDLCacheAsync() {
   let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  rimraf.sync(path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache'));
-  rimraf.sync(path.join(dotExpoHomeDirectory, 'android-apk-cache'));
-  rimraf.sync(path.join(dotExpoHomeDirectory, 'starter-app-cache'));
+  fs.removeSync(path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache'));
+  fs.removeSync(path.join(dotExpoHomeDirectory, 'android-apk-cache'));
+  fs.removeSync(path.join(dotExpoHomeDirectory, 'starter-app-cache'));
   Logger.notifications.info(`Cleared cache`);
 }

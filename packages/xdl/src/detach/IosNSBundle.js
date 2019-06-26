@@ -257,7 +257,9 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
 
     // app name
     infoPlist.CFBundleName = config.name;
-    infoPlist.CFBundleDisplayName = context.build.isExpoClientBuild() ? 'Expo' : config.name;
+    infoPlist.CFBundleDisplayName = context.build.isExpoClientBuild()
+      ? 'Expo (Custom)'
+      : config.name;
 
     // determine app linking schemes
     let linkingSchemes = config.scheme ? [config.scheme] : [];

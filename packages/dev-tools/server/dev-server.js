@@ -1,9 +1,9 @@
 import { graphiqlExpress } from 'apollo-server-express';
-import { Project } from 'xdl';
+import { Project } from '@expo/xdl';
 import express from 'express';
 import http from 'http';
 import next from 'next';
-import opn from 'opn';
+import openBrowser from 'react-dev-utils/openBrowser';
 
 import { startGraphQLServer } from './DevToolsServer';
 
@@ -34,7 +34,7 @@ async function run() {
     await Project.startAsync(projectDir);
     let url = `http://localhost:${PORT}`;
     console.log(`Development server running at ${url}`);
-    opn(url);
+    openBrowser(url);
   } catch (error) {
     console.error(error);
     process.exit(1);

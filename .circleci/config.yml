@@ -1,24 +1,66 @@
-# Javascript Node CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
-#
-version: 2
+version: 2.1
 
-jobs:
-  build:
+executors:
+  node:
     docker:
       - image: circleci/node:10
-    working_directory: ~/expo-dev-tools
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build
+      - test-dev-tools:
+          requires:
+            - build
+      - test-json-file:
+          requires:
+            - build
+      - test-expo-codemod:
+          requires:
+            - build
+jobs:
+  build:
+    executor: node
+    working_directory: ~/expo-cli
     steps:
       - checkout
       - restore_cache:
-          key: yarn-v3-{{ checksum "yarn.lock" }}
-      - run: yarn
-      - run: yarn bootstrap
-      - save_cache:
-          key: yarn-v3-{{ checksum "yarn.lock" }}
-          paths:
-            - ~/yarn_cache
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
       - run:
-          working_directory: ~/expo-dev-tools/packages/dev-tools
-          command: yarn test
+          name: Install Dependencies
+          command: yarn install --frozen-lockfile
+      - run:
+          name: Bootstrap (Link) Internal Dependencies
+          command: yarn bootstrap
+      - persist_to_workspace:
+          root: '~'
+          paths:
+            - expo-cli
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+  test-dev-tools:
+    executor: node
+    working_directory: ~/expo-cli/packages/dev-tools
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-json-file:
+    executor: node
+    working_directory: ~/expo-cli/packages/json-file
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-expo-codemod:
+    executor: node
+    working_directory: ~/expo-cli/packages/expo-codemod
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test

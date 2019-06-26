@@ -10,7 +10,6 @@ import * as ConfigUtils from '@expo/config';
 
 import ip from './ip';
 import Config from './Config';
-import ErrorCode from './ErrorCode';
 import * as Exp from './Exp';
 import * as ProjectSettings from './ProjectSettings';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -191,7 +190,7 @@ export async function constructUrlAsync(
 
     const { error } = joi.validate(opts, schema);
     if (error) {
-      throw new XDLError(ErrorCode.INVALID_OPTIONS, error.toString());
+      throw new XDLError('INVALID_OPTIONS', error.toString());
     }
   }
 

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
-import { Exp } from 'xdl';
+import { Exp } from '@expo/xdl';
 import isString from 'lodash/isString';
 import padEnd from 'lodash/padEnd';
 import { Snippet } from 'enquirer';
@@ -22,7 +22,12 @@ const FEATURED_TEMPLATES = [
   {
     shortName: 'blank',
     name: 'expo-template-blank',
-    description: 'minimal dependencies to run and an empty root component ',
+    description: 'minimal dependencies to run and an empty root component',
+  },
+  {
+    shortName: 'blank (TypeScript)',
+    name: 'expo-template-blank-typescript',
+    description: 'same as blank but with TypeScript configuration',
   },
   {
     shortName: 'tabs',

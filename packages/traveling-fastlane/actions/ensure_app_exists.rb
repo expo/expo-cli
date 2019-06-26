@@ -1,7 +1,18 @@
 require 'spaceship'
 require 'json'
 require 'base64'
+require 'optparse'
 require_relative 'funcs'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: ensure_app_exists.rb [options] appleId password teamId bundleId name"
+
+  opts.on("-p", "--push-notifications", "enable push notifications") do |push_notifications|
+    options[:enablePushNotifications] = push_notifications
+  end
+
+end.parse!
 
 $appleId, $password, $teamId, $bundleId, $name = ARGV
 ENV['FASTLANE_TEAM_ID'] = $teamId
@@ -9,10 +20,16 @@ ENV['FASTLANE_TEAM_ID'] = $teamId
 def ensure_app_exists()
   app = Spaceship::Portal.app.find $bundleId
   if app == nil
-    Spaceship::Portal.app.create!(bundle_id: $bundleId, name: $name)
-    true
+    {created: true, app: Spaceship::Portal.app.create!(bundle_id: $bundleId, name: $name)}
   else
-    false
+    {created: false, app: app}
+  end
+end
+
+def update_service(app, options)
+  if options[:enablePushNotifications]
+    app_service = Spaceship::Portal.app_service.push_notification.on
+    app.update_service(app_service)
   end
 end
 
@@ -22,7 +39,8 @@ with_captured_stderr{
   begin
     Spaceship::Portal.login($appleId, $password)
     Spaceship::Portal.client.team_id = $teamId
-    created = ensure_app_exists()
+    created, app = ensure_app_exists().values_at(:created, :app)
+    update_service(app, options)
     $result = { result: 'success', created: created }
   rescue Spaceship::Client::UnexpectedResponse => e
     $result = {

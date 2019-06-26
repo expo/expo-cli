@@ -1,36 +1,15 @@
 import fs from 'fs-extra';
-import Jimp from 'jimp';
 import mime from 'mime';
+import path from 'path';
+import temporary from 'tempy';
+import { sharpAsync } from '@expo/image-utils';
+
 import { joinURI } from './helpers/uri';
 import generateFingerprint from './helpers/fingerprint';
 import IconError from './errors/IconError';
 import { fromStartupImage } from './validators/Apple';
 
-const supportedMimeTypes = [Jimp.MIME_PNG, Jimp.MIME_JPEG, Jimp.MIME_BMP];
-
-const ASPECT_FILL = 'cover';
-const ASPECT_FIT = 'contain';
-
-export async function createBaseImageAsync(width, height, color) {
-  return new Promise(
-    (resolve, reject) =>
-      new Jimp(width, height, color, (err, image) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(image);
-      })
-  );
-}
-
-async function compositeImagesAsync(image, ...images) {
-  for (const imageProps of images) {
-    const childImage = await Jimp.read(imageProps);
-    image.composite(childImage, 0, 0);
-  }
-  return image;
-}
+const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
 function parseArray(i) {
   if (i == null) return [];
@@ -63,12 +42,17 @@ function processIcon(width, height, icon, buffer, mimeType, publicPath, shouldFi
     : `icon_${dimensions}.${mime.getExtension(mimeType)}`;
   const iconOutputDir = icon.destination ? joinURI(icon.destination, fileName) : fileName;
   const iconPublicUrl = joinURI(publicPath, iconOutputDir);
-  return {
-    manifestIcon: {
+
+  let manifestIcon = null;
+  if (width === height) {
+    manifestIcon = {
       src: iconPublicUrl,
       sizes: dimensions,
       type: mimeType,
-    },
+    };
+  }
+  return {
+    manifestIcon,
     webpackAsset: {
       output: iconOutputDir,
       url: iconPublicUrl,
@@ -104,14 +88,16 @@ function parseSize(size) {
 }
 
 async function getBufferWithMimeAsync({ src, resizeMode, color }, mimeType, { width, height }) {
+  let imagePath;
   if (!supportedMimeTypes.includes(mimeType)) {
-    try {
-      return fs.readFileSync(src);
-    } catch (err) {
-      throw new IconError(`It was not possible to read '${src}'.`);
-    }
+    imagePath = src;
   } else {
-    return await resize(src, mimeType, width, height, resizeMode, color);
+    imagePath = await resize(src, mimeType, width, height, resizeMode, color);
+  }
+  try {
+    return await fs.readFile(imagePath);
+  } catch (err) {
+    throw new IconError(`It was not possible to read '${src}'.`);
   }
 }
 
@@ -125,37 +111,34 @@ async function processImage(size, icon, fingerprint, publicPath) {
   return processIcon(width, height, icon, _buffer, mimeType, publicPath, fingerprint);
 }
 
-async function resize(img, mimeType, width, height, resizeMode = 'contain', color) {
+async function resize(inputPath, mimeType, width, height, fit = 'contain', background) {
   try {
-    const initialImage = await Jimp.read(img);
-    const center = Jimp.VERTICAL_ALIGN_MIDDLE | Jimp.HORIZONTAL_ALIGN_CENTER;
-    if (resizeMode === ASPECT_FILL) {
-      return await initialImage
-        .cover(width, height, center)
-        .quality(100)
-        .getBufferAsync(mimeType);
-    } else if (resizeMode === ASPECT_FIT) {
-      const resizedImage = await initialImage.contain(width, height, center).quality(100);
-      if (!color) {
-        return resizedImage.getBufferAsync(mimeType);
-      }
-
-      const splashScreen = await createBaseImageAsync(width, height, color);
-      const combinedImage = await compositeImagesAsync(splashScreen, resizedImage);
-      return combinedImage.getBufferAsync(mimeType);
-    } else {
-      throw new IconError(
-        `Unsupported resize mode: ${resizeMode}. Please choose either 'cover', or 'contain'`
-      );
-    }
+    const outputPath = temporary.directory();
+    await sharpAsync(
+      {
+        input: inputPath,
+        output: outputPath,
+        format: mimeType.split('/')[1],
+      },
+      [
+        {
+          operation: 'resize',
+          width,
+          height,
+          fit,
+          background,
+        },
+      ]
+    );
+    return path.join(outputPath, path.basename(inputPath));
   } catch ({ message }) {
-    throw new IconError(`It was not possible to generate splash screen '${img}'. ${message}`);
+    throw new IconError(`It was not possible to generate splash screen '${inputPath}'. ${message}`);
   }
 }
 
 export function retrieveIcons(manifest) {
   // Remove these items so they aren't written to disk.
-  const { startupImages, apple, icon, icons, ...config } = manifest;
+  const { startupImages, icons, ...config } = manifest;
   const parsedStartupImages = parseArray(startupImages);
 
   let parsedIcons = parseArray(icons);
@@ -198,7 +181,14 @@ export async function parseIcons(inputIcons, fingerprint, publicPath) {
   await Promise.all(promises);
 
   return {
-    icons,
+    icons: icons
+      .filter(icon => icon)
+      .sort(({ sizes }, { sizes: sizesB }) => {
+        if (sizes < sizesB) return -1;
+        else if (sizes > sizesB) return 1;
+        return 0;
+      }),
+    // startupImages: icons.filter(({ isStartupImage }) => isStartupImage),
     assets,
   };
 }

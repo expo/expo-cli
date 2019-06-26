@@ -2,6 +2,7 @@
  * @flow
  */
 import axios from 'axios';
+import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import delayAsync from 'delay-async';
@@ -23,7 +24,6 @@ import minimatch from 'minimatch';
 import ngrok from '@expo/ngrok';
 import os from 'os';
 import path from 'path';
-import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
@@ -31,19 +31,23 @@ import md5hex from 'md5hex';
 import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
-import webpack from 'webpack';
-import WebpackDevServer from 'webpack-dev-server';
 
 import * as ConfigUtils from '@expo/config';
 import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
+import {
+  readAssetJsonAsync,
+  getAssetFilesAsync,
+  optimizeImageAsync,
+  calculateHash,
+  createNewFilename,
+  toReadableValue,
+} from './AssetUtils';
 import Config from './Config';
-import createWebpackCompiler from './createWebpackCompiler';
 import * as Doctor from './project/Doctor';
 import * as DevSession from './DevSession';
-import ErrorCode from './ErrorCode';
 import logger from './Logger';
 import * as ExponentTools from './detach/ExponentTools';
 import * as Exp from './Exp';
@@ -62,7 +66,6 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import * as Watchman from './Watchman';
 import XDLError from './XDLError';
-import * as Web from './Web';
 import type { User as ExpUser } from './User'; //eslint-disable-line
 import * as Webpack from './Webpack';
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
@@ -106,14 +109,14 @@ export async function getManifestUrlWithFallbackAsync(projectRoot: string) {
 
 async function _assertValidProjectRoot(projectRoot) {
   if (!projectRoot) {
-    throw new XDLError(ErrorCode.NO_PROJECT_ROOT, 'No project root specified');
+    throw new XDLError('NO_PROJECT_ROOT', 'No project root specified');
   }
 }
 
 async function _getFreePortAsync(rangeStart) {
   let port = await freeportAsync(rangeStart);
   if (!port) {
-    throw new XDLError(ErrorCode.NO_PORT_FOUND, 'No available port found');
+    throw new XDLError('NO_PORT_FOUND', 'No available port found');
   }
 
   return port;
@@ -258,7 +261,7 @@ export async function getSlugAsync(projectRoot: string, options: Object = {}) {
   if (!exp || !pkg) {
     const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
-      ErrorCode.NO_PACKAGE_JSON,
+      'NO_PACKAGE_JSON',
       `Couldn't read ${configName} file in project at ${projectRoot}`
     );
   }
@@ -268,7 +271,7 @@ export async function getSlugAsync(projectRoot: string, options: Object = {}) {
   } else if (!exp.slug) {
     const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
-      ErrorCode.INVALID_MANIFEST,
+      'INVALID_MANIFEST',
       `${configName} in ${projectRoot} must contain the slug field`
     );
   }
@@ -340,7 +343,7 @@ export async function mergeAppDistributions(
       const index = await JsonFile.readAsync(indexPath);
       if (!index.sdkVersion) {
         throw new XDLError(
-          ErrorCode.INVALID_MANIFEST,
+          'INVALID_MANIFEST',
           `Invalid index.json, must specify an sdkVersion at ${indexPath}`
         );
       }
@@ -482,10 +485,7 @@ export async function exportForAppHosting(
   }
 
   if (!exp.slug) {
-    throw new XDLError(
-      ErrorCode.INVALID_MANIFEST,
-      'Must provide a slug field in the app.json manifest.'
-    );
+    throw new XDLError('INVALID_MANIFEST', 'Must provide a slug field in the app.json manifest.');
   }
   let username = await UserManager.getCurrentUsernameAsync();
   if (!username) {
@@ -500,7 +500,7 @@ export async function exportForAppHosting(
     projectRoot,
     null,
     path.join(outputDir, 'android-index.json'),
-    JSON.stringify(exp)
+    JSON.stringify({ ...exp, dependencies: Object.keys(pkg.dependencies) })
   );
 
   // save the ios manifest
@@ -622,7 +622,7 @@ export async function publishAsync(
   const validationStatus = await Doctor.validateWithNetworkAsync(projectRoot);
   if (validationStatus === Doctor.ERROR || validationStatus === Doctor.FATAL) {
     throw new XDLError(
-      ErrorCode.PUBLISH_VALIDATION_ERROR,
+      'PUBLISH_VALIDATION_ERROR',
       "Couldn't publish because errors were found. (See logs above.) Please fix the errors and try again."
     );
   }
@@ -652,7 +652,7 @@ export async function publishAsync(
       logger.global.error();
 
       throw new XDLError(
-        ErrorCode.HOOK_INITIALIZATION_ERROR,
+        'HOOK_INITIALIZATION_ERROR',
         'Please fix your postPublish hook configuration.'
       );
     }
@@ -873,7 +873,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
   // Validate schema
   const { error } = joi.validate(options, schema);
   if (error) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, error.toString());
+    throw new XDLError('INVALID_OPTIONS', error.toString());
   }
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
@@ -882,7 +882,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
   if (!exp || !pkg) {
     const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
-      ErrorCode.NO_PACKAGE_JSON,
+      'NO_PACKAGE_JSON',
       `Couldn't read ${configName} file in project at ${projectRoot}`
     );
   }
@@ -907,7 +907,7 @@ async function _getPublishExpConfigAsync(projectRoot, options) {
 
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
   if (exp.sdkVersion === 'UNVERSIONED' && !process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, 'Cannot publish with sdkVersion UNVERSIONED.');
+    throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
   return { exp, pkg };
@@ -920,13 +920,13 @@ async function _buildPublishBundlesAsync(projectRoot, opts?: Object) {
 
   logger.global.info('Building iOS bundle');
   let iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
-    errorCode: ErrorCode.INVALID_BUNDLE,
+    errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
   logger.global.info('Building Android bundle');
   let androidBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'android', {
-    errorCode: ErrorCode.INVALID_BUNDLE,
+    errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
@@ -948,12 +948,12 @@ async function _maybeBuildSourceMapsAsync(projectRoot, exp, options = {}) {
 
   logger.global.info('Building sourcemaps');
   let iosSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'ios', {
-    errorCode: ErrorCode.INVALID_BUNDLE,
+    errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
   let androidSourceMap = await _getForPlatformAsync(projectRoot, sourceMapUrl, 'android', {
-    errorCode: ErrorCode.INVALID_BUNDLE,
+    errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
@@ -974,11 +974,11 @@ async function _collectAssets(projectRoot, exp, hostedAssetPrefix) {
   let assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
 
   let iosAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
-    errorCode: ErrorCode.INVALID_ASSETS,
+    errorCode: 'INVALID_ASSETS',
   });
 
   let androidAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'android', {
-    errorCode: ErrorCode.INVALID_ASSETS,
+    errorCode: 'INVALID_ASSETS',
   });
 
   // Resolve manifest assets to their hosted URL and add them to the list of assets to
@@ -1278,7 +1278,7 @@ export async function buildAsync(
     mode: joi.string(),
     platform: joi.any().valid('ios', 'android', 'all'),
     expIds: joi.array(),
-    type: joi.any().valid('archive', 'simulator', 'client'),
+    type: joi.any().valid('archive', 'simulator', 'client', 'app-bundle', 'apk'),
     releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
     bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
     publicUrl: joi.string(),
@@ -1287,14 +1287,14 @@ export async function buildAsync(
 
   const { error } = joi.validate(options, schema);
   if (error) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, error.toString());
+    throw new XDLError('INVALID_OPTIONS', error.toString());
   }
 
   const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
     throw new XDLError(
-      ErrorCode.NO_PACKAGE_JSON,
+      'NO_PACKAGE_JSON',
       `Couldn't read ${configName} file in project at ${projectRoot}`
     );
   }
@@ -1311,7 +1311,7 @@ export async function buildAsync(
   if (options.mode !== 'status' && (options.platform === 'ios' || options.platform === 'all')) {
     if (!exp.ios || !exp.ios.bundleIdentifier) {
       throw new XDLError(
-        ErrorCode.INVALID_MANIFEST,
+        'INVALID_MANIFEST',
         `Must specify a bundle identifier in order to build this experience for iOS. ` +
           `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
       );
@@ -1321,7 +1321,7 @@ export async function buildAsync(
   if (options.mode !== 'status' && (options.platform === 'android' || options.platform === 'all')) {
     if (!exp.android || !exp.android.package) {
       throw new XDLError(
-        ErrorCode.INVALID_MANIFEST,
+        'INVALID_MANIFEST',
         `Must specify a java package in order to build this experience for Android. ` +
           `Please specify one in ${configName} at "${configPrefix}android.package"`
       );
@@ -1863,9 +1863,9 @@ async function _connectToNgrokAsync(
     // Attempt to connect 3 times
     if (attempts >= 2) {
       if (e.message) {
-        throw new XDLError(ErrorCode.NGROK_ERROR, e.toString());
+        throw new XDLError('NGROK_ERROR', e.toString());
       } else {
-        throw new XDLError(ErrorCode.NGROK_ERROR, JSON.stringify(e));
+        throw new XDLError('NGROK_ERROR', JSON.stringify(e));
       }
     }
     if (!attempts) {
@@ -1901,14 +1901,11 @@ export async function startTunnelsAsync(projectRoot: string) {
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort) {
-    throw new XDLError(
-      ErrorCode.NO_PACKAGER_PORT,
-      `No packager found for project at ${projectRoot}.`
-    );
+    throw new XDLError('NO_PACKAGER_PORT', `No packager found for project at ${projectRoot}.`);
   }
   if (!packagerInfo.expoServerPort) {
     throw new XDLError(
-      ErrorCode.NO_EXPO_SERVER_PORT,
+      'NO_EXPO_SERVER_PORT',
       `No Expo server found for project at ${projectRoot}.`
     );
   }
@@ -2056,13 +2053,103 @@ export async function setOptionsAsync(
   });
   const { error } = joi.validate(options, schema);
   if (error) {
-    throw new XDLError(ErrorCode.INVALID_OPTIONS, error.toString());
+    throw new XDLError('INVALID_OPTIONS', error.toString());
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
 }
 export async function getUrlAsync(projectRoot: string, options: Object = {}) {
   _assertValidProjectRoot(projectRoot);
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
+}
+
+export async function optimizeAsync(projectRoot: string = './', options: Object = {}) {
+  logger.global.info(chalk.green('Optimizing assets...'));
+
+  const { assetJson, assetInfo } = await readAssetJsonAsync(projectRoot);
+  // Keep track of which hash values in assets.json are no longer in use
+  const outdated = new Set();
+  for (const fileHash in assetInfo) outdated.add(fileHash);
+
+  let totalSaved = 0;
+  const { allFiles, selectedFiles } = await getAssetFilesAsync(projectRoot, options);
+  const hashes = {};
+  // Remove assets that have been deleted/modified from assets.json
+  allFiles.forEach(image => {
+    const hash = calculateHash(image);
+    if (assetInfo[hash]) {
+      outdated.delete(hash);
+    }
+    hashes[image] = hash;
+  });
+  outdated.forEach(outdatedHash => {
+    delete assetInfo[outdatedHash];
+  });
+
+  const { quality, include, exclude, save } = options;
+
+  const images = include || exclude ? selectedFiles : allFiles;
+  for (const image of images) {
+    const hash = hashes[image];
+    if (assetInfo[hash]) {
+      continue;
+    }
+    const { size: prevSize } = fs.statSync(image);
+
+    const newName = createNewFilename(image);
+    const optimizedImage = await optimizeImageAsync(image, quality);
+
+    const { size: newSize } = fs.statSync(optimizedImage);
+    const amountSaved = prevSize - newSize;
+    if (amountSaved > 0) {
+      await fs.move(image, newName);
+      await fs.move(optimizedImage, image);
+    } else {
+      assetInfo[hash] = true;
+      logger.global.info(
+        chalk.gray(
+          amountSaved === 0
+            ? `Compressed version of ${image} same size as original. Using original instead.`
+            : `Compressed version of ${image} was larger than original. Using original instead.`
+        )
+      );
+      continue;
+    }
+    // Recalculate hash since the image has changed
+    const newHash = calculateHash(image);
+    assetInfo[newHash] = true;
+
+    if (save) {
+      if (hash === newHash) {
+        logger.global.info(
+          chalk.gray(
+            `Compressed asset ${image} is identical to the original. Using original instead.`
+          )
+        );
+        fs.unlinkSync(newName);
+      } else {
+        logger.global.info(chalk.gray(`Saving original asset to ${newName}`));
+        // Save the old hash to prevent reoptimizing
+        assetInfo[hash] = true;
+      }
+    } else {
+      // Delete the renamed original asset
+      fs.unlinkSync(newName);
+    }
+    if (amountSaved) {
+      totalSaved += amountSaved;
+      logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
+    } else {
+      logger.global.info(chalk.gray(`Nothing to compress.`));
+    }
+  }
+  if (totalSaved === 0) {
+    logger.global.info('No assets optimized. Everything is fully compressed!');
+  } else {
+    logger.global.info(
+      `Finished compressing assets. ${chalk.green(toReadableValue(totalSaved))} saved.`
+    );
+  }
+  assetJson.writeAsync(assetInfo);
 }
 
 export async function startAsync(
@@ -2075,14 +2162,17 @@ export async function startAsync(
     projectRoot,
     developerTool: Config.developerTool,
   });
-  if (!options.webOnly) {
+
+  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  if (options.webOnly) {
+    await Webpack.startAsync(projectRoot, options, verbose);
+    DevSession.startSession(projectRoot, exp, 'web');
+  } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
+    DevSession.startSession(projectRoot, exp, 'native');
   }
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
-  if (hasWebSupport) {
-    await Webpack.startAsync(projectRoot, options, verbose);
-  }
+
   if (!Config.offline) {
     try {
       await startTunnelsAsync(projectRoot);
@@ -2090,8 +2180,6 @@ export async function startAsync(
       ProjectUtils.logDebug(projectRoot, 'expo', `Error starting tunnel ${e.message}`);
     }
   }
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  DevSession.startSession(projectRoot, exp);
   return exp;
 }
 
@@ -2099,7 +2187,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
   await stopExpoServerAsync(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
-  const hasWebSupport = await Web.hasWebSupportAsync(projectRoot);
+  const hasWebSupport = await Doctor.hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
     await Webpack.stopAsync(projectRoot);
   }

@@ -11,11 +11,15 @@ $result = nil
 captured_stderr = with_captured_stderr{
   begin
     config = {
-      apk: $buildPath,
       package_name: $androidPackage,
       json_key: $key,
       track: $track
     }
+    if File.extname($buildPath) == ".aab"
+        config[:aab] = $buildPath
+    else
+        config[:apk] = $buildPath
+    end
     Supply.config = FastlaneCore::Configuration.create(Supply::Options.available_options, config)
     Supply::Uploader.new.perform_upload
     $result = JSON.generate({ result: 'success' })

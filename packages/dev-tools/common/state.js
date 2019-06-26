@@ -341,6 +341,17 @@ export const publishProject = async (options, props) => {
     },
     props
   );
+  if (options.optimize) {
+    await props.client.mutate({
+      mutation: gql`
+        mutation OptimizeAssets {
+          optimizeAssets {
+            projectDir
+          }
+        }
+      `,
+    });
+  }
   let result;
   try {
     result = await props.client.mutate({

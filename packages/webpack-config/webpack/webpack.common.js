@@ -4,7 +4,7 @@ const chalk = require('chalk');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
-const webpack = require('webpack');
+const { DefinePlugin, HotModuleReplacementPlugin } = require('webpack');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
 const WorkboxPlugin = require('workbox-webpack-plugin');
@@ -12,13 +12,63 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
 const PnpWebpackPlugin = require('pnp-webpack-plugin');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
+const ManifestPlugin = require('webpack-manifest-plugin');
+const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
+const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
+const BrotliPlugin = require('brotli-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const createIndexHTMLFromAppJSONAsync = require('./createIndexHTMLFromAppJSONAsync');
 const createClientEnvironment = require('./createClientEnvironment');
-const createIndexHTMLFromAppJSON = require('./createIndexHTMLFromAppJSON');
+const getPathsAsync = require('./utils/getPathsAsync');
 const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
-const getPaths = require('./utils/getPaths');
+const createFontLoader = require('./loaders/createFontLoader');
+const createBabelLoaderAsync = require('./loaders/createBabelLoaderAsync');
+const getMode = require('./utils/getMode');
+const getConfigAsync = require('./utils/getConfigAsync');
+
+const DEFAULT_ALIAS = {
+  // Alias direct react-native imports to react-native-web
+  'react-native$': 'react-native-web',
+  '@react-native-community/netinfo': 'react-native-web/dist/exports/NetInfo',
+  // Add polyfills for modules that react-native-web doesn't support
+  // Depends on expo-asset
+  'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
+  'react-native/Libraries/Image/assetPathUtils$': 'expo-asset/build/Image/assetPathUtils',
+  'react-native/Libraries/Image/resolveAssetSource$': 'expo-asset/build/resolveAssetSource',
+  // Alias internal react-native modules to react-native-web
+  'react-native/Libraries/Components/View/ViewStylePropTypes$':
+    'react-native-web/dist/exports/View/ViewStylePropTypes',
+  'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
+    'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
+  'react-native/Libraries/vendor/emitter/EventEmitter$':
+    'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
+  'react-native/Libraries/vendor/emitter/EventSubscriptionVendor$':
+    'react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor',
+  'react-native/Libraries/EventEmitter/NativeEventEmitter$':
+    'react-native-web/dist/vendor/react-native/NativeEventEmitter',
+};
+
+const DEFAULT_GZIP = {
+  test: /\.(js|css)$/,
+  filename: '[path].gz[query]',
+  algorithm: 'gzip',
+  threshold: 1024,
+  minRatio: 0.8,
+};
+
+const DEFAULT_BROTLI = {
+  asset: '[path].br[query]',
+  test: /\.(js|css)$/,
+  threshold: 1024,
+  minRatio: 0.8,
+};
+
 const DEFAULT_SERVICE_WORKER = {};
+
 const DEFAULT_REPORT_CONFIG = {
-  verbose: false,
+  verbose: true,
   path: 'web-report',
   statsFilename: 'stats.json',
   reportFilename: 'report.html',
@@ -73,7 +123,7 @@ const fallbackLoaderConfiguration = {
 
 function createNoJSComponent(message) {
   // from twitter.com
-  return `" <form action="" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Ok</button> </p> </div> </form> "`;
+  return `" <form action="location.reload()" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Reload</button> </p> </div> </form> "`;
 }
 
 function getDevtool(env, { devtool }) {
@@ -91,32 +141,26 @@ function getDevtool(env, { devtool }) {
   return false;
 }
 
-const getMode = require('./utils/getMode');
-const getConfig = require('./utils/getConfig');
-// const createFontLoader = require('./loaders/createFontLoader');
-// const createBabelLoader = require('./loaders/createBabelLoader');
-const webpackConfigUnimodules = require('./webpack.config.unimodules');
-const merge = require('webpack-merge');
-
-module.exports = function(env = {}, argv) {
-  const config = getConfig(env);
+module.exports = async function(env = {}, argv) {
+  const config = await getConfigAsync(env);
   const mode = getMode(env);
-  const locations = getPaths(env);
+  const isDev = mode === 'development';
+  const isProd = mode === 'production';
+
+  const locations = await getPathsAsync(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
-  const middlewarePlugins = [
-    // Remove unused import/exports
-    new WebpackDeepScopeAnalysisPlugin(),
-  ];
+  const middlewarePlugins = [];
 
+  const { build: buildConfig } = config.web;
   const { lang } = config.web;
-  const { publicPath, rootId } = config.web.build;
+  const { publicPath, rootId, babel: babelAppConfig = {} } = config.web.build;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
   const serviceWorker = overrideWithPropertyOrConfig(
     // Prevent service worker in development mode
-    env.production ? config.web.build.serviceWorker : false,
+    config.web.build.serviceWorker,
     DEFAULT_SERVICE_WORKER
   );
   if (serviceWorker) {
@@ -124,8 +168,15 @@ module.exports = function(env = {}, argv) {
     // the HTML & assets that are part of the Webpack build.
     middlewarePlugins.push(
       new WorkboxPlugin.GenerateSW({
-        exclude: [/\.LICENSE$/, /\.map$/, /asset-manifest\.json$/],
-        navigateFallback: `${publicPath}index.html`,
+        exclude: [
+          /\.LICENSE$/,
+          /\.map$/,
+          /asset-manifest\.json$/,
+          // Exclude all apple touch images as they are cached locally after the PWA is added.
+          /^\bapple.*\.png$/,
+        ],
+        /// SINGLE PAGE:
+        // navigateFallback: `${publicPath}index.html`,
         clientsClaim: true,
         importWorkboxFrom: 'cdn',
         navigateFallbackBlacklist: [
@@ -135,20 +186,15 @@ module.exports = function(env = {}, argv) {
           // public/ and not a SPA route
           new RegExp('/[^/]+\\.[^/]+$'),
         ],
+        ...(isDev
+          ? {
+              include: [], // Don't cache any assets in dev mode.
+            }
+          : {}),
         ...serviceWorker,
       })
     );
   }
-
-  // Generate the `manifest.json`
-  middlewarePlugins.push(
-    new WebpackPWAManifestPlugin(config, {
-      ...env,
-      publicPath,
-      noResources: env.development,
-      filename: locations.production.manifest,
-    })
-  );
 
   /**
    * report: {
@@ -167,6 +213,9 @@ module.exports = function(env = {}, argv) {
   );
 
   if (reportConfig) {
+    if (isDev && reportConfig.verbose) {
+      console.log('Generating a report, this will add noticeably more time to rebuilds.');
+    }
     const reportDir = reportConfig.path;
     reportPlugins = [
       // Delete the report folder
@@ -191,23 +240,70 @@ module.exports = function(env = {}, argv) {
 
   const devtool = getDevtool(env, config.web.build);
 
-  const unimodulesConfig = webpackConfigUnimodules(env, argv);
-
   const allLoaders = [
+    {
+      test: /\.html$/,
+      use: ['html-loader'],
+      exclude: locations.template.folder,
+    },
     imageLoaderConfiguration,
-    ...unimodulesConfig.module.rules,
+    await createBabelLoaderAsync({
+      mode,
+      babelProjectRoot: babelAppConfig.root || locations.root,
+      verbose: babelAppConfig.verbose,
+      include: babelAppConfig.include,
+      use: babelAppConfig.use,
+    }),
+    createFontLoader({ locations }),
+
     styleLoaderConfiguration,
     // This needs to be the last loader
     fallbackLoaderConfiguration,
-  ];
+  ].filter(Boolean);
 
-  // Clear all loaders
-  unimodulesConfig.module.rules = [];
+  /**
+   * web: {
+   *   build: {
+   *     verbose: boolean,
+   *     brotli: boolean | {}, // (Brotli Options)
+   *     gzip: boolean | CompressionPlugin.Options<O>,
+   *   }
+   * }
+   */
+  const gzipConfig = isProd && overrideWithPropertyOrConfig(buildConfig.gzip, DEFAULT_GZIP);
+  const brotliConfig = isProd && enableWithPropertyOrConfig(buildConfig.brotli, DEFAULT_BROTLI);
 
-  return merge(unimodulesConfig, {
+  const appEntry = [locations.appMain];
+
+  if (isProd) {
+    if (env.polyfill) {
+      appEntry.unshift('@babel/polyfill');
+    }
+  } else {
+    // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
+    // Include an alternative client for WebpackDevServer. A client's job is to
+    // connect to WebpackDevServer by a socket and get notified about changes.
+    // When you save a file, the client will either apply hot updates (in case
+    // of CSS changes), or refresh the page (in case of JS changes). When you
+    // make a syntax error, this client will display a syntax error overlay.
+    // Note: instead of the default WebpackDevServer client, we use a custom one
+    // to bring better experience for Create React App users. You can replace
+    // the line below with these two lines if you prefer the stock client:
+    // require.resolve('webpack-dev-server/client') + '?/',
+    // require.resolve('webpack/hot/dev-server'),
+    appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+  }
+
+  const environmentVariables = createClientEnvironment(mode, publicPath, publicAppManifest);
+
+  return {
+    mode,
+    entry: {
+      app: appEntry,
+    },
     // https://webpack.js.org/configuration/other-options/#bail
     // Fail out on the first error instead of tolerating it.
-    bail: mode === 'production',
+    bail: isProd,
     devtool,
     context: __dirname,
     // configures where the build ends up
@@ -218,8 +314,34 @@ module.exports = function(env = {}, argv) {
       publicPath,
     },
     plugins: [
+      // Delete the build folder
+      isProd &&
+        new CleanWebpackPlugin([locations.production.folder], {
+          root: locations.root,
+          dry: false,
+          verbose: buildConfig.verbose,
+        }),
+      // Copy the template files over
+      isProd &&
+        new CopyWebpackPlugin([
+          {
+            from: locations.template.folder,
+            to: locations.production.folder,
+            // We generate new versions of these based on the templates
+            ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
+          },
+          {
+            from: locations.template.serveJson,
+            to: locations.production.serveJson,
+          },
+          {
+            from: locations.template.favicon,
+            to: locations.production.favicon,
+          },
+        ]),
+
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON(env),
+      await createIndexHTMLFromAppJSONAsync(env),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
@@ -230,13 +352,55 @@ module.exports = function(env = {}, argv) {
         ROOT_ID: rootId,
       }),
 
-      new webpack.DefinePlugin(createClientEnvironment(locations, publicPath, publicAppManifest)),
-
-      ...middlewarePlugins,
+      new WebpackPWAManifestPlugin(config, {
+        publicPath,
+        noResources: isDev || !env.pwa,
+        filename: locations.production.manifest,
+        HtmlWebpackPlugin,
+      }),
 
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
       new ModuleNotFoundPlugin(locations.root),
+
+      new DefinePlugin(environmentVariables),
+
+      // This is necessary to emit hot updates (currently CSS only):
+      isDev && new HotModuleReplacementPlugin(),
+      // Watcher doesn't work well if you mistype casing in a path so we use
+      // a plugin that prints an error when you attempt to do this.
+      // See https://github.com/facebook/create-react-app/issues/240
+      isDev && new CaseSensitivePathsPlugin(),
+
+      // If you require a missing module and then `npm install` it, you still have
+      // to restart the development server for Webpack to discover it. This plugin
+      // makes the discovery automatic so you don't have to restart.
+      // See https://github.com/facebook/create-react-app/issues/186
+      isDev && new WatchMissingNodeModulesPlugin(locations.absolute('node_modules')),
+
+      isProd &&
+        new MiniCssExtractPlugin({
+          // Options similar to the same options in webpackOptions.output
+          // both options are optional
+          filename: 'static/css/[name].[contenthash:8].css',
+          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+        }),
+
+      // Generate a manifest file which contains a mapping of all asset filenames
+      // to their corresponding output file so that tools can pick it up without
+      // having to parse `index.html`.
+      new ManifestPlugin({
+        fileName: 'asset-manifest.json',
+        publicPath,
+      }),
+
+      // Remove unused import/exports
+      isProd && new WebpackDeepScopeAnalysisPlugin(),
+
+      ...middlewarePlugins,
+
+      gzipConfig && new CompressionPlugin(gzipConfig),
+      brotliConfig && new BrotliPlugin(brotliConfig),
 
       new ProgressBarPlugin({
         format:
@@ -249,9 +413,9 @@ module.exports = function(env = {}, argv) {
       }),
 
       ...reportPlugins,
-    ],
-
+    ].filter(Boolean),
     module: {
+      strictExportPresence: false,
       rules: [
         // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
@@ -268,8 +432,19 @@ module.exports = function(env = {}, argv) {
         PnpWebpackPlugin.moduleLoader(module),
       ],
     },
-
     resolve: {
+      alias: DEFAULT_ALIAS,
+      extensions: [
+        '.web.ts',
+        '.web.tsx',
+        '.ts',
+        '.tsx',
+        '.web.js',
+        '.web.jsx',
+        '.js',
+        '.jsx',
+        '.json',
+      ],
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
         // guards against forgotten dependencies and such.
@@ -299,5 +474,5 @@ module.exports = function(env = {}, argv) {
     // Turn off performance processing because we utilize
     // our own (CRA) hints via the FileSizeReporter
     performance: false,
-  });
+  };
 };

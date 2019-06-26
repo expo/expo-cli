@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-import { UserSettings, UrlUtils } from 'xdl';
+import { UserSettings, UrlUtils } from '@expo/xdl';
 
 import askUser from '../askUser';
 import log from '../log';

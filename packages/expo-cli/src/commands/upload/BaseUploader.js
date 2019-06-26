@@ -1,7 +1,7 @@
 import path from 'path';
 
 import fs from 'fs-extra';
-import { StandaloneBuild, ProjectUtils } from 'xdl';
+import { StandaloneBuild, ProjectUtils } from '@expo/xdl';
 import chalk from 'chalk';
 
 import { downloadFile } from './utils';
@@ -80,7 +80,7 @@ export default class BaseUploader {
     const filename = path.basename(urlOrPath);
     const destinationPath = `/tmp/${filename}`;
     if (await fs.exists(destinationPath)) {
-      return destinationPath;
+      await fs.remove(destinationPath);
     }
     if (urlOrPath.startsWith('/')) {
       await fs.copy(urlOrPath, destinationPath);

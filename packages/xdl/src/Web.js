@@ -1,73 +1,92 @@
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
-import opn from 'opn';
-import chalk from 'chalk';
-import ErrorCode from './ErrorCode';
-import Logger from './Logger';
-import * as UrlUtils from './UrlUtils';
-import { readConfigJsonAsync } from './project/ProjectUtils';
-import XDLError from './XDLError';
+import openBrowser from 'react-dev-utils/openBrowser';
 
-function invokePossibleFunction(objectOrMethod, ...args) {
+import getenv from 'getenv';
+import chalk from 'chalk';
+import Logger from './Logger';
+import * as Doctor from './project/Doctor';
+import { readConfigJsonAsync, logWarning } from './project/ProjectUtils';
+import * as UrlUtils from './UrlUtils';
+
+// When you have errors in the production build that aren't present in the development build you can use `EXPO_WEB_DEBUG=true expo start --no-dev` to debug those errors.
+// - Prevent the production build from being minified
+// - Include file path info comments in the bundle
+export function isDebugModeEnabled() {
+  return getenv.boolish('EXPO_WEB_DEBUG', false);
+}
+
+export function isInfoEnabled() {
+  return getenv.boolish('EXPO_WEB_INFO', false);
+}
+
+export function shouldWebpackClearLogs() {
+  return !isInfoEnabled() && !getenv.boolish('EXPO_DEBUG', false);
+}
+
+export function logEnvironmentInfo(projectRoot, tag, config) {
+  if (isDebugModeEnabled() && config.mode === 'production') {
+    logWarning(
+      projectRoot,
+      tag,
+      `Webpack is bundling your project in \`production\` mode with the ${chalk.bold(
+        '`EXPO_WEB_DEBUG`'
+      )} environment variable enabled. You should toggle it off before building for production.`
+    );
+  }
+}
+
+async function invokePossibleFunctionAsync(objectOrMethod, ...args) {
   if (typeof objectOrMethod === 'function') {
-    return objectOrMethod(...args);
+    return await objectOrMethod(...args);
   } else {
     return objectOrMethod;
   }
 }
 
-export function invokeWebpackConfig(env, argv) {
+function applyEnvironmentVariables(config) {
+  // Use EXPO_DEBUG_WEB=true to enable debugging features for cases where the prod build
+  // has errors that aren't caught in development mode.
+  // Related: https://github.com/expo/expo-cli/issues/614
+  if (isDebugModeEnabled() && config.mode === 'production') {
+    // TODO: Bacon: Should this throw if not running in prod mode?
+
+    // Add comments that describe the file import/exports.
+    // This will make it easier to debug.
+    config.output.pathinfo = true;
+    // Prevent minimizing when running in debug mode.
+    config.optimization.minimize = false;
+  }
+
+  return config;
+}
+
+export async function invokeWebpackConfigAsync(env, argv) {
   // Check if the project has a webpack.config.js in the root.
   const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
+  let config;
   if (fs.existsSync(projectWebpackConfig)) {
     const webpackConfig = require(projectWebpackConfig);
-    return invokePossibleFunction(webpackConfig, env, argv);
+    config = await invokePossibleFunctionAsync(webpackConfig, env, argv);
+  } else {
+    // Fallback to the default expo webpack config.
+    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+    config = await createExpoWebpackConfigAsync(env, argv);
   }
-  // Fallback to the default expo webpack config.
-  const config = require('@expo/webpack-config');
-  return config(env, argv);
-}
-
-export async function logURL(projectRoot) {
-  let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
-  console.log(`Expo Web is running at ${chalk.underline(url)}`);
-}
-
-function logPreviewNotice() {
-  console.log();
-  console.log(
-    chalk.bold.yellow(
-      'Web support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
-    )
-  );
-  console.log();
+  return applyEnvironmentVariables(config);
 }
 
 export async function openProjectAsync(projectRoot) {
-  const hasWebSupport = await hasWebSupportAsync(projectRoot);
-  if (!hasWebSupport) {
-    logWebSetup();
-    return { success: false };
-  }
-  logPreviewNotice();
+  await Doctor.validateWebSupportAsync(projectRoot);
+
   try {
     let url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
-    opn(url, { wait: false });
+    openBrowser(url);
     return { success: true, url };
   } catch (e) {
     Logger.global.error(`Couldn't start project on web: ${e.message}`);
     return { success: false, error: e };
   }
-}
-
-export function logWebSetup() {
-  Logger.global.error(getWebSetupLogs());
-}
-
-export async function hasWebSupportAsync(projectRoot) {
-  const { exp } = await readConfigJsonAsync(projectRoot);
-  const isWebConfigured = exp.platforms.includes('all') || exp.platforms.includes('web');
-  return isWebConfigured;
 }
 
 // If platforms only contains the "web" field
@@ -77,41 +96,4 @@ export async function onlySupportsWebAsync(projectRoot) {
     return exp.platforms[0] === 'web';
   }
   return false;
-}
-
-export async function ensureWebSupportAsync(projectRoot) {
-  const hasWebSupport = await hasWebSupportAsync(projectRoot);
-  if (!hasWebSupport) {
-    throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, getWebSetupLogs());
-  }
-}
-
-function getWebSetupLogs() {
-  const appJsonRules = chalk.white(
-    `
-  ${chalk.whiteBright.bold(`app.json`)}
-  {
-    "platforms": [
-      "android",
-      "ios",
-  ${chalk.green.bold(`+      "web"`)}
-    ]
-  }`
-  );
-  const packageJsonRules = chalk.white(
-    `
-  ${chalk.whiteBright.bold(`package.json`)}
-  {
-    "dependencies": {
-  ${chalk.green.bold(`+      "react-native-web": "^0.11.0",`)}
-  ${chalk.green.bold(`+      "react-dom": "^16.7.0"`)}
-    },
-    "devDependencies": {
-  ${chalk.green.bold(`+      "babel-preset-expo": "^5.1.0"`)}
-    }
-  }`
-  );
-  return `${chalk.red.bold('Your project is not configured to support web yet!')}
-  ${packageJsonRules}
-    ${appJsonRules}`;
 }

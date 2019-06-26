@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { ApiV2, Project, User } from 'xdl';
+import { ApiV2, Project, User } from '@expo/xdl';
 import log from '../log';
 import * as table from '../commands/utils/cli-table';
 

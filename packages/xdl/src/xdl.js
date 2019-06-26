@@ -24,6 +24,9 @@ module.exports = {
   get ApiV2() {
     return require('./ApiV2').default;
   },
+  get AssetUtils() {
+    return require('./AssetUtils');
+  },
   get Binaries() {
     return require('./Binaries');
   },
@@ -92,9 +95,6 @@ module.exports = {
   },
   get IosCodeSigning() {
     return require('./detach/IosCodeSigning');
-  },
-  get MessageCode() {
-    return require('./MessageCode').default;
   },
   get Logger() {
     return require('./Logger').default;

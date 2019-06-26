@@ -48,6 +48,8 @@ function _validatePodfileSubstitutions(substitutions) {
     'PODFILE_UNVERSIONED_EXPO_MODULES_DEPENDENCIES',
     // Universal modules configurations to be included in the Podfile
     'UNIVERSAL_MODULES',
+    // Relative path from iOS project directory to folder where unimodules are installed.
+    'UNIVERSAL_MODULES_PATH',
   ];
 
   for (const key in substitutions) {
@@ -247,22 +249,35 @@ async function _concatTemplateFilesInDirectoryAsync(directory, filterFn) {
 }
 
 function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
+  const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+  const podNameExpression = sdkMajorVersion < 33 ? 'target.pod_name' : 'pod_name';
+  const targetExpression = sdkMajorVersion < 33 ? 'target' : 'target_installation_result';
+
   let podsRootSub = '${PODS_ROOT}';
   const maybeDetachedServiceDef = isServiceContext
     ? `config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED_SERVICE=1'`
     : '';
+
+  const maybeFrameworkSearchPathDef =
+    sdkMajorVersion < 33
+      ? `
+          # Needed for GoogleMaps 2.x
+          config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
+          config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
+          config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'`
+      : '';
   return `
-    if target.pod_name == 'ExpoKit'
-      target.native_target.build_configurations.each do |config|
-        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'
-        ${maybeDetachedServiceDef}
-        # needed for GoogleMaps 2.x
-        config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= []
-        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Base/Frameworks'
-        config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '${podsRootSub}/GoogleMaps/Maps/Frameworks'
+      if ${podNameExpression} == 'ExpoKit'
+        ${targetExpression}.native_target.build_configurations.each do |config|
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'EX_DETACHED=1'
+          ${maybeDetachedServiceDef}
+          # Enable Google Maps support
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'HAVE_GOOGLE_MAPS=1'
+          config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'HAVE_GOOGLE_MAPS_UTILS=1'
+          ${maybeFrameworkSearchPathDef}
+        end
       end
-    end
 `;
 }
 
@@ -283,33 +298,37 @@ function _renderUnversionedPostinstall(sdkVersion) {
   ];
   const podsToChangeRB = `[${podsToChangeDeployTarget.map(pod => `'${pod}'`).join(',')}]`;
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+  const podNameExpression = sdkMajorVersion < 33 ? 'target.pod_name' : 'pod_name';
+  const targetExpression = sdkMajorVersion < 33 ? 'target' : 'target_installation_result';
 
   // SDK31 drops support for iOS 9.0
   const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0';
 
   return `
-    if ${podsToChangeRB}.include? target.pod_name
-      target.native_target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
+      if ${podsToChangeRB}.include? ${podNameExpression}
+        ${targetExpression}.native_target.build_configurations.each do |config|
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
+        end
       end
-    end
-    # Can't specify this in the React podspec because we need
-    # to use those podspecs for detached projects which don't reference ExponentCPP.
-    if target.pod_name.start_with?('React')
-      target.native_target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
-        config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
+
+      # Can't specify this in the React podspec because we need to use those podspecs for detached
+      # projects which don't reference ExponentCPP.
+      if ${podNameExpression}.start_with?('React')
+        ${targetExpression}.native_target.build_configurations.each do |config|
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
+          config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
+        end
       end
-    end
-    # Build React Native with RCT_DEV enabled and RCT_ENABLE_INSPECTOR and
-    # RCT_ENABLE_PACKAGER_CONNECTION disabled
-    next unless target.pod_name == 'React'
-    target.native_target.build_configurations.each do |config|
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_DEV=1'
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_ENABLE_INSPECTOR=0'
-      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'ENABLE_PACKAGER_CONNECTION=0'
-    end
+
+      # Build React Native with RCT_DEV enabled and RCT_ENABLE_INSPECTOR and
+      # RCT_ENABLE_PACKAGER_CONNECTION disabled
+      next unless ${podNameExpression} == 'React'
+      ${targetExpression}.native_target.build_configurations.each do |config|
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_DEV=1'
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_ENABLE_INSPECTOR=0'
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'ENABLE_PACKAGER_CONNECTION=0'
+      end
 `;
 }
 
@@ -353,15 +372,41 @@ async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubst
   await fs.writeFile(pathToOutput, result);
 }
 
-function _renderUnversionedUniversalModulesDependencies(universalModules, sdkVersion) {
-  return indentString(
-    universalModules
-      .map(moduleInfo =>
-        _renderUnversionedUniversalModuleDependency(moduleInfo.podName, moduleInfo.path, sdkVersion)
-      )
-      .join('\n'),
-    2
-  );
+function _renderUnversionedUniversalModulesDependencies(
+  universalModules,
+  universalModulesPath,
+  sdkVersion
+) {
+  const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+
+  if (sdkMajorVersion >= 33) {
+    return indentString(
+      `
+# Install unimodules
+require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
+use_unimodules!(
+  modules_paths: ['${universalModulesPath}'],
+  exclude: [
+    'expo-face-detector',
+    'expo-payments-stripe',
+  ],
+)`,
+      2
+    );
+  } else {
+    return indentString(
+      universalModules
+        .map(moduleInfo =>
+          _renderUnversionedUniversalModuleDependency(
+            moduleInfo.podName,
+            moduleInfo.path,
+            sdkVersion
+          )
+        )
+        .join('\n'),
+      2
+    );
+  }
 }
 
 function _renderUnversionedUniversalModuleDependency(podName, path, sdkVersion) {
@@ -442,6 +487,7 @@ async function renderPodfileAsync(
     EXPOKIT_DEPENDENCY: _renderExpoKitDependency(expoKitDependencyOptions, sdkVersion),
     PODFILE_UNVERSIONED_EXPO_MODULES_DEPENDENCIES: _renderUnversionedUniversalModulesDependencies(
       universalModules,
+      moreSubstitutions.UNIVERSAL_MODULES_PATH,
       sdkVersion
     ),
     PODFILE_UNVERSIONED_RN_DEPENDENCY: _renderUnversionedReactNativeDependency(

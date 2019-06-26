@@ -14,6 +14,7 @@ const packageJson = require('../package.json');
 const paths = {
   source: {
     js: 'src/**/*.js',
+    ts: 'src/**/*.ts',
   },
   build: 'build',
   caches: 'caches',
@@ -22,7 +23,7 @@ const paths = {
 const tasks = {
   babel() {
     return gulp
-      .src(paths.source.js)
+      .src([paths.source.js, paths.source.ts])
       .pipe(changed(paths.build))
       .pipe(plumber())
       .pipe(
@@ -47,7 +48,7 @@ const tasks = {
   },
 
   watchBabel(done) {
-    gulp.watch(paths.source.js, gulp.parallel(tasks.flow, tasks.babel));
+    gulp.watch([paths.source.js, paths.source.ts], gulp.parallel(tasks.flow, tasks.babel));
     done();
   },
 

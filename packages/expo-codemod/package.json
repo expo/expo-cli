@@ -1,0 +1,48 @@
+{
+  "name": "expo-codemod",
+  "version": "1.0.2",
+  "description": "Codemod scripts for Expo apps",
+  "author": "Expo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/expo-codemod"
+  },
+  "bin": {
+    "expo-codemod": "./bin/expo-codemod.js"
+  },
+  "scripts": {
+    "build": "rm -rf ./build && tsc",
+    "prepare": "yarn build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "watch": "tsc --watch"
+  },
+  "files": [
+    "bin",
+    "build"
+  ],
+  "jest": {
+    "rootDir": "src",
+    "testEnvironment": "node"
+  },
+  "dependencies": {
+    "@expo/spawn-async": "^1.5.0",
+    "camelcase": "5.3.1",
+    "globby": "^9.2.0",
+    "jscodeshift": "0.6.4",
+    "multimatch": "^4.0.0",
+    "semver": "^6.0.0",
+    "yargs-parser": "^13.1.0"
+  },
+  "devDependencies": {
+    "@expo/babel-preset-cli": "^0.1.2",
+    "@types/globby": "^9.1.0",
+    "@types/jscodeshift": "^0.6.0",
+    "@types/multimatch": "^2.1.3",
+    "@types/yargs-parser": "^13.0.0",
+    "jest": "^24.8.0",
+    "typescript": "3.4.5"
+  }
+}

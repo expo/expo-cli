@@ -2,9 +2,9 @@ import path from 'path';
 import fse from 'fs-extra';
 import pacote from 'pacote';
 import chalk from 'chalk';
-import { Logger } from 'xdl';
+import { Logger } from '@expo/xdl';
 
-const DEFAULT_TEMPLATE = 'expo-module-template@2.0.1';
+const DEFAULT_TEMPLATE = 'expo-module-template@latest';
 
 /**
  * Fetches directory from npm or given templateDirectory into destinationPath
@@ -24,6 +24,13 @@ export default async function fetchTemplate(destinationPath, template) {
     // default npm packge
     Logger.global.info(`Using default NPM package as template: ${chalk.bold(DEFAULT_TEMPLATE)}`);
     await pacote.extract(DEFAULT_TEMPLATE, destinationPath);
+  }
+
+  if (await fse.pathExists(path.join(destinationPath, 'template-unimodule.json'))) {
+    await fse.move(
+      path.join(destinationPath, 'template-unimodule.json'),
+      path.join(destinationPath, 'unimodule.json')
+    );
   }
 }
 

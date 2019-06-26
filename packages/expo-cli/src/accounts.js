@@ -5,7 +5,7 @@
 import chalk from 'chalk';
 import program from 'commander';
 
-import { User as UserManager } from 'xdl';
+import { User as UserManager } from '@expo/xdl';
 import type { User } from 'xdl/build/User';
 import CommandError from './CommandError';
 import prompt from './prompt';

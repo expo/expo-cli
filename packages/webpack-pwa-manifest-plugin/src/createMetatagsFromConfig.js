@@ -1,50 +1,4 @@
-import Dot from 'dot-object';
 import Metatags from './Metatags';
-
-const delimiter = ':';
-const dot = new Dot(delimiter);
-
-function getMetaArrayFromObject(obj, format, prefix) {
-  const output = dot.dot(obj);
-  let parsed = [];
-  for (const key of Object.keys(output)) {
-    let components = key.split(delimiter);
-    if (prefix != null) {
-      components.unshift(prefix);
-    }
-    if (components[components.length - 1] === 'default') {
-      components.pop();
-    }
-    if (format != null) {
-      components = components.map(input => withFormat(input, format));
-    }
-    parsed.push({ property: components.join(delimiter), content: output[key] });
-  }
-  return parsed;
-}
-
-function withFormat(input, format) {
-  switch (format) {
-    case '-':
-      return pascalToKebab(input);
-    case '_':
-      return pascalToSnake(input);
-  }
-  return input;
-}
-
-function pascalToSnake(pascalValue) {
-  // https://stackoverflow.com/a/30521308/4047926
-  return pascalValue
-    .replace(/(?:^|\.?)([A-Z])/g, (searchValue, replaceValue) => '_' + replaceValue.toLowerCase())
-    .replace(/^_/, '');
-}
-
-function pascalToKebab(pascalValue) {
-  return pascalValue
-    .replace(/(?:^|\.?)([A-Z])/g, (searchValue, replaceValue) => '-' + replaceValue.toLowerCase())
-    .replace(/^-/, '');
-}
 
 function possibleProperty(input, possiblePropertyNames, fallback) {
   for (const propertyName of possiblePropertyNames) {
@@ -88,7 +42,9 @@ export default function createMetatagsFromConfig(config) {
     'format-detection': apple.formatDetection,
     'apple-touch-fullscreen': apple.touchFullscreen,
     'mobile-web-app-capable': apple.mobileWebAppCapable,
+    'apple-mobile-web-app-capable': apple.mobileWebAppCapable,
     'apple-mobile-web-app-status-bar-style': apple.barStyle,
+    'apple-mobile-web-app-title': web.shortName,
   };
 
   const metaTags = {

@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { UrlUtils, Webpack } from 'xdl';
+import { UrlUtils, Webpack } from '@expo/xdl';
 import BaseBuilder from './BaseBuilder';
 import IOSBuilder from './ios/IOSBuilder';
 import AndroidBuilder from './AndroidBuilder';
@@ -86,8 +86,9 @@ export default (program: any) => {
     .option('--keystore-path <app.jks>', 'Path to your Keystore.')
     .option('--keystore-alias <alias>', 'Keystore Alias')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
+    .option('-t --type <build>', 'Type of build: [app-bundle|apk].', /^(app-bundle|apk)$/i, 'apk')
     .description(
-      'Build a standalone APK for your project, signed and ready for submission to the Google Play Store.'
+      'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
     .asyncActionProjectDir((projectDir, options) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
@@ -106,13 +107,12 @@ export default (program: any) => {
 
   program
     .command('build:web [project-dir]')
-    .option('--no-polyfill', 'Prevent webpack from including @babel/polyfill')
-    .option('-d, --dev', 'Bundle your project using webpack in dev mode.')
+    .option('--polyfill', 'Include @babel/polyfill')
     .option(
-      '--stats <path>',
-      'Output path for webpack stats. Defaults to "web-build-stats.json"',
-      'web-build-stats.json'
+      '--no-pwa',
+      'Prevent webpack from generating the manifest.json and injecting meta into the index.html head.'
     )
+    .option('-d, --dev', 'Bundle your project using webpack in dev mode.')
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir(
       (projectDir, options) => Webpack.bundleAsync(projectDir, options),

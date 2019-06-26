@@ -10,14 +10,18 @@ import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import * as ConfigUtils from '@expo/config';
 
+import chalk from 'chalk';
+import inquirer from 'inquirer';
 import Schemer, { SchemerError } from '@expo/schemer';
 
 import * as ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
+import * as AssetUtils from '../AssetUtils';
 import * as Binaries from '../Binaries';
 import Config from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
+import XDLError from '../XDLError';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -424,12 +428,97 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
   return NO_ISSUES;
 }
 
+async function _validateOptimizedAssetsAsync(projectRoot: string): void {
+  const hasUnoptimized = await AssetUtils.hasUnoptimizedAssetsAsync(projectRoot);
+  if (hasUnoptimized) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `Warning: This project contains unoptimized assets. Please run \`expo optimize\` in your project directory.`,
+      'doctor-unoptimized-assets'
+    );
+  } else {
+    ProjectUtils.clearNotification(projectRoot, 'doctor-unoptimized-assets');
+  }
+}
+
 export async function validateLowLatencyAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, false);
 }
 
 export async function validateWithNetworkAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, true);
+}
+
+export async function hasWebSupportAsync(projectRoot, exp) {
+  let inputExp = exp;
+  if (!exp) {
+    inputExp = (await ProjectUtils.readConfigJsonAsync(projectRoot)).exp;
+  }
+  const { platforms } = inputExp;
+  if (!Array.isArray(platforms)) {
+    return false;
+  }
+
+  const isWebConfigured = platforms.includes('web');
+  return isWebConfigured;
+}
+
+function getWebSetupLogs(): string {
+  const appJsonRules = chalk.green(`
+  {
+    "platforms": [
+  ${chalk.green.bold(`+      "web"`)}
+    ]
+  }`);
+  return `${chalk.red(
+    `* Add "web" to the "platforms" array in your project's ${chalk.bold(`app.json`)}`
+  )} ${appJsonRules}`;
+}
+
+export async function validateWebSupportAsync(projectRoot) {
+  const isInteractive = process.stdout.isTTY;
+
+  await validateWebPlatformAddedAsync(projectRoot, isInteractive);
+
+  // TODO: Bacon: Add package validation
+}
+
+export async function validateWebPlatformAddedAsync(
+  projectRoot: string,
+  isInteractive: boolean = true
+): Promise<void> {
+  const hasWebSupport = await hasWebSupportAsync(projectRoot);
+  if (hasWebSupport) {
+    return true;
+  }
+
+  if (isInteractive && (await promptToAddWebPlatform())) {
+    await ConfigUtils.addPlatform(projectRoot, 'web');
+    return true;
+  }
+  throw new XDLError('WEB_NOT_CONFIGURED', getWebSetupLogs());
+}
+
+async function promptAsync(message: string): Promise<boolean> {
+  const question = {
+    type: 'confirm',
+    name: 'should',
+    message,
+    default: true,
+  };
+  const { should } = await inquirer.prompt(question);
+  return should;
+}
+
+async function promptToAddWebPlatform(): Promise<boolean> {
+  return await promptAsync(
+    `It appears you don't explicitly define "${chalk.green.underline(
+      `web`
+    )}" as one of the supported "${chalk.green.underline(
+      `platforms`
+    )}" in your project's ${chalk.green(`app.json`)}. \n  Would you like to add it?`
+  );
 }
 
 async function validateAsync(projectRoot: string, allowNetwork: boolean): Promise<number> {
@@ -457,6 +546,8 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
       return nodeModulesStatus;
     }
   }
+
+  await _validateOptimizedAssetsAsync(projectRoot, {});
 
   return status;
 }

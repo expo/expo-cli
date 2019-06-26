@@ -1,4 +1,4 @@
-import { UserSettings } from 'xdl';
+import { UserSettings } from '@expo/xdl';
 import prompt from './prompt';
 
 async function askForSendToAsync() {

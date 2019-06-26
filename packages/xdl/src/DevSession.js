@@ -16,6 +16,7 @@ let keepUpdating = true;
 export async function startSession(
   projectRoot: string,
   exp: any,
+  platform: 'native' | 'web',
   forceUpdate: boolean = false
 ): Promise<void> {
   if (forceUpdate) {
@@ -33,13 +34,22 @@ export async function startSession(
     }
 
     try {
-      let url = await UrlUtils.constructManifestUrlAsync(projectRoot);
+      let url;
+      if (platform === 'native') {
+        url = await UrlUtils.constructManifestUrlAsync(projectRoot);
+      } else if (platform === 'web') {
+        url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+      } else {
+        throw new Error(`Unsupported platform: ${platform}`);
+      }
+
       let apiClient = ApiV2Client.clientForUser(authSession);
       await apiClient.postAsync('development-sessions/notify-alive', {
         data: {
           session: {
             description: `${exp.name} on ${os.hostname()}`,
             hostname: os.hostname(),
+            platform,
             config: {
               // TODO: if icons are specified, upload a url for them too so people can distinguish
               description: exp.description,
@@ -56,7 +66,7 @@ export async function startSession(
       logger.global.debug(e, `Error updating dev session: ${e}`);
     }
 
-    setTimeout(() => startSession(projectRoot, exp), UPDATE_FREQUENCY_SECS * 1000);
+    setTimeout(() => startSession(projectRoot, exp, platform), UPDATE_FREQUENCY_SECS * 1000);
   }
 }
 

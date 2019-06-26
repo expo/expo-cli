@@ -23,7 +23,7 @@
     ]
   },
   "devDependencies": {
-    "@expo/spawn-async": "^1.4.2",
+    "@expo/spawn-async": "^1.5.0",
     "eslint": "^5.15.3",
     "eslint-config-universe": "^2.0.0-alpha.0",
     "husky": "^1.1.3",
