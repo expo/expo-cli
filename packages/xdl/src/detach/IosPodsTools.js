@@ -348,9 +348,14 @@ async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
   let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
   const type = options.isPodfile ? 'pod' : 'ss.dependency';
   const noWarningsFlag = options.isPodfile ? `, :inhibit_warnings => true` : '';
-  let depsStrings = dependencies.map(
-    dependency => `  ${type} '${dependency.name}', '${dependency.version}'${noWarningsFlag}`
-  );
+  let depsStrings = dependencies.map(dependency => {
+    let builder = '';
+    if (dependency.comments) {
+      builder += dependency.comments.map(commentLine => `  # ${commentLine}`).join('\n');
+    }
+    builder += `  ${type} '${dependency.name}', '${dependency.version}'${noWarningsFlag}`;
+    return builder;
+  });
   return depsStrings.join('\n');
 }
 
