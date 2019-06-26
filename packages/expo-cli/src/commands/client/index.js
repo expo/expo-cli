@@ -1,5 +1,5 @@
+import _ from 'lodash';
 import chalk from 'chalk';
-import idx from 'idx';
 import ora from 'ora';
 import path from 'path';
 import CliTable from 'cli-table';
@@ -33,27 +33,27 @@ export default program => {
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       const servicesDisabled = {
-        push_notifications:
+        pushNotifications:
           'not yet available until API tokens are supported for the Push Notification system',
       };
 
       // get custom project manifest if it exists
       // Note: this is some random user's project, NOT the expo client manifest
-      const spinner = ora(`Finding a valid app.json..`).start();
+      const spinner = ora(`Finding custom configuration for the Expo client...`).start();
       const appJsonPath = options.config || path.join(projectDir, 'app.json');
       const appJsonExists = await ConfigUtils.fileExistsAsync(appJsonPath);
       const { exp } = appJsonExists ? await ConfigUtils.readConfigJsonAsync(projectDir) : {};
 
       if (exp) {
-        spinner.succeed(`Found app.json at ${appJsonPath}`);
+        spinner.succeed(`Found custom configuration for the Expo client at ${appJsonPath}`);
       } else {
-        spinner.warn(`Unable to find app.json.`);
+        spinner.warn(`Unable to find custom configuration for the Expo client.`);
       }
-      if (!idx(exp, _ => _.ios.config.googleMapsApiKey)) {
+      if (!_.has(exp, _ => _.ios.config.googleMapsApiKey)) {
         const disabledReason = exp
-          ? 'ios.config.googleMapsApiKey does not exist in app.json'
-          : 'no app.json could be found';
-        servicesDisabled.google_maps = disabledReason;
+          ? `ios.config.googleMapsApiKey does not exist in configuration file found in ${appJsonPath}`
+          : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
+        servicesDisabled.googleMaps = disabledReason;
       }
 
       const authData = await appleApi.authenticate(options);
@@ -92,8 +92,8 @@ export default program => {
           pushKey === null
             ? 'you did not upload your push credentials'
             : 'we require you to be logged in to store push credentials';
-        // keep the default push notification reason if we havent implmeneted API tokens
-        servicesDisabled.push_notifications = servicesDisabled.push_notifications || disabledReason;
+        // keep the default push notification reason if we havent implmented API tokens
+        servicesDisabled.pushNotifications = servicesDisabled.pushNotifications || disabledReason;
       }
 
       if (Object.keys(servicesDisabled).length > 0) {
@@ -102,11 +102,7 @@ export default program => {
         const table = new CliTable({ head: ['Service', 'Reason'], style: { head: ['cyan'] } });
         table.push(
           ...Object.keys(servicesDisabled).map(service => {
-            const prettyService = service
-              .split('_')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
-            return [prettyService, servicesDisabled[service]];
+            return [_.startCase(service), servicesDisabled[service]];
           })
         );
         log(table.toString());
@@ -195,7 +191,7 @@ export default program => {
         udids,
         addUdid,
         email,
-        customProjectManifest: exp,
+        customAppConfig: exp,
       });
 
       log.newLine();
