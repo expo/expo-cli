@@ -352,6 +352,7 @@ async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
     let builder = '';
     if (dependency.comments) {
       builder += dependency.comments.map(commentLine => `  # ${commentLine}`).join('\n');
+      builder += '\n';
     }
     builder += `  ${type} '${dependency.name}', '${dependency.version}'${noWarningsFlag}`;
     return builder;
