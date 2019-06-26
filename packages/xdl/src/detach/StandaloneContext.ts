@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import StandaloneBuildFlags from './StandaloneBuildFlags';
 
 type StandaloneContextDataType = 'user' | 'service';
@@ -13,8 +9,8 @@ type StandaloneContextTestEnvironment = 'none' | 'local' | 'ci';
  *  such as during `exp detach`.
  */
 type StandaloneContextDataUser = {
-  projectPath: string,
-  exp: any,
+  projectPath: string;
+  exp: any;
 };
 
 /**
@@ -22,27 +18,28 @@ type StandaloneContextDataUser = {
  *  service machine, such as during `exp build`.
  */
 type StandaloneContextDataService = {
-  expoSourcePath: string,
-  archivePath: ?string,
-  manifest: ?any,
-  privateConfig: ?any,
-  testEnvironment: StandaloneContextTestEnvironment,
+  expoSourcePath: string;
+  archivePath: string | null;
+  manifest: any;
+  privateConfig: any;
+  testEnvironment: StandaloneContextTestEnvironment;
+  shellAppSdkVersion: string;
 };
 
 class StandaloneContext {
-  type: StandaloneContextDataType;
-  data: StandaloneContextDataUser | StandaloneContextDataService;
-  config: ?any; // same as underlying app.json or manifest
-  published: {
-    url: ?string,
-    releaseChannel: string,
+  type?: StandaloneContextDataType;
+  data?: StandaloneContextDataUser | StandaloneContextDataService;
+  config: any; // same as underlying app.json or manifest
+  published?: {
+    url?: string;
+    releaseChannel: string;
   };
-  build: StandaloneBuildFlags;
+  build?: StandaloneBuildFlags;
 
   static createUserContext = (
     projectPath: string,
     exp: any,
-    publishedUrl: ?string
+    publishedUrl?: string
   ): StandaloneContext => {
     let context = new StandaloneContext();
     context.type = 'user';
@@ -62,14 +59,14 @@ class StandaloneContext {
 
   static createServiceContext = (
     expoSourcePath: string,
-    archivePath: ?string,
-    manifest: ?any,
-    privateConfig: ?any,
+    archivePath: string | null,
+    manifest: any,
+    privateConfig: any,
     testEnvironment: StandaloneContextTestEnvironment,
     build: StandaloneBuildFlags,
-    publishedUrl: ?string,
-    releaseChannel: ?string,
-    shellAppSdkVersion: ?string
+    publishedUrl: string,
+    releaseChannel: string,
+    shellAppSdkVersion: string
   ): StandaloneContext => {
     let context = new StandaloneContext();
     context.type = 'service';

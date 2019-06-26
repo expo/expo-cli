@@ -1,31 +1,29 @@
-// Copyright 2015-present 650 Industries. All rights reserved.
-
-'use strict';
+import path from 'path';
+import { Readable } from 'stream';
 
 import fs from 'fs-extra';
-import path from 'path';
 import Request from 'request-promise-native';
 // `request-promise-native` discourages using pipe. Noticed some issues with
 // error handling so when using pipe use the original request lib instead.
 import pipeRequest from 'request';
-import rimraf from 'rimraf';
-import spawnAsyncQuiet from '@expo/spawn-async';
+import spawnAsyncQuiet, { SpawnResult, SpawnOptions } from '@expo/spawn-async';
 import _ from 'lodash';
+import { ExpoConfig, Platform } from '@expo/config';
 
-import logger, { pipeOutputToLogger } from './Logger';
+import LoggerDetach, { pipeOutputToLogger, Logger } from './Logger';
 import XDLError from '../XDLError';
 
 const request = Request.defaults({
   resolveWithFullResponse: true,
 });
 
-function _getFilesizeInBytes(path) {
+function _getFilesizeInBytes(path: string) {
   let stats = fs.statSync(path);
   let fileSizeInBytes = stats['size'];
   return fileSizeInBytes;
 }
 
-function parseSdkMajorVersion(expSdkVersion) {
+function parseSdkMajorVersion(expSdkVersion: string) {
   // We assume that the unversioned SDK is the latest
   if (expSdkVersion === 'UNVERSIONED') {
     return Infinity;
@@ -39,7 +37,7 @@ function parseSdkMajorVersion(expSdkVersion) {
   return sdkMajorVersion;
 }
 
-function saveUrlToPathAsync(url, path) {
+function saveUrlToPathAsync(url: string, path: string) {
   return new Promise(function(resolve, reject) {
     let stream = fs.createWriteStream(path);
     stream.on('close', () => {
@@ -49,11 +47,13 @@ function saveUrlToPathAsync(url, path) {
       resolve();
     });
     stream.on('error', reject);
-    pipeRequest({ url, timeout: 20000 }).on('error', reject).pipe(stream);
+    pipeRequest({ url, timeout: 20000 })
+      .on('error', reject)
+      .pipe(stream);
   });
 }
 
-function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
+function saveImageToPathAsync(projectRoot: string, pathOrURL: string, outPath: string) {
   const localPath = path.resolve(projectRoot, pathOrURL);
   return new Promise(function(resolve, reject) {
     let stream = fs.createWriteStream(outPath);
@@ -72,8 +72,9 @@ function saveImageToPathAsync(projectRoot, pathOrURL, outPath) {
   });
 }
 
-async function getManifestAsync(url, headers, options = {}) {
-  const buildPhaseLogger = options.logger || logger.withFields({ buildPhase: 'reading manifest' });
+async function getManifestAsync(url: string, headers: any, options: any = {}) {
+  const buildPhaseLogger =
+    options.logger || LoggerDetach.withFields({ buildPhase: 'reading manifest' });
   const requestOptions = {
     url: url.replace('exp://', 'http://'),
     headers,
@@ -98,7 +99,7 @@ async function getManifestAsync(url, headers, options = {}) {
   return manifest;
 }
 
-async function _retryPromise(fn, retries = 5) {
+async function _retryPromise<T>(fn: (...args: any[]) => T, retries = 5): Promise<T> {
   try {
     return await fn();
   } catch (err) {
@@ -110,41 +111,52 @@ async function _retryPromise(fn, retries = 5) {
   }
 }
 
-async function spawnAsyncThrowError(...args) {
-  if (args.length === 2) {
-    return spawnAsyncQuiet(args[0], args[1], {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-    });
-  } else {
-    const options = args[2];
-    const { pipeToLogger } = options;
-    if (pipeToLogger) {
-      options.stdio = 'pipe';
-      options.cwd = options.cwd || process.cwd();
-    }
-    const promise = spawnAsyncQuiet(...args);
-    if (pipeToLogger && promise.child) {
-      const streamsKeys = _.isObject(pipeToLogger)
-        ? _.keys(_.pickBy(pipeToLogger, _.identity))
-        : ['stdout', 'stderr'];
-      const streamsToLogs = _.pick(promise.child, streamsKeys);
-      pipeOutputToLogger(streamsToLogs, options.loggerFields, options);
-    }
-    return promise;
+async function spawnAsyncThrowError(
+  command: string,
+  args: string[],
+  options: SpawnOptions & {
+    loggerFields?: any;
+    pipeToLogger?: boolean | { stdout?: boolean; stderr?: boolean };
+    stdoutOnly?: boolean;
+    dontShowStdout?: boolean;
+  } = {
+    stdio: 'inherit',
+    cwd: process.cwd(),
   }
+): Promise<SpawnResult> {
+  const { pipeToLogger } = options;
+  if (pipeToLogger) {
+    options.stdio = 'pipe';
+    options.cwd = options.cwd || process.cwd();
+  }
+  const promise = spawnAsyncQuiet(command, args, options);
+  if (pipeToLogger && promise.child) {
+    let streams: { stdout?: Readable | null; stderr?: Readable | null } = {};
+    if (pipeToLogger === true || pipeToLogger.stdout) {
+      streams.stdout = promise.child.stdout;
+    }
+    if (pipeToLogger === true || pipeToLogger.stderr) {
+      streams.stderr = promise.child.stderr;
+    }
+    pipeOutputToLogger(streams, options.loggerFields, options);
+  }
+  return promise;
 }
 
-async function spawnAsync(...args) {
+async function spawnAsync(
+  command: string,
+  args: string[],
+  options: SpawnOptions
+): Promise<SpawnResult | void> {
   try {
-    return await spawnAsyncThrowError(...args);
+    return await spawnAsyncThrowError(command, args, options);
   } catch (e) {
-    logger.error(e.message);
+    LoggerDetach.error(e.message);
   }
 }
 
-function createSpawner(buildPhase, logger) {
-  return (command, ...args) => {
+function createSpawner(buildPhase: string, logger: Logger) {
+  return (command: string, ...args: any[]) => {
     const lastArg = _.last(args);
     const optionsFromArg = _.isObject(lastArg) ? args.pop() : {};
 
@@ -161,7 +173,10 @@ function createSpawner(buildPhase, logger) {
   };
 }
 
-async function transformFileContentsAsync(filename, transform) {
+async function transformFileContentsAsync(
+  filename: string,
+  transform: (input: string) => string | null
+) {
   let fileString = await fs.readFile(filename, 'utf8');
   let newFileString = transform(fileString);
   if (newFileString !== null) {
@@ -169,7 +184,7 @@ async function transformFileContentsAsync(filename, transform) {
   }
 }
 
-function manifestUsesSplashApi(manifest, platform) {
+function manifestUsesSplashApi(manifest: ExpoConfig, platform: Platform) {
   if (platform === 'ios') {
     return manifest.splash || (manifest.ios && manifest.ios.splash);
   }
@@ -179,23 +194,15 @@ function manifestUsesSplashApi(manifest, platform) {
   return false;
 }
 
-function rimrafDontThrow(directory) {
-  try {
-    rimraf.sync(directory);
-  } catch (e) {
-    logger.warn(
-      `There was an issue cleaning up, but your project should still work. You may need to manually remove ${directory}. (${e})`
-    );
-  }
+function rimrafDontThrow(directory: string) {
+  fs.removeSync(directory);
 }
 
-async function removeIfExists(file) {
-  try {
-    await fs.unlink(file);
-  } catch (e) {}
+async function removeIfExists(file: string) {
+  await fs.remove(file);
 }
 
-function isDirectory(dir) {
+function isDirectory(dir: string) {
   try {
     if (fs.statSync(dir).isDirectory()) {
       return true;
@@ -207,11 +214,13 @@ function isDirectory(dir) {
   }
 }
 
-async function getResolvedLocalesAsync(inMemoryManifest) {
-  const locales = {};
-  if (inMemoryManifest.locales !== undefined) {
-    for (const [lang, path] of Object.entries(inMemoryManifest.locales)) {
-      const s = await fs.readFile(path, 'utf8');
+type LocaleMap = { [lang: string]: any };
+
+async function getResolvedLocalesAsync(exp: ExpoConfig): Promise<LocaleMap> {
+  const locales: LocaleMap = {};
+  if (exp.locales !== undefined) {
+    for (const [lang, path] of Object.entries(exp.locales)) {
+      const s = await fs.readFile(path as string, 'utf8');
       try {
         locales[lang] = JSON.parse(s);
       } catch (e) {
@@ -222,14 +231,18 @@ async function getResolvedLocalesAsync(inMemoryManifest) {
   return locales;
 }
 
-async function regexFileAsync(regex, replace, filename) {
+async function regexFileAsync(regex: RegExp, replace: string, filename: string): Promise<void> {
   let file = await fs.readFile(filename);
   let fileString = file.toString();
   await fs.writeFile(filename, fileString.replace(regex, replace));
 }
 
 // Matches sed /d behavior
-async function deleteLinesInFileAsync(startRegex, endRegex, filename) {
+async function deleteLinesInFileAsync(
+  startRegex: RegExp,
+  endRegex: RegExp,
+  filename: string
+): Promise<void> {
   let file = await fs.readFile(filename);
   let fileString = file.toString();
   let lines = fileString.split(/\r?\n/);
