@@ -32,9 +32,12 @@ export default program => {
       'Build a custom version of the Expo Client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
     .asyncActionProjectDir(async (projectDir, options) => {
-      const servicesDisabled = {
-        pushNotifications:
-          'not yet available until API tokens are supported for the Push Notification system',
+      const disabledServices = {
+        pushNotifications: {
+          name: 'Push Notifications',
+          reason:
+            'not yet available until API tokens are supported for the Push Notification system',
+        },
       };
 
       // get custom project manifest if it exists
@@ -47,13 +50,13 @@ export default program => {
       if (exp) {
         spinner.succeed(`Found custom configuration for the Expo client at ${appJsonPath}`);
       } else {
-        spinner.warn(`Unable to find custom configuration for the Expo client.`);
+        spinner.warn(`Unable to find custom configuration for the Expo client`);
       }
-      if (!_.has(exp, _ => _.ios.config.googleMapsApiKey)) {
+      if (!_.has(exp, 'ios.config.googleMapsApiKey') && !_.has(exp, 'ios.config.googleApiKey')) {
         const disabledReason = exp
           ? `ios.config.googleMapsApiKey does not exist in configuration file found in ${appJsonPath}`
           : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
-        servicesDisabled.googleMaps = disabledReason;
+        disabledServices.googleMaps = { name: 'Google Maps', reason: disabledReason };
       }
 
       const authData = await appleApi.authenticate(options);
@@ -92,17 +95,20 @@ export default program => {
           pushKey === null
             ? 'you did not upload your push credentials'
             : 'we require you to be logged in to store push credentials';
-        // keep the default push notification reason if we havent implmented API tokens
-        servicesDisabled.pushNotifications = servicesDisabled.pushNotifications || disabledReason;
+        // TODO(quin): remove this when we fix push notifications
+        // keep the default push notification reason if we haven't implemented API tokens
+        disabledServices.pushNotifications.reason =
+          disabledServices.pushNotifications.reason || disabledReason;
       }
 
-      if (Object.keys(servicesDisabled).length > 0) {
+      if (Object.keys(disabledServices).length > 0) {
         log.newLine();
         log.warn('These services will be disabled in your custom Expo Client:');
         const table = new CliTable({ head: ['Service', 'Reason'], style: { head: ['cyan'] } });
         table.push(
-          ...Object.keys(servicesDisabled).map(service => {
-            return [_.startCase(service), servicesDisabled[service]];
+          ...Object.keys(disabledServices).map(serviceKey => {
+            const service = disabledServices[serviceKey];
+            return [service.name, service.reason];
           })
         );
         log(table.toString());
