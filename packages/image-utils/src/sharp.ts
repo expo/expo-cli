@@ -128,10 +128,12 @@ async function findSharpBinAsync(): Promise<string> {
   }
   try {
     const sharpCliPackage = require('sharp-cli/package.json');
+    const libVipsVersion = require('sharp').versions.vips;
     if (
       sharpCliPackage &&
       semver.satisfies(sharpCliPackage.version, requiredCliVersion) &&
-      typeof sharpCliPackage.bin.sharp === 'string'
+      typeof sharpCliPackage.bin.sharp === 'string' &&
+      typeof libVipsVersion === 'string'
     ) {
       _sharpBin = require.resolve(`sharp-cli/${sharpCliPackage.bin.sharp}`);
       return _sharpBin;
