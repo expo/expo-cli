@@ -25,7 +25,7 @@ export class Logger {
   }
 
   withFields(extraFields: any) {
-    return Object.assign({}, this, { extraFields: { ...this.extraFields, ...extraFields } });
+    return Object.assign(new Logger(), this, { extraFields: { ...this.extraFields, ...extraFields } });
   }
 
   trace(...args: any[]) {
