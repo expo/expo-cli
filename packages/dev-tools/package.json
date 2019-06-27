@@ -33,7 +33,7 @@
     "@expo/xdl": "*"
   },
   "devDependencies": {
-    "@expo/xdl": "^55.0.12",
+    "@expo/xdl": "*",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
