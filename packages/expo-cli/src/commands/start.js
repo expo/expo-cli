@@ -111,19 +111,18 @@ async function validateDependenciesVersions(projectDir, exp, pkg) {
   const projectDependencies = Object.keys(pkg.dependencies);
 
   const modulesToCheck = intersection(bundleNativeModulesNames, projectDependencies);
-  const incorrectDeps = modulesToCheck.reduce((acc, moduleName) => {
+  const incorrectDeps = [];
+  for (const moduleName of modulesToCheck) {
     const expectedRange = bundledNativeModules[moduleName];
     const actualRange = pkg.dependencies[moduleName];
     if (!semver.intersects(expectedRange, actualRange)) {
-      acc.push({
+      incorrectDeps.push({
         moduleName,
         expectedRange,
         actualRange,
       });
     }
-    return acc;
-  }, []);
-
+  }
   if (incorrectDeps.length > 0) {
     log.warn(
       "Some of your project's dependencies are not compatible with currently installed expo package version:"
@@ -136,7 +135,10 @@ async function validateDependenciesVersions(projectDir, exp, pkg) {
       );
     });
     log.warn(
-      'Your project may not work correctly until you install the correct versions of the packages.'
+      'Your project may not work correctly until you install the correct versions of the packages.\n' +
+        `To install the correct versions of these packages, please run: ${chalk.inverse(
+          'expo install [package-name ...]'
+        )}`
     );
   }
 }
