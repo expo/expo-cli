@@ -100,7 +100,6 @@ function _formatBytes(bytes: number): string {
 export async function getDeviceInfoAsync(options: any = {}): Promise<any> {
   let info = {};
 
-  await Binaries.sourceBashLoginScriptsAsync();
   let whichCommand = process.platform === 'win32' ? 'where' : 'which';
 
   try {
