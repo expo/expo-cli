@@ -282,8 +282,6 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
 }
 
 function _renderUnversionedPostinstall(sdkVersion) {
-  // TODO: switch to `installer.pods_project.targets.each` in postinstall
-  // see: https://stackoverflow.com/questions/37160688/set-deployment-target-for-cocoapodss-pod
   const podsToChangeDeployTarget = [
     'Amplitude-iOS',
     'Analytics',
@@ -304,12 +302,16 @@ function _renderUnversionedPostinstall(sdkVersion) {
   // SDK31 drops support for iOS 9.0
   const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0';
 
+  const podsToChangeDeployTargetIfStart =
+    sdkMajorVersion <= 33 ? `      if ${podsToChangeRB}.include? ${podNameExpression}` : '';
+  const podsToChangeDeployTargetIfEnd = sdkMajorVersion <= 33 ? '      end' : '';
+
   return `
-      if ${podsToChangeRB}.include? ${podNameExpression}
-        ${targetExpression}.native_target.build_configurations.each do |config|
-          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
-        end
+${podsToChangeDeployTargetIfStart}
+      ${targetExpression}.native_target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '${deploymentTarget}'
       end
+${podsToChangeDeployTargetIfEnd}
 
       # Can't specify this in the React podspec because we need to use those podspecs for detached
       # projects which don't reference ExponentCPP.
