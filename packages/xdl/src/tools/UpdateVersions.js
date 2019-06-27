@@ -80,10 +80,3 @@ export async function updateAndroidApk(s3Client: any, pathToApp: string, appVers
   versions['androidUrl'] = `https://d1ahtucjixef4r.cloudfront.net/Exponent-${appVersion}.apk`;
   await Versions.setVersionsAsync(versions);
 }
-
-export async function updateTurtleVersionAsync(sdkVersion: string, platform: string) {
-  const platforms = platform === 'both' ? ['android', 'ios'] : [platform];
-  const versions = await Versions.versionsAsync();
-  platforms.forEach(p => _.set(versions, ['turtleSdkVersions', p], sdkVersion));
-  await Versions.setVersionsAsync(versions);
-}

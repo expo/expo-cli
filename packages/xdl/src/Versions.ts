@@ -1,9 +1,10 @@
 import path from 'path';
 
-import { ExpoConfig, Platform } from '@expo/config';
+import { ExpoConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import forEach from 'lodash/forEach';
 import pickBy from 'lodash/pickBy';
+import get from 'lodash/get';
 import semver from 'semver';
 
 import ApiV2Client from './ApiV2';
@@ -27,7 +28,8 @@ type SDKVersion = {
 };
 
 type SDKVersions = { [version: string]: SDKVersion };
-type TurtleSDKVersions = { android: string; ios: string };
+type TurtleSDKVersions = { android: string[]; ios: string[]; };
+type TurtleSDKVersionsOld = { android: string; ios: string };
 
 type Versions = {
   androidUrl: 'https://d1ahtucjixef4r.cloudfront.net/Exponent-2.11.4.apk';
@@ -38,7 +40,7 @@ type Versions = {
   /* deprecated */ starterApps: unknown;
   /* deprecated */ templates: unknown[];
   /* deprecated */ templatesv2: unknown[];
-  turtleSdkVersions: TurtleSDKVersions;
+  turtleSdkVersions: TurtleSDKVersionsOld;
 };
 
 export async function versionsAsync(): Promise<Versions> {
@@ -57,12 +59,7 @@ export async function sdkVersionsAsync(): Promise<SDKVersions> {
   return sdkVersions;
 }
 
-export async function turtleSdkVersionsAsync(): Promise<TurtleSDKVersions> {
-  const { turtleSdkVersions } = await versionsAsync();
-  return turtleSdkVersions;
-}
-
-export async function setVersionsAsync(value: any): Promise<void> {
+export async function setVersionsAsync(value: any) {
   const user = await UserManager.getCurrentUserAsync();
   const api = ApiV2Client.clientForUser(user);
   const secret = process.env.EXPO_VERSIONS_SECRET;
@@ -205,21 +202,12 @@ export async function canTurtleBuildSdkVersion(
     );
   }
 
-  const turtleSdkVersions = await turtleSdkVersionsAsync();
-  const expoSdkVersion = (await sdkVersionsAsync())[sdkVersion];
+  const supportedVersions = await getSdkVersionsSupportedByTurtle();
+  const supportedVersionsForPlatform = get(supportedVersions, platform, [] as string[]);
+  return supportedVersionsForPlatform.indexOf(sdkVersion) !== -1;
+}
 
-  if (expoSdkVersion === undefined) {
-    throw new XDLError('INVALID_VERSION', `"${sdkVersion}" is not a valid Expo SDK version.`);
-  } else if (expoSdkVersion.isDeprecated) {
-    throw new XDLError(
-      'INVALID_VERSION',
-      `"${sdkVersion}" is deprecated. Please update Expo SDK version.`
-    );
-  }
-  if (!turtleSdkVersions || !turtleSdkVersions[platform]) {
-    return true;
-  }
-
-  const turtleSdkVersion = turtleSdkVersions[platform];
-  return semver.gte(turtleSdkVersion, sdkVersion);
+async function getSdkVersionsSupportedByTurtle(): Promise<TurtleSDKVersions> {
+  const api = new ApiV2Client();
+  return await api.getAsync('standalone-build/supportedSDKVersions');
 }
