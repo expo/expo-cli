@@ -12,6 +12,8 @@ import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import intersection from 'lodash/intersection';
 import semver from 'semver';
+import attempt from 'lodash/attempt';
+import isError from 'lodash/isError';
 
 import log from '../log';
 import sendTo from '../sendTo';
@@ -104,13 +106,23 @@ async function validateDependenciesVersions(projectDir, exp, pkg) {
     return;
   }
 
-  const bundledNativeModules = await JsonFile.readAsync(
+  const bundleNativeModulesPath = attempt(() =>
     ConfigUtils.resolveModule('expo/bundledNativeModules.json', projectDir, exp)
   );
-  const bundleNativeModulesNames = Object.keys(bundledNativeModules);
+  if (isError(bundleNativeModulesPath)) {
+    log.warn(
+      `Your project is in SDK version >= 33.0.0, but the ${chalk.underline(
+        'expo'
+      )} package version seems to be older.`
+    );
+    return;
+  }
+
+  const bundledNativeModules = await JsonFile.readAsync(bundleNativeModulesPath);
+  const bundledNativeModulesNames = Object.keys(bundledNativeModules);
   const projectDependencies = Object.keys(pkg.dependencies);
 
-  const modulesToCheck = intersection(bundleNativeModulesNames, projectDependencies);
+  const modulesToCheck = intersection(bundledNativeModulesNames, projectDependencies);
   const incorrectDeps = [];
   for (const moduleName of modulesToCheck) {
     const expectedRange = bundledNativeModules[moduleName];
