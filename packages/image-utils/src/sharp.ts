@@ -146,12 +146,11 @@ async function findSharpBinAsync(): Promise<string> {
     throw notFoundError(requiredCliVersion);
   }
 
-  if (semver.satisfies(installedCliVersion, requiredCliVersion)) {
-    _sharpBin = 'sharp';
-    return _sharpBin;
-  } else {
-    throw versionMismatchError(requiredCliVersion, installedCliVersion);
+  if (!semver.satisfies(installedCliVersion, requiredCliVersion)) {
+    showVersionMismatchWarning(requiredCliVersion, installedCliVersion);
   }
+  _sharpBin = 'sharp';
+  return _sharpBin;
 }
 
 function notFoundError(requiredCliVersion: string): Error {
@@ -163,13 +162,19 @@ function notFoundError(requiredCliVersion: string): Error {
   );
 }
 
-function versionMismatchError(requiredCliVersion: string, installedCliVersion: string): Error {
-  return new Error(
-    `This command requires version ${requiredCliVersion} of \`sharp-cli\`. \n` +
+let versionMismatchWarningShown = false;
+
+function showVersionMismatchWarning(requiredCliVersion: string, installedCliVersion: string) {
+  if (versionMismatchWarningShown) {
+    return;
+  }
+  console.warn(
+    `Warning: This command requires version ${requiredCliVersion} of \`sharp-cli\`. \n` +
       `Currently installed version: "${installedCliVersion}" \n` +
       `Required version: "${requiredCliVersion}" \n` +
       `You can install it using \`npm install -g sharp-cli@${requiredCliVersion}\`. \n` +
       '\n' +
       'For prerequisites, see: https://sharp.dimens.io/en/stable/install/#prerequisites'
   );
+  versionMismatchWarningShown = true;
 }

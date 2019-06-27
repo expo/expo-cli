@@ -32,7 +32,7 @@
     "semver": "6.1.1"
   },
   "optionalDependencies": {
-    "sharp-cli": "1.9.0"
+    "sharp-cli": "1.10.0"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.1.2",
