@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc --watch",
-    "build": "tsc",
+    "build": "rm -rf ./build && tsc",
     "prepare": "yarn build"
   },
   "repository": {
