@@ -12,7 +12,7 @@ async function checkIfSdkIsSupported(sdkVersion, platform) {
         `Unsupported SDK version: our app builders don't have support for ${sdkVersion} version yet. Submitting the app to the ${storeName} may result in an unexpected behaviour`
       )
     );
-    throw new Error('Unsupported sdk version');
+    throw new Error('Unsupported SDK version');
   }
 }
 
