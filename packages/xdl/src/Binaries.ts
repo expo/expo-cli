@@ -8,10 +8,7 @@ import Logger from './Logger';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 
-let hasSourcedBashLoginScripts = false;
-
 export const OSX_SOURCE_PATH = path.join(__dirname, '..', 'binaries', 'osx');
-const ERROR_MESSAGE = '\nPlease run `npm install -g exp && exp path`';
 
 function _hasbinAsync(name: string) {
   return new Promise((resolve, reject) => {
@@ -34,8 +31,6 @@ export function getBinariesPath(): string {
 }
 
 export async function addToPathAsync(name: string): Promise<void> {
-  await sourceBashLoginScriptsAsync();
-
   if (await _hasbinAsync(name)) {
     return;
   }
@@ -50,14 +45,6 @@ export async function addToPathAsync(name: string): Promise<void> {
   _prependToPath(binariesPath);
 }
 
-function _expoRCFileExists() {
-  try {
-    return fs.statSync(path.join(UserSettings.dotExpoHomeDirectory(), 'bashrc')).isFile();
-  } catch (e) {
-    return false;
-  }
-}
-
 function _prependToPath(newPath: string) {
   let currentPath = process.env.PATH ? process.env.PATH : '';
   if (currentPath.length > 0) {
@@ -66,83 +53,6 @@ function _prependToPath(newPath: string) {
   }
 
   process.env.PATH = `${newPath}${currentPath}`;
-}
-
-export async function sourceBashLoginScriptsAsync(): Promise<void> {
-  if (hasSourcedBashLoginScripts || process.platform === 'win32') {
-    return;
-  }
-
-  if (Config.developerTool !== 'xde') {
-    return;
-  }
-
-  hasSourcedBashLoginScripts = true;
-
-  let userSettingsPATH = await UserSettings.getAsync('PATH', null);
-
-  if (userSettingsPATH) {
-    _prependToPath(userSettingsPATH);
-  } else if (_expoRCFileExists()) {
-    try {
-      // User has a ~/.expo/bashrc. Run that and grab PATH.
-      let result = await spawnAsync(path.join(getBinariesPath(), `get-path-bash`), [], {
-        env: {
-          PATH: '',
-        },
-      });
-
-      if (result.stderr) {
-        Logger.global.warn(`Error sourcing ~/.expo/bashrc script: ${result.stderr}`);
-      }
-
-      if (result.stdout) {
-        _prependToPath(result.stdout);
-      }
-    } catch (e) {
-      Logger.global.warn(`Error sourcing ~/.expo/bashrc script: ${e.stderr}`);
-    }
-  } else {
-    try {
-      // No ~/.expo/bashrc file found. Run `env` in process.env.SHELL.
-      const shellName = process.env.SHELL;
-      if (!shellName) {
-        throw new Error('This command requires being run within a shell.');
-      }
-
-      let result;
-      if (/t?csh$/.test(shellName)) {
-        // csh
-        result = await spawnAsync(shellName, ['-d', '-c', 'env']);
-      } else if (/zsh$/.test(shellName)) {
-        // zsh
-        result = await spawnAsync(shellName, ['-l', '-c', 'env']);
-      } else {
-        // bash, fish
-        result = await spawnAsync(shellName, ['-l', '-c', 'env']);
-      }
-
-      if (result.stderr) {
-        Logger.global.warn(
-          `Error sourcing shell startup scripts: ${result.stderr}.${ERROR_MESSAGE}`
-        );
-      }
-
-      if (result.stdout) {
-        let regexResult = result.stdout.match(/(^|\n)PATH=(.+)/);
-
-        if (regexResult && regexResult.length >= 3) {
-          _prependToPath(regexResult[2]);
-        } else {
-          Logger.global.warn(
-            `Error parsing shell startup scripts output: ${result.stderr}.${ERROR_MESSAGE}`
-          );
-        }
-      }
-    } catch (e) {
-      Logger.global.warn(`Error sourcing shell startup scripts: ${e.stderr}.${ERROR_MESSAGE}`);
-    }
-  }
 }
 
 export async function writePathToUserSettingsAsync(): Promise<void> {

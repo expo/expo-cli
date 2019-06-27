@@ -40,8 +40,6 @@ function _isNpmVersionWithinRanges(npmVersion, ranges) {
 
 async function _checkNpmVersionAsync(projectRoot) {
   try {
-    await Binaries.sourceBashLoginScriptsAsync();
-
     try {
       let yarnVersionResponse = await spawnAsync('yarnpkg', ['--version']);
       if (yarnVersionResponse.status === 0) {
