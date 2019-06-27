@@ -5,6 +5,7 @@
 import chalk from 'chalk';
 import program from 'commander';
 
+import JsonFile from '@expo/json-file';
 import { User as UserManager } from '@expo/xdl';
 import type { User } from 'xdl/build/User';
 import CommandError from './CommandError';
@@ -66,8 +67,28 @@ export async function loginOrRegisterIfLoggedOut() {
   }
 }
 
+async function _sessionAuthAsync(loginSessionPath: string) {
+  const { sessionSecret } = await new JsonFile(loginSessionPath).readAsync();
+  const user = await UserManager.loginAsync('expo-session', { sessionSecret });
+  _printUserLoginStatus(user);
+}
+
 export async function login(options: CommandOptions) {
   const user = await UserManager.getCurrentUserAsync();
+
+  // user wants to dump a login session to disk
+  if (options.generateSession) {
+    if (!user) {
+      throw new CommandError('NOT_LOGGED_IN', 'You must be logged in to generate a login session.');
+    }
+    const sessionDumpPath =
+      typeof options.generateSession === 'string'
+        ? options.generateSession
+        : `${user.username}-login-session.json`;
+    const loginSession = await UserManager.newLoginSessionAsync();
+    return await new JsonFile(sessionDumpPath).writeAsync(loginSession);
+  }
+
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive) {
     if (user) {
@@ -87,17 +108,24 @@ export async function login(options: CommandOptions) {
         return;
       }
     }
-    return _usernamePasswordAuth(options.username, options.password);
-  } else if (options.username && options.password) {
-    return _usernamePasswordAuth(options.username, options.password);
-  } else if (options.username && process.env.EXPO_CLI_PASSWORD) {
-    return _usernamePasswordAuth(options.username, process.env.EXPO_CLI_PASSWORD);
-  } else {
+  }
+
+  // user wants to log in with a session file
+  if (options.session) {
+    return await _sessionAuthAsync(options.session);
+  }
+
+  // user wants to log in with username and password
+  const username = options.username;
+  const password = options.password || process.env.EXPO_CLI_PASSWORD;
+  const isMissingCredentials = !username || !password;
+  if (nonInteractive && isMissingCredentials) {
     throw new CommandError(
       'NON_INTERACTIVE',
       "Username and password not provided in non-interactive mode. Set the EXPO_CLI_PASSWORD environment variable if you don't want to pass in passwords through the command line."
     );
   }
+  return _usernamePasswordAuth(username, password);
 }
 
 async function _usernamePasswordAuth(username?: string, password?: string): Promise<User> {
@@ -137,8 +165,11 @@ async function _usernamePasswordAuth(username?: string, password?: string): Prom
     password: password || answers.password,
   };
 
-  let user = await UserManager.loginAsync('user-pass', data);
+  const user = await UserManager.loginAsync('user-pass', data);
+  _printUserLoginStatus(user);
+}
 
+function _printUserLoginStatus(user: User) {
   if (user) {
     console.log(`\nSuccess. You are now logged in as ${chalk.green(user.username)}.`);
     return user;

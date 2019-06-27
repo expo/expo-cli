@@ -45,6 +45,7 @@ export type UserOrLegacyUser = User | LegacyUser;
 
 export type ConnectionType =
   | 'Username-Password-Authentication'
+  | 'Expo-Session-Authentication'
   | 'facebook'
   | 'google-oauth2'
   | 'github';
@@ -57,7 +58,7 @@ export type RegistrationData = {
   familyName?: string;
 };
 
-export type LoginType = 'user-pass' | 'facebook' | 'google' | 'github';
+export type LoginType = 'user-pass' | 'expo-session' | 'facebook' | 'google' | 'github';
 
 export const ANONYMOUS_USERNAME = 'anonymous';
 
@@ -89,7 +90,7 @@ export class UserManagerInstance {
    */
   async loginAsync(
     loginType: LoginType,
-    loginArgs?: { username: string; password: string }
+    loginArgs?: { username: string; password: string; sessionSecret: string }
   ): Promise<User> {
     if (loginType === 'user-pass') {
       if (!loginArgs) {
@@ -107,9 +108,27 @@ export class UserManagerInstance {
         currentConnection: 'Username-Password-Authentication',
         sessionSecret: loginResp.sessionSecret,
       });
+    } else if (loginType === 'expo-session') {
+      if (!loginArgs) {
+        throw new Error(`The 'expo-session' login type requires a valid session file.`);
+      }
+      return this._getProfileAsync({
+        currentConnection: 'Expo-Session-Authentication',
+        sessionSecret: loginArgs.sessionSecret,
+      });
     } else {
       throw new Error(`Invalid login type provided. Must be 'user-pass'.`);
     }
+  }
+
+  async newLoginSessionAsync() {
+    let user = await this.getCurrentUserAsync();
+    const api = ApiV2Client.clientForUser(user);
+    const loginSessionResp = await api.postAsync('auth/create-new-login-session');
+    if (loginSessionResp.error) {
+      throw new XDLError('INVALID_SESSION', loginSessionResp['error_description']);
+    }
+    return loginSessionResp;
   }
 
   async registerAsync(userData: RegistrationData, user: UserOrLegacyUser | null): Promise<User> {
