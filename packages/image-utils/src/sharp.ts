@@ -1,8 +1,6 @@
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
 
-import { optionalDependencies } from '../package.json';
-
 export type SharpGlobalOptions = {
   compressionLevel?: '';
   format?: 'input' | 'jpeg' | 'jpg' | 'png' | 'raw' | 'tiff' | 'webp';
@@ -59,8 +57,6 @@ type Options =
       [key: string]: boolean | number | string | undefined;
     };
 
-const requiredCliVersion = optionalDependencies['sharp-cli'];
-
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
 
 export async function sharpAsync(
@@ -78,7 +74,7 @@ export async function sharpAsync(
   } catch (error) {
     if (error.stderr) {
       throw new Error(
-        +'\nProcessing images using sharp-cli failed: ' +
+        '\nProcessing images using sharp-cli failed: ' +
           error.message +
           '\nOutput: ' +
           error.stderr.replace(SHARP_HELP_PATTERN, '')
@@ -126,12 +122,15 @@ async function findSharpBinAsync(): Promise<string> {
   if (_sharpBin) {
     return _sharpBin;
   }
+  const requiredCliVersion = require('../package.json').optionalDependencies['sharp-cli'];
   try {
     const sharpCliPackage = require('sharp-cli/package.json');
+    const libVipsVersion = require('sharp').versions.vips;
     if (
       sharpCliPackage &&
       semver.satisfies(sharpCliPackage.version, requiredCliVersion) &&
-      typeof sharpCliPackage.bin.sharp === 'string'
+      typeof sharpCliPackage.bin.sharp === 'string' &&
+      typeof libVipsVersion === 'string'
     ) {
       _sharpBin = require.resolve(`sharp-cli/${sharpCliPackage.bin.sharp}`);
       return _sharpBin;
@@ -144,18 +143,18 @@ async function findSharpBinAsync(): Promise<string> {
   try {
     installedCliVersion = (await spawnAsync('sharp', ['--version'])).stdout.toString().trim();
   } catch (e) {
-    throw notFoundError();
+    throw notFoundError(requiredCliVersion);
   }
 
   if (semver.satisfies(installedCliVersion, requiredCliVersion)) {
     _sharpBin = 'sharp';
     return _sharpBin;
   } else {
-    throw versionMismatchError(installedCliVersion);
+    throw versionMismatchError(requiredCliVersion, installedCliVersion);
   }
 }
 
-function notFoundError(): Error {
+function notFoundError(requiredCliVersion: string): Error {
   return new Error(
     `This command requires version ${requiredCliVersion} of \`sharp-cli\`. \n` +
       `You can install it using \`npm install -g sharp-cli@${requiredCliVersion}\`. \n` +
@@ -164,7 +163,7 @@ function notFoundError(): Error {
   );
 }
 
-function versionMismatchError(installedCliVersion: string): Error {
+function versionMismatchError(requiredCliVersion: string, installedCliVersion: string): Error {
   return new Error(
     `This command requires version ${requiredCliVersion} of \`sharp-cli\`. \n` +
       `Currently installed version: "${installedCliVersion}" \n` +
