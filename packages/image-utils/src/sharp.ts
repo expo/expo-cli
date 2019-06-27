@@ -169,7 +169,7 @@ function showVersionMismatchWarning(requiredCliVersion: string, installedCliVers
     return;
   }
   console.warn(
-    `This command requires version ${requiredCliVersion} of \`sharp-cli\`. \n` +
+    `Warning: This command requires version ${requiredCliVersion} of \`sharp-cli\`. \n` +
       `Currently installed version: "${installedCliVersion}" \n` +
       `Required version: "${requiredCliVersion}" \n` +
       `You can install it using \`npm install -g sharp-cli@${requiredCliVersion}\`. \n` +
