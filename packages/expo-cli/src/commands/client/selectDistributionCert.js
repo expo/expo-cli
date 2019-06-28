@@ -11,10 +11,7 @@ import { tagForUpdate } from './tagger';
 
 import { choosePreferredCreds } from './selectUtils';
 
-// XXX: workaround for https://github.com/babel/babel/issues/6262
-export default selectDistributionCert;
-
-async function selectDistributionCert(context, options = {}) {
+export default async function selectDistributionCert(context, options = {}) {
   const certificates = context.username ? await chooseUnrevokedDistributionCert(context) : [];
   const choices = [...certificates];
 
@@ -31,18 +28,19 @@ async function selectDistributionCert(context, options = {}) {
   choices.push({ name: '[Upload an existing certificate]', value: 'UPLOAD' });
   choices.push({ name: '[Show me more info about these choices] ℹ️', value: 'INFO' });
 
-  let { distributionCert } = await prompt({
+  const { promptValue } = await prompt({
     type: 'list',
-    name: 'distributionCert',
+    name: 'promptValue',
     message: 'Select an iOS distribution certificate to use for code signing:',
     pageSize: Infinity,
     choices,
   });
-  if (distributionCert === 'GENERATE') {
-    distributionCert = await generateDistributionCert(context);
-  } else if (distributionCert === 'UPLOAD') {
-    distributionCert = (await promptForCredentials(context, ['distributionCert']))[0]
-      .distributionCert;
+  if (promptValue === 'GENERATE') {
+    return await generateDistributionCert(context);
+  } else if (promptValue === 'UPLOAD') {
+    const userProvidedCredentials = await promptForCredentials(context, ['distributionCert']);
+    const distributionCert = userProvidedCredentials[0].distributionCert;
+    distributionCert.distCertSerialNumber = userProvidedCredentials[1].distCertSerialNumber;
     const isValid = await validateUploadedCertificate(context, distributionCert);
     if (!isValid) {
       return await selectDistributionCert(context, { disableAutoSelectExisting: true });
@@ -50,13 +48,14 @@ async function selectDistributionCert(context, options = {}) {
 
     // tag for updating to Expo servers
     tagForUpdate(distributionCert);
-  } else if (distributionCert === 'INFO') {
+  } else if (promptValue === 'INFO') {
     open(
       'https://docs.expo.io/versions/latest/guides/adhoc-builds/#distribution-certificate-cli-options'
     );
-    distributionCert = await selectDistributionCert(context);
+    return await selectDistributionCert(context);
+  } else {
+    return promptValue; // this should be an unrevoked cert from the Expo servers
   }
-  return distributionCert;
 }
 
 async function validateUploadedCertificate(context, distributionCert) {
