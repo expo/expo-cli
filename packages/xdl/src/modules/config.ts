@@ -174,6 +174,11 @@ const expoUniversalModules = [
     sdkVersions: '>=33.0.0',
   },
   {
+    podName: 'EXDevice',
+    libName: 'expo-device',
+    sdkVersions: '>=34.0.0',
+  },
+  {
     podName: 'EXDocumentPicker',
     libName: 'expo-document-picker',
     sdkVersions: '>=33.0.0',
@@ -313,11 +318,6 @@ const expoUniversalModules = [
     podName: 'EXGL',
     libName: 'expo-gl',
     sdkVersions: '>=29.0.0',
-  },
-  {
-    podName: 'EXDevice',
-    libName: 'expo-device',
-    sdkVersions: '>=34.0.0',
   },
   {
     podName: 'EXGL-CPP',
