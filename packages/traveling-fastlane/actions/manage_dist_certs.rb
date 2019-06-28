@@ -45,6 +45,7 @@ def create()
     certP12: Base64.encode64(p12.to_der),
     certPassword: certPassword,
     certPrivateSigningKey: pkey,
+    distCertSerialNumber: cert.raw_data['serialNum'],
   }
 end
 
