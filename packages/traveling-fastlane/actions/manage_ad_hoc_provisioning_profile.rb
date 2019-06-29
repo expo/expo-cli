@@ -114,10 +114,11 @@ with_captured_output{
       Spaceship::Portal.login('fake-login', 'fake-password')
     elsif $appleId && $applePassword
       Spaceship::Portal.login($appleId, $applePassword)
-      Spaceship::Portal.client.team_id = $teamId
     else
       raise ArgumentError, 'Must pass in an Apple Session or Apple login/password'
     end
+
+    Spaceship::Portal.client.team_id = $teamId
 
     # Then we register all missing devices on the Apple Developer Portal. They are identified by UDIDs.
     devices = register_missing_devices($udids)
