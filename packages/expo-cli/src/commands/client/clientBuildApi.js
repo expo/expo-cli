@@ -9,6 +9,7 @@ async function createClientBuildRequest({
   udids,
   addUdid,
   email,
+  customAppConfig = {},
 }) {
   return await ApiV2.clientForUser(user).postAsync('client-build/create-ios-request', {
     appleTeamId: context.team.id,
@@ -16,6 +17,7 @@ async function createClientBuildRequest({
     addUdid,
     bundleIdentifier: context.bundleIdentifier,
     email,
+    customAppConfig,
     credentials: {
       ...(pushKey && pushKey.apnsKeyP8 ? { apnsKeyP8: pushKey.apnsKeyP8 } : null),
       ...(pushKey && pushKey.apnsKeyId ? { apnsKeyId: pushKey.apnsKeyId } : null),
