@@ -1,4 +1,4 @@
-type ErrorCode =
+export type ErrorCode =
   // Auth Errors
   | 'INVALID_USERNAME_PASSWORD'
   | 'TOO_MANY_ATTEMPTS'
@@ -28,5 +28,3 @@ type ErrorCode =
   | 'WEB_NOT_CONFIGURED'
   //Shell Apps
   | 'CREDENTIAL_ERROR';
-
-export default ErrorCode;
