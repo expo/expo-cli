@@ -127,7 +127,7 @@ export default program => {
         );
         log(table.toString());
         log(
-          'See https://docs.expo.io/versions/latest/guides/adhoc-builds/#fixing-disabled-services for more details.'
+          'See https://docs.expo.io/versions/latest/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
         );
       }
 
