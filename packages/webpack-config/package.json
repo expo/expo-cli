@@ -41,7 +41,7 @@
     "url-loader": "^1.1.2",
     "webpack": "4.24.0",
     "webpack-bundle-analyzer": "^3.0.4",
-    "webpack-deep-scope-plugin": "^1.6.0",
+    "webpack-deep-scope-plugin": "1.6.0",
     "webpack-manifest-plugin": "^2.0.4",
     "webpack-merge": "^4.2.1",
     "workbox-webpack-plugin": "^3.6.3"
