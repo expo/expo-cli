@@ -1,33 +1,59 @@
 version: 2.1
 
 executors:
-  node:
+  node-10:
     docker:
       - image: circleci/node:10
+  node-12:
+    docker:
+      - image: circleci/node:12
 workflows:
   version: 2
   build-and-test:
     jobs:
-      - build
+      - build:
+          name: build12
+          e: node-12
+      - build:
+          name: build10
+          e: node-10
       - test-dev-tools:
+          e: node-12
           requires:
-            - build
+            - build12
+      - test-dev-tools:
+          e: node-10
+          requires:
+            - build10
       - test-json-file:
+          e: node-12
           requires:
-            - build
+            - build12
+      - test-json-file:
+          e: node-10
+          requires:
+            - build10
       - test-expo-codemod:
+          e: node-12
           requires:
-            - build
+            - build12
+      - test-expo-codemod:
+          e: node-10
+          requires:
+            - build10
 jobs:
   build:
-    executor: node
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
     working_directory: ~/expo-cli
     steps:
       - checkout
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - yarn-packages-{{ checksum "yarn.lock" }}
+            - yarn-{{ parameters.e }}-{{ checksum "yarn.lock" }}
       - run:
           name: Install Dependencies
           command: yarn install --frozen-lockfile
@@ -40,25 +66,34 @@ jobs:
             - expo-cli
       - save_cache:
           name: Save Yarn Package Cache
-          key: yarn-packages-{{ checksum "yarn.lock" }}
+          key: yarn-{{ parameters.e }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
   test-dev-tools:
-    executor: node
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/dev-tools
     steps:
       - attach_workspace:
           at: '~'
       - run: yarn test
   test-json-file:
-    executor: node
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/json-file
     steps:
       - attach_workspace:
           at: '~'
       - run: yarn test
   test-expo-codemod:
-    executor: node
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/expo-codemod
     steps:
       - attach_workspace:
