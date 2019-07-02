@@ -18673,7 +18673,7 @@ webpack-cli@^3.2.3:
     v8-compile-cache "^2.0.2"
     yargs "^12.0.5"
 
-webpack-deep-scope-plugin@^1.6.0:
+webpack-deep-scope-plugin@1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/webpack-deep-scope-plugin/-/webpack-deep-scope-plugin-1.6.0.tgz#5a3a26dc8a40863c7c362840df1fb63f5ca4c441"
   integrity sha512-ZYldKNeWQtk9SoV70x7Eb2NRmvHMtNBOjscs0wUdg/pfymntiF+0W/D9v2o76ztufjND6RNFjNVnyFQww25AZg==
