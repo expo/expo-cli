@@ -112,6 +112,11 @@ const expoUniversalModules = [
     sdkVersions: '>=30.0.0 <33.0.0',
   },
   {
+    podName: 'EXBattery',
+    libName: 'expo-battery',
+    sdkVersions: '>=34.0.0',
+  },
+  {
     podName: 'EXBlur',
     libName: 'expo-blur',
     sdkVersions: '>=33.0.0',
@@ -167,6 +172,11 @@ const expoUniversalModules = [
     podName: 'EXCrypto',
     libName: 'expo-crypto',
     sdkVersions: '>=33.0.0',
+  },
+  {
+    podName: 'EXDevice',
+    libName: 'expo-device',
+    sdkVersions: '>=34.0.0',
   },
   {
     podName: 'EXDocumentPicker',
@@ -308,11 +318,6 @@ const expoUniversalModules = [
     podName: 'EXGL',
     libName: 'expo-gl',
     sdkVersions: '>=29.0.0',
-  },
-  {
-    podName: 'EXDevice',
-    libName: 'expo-device',
-    sdkVersions: '>=34.0.0',
   },
   {
     podName: 'EXGL-CPP',
