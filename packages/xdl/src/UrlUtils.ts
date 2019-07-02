@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import joi from 'joi';
 import os from 'os';
 import url from 'url';
@@ -26,7 +22,7 @@ export async function constructBundleUrlAsync(
 
 export async function constructManifestUrlAsync(
   projectRoot: string,
-  opts: any,
+  opts?: any,
   requestHostname?: string
 ) {
   return constructUrlAsync(projectRoot, opts, false, requestHostname);
@@ -71,7 +67,7 @@ export async function constructUrlWithExtensionAsync(
   let mainModulePath = guessMainModulePath(entryPoint);
   bundleUrl += `/${mainModulePath}.${ext}`;
 
-  let queryParams = await constructBundleQueryParamsAsync(projectRoot, opts, requestHostname);
+  let queryParams = await constructBundleQueryParamsAsync(projectRoot, opts);
   return `${bundleUrl}?${queryParams}`;
 }
 
@@ -130,7 +126,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   queryParams += '&hot=false';
 
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
@@ -151,7 +147,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
-export async function constructWebAppUrlAsync(projectRoot) {
+export async function constructWebAppUrlAsync(projectRoot: string): Promise<string | null> {
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.webpackServerPort) {
     return null;
@@ -173,7 +169,7 @@ export async function constructUrlAsync(
   opts: any,
   isPackager: boolean,
   requestHostname?: string
-) {
+): Promise<string> {
   if (opts) {
     let schema = joi.object().keys({
       urlType: joi.any().valid('exp', 'http', 'redirect', 'no-protocol'),
@@ -211,7 +207,7 @@ export async function constructUrlAsync(
   } else {
     protocol = 'exp';
 
-    let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+    let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
     if (exp.detach) {
       if (exp.scheme && Versions.gteSdkVersion(exp, '27.0.0')) {
         protocol = exp.scheme;
@@ -262,7 +258,7 @@ export async function constructUrlAsync(
     port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
   } else {
     let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
-    if (!ngrokUrl) {
+    if (!ngrokUrl || typeof ngrokUrl !== 'string') {
       ProjectUtils.logWarning(
         projectRoot,
         'expo',
@@ -308,11 +304,11 @@ export async function constructUrlAsync(
   return url_;
 }
 
-export function guessMainModulePath(entryPoint: string) {
+export function guessMainModulePath(entryPoint: string): string {
   return entryPoint.replace(/\.js$/, '');
 }
 
-export function randomIdentifier(length: number = 6) {
+export function randomIdentifier(length: number = 6): string {
   let alphabet = '23456789qwertyuipasdfghjkzxcvbnm';
   let result = '';
   for (let i = 0; i < length; i++) {
@@ -323,19 +319,19 @@ export function randomIdentifier(length: number = 6) {
   return result;
 }
 
-export function sevenDigitIdentifier() {
+export function sevenDigitIdentifier(): string {
   return `${randomIdentifier(3)}-${randomIdentifier(4)}`;
 }
 
-export function randomIdentifierForUser(username: string) {
+export function randomIdentifierForUser(username: string): string {
   return `${username}-${randomIdentifier(3)}-${randomIdentifier(2)}`;
 }
 
-export function someRandomness() {
+export function someRandomness(): string {
   return [randomIdentifier(2), randomIdentifier(3)].join('-');
 }
 
-export function domainify(s: string) {
+export function domainify(s: string): string {
   return s
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-')
@@ -343,7 +339,7 @@ export function domainify(s: string) {
     .replace(/-+$/, '');
 }
 
-export function getPlatformSpecificBundleUrl(url: string, platform: string) {
+export function getPlatformSpecificBundleUrl(url: string, platform: string): string {
   if (url.includes(Exp.ENTRY_POINT_PLATFORM_TEMPLATE_STRING)) {
     return url.replace(Exp.ENTRY_POINT_PLATFORM_TEMPLATE_STRING, platform);
   } else {
@@ -351,6 +347,6 @@ export function getPlatformSpecificBundleUrl(url: string, platform: string) {
   }
 }
 
-export async function isHttps(url) {
+export function isHttps(url: string): boolean {
   return validator.isURL(url, { protocols: ['https'] });
 }

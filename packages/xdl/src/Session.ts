@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import slugid from 'slugid';
 
 import UserSettings from './UserSettings';
@@ -10,7 +6,7 @@ function _newIdentifier(type = 'c') {
   return type + '-' + slugid.v4();
 }
 
-export async function clientIdAsync() {
+export async function clientIdAsync(): Promise<string> {
   var clientId = await UserSettings.getAsync('accessToken', null);
   if (clientId === null) {
     clientId = _newIdentifier();
