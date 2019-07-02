@@ -1,12 +1,7 @@
-/**
- * @flow
- */
-
 import fs from 'fs-extra';
 import tar from 'tar';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
-import rimraf from 'rimraf';
 import uuid from 'uuid';
 
 import * as Binaries from './Binaries';
@@ -30,11 +25,11 @@ async function _extractWindowsAsync(archive: string, dir: string) {
     console.error(e.stderr);
     throw e;
   } finally {
-    rimraf.sync(tmpDir);
+    fs.removeSync(tmpDir);
   }
 }
 
-export async function extractAsync(archive: string, dir: string) {
+export async function extractAsync(archive: string, dir: string): Promise<void> {
   try {
     if (process.platform === 'win32') {
       await _extractWindowsAsync(archive, dir);

@@ -1,13 +1,10 @@
-/**
- * @flow
- */
-
 import _ from 'lodash';
 import fs from 'fs-extra';
 import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 import semver from 'semver';
 import chalk from 'chalk';
+import ConfigUtils from '@expo/config';
 
 import * as Analytics from './Analytics';
 import * as Binaries from './Binaries';
@@ -20,19 +17,18 @@ import UserSettings from './UserSettings';
 import * as UrlUtils from './UrlUtils';
 import * as Versions from './Versions';
 import { getImageDimensionsAsync } from './tools/ImageUtils';
-import { parseSdkMajorVersion } from './detach/ExponentTools';
 
-let _lastUrl = null;
+let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
 
-export function isPlatformSupported() {
+export function isPlatformSupported(): boolean {
   return (
     process.platform === 'darwin' || process.platform === 'win32' || process.platform === 'linux'
   );
 }
 
-async function _getAdbOutputAsync(args) {
+async function _getAdbOutputAsync(args: string[]): Promise<string> {
   await Binaries.addToPathAsync('adb');
 
   try {
@@ -60,8 +56,8 @@ async function _isDeviceAuthorizedAsync() {
   let lines = _.trim(devices).split(/\r?\n/);
   lines.shift();
   let listOfDevicesWithoutFirstLine = lines.join('\n');
-  // result looks like "072c4cf200e333c7	device" when authorized
-  // and "072c4cf200e333c7	unauthorized" when not.
+  // result looks like "072c4cf200e333c7  device" when authorized
+  // and "072c4cf200e333c7  unauthorized" when not.
   return listOfDevicesWithoutFirstLine.includes('device');
 }
 
@@ -88,7 +84,7 @@ async function _expoVersionAsync() {
 
   let regex = /versionName=([0-9.]+)/;
   let regexMatch = regex.exec(info);
-  if (regexMatch.length < 2) {
+  if (!regexMatch || regexMatch.length < 2) {
     return null;
   }
 
@@ -118,7 +114,7 @@ async function _downloadApkAsync() {
   let versions = await Versions.versionsAsync();
   let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
-  if (await fs.exists(apkPath)) {
+  if (await fs.pathExists(apkPath)) {
     return apkPath;
   }
 
@@ -151,11 +147,7 @@ export async function upgradeExpoAsync(): Promise<boolean> {
     await _assertDeviceReadyAsync();
 
     await _uninstallExpoAsync();
-    let installResult = await _installExpoAsync();
-    if (installResult.status !== 0) {
-      return false;
-    }
-
+    await _installExpoAsync();
     if (_lastUrl) {
       Logger.global.info(`Opening ${_lastUrl} in Expo.`);
       await _getAdbOutputAsync([
@@ -211,7 +203,7 @@ async function _openUrlAsync(url: string) {
   return output;
 }
 
-async function openUrlAsync(url: string, isDetached: boolean = false) {
+async function openUrlAsync(url: string, isDetached: boolean = false): Promise<void> {
   try {
     await _assertDeviceReadyAsync();
 
@@ -253,12 +245,12 @@ async function openUrlAsync(url: string, isDetached: boolean = false) {
 
 export async function openProjectAsync(
   projectRoot: string
-): Promise<{ success: true, url: string } | { success: false, error: string }> {
+): Promise<{ success: true; url: string } | { success: false; error: string }> {
   try {
     await startAdbReverseAsync(projectRoot);
 
     let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
-    let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+    let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
     await openUrlAsync(projectUrl, !!exp.isDetached);
     return { success: true, url: projectUrl };
@@ -269,7 +261,7 @@ export async function openProjectAsync(
 }
 
 // Adb reverse
-export async function startAdbReverseAsync(projectRoot: string) {
+export async function startAdbReverseAsync(projectRoot: string): Promise<boolean> {
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   const expRc = await ProjectUtils.readExpRcAsync(projectRoot);
   const userDefinedAdbReversePorts = expRc.extraAdbReversePorts || [];
@@ -289,7 +281,7 @@ export async function startAdbReverseAsync(projectRoot: string) {
   return true;
 }
 
-export async function stopAdbReverseAsync(projectRoot: string) {
+export async function stopAdbReverseAsync(projectRoot: string): Promise<void> {
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   const expRc = await ProjectUtils.readExpRcAsync(projectRoot);
   const userDefinedAdbReversePorts = expRc.extraAdbReversePorts || [];
@@ -363,11 +355,11 @@ const splashScreenDPIConstraints = [
  * @param projectDir - directory of the expo project
  * @since SDK33
  */
-export async function checkSplashScreenImages(projectDir: string) {
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+export async function checkSplashScreenImages(projectDir: string): Promise<void> {
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
 
   // return before SDK33
-  if (parseSdkMajorVersion(exp.sdkVersion) < 33) {
+  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     return;
   }
 
@@ -407,7 +399,7 @@ export async function checkSplashScreenImages(projectDir: string) {
       if (!splashImage) {
         Logger.global.warn(
           `Couldn't read dimensions of provided splash image '${chalk.italic(
-            splashImage
+            imageRelativePath
           )}'. Does the file exist?`
         );
         continue;
