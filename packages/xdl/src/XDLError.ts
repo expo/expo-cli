@@ -1,6 +1,6 @@
 import ExtendableError from 'es6-error';
 
-import ErrorCode from './ErrorCode';
+import { ErrorCode } from './ErrorCode';
 
 const ERROR_PREFIX = 'Error: ';
 
