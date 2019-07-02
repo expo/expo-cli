@@ -53,7 +53,7 @@ export { Env };
 import * as ExponentTools from './detach/ExponentTools';
 export { ExponentTools };
 
-import ErrorCode from './ErrorCode';
+import { ErrorCode } from './ErrorCode';
 export { ErrorCode };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
