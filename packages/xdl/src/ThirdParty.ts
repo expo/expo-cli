@@ -1,9 +1,12 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 
-export async function getManifest(publicUrl, opts = {}) {
-  const req = {
+export async function getManifest(
+  publicUrl: string,
+  opts: { platform?: 'android' | 'ios' | 'all' } = {}
+) {
+  const req: AxiosRequestConfig = {
     url: publicUrl,
     method: 'get',
     headers: { Accept: 'application/expo+json,application/json' },
@@ -31,7 +34,7 @@ export async function getManifest(publicUrl, opts = {}) {
 
 // Third party publicUrls can return an array of manifests
 // We need to choose the first compatible one
-async function _extractManifest(expOrArray, publicUrl) {
+async function _extractManifest(expOrArray: any, publicUrl: string) {
   // if its not an array, assume it was a single manifest obj
   if (!Array.isArray(expOrArray)) {
     return expOrArray;

@@ -7,16 +7,14 @@ if (process.env.NODE_ENV !== 'production') {
 import * as Analytics from './Analytics';
 export { Analytics };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Android from './Android.js';
+import * as Android from './Android';
 export { Android };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
 import * as AndroidShellApp from './detach/AndroidShellApp.js';
 export { AndroidShellApp };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import Api from './Api.js';
+import Api from './Api';
 export { Api };
 
 import ApiV2 from './ApiV2';
@@ -56,8 +54,7 @@ export { ExponentTools };
 import { ErrorCode } from './ErrorCode';
 export { ErrorCode };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Exp from './Exp.js';
+import * as Exp from './Exp';
 export { Exp };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
@@ -143,16 +140,14 @@ export { ProjectUtils };
 import * as Simulator from './Simulator.js';
 export { Simulator };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as ThirdParty from './ThirdParty.js';
+import * as ThirdParty from './ThirdParty';
 export { ThirdParty };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
 import * as UpdateVersions from './tools/UpdateVersions.js';
 export { UpdateVersions };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as UrlUtils from './UrlUtils.js';
+import * as UrlUtils from './UrlUtils';
 export { UrlUtils };
 
 import User from './User';

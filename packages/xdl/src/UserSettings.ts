@@ -8,6 +8,7 @@ import { ConnectionType } from './User';
 import * as Env from './Env';
 
 export type UserSettingsData = {
+  accessToken?: string;
   auth?: UserData | null;
   ignoreBundledBinaries?: string[];
   openDevToolsAtStartup?: boolean;
@@ -50,7 +51,7 @@ function userSettingsJsonFile(): JsonFile<UserSettingsData> {
 function recentExpsJsonFile() {
   // TODO(ville): Add array support to JsonFile.
   // @ts-ignore JsonFile doesn't officially support arrays, only objects
-  return new JsonFile<JSONArray>(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'), {
+  return new JsonFile<string[]>(path.join(dotExpoHomeDirectory(), 'xde-recent-exps.json'), {
     jsonParseErrorDefault: [],
     cantReadFileDefault: [],
   });

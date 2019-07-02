@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import * as ConfigUtils from '@expo/config';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
@@ -9,14 +5,13 @@ import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
-import pacote from 'pacote';
+import pacote, { PackageSpec } from 'pacote';
 import tar from 'tar';
 
 import Api from './Api';
 import * as Binaries from './Binaries';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-import * as ProjectUtils from './project/ProjectUtils';
 import * as ThirdParty from './ThirdParty';
 import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
@@ -26,8 +21,17 @@ import * as ProjectSettings from './ProjectSettings';
 // FIXME(perry) eliminate usage of this template
 export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 
+// TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
+type ReadEntry = any;
+
+type InitialConfig = {
+  displayName?: string;
+  name: string;
+  [key: string]: any;
+};
+
 export async function determineEntryPointAsync(root: string) {
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(root);
+  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(root);
 
   // entryPoint is relative to the packager root and main is relative
   // to the project root. So if your rn-cli.config.js points to a different
@@ -42,13 +46,17 @@ export async function determineEntryPointAsync(root: string) {
 }
 
 class Transformer extends Minipass {
-  constructor(config) {
+  data: string;
+  config: InitialConfig;
+  displayName: string;
+
+  constructor(config: InitialConfig) {
     super();
     this.data = '';
     this.config = config;
     this.displayName = config.displayName || config.name;
   }
-  write(data) {
+  write(data: string) {
     this.data += data;
     return true;
   }
@@ -65,19 +73,20 @@ class Transformer extends Minipass {
 // Binary files, don't process these (avoid decoding as utf8)
 const binaryExtensions = ['.png', '.jar'];
 
-function createFileTransform(config) {
-  return function transformFile(entry) {
+function createFileTransform(config: InitialConfig) {
+  return function transformFile(entry: ReadEntry) {
     if (!binaryExtensions.includes(path.extname(entry.path)) && config.name) {
       return new Transformer(config);
     }
+    return;
   };
 }
 
 export async function extractTemplateApp(
-  templateSpec: string | object,
+  templateSpec: PackageSpec,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
-  config = {}
+  config: InitialConfig
 ) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
   let tarStream = await pacote.tarball.stream(templateSpec, {
@@ -88,15 +97,17 @@ export async function extractTemplateApp(
     const extractStream = tar.x({
       cwd: projectRoot,
       strip: 1,
+      // TODO(ville): pending https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
+      // @ts-ignore property missing from the type definition
       transform: createFileTransform(config),
-      onentry(entry) {
+      onentry(entry: ReadEntry) {
         if (config.name) {
           // Rewrite paths for bare workflow
           entry.path = entry.path
             .replace(/HelloWorld/g, config.name)
             .replace(/helloworld/g, config.name.toLowerCase());
         }
-        if (entry.type.toLowerCase() === 'file' && path.basename(entry.path) === 'gitignore') {
+        if (/^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
           // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
           // See: https://github.com/npm/npm/issues/1862
           entry.path = entry.path.replace(/gitignore$/, '.gitignore');
@@ -166,7 +177,7 @@ async function initGitRepoAsync(root: string) {
   }
 }
 
-async function installDependenciesAsync(projectRoot, packageManager) {
+async function installDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
   Logger.global.info('Installing dependencies...');
 
   if (packageManager === 'yarn') {
@@ -186,12 +197,10 @@ export async function saveRecentExpRootAsync(root: string) {
   root = path.resolve(root);
 
   // Write the recent Exps JSON file
-  let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
+  const recentExpsJsonFile = UserSettings.recentExpsJsonFile();
   let recentExps = await recentExpsJsonFile.readAsync();
   // Filter out copies of this so we don't get dupes in this list
-  recentExps = recentExps.filter(function(x) {
-    return x !== root;
-  });
+  recentExps = recentExps.filter((dir: string) => dir !== root);
   recentExps.unshift(root);
   return await recentExpsJsonFile.writeAsync(recentExps.slice(0, 100));
 }
@@ -200,7 +209,7 @@ function getHomeDir(): string {
   return process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || '';
 }
 
-function makePathReadable(pth) {
+function makePathReadable(pth: string) {
   let homedir = getHomeDir();
   if (pth.substr(0, homedir.length) === homedir) {
     return `~${pth.substr(homedir.length)}`;
@@ -211,9 +220,9 @@ function makePathReadable(pth) {
 
 export async function expInfoSafeAsync(root: string) {
   try {
-    let { exp: { name, description, icon, iconUrl } } = await ProjectUtils.readConfigJsonAsync(
-      root
-    );
+    let {
+      exp: { name, description, icon, iconUrl },
+    } = await ConfigUtils.readConfigJsonAsync(root);
     let pathOrUrl =
       icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
     let resolvedPath = path.resolve(root, pathOrUrl);
@@ -237,13 +246,14 @@ export async function expInfoSafeAsync(root: string) {
 
 type PublishInfo = {
   args: {
-    username: string,
-    remoteUsername: string,
-    remotePackageName: string,
-    remoteFullPackageName: string,
-    iosBundleIdentifier: ?string,
-    androidPackage: ?string,
-  },
+    username: string;
+    remoteUsername: string;
+    remotePackageName: string;
+    remoteFullPackageName: string;
+    sdkVersion: string;
+    iosBundleIdentifier?: string;
+    androidPackage?: string;
+  };
 };
 
 export async function getThirdPartyInfoAsync(publicUrl: string): Promise<PublishInfo> {
@@ -295,7 +305,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
   const { username } = user;
 
-  const { exp } = await ProjectUtils.readConfigJsonAsync(root);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(root);
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;
