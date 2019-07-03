@@ -79,7 +79,7 @@ export async function ejectAsync(projectRoot: string, options) {
   const ejectMethod =
     options.ejectMethod ||
     (await prompt(questions, {
-      nonInteractiveHelp: 'Please specify eject method (expoKit, bare) with --eject-method option.',
+      nonInteractiveHelp: 'Please specify eject method (bare, expokit) with the --eject-method option.',
     })).ejectMethod;
 
   if (ejectMethod === 'bare') {
@@ -93,7 +93,7 @@ export async function ejectAsync(projectRoot: string, options) {
     return;
   } else {
     throw new Error(
-      `Unrecognized eject method "${ejectMethod}". Valid options are: expokit, plain.`
+      `Unrecognized eject method "${ejectMethod}". Valid options are: bare, expokit.`
     );
   }
 
@@ -101,7 +101,7 @@ export async function ejectAsync(projectRoot: string, options) {
 }
 
 async function ejectToBareAsync(projectRoot, options) {
-  const useYarn = await fse.exists(path.resolve('yarn.lock'));
+  const useYarn = ConfigUtils.isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
   const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
   const { exp, pkg: pkgJson } = await ProjectUtils.readConfigJsonAsync(projectRoot);
@@ -113,12 +113,12 @@ async function ejectToBareAsync(projectRoot, options) {
   if (!exp) throw new Error(`Couldn't read ${configName}`);
   if (!pkgJson) throw new Error(`Couldn't read package.json`);
 
-  if (Versions.lteSdkVersion(exp, '32.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     throw new Error(`Ejecting to a bare project is only available for SDK 33 and higher`);
   }
 
   // Validate that the template exists
-  let sdkMajorVersionNumber = exp.sdkVersion.split('.')[0];
+  let sdkMajorVersionNumber = semver.major(exp.sdkVersion);
   let templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
   try {
     await pacote.manifest(templateSpec);
@@ -216,7 +216,7 @@ Android Studio to build the native code for your project.`);
 
 async function getAppNamesAsync(projectRoot) {
   const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
-  const { exp, pkg: pkgJson } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { exp, pkg: pkgJson } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   const appJson = configName === 'app.json' ? JSON.parse(await fse.readFile(configPath)) : {};
 
   let { displayName, name } = appJson;
