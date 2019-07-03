@@ -6,11 +6,13 @@ import matchRequire from 'match-require';
 import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 import spawn from 'cross-spawn';
+import semver from 'semver';
 import pacote from 'pacote';
 import temporary from 'tempy';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
+import * as PackageManager from '../../PackageManager';
 
 import log from '../../log';
 import prompt from '../../prompt';
@@ -79,7 +81,8 @@ export async function ejectAsync(projectRoot: string, options) {
   const ejectMethod =
     options.ejectMethod ||
     (await prompt(questions, {
-      nonInteractiveHelp: 'Please specify eject method (bare, expokit) with the --eject-method option.',
+      nonInteractiveHelp:
+        'Please specify eject method (bare, expokit) with the --eject-method option.',
     })).ejectMethod;
 
   if (ejectMethod === 'bare') {
@@ -123,9 +126,13 @@ async function ejectToBareAsync(projectRoot, options) {
   try {
     await pacote.manifest(templateSpec);
   } catch (e) {
-    throw new Error(
-      `Unable to eject because an eject template for SDK ${sdkMajorVersionNumber} was not found`
-    );
+    if (e.code === 'E404') {
+      throw new Error(
+        `Unable to eject because an eject template for SDK ${sdkMajorVersionNumber} was not found`
+      );
+    } else {
+      throw e;
+    }
   }
 
   /**
@@ -167,7 +174,7 @@ async function ejectToBareAsync(projectRoot, options) {
     process.exit(1);
   }
 
-  log(`Updating your ${npmOrYarn} scripts in package.json...`);
+  log(`Updating your package.json...`);
   if (!pkgJson.scripts) {
     pkgJson.scripts = {};
   }
@@ -199,22 +206,18 @@ AppRegistry.registerComponent('${appJson.name}', () => App);
   await fse.writeFile(path.resolve('index.js'), indexjs);
   log(chalk.green('Added new entry points!'));
 
-  log(`
-Note that using \`${npmOrYarn} start\` will now require you to run Xcode and/or
-Android Studio to build the native code for your project.`);
+  log(
+    chalk.grey(
+      `Note that using \`${npmOrYarn} start\` will now require you to run Xcode and/or Android Studio to build the native code for your project.`
+    )
+  );
 
   log('Removing node_modules...');
   await fse.remove('node_modules');
-  if (useYarn) {
-    log('Installing packages with yarn...');
-    spawn.sync('yarnpkg', [], { stdio: 'inherit' });
-  } else {
-    // npm prints the whole package tree to stdout unless we ignore it.
-    const stdio = [process.stdin, 'ignore', process.stderr];
 
-    log('Installing existing packages with npm...');
-    spawn.sync('npm', ['install'], { stdio });
-  }
+  log('Installing new packages...');
+  const packageManager = PackageManager.createForProject(projectRoot);
+  await packageManager.installAsync();
 }
 
 async function getAppNamesAsync(projectRoot) {
