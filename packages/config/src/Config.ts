@@ -137,8 +137,9 @@ export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestL
     web = {};
   }
 
-  // TODO: Bacon: use web values here
   return {
+    ...appManifest,
+    name: appManifest.displayName || appManifest.name,
     /**
      * Omit app.json properties that get removed during the native turtle build
      *
@@ -146,21 +147,15 @@ export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestL
      * `facebookAppId`
      * `facebookDisplayName`
      */
-    name: appManifest.displayName || appManifest.name,
-    description: appManifest.description,
-    slug: appManifest.slug,
-    sdkVersion: appManifest.sdkVersion,
-    version: appManifest.version,
-    githubUrl: appManifest.githubUrl,
-    orientation: appManifest.orientation,
-    primaryColor: appManifest.primaryColor,
-    privacy: appManifest.privacy,
-    icon: appManifest.icon,
-    scheme: appManifest.scheme,
-    notification: appManifest.notification,
-    splash: appManifest.splash,
-    androidShowExponentNotificationInShellApp:
-      appManifest.androidShowExponentNotificationInShellApp,
+    facebookScheme: undefined,
+    facebookAppId: undefined,
+    facebookDisplayName: undefined,
+
+    // Remove iOS and Android.
+    ios: undefined,
+    android: undefined,
+
+    // Use the PWA `manifest.json` as the native web manifest.
     web,
   };
 }
