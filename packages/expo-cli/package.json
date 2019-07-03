@@ -96,6 +96,7 @@
     "slash": "1.0.0",
     "source-map-support": "0.5.9",
     "split": "1.0.1",
+    "tmp": "^0.1.0",
     "untildify": "3.0.3",
     "validator": "10.5.0",
     "wordwrap": "1.0.0"
