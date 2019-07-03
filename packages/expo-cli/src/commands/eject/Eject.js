@@ -87,20 +87,32 @@ export async function ejectAsync(projectRoot: string, options) {
 
   if (ejectMethod === 'bare') {
     await ejectToBareAsync(projectRoot, options);
+    log.nested(chalk.green('Ejected successfully!'));
+    log.newLine();
+    log.nested(
+      `Before running your app on iOS, make sure you have CocoaPods installed and initialize the project:`
+    );
+    log.nested('');
+    log.nested(`  cd ios`);
+    log.nested(`  pod install`);
+    log.nested('');
+    log.nested('Then you can run the project:');
+    log.nested('');
+    let packageManager = ConfigUtils.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
+    log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
+    log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
   } else if (ejectMethod === 'expokit') {
     await loginOrRegisterIfLoggedOut();
     await Detach.detachAsync(projectRoot, options);
+    log(chalk.green('Ejected successfully!'));
   } else if (ejectMethod === 'cancel') {
     // we don't want to print the survey for cancellations
     log('OK! If you change your mind you can run this command again.');
-    return;
   } else {
     throw new Error(
       `Unrecognized eject method "${ejectMethod}". Valid options are: bare, expokit.`
     );
   }
-
-  log(chalk.green('Ejected successfully!'));
 }
 
 async function ejectToBareAsync(projectRoot, options) {
@@ -218,6 +230,7 @@ AppRegistry.registerComponent('${appJson.name}', () => App);
   log('Installing new packages...');
   const packageManager = PackageManager.createForProject(projectRoot);
   await packageManager.installAsync();
+  log.newLine();
 }
 
 async function getAppNamesAsync(projectRoot) {
