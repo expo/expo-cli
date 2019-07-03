@@ -7,7 +7,7 @@ import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 import spawn from 'cross-spawn';
 import pacote from 'pacote';
-import tmp from 'tmp';
+import temporary from 'tempy';
 import spawnAsync from '@expo/spawn-async';
 import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
@@ -147,15 +147,18 @@ async function ejectToBareAsync(projectRoot, options) {
   await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
   log(chalk.green('Wrote to app.json, please update it manually in the future.'));
 
+  let reactNativeUnimodulesVersion = '*';
+
   /**
    * Extract the template and copy it over
    */
   try {
-    let tempDir = tmp.dirSync();
-    await Exp.extractTemplateAppAsync(templateSpec, tempDir.name, appJson);
-    fse.copySync(path.join(tempDir.name, 'ios'), path.join(projectRoot, 'ios'));
-    fse.copySync(path.join(tempDir.name, 'android'), path.join(projectRoot, 'android'));
-    tempDir.removeCallback();
+    let tempDir = temporary.directory();
+    await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson);
+    fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
+    fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
+    let packageJson = fse.readJsonSync(path.join(tempDir, 'package.json'));
+    reactNativeUnimodulesVersion = packageJson.dependencies['react-native-unimodules'];
     log('Successfully copied template native code.');
   } catch (e) {
     log(chalk.red(e.message));
@@ -179,7 +182,7 @@ async function ejectToBareAsync(projectRoot, options) {
   pkgJson.dependencies['react-native'] = reactNativeVersion;
 
   // TODO: how should we version react-native-unimodules to match up with react-native version?
-  pkgJson.dependencies['react-native-unimodules'] = '^0.4.1';
+  pkgJson.dependencies['react-native-unimodules'] = reactNativeUnimodulesVersion;
 
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
 
