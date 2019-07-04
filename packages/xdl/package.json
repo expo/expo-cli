@@ -15,7 +15,7 @@
     "prebuild": "yarn clean",
     "clean": "rimraf ./build",
     "prepare": "yarn build",
-    "watch": "concurrently \"tsc --noEmit --watch\" \"gulp watch\"",
+    "watch": "concurrently \"tsc --emitDeclarationsOnly --watch\" \"gulp watch\"",
     "test": "jest --config jest/unit-test-config.json --rootDir .",
     "integration-tests": "jest --config jest/integration-test-config.json --rootDir .",
     "flow-typed": "flow-typed install --flowVersion=\"$(flow version | awk '{ print $9 }')\""

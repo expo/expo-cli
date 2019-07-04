@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
@@ -26,11 +22,14 @@ import {
   Config,
   Doctor,
   Logger,
-  PackagerLogsStream,
   NotificationCode,
+  PackagerLogsStream,
+  LogRecord,
+  LogUpdater,
   Project,
   ProjectUtils,
-  User as UserManager,
+  UserManager,
+  XDLError,
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
@@ -59,10 +58,12 @@ program.on('--help', () => {
   log(`To learn more about a specific command and its options use 'expo [command] --help'\n`);
 });
 
+export type Action = (...args: any[]) => void;
+
 // asyncAction is a wrapper for all commands/actions to be executed after commander is done
 // parsing the command input
-Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
-  return this.action(async (...args) => {
+Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boolean) {
+  return this.action(async (...args: any[]) => {
     if (!skipUpdateCheck) {
       try {
         await checkCliVersionAsync();
@@ -115,9 +116,9 @@ Command.prototype.asyncAction = function(asyncFn, skipUpdateCheck) {
 // - Attaches the bundling logger
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
-Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidation, skipAuthCheck) {
+Command.prototype.asyncActionProjectDir = function(asyncFn: Action, skipProjectValidation: boolean, skipAuthCheck: boolean) {
   this.option('--config [file]', 'Specify a path to app.json');
-  return this.asyncAction(async (projectDir, ...args) => {
+  return this.asyncAction(async (projectDir: string, ...args: any[]) => {
     const opts = args[0];
 
     if (!projectDir) {
@@ -134,7 +135,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
       ConfigUtils.setCustomConfigPath(projectDir, pathToConfig);
     }
 
-    const logLines = (msg, logFn) => {
+    const logLines = (msg: any, logFn: (...args: any[]) => void) => {
       if (typeof msg === 'string') {
         for (let line of msg.split('\n')) {
           logFn(line);
@@ -144,7 +145,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
       }
     };
 
-    const logStackTrace = (chunk, logFn, nestedLogFn) => {
+    const logStackTrace = (chunk: LogRecord, logFn: (...args: any[]) => void, nestedLogFn: (...args: any[]) => void) => {
       let traceInfo;
       try {
         traceInfo = JSON.parse(chunk.msg);
@@ -156,12 +157,12 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
       log.addNewLineIfNone();
       logFn(chalk.bold(message));
 
-      const isLibraryFrame = line => {
+      const isLibraryFrame = (line: string) => {
         return line.startsWith('node_modules');
       };
 
-      let stackFrames = compact(stack.split('\n'));
-      let lastAppCodeFrameIndex = findLastIndex(stackFrames, line => {
+      const stackFrames: string[] = compact(stack.split('\n'));
+      let lastAppCodeFrameIndex = findLastIndex(stackFrames, (line: string) => {
         return !isLibraryFrame(line);
       });
       let lastFrameIndexToLog = Math.min(
@@ -198,7 +199,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
       log.printNewLineBeforeNextLog();
     };
 
-    const logWithLevel = chunk => {
+    const logWithLevel = (chunk: LogRecord) => {
       if (!chunk.msg) {
         return;
       }
@@ -223,7 +224,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
       }
     };
 
-    let bar;
+    let bar: ProgressBar | null;
     // eslint-disable-next-line no-new
     new PackagerLogsStream({
       projectRoot: projectDir,
@@ -237,12 +238,12 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
 
         log.setBundleProgressBar(bar);
       },
-      onProgressBuildBundle: percent => {
+      onProgressBuildBundle: (percent: number) => {
         if (!bar || bar.complete) return;
         let ticks = percent - bar.curr;
         ticks > 0 && bar.tick(ticks);
       },
-      onFinishBuildBundle: (err, startTime: Date, endTime: Date) => {
+      onFinishBuildBundle: (err, startTime, endTime) => {
         if (bar && !bar.complete) {
           bar.tick(100 - bar.curr);
         }
@@ -254,13 +255,13 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
           if (err) {
             log(chalk.red('Failed building JavaScript bundle.'));
           } else {
-            log(chalk.green(`Finished building JavaScript bundle in ${endTime - startTime}ms.`));
+            log(chalk.green(`Finished building JavaScript bundle in ${endTime.getTime() - startTime.getTime()}ms.`));
           }
         }
       },
-      updateLogs: updater => {
+      updateLogs: (updater: LogUpdater) => {
         let newLogChunks = updater([]);
-        newLogChunks.forEach(newLogChunk => {
+        newLogChunks.forEach((newLogChunk: LogRecord) => {
           if (newLogChunk.issueId && newLogChunk.issueCleared) {
             return;
           }
@@ -272,7 +273,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
     // needed for validation logging to function
     ProjectUtils.attachLoggerStream(projectDir, {
       stream: {
-        write: chunk => {
+        write: (chunk: LogRecord) => {
           if (chunk.tag === 'device') {
             logWithLevel(chunk);
           }
@@ -308,7 +309,7 @@ Command.prototype.asyncActionProjectDir = function(asyncFn, skipProjectValidatio
   });
 };
 
-function runAsync(programName) {
+function runAsync(programName: string) {
   try {
     // Setup analytics
     Analytics.setSegmentNodeKey('vGu92cdmVaggGA26s3lBX6Y5fILm8SQ7');
@@ -323,14 +324,19 @@ function runAsync(programName) {
         serverUrl = `http://${serverUrl}`;
       }
       let parsedUrl = url.parse(serverUrl);
-      Config.api.host = parsedUrl.hostname;
-      Config.api.port = parsedUrl.port;
+      const port = parseInt(parsedUrl.port || '')
+      if (parsedUrl.hostname && port) {
+        Config.api.host = parsedUrl.hostname;
+        Config.api.port = port;
+      } else {
+        throw new Error('Environment variable SERVER_URL is not a valid url');
+      }
     }
 
     Config.developerTool = packageJSON.name;
 
     // Setup our commander instance
-    program.name = programName;
+    program.name(programName);
     program
       .version(packageJSON.version)
       .option('-o, --output [format]', 'Output format. pretty (default), raw')
@@ -340,7 +346,7 @@ function runAsync(programName) {
       );
 
     // Load each module found in ./commands by 'registering' it with our commander instance
-    const commandFiles = [].concat(
+    const commandFiles = ([] as string[]).concat(
       glob.sync('commands/*.js', { cwd: __dirname }),
       glob.sync('commands/*/index.js', { cwd: __dirname })
     );
@@ -379,8 +385,8 @@ function runAsync(programName) {
 
     // Display a message if the user does not input a valid command
     if (subCommand) {
-      let commands = [];
-      program.commands.forEach(command => {
+      let commands: string[] = [];
+      program.commands.forEach((command: Command) => {
         commands.push(command['_name']);
         let alias = command['_alias'];
         if (alias) {
@@ -436,7 +442,7 @@ any interaction with Expo servers may result in unexpected behaviour.`
 function _registerLogs() {
   let stream = {
     stream: {
-      write: chunk => {
+      write: (chunk: any) => {
         if (chunk.code) {
           switch (chunk.code) {
             case NotificationCode.START_LOADING:
@@ -477,7 +483,7 @@ async function writePathAsync() {
 }
 
 // This is the entry point of the CLI
-export function run(programName) {
+export function run(programName: string) {
   (async function() {
     await Promise.all([writePathAsync(), runAsync(programName)]);
   })().catch(e => {
