@@ -5,7 +5,7 @@ import semver from 'semver';
 
 import { Cacher } from './FsCache';
 
-function createModuleVersionChecker(name, currentVersion) {
+function createModuleVersionChecker(name: string, currentVersion: string) {
   const UpdateCacher = new Cacher(
     async () => {
       const pkgJson = await npmPackageJson(name, { version: currentVersion });

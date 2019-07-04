@@ -28,14 +28,14 @@ type SDKVersion = {
 };
 
 type SDKVersions = { [version: string]: SDKVersion };
-type TurtleSDKVersions = { android: string[]; ios: string[]; };
+type TurtleSDKVersions = { android: string[]; ios: string[] };
 type TurtleSDKVersionsOld = { android: string; ios: string };
 
 type Versions = {
-  androidUrl: 'https://d1ahtucjixef4r.cloudfront.net/Exponent-2.11.4.apk';
-  androidVersion: '2.11.4';
-  iosUrl: 'https://dpq5q02fu5f55.cloudfront.net/Exponent-2.11.1.tar.gz';
-  iosVersion: '2.11.1';
+  androidUrl: string;
+  androidVersion: string;
+  iosUrl: string;
+  iosVersion: string;
   sdkVersions: SDKVersions;
   /* deprecated */ starterApps: unknown;
   /* deprecated */ templates: unknown[];
