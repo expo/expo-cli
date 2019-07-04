@@ -942,18 +942,21 @@ export async function runShellAppModificationsAsync(
     }
 
     // Fabric
+    // Delete existing Fabric API key.
+    await deleteLinesInFileAsync(
+      `BEGIN FABRIC CONFIG`,
+      `END FABRIC CONFIG`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+    await fs.remove(path.join(shellPath, 'app', 'fabric.properties'));
+
     if (fabric) {
-      await fs.remove(path.join(shellPath, 'app', 'fabric.properties'));
+      // Put user's Fabric key if provided.
       await fs.writeFileSync(
         path.join(shellPath, 'app', 'fabric.properties'),
         `apiSecret=${fabric.buildSecret}\n`
       );
 
-      await deleteLinesInFileAsync(
-        `BEGIN FABRIC CONFIG`,
-        `END FABRIC CONFIG`,
-        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
-      );
       await regexFileAsync(
         '<!-- ADD FABRIC CONFIG HERE -->',
         `<meta-data
@@ -964,12 +967,15 @@ export async function runShellAppModificationsAsync(
     }
 
     // Google Maps
+    // Delete existing Google Maps API key.
+    await deleteLinesInFileAsync(
+      `BEGIN GOOGLE MAPS CONFIG`,
+      `END GOOGLE MAPS CONFIG`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+
     if (googleMaps) {
-      await deleteLinesInFileAsync(
-        `BEGIN GOOGLE MAPS CONFIG`,
-        `END GOOGLE MAPS CONFIG`,
-        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
-      );
+      // Put user's Google Maps API key if provided.
       await regexFileAsync(
         '<!-- ADD GOOGLE MAPS CONFIG HERE -->',
         `<meta-data
