@@ -1,5 +1,3 @@
-// @flow
-
 import os from 'os';
 
 import ApiV2Client from './ApiV2';
