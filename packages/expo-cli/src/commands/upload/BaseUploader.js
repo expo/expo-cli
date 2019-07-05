@@ -70,7 +70,7 @@ export default class BaseUploader {
     });
     if (!build) {
       throw new Error(
-        `There are no builds on the Expo servers, please run 'expo build:${platform} first'`
+        `There are no builds on the Expo servers, please run 'expo build:${platform}' first`
       );
     }
     return this._downloadBuild(build.artifacts.url);
