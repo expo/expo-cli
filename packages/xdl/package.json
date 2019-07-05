@@ -3,7 +3,12 @@
   "version": "55.0.14",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
-  "files": ["build", "binaries", "caches", "scripts"],
+  "files": [
+    "build",
+    "binaries",
+    "caches",
+    "scripts"
+  ],
   "scripts": {
     "start": "yarn build && yarn run watch",
     "build": "tsc --emitDeclarationOnly && gulp build",
@@ -69,6 +74,7 @@
     "package-json": "6.4.0",
     "pacote": "9.3.0",
     "plist": "2.1.0",
+    "pretty-bytes": "^5.2.0",
     "probe-image-size": "4.0.0",
     "querystring": "0.2.0",
     "raven": "2.6.3",

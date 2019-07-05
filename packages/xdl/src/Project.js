@@ -28,6 +28,7 @@ import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
 import md5hex from 'md5hex';
+import prettyBytes from 'pretty-bytes';
 import urljoin from 'url-join';
 import uuid from 'uuid';
 import readLastLines from 'read-last-lines';
@@ -43,7 +44,6 @@ import {
   optimizeImageAsync,
   calculateHash,
   createNewFilename,
-  toReadableValue,
 } from './AssetUtils';
 import Config from './Config';
 import * as Doctor from './project/Doctor';
@@ -2137,7 +2137,7 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
     }
     if (amountSaved) {
       totalSaved += amountSaved;
-      logger.global.info(`Saved ${toReadableValue(amountSaved)}`);
+      logger.global.info(`Saved ${prettyBytes(amountSaved)}`);
     } else {
       logger.global.info(chalk.gray(`Nothing to compress.`));
     }
@@ -2146,7 +2146,7 @@ export async function optimizeAsync(projectRoot: string = './', options: Object 
     logger.global.info('No assets optimized. Everything is fully compressed!');
   } else {
     logger.global.info(
-      `Finished compressing assets. ${chalk.green(toReadableValue(totalSaved))} saved.`
+      `Finished compressing assets. ${chalk.green(prettyBytes(totalSaved))} saved.`
     );
   }
   assetJson.writeAsync(assetInfo);
