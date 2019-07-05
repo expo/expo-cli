@@ -88,7 +88,7 @@ export default class JsonFile<TJSONObject extends JSONObject> {
     return setAsync(this.file, key, value, this._getOptions(options));
   }
 
-  async mergeAsync(sources: TJSONObject | Array<TJSONObject>, options?: Options<TJSONObject>) {
+  async mergeAsync(sources: Partial<TJSONObject> | Array<Partial<TJSONObject>>, options?: Options<TJSONObject>) {
     return mergeAsync(this.file, sources, this._getOptions(options));
   }
 

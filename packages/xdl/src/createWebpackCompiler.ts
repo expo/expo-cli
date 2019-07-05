@@ -7,6 +7,8 @@
 import chalk from 'chalk';
 import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
+import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
+import webpack from 'webpack';
 
 import * as ProjectUtils from './project/ProjectUtils';
 import { logEnvironmentInfo, shouldWebpackClearLogs } from './Web';
@@ -15,7 +17,7 @@ const CONSOLE_TAG = 'expo';
 
 const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
 
-function log(projectRoot, message, showInDevtools = true) {
+function log(projectRoot: string, message: string, showInDevtools = true) {
   if (showInDevtools) {
     ProjectUtils.logInfo(projectRoot, CONSOLE_TAG, message);
   } else {
@@ -23,15 +25,20 @@ function log(projectRoot, message, showInDevtools = true) {
   }
 }
 
-function logWarning(projectRoot, message) {
+function logWarning(projectRoot: string, message: string) {
   ProjectUtils.logWarning(projectRoot, CONSOLE_TAG, message);
 }
 
-function logError(projectRoot, message) {
+function logError(projectRoot: string, message: string) {
   ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
 }
 
-function printInstructions(projectRoot, appName, urls, showInDevtools) {
+function printInstructions(
+  projectRoot: string,
+  appName: string,
+  urls: Urls,
+  showInDevtools: boolean
+) {
   let message = `You can now view ${chalk.bold(appName)} in the browser.\n\n`;
   if (urls.lanUrlForTerminal) {
     message += `  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}\n`;
@@ -46,7 +53,7 @@ function printInstructions(projectRoot, appName, urls, showInDevtools) {
   log(projectRoot, message, showInDevtools);
 }
 
-export function printPreviewNotice(projectRoot, showInDevtools) {
+export function printPreviewNotice(projectRoot: string, showInDevtools: boolean) {
   log(
     projectRoot,
     chalk.underline.yellow(
@@ -63,18 +70,21 @@ export default function createWebpackCompiler({
   urls,
   nonInteractive,
   useYarn,
-  webpack,
+  webpackFactory,
   onFinished,
+}: {
+  projectRoot: string;
+  appName: string;
+  config: webpack.Configuration;
+  urls: Urls;
+  nonInteractive?: boolean;
+  useYarn: boolean;
+  webpackFactory: (options?: webpack.Configuration) => webpack.Compiler;
+  onFinished: (() => void);
 }) {
   // "Compiler" is a low-level interface to Webpack.
   // It lets us listen to some events and provide our own custom messages.
-  let compiler;
-  try {
-    compiler = webpack(config);
-  } catch (err) {
-    logError(projectRoot, '\nFailed to compile\n' + err.message || err);
-    process.exit(1);
-  }
+  const compiler = webpackFactory(config);
 
   // "invalid" event fires when you have changed a file, and Webpack is
   // recompiling a bundle. WebpackDevServer takes care to pause serving the

@@ -37,7 +37,7 @@ export { Credentials };
 import * as AndroidCredentials from './credentials/AndroidCredentials';
 export { AndroidCredentials };
 
-const  Detach: any = require('./detach/Detach.js');
+const Detach: any = require('./detach/Detach.js');
 export { Detach };
 
 const Doctor: any = require('./project/Doctor.js');
@@ -145,10 +145,10 @@ export { Utils };
 import * as Versions from './Versions';
 export { Versions };
 
-const Web = require('./Web.js');
+import * as Web from './Web';
 export { Web };
 
-const Webpack = require('./Webpack.js');
+import * as Webpack from './Webpack';
 export { Webpack };
 
 import XDLError from './XDLError';

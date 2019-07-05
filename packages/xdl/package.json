@@ -113,6 +113,7 @@
     "@types/ncp": "^2.0.1",
     "@types/npm-package-arg": "^6.1.0",
     "@types/raven": "^2.5.3",
+    "@types/react-dev-utils": "^9.0.1",
     "@types/request": "^2.48.1",
     "@types/request-promise-native": "^1.0.16",
     "@types/semver": "^6.0.0",
