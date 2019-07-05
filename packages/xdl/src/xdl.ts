@@ -11,7 +11,7 @@ import * as Android from './Android';
 export { Android };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as AndroidShellApp from './detach/AndroidShellApp.js';
+import * as AndroidShellApp from './detach/AndroidShellApp';
 export { AndroidShellApp };
 
 import Api from './Api';
@@ -20,8 +20,7 @@ export { Api };
 import ApiV2 from './ApiV2';
 export { ApiV2 };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as AssetUtils from './AssetUtils.js';
+import * as AssetUtils from './AssetUtils';
 export { AssetUtils };
 
 import * as Binaries from './Binaries';
@@ -34,15 +33,15 @@ import Config from './Config';
 export { Config };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as Credentials from './credentials/Credentials.js';
+import * as Credentials from './credentials/Credentials';
 export { Credentials };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as Detach from './detach/Detach.js';
+import * as Detach from './detach/Detach';
 export { Detach };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as Doctor from './project/Doctor.js';
+import * as Doctor from './project/Doctor';
 export { Doctor };
 
 import * as Env from './Env';
@@ -58,15 +57,13 @@ import * as Exp from './Exp';
 export { Exp };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as ExpSchema from './project/ExpSchema.js';
+import * as ExpSchema from './project/ExpSchema';
 export { ExpSchema };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as FileSystem from './FileSystem.js';
+import * as FileSystem from './FileSystem';
 export { FileSystem };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import FormData from './tools/FormData.js';
+import FormData from './tools/FormData';
 export { FormData };
 
 import * as FsCache from './tools/FsCache';
@@ -76,35 +73,35 @@ import * as ImageUtils from './tools/ImageUtils';
 export { ImageUtils };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as StandaloneBuild from './StandaloneBuild.js';
+import * as StandaloneBuild from './StandaloneBuild';
 export { StandaloneBuild };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosIcons from './detach/IosIcons.js';
+import * as IosIcons from './detach/IosIcons';
 export { IosIcons };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import IosIPABuilder from './detach/IosIPABuilder.js';
+import IosIPABuilder from './detach/IosIPABuilder';
 export { IosIPABuilder };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosKeychain from './detach/IosKeychain.js';
+import * as IosKeychain from './detach/IosKeychain';
 export { IosKeychain };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosPlist from './detach/IosPlist.js';
+import * as IosPlist from './detach/IosPlist';
 export { IosPlist };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosPodsTools from './detach/IosPodsTools.js';
+import * as IosPodsTools from './detach/IosPodsTools';
 export { IosPodsTools };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosShellApp from './detach/IosShellApp.js';
+import * as IosShellApp from './detach/IosShellApp';
 export { IosShellApp };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosCodeSigning from './detach/IosCodeSigning.js';
+import * as IosCodeSigning from './detach/IosCodeSigning';
 export { IosCodeSigning };
 
 import Logger from './Logger';
@@ -113,8 +110,7 @@ export { Logger };
 import LoggerDetach from './detach/Logger';
 export { LoggerDetach };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as ModuleVersion from './tools/ModuleVersion.js';
+import * as ModuleVersion from './tools/ModuleVersion';
 export { ModuleVersion };
 
 import * as Modules from './modules/Modules';
@@ -127,7 +123,7 @@ import PackagerLogsStream from './logs/PackagerLogsStream';
 export { PackagerLogsStream };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as Project from './Project.js';
+import * as Project from './Project';
 export { Project };
 
 import * as ProjectSettings from './ProjectSettings';
@@ -136,15 +132,13 @@ export { ProjectSettings };
 import * as ProjectUtils from './project/ProjectUtils';
 export { ProjectUtils };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Simulator from './Simulator.js';
+import * as Simulator from './Simulator';
 export { Simulator };
 
 import * as ThirdParty from './ThirdParty';
 export { ThirdParty };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as UpdateVersions from './tools/UpdateVersions.js';
+import * as UpdateVersions from './tools/UpdateVersions';
 export { UpdateVersions };
 
 import * as UrlUtils from './UrlUtils';
@@ -163,11 +157,11 @@ import * as Versions from './Versions';
 export { Versions };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as Web from './Web.js';
+import * as Web from './Web';
 export { Web };
 
 // @ts-ignore untyped module yet to be converted to TypeScript
-import * as Webpack from './Webpack.js';
+import * as Webpack from './Webpack';
 export { Webpack };
 
 import XDLError from './XDLError';
