@@ -1,6 +1,7 @@
 const { createEnvironmentConstants } = require('@expo/config');
 const WebpackPWAManifestPlugin = require('@expo/webpack-pwa-manifest-plugin');
 const chalk = require('chalk');
+const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
@@ -19,6 +20,8 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const BrotliPlugin = require('brotli-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const WebpackNotifierPlugin = require('webpack-notifier');
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const createIndexHTMLFromAppJSONAsync = require('./createIndexHTMLFromAppJSONAsync');
 const createClientEnvironment = require('./createClientEnvironment');
 const getPathsAsync = require('./utils/getPathsAsync');
@@ -146,7 +149,7 @@ module.exports = async function(env = {}, argv) {
   const mode = getMode(env);
   const isDev = mode === 'development';
   const isProd = mode === 'production';
-
+  let pluginNames = {};
   // Enables deep scope analysis in production mode.
   // Remove unused import/exports
   // override: `env.deepScopeAnalysis`
@@ -158,55 +161,13 @@ module.exports = async function(env = {}, argv) {
   const locations = await getPathsAsync(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
-  const middlewarePlugins = [];
+  // const middlewarePlugins = [];
 
   const { build: buildConfig } = config.web;
   const { lang } = config.web;
   const { publicPath, rootId, babel: babelAppConfig = {} } = config.web.build;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
-
-  if (deepScopeAnalysisEnabled) {
-    middlewarePlugins.push(new WebpackDeepScopeAnalysisPlugin());
-  }
-
-  const serviceWorker = overrideWithPropertyOrConfig(
-    // Prevent service worker in development mode
-    config.web.build.serviceWorker,
-    DEFAULT_SERVICE_WORKER
-  );
-  if (serviceWorker) {
-    // Generate a service worker script that will precache, and keep up to date,
-    // the HTML & assets that are part of the Webpack build.
-    middlewarePlugins.push(
-      new WorkboxPlugin.GenerateSW({
-        exclude: [
-          /\.LICENSE$/,
-          /\.map$/,
-          /asset-manifest\.json$/,
-          // Exclude all apple touch images as they are cached locally after the PWA is added.
-          /^\bapple.*\.png$/,
-        ],
-        /// SINGLE PAGE:
-        // navigateFallback: `${publicPath}index.html`,
-        clientsClaim: true,
-        importWorkboxFrom: 'cdn',
-        navigateFallbackBlacklist: [
-          // Exclude URLs starting with /_, as they're likely an API call
-          new RegExp('^/_'),
-          // Exclude URLs containing a dot, as they're likely a resource in
-          // public/ and not a SPA route
-          new RegExp('/[^/]+\\.[^/]+$'),
-        ],
-        ...(isDev
-          ? {
-              include: [], // Don't cache any assets in dev mode.
-            }
-          : {}),
-        ...serviceWorker,
-      })
-    );
-  }
 
   /**
    * report: {
@@ -217,38 +178,6 @@ module.exports = async function(env = {}, argv) {
    * }
    */
   let reportPlugins = [];
-
-  const reportConfig = enableWithPropertyOrConfig(
-    config.web.build.report,
-    DEFAULT_REPORT_CONFIG,
-    true
-  );
-
-  if (reportConfig) {
-    if (isDev && reportConfig.verbose) {
-      console.log('Generating a report, this will add noticeably more time to rebuilds.');
-    }
-    const reportDir = reportConfig.path;
-    reportPlugins = [
-      // Delete the report folder
-      new CleanWebpackPlugin([locations.absolute(reportDir)], {
-        root: locations.root,
-        dry: false,
-        verbose: reportConfig.verbose,
-      }),
-      // Generate the report.html and stats.json
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        defaultSizes: 'gzip',
-        generateStatsFile: true,
-        openAnalyzer: false,
-        ...reportConfig,
-        logLevel: reportConfig.verbose ? 'info' : 'silent',
-        statsFilename: locations.absolute(reportDir, reportConfig.statsFilename),
-        reportFilename: locations.absolute(reportDir, reportConfig.reportFilename),
-      }),
-    ];
-  }
 
   const devtool = getDevtool(env, config.web.build);
 
@@ -308,6 +237,188 @@ module.exports = async function(env = {}, argv) {
 
   const environmentVariables = createClientEnvironment(mode, publicPath, publicAppManifest);
 
+  if (isProd) {
+    // Delete the build folder
+
+    pluginNames['Delete existing build folder'] = new CleanWebpackPlugin(
+      [locations.production.folder],
+      {
+        root: locations.root,
+        dry: false,
+        verbose: buildConfig.verbose,
+      }
+    );
+    // Copy the template files over
+
+    pluginNames['Create a new build folder and copy template files'] = new CopyWebpackPlugin([
+      {
+        from: locations.template.folder,
+        to: locations.production.folder,
+        // We generate new versions of these based on the templates
+        ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
+      },
+      {
+        from: locations.template.serveJson,
+        to: locations.production.serveJson,
+      },
+      {
+        from: locations.template.favicon,
+        to: locations.production.favicon,
+      },
+    ]);
+  }
+
+  // Generate the `index.html`
+  pluginNames['Generating the index.html'] = await createIndexHTMLFromAppJSONAsync(env);
+
+  // Add variables to the `index.html`
+  const interpolateHtmlPlugin = new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
+    PUBLIC_URL: publicPath,
+    WEB_TITLE: config.web.name,
+    NO_SCRIPT: noJSComponent,
+    LANG_ISO_CODE: lang,
+    ROOT_ID: rootId,
+  });
+  pluginNames['Interpolate HTML'] = interpolateHtmlPlugin;
+
+  pluginNames['Create the PWA'] = new WebpackPWAManifestPlugin(config, {
+    publicPath,
+    noResources: isDev || !env.pwa,
+    filename: locations.production.manifest,
+    HtmlWebpackPlugin,
+  });
+
+  // This gives some necessary context to module not found errors, such as
+  // the requesting resource.
+  pluginNames['Adding resource errors'] = new ModuleNotFoundPlugin(locations.root);
+
+  pluginNames['Creating environment variables'] = new DefinePlugin(environmentVariables);
+
+  if (isDev) {
+    // This is necessary to emit hot updates (currently CSS only):
+    pluginNames['Hot module replacement'] = new HotModuleReplacementPlugin();
+    // Watcher doesn't work well if you mistype casing in a path so we use
+    // a plugin that prints an error when you attempt to do this.
+    // See https://github.com/facebook/create-react-app/issues/240
+    pluginNames['Case sensitive paths'] = new CaseSensitivePathsPlugin();
+
+    // If you require a missing module and then `npm install` it, you still have
+    // to restart the development server for Webpack to discover it. This plugin
+    // makes the discovery automatic so you don't have to restart.
+    // See https://github.com/facebook/create-react-app/issues/186
+    pluginNames['Watching missing node modules'] = new WatchMissingNodeModulesPlugin(
+      locations.modules
+    );
+  }
+
+  if (isProd)
+    pluginNames['Performing CSS extraction'] = new MiniCssExtractPlugin({
+      // Options similar to the same options in webpackOptions.output
+      // both options are optional
+      filename: 'static/css/[name].[contenthash:8].css',
+      chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
+    });
+
+  // Generate a manifest file which contains a mapping of all asset filenames
+  // to their corresponding output file so that tools can pick it up without
+  // having to parse `index.html`.
+  pluginNames['Generating the asset manifest'] = new ManifestPlugin({
+    fileName: 'asset-manifest.json',
+    publicPath,
+  });
+
+  if (deepScopeAnalysisEnabled) {
+    const deepScope = new WebpackDeepScopeAnalysisPlugin();
+    // middlewarePlugins.push(deepScope);
+    pluginNames['Tree-Shaking'] = deepScope;
+  }
+
+  const serviceWorker = overrideWithPropertyOrConfig(
+    // Prevent service worker in development mode
+    config.web.build.serviceWorker,
+    DEFAULT_SERVICE_WORKER
+  );
+  if (serviceWorker) {
+    // Generate a service worker script that will precache, and keep up to date,
+    // the HTML & assets that are part of the Webpack build.
+    const serviceWorkerPlugin = new WorkboxPlugin.GenerateSW({
+      exclude: [
+        /\.LICENSE$/,
+        /\.map$/,
+        /asset-manifest\.json$/,
+        // Exclude all apple touch images as they are cached locally after the PWA is added.
+        /^\bapple.*\.png$/,
+      ],
+      /// SINGLE PAGE:
+      // navigateFallback: `${publicPath}index.html`,
+      clientsClaim: true,
+      importWorkboxFrom: 'cdn',
+      navigateFallbackBlacklist: [
+        // Exclude URLs starting with /_, as they're likely an API call
+        new RegExp('^/_'),
+        // Exclude URLs containing a dot, as they're likely a resource in
+        // public/ and not a SPA route
+        new RegExp('/[^/]+\\.[^/]+$'),
+      ],
+      ...(isDev
+        ? {
+            include: [], // Don't cache any assets in dev mode.
+          }
+        : {}),
+      ...serviceWorker,
+    });
+    // middlewarePlugins.push(serviceWorkerPlugin);
+    pluginNames['Service-Worker'] = serviceWorkerPlugin;
+  }
+
+  if (gzipConfig) pluginNames['GZip Compression'] = new CompressionPlugin(gzipConfig);
+  if (brotliConfig) pluginNames['Brotli Compression'] = new BrotliPlugin(brotliConfig);
+  // pluginNames['Progress Bar'] = new ProgressBarPlugin({
+  //   format:
+  //     'Building Webpack bundle [:bar] ' + chalk.green.bold(':percent') + ' (:elapsed seconds) :msg',
+  //   clear: false,
+  //   complete: '=',
+  //   incomplete: ' ',
+  // });
+  pluginNames['Webpack Notification'] = new WebpackNotifierPlugin({
+    title: 'Expo Web',
+    contentImage: path.join(__dirname, '../web-default/icon.png'),
+  });
+
+  const reportConfig = enableWithPropertyOrConfig(
+    config.web.build.report,
+    DEFAULT_REPORT_CONFIG,
+    true
+  );
+
+  if (reportConfig) {
+    if (isDev && reportConfig.verbose) {
+      console.log('Generating a report, this will add noticeably more time to rebuilds.');
+    }
+    const reportDir = reportConfig.path;
+    const bundleAnalyzerPlugin = new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      defaultSizes: 'gzip',
+      generateStatsFile: true,
+      openAnalyzer: false,
+      ...reportConfig,
+      logLevel: reportConfig.verbose ? 'info' : 'silent',
+      statsFilename: locations.absolute(reportDir, reportConfig.statsFilename),
+      reportFilename: locations.absolute(reportDir, reportConfig.reportFilename),
+    });
+    // Delete the report folder
+    pluginNames['Delete old report'] = new CleanWebpackPlugin([locations.absolute(reportDir)], {
+      root: locations.root,
+      dry: false,
+      verbose: reportConfig.verbose,
+    });
+    // Generate the report.html and stats.json
+    pluginNames['Analyze bundle'] = bundleAnalyzerPlugin;
+  }
+
+  const smp = new SpeedMeasurePlugin({ pluginNames });
+  // return smp.wrap(config);
+
   return {
     mode,
     entry: {
@@ -326,102 +437,8 @@ module.exports = async function(env = {}, argv) {
       publicPath,
     },
     plugins: [
-      // Delete the build folder
-      isProd &&
-        new CleanWebpackPlugin([locations.production.folder], {
-          root: locations.root,
-          dry: false,
-          verbose: buildConfig.verbose,
-        }),
-      // Copy the template files over
-      isProd &&
-        new CopyWebpackPlugin([
-          {
-            from: locations.template.folder,
-            to: locations.production.folder,
-            // We generate new versions of these based on the templates
-            ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
-          },
-          {
-            from: locations.template.serveJson,
-            to: locations.production.serveJson,
-          },
-          {
-            from: locations.template.favicon,
-            to: locations.production.favicon,
-          },
-        ]),
-
-      // Generate the `index.html`
-      await createIndexHTMLFromAppJSONAsync(env),
-
-      // Add variables to the `index.html`
-      new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
-        PUBLIC_URL: publicPath,
-        WEB_TITLE: config.web.name,
-        NO_SCRIPT: noJSComponent,
-        LANG_ISO_CODE: lang,
-        ROOT_ID: rootId,
-      }),
-
-      new WebpackPWAManifestPlugin(config, {
-        publicPath,
-        noResources: isDev || !env.pwa,
-        filename: locations.production.manifest,
-        HtmlWebpackPlugin,
-      }),
-
-      // This gives some necessary context to module not found errors, such as
-      // the requesting resource.
-      new ModuleNotFoundPlugin(locations.root),
-
-      new DefinePlugin(environmentVariables),
-
-      // This is necessary to emit hot updates (currently CSS only):
-      isDev && new HotModuleReplacementPlugin(),
-      // Watcher doesn't work well if you mistype casing in a path so we use
-      // a plugin that prints an error when you attempt to do this.
-      // See https://github.com/facebook/create-react-app/issues/240
-      isDev && new CaseSensitivePathsPlugin(),
-
-      // If you require a missing module and then `npm install` it, you still have
-      // to restart the development server for Webpack to discover it. This plugin
-      // makes the discovery automatic so you don't have to restart.
-      // See https://github.com/facebook/create-react-app/issues/186
-      isDev && new WatchMissingNodeModulesPlugin(locations.modules),
-
-      isProd &&
-        new MiniCssExtractPlugin({
-          // Options similar to the same options in webpackOptions.output
-          // both options are optional
-          filename: 'static/css/[name].[contenthash:8].css',
-          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-        }),
-
-      // Generate a manifest file which contains a mapping of all asset filenames
-      // to their corresponding output file so that tools can pick it up without
-      // having to parse `index.html`.
-      new ManifestPlugin({
-        fileName: 'asset-manifest.json',
-        publicPath,
-      }),
-
-      ...middlewarePlugins,
-
-      gzipConfig && new CompressionPlugin(gzipConfig),
-      brotliConfig && new BrotliPlugin(brotliConfig),
-
-      new ProgressBarPlugin({
-        format:
-          'Building Webpack bundle [:bar] ' +
-          chalk.green.bold(':percent') +
-          ' (:elapsed seconds) :msg',
-        clear: false,
-        complete: '=',
-        incomplete: ' ',
-      }),
-
-      ...reportPlugins,
+      ...Object.values(pluginNames),
+      // ...reportPlugins,
     ].filter(Boolean),
     module: {
       strictExportPresence: false,
