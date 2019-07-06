@@ -149,10 +149,11 @@ module.exports = async function(env = {}, argv) {
 
   // Enables deep scope analysis in production mode.
   // Remove unused import/exports
-  // override: `env.deepScopeAnalysis`
+  // override: `env.removeUnusedImportExports`
   const deepScopeAnalysisEnabled = overrideWithPropertyOrConfig(
     env.removeUnusedImportExports,
-    isProd
+    false
+    // isProd
   );
 
   const locations = await getPathsAsync(env);
@@ -218,11 +219,12 @@ module.exports = async function(env = {}, argv) {
    */
   let reportPlugins = [];
 
-  const reportConfig = enableWithPropertyOrConfig(
-    config.web.build.report,
-    DEFAULT_REPORT_CONFIG,
-    true
-  );
+  const reportConfig = enableWithPropertyOrConfig(env.report, DEFAULT_REPORT_CONFIG, true);
+  if (typeof config.web.build.report !== 'undefined') {
+    throw new Error(
+      'expo.web.build.report is deprecated. Please extend webpack.config.js and use env.report instead.'
+    );
+  }
 
   if (reportConfig) {
     if (isDev && reportConfig.verbose) {
