@@ -12,6 +12,7 @@ const includeModulesThatContainPaths = [
   getModule('@react'),
   getModule('@expo'),
   getModule('@unimodules'),
+  getModule('native-base'),
 ];
 
 const parsedPackageNames = [];
