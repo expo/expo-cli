@@ -15,10 +15,11 @@ module.exports = async function(env = {}, argv) {
 
   const locations = await getPathsAsync(env);
 
-  const shouldUseSourceMap =
-    env.config.web.build.devtool !== undefined && env.config.web.build.devtool;
+  const commonConfig = await common(env, argv);
 
-  return merge(await common(env, argv), {
+  const shouldUseSourceMap = commonConfig.devtool !== null;
+
+  return merge(commonConfig, {
     output: {
       path: locations.production.folder,
       filename: 'static/js/[name].[contenthash:8].js',
