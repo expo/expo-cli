@@ -1,6 +1,7 @@
-'use strict';
-Object.defineProperty(exports, '__esModule', { value: true });
-function createFontLoader({ locations }) {
+import { Rule } from 'webpack';
+import { FilePaths } from '../types';
+
+function createFontLoader({ locations }: { locations: FilePaths }): Rule {
   return {
     test: /\.(ttf|otf|woff)$/,
     use: [
@@ -19,5 +20,5 @@ function createFontLoader({ locations }) {
     ],
   };
 }
-exports.default = createFontLoader;
-//# sourceMappingURL=createFontLoader.js.map
+
+export default createFontLoader;

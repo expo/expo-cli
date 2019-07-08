@@ -1,22 +1,32 @@
-'use strict';
-Object.defineProperty(exports, '__esModule', { value: true });
-function isObject(val) {
+function isObject(val: any): boolean {
   if (val === null) {
     return false;
   }
   return typeof val === 'function' || typeof val === 'object';
 }
+
 /**
  * Given a config option that could evalutate to true, config, or null; return a config.
  * e.g.
  * `polyfill: true` returns the `config`
  * `polyfill: {}` returns `{}`
  */
-function enableWithPropertyOrConfig(prop, config, merge = false) {
+
+export function enableWithPropertyOrConfig(
+  prop: any,
+  config: boolean | { [key: string]: any },
+  merge: boolean = false
+): any {
   // Value is truthy but not a replacement config.
   if (prop) {
     if (isObject(prop) && merge) {
-      return Object.assign({}, config, prop);
+      if (config == null || typeof config !== 'object') {
+        throw new Error('enableWithPropertyOrConfig cannot merge config: ' + config);
+      }
+      return {
+        ...config,
+        ...prop,
+      };
     }
     // Return the default config
     return config;
@@ -24,15 +34,17 @@ function enableWithPropertyOrConfig(prop, config, merge = false) {
   // Return falsey or replacement config.
   return prop;
 }
-exports.enableWithPropertyOrConfig = enableWithPropertyOrConfig;
+
 /**
  * Used for features that are enabled by default unless specified otherwise.
  */
-function overrideWithPropertyOrConfig(prop, config, merge = false) {
+export function overrideWithPropertyOrConfig(
+  prop: any,
+  config: boolean | { [key: string]: any },
+  merge: boolean = false
+): any {
   if (prop === undefined) {
     return config;
   }
   return enableWithPropertyOrConfig(prop, config, merge);
 }
-exports.overrideWithPropertyOrConfig = overrideWithPropertyOrConfig;
-//# sourceMappingURL=config.js.map

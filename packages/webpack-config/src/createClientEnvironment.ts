@@ -1,9 +1,24 @@
-'use strict';
-Object.defineProperty(exports, '__esModule', { value: true });
-function createClientEnvironment(mode, publicPath, nativeAppManifest) {
+/**
+ * This creates environment variables that won't be tree shaken.
+ */
+import { ExpoConfig } from '@expo/config';
+import { Mode } from './types';
+
+export interface ClientEnv {
+  __DEV__: boolean;
+  'process.env': { [key: string]: string };
+}
+
+function createClientEnvironment(
+  mode: Mode,
+  publicPath: string,
+  nativeAppManifest: ExpoConfig
+): ClientEnv {
   const environment = mode || 'development';
   const __DEV__ = environment !== 'production';
+
   const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_)/i;
+
   const processEnv = Object.keys(process.env)
     .filter(key => ENV_VAR_REGEX.test(key))
     .reduce(
@@ -17,6 +32,7 @@ function createClientEnvironment(mode, publicPath, nativeAppManifest) {
          * Most importantly, it switches React into the correct mode.
          */
         NODE_ENV: JSON.stringify(environment),
+
         /**
          * Useful for resolving the correct path to static assets in `public`.
          * For example, <img src={process.env.PUBLIC_URL + '/img/logo.png'} />.
@@ -24,17 +40,18 @@ function createClientEnvironment(mode, publicPath, nativeAppManifest) {
          * images into the root folder and `import` them in code to get their paths.
          */
         PUBLIC_URL: JSON.stringify(publicPath),
+
         /**
          * Surfaces the `app.json` (config) as an environment variable which is then parsed by
          * `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/
          */
         APP_MANIFEST: JSON.stringify(nativeAppManifest),
-      }
+      } as { [key: string]: string }
     );
   return {
     'process.env': processEnv,
     __DEV__,
   };
 }
-exports.default = createClientEnvironment;
-//# sourceMappingURL=createClientEnvironment.js.map
+
+export default createClientEnvironment;
