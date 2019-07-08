@@ -25,6 +25,7 @@ export type LogFields = {
   tag: LogTag;
   issueId?: string;
   issueCleared?: boolean;
+  includesStack?: boolean;
 };
 
 export function logWithLevel(
@@ -119,7 +120,7 @@ export function clearNotification(projectRoot: string, id: string) {
 }
 
 export function attachLoggerStream(projectRoot: string, stream: LogStream) {
-  _getLogger(projectRoot).addStream(stream as LogStream);
+  _getLogger(projectRoot).addStream(stream);
 }
 
 // Wrap with logger

@@ -2,13 +2,13 @@
  * @flow
  */
 
-import { User } from '@expo/xdl';
+import { UserManager } from '@expo/xdl';
 
 import log from '../log';
 
 async function action(options) {
   try {
-    await User.logoutAsync();
+    await UserManager.logoutAsync();
     log('Success.');
   } catch (e) {
     throw new Error("Unexpected Error: Couldn't logout");
