@@ -1,12 +1,14 @@
 import chalk from 'chalk';
 import program from 'commander';
 
-let _bundleProgressBar;
-let _oraSpinner;
+type Color = (...text: string[]) => string;
+
+let _bundleProgressBar: any;
+let _oraSpinner: any;
 
 let _printNewLineBeforeNextLog = false;
 let _isLastLineNewLine = false;
-function _updateIsLastLineNewLine(args) {
+function _updateIsLastLineNewLine(args: any[]) {
   if (args.length === 0) {
     _isLastLineNewLine = true;
   } else {
@@ -26,28 +28,28 @@ function _maybePrintNewLine() {
   }
 }
 
-function consoleLog(...args) {
+function consoleLog(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
   console.log(...args);
 }
 
-function consoleWarn(...args) {
+function consoleWarn(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
   console.warn(...args);
 }
 
-function consoleError(...args) {
+function consoleError(...args: any[]) {
   _maybePrintNewLine();
   _updateIsLastLineNewLine(args);
 
   console.error(...args);
 }
 
-function respectProgressBars(commitLogs) {
+function respectProgressBars(commitLogs: () => void) {
   if (_bundleProgressBar) {
     _bundleProgressBar.terminate();
     _bundleProgressBar.lastDraw = '';
@@ -65,11 +67,11 @@ function respectProgressBars(commitLogs) {
   }
 }
 
-function getPrefix(chalkColor) {
+function getPrefix(chalkColor: Color) {
   return chalkColor(`[${new Date().toTimeString().slice(0, 8)}]`);
 }
 
-function withPrefixAndTextColor(args, chalkColor = chalk.gray) {
+function withPrefixAndTextColor(args: any[], chalkColor: Color = chalk.gray) {
   if (program.nonInteractive) {
     return [getPrefix(chalkColor), ...args.map(arg => chalkColor(arg))];
   } else {
@@ -77,7 +79,7 @@ function withPrefixAndTextColor(args, chalkColor = chalk.gray) {
   }
 }
 
-function withPrefix(args, chalkColor = chalk.gray) {
+function withPrefix(args: any[], chalkColor = chalk.gray) {
   if (program.nonInteractive) {
     return [getPrefix(chalkColor), ...args];
   } else {
@@ -85,7 +87,7 @@ function withPrefix(args, chalkColor = chalk.gray) {
   }
 }
 
-function log(...args) {
+function log(...args: any[]) {
   if (log.config.raw) {
     return;
   }
@@ -95,7 +97,7 @@ function log(...args) {
   });
 }
 
-log.nested = function(message) {
+log.nested = function(message: any) {
   respectProgressBars(() => {
     consoleLog(message);
   });
@@ -117,15 +119,15 @@ log.printNewLineBeforeNextLog = function printNewLineBeforeNextLog() {
   _printNewLineBeforeNextLog = true;
 };
 
-log.setBundleProgressBar = function setBundleProgressBar(bar) {
+log.setBundleProgressBar = function setBundleProgressBar(bar: any) {
   _bundleProgressBar = bar;
 };
 
-log.setSpinner = function setSpinner(oraSpinner) {
+log.setSpinner = function setSpinner(oraSpinner: any) {
   _oraSpinner = oraSpinner;
 };
 
-log.error = function error(...args) {
+log.error = function error(...args: any[]) {
   if (log.config.raw) {
     return;
   }
@@ -135,13 +137,13 @@ log.error = function error(...args) {
   });
 };
 
-log.nestedError = function(message) {
+log.nestedError = function(message: string) {
   respectProgressBars(() => {
     consoleError(chalk.red(message));
   });
 };
 
-log.warn = function warn(...args) {
+log.warn = function warn(...args: any[]) {
   if (log.config.raw) {
     return;
   }
@@ -151,13 +153,13 @@ log.warn = function warn(...args) {
   });
 };
 
-log.nestedWarn = function(message) {
+log.nestedWarn = function(message: string) {
   respectProgressBars(() => {
     consoleWarn(chalk.yellow(message));
   });
 };
 
-log.gray = function(...args) {
+log.gray = function(...args: any[]) {
   if (log.config.raw) {
     return;
   }
@@ -167,7 +169,7 @@ log.gray = function(...args) {
   });
 };
 
-log.raw = function(...args) {
+log.raw = function(...args: any[]) {
   if (!log.config.raw) {
     return;
   }

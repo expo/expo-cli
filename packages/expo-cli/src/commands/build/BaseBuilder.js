@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Project, ProjectUtils, User, Versions } from '@expo/xdl';
+import { Project, ProjectUtils, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fp from 'lodash/fp';
@@ -80,7 +80,7 @@ export default class BaseBuilder {
     // always use local json to unify behaviour between regular apps and self hosted ones
     const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
     this.manifest = exp;
-    this.user = await User.ensureLoggedInAsync();
+    this.user = await UserManager.ensureLoggedInAsync();
 
     await this.checkProjectConfig();
   }

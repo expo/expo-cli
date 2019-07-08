@@ -2,10 +2,11 @@ import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
 import { Android, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
+import { Command } from 'commander';
 
 import CommandError from './CommandError';
 
-function addOptions(program) {
+function addOptions(program: Command) {
   program
     .option('-a, --android', 'Opens your app in Expo on a connected Android device')
     .option(
@@ -28,11 +29,11 @@ function addOptions(program) {
     .option('--no-https', 'To start webpack with http protocol');
 }
 
-function hasBooleanArg(rawArgs, argName) {
+function hasBooleanArg(rawArgs: string[], argName: string) {
   return rawArgs.includes('--' + argName) || rawArgs.includes('--no-' + argName);
 }
 
-function getBooleanArg(rawArgs, argName) {
+function getBooleanArg(rawArgs: string[], argName: string) {
   if (rawArgs.includes('--' + argName)) {
     return true;
   } else {
@@ -40,11 +41,11 @@ function getBooleanArg(rawArgs, argName) {
   }
 }
 
-async function optsAsync(projectDir, options) {
+async function optsAsync(projectDir: string, options: any) {
   var opts = await ProjectSettings.readAsync(projectDir);
 
-  if (!!options.host + !!options.lan + !!options.localhost + !!options.tunnel > 1) {
-    throw CommandError(
+  if ([options.host, options.lan, options.localhost, options.tunnel].filter(i => i).length > 1) {
+    throw new CommandError(
       'BAD_ARGS',
       'Specify at most one of --host, --tunnel, --lan, and --localhost'
     );
@@ -78,11 +79,11 @@ async function optsAsync(projectDir, options) {
   return opts;
 }
 
-function printQRCode(url) {
+function printQRCode(url: string) {
   qrcodeTerminal.generate(url, code => console.log(`${indentString(code, 2)}\n`));
 }
 
-async function handleMobileOptsAsync(projectDir, options) {
+async function handleMobileOptsAsync(projectDir: string, options: any) {
   if (options.android) {
     await Android.openProjectAsync(projectDir);
   }

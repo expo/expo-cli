@@ -4,7 +4,7 @@ import ora from 'ora';
 import path from 'path';
 import CliTable from 'cli-table';
 import * as ConfigUtils from '@expo/config';
-import { Android, Simulator, User, Credentials } from '@expo/xdl';
+import { Android, Simulator, UserManager, Credentials } from '@expo/xdl';
 
 import CommandError from '../../CommandError';
 import urlOpts from '../../urlOpts';
@@ -61,7 +61,7 @@ export default program => {
       }
 
       const authData = await appleApi.authenticate(options);
-      const user = await User.getCurrentUserAsync();
+      const user = await UserManager.getCurrentUserAsync();
 
       // check if any builds are in flight
       const { isAllowed, errorMessage } = await isAllowedToBuild({

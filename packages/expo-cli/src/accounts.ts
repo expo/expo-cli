@@ -1,14 +1,9 @@
-/**
- * @flow
- */
-
 import chalk from 'chalk';
 import program from 'commander';
 
-import { User as UserManager } from '@expo/xdl';
-import type { User } from 'xdl/build/User';
+import { User, UserManager, RegistrationData } from '@expo/xdl';
 import CommandError from './CommandError';
-import prompt from './prompt';
+import prompt, { Question } from './prompt';
 import log from './log';
 
 UserManager.initialize();
@@ -16,9 +11,12 @@ UserManager.initialize();
 type CommandOptions = {
   username?: string,
   password?: string,
+  parent?: {
+    nonInteractive: boolean,
+  }
 };
 
-export async function loginOrRegisterIfLoggedOut() {
+export async function loginOrRegisterIfLoggedOut(): Promise<User> {
   let user = await UserManager.getCurrentUserAsync();
   if (user) {
     return user;
@@ -33,29 +31,27 @@ export async function loginOrRegisterIfLoggedOut() {
     );
   }
 
-  const questions = [
-    {
-      type: 'list',
-      name: 'action',
-      message: 'How would you like to authenticate?',
-      choices: [
-        {
-          name: 'Make a new Expo account',
-          value: 'register',
-        },
-        {
-          name: 'Log in with an existing Expo account',
-          value: 'existingUser',
-        },
-        {
-          name: 'Cancel',
-          value: 'cancel',
-        },
-      ],
-    },
-  ];
+  const question: Question = {
+    type: 'list',
+    name: 'action',
+    message: 'How would you like to authenticate?',
+    choices: [
+      {
+        name: 'Make a new Expo account',
+        value: 'register',
+      },
+      {
+        name: 'Log in with an existing Expo account',
+        value: 'existingUser',
+      },
+      {
+        name: 'Cancel',
+        value: 'cancel',
+      },
+    ],
+  };
 
-  const { action } = await prompt(questions);
+  const { action } = await prompt(question);
 
   if (action === 'register') {
     return register();
@@ -66,25 +62,23 @@ export async function loginOrRegisterIfLoggedOut() {
   }
 }
 
-export async function login(options: CommandOptions) {
+export async function login(options: CommandOptions): Promise<User> {
   const user = await UserManager.getCurrentUserAsync();
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!nonInteractive) {
     if (user) {
-      const question = [
-        {
-          type: 'confirm',
-          name: 'action',
-          message: `You are already logged in as ${chalk.green(
-            user.username
-          )}. Log in as new user?`,
-        },
-      ];
+      const question: Question = {
+        type: 'confirm',
+        name: 'action',
+        message: `You are already logged in as ${chalk.green(
+          user.username
+        )}. Log in as new user?`,
+      };
 
       const { action } = await prompt(question);
       if (!action) {
         // If user chooses to stay logged in, return
-        return;
+        return user;
       }
     }
     return _usernamePasswordAuth(options.username, options.password);
@@ -101,13 +95,13 @@ export async function login(options: CommandOptions) {
 }
 
 async function _usernamePasswordAuth(username?: string, password?: string): Promise<User> {
-  const questions = [];
+  const questions: Question[] = [];
   if (!username) {
     questions.push({
       type: 'input',
       name: 'username',
       message: 'Username/Email Address:',
-      validate(val) {
+      validate(val: string) {
         if (val.trim() === '') {
           return false;
         }
@@ -121,7 +115,7 @@ async function _usernamePasswordAuth(username?: string, password?: string): Prom
       type: 'password',
       name: 'password',
       message: 'Password:',
-      validate(val) {
+      validate(val: string) {
         if (val.trim() === '') {
           return false;
         }
@@ -155,7 +149,7 @@ Just a few questions:
 `
   );
 
-  let questions = [
+  const questions: Question[] = [
     {
       type: 'input',
       name: 'email',
@@ -200,15 +194,15 @@ Just a few questions:
         if (val.trim() === '') {
           return false;
         }
-        if (val.trim() !== answers.password.trim()) {
+        if (!answers || !answers.password || val.trim() !== answers.password.trim()) {
           return `Passwords don't match!`;
         }
         return true;
       },
     },
   ];
-  let answers = await prompt(questions);
-  let registeredUser = await UserManager.registerAsync(answers);
+  const answers = await prompt(questions);
+  const registeredUser = await UserManager.registerAsync(answers as RegistrationData);
   console.log('\nThanks for signing up!');
   return registeredUser;
 }
