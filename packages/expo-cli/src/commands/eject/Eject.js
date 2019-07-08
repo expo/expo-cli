@@ -128,8 +128,8 @@ async function ejectToBareAsync(projectRoot, options) {
   if (!exp) throw new Error(`Couldn't read ${configName}`);
   if (!pkgJson) throw new Error(`Couldn't read package.json`);
 
-  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    throw new Error(`Ejecting to a bare project is only available for SDK 33 and higher`);
+  if (!Versions.gteSdkVersion(exp, '34.0.0')) {
+    throw new Error(`Ejecting to a bare project is only available for SDK 34 and higher`);
   }
 
   // Validate that the template exists
