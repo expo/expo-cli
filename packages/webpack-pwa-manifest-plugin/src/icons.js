@@ -122,6 +122,10 @@ async function resize(inputPath, mimeType, width, height, fit = 'contain', backg
       },
       [
         {
+          operation: 'flatten',
+          background,
+        },
+        {
           operation: 'resize',
           width,
           height,

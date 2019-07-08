@@ -1,11 +1,7 @@
-/**
- * @flow
- */
-
 import fs from 'fs';
 import path from 'path';
 import spawnAsync from '@expo/spawn-async';
-import _ from 'lodash';
+
 import * as Versions from '../Versions';
 
 export async function updateSdkVersionsAsync(

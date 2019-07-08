@@ -388,7 +388,7 @@ module.exports = async function(env = {}, argv) {
       // to restart the development server for Webpack to discover it. This plugin
       // makes the discovery automatic so you don't have to restart.
       // See https://github.com/facebook/create-react-app/issues/186
-      isDev && new WatchMissingNodeModulesPlugin(locations.absolute('node_modules')),
+      isDev && new WatchMissingNodeModulesPlugin(locations.modules),
 
       isProd &&
         new MiniCssExtractPlugin({

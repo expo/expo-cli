@@ -10,6 +10,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2016"
+    "target": "ES2016",
+    "typeRoots": ["ts-declarations", "node_modules/@types"]
   }
 }

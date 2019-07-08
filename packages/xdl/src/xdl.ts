@@ -10,8 +10,7 @@ export { Analytics };
 import * as Android from './Android';
 export { Android };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as AndroidShellApp from './detach/AndroidShellApp.js';
+const AndroidShellApp: any = require('./detach/AndroidShellApp.js');
 export { AndroidShellApp };
 
 import Api from './Api';
@@ -20,8 +19,7 @@ export { Api };
 import ApiV2 from './ApiV2';
 export { ApiV2 };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as AssetUtils from './AssetUtils.js';
+import * as AssetUtils from './AssetUtils';
 export { AssetUtils };
 
 import * as Binaries from './Binaries';
@@ -33,16 +31,13 @@ export { Webhooks };
 import Config from './Config';
 export { Config };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Credentials from './credentials/Credentials.js';
+const Credentials: any = require('./credentials/Credentials.js');
 export { Credentials };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Detach from './detach/Detach.js';
+const  Detach: any = require('./detach/Detach.js');
 export { Detach };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Doctor from './project/Doctor.js';
+const Doctor: any = require('./project/Doctor.js');
 export { Doctor };
 
 import * as Env from './Env';
@@ -57,16 +52,13 @@ export { ErrorCode };
 import * as Exp from './Exp';
 export { Exp };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as ExpSchema from './project/ExpSchema.js';
+const ExpSchema: any = require('./project/ExpSchema.js');
 export { ExpSchema };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as FileSystem from './FileSystem.js';
+import * as FileSystem from './FileSystem';
 export { FileSystem };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import FormData from './tools/FormData.js';
+import FormData from './tools/FormData';
 export { FormData };
 
 import * as FsCache from './tools/FsCache';
@@ -75,36 +67,28 @@ export { FsCache };
 import * as ImageUtils from './tools/ImageUtils';
 export { ImageUtils };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as StandaloneBuild from './StandaloneBuild.js';
+const StandaloneBuild: any = require('./StandaloneBuild.js');
 export { StandaloneBuild };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosIcons from './detach/IosIcons.js';
+const IosIcons = require('./detach/IosIcons.js');
 export { IosIcons };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import IosIPABuilder from './detach/IosIPABuilder.js';
+const IosIPABuilder = require('./detach/IosIPABuilder.js').default;
 export { IosIPABuilder };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosKeychain from './detach/IosKeychain.js';
+const IosKeychain = require('./detach/IosKeychain.js');
 export { IosKeychain };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosPlist from './detach/IosPlist.js';
+const IosPlist = require('./detach/IosPlist.js');
 export { IosPlist };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosPodsTools from './detach/IosPodsTools.js';
+const IosPodsTools = require('./detach/IosPodsTools.js');
 export { IosPodsTools };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosShellApp from './detach/IosShellApp.js';
+const IosShellApp = require('./detach/IosShellApp.js');
 export { IosShellApp };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as IosCodeSigning from './detach/IosCodeSigning.js';
+const IosCodeSigning = require('./detach/IosCodeSigning.js');
 export { IosCodeSigning };
 
 import Logger from './Logger';
@@ -113,8 +97,7 @@ export { Logger };
 import LoggerDetach from './detach/Logger';
 export { LoggerDetach };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as ModuleVersion from './tools/ModuleVersion.js';
+import * as ModuleVersion from './tools/ModuleVersion';
 export { ModuleVersion };
 
 import * as Modules from './modules/Modules';
@@ -123,11 +106,10 @@ export { Modules };
 import NotificationCode from './NotificationCode';
 export { NotificationCode };
 
-import PackagerLogsStream from './logs/PackagerLogsStream';
-export { PackagerLogsStream };
+import PackagerLogsStream, { LogRecord, LogUpdater } from './logs/PackagerLogsStream';
+export { PackagerLogsStream, LogRecord, LogUpdater };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Project from './Project.js';
+const Project = require('./Project.js');
 export { Project };
 
 import * as ProjectSettings from './ProjectSettings';
@@ -136,22 +118,20 @@ export { ProjectSettings };
 import * as ProjectUtils from './project/ProjectUtils';
 export { ProjectUtils };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Simulator from './Simulator.js';
+import * as Simulator from './Simulator';
 export { Simulator };
 
 import * as ThirdParty from './ThirdParty';
 export { ThirdParty };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as UpdateVersions from './tools/UpdateVersions.js';
+import * as UpdateVersions from './tools/UpdateVersions';
 export { UpdateVersions };
 
 import * as UrlUtils from './UrlUtils';
 export { UrlUtils };
 
-import User from './User';
-export { User };
+import UserManager, { User, RegistrationData } from './User';
+export { UserManager, User, RegistrationData };
 
 import UserSettings from './UserSettings';
 export { UserSettings };
@@ -162,12 +142,10 @@ export { Utils };
 import * as Versions from './Versions';
 export { Versions };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Web from './Web.js';
+const Web = require('./Web.js');
 export { Web };
 
-// @ts-ignore untyped module yet to be converted to TypeScript
-import * as Webpack from './Webpack.js';
+const Webpack = require('./Webpack.js');
 export { Webpack };
 
 import XDLError from './XDLError';

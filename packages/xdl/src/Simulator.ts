@@ -1,28 +1,24 @@
-/**
- * @flow
- */
+import os from 'os';
+import path from 'path';
 
+import ConfigUtils from '@expo/config';
 import delayAsync from 'delay-async';
 import glob from 'glob-promise';
-import homeDir from 'home-dir';
 import * as osascript from '@expo/osascript';
-import path from 'path';
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
-import rimraf from 'rimraf';
 import fs from 'fs-extra';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-import * as ProjectUtils from './project/ProjectUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 import * as UrlUtils from './UrlUtils';
 
-let _lastUrl = null;
+let _lastUrl: string | null = null;
 
 const SUGGESTED_XCODE_VERSION = `8.2.0`;
 const XCODE_NOT_INSTALLED_ERROR =
@@ -32,7 +28,7 @@ export function isPlatformSupported() {
   return process.platform === 'darwin';
 }
 
-function _isLicenseOutOfDate(text) {
+function _isLicenseOutOfDate(text: string) {
   if (!text) {
     return false;
   }
@@ -41,7 +37,7 @@ function _isLicenseOutOfDate(text) {
   return lower.includes('xcode') && lower.includes('license');
 }
 
-async function _xcrunAsync(args) {
+async function _xcrunAsync(args: string[]) {
   try {
     return await spawnAsync('xcrun', args);
   } catch (e) {
@@ -87,7 +83,7 @@ export async function _isSimulatorInstalledAsync() {
 
     // find something that looks like a dot separated version number
     let matches = stdout.match(/[\d]{1,2}\.[\d]{1,3}/);
-    if (matches.length === 0) {
+    if (!matches) {
       // very unlikely
       console.error('No version number found from `xcodebuild -version`.');
       Logger.global.error(
@@ -163,11 +159,11 @@ export async function _isSimulatorRunningAsync() {
 async function _bootDefaultSimulatorDeviceAsync() {
   Logger.global.info(`Booting device in iOS simulator...`);
   try {
-    let defaultDeviceUDID = await _getDefaultSimulatorDeviceUDIDAsync();
-    if (!defaultDeviceUDID) {
-      defaultDeviceUDID = (await _getFirstAvailableDeviceAsync()).udid;
+    let deviceUDID = await _getDefaultSimulatorDeviceUDIDAsync();
+    if (!deviceUDID) {
+      deviceUDID = (await _getFirstAvailableDeviceAsync()).udid;
     }
-    return await _xcrunAsync(['simctl', 'boot', defaultDeviceUDID]);
+    return await _xcrunAsync(['simctl', 'boot', deviceUDID]);
   } catch (e) {
     Logger.global.error(
       `There was a problem booting a device in iOS Simulator. Quit Simulator, and try again.`
@@ -189,7 +185,7 @@ async function _getDefaultSimulatorDeviceUDIDAsync() {
   }
 }
 
-async function _waitForSimulatorRunningAsync() {
+async function _waitForSimulatorRunningAsync(): Promise<boolean> {
   if (await _isSimulatorRunningAsync()) {
     return true;
   } else {
@@ -199,23 +195,36 @@ async function _waitForSimulatorRunningAsync() {
 }
 
 async function _getFirstAvailableDeviceAsync() {
-  let simulatorDeviceInfo = await _listSimulatorDevicesAsync();
-  for (let runtime in simulatorDeviceInfo.devices) {
-    let devices = simulatorDeviceInfo.devices[runtime];
+  const simulatorDeviceInfo = await _listSimulatorDevicesAsync();
+  for (const runtime in simulatorDeviceInfo.devices) {
+    const devices = simulatorDeviceInfo.devices[runtime];
     for (let i = 0; i < devices.length; i++) {
-      let device = devices[i];
+      const device = devices[i];
       if (device.isAvailable && device.name.includes('iPhone')) {
         return device;
       }
     }
   }
-  Logger.global.warn('No iPhone devices available in Simulator.');
-  return null;
+  throw new Error('No iPhone devices available in Simulator.');
 }
 
+type SimulatorDevice = {
+  availability: string;
+  state: string;
+  isAvailable: boolean;
+  name: string;
+  udid: string;
+  availabilityError: string;
+};
+type SimulatorDeviceList = {
+  devices: {
+    [runtime: string]: SimulatorDevice[];
+  };
+};
+
 async function _listSimulatorDevicesAsync() {
-  let infoJson = await _xcrunAsync(['simctl', 'list', 'devices', '--json']);
-  let info = JSON.parse(infoJson.stdout);
+  const result = await _xcrunAsync(['simctl', 'list', 'devices', '--json']);
+  const info = JSON.parse(result.stdout) as SimulatorDeviceList;
   return info;
 }
 
@@ -234,7 +243,7 @@ async function _bootedSimulatorDeviceAsync() {
 }
 
 export function _dirForSimulatorDevice(udid: string) {
-  return path.resolve(homeDir(), 'Library/Developer/CoreSimulator/Devices', udid);
+  return path.resolve(os.homedir(), 'Library/Developer/CoreSimulator/Devices', udid);
 }
 
 export async function _quitSimulatorAsync() {
@@ -256,7 +265,7 @@ export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
   return matches.length > 0;
 }
 
-export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync() {
+export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync(): Promise<boolean> {
   if (await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
     return true;
   } else {
@@ -281,7 +290,7 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
 
   let regex = /Exponent-([0-9.]+)\.app/;
   let regexMatch = regex.exec(matches[0]);
-  if (regexMatch.length < 2) {
+  if (!regexMatch) {
     return null;
   }
 
@@ -300,7 +309,7 @@ export async function _checkExpoUpToDateAsync() {
   }
 }
 
-export async function _downloadSimulatorAppAsync(url) {
+export async function _downloadSimulatorAppAsync(url?: string) {
   // If specific URL given just always download it and don't use cache
   if (url) {
     let dir = path.join(_simulatorCacheDirectory(), `Exponent-tmp.app`);
@@ -311,12 +320,12 @@ export async function _downloadSimulatorAppAsync(url) {
   let versions = await Versions.versionsAsync();
   let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
 
-  if (await fs.exists(dir)) {
+  if (await fs.pathExists(dir)) {
     let filesInDir = await fs.readdir(dir);
     if (filesInDir.length > 0) {
       return dir;
     } else {
-      rimraf.sync(dir);
+      fs.removeSync(dir);
     }
   }
 
@@ -324,7 +333,7 @@ export async function _downloadSimulatorAppAsync(url) {
   try {
     await Api.downloadAsync(versions.iosUrl, dir, { extract: true });
   } catch (e) {
-    rimraf.sync(dir);
+    fs.removeSync(dir);
     throw e;
   }
 
@@ -332,7 +341,7 @@ export async function _downloadSimulatorAppAsync(url) {
 }
 
 // url: Optional URL of Exponent.app tarball to download
-export async function _installExpoOnSimulatorAsync(url) {
+export async function _installExpoOnSimulatorAsync(url?: string) {
   Logger.global.info(`Downloading the latest version of Expo client app`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let dir = await _downloadSimulatorAppAsync(url);
@@ -350,7 +359,7 @@ export async function _uninstallExpoAppFromSimulatorAsync() {
     await _xcrunAsync(['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
   } catch (e) {
     if (e.message && e.message.includes('No devices are booted.')) {
-      return null;
+      return;
     } else {
       console.error(e);
       throw e;
@@ -394,7 +403,7 @@ export async function _openUrlInSimulatorAsync(url: string) {
 export async function openUrlInSimulatorSafeAsync(
   url: string,
   isDetached: boolean = false
-): Promise<{ success: true } | { success: false, msg: string }> {
+): Promise<{ success: true } | { success: false; msg: string }> {
   if (!(await _isSimulatorInstalledAsync())) {
     return {
       success: false,
@@ -453,12 +462,12 @@ export async function openUrlInSimulatorSafeAsync(
 
 export async function openProjectAsync(
   projectRoot: string
-): Promise<{ success: true, url: string } | { success: false, error: string }> {
+): Promise<{ success: true; url: string } | { success: false; error: string }> {
   let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
     hostType: 'localhost',
   });
 
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
   if (result.success) {

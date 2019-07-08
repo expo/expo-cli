@@ -112,7 +112,7 @@ export class UserManagerInstance {
     }
   }
 
-  async registerAsync(userData: RegistrationData, user: UserOrLegacyUser | null): Promise<User> {
+  async registerAsync(userData: RegistrationData, user: UserOrLegacyUser | null = null): Promise<User> {
     if (!user) {
       user = await this.getCurrentUserAsync();
     }

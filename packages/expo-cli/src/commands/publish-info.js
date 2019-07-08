@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Api, Project, FormData, User } from '@expo/xdl';
+import { Api, Project, FormData, UserManager } from '@expo/xdl';
 import * as table from '../commands/utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
@@ -31,7 +31,7 @@ export default (program: any) => {
       }
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
-      await User.ensureLoggedInAsync();
+      await UserManager.ensureLoggedInAsync();
 
       // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
       let formData = new FormData();
@@ -107,7 +107,7 @@ export default (program: any) => {
       }
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
-      await User.ensureLoggedInAsync();
+      await UserManager.ensureLoggedInAsync();
 
       let formData = new FormData();
       formData.append('queryType', 'details');

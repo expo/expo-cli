@@ -36,9 +36,9 @@ type DeviceLogRecord = {
   msg: any;
   level: number;
 };
-type LogRecord = MetroLogRecord | ExpoLogRecord | DeviceLogRecord;
+export type LogRecord = (MetroLogRecord | ExpoLogRecord | DeviceLogRecord) & ProjectUtils.LogFields;
 
-type LogUpdater = (logState: Array<LogRecord>) => Array<LogRecord>;
+export type LogUpdater = (logState: Array<LogRecord>) => Array<LogRecord>;
 
 type ErrorObject = {
   name?: string;
@@ -144,8 +144,8 @@ type StartBuildBundleCallback = (chunk: LogRecord) => void;
 type ProgressBuildBundleCallback = (progress: number, start: Date | null, chunk: any) => void;
 type FinishBuildBundleCallback = (
   error: string | null,
-  start: Date | null,
-  end: Date | null,
+  start: Date,
+  end: Date,
   chunk: MetroLogRecord
 ) => void;
 
@@ -361,14 +361,12 @@ export default class PackagerLogsStream {
 
     let percentProgress;
     let bundleComplete = false;
-    let bundleBuildEnd = null;
 
     if (msg.type === 'bundle_build_done') {
       percentProgress = 100;
       bundleComplete = true;
-      bundleBuildEnd = new Date();
       if (this._bundleBuildStart) {
-        const duration = bundleBuildEnd.getTime() - this._bundleBuildStart.getTime();
+        const duration = new Date().getTime() - this._bundleBuildStart.getTime();
         progressChunk.msg = `Building JavaScript bundle: finished in ${duration}ms.`;
       } else {
         progressChunk.msg = `Building JavaScript bundle: finished.`;
@@ -376,7 +374,6 @@ export default class PackagerLogsStream {
     } else if (msg.type === 'bundle_build_failed') {
       percentProgress = -1;
       bundleComplete = true;
-      bundleBuildEnd = new Date();
       progressChunk.msg = `Building JavaScript bundle: error`;
       progressChunk.level = Logger.ERROR;
     } else if (msg.type === 'bundle_transform_progressed') {
@@ -394,9 +391,9 @@ export default class PackagerLogsStream {
       this._onProgressBuildBundle(percentProgress, this._bundleBuildStart, progressChunk);
 
       if (bundleComplete) {
-        if (this._onFinishBuildBundle) {
+        if (this._onFinishBuildBundle && this._bundleBuildStart) {
           const error = msg.type === 'bundle_build_failed' ? 'Build failed' : null;
-          this._onFinishBuildBundle(error, this._bundleBuildStart, bundleBuildEnd, progressChunk);
+          this._onFinishBuildBundle(error, this._bundleBuildStart, new Date(), progressChunk);
         }
         this._bundleBuildStart = null;
         this._bundleBuildChunkID = null;
@@ -481,18 +478,15 @@ export default class PackagerLogsStream {
   }
 
   _enqueueFlushLogsToAdd = () => {
-    let func = () => {
-      this._updateLogs(logs => {
-        if (this._logsToAdd.length === 0) {
-          return logs;
-        }
+    this._updateLogs(logs => {
+      if (this._logsToAdd.length === 0) {
+        return logs;
+      }
 
-        let nextLogs = logs.concat(this._logsToAdd);
-        this._logsToAdd = [];
-        return nextLogs;
-      });
-    };
-    func();
+      let nextLogs = logs.concat(this._logsToAdd);
+      this._logsToAdd = [];
+      return nextLogs;
+    });
   };
 
   _maybeParseMsgJSON(chunk: LogRecord) {
