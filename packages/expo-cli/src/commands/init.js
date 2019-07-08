@@ -149,7 +149,7 @@ async function action(projectDir, options) {
     packageManager = (await shouldUseYarnAsync()) ? 'yarn' : 'npm';
   }
 
-  let projectPath = await Exp.extractTemplateApp(
+  let projectPath = await Exp.extractAndInitializeTemplateApp(
     templateSpec,
     path.join(parentDir, dirName || initialConfig.name || initialConfig.expo.slug),
     packageManager,

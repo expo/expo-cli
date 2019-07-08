@@ -98,6 +98,7 @@
     "slash": "1.0.0",
     "source-map-support": "0.5.9",
     "split": "1.0.1",
+    "tempy": "^0.3.0",
     "targz": "^1.0.1",
     "untildify": "3.0.3",
     "validator": "10.5.0",

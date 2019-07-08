@@ -82,43 +82,14 @@ function createFileTransform(config: InitialConfig) {
   };
 }
 
-export async function extractTemplateApp(
+export async function extractAndInitializeTemplateApp(
   templateSpec: PackageSpec,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
   config: InitialConfig
 ) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
-  let tarStream = await pacote.tarball.stream(templateSpec, {
-    cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
-  });
-  await fs.mkdirp(projectRoot);
-  await new Promise((resolve, reject) => {
-    const extractStream = tar.x({
-      cwd: projectRoot,
-      strip: 1,
-      // TODO(ville): pending https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
-      // @ts-ignore property missing from the type definition
-      transform: createFileTransform(config),
-      onentry(entry: ReadEntry) {
-        if (config.name) {
-          // Rewrite paths for bare workflow
-          entry.path = entry.path
-            .replace(/HelloWorld/g, config.name)
-            .replace(/helloworld/g, config.name.toLowerCase());
-        }
-        if (/^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
-          // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
-          // See: https://github.com/npm/npm/issues/1862
-          entry.path = entry.path.replace(/gitignore$/, '.gitignore');
-        }
-      },
-    });
-    tarStream.on('error', reject);
-    extractStream.on('error', reject);
-    extractStream.on('close', resolve);
-    tarStream.pipe(extractStream);
-  });
+  await extractTemplateAppAsync(templateSpec, projectRoot, config);
 
   // Update files
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Customizing project...');
@@ -148,6 +119,45 @@ export async function extractTemplateApp(
   await installDependenciesAsync(projectRoot, packageManager);
 
   return projectRoot;
+}
+
+export async function extractTemplateAppAsync(
+  templateSpec: PackageSpec,
+  targetPath: string,
+  config: InitialConfig
+) {
+  let tarStream = await pacote.tarball.stream(templateSpec, {
+    cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
+  });
+  await fs.mkdirp(targetPath);
+  await new Promise((resolve, reject) => {
+    const extractStream = tar.x({
+      cwd: targetPath,
+      strip: 1,
+      // TODO(ville): pending https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
+      // @ts-ignore property missing from the type definition
+      transform: createFileTransform(config),
+      onentry(entry: ReadEntry) {
+        if (config.name) {
+          // Rewrite paths for bare workflow
+          entry.path = entry.path
+            .replace(/HelloWorld/g, config.name)
+            .replace(/helloworld/g, config.name.toLowerCase());
+        }
+        if (/^file$/i.test(entry.type) && path.basename(entry.path) === 'gitignore') {
+          // Rename `gitignore` because npm ignores files named `.gitignore` when publishing.
+          // See: https://github.com/npm/npm/issues/1862
+          entry.path = entry.path.replace(/gitignore$/, '.gitignore');
+        }
+      },
+    });
+    tarStream.on('error', reject);
+    extractStream.on('error', reject);
+    extractStream.on('close', resolve);
+    tarStream.pipe(extractStream);
+  });
+
+  return targetPath;
 }
 
 async function initGitRepoAsync(root: string) {
