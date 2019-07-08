@@ -21,7 +21,7 @@ export function isInfoEnabled() {
 }
 
 export function shouldWebpackClearLogs() {
-  return !isInfoEnabled() && !getenv.boolish('EXPO_DEBUG', false);
+  return !isDebugModeEnabled() && !isInfoEnabled() && !getenv.boolish('EXPO_DEBUG', false);
 }
 
 export function logEnvironmentInfo(projectRoot, tag, config) {
@@ -49,13 +49,31 @@ function applyEnvironmentVariables(config) {
   // has errors that aren't caught in development mode.
   // Related: https://github.com/expo/expo-cli/issues/614
   if (isDebugModeEnabled() && config.mode === 'production') {
-    // TODO: Bacon: Should this throw if not running in prod mode?
+    console.log(chalk.bgYellow.black('Bundling the project in debug mode.'));
+    // Enable line to line mapped mode for all/specified modules.
+    // Line to line mapped mode uses a simple SourceMap where each line of the generated source is mapped to the same line of the original source.
+    // It’s a performance optimization. Only use it if your performance need to be better and you are sure that input lines match which generated lines.
+    // true enables it for all modules (not recommended)
+    config.output.devtoolLineToLine = true;
 
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
     config.output.pathinfo = true;
     // Prevent minimizing when running in debug mode.
     config.optimization.minimize = false;
+    // Instead of numeric ids, give modules readable names for better debugging.
+    config.optimization.namedModules = true;
+    // Instead of numeric ids, give chunks readable names for better debugging.
+    config.optimization.namedChunks = true;
+    // Readable ids for better debugging.
+    config.optimization.moduleIds = 'named';
+    // if optimization.namedChunks is enabled optimization.chunkIds is set to 'named'.
+    // This will manually enable it just to be safe.
+    config.optimization.chunkIds = 'named';
+
+    if (config.optimization.splitChunks) {
+      config.optimization.splitChunks.name = true;
+    }
   }
 
   return config;
