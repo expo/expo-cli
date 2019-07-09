@@ -8,7 +8,7 @@ import {
   ProjectUtils,
   Simulator,
   UrlUtils,
-  User,
+  UserManager,
   UserSettings,
   Webpack,
 } from '@expo/xdl';
@@ -42,7 +42,7 @@ const printUsage = async projectDir => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
-  const username = await User.getCurrentUsernameAsync();
+  const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
   const iosInfo = process.platform === 'darwin' ? `, or ${b`i`} to run on ${u`i`}OS simulator` : '';
   const webInfo = exp.platforms.includes('web') ? `, ${b`w`} to run on ${u`w`}eb` : '';
@@ -64,7 +64,7 @@ const printUsage = async projectDir => {
 
 export const printServerInfo = async projectDir => {
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
-  const username = await User.getCurrentUsernameAsync();
+  const username = await UserManager.getCurrentUsernameAsync();
   log.newLine();
   log.nested(`  ${u(url)}`);
   log.newLine();
@@ -253,9 +253,9 @@ Please reload the project in the Expo app for the change to take effect.`
         break;
       }
       case 's': {
-        const authSession = await User.getSessionAsync();
+        const authSession = await UserManager.getSessionAsync();
         if (authSession) {
-          await User.logoutAsync();
+          await UserManager.logoutAsync();
           log('Signed out.');
         } else {
           stopWaitingForCommand();

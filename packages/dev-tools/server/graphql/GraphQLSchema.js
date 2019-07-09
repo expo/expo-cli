@@ -14,7 +14,7 @@ import {
   ProjectUtils,
   UrlUtils,
   UserSettings,
-  User,
+  UserManager,
 } from '@expo/xdl';
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
@@ -519,7 +519,7 @@ const resolvers = {
       };
     },
     async user() {
-      const username = await User.getCurrentUsernameAsync();
+      const username = await UserManager.getCurrentUsernameAsync();
       return { username };
     },
   },
