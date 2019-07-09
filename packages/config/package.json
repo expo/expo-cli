@@ -4,10 +4,11 @@
   "description": "A library for interacting with the app.json",
   "main": "build/Config.js",
   "scripts": {
-    "lint": "eslint .",
     "watch": "tsc --watch",
     "build": "tsc",
-    "prepare": "yarn build"
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",

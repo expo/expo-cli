@@ -4,7 +4,7 @@ import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 import semver from 'semver';
 import chalk from 'chalk';
-import ConfigUtils from '@expo/config';
+import * as ConfigUtils from '@expo/config';
 
 import * as Analytics from './Analytics';
 import * as Binaries from './Binaries';

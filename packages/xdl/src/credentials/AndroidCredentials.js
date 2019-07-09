@@ -26,7 +26,7 @@ export type Credentials = {
 
 export async function backupExistingCredentials(
   { outputPath, username, experienceName }: Object,
-  log: any = logger.info.bind(logger),
+  log: any = logger.global.info.bind(logger.global),
   logSecrets: boolean = true
 ) {
   const credentialMetadata = { username, experienceName, platform: 'android' };
@@ -107,7 +107,7 @@ export async function exportPrivateKey(
   { keystorePath, keystorePassword, keyAlias, keyPassword }: Object,
   encryptionKey: string,
   outputPath: string,
-  log: any = logger.info.bind(logger)
+  log: any = logger.global.info.bind(logger.global)
 ) {
   let nodePty;
   const ptyTmpDir = '/tmp/pty-tmp-install';
@@ -199,7 +199,7 @@ export async function exportPrivateKey(
 
 export async function logKeystoreHashes(
   { keystorePath, keystorePassword, keyAlias }: Object,
-  log: any = logger.info.bind(logger)
+  log: any = logger.global.info.bind(logger.global)
 ) {
   const certFile = `${keystorePath}.cer`;
   try {
@@ -250,7 +250,7 @@ export async function logKeystoreHashes(
 export function logKeystoreCredentials(
   { keystorePassword, keyAlias, keyPassword }: Object,
   title: string = 'Keystore credentials',
-  log: any = logger.info.bind(logger)
+  log: any = logger.global.info.bind(logger.global)
 ) {
   log(`${title}
     Keystore password: ${chalk.bold(keystorePassword)}
