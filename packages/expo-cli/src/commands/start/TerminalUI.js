@@ -12,16 +12,14 @@ import {
   UserSettings,
   Webpack,
 } from '@expo/xdl';
-
 import chalk from 'chalk';
+import trimStart from 'lodash/trimStart';
 import openBrowser from 'react-dev-utils/openBrowser';
 import readline from 'readline';
-import trimStart from 'lodash/trimStart';
 import wordwrap from 'wordwrap';
-
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
-import urlOpts from '../../urlOpts';
 import log from '../../log';
+import urlOpts from '../../urlOpts';
 
 const CTRL_C = '\u0003';
 const CTRL_D = '\u0004';
