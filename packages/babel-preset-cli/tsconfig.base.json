@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "composite": true,
     "esModuleInterop": true,
     "inlineSources": true,
     "lib": ["ES2016"],

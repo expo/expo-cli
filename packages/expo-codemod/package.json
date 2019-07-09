@@ -13,11 +13,12 @@
     "expo-codemod": "./bin/expo-codemod.js"
   },
   "scripts": {
-    "build": "rm -rf ./build && tsc",
-    "prepare": "yarn build",
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "test": "jest",
-    "test:watch": "jest --watch",
-    "watch": "tsc --watch"
+    "test:watch": "jest --watch"
   },
   "files": [
     "bin",
