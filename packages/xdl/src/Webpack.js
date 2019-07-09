@@ -58,6 +58,9 @@ export async function startAsync(
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
   const mode = dev ? 'development' : 'production';
 
+  process.env.BABEL_ENV = mode;
+  process.env.NODE_ENV = mode;
+
   const config = await Web.invokeWebpackConfigAsync({
     projectRoot,
     pwa: true,
