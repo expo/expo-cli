@@ -42,11 +42,6 @@ declare module '@expo/bunyan' {
     trace(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
-     */
-    trace(format: any, ...params: any[]): void;
-
-    /**
      * For @expo/xdl
      */
     trace(...params: any[]): void;
@@ -74,11 +69,6 @@ declare module '@expo/bunyan' {
      * field name for the Error instance.
      */
     debug(obj: Object, ...params: any[]): void;
-
-    /**
-     * Uses `util.format` for msg formatting.
-     */
-    debug(format: any, ...params: any[]): void;
 
     /**
      * For @expo/xdl
@@ -110,11 +100,6 @@ declare module '@expo/bunyan' {
     info(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
-     */
-    info(format: any, ...params: any[]): void;
-
-    /**
      * For @expo/xdl
      */
     info(...params: any[]): void;
@@ -142,11 +127,6 @@ declare module '@expo/bunyan' {
      * field name for the Error instance.
      */
     warn(obj: Object, ...params: any[]): void;
-
-    /**
-     * Uses `util.format` for msg formatting.
-     */
-    warn(format: any, ...params: any[]): void;
 
     /**
      * For @expo/xdl
@@ -178,11 +158,6 @@ declare module '@expo/bunyan' {
     error(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
-     */
-    error(format: any, ...params: any[]): void;
-
-    /**
      * For @expo/xdl
      */
     error(...params: any[]): void;
@@ -210,11 +185,6 @@ declare module '@expo/bunyan' {
      * field name for the Error instance.
      */
     fatal(obj: Object, ...params: any[]): void;
-
-    /**
-     * Uses `util.format` for msg formatting.
-     */
-    fatal(format: any, ...params: any[]): void;
 
     /**
      * For @expo/xdl

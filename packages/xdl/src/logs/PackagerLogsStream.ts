@@ -200,7 +200,7 @@ export default class PackagerLogsStream {
 
     ProjectUtils.attachLoggerStream(this._projectRoot, {
       stream: {
-        write: (chunk: any) => {
+        write: (chunk: LogRecord) => {
           if (chunk.tag !== 'metro' && chunk.tag !== 'expo') {
             return;
           } else if (this._getCurrentOpenProjectId() !== projectId) {
