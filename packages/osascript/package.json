@@ -4,9 +4,10 @@
   "description": "Tools for running an osascripts in Node",
   "main": "lib/index.js",
   "scripts": {
-    "build": "tsc",
     "watch": "tsc --watch",
-    "prepare": "yarn build"
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo"
   },
   "repository": {
     "type": "git",

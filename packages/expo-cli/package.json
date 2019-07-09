@@ -9,10 +9,11 @@
     "bin"
   ],
   "scripts": {
-    "start": "yarn run build && yarn run watch",
+    "start": "yarn run prepare && yarn run watch",
     "build": "tsc --noEmit && gulp build",
     "watch": "concurrently \"tsc --noEmit --watch\" \"gulp watch\"",
-    "prepare": "yarn build",
+    "prepare": "yarn run clean && yarn run build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "preversion": "node ./scripts/preversion.js",
     "pkg": "pkg ."
   },

@@ -5,8 +5,9 @@
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc --watch",
-    "build": "rm -rf ./build && tsc",
-    "prepare": "yarn build"
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo"
   },
   "repository": {
     "type": "git",
