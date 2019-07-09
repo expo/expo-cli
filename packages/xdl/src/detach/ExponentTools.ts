@@ -118,7 +118,6 @@ async function spawnAsyncThrowError(
     loggerFields?: any;
     pipeToLogger?: boolean | { stdout?: boolean; stderr?: boolean };
     stdoutOnly?: boolean;
-    dontShowStdout?: boolean;
   } = {
     stdio: 'inherit',
     cwd: process.cwd(),

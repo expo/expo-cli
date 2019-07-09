@@ -47,6 +47,11 @@ declare module '@expo/bunyan' {
     trace(format: any, ...params: any[]): void;
 
     /**
+     * For @expo/xdl
+     */
+    trace(...params: any[]): void;
+
+    /**
      * Returns a boolean: is the `debug` level enabled?
      *
      * This is equivalent to `log.isDebugEnabled()` or `log.isEnabledFor(DEBUG)` in log4j.
@@ -74,6 +79,11 @@ declare module '@expo/bunyan' {
      * Uses `util.format` for msg formatting.
      */
     debug(format: any, ...params: any[]): void;
+
+    /**
+     * For @expo/xdl
+     */
+    debug(...params: any[]): void;
 
     /**
      * Returns a boolean: is the `info` level enabled?
@@ -105,6 +115,11 @@ declare module '@expo/bunyan' {
     info(format: any, ...params: any[]): void;
 
     /**
+     * For @expo/xdl
+     */
+    info(...params: any[]): void;
+
+    /**
      * Returns a boolean: is the `warn` level enabled?
      *
      * This is equivalent to `log.isWarnEnabled()` or `log.isEnabledFor(WARN)` in log4j.
@@ -132,6 +147,11 @@ declare module '@expo/bunyan' {
      * Uses `util.format` for msg formatting.
      */
     warn(format: any, ...params: any[]): void;
+
+    /**
+     * For @expo/xdl
+     */
+    warn(...params: any[]): void;
 
     /**
      * Returns a boolean: is the `error` level enabled?
@@ -163,6 +183,11 @@ declare module '@expo/bunyan' {
     error(format: any, ...params: any[]): void;
 
     /**
+     * For @expo/xdl
+     */
+    error(...params: any[]): void;
+
+    /**
      * Returns a boolean: is the `fatal` level enabled?
      *
      * This is equivalent to `log.isFatalEnabled()` or `log.isEnabledFor(FATAL)` in log4j.
@@ -190,6 +215,11 @@ declare module '@expo/bunyan' {
      * Uses `util.format` for msg formatting.
      */
     fatal(format: any, ...params: any[]): void;
+
+    /**
+     * For @expo/xdl
+     */
+    fatal(...params: any[]): void;
   }
 
   namespace Logger {
