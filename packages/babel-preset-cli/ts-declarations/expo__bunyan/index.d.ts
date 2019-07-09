@@ -42,9 +42,9 @@ declare module '@expo/bunyan' {
     trace(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
+     * For @expo/xdl
      */
-    trace(format: any, ...params: any[]): void;
+    trace(...params: any[]): void;
 
     /**
      * Returns a boolean: is the `debug` level enabled?
@@ -71,9 +71,9 @@ declare module '@expo/bunyan' {
     debug(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
+     * For @expo/xdl
      */
-    debug(format: any, ...params: any[]): void;
+    debug(...params: any[]): void;
 
     /**
      * Returns a boolean: is the `info` level enabled?
@@ -100,9 +100,9 @@ declare module '@expo/bunyan' {
     info(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
+     * For @expo/xdl
      */
-    info(format: any, ...params: any[]): void;
+    info(...params: any[]): void;
 
     /**
      * Returns a boolean: is the `warn` level enabled?
@@ -129,9 +129,9 @@ declare module '@expo/bunyan' {
     warn(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
+     * For @expo/xdl
      */
-    warn(format: any, ...params: any[]): void;
+    warn(...params: any[]): void;
 
     /**
      * Returns a boolean: is the `error` level enabled?
@@ -158,9 +158,9 @@ declare module '@expo/bunyan' {
     error(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
+     * For @expo/xdl
      */
-    error(format: any, ...params: any[]): void;
+    error(...params: any[]): void;
 
     /**
      * Returns a boolean: is the `fatal` level enabled?
@@ -187,9 +187,9 @@ declare module '@expo/bunyan' {
     fatal(obj: Object, ...params: any[]): void;
 
     /**
-     * Uses `util.format` for msg formatting.
+     * For @expo/xdl
      */
-    fatal(format: any, ...params: any[]): void;
+    fatal(...params: any[]): void;
   }
 
   namespace Logger {
