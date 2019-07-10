@@ -180,7 +180,9 @@ module.exports = async function(env = {}, argv) {
     // Generate a service worker script that will precache, and keep up to date,
     // the HTML & assets that are part of the Webpack build.
     middlewarePlugins.push(
-      new WorkboxPlugin.GenerateSW({
+      new WorkboxPlugin.InjectManifest({
+        swSrc: require.resolve('./serviceWorker.js'),
+        swDest: 'service-worker.js',
         exclude: [
           /\.LICENSE$/,
           /\.map$/,
@@ -188,17 +190,18 @@ module.exports = async function(env = {}, argv) {
           // Exclude all apple touch images as they are cached locally after the PWA is added.
           /^\bapple.*\.png$/,
         ],
+        importWorkboxFrom: 'cdn',
+        // TODO: Support these two:
+        /*
         /// SINGLE PAGE:
         // navigateFallback: `${publicPath}index.html`,
-        clientsClaim: true,
-        importWorkboxFrom: 'cdn',
         navigateFallbackBlacklist: [
           // Exclude URLs starting with /_, as they're likely an API call
           new RegExp('^/_'),
           // Exclude URLs containing a dot, as they're likely a resource in
           // public/ and not a SPA route
           new RegExp('/[^/]+\\.[^/]+$'),
-        ],
+        ],*/
         ...(isDev
           ? {
               include: [], // Don't cache any assets in dev mode.
