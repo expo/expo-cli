@@ -74,4 +74,42 @@ export default (program: any) => {
 
       log('All done!');
     }, true);
+
+  program
+    .command('push:web:upload [project-dir]')
+    .description('Uploads a VAPID key for web push notifications.')
+    .option('--vapid-pubkey [vapid-public-key]', 'URL-safe base64-encoded VAPID public key.')
+    .option('--vapid-pvtkey [vapid-private-key]', 'URL-safe base64-encoded VAPID private key.')
+    .option(
+      '--vapid-subject [vapid-subject]',
+      'URL or `mailto:` URL which provides a point of contact in case the push service needs to contact the message sender.'
+    )
+    .asyncActionProjectDir(async (projectDir, options) => {
+      if (!options.vapidPubkey || !options.vapidPvtkey || !options.vapidSubject) {
+        throw new Error(
+          'Must specify all three fields (--vapid-pubkey, --vapid-pvtkey, and --vapid-subject) to upload.'
+        );
+      }
+
+      log('Reading project configuration...');
+
+      const {
+        args: { remotePackageName },
+      } = await Exp.getPublishInfoAsync(projectDir);
+
+      log('Logging in...');
+
+      let user = await UserManager.getCurrentUserAsync();
+      let apiClient = ApiV2.clientForUser(user);
+
+      log("Setting VAPID key on Expo's servers...");
+
+      await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
+        vapidPublicKey: options.vapidPubkey,
+        vapidPrivateKey: options.vapidPvtkey,
+        vapidSubject: options.vapidSubject,
+      });
+
+      log('All done!');
+    }, true);
 };
