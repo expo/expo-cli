@@ -5,6 +5,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
+import get from 'lodash/get';
+import has from 'lodash/has';
+import pascalCase from 'pascal-case';
 
 import {
   getManifestAsync,
@@ -199,10 +202,18 @@ async function _createStandaloneContextAsync(args) {
     });
   }
 
+  let bundleExecutable = args.type === 'archive' ? EXPOKIT_APP : EXPONENT_APP;
+  if (has(manifest, 'ios.infoPlist.CFBundleExecutable')) {
+    bundleExecutable = get(manifest, 'ios.infoPlist.CFBundleExecutable');
+  } else if (privateConfig && privateConfig.bundleIdentifier) {
+    bundleExecutable = pascalCase(privateConfig.bundleIdentifier);
+  }
+
   const buildFlags = StandaloneBuildFlags.createIos(args.configuration, {
     workspaceSourcePath,
     appleTeamId: args.appleTeamId,
     buildType: args.type,
+    bundleExecutable,
   });
   const context = StandaloneContext.createServiceContext(
     expoSourcePath,
@@ -252,9 +263,16 @@ async function configureAndCopyArchiveAsync(args) {
       );
     } else if (type === 'archive' || type === 'client') {
       const workspaceName = type === 'archive' ? EXPOKIT_APP : EXPONENT_APP;
+      if (context.build.ios.bundleExecutable !== workspaceName) {
+        await spawnAsync('/bin/mv', [workspaceName, context.build.ios.bundleExecutable], {
+          pipeToLogger: true,
+          cwd: context.data.archivePath,
+          loggerFields: { buildPhase: 'renaming bundle executable' },
+        });
+      }
       await spawnAsync('/bin/mv', [`${workspaceName}.xcarchive`, output], {
         pipeToLogger: true,
-        cwd: `${context.data.archivePath}/../../../..`,
+        cwd: path.join(context.data.archivePath, '../../../..'),
         loggerFields: { buildPhase: 'renaming archive' },
       });
     }
@@ -296,16 +314,13 @@ async function createTurtleWorkspaceAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await _createTurtleWorkspaceAsync(context, args);
   logger.info(
-    `Created turtle workspace at ${
-      context.build.ios.workspaceSourcePath
-    }. You can open and run this in Xcode.`
+    `Created turtle workspace at ${context.build.ios
+      .workspaceSourcePath}. You can open and run this in Xcode.`
   );
   if (context.config) {
     await IosNSBundle.configureAsync(context);
     logger.info(
-      `The turtle workspace was configured for the url ${
-        args.url
-      }. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
+      `The turtle workspace was configured for the url ${args.url}. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
     );
   } else {
     logger.info(
