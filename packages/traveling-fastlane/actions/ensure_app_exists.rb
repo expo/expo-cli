@@ -27,7 +27,7 @@ def ensure_app_exists()
 end
 
 def update_service(app, options)
-  if options[:enablePushNotifications]
+  if options[:enablePushNotifications] && !app.details.features["push"]
     app_service = Spaceship::Portal.app_service.push_notification.on
     app.update_service(app_service)
   end
@@ -40,9 +40,7 @@ with_captured_stderr{
     Spaceship::Portal.login($appleId, $password)
     Spaceship::Portal.client.team_id = $teamId
     created, app = ensure_app_exists().values_at(:created, :app)
-    if created
-      update_service(app, options)
-    end
+    update_service(app, options)
     $result = { result: 'success', created: created }
   rescue Spaceship::Client::UnexpectedResponse => e
     $result = {
