@@ -8,7 +8,7 @@ workbox.clientsClaim();
 self.addEventListener('push', event => {
   let payload = {};
   try {
-    payload = JSON.parse(event.data.text());
+    payload = event.data.json();
   } catch (e) {
     // If `event.data.text()` is not a JSON object, we just treat it
     // as a plain string and display it as the body.
