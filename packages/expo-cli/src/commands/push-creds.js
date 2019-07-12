@@ -112,4 +112,54 @@ export default (program: any) => {
 
       log('All done!');
     }, true);
+
+  program
+    .command('push:web:show [project-dir]')
+    .description(
+      'Prints the VAPID public key, the VAPID private key, and the VAPID subject currently in use for web notifications for this project.'
+    )
+    .asyncActionProjectDir(async (projectDir, options) => {
+      const {
+        args: { remotePackageName },
+      } = await Exp.getPublishInfoAsync(projectDir);
+      let user = await UserManager.getCurrentUserAsync();
+      let apiClient = ApiV2.clientForUser(user);
+
+      let result = await apiClient.getAsync(`credentials/push/web/${remotePackageName}`);
+
+      if (
+        result.status === 'ok' &&
+        result.vapidPublicKey &&
+        result.vapidPrivateKey &&
+        result.vapidSubject
+      ) {
+        log(JSON.stringify(result));
+      } else if (result.status === 'error') {
+        throw new Error('Server returned an error: ' + result.error);
+      } else {
+        throw new Error('Server returned an invalid result!');
+      }
+    }, true);
+
+  program
+    .command('push:web:clear [project-dir]')
+    .description(
+      'Deletes previously uploaded VAPID public key, VAPID private key, and VAPID subject.'
+    )
+    .asyncActionProjectDir(async (projectDir, options) => {
+      log('Reading project configuration...');
+      const {
+        args: { remotePackageName },
+      } = await Exp.getPublishInfoAsync(projectDir);
+
+      log('Logging in...');
+      let user = await UserManager.getCurrentUserAsync();
+      let apiClient = ApiV2.clientForUser(user);
+
+      log("Deleting API key from Expo's servers...");
+
+      await apiClient.deleteAsync(`credentials/push/web/${remotePackageName}`);
+
+      log('All done!');
+    }, true);
 };
