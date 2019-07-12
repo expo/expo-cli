@@ -6,9 +6,18 @@ workbox.clientsClaim();
  * Add support for push notification.
  */
 self.addEventListener('push', event => {
-  const title = 'Get Started With Workbox';
+  let payload = {};
+  try {
+    payload = JSON.parse(event.data.text());
+  } catch (e) {
+    // If `event.data.text()` is not a JSON object, we just treat it
+    // as a plain string and display it as the body.
+    payload = { title: '', body: event.data.text() };
+  }
+
+  const title = payload.title;
   const options = {
-    body: event.data.text(),
+    body: payload.body,
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
