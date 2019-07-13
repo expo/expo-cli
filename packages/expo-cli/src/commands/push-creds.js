@@ -102,7 +102,7 @@ export default (program: any) => {
       let user = await UserManager.getCurrentUserAsync();
       let apiClient = ApiV2.clientForUser(user);
 
-      log("Setting VAPID key on Expo's servers...");
+      log("Setting VAPID keys on Expo's servers...");
 
       await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
         vapidPublicKey: options.vapidPubkey,
