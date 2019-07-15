@@ -18,6 +18,7 @@ self.addEventListener('push', event => {
   const title = payload.title;
   const options = {
     body: payload.body,
+    data: payload.data || {},
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
@@ -53,7 +54,7 @@ self.addEventListener('notificationclick', event => {
       }
 
       // Message the client:
-      appClient.postMessage('New chat messages!');
+      appClient.postMessage(event.notification.data);
     })()
   );
 });
