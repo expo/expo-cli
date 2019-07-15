@@ -26,7 +26,7 @@ export type Credentials = {
 
 export async function backupExistingCredentials(
   { outputPath, username, experienceName }: Object,
-  log: any = logger.info.bind(logger),
+  log: any = logger.global.info.bind(logger.global),
   logSecrets: boolean = true
 ) {
   const credentialMetadata = { username, experienceName, platform: 'android' };
@@ -58,7 +58,7 @@ export async function backupExistingCredentials(
   };
 }
 
-export async function exportCert(
+export async function exportCertBinary(
   keystorePath: string,
   keystorePassword: string,
   keyAlias: string,
@@ -80,11 +80,34 @@ export async function exportCert(
   ]);
 }
 
+export async function exportCertBase64(
+  keystorePath: string,
+  keystorePassword: string,
+  keyAlias: string,
+  certFile: string
+) {
+  return spawnAsync('keytool', [
+    '-export',
+    '-rfc',
+    '-keystore',
+    keystorePath,
+    '-storepass',
+    keystorePassword,
+    '-alias',
+    keyAlias,
+    '-file',
+    certFile,
+    '-noprompt',
+    '-storetype',
+    'JKS',
+  ]);
+}
+
 export async function exportPrivateKey(
   { keystorePath, keystorePassword, keyAlias, keyPassword }: Object,
   encryptionKey: string,
   outputPath: string,
-  log: any = logger.info.bind(logger)
+  log: any = logger.global.info.bind(logger.global)
 ) {
   let nodePty;
   const ptyTmpDir = '/tmp/pty-tmp-install';
@@ -176,11 +199,11 @@ export async function exportPrivateKey(
 
 export async function logKeystoreHashes(
   { keystorePath, keystorePassword, keyAlias }: Object,
-  log: any = logger.info.bind(logger)
+  log: any = logger.global.info.bind(logger.global)
 ) {
   const certFile = `${keystorePath}.cer`;
   try {
-    await exportCert(keystorePath, keystorePassword, keyAlias, certFile);
+    await exportCertBinary(keystorePath, keystorePassword, keyAlias, certFile);
     const data = fs.readFileSync(certFile);
     const googleHash = crypto
       .createHash('sha1')
@@ -227,7 +250,7 @@ export async function logKeystoreHashes(
 export function logKeystoreCredentials(
   { keystorePassword, keyAlias, keyPassword }: Object,
   title: string = 'Keystore credentials',
-  log: any = logger.info.bind(logger)
+  log: any = logger.global.info.bind(logger.global)
 ) {
   log(`${title}
     Keystore password: ${chalk.bold(keystorePassword)}

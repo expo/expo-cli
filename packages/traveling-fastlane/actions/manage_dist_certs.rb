@@ -24,6 +24,7 @@ def list()
       ownerType: cert.owner_type,
       ownerName: cert.owner_name,
       ownerId: cert.owner_id,
+      serialNumber: cert.raw_data['serialNum'],
     }
   }
 end
@@ -44,6 +45,7 @@ def create()
     certP12: Base64.encode64(p12.to_der),
     certPassword: certPassword,
     certPrivateSigningKey: pkey,
+    distCertSerialNumber: cert.raw_data['serialNum'],
   }
 end
 

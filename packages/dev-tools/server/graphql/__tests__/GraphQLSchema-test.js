@@ -4,7 +4,7 @@ import createContext from '../createContext';
 import AsyncIterableRingBuffer from '../AsyncIterableRingBuffer';
 import Issues from '../Issues';
 
-jest.mock('xdl');
+jest.mock('@expo/xdl');
 
 const MOCK_LOGS = [
   {
@@ -314,6 +314,7 @@ test('subscriptions', async () => {
   }
 
   const queryResult = await graphql({ schema, source: fullQuery, contextValue: context() });
+  expect(queryResult.errors).toBeUndefined();
   const cursor = queryResult.data.currentProject.messages.pageInfo.cursor;
 
   for (const log of MOCK_LOGS.slice(1)) {

@@ -2,8 +2,9 @@
  * @flow
  */
 
-import { Project, ProjectUtils, User, Versions } from 'xdl';
+import { Project, ProjectUtils, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
+import delayAsync from 'delay-async';
 import fp from 'lodash/fp';
 import get from 'lodash/get';
 import ora from 'ora';
@@ -15,7 +16,6 @@ import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
 import prompt from '../../prompt';
 
-const sleep = ms => new Promise(res => setTimeout(res, ms));
 const secondsToMilliseconds = seconds => seconds * 1000;
 
 type BuilderOptions = {
@@ -80,7 +80,7 @@ export default class BaseBuilder {
     // always use local json to unify behaviour between regular apps and self hosted ones
     const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
     this.manifest = exp;
-    this.user = await User.ensureLoggedInAsync();
+    this.user = await UserManager.ensureLoggedInAsync();
 
     await this.checkProjectConfig();
   }
@@ -98,7 +98,7 @@ export default class BaseBuilder {
       log.warn(
         `\nSDK${oldestSupportedMajorVersion} will be ${chalk.bold(
           'deprecated'
-        )} soon! We recommend upgrading versions, ideally to the latest (SDK${semver.major(
+        )} next! We recommend upgrading versions, ideally to the latest (SDK${semver.major(
           version
         )}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`
       );
@@ -329,7 +329,7 @@ ${job.id}
           throw new BuildError(`Unknown status: ${job.status} - aborting!`);
       }
       time = new Date().getTime();
-      await sleep(secondsToMilliseconds(interval));
+      await delayAsync(secondsToMilliseconds(interval));
     }
     spinner.warn('Timed out.');
     throw new BuildError(
@@ -355,6 +355,11 @@ ${job.id}
         ...opts,
         type: this.options.type,
         bundleIdentifier,
+      };
+    } else if (platform === 'android') {
+      opts = {
+        ...opts,
+        type: this.options.type,
       };
     }
 

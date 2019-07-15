@@ -1,0 +1,21 @@
+# 🚨🚨ATTENTION🚨🚨
+# Please follow the commit message format below 📝
+#
+# <type>: <description>
+# [optional body]
+# [optional footer]
+# 
+# types: "fix" = patches a bug in the codebase
+# 	 "feat" = introduces new feature to codebase
+#	 "improvement" = improvement without adding a feature or fixing a bug
+#	 various others: "chore" "docs" "style" "refactor" "perf" "test"
+# 
+# Include "BREAKING CHANGE:" at the beginning of the body or footer if your commit introduces a breaking API change
+
+
+
+
+
+
+# Example commit messages @ https://www.conventionalcommits.org/en/v1.0.0-beta.4/#examples
+# Thank you for cooperating, this allows us to auto-generate a fantastic changelog :)

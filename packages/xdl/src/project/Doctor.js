@@ -16,12 +16,12 @@ import Schemer, { SchemerError } from '@expo/schemer';
 
 import * as ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
+import * as AssetUtils from '../AssetUtils';
 import * as Binaries from '../Binaries';
 import Config from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
 import XDLError from '../XDLError';
-import ErrorCode from '../ErrorCode';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -40,8 +40,6 @@ function _isNpmVersionWithinRanges(npmVersion, ranges) {
 
 async function _checkNpmVersionAsync(projectRoot) {
   try {
-    await Binaries.sourceBashLoginScriptsAsync();
-
     try {
       let yarnVersionResponse = await spawnAsync('yarnpkg', ['--version']);
       if (yarnVersionResponse.status === 0) {
@@ -428,6 +426,20 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
   return NO_ISSUES;
 }
 
+async function _validateOptimizedAssetsAsync(projectRoot: string): void {
+  const hasUnoptimized = await AssetUtils.hasUnoptimizedAssetsAsync(projectRoot);
+  if (hasUnoptimized) {
+    ProjectUtils.logWarning(
+      projectRoot,
+      'expo',
+      `Warning: This project contains unoptimized assets. Please run \`expo optimize\` in your project directory.`,
+      'doctor-unoptimized-assets'
+    );
+  } else {
+    ProjectUtils.clearNotification(projectRoot, 'doctor-unoptimized-assets');
+  }
+}
+
 export async function validateLowLatencyAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, false);
 }
@@ -483,7 +495,7 @@ export async function validateWebPlatformAddedAsync(
     await ConfigUtils.addPlatform(projectRoot, 'web');
     return true;
   }
-  throw new XDLError(ErrorCode.WEB_NOT_CONFIGURED, getWebSetupLogs());
+  throw new XDLError('WEB_NOT_CONFIGURED', getWebSetupLogs());
 }
 
 async function promptAsync(message: string): Promise<boolean> {
@@ -532,6 +544,8 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
       return nodeModulesStatus;
     }
   }
+
+  await _validateOptimizedAssetsAsync(projectRoot, {});
 
   return status;
 }

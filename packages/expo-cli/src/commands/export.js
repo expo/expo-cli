@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import validator from 'validator';
 import path from 'path';
 import targz from 'targz';
-import { Project, UrlUtils } from 'xdl';
+import { Project, UrlUtils } from '@expo/xdl';
 
 import log from '../log';
 import { installExitHooks } from '../exit';

@@ -5,9 +5,8 @@ import * as ConfigUtils from '@expo/config';
 import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-
+import chalk from 'chalk';
 import createWebpackCompiler from './createWebpackCompiler';
-import ErrorCode from './ErrorCode';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
@@ -35,7 +34,7 @@ async function choosePortAsync(): Promise<number | null> {
   try {
     return await choosePort(HOST, DEFAULT_PORT);
   } catch (error) {
-    throw new XDLError(ErrorCode.NO_PORT_FOUND, 'No available port found: ' + error.message);
+    throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
   }
 }
 
@@ -57,19 +56,25 @@ export async function startAsync(
   const { webName } = ConfigUtils.getNameFromConfig(exp);
 
   let { dev, https } = await ProjectSettings.readAsync(projectRoot);
-  const config = Web.invokeWebpackConfig({
+  const mode = dev ? 'development' : 'production';
+
+  process.env.BABEL_ENV = mode;
+  process.env.NODE_ENV = mode;
+
+  const config = await Web.invokeWebpackConfigAsync({
     projectRoot,
     pwa: true,
     development: dev,
     production: !dev,
     https,
+    info: Web.isInfoEnabled(),
   });
 
   webpackServerPort = await choosePortAsync();
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    `Starting Webpack on port ${webpackServerPort}.`
+    `Starting Webpack on port ${webpackServerPort} in ${chalk.underline(mode)} mode.`
   );
 
   const protocol = https ? 'https' : 'http';
@@ -144,12 +149,13 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
   process.env.BABEL_ENV = mode;
   process.env.NODE_ENV = mode;
 
-  let config = Web.invokeWebpackConfig({
+  let config = await Web.invokeWebpackConfigAsync({
     projectRoot,
     pwa: packagerOpts.pwa,
     polyfill: packagerOpts.polyfill,
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
+    info: Web.isInfoEnabled(),
   });
   let compiler = webpack(config);
 

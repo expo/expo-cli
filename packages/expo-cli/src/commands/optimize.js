@@ -1,5 +1,4 @@
-import { Project, ProjectUtils, AssetUtils } from 'xdl';
-import prompt from '../prompt';
+import { Project, ProjectUtils, AssetUtils } from '@expo/xdl';
 import log from '../log';
 
 export async function action(projectDir = './', options = {}) {
@@ -11,16 +10,20 @@ export async function action(projectDir = './', options = {}) {
 
   const hasUnoptimizedAssets = await AssetUtils.hasUnoptimizedAssetsAsync(projectDir, options);
   if (!options.save && hasUnoptimizedAssets) {
-    log.warn('Running this command will overwrite the original assets.');
-    const { saveOriginals } = await prompt({
-      type: 'confirm',
-      name: 'saveOriginals',
-      message: 'Do you want to save a backup of each file?',
-    });
-    if (saveOriginals) {
-      options.save = true;
-    }
+    log.warn('This will overwrite the original assets.');
   }
+
+  // Validate custom quality
+  const defaultQuality = 80;
+  const { quality: strQuality } = options;
+
+  const quality = Number(strQuality);
+  const validQuality = Number.isInteger(quality) && quality > 0 && quality <= 100;
+  if (strQuality !== undefined && !validQuality) {
+    throw new Error('Invalid value for --quality flag. Must be an integer between 1 and 100.');
+  }
+  const outputQuality = validQuality ? quality : defaultQuality;
+  options.quality = outputQuality;
   await Project.optimizeAsync(projectDir, options);
 }
 
@@ -29,7 +32,11 @@ export default program => {
     .command('optimize [project-dir]')
     .alias('o')
     .description('Compress the assets in your Expo project')
-    .option('-s, --save', 'Save the original assets with a .expo extension')
+    .option('-s, --save', 'Save the original assets with a .orig extension')
+    .option(
+      '--quality [number]',
+      'Specify the quality the compressed image is reduced to. Default is 60'
+    )
     .option(
       '--include [pattern]',
       'Include only assets that match this glob pattern relative to the project root'

@@ -9,8 +9,11 @@ import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 
 import * as ProjectUtils from './project/ProjectUtils';
+import { logEnvironmentInfo, shouldWebpackClearLogs } from './Web';
 
 const CONSOLE_TAG = 'expo';
+
+const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
 
 function log(projectRoot, message, showInDevtools = true) {
   if (showInDevtools) {
@@ -63,11 +66,6 @@ export default function createWebpackCompiler({
   webpack,
   onFinished,
 }) {
-  const devSocket = {
-    warnings: warnings => logWarning(projectRoot, warnings),
-    errors: errors => logError(projectRoot, errors),
-  };
-
   // "Compiler" is a low-level interface to Webpack.
   // It lets us listen to some events and provide our own custom messages.
   let compiler;
@@ -83,7 +81,7 @@ export default function createWebpackCompiler({
   // bundle, so if you refresh, it'll wait instead of serving the old one.
   // "invalid" is short for "bundle invalidated", it doesn't imply any errors.
   compiler.hooks.invalid.tap('invalid', () => {
-    if (!nonInteractive) {
+    if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
       clearConsole();
     }
     log(projectRoot, '\nCompiling...');
@@ -94,7 +92,7 @@ export default function createWebpackCompiler({
   // "done" event fires when Webpack has finished recompiling the bundle.
   // Whether or not you have warnings or errors, you will get this event.
   compiler.hooks.done.tap('done', async stats => {
-    if (!nonInteractive) {
+    if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
       clearConsole();
     }
 
@@ -111,20 +109,17 @@ export default function createWebpackCompiler({
 
     const messages = formatWebpackMessages(statsData);
 
-    if (messages.errors.length > 0) {
-      devSocket.errors(messages.errors);
-    } else if (messages.warnings.length > 0) {
-      devSocket.warnings(messages.warnings);
-    }
-
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
     if (isSuccessful) {
       log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
       printPreviewNotice(projectRoot, isFirstCompile);
+      logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
     }
+
     if (isSuccessful && (!nonInteractive || isFirstCompile)) {
       printInstructions(projectRoot, appName, urls, isFirstCompile);
     }
+
     if (!isFirstCompile) {
       log(
         projectRoot,
@@ -132,6 +127,7 @@ export default function createWebpackCompiler({
         false
       );
     }
+
     onFinished();
     isFirstCompile = false;
 

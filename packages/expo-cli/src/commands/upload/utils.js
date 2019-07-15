@@ -1,4 +1,4 @@
-import { ExponentTools } from 'xdl';
+import { ExponentTools } from '@expo/xdl';
 import get from 'lodash/get';
 import fs from 'fs-extra';
 import ProgressBar from 'progress';

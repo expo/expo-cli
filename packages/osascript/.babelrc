@@ -1,7 +1,0 @@
-{
-  "presets": ["env"],
-  "plugins": [
-    "babel-plugin-transform-es2015-modules-commonjs",
-    ["transform-runtime", { "polyfill": false }]
-  ]
-}

@@ -5,8 +5,16 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
+import get from 'lodash/get';
+import has from 'lodash/has';
+import pascalCase from 'pascal-case';
 
-import { getManifestAsync, spawnAsync, spawnAsyncThrowError } from './ExponentTools';
+import {
+  getManifestAsync,
+  spawnAsync,
+  spawnAsyncThrowError,
+  parseSdkMajorVersion,
+} from './ExponentTools';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
@@ -92,10 +100,12 @@ async function _buildAsync(
   configuration,
   type,
   relativeBuildDestination,
-  verbose
+  verbose,
+  useModernBuildSystem = false
 ) {
+  const modernBuildSystemFragment = `-UseModernBuildSystem=${useModernBuildSystem ? 'YES' : 'NO'}`;
   const buildDest = `${relativeBuildDestination}-${type}`;
-  let buildCmd = `set -o pipefail && xcodebuild -workspace ${projectName}.xcworkspace -scheme ${projectName} -configuration ${configuration} -derivedDataPath ${buildDest} -UseModernBuildSystem=NO`,
+  let buildCmd = `set -o pipefail && xcodebuild -workspace ${projectName}.xcworkspace -scheme ${projectName} -configuration ${configuration} -derivedDataPath ${buildDest} ${modernBuildSystemFragment}`,
     pathToArtifact;
   if (type === 'simulator') {
     buildCmd += ` -sdk iphonesimulator CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO ARCHS="i386 x86_64" ONLY_ACTIVE_ARCH=NO | xcpretty`;
@@ -164,7 +174,7 @@ async function _createStandaloneContextAsync(args) {
   if (args.workspacePath) {
     workspaceSourcePath = args.workspacePath;
   } else {
-    workspaceSourcePath = path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'ios', 'default');
+    workspaceSourcePath = path.join(expoSourcePath, '..', 'shellAppWorkspaces', 'default', 'ios');
   }
   let { privateConfigFile, privateConfigData } = args;
 
@@ -192,10 +202,18 @@ async function _createStandaloneContextAsync(args) {
     });
   }
 
+  let bundleExecutable = args.type === 'archive' ? EXPOKIT_APP : EXPONENT_APP;
+  if (has(manifest, 'ios.infoPlist.CFBundleExecutable')) {
+    bundleExecutable = get(manifest, 'ios.infoPlist.CFBundleExecutable');
+  } else if (privateConfig && privateConfig.bundleIdentifier) {
+    bundleExecutable = pascalCase(privateConfig.bundleIdentifier);
+  }
+
   const buildFlags = StandaloneBuildFlags.createIos(args.configuration, {
     workspaceSourcePath,
     appleTeamId: args.appleTeamId,
     buildType: args.type,
+    bundleExecutable,
   });
   const context = StandaloneContext.createServiceContext(
     expoSourcePath,
@@ -245,9 +263,16 @@ async function configureAndCopyArchiveAsync(args) {
       );
     } else if (type === 'archive' || type === 'client') {
       const workspaceName = type === 'archive' ? EXPOKIT_APP : EXPONENT_APP;
+      if (context.build.ios.bundleExecutable !== workspaceName) {
+        await spawnAsync('/bin/mv', [workspaceName, context.build.ios.bundleExecutable], {
+          pipeToLogger: true,
+          cwd: context.data.archivePath,
+          loggerFields: { buildPhase: 'renaming bundle executable' },
+        });
+      }
       await spawnAsync('/bin/mv', [`${workspaceName}.xcarchive`, output], {
         pipeToLogger: true,
-        cwd: `${context.data.archivePath}/../../../..`,
+        cwd: path.join(context.data.archivePath, '../../../..'),
         loggerFields: { buildPhase: 'renaming archive' },
       });
     }
@@ -330,7 +355,8 @@ async function buildAndCopyArtifactAsync(args) {
     context.build.configuration,
     type,
     path.relative(context.build.ios.workspaceSourcePath, '../shellAppBase'),
-    verbose
+    verbose,
+    parseSdkMajorVersion(args.shellAppSdkVersion) > 33
   );
   const artifactDestPath = path.join('../shellAppBase-builds', type, context.build.configuration);
   logger.info(`\nFinished building, copying artifact to ${path.resolve(artifactDestPath)}...`);

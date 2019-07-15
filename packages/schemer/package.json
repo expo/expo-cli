@@ -1,6 +1,6 @@
 {
   "name": "@expo/schemer",
-  "version": "1.2.4",
+  "version": "1.2.6",
   "description": "Centralized scheme validation library for Expo",
   "main": "./build/index.js",
   "scripts": {
@@ -38,7 +38,7 @@
     "babel-preset-flow": "^6.23.0",
     "es6-error": "^4.0.2",
     "json-schema-traverse": "0.3.1",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.11",
     "probe-image-size": "^3.1.0",
     "read-chunk": "^2.0.0"
   },

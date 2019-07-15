@@ -17,6 +17,7 @@ import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
 import * as ConfigUtils from '@expo/config';
+import isPlainObject from 'lodash/isPlainObject';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
 
@@ -27,7 +28,6 @@ import * as IosWorkspace from './IosWorkspace';
 import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
-import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from '../project/ProjectUtils';
 import UserManager from '../User';
 import XDLError from '../XDLError';
@@ -89,7 +89,7 @@ async function _detachAsync(projectRoot, options) {
 
   if (hasIosDirectory && hasAndroidDirectory) {
     throw new XDLError(
-      ErrorCode.DIRECTORY_ALREADY_EXISTS,
+      'DIRECTORY_ALREADY_EXISTS',
       'Error detaching. `ios` and `android` directories already exist.'
     );
   }
@@ -271,6 +271,13 @@ async function _detachAsync(projectRoot, options) {
     packagesToInstall.push(sdkVersionConfig.expokitNpmPackage);
   }
 
+  const { packagesToInstallWhenEjecting } = sdkVersionConfig;
+  if (isPlainObject(packagesToInstallWhenEjecting)) {
+    Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
+      packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
+    });
+  }
+
   if (packagesToInstall.length) {
     await installPackagesAsync(projectRoot, packagesToInstall, {
       packageManager: options.packageManager,
@@ -374,7 +381,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
   // path generated inside IosShellApp. When we support more than one path, this needs to
   // be smarter.
   const expoRootDir = path.join(projectDir, '..', '..');
-  const workspaceSourcePath = path.join(projectDir, 'default');
+  const workspaceSourcePath = path.join(projectDir, 'ios');
   const buildFlags = StandaloneBuildFlags.createIos('Release', { workspaceSourcePath });
   const context = StandaloneContext.createServiceContext(
     expoRootDir,

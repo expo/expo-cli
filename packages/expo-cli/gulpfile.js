@@ -5,19 +5,21 @@ const babel = require('gulp-babel');
 const changed = require('gulp-changed');
 const plumber = require('gulp-plumber');
 const sourcemaps = require('gulp-sourcemaps');
-const fs = require('fs-extra');
 
 const packageJSON = require('./package.json');
 
 const paths = {
-  source: 'src/**/*.js',
+  source: {
+    js: 'src/**/*.js',
+    ts: 'src/**/*.ts',
+  },
   build: 'build',
 };
 
 const tasks = {
   babel() {
     return gulp
-      .src(paths.source)
+      .src([paths.source.js, paths.source.ts])
       .pipe(changed(paths.build))
       .pipe(plumber())
       .pipe(sourcemaps.init())
@@ -32,15 +34,11 @@ const tasks = {
   },
 
   watchBabel(done) {
-    gulp.watch(paths.source, tasks.babel);
+    gulp.watch([paths.source.js, paths.source.ts], tasks.babel);
     done();
   },
 };
 
 gulp.task('build', tasks.babel);
-gulp.task('watch', tasks.watchBabel);
-gulp.task('clean', done => {
-  fs.remove(paths.build, done);
-});
-
+gulp.task('watch', gulp.series(tasks.babel, tasks.watchBabel));
 gulp.task('default', gulp.series('watch'));

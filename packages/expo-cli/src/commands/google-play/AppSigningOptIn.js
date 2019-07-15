@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import _ from 'lodash';
 
-import { Credentials, User, ProjectUtils } from 'xdl';
+import { Credentials, UserManager, ProjectUtils } from '@expo/xdl';
 
 import log from '../../log';
 import prompt from '../../prompt';
@@ -30,7 +30,7 @@ export default class AppSigningOptInProcess {
   }
 
   async run() {
-    const { username } = (await User.ensureLoggedInAsync()) || {};
+    const { username } = (await UserManager.ensureLoggedInAsync()) || {};
     const { exp = {} } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
 
     await this.init(exp.slug);
@@ -117,7 +117,7 @@ export default class AppSigningOptInProcess {
     );
 
     log(`Saving upload certificate to ${this.publicUploadCert}`);
-    await Credentials.Android.exportCert(
+    await Credentials.Android.exportCertBase64(
       this.uploadKeystore,
       this.uploadKeystoreCredentials.keystorePassword,
       this.uploadKeystoreCredentials.keyAlias,

@@ -1,0 +1,14 @@
+{
+  "extends": "@expo/babel-preset-cli/tsconfig.base",
+  "include": ["src/**/*.ts"],
+  "compilerOptions": {
+    "outDir": "build",
+    "rootDir": "src"
+  },
+  "references": [
+    { "path": "../image-utils" },
+    { "path": "../json-file" },
+    { "path": "../osascript" },
+    { "path": "../config" }
+  ]
+}

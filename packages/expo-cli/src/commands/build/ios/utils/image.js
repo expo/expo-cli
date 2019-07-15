@@ -1,12 +1,19 @@
 import fs from 'fs-extra';
 import { PNG } from 'pngjs';
 import pick from 'lodash/pick';
-import { XDLError, ErrorCode } from 'xdl';
+import { XDLError } from '@expo/xdl';
+import request from 'request';
+import validator from 'validator';
 
-async function ensurePNGIsNotTransparent(imagePath) {
+async function ensurePNGIsNotTransparent(imagePathOrURL) {
   let hasAlreadyResolved = false;
+  const stream = validator.isURL(imagePathOrURL, {
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  })
+    ? request(imagePathOrURL)
+    : fs.createReadStream(imagePathOrURL);
   return new Promise((res, rej) => {
-    const stream = fs.createReadStream(imagePath);
     stream
       .pipe(new PNG({ filterType: 4 }))
       .on('metadata', ({ alpha }) => {
@@ -37,7 +44,7 @@ function validateAlphaChannelIsEmpty(data, { width, height }) {
       let idx = (width * y + x) * 4;
       if (data[idx + 3] !== 255) {
         throw new XDLError(
-          ErrorCode.INVALID_ASSETS,
+          'INVALID_ASSETS',
           `Your application icon can't have transparency if you wish to upload your app to Apple Store.`
         );
       }

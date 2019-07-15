@@ -2,7 +2,6 @@ import path from 'path';
 import generateFingerprint from './helpers/fingerprint';
 import { joinURI } from './helpers/uri';
 import { retrieveIcons, parseIcons } from './icons';
-import except from './helpers/except';
 
 const voidTags = [
   'area',
@@ -22,14 +21,6 @@ const voidTags = [
   'track',
   'wbr',
 ];
-
-const appleTags = {
-  'apple-touch-icon': 'link',
-  'apple-touch-startup-image': 'link',
-  'apple-mobile-web-app-title': 'meta',
-  'apple-mobile-web-app-capable': 'meta',
-  'apple-mobile-web-app-status-bar-style': 'meta',
-};
 
 function createFilename(filenameTemplate, json, shouldFingerprint) {
   const formatters = [
@@ -55,12 +46,15 @@ function createFilename(filenameTemplate, json, shouldFingerprint) {
 }
 
 // Create `manifest.json`
-function writeManifestToFile(manifest, options, publicPath, icons) {
-  const content = { ...manifest, icons };
+function writeManifestToFile(manifest, options, publicPath) {
+  let content = { ...manifest };
 
   if (content.orientation === 'omit') {
     delete content.orientation;
   }
+
+  // Object.keys(content).forEach(key => content[key] == null && delete content[key]);
+
   const json = JSON.stringify(content, null, 2);
   const file = path.parse(options.filename);
   const filename = createFilename(file.base, json, options.fingerprints);
@@ -82,8 +76,8 @@ export async function buildResources(self, publicPath = '') {
       parsedIconsResult = await parseIcons(results, self.options.fingerprints, publicPath);
     }
 
-    const { icons = {}, assets = [] } = parsedIconsResult;
-    const results = writeManifestToFile(self.manifest, self.options, publicPath, icons);
+    const { icons, assets = [] } = parsedIconsResult;
+    const results = writeManifestToFile({ ...self.manifest, icons }, self.options, publicPath);
     self.assets = [results, ...assets];
     return results;
   }
@@ -101,114 +95,27 @@ export function injectResources(compilation, assets, callback) {
   callback();
 }
 
-export function generateAppleTags(manifest, assets) {
+export function generateAppleSplashAndIconTags(assets) {
   let tags = {};
-  if (manifest.ios) {
-    let apple = {
-      'apple-mobile-web-app-title': 'Expo PWA',
-      'apple-mobile-web-app-capable': 'yes',
-      'apple-mobile-web-app-status-bar-style': 'default',
-    };
-    if (typeof manifest.ios === 'object') {
-      apple = {
-        ...apple,
-        ...manifest.ios,
-      };
-    }
-
-    for (let tag in apple) {
-      const type = appleTags[tag];
-      if (type) {
-        tags = applyTag(tags, type, formatAppleTag(tag, apple[tag]));
-      }
-    }
-    if (assets) {
-      for (let asset of assets) {
-        if (asset.ios && asset.ios.valid) {
-          if (asset.ios.valid === 'startup') {
-            tags = applyTag(tags, 'link', {
-              rel: 'apple-touch-startup-image',
-              media: asset.ios.media,
-              href: asset.ios.href,
-            });
-          } else {
-            tags = applyTag(tags, 'link', {
-              // apple-touch-icon-precomposed
-              rel: 'apple-touch-icon',
-              sizes: asset.ios.size,
-              href: asset.ios.href,
-            });
-          }
-        }
+  for (let asset of assets) {
+    if (asset.ios && asset.ios.valid) {
+      if (asset.ios.valid === 'startup') {
+        tags = applyTag(tags, 'link', {
+          rel: 'apple-touch-startup-image',
+          media: asset.ios.media,
+          href: asset.ios.href,
+        });
+      } else {
+        tags = applyTag(tags, 'link', {
+          // apple-touch-icon-precomposed
+          rel: 'apple-touch-icon',
+          sizes: asset.ios.size,
+          href: asset.ios.href,
+        });
       }
     }
   }
   return tags;
-}
-
-export function generateMaskIconLink(tags, assets) {
-  const svgAsset = assets.find(asset => /[^.]+$/.exec(asset.output)[0] === 'svg');
-  if (svgAsset) {
-    tags = applyTag(
-      tags,
-      'link',
-      Object.assign(
-        {
-          rel: 'mask-icon',
-          href: svgAsset.url,
-        },
-        !!svgAsset.color && { color: svgAsset.color }
-      )
-    );
-  }
-  return tags;
-}
-
-function formatAppleTag(tag, content) {
-  if (tag === 'apple-touch-icon') {
-    if (typeof content === 'string') {
-      return {
-        rel: tag,
-        href: content,
-      };
-    } else {
-      let sizes = content.sizes;
-      sizes = +sizes || parseInt(sizes);
-      return isNaN(sizes)
-        ? {
-            rel: tag,
-            href: content.href,
-          }
-        : {
-            rel: tag,
-            sizes,
-            href: content.href,
-          };
-    }
-  } else if (tag === 'apple-touch-startup-image') {
-    return {
-      rel: tag,
-      href: content,
-    };
-  } else if (tag === 'apple-mobile-web-app-title') {
-    return {
-      name: tag,
-      content,
-    };
-  } else if (tag === 'apple-mobile-web-app-capable') {
-    let value = content;
-    if (typeof content === 'boolean' || typeof content === 'number') value = content ? 'yes' : 'no';
-    return {
-      name: tag,
-      content: value,
-    };
-  } else if (tag === 'apple-mobile-web-app-status-bar-style') {
-    return {
-      name: tag,
-      content,
-    };
-  }
-  return null;
 }
 
 export function applyTag(obj, tag, content) {

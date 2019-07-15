@@ -6,7 +6,6 @@ import fs from 'fs';
 import path from 'path';
 import Schemer from '@expo/schemer';
 import Api from '../Api';
-import ErrorCode from '../ErrorCode';
 import * as ProjectUtils from './ProjectUtils';
 
 let _xdlSchemaJson = {};
@@ -69,7 +68,7 @@ async function _getSchemaJSONAsync(sdkVersion) {
     try {
       _xdlSchemaJson[sdkVersion] = await Api.xdlSchemaAsync(sdkVersion);
     } catch (e) {
-      if (e.code && e.code === ErrorCode.INVALID_JSON) {
+      if (e.code && e.code === 'INVALID_JSON') {
         throw new Error(`Couldn't read schema from server`);
       } else {
         throw e;

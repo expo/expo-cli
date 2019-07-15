@@ -24,30 +24,6 @@ const VALID_DISPLAY_TYPES = [
   'browser',
 ];
 
-const VALID_ICON_PURPOSE = [
-  /**
-   * A user agent can present this icon where space constraints and/or color requirements differ from those of the application icon.
-   */
-  'badge',
-  /**
-   * The image is designed with icon masks and safe zone in mind, such that any part of the image that is outside the safe zone can safely be ignored and masked away by the user agent.
-   */
-  'maskable',
-  /**
-   * The user agent is free to display the icon in any context (this is the default value).
-   */
-  'any',
-];
-
-const VALID_MULTI_PURPOSE_PLATFORMS = [
-  'play', // android
-  'itunes', // ios
-  'windows', // windows
-];
-
-// https://developers.google.com/web/fundamentals/web-app-manifest/#icons
-const REQUIRED_ICON_SIZES = [192, 512];
-
 const presets = {
   dir: ['ltr', 'rtl', 'auto'],
   orientation: [

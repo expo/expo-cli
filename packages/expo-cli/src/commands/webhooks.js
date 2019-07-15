@@ -1,4 +1,4 @@
-import { Webhooks, Exp } from 'xdl';
+import { Webhooks, Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import validator from 'validator';

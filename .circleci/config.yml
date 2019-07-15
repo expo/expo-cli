@@ -1,27 +1,101 @@
-# Javascript Node CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
-#
-version: 2
+version: 2.1
 
-jobs:
-  build:
+executors:
+  node-10:
     docker:
       - image: circleci/node:10
-    working_directory: ~/expo-dev-tools
+  node-12:
+    docker:
+      - image: circleci/node:12
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build:
+          name: build12
+          e: node-12
+      - build:
+          name: build10
+          e: node-10
+      - test-dev-tools:
+          e: node-12
+          requires:
+            - build12
+      - test-dev-tools:
+          e: node-10
+          requires:
+            - build10
+      - test-json-file:
+          e: node-12
+          requires:
+            - build12
+      - test-json-file:
+          e: node-10
+          requires:
+            - build10
+      - test-expo-codemod:
+          e: node-12
+          requires:
+            - build12
+      - test-expo-codemod:
+          e: node-10
+          requires:
+            - build10
+jobs:
+  build:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli
     steps:
       - checkout
       - restore_cache:
-          key: yarn-v3-{{ checksum "yarn.lock" }}
-      - run: yarn
-      - run: yarn bootstrap
-      - save_cache:
-          key: yarn-v3-{{ checksum "yarn.lock" }}
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-{{ parameters.e }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install Dependencies
+          command: yarn install --frozen-lockfile
+      - run:
+          name: Bootstrap (Link) Internal Dependencies
+          command: yarn bootstrap
+      - persist_to_workspace:
+          root: '~'
           paths:
-            - ~/yarn_cache
-      - run:
-          working_directory: ~/expo-dev-tools/packages/dev-tools
-          command: yarn test
-      - run:
-          working_directory: ~/expo-dev-tools/packages/webpack-pwa-manifest-plugin
-          command: yarn test
+            - expo-cli
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-{{ parameters.e }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
+  test-dev-tools:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/dev-tools
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-json-file:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/json-file
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-expo-codemod:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/expo-codemod
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test

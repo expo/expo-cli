@@ -5,7 +5,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import untildify from 'untildify';
-import { Android, Credentials } from 'xdl';
+import { Android, Credentials } from '@expo/xdl';
 import chalk from 'chalk';
 import get from 'lodash/get';
 

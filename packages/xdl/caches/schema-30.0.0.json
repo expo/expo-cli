@@ -16,6 +16,10 @@
         "type": "string",
         "pattern": "^[a-zA-Z0-9_\\-]+$"
       },
+      "owner": {
+        "description": "The username of the account under which this app is published. If not specified, the app is published as the currently signed-in user.",
+        "type": "string"
+      },
       "privacy": {
         "description":
           "Either `public` or `unlisted`. If not provided, defaults to `unlisted`. In the future `private` will be supported. `unlisted` hides the experience from search results.",
@@ -217,13 +221,11 @@
         "type": "boolean"
       },
       "scheme": {
-        "description":
-          "URL scheme to link into your app. For example, if we set this to `'demo'`, then demo:// URLs would open your app when tapped.",
+        "description": "URL scheme to link into your app. For example, if we set this to `'demo'`, then demo:// URLs would open your app when tapped.",
         "type": "string",
-        "pattern": "^[a-zA-Z][a-zA-Z0-9+.-]*$",
+        "pattern": "^[a-z][a-z0-9+.-]*$",
         "meta": {
-          "regexHuman":
-            "String beginning with a letter followed by any combination of letters, digits, \"+\", \".\" or \"-\"",
+          "regexHuman": "String beginning with a lowercase letter followed by any combination of lowercase letters, digits, \"+\", \".\" or \"-\"",
           "standaloneOnly": true
         }
       },

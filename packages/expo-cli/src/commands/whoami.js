@@ -2,14 +2,14 @@
  * @flow
  */
 
-import { User } from 'xdl';
+import { UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 
 import log from '../log';
 import CommandError from '../CommandError';
 
 async function action(options) {
-  const username = await User.getCurrentUsernameAsync();
+  const username = await UserManager.getCurrentUsernameAsync();
   if (username) {
     log(`Logged in as ${chalk.green(username)}`);
     log.raw(username);

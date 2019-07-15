@@ -96,13 +96,14 @@ async function cleanBackupAsync(plistPath, plistName, restoreOriginal = true) {
   let plistFilename = _getNormalizedPlistFilename(plistName);
   let configPlistName = path.join(plistPath, plistFilename);
   let configFilename = path.join(plistPath, `${plistName}.json`);
+  const backupPlistPath = `${configPlistName}.bak`;
 
-  if (restoreOriginal) {
-    await spawnAsyncThrowError('/bin/cp', [`${configPlistName}.bak`, configPlistName]);
+  if (restoreOriginal && (await fs.exists(backupPlistPath))) {
+    await fs.copy(backupPlistPath, configPlistName);
   }
 
-  await spawnAsyncThrowError('/bin/rm', [`${configPlistName}.bak`]);
-  await spawnAsyncThrowError('/bin/rm', [configFilename]);
+  await fs.remove(backupPlistPath);
+  await fs.remove(configFilename);
 }
 
 export { modifyAsync, cleanBackupAsync, createBlankAsync };

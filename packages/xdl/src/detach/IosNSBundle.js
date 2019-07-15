@@ -257,7 +257,9 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
 
     // app name
     infoPlist.CFBundleName = config.name;
-    infoPlist.CFBundleDisplayName = context.build.isExpoClientBuild() ? 'Expo' : config.name;
+    infoPlist.CFBundleDisplayName = context.build.isExpoClientBuild()
+      ? 'Expo (Custom)'
+      : config.name;
 
     // determine app linking schemes
     let linkingSchemes = config.scheme ? [config.scheme] : [];
@@ -368,6 +370,10 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
     if (context.type === 'user') {
       infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
       _logDeveloperInfoForLocalDevelopment(infoPlist);
+    }
+
+    if (context.type === 'service') {
+      infoPlist.CFBundleExecutable = context.build.ios.bundleExecutable;
     }
 
     return infoPlist;

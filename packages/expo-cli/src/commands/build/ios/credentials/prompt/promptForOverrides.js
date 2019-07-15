@@ -1,4 +1,4 @@
-import { Credentials } from 'xdl';
+import { Credentials } from '@expo/xdl';
 import ora from 'ora';
 import isObject from 'lodash/isObject';
 

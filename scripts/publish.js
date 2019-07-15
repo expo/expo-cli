@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 let path = require('path');
 let spawnAsync = require('@expo/spawn-async');
 
@@ -15,11 +16,23 @@ async function run() {
   console.log('🔎 Looking for packages to publish');
   let toPublish = [];
   for (const { name, version, location } of packages) {
-    const packageView = JSON.parse(
-      (await spawnAsync('npm', ['view', '--json', name], {
+    let packageViewStdout;
+    try {
+      packageViewStdout = (await spawnAsync('npm', ['view', '--json', name], {
         stdio: ['inherit', 'pipe', 'inherit'],
-      })).stdout
-    );
+      })).stdout;
+    } catch (e) {
+      const response = JSON.parse(e.stdout);
+      if (response.error && response.error.code === 'E404') {
+        toPublish.push({ name, location });
+        console.log(`* ${name} 🆕`);
+      } else {
+        throw e;
+      }
+      continue;
+    }
+
+    const packageView = JSON.parse(packageViewStdout);
     if (!packageView.versions.includes(version)) {
       toPublish.push({ name, location });
       console.log(`* ${name}`);

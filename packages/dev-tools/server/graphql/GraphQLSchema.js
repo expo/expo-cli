@@ -1,21 +1,21 @@
 /* @flow */
-
 import * as ConfigUtils from '@expo/config';
-import { $$asyncIterator } from 'iterall';
-import { makeExecutableSchema } from 'graphql-tools';
 import {
   Android,
   Config,
   Exp,
   Logger,
-  Simulator,
   Project,
   ProjectSettings,
   ProjectUtils,
+  Simulator,
   UrlUtils,
+  UserManager,
   UserSettings,
-  User,
-} from 'xdl';
+} from '@expo/xdl';
+import { makeExecutableSchema } from 'graphql-tools';
+import { $$asyncIterator } from 'iterall';
+
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
 // for prettier
@@ -519,7 +519,7 @@ const resolvers = {
       };
     },
     async user() {
-      const username = await User.getCurrentUsernameAsync();
+      const username = await UserManager.getCurrentUsernameAsync();
       return { username };
     },
   },

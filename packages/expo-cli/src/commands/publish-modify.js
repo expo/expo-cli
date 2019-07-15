@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { ApiV2, Project, User } from 'xdl';
+import { ApiV2, Project, UserManager } from '@expo/xdl';
 import log from '../log';
 import * as table from '../commands/utils/cli-table';
 
@@ -26,7 +26,7 @@ export default (program: any) => {
       if (!options.publishId) {
         throw new Error('You must specify a publish id. You can find ids using publish:history.');
       }
-      const user = await User.ensureLoggedInAsync();
+      const user = await UserManager.ensureLoggedInAsync();
       const api = ApiV2.clientForUser(user);
       try {
         let result = await api.postAsync('publish/set', {
@@ -53,7 +53,7 @@ export default (program: any) => {
       if (!options.channelId) {
         throw new Error('You must specify a channel id. You can find ids using publish:history.');
       }
-      const user = await User.getCurrentUserAsync();
+      const user = await UserManager.getCurrentUserAsync();
       const api = ApiV2.clientForUser(user);
       try {
         let result = await api.postAsync('publish/rollback', {

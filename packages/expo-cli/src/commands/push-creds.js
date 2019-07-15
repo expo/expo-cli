@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { ApiV2, Exp, User } from 'xdl';
+import { ApiV2, Exp, UserManager } from '@expo/xdl';
 
 import log from '../log';
 
@@ -24,7 +24,7 @@ export default (program: any) => {
 
       log('Logging in...');
 
-      let user = await User.getCurrentUserAsync();
+      let user = await UserManager.getCurrentUserAsync();
       let apiClient = ApiV2.clientForUser(user);
 
       log("Setting API key on Expo's servers...");
@@ -43,7 +43,7 @@ export default (program: any) => {
       const {
         args: { remotePackageName },
       } = await Exp.getPublishInfoAsync(projectDir);
-      let user = await User.getCurrentUserAsync();
+      let user = await UserManager.getCurrentUserAsync();
       let apiClient = ApiV2.clientForUser(user);
 
       let result = await apiClient.getAsync(`credentials/push/android/${remotePackageName}`);
@@ -65,7 +65,7 @@ export default (program: any) => {
       } = await Exp.getPublishInfoAsync(projectDir);
 
       log('Logging in...');
-      let user = await User.getCurrentUserAsync();
+      let user = await UserManager.getCurrentUserAsync();
       let apiClient = ApiV2.clientForUser(user);
 
       log("Deleting API key from Expo's servers...");
