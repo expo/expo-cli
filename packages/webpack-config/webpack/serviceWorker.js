@@ -35,11 +35,13 @@ self.addEventListener('notificationclick', event => {
 
       let appClient;
 
+      let path = event.notification.data._webPath || '/';
+
       // Let's see if we already have a window open:
       for (const client of allClients) {
         const url = new URL(client.url);
 
-        if (url.pathname === '/') {
+        if (url.pathname === path) {
           // Excellent, let's use it!
           client.focus();
           appClient = client;
@@ -50,7 +52,7 @@ self.addEventListener('notificationclick', event => {
       // If we didn't find an existing window,
       // open a new one:
       if (!appClient) {
-        appClient = await self.clients.openWindow('/');
+        appClient = await self.clients.openWindow(path);
       }
 
       // Message the client:
