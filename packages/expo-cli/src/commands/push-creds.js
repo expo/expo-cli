@@ -75,15 +75,15 @@ export default (program: any) => {
       log('All done!');
     }, true);
 
+  const vapidSubjectDescription =
+    'URL or `mailto:` URL which provides a point of contact in case the push service needs to contact the message sender.';
+
   program
     .command('push:web:upload [project-dir]')
-    .description('Uploads a VAPID key for web push notifications.')
+    .description('Uploads VAPID key pair and VAPID subject for web push notifications.')
     .option('--vapid-pubkey [vapid-public-key]', 'URL-safe base64-encoded VAPID public key.')
     .option('--vapid-pvtkey [vapid-private-key]', 'URL-safe base64-encoded VAPID private key.')
-    .option(
-      '--vapid-subject [vapid-subject]',
-      'URL or `mailto:` URL which provides a point of contact in case the push service needs to contact the message sender.'
-    )
+    .option('--vapid-subject [vapid-subject]', vapidSubjectDescription)
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.vapidPubkey || !options.vapidPvtkey || !options.vapidSubject) {
         throw new Error(
@@ -111,6 +111,40 @@ export default (program: any) => {
       });
 
       log('All done!');
+    }, true);
+
+  program
+    .command('push:web:generate [project-dir]')
+    .description('Generates VAPID key pair for web push notifications.')
+    .option('--vapid-subject [vapid-subject]', vapidSubjectDescription)
+    .asyncActionProjectDir(async (projectDir, options) => {
+      if (!options.vapidSubject) {
+        throw new Error('Must specify --vapid-subject.');
+      }
+
+      log('Reading project configuration...');
+
+      const {
+        args: { remotePackageName },
+      } = await Exp.getPublishInfoAsync(projectDir);
+
+      log('Logging in...');
+
+      let user = await UserManager.getCurrentUserAsync();
+      let apiClient = ApiV2.clientForUser(user);
+
+      log("Generating and setting VAPID keys on Expo's servers...");
+
+      let results = await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
+        vapidSubject: options.vapidSubject,
+      });
+
+      log('All done!');
+      log('Your VAPID public key is: ' + results.vapidPublicKey);
+      log('Your VAPID private key is: ' + results.vapidPrivateKey);
+      log(
+        "Don't forget to also add the generated public key to your `app.json` file! Learn more here: https://docs.expo.io/versions/latest/guides/using-vapid/"
+      );
     }, true);
 
   program
