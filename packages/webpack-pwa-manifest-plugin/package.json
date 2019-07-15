@@ -33,13 +33,13 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@expo/config": "^1.0.3",
     "@expo/image-utils": "^0.2.2",
     "css-color-names": "^1.0.1",
     "mime": "^2.4.0",
     "tempy": "^0.3.0"
   },
   "devDependencies": {
+    "@expo/config": "^1.0.3",
     "babel-eslint": "^8.2.2",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-transform-flow-strip-types": "^6.8.0",

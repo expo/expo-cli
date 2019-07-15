@@ -25,10 +25,7 @@
     },
     "platforms": ["android", "ios", "web"],
     "web": {
-      "shortName": "Demo",
-      "build": {
-        "report": false
-      }
+      "shortName": "Demo"
     }
   }
 }
