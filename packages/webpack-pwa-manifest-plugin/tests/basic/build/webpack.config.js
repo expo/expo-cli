@@ -12,12 +12,12 @@ const validatedConfig = ensurePWAConfig(config, absolute, {
   templateIcon: path.resolve(__dirname, '../..', 'icon.png'),
 });
 
-module.exports = {
+module.exports = async () => ({
   entry: path.join(__dirname, '../App.js'),
   output: {
     path: path.join(__dirname, '../output'),
     publicPath: '/',
-    filename: '[name].[hash].bundle.js',
+    filename: 'bundle.js',
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -31,11 +31,12 @@ module.exports = {
         removeAttributeQuotes: true,
         removeComments: true,
       },
+      template: path.join(__dirname, '../../index.html'),
     }),
     new WebpackPwaManifest(validatedConfig, {
       publicPath: '/',
-      noResources: true,
+      noResources: false,
       filename: '/manifest.json',
     }),
   ],
-};
+});

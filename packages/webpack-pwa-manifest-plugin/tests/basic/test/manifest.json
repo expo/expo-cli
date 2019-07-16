@@ -2,18 +2,7 @@
   "background_color": "#4d5fab",
   "description": "Official app for things.",
   "dir": "auto",
-  "display": "fullscreen",
-  "icons": {},
-  "startupImages": [
-    {
-      "resizeMode": "contain",
-      "color": "#4d5fab",
-      "src": "/Users/evanbacon/Documents/GitHub/expo-cli/packages/webpack-pwa-manifest-plugin/tests/icon.png",
-      "supportsTablet": true,
-      "orientation": "portrait",
-      "destination": "assets/splash"
-    }
-  ],
+  "display": "standalone",
   "lang": "en",
   "name": "Demo App",
   "orientation": "portrait",
@@ -32,8 +21,21 @@
   "short_name": "Demo",
   "start_url": ".",
   "theme_color": "#4d5fab",
-  "ios": {
-    "apple-mobile-web-app-title": "Demo",
-    "apple-mobile-web-app-status-bar-style": "default"
-  }
+  "icons": [
+    {
+      "src": "/apple/icons/icon_180x180.680b5287bdc414c3b6f1e263403c54ce.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple/icons/icon_192x192.0be1aa031c17d6357cb7a44931cb83ac.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple/icons/icon_512x512.13cc6fb0226acb5fbd694c9910fb1a61.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

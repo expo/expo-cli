@@ -1,5 +1,6 @@
 {
   "expo": {
+    "entryPoint": "./App.js",
     "name": "Demo App",
     "description": "Official app for things.",
     "slug": "demo-app",
