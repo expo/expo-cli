@@ -372,6 +372,10 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
       _logDeveloperInfoForLocalDevelopment(infoPlist);
     }
 
+    if (context.type === 'service') {
+      infoPlist.CFBundleExecutable = context.build.ios.bundleExecutable;
+    }
+
     return infoPlist;
   });
   return result;

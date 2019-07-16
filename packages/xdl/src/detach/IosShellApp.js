@@ -5,6 +5,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
+import get from 'lodash/get';
+import has from 'lodash/has';
+import pascalCase from 'pascal-case';
 
 import {
   getManifestAsync,
@@ -199,10 +202,18 @@ async function _createStandaloneContextAsync(args) {
     });
   }
 
+  let bundleExecutable = args.type === 'client' ? EXPONENT_APP : EXPOKIT_APP;
+  if (has(manifest, 'ios.infoPlist.CFBundleExecutable')) {
+    bundleExecutable = get(manifest, 'ios.infoPlist.CFBundleExecutable');
+  } else if (privateConfig && privateConfig.bundleIdentifier) {
+    bundleExecutable = pascalCase(privateConfig.bundleIdentifier);
+  }
+
   const buildFlags = StandaloneBuildFlags.createIos(args.configuration, {
     workspaceSourcePath,
     appleTeamId: args.appleTeamId,
     buildType: args.type,
+    bundleExecutable,
   });
   const context = StandaloneContext.createServiceContext(
     expoSourcePath,
@@ -236,11 +247,19 @@ async function configureAndCopyArchiveAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await IosNSBundle.configureAsync(context);
   if (output) {
+    const workspaceName = type === 'client' ? EXPONENT_APP : EXPOKIT_APP;
+    if (context.build.ios.bundleExecutable !== workspaceName) {
+      await spawnAsync('/bin/mv', [workspaceName, context.build.ios.bundleExecutable], {
+        pipeToLogger: true,
+        cwd: context.data.archivePath,
+        loggerFields: { buildPhase: 'renaming bundle executable' },
+      });
+    }
     if (type === 'simulator') {
       const archiveName = context.config.slug.replace(/[^0-9a-z_-]/gi, '_');
       const appReleasePath = path.resolve(context.data.archivePath, '..');
       await spawnAsync(
-        `mv ${EXPOKIT_APP}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+        `mv ${workspaceName}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
         null,
         {
           stdoutOnly: true,
@@ -251,10 +270,9 @@ async function configureAndCopyArchiveAsync(args) {
         }
       );
     } else if (type === 'archive' || type === 'client') {
-      const workspaceName = type === 'archive' ? EXPOKIT_APP : EXPONENT_APP;
       await spawnAsync('/bin/mv', [`${workspaceName}.xcarchive`, output], {
         pipeToLogger: true,
-        cwd: `${context.data.archivePath}/../../../..`,
+        cwd: path.join(context.data.archivePath, '../../../..'),
         loggerFields: { buildPhase: 'renaming archive' },
       });
     }

@@ -166,7 +166,7 @@ async function ejectToBareAsync(projectRoot, options) {
   await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
   log(chalk.green('Wrote to app.json, please update it manually in the future.'));
 
-  let reactNativeUnimodulesVersion = '*';
+  let defaultDependencies = {};
 
   /**
    * Extract the template and copy it over
@@ -177,7 +177,7 @@ async function ejectToBareAsync(projectRoot, options) {
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
     let packageJson = fse.readJsonSync(path.join(tempDir, 'package.json'));
-    reactNativeUnimodulesVersion = packageJson.dependencies['react-native-unimodules'];
+    defaultDependencies = packageJson.dependencies;
     log('Successfully copied template native code.');
   } catch (e) {
     log(chalk.red(e.message));
@@ -195,13 +195,15 @@ async function ejectToBareAsync(projectRoot, options) {
   pkgJson.scripts.ios = 'react-native run-ios';
   pkgJson.scripts.android = 'react-native run-android';
 
-  const { sdkVersion } = exp;
-  const versions = await Versions.versionsAsync();
-  const reactNativeVersion = versions.sdkVersions[sdkVersion].facebookReactNativeVersion;
-  pkgJson.dependencies['react-native'] = reactNativeVersion;
-
-  // TODO: how should we version react-native-unimodules to match up with react-native version?
-  pkgJson.dependencies['react-native-unimodules'] = reactNativeUnimodulesVersion;
+  // The template may have some dependencies beyond react/react-native/react-native-unimodules,
+  // for example RNGH and Reanimated. We should prefer the version that is already being used
+  // in the project for those, but swap the react/react-native/react-native-unimodules versions
+  // with the ones in the template.
+  let combinedDependencies = { ...defaultDependencies, ...pkgJson.dependencies };
+  combinedDependencies['react-native'] = defaultDependencies['react-native'];
+  combinedDependencies['react'] = defaultDependencies['react'];
+  combinedDependencies['react-native-unimodules'] = defaultDependencies['react-native-unimodules'];
+  pkgJson.dependencies = combinedDependencies;
 
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
 
