@@ -202,7 +202,7 @@ async function _createStandaloneContextAsync(args) {
     });
   }
 
-  let bundleExecutable = args.type === 'archive' ? EXPOKIT_APP : EXPONENT_APP;
+  let bundleExecutable = args.type === 'client' ? EXPONENT_APP : EXPOKIT_APP;
   if (has(manifest, 'ios.infoPlist.CFBundleExecutable')) {
     bundleExecutable = get(manifest, 'ios.infoPlist.CFBundleExecutable');
   } else if (privateConfig && privateConfig.bundleIdentifier) {
@@ -247,11 +247,19 @@ async function configureAndCopyArchiveAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await IosNSBundle.configureAsync(context);
   if (output) {
+    const workspaceName = type === 'client' ? EXPONENT_APP : EXPOKIT_APP;
+    if (context.build.ios.bundleExecutable !== workspaceName) {
+      await spawnAsync('/bin/mv', [workspaceName, context.build.ios.bundleExecutable], {
+        pipeToLogger: true,
+        cwd: context.data.archivePath,
+        loggerFields: { buildPhase: 'renaming bundle executable' },
+      });
+    }
     if (type === 'simulator') {
       const archiveName = context.config.slug.replace(/[^0-9a-z_-]/gi, '_');
       const appReleasePath = path.resolve(context.data.archivePath, '..');
       await spawnAsync(
-        `mv ${EXPOKIT_APP}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+        `mv ${workspaceName}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
         null,
         {
           stdoutOnly: true,
@@ -262,14 +270,6 @@ async function configureAndCopyArchiveAsync(args) {
         }
       );
     } else if (type === 'archive' || type === 'client') {
-      const workspaceName = type === 'archive' ? EXPOKIT_APP : EXPONENT_APP;
-      if (context.build.ios.bundleExecutable !== workspaceName) {
-        await spawnAsync('/bin/mv', [workspaceName, context.build.ios.bundleExecutable], {
-          pipeToLogger: true,
-          cwd: context.data.archivePath,
-          loggerFields: { buildPhase: 'renaming bundle executable' },
-        });
-      }
       await spawnAsync('/bin/mv', [`${workspaceName}.xcarchive`, output], {
         pipeToLogger: true,
         cwd: path.join(context.data.archivePath, '../../../..'),
@@ -314,13 +314,16 @@ async function createTurtleWorkspaceAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await _createTurtleWorkspaceAsync(context, args);
   logger.info(
-    `Created turtle workspace at ${context.build.ios
-      .workspaceSourcePath}. You can open and run this in Xcode.`
+    `Created turtle workspace at ${
+      context.build.ios.workspaceSourcePath
+    }. You can open and run this in Xcode.`
   );
   if (context.config) {
     await IosNSBundle.configureAsync(context);
     logger.info(
-      `The turtle workspace was configured for the url ${args.url}. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
+      `The turtle workspace was configured for the url ${
+        args.url
+      }. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
     );
   } else {
     logger.info(
