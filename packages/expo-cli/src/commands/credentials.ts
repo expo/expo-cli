@@ -1,41 +1,41 @@
 import {
   runCredentialsManager,
-  CredentialsManagerOptions,
   Context,
 } from '../credentials';
-import { SummaryAndroid, Summary } from '../credentials/views/Summary';
+import { SelectAndroidExperience, SelectPlatform } from '../credentials/views/Select';
 import { CommanderStatic } from 'commander';
 
 export default function (program: CommanderStatic) {
+  program
+    .command('credentials:manager:android')
+    .description('Manage your Android credentials')
+    .asyncAction(async () => {
+      const projectDir = process.cwd();
+      const context = new Context();
+      await context.init(projectDir);
+      await runCredentialsManager(context, new SelectAndroidExperience());
+    }, /* skip project validation */ true);
+
   // @ts-ignore disabled for now
-  return 
+  return;
+
   program
     .command('credentials:manager')
     .description('Manage your credentials')
-    .asyncAction(async (options: CredentialsManagerOptions) => {
+    .asyncAction(async () => {
       const projectDir = process.cwd();
-      const context = new Context(new Summary());
-      await context.init(projectDir, options);
-      await runCredentialsManager(context);
+      const context = new Context();
+      await context.init(projectDir);
+      await runCredentialsManager(context, new SelectPlatform());
     }, /* skip project validation */ true);
 
   program
     .command('credentials:manager:ios')
-    .description('Manage your credentials')
-    .asyncAction(async (options: CredentialsManagerOptions) => {
+    .description('Manage your iOS credentials')
+    .asyncAction(async () => {
       const projectDir = process.cwd();
-      const context = new Context(new SummaryAndroid()); // TODO: implement ios part
-      await context.init(projectDir, options);
-      await runCredentialsManager(context);
-    }, /* skip project validation */ true);
-
-  program
-    .command('credentials:manager:android')
-    .description('Manage your credentials')
-    .asyncAction(async (options: CredentialsManagerOptions) => {
-      const projectDir = process.cwd();
-      const context = new Context(new SummaryAndroid());
-      await context.init(projectDir, options);
-      await runCredentialsManager(context);
+      const context = new Context(); // TODO: implement ios part
+      await context.init(projectDir);
+      await runCredentialsManager(context, new SelectAndroidExperience());
     }, /* skip project validation */ true);
 };

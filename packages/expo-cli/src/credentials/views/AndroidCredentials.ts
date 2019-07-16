@@ -1,4 +1,4 @@
-import { AndroidCredentials as Credentials } from '@expo/xdl';
+import { AndroidCredentials as Credentials, ApiV2 } from '@expo/xdl';
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 import chalk from 'chalk';
@@ -58,9 +58,9 @@ export class ExperienceView implements IView {
         name: 'action',
         message: 'What do you want to do?',
         choices: [
-          { value: 'update-keystore', name: 'Update upload keystore' },
-          { value: 'update-fcm-key', name: 'Update FCM api key' },
-          { value: 'fetch-keystore', name: 'Download keystore from expo servers' },
+          { value: 'update-keystore', name: 'Update Upload Keystore' },
+          { value: 'update-fcm-key', name: 'Update FCM Api Key' },
+          { value: 'fetch-keystore', name: 'Download Keystore from the Expo servers' },
           // { value: 'fetch-public-cert', name: 'Extract public cert from keystore' },
           // {
           //   value: 'fetch-private-signing-key',
@@ -91,7 +91,7 @@ export class ExperienceView implements IView {
   }
 }
 
-class UpdateKeystore implements IView {
+export class UpdateKeystore implements IView {
   experience: string;
 
   constructor(experience: string) {
@@ -101,11 +101,11 @@ class UpdateKeystore implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const keystore = await this.provideOrGenerate(ctx);
     await ctx.api.putAsync(`credentials/android/keystore/${this.experience}`, { keystore });
-    log(chalk.green('Updated successfully'));
+    log(chalk.green('Updated Keystore successfully'));
     return null;
   }
 
-  async provideOrGenerate(context: Context): Promise<Credentials.Keystore> {
+  async provideOrGenerate(ctx: Context): Promise<Credentials.Keystore> {
     const providedKeystore = await askForUserProvided(keystoreSchema);
     if (providedKeystore) {
       return providedKeystore;
@@ -119,7 +119,7 @@ class UpdateKeystore implements IView {
       const keystoreData = await Credentials.generateUploadKeystore(
         tmpKeystoreName,
         '---------------', // TODO: add android package (it's not required)
-        this.experience,
+        `@${ctx.user.username}/${this.experience}`,
       );
 
       return {
@@ -128,7 +128,7 @@ class UpdateKeystore implements IView {
       };
     } catch (error) {
       log.warn(
-        "If you don't provide keystore it will be generated on our servers durring next build"
+        "If you don't provide your own Android Kkeystore, it will be generated on our servers durring next build"
       );
       throw error;
     } finally {
@@ -139,7 +139,7 @@ class UpdateKeystore implements IView {
   }
 }
 
-class UpdateFcmKey implements IView {
+export class UpdateFcmKey implements IView {
   experience: string;
 
   constructor(experience: string) {
@@ -151,8 +151,8 @@ class UpdateFcmKey implements IView {
       {
         type: 'input',
         name: 'fcmApiKey',
-        message: 'FCM api key',
-        validate: value => value.length > 0 || "FCM api key can't be empty",
+        message: 'FCM Api Key',
+        validate: value => value.length > 0 || "FCM Api Key can't be empty",
       },
     ]);
 
@@ -162,45 +162,55 @@ class UpdateFcmKey implements IView {
   }
 }
 
-class DownloadKeystore implements IView {
+export class DownloadKeystore implements IView {
   experience: string;
   credentials: Credentials.Keystore | null;
 
-  constructor(experience: string, credentials: Credentials.Keystore | null) {
+  constructor(experience: string, credentials: Credentials.Keystore | null = null) {
     this.credentials = credentials;
     this.experience = experience;
   }
 
   async open(ctx: Context): Promise<IView | null> {
     const keystoreName = `${this.experience}.bak.jks`;
+    const { confirm } = await prompt({
+      type: 'confirm',
+      name: 'confirm',
+      message: 'Do you want to display the Android Keystore credentials?',
+    });
+    log(chalk.green(`Saving Keystore to ${keystoreName}`));
+    await this.save(ctx, keystoreName, confirm); 
+    return null;
+  }
 
-    if (await fs.pathExists(keystoreName)) {
-      await fs.unlink(keystoreName);
+  async fetch(ctx: Context): Promise<void> {
+    const credentials = await ApiV2.clientForUser(ctx.user).getAsync(`credentials/android/${ctx.manifest.slug}`);
+    if (credentials && credentials.keystore) {
+      this.credentials = credentials.keystore;
+    }
+  }
+
+  async save(ctx: Context, keystorePath: string, shouldLog: boolean = false): Promise<void> {
+    if (await fs.pathExists(keystorePath)) {
+      await fs.unlink(keystorePath);
     }
     const { keystore, keystorePassword, keyAlias, keyPassword }: any = this.credentials || {}; 
     if (!keystore || !keystorePassword || !keyAlias || !keyPassword) {
-      log.warn('There is no valid keystore defined for this app');
-      return null;
+      log.warn('There is no valid Keystore defined for this app');
+      return;
     }
 
     const storeBuf = Buffer.from(keystore, 'base64');
-    await fs.writeFile(keystoreName, storeBuf);
-    const { confirm } = await prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: "Do you wan't to display keystore credentials?",
-      },
-    ]);
+    await fs.writeFile(keystorePath, storeBuf);
 
-    if (confirm) {
-      log(`
+    if (shouldLog) {
+      log(`Keystore credentials
   Keystore password: ${chalk.bold(keystorePassword)}
   Key alias:         ${chalk.bold(keyAlias)}
   Key password:      ${chalk.bold(keyPassword)}
+
+  Path to Keystore:  ${keystorePath}
       `);
     }
-    log(chalk.green(`Saved keystore to ${keystoreName}`));
-    return null;
   }
 }

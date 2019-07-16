@@ -13,11 +13,11 @@ export type AndroidCredentials = {
 
 export const keystoreSchema: CredentialSchema<Android.Keystore> = {
   id: 'keystore',
-  name: 'Android keystore',
+  name: 'Android Keystore',
   required: ['keystore', 'keystorePassword', 'keyAlias', 'keyPassword'],
   questions: {
     keystore: {
-      question: 'Path to keystore file.',
+      question: 'Path to the Keystore file.',
       type: 'file',
       base64Encode: true,
     },

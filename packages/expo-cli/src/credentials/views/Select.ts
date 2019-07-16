@@ -5,11 +5,12 @@ import log from '../../log';
 import * as androidCredentials from './AndroidCredentials';
 import { Context, IView } from '../context';
 import { AndroidCredentials } from '../credentials';
+import { changeMainView } from '../route';
 import {
   displayAndroidCredentials,
 } from '../actions/list';
 
-export class Summary implements IView {
+export class SelectPlatform implements IView {
   async open(context: Context): Promise<IView | null> {
     const { platform } = await prompt([
       {
@@ -20,12 +21,13 @@ export class Summary implements IView {
         choices: ['ios', 'android'],
       },
     ]);
-    context.mainView = platform === 'ios' ? new SummaryAndroid() : new SummaryAndroid();
-    return context.mainView;
+    const view = platform === 'ios' ? new SelectPlatform() : new SelectAndroidExperience();
+    changeMainView(view);
+    return view;
   }
 }
 
-export class SummaryAndroid implements IView {
+export class SelectAndroidExperience implements IView {
   androidCredentials: AndroidCredentials[] = [];
   askAboutProjectMode = true;
 
@@ -37,12 +39,11 @@ export class SummaryAndroid implements IView {
           type: 'confirm',
           name: 'runProjectContext',
           message: `You are currently in a directory with ${experienceName} experience. Do you want to select it?`,
-          default: false,
         },
       ]);
       if (runProjectContext) {
         const view = new androidCredentials.ExperienceView(ctx.manifest.slug, null);
-        ctx.mainView = view;
+        changeMainView(view);
         return view;
       }
     }
@@ -70,7 +71,7 @@ export class SummaryAndroid implements IView {
     if (matchName && matchName[1]) {
       return new androidCredentials.ExperienceView(matchName[1], this.androidCredentials[appIndex]);
     } else {
-      log.error('invalid experience name');
+      log.error('Invalid experience name');
     }
     return null;
   }
@@ -81,10 +82,10 @@ export async function askQuit(mainpage: IView): Promise<IView> {
     {
       type: 'list',
       name: 'selected',
-      message: 'Do you want to quit credential manager',
+      message: 'Do you want to quit Credential Manager',
       choices: [
-        { value: 'exit', name: 'Quit credential manager' },
-        { value: 'mainpage', name: 'Go back to the credentials summary' },
+        { value: 'exit', name: 'Quit Credential Manager' },
+        { value: 'mainpage', name: 'Go back to experience overview.' },
       ],
     },
   ]);

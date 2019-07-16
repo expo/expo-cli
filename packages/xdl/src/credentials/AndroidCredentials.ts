@@ -32,37 +32,6 @@ type KeystoreInfo = {
   keyAlias: string,
 };
 
-export async function fetchKeystore(experienceName: string) {
-  return await ApiV2
-}
-
-export async function backupCredentials(
-  credentials: Keystore,
-  outputPath: string,
-  log: any = logger.global,
-  logSecrets: boolean = true
-) {
-  const { keystore, keystorePassword, keyAlias, keyPassword } = credentials;
-
-  const storeBuf = Buffer.from(keystore, 'base64');
-  log.info(`Writing keystore to ${outputPath}...`);
-  await fs.writeFile(outputPath, storeBuf);
-  if (logSecrets) {
-    log.info('Done writing keystore to disk.');
-    log.info(`${chalk.yellow('Save these important values as well:')}
-
-  Keystore password: ${chalk.bold(keystorePassword)}
-  Key alias:         ${chalk.bold(keyAlias)}
-  Key password:      ${chalk.bold(keyPassword)}
-  `);
-  }
-
-  return {
-    keystorePassword,
-    keyAlias,
-    keyPassword,
-  };
-}
 
 export async function exportCertBinary(
   { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
@@ -86,7 +55,7 @@ export async function exportCertBinary(
   } catch (err) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
-      log.info('keytool is part of OpenJDK: https://openjdk.java.net/');
+      log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
       log.info('Also make sure that keytool is in your PATH after installation.');
     }
     throw err;
@@ -116,7 +85,7 @@ export async function exportCertBase64(
   } catch (err) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
-      log.info('keytool is part of OpenJDK: https://openjdk.java.net/');
+      log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
       log.info('Also make sure that keytool is in your PATH after installation.');
     }
     throw err;
@@ -136,7 +105,7 @@ export async function exportPrivateKey(
     nodePty = require('node-pty-prebuilt');
   } catch (err) {
     try {
-      log.info('Installing node-pty-prebuilt in temporary directory');
+      log.info('Installing node-pty-prebuilt in a temporary directory');
       await fs.mkdirp(ptyTmpDir);
       await spawnAsync('npm', ['init', '--yes'], { cwd: ptyTmpDir });
       await spawnAsync('npm', ['install', 'node-pty-prebuilt'], {
@@ -208,7 +177,7 @@ export async function exportPrivateKey(
       child.write(keystorePassword + NEWLINE);
       child.write(keyPassword + NEWLINE);
     });
-    log.info(`Exported and encrypted private app signing key to file ${outputPath}`);
+    log.info(`Exported and encrypted private App Signing Key to file ${outputPath}`);
   } catch (error) {
     throw new Error(`PEPK tool failed with return code ${error}`);
   } finally {
@@ -224,7 +193,7 @@ export async function logKeystoreHashes(
   const certFile = `${keystorePath}.cer`;
   try {
     await exportCertBinary(keystoreInfo, certFile);
-    const data = fs.readFileSync(certFile);
+    const data = await fs.readFile(certFile);
     const googleHash = crypto
       .createHash('sha1')
       .update(data)
@@ -246,7 +215,7 @@ export async function logKeystoreHashes(
   } catch (err) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
-      log.info('keytool is part of OpenJDK: https://openjdk.java.net/');
+      log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
       log.info('Also make sure that keytool is in your PATH after installation.');
     }
     if (err.stdout) {
@@ -258,7 +227,7 @@ export async function logKeystoreHashes(
     throw err;
   } finally {
     try {
-      fs.unlinkSync(certFile);
+      await fs.unlink(certFile);
     } catch (err) {
       if (err.code !== 'ENOENT') {
         log.error(err);

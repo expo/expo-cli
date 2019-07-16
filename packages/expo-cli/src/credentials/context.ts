@@ -1,19 +1,13 @@
-import { ApiV2, Exp, User, UserManager, ProjectUtils } from '@expo/xdl';
+import fs from 'fs-extra';
+import path from 'path';
+import { ApiV2, Exp, User, UserManager, ProjectUtils, Doctor } from '@expo/xdl';
 import log from '../log';
-import { Summary, askQuit } from './views/Summary';
-
-export type CredentialsManagerOptions = {
-  
-}
 
 export interface IView {
   open(ctx: Context): Promise<IView | null>
 };
 
-
 export class Context {
-  mainView: IView;
-  
   _hasProjectContext: boolean = false; 
   _user?: User;
   _manifest: any;
@@ -32,13 +26,9 @@ export class Context {
     return this._apiClient as ApiV2;
   }
 
-  constructor(mainView: IView) {
-    this.mainView = mainView;
-  }
-
-
-  async init(projectDir: string, options: CredentialsManagerOptions) {
-    if (true /* TODO has project context */) {
+  async init(projectDir: string) {
+    const status = await Doctor.validateLowLatencyAsync(projectDir);
+    if (status !== Doctor.FATAL) {
       /* This manager does not need to work in project context */
       const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
       this._manifest = exp;

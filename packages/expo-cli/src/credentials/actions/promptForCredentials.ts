@@ -2,6 +2,7 @@ import path from 'path';
 import untildify from 'untildify';
 import fs from 'fs-extra';
 import get from 'lodash/get';
+import once from 'lodash/once';
 
 import prompt, { Question as PromptQuestion } from '../../prompt';
 import log from '../../log';
@@ -30,18 +31,18 @@ export type CredentialSchema<T> = {
 
 
 
-const EXPERT_PROMPT = `
+const EXPERT_PROMPT = once(() => log.warn(`
 WARNING! In this mode, we won't be able to make sure that your crdentials are valid.
 Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!
 
-When building for ios make sure you've created your app ID on the developer portal, that your app ID
+When building for IOS make sure you've created your App ID on the Apple Developer Portal, that your App ID
 is in app.json as \`bundleIdentifier\`, and that the provisioning profile you
-upload matches that team ID and app ID.
-`;
+upload matches that Team ID and App ID.
+`));
 
 export async function askForUserProvided<T extends Results>(schema: CredentialSchema<T>): Promise<T | null>  {
   if (await willUserProvideCredentialsType(schema.name)) {
-    log.warn(EXPERT_PROMPT);
+    EXPERT_PROMPT();
     return await getCredentialsFromUser(schema);
   }
   return null;
