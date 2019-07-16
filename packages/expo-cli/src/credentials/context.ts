@@ -39,7 +39,3 @@ export class Context {
     this._apiClient = ApiV2.clientForUser(this.user);
   }
 }
-
-
-
-
