@@ -163,9 +163,8 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
 
   try {
     // We generate the stats.json file in the webpack-config
-    const { stats, warnings } = await new Promise((resolve, reject) =>
+    const { warnings } = await new Promise((resolve, reject) =>
       compiler.run((error, stats) => {
-        console.log(error, stats.hasErrors(), stats.hasWarnings());
         let messages;
         if (error) {
           if (!error.message) {
