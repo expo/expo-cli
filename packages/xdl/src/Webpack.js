@@ -2,6 +2,8 @@
  * @flow
  */
 import * as ConfigUtils from '@expo/config';
+import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
+import printBuildError from 'react-dev-utils/printBuildError';
 import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
@@ -161,23 +163,71 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
 
   try {
     // We generate the stats.json file in the webpack-config
-    await new Promise((resolve, reject) =>
-      compiler.run(async (error, stats) => {
-        // TODO: Bacon: account for CI
+    const { stats, warnings } = await new Promise((resolve, reject) =>
+      compiler.run((error, stats) => {
+        console.log(error, stats.hasErrors(), stats.hasWarnings());
+        let messages;
         if (error) {
-          // TODO: Bacon: Clean up error messages
-          return reject(error);
+          if (!error.message) {
+            return reject(error);
+          }
+          messages = formatWebpackMessages({
+            errors: [error.message],
+            warnings: [],
+          });
+        } else {
+          messages = formatWebpackMessages(
+            stats.toJson({ all: false, warnings: true, errors: true })
+          );
         }
-        resolve(stats);
+
+        if (messages.errors.length) {
+          // Only keep the first error. Others are often indicative
+          // of the same problem, but confuse the reader with noise.
+          if (messages.errors.length > 1) {
+            messages.errors.length = 1;
+          }
+          return reject(new Error(messages.errors.join('\n\n')));
+        }
+        if (
+          process.env.CI &&
+          (typeof process.env.CI !== 'string' || process.env.CI.toLowerCase() !== 'false') &&
+          messages.warnings.length
+        ) {
+          console.log(
+            chalk.yellow(
+              '\nTreating warnings as errors because process.env.CI = true.\n' +
+                'Most CI servers set it automatically.\n'
+            )
+          );
+          return reject(new Error(messages.warnings.join('\n\n')));
+        }
+
+        resolve({
+          stats,
+          warnings: messages.warnings,
+        });
       })
     );
+
+    if (warnings.length) {
+      console.log(chalk.yellow('Compiled with warnings.\n'));
+      console.log(warnings.join('\n\n'));
+      console.log(
+        '\nSearch for the ' +
+          chalk.underline(chalk.yellow('keywords')) +
+          ' to learn more about each warning.'
+      );
+      console.log(
+        'To ignore, add ' + chalk.cyan('// eslint-disable-next-line') + ' to the line before.\n'
+      );
+    } else {
+      console.log(chalk.green('Compiled successfully.\n'));
+    }
   } catch (error) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      'There was a problem building your web project. ' + error.message
-    );
-    throw error;
+    console.log(chalk.red('Failed to compile.\n'));
+    printBuildError(error);
+    process.exit(1);
   }
 }
 

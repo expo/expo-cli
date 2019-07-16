@@ -68,7 +68,7 @@ const DEFAULT_BROTLI = {
 const DEFAULT_SERVICE_WORKER = {};
 
 const DEFAULT_REPORT_CONFIG = {
-  verbose: true,
+  verbose: false,
   path: 'web-report',
   statsFilename: 'stats.json',
   reportFilename: 'report.html',
@@ -126,8 +126,8 @@ function createNoJSComponent(message) {
   return `" <form action="location.reload()" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Reload</button> </p> </div> </form> "`;
 }
 
-function getDevtool(env, { devtool }) {
-  if (env.production) {
+function getDevtool({ production, development }, { devtool }) {
+  if (production) {
     // string or false
     if (devtool !== undefined) {
       // When big assets are involved sources maps can become expensive and cause your process to run out of memory.
@@ -135,7 +135,7 @@ function getDevtool(env, { devtool }) {
     }
     return 'source-map';
   }
-  if (env.development) {
+  if (development) {
     return 'cheap-module-source-map';
   }
   return false;
@@ -252,8 +252,17 @@ module.exports = async function(env = {}, argv) {
     ];
   }
 
-  const devtool = getDevtool(env, config.web.build);
+  const devtool = getDevtool({ production: isProd, development: isDev }, config.web.build);
 
+  const babelProjectRoot = babelAppConfig.root || locations.root;
+
+  const babelLoader = await createBabelLoaderAsync({
+    mode,
+    babelProjectRoot,
+    verbose: babelAppConfig.verbose,
+    include: babelAppConfig.include,
+    use: babelAppConfig.use,
+  });
   const allLoaders = [
     {
       test: /\.html$/,
@@ -261,13 +270,7 @@ module.exports = async function(env = {}, argv) {
       exclude: locations.template.folder,
     },
     imageLoaderConfiguration,
-    await createBabelLoaderAsync({
-      mode,
-      babelProjectRoot: babelAppConfig.root || locations.root,
-      verbose: babelAppConfig.verbose,
-      include: babelAppConfig.include,
-      use: babelAppConfig.use,
-    }),
+    babelLoader,
     createFontLoader({ locations }),
 
     styleLoaderConfiguration,
@@ -322,7 +325,8 @@ module.exports = async function(env = {}, argv) {
     context: __dirname,
     // configures where the build ends up
     output: {
-      path: locations.production.folder,
+      // Build folder (default `web-build`)
+      path: isProd ? locations.production.folder : undefined,
       sourceMapFilename: '[chunkhash].map',
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
@@ -333,7 +337,7 @@ module.exports = async function(env = {}, argv) {
         new CleanWebpackPlugin([locations.production.folder], {
           root: locations.root,
           dry: false,
-          verbose: buildConfig.verbose,
+          verbose: false,
         }),
       // Copy the template files over
       isProd &&
@@ -414,13 +418,11 @@ module.exports = async function(env = {}, argv) {
       brotliConfig && new BrotliPlugin(brotliConfig),
 
       new ProgressBarPlugin({
-        format:
-          'Building Webpack bundle [:bar] ' +
-          chalk.green.bold(':percent') +
-          ' (:elapsed seconds) :msg',
+        format: `[:bar] ${chalk.green.bold(':percent')} (:elapsed seconds)`,
         clear: false,
         complete: '=',
         incomplete: ' ',
+        summary: false,
       }),
 
       ...reportPlugins,
@@ -430,6 +432,32 @@ module.exports = async function(env = {}, argv) {
       rules: [
         // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
+
+        // First, run the linter.
+        // It's important to do this before Babel processes the JS.
+        // This will throw required errors and warnings during the build.
+        {
+          test: /\.(js|mjs|jsx|ts|tsx)$/,
+          enforce: 'pre',
+          use: [
+            {
+              loader: require.resolve('eslint-loader'),
+              options: {
+                emitError: isProd,
+                formatter: require.resolve('react-dev-utils/eslintFormatter'),
+                eslintPath: require.resolve('eslint'),
+                baseConfig: {
+                  extends: ['universe/node', 'universe/web'],
+                  settings: { react: { version: 'detect' } },
+                },
+                ignore: false,
+                useEslintrc: false,
+              },
+            },
+          ],
+          include: babelLoader.include,
+        },
+
         {
           oneOf: allLoaders,
         },
@@ -465,7 +493,7 @@ module.exports = async function(env = {}, argv) {
         // To fix this, we prevent you from importing files out of the root folder -- if you'd like to,
         // please link the files into your node_modules/ and let module-resolution kick in.
         // Make sure your source files are compiled, as they will not be processed in any way.
-        new ModuleScopePlugin(locations.template.folder, [locations.packageJson]),
+        new ModuleScopePlugin(babelProjectRoot, [locations.packageJson]),
       ],
       symlinks: false,
     },
@@ -484,6 +512,6 @@ module.exports = async function(env = {}, argv) {
     },
     // Turn off performance processing because we utilize
     // our own (CRA) hints via the FileSizeReporter
-    performance: false,
+    // performance: false,
   };
 };
