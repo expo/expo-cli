@@ -276,7 +276,7 @@ export async function createKeystore(
   } catch (error) {
     if (error.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
-      log.info('keytool is part of OpenJDK: https://openjdk.java.net/');
+      log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
       log.info('Also make sure that keytool is in your PATH after installation.');
     }
     throw error;
