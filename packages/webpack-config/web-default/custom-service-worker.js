@@ -1,6 +1,16 @@
 /* global self */
 
 /**
+ * Store notification icon string in service worker.
+ * Ref: https://stackoverflow.com/a/35729334/2603230
+ */
+self.addEventListener('message', function(event) {
+  let data = JSON.parse(event.data);
+
+  self.notificationIcon = data.notificationIcon;
+});
+
+/**
  * Add support for push notification.
  */
 self.addEventListener('push', event => {
@@ -17,7 +27,7 @@ self.addEventListener('push', event => {
   let options = {
     body: payload.body,
     data: payload.data || {},
-    icon: payload.data._icon,
+    icon: payload.data._icon || self.notificationIcon || null,
   };
   if (payload.data._tag) {
     options.tag = payload.data._tag;
