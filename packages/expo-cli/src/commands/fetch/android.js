@@ -1,53 +1,41 @@
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
+import get from 'lodash/get';
 
-import { Credentials, Exp } from '@expo/xdl';
+import { AndroidCredentials } from '@expo/xdl';
+import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
+import { Context } from '../../credentials';
 
 import log from '../../log';
 
 async function fetchAndroidKeystoreAsync(projectDir) {
-  const {
-    args: { username, remotePackageName, remoteFullPackageName: experienceName },
-  } = await Exp.getPublishInfoAsync(projectDir);
+  const ctx = new Context();
+  await ctx.init(projectDir);
 
-  const backupKeystoreOutputPath = path.resolve(projectDir, `${remotePackageName}.jks`);
-  await Credentials.Android.backupExistingCredentials(
-    {
-      outputPath: backupKeystoreOutputPath,
-      username,
-      experienceName,
-    },
-    log
-  );
+  const backupKeystoreOutputPath = path.resolve(projectDir, `${ctx.manifest.slug}.jks`);
+
+  const view = new DownloadKeystore(ctx.manifest.slug);
+  await view.fetch(ctx);
+  await view.save(ctx, backupKeystoreOutputPath, true);
 }
 
 async function fetchAndroidHashesAsync(projectDir) {
-  const {
-    args: { username, remotePackageName, remoteFullPackageName: experienceName },
-  } = await Exp.getPublishInfoAsync(projectDir);
-
-  const outputPath = path.resolve(projectDir, `${remotePackageName}.tmp.jks`);
+  const ctx = new Context();
+  await ctx.init(projectDir);
+  const outputPath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
   try {
-    const { keystorePassword, keyAlias } = await Credentials.Android.backupExistingCredentials(
-      {
-        outputPath,
-        username,
-        experienceName,
-      },
-      log,
-      false
-    );
-    await Credentials.Android.logKeystoreHashes(
-      {
-        keystorePath: outputPath,
-        keystorePassword,
-        keyAlias,
-      },
-      log
-    );
+    const view = new DownloadKeystore(ctx.manifest.slug);
+    await view.fetch(ctx);
+    await view.save(ctx, outputPath);
+
+    await AndroidCredentials.logKeystoreHashes({
+      keystorePath: outputPath,
+      keystorePassword: get(view, 'credentials.keystorePassword'),
+      keyAlias: get(view, 'credentials.keyAlias'),
+    });
   } finally {
     try {
-      fs.unlinkSync(outputPath);
+      fs.unlink(outputPath);
     } catch (err) {
       if (err.code !== 'ENOENT') {
         log.error(err);
@@ -57,33 +45,28 @@ async function fetchAndroidHashesAsync(projectDir) {
 }
 
 async function fetchAndroidUploadCertAsync(projectDir) {
-  const {
-    args: { username, remotePackageName, remoteFullPackageName: experienceName },
-  } = await Exp.getPublishInfoAsync(projectDir);
+  const ctx = new Context();
+  await ctx.init(projectDir);
 
-  const keystorePath = path.resolve(projectDir, `${remotePackageName}.tmp.jks`);
-  const uploadKeyPath = path.resolve(projectDir, `${remotePackageName}_upload_cert.pem`);
+  const keystorePath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
+  const uploadKeyPath = path.resolve(projectDir, `${ctx.manifest.slug}_upload_cert.pem`);
   try {
-    const { keystorePassword, keyAlias } = await Credentials.Android.backupExistingCredentials(
-      {
-        outputPath: keystorePath,
-        username,
-        experienceName,
-      },
-      log,
-      false
-    );
+    const view = new DownloadKeystore(ctx.manifest.slug);
+    await view.fetch(ctx);
+    await view.save(ctx, keystorePath);
 
     log(`Writing upload key to ${uploadKeyPath}`);
-    await Credentials.Android.exportCertBase64(
-      keystorePath,
-      keystorePassword,
-      keyAlias,
+    await AndroidCredentials.exportCertBase64(
+      {
+        keystorePath,
+        keystorePassword: get(view, 'credentials.keystorePassword'),
+        keyAlias: get(view, 'credentials.keyAlias'),
+      },
       uploadKeyPath
     );
   } finally {
     try {
-      fs.unlinkSync(keystorePath);
+      await fs.unlink(keystorePath);
     } catch (err) {
       if (err.code !== 'ENOENT') {
         log.error(err);
