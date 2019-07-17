@@ -6,108 +6,96 @@ import fs from 'fs-extra';
 import chalk from 'chalk';
 import crypto from 'crypto';
 import uuidv4 from 'uuid/v4';
-import spawnAsync from '@expo/spawn-async';
+import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import axios from 'axios';
 import ProgressBar from 'progress';
 
-import { getCredentialsForPlatform } from './Credentials';
+import ApiV2 from '../ApiV2';
 import logger from '../Logger';
 import UserSettings from '../UserSettings';
 
+const log = logger.global;
 const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
 const javaExecutable = process.platform === 'win32' ? 'java.exe' : 'java';
 
-export type Credentials = {
+export type Keystore = {
   keystore: string,
   keystorePassword: string,
   keyPassword: string,
-  keystoreAlias: string,
+  keyAlias: string,
 };
 
-export async function backupExistingCredentials(
-  { outputPath, username, experienceName }: Object,
-  log: any = logger.global.info.bind(logger.global),
-  logSecrets: boolean = true
-) {
-  const credentialMetadata = { username, experienceName, platform: 'android' };
-
-  log(`Retreiving Android keystore for ${experienceName}`);
-
-  const credentials = (await getCredentialsForPlatform(credentialMetadata): any);
-  if (!credentials) {
-    throw new Error('Unable to fetch credentials for this project. Are you sure they exist?');
-  }
-  const { keystore, keystorePassword, keystoreAlias: keyAlias, keyPassword } = credentials;
-
-  const storeBuf = Buffer.from(keystore, 'base64');
-  log(`Writing keystore to ${outputPath}...`);
-  fs.writeFileSync(outputPath, storeBuf);
-  if (logSecrets) {
-    log('Done writing keystore to disk.');
-    log(`${chalk.yellow('Save these important values as well:')}
-
-  Keystore password: ${chalk.bold(keystorePassword)}
-  Key alias:         ${chalk.bold(keyAlias)}
-  Key password:      ${chalk.bold(keyPassword)}
-  `);
-  }
-  return {
-    keystorePassword,
-    keyAlias,
-    keyPassword,
-  };
-}
-
-export async function exportCertBinary(
+type KeystoreInfo = {
   keystorePath: string,
   keystorePassword: string,
+  keyPassword: string,
   keyAlias: string,
-  certFile: string
-) {
-  return spawnAsync('keytool', [
-    '-exportcert',
-    '-keystore',
-    keystorePath,
-    '-storepass',
-    keystorePassword,
-    '-alias',
-    keyAlias,
-    '-file',
-    certFile,
-    '-noprompt',
-    '-storetype',
-    'JKS',
-  ]);
+};
+
+
+export async function exportCertBinary(
+  { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
+  certFile: string,
+): Promise<SpawnResult> {
+  try {
+    return spawnAsync('keytool', [
+      '-exportcert',
+      '-keystore',
+      keystorePath,
+      '-storepass',
+      keystorePassword,
+      '-alias',
+      keyAlias,
+      '-file',
+      certFile,
+      '-noprompt',
+      '-storetype',
+      'JKS',
+    ]);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      log.warn('Are you sure you have keytool installed?');
+      log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
+      log.info('Also make sure that keytool is in your PATH after installation.');
+    }
+    throw err;
+  }
 }
 
 export async function exportCertBase64(
-  keystorePath: string,
-  keystorePassword: string,
-  keyAlias: string,
-  certFile: string
-) {
-  return spawnAsync('keytool', [
-    '-export',
-    '-rfc',
-    '-keystore',
-    keystorePath,
-    '-storepass',
-    keystorePassword,
-    '-alias',
-    keyAlias,
-    '-file',
-    certFile,
-    '-noprompt',
-    '-storetype',
-    'JKS',
-  ]);
+  { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
+  certFile: string,
+): Promise<SpawnResult> {
+  try {
+    return spawnAsync('keytool', [
+      '-export',
+      '-rfc',
+      '-keystore',
+      keystorePath,
+      '-storepass',
+      keystorePassword,
+      '-alias',
+      keyAlias,
+      '-file',
+      certFile,
+      '-noprompt',
+      '-storetype',
+      'JKS',
+    ]);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      log.warn('Are you sure you have keytool installed?');
+      log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
+      log.info('Also make sure that keytool is in your PATH after installation.');
+    }
+    throw err;
+  }
 }
 
 export async function exportPrivateKey(
-  { keystorePath, keystorePassword, keyAlias, keyPassword }: Object,
+  { keystorePath, keystorePassword, keyAlias, keyPassword }: KeystoreInfo,
   encryptionKey: string,
   outputPath: string,
-  log: any = logger.global.info.bind(logger.global)
 ) {
   let nodePty;
   const ptyTmpDir = '/tmp/pty-tmp-install';
@@ -117,7 +105,7 @@ export async function exportPrivateKey(
     nodePty = require('node-pty-prebuilt');
   } catch (err) {
     try {
-      log('Installing node-pty-prebuilt in temporary directory');
+      log.info('Installing node-pty-prebuilt in a temporary directory');
       await fs.mkdirp(ptyTmpDir);
       await spawnAsync('npm', ['init', '--yes'], { cwd: ptyTmpDir });
       await spawnAsync('npm', ['install', 'node-pty-prebuilt'], {
@@ -126,14 +114,14 @@ export async function exportPrivateKey(
       });
       nodePty = require(`${ptyTmpDir}/node_modules/node-pty-prebuilt`);
     } catch (err) {
-      log(`Run ${chalk.cyan('npm -g install node-pty-prebuilt')} to install node pty`);
+      log.info(`Run ${chalk.cyan('npm -g install node-pty-prebuilt')} to install node pty`);
       throw new Error('Package node-pty-prebuilt is required to use PEPK tool');
     }
   }
   const ptySpawn = nodePty.spawn;
   const encryptToolPath = path.join(UserSettings.dotExpoHomeDirectory(), 'android_tools_pepk.jar');
   if (!fs.existsSync(encryptToolPath)) {
-    log(`Downloading PEPK tool from Google Play to ${encryptToolPath}`);
+    log.info(`Downloading PEPK tool from Google Play to ${encryptToolPath}`);
     const downloadUrl =
       'https://www.gstatic.com/play-apps-publisher-rapid/signing-tool/prod/pepk.jar';
     const file = fs.createWriteStream(encryptToolPath);
@@ -145,7 +133,7 @@ export async function exportPrivateKey(
       total: parseInt(response.headers['content-length'], 10),
     });
     response.data.pipe(file);
-    response.data.on('data', chunk => bar.tick(chunk.length));
+    response.data.on('data', (chunk: any) => bar.tick(chunk.length));
     await new Promise((resolve, reject) => {
       file.on('finish', resolve);
       file.on('error', reject);
@@ -175,11 +163,11 @@ export async function exportPrivateKey(
           env: process.env,
         }
       );
-      child.on('error', err => {
-        log('error', err);
+      child.on('error', (err: Error) => {
+        log.error('error', err);
         rej(err);
       });
-      child.on('exit', exitCode => {
+      child.on('exit', (exitCode: number) => {
         if (exitCode !== 0) {
           rej(exitCode);
         } else {
@@ -189,7 +177,7 @@ export async function exportPrivateKey(
       child.write(keystorePassword + NEWLINE);
       child.write(keyPassword + NEWLINE);
     });
-    log(`Exported and encrypted private app signing key to file ${outputPath}`);
+    log.info(`Exported and encrypted private App Signing Key to file ${outputPath}`);
   } catch (error) {
     throw new Error(`PEPK tool failed with return code ${error}`);
   } finally {
@@ -198,13 +186,14 @@ export async function exportPrivateKey(
 }
 
 export async function logKeystoreHashes(
-  { keystorePath, keystorePassword, keyAlias }: Object,
-  log: any = logger.global.info.bind(logger.global)
+  keystoreInfo: KeystoreInfo,
+  linePrefix: string = '',
 ) {
+  const { keystorePath, keystorePassword, keyAlias } = keystoreInfo;
   const certFile = `${keystorePath}.cer`;
   try {
-    await exportCertBinary(keystorePath, keystorePassword, keyAlias, certFile);
-    const data = fs.readFileSync(certFile);
+    await exportCertBinary(keystoreInfo, certFile);
+    const data = await fs.readFile(certFile);
     const googleHash = crypto
       .createHash('sha1')
       .update(data)
@@ -219,18 +208,18 @@ export async function logKeystoreHashes(
       .createHash('sha1')
       .update(data)
       .digest('base64');
-    log(`Google Certificate Fingerprint:     ${googleHash.replace(/(.{2}(?!$))/g, '$1:')}`);
-    log(`Google Certificate Hash (SHA-1):    ${googleHash}`);
-    log(`Google Certificate Hash (SHA-256):  ${googleHash256}`);
-    log(`Facebook Key Hash:                  ${fbHash}`);
+    log.info(`${linePrefix}Google Certificate Fingerprint:     ${googleHash.replace(/(.{2}(?!$))/g, '$1:')}`);
+    log.info(`${linePrefix}Google Certificate Hash (SHA-1):    ${googleHash}`);
+    log.info(`${linePrefix}Google Certificate Hash (SHA-256):  ${googleHash256}`);
+    log.info(`${linePrefix}Facebook Key Hash:                  ${fbHash}`);
   } catch (err) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
-      log('keytool is part of OpenJDK: https://openjdk.java.net/');
-      log('Also make sure that keytool is in your PATH after installation.');
+      log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
+      log.info('Also make sure that keytool is in your PATH after installation.');
     }
     if (err.stdout) {
-      log(err.stdout);
+      log.info(err.stdout);
     }
     if (err.stderr) {
       log.error(err.stderr);
@@ -238,7 +227,7 @@ export async function logKeystoreHashes(
     throw err;
   } finally {
     try {
-      fs.unlinkSync(certFile);
+      await fs.unlink(certFile);
     } catch (err) {
       if (err.code !== 'ENOENT') {
         log.error(err);
@@ -248,53 +237,63 @@ export async function logKeystoreHashes(
 }
 
 export function logKeystoreCredentials(
-  { keystorePassword, keyAlias, keyPassword }: Object,
+  { keystorePassword, keyAlias, keyPassword }: Keystore,
   title: string = 'Keystore credentials',
-  log: any = logger.global.info.bind(logger.global)
+  linePrefix: string = '',
 ) {
-  log(`${title}
-    Keystore password: ${chalk.bold(keystorePassword)}
-    Key alias:         ${chalk.bold(keyAlias)}
-    Key password:      ${chalk.bold(keyPassword)}
+  log.info(`${linePrefix}${title}
+${linePrefix}    Keystore password: ${chalk.bold(keystorePassword)}
+${linePrefix}    Key alias:         ${chalk.bold(keyAlias)}
+${linePrefix}    Key password:      ${chalk.bold(keyPassword)}
   `);
 }
 
 export async function createKeystore(
-  { keystorePath, keystorePassword, keyAlias, keyPassword }: Object,
-  androidPackage: string
-): Promise<> {
-  return spawnAsync('keytool', [
-    '-genkey',
-    '-v',
-    '-storepass',
-    keystorePassword,
-    '-keypass',
-    keyPassword,
-    '-keystore',
-    keystorePath,
-    '-alias',
-    keyAlias,
-    '-keyalg',
-    'RSA',
-    '-keysize',
-    '2048',
-    '-validity',
-    '10000',
-    '-dname',
-    `CN=${androidPackage},OU=,O=,L=,S=,C=US`,
-  ]);
+  { keystorePath, keystorePassword, keyAlias, keyPassword }: KeystoreInfo,
+  androidPackage: string,
+): Promise<SpawnResult> {
+  try {
+    return await spawnAsync('keytool', [
+      '-genkey',
+      '-v',
+      '-storepass',
+      keystorePassword,
+      '-keypass',
+      keyPassword,
+      '-keystore',
+      keystorePath,
+      '-alias',
+      keyAlias,
+      '-keyalg',
+      'RSA',
+      '-keysize',
+      '2048',
+      '-validity',
+      '10000',
+      '-dname',
+      `CN=${androidPackage},OU=,O=,L=,S=,C=US`,
+    ]);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      log.warn('Are you sure you have keytool installed?');
+      log.info('keytool is a part of OpenJDK: https://openjdk.java.net/');
+      log.info('Also make sure that keytool is in your PATH after installation.');
+    }
+    throw error;
+  }
 }
 
 export async function generateUploadKeystore(
   uploadKeystorePath: string,
   androidPackage: string,
-  experienceName: string
-): Promise<Object> {
+  experienceName: string,
+): Promise<KeystoreInfo> {
   const keystoreData = {
     keystorePassword: uuidv4().replace(/-/g, ''),
     keyPassword: uuidv4().replace(/-/g, ''),
     keyAlias: Buffer.from(experienceName).toString('base64'),
+    keystorePath: uploadKeystorePath,
   };
-  await createKeystore({ keystorePath: uploadKeystorePath, ...keystoreData }, androidPackage);
+  await createKeystore(keystoreData, androidPackage);
   return keystoreData;
 }

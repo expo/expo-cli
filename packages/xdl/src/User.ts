@@ -150,9 +150,9 @@ export class UserManagerInstance {
    *
    * If there are any issues with the login, this method throws.
    */
-  async ensureLoggedInAsync(): Promise<User | null> {
+  async ensureLoggedInAsync(): Promise<User> {
     if (Config.offline) {
-      return null;
+      throw new XDLError('NETWORK_REQUIRED', 'Can\'t verify user without network access');
     }
 
     let user = await this.getCurrentUserAsync();
