@@ -9,6 +9,12 @@
     "directory": "packages/webpack-config"
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=8.10"
+  },
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
   "dependencies": {
     "@babel/core": "^7.0.0",
     "@babel/polyfill": "^7.2.5",
@@ -25,6 +31,7 @@
     "copy-webpack-plugin": "^5.0.0",
     "css-loader": "^2.1.1",
     "deep-diff": "^1.0.2",
+    "eslint-loader": "^2.2.1",
     "file-loader": "^3.0.1",
     "find-yarn-workspace-root": "^1.2.1",
     "html-loader": "^0.5.5",
@@ -46,5 +53,20 @@
     "webpack-merge": "^4.2.1",
     "workbox-webpack-plugin": "^3.6.3"
   },
-  "gitHead": "613642fe06827cc231405784b099cf71c29072df"
+  "gitHead": "613642fe06827cc231405784b099cf71c29072df",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "eslint-config-universe": "^1.0.7"
+  }
 }
