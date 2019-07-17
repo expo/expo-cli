@@ -14,10 +14,15 @@ self.addEventListener('push', event => {
   }
 
   const title = payload.title;
-  const options = {
+  let options = {
     body: payload.body,
     data: payload.data || {},
+    icon: payload.data._icon,
   };
+  if (payload.data._tag) {
+    options.tag = payload.data._tag;
+    options.renotify = payload.data._renotify;
+  }
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
