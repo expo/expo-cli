@@ -32,7 +32,7 @@ export function getServer(projectRoot: string) {
   return webpackDevServerInstance;
 }
 
-async function choosePortAsync(customDefaultPort?:number | undefined): Promise<number | null> {
+async function choosePortAsync(customDefaultPort?: number | undefined): Promise<number | null> {
   try {
     return await choosePort(HOST, customDefaultPort || DEFAULT_PORT);
   } catch (error) {
