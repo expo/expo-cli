@@ -10,7 +10,6 @@ import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import axios from 'axios';
 import ProgressBar from 'progress';
 
-import ApiV2 from '../ApiV2';
 import logger from '../Logger';
 import UserSettings from '../UserSettings';
 

@@ -31,7 +31,7 @@ export class ExperienceView implements IView {
 
   async open(ctx: Context): Promise<IView | null> {
     if (this.shouldRefetch) {
-      const appCredentials: AndroidCredentials = await ctx.api.getAsync(`credentials/android/${this.experience}`);
+      const appCredentials: AndroidCredentials = await ctx.api.getAsync(`credentials/android/@${ctx.user.username}/${this.experience}`);
       this.experienceName = get(appCredentials, 'experienceName');
       this.keystore = get(appCredentials, 'keystore');
       this.pushCredentials = get(appCredentials, 'pushCredentials')
@@ -100,7 +100,7 @@ export class UpdateKeystore implements IView {
 
   async open(ctx: Context): Promise<IView | null> {
     const keystore = await this.provideOrGenerate(ctx);
-    await ctx.api.putAsync(`credentials/android/keystore/${this.experience}`, { keystore });
+    await ctx.api.putAsync(`credentials/android/keystore/@${ctx.user.username}/${this.experience}`, { keystore });
     log(chalk.green('Updated Keystore successfully'));
     return null;
   }
@@ -146,7 +146,7 @@ export class UpdateFcmKey implements IView {
     this.experience = experience;
   }
 
-  async open(context: Context): Promise<IView | null> {
+  async open(ctx: Context): Promise<IView | null> {
     const { fcmApiKey } = await prompt([
       {
         type: 'input',
@@ -156,7 +156,7 @@ export class UpdateFcmKey implements IView {
       },
     ]);
 
-    await context.api.putAsync(`credentials/android/push/${this.experience}`, { fcmApiKey });
+    await ctx.api.putAsync(`credentials/android/push/@${ctx.user.username}/${this.experience}`, { fcmApiKey });
     log(chalk.green('Updated successfully'));
     return null;
   }
@@ -184,7 +184,7 @@ export class DownloadKeystore implements IView {
   }
 
   async fetch(ctx: Context): Promise<void> {
-    const credentials = await ApiV2.clientForUser(ctx.user).getAsync(`credentials/android/${ctx.manifest.slug}`);
+    const credentials = await ApiV2.clientForUser(ctx.user).getAsync(`credentials/android/@${ctx.user.username}/${ctx.manifest.slug}`);
     if (credentials && credentials.keystore) {
       this.credentials = credentials.keystore;
     }
