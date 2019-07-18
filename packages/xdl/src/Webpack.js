@@ -32,9 +32,9 @@ export function getServer(projectRoot: string) {
   return webpackDevServerInstance;
 }
 
-async function choosePortAsync(): Promise<number | null> {
+async function choosePortAsync(customDefaultPort?:number | undefined): Promise<number | null> {
   try {
-    return await choosePort(HOST, DEFAULT_PORT);
+    return await choosePort(HOST, customDefaultPort || DEFAULT_PORT);
   } catch (error) {
     throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
   }
@@ -72,7 +72,7 @@ export async function startAsync(
     info: Web.isInfoEnabled(),
   });
 
-  webpackServerPort = await choosePortAsync();
+  webpackServerPort = await choosePortAsync(config.devServer.port);
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
