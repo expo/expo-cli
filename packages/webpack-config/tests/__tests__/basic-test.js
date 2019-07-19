@@ -26,7 +26,6 @@ describe('basic', () => {
   });
   it('builds', async () => {
     const projectRoot = fs.realpathSync(path.resolve(__dirname, '../basic'));
-    console.log('root', projectRoot);
     await Webpack.bundleAsync(
       projectRoot,
       {
