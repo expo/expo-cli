@@ -47,7 +47,7 @@ function run(name, next) {
               run(next.shift(), next);
             } else {
               console.log(chalk.bgRed.black('There are files missing or with different content.'));
-              console.log(chalk.bgRed.black(`Test "${name}" failedon file ${outputContent}.`));
+              console.log(chalk.bgRed.black(`Test "${name}" failed on file ${outputContent}.`));
               console.timeEnd(name);
               assert(result === testContentLength);
             }
