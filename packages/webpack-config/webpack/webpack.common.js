@@ -449,6 +449,9 @@ module.exports = async function(env = {}, argv) {
                 baseConfig: {
                   extends: ['universe/node', 'universe/web'],
                   settings: { react: { version: 'detect' } },
+                  globals: {
+                    __DEV__: 'writable',
+                  },
                 },
                 ignore: false,
                 useEslintrc: false,

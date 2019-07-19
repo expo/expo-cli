@@ -225,8 +225,9 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
     }
   } catch (error) {
     console.log(chalk.red('Failed to compile.\n'));
-    printBuildError(error);
-    process.exit(1);
+    // printBuildError(error);
+    throw error;
+    // process.exit(1);
   }
 }
 
