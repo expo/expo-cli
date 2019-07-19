@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
 
-import ConfigUtils from '@expo/config';
+import * as ConfigUtils from '@expo/config';
 import delayAsync from 'delay-async';
 import glob from 'glob-promise';
 import * as osascript from '@expo/osascript';
