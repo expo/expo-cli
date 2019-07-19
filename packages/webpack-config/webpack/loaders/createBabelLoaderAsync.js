@@ -69,7 +69,7 @@ module.exports = async function({
 
     include(inputPath) {
       for (const possibleModule of modules) {
-        if (inputPath.includes(possibleModule)) {
+        if (inputPath.includes(path.normalize(possibleModule))) {
           if (verbose) {
             const packageName = packageNameFromPath(inputPath);
             logPackage(packageName);
