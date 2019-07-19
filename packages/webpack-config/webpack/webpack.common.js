@@ -326,7 +326,8 @@ module.exports = async function(env = {}, argv) {
     // configures where the build ends up
     output: {
       // Build folder (default `web-build`)
-      path: isProd ? locations.production.folder : undefined,
+      path: locations.production.folder,
+
       sourceMapFilename: '[chunkhash].map',
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
@@ -436,7 +437,7 @@ module.exports = async function(env = {}, argv) {
         // First, run the linter.
         // It's important to do this before Babel processes the JS.
         // This will throw required errors and warnings during the build.
-        {
+        env.dangerouslyUseLinter && {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
           enforce: 'pre',
           use: [
@@ -461,7 +462,7 @@ module.exports = async function(env = {}, argv) {
         {
           oneOf: allLoaders,
         },
-      ],
+      ].filter(Boolean),
     },
 
     resolveLoader: {
