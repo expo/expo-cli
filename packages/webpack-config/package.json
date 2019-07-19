@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "repository": {
@@ -19,8 +19,8 @@
     "@babel/core": "^7.0.0",
     "@babel/polyfill": "^7.2.5",
     "@babel/runtime": "^7.3.4",
-    "@expo/config": "^2.1.0",
-    "@expo/webpack-pwa-manifest-plugin": "^1.2.0",
+    "@expo/config": "^2.1.1",
+    "@expo/webpack-pwa-manifest-plugin": "^1.2.1",
     "babel-loader": "^8.0.5",
     "babel-preset-expo": "^5.1.1",
     "brotli-webpack-plugin": "^1.1.0",
