@@ -1,6 +1,31 @@
-module.exports = function(api) {
-  api.cache(true);
+module.exports = function(api, options = {}) {
+  const { web = {}, native = {} } = options;
+  const isWeb = api.caller(isTargetWeb);
+  const platformOptions = isWeb
+    ? { disableImportExportTransform: false, ...web }
+    : { disableImportExportTransform: false, ...native };
+
   return {
-    presets: ['babel-preset-expo'],
+    presets: [
+      [
+        'module:metro-react-native-babel-preset',
+        { disableImportExportTransform: platformOptions.disableImportExportTransform },
+      ],
+    ],
+    plugins: [
+      [
+        'babel-plugin-module-resolver',
+        {
+          alias: {
+            'react-native-vector-icons': '@expo/vector-icons',
+          },
+        },
+      ],
+      isWeb && ['babel-plugin-react-native-web'],
+    ].filter(Boolean),
   };
 };
+
+function isTargetWeb(caller) {
+  return caller && caller.name === 'babel-loader';
+}

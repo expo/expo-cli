@@ -95,8 +95,6 @@ module.exports = async function({
         babelrc: false,
         // Attempt to use local babel.config.js file for compiling project.
         configFile: true,
-        // If no babel.config.js file exists, use babel-preset-expo.
-        presets: [require.resolve('babel-preset-expo')],
         // Only clobber hard coded values.
         ...(customUseOptions || {}),
 

@@ -439,11 +439,14 @@ module.exports = async function(env = {}, argv) {
         {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
           enforce: 'pre',
+          exclude: [locations.modules],
           use: [
             {
               loader: require.resolve('eslint-loader'),
               options: {
-                emitError: isProd,
+                root: locations.root,
+                // TODO: Bacon: Use this in prod mode when we are excluding properly in a yarn workspace.
+                emitError: false,
                 formatter: require.resolve('react-dev-utils/eslintFormatter'),
                 eslintPath: require.resolve('eslint'),
                 baseConfig: {
@@ -458,7 +461,6 @@ module.exports = async function(env = {}, argv) {
               },
             },
           ],
-          include: babelLoader.include,
         },
 
         {
