@@ -326,7 +326,7 @@ module.exports = async function(env = {}, argv) {
     // configures where the build ends up
     output: {
       // Build folder (default `web-build`)
-      path: isProd ? locations.production.folder : undefined,
+      path: locations.production.folder,
       sourceMapFilename: '[chunkhash].map',
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
@@ -436,7 +436,7 @@ module.exports = async function(env = {}, argv) {
         // First, run the linter.
         // It's important to do this before Babel processes the JS.
         // This will throw required errors and warnings during the build.
-        {
+        env.dangerouslyUseLinter && {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
           enforce: 'pre',
           exclude: [new RegExp('node_modules/'), new RegExp('(webpack)/')],
@@ -450,7 +450,7 @@ module.exports = async function(env = {}, argv) {
                 formatter: require.resolve('react-dev-utils/eslintFormatter'),
                 eslintPath: require.resolve('eslint'),
                 baseConfig: {
-                  extends: ['universe/node', 'universe/web'],
+                  extends: ['eslint-config-universe/node', 'eslint-config-universe/web'],
                   settings: { react: { version: 'detect' } },
                   globals: {
                     __DEV__: 'writable',
@@ -466,7 +466,7 @@ module.exports = async function(env = {}, argv) {
         {
           oneOf: allLoaders,
         },
-      ],
+      ].filter(Boolean),
     },
 
     resolveLoader: {
