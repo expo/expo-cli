@@ -116,5 +116,7 @@ jobs:
     steps:
       - attach_workspace:
           at: '~'
-      - run: cd tests/basic && yarn && cd ../..
+      - run:
+          name: Install test project dependencies
+          command: cd tests/basic && yarn && cd ../..
       - run: yarn test
