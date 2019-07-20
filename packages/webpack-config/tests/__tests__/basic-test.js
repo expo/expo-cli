@@ -4,6 +4,7 @@
 const path = require('path');
 const fs = require('fs');
 const { Webpack } = require('@expo/xdl');
+const projectRoot = fs.realpathSync(path.resolve(__dirname, '../basic'));
 
 describe('basic', () => {
   let timeout;
@@ -18,7 +19,7 @@ describe('basic', () => {
   //   process.env.EXPO_WEB_INFO = true;
 
   it('starts', async () => {
-    const projectRoot = fs.realpathSync(path.resolve(__dirname, '../basic'));
+    process.env.TESTING_REMOVE_UNUSED_IMPORT_EXPORTS = false;
 
     const info = await Webpack.startAsync(
       projectRoot,
@@ -33,8 +34,7 @@ describe('basic', () => {
     }
   });
 
-  it('builds', async () => {
-    const projectRoot = fs.realpathSync(path.resolve(__dirname, '../basic'));
+  async function buildAsync() {
     await Webpack.bundleAsync(
       projectRoot,
       {
@@ -42,5 +42,15 @@ describe('basic', () => {
       },
       true
     );
+  }
+
+  it('builds', async () => {
+    process.env.TESTING_REMOVE_UNUSED_IMPORT_EXPORTS = false;
+    await buildAsync();
+  });
+
+  it('builds with tree-shaking', async () => {
+    process.env.TESTING_REMOVE_UNUSED_IMPORT_EXPORTS = true;
+    await buildAsync();
   });
 });
