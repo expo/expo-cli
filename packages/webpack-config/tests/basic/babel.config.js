@@ -21,6 +21,7 @@ module.exports = function(api, options = {}) {
           },
         },
       ],
+      ['@babel/plugin-proposal-decorators', { legacy: true }],
       isWeb && ['babel-plugin-react-native-web'],
     ].filter(Boolean),
   };
