@@ -18,7 +18,8 @@
     "react-native-web": "^0.11.5"
   },
   "devDependencies": {
-    "babel-preset-expo": "^5.1.1"
+    "babel-preset-expo": "^5.1.1",
+    "metro-react-native-babel-preset": "^0.55.0"
   },
   "private": true
 }
