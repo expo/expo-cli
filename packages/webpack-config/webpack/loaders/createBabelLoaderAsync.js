@@ -15,6 +15,12 @@ const includeModulesThatContainPaths = [
   getModule('native-base'),
 ];
 
+const excludedRootPaths = [
+  'node_modules',
+  // Prevent transpiling webpack generated files.
+  '(webpack)',
+];
+
 const parsedPackageNames = [];
 // TODO: Bacon: Support internal packages. ex: react/fbjs
 function packageNameFromPath(inputPath) {
@@ -78,10 +84,15 @@ module.exports = async function({
         }
       }
       // Is inside the project and is not one of designated modules
-      if (!inputPath.includes('node_modules') && inputPath.includes(ensuredProjectRoot)) {
-        return inputPath;
+      if (inputPath.includes(ensuredProjectRoot)) {
+        for (const excluded of excludedRootPaths) {
+          if (inputPath.includes(excluded)) {
+            return false;
+          }
+        }
+        return true;
       }
-      return null;
+      return false;
     },
     use: {
       ...customUse,
