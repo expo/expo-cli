@@ -36,6 +36,10 @@ async function parseStartOptionsAsync(projectDir: string, options: Object): Prom
     startOpts.maxWorkers = options.maxWorkers;
   }
 
+  if (options.minify) {
+    startOpts.minify = true;
+  }
+
   if (options.webOnly) {
     startOpts.webOnly = options.webOnly;
   } else {
@@ -47,7 +51,7 @@ async function parseStartOptionsAsync(projectDir: string, options: Object): Prom
 async function action(projectDir, options) {
   installExitHooks(projectDir);
 
-  await urlOpts.optsAsync(projectDir, options);
+  const urlOptions = await urlOpts.optsAsync(projectDir, options);
 
   log(chalk.gray('Starting project at', projectDir));
 
@@ -77,7 +81,10 @@ async function action(projectDir, options) {
 
   const startOpts = await parseStartOptionsAsync(projectDir, options);
 
-  await Project.startAsync(rootPath, startOpts);
+  await Project.startAsync(rootPath, {
+    ...startOpts,
+    minify: urlOptions.minify,
+  });
 
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
 

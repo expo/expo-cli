@@ -30,7 +30,7 @@ module.exports = async function(env = {}, argv) {
         locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/'),
     },
     optimization: {
-      minimize: true,
+      minimize: env.minify,
       minimizer: [
         // This is only used in production mode
         new TerserPlugin({

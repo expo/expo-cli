@@ -42,7 +42,7 @@ async function choosePortAsync(): Promise<number | null> {
 
 export async function startAsync(
   projectRoot: string,
-  { nonInteractive }: Object,
+  { nonInteractive, minify }: Object,
   verbose: boolean
 ): Promise<{ url: string, server: WebpackDevServer }> {
   await Doctor.validateWebSupportAsync(projectRoot);
@@ -70,6 +70,7 @@ export async function startAsync(
     production: !dev,
     https,
     info: Web.isInfoEnabled(),
+    minify,
   });
 
   webpackServerPort = await choosePortAsync();
@@ -158,6 +159,7 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
     development: packagerOpts.dev,
     production: !packagerOpts.dev,
     info: Web.isInfoEnabled(),
+    minify: packagerOpts.minify,
   });
   let compiler = webpack(config);
 
