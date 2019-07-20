@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const { Webpack } = require('@expo/xdl');
 
-xdescribe('basic', () => {
+describe('basic', () => {
   let timeout;
   beforeAll(() => {
     timeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
@@ -17,7 +17,7 @@ xdescribe('basic', () => {
   process.env.EXPO_DEBUG = true;
   //   process.env.EXPO_WEB_INFO = true;
 
-  it('starts', async () => {
+  xit('starts', async () => {
     const projectRoot = fs.realpathSync(path.resolve(__dirname, '../basic'));
 
     const info = await Webpack.startAsync(
@@ -32,6 +32,7 @@ xdescribe('basic', () => {
       info.server.close();
     }
   });
+
   it('builds', async () => {
     const projectRoot = fs.realpathSync(path.resolve(__dirname, '../basic'));
     await Webpack.bundleAsync(
