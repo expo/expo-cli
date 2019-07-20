@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`createClientEnvironment matches 1`] = `
+Object {
+  "__DEV__": true,
+  "process.env": Object {
+    "APP_MANIFEST": "{\\"name\\":\\"basic\\",\\"slug\\":\\"basic\\",\\"privacy\\":\\"public\\",\\"sdkVersion\\":\\"33.0.0\\",\\"platforms\\":{\\"0\\":\\"ios\\",\\"1\\":\\"android\\",\\"2\\":\\"web\\"},\\"version\\":\\"1.0.0\\",\\"orientation\\":\\"portrait\\",\\"icon\\":\\"./assets/icon.png\\",\\"splash\\":{\\"image\\":\\"./assets/splash.png\\",\\"resizeMode\\":\\"contain\\",\\"backgroundColor\\":\\"#ffffff\\"},\\"updates\\":{\\"fallbackToCacheTimeout\\":0},\\"assetBundlePatterns\\":{\\"0\\":\\"**/*\\"},\\"description\\":\\"A Neat Expo App\\",\\"primaryColor\\":\\"#4630EB\\",\\"web\\":{\\"background_color\\":\\"#ffffff\\",\\"description\\":\\"A Neat Expo App\\",\\"dir\\":\\"auto\\",\\"display\\":\\"standalone\\",\\"lang\\":\\"en\\",\\"name\\":\\"basic\\",\\"orientation\\":\\"portrait\\",\\"prefer_related_applications\\":true,\\"related_applications\\":{},\\"short_name\\":\\"basic\\",\\"start_url\\":\\".\\",\\"theme_color\\":\\"#4630EB\\"}}",
+    "NODE_ENV": "\\"development\\"",
+    "PUBLIC_URL": "\\"/\\"",
+  },
+}
+`;
