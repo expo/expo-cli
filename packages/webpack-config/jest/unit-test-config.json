@@ -1,6 +1,6 @@
 {
   "testEnvironment": "node",
-  "roots": ["tests"],
+  "roots": ["tests", "webpack"],
   "moduleFileExtensions": ["js", "json"],
   "resetModules": false,
   "setupFilesAfterEnv": ["<rootDir>/jest/unit-test-setup.js"]

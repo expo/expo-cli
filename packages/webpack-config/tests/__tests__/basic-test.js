@@ -5,7 +5,15 @@ const path = require('path');
 const fs = require('fs');
 const { Webpack } = require('@expo/xdl');
 
-describe('basic', () => {
+xdescribe('basic', () => {
+  let timeout;
+  beforeAll(() => {
+    timeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 4;
+  });
+  afterAll(() => {
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = timeout;
+  });
   process.env.EXPO_DEBUG = true;
   //   process.env.EXPO_WEB_INFO = true;
 
