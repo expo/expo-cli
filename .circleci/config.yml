@@ -116,4 +116,5 @@ jobs:
     steps:
       - attach_workspace:
           at: '~'
+      - run: cd tests/basic && yarn && cd ../..
       - run: yarn test
