@@ -439,7 +439,7 @@ module.exports = async function(env = {}, argv) {
         env.dangerouslyUseLinter && {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
           enforce: 'pre',
-          exclude: [new RegExp('node_modules/'), new RegExp('(webpack)/')],
+          exclude: [/\bnode_modules\//, /\b\(webpack\)\//],
           use: [
             {
               loader: require.resolve('eslint-loader'),
