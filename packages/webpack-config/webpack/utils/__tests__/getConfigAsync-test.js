@@ -1,6 +1,6 @@
-const path = require('path');
-const getConfigAsync = require('../getConfigAsync');
-const normalizePaths = require('../normalizePaths');
+import path from 'path';
+import getConfigAsync from '../getConfigAsync';
+import normalizePaths from '../normalizePaths';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 

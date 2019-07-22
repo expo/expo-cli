@@ -1,9 +1,6 @@
-'use strict';
-
-// const puppeteer = require('puppeteer');
-const path = require('path');
-const fs = require('fs');
-const { Webpack } = require('@expo/xdl');
+import path from 'path';
+import fs from 'fs';
+import { Webpack } from '@expo/xdl';
 const projectRoot = fs.realpathSync(path.resolve(__dirname, '../basic'));
 
 describe('basic', () => {

@@ -1,8 +1,8 @@
-const path = require('path');
-const getPathsAsync = require('../getPathsAsync');
+import path from 'path';
+import getPathsAsync from '../getPathsAsync';
+import normalizePaths from '../normalizePaths';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
-const normalizePaths = require('../normalizePaths');
 
 describe('getPathsAsync', () => {
   it('matches', async () => {

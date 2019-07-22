@@ -1,4 +1,4 @@
-const getMode = require('../getMode');
+import getMode from '../getMode';
 
 describe('getMode', () => {
   it('boolean', () => {
