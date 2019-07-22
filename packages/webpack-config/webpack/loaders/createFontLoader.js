@@ -3,7 +3,7 @@ module.exports = function createFontLoader({ locations }) {
     test: /\.(ttf|otf|woff)$/,
     use: [
       {
-        loader: 'url-loader',
+        loader: require.resolve('url-loader'),
         options: {
           limit: 50000,
           name: './fonts/[name].[ext]',

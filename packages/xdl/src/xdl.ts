@@ -34,6 +34,9 @@ export { Config };
 const Credentials: any = require('./credentials/Credentials.js');
 export { Credentials };
 
+import * as AndroidCredentials from './credentials/AndroidCredentials';
+export { AndroidCredentials };
+
 const  Detach: any = require('./detach/Detach.js');
 export { Detach };
 

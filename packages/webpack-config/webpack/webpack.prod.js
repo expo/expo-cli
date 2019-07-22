@@ -104,6 +104,9 @@ module.exports = async function(env = {}, argv) {
       // Keep the runtime chunk separated to enable long term caching
       // https://twitter.com/wSokra/status/969679223278505985
       runtimeChunk: true,
+
+      // Skip the emitting phase whenever there are errors while compiling. This ensures that no erroring assets are emitted.
+      noEmitOnErrors: true,
     },
   });
 };

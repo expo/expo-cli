@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import wordwrap from 'wordwrap';
 
 import { runAction, travelingFastlane } from './fastlane';
-import { nonEmptyInput } from '../../../utils/validators';
+import { nonEmptyInput } from '../../../../validators';
 import log from '../../../../log';
 import prompt from '../../../../prompt';
 

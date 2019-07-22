@@ -1,10 +1,9 @@
 /* @flow */
 
 import Api from '../Api';
-import * as Android from './AndroidCredentials';
 import * as Ios from './IosCredentials';
 
-export type Credentials = Ios.Credentials | Android.Credentials;
+export type Credentials = Ios.Credentials; // can't import android types from typescript
 
 export type CredentialMetadata = {
   username: string,
@@ -13,7 +12,7 @@ export type CredentialMetadata = {
   platform: string,
 };
 
-export { Android, Ios };
+export { Ios };
 
 export async function credentialsExistForPlatformAsync(
   metadata: CredentialMetadata

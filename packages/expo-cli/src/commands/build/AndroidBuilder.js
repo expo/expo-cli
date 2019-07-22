@@ -15,6 +15,8 @@ import BaseBuilder from './BaseBuilder';
 import prompt from '../../prompt';
 import * as utils from './utils';
 import { PLATFORMS } from './constants';
+import { Context } from '../../credentials';
+import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
 
 const { ANDROID } = PLATFORMS;
 
@@ -94,18 +96,14 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
     if (answers.confirm) {
       log('Backing up your Android keystore now...');
-      const backupKeystoreOutputPath = path.resolve(
-        this.projectDir,
-        `${this.manifest.slug}.jks.bak`
-      );
-      await Credentials.Android.backupExistingCredentials(
-        {
-          outputPath: backupKeystoreOutputPath,
-          username,
-          experienceName,
-        },
-        log
-      );
+      const ctx = new Context();
+      await ctx.init(this.projectDir);
+
+      const backupKeystoreOutputPath = path.resolve(this.projectDir, `${ctx.manifest.slug}.jks`);
+
+      const view = new DownloadKeystore(ctx.manifest.slug);
+      await view.fetch(ctx);
+      await view.save(ctx, backupKeystoreOutputPath, true);
       await Credentials.removeCredentialsForPlatform(ANDROID, credentialMetadata);
       log.warn('Removed existing credentials from Expo servers');
     }
