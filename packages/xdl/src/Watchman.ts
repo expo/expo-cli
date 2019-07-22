@@ -1,18 +1,18 @@
 import path from 'path';
 
 import fs from 'fs-extra';
-import spawnAsync from '@expo/spawn-async';
+import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import pTimeout from 'p-timeout';
 
 import * as Binaries from './Binaries';
 
 const WAIT_FOR_WATCHMAN_VERSION_MS = 3000;
 
-export function isPlatformSupported() {
+export function isPlatformSupported(): boolean {
   return process.platform === 'darwin';
 }
 
-export async function addToPathAsync() {
+export async function addToPathAsync(): Promise<void> {
   if (!isPlatformSupported()) {
     return;
   }
@@ -20,7 +20,7 @@ export async function addToPathAsync() {
   await Binaries.addToPathAsync('watchman');
 }
 
-export async function unblockAndGetVersionAsync(projectRoot?: string) {
+export async function unblockAndGetVersionAsync(projectRoot?: string): Promise<string | null> {
   if (!isPlatformSupported()) {
     return null;
   }
@@ -40,7 +40,7 @@ export async function unblockAndGetVersionAsync(projectRoot?: string) {
   }
 }
 
-async function _unblockAndVersionAsync(projectRoot?: string) {
+async function _unblockAndVersionAsync(projectRoot?: string): Promise<SpawnResult> {
   try {
     return await pTimeout(_versionAsync(), WAIT_FOR_WATCHMAN_VERSION_MS);
   } catch (error) {
@@ -53,7 +53,7 @@ async function _unblockAndVersionAsync(projectRoot?: string) {
   }
 }
 
-async function _unblockAsync(projectRoot?: string) {
+async function _unblockAsync(projectRoot?: string): Promise<void> {
   if (process.env.TMPDIR && process.env.USER) {
     // XDL's copy of watchman:
     fs.removeSync(path.join(process.env.TMPDIR, `${process.env.USER}-state`));
@@ -73,6 +73,6 @@ async function _unblockAsync(projectRoot?: string) {
   }
 }
 
-async function _versionAsync() {
+async function _versionAsync(): Promise<SpawnResult> {
   return await spawnAsync('watchman', ['version']);
 }
