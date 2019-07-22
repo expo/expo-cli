@@ -14,6 +14,20 @@ it(`accepts a "mode" option`, () => {
 it(`reads from the NODE_ENV environment variable`, () => {
   const mode = process.env.NODE_ENV;
   process.env.NODE_ENV = 'production';
-  expect(getMode({})).toBe('production');
-  process.env.NODE_ENV = mode;
+  try {
+    expect(getMode({})).toBe('production');
+  } catch (error) {
+    throw error;
+  } finally {
+    process.env.NODE_ENV = mode;
+  }
+});
+
+it(`prioritizes the "mode" option`, () => {
+  expect(
+    getMode({
+      development: true,
+      mode: 'production',
+    })
+  ).toBe('production');
 });
