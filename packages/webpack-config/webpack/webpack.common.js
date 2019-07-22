@@ -82,7 +82,7 @@ const DEFAULT_REPORT_CONFIG = {
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
   use: {
-    loader: 'url-loader',
+    loader: require.resolve('url-loader'),
     options: {
       // Inline resources as Base64 when there is less reason to parallelize their download. The
       // heuristic we use is whether the resource would fit within a TCP/IP packet that we would
@@ -99,7 +99,7 @@ const imageLoaderConfiguration = {
 
 const styleLoaderConfiguration = {
   test: /\.(css)$/,
-  use: ['style-loader', 'css-loader'],
+  use: [require.resolve('style-loader'), require.resolve('css-loader')],
 };
 
 // "file" loader makes sure those assets get served by WebpackDevServer.
@@ -266,7 +266,7 @@ module.exports = async function(env = {}, argv) {
   const allLoaders = [
     {
       test: /\.html$/,
-      use: ['html-loader'],
+      use: [require.resolve('html-loader')],
       exclude: locations.template.folder,
     },
     imageLoaderConfiguration,

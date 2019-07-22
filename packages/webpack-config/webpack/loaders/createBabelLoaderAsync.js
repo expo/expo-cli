@@ -97,7 +97,7 @@ module.exports = async function({
     use: {
       ...customUse,
       // AFAIK there is no reason to replace `babel-loader`.
-      loader: 'babel-loader',
+      loader: require.resolve('babel-loader'),
 
       options: {
         // TODO: Bacon: Caching seems to break babel
