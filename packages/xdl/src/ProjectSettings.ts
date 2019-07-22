@@ -33,19 +33,19 @@ type PackagerInfo = {
 };
 const packagerInfoFile = 'packager-info.json';
 
-function projectSettingsJsonFile(projectRoot: string) {
+function projectSettingsJsonFile(projectRoot: string): JsonFile<ProjectSettings> {
   return new JsonFile<ProjectSettings>(
     path.join(dotExpoProjectDirectory(projectRoot), projectSettingsFile)
   );
 }
 
-function packagerInfoJsonFile(projectRoot: string) {
+function packagerInfoJsonFile(projectRoot: string): JsonFile<PackagerInfo> {
   return new JsonFile<PackagerInfo>(
     path.join(dotExpoProjectDirectory(projectRoot), packagerInfoFile)
   );
 }
 
-export async function readAsync(projectRoot: string) {
+export async function readAsync(projectRoot: string): Promise<ProjectSettings> {
   let projectSettings;
   try {
     projectSettings = await projectSettingsJsonFile(projectRoot).readAsync();
@@ -60,7 +60,7 @@ export async function readAsync(projectRoot: string) {
   return projectSettings;
 }
 
-function migrateDeprecatedSettings(projectSettings: any) {
+function migrateDeprecatedSettings(projectSettings: any): void {
   if (projectSettings.hostType === 'ngrok') {
     // 'ngrok' is deprecated
     projectSettings.hostType = 'tunnel';
@@ -77,7 +77,10 @@ function migrateDeprecatedSettings(projectSettings: any) {
   }
 }
 
-export async function setAsync(projectRoot: string, json: Partial<ProjectSettings>) {
+export async function setAsync(
+  projectRoot: string,
+  json: Partial<ProjectSettings>
+): Promise<ProjectSettings> {
   try {
     return await projectSettingsJsonFile(projectRoot).mergeAsync(json, {
       cantReadFileDefault: projectSettingsDefaults,
@@ -89,7 +92,7 @@ export async function setAsync(projectRoot: string, json: Partial<ProjectSetting
   }
 }
 
-export async function readPackagerInfoAsync(projectRoot: string) {
+export async function readPackagerInfoAsync(projectRoot: string): Promise<PackagerInfo> {
   try {
     return await packagerInfoJsonFile(projectRoot).readAsync({
       cantReadFileDefault: {},
@@ -99,7 +102,10 @@ export async function readPackagerInfoAsync(projectRoot: string) {
   }
 }
 
-export async function setPackagerInfoAsync(projectRoot: string, json: Partial<PackagerInfo>) {
+export async function setPackagerInfoAsync(
+  projectRoot: string,
+  json: Partial<PackagerInfo>
+): Promise<PackagerInfo> {
   try {
     return await packagerInfoJsonFile(projectRoot).mergeAsync(json, {
       cantReadFileDefault: {},
@@ -109,7 +115,7 @@ export async function setPackagerInfoAsync(projectRoot: string, json: Partial<Pa
   }
 }
 
-export function dotExpoProjectDirectory(projectRoot: string) {
+export function dotExpoProjectDirectory(projectRoot: string): string {
   let dirPath = path.join(projectRoot, '.expo');
   try {
     // move .exponent to .expo
@@ -125,7 +131,7 @@ export function dotExpoProjectDirectory(projectRoot: string) {
   return dirPath;
 }
 
-export function dotExpoProjectDirectoryExists(projectRoot: string) {
+export function dotExpoProjectDirectoryExists(projectRoot: string): boolean {
   let dirPath = path.join(projectRoot, '.expo');
   try {
     if (fs.statSync(dirPath).isDirectory()) {
@@ -138,7 +144,7 @@ export function dotExpoProjectDirectoryExists(projectRoot: string) {
   return false;
 }
 
-export async function getPackagerOptsAsync(projectRoot: string) {
+export async function getPackagerOptsAsync(projectRoot: string): Promise<ProjectSettings> {
   let projectSettings = await readAsync(projectRoot);
   return projectSettings;
 }

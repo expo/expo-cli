@@ -88,8 +88,11 @@ export default class JsonFile<TJSONObject extends JSONObject> {
     return setAsync(this.file, key, value, this._getOptions(options));
   }
 
-  async mergeAsync(sources: Partial<TJSONObject> | Array<Partial<TJSONObject>>, options?: Options<TJSONObject>) {
-    return mergeAsync(this.file, sources, this._getOptions(options));
+  async mergeAsync(
+    sources: Partial<TJSONObject> | Array<Partial<TJSONObject>>,
+    options?: Options<TJSONObject>
+  ): Promise<TJSONObject> {
+    return mergeAsync<TJSONObject>(this.file, sources, this._getOptions(options));
   }
 
   async deleteKeyAsync(key: string, options?: Options<TJSONObject>) {
@@ -198,7 +201,7 @@ async function setAsync<TJSONObject extends JSONObject>(
 
 async function mergeAsync<TJSONObject extends JSONObject>(
   file: string,
-  sources: Array<TJSONObject> | TJSONObject,
+  sources: Partial<TJSONObject> | Array<Partial<TJSONObject>>,
   options?: Options<TJSONObject>
 ): Promise<TJSONObject> {
   const object = await readAsync(file, options);
