@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`getPathsAsync matches 1`] = `
+exports[`has consistent defaults 1`] = `
 Object {
   "absolute": [Function],
   "appMain": "tests/basic/index",

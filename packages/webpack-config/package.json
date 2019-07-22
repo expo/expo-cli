@@ -63,6 +63,11 @@
     "webpack-merge": "^4.2.1",
     "workbox-webpack-plugin": "^3.6.3"
   },
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-flow": "^7.0.0",
+    "@expo/babel-preset-cli": "^0.1.5"
+  },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "browserslist": {
     "production": [

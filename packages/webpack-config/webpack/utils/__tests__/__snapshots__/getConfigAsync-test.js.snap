@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`getConfigAsync matches 1`] = `
+exports[`has consistent defaults 1`] = `
 Object {
   "android": Object {},
   "assetBundlePatterns": Object {
