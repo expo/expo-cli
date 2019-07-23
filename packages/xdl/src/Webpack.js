@@ -19,7 +19,7 @@ import ip from './ip';
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
 const HOST = '0.0.0.0';
-const DEFAULT_PORT = 19006;
+const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 19006;
 const WEBPACK_LOG_TAG = 'expo';
 
 let webpackDevServerInstance: WebpackDevServer | null = null;
@@ -32,9 +32,9 @@ export function getServer(projectRoot: string) {
   return webpackDevServerInstance;
 }
 
-async function choosePortAsync(customDefaultPort?: number | undefined): Promise<number | null> {
+async function choosePortAsync(): Promise<number | null> {
   try {
-    return await choosePort(HOST, customDefaultPort || DEFAULT_PORT);
+    return await choosePort(HOST, DEFAULT_PORT);
   } catch (error) {
     throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
   }
@@ -72,7 +72,7 @@ export async function startAsync(
     info: Web.isInfoEnabled(),
   });
 
-  webpackServerPort = await choosePortAsync(config.devServer.port);
+  webpackServerPort = config.devServer.port || await choosePortAsync();
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
