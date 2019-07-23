@@ -18,7 +18,7 @@ import ip from './ip';
 
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
-const HOST = '0.0.0.0';
+const HOST = process.env.IP || '0.0.0.0';
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 19006;
 const WEBPACK_LOG_TAG = 'expo';
 
