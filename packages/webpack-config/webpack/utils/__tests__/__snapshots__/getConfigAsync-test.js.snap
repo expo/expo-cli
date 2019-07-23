@@ -3,9 +3,9 @@
 exports[`has consistent defaults 1`] = `
 Object {
   "android": Object {},
-  "assetBundlePatterns": Object {
-    "0": "**/*",
-  },
+  "assetBundlePatterns": Array [
+    "**/*",
+  ],
   "description": "A Neat Expo App",
   "icon": "./assets/icon.png",
   "ios": Object {
@@ -13,11 +13,11 @@ Object {
   },
   "name": "basic",
   "orientation": "portrait",
-  "platforms": Object {
-    "0": "ios",
-    "1": "android",
-    "2": "web",
-  },
+  "platforms": Array [
+    "ios",
+    "android",
+    "web",
+  ],
   "primaryColor": "#4630EB",
   "privacy": "public",
   "sdkVersion": "33.0.0",
@@ -46,22 +46,22 @@ Object {
     "description": "A Neat Expo App",
     "dir": "auto",
     "display": "standalone",
-    "icons": Object {
-      "0": Object {
+    "icons": Array [
+      Object {
         "destination": "apple/icons",
-        "size": Object {
-          "0": 192,
-          "1": 512,
-        },
+        "size": Array [
+          192,
+          512,
+        ],
         "src": "tests/basic/assets/icon.png",
       },
-      "1": Object {
+      Object {
         "destination": "apple/icons",
         "ios": true,
         "sizes": 180,
         "src": "tests/basic/assets/icon.png",
       },
-    },
+    ],
     "lang": "en",
     "meta": Object {
       "apple": Object {
@@ -75,12 +75,12 @@ Object {
     "name": "basic",
     "orientation": "portrait",
     "preferRelatedApplications": true,
-    "relatedApplications": Object {},
+    "relatedApplications": Array [],
     "scope": undefined,
     "shortName": "basic",
     "startUrl": ".",
-    "startupImages": Object {
-      "0": Object {
+    "startupImages": Array [
+      Object {
         "color": "#ffffff",
         "destination": "apple/splash",
         "orientation": "portrait",
@@ -88,7 +88,7 @@ Object {
         "src": "tests/basic/assets/splash.png",
         "supportsTablet": true,
       },
-    },
+    ],
     "themeColor": "#4630EB",
   },
 }
