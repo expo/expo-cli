@@ -14,11 +14,12 @@ import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
 import * as Doctor from './project/Doctor';
 import XDLError from './XDLError';
-import ip from './ip';
+import ip from './ip'
 
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
-const HOST = process.env.IP || '0.0.0.0';
+const HOST = process.env.IP;
+const PUBLIC_HOST = process.env.HOST;
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 19006;
 const WEBPACK_LOG_TAG = 'expo';
 
@@ -94,9 +95,12 @@ export async function startAsync(
       useYarn,
       onFinished: resolve,
     });
-    webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
+    webpackDevServerInstance = new WebpackDevServer(compiler, {
+      ...config.devServer,
+      publicHost: PUBLIC_HOST,
+    });
     // Launch WebpackDevServer.
-    webpackDevServerInstance.listen(webpackServerPort, HOST, error => {
+    webpackDevServerInstance.listen(webpackServerPort, HOST || '0.0.0.0', error => {
       if (error) {
         ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error);
       }
@@ -119,9 +123,9 @@ export async function getUrlAsync(projectRoot: string): Promise<string> {
   if (!devServer) {
     return null;
   }
-  const host = ip.address();
+  const host = PUBLIC_HOST || `${HOST || ip.address()}:${webpackServerPort}`;
   const urlType = await getProtocolAsync(projectRoot);
-  return `${urlType}://${host}:${webpackServerPort}`;
+  return `${urlType}://${host}`;
 }
 
 export async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> {
