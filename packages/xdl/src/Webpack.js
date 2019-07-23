@@ -2,19 +2,19 @@
  * @flow
  */
 import * as ConfigUtils from '@expo/config';
+import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import printBuildError from 'react-dev-utils/printBuildError';
 import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import chalk from 'chalk';
+
 import createWebpackCompiler from './createWebpackCompiler';
+import ip from './ip';
+import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
-import * as Doctor from './project/Doctor';
 import XDLError from './XDLError';
-import ip from './ip';
 
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
