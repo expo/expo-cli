@@ -4,7 +4,7 @@
  * Store notification icon string in service worker.
  * Ref: https://stackoverflow.com/a/35729334/2603230
  */
-self.addEventListener('message', function(event) {
+self.addEventListener('message', event => {
   let data = JSON.parse(event.data);
 
   self.notificationIcon = data.notificationIcon;
@@ -41,7 +41,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
 
   event.waitUntil(
-    (async function() {
+    (async () => {
       const allClients = await self.clients.matchAll({
         includeUncontrolled: true,
       });
