@@ -364,7 +364,7 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
   }
 
   const splashScreenMode =
-    _.get(exp, 'android.splash.resizeMode') || _.get(exp, 'splash.resizeMode');
+    _.get(exp, 'android.splash.resizeMode') || _.get(exp, 'splash.resizeMode', 'contain'); 
 
   // only mode `native` is handled by this check
   if (splashScreenMode === 'contain' || splashScreenMode === 'cover') {

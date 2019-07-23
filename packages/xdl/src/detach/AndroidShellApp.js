@@ -32,6 +32,8 @@ const {
 
 const imageKeys = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
 
+type BuildMode = 'debug' | 'release';
+
 // Do not call this from anything used by detach
 function exponentDirectory(workingDir) {
   if (workingDir) {
@@ -357,7 +359,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
 
   await copyInitialShellAppFilesAsync(androidSrcPath, shellPath, false, sdkVersion);
   await removeObsoleteSdks(shellPath, sdkVersion);
-  await runShellAppModificationsAsync(context, sdkVersion);
+  await runShellAppModificationsAsync(context, sdkVersion, buildMode);
   await prepareEnabledModules(shellPath, modules);
 
   if (!args.skipBuild) {
@@ -380,7 +382,8 @@ function shellPathForContext(context: StandaloneContext) {
 
 export async function runShellAppModificationsAsync(
   context: StandaloneContext,
-  sdkVersion: ?string
+  sdkVersion: ?string,
+  buildMode: ?BuildMode
 ) {
   const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
 
@@ -1025,6 +1028,26 @@ export async function runShellAppModificationsAsync(
     );
   }
 
+  // Set manifest url for debug mode
+  if (buildMode === 'debug') {
+    await regexFileAsync(
+      'DEVELOPMENT_URL = ""',
+      `DEVELOPMENT_URL = "${fullManifestUrl}"`,
+      path.join(
+        shellPath,
+        'app',
+        'src',
+        'main',
+        'java',
+        'host',
+        'exp',
+        'exponent',
+        'generated',
+        'DetachBuildConstants.java'
+      )
+    );
+  }
+
   // Google sign in
   await regexFileAsync(
     /"current_key": "(.*?)"/,
@@ -1042,7 +1065,7 @@ async function buildShellAppAsync(
   context: StandaloneContext,
   sdkVersion: string,
   buildType: string,
-  buildMode: 'debug' | 'release'
+  buildMode: BuildMode
 ) {
   let shellPath = shellPathForContext(context);
   const ext = buildType === 'app-bundle' ? 'aab' : 'apk';

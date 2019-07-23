@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "3.0.0",
+  "version": "3.0.2",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
-    "@expo/babel-preset-cli": "^0.1.2",
+    "@expo/babel-preset-cli": "^0.1.5",
     "@types/dateformat": "^3.0.0",
     "@types/inquirer": "^6.0.3",
     "@types/progress": "^2.0.3",
@@ -59,12 +59,13 @@
   },
   "dependencies": {
     "@expo/bunyan": "3.0.2",
-    "@expo/config": "^2.1.0",
-    "@expo/dev-tools": "^0.5.39",
-    "@expo/json-file": "^8.1.7",
+    "@expo/config": "^2.1.2",
+    "@expo/dev-tools": "^0.5.41",
+    "@expo/json-file": "^8.1.9",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
-    "@expo/xdl": "^56.0.0",
+    "@expo/xdl": "^56.1.1",
+    "@types/untildify": "^3.0.0",
     "ansi-regex": "^4.1.0",
     "axios": "0.19.0",
     "babel-runtime": "6.26.0",
@@ -99,15 +100,15 @@
     "slash": "1.0.0",
     "source-map-support": "0.5.9",
     "split": "1.0.1",
-    "tempy": "^0.3.0",
     "targz": "^1.0.1",
+    "tempy": "^0.3.0",
     "untildify": "3.0.3",
     "validator": "10.5.0",
     "wordwrap": "1.0.0"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.9.9",
-    "@expo/traveling-fastlane-linux": "1.9.9"
+    "@expo/traveling-fastlane-darwin": "1.9.11",
+    "@expo/traveling-fastlane-linux": "1.9.11"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }

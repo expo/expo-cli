@@ -3,9 +3,11 @@
 import path from 'path';
 import chalk from 'chalk';
 import fs from 'fs-extra';
-import _ from 'lodash';
+import get from 'lodash/get';
 
-import { Credentials, UserManager, ProjectUtils } from '@expo/xdl';
+import { AndroidCredentials, Credentials } from '@expo/xdl';
+import { Context } from '../../credentials';
+import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
 
 import log from '../../log';
 import prompt from '../../prompt';
@@ -30,27 +32,29 @@ export default class AppSigningOptInProcess {
   }
 
   async run() {
-    const { username } = (await UserManager.ensureLoggedInAsync()) || {};
-    const { exp = {} } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
+    const ctx = new Context();
+    await ctx.init(this.projectDir);
+    await this.init(ctx.manifest.slug);
 
-    await this.init(exp.slug);
+    const view = new DownloadKeystore(ctx.manifest.slug);
+    await view.fetch(ctx);
+    await view.save(ctx, this.signKeystore, true);
 
-    log(`Saving current keystore to ${this.signKeystore}...`);
-    this.signKeystoreCredentials = await Credentials.Android.backupExistingCredentials({
-      outputPath: this.signKeystore,
-      username,
-      experienceName: `@${username}/${exp.slug}`,
-    });
+    this.signKeystoreCredentials = {
+      keystorePassword: get(view, 'credentials.keystorePassword'),
+      keyAlias: get(view, 'credentials.keyAlias'),
+      keyPassword: get(view, 'credentials.keyPassword'),
+    };
 
     try {
       await this.exportPrivateKey();
-      await this.prepareKeystores(username, exp);
+      await this.prepareKeystores(ctx.user.username, ctx.manifest);
     } catch (error) {
       log.error(error);
       await this.cleanup(true);
       return;
     }
-    await this.afterStoreSubmit(username, exp);
+    await this.afterStoreSubmit(ctx.user.username, ctx.manifest);
   }
 
   async init(slug: string) {
@@ -100,49 +104,46 @@ export default class AppSigningOptInProcess {
     ];
     const { encryptionKey } = await prompt(encryptKeyQuestion);
 
-    await Credentials.Android.exportPrivateKey(
+    await AndroidCredentials.exportPrivateKey(
       { keystorePath: this.signKeystore, ...this.signKeystoreCredentials },
       encryptionKey,
-      this.privateSigningKey,
-      log
+      this.privateSigningKey
     );
   }
 
   async prepareKeystores(username: string, exp: Object) {
     log(`Saving upload keystore to ${this.uploadKeystore}...`);
-    this.uploadKeystoreCredentials = await Credentials.Android.generateUploadKeystore(
+    this.uploadKeystoreCredentials = await AndroidCredentials.generateUploadKeystore(
       this.uploadKeystore,
-      _.get(exp, 'android.package'),
+      get(exp, 'android.package'),
       `@${username}/${exp.slug}`
     );
 
     log(`Saving upload certificate to ${this.publicUploadCert}`);
-    await Credentials.Android.exportCertBase64(
-      this.uploadKeystore,
-      this.uploadKeystoreCredentials.keystorePassword,
-      this.uploadKeystoreCredentials.keyAlias,
+    await AndroidCredentials.exportCertBase64(
+      {
+        keystorePath: this.uploadKeystore,
+        keystorePassword: this.uploadKeystoreCredentials.keystorePassword,
+        keyAlias: this.uploadKeystoreCredentials.keyAlias,
+      },
       this.publicUploadCert
     );
 
-    await Credentials.Android.logKeystoreCredentials(
+    await AndroidCredentials.logKeystoreCredentials(
       this.uploadKeystoreCredentials,
-      'Credentials for upload keystore',
-      log
+      'Credentials for upload keystore'
     );
 
     log('App signing certificate');
-    await Credentials.Android.logKeystoreHashes(
-      {
-        keystorePath: this.signKeystore,
-        ...this.signKeystoreCredentials,
-      },
-      log
-    );
+    await AndroidCredentials.logKeystoreHashes({
+      keystorePath: this.signKeystore,
+      ...this.signKeystoreCredentials,
+    });
     log('Upload certificate');
-    await Credentials.Android.logKeystoreHashes(
-      { keystorePath: this.uploadKeystore, ...this.uploadKeystoreCredentials },
-      log
-    );
+    await AndroidCredentials.logKeystoreHashes({
+      keystorePath: this.uploadKeystore,
+      ...this.uploadKeystoreCredentials,
+    });
   }
 
   async afterStoreSubmit(username: string, exp: Object) {
@@ -194,10 +195,9 @@ export default class AppSigningOptInProcess {
         this.signKeystore
       }; remove it only if you are sure that Google Play App Signing is enabled for your app.`
     );
-    Credentials.Android.logKeystoreCredentials(
+    AndroidCredentials.logKeystoreCredentials(
       this.signKeystoreCredentials,
-      'Credentials for original keystore',
-      log
+      'Credentials for original keystore'
     );
     await this.cleanup();
   }
