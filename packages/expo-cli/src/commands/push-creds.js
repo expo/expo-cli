@@ -140,8 +140,8 @@ export default (program: any) => {
       });
 
       log('All done!');
-      log('Your VAPID public key is: ' + results.vapidPublicKey);
-      log('Your VAPID private key is: ' + results.vapidPrivateKey);
+      log(`Your VAPID public key is: ${results.vapidPublicKey}`);
+      log(`Your VAPID private key is: ${results.vapidPrivateKey}`);
       log(
         "Don't forget to also add the generated public key to your `app.json` file! Learn more here: https://docs.expo.io/versions/latest/guides/using-vapid/"
       );
@@ -169,7 +169,7 @@ export default (program: any) => {
       ) {
         log(JSON.stringify(result));
       } else if (result.status === 'error') {
-        throw new Error('Server returned an error: ' + result.error);
+        throw new Error(`Server returned an error: ${result.error}`);
       } else {
         throw new Error('Server returned an invalid result!');
       }
