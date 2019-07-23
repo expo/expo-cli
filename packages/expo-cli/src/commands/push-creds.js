@@ -99,8 +99,8 @@ export default (program: any) => {
 
       log('Logging in...');
 
-      let user = await UserManager.getCurrentUserAsync();
-      let apiClient = ApiV2.clientForUser(user);
+      const user = await UserManager.getCurrentUserAsync();
+      const apiClient = ApiV2.clientForUser(user);
 
       log("Setting VAPID keys on Expo's servers...");
 
@@ -130,12 +130,12 @@ export default (program: any) => {
 
       log('Logging in...');
 
-      let user = await UserManager.getCurrentUserAsync();
-      let apiClient = ApiV2.clientForUser(user);
+      const user = await UserManager.getCurrentUserAsync();
+      const apiClient = ApiV2.clientForUser(user);
 
       log("Generating and setting VAPID keys on Expo's servers...");
 
-      let results = await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
+      const results = await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
         vapidSubject: options.vapidSubject,
       });
 
@@ -156,10 +156,10 @@ export default (program: any) => {
       const {
         args: { remotePackageName },
       } = await Exp.getPublishInfoAsync(projectDir);
-      let user = await UserManager.getCurrentUserAsync();
-      let apiClient = ApiV2.clientForUser(user);
+      const user = await UserManager.getCurrentUserAsync();
+      const apiClient = ApiV2.clientForUser(user);
 
-      let result = await apiClient.getAsync(`credentials/push/web/${remotePackageName}`);
+      const result = await apiClient.getAsync(`credentials/push/web/${remotePackageName}`);
 
       if (
         result.status === 'ok' &&
@@ -187,8 +187,8 @@ export default (program: any) => {
       } = await Exp.getPublishInfoAsync(projectDir);
 
       log('Logging in...');
-      let user = await UserManager.getCurrentUserAsync();
-      let apiClient = ApiV2.clientForUser(user);
+      const user = await UserManager.getCurrentUserAsync();
+      const apiClient = ApiV2.clientForUser(user);
 
       log("Deleting API key from Expo's servers...");
 
