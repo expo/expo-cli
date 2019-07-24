@@ -291,18 +291,21 @@ async function createWebpackConfigAsync(
   return { env, config };
 }
 
-async function getNextProjectSettingsAsync(projectRoot: string, settings: Object) {
-  let nextSettings = {};
+async function applyOptionsToProjectSettingsAsync(
+  projectRoot: string,
+  options: BundlingOptions
+) /*: ProjectSettings */ {
+  let newSettings = {};
   // Change settings before reading them
-  if (typeof settings.https === 'boolean') {
-    nextSettings.https = settings.https;
+  if (typeof options.https === 'boolean') {
+    newSettings.https = options.https;
   }
-  if (typeof settings.dev === 'boolean') {
-    nextSettings.dev = settings.dev;
+  if (typeof options.dev === 'boolean') {
+    newSettings.dev = options.dev;
   }
 
-  if (Object.keys(nextSettings).length) {
-    await ProjectSettings.setAsync(projectRoot, nextSettings);
+  if (Object.keys(newSettings).length) {
+    await ProjectSettings.setAsync(projectRoot, newSettings);
   }
 
   return await ProjectSettings.readAsync(projectRoot);
@@ -310,21 +313,20 @@ async function getNextProjectSettingsAsync(projectRoot: string, settings: Object
 
 async function getWebpackConfigEnvFromBundlingOptionsAsync(
   projectRoot: string,
-  settings: BundlingOptions
+  options: BundlingOptions
 ): Promise<Object> {
-  let { dev, https } = await getNextProjectSettingsAsync(projectRoot, settings);
+  let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
 
-  const mode =
-    typeof settings.mode === 'string' ? settings.mode : dev ? 'development' : 'production';
+  const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';
 
   const isImageEditingEnabled = validateBoolOption(
     'isImageEditingEnabled',
-    settings.isImageEditingEnabled,
+    options.isImageEditingEnabled,
     true
   );
   const isDebugInfoEnabled = validateBoolOption(
     'isDebugInfoEnabled',
-    settings.isDebugInfoEnabled,
+    options.isDebugInfoEnabled,
     Web.isInfoEnabled()
   );
 
@@ -333,10 +335,10 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     pwa: isImageEditingEnabled,
     mode,
     https,
-    polyfill: validateBoolOption('isPolyfillEnabled', settings.isPolyfillEnabled, false),
+    polyfill: validateBoolOption('isPolyfillEnabled', options.isPolyfillEnabled, false),
     development: dev,
     production: !dev,
     info: isDebugInfoEnabled,
-    ...(settings.webpackEnv || {}),
+    ...(options.webpackEnv || {}),
   };
 }
