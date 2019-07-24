@@ -7,26 +7,23 @@ const DEFAULT_TIMEOUT_INTERVAL = 1000 * 60 * 4;
 
 beforeEach(() => {
   process.env.EXPO_DEBUG = true;
-  //   process.env.EXPO_WEB_INFO = true;
-});
-
-afterEach(() => {
-  process.env.TESTING_REMOVE_UNUSED_IMPORT_EXPORTS = false;
 });
 
 it(
   `starts`,
   async () => {
-    process.env.TESTING_REMOVE_UNUSED_IMPORT_EXPORTS = false;
-
-    const info = await Webpack.startAsync(
-      projectRoot,
-      {
-        nonInteractive: true,
+    const info = await Webpack.startAsync(projectRoot, {
+      nonInteractive: true,
+      verbose: true,
+      mode: 'development',
+      webpackEnv: {
+        removeUnusedImportExports: false,
+        report: false,
       },
-      true
-    );
-    console.log('WebpackDevServer listening at localhost:', info.url.split(':').pop());
+    });
+
+    console.log('WebpackDevServer listening at localhost:', info.port);
+
     if (info.server) {
       info.server.close();
     }
@@ -37,8 +34,7 @@ it(
 it(
   `builds`,
   async () => {
-    process.env.TESTING_REMOVE_UNUSED_IMPORT_EXPORTS = false;
-    await buildAsync();
+    await buildAsync(false);
   },
   DEFAULT_TIMEOUT_INTERVAL
 );
@@ -46,18 +42,19 @@ it(
 it(
   `builds with tree-shaking`,
   async () => {
-    process.env.TESTING_REMOVE_UNUSED_IMPORT_EXPORTS = true;
-    await buildAsync();
+    await buildAsync(true);
   },
   DEFAULT_TIMEOUT_INTERVAL
 );
 
-async function buildAsync() {
-  await Webpack.bundleAsync(
-    projectRoot,
-    {
-      nonInteractive: true,
+async function buildAsync(removeUnusedImportExports) {
+  await Webpack.bundleAsync(projectRoot, {
+    nonInteractive: true,
+    verbose: true,
+    mode: 'production',
+    webpackEnv: {
+      removeUnusedImportExports,
+      report: !process.env.CI,
     },
-    true
-  );
+  });
 }
