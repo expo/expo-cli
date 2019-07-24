@@ -227,17 +227,14 @@ export async function getUrlAsync(projectRoot: string): Promise<string> {
     return null;
   }
   const host = ip.address();
-  const urlType = await getProtocolAsync(projectRoot);
-  return `${urlType}://${host}:${webpackServerPort}`;
+  const protocol = await getProtocolAsync(projectRoot);
+  return `${protocol}://${host}:${webpackServerPort}`;
 }
 
 export async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> {
   // TODO: Bacon: Handle when not in expo
   const { https } = await ProjectSettings.readAsync(projectRoot);
-  if (https === true) {
-    return 'https';
-  }
-  return 'http';
+  return https === true ? 'https' : 'http';
 }
 
 export async function getAvailablePortAsync(
