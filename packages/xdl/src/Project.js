@@ -1492,6 +1492,7 @@ export async function startReactNativeServerAsync(
     port: packagerPort,
     customLogReporterPath: ConfigUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
     assetExts: ['ttf'],
+    sourceExts: ['expo.js', 'expo.ts', 'expo.tsx', 'expo.json', 'js', 'json', 'ts', 'tsx'],
     nonPersistent: !!options.nonPersistent,
   };
 
@@ -2165,7 +2166,7 @@ export async function startAsync(
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (options.webOnly) {
-    await Webpack.startAsync(projectRoot, options, verbose);
+    await Webpack.startAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
   } else {
     await startExpoServerAsync(projectRoot);
