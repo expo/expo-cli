@@ -29,14 +29,24 @@ module.exports = async function(env = {}, argv) {
       // Point sourcemap entries to original disk location (format as URL on Windows)
       devtoolModuleFilenameTemplate: info =>
         locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/'),
+      // Enable line to line mapped mode for all/specified modules.
+      // Line to line mapped mode uses a simple SourceMap where each line of the generated source is mapped to the same line of the original source.
+      // It’s a performance optimization. Only use it if your performance need to be better and you are sure that input lines match which generated lines.
+      // true enables it for all modules (not recommended)
       devtoolLineToLine: !minify || undefined,
+      // Add comments that describe the file import/exports.
       pathinfo: !minify || undefined,
     },
     optimization: {
       minimize: minify,
+      // Instead of numeric ids, give modules readable names for better debugging.
       namedModules: minify ? undefined : true,
+      // Instead of numeric ids, give chunks readable names for better debugging.
       namedChunks: minify ? undefined : true,
+      // Readable ids for better debugging.
       moduleIds: minify ? undefined : 'named',
+      // if optimization.namedChunks is enabled optimization.chunkIds is set to 'named'.
+      // This will manually enable it just to be safe.
       chunkIds: minify ? undefined : 'named',
       minimizer: [
         // This is only used in production mode
@@ -104,12 +114,10 @@ module.exports = async function(env = {}, argv) {
       // Automatically split vendor and commons
       // https://twitter.com/wSokra/status/969633336732905474
       // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
-      splitChunks: minify
-        ? {
-            chunks: 'all',
-            name: false,
-          }
-        : undefined,
+      splitChunks: {
+        chunks: 'all',
+        name: !minify,
+      },
       // Keep the runtime chunk separated to enable long term caching
       // https://twitter.com/wSokra/status/969679223278505985
       runtimeChunk: true,
