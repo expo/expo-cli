@@ -2166,7 +2166,7 @@ export async function startAsync(
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (options.webOnly) {
-    await Webpack.startAsync(projectRoot, options, verbose);
+    await Webpack.startAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
   } else {
     await startExpoServerAsync(projectRoot);
