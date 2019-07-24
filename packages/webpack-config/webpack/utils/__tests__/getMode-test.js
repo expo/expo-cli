@@ -16,8 +16,6 @@ it(`reads from the NODE_ENV environment variable`, () => {
   process.env.NODE_ENV = 'production';
   try {
     expect(getMode({})).toBe('production');
-  } catch (error) {
-    throw error;
   } finally {
     process.env.NODE_ENV = mode;
   }
