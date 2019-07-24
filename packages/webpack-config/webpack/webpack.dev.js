@@ -11,7 +11,9 @@ module.exports = async function(env = {}, argv) {
     env.config = await getConfigAsync(env);
   }
 
+  const minify = env.minify === undefined ? false : env.minify;
   const devServer = await createDevServerConfigAsync(env, argv);
+
   return merge(await common(env, argv), {
     output: {
       // Add comments that describe the file import/exports.
@@ -25,6 +27,9 @@ module.exports = async function(env = {}, argv) {
       // Point sourcemap entries to original disk location (format as URL on Windows)
       devtoolModuleFilenameTemplate: info =>
         path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
+    },
+    optimization: {
+      minimize: minify,
     },
     devServer,
   });

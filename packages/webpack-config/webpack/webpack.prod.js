@@ -17,6 +17,7 @@ module.exports = async function(env = {}, argv) {
 
   const commonConfig = await common(env, argv);
 
+  const minify = env.minify === undefined ? true : env.minify;
   const shouldUseSourceMap = commonConfig.devtool !== null;
 
   return merge(commonConfig, {
@@ -28,9 +29,15 @@ module.exports = async function(env = {}, argv) {
       // Point sourcemap entries to original disk location (format as URL on Windows)
       devtoolModuleFilenameTemplate: info =>
         locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/'),
+      devtoolLineToLine: !minify || undefined,
+      pathinfo: !minify || undefined,
     },
     optimization: {
-      minimize: env.minify,
+      minimize: minify,
+      namedModules: minify ? undefined : true,
+      namedChunks: minify ? undefined : true,
+      moduleIds: minify ? undefined : 'named',
+      chunkIds: minify ? undefined : 'named',
       minimizer: [
         // This is only used in production mode
         new TerserPlugin({
@@ -97,10 +104,12 @@ module.exports = async function(env = {}, argv) {
       // Automatically split vendor and commons
       // https://twitter.com/wSokra/status/969633336732905474
       // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
-      splitChunks: {
-        chunks: 'all',
-        name: false,
-      },
+      splitChunks: minify
+        ? {
+            chunks: 'all',
+            name: false,
+          }
+        : undefined,
       // Keep the runtime chunk separated to enable long term caching
       // https://twitter.com/wSokra/status/969679223278505985
       runtimeChunk: true,

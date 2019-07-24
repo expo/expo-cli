@@ -36,8 +36,6 @@ function hasBooleanArg(rawArgs: string[], argName: string) {
 function getBooleanArg(rawArgs: string[], argName: string) {
   if (rawArgs.includes('--' + argName)) {
     return true;
-  } else if (rawArgs.includes('--no-' + argName)) {
-    return false;
   } else {
     return false;
   }
