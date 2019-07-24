@@ -1492,6 +1492,7 @@ export async function startReactNativeServerAsync(
     port: packagerPort,
     customLogReporterPath: ConfigUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
     assetExts: ['ttf'],
+    sourceExts: ['expo.js', 'expo.ts', 'expo.tsx', 'expo.json', 'js', 'json', 'ts', 'tsx'],
     nonPersistent: !!options.nonPersistent,
   };
 
