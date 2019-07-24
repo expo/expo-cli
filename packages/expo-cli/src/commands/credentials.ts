@@ -2,40 +2,30 @@ import {
   runCredentialsManager,
   Context,
 } from '../credentials';
-import { SelectAndroidExperience, SelectPlatform } from '../credentials/views/Select';
+import { SelectAndroidExperience, SelectIosExperience, SelectPlatform } from '../credentials/views/Select';
 import { CommanderStatic } from 'commander';
+
+type Options = {
+  platform?: 'android' | 'ios'
+}
 
 export default function (program: CommanderStatic) {
   program
-    .command('credentials:manager:android')
-    .description('Manage your Android credentials')
-    .asyncAction(async () => {
-      const projectDir = process.cwd();
-      const context = new Context();
-      await context.init(projectDir);
-      await runCredentialsManager(context, new SelectAndroidExperience());
-    }, /* skip project validation */ true);
-
-  // @ts-ignore disabled for now
-  return;
-
-  program
     .command('credentials:manager')
     .description('Manage your credentials')
-    .asyncAction(async () => {
+    .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
+    .asyncAction(async (options: Options) => {
       const projectDir = process.cwd();
       const context = new Context();
       await context.init(projectDir);
-      await runCredentialsManager(context, new SelectPlatform());
-    }, /* skip project validation */ true);
-
-  program
-    .command('credentials:manager:ios')
-    .description('Manage your iOS credentials')
-    .asyncAction(async () => {
-      const projectDir = process.cwd();
-      const context = new Context(); // TODO: implement ios part
-      await context.init(projectDir);
-      await runCredentialsManager(context, new SelectAndroidExperience());
+      let mainpage;
+      if (options.platform === 'android') {
+        mainpage = new SelectAndroidExperience();  
+      } else if (options.platform === 'ios') {
+        mainpage = new SelectIosExperience();
+      } else {
+        mainpage = new SelectPlatform();
+      }
+      await runCredentialsManager(context, mainpage);
     }, /* skip project validation */ true);
 };

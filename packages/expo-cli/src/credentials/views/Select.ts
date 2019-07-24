@@ -1,17 +1,23 @@
 import get from 'lodash/get';
-import prompt, { Question } from '../../prompt';
+import prompt, { Question, ChoiceType } from '../../prompt';
 import log from '../../log';
 
-import * as androidCredentials from './AndroidCredentials';
+import * as androidView from './AndroidCredentials';
+import * as iosAppView from './IosAppCredentials';
+import * as iosPushView from './IosPushCredentials';
+import * as iosDistView from './IosDistCert';
+import * as iosProvisionigProfileView from './IosProvisioningProfile';
+
 import { Context, IView } from '../context';
-import { AndroidCredentials } from '../credentials';
+import { AndroidCredentials, IosCredentials } from '../credentials';
 import { changeMainView } from '../route';
 import {
   displayAndroidCredentials,
+  displayIosCredentials,
 } from '../actions/list';
 
 export class SelectPlatform implements IView {
-  async open(context: Context): Promise<IView | null> {
+  async open(ctx: Context): Promise<IView | null> {
     const { platform } = await prompt([
       {
         type: 'list',
@@ -21,11 +27,93 @@ export class SelectPlatform implements IView {
         choices: ['ios', 'android'],
       },
     ]);
-    const view = platform === 'ios' ? new SelectPlatform() : new SelectAndroidExperience();
+    const view = platform === 'ios' ? new SelectIosExperience() : new SelectAndroidExperience();
     changeMainView(view);
     return view;
   }
 }
+
+export class SelectIosExperience implements IView {
+  async open(ctx: Context): Promise<IView | null> {
+    const iosCredentials = await ctx.ios.getAllCredentials();
+
+    await displayIosCredentials(iosCredentials);
+
+    const projectSpecificActions: ChoiceType<string>[] = ctx.hasProjectContext
+      ? [
+          prompt.separator('---- Current project actions ----'),
+          {
+            value: 'use-existing-push-ios',
+            name: 'Use existing Push Notifications Key in current project',
+          },
+          {
+            value: 'use-existing-dist-ios',
+            name: 'Use existing Distribution Certificate in current project',
+          },
+          // {
+          //   value: 'current-remove-push-ios',
+          //   name: 'Remove Push Notifactions credentials for current project',
+          // },
+          // {
+          //   value: 'current-remove-dist-ios',
+          //   name: 'Remove Distribution Certificate for current project',
+          // },
+          // {
+          //   value: 'current-remove-app-ios',
+          //   name: 'Remove all credentials for current project',
+          // },
+          prompt.separator('---- Account level actions ----'),
+        ]
+      : [];
+
+    const question: Question = {
+      type: 'list',
+      name: 'action',
+      message: 'What do you want to do?',
+      choices: [
+        ...projectSpecificActions,
+        { value: 'remove-provisioning-profile', name: 'Remove Provisioning Profile' },
+        { value: 'create-ios-push', name: 'Add new Push Notifications Key' },
+        { value: 'remove-ios-push', name: 'Remove Push Notification credentials' },
+        { value: 'update-ios-push', name: 'Update Push Notifications Key' },
+        { value: 'create-ios-dist', name: 'Add new Distribution Certificate' },
+        { value: 'remove-ios-dist', name: 'Remove Distribution Certificate' },
+        { value: 'update-ios-dist', name: 'Update Distribution Certificate' },
+      ],
+      pageSize: Infinity,
+    };
+
+    const { action } = await prompt(question);
+    return this.handleAction(ctx, action);
+  }
+
+  handleAction(ctx: Context, action: string): IView | null {
+    switch (action) {
+      case 'create-ios-push':
+        return new iosPushView.CreateIosPush();
+      case 'update-ios-push':
+        return new iosPushView.UpdateIosPush();
+      case 'remove-ios-push':
+        return new iosPushView.RemoveIosPush();
+      case 'create-ios-dist':
+        return new iosDistView.CreateIosDist();
+      case 'update-ios-dist':
+        return new iosDistView.UpdateIosDist();
+      case 'remove-ios-dist':
+        return new iosDistView.RemoveIosDist();
+      case 'use-existing-push-ios':
+        return new iosPushView.UseExistingPushNotification();
+      case 'use-existing-dist-ios':
+        return new iosDistView.UseExistingDistributionCert();
+      case 'remove-provisioning-profile':
+        return new iosProvisionigProfileView.RemoveProvisioningProfile();
+      default:
+        throw new Error('Unknown action selected');
+    }
+  }
+}
+
+
 
 export class SelectAndroidExperience implements IView {
   androidCredentials: AndroidCredentials[] = [];
@@ -42,14 +130,14 @@ export class SelectAndroidExperience implements IView {
         },
       ]);
       if (runProjectContext) {
-        const view = new androidCredentials.ExperienceView(ctx.manifest.slug, null);
+        const view = new androidView.ExperienceView(ctx.manifest.slug, null);
         changeMainView(view);
         return view;
       }
     }
     this.askAboutProjectMode = false;
 
-    if (this.androidCredentials) {
+    if (this.androidCredentials.length === 0) {
       this.androidCredentials = get(await ctx.api.getAsync('credentials/android'), 'credentials')
     }
     await displayAndroidCredentials(this.androidCredentials);
@@ -69,7 +157,7 @@ export class SelectAndroidExperience implements IView {
 
     const matchName = this.androidCredentials[appIndex].experienceName.match(/@[\w.-]+\/([\w.-]+)/);
     if (matchName && matchName[1]) {
-      return new androidCredentials.ExperienceView(matchName[1], this.androidCredentials[appIndex]);
+      return new androidView.ExperienceView(matchName[1], this.androidCredentials[appIndex]);
     } else {
       log.error('Invalid experience name');
     }
