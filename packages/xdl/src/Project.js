@@ -189,9 +189,9 @@ async function _resolveGoogleServicesFile(projectRoot, manifest) {
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)).filter(
-      ({ fieldPath }) => get(manifest, fieldPath)
-    );
+    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
+      manifest.sdkVersion
+    )).filter(({ fieldPath }) => get(manifest, fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -224,9 +224,7 @@ async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = 
       logMethod(
         projectRoot,
         'expo',
-        `Unable to resolve asset "${e.localAssetPath}" from "${
-          e.manifestField
-        }" in your app/exp.json.`
+        `Unable to resolve asset "${e.localAssetPath}" from "${e.manifestField}" in your app/exp.json.`
       );
     } else {
       logMethod(
@@ -367,9 +365,7 @@ export async function mergeAppDistributions(
     return indexes.sort((index1, index2) => {
       if (semver.eq(index1.sdkVersion, index2.sdkVersion)) {
         logger.global.error(
-          `Encountered multiple index.json with the same SDK version ${
-            index1.sdkVersion
-          }. This could result in undefined behavior.`
+          `Encountered multiple index.json with the same SDK version ${index1.sdkVersion}. This could result in undefined behavior.`
         );
       }
       return semver.gte(index1.sdkVersion, index2.sdkVersion) ? -1 : 1;
@@ -802,9 +798,7 @@ export async function publishAsync(
         // ADD EMBEDDED RESPONSES HERE
         // START EMBEDDED RESPONSES
         embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-        embeddedResponses.add(new Constants.EmbeddedResponse("${
-          androidManifest.bundleUrl
-        }", "assets://shell-app.bundle", "application/javascript"));
+        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
         // END EMBEDDED RESPONSES`,
         constantsPath
       );
@@ -1492,6 +1486,7 @@ export async function startReactNativeServerAsync(
     port: packagerPort,
     customLogReporterPath: ConfigUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
     assetExts: ['ttf'],
+    sourceExts: ['expo.js', 'expo.ts', 'expo.tsx', 'expo.json', 'js', 'json', 'ts', 'tsx'],
     nonPersistent: !!options.nonPersistent,
   };
 
@@ -2165,7 +2160,7 @@ export async function startAsync(
 
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (options.webOnly) {
-    await Webpack.startAsync(projectRoot, options, verbose);
+    await Webpack.startAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
   } else {
     await startExpoServerAsync(projectRoot);

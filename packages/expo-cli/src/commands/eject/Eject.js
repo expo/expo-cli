@@ -204,13 +204,19 @@ async function ejectToBareAsync(projectRoot, options) {
   combinedDependencies['react'] = defaultDependencies['react'];
   combinedDependencies['react-native-unimodules'] = defaultDependencies['react-native-unimodules'];
   pkgJson.dependencies = combinedDependencies;
-
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
-
   log(chalk.green('Your package.json is up to date!'));
 
   log(`Adding entry point...`);
+  if (pkgJson.main !== EXPO_APP_ENTRY) {
+    log(
+      chalk.yellow(
+        `Removing "main": ${pkgJson.main} from package.json. We recommend using index.js instead.`
+      )
+    );
+  }
   delete pkgJson.main;
+  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
 
   const indexjs = `import { AppRegistry } from 'react-native';
 import App from './App';
