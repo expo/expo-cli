@@ -10,6 +10,7 @@ import semver from 'semver';
 import pacote from 'pacote';
 import temporary from 'tempy';
 import spawnAsync from '@expo/spawn-async';
+import JsonFile from '@expo/json-file';
 import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 import * as PackageManager from '../../PackageManager';
@@ -19,6 +20,44 @@ import prompt from '../../prompt';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
+
+async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string) {
+  const { exp, pkg: pkgJson } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const pkgsWithExtraSetup = await JsonFile.readAsync(
+    ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
+  );
+  const packagesToWarn = Object.keys(pkgJson.dependencies).filter(pkgName =>
+    pkgsWithExtraSetup.hasOwnProperty(pkgName)
+  );
+
+  if (packagesToWarn.length === 0) {
+    return;
+  }
+
+  let plural = packagesToWarn.length > 1;
+  log.nested('');
+  log.nested(
+    chalk.yellow(
+      `Warning: your app includes ${chalk.bold(packagesToWarn.length)} package${
+        plural ? 's' : ''
+      } that require${plural ? '' : 's'} additional setup. See the following URL${
+        plural ? 's' : ''
+      } for instructions.`
+    )
+  );
+  log.nested(
+    chalk.yellow(
+      `Your app may not build/run until the additional setup for ${
+        plural ? 'these packages' : 'this package'
+      } has been completed.`
+    )
+  );
+  log.nested('');
+  packagesToWarn.forEach(pkgName => {
+    log.nested(chalk.yellow(`- ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`));
+  });
+  log.nested('');
+}
 
 export async function ejectAsync(projectRoot: string, options) {
   let workingTreeStatus = 'unknown';
@@ -101,6 +140,7 @@ export async function ejectAsync(projectRoot: string, options) {
     let packageManager = ConfigUtils.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
     log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
     log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
+    await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
   } else if (ejectMethod === 'expokit') {
     await loginOrRegisterIfLoggedOut();
     await Detach.detachAsync(projectRoot, options);
