@@ -33,6 +33,9 @@ self.addEventListener('push', event => {
     options.tag = payload.data._tag;
     options.renotify = payload.data._renotify;
   }
+  if (payload.data._richContent && payload.data._richContent.image) {
+    options.image = payload.data._richContent.image;
+  }
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
