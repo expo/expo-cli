@@ -498,11 +498,9 @@ export async function runShellAppModificationsAsync(
   );
 
   // Versions
-  let buildGradleFile = await fs.readFileSync(path.join(shellPath, 'app', 'build.gradle'), 'utf8');
-  let androidVersion = buildGradleFile.match(/versionName '(\S+)'/)[1];
   await regexFileAsync(
     'VERSION_NAME = null',
-    `VERSION_NAME = "${androidVersion}"`,
+    `VERSION_NAME = "${version}"`,
     path.join(
       shellPath,
       'app',
