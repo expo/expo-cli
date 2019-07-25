@@ -69,7 +69,13 @@ self.addEventListener('notificationclick', event => {
       }
 
       // Message the client:
-      appClient.postMessage(event.notification.data);
+      // `origin` will always be `'selected'` in this case.
+      // https://docs.expo.io/versions/latest/sdk/notifications/#notification
+      appClient.postMessage({
+        origin: 'selected',
+        data: event.notification.data,
+        remote: !event.notification._isLocal,
+      });
     })()
   );
 });
