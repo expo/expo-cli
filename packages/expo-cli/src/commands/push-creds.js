@@ -186,6 +186,33 @@ async function _uploadWebPushCredientials(projectDir, options) {
     vapidSubject: options.vapidSubject,
   });
 
+  if (results.oldVapidData) {
+    log(
+      chalk.yellow(
+        `Warning: You have previously stored another VAPID key pair on Expo's server. Your current action has overridden the old key pair. This means that all your web clients will not receive any new notifications from you until you have deployed the app containing the new VAPID public key, and that the user has visited the site again since then.`
+      )
+    );
+    log(chalk.yellow(`For your record:`));
+    log(chalk.yellow(`- Your old VAPID public key: ${results.oldVapidData.vapidPublicKey}`));
+    log(chalk.yellow(`- Your old VAPID private key: ${results.oldVapidData.vapidPrivateKey}`));
+    log(chalk.yellow(`- Your old VAPID subject: ${results.oldVapidData.vapidSubject}`));
+    log(
+      chalk.yellow(
+        `If you wish to undo the current action, you can type the following command to upload your old credentials back to Expo's server:`
+      )
+    );
+    log(
+      chalk.yellowBright(
+        `expo push:web:upload --vapid-pubkey ${
+          results.oldVapidData.vapidPublicKey
+        } --vapid-pvtkey ${results.oldVapidData.vapidPrivateKey} --vapid-subject ${
+          results.oldVapidData.vapidSubject
+        }`
+      )
+    );
+  }
+  log(chalk.green(`VAPID data uploaded!`));
+
   /**
    * Customize app.json
    */
