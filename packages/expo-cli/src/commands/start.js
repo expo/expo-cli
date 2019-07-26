@@ -127,7 +127,10 @@ async function validateDependenciesVersions(projectDir, exp, pkg) {
   for (const moduleName of modulesToCheck) {
     const expectedRange = bundledNativeModules[moduleName];
     const actualRange = pkg.dependencies[moduleName];
-    if (!semver.intersects(expectedRange, actualRange)) {
+    if (
+      (semver.valid(actualRange) || semver.validRange(actualRange)) &&
+      !semver.intersects(expectedRange, actualRange)
+    ) {
       incorrectDeps.push({
         moduleName,
         expectedRange,
