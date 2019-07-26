@@ -223,17 +223,22 @@ async function _uploadWebPushCredientials(projectDir, options) {
 
   if (appJson.expo.owner && appJson.expo.owner !== user.username) {
     log(
-      chalk.cyan(
-        `expo.owner is already configured to be "${
+      chalk.yellow(
+        `Warning: expo.owner is already configured to be "${
           appJson.expo.owner
         }" in app.json, but your current username is "${
           user.username
-        }". We will replace it with your current username.`
+        }". You will not receive any push notification if you do not change expo.owner to "${
+          user.username
+        }" in app.json. Alternatively, you could choose to login to "${
+          appJson.expo.owner
+        }" and then execute this command again.`
       )
     );
+  } else {
+    appJson.expo.owner = user.username;
+    changedProperties.push('expo.owner');
   }
-  appJson.expo.owner = user.username;
-  changedProperties.push('expo.owner');
 
   if (
     appJson.expo.notification &&
@@ -242,7 +247,7 @@ async function _uploadWebPushCredientials(projectDir, options) {
   ) {
     log(
       chalk.cyan(
-        `expo.notification.vapidPublicKey is already configured in app.json (${
+        `Notice: expo.notification.vapidPublicKey is already configured in app.json (${
           appJson.expo.notification.vapidPublicKey
         }), but it is different from the VAPID public key you just ${
           isGeneration ? `generated` : `uploaded`
