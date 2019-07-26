@@ -395,7 +395,7 @@ require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
 use_unimodules!(
   modules_paths: ['${universalModulesPath}'],
   exclude: [
-    'expo-face-detector',
+    'expo-in-app-purchases',
     'expo-payments-stripe',
   ],
 )`,
