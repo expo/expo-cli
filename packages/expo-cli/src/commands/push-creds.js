@@ -91,24 +91,7 @@ export default (program: any) => {
         );
       }
 
-      log('Reading project configuration...');
-
-      const {
-        args: { remotePackageName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-
-      log('Logging in...');
-
-      const user = await UserManager.getCurrentUserAsync();
-      const apiClient = ApiV2.clientForUser(user);
-
-      log("Setting VAPID keys on Expo's servers...");
-
-      await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
-        vapidPublicKey: options.vapidPubkey,
-        vapidPrivateKey: options.vapidPvtkey,
-        vapidSubject: options.vapidSubject,
-      });
+      await _uploadWebPushCredientials(projectDir, options);
 
       log('All done!');
     }, true);
@@ -122,22 +105,7 @@ export default (program: any) => {
         throw new Error('Must specify --vapid-subject.');
       }
 
-      log('Reading project configuration...');
-
-      const {
-        args: { remotePackageName },
-      } = await Exp.getPublishInfoAsync(projectDir);
-
-      log('Logging in...');
-
-      const user = await UserManager.getCurrentUserAsync();
-      const apiClient = ApiV2.clientForUser(user);
-
-      log("Generating and setting VAPID keys on Expo's servers...");
-
-      const results = await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
-        vapidSubject: options.vapidSubject,
-      });
+      const results = await _uploadWebPushCredientials(projectDir, options);
 
       log('All done!');
       log(`Your VAPID public key is: ${results.vapidPublicKey}`);
@@ -197,3 +165,29 @@ export default (program: any) => {
       log('All done!');
     }, true);
 };
+
+async function _uploadWebPushCredientials(projectDir, options) {
+  log('Reading project configuration...');
+
+  const {
+    args: { remotePackageName },
+  } = await Exp.getPublishInfoAsync(projectDir);
+
+  log('Logging in...');
+
+  const user = await UserManager.getCurrentUserAsync();
+  const apiClient = ApiV2.clientForUser(user);
+
+  if (options.vapidPubkey && options.vapidPvtkey) {
+    log("Uploading VAPID keys to Expo's servers...");
+  } else {
+    log("Generating and setting VAPID keys on Expo's servers...");
+  }
+
+  const results = await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
+    vapidPublicKey: options.vapidPubkey,
+    vapidPrivateKey: options.vapidPvtkey,
+    vapidSubject: options.vapidSubject,
+  });
+  return results;
+}
