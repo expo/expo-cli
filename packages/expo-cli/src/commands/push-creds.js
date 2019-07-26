@@ -107,8 +107,8 @@ export default (program: any) => {
       }
 
       const results = await _uploadWebPushCredientials(projectDir, options);
-      log(`Your VAPID public key is: ${results.vapidPublicKey}`);
-      log(`Your VAPID private key is: ${results.vapidPrivateKey}`);
+      log(chalk.green(`Your VAPID public key is: ${results.vapidPublicKey}`));
+      log(chalk.green(`Your VAPID private key is: ${results.vapidPrivateKey}`));
     }, true);
 
   program
