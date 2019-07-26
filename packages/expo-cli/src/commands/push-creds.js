@@ -186,19 +186,19 @@ async function _uploadWebPushCredientials(projectDir, options) {
     vapidSubject: options.vapidSubject,
   });
 
-  if (results.oldVapidData) {
+  if (results.oldVapidData && results.oldVapidData.vapidPublicKey !== results.vapidPublicKey) {
     log(
       chalk.yellow(
         `Warning: You have previously stored another VAPID key pair on Expo's server. Your current action has overridden the old key pair. This means that all your web clients will not receive any new notifications from you until you have deployed the app containing the new VAPID public key, and that the user has visited the site again since then.`
       )
     );
-    log(chalk.yellow(`For your record:`));
+    log(chalk.yellow(`For your records:`));
     log(chalk.yellow(`- Your old VAPID public key: ${results.oldVapidData.vapidPublicKey}`));
     log(chalk.yellow(`- Your old VAPID private key: ${results.oldVapidData.vapidPrivateKey}`));
     log(chalk.yellow(`- Your old VAPID subject: ${results.oldVapidData.vapidSubject}`));
     log(
       chalk.yellow(
-        `If you wish to undo the current action, you can type the following command to upload your old credentials back to Expo's server:`
+        `If you wish to undo the current action, you can use the following command to upload your old credentials back to Expo's server:`
       )
     );
     log(
@@ -262,7 +262,7 @@ async function _uploadWebPushCredientials(projectDir, options) {
   changedProperties.push('expo.notification.vapidPublicKey');
 
   if (changedProperties.length) {
-    log(`Writing app.json...`);
+    log(`Writing to app.json...`);
     await fse.writeFile(configPath, JSON.stringify(appJson, null, 2));
     log(chalk.green(`Wrote ${changedProperties.join(', ')} to app.json.`));
   }
