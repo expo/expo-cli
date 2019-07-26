@@ -85,7 +85,7 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
       Analytics.flush();
     } catch (err) {
       // TODO: Find better ways to consolidate error messages
-      if (err._isCommandError) {
+      if (err.isCommandError) {
         log.error(err.message);
       } else if (err._isApiError) {
         log.error(chalk.red(err.message));
