@@ -7,7 +7,9 @@
 self.addEventListener('message', event => {
   let data = JSON.parse(event.data);
 
-  self.notificationIcon = data.notificationIcon;
+  if (data.fromExpoWebClient) {
+    self.notificationIcon = data.fromExpoWebClient.notificationIcon;
+  }
 });
 
 /**
