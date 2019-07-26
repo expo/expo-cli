@@ -2,7 +2,10 @@
  * @flow
  */
 
+import fse from 'fs-extra';
+import chalk from 'chalk';
 import { ApiV2, Exp, UserManager } from '@expo/xdl';
+import * as ConfigUtils from '@expo/config';
 
 import log from '../log';
 
@@ -92,8 +95,6 @@ export default (program: any) => {
       }
 
       await _uploadWebPushCredientials(projectDir, options);
-
-      log('All done!');
     }, true);
 
   program
@@ -106,13 +107,8 @@ export default (program: any) => {
       }
 
       const results = await _uploadWebPushCredientials(projectDir, options);
-
-      log('All done!');
       log(`Your VAPID public key is: ${results.vapidPublicKey}`);
       log(`Your VAPID private key is: ${results.vapidPrivateKey}`);
-      log(
-        "Don't forget to also add the generated public key to your `app.json` file! Learn more here: https://docs.expo.io/versions/latest/guides/using-vapid/"
-      );
     }, true);
 
   program
@@ -161,12 +157,12 @@ export default (program: any) => {
       log("Deleting API key from Expo's servers...");
 
       await apiClient.deleteAsync(`credentials/push/web/${remotePackageName}`);
-
-      log('All done!');
     }, true);
 };
 
 async function _uploadWebPushCredientials(projectDir, options) {
+  const isGeneration = !(options.vapidPubkey && options.vapidPvtkey);
+
   log('Reading project configuration...');
 
   const {
@@ -178,10 +174,10 @@ async function _uploadWebPushCredientials(projectDir, options) {
   const user = await UserManager.getCurrentUserAsync();
   const apiClient = ApiV2.clientForUser(user);
 
-  if (options.vapidPubkey && options.vapidPvtkey) {
-    log("Uploading VAPID keys to Expo's servers...");
-  } else {
+  if (isGeneration) {
     log("Generating and setting VAPID keys on Expo's servers...");
+  } else {
+    log("Uploading VAPID keys to Expo's servers...");
   }
 
   const results = await apiClient.putAsync(`credentials/push/web/${remotePackageName}`, {
@@ -189,5 +185,57 @@ async function _uploadWebPushCredientials(projectDir, options) {
     vapidPrivateKey: options.vapidPvtkey,
     vapidSubject: options.vapidSubject,
   });
+
+  /**
+   * Customize app.json
+   */
+  log(`Reading app.json...`);
+  const { configPath } = await ConfigUtils.findConfigFileAsync(projectDir);
+  const appJson = JSON.parse(await fse.readFile(configPath));
+  let changedProperties = [];
+
+  if (appJson.expo.owner && appJson.expo.owner !== user.username) {
+    log(
+      chalk.cyan(
+        `expo.owner is already configured to be "${
+          appJson.expo.owner
+        }" in app.json, but your current username is "${
+          user.username
+        }". We will replace it with your current username.`
+      )
+    );
+  }
+  appJson.expo.owner = user.username;
+  changedProperties.push('expo.owner');
+
+  if (
+    appJson.expo.notification &&
+    appJson.expo.notification.vapidPublicKey &&
+    appJson.expo.notification.vapidPublicKey !== results.vapidPublicKey
+  ) {
+    log(
+      chalk.cyan(
+        `expo.notification.vapidPublicKey is already configured in app.json (${
+          appJson.expo.notification.vapidPublicKey
+        }), but it is different from the VAPID public key you just ${
+          isGeneration ? `generated` : `uploaded`
+        }. We will replace it with the new VAPID public key.`
+      )
+    );
+  }
+  if (!appJson.expo.notification) {
+    appJson.expo.notification = {};
+  }
+  appJson.expo.notification.vapidPublicKey = results.vapidPublicKey;
+  changedProperties.push('expo.notification.vapidPublicKey');
+
+  if (changedProperties.length) {
+    log(`Writing app.json...`);
+    await fse.writeFile(configPath, JSON.stringify(appJson, null, 2));
+    log(chalk.green(`Wrote ${changedProperties.join(', ')} to app.json.`));
+  }
+
+  log(chalk.green('All done!'));
+
   return results;
 }
