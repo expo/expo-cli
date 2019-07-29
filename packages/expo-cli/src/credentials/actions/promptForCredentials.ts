@@ -20,6 +20,8 @@ type Results = {
 
 export type CredentialSchema<T> = {
   id: string,
+  canReuse?: boolean,
+  dependsOn?: string,
   name: string,
   required: Array<string>,
   questions?: {
