@@ -19,6 +19,11 @@ export class RemoveProvisioningProfile implements IView {
     const selected = await selectProfileFromList(ctx.ios.credentials);
     if (selected) {
       await this.removeSpecific(ctx, selected);
+      log(
+        chalk.green(
+          `Successfully removed Provisioning Profile for ${selected.experienceName} (${selected.bundleIdentifier})`
+        )
+      );
     }
     return null;
   }
@@ -39,9 +44,6 @@ export class RemoveProvisioningProfile implements IView {
       const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
       await ppManager.revoke(selected.bundleIdentifier);
     }
-    log(
-      `Succesfully removed Provisioning Profile for ${selected.experienceName} (${selected.bundleIdentifier})`
-    );
   }
 }
 

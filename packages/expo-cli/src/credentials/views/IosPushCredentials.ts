@@ -36,7 +36,7 @@ export class CreateIosPush implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const pushKey = await this.create(ctx);
 
-    log('Created Push Notification Key succesfully\n');
+    log('Successfully created Push Notification Key\n');
     displayIosUserCredentials(pushKey);
     log();
     return null;
@@ -47,50 +47,7 @@ export class CreateIosPush implements IView {
     if (userProvided) {
       return userProvided;
     }
-    return this.generate(ctx);
-  }
-
-  async generate(ctx: Context): Promise<PushKey> {
-    await ctx.ensureAppleCtx();
-    const manager = new PushKeyManager(ctx.appleCtx);
-    try {
-      return await manager.create();
-    } catch(e) {
-      if (e.code === 'APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR') {
-        const keys = await manager.list();
-        log.warn('Maximum number of Push Notifications Keys generated on Apple Developer Portal.');
-        log.warn(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
-        const usedByExpo = ctx.ios.credentials.userCredentials
-          .filter((cert): cert is IosPushCredentials => cert.type === 'push-key')
-          .reduce<{[key: string]: IosPushCredentials}>((acc, cert) => ({...acc, [cert.apnsKeyId]: cert}), {});
-        
-        const { revoke } = await prompt([
-          {
-            type: 'checkbox',
-            name: 'revoke',
-            message:
-            'Choose keys to revoke.',
-            choices: keys.map((key, index) => ({
-              value: index,
-              name: formatPushKeyFromApple(key, ctx.ios.credentials),
-            })),
-            pageSize: Infinity,
-          },
-        ]);
-
-        for (const index of revoke) {
-          const certInfo = keys[index]
-          if (certInfo && usedByExpo[certInfo.id]) {
-            await new RemoveIosPush(true).removeSpecific(ctx, usedByExpo[certInfo.id]);
-          } else {
-            await manager.revoke([certInfo.id]);
-          }
-        }
-      } else {
-        throw e;
-      }
-    }
-    return await this.generate(ctx);
+    return await generatePushKey(ctx);
   }
 }
 
@@ -106,8 +63,10 @@ export class RemoveIosPush implements IView {
     if (!selected) {
     } else if (!get(selected, 'type')) {
       await this.removePushCert(ctx, selected as IosAppCredentials);
+      log(chalk.green('Successfully removed Push Certificate'));
     } else {
       await this.removeSpecific(ctx, selected as IosPushCredentials);
+      log(chalk.green('Successfully removed Push Notification Key'));
     }
     return null;
   }
@@ -139,7 +98,7 @@ export class RemoveIosPush implements IView {
       {
         type: 'confirm',
         name: 'revoke',
-        message: `Do you want also to revoke it on Apple Developer Portal?`,
+        message: `Do you also want to revoke it on Apple Developer Portal?`,
         when: !this.shouldRevoke,
       },
     ]);
@@ -153,14 +112,21 @@ export class RemoveIosPush implements IView {
 export class UpdateIosPush implements IView {
   async open(ctx: Context) {
     const selected = await selectPushCredFromList(ctx.ios.credentials, false) as IosPushCredentials;
-    if (!selected) {
-    } else {
-      return await this.updateSpecific(ctx, selected);
+    if (selected) {
+      await this.updateSpecific(ctx, selected);
+
+      log(chalk.green('Successfully updated Push Notification Key.\n'));
+      const updated = ctx.ios.credentials.userCredentials.find(i => i.id === selected.id)
+      if (updated) {
+        displayIosUserCredentials(updated);
+      }
+      log();
+
     }
     return null;
   }
 
-  async updateSpecific(ctx: Context, selected: IosPushCredentials): Promise<IView | null> {
+  async updateSpecific(ctx: Context, selected: IosPushCredentials) {
     const apps = getAppsUsingPushCred(ctx.ios.credentials, selected);
     const appsList = apps.map(appCred => appCred.experienceName).join(', ');
 
@@ -173,7 +139,7 @@ export class UpdateIosPush implements IView {
       const { confirm } = await prompt(question);
       if (!confirm) {
         log.warn('Aborting update process');
-        return null;
+        return;
       }
     }
 
@@ -184,11 +150,6 @@ export class UpdateIosPush implements IView {
       teamName: ctx.appleCtx.team.name,
     }
     await ctx.ios.updatePushKey(selected.id, credentials);
-
-    log(chalk.green('Updated Push Notification Key succesfully\n'));
-    displayIosUserCredentials(selected);
-    log();
-    return null;
   }
 
   async provideOrGenerate(ctx: Context): Promise<PushKey> {
@@ -196,42 +157,7 @@ export class UpdateIosPush implements IView {
     if (userProvided) {
       return userProvided;
     }
-    await ctx.ensureAppleCtx();
-    const manager = new PushKeyManager(ctx.appleCtx);
-    const keys = await manager.list();
-    if (keys.length >= 2) {
-      log.error(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
-    }
-
-    if (keys.length !== 0) {
-      const { revoke } = await prompt([
-        {
-          type: 'list',
-          name: 'revoke',
-          message:
-            'Do you want to revoke existing Push Notifictions Key from your Apple Developer Portal?',
-          choices: [
-            { value: 'norevoke', name: "Don't revoke any keys." },
-            ...keys.map((key, index) => ({ value: index, name: manager.format(key) })),
-          ],
-          pageSize: Infinity,
-        },
-      ]);
-
-      if (revoke !== 'norevoke') {
-        const usedByExpo = ctx.ios.credentials.userCredentials.filter(
-          key =>
-            key.type === 'push-key' &&
-            key.apnsKeyId === keys[revoke].id
-        ) as IosPushCredentials[];
-        if (usedByExpo.length >= 1) {
-          await new RemoveIosPush(true).removeSpecific(ctx, usedByExpo[0]);
-        } else {
-          await manager.revoke([keys[revoke].id]);
-        }
-      }
-    }
-    return await manager.create();
+    return await generatePushKey(ctx);
   }
 }
 
@@ -256,7 +182,7 @@ export class UseExistingPushNotification implements IView {
     const selected = await selectPushCredFromList(ctx.ios.credentials, false) as IosPushCredentials;
     if (selected) {
       await ctx.ios.usePushKey(experienceName, bundleIdentifier, selected.id);
-      log(chalk.green(`Push Notifactions Key succesfully assingned to ${experienceName} (${bundleIdentifier})`));
+      log(chalk.green(`Successfully assingned Push Notifactions Key to ${experienceName} (${bundleIdentifier})`));
     }
     return null;
   }
@@ -281,7 +207,7 @@ async function selectPushCredFromList(
       return formatPushKey(pushCred as IosPushCredentials, iosCredentials);
     } else {
       const pushCert = pushCred as IosAppCredentials;
-      return `Push Certificate (pushId: ${pushCert.credentials.pushId || '------'}, teamId: ${pushCert.credentials.teamId ||
+      return `Push Certificate (PushId: ${pushCert.credentials.pushId || '------'}, TeamId: ${pushCert.credentials.teamId ||
         '-------'} used in ${pushCert.experienceName})`;
     }
     return 'unkown credentials';
@@ -343,3 +269,47 @@ function formatPushKey(pushKey: IosPushCredentials, credentials: IosCredentials)
 
   return `Push Notifications Key (Key ID: ${pushKey.apnsKeyId}, Team ID: ${pushKey.teamId})${usedByString}`;
 }
+
+async function generatePushKey(ctx: Context): Promise<PushKey> {
+  await ctx.ensureAppleCtx();
+  const manager = new PushKeyManager(ctx.appleCtx);
+  try {
+    return await manager.create();
+  } catch(e) {
+    if (e.code === 'APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR') {
+      const keys = await manager.list();
+      log.warn('Maximum number of Push Notifications Keys generated on Apple Developer Portal.');
+      log.warn(APPLE_KEYS_TOO_MANY_GENERATED_ERROR);
+      const usedByExpo = ctx.ios.credentials.userCredentials
+        .filter((cert): cert is IosPushCredentials => cert.type === 'push-key')
+        .reduce<{[key: string]: IosPushCredentials}>((acc, cert) => ({...acc, [cert.apnsKeyId]: cert}), {});
+
+      const { revoke } = await prompt([
+        {
+          type: 'checkbox',
+          name: 'revoke',
+          message:
+          'Select Push Notifications Key to revoke.',
+          choices: keys.map((key, index) => ({
+            value: index,
+            name: formatPushKeyFromApple(key, ctx.ios.credentials),
+          })),
+          pageSize: Infinity,
+        },
+      ]);
+
+      for (const index of revoke) {
+        const certInfo = keys[index]
+        if (certInfo && usedByExpo[certInfo.id]) {
+          await new RemoveIosPush(true).removeSpecific(ctx, usedByExpo[certInfo.id]);
+        } else {
+          await manager.revoke([certInfo.id]);
+        }
+      }
+    } else {
+      throw e;
+    }
+  }
+  return await generatePushKey(ctx);
+}
+

@@ -102,7 +102,7 @@ export class IosApi {
       this.credentials.appCredentials,
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier,
     );
-    this.credentials.appCredentials[credIndex].distCredentialsId = userCredentialsId;
+    this.credentials.appCredentials[credIndex].pushCredentialsId = userCredentialsId;
   }
   async deletePushCert(experienceName: string, bundleIdentifier: string) {
     await this.api.postAsync(`credentials/ios/pushCert/delete`, { experienceName, bundleIdentifier })

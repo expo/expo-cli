@@ -35,7 +35,7 @@ export class CreateIosDist implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const distCert = await this.create(ctx);
 
-    log('Created Distribution Certificate succesfully\n');
+    log(chalk.green('Successfully created Distribution Certificate\n'));
     displayIosUserCredentials(distCert);
     log();
     return null;
@@ -46,50 +46,7 @@ export class CreateIosDist implements IView {
     if (userProvided) {
       return userProvided;
     }
-    return await this.generate(ctx);
-  }
-
-  async generate(ctx: Context): Promise<DistCert> {
-    await ctx.ensureAppleCtx();
-    const manager = new DistCertManager(ctx.appleCtx);
-    try {
-      return await manager.create();
-    } catch(e) {
-      if (e.code === 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR') {
-        const certs = await manager.list();
-        log.warn('Maximum number of Distribution Certificates generated on Apple Developer Portal.');
-        log.warn(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
-        const usedByExpo = ctx.ios.credentials.userCredentials
-          .filter((cert): cert is IosDistCredentials => cert.type === 'dist-cert' && !!cert.certId)
-          .reduce<{[key: string]: IosDistCredentials}>((acc, cert) => ({...acc, [cert.certId || '']: cert}), {});
-        
-        const { revoke } = await prompt([
-          {
-            type: 'checkbox',
-            name: 'revoke',
-            message:
-            'Choose certificates to revoke.',
-            choices: certs.map((cert, index) => ({
-              value: index,
-              name: formatDistCertFromApple(cert, ctx.ios.credentials),
-            })),
-            pageSize: Infinity,
-          },
-        ]);
-
-        for (const index of revoke) {
-          const certInfo = certs[index]
-          if (certInfo && usedByExpo[certInfo.id]) {
-            await new RemoveIosDist(true).removeSpecific(ctx, usedByExpo[certInfo.id]);
-          } else {
-            await manager.revoke([certInfo.id]);
-          }
-        }
-      } else {
-        throw e;
-      }
-    }
-    return await this.generate(ctx);
+    return await generateDistCert(ctx);
   }
 }
 
@@ -103,12 +60,13 @@ export class RemoveIosDist implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const selected = await selectDistCertFromList(ctx.ios.credentials);
     if (selected) {
-      return await this.removeSpecific(ctx, selected);
+      await this.removeSpecific(ctx, selected);
+      log(chalk.green('Successfully removed Distribution Certificate\n'));
     }
     return null;
   }
 
-  async removeSpecific(ctx: Context, selected: IosDistCredentials): Promise<IView | null> {
+  async removeSpecific(ctx: Context, selected: IosDistCredentials) {
     const apps = ctx.ios.credentials.appCredentials.filter(
       cred => cred.distCredentialsId === selected.id
     );
@@ -124,7 +82,7 @@ export class RemoveIosDist implements IView {
       ]);
       if (!confirm) {
         log('Aborting');
-        return null;
+        return;
       }
     }
 
@@ -136,7 +94,7 @@ export class RemoveIosDist implements IView {
         {
           type: 'confirm',
           name: 'revoke',
-          message: `Do you want also to revoke it on Apple Developer Portal?`,
+          message: `Do you also want to revoke it on Apple Developer Portal?`,
           when: !this.shouldRevoke,
         },
       ]);
@@ -148,9 +106,9 @@ export class RemoveIosDist implements IView {
     }
 
     for (const appCredentials of apps) {
+      log(`Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`);
       await new RemoveProvisioningProfile(shouldRevoke || this.shouldRevoke).removeSpecific(ctx, appCredentials);
     }
-    return null;
   }
 }
 
@@ -158,12 +116,19 @@ export class UpdateIosDist implements IView {
   async open(ctx: Context): Promise<IView | null> {
     const selected = await selectDistCertFromList(ctx.ios.credentials);
     if (selected) {
-      return await this.updateSpecific(ctx, selected);
+      await this.updateSpecific(ctx, selected);
+
+      log(chalk.green('Successfully updated Distribution Certificate\n'));
+      const updated = ctx.ios.credentials.userCredentials.find(i => i.id === selected.id)
+      if (updated) {
+        displayIosUserCredentials(updated);
+      }
+      log();
     }
     return null;
   }
 
-  async updateSpecific(ctx: Context, selected: IosDistCredentials): Promise<IView | null> {
+  async updateSpecific(ctx: Context, selected: IosDistCredentials) {
     const apps = ctx.ios.credentials.appCredentials.filter(
       cred => cred.distCredentialsId === selected.id
     );
@@ -178,7 +143,7 @@ export class UpdateIosDist implements IView {
       const { confirm } = await prompt(question);
       if (!confirm) {
         log('Aborting update process');
-        return null;
+        return;
       }
     }
 
@@ -191,16 +156,12 @@ export class UpdateIosDist implements IView {
     });
 
     for (const appCredentials of apps) {
+      log(`Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`);
       await new RemoveProvisioningProfile(true).removeSpecific(
         ctx,
         appCredentials
       );
     }
-
-    log('Updated Distribution Certificate succesfully\n');
-    displayIosUserCredentials(updatedUserCredentials);
-    log();
-    return null;
   }
 
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
@@ -208,43 +169,7 @@ export class UpdateIosDist implements IView {
     if (userProvided) {
       return userProvided;
     }
-    await ctx.ensureAppleCtx();
-    const manager = new DistCertManager(ctx.appleCtx);
-    const certs = await manager.list();
-    if (certs.length >= 3) {
-      log.error(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
-    }
-
-    if (certs.length >= 2) {
-      const { revoke } = await prompt([
-        {
-          type: 'list',
-          name: 'revoke',
-          message:
-            'Do you want to revoke existing Distribution Certificate from your Apple Developer Portal?',
-          choices: [
-            { value: 'norevoke', name: "Don't revoke any certificates." },
-            ...certs.map((cert, index) => ({ value: index, name: manager.format(cert) })),
-          ],
-          pageSize: Infinity,
-        },
-      ]);
-
-      if (revoke !== 'norevoke') {
-        const usedByExpo = ctx.ios.credentials.userCredentials.filter(
-          cert =>
-            cert.type === 'dist-cert' &&
-            cert.certId === certs[revoke].id &&
-            cert.certId
-        ) as IosDistCredentials[];
-        if (usedByExpo.length >= 1) {
-          await new RemoveIosDist(true).removeSpecific(ctx, usedByExpo[0]);
-        } else {
-          await manager.revoke([certs[revoke].id]);
-        }
-      }
-    }
-    return await manager.create();
+    return await generateDistCert(ctx);
   }
 }
 
@@ -265,7 +190,7 @@ export class UseExistingDistributionCert implements IView {
     const selected = await selectDistCertFromList(ctx.ios.credentials);
     if (selected) {
       await ctx.ios.useDistCert(experienceName, bundleIdentifier, selected.id);
-      log(chalk.green(`Distribution Certificate succesfully assingned to ${experienceName} (${bundleIdentifier})`));
+      log(chalk.green(`Successfully assingned Distribution Certificate to ${experienceName} (${bundleIdentifier})`));
     }
     return null;
   }
@@ -308,7 +233,7 @@ function formatDistCertFromApple(appleInfo: DistCertInfo, credentials: IosCreden
   const createdDate = dateformat(new Date(created * 1000));
   return `${name} (${status}) - Cert ID: ${id}, Serial number: ${serialNumber}, Team ID: ${appleInfo.ownerId}, Team name: ${ownerName}
     expires: ${expiresDate}, created: ${createdDate}  
-${usedByString}`;
+  ${usedByString}`;
 }
 
 function formatDistCert(distCert: IosDistCredentials, credentials: IosCredentials): string {
@@ -328,4 +253,47 @@ function formatDistCert(distCert: IosDistCredentials, credentials: IosCredential
     serialNumber = chalk.red('invalid serial number');
   }
   return `Distribution Certificate (Cert ID: ${distCert.certId}, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}`;
+}
+
+async function generateDistCert(ctx: Context): Promise<DistCert> {
+  await ctx.ensureAppleCtx();
+  const manager = new DistCertManager(ctx.appleCtx);
+  try {
+    return await manager.create();
+  } catch(e) {
+    if (e.code === 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR') {
+      const certs = await manager.list();
+      log.warn('Maximum number of Distribution Certificates generated on Apple Developer Portal.');
+      log.warn(APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR);
+      const usedByExpo = ctx.ios.credentials.userCredentials
+        .filter((cert): cert is IosDistCredentials => cert.type === 'dist-cert' && !!cert.certId)
+        .reduce<{[key: string]: IosDistCredentials}>((acc, cert) => ({...acc, [cert.certId || '']: cert}), {});
+
+      const { revoke } = await prompt([
+        {
+          type: 'checkbox',
+          name: 'revoke',
+          message:
+          'Select certificates to revoke.',
+          choices: certs.map((cert, index) => ({
+            value: index,
+            name: formatDistCertFromApple(cert, ctx.ios.credentials),
+          })),
+          pageSize: Infinity,
+        },
+      ]);
+
+      for (const index of revoke) {
+        const certInfo = certs[index]
+        if (certInfo && usedByExpo[certInfo.id]) {
+          await new RemoveIosDist(true).removeSpecific(ctx, usedByExpo[certInfo.id]);
+        } else {
+          await manager.revoke([certInfo.id]);
+        }
+      }
+    } else {
+      throw e;
+    }
+  }
+  return await generateDistCert(ctx);
 }
