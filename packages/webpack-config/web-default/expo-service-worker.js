@@ -31,12 +31,12 @@ self.addEventListener('push', event => {
     data: payload.data || {},
     icon: payload.data._icon || self.notificationIcon || null,
   };
-  if (payload.data._tag) {
-    options.tag = payload.data._tag;
-    options.renotify = payload.data._renotify;
+  if (options.data._tag) {
+    options.tag = options.data._tag;
+    options.renotify = options.data._renotify;
   }
-  if (payload.data._richContent && payload.data._richContent.image) {
-    options.image = payload.data._richContent.image;
+  if (options.data._richContent && options.data._richContent.image) {
+    options.image = options.data._richContent.image;
   }
   event.waitUntil(self.registration.showNotification(title, options));
 });
