@@ -82,9 +82,9 @@ export function displayIosUserCredentials(
     const usedByApps = uniq(
       credentials.appCredentials
         .filter(c => c[field] === userCredentials.id)
-        .map(c => c.experienceName)
-    ).join(', ');
-    const usedByAppsText = usedByApps ? `used by ${usedByApps}` : 'not used by any apps';
+        .map(c => `${c.experienceName} (${c.bundleIdentifier})`)
+    ).join(',\n      ');
+    const usedByAppsText = usedByApps ? `used by\n      ${usedByApps}` : 'not used by any apps';
     log(`    ${chalk.gray(usedByAppsText)}`);
   }
 }
