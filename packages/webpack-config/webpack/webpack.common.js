@@ -19,6 +19,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
 const BrotliPlugin = require('brotli-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CspHtmlWebpackPlugin = require('csp-html-webpack-plugin');
 const createIndexHTMLFromAppJSONAsync = require('./createIndexHTMLFromAppJSONAsync');
 const createClientEnvironment = require('./createClientEnvironment');
 const getPathsAsync = require('./utils/getPathsAsync');
@@ -377,6 +378,16 @@ module.exports = async function(env = {}, argv) {
         filename: locations.production.manifest,
         HtmlWebpackPlugin,
       }),
+
+      // Add Content Security Policy tags
+      new CspHtmlWebpackPlugin(
+        {},
+        {
+          hashEnabled: {
+            'style-src': false,
+          },
+        }
+      ),
 
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
