@@ -7,12 +7,36 @@ import openBrowser from 'react-dev-utils/openBrowser';
 import { readConfigJsonAsync } from '@expo/config';
 import set from 'lodash/set';
 import webpack from 'webpack';
+import {
+  Configuration as WebpackDevServerConfiguration,
+  ProxyConfigMap,
+  ProxyConfigArray,
+} from 'webpack-dev-server';
 
 import Logger from './Logger';
 // @ts-ignore missing types for Doctor until it gets converted to TypeScript
 import * as Doctor from './project/Doctor';
 import { logWarning, LogTag } from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
+
+export interface WebpackConfiguration extends webpack.Configuration {
+  devServer?: WebpackDevServerConfiguration;
+}
+
+export type WebEnvironment = {
+  projectRoot: string;
+  pwa: boolean;
+  mode: 'development' | 'production' | 'test' | 'none';
+  polyfill: boolean;
+  development: boolean;
+  production: boolean;
+  https: boolean;
+  info: boolean;
+};
+
+type AsyncWebpackConfig =
+  | WebpackConfiguration
+  | ((env: WebEnvironment, argv: string[]) => Promise<WebpackConfiguration> | WebpackConfiguration);
 
 // When you have errors in the production build that aren't present in the development build you can use `EXPO_WEB_DEBUG=true expo start --no-dev` to debug those errors.
 // - Prevent the production build from being minified
@@ -45,65 +69,57 @@ export function logEnvironmentInfo(
   }
 }
 
-function applyEnvironmentVariables(config: webpack.Configuration): webpack.Configuration {
+function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfiguration {
   // Use EXPO_DEBUG_WEB=true to enable debugging features for cases where the prod build
   // has errors that aren't caught in development mode.
   // Related: https://github.com/expo/expo-cli/issues/614
   if (isDebugModeEnabled() && config.mode === 'production') {
     console.log(chalk.bgYellow.black('Bundling the project in debug mode.'));
+
+    const output = config.output || {};
+    const optimization = config.optimization || {};
+
     // Enable line to line mapped mode for all/specified modules.
     // Line to line mapped mode uses a simple SourceMap where each line of the generated source is mapped to the same line of the original source.
     // It’s a performance optimization. Only use it if your performance need to be better and you are sure that input lines match which generated lines.
     // true enables it for all modules (not recommended)
-    config.output.devtoolLineToLine = true;
+    output.devtoolLineToLine = true;
 
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
-    config.output.pathinfo = true;
+    output.pathinfo = true;
+
     // Prevent minimizing when running in debug mode.
-    config.optimization.minimize = false;
+    optimization.minimize = false;
     // Instead of numeric ids, give modules readable names for better debugging.
-    config.optimization.namedModules = true;
+    optimization.namedModules = true;
     // Instead of numeric ids, give chunks readable names for better debugging.
-    config.optimization.namedChunks = true;
+    optimization.namedChunks = true;
     // Readable ids for better debugging.
-    config.optimization.moduleIds = 'named';
+    // @ts-ignore Property 'moduleIds' does not exist.
+    optimization.moduleIds = 'named';
     // if optimization.namedChunks is enabled optimization.chunkIds is set to 'named'.
     // This will manually enable it just to be safe.
-    config.optimization.chunkIds = 'named';
+    // @ts-ignore Property 'chunkIds' does not exist.
+    optimization.chunkIds = 'named';
 
-    if (config.optimization.splitChunks) {
-      config.optimization.splitChunks.name = true;
+    if (optimization.splitChunks) {
+      optimization.splitChunks.name = true;
     }
+
+    Object.assign(config, { output, optimization });
   }
 
   return config;
 }
 
-type WebEnvironment = {
-  projectRoot: string;
-  pwa: boolean;
-  polyfill?: boolean;
-  development: boolean;
-  production: boolean;
-  https?: boolean;
-  info: boolean;
-};
-
-type AsyncWebpackConfig =
-  | webpack.Configuration
-  | ((
-      env: WebEnvironment,
-      argv: string[]
-    ) => Promise<webpack.Configuration> | webpack.Configuration);
-
 export async function invokeWebpackConfigAsync(
   env: WebEnvironment,
   argv?: string[]
-): Promise<webpack.Configuration> {
+): Promise<WebpackConfiguration> {
   // Check if the project has a webpack.config.js in the root.
   const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
-  let config: webpack.Configuration;
+  let config: WebpackConfiguration;
   if (fs.existsSync(projectWebpackConfig)) {
     const webpackConfig = require(projectWebpackConfig);
     if (typeof webpackConfig === 'function') {

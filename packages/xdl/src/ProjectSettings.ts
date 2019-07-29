@@ -3,7 +3,7 @@ import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
 import path from 'path';
 
-type ProjectSettings = {
+export type ProjectSettings = {
   hostType: 'localhost' | 'lan' | 'tunnel';
   lanType: 'ip' | 'hostname';
   dev: boolean;
@@ -11,6 +11,8 @@ type ProjectSettings = {
   urlRandomness: string | null;
   https: boolean;
 };
+export type Settings = ProjectSettings;
+
 const projectSettingsFile = 'settings.json';
 const projectSettingsDefaults: ProjectSettings = {
   hostType: 'lan',
