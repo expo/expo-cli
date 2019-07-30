@@ -34,7 +34,7 @@ it(
 it(
   `builds`,
   async () => {
-    await buildAsync(false);
+    await buildAsync({ removeUnusedImportExports: false });
   },
   DEFAULT_TIMEOUT_INTERVAL
 );
@@ -42,12 +42,12 @@ it(
 it(
   `builds with tree-shaking`,
   async () => {
-    await buildAsync(true);
+    await buildAsync({ removeUnusedImportExports: true });
   },
   DEFAULT_TIMEOUT_INTERVAL
 );
 
-async function buildAsync(removeUnusedImportExports) {
+async function buildAsync({ removeUnusedImportExports }) {
   await Webpack.bundleAsync(projectRoot, {
     nonInteractive: true,
     verbose: true,
