@@ -32,8 +32,14 @@ export async function action(projectDir: string, options: Options = {}) {
   const hasOptimized = fs.existsSync(path.join(projectDir, '/.expo-shared/assets.json'));
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!hasOptimized && !nonInteractive) {
-    log.warn('It seems your assets have not been optimized yet.');
-    log.warn('To compress the images in your project run `expo optimize`');
+    log.warn(
+      'Warning: Your project may contain unoptimized image assets. Smaller image sizes can improve app performance.'
+    );
+    log.warn(
+      `To compress the images in your project, abort publishing and run ${chalk.bold(
+        'expo optimize'
+      )}.`
+    );
   }
   const status = await Project.currentStatus(projectDir);
 

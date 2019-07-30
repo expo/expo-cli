@@ -18,69 +18,61 @@ import ip from './ip';
 
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
-const HOST = '0.0.0.0';
-const DEFAULT_PORT = 19006;
+export const HOST = '0.0.0.0';
+export const DEFAULT_PORT = 19006;
 const WEBPACK_LOG_TAG = 'expo';
 
 let webpackDevServerInstance: WebpackDevServer | null = null;
 let webpackServerPort: number | null = null;
 
-export function getServer(projectRoot: string) {
-  if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
-  }
-  return webpackDevServerInstance;
-}
-
-async function choosePortAsync(): Promise<number | null> {
-  try {
-    return await choosePort(HOST, DEFAULT_PORT);
-  } catch (error) {
-    throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
-  }
-}
+export type BundlingOptions = {
+  isValidationEnabled?: boolean,
+  isImageEditingEnabled?: boolean,
+  isDebugInfoEnabled?: boolean,
+  isPolyfillEnabled?: boolean,
+  webpackEnv?: Object,
+  mode?: 'development' | 'production' | 'test' | 'none',
+  https?: boolean,
+  nonInteractive?: boolean,
+  onWebpackFinished?: (error: Error) => void,
+};
 
 export async function startAsync(
   projectRoot: string,
-  { nonInteractive }: Object,
-  verbose: boolean
+  options: BundlingOptions = {},
+  deprecatedVerbose?: boolean
 ): Promise<{ url: string, server: WebpackDevServer }> {
-  await Doctor.validateWebSupportAsync(projectRoot);
+  if (typeof deprecatedVerbose !== 'undefined') {
+    throw new XDLError(
+      'WEBPACK_DEPRECATED',
+      'startAsync(root, options, verbose): The `verbose` option is deprecated.'
+    );
+  }
 
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is already running.');
     return;
   }
 
-  const useYarn = ConfigUtils.isUsingYarn(projectRoot);
+  const { env, config } = await createWebpackConfigAsync(projectRoot, options);
 
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  const { webName } = ConfigUtils.getNameFromConfig(exp);
+  webpackServerPort = await getAvailablePortAsync();
 
-  let { dev, https } = await ProjectSettings.readAsync(projectRoot);
-  const mode = dev ? 'development' : 'production';
-
-  process.env.BABEL_ENV = mode;
-  process.env.NODE_ENV = mode;
-
-  const config = await Web.invokeWebpackConfigAsync({
-    projectRoot,
-    pwa: true,
-    development: dev,
-    production: !dev,
-    https,
-    info: Web.isInfoEnabled(),
-  });
-
-  webpackServerPort = await choosePortAsync();
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    `Starting Webpack on port ${webpackServerPort} in ${chalk.underline(mode)} mode.`
+    `Starting Webpack on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
   );
 
-  const protocol = https ? 'https' : 'http';
+  const protocol = env.https ? 'https' : 'http';
   const urls = prepareUrls(protocol, '::', webpackServerPort);
+  const useYarn = ConfigUtils.isUsingYarn(projectRoot);
+  const appName = await getProjectNameAsync(projectRoot);
+  const nonInteractive = validateBoolOption(
+    'nonInteractive',
+    options.nonInteractive,
+    process.stdout.isTTY
+  );
 
   await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
@@ -88,7 +80,7 @@ export async function startAsync(
       projectRoot,
       nonInteractive,
       webpack,
-      appName: webName,
+      appName,
       config,
       urls,
       useYarn,
@@ -100,7 +92,9 @@ export async function startAsync(
       if (error) {
         ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error);
       }
-      // clearConsole();
+      if (typeof options.onWebpackFinished === 'function') {
+        options.onWebpackFinished(error);
+      }
     });
   });
 
@@ -108,29 +102,14 @@ export async function startAsync(
     webpackServerPort,
   });
 
-  return {
-    server: webpackDevServerInstance,
-    url: await getUrlAsync(projectRoot),
-  };
-}
-
-export async function getUrlAsync(projectRoot: string): Promise<string> {
-  const devServer = getServer(projectRoot);
-  if (!devServer) {
-    return null;
-  }
   const host = ip.address();
-  const urlType = await getProtocolAsync(projectRoot);
-  return `${urlType}://${host}:${webpackServerPort}`;
-}
-
-export async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> {
-  // TODO: Bacon: Handle when not in expo
-  const { https } = await ProjectSettings.readAsync(projectRoot);
-  if (https === true) {
-    return 'https';
-  }
-  return 'http';
+  return {
+    url: `${protocol}://${host}:${webpackServerPort}`,
+    server: webpackDevServerInstance,
+    port: webpackServerPort,
+    protocol,
+    host,
+  };
 }
 
 export async function stopAsync(projectRoot: string): Promise<void> {
@@ -138,28 +117,23 @@ export async function stopAsync(projectRoot: string): Promise<void> {
     await new Promise(resolve => webpackDevServerInstance.close(() => resolve()));
     webpackDevServerInstance = null;
     webpackServerPort = null;
-    // TODO
     await ProjectSettings.setPackagerInfoAsync(projectRoot, {
       webpackServerPort: null,
     });
   }
 }
 
-export async function bundleAsync(projectRoot: string, packagerOpts: Object): Promise<void> {
-  await Doctor.validateWebSupportAsync(projectRoot);
-  const mode = packagerOpts.dev ? 'development' : 'production';
-  process.env.BABEL_ENV = mode;
-  process.env.NODE_ENV = mode;
+export async function openAsync(projectRoot: string, options: BundlingOptions): Promise<void> {
+  if (!webpackDevServerInstance) {
+    await startAsync(projectRoot, options);
+  }
+  await Web.openProjectAsync(projectRoot);
+}
 
-  let config = await Web.invokeWebpackConfigAsync({
-    projectRoot,
-    pwa: packagerOpts.pwa,
-    polyfill: packagerOpts.polyfill,
-    development: packagerOpts.dev,
-    production: !packagerOpts.dev,
-    info: Web.isInfoEnabled(),
-  });
-  let compiler = webpack(config);
+export async function bundleAsync(projectRoot: string, options: BundlingOptions): Promise<void> {
+  const { config } = await createWebpackConfigAsync(projectRoot, options);
+
+  const compiler = webpack(config);
 
   try {
     // We generate the stats.json file in the webpack-config
@@ -230,9 +204,141 @@ export async function bundleAsync(projectRoot: string, packagerOpts: Object): Pr
   }
 }
 
-export async function openAsync(projectRoot: string, options = {}, verbose = true): Promise<void> {
-  if (!webpackDevServerInstance) {
-    await startAsync(projectRoot, options, verbose);
+export async function getProjectNameAsync(projectRoot: string): Promise<string> {
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { webName } = ConfigUtils.getNameFromConfig(exp);
+  return webName;
+}
+
+export function getServer(projectRoot: string): WebpackDevServer | null {
+  if (webpackDevServerInstance == null) {
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
   }
-  await Web.openProjectAsync(projectRoot);
+  return webpackDevServerInstance;
+}
+
+export function getPort(): number | null {
+  return webpackServerPort;
+}
+
+export async function getUrlAsync(projectRoot: string): Promise<string> {
+  const devServer = getServer(projectRoot);
+  if (!devServer) {
+    return null;
+  }
+  const host = ip.address();
+  const protocol = await getProtocolAsync(projectRoot);
+  return `${protocol}://${host}:${webpackServerPort}`;
+}
+
+export async function getProtocolAsync(projectRoot: string): Promise<'http' | 'https'> {
+  // TODO: Bacon: Handle when not in expo
+  const { https } = await ProjectSettings.readAsync(projectRoot);
+  return https === true ? 'https' : 'http';
+}
+
+export async function getAvailablePortAsync(
+  options: { host: string, defaultPort: number } = {}
+): Promise<number> {
+  try {
+    return await choosePort(options.host || HOST, options.defaultPort || DEFAULT_PORT);
+  } catch (error) {
+    throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
+  }
+}
+
+export function setMode(mode: 'development' | 'production' | 'test' | 'none'): void {
+  process.env.BABEL_ENV = mode;
+  process.env.NODE_ENV = mode;
+}
+
+function validateBoolOption(name, value, defaultValue) {
+  if (typeof value === 'undefined') {
+    value = defaultValue;
+  }
+
+  if (typeof value !== 'boolean') {
+    throw new XDLError('WEBPACK_INVALID_OPTION', `'${name}' option must be a boolean.`);
+  }
+
+  return value;
+}
+
+function transformCLIOptions(options) {
+  // Transform the CLI flags into more explicit values
+  return {
+    ...options,
+    isImageEditingEnabled: options.pwa,
+    isPolyfillEnabled: options.polyfill,
+  };
+}
+
+async function createWebpackConfigAsync(
+  projectRoot: string,
+  options: BundlingOptions = {}
+): Promise<{ env: Object, config: WebpackDevServer.Configuration }> {
+  const fullOptions = transformCLIOptions(options);
+  if (validateBoolOption('isValidationEnabled', fullOptions.isValidationEnabled, true)) {
+    await Doctor.validateWebSupportAsync(projectRoot);
+  }
+
+  const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
+
+  setMode(env.mode);
+
+  const config = await Web.invokeWebpackConfigAsync(env);
+
+  return { env, config };
+}
+
+async function applyOptionsToProjectSettingsAsync(
+  projectRoot: string,
+  options: BundlingOptions
+) /*: ProjectSettings */ {
+  let newSettings = {};
+  // Change settings before reading them
+  if (typeof options.https === 'boolean') {
+    newSettings.https = options.https;
+  }
+  if (typeof options.dev === 'boolean') {
+    newSettings.dev = options.dev;
+  }
+
+  if (Object.keys(newSettings).length) {
+    await ProjectSettings.setAsync(projectRoot, newSettings);
+  }
+
+  return await ProjectSettings.readAsync(projectRoot);
+}
+
+async function getWebpackConfigEnvFromBundlingOptionsAsync(
+  projectRoot: string,
+  options: BundlingOptions
+): Promise<Object> {
+  let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
+
+  const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';
+
+  const isImageEditingEnabled = validateBoolOption(
+    'isImageEditingEnabled',
+    options.isImageEditingEnabled,
+    true
+  );
+  const isDebugInfoEnabled = validateBoolOption(
+    'isDebugInfoEnabled',
+    options.isDebugInfoEnabled,
+    Web.isInfoEnabled()
+  );
+
+  return {
+    projectRoot,
+    pwa: isImageEditingEnabled,
+    mode,
+    https,
+    polyfill: validateBoolOption('isPolyfillEnabled', options.isPolyfillEnabled, false),
+    development: dev,
+    production: !dev,
+    info: isDebugInfoEnabled,
+    ...(options.webpackEnv || {}),
+  };
 }

@@ -426,20 +426,6 @@ async function _validateNodeModulesAsync(projectRoot): Promise<number> {
   return NO_ISSUES;
 }
 
-async function _validateOptimizedAssetsAsync(projectRoot: string): void {
-  const hasUnoptimized = await AssetUtils.hasUnoptimizedAssetsAsync(projectRoot);
-  if (hasUnoptimized) {
-    ProjectUtils.logWarning(
-      projectRoot,
-      'expo',
-      `Warning: This project contains unoptimized assets. Please run \`expo optimize\` in your project directory.`,
-      'doctor-unoptimized-assets'
-    );
-  } else {
-    ProjectUtils.clearNotification(projectRoot, 'doctor-unoptimized-assets');
-  }
-}
-
 export async function validateLowLatencyAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, false);
 }
@@ -544,8 +530,6 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
       return nodeModulesStatus;
     }
   }
-
-  await _validateOptimizedAssetsAsync(projectRoot, {});
 
   return status;
 }

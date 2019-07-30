@@ -8,7 +8,7 @@ import { Cacher } from './FsCache';
 function createModuleVersionChecker(name: string, currentVersion: string) {
   const UpdateCacher = new Cacher(
     async () => {
-      const pkgJson = await npmPackageJson(name, { version: currentVersion });
+      const pkgJson = await pTimeout(npmPackageJson(name, { version: currentVersion }), 2000);
       return {
         latestVersion: await pTimeout(latestVersionAsync(name), 2000),
         deprecated: pkgJson.deprecated,
