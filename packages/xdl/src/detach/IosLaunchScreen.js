@@ -11,6 +11,7 @@ import {
   saveImageToPathAsync,
   spawnAsyncThrowError,
   transformFileContentsAsync,
+  saveUrlToPathAsync,
 } from './ExponentTools';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
@@ -195,21 +196,36 @@ async function configureLaunchAssetsAsync(
   const config = context.config;
 
   const splashIntermediateFilename = path.join(intermediatesDirectory, 'LaunchScreen.xib');
-  await _copyIntermediateLaunchScreenAsync(context, splashIntermediateFilename);
 
-  if (manifestUsesSplashApi(config, 'ios')) {
-    await transformFileContentsAsync(splashIntermediateFilename, fileString => {
-      const parser = new DOMParser();
-      const serializer = new XMLSerializer();
-      const dom = parser.parseFromString(fileString);
+  // TODO: detect expo.ios.splash.xib
+  if (true) {
+    if (context.type === 'user') {
+      const sourcePath = path.resolve(context.data.projectPath, './assets/gogogo.xib');
+      // context.data.exp.ios.splash.xib
+      await spawnAsyncThrowError('/bin/cp', [sourcePath, splashIntermediateFilename], {
+        stdio: 'inherit',
+      });
+    } else {
+      // TODO: CHECK IF THIS IS WORKING CORRECTLY (logger.warn to see `JSON.stringify(context.data.manifest)`)
+      await saveUrlToPathAsync(context.data.manifest.ios.splash.xibUrl, splashIntermediateFilename);
+    }
+  } else {
+    await _copyIntermediateLaunchScreenAsync(context, splashIntermediateFilename);
 
-      _setBackgroundColor(config, dom);
-      _setBackgroundImageResizeMode(config, dom);
+    if (manifestUsesSplashApi(config, 'ios')) {
+      await transformFileContentsAsync(splashIntermediateFilename, fileString => {
+        const parser = new DOMParser();
+        const serializer = new XMLSerializer();
+        const dom = parser.parseFromString(fileString);
 
-      return serializer.serializeToString(dom);
-    });
+        _setBackgroundColor(config, dom);
+        _setBackgroundImageResizeMode(config, dom);
 
-    await _saveImageAssetsAsync(context);
+        return serializer.serializeToString(dom);
+      });
+
+      await _saveImageAssetsAsync(context);
+    }
   }
 
   if (context.type === 'user') {
