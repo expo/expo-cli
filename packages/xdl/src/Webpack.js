@@ -114,6 +114,7 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
+    console.log(chalk.bold('[web]'), chalk.blue('Stopping Webpack Dev Server'));
     await new Promise(resolve => webpackDevServerInstance.close(() => resolve()));
     webpackDevServerInstance = null;
     webpackServerPort = null;
