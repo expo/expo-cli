@@ -178,6 +178,7 @@ export async function constructUrlAsync(
       dev: joi.boolean(),
       strict: joi.boolean(),
       minify: joi.boolean(),
+      https: joi.boolean(),
       urlRandomness: joi
         .string()
         .optional()
