@@ -145,14 +145,14 @@ export async function stopAsync(projectRoot: string): Promise<void> {
   }
 }
 
-export async function openAsync(projectRoot: string, options: BundlingOptions): Promise<void> {
+export async function openAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
   if (!webpackDevServerInstance) {
     await startAsync(projectRoot, options);
   }
   await Web.openProjectAsync(projectRoot);
 }
 
-export async function bundleAsync(projectRoot: string, options: BundlingOptions): Promise<void> {
+export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
   const { config } = await createWebpackConfigAsync(projectRoot, options);
 
   const compiler = webpack(config);
