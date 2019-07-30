@@ -54,7 +54,7 @@ const FEATURED_TEMPLATES = [
   // },
 ];
 
-const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript,'];
+const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript'];
 
 async function action(projectDir, options) {
   let parentDir;
