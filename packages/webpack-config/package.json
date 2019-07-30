@@ -8,6 +8,9 @@
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/webpack-config"
   },
+  "scripts": {
+    "test": "jest --config jest/unit-test-config.json --rootDir ."
+  },
   "license": "MIT",
   "engines": {
     "node": ">=8.10"
@@ -22,7 +25,6 @@
     "@expo/config": "^2.1.2",
     "@expo/webpack-pwa-manifest-plugin": "^1.2.2",
     "babel-loader": "^8.0.5",
-    "babel-preset-expo": "^5.1.1",
     "brotli-webpack-plugin": "^1.1.0",
     "case-sensitive-paths-webpack-plugin": "^2.2.0",
     "chalk": "^2.4.2",
@@ -47,6 +49,7 @@
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "pnp-webpack-plugin": "^1.2.1",
     "postcss-safe-parser": "^4.0.1",
+    "prettier": "^1.16.4",
     "progress-bar-webpack-plugin": "^1.12.1",
     "react-dev-utils": "^7.0.3",
     "style-loader": "^0.23.1",
@@ -58,6 +61,11 @@
     "webpack-manifest-plugin": "^2.0.4",
     "webpack-merge": "^4.2.1",
     "workbox-webpack-plugin": "^3.6.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-flow": "^7.0.0",
+    "@expo/babel-preset-cli": "^0.1.5"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "browserslist": {
@@ -71,8 +79,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "eslint-config-universe": "^1.0.7"
   }
 }

@@ -41,6 +41,14 @@ workflows:
           e: node-10
           requires:
             - build10
+      - test-webpack-config:
+          e: node-12
+          requires:
+            - build12
+      - test-webpack-config:
+          e: node-10
+          requires:
+            - build10
 jobs:
   build:
     parameters:
@@ -98,4 +106,17 @@ jobs:
     steps:
       - attach_workspace:
           at: '~'
+      - run: yarn test
+  test-webpack-config:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/webpack-config
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run:
+          name: Install test project dependencies
+          command: cd tests/basic && yarn && cd ../..
       - run: yarn test

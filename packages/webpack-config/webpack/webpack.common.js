@@ -327,7 +327,6 @@ module.exports = async function(env = {}, argv) {
     output: {
       // Build folder (default `web-build`)
       path: locations.production.folder,
-
       sourceMapFilename: '[chunkhash].map',
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
@@ -440,23 +439,28 @@ module.exports = async function(env = {}, argv) {
         env.dangerouslyUseLinter && {
           test: /\.(js|mjs|jsx|ts|tsx)$/,
           enforce: 'pre',
+          exclude: [/\bnode_modules\//, /\b\(webpack\)\//],
           use: [
             {
               loader: require.resolve('eslint-loader'),
               options: {
-                emitError: isProd,
+                root: locations.root,
+                // TODO: Bacon: Use this in prod mode when we are excluding properly in a yarn workspace.
+                emitError: false,
                 formatter: require.resolve('react-dev-utils/eslintFormatter'),
                 eslintPath: require.resolve('eslint'),
                 baseConfig: {
-                  extends: ['universe/node', 'universe/web'],
+                  extends: ['eslint-config-universe/node', 'eslint-config-universe/web'],
                   settings: { react: { version: 'detect' } },
+                  globals: {
+                    __DEV__: 'writable',
+                  },
                 },
                 ignore: false,
                 useEslintrc: false,
               },
             },
           ],
-          include: babelLoader.include,
         },
 
         {

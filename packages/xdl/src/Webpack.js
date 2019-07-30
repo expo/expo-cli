@@ -2,19 +2,19 @@
  * @flow
  */
 import * as ConfigUtils from '@expo/config';
+import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import printBuildError from 'react-dev-utils/printBuildError';
 import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import chalk from 'chalk';
+
 import createWebpackCompiler from './createWebpackCompiler';
+import ip from './ip';
+import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
-import * as Doctor from './project/Doctor';
 import XDLError from './XDLError';
-import ip from './ip';
 
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
@@ -186,21 +186,12 @@ export async function bundleAsync(projectRoot: string, options: BundlingOptions)
     if (warnings.length) {
       console.log(chalk.yellow('Compiled with warnings.\n'));
       console.log(warnings.join('\n\n'));
-      console.log(
-        '\nSearch for the ' +
-          chalk.underline(chalk.yellow('keywords')) +
-          ' to learn more about each warning.'
-      );
-      console.log(
-        'To ignore, add ' + chalk.cyan('// eslint-disable-next-line') + ' to the line before.\n'
-      );
     } else {
       console.log(chalk.green('Compiled successfully.\n'));
     }
   } catch (error) {
     console.log(chalk.red('Failed to compile.\n'));
-    printBuildError(error);
-    process.exit(1);
+    throw error;
   }
 }
 
