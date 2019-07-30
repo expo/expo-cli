@@ -22,7 +22,7 @@ it(
       },
     });
 
-    console.log('WebpackDevServer listening at localhost:', info.port);
+    console.log(`WebpackDevServer listening at localhost:${info.port}`);
 
     if (info.server) {
       info.server.close();
