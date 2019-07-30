@@ -22,7 +22,7 @@ const FEATURED_TEMPLATES = [
   {
     shortName: 'blank',
     name: 'expo-template-blank',
-    description: 'minimal dependencies to run and an empty root component',
+    description: 'a minimal app as clean as an empty canvas',
   },
   {
     shortName: 'blank (TypeScript)',
@@ -36,9 +36,15 @@ const FEATURED_TEMPLATES = [
   },
   '----- Bare workflow -----',
   {
-    shortName: 'bare-minimum',
+    shortName: 'minimal',
     name: 'expo-template-bare-minimum',
-    description: 'minimal setup for using unimodules',
+    description: 'bare and minimal, just the essentials to get you started',
+    bare: true,
+  },
+  {
+    shortName: 'minimal (TypeScript)',
+    name: 'expo-template-bare-typescript',
+    description: 'same as minimal but with TypeScript configuration',
     bare: true,
   },
   // {
@@ -48,7 +54,7 @@ const FEATURED_TEMPLATES = [
   // },
 ];
 
-const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-foundation,'];
+const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript,'];
 
 async function action(projectDir, options) {
   let parentDir;
