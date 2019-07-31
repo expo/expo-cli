@@ -7,6 +7,7 @@
 import chalk from 'chalk';
 import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
+import boxen from 'boxen';
 
 import * as ProjectUtils from './project/ProjectUtils';
 import { logEnvironmentInfo, shouldWebpackClearLogs } from './Web';
@@ -14,6 +15,10 @@ import { logEnvironmentInfo, shouldWebpackClearLogs } from './Web';
 const CONSOLE_TAG = 'expo';
 
 const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
+
+const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
+
+const withTag = (...messages) => [PLATFORM_TAG + ' ', ...messages].join('');
 
 function log(projectRoot, message, showInDevtools = true) {
   if (showInDevtools) {
@@ -24,33 +29,54 @@ function log(projectRoot, message, showInDevtools = true) {
 }
 
 function logWarning(projectRoot, message) {
-  ProjectUtils.logWarning(projectRoot, CONSOLE_TAG, message);
+  ProjectUtils.logWarning(projectRoot, CONSOLE_TAG, withTag(message));
 }
 
 function logError(projectRoot, message) {
-  ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
+  ProjectUtils.logError(projectRoot, CONSOLE_TAG, withTag(message));
 }
 
-function printInstructions(projectRoot, appName, urls, showInDevtools) {
-  let message = `You can now view ${chalk.bold(appName)} in the browser.\n\n`;
+export function printInstructions(projectRoot, { appName, urls, showInDevtools, showHelp }) {
+  printPreviewNotice(projectRoot, showInDevtools);
+
+  let message = '\n';
+  message += `${ProjectUtils.getPlatformTag('React')} You can now view ${chalk.bold(
+    appName
+  )} in the browser.\n`;
+
   if (urls.lanUrlForTerminal) {
-    message += `  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}\n`;
-    message += `  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}\n`;
+    message += `\n  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}`;
+    message += `\n  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}`;
   } else {
-    message += `  ${urls.localUrlForTerminal}\n`;
+    message += `\n  ${urls.localUrlForTerminal}`;
   }
 
-  message += `\nNote that the development build is not optimized. To create a production build, use ${chalk.bold(
-    `expo build:web`
-  )}.`;
+  message += `\n\nNote that the development build is not optimized.\n`;
+
+  message += `\n \u203A To create a production build, run ${chalk.bold(`expo build:web`)}`;
+  message += `\n \u203A Press ${chalk.bold(`Ctrl+C`)} to exit.`;
+
   log(projectRoot, message, showInDevtools);
+
+  if (showHelp) {
+    const PLATFORM_TAG = ProjectUtils.getPlatformTag('Expo');
+    log(
+      projectRoot,
+      `\n${PLATFORM_TAG} Press ${chalk.bold('?')} to show a list of all available commands.`,
+      showInDevtools
+    );
+  }
 }
 
 export function printPreviewNotice(projectRoot, showInDevtools) {
   log(
     projectRoot,
-    chalk.underline.yellow(
-      '\nWeb support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
+    boxen(
+      chalk.yellow(
+        'Web support in Expo is experimental and subject to breaking changes.\n' +
+          'Do not use this in production yet.'
+      ),
+      { borderColor: 'yellow', padding: 1 }
     ),
     showInDevtools
   );
@@ -82,7 +108,7 @@ export default function createWebpackCompiler({
   // "invalid" is short for "bundle invalidated", it doesn't imply any errors.
   compiler.hooks.invalid.tap('invalid', () => {
     if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
-      clearConsole();
+      // clearConsole();
     }
     log(projectRoot, '\nCompiling...');
   });
@@ -110,22 +136,18 @@ export default function createWebpackCompiler({
     const messages = formatWebpackMessages(statsData);
 
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
+
     if (isSuccessful) {
-      log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
-      printPreviewNotice(projectRoot, isFirstCompile);
       logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
     }
 
-    if (isSuccessful && (!nonInteractive || isFirstCompile)) {
-      printInstructions(projectRoot, appName, urls, isFirstCompile);
-    }
-
-    if (!isFirstCompile) {
-      log(
-        projectRoot,
-        `Press ${chalk.bold('?')} to show a list of all available commands.\n`,
-        false
-      );
+    if (isSuccessful && !isFirstCompile && !nonInteractive) {
+      printInstructions(projectRoot, {
+        appName,
+        urls,
+        showInDevtools: isFirstCompile,
+        showHelp: true,
+      });
     }
 
     onFinished();

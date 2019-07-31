@@ -8,7 +8,7 @@ import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
-import createWebpackCompiler from './createWebpackCompiler';
+import createWebpackCompiler, { printInstructions } from './createWebpackCompiler';
 import ip from './ip';
 import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -37,6 +37,30 @@ export type BundlingOptions = {
   onWebpackFinished?: (error: Error) => void,
 };
 
+export async function restartAsync(
+  projectRoot: string,
+  options: BundlingOptions = {}
+): Promise<{ url: string, server: WebpackDevServer }> {
+  await stopAsync(projectRoot);
+  return await startAsync(projectRoot, options);
+}
+
+const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
+const withTag = (...messages) => [PLATFORM_TAG + ' ', ...messages].join('');
+
+export function printConnectionInstructions(projectRoot, options = {}) {
+  if (!devServerInfo) return;
+  printInstructions(projectRoot, {
+    appName: devServerInfo.appName,
+    urls: devServerInfo.urls,
+    showInDevtools: false,
+    showHelp: false,
+    ...options,
+  });
+}
+
+let devServerInfo = null;
+
 export async function startAsync(
   projectRoot: string,
   options: BundlingOptions = {},
@@ -50,7 +74,11 @@ export async function startAsync(
   }
 
   if (webpackDevServerInstance) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is already running.');
+    ProjectUtils.logError(
+      projectRoot,
+      WEBPACK_LOG_TAG,
+      withTag(chalk.red('Webpack is already running.'))
+    );
     return;
   }
 
@@ -61,7 +89,7 @@ export async function startAsync(
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    `Starting Webpack on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
+    withTag(`Starting Webpack on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`)
   );
 
   const protocol = env.https ? 'https' : 'http';
@@ -71,7 +99,7 @@ export async function startAsync(
   const nonInteractive = validateBoolOption(
     'nonInteractive',
     options.nonInteractive,
-    process.stdout.isTTY
+    !process.stdout.isTTY
   );
 
   await new Promise(resolve => {
@@ -86,6 +114,14 @@ export async function startAsync(
       useYarn,
       onFinished: resolve,
     });
+    devServerInfo = {
+      urls,
+      protocol,
+      useYarn,
+      appName,
+      nonInteractive,
+      port: webpackServerPort,
+    };
     webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
     // Launch WebpackDevServer.
     webpackDevServerInstance.listen(webpackServerPort, HOST, error => {
@@ -97,6 +133,8 @@ export async function startAsync(
       }
     });
   });
+
+  await printConnectionInstructions(projectRoot);
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort,
@@ -114,9 +152,10 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
-    console.log(chalk.bold('[web]'), chalk.blue('Stopping Webpack Dev Server'));
+    ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Closing Webpack server');
     await new Promise(resolve => webpackDevServerInstance.close(() => resolve()));
     webpackDevServerInstance = null;
+    devServerInfo = null;
     webpackServerPort = null;
     await ProjectSettings.setPackagerInfoAsync(projectRoot, {
       webpackServerPort: null,
@@ -168,10 +207,14 @@ export async function bundleAsync(projectRoot: string, options: BundlingOptions)
           (typeof process.env.CI !== 'string' || process.env.CI.toLowerCase() !== 'false') &&
           messages.warnings.length
         ) {
-          console.log(
-            chalk.yellow(
-              '\nTreating warnings as errors because process.env.CI = true.\n' +
-                'Most CI servers set it automatically.\n'
+          ProjectUtils.logWarning(
+            projectRoot,
+            WEBPACK_LOG_TAG,
+            withTag(
+              chalk.yellow(
+                '\nTreating warnings as errors because process.env.CI = true.\n' +
+                  'Most CI servers set it automatically.\n'
+              )
             )
           );
           return reject(new Error(messages.warnings.join('\n\n')));
@@ -185,13 +228,21 @@ export async function bundleAsync(projectRoot: string, options: BundlingOptions)
     );
 
     if (warnings.length) {
-      console.log(chalk.yellow('Compiled with warnings.\n'));
-      console.log(warnings.join('\n\n'));
+      ProjectUtils.logWarning(
+        projectRoot,
+        WEBPACK_LOG_TAG,
+        withTag(chalk.yellow('Compiled with warnings.\n'))
+      );
+      ProjectUtils.logWarning(projectRoot, WEBPACK_LOG_TAG, warnings.join('\n\n'));
     } else {
-      console.log(chalk.green('Compiled successfully.\n'));
+      ProjectUtils.logInfo(
+        projectRoot,
+        WEBPACK_LOG_TAG,
+        withTag(chalk.green('Compiled successfully.\n'))
+      );
     }
   } catch (error) {
-    console.log(chalk.red('Failed to compile.\n'));
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, withTag(chalk.red('Failed to compile.\n')));
     throw error;
   }
 }
@@ -204,7 +255,7 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
 
 export function getServer(projectRoot: string): WebpackDevServer | null {
   if (webpackDevServerInstance == null) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, withTag('Webpack is not running.'));
   }
   return webpackDevServerInstance;
 }

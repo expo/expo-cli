@@ -32,35 +32,47 @@ const clearConsole = () => {
 };
 
 const printHelp = () => {
+  const PLATFORM_TAG = ProjectUtils.getPlatformTag('Expo');
   log.newLine();
-  log.nested(`Press ${b('?')} to show a list of all available commands.`);
+  log.nested(`${PLATFORM_TAG} Press ${b('?')} to show a list of all available commands.`);
 };
 
-const printUsage = async projectDir => {
+const printUsage = async (projectDir, options = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
-  const iosInfo = process.platform === 'darwin' ? `, or ${b`i`} to run on ${u`i`}OS simulator` : '';
-  const webInfo = exp.platforms.includes('web') ? `, ${b`w`} to run on ${u`w`}eb` : '';
+  const androidInfo = options.webOnly ? '' : `${b`a`} to run on ${u`A`}ndroid device/emulator`;
+  const iosInfo =
+    !options.webOnly && process.platform === 'darwin'
+      ? `${b`i`} to run on ${u`i`}OS simulator`
+      : '';
+  const webInfo = exp.platforms.includes('web') ? `${b`w`} to run on ${u`w`}eb` : '';
+  const platformInfo = [androidInfo, iosInfo, webInfo].filter(Boolean).join(', or ');
   log.nested(`
- \u203A Press ${b`a`} to run on ${u`A`}ndroid device/emulator${iosInfo}${webInfo}.
+ \u203A Press ${platformInfo}.
  \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
  \u203A Press ${b`d`} to open DevTools in the default web browser.
- \u203A Press ${b`shift-d`} to ${
-    openDevToolsAtStartup ? 'disable' : 'enable'
-  } automatically opening ${u`D`}evTools at startup.
- \u203A Press ${b`e`} to send an app link with ${u`e`}mail.
+ \u203A Press ${b`shift-d`} to ${openDevToolsAtStartup
+    ? 'disable'
+    : 'enable'} automatically opening ${u`D`}evTools at startup.${options.webOnly
+    ? ''
+    : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`}
  \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
  \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
- \u203A Press ${b`s`} to ${u`s`}ign ${
-    username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
-  }
+ \u203A Press ${b`s`} to ${u`s`}ign ${username
+    ? `out. (Signed in as ${i('@' + username)}.)`
+    : 'in.'}
 `);
 };
 
-export const printServerInfo = async projectDir => {
+export const printServerInfo = async (projectDir, options = {}) => {
+  if (options.webOnly) {
+    Webpack.printConnectionInstructions(projectDir);
+    printHelp();
+    return;
+  }
   const url = await UrlUtils.constructManifestUrlAsync(projectDir);
   const username = await UserManager.getCurrentUsernameAsync();
   log.newLine();
@@ -87,6 +99,8 @@ export const printServerInfo = async projectDir => {
   if (!username) {
     log.nested(item(`Press ${b`s`} to sign in and enable more options.`));
   }
+
+  Webpack.printConnectionInstructions(projectDir);
   printHelp();
 };
 
@@ -107,9 +121,100 @@ export const startAsync = async (projectDir, options) => {
 
   startWaitingForCommand();
 
-  await printServerInfo(projectDir);
+  if (!options.webOnly) {
+    await printServerInfo(projectDir, options);
+  }
 
   async function handleKeypress(key) {
+    if (options.webOnly) {
+      switch (key) {
+        case 'a':
+          log(chalk.red` \u203A Opening the Android simulator is not supported in web-only mode`);
+          break;
+        case 'i':
+          log(chalk.red` \u203A Opening the iOS simulator is not supported in web-only mode`);
+          break;
+        case 'e':
+          log(chalk.red` \u203A Sending a URL is not supported in web-only mode`);
+          break;
+      }
+    } else {
+      switch (key) {
+        case 'a': {
+          clearConsole();
+          log('Trying to open the project on Android...');
+          await Android.openProjectAsync(projectDir);
+          printHelp();
+          break;
+        }
+        case 'i': {
+          clearConsole();
+          log('Trying to open the project in iOS simulator...');
+          await Simulator.openProjectAsync(projectDir);
+          printHelp();
+          break;
+        }
+        case 'e': {
+          stopWaitingForCommand();
+          const lanAddress = await UrlUtils.constructManifestUrlAsync(projectDir, {
+            hostType: 'lan',
+          });
+          const defaultRecipient = await UserSettings.getAsync('sendTo', null);
+          const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
+          const handleKeypress = (chr, key) => {
+            if (key && key.name === 'escape') {
+              cleanup();
+              cancel();
+            }
+          };
+          const cleanup = () => {
+            rl.close();
+            process.stdin.removeListener('keypress', handleKeypress);
+            startWaitingForCommand();
+          };
+          const cancel = async () => {
+            clearConsole();
+            printHelp();
+          };
+          clearConsole();
+          process.stdin.addListener('keypress', handleKeypress);
+          log('Please enter your email address (press ESC to cancel) ');
+          rl.question(
+            defaultRecipient ? `[default: ${defaultRecipient}]> ` : '> ',
+            async sendTo => {
+              cleanup();
+              if (!sendTo && defaultRecipient) {
+                sendTo = defaultRecipient;
+              }
+              sendTo = sendTo && sendTo.trim();
+              if (!sendTo) {
+                cancel();
+                return;
+              }
+              log(`Sending ${lanAddress} to ${sendTo}...`);
+
+              let sent = false;
+              try {
+                await Exp.sendAsync(sendTo, lanAddress);
+                log(`Sent link successfully.`);
+                sent = true;
+              } catch (err) {
+                log(`Could not send link. ${err}`);
+              }
+              printHelp();
+              if (sent) {
+                await UserSettings.setAsync('sendTo', sendTo);
+              }
+            }
+          );
+          break;
+        }
+      }
+    }
+
     switch (key) {
       case CTRL_C:
       case CTRL_D: {
@@ -121,33 +226,19 @@ export const startAsync = async (projectDir, options) => {
         break;
       }
       case '?': {
-        await printUsage(projectDir);
-        break;
-      }
-      case 'a': {
-        clearConsole();
-        log('Trying to open the project on Android...');
-        await Android.openProjectAsync(projectDir);
-        printHelp();
-        break;
-      }
-      case 'i': {
-        clearConsole();
-        log('Trying to open the project in iOS simulator...');
-        await Simulator.openProjectAsync(projectDir);
-        printHelp();
+        await printUsage(projectDir, options);
         break;
       }
       case 'w': {
         clearConsole();
-        log('Trying to open the project in a web browser...');
+        log('Attempting to open the project in a web browser...');
         await Webpack.openAsync(projectDir);
         printHelp();
         break;
       }
       case 'c': {
         clearConsole();
-        await printServerInfo(projectDir);
+        await printServerInfo(projectDir, options);
         break;
       }
       case 'd': {
@@ -159,7 +250,7 @@ export const startAsync = async (projectDir, options) => {
       }
       case 'D': {
         clearConsole();
-        const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
+        const enabled = !await UserSettings.getAsync('openDevToolsAtStartup', true);
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         log(
           `Automatically opening DevTools ${b(
@@ -167,61 +258,6 @@ export const startAsync = async (projectDir, options) => {
           )}.\nPress ${b`d`} to open DevTools now.`
         );
         printHelp();
-        break;
-      }
-      case 'e': {
-        stopWaitingForCommand();
-        const lanAddress = await UrlUtils.constructManifestUrlAsync(projectDir, {
-          hostType: 'lan',
-        });
-        const defaultRecipient = await UserSettings.getAsync('sendTo', null);
-        const rl = readline.createInterface({
-          input: process.stdin,
-          output: process.stdout,
-        });
-        const handleKeypress = (chr, key) => {
-          if (key && key.name === 'escape') {
-            cleanup();
-            cancel();
-          }
-        };
-        const cleanup = () => {
-          rl.close();
-          process.stdin.removeListener('keypress', handleKeypress);
-          startWaitingForCommand();
-        };
-        const cancel = async () => {
-          clearConsole();
-          printHelp();
-        };
-        clearConsole();
-        process.stdin.addListener('keypress', handleKeypress);
-        log('Please enter your email address (press ESC to cancel) ');
-        rl.question(defaultRecipient ? `[default: ${defaultRecipient}]> ` : '> ', async sendTo => {
-          cleanup();
-          if (!sendTo && defaultRecipient) {
-            sendTo = defaultRecipient;
-          }
-          sendTo = sendTo && sendTo.trim();
-          if (!sendTo) {
-            cancel();
-            return;
-          }
-          log(`Sending ${lanAddress} to ${sendTo}...`);
-
-          let sent = false;
-          try {
-            await Exp.sendAsync(sendTo, lanAddress);
-            log(`Sent link successfully.`);
-            sent = true;
-          } catch (err) {
-            log(`Could not send link. ${err}`);
-          }
-          printHelp();
-          if (sent) {
-            await UserSettings.setAsync('sendTo', sendTo);
-          }
-        });
         break;
       }
       case 'p': {
@@ -247,7 +283,7 @@ Please reload the project in the Expo app for the change to take effect.`
         } else {
           log('Restarting Metro Bundler...');
         }
-        Project.startAsync(projectDir, { reset });
+        Project.startAsync(projectDir, { ...options, reset });
         break;
       }
       case 's': {
