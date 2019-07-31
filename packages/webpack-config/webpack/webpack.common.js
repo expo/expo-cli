@@ -294,7 +294,7 @@ module.exports = async function(env = {}, argv) {
 
   if (isProd) {
     if (env.polyfill) {
-      appEntry.unshift('@babel/polyfill');
+      throw new Error('--polyfill is deprecated');
     }
   } else {
     // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
