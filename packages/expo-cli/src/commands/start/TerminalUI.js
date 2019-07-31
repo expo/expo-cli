@@ -128,7 +128,7 @@ export const startAsync = async (projectDir, options) => {
         case 'a':
           clearConsole();
           log('Trying to open the web project in Chrome on Android...');
-          await Android.openProjectAsync(projectDir);
+          await Android.openWebProjectAsync(projectDir);
           printHelp();
           break;
         case 'i':

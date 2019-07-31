@@ -48,6 +48,8 @@ async function startWebAction(projectDir, options) {
   const startOpts = parseStartOptions(projectDir, options);
   await Project.startAsync(rootPath, startOpts);
 
+  await urlOpts.handleMobileOptsAsync(projectDir, options);
+
   if (!options.nonInteractive && !exp.isDetached) {
     await TerminalUI.startAsync(projectDir, startOpts);
   }
