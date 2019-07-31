@@ -39,7 +39,7 @@ export default async function selectPushKey(context, options = {}) {
   if (promptValue === 'GENERATE') {
     return await generatePushKey(context);
   } else if (promptValue === 'UPLOAD') {
-    const pushKey = (await promptForCredentials(context, ['pushKey']))[0].pushKey;
+    const pushKey = (await promptForCredentials(context, ['pushKey'])).credentials.pushKey;
     const isValid = await validateUploadedPushKey(context, pushKey);
     if (!isValid) {
       return await selectPushKey(context, { disableAutoSelectExisting: true });
