@@ -1,5 +1,5 @@
 /* global page */
-const config = require('../../jest-puppeteer.config');
+import config from '../../jest-puppeteer.config';
 
 beforeEach(async () => {
   await page.goto(config.url);
