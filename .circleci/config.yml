@@ -20,8 +20,8 @@ workflows:
       - build:
           name: build10
           e: node-10
-      - puppeteer:
-          name: buildPuppeteer
+      - build:
+          name: puppeteerEnv
           e: puppeteer
       - test-dev-tools:
           e: node-12
@@ -58,7 +58,7 @@ workflows:
       - test-webpack-config-e2e:
           e: puppeteer
           requires:
-            - buildPuppeteer
+            - puppeteerEnv
 jobs:
   build:
     parameters:
