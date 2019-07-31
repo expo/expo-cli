@@ -244,7 +244,7 @@ export default (program: any) => {
       async (projectDir, options) => {
         return startWebAction(
           projectDir,
-          await normalizeOptionsAsync(projectDir, { ...options, web: true, webOnly: true })
+          await normalizeOptionsAsync(projectDir, { ...options, webOnly: true })
         );
       },
       /* skipProjectValidation: */ true,

@@ -134,8 +134,6 @@ export async function startAsync(
     });
   });
 
-  await printConnectionInstructions(projectRoot);
-
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort,
   });

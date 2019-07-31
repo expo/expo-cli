@@ -118,9 +118,7 @@ export const startAsync = async (projectDir, options) => {
 
   startWaitingForCommand();
 
-  if (!options.webOnly) {
-    await printServerInfo(projectDir, options);
-  }
+  await printServerInfo(projectDir, options);
 
   async function handleKeypress(key) {
     if (options.webOnly) {
@@ -237,7 +235,7 @@ export const startAsync = async (projectDir, options) => {
         clearConsole();
         log('Attempting to open the project in a web browser...');
         await Webpack.openAsync(projectDir);
-        printHelp();
+        await printServerInfo(projectDir, options);
         break;
       }
       case 'c': {
