@@ -17,6 +17,8 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 import * as UrlUtils from './UrlUtils';
+// @ts-ignore
+import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 
 let _lastUrl: string | null = null;
 
@@ -477,6 +479,18 @@ export async function openProjectAsync(
   let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
+  if (result.success) {
+    return { success: true, url: projectUrl };
+  } else {
+    return { success: result.success, error: result.msg };
+  }
+}
+
+export async function openWebProjectAsync(
+  projectRoot: string
+): Promise<{ success: true; url: string } | { success: false; error: string }> {
+  const projectUrl = await getWebpackUrlAsync(projectRoot);  
+  const result = await openUrlInSimulatorSafeAsync(projectUrl, true);
   if (result.success) {
     return { success: true, url: projectUrl };
   } else {

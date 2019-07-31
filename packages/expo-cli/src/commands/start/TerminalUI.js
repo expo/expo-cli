@@ -43,11 +43,8 @@ const printUsage = async (projectDir, options = {}) => {
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
-  const androidInfo = options.webOnly ? '' : `${b`a`} to run on ${u`A`}ndroid device/emulator`;
-  const iosInfo =
-    !options.webOnly && process.platform === 'darwin'
-      ? `${b`i`} to run on ${u`i`}OS simulator`
-      : '';
+  const androidInfo = `${b`a`} to run on ${u`A`}ndroid device/emulator`;
+  const iosInfo = process.platform === 'darwin' ? `${b`i`} to run on ${u`i`}OS simulator` : '';
   const webInfo = exp.platforms.includes('web') ? `${b`w`} to run on ${u`w`}eb` : '';
   const platformInfo = [androidInfo, iosInfo, webInfo].filter(Boolean).join(', or ');
   log.nested(`
@@ -129,10 +126,17 @@ export const startAsync = async (projectDir, options) => {
     if (options.webOnly) {
       switch (key) {
         case 'a':
-          log(chalk.red` \u203A Opening the Android simulator is not supported in web-only mode`);
+          clearConsole();
+          log('Trying to open the web project in Chrome on Android...');
+          await Android.openProjectAsync(projectDir);
+          printHelp();
           break;
         case 'i':
-          log(chalk.red` \u203A Opening the iOS simulator is not supported in web-only mode`);
+          clearConsole();
+          log('Trying to open the web project in Safari on the iOS simulator...');
+          await Simulator.openWebProjectAsync(projectDir);
+          printHelp();
+          // log(chalk.red` \u203A Opening the iOS simulator is not supported in web-only mode`);
           break;
         case 'e':
           log(chalk.red` \u203A Sending a URL is not supported in web-only mode`);
