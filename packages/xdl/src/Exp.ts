@@ -7,6 +7,7 @@ import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import tar from 'tar';
+import hasbin from 'hasbin';
 
 import Api from './Api';
 import * as Binaries from './Binaries';
@@ -161,7 +162,7 @@ export async function extractTemplateAppAsync(
 }
 
 async function initGitRepoAsync(root: string) {
-  if (process.platform === 'darwin' && !Binaries.isXcodeInstalled()) {
+  if (process.platform === 'darwin' && !hasbin.sync('git')) {
     Logger.global.warn(`Unable to initialize git repo. \`git\` not installed.`);
     return;
   }
