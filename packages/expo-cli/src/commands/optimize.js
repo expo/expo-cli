@@ -35,7 +35,7 @@ export default program => {
     .option('-s, --save', 'Save the original assets with a .orig extension')
     .option(
       '--quality [number]',
-      'Specify the quality the compressed image is reduced to. Default is 60'
+      `Specify the quality the compressed image is reduced to. Default is 80`
     )
     .option(
       '--include [pattern]',
