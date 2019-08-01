@@ -232,20 +232,25 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
 
   let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
-    // apply any custom information from ios.infoPlist prior to all other exponent config
+    // apply any custom information from ios.infoPlist prior to all other expo config
+    let extraConfig = config.ios ? config.ios.infoPlist : {};
     let usageDescriptionKeysConfigured = {};
-    if (config.ios && config.ios.infoPlist) {
-      let extraConfig = config.ios.infoPlist;
-      for (let key in extraConfig) {
-        if (extraConfig.hasOwnProperty(key)) {
-          infoPlist[key] = extraConfig[key];
+    for (let key in extraConfig) {
+      if (extraConfig.hasOwnProperty(key)) {
+        infoPlist[key] = extraConfig[key];
 
-          // if the user provides *UsageDescription keys, don't override them later.
-          if (_isAppleUsageDescriptionKey(key)) {
-            usageDescriptionKeysConfigured[key] = true;
-          }
+        // if the user provides *UsageDescription keys, don't override them later.
+        if (_isAppleUsageDescriptionKey(key)) {
+          usageDescriptionKeysConfigured[key] = true;
         }
       }
+    }
+
+    // reset the status bar style to the default gray. this can be removed if we
+    // ever change expo client to use `UIStatusBarStyleDefault` instead of
+    // `UIStatusBarStyleLightContent`
+    if (!extraConfig.UIStatusBarStyle) {
+      infoPlist.UIStatusBarStyle = 'UIStatusBarStyleDefault';
     }
 
     // bundle id
