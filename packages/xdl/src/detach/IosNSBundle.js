@@ -366,6 +366,13 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
       infoPlist.UIDeviceFamily = [2];
     }
 
+    // Whether requires full screen on iPad
+    infoPlist.UIRequiresFullScreen = config.ios && config.ios.requireFullScreen;
+    if (infoPlist.UIRequiresFullScreen === null || infoPlist.UIRequiresFullScreen === undefined) {
+      // NOTES: This is defaulted to `true` for now to match the behavior prior to SDK 34, but will change to `false` in a future SDK version.
+      infoPlist.UIRequiresFullScreen = true;
+    }
+
     // context-specific plist changes
     if (context.type === 'user') {
       infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
