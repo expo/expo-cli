@@ -4,7 +4,7 @@ const path = require('path');
 const { Webpack } = require('../../xdl');
 
 async function main(args) {
-  const projectRoot = path.resolve(process.cwd(), args[0]);
+  const projectRoot = path.resolve(args[0]);
   console.log('Building', projectRoot);
   try {
     await Webpack.bundleAsync(projectRoot, {

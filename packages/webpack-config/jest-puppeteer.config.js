@@ -1,3 +1,5 @@
+const assert = require('assert');
+
 const launch = process.env.CI
   ? {
       args: ['--ignore-certificate-errors', '--no-sandbox', '--disable-setuid-sandbox'],
@@ -12,11 +14,11 @@ const launch = process.env.CI
 
 const config = {
   start: {
-    url: 'https://localhost:19006',
+    url: 'https://localhost:5000',
     launch,
     server: {
       command: `../expo-cli/bin/expo.js start tests/basic/ --web-only --non-interactive --https`,
-      port: 19006,
+      port: 5000,
       launchTimeout: 30000,
       debug: true,
     },
@@ -33,5 +35,14 @@ const config = {
     },
   },
 }[process.env.EXPO_E2E_COMMAND];
+
+assert(process.env.EXPO_E2E_COMMAND, `EXPO_E2E_COMMAND must be defined`);
+assert(
+  config,
+  `"${process.env.EXPO_E2E_COMMAND}" is not a valid E2E test. Expected one of ${Object.keys(
+    config
+  ).join(', ')}`
+);
+process.env.WEB_PORT = config.server.port;
 
 module.exports = config;
