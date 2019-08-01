@@ -197,17 +197,20 @@ async function configureLaunchAssetsAsync(
 
   const splashIntermediateFilename = path.join(intermediatesDirectory, 'LaunchScreen.xib');
 
-  // TODO: detect expo.ios.splash.xib
-  if (true) {
+  let xbiFile = null;
+  if (context.type === 'user') {
+    xbiFile = ((context.data.exp.ios || {}).splash || {}).xib;
+  } else {
+    xbiFile = ((context.data.manifest.ios || {}).splash || {}).xibUrl;
+  }
+  if (xbiFile) {
     if (context.type === 'user') {
-      const sourcePath = path.resolve(context.data.projectPath, './assets/gogogo.xib');
-      // context.data.exp.ios.splash.xib
+      const sourcePath = path.resolve(context.data.projectPath, xbiFile);
       await spawnAsyncThrowError('/bin/cp', [sourcePath, splashIntermediateFilename], {
         stdio: 'inherit',
       });
     } else {
-      // TODO: CHECK IF THIS IS WORKING CORRECTLY (logger.warn to see `JSON.stringify(context.data.manifest)`)
-      await saveUrlToPathAsync(context.data.manifest.ios.splash.xibUrl, splashIntermediateFilename);
+      await saveUrlToPathAsync(xbiFile, splashIntermediateFilename);
     }
   } else {
     await _copyIntermediateLaunchScreenAsync(context, splashIntermediateFilename);
