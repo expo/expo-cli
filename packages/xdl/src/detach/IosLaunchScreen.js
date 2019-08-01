@@ -199,9 +199,13 @@ async function configureLaunchAssetsAsync(
 
   let xbiFile = null;
   if (context.type === 'user') {
-    xbiFile = ((context.data.exp.ios || {}).splash || {}).xib;
+    xbiFile =
+      context.data.exp.ios && context.data.exp.ios.splash && context.data.exp.ios.splash.xib;
   } else {
-    xbiFile = ((context.data.manifest.ios || {}).splash || {}).xibUrl;
+    xbiFile =
+      context.data.manifest.ios &&
+      context.data.manifest.ios.splash &&
+      context.data.manifest.ios.splash.xibUrl;
   }
   if (xbiFile) {
     if (context.type === 'user') {
