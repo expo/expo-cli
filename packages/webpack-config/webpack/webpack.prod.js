@@ -45,7 +45,7 @@ module.exports = async function(env = {}, argv) {
             },
             compress: {
               ecma: 5,
-              warnings: false,
+              warnings: process.env.EXPO_WEB_DEBUG ? 'verbose' : false,
               // Disabled because of an issue with Uglify breaking seemingly valid code:
               // https://github.com/facebook/create-react-app/issues/2376
               // Pending further investigation:
@@ -57,12 +57,14 @@ module.exports = async function(env = {}, argv) {
               // https://github.com/terser-js/terser/issues/120
               inline: 2,
             },
-            mangle: {
-              safari10: true,
-            },
+            mangle: process.env.EXPO_WEB_DEBUG
+              ? false
+              : {
+                  safari10: true,
+                },
             output: {
               ecma: 5,
-              comments: false,
+              comments: process.env.EXPO_WEB_DEBUG,
               // Turned on because emoji and regex is not minified properly using default
               // https://github.com/facebook/create-react-app/issues/2488
               ascii_only: true,

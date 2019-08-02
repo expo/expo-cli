@@ -59,6 +59,7 @@ module.exports = async function({
   babelProjectRoot,
   include = [],
   verbose,
+  platform,
   ...options
 } = {}) {
   const ensuredProjectRoot = await ensureRootAsync(babelProjectRoot);
@@ -96,9 +97,7 @@ module.exports = async function({
     },
     use: {
       ...customUse,
-      // AFAIK there is no reason to replace `babel-loader`.
-      loader: require.resolve('babel-loader'),
-
+      loader: path.join(__dirname, 'expo-babel-loader'),
       options: {
         // TODO: Bacon: Caching seems to break babel
         cacheDirectory: false,
@@ -106,9 +105,15 @@ module.exports = async function({
         babelrc: false,
         // Attempt to use local babel.config.js file for compiling project.
         configFile: true,
+
         // Only clobber hard coded values.
         ...(customUseOptions || {}),
 
+        custom: {
+          bundler: 'webpack',
+          platform,
+          mode,
+        },
         root: ensuredProjectRoot,
         // Cache babel files in production
         cacheCompression: isProduction,
