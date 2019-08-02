@@ -43,6 +43,7 @@ assert(
     config
   ).join(', ')}`
 );
+// Tell Expo CLI to use the same port on which the test runner expects there to be a server
 process.env.WEB_PORT = config.server.port;
 
 module.exports = config;
