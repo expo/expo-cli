@@ -368,7 +368,7 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
 
     // Whether requires full screen on iPad
     infoPlist.UIRequiresFullScreen = config.ios && config.ios.requireFullScreen;
-    if (infoPlist.UIRequiresFullScreen === null || infoPlist.UIRequiresFullScreen === undefined) {
+    if (infoPlist.UIRequiresFullScreen == null) {
       // NOTES: This is defaulted to `true` for now to match the behavior prior to SDK 34, but will change to `false` in a future SDK version.
       infoPlist.UIRequiresFullScreen = true;
     }
