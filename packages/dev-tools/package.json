@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.5.42",
+  "version": "0.5.43",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
@@ -33,7 +33,7 @@
     "@expo/xdl": "*"
   },
   "devDependencies": {
-    "@expo/xdl": "^56.1.2",
+    "@expo/xdl": "^56.1.4",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
