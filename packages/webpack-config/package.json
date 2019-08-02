@@ -9,7 +9,11 @@
     "directory": "packages/webpack-config"
   },
   "scripts": {
-    "test": "jest --config jest/unit-test-config.json --rootDir ."
+    "test": "npm run test:unit; npm run test:e2e",
+    "test:unit": "jest --config jest/unit-test-config.json --rootDir .",
+    "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
+    "test:e2e:build": "EXPO_E2E_COMMAND='build' jest --config jest/e2e-test-config.json --rootDir .",
+    "test:e2e": "npm run test:e2e:start; npm run test:e2e:build"
   },
   "license": "MIT",
   "engines": {
@@ -58,7 +62,10 @@
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@babel/preset-flow": "^7.0.0",
-    "@expo/babel-preset-cli": "^0.1.5"
+    "@expo/babel-preset-cli": "^0.1.5",
+    "jest-puppeteer": "^4.3.0",
+    "puppeteer": "^1.19.0",
+    "serve": "^11.1.0"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "browserslist": {
