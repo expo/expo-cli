@@ -1,6 +1,7 @@
 /**
  * @flow
  */
+import _ from 'lodash';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
@@ -43,7 +44,71 @@ export async function startAsync(
   options: BundlingOptions = {},
   deprecatedVerbose?: boolean
 ): Promise<{ url: string, server: WebpackDevServer }> {
-  if (typeof deprecatedVerbose !== 'undefined') {
+  const express = require('express');
+  const next = require(`${projectRoot}/node_modules/next`);
+
+  let { env, config } = await createWebpackConfigAsync(projectRoot, options);
+  //delete config.plugins;
+  console.warn(config);
+
+  const port = parseInt(process.env.PORT, 10) || 3000;
+  const dev = process.env.NODE_ENV !== 'production';
+  const myconf = {
+    // TODO: IMPORT USER'S `next.config.js` HERE, OR ANY OTHER POSSIBLE OPTION?
+    webpack: old_config => {
+      console.warn(old_config);
+      console.warn(JSON.stringify(old_config.module.rules));
+      // Alias all `react-native` imports to `react-native-web`
+      /*old_config.resolve.alias = {
+          ...(old_config.resolve.alias || {}),
+          'react-native$': 'react-native-web',
+        };*/
+
+      // TODO: LOOK AT THE OPTIONS TO SEE WHAT IS `old_config`
+      // AND WHY WE NEED THEM. I.E. CHECK DIFF BETWEEN `old_config` and `config` AND SEE WHICH ARE NEEDED FROM `config`
+      // ALSO CHECK "Conflict: Multiple chunks emit assets to the same filename static/js/bundle.js"
+      // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
+
+      const newConfig = {
+        ...old_config,
+        // TODO USE MERGE HERE? BUT EXTENSION NEED TO BE `config`'s
+        resolve: {
+          ...old_config.resolve,
+          extensions: config.resolve.extensions,
+          alias: { ...old_config.resolve.alias, ...config.resolve.alias },
+        },
+        resolveLoader: _.merge(old_config.resolveLoader, config.resolveLoader),
+      };
+      console.warn(newConfig);
+
+      return newConfig;
+    },
+    // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
+    // https://github.com/zeit/next.js/issues/5685
+    pageExtensions: config.resolve.extensions.map(string => string.substr(1)),
+  };
+  console.warn(myconf);
+  const app = next({
+    dev,
+    dir: projectRoot,
+    conf: myconf,
+  });
+  const handle = app.getRequestHandler();
+
+  app.prepare().then(() => {
+    const server = express();
+
+    server.get('*', (req, res) => {
+      return handle(req, res);
+    });
+
+    server.listen(port, err => {
+      if (err) throw err;
+      console.log(`> Ready on http://localhost:${port}`);
+    });
+  });
+
+  /*if (typeof deprecatedVerbose !== 'undefined') {
     throw new XDLError(
       'WEBPACK_DEPRECATED',
       'startAsync(root, options, verbose): The `verbose` option is deprecated.'
@@ -112,7 +177,7 @@ export async function startAsync(
     port: webpackServerPort,
     protocol,
     host,
-  };
+  };*/
 }
 
 export async function stopAsync(projectRoot: string): Promise<void> {
