@@ -255,6 +255,8 @@ export async function createKeystore(
     return await spawnAsync('keytool', [
       '-genkey',
       '-v',
+      '-storetype',
+      'JKS',
       '-storepass',
       keystorePassword,
       '-keypass',

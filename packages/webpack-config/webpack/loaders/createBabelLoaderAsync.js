@@ -114,6 +114,7 @@ module.exports = async function({
           platform,
           mode,
         },
+        sourceType: 'unambiguous',
         root: ensuredProjectRoot,
         // Cache babel files in production
         cacheCompression: isProduction,
