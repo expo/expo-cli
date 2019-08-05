@@ -18,22 +18,15 @@ module.exports = require('babel-loader').custom(() => {
         ...cfg.options,
       };
     },
+    /**
     result(result) {
-      /**
-       * Test the babel output
-       * if (result.map.sources.includes('/.../CustomApp.js')) {
-       *  const before = result.map.sourcesContent[0];
-       *  const after = result.code;
-       * }
-       */
-      if (result.map.sources.find(v => v.includes(`/CustomApp.js`))) {
+      // Test the babel output
+      if (result.map.sources.includes('/CustomApp.js')) {
         const before = result.map.sourcesContent[0];
         const after = result.code;
-        console.log('\nBABEL:');
-        console.log('BEFORE:', before);
-        console.log('AFTER:', after);
       }
       return result;
     },
+    */
   };
 });
