@@ -25,7 +25,7 @@ export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
 export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';
 
-let webpackDevServerInstance: WebpackDevServer | null = null;
+let webpackDevServerInstance: WebpackDevServer | http.Server | null = null;
 let webpackServerPort: number | null = null;
 
 export type BundlingOptions = {
@@ -433,12 +433,9 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
       return handle(req, res);
     });
 
-    server.listen(port, err => {
+    webpackDevServerInstance = server.listen(port, err => {
       if (err) throw err;
       console.log(`> Ready on http://localhost:${port}`);
     });
-
-    // TODO: DO SOMETHING WITH webpackDevServerInstance
-    //webpackDevServerInstance = server;
   });
 }
