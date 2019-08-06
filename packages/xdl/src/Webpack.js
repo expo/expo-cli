@@ -1,7 +1,6 @@
 /**
  * @flow
  */
-import _ from 'lodash';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
@@ -47,17 +46,23 @@ export async function startAsync(
   const express = require('express');
   const next = require(`${projectRoot}/node_modules/next`);
 
-  let { env, config } = await createWebpackConfigAsync(projectRoot, options);
+  let { env, config: expoConfig } = await createWebpackConfigAsync(projectRoot, options);
   //delete config.plugins;
-  console.warn(config);
+  console.warn('expoConfig:');
+  console.warn(expoConfig);
+  console.warn('\n\n\n\n\n');
 
   const port = parseInt(process.env.PORT, 10) || 3000;
   const dev = process.env.NODE_ENV !== 'production';
   const myconf = {
     // TODO: IMPORT USER'S `next.config.js` HERE, OR ANY OTHER POSSIBLE OPTION?
-    webpack: old_config => {
-      console.warn(old_config);
-      console.warn(JSON.stringify(old_config.module.rules));
+    webpack: (nextjsConfig, options) => {
+      console.warn('nextjsConfig:');
+      console.warn(nextjsConfig);
+      console.warn('options:');
+      console.warn(options);
+      console.warn('\n\n\n\n\n');
+      //console.warn(JSON.stringify(old_config.module.rules));
       // Alias all `react-native` imports to `react-native-web`
       /*old_config.resolve.alias = {
           ...(old_config.resolve.alias || {}),
@@ -70,24 +75,28 @@ export async function startAsync(
       // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
 
       const newConfig = {
-        ...old_config,
+        ...nextjsConfig,
         // TODO USE MERGE HERE? BUT EXTENSION NEED TO BE `config`'s
         resolve: {
-          ...old_config.resolve,
-          extensions: config.resolve.extensions,
-          alias: { ...old_config.resolve.alias, ...config.resolve.alias },
+          ...nextjsConfig.resolve,
+          extensions: expoConfig.resolve.extensions,
+          alias: { ...nextjsConfig.resolve.alias, ...expoConfig.resolve.alias },
         },
-        resolveLoader: _.merge(old_config.resolveLoader, config.resolveLoader),
+        resolveLoader: { ...expoConfig.resolveLoader, ...nextjsConfig.resolveLoader },
       };
+      console.warn('newConfig:');
       console.warn(newConfig);
+      console.warn('\n\n\n\n\n');
 
       return newConfig;
     },
     // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
     // https://github.com/zeit/next.js/issues/5685
-    pageExtensions: config.resolve.extensions.map(string => string.substr(1)),
+    pageExtensions: expoConfig.resolve.extensions.map(string => string.substr(1)),
   };
+  console.warn('myconf:');
   console.warn(myconf);
+  console.warn('\n\n\n\n\n');
   const app = next({
     dev,
     dir: projectRoot,
