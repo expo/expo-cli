@@ -6,9 +6,13 @@ module.exports = () => ({
         targets: {
           node: '8.9.0',
         },
+        modules: false,
       },
     ],
     '@babel/preset-typescript',
   ],
-  plugins: ['@babel/plugin-proposal-class-properties'],
+  plugins: [
+    '@babel/plugin-proposal-class-properties',
+    ['@babel/plugin-transform-modules-commonjs', { lazy: source => true }],
+  ],
 });
