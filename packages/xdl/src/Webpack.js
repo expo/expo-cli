@@ -2,6 +2,8 @@
  * @flow
  */
 import * as ConfigUtils from '@expo/config';
+import fs from 'fs-extra';
+import path from 'path';
 import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
@@ -44,7 +46,20 @@ export async function startAsync(
   deprecatedVerbose?: boolean
 ): Promise<{ url: string, server: WebpackDevServer }> {
   const express = require('express');
-  const next = require(`${projectRoot}/node_modules/next`);
+  let next;
+  try {
+    next = require(path.join(projectRoot, 'node_modules', 'next'));
+  } catch {
+    console.warn('Next is not installed.');
+    return;
+  }
+
+  let userNextConfigJs = {};
+  const userNextConfigJsPath = path.join(projectRoot, 'next.config.js');
+  if (fs.existsSync(userNextConfigJsPath)) {
+    userNextConfigJs = require(userNextConfigJsPath);
+  }
+  console.warn(userNextConfigJs);
 
   let { env, config: expoConfig } = await createWebpackConfigAsync(projectRoot, options);
   //delete config.plugins;
@@ -56,6 +71,11 @@ export async function startAsync(
   const dev = process.env.NODE_ENV !== 'production';
   const myconf = {
     // TODO: IMPORT USER'S `next.config.js` HERE, OR ANY OTHER POSSIBLE OPTION?
+    // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
+    pageExtensions: expoConfig.resolve.extensions.map(string => string.substr(1)),
+    ...userNextConfigJs,
+    // Note `webpack` has to come after `...userNextConfigJs` because we want to override that
+    // User's `webpack` config is loaded below in `return`.
     webpack: (nextjsConfig, options) => {
       console.warn('nextjsConfig:');
       console.warn(nextjsConfig);
@@ -88,12 +108,16 @@ export async function startAsync(
       console.warn(newConfig);
       console.warn('\n\n\n\n\n');
 
+      // If the user has webpack config in their next.config.js, we provide our config to them.
+      // Reference: https://github.com/zeit/next-plugins/blob/8f9672dc0e189ffef5c99e588d40fa08d1d99d4f/packages/next-sass/index.js#L46-L50
+      if (typeof userNextConfigJs.webpack === 'function') {
+        return userNextConfigJs.webpack(newConfig, options);
+      }
+
       return newConfig;
     },
-    // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
-    // https://github.com/zeit/next.js/issues/5685
-    pageExtensions: expoConfig.resolve.extensions.map(string => string.substr(1)),
   };
+
   console.warn('myconf:');
   console.warn(myconf);
   console.warn('\n\n\n\n\n');
