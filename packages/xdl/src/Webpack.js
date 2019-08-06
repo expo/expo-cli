@@ -394,6 +394,10 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
 
       const newConfig = {
         ...nextjsConfig,
+        module: {
+          ...nextjsConfig.module,
+          rules: [...expoConfig.module.rules, ...nextjsConfig.module.rules],
+        },
         // TODO USE MERGE HERE? BUT EXTENSION NEED TO BE `config`'s
         resolve: {
           ...nextjsConfig.resolve,
