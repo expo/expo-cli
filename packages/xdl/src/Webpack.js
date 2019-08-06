@@ -9,6 +9,7 @@ import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
+import express from 'express';
 
 import getenv from 'getenv';
 import createWebpackCompiler from './createWebpackCompiler';
@@ -45,112 +46,18 @@ export async function startAsync(
   options: BundlingOptions = {},
   deprecatedVerbose?: boolean
 ): Promise<{ url: string, server: WebpackDevServer }> {
-  const express = require('express');
-  let next;
-  try {
-    next = require(path.join(projectRoot, 'node_modules', 'next'));
-  } catch {
-    console.warn('Next is not installed.');
-    return;
-  }
-
-  let userNextConfigJs = {};
-  const userNextConfigJsPath = path.join(projectRoot, 'next.config.js');
-  if (fs.existsSync(userNextConfigJsPath)) {
-    userNextConfigJs = require(userNextConfigJsPath);
-  }
-  console.warn(userNextConfigJs);
-
-  let { env, config: expoConfig } = await createWebpackConfigAsync(projectRoot, options);
-  //delete config.plugins;
-  console.warn('expoConfig:');
-  console.warn(expoConfig);
-  console.warn('\n\n\n\n\n');
-
-  const port = parseInt(process.env.PORT, 10) || 3000;
-  const dev = process.env.NODE_ENV !== 'production';
-  const myconf = {
-    // TODO: IMPORT USER'S `next.config.js` HERE, OR ANY OTHER POSSIBLE OPTION?
-    // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
-    pageExtensions: expoConfig.resolve.extensions.map(string => string.substr(1)),
-    ...userNextConfigJs,
-    // Note `webpack` has to come after `...userNextConfigJs` because we want to override that
-    // User's `webpack` config is loaded below in `return`.
-    webpack: (nextjsConfig, options) => {
-      console.warn('nextjsConfig:');
-      console.warn(nextjsConfig);
-      console.warn('options:');
-      console.warn(options);
-      console.warn('\n\n\n\n\n');
-      //console.warn(JSON.stringify(old_config.module.rules));
-      // Alias all `react-native` imports to `react-native-web`
-      /*old_config.resolve.alias = {
-          ...(old_config.resolve.alias || {}),
-          'react-native$': 'react-native-web',
-        };*/
-
-      // TODO: LOOK AT THE OPTIONS TO SEE WHAT IS `old_config`
-      // AND WHY WE NEED THEM. I.E. CHECK DIFF BETWEEN `old_config` and `config` AND SEE WHICH ARE NEEDED FROM `config`
-      // ALSO CHECK "Conflict: Multiple chunks emit assets to the same filename static/js/bundle.js"
-      // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
-
-      const newConfig = {
-        ...nextjsConfig,
-        // TODO USE MERGE HERE? BUT EXTENSION NEED TO BE `config`'s
-        resolve: {
-          ...nextjsConfig.resolve,
-          extensions: expoConfig.resolve.extensions,
-          alias: { ...nextjsConfig.resolve.alias, ...expoConfig.resolve.alias },
-        },
-        resolveLoader: { ...expoConfig.resolveLoader, ...nextjsConfig.resolveLoader },
-      };
-      console.warn('newConfig:');
-      console.warn(newConfig);
-      console.warn('\n\n\n\n\n');
-
-      // If the user has webpack config in their next.config.js, we provide our config to them.
-      // Reference: https://github.com/zeit/next-plugins/blob/8f9672dc0e189ffef5c99e588d40fa08d1d99d4f/packages/next-sass/index.js#L46-L50
-      if (typeof userNextConfigJs.webpack === 'function') {
-        return userNextConfigJs.webpack(newConfig, options);
-      }
-
-      return newConfig;
-    },
-  };
-
-  console.warn('myconf:');
-  console.warn(myconf);
-  console.warn('\n\n\n\n\n');
-  const app = next({
-    dev,
-    dir: projectRoot,
-    conf: myconf,
-  });
-  const handle = app.getRequestHandler();
-
-  app.prepare().then(() => {
-    const server = express();
-
-    server.get('*', (req, res) => {
-      return handle(req, res);
-    });
-
-    server.listen(port, err => {
-      if (err) throw err;
-      console.log(`> Ready on http://localhost:${port}`);
-    });
-  });
-
-  /*if (typeof deprecatedVerbose !== 'undefined') {
+  if (typeof deprecatedVerbose !== 'undefined') {
     throw new XDLError(
       'WEBPACK_DEPRECATED',
       'startAsync(root, options, verbose): The `verbose` option is deprecated.'
     );
   }
 
+  await startNextJsAsync(projectRoot, options);
+  return;
+
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is already running.');
-    return;
   }
 
   const { env, config } = await createWebpackConfigAsync(projectRoot, options);
@@ -210,7 +117,7 @@ export async function startAsync(
     port: webpackServerPort,
     protocol,
     host,
-  };*/
+  };
 }
 
 export async function stopAsync(projectRoot: string): Promise<void> {
@@ -433,4 +340,105 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     info: isDebugInfoEnabled,
     ...(options.webpackEnv || {}),
   };
+}
+
+async function startNextJsAsync(projectRoot: string, options: BundlingOptions = {}) {
+  let next;
+  try {
+    next = require(path.join(projectRoot, 'node_modules', 'next'));
+  } catch {
+    console.warn('Next is not installed.');
+    return;
+  }
+
+  let userNextConfigJs = {};
+  const userNextConfigJsPath = path.join(projectRoot, 'next.config.js');
+  if (fs.existsSync(userNextConfigJsPath)) {
+    userNextConfigJs = require(userNextConfigJsPath);
+  }
+  console.warn(userNextConfigJs);
+
+  let { env, config: expoConfig } = await createWebpackConfigAsync(projectRoot, options);
+  //delete config.plugins;
+  /*console.warn('expoConfig:');
+  console.warn(expoConfig);
+  console.warn('\n\n\n\n\n');*/
+
+  // TODO: START AT USER-SPECIFIC PORT ETC.
+  const port = parseInt(process.env.PORT, 10) || 3000;
+  const dev = process.env.NODE_ENV !== 'production';
+  const myconf = {
+    // TODO: IMPORT USER'S `next.config.js` HERE, OR ANY OTHER POSSIBLE OPTION?
+    // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
+    pageExtensions: expoConfig.resolve.extensions.map(string => string.substr(1)),
+    ...userNextConfigJs,
+    // Note `webpack` has to come after `...userNextConfigJs` because we want to override that
+    // User's `webpack` config is loaded below in `return`.
+    webpack: (nextjsConfig, options) => {
+      /*console.warn('nextjsConfig:');
+      console.warn(nextjsConfig);
+      console.warn('options:');
+      console.warn(options);
+      console.warn('\n\n\n\n\n');*/
+      //console.warn(JSON.stringify(old_config.module.rules));
+      // Alias all `react-native` imports to `react-native-web`
+      /*old_config.resolve.alias = {
+          ...(old_config.resolve.alias || {}),
+          'react-native$': 'react-native-web',
+        };*/
+
+      // TODO: LOOK AT THE OPTIONS TO SEE WHAT IS `old_config`
+      // AND WHY WE NEED THEM. I.E. CHECK DIFF BETWEEN `old_config` and `config` AND SEE WHICH ARE NEEDED FROM `config`
+      // ALSO CHECK "Conflict: Multiple chunks emit assets to the same filename static/js/bundle.js"
+      // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
+
+      const newConfig = {
+        ...nextjsConfig,
+        // TODO USE MERGE HERE? BUT EXTENSION NEED TO BE `config`'s
+        resolve: {
+          ...nextjsConfig.resolve,
+          extensions: expoConfig.resolve.extensions,
+          alias: { ...nextjsConfig.resolve.alias, ...expoConfig.resolve.alias },
+        },
+        resolveLoader: { ...expoConfig.resolveLoader, ...nextjsConfig.resolveLoader },
+      };
+      /*console.warn('newConfig:');
+      console.warn(newConfig);
+      console.warn('\n\n\n\n\n');*/
+
+      // If the user has webpack config in their next.config.js, we provide our config to them.
+      // Reference: https://github.com/zeit/next-plugins/blob/8f9672dc0e189ffef5c99e588d40fa08d1d99d4f/packages/next-sass/index.js#L46-L50
+      if (typeof userNextConfigJs.webpack === 'function') {
+        return userNextConfigJs.webpack(newConfig, options);
+      }
+
+      return newConfig;
+    },
+  };
+
+  /*console.warn('myconf:');
+  console.warn(myconf);
+  console.warn('\n\n\n\n\n');*/
+  const app = next({
+    dev,
+    dir: projectRoot,
+    conf: myconf,
+  });
+  const handle = app.getRequestHandler();
+
+  app.prepare().then(() => {
+    const server = express();
+
+    server.get('*', (req, res) => {
+      return handle(req, res);
+    });
+
+    server.listen(port, err => {
+      if (err) throw err;
+      console.log(`> Ready on http://localhost:${port}`);
+    });
+
+    // TODO: DO SOMETHING WITH webpackDevServerInstance
+    //webpackDevServerInstance = server;
+  });
 }
