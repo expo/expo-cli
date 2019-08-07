@@ -342,6 +342,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   };
 }
 
+// TODO: SEPERATE THIS AS A EXTRA PACKAGE AS @expo/nextjs-config
 async function startNextJsAsync(projectRoot: string, options: BundlingOptions = {}) {
   let next;
   try {
@@ -392,13 +393,20 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
       // ALSO CHECK "Conflict: Multiple chunks emit assets to the same filename static/js/bundle.js"
       // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
 
+      const myOneOf = [...expoConfig.module.rules[1].oneOf];
+      myOneOf.unshift({ ...nextjsConfig.module.rules[0] });
+      // TODO: Why do we need to pop the last rule for it to work?
+      //if (!options.isServer) {
+      myOneOf.pop();
+      //}
+      const myRules = [{ ...expoConfig.module.rules[1], oneOf: myOneOf }];
+
       const newConfig = {
         ...nextjsConfig,
         module: {
           ...nextjsConfig.module,
-          rules: [...expoConfig.module.rules, ...nextjsConfig.module.rules],
+          rules: myRules,
         },
-        // TODO USE MERGE HERE? BUT EXTENSION NEED TO BE `config`'s
         resolve: {
           ...nextjsConfig.resolve,
           extensions: expoConfig.resolve.extensions,
