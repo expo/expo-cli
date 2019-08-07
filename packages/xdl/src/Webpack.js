@@ -61,6 +61,7 @@ export async function startAsync(
   }
 
   const { env, config } = await createWebpackConfigAsync(projectRoot, options);
+  console.warn(JSON.stringify(config.module.rules));
 
   webpackServerPort = await getAvailablePortAsync({
     defaultPort: options.port,
@@ -342,6 +343,36 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   };
 }
 
+const PATH_DELIMITER = '[\\\\/]'; // match 2 antislashes or one slash
+const safePath = module => module.split('/').join(PATH_DELIMITER);
+const generateIncludes = (projectRoot, modules) => {
+  return modules.map(module => new RegExp(`${safePath(module)}(?!.*node_modules)`));
+};
+const generateExcludes = modules => {
+  return [
+    new RegExp(
+      `node_modules${PATH_DELIMITER}(?!(${modules.map(safePath).join('|')})(?!.*node_modules))`
+    ),
+  ];
+};
+const regexEqual = (x, y) => {
+  return (
+    x instanceof RegExp &&
+    y instanceof RegExp &&
+    x.source === y.source &&
+    x.global === y.global &&
+    x.ignoreCase === y.ignoreCase &&
+    x.multiline === y.multiline
+  );
+};
+
+Function.prototype.toJSON = function() {
+  return this.toString();
+};
+RegExp.prototype.toJSON = function() {
+  return this.toString();
+};
+
 // TODO: SEPERATE THIS AS A EXTRA PACKAGE AS @expo/nextjs-config
 async function startNextJsAsync(projectRoot: string, options: BundlingOptions = {}) {
   let next;
@@ -394,12 +425,24 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
       // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
 
       const myOneOf = [...expoConfig.module.rules[1].oneOf];
-      myOneOf.unshift({ ...nextjsConfig.module.rules[0] });
+      //myOneOf.unshift({ ...nextjsConfig.module.rules[0] });
+      //myOneOf[0].include = myOneOf[3].include;
+      //myOneOf[2] = { ...nextjsConfig.module.rules[0] };
+      //myOneOf[2].use.options.sourceType = 'unambiguous';
+      console.warn('before:');
+      console.warn(myOneOf[0]);
       // TODO: Why do we need to pop the last rule for it to work?
       //if (!options.isServer) {
       myOneOf.pop();
       //}
-      const myRules = [{ ...expoConfig.module.rules[1], oneOf: myOneOf }];
+      console.warn('myOneOfmyOneOf:');
+      console.warn(JSON.stringify(myOneOf));
+      const myRules = [
+        nextjsConfig.module.rules[0],
+        { ...expoConfig.module.rules[1], oneOf: myOneOf },
+      ];
+      console.warn('hhhhhhaaaaaaa:');
+      console.warn(JSON.stringify(myRules));
 
       const { DefinePlugin } = require('webpack');
       const createClientEnvironment = require('../../webpack-config/webpack/createClientEnvironment');
@@ -420,9 +463,39 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
         resolveLoader: { ...expoConfig.resolveLoader, ...nextjsConfig.resolveLoader },
       };
       newConfig.plugins.push(new DefinePlugin(environmentVariables));
-      /*console.warn('newConfig:');
-      console.warn(newConfig);
-      console.warn('\n\n\n\n\n');*/
+      //newConfig.resolve.symlinks = false;
+      const includes = generateIncludes(projectRoot, [
+        '^expo',
+        '^@expo',
+        '^react-native',
+        '^@unimodules',
+      ]);
+      console.warn('generateIncludes');
+      console.warn(includes);
+      /*newConfig.module.rules.push({
+        test: /\.+(js|jsx|ts|tsx)$/,
+        loader: options.defaultLoaders.babel,
+        include: includes,
+      });*/
+
+      // TODO: WHY IS THIS SOOOOOO NECESSARY???
+      if (newConfig.externals) {
+        newConfig.externals = newConfig.externals.map(external => {
+          if (typeof external !== 'function') return external;
+          return (ctx, req, cb) => {
+            return includes.find(
+              include =>
+                req.startsWith('.') ? include.test(path.resolve(ctx, req)) : include.test(req)
+            )
+              ? cb()
+              : external(ctx, req, cb);
+          };
+        });
+      }
+
+      console.warn('newConfig:');
+      console.warn(JSON.stringify(newConfig));
+      console.warn('\n\n\n\n\n');
 
       // If the user has webpack config in their next.config.js, we provide our config to them.
       // Reference: https://github.com/zeit/next-plugins/blob/8f9672dc0e189ffef5c99e588d40fa08d1d99d4f/packages/next-sass/index.js#L46-L50
@@ -432,6 +505,23 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
 
       return newConfig;
     },
+    /*webpackDevMiddleware(config) {
+      const excludes = generateExcludes(['^expo', '^@expo', '^react-native', '^@unimodules']);
+      // Replace /node_modules/ by the new exclude RegExp (including the modules
+      // that are going to be transpiled)
+      // https://github.com/zeit/next.js/blob/815f2e91386a0cd046c63cbec06e4666cff85971/packages/next/server/hot-reloader.js#L335
+      const ignored = config.watchOptions.ignored
+        .filter(regexp => !regexEqual(regexp, /[\\/]node_modules[\\/]/))
+        .concat(excludes);
+
+      config.watchOptions.ignored = ignored;
+
+      if (typeof userNextConfigJs.webpackDevMiddleware === 'function') {
+        return userNextConfigJs.webpackDevMiddleware(config);
+      }
+
+      return config;
+    },*/
   };
 
   /*console.warn('myconf:');
