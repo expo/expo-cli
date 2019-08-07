@@ -401,7 +401,12 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
       //}
       const myRules = [{ ...expoConfig.module.rules[1], oneOf: myOneOf }];
 
-      const newConfig = {
+      const { DefinePlugin } = require('webpack');
+      const createClientEnvironment = require('../../webpack-config/webpack/createClientEnvironment');
+      // TODO PROPER
+      const environmentVariables = createClientEnvironment(null, {}, {});
+
+      let newConfig = {
         ...nextjsConfig,
         module: {
           ...nextjsConfig.module,
@@ -414,6 +419,7 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
         },
         resolveLoader: { ...expoConfig.resolveLoader, ...nextjsConfig.resolveLoader },
       };
+      newConfig.plugins.push(new DefinePlugin(environmentVariables));
       /*console.warn('newConfig:');
       console.warn(newConfig);
       console.warn('\n\n\n\n\n');*/
