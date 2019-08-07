@@ -1,18 +1,10 @@
 const path = require('path');
 const chalk = require('chalk');
 const getPathsAsync = require('../utils/getPathsAsync');
-const getModule = name => path.join('node_modules', name);
 
 // Only compile files from the react ecosystem.
 const includeModulesThatContainPaths = [
-  getModule('react-native'),
-  getModule('react-navigation'),
-  getModule('expo'),
-  getModule('unimodules'),
-  getModule('@react'),
-  getModule('@expo'),
-  getModule('@unimodules'),
-  getModule('native-base'),
+  /node_modules\/(@?expo|@?react-native|@react|@?unimodules|native-base|static-container).*\//,
 ];
 
 const excludedRootPaths = [
@@ -37,7 +29,7 @@ function packageNameFromPath(inputPath) {
 function logPackage(packageName) {
   if (!parsedPackageNames.includes(packageName)) {
     parsedPackageNames.push(packageName);
-    console.log(chalk.cyan('\nCompiling module: ' + chalk.bold(packageName)));
+    console.log(chalk.cyan('Compiling module: ' + chalk.bold(packageName)));
   }
 }
 
@@ -75,18 +67,18 @@ module.exports = async function({
 
     include(inputPath) {
       for (const possibleModule of modules) {
-        if (inputPath.includes(possibleModule)) {
+        if (inputPath.match(possibleModule)) {
           if (verbose) {
             const packageName = packageNameFromPath(inputPath);
             logPackage(packageName);
           }
-          return inputPath;
+          return true;
         }
       }
       // Is inside the project and is not one of designated modules
-      if (inputPath.includes(ensuredProjectRoot)) {
+      if (inputPath.match(ensuredProjectRoot)) {
         for (const excluded of excludedRootPaths) {
-          if (inputPath.includes(excluded)) {
+          if (inputPath.match(excluded)) {
             return false;
           }
         }
