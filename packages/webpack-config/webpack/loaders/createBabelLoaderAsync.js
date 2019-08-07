@@ -97,7 +97,8 @@ module.exports = async function({
     },
     use: {
       ...customUse,
-      loader: path.join(__dirname, 'expo-babel-loader'),
+      loader: 'babel-loader',
+      // loader: path.join(__dirname, 'expo-babel-loader'),
       options: {
         // TODO: Bacon: Caching seems to break babel
         cacheDirectory: false,
@@ -109,7 +110,7 @@ module.exports = async function({
         // Only clobber hard coded values.
         ...(customUseOptions || {}),
 
-        custom: {
+        caller: {
           bundler: 'webpack',
           platform,
           mode,
