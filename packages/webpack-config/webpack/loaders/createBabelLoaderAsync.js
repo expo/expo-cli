@@ -108,7 +108,7 @@ module.exports = async function({
         configFile: true,
         // Only clobber hard coded values.
         ...(customUseOptions || {}),
-
+        sourceType: 'unambiguous',
         root: ensuredProjectRoot,
         // Cache babel files in production
         cacheCompression: isProduction,

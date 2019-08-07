@@ -7,6 +7,7 @@ import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
+import getenv from 'getenv';
 
 import createWebpackCompiler, { printInstructions } from './createWebpackCompiler';
 import ip from './ip';
@@ -15,11 +16,10 @@ import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
 import XDLError from './XDLError';
-
 import type { User as ExpUser } from './User'; //eslint-disable-line
 
-export const HOST = '0.0.0.0';
-export const DEFAULT_PORT = 19006;
+export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
+export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';
 
 let webpackDevServerInstance: WebpackDevServer | null = null;
@@ -35,6 +35,7 @@ export type BundlingOptions = {
   https?: boolean,
   nonInteractive?: boolean,
   onWebpackFinished?: (error: Error) => void,
+  port?: number,
 };
 
 export async function restartAsync(
@@ -84,7 +85,9 @@ export async function startAsync(
 
   const { env, config } = await createWebpackConfigAsync(projectRoot, options);
 
-  webpackServerPort = await getAvailablePortAsync();
+  webpackServerPort = await getAvailablePortAsync({
+    defaultPort: options.port,
+  });
 
   ProjectUtils.logInfo(
     projectRoot,

@@ -148,6 +148,10 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
     }
   });
 
+  // Disable cocoapod stats to speed up the install
+  const COCOAPODS_DISABLE_STATS = process.env.COCOAPODS_DISABLE_STATS;
+  process.env.COCOAPODS_DISABLE_STATS = true;
+
   // install
   let cocoapodsArgs = ['install'];
   if (isRepoUpdateEnabled) {
@@ -155,10 +159,15 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
   }
   logger.info('Installing iOS workspace dependencies...');
   logger.info(`pod ${cocoapodsArgs.join(' ')}`);
-  await spawnAsyncThrowError('pod', cocoapodsArgs, {
-    stdio: 'inherit',
-    cwd: workspacePath,
-  });
+  try {
+    await spawnAsyncThrowError('pod', cocoapodsArgs, {
+      stdio: 'inherit',
+      cwd: workspacePath,
+    });
+  } finally {
+    // Revert the stats to the user preference
+    process.env.COCOAPODS_DISABLE_STATS = COCOAPODS_DISABLE_STATS;
+  }
 }
 
 /**

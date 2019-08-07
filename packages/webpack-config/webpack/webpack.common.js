@@ -432,37 +432,6 @@ module.exports = async function(env = {}, argv) {
       rules: [
         // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
-
-        // First, run the linter.
-        // It's important to do this before Babel processes the JS.
-        // This will throw required errors and warnings during the build.
-        env.dangerouslyUseLinter && {
-          test: /\.(js|mjs|jsx|ts|tsx)$/,
-          enforce: 'pre',
-          exclude: [/\bnode_modules\//, /\b\(webpack\)\//],
-          use: [
-            {
-              loader: require.resolve('eslint-loader'),
-              options: {
-                root: locations.root,
-                // TODO: Bacon: Use this in prod mode when we are excluding properly in a yarn workspace.
-                emitError: false,
-                formatter: require.resolve('react-dev-utils/eslintFormatter'),
-                eslintPath: require.resolve('eslint'),
-                baseConfig: {
-                  extends: ['eslint-config-universe/node', 'eslint-config-universe/web'],
-                  settings: { react: { version: 'detect' } },
-                  globals: {
-                    __DEV__: 'writable',
-                  },
-                },
-                ignore: false,
-                useEslintrc: false,
-              },
-            },
-          ],
-        },
-
         {
           oneOf: allLoaders,
         },
