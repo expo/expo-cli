@@ -86,7 +86,15 @@ export async function startAsync(
   );
 
   if (usingNextJs) {
-    await startNextJsAsync(projectRoot, webpackServerPort, env.development, config);
+    await new Promise(resolve => {
+      startNextJsAsync({
+        projectRoot,
+        port: webpackServerPort,
+        dev: env.development,
+        expoConfig: config,
+        onFinished: resolve,
+      });
+    });
   } else {
     await new Promise(resolve => {
       // Create a webpack compiler that is configured with custom messages.
@@ -369,12 +377,7 @@ RegExp.prototype.toJSON = function() {
   return this.toString();
 };
 
-async function startNextJsAsync(
-  projectRoot: string,
-  port: number,
-  dev: boolean,
-  expoConfig: Object
-) {
+async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished }) {
   let next;
   try {
     next = require(path.join(projectRoot, 'node_modules', 'next'));
@@ -466,6 +469,7 @@ async function startNextJsAsync(
     webpackDevServerInstance = server.listen(port, err => {
       if (err) throw err;
       console.log(`> Ready on http://localhost:${port}`);
+      onFinished();
     });
   });
 }
