@@ -275,7 +275,8 @@ function transformCLIOptions(options) {
 
 async function createWebpackConfigAsync(
   projectRoot: string,
-  options: BundlingOptions = {}
+  options: BundlingOptions = {},
+  unimodules: boolean = false
 ): Promise<{ env: Object, config: WebpackDevServer.Configuration }> {
   const fullOptions = transformCLIOptions(options);
   if (validateBoolOption('isValidationEnabled', fullOptions.isValidationEnabled, true)) {
@@ -286,7 +287,13 @@ async function createWebpackConfigAsync(
 
   setMode(env.mode);
 
-  const config = await Web.invokeWebpackConfigAsync(env);
+  let config;
+  if (unimodules) {
+    const webpackConfigUnimodules = require('@expo/webpack-config/webpack/webpack.config.unimodules');
+    config = await webpackConfigUnimodules(env);
+  } else {
+    config = await Web.invokeWebpackConfigAsync(env);
+  }
 
   return { env, config };
 }
@@ -366,12 +373,8 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
   }
   console.warn(userNextConfigJs);
 
-  const webpackConfig = require('@expo/webpack-config/webpack/webpack.config.unimodules');
-  const expoConfig = await webpackConfig({
-    // Attempt to use the input webpack config mode
-    mode: options.mode,
-    ...{ projectRoot },
-  });
+  // Create unimodules webpack config
+  const { config: expoConfig } = await createWebpackConfigAsync(projectRoot, options, true);
 
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
   const includeFunc = expoConfig.module.rules[1].include;
