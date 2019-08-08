@@ -382,6 +382,7 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
   const dev = process.env.NODE_ENV !== 'production';
   const myconf = {
     // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
+    // Remove the `.` before each file extension
     pageExtensions: expoConfig.resolve.extensions.map(string => string.substr(1)),
     ...userNextConfigJs,
     // Note `webpack` has to come after `...userNextConfigJs` because we want to override that
@@ -413,8 +414,8 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
           alias: { ...nextjsConfig.resolve.alias, ...expoConfig.resolve.alias },
         },
         resolveLoader: { ...expoConfig.resolveLoader, ...nextjsConfig.resolveLoader },
+        plugins: [...nextjsConfig.plugins, ...expoConfig.plugins],
       };
-      newConfig.plugins.push(...expoConfig.plugins);
 
       // We have to transpile these modules and make them not external too.
       // We have to do this because next.js by default externals all `node_modules`'s js files.
