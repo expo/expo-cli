@@ -377,7 +377,6 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
   const port = parseInt(process.env.PORT, 10) || 3000;
   const dev = process.env.NODE_ENV !== 'production';
   const myconf = {
-    // TODO: IMPORT USER'S `next.config.js` HERE, OR ANY OTHER POSSIBLE OPTION?
     // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
     pageExtensions: expoConfig.resolve.extensions.map(string => string.substr(1)),
     ...userNextConfigJs,
@@ -396,9 +395,6 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
           'react-native$': 'react-native-web',
         };*/
 
-      // TODO: LOOK AT THE OPTIONS TO SEE WHAT IS `old_config`
-      // AND WHY WE NEED THEM. I.E. CHECK DIFF BETWEEN `old_config` and `config` AND SEE WHICH ARE NEEDED FROM `config`
-      // ALSO CHECK "Conflict: Multiple chunks emit assets to the same filename static/js/bundle.js"
       // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
 
       const myOneOf = [...expoConfig.module.rules[1].oneOf];
@@ -408,10 +404,11 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
       //myOneOf[2].use.options.sourceType = 'unambiguous';
       console.warn('before:');
       console.warn(myOneOf[0]);
-      // TODO: Why do we need to pop the last rule for it to work?
-      //if (!options.isServer) {
+      // We don't need the `fallbackLoaderConfiguration` rule here
+      // (https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/webpack.common.js#L105-L122)
+      // because any other static images should be handled by next.js.
+      // https://nextjs.org/docs#static-file-serving-eg-images
       myOneOf.pop();
-      //}
       console.warn('myOneOfmyOneOf:');
       console.warn(JSON.stringify(myOneOf));
       const myRules = [
@@ -446,7 +443,7 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
       // Reference:
       // https://github.com/martpie/next-transpile-modules/blob/77450a0c0307e4b650d7acfbc18641ef9465f0da/index.js#L48-L62
       // https://github.com/zeit/next.js/blob/0b496a45e85f3c9aa3cf2e77eef10888be5884fc/packages/next/build/webpack-config.ts#L185-L258
-      // "include" function is from `expo-cli/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js`
+      // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
       if (newConfig.externals) {
         newConfig.externals = newConfig.externals.map(external => {
           if (typeof external !== 'function') return external;
