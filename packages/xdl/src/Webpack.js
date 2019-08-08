@@ -53,15 +53,17 @@ export async function startAsync(
     );
   }
 
-  await startNextJsAsync(projectRoot, options);
-  return;
-
-  if (webpackDevServerInstance) {
-    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is already running.');
+  const usingNextJs = true;
+  let serverName = 'Webpack';
+  if (usingNextJs) {
+    serverName = 'NextJS';
   }
 
-  const { env, config } = await createWebpackConfigAsync(projectRoot, options);
-  console.warn(JSON.stringify(config.module.rules));
+  if (webpackDevServerInstance) {
+    ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, `${serverName} is already running.`);
+  }
+
+  const { env, config } = await createWebpackConfigAsync(projectRoot, options, usingNextJs);
 
   webpackServerPort = await getAvailablePortAsync({
     defaultPort: options.port,
@@ -70,7 +72,7 @@ export async function startAsync(
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    `Starting Webpack on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
+    `Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
   );
 
   const protocol = env.https ? 'https' : 'http';
@@ -83,29 +85,33 @@ export async function startAsync(
     process.stdout.isTTY
   );
 
-  await new Promise(resolve => {
-    // Create a webpack compiler that is configured with custom messages.
-    const compiler = createWebpackCompiler({
-      projectRoot,
-      nonInteractive,
-      webpack,
-      appName,
-      config,
-      urls,
-      useYarn,
-      onFinished: resolve,
+  if (usingNextJs) {
+    await startNextJsAsync(projectRoot, webpackServerPort, env.development, config);
+  } else {
+    await new Promise(resolve => {
+      // Create a webpack compiler that is configured with custom messages.
+      const compiler = createWebpackCompiler({
+        projectRoot,
+        nonInteractive,
+        webpack,
+        appName,
+        config,
+        urls,
+        useYarn,
+        onFinished: resolve,
+      });
+      webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
+      // Launch WebpackDevServer.
+      webpackDevServerInstance.listen(webpackServerPort, HOST, error => {
+        if (error) {
+          ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error);
+        }
+        if (typeof options.onWebpackFinished === 'function') {
+          options.onWebpackFinished(error);
+        }
+      });
     });
-    webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
-    // Launch WebpackDevServer.
-    webpackDevServerInstance.listen(webpackServerPort, HOST, error => {
-      if (error) {
-        ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error);
-      }
-      if (typeof options.onWebpackFinished === 'function') {
-        options.onWebpackFinished(error);
-      }
-    });
-  });
+  }
 
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort,
@@ -357,7 +363,12 @@ RegExp.prototype.toJSON = function() {
   return this.toString();
 };
 
-async function startNextJsAsync(projectRoot: string, options: BundlingOptions = {}) {
+async function startNextJsAsync(
+  projectRoot: string,
+  port: number,
+  dev: boolean,
+  expoConfig: Object
+) {
   let next;
   try {
     next = require(path.join(projectRoot, 'node_modules', 'next'));
@@ -373,15 +384,9 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
   }
   console.warn(userNextConfigJs);
 
-  // Create unimodules webpack config
-  const { config: expoConfig } = await createWebpackConfigAsync(projectRoot, options, true);
-
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
   const includeFunc = expoConfig.module.rules[1].include;
 
-  // TODO: START AT USER-SPECIFIC PORT ETC.
-  const port = parseInt(process.env.PORT, 10) || 3000;
-  const dev = process.env.NODE_ENV !== 'production';
   const myconf = {
     // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
     // Remove the `.` before each file extension
