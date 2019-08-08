@@ -368,10 +368,14 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
   console.warn(userNextConfigJs);
 
   let { env, config: expoConfig } = await createWebpackConfigAsync(projectRoot, options);
-  //delete config.plugins;
-  /*console.warn('expoConfig:');
-  console.warn(expoConfig);
-  console.warn('\n\n\n\n\n');*/
+  // We need to remove the `fallbackLoaderConfiguration` rule here
+  // (https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/webpack.common.js#L105-L122)
+  // because any other static files should be handled by Next.js.
+  // https://nextjs.org/docs#static-file-serving-eg-images
+  expoConfig.module.rules[1].oneOf.pop();
+
+  // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
+  const includeFunc = expoConfig.module.rules[1].oneOf[2].include;
 
   // TODO: START AT USER-SPECIFIC PORT ETC.
   const port = parseInt(process.env.PORT, 10) || 3000;
@@ -397,37 +401,20 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
 
       // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
 
-      const myOneOf = [...expoConfig.module.rules[1].oneOf];
-      //myOneOf.unshift({ ...nextjsConfig.module.rules[0] });
-      //myOneOf[0].include = myOneOf[3].include;
-      //myOneOf[2] = { ...nextjsConfig.module.rules[0] };
-      //myOneOf[2].use.options.sourceType = 'unambiguous';
-      console.warn('before:');
-      console.warn(myOneOf[0]);
-      // We don't need the `fallbackLoaderConfiguration` rule here
-      // (https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/webpack.common.js#L105-L122)
-      // because any other static images should be handled by next.js.
-      // https://nextjs.org/docs#static-file-serving-eg-images
-      myOneOf.pop();
-      console.warn('myOneOfmyOneOf:');
-      console.warn(JSON.stringify(myOneOf));
-      const myRules = [
-        nextjsConfig.module.rules[0],
-        { ...expoConfig.module.rules[1], oneOf: myOneOf },
-      ];
+      const newRules = [nextjsConfig.module.rules[0], expoConfig.module.rules[1]];
       console.warn('hhhhhhaaaaaaa:');
-      console.warn(JSON.stringify(myRules));
+      console.warn(JSON.stringify(newRules));
 
       const { DefinePlugin } = require('webpack');
       const createClientEnvironment = require('../../webpack-config/webpack/createClientEnvironment');
-      // TODO PROPER
+      // TODO: PROPER
       const environmentVariables = createClientEnvironment(null, {}, {});
 
       let newConfig = {
         ...nextjsConfig,
         module: {
           ...nextjsConfig.module,
-          rules: myRules,
+          rules: newRules,
         },
         resolve: {
           ...nextjsConfig.resolve,
@@ -439,18 +426,15 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
       newConfig.plugins.push(new DefinePlugin(environmentVariables));
 
       // We have to transpile these modules and make them not external too.
-      // We have to do this because next.js by default externals all node_modules
+      // We have to do this because next.js by default externals all `node_modules`'s js files.
       // Reference:
       // https://github.com/martpie/next-transpile-modules/blob/77450a0c0307e4b650d7acfbc18641ef9465f0da/index.js#L48-L62
       // https://github.com/zeit/next.js/blob/0b496a45e85f3c9aa3cf2e77eef10888be5884fc/packages/next/build/webpack-config.ts#L185-L258
-      // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
       if (newConfig.externals) {
         newConfig.externals = newConfig.externals.map(external => {
           if (typeof external !== 'function') return external;
           return (ctx, req, cb) => {
-            return myOneOf[2].include(path.join('node_modules', req))
-              ? cb()
-              : external(ctx, req, cb);
+            return includeFunc(path.join('node_modules', req)) ? cb() : external(ctx, req, cb);
           };
         });
       }
@@ -464,7 +448,6 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
       if (typeof userNextConfigJs.webpack === 'function') {
         return userNextConfigJs.webpack(newConfig, options);
       }
-
       return newConfig;
     },
   };
