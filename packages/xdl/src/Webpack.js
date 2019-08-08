@@ -367,15 +367,15 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
   }
   console.warn(userNextConfigJs);
 
-  let { env, config: expoConfig } = await createWebpackConfigAsync(projectRoot, options);
-  // We need to remove the `fallbackLoaderConfiguration` rule here
-  // (https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/webpack.common.js#L105-L122)
-  // because any other static files should be handled by Next.js.
-  // https://nextjs.org/docs#static-file-serving-eg-images
-  expoConfig.module.rules[1].oneOf.pop();
+  const webpackConfig = require('@expo/webpack-config/webpack/webpack.config.unimodules');
+  const expoConfig = await webpackConfig({
+    // Attempt to use the input webpack config mode
+    mode: options.mode,
+    ...{ projectRoot },
+  });
 
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
-  const includeFunc = expoConfig.module.rules[1].oneOf[2].include;
+  const includeFunc = expoConfig.module.rules[1].include;
 
   // TODO: START AT USER-SPECIFIC PORT ETC.
   const port = parseInt(process.env.PORT, 10) || 3000;
@@ -401,20 +401,11 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
 
       // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
 
-      const newRules = [nextjsConfig.module.rules[0], expoConfig.module.rules[1]];
-      console.warn('hhhhhhaaaaaaa:');
-      console.warn(JSON.stringify(newRules));
-
-      const { DefinePlugin } = require('webpack');
-      const createClientEnvironment = require('../../webpack-config/webpack/createClientEnvironment');
-      // TODO: PROPER
-      const environmentVariables = createClientEnvironment(null, {}, {});
-
       let newConfig = {
         ...nextjsConfig,
         module: {
           ...nextjsConfig.module,
-          rules: newRules,
+          rules: [...nextjsConfig.module.rules, ...expoConfig.module.rules],
         },
         resolve: {
           ...nextjsConfig.resolve,
@@ -423,7 +414,7 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
         },
         resolveLoader: { ...expoConfig.resolveLoader, ...nextjsConfig.resolveLoader },
       };
-      newConfig.plugins.push(new DefinePlugin(environmentVariables));
+      newConfig.plugins.push(...expoConfig.plugins);
 
       // We have to transpile these modules and make them not external too.
       // We have to do this because next.js by default externals all `node_modules`'s js files.
