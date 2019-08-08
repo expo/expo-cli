@@ -343,29 +343,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   };
 }
 
-const PATH_DELIMITER = '[\\\\/]'; // match 2 antislashes or one slash
-const safePath = module => module.split('/').join(PATH_DELIMITER);
-const generateIncludes = (projectRoot, modules) => {
-  return modules.map(module => new RegExp(`${safePath(module)}(?!.*node_modules)`));
-};
-const generateExcludes = modules => {
-  return [
-    new RegExp(
-      `node_modules${PATH_DELIMITER}(?!(${modules.map(safePath).join('|')})(?!.*node_modules))`
-    ),
-  ];
-};
-const regexEqual = (x, y) => {
-  return (
-    x instanceof RegExp &&
-    y instanceof RegExp &&
-    x.source === y.source &&
-    x.global === y.global &&
-    x.ignoreCase === y.ignoreCase &&
-    x.multiline === y.multiline
-  );
-};
-
 Function.prototype.toJSON = function() {
   return this.toString();
 };
@@ -463,30 +440,18 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
         resolveLoader: { ...expoConfig.resolveLoader, ...nextjsConfig.resolveLoader },
       };
       newConfig.plugins.push(new DefinePlugin(environmentVariables));
-      //newConfig.resolve.symlinks = false;
-      const includes = generateIncludes(projectRoot, [
-        '^expo',
-        '^@expo',
-        '^react-native',
-        '^@unimodules',
-      ]);
-      console.warn('generateIncludes');
-      console.warn(includes);
-      /*newConfig.module.rules.push({
-        test: /\.+(js|jsx|ts|tsx)$/,
-        loader: options.defaultLoaders.babel,
-        include: includes,
-      });*/
 
-      // TODO: WHY IS THIS SOOOOOO NECESSARY???
+      // We have to transpile these modules and make them not external too.
+      // We have to do this because next.js by default externals all node_modules
+      // Reference:
+      // https://github.com/martpie/next-transpile-modules/blob/77450a0c0307e4b650d7acfbc18641ef9465f0da/index.js#L48-L62
+      // https://github.com/zeit/next.js/blob/0b496a45e85f3c9aa3cf2e77eef10888be5884fc/packages/next/build/webpack-config.ts#L185-L258
+      // "include" function is from `expo-cli/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js`
       if (newConfig.externals) {
         newConfig.externals = newConfig.externals.map(external => {
           if (typeof external !== 'function') return external;
           return (ctx, req, cb) => {
-            return includes.find(
-              include =>
-                req.startsWith('.') ? include.test(path.resolve(ctx, req)) : include.test(req)
-            )
+            return myOneOf[2].include(path.join('node_modules', req))
               ? cb()
               : external(ctx, req, cb);
           };
@@ -505,23 +470,6 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
 
       return newConfig;
     },
-    /*webpackDevMiddleware(config) {
-      const excludes = generateExcludes(['^expo', '^@expo', '^react-native', '^@unimodules']);
-      // Replace /node_modules/ by the new exclude RegExp (including the modules
-      // that are going to be transpiled)
-      // https://github.com/zeit/next.js/blob/815f2e91386a0cd046c63cbec06e4666cff85971/packages/next/server/hot-reloader.js#L335
-      const ignored = config.watchOptions.ignored
-        .filter(regexp => !regexEqual(regexp, /[\\/]node_modules[\\/]/))
-        .concat(excludes);
-
-      config.watchOptions.ignored = ignored;
-
-      if (typeof userNextConfigJs.webpackDevMiddleware === 'function') {
-        return userNextConfigJs.webpackDevMiddleware(config);
-      }
-
-      return config;
-    },*/
   };
 
   /*console.warn('myconf:');
