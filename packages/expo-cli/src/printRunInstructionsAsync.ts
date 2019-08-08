@@ -1,8 +1,8 @@
-import { User as UserManager } from '@expo/xdl';
+import { UserManager } from '@expo/xdl';
 import chalk from 'chalk';
 import log from './log';
 
-export default async function printRunInstructionsAsync() {
+export default async function printRunInstructionsAsync(): Promise<void> {
   let user = await UserManager.getCurrentUserAsync();
 
   // If no user, we are offline and can't connect

@@ -1,6 +1,6 @@
 import ansiRegex from 'ansi-regex';
 import { isUsingYarn } from '@expo/config';
-import spawnAsync from '@expo/spawn-async';
+import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import split from 'split';
 import { Transform } from 'stream';
 
@@ -17,21 +17,37 @@ const yarnPeerDependencyWarningPattern = new RegExp(
 );
 
 class NpmStderrTransform extends Transform {
-  _transform(chunk, encoding, callback) {
+  _transform(
+    chunk: Buffer,
+    encoding: string,
+    callback: (error?: Error | null, data?: any) => void
+  ) {
     this.push(chunk.toString().replace(npmPeerDependencyWarningPattern, ''));
     callback();
   }
 }
 
 class YarnStderrTransform extends Transform {
-  _transform(chunk, encoding, callback) {
+  _transform(
+    chunk: Buffer,
+    encoding: string,
+    callback: (error?: Error | null, data?: any) => void
+  ) {
     this.push(chunk.toString().replace(yarnPeerDependencyWarningPattern, ''));
     callback();
   }
 }
 
-export class NpmPackageManager {
-  constructor({ cwd }) {
+export interface PackageManager {
+  installAsync(): Promise<void>;
+  addAsync(...names: string[]): Promise<void>;
+  addDevAsync(...names: string[]): Promise<void>;
+}
+
+export class NpmPackageManager implements PackageManager {
+  options: SpawnOptions;
+
+  constructor({ cwd }: { cwd: string }) {
     this.options = { cwd, stdio: ['inherit', 'inherit', 'pipe'] };
   }
   get name() {
@@ -40,27 +56,31 @@ export class NpmPackageManager {
   async installAsync() {
     await this._runAsync(['install']);
   }
-  async addAsync(...names) {
+  async addAsync(...names: string[]) {
     await this._runAsync(['install', '--save', ...names]);
   }
-  async addDevAsync(...names) {
+  async addDevAsync(...names: string[]) {
     await this._runAsync(['install', '--save-dev', ...names]);
   }
 
   // Private
-  async _runAsync(args) {
+  async _runAsync(args: string[]) {
     log(`> npm ${args.join(' ')}`);
     const promise = spawnAsync('npm', [...args], this.options);
-    promise.child.stderr
-      .pipe(split(/\r?\n/, line => line + '\n'))
-      .pipe(new NpmStderrTransform())
-      .pipe(process.stderr);
+    if (promise.child.stderr) {
+      promise.child.stderr
+        .pipe(split(/\r?\n/, (line: string) => line + '\n'))
+        .pipe(new NpmStderrTransform())
+        .pipe(process.stderr);
+    }
     await promise;
   }
 }
 
-export class YarnPackageManager {
-  constructor({ cwd }) {
+export class YarnPackageManager implements PackageManager {
+  options: SpawnOptions;
+
+  constructor({ cwd }: { cwd: string }) {
     this.options = {
       cwd,
       stdio: ['inherit', 'inherit', 'pipe'],
@@ -72,23 +92,28 @@ export class YarnPackageManager {
   async installAsync() {
     await this._runAsync(['install']);
   }
-  async addAsync(...names) {
+  async addAsync(...names: string[]) {
     await this._runAsync(['add', ...names]);
   }
-  async addDevAsync(...names) {
+  async addDevAsync(...names: string[]) {
     await this._runAsync(['add', '--dev', ...names]);
   }
 
   // Private
-  async _runAsync(args) {
+  async _runAsync(args: string[]) {
     log(`> yarn ${args.join(' ')}`);
     const promise = spawnAsync('yarnpkg', args, this.options);
-    promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
+    if (promise.child.stderr) {
+      promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
+    }
     await promise;
   }
 }
 
-export function createForProject(projectRoot, options = {}) {
+export function createForProject(
+  projectRoot: string,
+  options: { npm?: boolean; yarn?: boolean } = {}
+) {
   let PackageManager;
   if (options.npm) {
     PackageManager = NpmPackageManager;
