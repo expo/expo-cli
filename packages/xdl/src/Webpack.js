@@ -56,7 +56,7 @@ export async function startAsync(
   const usingNextJs = await getProjectUseNextJsAsync(projectRoot);
   let serverName = 'Webpack';
   if (usingNextJs) {
-    serverName = 'NextJS';
+    serverName = 'Next.js';
   }
 
   if (webpackDevServerInstance) {
@@ -382,8 +382,7 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
   try {
     next = require(path.join(projectRoot, 'node_modules', 'next'));
   } catch {
-    console.warn('Next is not installed.');
-    return;
+    throw new XDLError('NEXTJS_NOT_INSTALLED', 'Next.js is not installed in your app.');
   }
 
   let userNextConfigJs = {};
@@ -467,7 +466,12 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
     });
 
     webpackDevServerInstance = server.listen(port, err => {
-      if (err) throw err;
+      if (err) {
+        throw new XDLError(
+          'EXPRESS_FAIL_TO_START',
+          `Express server failed to start: ${err.toString()}`
+        );
+      }
       console.log(`> Ready on http://localhost:${port}`);
       onFinished();
     });
