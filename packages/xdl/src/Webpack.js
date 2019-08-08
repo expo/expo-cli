@@ -397,6 +397,7 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
         },
         resolve: {
           ...nextjsConfig.resolve,
+          symlinks: false,
           extensions: expoConfig.resolve.extensions,
           alias: { ...nextjsConfig.resolve.alias, ...expoConfig.resolve.alias },
         },
