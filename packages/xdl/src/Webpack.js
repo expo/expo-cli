@@ -53,7 +53,7 @@ export async function startAsync(
     );
   }
 
-  const usingNextJs = true;
+  const usingNextJs = await getProjectUseNextJsAsync(projectRoot);
   let serverName = 'Webpack';
   if (usingNextJs) {
     serverName = 'NextJS';
@@ -214,6 +214,12 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   const { webName } = ConfigUtils.getNameFromConfig(exp);
   return webName;
+}
+
+export async function getProjectUseNextJsAsync(projectRoot: string): Promise<boolean> {
+  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { useNextJs } = exp.web || {};
+  return Boolean(useNextJs);
 }
 
 export function getServer(projectRoot: string): WebpackDevServer | null {
