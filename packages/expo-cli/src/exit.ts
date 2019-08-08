@@ -1,9 +1,7 @@
-// @flow
-
 import chalk from 'chalk';
 import { Project } from '@expo/xdl';
 
-export function installExitHooks(projectDir: string) {
+export function installExitHooks(projectDir: string): void {
   // install ctrl+c handler that writes non-running state to directory
   if (process.platform === 'win32') {
     require('readline')
@@ -12,7 +10,7 @@ export function installExitHooks(projectDir: string) {
         output: process.stdout,
       })
       .on('SIGINT', () => {
-        process.emit('SIGINT');
+        process.kill(process.pid, 'SIGINT');
       });
   }
 
