@@ -350,7 +350,6 @@ RegExp.prototype.toJSON = function() {
   return this.toString();
 };
 
-// TODO: SEPERATE THIS AS A EXTRA PACKAGE AS @expo/nextjs-config
 async function startNextJsAsync(projectRoot: string, options: BundlingOptions = {}) {
   let next;
   try {
@@ -388,18 +387,6 @@ async function startNextJsAsync(projectRoot: string, options: BundlingOptions = 
     // Note `webpack` has to come after `...userNextConfigJs` because we want to override that
     // User's `webpack` config is loaded below in `return`.
     webpack: (nextjsConfig, options) => {
-      /*console.warn('nextjsConfig:');
-      console.warn(nextjsConfig);
-      console.warn('options:');
-      console.warn(options);
-      console.warn('\n\n\n\n\n');*/
-      //console.warn(JSON.stringify(old_config.module.rules));
-      // Alias all `react-native` imports to `react-native-web`
-      /*old_config.resolve.alias = {
-          ...(old_config.resolve.alias || {}),
-          'react-native$': 'react-native-web',
-        };*/
-
       // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
 
       let newConfig = {
