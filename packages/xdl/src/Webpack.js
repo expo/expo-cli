@@ -154,67 +154,73 @@ export async function openAsync(projectRoot: string, options: BundlingOptions): 
 }
 
 export async function bundleAsync(projectRoot: string, options: BundlingOptions): Promise<void> {
-  const { config } = await createWebpackConfigAsync(projectRoot, options);
+  const usingNextJs = await getProjectUseNextJsAsync(projectRoot);
 
-  const compiler = webpack(config);
+  const { config } = await createWebpackConfigAsync(projectRoot, options, usingNextJs);
 
-  try {
-    // We generate the stats.json file in the webpack-config
-    const { warnings } = await new Promise((resolve, reject) =>
-      compiler.run((error, stats) => {
-        let messages;
-        if (error) {
-          if (!error.message) {
-            return reject(error);
+  if (usingNextJs) {
+    await bundleNextJsAsync({ projectRoot, expoConfig: config });
+  } else {
+    const compiler = webpack(config);
+
+    try {
+      // We generate the stats.json file in the webpack-config
+      const { warnings } = await new Promise((resolve, reject) =>
+        compiler.run((error, stats) => {
+          let messages;
+          if (error) {
+            if (!error.message) {
+              return reject(error);
+            }
+            messages = formatWebpackMessages({
+              errors: [error.message],
+              warnings: [],
+            });
+          } else {
+            messages = formatWebpackMessages(
+              stats.toJson({ all: false, warnings: true, errors: true })
+            );
           }
-          messages = formatWebpackMessages({
-            errors: [error.message],
-            warnings: [],
+
+          if (messages.errors.length) {
+            // Only keep the first error. Others are often indicative
+            // of the same problem, but confuse the reader with noise.
+            if (messages.errors.length > 1) {
+              messages.errors.length = 1;
+            }
+            return reject(new Error(messages.errors.join('\n\n')));
+          }
+          if (
+            process.env.CI &&
+            (typeof process.env.CI !== 'string' || process.env.CI.toLowerCase() !== 'false') &&
+            messages.warnings.length
+          ) {
+            console.log(
+              chalk.yellow(
+                '\nTreating warnings as errors because process.env.CI = true.\n' +
+                  'Most CI servers set it automatically.\n'
+              )
+            );
+            return reject(new Error(messages.warnings.join('\n\n')));
+          }
+
+          resolve({
+            stats,
+            warnings: messages.warnings,
           });
-        } else {
-          messages = formatWebpackMessages(
-            stats.toJson({ all: false, warnings: true, errors: true })
-          );
-        }
+        })
+      );
 
-        if (messages.errors.length) {
-          // Only keep the first error. Others are often indicative
-          // of the same problem, but confuse the reader with noise.
-          if (messages.errors.length > 1) {
-            messages.errors.length = 1;
-          }
-          return reject(new Error(messages.errors.join('\n\n')));
-        }
-        if (
-          process.env.CI &&
-          (typeof process.env.CI !== 'string' || process.env.CI.toLowerCase() !== 'false') &&
-          messages.warnings.length
-        ) {
-          console.log(
-            chalk.yellow(
-              '\nTreating warnings as errors because process.env.CI = true.\n' +
-                'Most CI servers set it automatically.\n'
-            )
-          );
-          return reject(new Error(messages.warnings.join('\n\n')));
-        }
-
-        resolve({
-          stats,
-          warnings: messages.warnings,
-        });
-      })
-    );
-
-    if (warnings.length) {
-      console.log(chalk.yellow('Compiled with warnings.\n'));
-      console.log(warnings.join('\n\n'));
-    } else {
-      console.log(chalk.green('Compiled successfully.\n'));
+      if (warnings.length) {
+        console.log(chalk.yellow('Compiled with warnings.\n'));
+        console.log(warnings.join('\n\n'));
+      } else {
+        console.log(chalk.green('Compiled successfully.\n'));
+      }
+    } catch (error) {
+      console.log(chalk.red('Failed to compile.\n'));
+      throw error;
     }
-  } catch (error) {
-    console.log(chalk.red('Failed to compile.\n'));
-    throw error;
   }
 }
 
@@ -412,6 +418,20 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
       onFinished();
     });
   });
+}
+
+async function bundleNextJsAsync({ projectRoot, expoConfig }) {
+  let nextBuild;
+  try {
+    nextBuild = require(path.join(projectRoot, 'node_modules', 'next', 'dist', 'build')).default;
+  } catch {
+    throw new XDLError(
+      'NEXTJS_NOT_INSTALLED',
+      'Next.js (or its build component) is not installed in your app.'
+    );
+  }
+
+  await nextBuild(projectRoot, _createNextJsConf({ projectRoot, expoConfig }));
 }
 
 function _createNextJsConf({ projectRoot, expoConfig }) {
