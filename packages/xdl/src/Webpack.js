@@ -411,10 +411,7 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
 
   app.prepare().then(() => {
     const server = express();
-
-    server.get('*', (req, res) => {
-      return handle(req, res);
-    });
+    server.get('*', handle);
 
     webpackDevServerInstance = server.listen(port, err => {
       if (err) {
