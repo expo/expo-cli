@@ -1,3 +1,4 @@
+// https://github.com/zeit/next.js/blob/00b56c6ede6fce26c300d3864f70ce1ecbe5fb1d/examples/with-react-native-web/pages/_document.js
 import Document, { Head, Main, NextScript } from 'next/document';
 import React from 'react';
 import { AppRegistry } from 'react-native';
