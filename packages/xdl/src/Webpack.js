@@ -61,6 +61,7 @@ export async function startAsync(
 
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, `${serverName} is already running.`);
+    return;
   }
 
   const { env, config } = await createWebpackConfigAsync(projectRoot, options, usingNextJs);
@@ -376,13 +377,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   };
 }
 
-Function.prototype.toJSON = function() {
-  return this.toString();
-};
-RegExp.prototype.toJSON = function() {
-  return this.toString();
-};
-
 async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished }) {
   let next;
   try {
@@ -446,7 +440,6 @@ function _createNextJsConf({ projectRoot, expoConfig }) {
   if (fs.existsSync(userNextConfigJsPath)) {
     userNextConfigJs = require(userNextConfigJsPath);
   }
-  console.warn(userNextConfigJs);
 
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
   const includeFunc = expoConfig.module.rules[1].include;
@@ -490,10 +483,6 @@ function _createNextJsConf({ projectRoot, expoConfig }) {
           };
         });
       }
-
-      console.warn('newConfig:');
-      console.warn(JSON.stringify(newConfig));
-      console.warn('\n\n\n\n\n');
 
       // If the user has webpack config in their next.config.js, we provide our config to them.
       // Reference: https://github.com/zeit/next-plugins/blob/8f9672dc0e189ffef5c99e588d40fa08d1d99d4f/packages/next-sass/index.js#L46-L50
