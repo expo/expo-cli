@@ -385,9 +385,6 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
     throw new XDLError('NEXTJS_NOT_INSTALLED', 'Next.js is not installed in your app.');
   }
 
-  /*console.warn('myconf:');
-  console.warn(myconf);
-  console.warn('\n\n\n\n\n');*/
   const app = next({
     dev,
     dir: projectRoot,
@@ -412,7 +409,6 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
           `Express server failed to start: ${err.toString()}`
         );
       }
-      console.log(`> Ready on http://localhost:${port}`);
       onFinished();
     });
   });
