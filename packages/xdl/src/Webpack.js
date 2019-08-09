@@ -324,8 +324,8 @@ async function createWebpackConfigAsync(
 
   let config;
   if (unimodules) {
-    const webpackConfigUnimodules = require('@expo/webpack-config/webpack/webpack.config.unimodules');
-    config = await webpackConfigUnimodules(env);
+    const withUnimodules = require('@expo/webpack-config/withUnimodules');
+    config = await withUnimodules({}, env);
   } else {
     config = await Web.invokeWebpackConfigAsync(env);
   }
