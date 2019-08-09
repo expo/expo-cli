@@ -34,6 +34,28 @@ const config = {
       debug: true,
     },
   },
+  startNextJs: {
+    url: 'http://localhost:8000',
+    launch,
+    server: {
+      command: `../expo-cli/bin/expo.js start tests/nextjs/ --web-only --dev --non-interactive --no-https`,
+      port: 8000,
+      launchTimeout: 30000,
+      debug: true,
+    },
+    hasServerSideRendering: true,
+  },
+  buildNextJs: {
+    url: 'http://localhost:8000',
+    launch,
+    server: {
+      command: `../expo-cli/bin/expo.js start tests/nextjs/ --web-only --no-dev --non-interactive --no-https`,
+      port: 8000,
+      launchTimeout: 30000,
+      debug: true,
+    },
+    hasServerSideRendering: true,
+  },
 }[process.env.EXPO_E2E_COMMAND];
 
 assert(process.env.EXPO_E2E_COMMAND, `EXPO_E2E_COMMAND must be defined`);

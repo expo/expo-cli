@@ -1,8 +1,9 @@
 /* global page */
 import config from '../../jest-puppeteer.config';
 
+let response;
 beforeEach(async () => {
-  await page.goto(config.url);
+  response = await page.goto(config.url);
 });
 
 it(`should match a text element`, async () => {
@@ -10,3 +11,12 @@ it(`should match a text element`, async () => {
     text: 'Open up App.js to start working on your app!',
   });
 });
+
+if (config.hasServerSideRendering) {
+  it(`should match a text element server-side`, async () => {
+    const sourceCode = await response.text();
+    expect(sourceCode).toEqual(
+      expect.stringContaining('Open up App.js to start working on your app!')
+    );
+  });
+}
