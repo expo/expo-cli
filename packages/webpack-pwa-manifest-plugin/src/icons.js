@@ -1,7 +1,10 @@
 import fs from 'fs-extra';
 import mime from 'mime';
+import fetch from 'node-fetch';
 import path from 'path';
+import stream from 'stream';
 import temporary from 'tempy';
+import util from 'util';
 import { sharpAsync } from '@expo/image-utils';
 
 import { joinURI } from './helpers/uri';
@@ -92,13 +95,36 @@ async function getBufferWithMimeAsync({ src, resizeMode, color }, mimeType, { wi
   if (!supportedMimeTypes.includes(mimeType)) {
     imagePath = src;
   } else {
-    imagePath = await resize(src, mimeType, width, height, resizeMode, color);
+    let localSrc = src;
+
+    // In case the icon is a remote URL we need to download it first
+    if (src.startsWith('http')) {
+      localSrc = await downloadImage(src);
+    }
+
+    imagePath = await resize(localSrc, mimeType, width, height, resizeMode, color);
   }
   try {
     return await fs.readFile(imagePath);
   } catch (err) {
     throw new IconError(`It was not possible to read '${src}'.`);
   }
+}
+
+async function downloadImage(url) {
+  const outputPath = temporary.directory();
+  const localPath = path.join(outputPath, path.basename(url));
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new IconError(`It was not possible to download splash screen from '${url}'`);
+  }
+
+  // Download to local file
+  const streamPipeline = util.promisify(stream.pipeline);
+  await streamPipeline(response.body, fs.createWriteStream(localPath));
+
+  return localPath;
 }
 
 async function processImage(size, icon, fingerprint, publicPath) {
@@ -185,13 +211,11 @@ export async function parseIcons(inputIcons, fingerprint, publicPath) {
   await Promise.all(promises);
 
   return {
-    icons: icons
-      .filter(icon => icon)
-      .sort(({ sizes }, { sizes: sizesB }) => {
-        if (sizes < sizesB) return -1;
-        else if (sizes > sizesB) return 1;
-        return 0;
-      }),
+    icons: icons.filter(icon => icon).sort(({ sizes }, { sizes: sizesB }) => {
+      if (sizes < sizesB) return -1;
+      else if (sizes > sizesB) return 1;
+      return 0;
+    }),
     // startupImages: icons.filter(({ isStartupImage }) => isStartupImage),
     assets,
   };

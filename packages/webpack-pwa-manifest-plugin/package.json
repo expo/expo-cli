@@ -33,6 +33,7 @@
     "@expo/image-utils": "^0.2.5",
     "css-color-names": "^1.0.1",
     "mime": "^2.4.0",
+    "node-fetch": "^2.6.0",
     "tempy": "^0.3.0"
   },
   "devDependencies": {
