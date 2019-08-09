@@ -241,8 +241,8 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
 
 export async function getProjectUseNextJsAsync(projectRoot: string): Promise<boolean> {
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  const { useNextJs } = exp.web || {};
-  return Boolean(useNextJs);
+  const { use } = exp.web || {};
+  return use === 'nextjs';
 }
 
 export function getServer(projectRoot: string): WebpackDevServer | null {

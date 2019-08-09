@@ -21,7 +21,7 @@
       "supportsTablet": true
     },
     "web": {
-      "useNextJs": true
+      "use": "nextjs"
     }
   }
 }
