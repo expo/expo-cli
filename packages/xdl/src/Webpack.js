@@ -388,7 +388,8 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
 async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished }) {
   let next;
   try {
-    next = require(path.join(projectRoot, 'node_modules', 'next'));
+    const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+    next = require(ConfigUtils.resolveModule('next', projectRoot, exp));
   } catch {
     throw new XDLError('NEXTJS_NOT_INSTALLED', 'Next.js is not installed in your app.');
   }
@@ -428,7 +429,8 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
 async function bundleNextJsAsync({ projectRoot, expoConfig }) {
   let nextBuild;
   try {
-    nextBuild = require(path.join(projectRoot, 'node_modules', 'next', 'dist', 'build')).default;
+    const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+    nextBuild = require(ConfigUtils.resolveModule('next/dist/build', projectRoot, exp)).default;
   } catch {
     throw new XDLError(
       'NEXTJS_NOT_INSTALLED',
