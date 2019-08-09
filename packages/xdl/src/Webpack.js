@@ -12,7 +12,7 @@ import WebpackDevServer from 'webpack-dev-server';
 import express from 'express';
 
 import getenv from 'getenv';
-import createWebpackCompiler from './createWebpackCompiler';
+import createWebpackCompiler, { printSuccessMessages } from './createWebpackCompiler';
 import ip from './ip';
 import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -95,6 +95,14 @@ export async function startAsync(
         expoConfig: config,
         onFinished: resolve,
       });
+    });
+    printSuccessMessages({
+      projectRoot,
+      appName,
+      urls,
+      config,
+      isFirstCompile: true,
+      nonInteractive,
     });
   } else {
     await new Promise(resolve => {

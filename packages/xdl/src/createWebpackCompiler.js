@@ -111,13 +111,7 @@ export default function createWebpackCompiler({
 
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
     if (isSuccessful) {
-      log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
-      printPreviewNotice(projectRoot, isFirstCompile);
-      logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
-    }
-
-    if (isSuccessful && (!nonInteractive || isFirstCompile)) {
-      printInstructions(projectRoot, appName, urls, isFirstCompile);
+      printSuccessMessages({ projectRoot, appName, urls, config, isFirstCompile, nonInteractive });
     }
 
     if (!isFirstCompile) {
@@ -152,4 +146,21 @@ export default function createWebpackCompiler({
   });
 
   return compiler;
+}
+
+export function printSuccessMessages({
+  projectRoot,
+  appName,
+  urls,
+  config,
+  isFirstCompile,
+  nonInteractive,
+}) {
+  log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
+  printPreviewNotice(projectRoot, isFirstCompile);
+  logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
+
+  if (!nonInteractive || isFirstCompile) {
+    printInstructions(projectRoot, appName, urls, isFirstCompile);
+  }
 }
