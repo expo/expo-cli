@@ -460,8 +460,6 @@ function _createNextJsConf({ projectRoot, expoConfig }) {
     // Note `webpack` has to come after `...userNextConfigJs` because we want to override that
     // User's `webpack` config is loaded below in `return`.
     webpack: (nextjsConfig, options) => {
-      // TODO: ADD A BABEL-LOADER DATA PASS TO BABEL TO SHOW THAT IT IS FROM NEXTJS AND AUTOMATICALLY USE next/babel
-
       let newConfig = {
         ...nextjsConfig,
         module: {
