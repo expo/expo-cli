@@ -391,6 +391,12 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
     throw new XDLError('NEXTJS_NOT_INSTALLED', 'Next.js is not installed in your app.');
   }
 
+  // Build first if in production mode.
+  // https://nextjs.org/docs#custom-server-and-routing
+  if (!dev) {
+    await bundleNextJsAsync({ projectRoot, expoConfig });
+  }
+
   const app = next({
     dev,
     dir: projectRoot,
