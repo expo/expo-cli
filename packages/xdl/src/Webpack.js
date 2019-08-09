@@ -385,6 +385,40 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
     throw new XDLError('NEXTJS_NOT_INSTALLED', 'Next.js is not installed in your app.');
   }
 
+  /*console.warn('myconf:');
+  console.warn(myconf);
+  console.warn('\n\n\n\n\n');*/
+  const app = next({
+    dev,
+    dir: projectRoot,
+    conf: _createNextJsConf({
+      projectRoot,
+      expoConfig,
+    }),
+  });
+  const handle = app.getRequestHandler();
+
+  app.prepare().then(() => {
+    const server = express();
+
+    server.get('*', (req, res) => {
+      return handle(req, res);
+    });
+
+    webpackDevServerInstance = server.listen(port, err => {
+      if (err) {
+        throw new XDLError(
+          'EXPRESS_FAIL_TO_START',
+          `Express server failed to start: ${err.toString()}`
+        );
+      }
+      console.log(`> Ready on http://localhost:${port}`);
+      onFinished();
+    });
+  });
+}
+
+function _createNextJsConf({ projectRoot, expoConfig }) {
   let userNextConfigJs = {};
   const userNextConfigJsPath = path.join(projectRoot, 'next.config.js');
   if (fs.existsSync(userNextConfigJsPath)) {
@@ -395,7 +429,7 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
   const includeFunc = expoConfig.module.rules[1].include;
 
-  const myconf = {
+  return {
     // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
     // Remove the `.` before each file extension
     pageExtensions: expoConfig.resolve.extensions.map(string => string.substr(1)),
@@ -447,33 +481,4 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
       return newConfig;
     },
   };
-
-  /*console.warn('myconf:');
-  console.warn(myconf);
-  console.warn('\n\n\n\n\n');*/
-  const app = next({
-    dev,
-    dir: projectRoot,
-    conf: myconf,
-  });
-  const handle = app.getRequestHandler();
-
-  app.prepare().then(() => {
-    const server = express();
-
-    server.get('*', (req, res) => {
-      return handle(req, res);
-    });
-
-    webpackDevServerInstance = server.listen(port, err => {
-      if (err) {
-        throw new XDLError(
-          'EXPRESS_FAIL_TO_START',
-          `Express server failed to start: ${err.toString()}`
-        );
-      }
-      console.log(`> Ready on http://localhost:${port}`);
-      onFinished();
-    });
-  });
 }
