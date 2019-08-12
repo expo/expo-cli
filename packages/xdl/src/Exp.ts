@@ -1,4 +1,5 @@
 import * as ConfigUtils from '@expo/config';
+import { AppJSONConfig, BareAppConfig } from '@expo/config';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import path from 'path';
@@ -24,12 +25,6 @@ export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 // TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
 type ReadEntry = any;
 
-type InitialConfig = {
-  displayName?: string;
-  name: string;
-  [key: string]: any;
-};
-
 export async function determineEntryPointAsync(root: string) {
   let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(root);
 
@@ -47,14 +42,12 @@ export async function determineEntryPointAsync(root: string) {
 
 class Transformer extends Minipass {
   data: string;
-  config: InitialConfig;
-  displayName: string;
+  config: AppJSONConfig | BareAppConfig;
 
-  constructor(config: InitialConfig) {
+  constructor(config: AppJSONConfig | BareAppConfig) {
     super();
     this.data = '';
     this.config = config;
-    this.displayName = config.displayName || config.name;
   }
   write(data: string) {
     this.data += data;
@@ -73,7 +66,7 @@ class Transformer extends Minipass {
 // Binary files, don't process these (avoid decoding as utf8)
 const binaryExtensions = ['.png', '.jar'];
 
-function createFileTransform(config: InitialConfig) {
+function createFileTransform(config: AppJSONConfig | BareAppConfig) {
   return function transformFile(entry: ReadEntry) {
     if (!binaryExtensions.includes(path.extname(entry.path)) && config.name) {
       return new Transformer(config);
@@ -86,7 +79,7 @@ export async function extractAndInitializeTemplateApp(
   templateSpec: PackageSpec,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
-  config: InitialConfig
+  config: AppJSONConfig | BareAppConfig
 ) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
   await extractTemplateAppAsync(templateSpec, projectRoot, config);
@@ -124,7 +117,7 @@ export async function extractAndInitializeTemplateApp(
 export async function extractTemplateAppAsync(
   templateSpec: PackageSpec,
   targetPath: string,
-  config: InitialConfig
+  config: AppJSONConfig | BareAppConfig
 ) {
   let tarStream = await pacote.tarball.stream(templateSpec, {
     cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
