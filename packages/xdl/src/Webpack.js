@@ -508,7 +508,6 @@ function _createNextJsConf({ projectRoot, expoConfig }) {
 
 function _findBabelLoader(rules: Object): Object | null {
   for (const rule of rules) {
-    console.warn(rule.use);
     if (rule.use && rule.use.loader && rule.use.loader.includes('/babel-loader')) {
       return rule;
     }
