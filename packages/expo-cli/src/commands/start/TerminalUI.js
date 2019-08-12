@@ -51,16 +51,16 @@ const printUsage = async (projectDir, options = {}) => {
  \u203A Press ${platformInfo}.
  \u203A Press ${b`c`} to show info on ${u`c`}onnecting new devices.
  \u203A Press ${b`d`} to open DevTools in the default web browser.
- \u203A Press ${b`shift-d`} to ${openDevToolsAtStartup
-    ? 'disable'
-    : 'enable'} automatically opening ${u`D`}evTools at startup.${options.webOnly
-    ? ''
-    : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`}
+ \u203A Press ${b`shift-d`} to ${
+    openDevToolsAtStartup ? 'disable' : 'enable'
+  } automatically opening ${u`D`}evTools at startup.${
+    options.webOnly ? '' : `\n \u203A Press ${b`e`} to send an app link with ${u`e`}mail.`
+  }
  \u203A Press ${b`p`} to toggle ${u`p`}roduction mode. (current mode: ${i(devMode)})
  \u203A Press ${b`r`} to ${u`r`}estart bundler, or ${b`shift-r`} to restart and clear cache.
- \u203A Press ${b`s`} to ${u`s`}ign ${username
-    ? `out. (Signed in as ${i('@' + username)}.)`
-    : 'in.'}
+ \u203A Press ${b`s`} to ${u`s`}ign ${
+    username ? `out. (Signed in as ${i('@' + username)}.)` : 'in.'
+  }
 `);
 };
 
@@ -134,7 +134,6 @@ export const startAsync = async (projectDir, options) => {
           log('Trying to open the web project in Safari on the iOS simulator...');
           await Simulator.openWebProjectAsync(projectDir);
           printHelp();
-          // log(chalk.red` \u203A Opening the iOS simulator is not supported in web-only mode`);
           break;
         case 'e':
           log(chalk.red` \u203A Sending a URL is not supported in web-only mode`);
@@ -252,7 +251,7 @@ export const startAsync = async (projectDir, options) => {
       }
       case 'D': {
         clearConsole();
-        const enabled = !await UserSettings.getAsync('openDevToolsAtStartup', true);
+        const enabled = !(await UserSettings.getAsync('openDevToolsAtStartup', true));
         await UserSettings.setAsync('openDevToolsAtStartup', enabled);
         log(
           `Automatically opening DevTools ${b(
