@@ -29,7 +29,7 @@ export function isPlatformSupported(): boolean {
   );
 }
 
-async function _getAdbOutputAsync(args: string[]): Promise<string> {
+export async function _getAdbOutputAsync(args: string[]): Promise<string> {
   await Binaries.addToPathAsync('adb');
 
   try {
@@ -111,7 +111,7 @@ function _apkCacheDirectory() {
   return dir;
 }
 
-async function _downloadApkAsync() {
+export async function _downloadApkAsync(url?: string) {
   let versions = await Versions.versionsAsync();
   let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
@@ -120,16 +120,16 @@ async function _downloadApkAsync() {
   }
 
   await Api.downloadAsync(
-    versions.androidUrl,
+    url || versions.androidUrl,
     path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`)
   );
   return apkPath;
 }
 
-async function _installExpoAsync() {
+export async function _installExpoAsync(url?: string) {
   Logger.global.info(`Downloading latest version of Expo`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
-  let path = await _downloadApkAsync();
+  let path = await _downloadApkAsync(url);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   Logger.global.info(`Installing Expo on device`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
@@ -138,7 +138,7 @@ async function _installExpoAsync() {
   return result;
 }
 
-async function _uninstallExpoAsync() {
+export async function _uninstallExpoAsync() {
   Logger.global.info('Uninstalling Expo from Android device.');
   return await _getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
 }
@@ -171,7 +171,7 @@ export async function upgradeExpoAsync(): Promise<boolean> {
 }
 
 // Open Url
-async function _assertDeviceReadyAsync() {
+export async function _assertDeviceReadyAsync() {
   const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
   if (!(await _isDeviceAttachedAsync())) {
