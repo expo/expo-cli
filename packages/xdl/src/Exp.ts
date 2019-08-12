@@ -161,11 +161,6 @@ export async function extractTemplateAppAsync(
 }
 
 async function initGitRepoAsync(root: string) {
-  if (process.platform === 'darwin' && !Binaries.isXcodeInstalled()) {
-    Logger.global.warn(`Unable to initialize git repo. \`git\` not installed.`);
-    return;
-  }
-
   // let's see if we're in a git tree
   let insideGit = true;
   try {
@@ -174,6 +169,9 @@ async function initGitRepoAsync(root: string) {
     });
     Logger.global.debug('New project is already inside of a git repo, skipping git init.');
   } catch (e) {
+    if (e.errno == 'ENOENT') {
+      Logger.global.warn('Unable to initialize git repo. `git` not in PATH.');
+    }
     insideGit = false;
   }
 

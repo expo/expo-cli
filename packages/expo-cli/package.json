@@ -44,10 +44,12 @@
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@expo/babel-preset-cli": "^0.2.0",
+    "@types/ansi-regex": "^4.0.0",
     "@types/dateformat": "^3.0.0",
     "@types/inquirer": "^6.0.3",
     "@types/progress": "^2.0.3",
     "@types/slash": "^2.0.0",
+    "@types/split": "^1.0.0",
     "@types/wordwrap": "^1.0.0",
     "gulp": "^4.0.0",
     "gulp-babel": "^8.0.01",

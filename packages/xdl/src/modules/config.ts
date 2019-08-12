@@ -117,6 +117,19 @@ const expoUniversalModules = [
     sdkVersions: '>=34.0.0',
   },
   {
+    podName: 'EXBluetooth',
+    libName: 'expo-bluetooth',
+    sdkVersions: '>=34.0.0',
+    config: {
+      ios: {
+        includeInExpoClient: false,
+      },
+      android: {
+        includeInExpoClient: false,
+      },
+    },
+  },
+  {
     podName: 'EXBlur',
     libName: 'expo-blur',
     sdkVersions: '>=33.0.0',
