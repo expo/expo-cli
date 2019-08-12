@@ -1,14 +1,11 @@
-/**
- * @flow
- */
-
-import { UserManager } from '@expo/xdl';
+import { Command } from 'commander';
 import chalk from 'chalk';
+import { UserManager } from '@expo/xdl';
 
 import log from '../log';
 import CommandError from '../CommandError';
 
-async function action(options) {
+async function action() {
   const username = await UserManager.getCurrentUsernameAsync();
   if (username) {
     log(`Logged in as ${chalk.green(username)}`);
@@ -18,7 +15,7 @@ async function action(options) {
   }
 }
 
-export default program => {
+export default (program: Command) => {
   program
     .command('whoami')
     .alias('w')
