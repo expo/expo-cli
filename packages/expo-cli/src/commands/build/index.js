@@ -115,7 +115,13 @@ export default (program: any) => {
     .option('-d, --dev', 'Bundle your project using webpack in dev mode.')
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir(
-      (projectDir, options) => Webpack.bundleAsync(projectDir, options),
+      (projectDir, options) => {
+        if (typeof options.dev === 'undefined') {
+          options.dev = false;
+        }
+        
+        Webpack.bundleAsync(projectDir, options)
+      },
       /* skipProjectValidation: */ false,
       /* skipAuthCheck: */ true
     );
