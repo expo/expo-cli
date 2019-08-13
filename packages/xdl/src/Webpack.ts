@@ -8,7 +8,6 @@ import WebpackDevServer from 'webpack-dev-server';
 import getenv from 'getenv';
 import createWebpackCompiler from './createWebpackCompiler';
 import ip from './ip';
-import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
