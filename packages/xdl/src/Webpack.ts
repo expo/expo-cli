@@ -24,7 +24,7 @@ export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
 export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';
 
-type DevServer = WebpackDevServer | http.Server;
+export type DevServer = WebpackDevServer | http.Server;
 
 let webpackDevServerInstance: DevServer | null = null;
 let webpackServerPort: number | null = null;
@@ -187,7 +187,7 @@ export async function openAsync(projectRoot: string, options?: BundlingOptions):
 export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
   const usingNextJs = await getProjectUseNextJsAsync(projectRoot);
 
-  const { config } = await createWebpackConfigAsync(projectRoot, options);
+  const { config } = await createWebpackConfigAsync(projectRoot, options, usingNextJs);
 
   if (usingNextJs) {
     await bundleNextJsAsync({ projectRoot, expoConfig: config });
@@ -265,11 +265,11 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
 
 export async function getProjectUseNextJsAsync(projectRoot: string): Promise<boolean> {
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  const { use } = exp.web || {};
+  const { use = null } = (exp && exp.web) || {};
   return use === 'nextjs';
 }
 
-export function getServer(projectRoot: string): WebpackDevServer | null {
+export function getServer(projectRoot: string): DevServer | null {
   if (webpackDevServerInstance == null) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is not running.');
   }
@@ -441,7 +441,7 @@ async function startNextJsAsync({ projectRoot, port, dev, expoConfig, onFinished
   });
   const handle = app.getRequestHandler();
 
-  return app.prepare().then(() => {
+  app.prepare().then(() => {
     const server = express();
     server.get('*', handle);
 
