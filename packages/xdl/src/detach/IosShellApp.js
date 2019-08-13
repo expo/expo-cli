@@ -117,7 +117,7 @@ async function _buildAsync(
       `${projectName}.app`
     );
   } else if (type === 'archive') {
-    buildCmd += ` -sdk iphoneos -destination generic/platform=iOS archive -archivePath ${buildDest}/${projectName}.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty`;
+    buildCmd += ` -sdk iphoneos -destination generic/platform=iOS archive -archivePath ${buildDest}/${projectName}.xcarchive CODE_SIGNING_ALLOWED=NO | xcpretty`;
     pathToArtifact = path.join(buildDest, `${projectName}.xcarchive`);
   } else {
     throw new Error(`Unsupported build type: ${type}`);
