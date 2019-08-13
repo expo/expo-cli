@@ -38,9 +38,11 @@ export default async function selectDistributionCert(context, options = {}) {
   if (promptValue === 'GENERATE') {
     return await generateDistributionCert(context);
   } else if (promptValue === 'UPLOAD') {
-    const userProvidedCredentials = await promptForCredentials(context, ['distributionCert']);
-    const distributionCert = userProvidedCredentials[0].distributionCert;
-    distributionCert.distCertSerialNumber = userProvidedCredentials[1].distCertSerialNumber;
+    const { credentials: userProvidedCredentials, metadata } = await promptForCredentials(context, [
+      'distributionCert',
+    ]);
+    const distributionCert = userProvidedCredentials.distributionCert;
+    distributionCert.distCertSerialNumber = metadata.distCertSerialNumber;
     const isValid = await validateUploadedCertificate(context, distributionCert);
     if (!isValid) {
       return await selectDistributionCert(context, { disableAutoSelectExisting: true });

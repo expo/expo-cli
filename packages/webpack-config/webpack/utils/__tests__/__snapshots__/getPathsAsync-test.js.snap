@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`has consistent defaults 1`] = `
+Object {
+  "absolute": [Function],
+  "appMain": "tests/basic/index",
+  "includeModule": [Function],
+  "modules": "tests/basic/node_modules",
+  "packageJson": "tests/basic/package.json",
+  "production": Object {
+    "favicon": "tests/basic/web-build/favicon.ico",
+    "folder": "tests/basic/web-build",
+    "get": [Function],
+    "indexHtml": "tests/basic/web-build/index.html",
+    "manifest": "tests/basic/web-build/manifest.json",
+    "serveJson": "tests/basic/web-build/serve.json",
+  },
+  "root": "tests/basic",
+  "template": Object {
+    "favicon": "web-default/favicon.ico",
+    "folder": "web-default",
+    "get": [Function],
+    "indexHtml": "web-default/index.html",
+    "manifest": "web-default/manifest.json",
+    "serveJson": "web-default/serve.json",
+  },
+}
+`;

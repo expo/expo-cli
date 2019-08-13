@@ -366,6 +366,15 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
       infoPlist.UIDeviceFamily = [2];
     }
 
+    // Whether requires full screen on iPad
+    infoPlist.UIRequiresFullScreen = config.ios && config.ios.requireFullScreen;
+    if (infoPlist.UIRequiresFullScreen == null) {
+      // NOTES: This is defaulted to `true` for now to match the behavior prior to SDK 34, but will change to `false` in a future SDK version.
+      infoPlist.UIRequiresFullScreen = true;
+    }
+    // Cast to make sure that it is a boolean.
+    infoPlist.UIRequiresFullScreen = Boolean(infoPlist.UIRequiresFullScreen);
+
     // context-specific plist changes
     if (context.type === 'user') {
       infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
@@ -441,6 +450,20 @@ async function _configureConstantsPlistAsync(context: StandaloneContext) {
   });
 }
 
+async function _configureGoogleServicesPlistAsync(context: StandaloneContext) {
+  if (context.type === 'user') {
+    return;
+  }
+  if (get(context, 'data.manifest.ios.googleServicesFile')) {
+    const { supportingDirectory } = IosWorkspace.getPaths(context);
+    await fs.writeFile(
+      path.join(supportingDirectory, 'GoogleService-Info.plist'),
+      get(context, 'data.manifest.ios.googleServicesFile'),
+      'base64'
+    );
+  }
+}
+
 async function configureAsync(context: StandaloneContext) {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
@@ -467,6 +490,7 @@ async function configureAsync(context: StandaloneContext) {
     }
     await _configureEntitlementsAsync(context);
     await _configureConstantsPlistAsync(context);
+    await _configureGoogleServicesPlistAsync(context);
     if (!context.build.isExpoClientBuild()) {
       await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
       await IosLocalization.writeLocalizationResourcesAsync({

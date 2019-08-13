@@ -117,7 +117,7 @@ async function _buildAsync(
       `${projectName}.app`
     );
   } else if (type === 'archive') {
-    buildCmd += ` -sdk iphoneos -destination generic/platform=iOS archive -archivePath ${buildDest}/${projectName}.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcpretty`;
+    buildCmd += ` -sdk iphoneos -destination generic/platform=iOS archive -archivePath ${buildDest}/${projectName}.xcarchive CODE_SIGNING_ALLOWED=NO | xcpretty`;
     pathToArtifact = path.join(buildDest, `${projectName}.xcarchive`);
   } else {
     throw new Error(`Unsupported build type: ${type}`);
@@ -148,6 +148,10 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
     }
   });
 
+  // Disable cocoapod stats to speed up the install
+  const COCOAPODS_DISABLE_STATS = process.env.COCOAPODS_DISABLE_STATS;
+  process.env.COCOAPODS_DISABLE_STATS = true;
+
   // install
   let cocoapodsArgs = ['install'];
   if (isRepoUpdateEnabled) {
@@ -155,10 +159,15 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
   }
   logger.info('Installing iOS workspace dependencies...');
   logger.info(`pod ${cocoapodsArgs.join(' ')}`);
-  await spawnAsyncThrowError('pod', cocoapodsArgs, {
-    stdio: 'inherit',
-    cwd: workspacePath,
-  });
+  try {
+    await spawnAsyncThrowError('pod', cocoapodsArgs, {
+      stdio: 'inherit',
+      cwd: workspacePath,
+    });
+  } finally {
+    // Revert the stats to the user preference
+    process.env.COCOAPODS_DISABLE_STATS = COCOAPODS_DISABLE_STATS;
+  }
 }
 
 /**
@@ -314,16 +323,13 @@ async function createTurtleWorkspaceAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await _createTurtleWorkspaceAsync(context, args);
   logger.info(
-    `Created turtle workspace at ${
-      context.build.ios.workspaceSourcePath
-    }. You can open and run this in Xcode.`
+    `Created turtle workspace at ${context.build.ios
+      .workspaceSourcePath}. You can open and run this in Xcode.`
   );
   if (context.config) {
     await IosNSBundle.configureAsync(context);
     logger.info(
-      `The turtle workspace was configured for the url ${
-        args.url
-      }. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
+      `The turtle workspace was configured for the url ${args.url}. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
     );
   } else {
     logger.info(

@@ -1,0 +1,95 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`has consistent defaults 1`] = `
+Object {
+  "android": Object {},
+  "assetBundlePatterns": Array [
+    "**/*",
+  ],
+  "description": "A Neat Expo App",
+  "icon": "./assets/icon.png",
+  "ios": Object {
+    "supportsTablet": true,
+  },
+  "name": "basic",
+  "orientation": "portrait",
+  "platforms": Array [
+    "ios",
+    "android",
+    "web",
+  ],
+  "primaryColor": "#4630EB",
+  "privacy": "public",
+  "sdkVersion": "33.0.0",
+  "slug": "basic",
+  "splash": Object {
+    "backgroundColor": "#ffffff",
+    "image": "./assets/splash.png",
+    "resizeMode": "contain",
+  },
+  "updates": Object {
+    "fallbackToCacheTimeout": 0,
+  },
+  "version": "1.0.0",
+  "web": Object {
+    "backgroundColor": "#ffffff",
+    "barStyle": "default",
+    "build": Object {
+      "output": "web-build",
+      "publicPath": "/",
+      "rootId": "root",
+    },
+    "crossorigin": undefined,
+    "dangerous": Object {
+      "noJavaScriptMessage": "Oh no! It looks like JavaScript is not enabled in your browser.",
+    },
+    "description": "A Neat Expo App",
+    "dir": "auto",
+    "display": "standalone",
+    "icons": Array [
+      Object {
+        "destination": "apple/icons",
+        "size": Array [
+          192,
+          512,
+        ],
+        "src": "tests/basic/assets/icon.png",
+      },
+      Object {
+        "destination": "apple/icons",
+        "ios": true,
+        "sizes": 180,
+        "src": "tests/basic/assets/icon.png",
+      },
+    ],
+    "lang": "en",
+    "meta": Object {
+      "apple": Object {
+        "barStyle": "default",
+        "formatDetection": "telephone=no",
+        "mobileWebAppCapable": "yes",
+        "touchFullscreen": "yes",
+      },
+      "viewport": "width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover",
+    },
+    "name": "basic",
+    "orientation": "portrait",
+    "preferRelatedApplications": true,
+    "relatedApplications": Array [],
+    "scope": undefined,
+    "shortName": "basic",
+    "startUrl": ".",
+    "startupImages": Array [
+      Object {
+        "color": "#ffffff",
+        "destination": "apple/splash",
+        "orientation": "portrait",
+        "resizeMode": "contain",
+        "src": "tests/basic/assets/splash.png",
+        "supportsTablet": true,
+      },
+    ],
+    "themeColor": "#4630EB",
+  },
+}
+`;

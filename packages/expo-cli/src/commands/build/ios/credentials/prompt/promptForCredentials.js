@@ -38,7 +38,7 @@ async function promptForCredentials(appleCtx, types, printWarning = true) {
     Object.assign(metadata, await _calculateMetadata(credentials[type]));
   }
 
-  return [credentials, metadata];
+  return { credentials, metadata };
 }
 
 async function _askQuestionAndProcessAnswer(definition) {

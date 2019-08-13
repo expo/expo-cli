@@ -8,6 +8,7 @@ import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
+export type BareAppConfig = { name: string; displayName: string; [key: string]: any };
 export type ExpoConfig = {
   name?: string;
   slug?: string;

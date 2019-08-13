@@ -40,7 +40,12 @@ export async function getExistingDistCerts(
 
 export function formatDistCerts(distCerts, options) {
   return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }) => {
-    const serialNumber = IosCodeSigning.findP12CertSerialNumber(certP12, certPassword);
+    let serialNumber;
+    try {
+      serialNumber = IosCodeSigning.findP12CertSerialNumber(certP12, certPassword);
+    } catch (error) {
+      serialNumber = '------';
+    }
     let name = `Serial number: ${serialNumber}`;
     if (certId) {
       name = `${name}, Certificate ID: ${certId}`;

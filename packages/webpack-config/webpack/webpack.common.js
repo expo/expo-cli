@@ -327,7 +327,6 @@ module.exports = async function(env = {}, argv) {
     output: {
       // Build folder (default `web-build`)
       path: locations.production.folder,
-
       sourceMapFilename: '[chunkhash].map',
       // This is the URL that app is served from. We use "/" in development.
       publicPath,
@@ -433,32 +432,6 @@ module.exports = async function(env = {}, argv) {
       rules: [
         // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
-
-        // First, run the linter.
-        // It's important to do this before Babel processes the JS.
-        // This will throw required errors and warnings during the build.
-        env.dangerouslyUseLinter && {
-          test: /\.(js|mjs|jsx|ts|tsx)$/,
-          enforce: 'pre',
-          use: [
-            {
-              loader: require.resolve('eslint-loader'),
-              options: {
-                emitError: isProd,
-                formatter: require.resolve('react-dev-utils/eslintFormatter'),
-                eslintPath: require.resolve('eslint'),
-                baseConfig: {
-                  extends: ['universe/node', 'universe/web'],
-                  settings: { react: { version: 'detect' } },
-                },
-                ignore: false,
-                useEslintrc: false,
-              },
-            },
-          ],
-          include: babelLoader.include,
-        },
-
         {
           oneOf: allLoaders,
         },
