@@ -10,6 +10,12 @@ import * as ConfigUtils from '@expo/config';
 
 import log from '../log';
 
+type VapidData = {
+  vapidSubject: string;
+  vapidPubkey?: string;
+  vapidPvtkey?: string;
+};
+
 export default (program: Command) => {
   program
     .command('push:android:upload [project-dir]')
@@ -88,7 +94,7 @@ export default (program: Command) => {
     .option('--vapid-pubkey [vapid-public-key]', 'URL-safe base64-encoded VAPID public key.')
     .option('--vapid-pvtkey [vapid-private-key]', 'URL-safe base64-encoded VAPID private key.')
     .option('--vapid-subject [vapid-subject]', vapidSubjectDescription)
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: VapidData) => {
       if (!options.vapidPubkey || !options.vapidPvtkey || !options.vapidSubject) {
         throw new Error(
           'Must specify all three fields (--vapid-pubkey, --vapid-pvtkey, and --vapid-subject) to upload.'
@@ -102,7 +108,7 @@ export default (program: Command) => {
     .command('push:web:generate [project-dir]')
     .description('Generates VAPID key pair for web push notifications.')
     .option('--vapid-subject [vapid-subject]', vapidSubjectDescription)
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: VapidData) => {
       if (!options.vapidSubject) {
         throw new Error('Must specify --vapid-subject.');
       }
@@ -117,7 +123,7 @@ export default (program: Command) => {
     .description(
       'Prints the VAPID public key, the VAPID private key, and the VAPID subject currently in use for web notifications for this project.'
     )
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string) => {
       const {
         args: { remotePackageName },
       } = await Exp.getPublishInfoAsync(projectDir);
@@ -145,7 +151,7 @@ export default (program: Command) => {
     .description(
       'Deletes previously uploaded VAPID public key, VAPID private key, and VAPID subject.'
     )
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string) => {
       log('Reading project configuration...');
       const {
         args: { remotePackageName },
@@ -161,7 +167,7 @@ export default (program: Command) => {
     }, true);
 };
 
-async function _uploadWebPushCredientials(projectDir, options) {
+async function _uploadWebPushCredientials(projectDir: string, options: VapidData) {
   const isGeneration = !(options.vapidPubkey && options.vapidPvtkey);
 
   log('Reading project configuration...');
@@ -219,26 +225,28 @@ async function _uploadWebPushCredientials(projectDir, options) {
    */
   log(`Reading app.json...`);
   const { configPath } = await ConfigUtils.findConfigFileAsync(projectDir);
-  const appJson = JSON.parse(await fse.readFile(configPath));
+  const appJson = JSON.parse(await fse.readFile(configPath).then(value => value.toString()));
   let changedProperties = [];
 
-  if (appJson.expo.owner && appJson.expo.owner !== user.username) {
-    log(
-      chalk.yellow(
-        `Warning: expo.owner is already configured to be "${
-          appJson.expo.owner
-        }" in app.json, but your current username is "${
-          user.username
-        }". You will not receive any push notification if you do not change expo.owner to "${
-          user.username
-        }" in app.json. Alternatively, you could choose to login to "${
-          appJson.expo.owner
-        }" and then execute this command again.`
-      )
-    );
-  } else {
-    appJson.expo.owner = user.username;
-    changedProperties.push('expo.owner');
+  if (user) {
+    if (appJson.expo.owner && appJson.expo.owner !== user.username) {
+      log(
+        chalk.yellow(
+          `Warning: expo.owner is already configured to be "${
+            appJson.expo.owner
+          }" in app.json, but your current username is "${
+            user.username
+          }". You will not receive any push notification if you do not change expo.owner to "${
+            user.username
+          }" in app.json. Alternatively, you could choose to login to "${
+            appJson.expo.owner
+          }" and then execute this command again.`
+        )
+      );
+    } else {
+      appJson.expo.owner = user.username;
+      changedProperties.push('expo.owner');
+    }
   }
 
   if (
