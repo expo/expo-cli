@@ -1,4 +1,4 @@
-/* global self */
+/* eslint-env serviceworker */
 
 /**
  * Store notification icon string in service worker.
