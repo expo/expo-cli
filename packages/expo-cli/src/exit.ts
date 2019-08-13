@@ -18,6 +18,7 @@ export function installExitHooks(
   }
 
   for (const signal of ['SIGINT', 'SIGTERM']) {
+    // @ts-ignore
     process.on(signal, () => {
       console.log(chalk.blue('\nStopping packager...'));
       onStop(projectDir).then(() => {
