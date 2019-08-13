@@ -1,10 +1,8 @@
-/**
- * @flow
- */
+import { Command } from 'commander';
 
 import { login } from '../accounts';
 
-export default (program: any) => {
+export default (program: Command) => {
   program
     .command('login')
     .alias('signin')

@@ -5,7 +5,7 @@ import { Exp, UserSettings } from '@expo/xdl';
 import askUser from './askUser';
 import log from './log';
 
-async function getRecipient(sendTo) {
+async function getRecipient(sendTo: string) {
   let recipient;
   if (sendTo) {
     if (typeof sendTo !== 'boolean') {
@@ -22,7 +22,7 @@ async function getRecipient(sendTo) {
   return recipient;
 }
 
-async function sendUrlAsync(url, recipient) {
+async function sendUrlAsync(url: string, recipient: string) {
   log('Sending URL to', recipient);
   simpleSpinner.start();
   try {

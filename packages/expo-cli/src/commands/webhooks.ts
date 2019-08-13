@@ -1,3 +1,4 @@
+import { Command } from 'commander';
 import { Webhooks, Exp } from '@expo/xdl';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
@@ -5,9 +6,11 @@ import validator from 'validator';
 
 import log from '../log';
 
+type Options = { url?: string; secret?: string; event?: string };
+
 const WEBHOOK_TYPES = ['build'];
 
-export default program => {
+export default (program: Command) => {
   program
     .command('webhooks:set [project-dir]')
     .option('--url <webhook-url>', 'Webhook to be called after building the app.')
@@ -17,9 +20,9 @@ export default program => {
       'Secret to be used to calculate the webhook request payload signature (check docs for more details). It has to be at least 16 characters long.'
     )
     .description(`Set a webhook for the project.`)
-    .asyncActionProjectDir(async (projectDir, _options) => {
-      const options = _sanitizeOptions(_options);
-      const secret = options.secret ? options.secret : await _askForSecret();
+    .asyncActionProjectDir(async (projectDir: string, _options: Options) => {
+      const options = await _sanitizeOptions(_options);
+      const secret = options.secret;
       const webhookData = { ...options, secret };
       const {
         args: { remoteFullPackageName: experienceName },
@@ -38,7 +41,7 @@ export default program => {
   program
     .command('webhooks:show [project-dir]')
     .description(`Show webhooks for the project.`)
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string) => {
       const {
         args: { remoteFullPackageName: experienceName },
       } = await Exp.getPublishInfoAsync(projectDir);
@@ -68,7 +71,7 @@ export default program => {
     .command('webhooks:clear [project-dir]')
     .option('--event <webhook-type>', 'Type of webhook: [build].')
     .description(`Clear a webhook associated with this project.`)
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: { event?: string }) => {
       const event = _sanitizeEvent(options.event);
       const {
         args: { remoteFullPackageName: experienceName },
@@ -86,43 +89,43 @@ export default program => {
     }, true);
 };
 
-function _sanitizeOptions(options) {
-  const { url, secret, event: _event = 'build' } = options;
+async function _sanitizeOptions(options: Options): Promise<Webhooks.WebhookData> {
+  let { url, secret, event: _event = 'build' } = options;
 
-  const event = _sanitizeEvent(_event, true);
+  const event = _sanitizeEvent(_event);
+  if (!event) {
+    throw new Error('Webhook type has to be provided');
+  }
 
   if (!url) {
     throw new Error('You must provide --url parameter');
-  } else {
-    const isValidUrl = validator.isURL(url, {
-      protocols: ['http', 'https'],
-      require_protocol: true,
-    });
-    if (!isValidUrl) {
-      throw new Error(
-        'The provided webhook URL is invalid and must be an absolute URL, including a scheme.'
-      );
-    }
+  }
+  const isValidUrl = validator.isURL(url, {
+    protocols: ['http', 'https'],
+    require_protocol: true,
+  });
+  if (!isValidUrl) {
+    throw new Error(
+      'The provided webhook URL is invalid and must be an absolute URL, including a scheme.'
+    );
+  }
 
-    if (secret) {
-      const secretString = String(secret);
-      if (secretString.length < 16 || secretString.length > 1000) {
-        throw new Error('Webhook secret has be at least 16 and not more than 1000 characters long');
-      }
+  if (secret) {
+    const secretString = String(secret);
+    if (secretString.length < 16 || secretString.length > 1000) {
+      throw new Error('Webhook secret has be at least 16 and not more than 1000 characters long');
     }
+  } else {
+    secret = await _askForSecret();
   }
 
   return { url, secret, event };
 }
 
-function _sanitizeEvent(event, required = false) {
+function _sanitizeEvent(event: string | undefined, required = false): string | undefined {
   if (!event) {
-    if (required) {
-      throw new Error('Webhook type has to be provided');
-    } else {
-      // we don't have anything to sanitize here, continue
-      return event;
-    }
+    // we don't have anything to sanitize here, continue
+    return event;
   }
 
   if (!WEBHOOK_TYPES.includes(event)) {
@@ -132,7 +135,7 @@ function _sanitizeEvent(event, required = false) {
   return event;
 }
 
-async function _askForSecret() {
+async function _askForSecret(): Promise<string> {
   const { secret } = await inquirer.prompt({
     type: 'password',
     name: 'secret',

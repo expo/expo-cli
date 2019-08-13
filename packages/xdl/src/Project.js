@@ -184,6 +184,13 @@ async function _resolveGoogleServicesFile(projectRoot, manifest) {
     );
     manifest.android.googleServicesFile = contents;
   }
+  if (manifest.ios && manifest.ios.googleServicesFile) {
+    const contents = await fs.readFile(
+      path.resolve(projectRoot, manifest.ios.googleServicesFile),
+      'base64'
+    );
+    manifest.ios.googleServicesFile = contents;
+  }
 }
 
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
