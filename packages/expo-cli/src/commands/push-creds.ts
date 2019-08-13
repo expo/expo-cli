@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import fse from 'fs-extra';
 import chalk from 'chalk';
 import { Command } from 'commander';
