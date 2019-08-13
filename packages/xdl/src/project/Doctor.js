@@ -139,9 +139,9 @@ export async function validateWithSchema(
     await validator.validateSchemaAsync(exp);
   } catch (e) {
     if (e instanceof SchemerError) {
-      schemaErrorMessage = `Error: Problem${e.errors.length > 1
-        ? 's'
-        : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
+      schemaErrorMessage = `Error: Problem${
+        e.errors.length > 1 ? 's' : ''
+      } validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
@@ -151,9 +151,9 @@ export async function validateWithSchema(
       await validator.validateAssetsAsync(exp);
     } catch (e) {
       if (e instanceof SchemerError) {
-        assetsErrorMessage = `Error: Problem${e.errors.length > 1
-          ? ''
-          : 's'} validating asset fields in ${configName}. See ${Config.helpUrl}`;
+        assetsErrorMessage = `Error: Problem${
+          e.errors.length > 1 ? '' : 's'
+        } validating asset fields in ${configName}. See ${Config.helpUrl}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -162,9 +162,9 @@ export async function validateWithSchema(
 }
 
 function formatValidationError(validationError) {
-  return `\n • ${validationError.fieldPath
-    ? 'Field: ' + validationError.fieldPath + ' - '
-    : ''}${validationError.message}.`;
+  return `\n • ${validationError.fieldPath ? 'Field: ' + validationError.fieldPath + ' - ' : ''}${
+    validationError.message
+  }.`;
 }
 
 async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promise<number> {
@@ -351,9 +351,9 @@ async function _validateReactNativeVersionAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject[
-            'expoReactNativeTag'
-          ]}`,
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${
+            sdkVersionObject['expoReactNativeTag']
+          }`,
           'doctor-invalid-version-of-react-native'
         );
         return WARNING;

@@ -323,13 +323,16 @@ async function createTurtleWorkspaceAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await _createTurtleWorkspaceAsync(context, args);
   logger.info(
-    `Created turtle workspace at ${context.build.ios
-      .workspaceSourcePath}. You can open and run this in Xcode.`
+    `Created turtle workspace at ${
+      context.build.ios.workspaceSourcePath
+    }. You can open and run this in Xcode.`
   );
   if (context.config) {
     await IosNSBundle.configureAsync(context);
     logger.info(
-      `The turtle workspace was configured for the url ${args.url}. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
+      `The turtle workspace was configured for the url ${
+        args.url
+      }. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
     );
   } else {
     logger.info(
