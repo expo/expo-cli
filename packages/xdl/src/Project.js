@@ -184,6 +184,13 @@ async function _resolveGoogleServicesFile(projectRoot, manifest) {
     );
     manifest.android.googleServicesFile = contents;
   }
+  if (manifest.ios && manifest.ios.googleServicesFile) {
+    const contents = await fs.readFile(
+      path.resolve(projectRoot, manifest.ios.googleServicesFile),
+      'base64'
+    );
+    manifest.ios.googleServicesFile = contents;
+  }
 }
 
 async function _resolveManifestAssets(projectRoot, manifest, resolver, strict = false) {
@@ -1792,7 +1799,7 @@ export async function startExpoServerAsync(projectRoot: string) {
         developerTool: Config.developerTool,
       });
     } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error in manifestHandler: ${e} ${e.stack}`);
+      ProjectUtils.logError(projectRoot, 'expo', e.stack);
       // 5xx = Server Error HTTP code
       res.status(520).send({
         error: e.toString(),

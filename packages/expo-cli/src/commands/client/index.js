@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import fs from 'fs-extra';
 import chalk from 'chalk';
 import ora from 'ora';
 import path from 'path';
@@ -58,6 +59,13 @@ export default program => {
           ? `ios.config.googleMapsApiKey does not exist in configuration file found in ${appJsonPath}`
           : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
         disabledServices.googleMaps = { name: 'Google Maps', reason: disabledReason };
+      }
+      if (_.has(exp, 'ios.googleServicesFile')) {
+        const contents = await fs.readFile(
+          path.resolve(projectDir, exp.ios.googleServicesFile),
+          'base64'
+        );
+        exp.ios.googleServicesFile = contents;
       }
 
       const authData = await appleApi.authenticate(options);

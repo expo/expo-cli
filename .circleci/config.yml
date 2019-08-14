@@ -7,6 +7,9 @@ executors:
   node-12:
     docker:
       - image: circleci/node:12
+  puppeteer:
+    docker:
+      - image: circleci/node:latest-browsers
 workflows:
   version: 2
   build-and-test:
@@ -17,6 +20,9 @@ workflows:
       - build:
           name: build10
           e: node-10
+      - build:
+          name: puppeteerEnv
+          e: puppeteer
       - test-dev-tools:
           e: node-12
           requires:
@@ -41,14 +47,18 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-webpack-config:
+      - test-webpack-config-unit:
           e: node-12
           requires:
             - build12
-      - test-webpack-config:
+      - test-webpack-config-unit:
           e: node-10
           requires:
             - build10
+      - test-webpack-config-e2e:
+          e: puppeteer
+          requires:
+            - puppeteerEnv
 jobs:
   build:
     parameters:
@@ -107,7 +117,17 @@ jobs:
       - attach_workspace:
           at: '~'
       - run: yarn test
-  test-webpack-config:
+  test-webpack-config-unit:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/webpack-config
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test:unit
+  test-webpack-config-e2e:
     parameters:
       e:
         type: executor
@@ -119,4 +139,4 @@ jobs:
       - run:
           name: Install test project dependencies
           command: cd tests/basic && yarn && cd ../..
-      - run: yarn test
+      - run: yarn test:e2e

@@ -1,6 +1,3 @@
-/**
- * @flow
- */
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
@@ -8,40 +5,59 @@ import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
+import getenv from 'getenv';
 import createWebpackCompiler from './createWebpackCompiler';
 import ip from './ip';
-import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
+// @ts-ignore missing types for Doctor until it gets converted to TypeScript
+import * as Doctor from './project/Doctor';
 import XDLError from './XDLError';
+import { User as ExpUser } from './User';
 
-import type { User as ExpUser } from './User'; //eslint-disable-line
-
-export const HOST = '0.0.0.0';
-export const DEFAULT_PORT = 19006;
+export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
+export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';
 
 let webpackDevServerInstance: WebpackDevServer | null = null;
 let webpackServerPort: number | null = null;
 
-export type BundlingOptions = {
-  isValidationEnabled?: boolean,
-  isImageEditingEnabled?: boolean,
-  isDebugInfoEnabled?: boolean,
-  isPolyfillEnabled?: boolean,
-  webpackEnv?: Object,
-  mode?: 'development' | 'production' | 'test' | 'none',
-  https?: boolean,
-  nonInteractive?: boolean,
-  onWebpackFinished?: (error: Error) => void,
+type CLIWebOptions = {
+  dev?: boolean;
+  polyfill?: boolean;
+  pwa?: boolean;
+  nonInteractive?: boolean;
+  port?: number;
+  onWebpackFinished?: (error?: Error) => void;
+};
+
+type BundlingOptions = {
+  dev?: boolean;
+  polyfill?: boolean;
+  pwa?: boolean;
+  isValidationEnabled?: boolean;
+  isImageEditingEnabled?: boolean;
+  isDebugInfoEnabled?: boolean;
+  isPolyfillEnabled?: boolean;
+  webpackEnv?: Object;
+  mode?: 'development' | 'production' | 'test' | 'none';
+  https?: boolean;
+  nonInteractive?: boolean;
+  onWebpackFinished?: (error?: Error) => void;
 };
 
 export async function startAsync(
   projectRoot: string,
-  options: BundlingOptions = {},
+  options: CLIWebOptions = {},
   deprecatedVerbose?: boolean
-): Promise<{ url: string, server: WebpackDevServer }> {
+): Promise<{
+  url: string;
+  server: WebpackDevServer;
+  port: number;
+  protocol: 'http' | 'https';
+  host?: string;
+} | null> {
   if (typeof deprecatedVerbose !== 'undefined') {
     throw new XDLError(
       'WEBPACK_DEPRECATED',
@@ -51,12 +67,15 @@ export async function startAsync(
 
   if (webpackDevServerInstance) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, 'Webpack is already running.');
-    return;
+    return null;
   }
 
   const { env, config } = await createWebpackConfigAsync(projectRoot, options);
 
-  webpackServerPort = await getAvailablePortAsync();
+  const port = await getAvailablePortAsync({
+    defaultPort: options.port,
+  });
+  webpackServerPort = port;
 
   ProjectUtils.logInfo(
     projectRoot,
@@ -71,42 +90,43 @@ export async function startAsync(
   const nonInteractive = validateBoolOption(
     'nonInteractive',
     options.nonInteractive,
-    process.stdout.isTTY
+    !!process.stdout.isTTY
   );
 
-  await new Promise(resolve => {
+  const server: WebpackDevServer = await new Promise(resolve => {
     // Create a webpack compiler that is configured with custom messages.
     const compiler = createWebpackCompiler({
       projectRoot,
       nonInteractive,
-      webpack,
+      webpackFactory: webpack,
       appName,
       config,
       urls,
       useYarn,
-      onFinished: resolve,
+      onFinished: () => resolve(server),
     });
-    webpackDevServerInstance = new WebpackDevServer(compiler, config.devServer);
+    const server = new WebpackDevServer(compiler, config.devServer);
     // Launch WebpackDevServer.
-    webpackDevServerInstance.listen(webpackServerPort, HOST, error => {
+    server.listen(port, HOST, error => {
       if (error) {
-        ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error);
+        ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
       }
       if (typeof options.onWebpackFinished === 'function') {
         options.onWebpackFinished(error);
       }
     });
+    webpackDevServerInstance = server;
   });
-
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort,
   });
 
   const host = ip.address();
+  const url = `${protocol}://${host}:${webpackServerPort}`;
   return {
-    url: `${protocol}://${host}:${webpackServerPort}`,
-    server: webpackDevServerInstance,
-    port: webpackServerPort,
+    url,
+    server,
+    port,
     protocol,
     host,
   };
@@ -114,7 +134,8 @@ export async function startAsync(
 
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
-    await new Promise(resolve => webpackDevServerInstance.close(() => resolve()));
+    const server = webpackDevServerInstance;
+    await new Promise(resolve => server.close(() => resolve()));
     webpackDevServerInstance = null;
     webpackServerPort = null;
     await ProjectSettings.setPackagerInfoAsync(projectRoot, {
@@ -123,21 +144,21 @@ export async function stopAsync(projectRoot: string): Promise<void> {
   }
 }
 
-export async function openAsync(projectRoot: string, options: BundlingOptions): Promise<void> {
+export async function openAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
   if (!webpackDevServerInstance) {
     await startAsync(projectRoot, options);
   }
   await Web.openProjectAsync(projectRoot);
 }
 
-export async function bundleAsync(projectRoot: string, options: BundlingOptions): Promise<void> {
+export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
   const { config } = await createWebpackConfigAsync(projectRoot, options);
 
   const compiler = webpack(config);
 
   try {
     // We generate the stats.json file in the webpack-config
-    const { warnings } = await new Promise((resolve, reject) =>
+    const { stats, warnings } = await new Promise((resolve, reject) =>
       compiler.run((error, stats) => {
         let messages;
         if (error) {
@@ -147,6 +168,8 @@ export async function bundleAsync(projectRoot: string, options: BundlingOptions)
           messages = formatWebpackMessages({
             errors: [error.message],
             warnings: [],
+            _showErrors: true,
+            _showWarnings: true,
           });
         } else {
           messages = formatWebpackMessages(
@@ -196,7 +219,7 @@ export async function bundleAsync(projectRoot: string, options: BundlingOptions)
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   const { webName } = ConfigUtils.getNameFromConfig(exp);
   return webName;
 }
@@ -212,7 +235,7 @@ export function getPort(): number | null {
   return webpackServerPort;
 }
 
-export async function getUrlAsync(projectRoot: string): Promise<string> {
+export async function getUrlAsync(projectRoot: string): Promise<string | null> {
   const devServer = getServer(projectRoot);
   if (!devServer) {
     return null;
@@ -229,10 +252,17 @@ export async function getProtocolAsync(projectRoot: string): Promise<'http' | 'h
 }
 
 export async function getAvailablePortAsync(
-  options: { host: string, defaultPort: number } = {}
+  options: { host?: string; defaultPort?: number } = {}
 ): Promise<number> {
   try {
-    return await choosePort(options.host || HOST, options.defaultPort || DEFAULT_PORT);
+    const defaultPort =
+      'defaultPort' in options && options.defaultPort ? options.defaultPort : DEFAULT_PORT;
+    const port = await choosePort(
+      'host' in options && options.host ? options.host : HOST,
+      defaultPort
+    );
+    if (!port) throw new Error(`Port ${defaultPort} not available.`);
+    else return port;
   } catch (error) {
     throw new XDLError('NO_PORT_FOUND', 'No available port found: ' + error.message);
   }
@@ -243,7 +273,7 @@ export function setMode(mode: 'development' | 'production' | 'test' | 'none'): v
   process.env.NODE_ENV = mode;
 }
 
-function validateBoolOption(name, value, defaultValue) {
+function validateBoolOption(name: string, value: unknown, defaultValue: boolean): boolean {
   if (typeof value === 'undefined') {
     value = defaultValue;
   }
@@ -255,7 +285,7 @@ function validateBoolOption(name, value, defaultValue) {
   return value;
 }
 
-function transformCLIOptions(options) {
+function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
   // Transform the CLI flags into more explicit values
   return {
     ...options,
@@ -266,8 +296,8 @@ function transformCLIOptions(options) {
 
 async function createWebpackConfigAsync(
   projectRoot: string,
-  options: BundlingOptions = {}
-): Promise<{ env: Object, config: WebpackDevServer.Configuration }> {
+  options: CLIWebOptions = {}
+): Promise<{ env: any; config: Web.WebpackConfiguration }> {
   const fullOptions = transformCLIOptions(options);
   if (validateBoolOption('isValidationEnabled', fullOptions.isValidationEnabled, true)) {
     await Doctor.validateWebSupportAsync(projectRoot);
@@ -285,8 +315,8 @@ async function createWebpackConfigAsync(
 async function applyOptionsToProjectSettingsAsync(
   projectRoot: string,
   options: BundlingOptions
-) /*: ProjectSettings */ {
-  let newSettings = {};
+): Promise<ProjectSettings.Settings> {
+  let newSettings: Partial<ProjectSettings.Settings> = {};
   // Change settings before reading them
   if (typeof options.https === 'boolean') {
     newSettings.https = options.https;
@@ -305,7 +335,7 @@ async function applyOptionsToProjectSettingsAsync(
 async function getWebpackConfigEnvFromBundlingOptionsAsync(
   projectRoot: string,
   options: BundlingOptions
-): Promise<Object> {
+): Promise<Web.WebEnvironment> {
   let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
 
   const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';

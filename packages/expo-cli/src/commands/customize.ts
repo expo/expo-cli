@@ -1,6 +1,8 @@
+import { Command } from 'commander';
 import spawnAsync from '@expo/spawn-async';
-import { ProjectUtils } from '@expo/xdl';
+import ConfigUtils from '@expo/config';
 import chalk from 'chalk';
+// @ts-ignore enquirer has no exported member 'MultiSelect'
 import { MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
@@ -8,7 +10,9 @@ import path from 'path';
 import log from '../log';
 import * as PackageManager from '../PackageManager';
 
-async function maybeWarnToCommitAsync(projectRoot) {
+type Options = { force: boolean };
+
+async function maybeWarnToCommitAsync(projectRoot: string) {
   let workingTreeStatus = 'unknown';
   try {
     const result = await spawnAsync('git', ['status', '--porcelain']);
@@ -27,7 +31,19 @@ async function maybeWarnToCommitAsync(projectRoot) {
   }
 }
 
-async function generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder }) {
+async function generateFilesAsync({
+  projectDir,
+  staticPath,
+  options,
+  answer,
+  templateFolder,
+}: {
+  projectDir: string;
+  staticPath: string;
+  options: Options;
+  answer: string[];
+  templateFolder: string;
+}) {
   let promises = [];
 
   for (const file of answer) {
@@ -48,7 +64,7 @@ async function generateFilesAsync({ projectDir, staticPath, options, answer, tem
       const fileName = path.basename(file);
       const src = path.resolve(templateFolder, fileName);
       const dest = path.resolve(projectDir, staticPath, fileName);
-      if (await fs.exists(src)) {
+      if (await fs.pathExists(src)) {
         promises.push(fs.copy(src, dest, { overwrite: true, recursive: true }));
       } else {
         throw new Error(`Expected template file for ${fileName} doesn't exist at path: ${src}`);
@@ -58,11 +74,12 @@ async function generateFilesAsync({ projectDir, staticPath, options, answer, tem
   await Promise.all(promises);
 }
 
-export async function action(projectDir = './', options = {}) {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+export async function action(projectDir: string = './', options: Options = { force: false }) {
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
 
-  let templateFolder = require.resolve('@expo/webpack-config/web-default/index.html');
-  templateFolder = templateFolder.substring(0, templateFolder.lastIndexOf('/'));
+  const templateFolder = path.dirname(
+    require.resolve('@expo/webpack-config/web-default/index.html')
+  );
 
   const files = (await fs.readdir(templateFolder)).filter(item => item !== 'icon.png');
   // { expo: { web: { staticPath: ... } } }
@@ -109,7 +126,7 @@ export async function action(projectDir = './', options = {}) {
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });
 }
 
-export default program => {
+export default (program: Command) => {
   program
     .command('customize:web [project-dir]')
     .description('Generate static web files into your project.')

@@ -31,6 +31,11 @@ module.exports = async function getPaths({ locations, projectRoot }) {
   const inputProjectRoot = projectRoot || appDirectory;
 
   function absolute(...pathComponents) {
+    // Simple check if we are dealing with an URL
+    if (pathComponents && pathComponents.length === 1 && pathComponents[0].startsWith('http')) {
+      return pathComponents[0];
+    }
+
     return path.resolve(inputProjectRoot, ...pathComponents);
   }
 

@@ -1,12 +1,9 @@
-/**
- * @flow
- */
-
+import { Command } from 'commander';
 import { UserManager } from '@expo/xdl';
 
 import log from '../log';
 
-async function action(options) {
+async function action() {
   try {
     await UserManager.logoutAsync();
     log('Success.');
@@ -15,7 +12,7 @@ async function action(options) {
   }
 }
 
-export default (program: any) => {
+export default (program: Command) => {
   program
     .command('logout')
     .description('Logout from your Expo account')
