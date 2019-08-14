@@ -268,6 +268,12 @@ export async function openWebProjectAsync(
     await startAdbReverseAsync(projectRoot);
 
     const projectUrl = await getWebpackUrlAsync(projectRoot);  
+    if (projectUrl == null) {
+      return { 
+        success: false, 
+        error: `The web project has not been started yet`
+      };
+    }
     await openUrlAsync(projectUrl, true);
     return { success: true, url: projectUrl };
   } catch (e) {
