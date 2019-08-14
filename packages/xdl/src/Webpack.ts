@@ -58,6 +58,15 @@ export async function restartAsync(
 const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
 const withTag = (...messages: any[]) => [PLATFORM_TAG + ' ', ...messages].join('');
 
+let devServerInfo: {
+  urls: string[];
+  protocol: 'http' | 'https';
+  useYarn: boolean;
+  appName: string;
+  nonInteractive: boolean;
+  port: number;
+} | null = null;
+
 export function printConnectionInstructions(projectRoot: string, options = {}) {
   if (!devServerInfo) return;
   printInstructions(projectRoot, {
@@ -68,8 +77,6 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
     ...options,
   });
 }
-
-let devServerInfo = null;
 
 export async function startAsync(
   projectRoot: string,
