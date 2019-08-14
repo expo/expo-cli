@@ -39,6 +39,7 @@
     "deep-diff": "^1.0.2",
     "file-loader": "^3.0.1",
     "find-yarn-workspace-root": "^1.2.1",
+    "getenv": "^0.7.0",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "4.0.0-alpha.2",
     "is-wsl": "^2.0.0",
