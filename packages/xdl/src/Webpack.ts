@@ -429,7 +429,10 @@ async function startNextJsAsync({
     const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
     next = require(ConfigUtils.resolveModule('next', projectRoot, exp!));
   } catch {
-    throw new XDLError('NEXTJS_NOT_INSTALLED', 'Next.js is not installed in your app.');
+    throw new XDLError(
+      'NEXTJS_NOT_INSTALLED',
+      'Next.js is not installed in your app. Learn more here: https://docs.expo.io/versions/latest/guides/using-nextjs/.'
+    );
   }
 
   // Build first if in production mode.
@@ -455,10 +458,7 @@ async function startNextJsAsync({
 
   webpackDevServerInstance = server.listen(port, err => {
     if (err) {
-      throw new XDLError(
-        'EXPRESS_FAIL_TO_START',
-        `Express server failed to start: ${err.toString()}`
-      );
+      throw new Error(`Express server failed to start: ${err.toString()}`);
     }
   });
 
@@ -479,7 +479,7 @@ async function bundleNextJsAsync({
   } catch {
     throw new XDLError(
       'NEXTJS_NOT_INSTALLED',
-      'Next.js (or its build component) is not installed in your app.'
+      'Next.js (or its build component) is not installed in your app. Learn more here: https://docs.expo.io/versions/latest/guides/using-nextjs/.'
     );
   }
 
@@ -511,7 +511,9 @@ function _createNextJsConfig({
   return {
     // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
     // Remove the `.` before each file extension
-    pageExtensions: expoWebpackConfig.resolve!.extensions!.map((string: string) => string.substr(1)),
+    pageExtensions: expoWebpackConfig.resolve!.extensions!.map((string: string) =>
+      string.substr(1)
+    ),
     ...userNextJsConfig,
     // Note `webpack` has to come after `...userNextJsConfig` because we want to override that
     // User's `webpack` config is loaded below in `return`.

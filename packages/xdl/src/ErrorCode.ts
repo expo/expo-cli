@@ -30,6 +30,5 @@ export type ErrorCode =
   | 'WEBPACK_INVALID_OPTION'
   | 'NETWORK_REQUIRED'
   | 'NEXTJS_NOT_INSTALLED'
-  | 'EXPRESS_FAIL_TO_START'
   //Shell Apps
   | 'CREDENTIAL_ERROR';
