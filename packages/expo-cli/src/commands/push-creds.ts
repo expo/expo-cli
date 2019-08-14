@@ -1,17 +1,14 @@
-/**
- * @flow
- */
-
+import { Command } from 'commander';
 import { ApiV2, Exp, UserManager } from '@expo/xdl';
 
 import log from '../log';
 
-export default (program: any) => {
+export default (program: Command) => {
   program
     .command('push:android:upload [project-dir]')
     .description('Uploads a Firebase Cloud Messaging key for Android push notifications.')
     .option('--api-key [api-key]', 'Server API key for FCM.')
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: { apiKey?: string }) => {
       if (!options.apiKey || options.apiKey.length === 0) {
         throw new Error('Must specify an API key to upload with --api-key.');
       }
@@ -39,7 +36,7 @@ export default (program: any) => {
   program
     .command('push:android:show [project-dir]')
     .description('Print the value currently in use for FCM notifications for this project.')
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string) => {
       const {
         args: { remotePackageName },
       } = await Exp.getPublishInfoAsync(projectDir);
@@ -58,7 +55,7 @@ export default (program: any) => {
   program
     .command('push:android:clear [project-dir]')
     .description('Deletes a previously uploaded FCM credential.')
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string) => {
       log('Reading project configuration...');
       const {
         args: { remotePackageName },

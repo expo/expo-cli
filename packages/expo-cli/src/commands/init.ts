@@ -1,8 +1,11 @@
 import chalk from 'chalk';
 import fs from 'fs';
+import { Command } from 'commander';
+import { AppJSONConfig, BareAppConfig } from '@expo/config';
 import { Exp } from '@expo/xdl';
 import isString from 'lodash/isString';
 import padEnd from 'lodash/padEnd';
+// @ts-ignore enquirer has no exported member 'Snippet'
 import { Snippet } from 'enquirer';
 import semver from 'semver';
 import set from 'lodash/set';
@@ -16,6 +19,17 @@ import path from 'path';
 import prompt from '../prompt';
 import log from '../log';
 import CommandError from '../CommandError';
+
+type Options = {
+  template?: string;
+  npm?: boolean;
+  yarn?: boolean;
+  workflow?: string;
+  name?: string;
+  androidPackage?: string;
+  iosBundleIdentifier?: string;
+  parent?: Command;
+};
 
 const FEATURED_TEMPLATES = [
   '----- Managed workflow -----',
@@ -56,7 +70,7 @@ const FEATURED_TEMPLATES = [
 
 const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript'];
 
-async function action(projectDir, options) {
+async function action(projectDir: string, options: Options) {
   let parentDir;
   let dirName;
 
@@ -95,7 +109,8 @@ async function action(projectDir, options) {
     }
   } else {
     let descriptionColumn =
-      Math.max(...FEATURED_TEMPLATES.map(t => (t.shortName ? t.shortName.length : 0))) + 2;
+      Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) +
+      2;
     let { template } = await prompt(
       {
         type: 'list',
@@ -123,8 +138,10 @@ async function action(projectDir, options) {
       {
         nonInteractiveHelp:
           '--template: argument is required in non-interactive mode. Valid choices are: ' +
-          FEATURED_TEMPLATES.filter(({ shortName }) => shortName)
-            .map(template => `'${template.shortName}'`)
+          FEATURED_TEMPLATES.map(template =>
+            typeof template === 'object' && template.shortName ? `'${template.shortName}'` : ''
+          )
+            .filter(text => text)
             .join(', ') +
           ' or any custom template (name of npm package).',
       }
@@ -146,7 +163,7 @@ async function action(projectDir, options) {
     initialConfig = await promptForManagedConfig(parentDir, dirName, options);
   }
 
-  let packageManager;
+  let packageManager: 'npm' | 'yarn' | undefined;
   if (options.yarn) {
     packageManager = 'yarn';
   } else if (options.npm) {
@@ -157,7 +174,10 @@ async function action(projectDir, options) {
 
   let projectPath = await Exp.extractAndInitializeTemplateApp(
     templateSpec,
-    path.join(parentDir, dirName || initialConfig.name || initialConfig.expo.slug),
+    path.join(
+      parentDir,
+      dirName || ('expo' in initialConfig ? initialConfig.expo.slug : initialConfig.name)
+    ),
     packageManager,
     initialConfig
   );
@@ -195,12 +215,12 @@ async function action(projectDir, options) {
   log.nested('');
 }
 
-function validateName(parentDir, name) {
-  if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
-    return 'The project name can only contain URL-friendly characters.';
-  }
+function validateName(parentDir: string, name: string | undefined) {
   if (typeof name !== 'string' || name === '') {
     return 'The project name can not be empty.';
+  }
+  if (!/^[a-z0-9@.\-_]+$/i.test(name)) {
+    return 'The project name can only contain URL-friendly characters.';
   }
   let dir = path.join(parentDir, name);
   if (!isNonExistentOrEmptyDir(dir)) {
@@ -209,13 +229,13 @@ function validateName(parentDir, name) {
   return true;
 }
 
-function validateProjectName(name) {
+function validateProjectName(name: string) {
   return (
     /^[a-z0-9]+$/i.test(name) || 'Project name can only include ASCII characters A-Z, a-z and 0-9'
   );
 }
 
-function isNonExistentOrEmptyDir(dir) {
+function isNonExistentOrEmptyDir(dir: string) {
   try {
     return fs.statSync(dir).isDirectory() && fs.readdirSync(dir).length === 0;
   } catch (error) {
@@ -249,7 +269,11 @@ async function shouldUseYarnAsync() {
   }
 }
 
-async function promptForBareConfig(parentDir, dirName, options) {
+async function promptForBareConfig(
+  parentDir: string,
+  dirName: string | undefined,
+  options: Options
+): Promise<BareAppConfig> {
   let projectName = undefined;
   if (dirName) {
     let validationResult = validateProjectName(dirName);
@@ -261,18 +285,22 @@ async function promptForBareConfig(parentDir, dirName, options) {
   }
 
   if (options.parent && options.parent.nonInteractive) {
-    let config = {
-      name: projectName,
-    };
-    if (!isString(options.name) || options.name === '') {
+    if (!projectName) {
+      throw new CommandError(
+        'NON_INTERACTIVE',
+        'The project dir argument is required in non-interactive mode.'
+      );
+    }
+    if (typeof options.name !== 'string' || options.name === '') {
       throw new CommandError(
         'NON_INTERACTIVE',
         '--name: argument is required in non-interactive mode.'
       );
-    } else {
-      config.displayName = options.name;
-      return config;
     }
+    return {
+      name: projectName,
+      displayName: options.name,
+    };
   }
 
   let { values } = await new Snippet({
@@ -284,15 +312,15 @@ async function promptForBareConfig(parentDir, dirName, options) {
         name: 'name',
         message: 'The name of the Android Studio and Xcode projects to be created',
         initial: projectName,
-        filter: name => name.trim(),
-        validate: name => validateProjectName(name),
+        filter: (name: string) => name.trim(),
+        validate: (name: string) => validateProjectName(name),
         required: true,
       },
       {
         name: 'displayName',
         message: 'The name of your app visible on the home screen',
         initial: isString(options.name) ? options.name : undefined,
-        filter: name => name.trim(),
+        filter: (name: string) => name.trim(),
         required: true,
       },
     ],
@@ -306,26 +334,27 @@ async function promptForBareConfig(parentDir, dirName, options) {
       2
     ),
   }).run();
-  let config = {};
-  for (let key of Object.keys(values)) {
-    set(config, key, values[key]);
-  }
-  return config;
+  return values;
 }
 
-async function promptForManagedConfig(parentDir, dirName, options) {
+async function promptForManagedConfig(
+  parentDir: string,
+  dirName: string | undefined,
+  options: Options
+): Promise<AppJSONConfig> {
   if (options.parent && options.parent.nonInteractive) {
-    let config = {
-      slug: dirName,
-    };
     if (!isString(options.name) || options.name === '') {
       throw new CommandError(
         'NON_INTERACTIVE',
         '--name: argument is required in non-interactive mode.'
       );
     } else {
-      config.name = options.name;
-      return config;
+      return {
+        expo: {
+          slug: dirName,
+          name: options.name,
+        },
+      };
     }
   }
 
@@ -339,15 +368,15 @@ async function promptForManagedConfig(parentDir, dirName, options) {
         name: 'name',
         message: 'The name of your app visible on the home screen',
         initial: isString(options.name) ? options.name : undefined,
-        filter: name => name.trim(),
+        filter: (name: string) => name.trim(),
         required: true,
       },
       {
         name: 'slug',
         message: 'A URL friendly name for your app',
         initial: dirName,
-        filter: name => name.trim(),
-        validate: name => validateName(parentDir, name),
+        filter: (name: string) => name.trim(),
+        validate: (name: string) => validateName(parentDir, name),
         required: true,
       },
     ],
@@ -363,14 +392,10 @@ async function promptForManagedConfig(parentDir, dirName, options) {
       2
     ),
   }).run();
-  let config = {};
-  for (let key of Object.keys(values)) {
-    set(config, key, values[key]);
-  }
-  return { expo: config };
+  return { expo: values };
 }
 
-export default program => {
+export default (program: Command) => {
   program
     .command('init [project-dir]')
     .alias('i')

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-
+import { Command } from 'commander';
 import { UserSettings, UrlUtils } from '@expo/xdl';
 
 import askUser from '../askUser';
@@ -7,7 +7,7 @@ import log from '../log';
 import sendTo from '../sendTo';
 import urlOpts from '../urlOpts';
 
-async function action(projectDir, options) {
+async function action(projectDir: string, options: { sendTo?: string }) {
   await urlOpts.optsAsync(projectDir, options);
 
   let url = await UrlUtils.constructManifestUrlAsync(projectDir);
@@ -44,7 +44,7 @@ async function action(projectDir, options) {
   process.exit();
 }
 
-export default program => {
+export default (program: Command) => {
   program
     .command('send [project-dir]')
     .description('Sends a link to your project to an email address')
