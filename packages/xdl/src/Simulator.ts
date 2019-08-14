@@ -490,7 +490,7 @@ export async function openWebProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
   const projectUrl = await getWebpackUrlAsync(projectRoot);  
-  if (projectUrl == null) {
+  if (projectUrl === null) {
     return { 
       success: false, 
       error: `The web project has not been started yet`
