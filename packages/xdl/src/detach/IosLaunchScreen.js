@@ -197,24 +197,24 @@ async function configureLaunchAssetsAsync(
 
   const splashIntermediateFilename = path.join(intermediatesDirectory, 'LaunchScreen.xib');
 
-  let xbiFile = null;
+  let xibFile = null;
   if (context.type === 'user') {
-    xbiFile =
+    xibFile =
       context.data.exp.ios && context.data.exp.ios.splash && context.data.exp.ios.splash.xib;
   } else {
-    xbiFile =
+    xibFile =
       context.data.manifest.ios &&
       context.data.manifest.ios.splash &&
       context.data.manifest.ios.splash.xibUrl;
   }
-  if (xbiFile) {
+  if (xibFile) {
     if (context.type === 'user') {
-      const sourcePath = path.resolve(context.data.projectPath, xbiFile);
+      const sourcePath = path.resolve(context.data.projectPath, xibFile);
       await spawnAsyncThrowError('/bin/cp', [sourcePath, splashIntermediateFilename], {
         stdio: 'inherit',
       });
     } else {
-      await saveUrlToPathAsync(xbiFile, splashIntermediateFilename);
+      await saveUrlToPathAsync(xibFile, splashIntermediateFilename);
     }
   } else {
     await _copyIntermediateLaunchScreenAsync(context, splashIntermediateFilename);
