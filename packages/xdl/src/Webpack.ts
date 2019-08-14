@@ -431,7 +431,7 @@ async function startNextJsAsync({
   } catch {
     throw new XDLError(
       'NEXTJS_NOT_INSTALLED',
-      'Next.js is not installed in your app. Learn more here: https://docs.expo.io/versions/latest/guides/using-nextjs/.'
+      'Next.js is not installed in your app. See https://docs.expo.io/versions/latest/guides/using-nextjs/'
     );
   }
 
@@ -479,7 +479,7 @@ async function bundleNextJsAsync({
   } catch {
     throw new XDLError(
       'NEXTJS_NOT_INSTALLED',
-      'Next.js (or its build component) is not installed in your app. Learn more here: https://docs.expo.io/versions/latest/guides/using-nextjs/.'
+      'Next.js (or its build component) is not installed in your app. See https://docs.expo.io/versions/latest/guides/using-nextjs/'
     );
   }
 
