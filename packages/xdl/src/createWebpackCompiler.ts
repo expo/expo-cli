@@ -125,9 +125,6 @@ export default function createWebpackCompiler({
   // bundle, so if you refresh, it'll wait instead of serving the old one.
   // "invalid" is short for "bundle invalidated", it doesn't imply any errors.
   compiler.hooks.invalid.tap('invalid', () => {
-    if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
-      // clearConsole();
-    }
     log(projectRoot, '\nCompiling...');
   });
 
