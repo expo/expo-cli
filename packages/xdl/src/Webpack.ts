@@ -50,7 +50,7 @@ type BundlingOptions = {
 export async function restartAsync(
   projectRoot: string,
   options: BundlingOptions = {}
-): Promise<{ url: string; server: WebpackDevServer }> {
+): Promise<WebpackSettings | null> {
   await stopAsync(projectRoot);
   return await startAsync(projectRoot, options);
 }
@@ -78,17 +78,20 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
   });
 }
 
-export async function startAsync(
-  projectRoot: string,
-  options: CLIWebOptions = {},
-  deprecatedVerbose?: boolean
-): Promise<{
+
+interface WebpackSettings {
   url: string;
   server: WebpackDevServer;
   port: number;
   protocol: 'http' | 'https';
   host?: string;
-} | null> {
+}
+
+export async function startAsync(
+  projectRoot: string,
+  options: CLIWebOptions = {},
+  deprecatedVerbose?: boolean
+): Promise<WebpackSettings | null> {
   if (typeof deprecatedVerbose !== 'undefined') {
     throw new XDLError(
       'WEBPACK_DEPRECATED',
