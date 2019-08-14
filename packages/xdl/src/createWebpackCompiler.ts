@@ -40,9 +40,17 @@ function logError(projectRoot: string, message: string) {
 
 export function printInstructions(
   projectRoot: string,
-  appName: string,
-  urls: Urls,
-  showInDevtools: boolean
+  {
+    appName,
+    urls,
+    showInDevtools,
+    showHelp,
+  }: {
+    appName: string;
+    urls: Urls;
+    showInDevtools: boolean;
+    showHelp: boolean;
+  }
 ) {
   printPreviewNotice(projectRoot, showInDevtools);
 
