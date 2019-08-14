@@ -261,8 +261,8 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
 }
 
 export async function getProjectUseNextJsAsync(projectRoot: string): Promise<boolean> {
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  const { use = null } = (exp && exp.web) || {};
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { use = null } = exp.web || {};
   return use === 'nextjs';
 }
 
@@ -426,8 +426,8 @@ async function startNextJsAsync({
 }): Promise<DevServer> {
   let next;
   try {
-    const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-    next = require(ConfigUtils.resolveModule('next', projectRoot, exp!));
+    const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+    next = require(ConfigUtils.resolveModule('next', projectRoot, exp));
   } catch {
     throw new XDLError(
       'NEXTJS_NOT_INSTALLED',
@@ -474,8 +474,8 @@ async function bundleNextJsAsync({
 }) {
   let nextBuild;
   try {
-    const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-    nextBuild = require(ConfigUtils.resolveModule('next/dist/build', projectRoot, exp!)).default;
+    const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+    nextBuild = require(ConfigUtils.resolveModule('next/dist/build', projectRoot, exp)).default;
   } catch {
     throw new XDLError(
       'NEXTJS_NOT_INSTALLED',
