@@ -165,6 +165,13 @@ export function printSuccessMessages({
   config,
   isFirstCompile,
   nonInteractive,
+}: {
+  projectRoot: string;
+  appName: string;
+  config: webpack.Configuration;
+  urls: Urls;
+  isFirstCompile: boolean;
+  nonInteractive?: boolean;
 }) {
   log(projectRoot, chalk.bold.cyan(`Compiled successfully!`));
   printPreviewNotice(projectRoot, isFirstCompile);
