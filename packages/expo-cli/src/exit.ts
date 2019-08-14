@@ -17,8 +17,8 @@ export function installExitHooks(
       });
   }
 
-  for (const signal of ['SIGINT', 'SIGTERM']) {
-    // @ts-ignore
+  const killSignals: ['SIGINT', 'SIGTERM'] = ['SIGINT', 'SIGTERM'];
+  for (const signal of killSignals) {
     process.on(signal, () => {
       console.log(chalk.blue('\nStopping packager...'));
       onStop(projectDir).then(() => {
