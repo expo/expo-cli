@@ -35,6 +35,7 @@ type CLIWebOptions = {
   pwa?: boolean;
   nonInteractive?: boolean;
   port?: number;
+  unimodulesOnly?: boolean;
   onWebpackFinished?: (error?: Error) => void;
 };
 
@@ -50,6 +51,7 @@ type BundlingOptions = {
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
   nonInteractive?: boolean;
+  unimodulesOnly?: boolean;
   onWebpackFinished?: (error?: Error) => void;
 };
 
@@ -72,6 +74,7 @@ export async function startAsync(
   }
 
   const usingNextJs = await getProjectUseNextJsAsync(projectRoot);
+  options.unimodulesOnly = usingNextJs;
   let serverName = 'Webpack';
   if (usingNextJs) {
     serverName = 'Next.js';
@@ -82,7 +85,7 @@ export async function startAsync(
     return null;
   }
 
-  const { env, config } = await createWebpackConfigAsync(projectRoot, options, usingNextJs);
+  const { env, config } = await createWebpackConfigAsync(projectRoot, options);
 
   const port = await getAvailablePortAsync({
     defaultPort: options.port,
@@ -184,7 +187,10 @@ export async function openAsync(projectRoot: string, options?: BundlingOptions):
 export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
   const usingNextJs = await getProjectUseNextJsAsync(projectRoot);
 
-  const { config } = await createWebpackConfigAsync(projectRoot, options, usingNextJs);
+  const { config } = await createWebpackConfigAsync(projectRoot, {
+    ...options,
+    unimodulesOnly: usingNextJs,
+  });
 
   if (usingNextJs) {
     await bundleNextJsAsync({ projectRoot, expoWebpackConfig: config });
@@ -338,8 +344,7 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
 
 async function createWebpackConfigAsync(
   projectRoot: string,
-  options: CLIWebOptions = {},
-  unimodules: boolean = false
+  options: CLIWebOptions = {}
 ): Promise<{ env: any; config: Web.WebpackConfiguration }> {
   const fullOptions = transformCLIOptions(options);
   if (validateBoolOption('isValidationEnabled', fullOptions.isValidationEnabled, true)) {
@@ -351,7 +356,7 @@ async function createWebpackConfigAsync(
   setMode(env.mode);
 
   let config;
-  if (unimodules) {
+  if (options.unimodulesOnly) {
     const withUnimodules = require('@expo/webpack-config/withUnimodules');
     config = await withUnimodules({}, env);
   } else {
