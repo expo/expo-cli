@@ -1,7 +1,7 @@
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import { choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
+import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import getenv from 'getenv';
@@ -59,7 +59,7 @@ const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
 const withTag = (...messages: any[]) => [PLATFORM_TAG + ' ', ...messages].join('');
 
 let devServerInfo: {
-  urls: string[];
+  urls: Urls;
   protocol: 'http' | 'https';
   useYarn: boolean;
   appName: string;
@@ -146,7 +146,7 @@ export async function startAsync(
       useYarn,
       appName,
       nonInteractive,
-      port: webpackServerPort,
+      port: webpackServerPort!,
     };
     const server = new WebpackDevServer(compiler, config.devServer);
     // Launch WebpackDevServer.
