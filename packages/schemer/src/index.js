@@ -168,7 +168,7 @@ export default class Schemer {
     await Promise.all(assets.map(this._validateAssetAsync.bind(this)));
   }
 
-  async _validateAssetAsync({
+  async _validateImageAsync({
     fieldPath,
     data,
     meta,
@@ -182,7 +182,6 @@ export default class Schemer {
       // filePath could be an URL
       const filePath = path.resolve(this.rootDir, data);
       try {
-        // Assumption: All assets are images. This may change in the future.
         // NOTE(nikki): The '4100' below should be enough for most file types, though we
         //              could probably go shorter....
         //              http://www.garykessler.net/library/file_sigs.html
@@ -244,6 +243,22 @@ export default class Schemer {
             meta,
           })
         );
+      }
+    }
+  }
+
+  async _validateAssetAsync({
+    fieldPath,
+    data,
+    meta,
+  }: {
+    fieldPath: string,
+    data: string,
+    meta: Meta,
+  }) {
+    if (meta && meta.asset && data) {
+      if (meta.asset.contentTypePattern && meta.asset.contentTypePattern.startsWith('^image')) {
+        await this._validateImageAsync({ fieldPath, data, meta });
       }
     }
   }
