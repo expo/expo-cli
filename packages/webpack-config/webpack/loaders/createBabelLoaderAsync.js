@@ -97,7 +97,7 @@ module.exports = async function({
     },
     use: {
       ...customUse,
-      loader: 'babel-loader',
+      loader: require.resolve('babel-loader'),
       // loader: path.join(__dirname, 'expo-babel-loader'),
       options: {
         // TODO: Bacon: Caching seems to break babel
