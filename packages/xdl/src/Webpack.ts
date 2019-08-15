@@ -110,6 +110,10 @@ export async function startAsync(
 
   let server: DevServer;
   if (usingNextJs) {
+    if (protocol === 'https') {
+      // TODO: Support https.
+      throw new Error('https with Next.js is not supported for now.');
+    }
     server = await startNextJsAsync({
       projectRoot,
       port: webpackServerPort,
