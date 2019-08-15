@@ -648,7 +648,7 @@ body {
 }
 \`;
 
-export default class MyDocument extends Document {
+export default class ExpoDocument extends Document {
   static async getInitialProps ({ renderPage }) {
     AppRegistry.registerComponent('Main', () => Main)
     const { getStyleElement } = AppRegistry.getApplication('Main')
@@ -677,6 +677,6 @@ export default class MyDocument extends Document {
 `;
 
 const nextJsImportDocument = `\
-import MyDocument from '../.expo/next_document';
-export default MyDocument;
+import ExpoDocument from '../.expo/next_document';
+export default ExpoDocument;
 `;
