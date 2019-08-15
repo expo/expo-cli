@@ -78,7 +78,6 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
   });
 }
 
-
 interface WebpackSettings {
   url: string;
   server: WebpackDevServer;
@@ -181,8 +180,7 @@ export async function startAsync(
 export async function stopAsync(projectRoot: string): Promise<void> {
   if (webpackDevServerInstance) {
     ProjectUtils.logInfo(projectRoot, WEBPACK_LOG_TAG, '\u203A Closing Webpack server');
-    const server = webpackDevServerInstance;
-    await new Promise(resolve => server.close(() => resolve()));
+    webpackDevServerInstance.close();
     webpackDevServerInstance = null;
     devServerInfo = null;
     webpackServerPort = null;
