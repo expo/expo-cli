@@ -172,7 +172,7 @@ module.exports = async function(env = {}, argv) {
 
   const { build: buildConfig } = config.web;
   const { lang } = config.web;
-  const { publicPath, rootId, babel: babelAppConfig = {} } = config.web.build;
+  const { rootId, babel: babelAppConfig = {} } = config.web.build;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
