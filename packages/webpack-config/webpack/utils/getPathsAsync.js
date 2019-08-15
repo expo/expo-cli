@@ -22,7 +22,7 @@ const possibleMainFiles = [
   'src/index.jsx',
 ];
 
-const envPublicUrl = process.env.PUBLIC_URL;
+const envPublicUrl = process.env.WEB_PUBLIC_URL;
 
 const appDirectory = fs.realpathSync(process.cwd());
 
@@ -104,7 +104,7 @@ module.exports = async function getPaths({ locations, projectRoot }) {
   }
 
   const getPublicUrl = appPackageJson => envPublicUrl || require(packageJsonPath).homepage;
-  // We use `PUBLIC_URL` environment variable or "homepage" field to infer
+  // We use `WEB_PUBLIC_URL` environment variable or "homepage" field to infer
   // "public path" at which the app is served.
   // Webpack needs to know it to put the right <script> hrefs into HTML even in
   // single-page apps that may serve index.html for nested URLs like /todos/42.

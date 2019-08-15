@@ -164,8 +164,8 @@ module.exports = async function(env = {}, argv) {
   const shouldUseRelativeAssetPaths = publicPath === './';
 
   // `publicUrl` is just like `publicPath`, but we will provide it to our app
-  // as %PUBLIC_URL% in `index.html` and `process.env.PUBLIC_URL` in JavaScript.
-  // Omit trailing slash as %PUBLIC_URL%/xyz looks better than %PUBLIC_URL%xyz.
+  // as %WEB_PUBLIC_URL% in `index.html` and `process.env.WEB_PUBLIC_URL` in JavaScript.
+  // Omit trailing slash as %WEB_PUBLIC_URL%/xyz looks better than %WEB_PUBLIC_URL%xyz.
   const publicUrl = isProd ? publicPath.slice(0, -1) : isDev && '';
 
   const middlewarePlugins = [];
@@ -384,7 +384,7 @@ module.exports = async function(env = {}, argv) {
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
-        PUBLIC_URL: publicPath,
+        WEB_PUBLIC_URL: publicPath,
         WEB_TITLE: config.web.name,
         NO_SCRIPT: noJSComponent,
         LANG_ISO_CODE: lang,
