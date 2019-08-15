@@ -450,6 +450,8 @@ async function startNextJsAsync({
     await bundleNextJsAsync({ projectRoot, expoWebpackConfig });
   }
 
+  await _copyCustomNextJsTemplatesAsync(projectRoot);
+
   const app = next({
     dev,
     dir: projectRoot,
@@ -492,6 +494,7 @@ async function bundleNextJsAsync({
     );
   }
 
+  await _copyCustomNextJsTemplatesAsync(projectRoot);
   await nextBuild(projectRoot, _createNextJsConfig({ projectRoot, expoWebpackConfig }));
 }
 
@@ -501,7 +504,7 @@ function _createNextJsConfig({
 }: {
   projectRoot: string;
   expoWebpackConfig: Web.WebpackConfiguration;
-}) {
+}): any {
   let userNextJsConfig: any = {};
   const userNextConfigJsPath = path.join(projectRoot, 'next.config.js');
   if (fs.existsSync(userNextConfigJsPath)) {
@@ -579,3 +582,101 @@ function _findBabelLoader(rules: webpack.RuleSetRule[]): webpack.RuleSetRule | n
   }
   return null;
 }
+
+async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
+  try {
+    await fs.writeFile(path.join(projectRoot, '.expo', 'next_document.js'), nextJsDocument);
+  } catch (e) {
+    throw new Error(`Could not write to _document.js: ${e.toString()}`);
+  }
+
+  const pagesDocument = path.join(projectRoot, 'pages', '_document.js');
+  if (!fs.existsSync(pagesDocument)) {
+    // Only write to `pages/_document.js` if it doesn't exists.
+    try {
+      await fs.writeFile(pagesDocument, nextJsImportDocument);
+    } catch (e) {
+      throw new Error(`Could not write to pages/_document.js: ${e.toString()}`);
+    }
+  }
+}
+
+const nextJsDocument = `\
+// Based on https://github.com/zeit/next.js/tree/canary/examples/with-react-native-web
+// and https://github.com/expo/expo-cli/blob/master/packages/webpack-config/web-default/index.html
+import Document, { Head, Main, NextScript } from 'next/document'
+import React from 'react'
+import { AppRegistry } from 'react-native'
+
+const normalizeNextElements = \`
+/**
+ * Building on the RNWeb reset:
+ * https://github.com/necolas/react-native-web/blob/master/packages/react-native-web/src/exports/StyleSheet/initialRules.js
+ */
+html, body, #__next {
+  width: 100%;
+  /* To smooth any scrolling behavior */
+  -webkit-overflow-scrolling: touch;
+  margin: 0px;
+  padding: 0px;
+  /* Allows content to fill the viewport and go beyond the bottom */
+  min-height: 100%;
+}
+#__next {
+  flex-shrink: 0;
+  flex-basis: auto;
+  flex-grow: 1;
+  display: flex;
+  flex: 1;
+}
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+  /* Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138 */
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+body {
+  display: flex;
+  /* Allows you to scroll below the viewport; default value is visible */
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -ms-overflow-style: scrollbar;
+}
+\`;
+
+export default class MyDocument extends Document {
+  static async getInitialProps ({ renderPage }) {
+    AppRegistry.registerComponent('Main', () => Main)
+    const { getStyleElement } = AppRegistry.getApplication('Main')
+    const page = renderPage()
+    const styles = [
+      <style dangerouslySetInnerHTML={{ __html: normalizeNextElements }} />,
+      getStyleElement()
+    ]
+    return { ...page, styles: React.Children.toArray(styles) }
+  }
+
+  render () {
+    return (
+      <html>
+        <Head>
+          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </html>
+    );
+  }
+}
+`;
+
+const nextJsImportDocument = `\
+import MyDocument from '../.expo/next_document';
+export default MyDocument;
+`;
