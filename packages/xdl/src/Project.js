@@ -2194,7 +2194,7 @@ export async function startAsync(
 
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
-  Webpack.stopAsync(projectRoot);
+  await Webpack.stopAsync(projectRoot);
   ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Closing Expo server');
   await stopExpoServerAsync(projectRoot);
   ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
@@ -2209,7 +2209,7 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
 }
 
 export async function stopWebOnlyAsync(projectDir: string): Promise<void> {
-  Webpack.stopAsync(projectDir);
+  await Webpack.stopAsync(projectDir);
   await DevSession.stopSession();
 }
 
