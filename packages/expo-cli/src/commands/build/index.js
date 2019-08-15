@@ -112,10 +112,15 @@ export default (program: any) => {
       '--no-pwa',
       'Prevent webpack from generating the manifest.json and injecting meta into the index.html head.'
     )
-    .option('-d, --dev', 'Bundle your project using webpack in dev mode.')
+    .option('-d, --dev', 'Turns dev flag on before bundling')
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir(
-      (projectDir, options) => Webpack.bundleAsync(projectDir, options),
+      (projectDir, options) => {
+        return Webpack.bundleAsync(projectDir, {
+          ...options,
+          dev: typeof options.dev === 'undefined' ? false : options.dev,
+        });
+      },
       /* skipProjectValidation: */ false,
       /* skipAuthCheck: */ true
     );

@@ -146,6 +146,7 @@ module.exports = async function(env = {}, argv) {
   const mode = getMode(env);
   const isDev = mode === 'development';
   const isProd = mode === 'production';
+  const { platform = 'web' } = env;
 
   // Enables deep scope analysis in production mode.
   // Remove unused import/exports
@@ -258,6 +259,7 @@ module.exports = async function(env = {}, argv) {
 
   const babelLoader = await createBabelLoaderAsync({
     mode,
+    platform,
     babelProjectRoot,
     verbose: babelAppConfig.verbose,
     include: babelAppConfig.include,
