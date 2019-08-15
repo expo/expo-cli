@@ -274,18 +274,6 @@ module.exports = async function(env = {}, argv) {
     use: babelAppConfig.use,
   });
   const allLoaders = [
-    isDev && require.resolve('style-loader'),
-    isProd && {
-      loader: MiniCssExtractPlugin.loader,
-      options: shouldUseRelativeAssetPaths ? { publicPath: '../../' } : {},
-    },
-    {
-      loader: require.resolve('css-loader'),
-      options: {
-        importLoaders: 1,
-        sourceMap: isProd,
-      },
-    },
     {
       test: /\.html$/,
       use: [require.resolve('html-loader')],
@@ -294,6 +282,10 @@ module.exports = async function(env = {}, argv) {
     imageLoaderConfiguration,
     babelLoader,
     createFontLoader({ locations }),
+    {
+      test: /\.(css)$/,
+      use: [require.resolve('style-loader'), require.resolve('css-loader')],
+    },
     // This needs to be the last loader
     fallbackLoaderConfiguration,
   ].filter(Boolean);
