@@ -111,20 +111,20 @@ function _renderUnversionedReactNativeDependency(options, sdkVersion) {
 ${_renderUnversionedReactDependency(options, sdkVersion)}
 ${_renderUnversionedYogaDependency(options)}
 ${_renderUnversionedThirdPartyDependency(
-  'DoubleConversion',
-  path.join('third-party-podspecs', 'DoubleConversion.podspec'),
-  options
-)}
+      'DoubleConversion',
+      path.join('third-party-podspecs', 'DoubleConversion.podspec'),
+      options
+    )}
 ${_renderUnversionedThirdPartyDependency(
-  'Folly',
-  path.join('third-party-podspecs', 'Folly.podspec'),
-  options
-)}
+      'Folly',
+      path.join('third-party-podspecs', 'Folly.podspec'),
+      options
+    )}
 ${_renderUnversionedThirdPartyDependency(
-  glogLibraryName,
-  path.join('third-party-podspecs', `${glogLibraryName}.podspec`),
-  options
-)}
+      glogLibraryName,
+      path.join('third-party-podspecs', `${glogLibraryName}.podspec`),
+      options
+    )}
 `,
     2
   );
@@ -395,6 +395,7 @@ require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
 use_unimodules!(
   modules_paths: ['${universalModulesPath}'],
   exclude: [
+    'expo-bluetooth',
     'expo-in-app-purchases',
     'expo-payments-stripe',
   ],
