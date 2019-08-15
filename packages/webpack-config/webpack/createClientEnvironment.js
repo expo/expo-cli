@@ -27,7 +27,7 @@ module.exports = function createClientEnvironment(mode, publicUrl, nativeAppMani
          * This should only be used as an escape hatch. Normally you would put
          * images into the root folder and `import` them in code to get their paths.
          */
-        WEB_PUBLIC_URL: publicUrl,
+        WEB_PUBLIC_URL: JSON.stringify(publicUrl),
 
         /**
          * Surfaces the `app.json` (config) as an environment variable which is then parsed by
