@@ -51,17 +51,19 @@ async function ensureRootAsync(possibleProjectRoot) {
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
  */
-module.exports = async function({
-  /**
+module.exports = async function(
+  {
+    /**
    * The webpack mode: `"production" | "development"`
    */
-  mode,
-  babelProjectRoot,
-  include = [],
-  verbose,
-  platform,
-  ...options
-} = {}) {
+    mode,
+    babelProjectRoot,
+    include = [],
+    verbose,
+    platform,
+    ...options
+  } = {}
+) {
   const ensuredProjectRoot = await ensureRootAsync(babelProjectRoot);
   const modules = [...includeModulesThatContainPaths, ...include];
   const customUse = options.use || {};
@@ -98,7 +100,6 @@ module.exports = async function({
     use: {
       ...customUse,
       loader: require.resolve('babel-loader'),
-      // loader: path.join(__dirname, 'expo-babel-loader'),
       options: {
         // TODO: Bacon: Caching seems to break babel
         cacheDirectory: false,
