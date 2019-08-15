@@ -6,7 +6,7 @@ const getPathsAsync = require('./utils/getPathsAsync');
 const host = process.env.HOST || '0.0.0.0';
 
 module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) {
-  const { https = false, config: { web: { build: { publicPath = '/' } = {} } = {} } = {} } = env;
+  const { https = false } = env;
   const locations = await getPathsAsync(env);
   // https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpackDevServer.config.js
   const CRA = {
@@ -41,7 +41,7 @@ module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) 
     hot: true,
     // It is important to tell WebpackDevServer to use the same "root" path
     // as we specified in the config. In development, we always serve from /.
-    publicPath,
+    publicPath: '/',
     // WebpackDevServer is noisy by default so we emit custom message instead
     // by listening to the compiler events with `compiler.hooks[...].tap` calls above.
     quiet: true,

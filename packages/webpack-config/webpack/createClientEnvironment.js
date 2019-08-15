@@ -1,7 +1,7 @@
 /**
  * This creates environment variables that won't be tree shaken.
  */
-module.exports = function createClientEnvironment(mode, publicPath, nativeAppManifest) {
+module.exports = function createClientEnvironment(mode, publicUrl, nativeAppManifest) {
   const environment = mode || 'development';
   const __DEV__ = environment !== 'production';
 
@@ -27,7 +27,7 @@ module.exports = function createClientEnvironment(mode, publicPath, nativeAppMan
          * This should only be used as an escape hatch. Normally you would put
          * images into the root folder and `import` them in code to get their paths.
          */
-        PUBLIC_URL: JSON.stringify(publicPath),
+        PUBLIC_URL: publicUrl,
 
         /**
          * Surfaces the `app.json` (config) as an environment variable which is then parsed by
