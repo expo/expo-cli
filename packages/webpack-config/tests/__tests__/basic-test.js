@@ -10,3 +10,9 @@ it(`should match a text element`, async () => {
     text: 'Open up App.js to start working on your app!',
   });
 });
+
+it(`should be aware of process.env.CI`, async () => {
+  await expect(page).toMatchElement('div[data-testid="has-ci-text"]', {
+    text: 'Has CI env',
+  });
+});
