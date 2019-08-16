@@ -36,7 +36,6 @@ describe(`Lighthouse`, () => {
 
     jest.setTimeout(60000);
 
-    // await page.close();
     lhr = (await lighthouse(config.url, {
       port: url.parse(browser.wsEndpoint()).port,
       output: 'json',
