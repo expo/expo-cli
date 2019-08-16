@@ -70,7 +70,7 @@ Object {
         "mobileWebAppCapable": "yes",
         "touchFullscreen": "yes",
       },
-      "viewport": "width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover",
+      "viewport": "width=device-width,initial-scale=1,minimum-scale=1,viewport-fit=cover",
     },
     "name": "basic",
     "orientation": "portrait",
