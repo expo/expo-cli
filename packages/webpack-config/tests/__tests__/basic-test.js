@@ -20,3 +20,9 @@ if (config.hasServerSideRendering) {
     );
   });
 }
+
+it(`should be aware of process.env.CI`, async () => {
+  await expect(page).toMatchElement('div[data-testid="has-ci-text"]', {
+    text: 'Has CI env',
+  });
+});

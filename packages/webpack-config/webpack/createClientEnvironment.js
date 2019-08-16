@@ -5,7 +5,7 @@ module.exports = function createClientEnvironment(mode, publicPath, nativeAppMan
   const environment = mode || 'development';
   const __DEV__ = environment !== 'production';
 
-  const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_)/i;
+  const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_|CI$)/i;
 
   const processEnv = Object.keys(process.env)
     .filter(key => ENV_VAR_REGEX.test(key))
