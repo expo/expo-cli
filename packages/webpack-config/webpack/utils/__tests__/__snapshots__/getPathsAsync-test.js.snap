@@ -16,6 +16,7 @@ Object {
     "serveJson": "tests/basic/web-build/serve.json",
   },
   "root": "tests/basic",
+  "servedPath": "/",
   "template": Object {
     "favicon": "web-default/favicon.ico",
     "folder": "web-default",
@@ -26,3 +27,5 @@ Object {
   },
 }
 `;
+
+exports[`uses a custom public path from the homepage field of a project's package.json 1`] = `"/homepage-defined/"`;

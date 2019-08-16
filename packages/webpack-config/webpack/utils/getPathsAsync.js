@@ -22,10 +22,6 @@ const possibleMainFiles = [
   'src/index.jsx',
 ];
 
-const envPublicUrl = process.env.WEB_PUBLIC_URL;
-
-const appDirectory = fs.realpathSync(process.cwd());
-
 function ensureSlash(inputPath, needsSlash) {
   const hasSlash = inputPath.endsWith('/');
   if (hasSlash && !needsSlash) {
@@ -38,6 +34,9 @@ function ensureSlash(inputPath, needsSlash) {
 }
 
 module.exports = async function getPaths({ locations, projectRoot }) {
+  const envPublicUrl = process.env.WEB_PUBLIC_URL;
+  const appDirectory = fs.realpathSync(process.cwd());
+
   // Recycle locations
   if (locations) {
     return locations;
