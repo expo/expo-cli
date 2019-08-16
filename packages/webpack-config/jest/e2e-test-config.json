@@ -1,6 +1,0 @@
-{
-  "roots": ["tests"],
-  "moduleFileExtensions": ["js", "json", "node"],
-  "resetModules": false,
-  "preset": "jest-puppeteer"
-}

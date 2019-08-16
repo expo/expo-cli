@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Lighthouse should have a Progressive Web App score of 93 or greater 1`] = `0.93`;
+
+exports[`Lighthouse should have a page loading score of 99 or greater 1`] = `1`;
+
+exports[`Lighthouse should have a perfect SEO score 1`] = `1`;
+
+exports[`Lighthouse should have a perfect a11y Alt Text score 1`] = `1`;
+
+exports[`Lighthouse should have a perfect a11y Contrast score 1`] = `1`;
+
+exports[`Lighthouse should have a perfect aria attributes score 1`] = `1`;
+
+exports[`Lighthouse should have a perfect aria values score 1`] = `1`;
+
+exports[`Lighthouse should have a perfect library vulnerability score 1`] = `1`;
+
+exports[`Lighthouse should have a perfect logical tab order for assitive technology use score 1`] = `1`;
+
+exports[`Lighthouse should have a perfect no tabIndex values above 0 score 1`] = `1`;
+
+exports[`Lighthouse should have a performance score of 97 or greater 1`] = `1`;
+
+exports[`Lighthouse should have an accessibility score of 90 or greater 1`] = `1`;
+
+exports[`Lighthouse should have best practices score of 93 or greater 1`] = `0.93`;

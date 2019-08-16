@@ -1,6 +1,9 @@
 const assert = require('assert');
+const getenv = require('getenv');
+const fs = require('fs');
+const path = require('path');
 
-const launch = process.env.CI
+const launch = getenv.boolish('CI', false)
   ? {
       args: ['--ignore-certificate-errors', '--no-sandbox', '--disable-setuid-sandbox'],
       ignoreHTTPSErrors: true,
@@ -12,24 +15,41 @@ const launch = process.env.CI
       headless: true,
     };
 
+const PORT = 5000;
+
+let shouldBuildProject = true;
+
+if (
+  // Only skip the build if the EXPO_E2E_SKIP_BUILD is defined and the build already exists
+  getenv.boolish('EXPO_E2E_SKIP_BUILD', false) &&
+  fs.existsSync(path.resolve(__dirname, 'tests/basic/web-build/index.html'))
+) {
+  shouldBuildProject = false;
+}
+
 const config = {
   start: {
-    url: 'https://localhost:5000',
+    url: `https://localhost:${PORT}`,
     launch,
     server: {
       command: `../expo-cli/bin/expo.js start tests/basic/ --web-only --non-interactive --https`,
-      port: 5000,
+      port: PORT,
       launchTimeout: 30000,
       debug: true,
     },
   },
   build: {
-    url: 'http://localhost:5000',
+    url: `http://localhost:${PORT}`,
     launch,
     server: {
-      command: `node jest/build-project.js tests/basic/ && serve tests/basic/web-build`,
+      command: [
+        shouldBuildProject && `node jest/build-project.js tests/basic/`,
+        `serve tests/basic/web-build`,
+      ]
+        .filter(Boolean)
+        .join(' && '),
       // The default serve-cli port
-      port: 5000,
+      port: PORT,
       launchTimeout: 30000,
       debug: true,
     },
@@ -43,6 +63,7 @@ assert(
     config
   ).join(', ')}`
 );
+
 // Tell Expo CLI to use the same port on which the test runner expects there to be a server
 process.env.WEB_PORT = config.server.port;
 
