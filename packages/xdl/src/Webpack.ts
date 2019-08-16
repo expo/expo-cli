@@ -504,7 +504,7 @@ function _createNextJsConfig({
 }: {
   projectRoot: string;
   expoWebpackConfig: Web.WebpackConfiguration;
-}): any {
+}): { [key: string]: any } {
   let userNextJsConfig: any = {};
   const userNextConfigJsPath = path.join(projectRoot, 'next.config.js');
   if (fs.existsSync(userNextConfigJsPath)) {
