@@ -25,7 +25,7 @@ describe(`Lighthouse`, () => {
     { field: 'aria-valid-attr', name: 'aria attributes' },
     { field: 'aria-valid-attr-value', name: 'aria values' },
     { field: 'tabindex', name: 'no tabIndex values above 0' },
-    { field: 'logical-tab-order', name: 'logical tab order for assitive technology use' },
+    { field: 'logical-tab-order', name: 'logical tab order for assistive technology use' },
     { field: 'no-vulnerable-libraries', name: 'library vulnerability' },
   ];
 
