@@ -211,11 +211,13 @@ export async function parseIcons(inputIcons, fingerprint, publicPath) {
   await Promise.all(promises);
 
   return {
-    icons: icons.filter(icon => icon).sort(({ sizes }, { sizes: sizesB }) => {
-      if (sizes < sizesB) return -1;
-      else if (sizes > sizesB) return 1;
-      return 0;
-    }),
+    icons: icons
+      .filter(icon => icon)
+      .sort(({ sizes }, { sizes: sizesB }) => {
+        if (sizes < sizesB) return -1;
+        else if (sizes > sizesB) return 1;
+        return 0;
+      }),
     // startupImages: icons.filter(({ isStartupImage }) => isStartupImage),
     assets,
   };

@@ -29,5 +29,6 @@ export type ErrorCode =
   | 'WEBPACK_DEPRECATED'
   | 'WEBPACK_INVALID_OPTION'
   | 'NETWORK_REQUIRED'
+  | 'NEXTJS_NOT_INSTALLED'
   //Shell Apps
   | 'CREDENTIAL_ERROR';
