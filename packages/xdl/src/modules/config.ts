@@ -523,6 +523,11 @@ const expoUniversalModules = [
     libName: 'expo-web-browser',
     sdkVersions: '>=33.0.0',
   },
+  {
+    podName: 'EXWallet',
+    libName: 'expo-wallet',
+    sdkVersions: '>=35.0.0',
+  },
 
   // JS-only modules
   {
