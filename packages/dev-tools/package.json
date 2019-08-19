@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.5.45",
+  "version": "0.5.46",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development node ./scripts/dev-server.js",
@@ -20,7 +20,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@expo/config": "^2.1.3",
+    "@expo/config": "^2.1.4",
     "express": "4.16.4",
     "freeport-async": "1.1.1",
     "graphql": "0.13.2",
@@ -33,7 +33,7 @@
     "@expo/xdl": "*"
   },
   "devDependencies": {
-    "@expo/xdl": "^56.2.0",
+    "@expo/xdl": "^56.2.1",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
