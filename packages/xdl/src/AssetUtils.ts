@@ -35,12 +35,22 @@ export const optimizeImageAsync = async (inputPath: string, quality: number) => 
   return path.join(outputPath, path.basename(inputPath));
 };
 
-type Options = { quality: number; include: string; exclude: string };
+export type OptimizationOptions = {
+  quality: number;
+  include?: string;
+  exclude?: string;
+  save?: boolean;
+};
+
+export type AssetInfo = { [hash: string]: boolean };
 
 /*
  * Returns a boolean indicating whether or not there are assets to optimize
  */
-export const hasUnoptimizedAssetsAsync = async (projectDir: string, options: Options) => {
+export const hasUnoptimizedAssetsAsync = async (
+  projectDir: string,
+  options: OptimizationOptions
+) => {
   if (!fs.existsSync(path.join(projectDir, '.expo-shared/assets.json'))) {
     return true;
   }
@@ -61,7 +71,7 @@ export const hasUnoptimizedAssetsAsync = async (projectDir: string, options: Opt
  * Find all project assets under assetBundlePatterns in app.json excluding node_modules.
  * If --include of --exclude flags were passed in those results are filtered out.
  */
-export const getAssetFilesAsync = async (projectDir: string, options: Options) => {
+export const getAssetFilesAsync = async (projectDir: string, options: OptimizationOptions) => {
   const { exp } = await readConfigJsonAsync(projectDir);
   const { assetBundlePatterns } = exp;
   const globOptions = {
@@ -104,13 +114,15 @@ const filterImages = (files: string[], projectDir: string) => {
 /*
  * Read the contents of assets.json under .expo-shared folder. Create the file/directory if they don't exist.
  */
-export const readAssetJsonAsync = async (projectDir: string) => {
+export const readAssetJsonAsync = async (
+  projectDir: string
+): Promise<{ assetJson: JsonFile<AssetInfo>; assetInfo: AssetInfo }> => {
   const dirPath = path.join(projectDir, '.expo-shared');
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath);
   }
 
-  const assetJson = new JsonFile(path.join(dirPath, 'assets.json'));
+  const assetJson = new JsonFile<AssetInfo>(path.join(dirPath, 'assets.json'));
   if (!fs.existsSync(assetJson.file)) {
     const message =
       `Creating ${chalk.italic('.expo-shared/assets.json')} in the project's root directory.\n` +

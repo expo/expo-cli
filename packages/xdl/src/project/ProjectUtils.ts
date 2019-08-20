@@ -26,6 +26,11 @@ export type LogFields = {
   issueId?: string;
   issueCleared?: boolean;
   includesStack?: boolean;
+  deviceId?: string;
+  deviceName?: string;
+  groupDepth?: number;
+  shouldHide?: boolean;
+  _expoEventType?: 'TUNNEL_READY';
 };
 
 export function logWithLevel(
