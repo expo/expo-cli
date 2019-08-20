@@ -10,11 +10,15 @@ declare module 'probe-image-size' {
     hUnits: 'in' | 'mm' | 'cm' | 'pt' | 'pc' | 'px' | 'em' | 'ex';
   };
 
-  function get_image_size(
+  function probeImageSize(
     src: ReadStream | string,
     options?: any,
     callback?: (error: Error | null, result: ProbeResult) => void
   ): Promise<ProbeResult>;
 
-  export = get_image_size;
+  namespace probeImageSize {
+    function sync(buffer: Buffer): ProbeResult | null;
+  }
+
+  export = probeImageSize;
 }
