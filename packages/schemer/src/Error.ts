@@ -1,12 +1,7 @@
-/**
- * @flow
- **/
-
 import ExtendableError from 'es6-error';
 
 export class SchemerError extends ExtendableError {
   errors: Array<ValidationError>;
-  message: string;
   constructor(errors: Array<ValidationError>) {
     const message = errors.map(e => e.message).join('\n');
     super(message);
@@ -19,8 +14,20 @@ export class ValidationError extends ExtendableError {
   fieldPath: string;
   message: string;
   data: any;
-  meta: Object;
-  constructor({ errorCode, fieldPath, message, data, meta }: Object) {
+  meta: any;
+  constructor({
+    errorCode,
+    fieldPath,
+    message,
+    data,
+    meta,
+  }: {
+    errorCode: keyof typeof ErrorCodes;
+    fieldPath: string;
+    message: string;
+    data: any;
+    meta: any;
+  }) {
     super(message);
     this.errorCode = errorCode;
     this.fieldPath = fieldPath;
