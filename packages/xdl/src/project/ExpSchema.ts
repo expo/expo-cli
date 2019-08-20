@@ -1,34 +1,33 @@
-/**
- * @flow
- */
-
 import fs from 'fs';
 import path from 'path';
 import Schemer from '@expo/schemer';
 import Api from '../Api';
-import * as ProjectUtils from './ProjectUtils';
+import * as ConfigUtils from '@expo/config';
 
-let _xdlSchemaJson = {};
+export type Schema = any;
+export type AssetSchema = { schema: Schema; fieldPath: string };
 
-export async function validatorFromProjectRoot(projectRoot: string): Schemer {
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (!exp) throw new Error(`Couldn't read local manifest`);
+let _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
+
+export async function validatorFromProjectRoot(projectRoot: string): Promise<Schemer> {
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  if (!exp.sdkVersion) throw new Error(`Couldn't read local manifest`);
   const schema = await getSchemaAsync(exp.sdkVersion);
   const validator = new Schemer(schema);
   return validator;
 }
 
-export async function getSchemaAsync(sdkVersion: string) {
+export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
   let json = await _getSchemaJSONAsync(sdkVersion);
   return json.schema;
 }
 
 // Array of schema nodes that refer to assets along with their field
 // path (eg. 'notification.icon')
-export async function getAssetSchemasAsync(sdkVersion: string) {
+export async function getAssetSchemasAsync(sdkVersion: string): Promise<AssetSchema[]> {
   const schema = await getSchemaAsync(sdkVersion);
-  const assetSchemas = [];
-  const visit = (node, fieldPath) => {
+  const assetSchemas: AssetSchema[] = [];
+  const visit = (node: Schema, fieldPath: string) => {
     if (node.meta && node.meta.asset) {
       assetSchemas.push({ schema: node, fieldPath });
     }
@@ -43,7 +42,7 @@ export async function getAssetSchemasAsync(sdkVersion: string) {
   return assetSchemas;
 }
 
-async function _getSchemaJSONAsync(sdkVersion) {
+async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema }> {
   if (process.env.LOCAL_XDL_SCHEMA) {
     if (process.env.EXPONENT_UNIVERSE_DIR) {
       return JSON.parse(
