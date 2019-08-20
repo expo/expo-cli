@@ -458,6 +458,7 @@ async function startNextJsAsync({
     conf: _createNextJsConfig({
       projectRoot,
       expoWebpackConfig,
+      userConfigOnly: !dev,
     }),
   });
   const handle = app.getRequestHandler();
@@ -501,14 +502,19 @@ async function bundleNextJsAsync({
 function _createNextJsConfig({
   projectRoot,
   expoWebpackConfig,
+  userConfigOnly = false,
 }: {
   projectRoot: string;
   expoWebpackConfig: Web.WebpackConfiguration;
+  userConfigOnly?: boolean;
 }): { [key: string]: any } {
   let userNextJsConfig: any = {};
   const userNextConfigJsPath = path.join(projectRoot, 'next.config.js');
   if (fs.existsSync(userNextConfigJsPath)) {
     userNextJsConfig = require(userNextConfigJsPath);
+  }
+  if (userConfigOnly) {
+    return userNextJsConfig;
   }
 
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
