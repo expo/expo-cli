@@ -17,6 +17,7 @@ export type ExpoConfig = {
   nodeModulesPath?: string;
   [key: string]: any;
 };
+export type ExpRc = { [key: string]: any };
 export type Platform = 'android' | 'ios' | 'web';
 
 export type PackageJSONConfig = { [key: string]: any };
@@ -119,7 +120,7 @@ export function configFilename(projectRoot: string): string {
   return findConfigFile(projectRoot).configName;
 }
 
-export async function readExpRcAsync(projectRoot: string): Promise<object> {
+export async function readExpRcAsync(projectRoot: string): Promise<ExpRc> {
   const expRcPath = path.join(projectRoot, '.exprc');
   return await JsonFile.readAsync(expRcPath, { json5: true, cantReadFileDefault: {} });
 }
