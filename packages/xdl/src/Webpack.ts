@@ -520,6 +520,13 @@ function _createNextJsConfig({
   }
   const includeFunc = expoBabelLoader.include as ((path: string) => boolean);
 
+  // Inject `process.env` with Next.js's `env` instead of `process.env` in
+  // Webpack's `DefinePlugin`.
+  const definePlugin = _findDefinePlugin(expoWebpackConfig.plugins!) as any;
+  const definitions = (definePlugin || {}).definitions;
+  const { 'process.env': { NODE_ENV, ...processEnv } } = definitions;
+  delete definitions['process.env'];
+
   return {
     // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
     // Remove the `.` before each file extension
@@ -527,6 +534,11 @@ function _createNextJsConfig({
       string.substr(1)
     ),
     ...userNextJsConfig,
+    // Inject `process.env` (see above).
+    env: {
+      ...processEnv,
+      ...userNextJsConfig.env,
+    },
     // Note `webpack` has to come after `...userNextJsConfig` because we want to override that
     // User's `webpack` config is loaded below in `return`.
     webpack: (nextjsWebpackConfig: Web.WebpackConfiguration, options: any) => {
@@ -578,6 +590,15 @@ function _findBabelLoader(rules: webpack.RuleSetRule[]): webpack.RuleSetRule | n
       (rule.use as any).loader.includes('/babel-loader')
     ) {
       return rule;
+    }
+  }
+  return null;
+}
+
+function _findDefinePlugin(plugins: webpack.Plugin[]): webpack.DefinePlugin | null {
+  for (const plugin of plugins) {
+    if ((plugin as any).definitions) {
+      return plugin;
     }
   }
   return null;
