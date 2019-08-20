@@ -13,18 +13,25 @@ function isObject(val) {
  */
 
 function enableWithPropertyOrConfig(prop, config, merge = false) {
-  // Value is truthy but not a replacement config.
+  // Value is truthy.
   if (prop) {
-    if (isObject(prop) && merge) {
-      return {
-        ...config,
-        ...prop,
-      };
+    if (isObject(prop)) {
+      // Merge config if necessary.
+      if (merge) {
+        return {
+          ...config,
+          ...prop,
+        };
+      }
+
+      // Return property
+      return prop;
     }
-    // Return the default config
+
+    // Value is truthy but not a replacement config, thus return the default config.
     return config;
   }
-  // Return falsey or replacement config.
+  // Return falsey.
   return prop;
 }
 
