@@ -16,8 +16,7 @@
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "watch": "concurrently \"tsc --emitDeclarationOnly --watch\" \"gulp watch\"",
     "test": "jest --config jest/unit-test-config.json --rootDir .",
-    "integration-tests": "jest --config jest/integration-test-config.json --rootDir .",
-    "flow-typed": "flow-typed install --flowVersion=\"$(flow version | awk '{ print $9 }')\""
+    "integration-tests": "jest --config jest/integration-test-config.json --rootDir ."
   },
   "repository": {
     "type": "git",
