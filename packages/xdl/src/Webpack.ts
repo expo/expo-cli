@@ -520,10 +520,11 @@ function _createNextJsConfig({
   }
   const includeFunc = expoBabelLoader.include as ((path: string) => boolean);
 
-  // Inject `process.env` with Next.js's `env` instead of `process.env` in
-  // Webpack's `DefinePlugin`.
+  // Inject `process.env` with Next.js's `env` instead of setting `process.env`
+  // directly with Webpack's `DefinePlugin`.
   const definePlugin = _findDefinePlugin(expoWebpackConfig.plugins!) as any;
   const definitions = (definePlugin || {}).definitions;
+  // Next.js does not accept `NODE_ENV` in `env`, so we exclude it.
   const { 'process.env': { NODE_ENV, ...processEnv } } = definitions;
   delete definitions['process.env'];
 
