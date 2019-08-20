@@ -3,6 +3,5 @@
 /packages/expo-cli/build
 /packages/json-file/build
 /packages/schemer/build
-/packages/xdl/flow-typed
 /packages/xdl/build
 package.json

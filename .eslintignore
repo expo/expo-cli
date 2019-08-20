@@ -2,9 +2,6 @@
 node_modules
 vendor
 
-# Ignore Flow library definitions
-flow-typed
-
 # Ignore build artifacts
 /packages/*/build
 /packages/osascript/lib
