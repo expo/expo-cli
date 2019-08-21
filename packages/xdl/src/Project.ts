@@ -8,7 +8,7 @@ import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import HashIds from 'hashids';
-import joi, { any, string } from 'joi';
+import joi from 'joi';
 import JsonFile, { JSONObject } from '@expo/json-file';
 import { promisify } from 'util';
 import chunk from 'lodash/chunk';
