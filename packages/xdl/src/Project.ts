@@ -157,6 +157,17 @@ type PostPublishHook = {
   _fn: (input: HookArguments) => any;
 };
 
+type Release = {
+  fullName: string;
+  channel: string;
+  channelId: string;
+  publicationId: string;
+  appVersion: string;
+  sdkVersion: string;
+  publishedTime: string;
+  platform: string;
+};
+
 export type ProjectStatus = 'running' | 'ill' | 'exited';
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
@@ -171,7 +182,9 @@ export async function currentStatus(projectDir: string): Promise<ProjectStatus> 
 }
 
 // DECPRECATED: use UrlUtils.constructManifestUrlAsync
-export async function getManifestUrlWithFallbackAsync(projectRoot: string) {
+export async function getManifestUrlWithFallbackAsync(
+  projectRoot: string
+): Promise<{ url: string; isUrlFallback: false }> {
   return {
     url: await UrlUtils.constructManifestUrlAsync(projectRoot),
     isUrlFallback: false,
@@ -341,27 +354,18 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: Confi
   }
 }
 
-export async function getSlugAsync(projectRoot: string, options: Object = {}) {
-  // Verify that exp/app.json exist
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (!exp || !pkg) {
-    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
-    throw new XDLError(
-      'NO_PACKAGE_JSON',
-      `Couldn't read ${configName} file in project at ${projectRoot}`
-    );
+export async function getSlugAsync(projectRoot: string, options = {}): Promise<string> {
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  if (exp.slug) {
+    return exp.slug;
   }
-
-  if (!exp.slug && pkg.name) {
-    exp.slug = pkg.name;
-  } else if (!exp.slug) {
-    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
-    throw new XDLError(
-      'INVALID_MANIFEST',
-      `${configName} in ${projectRoot} must contain the slug field`
-    );
+  if (pkg.name) {
+    return pkg.name;
   }
-  return exp.slug;
+  throw new XDLError(
+    'INVALID_MANIFEST',
+    `app.json in ${projectRoot} must contain the "slug" field`
+  );
 }
 
 export async function getLatestReleaseAsync(
@@ -370,7 +374,7 @@ export async function getLatestReleaseAsync(
     releaseChannel: string;
     platform: string;
   }
-) {
+): Promise<Release | null> {
   // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
   let formData = new FormData();
   formData.append('queryType', 'history');
@@ -394,7 +398,7 @@ export async function mergeAppDistributions(
   projectRoot: string,
   sourceDirs: Array<string>,
   outputDir: string
-) {
+): Promise<void> {
   const assetPathToWrite = path.resolve(projectRoot, outputDir, 'assets');
   await fs.ensureDir(assetPathToWrite);
   const bundlesPathToWrite = path.resolve(projectRoot, outputDir, 'bundles');
@@ -501,7 +505,7 @@ export async function exportForAppHosting(
     dumpSourcemap?: boolean;
     publishOptions?: PublishOptions;
   } = {}
-) {
+): Promise<void> {
   await _validatePackagerReadyAsync(projectRoot);
 
   // build the bundles
@@ -1416,6 +1420,28 @@ async function getConfigAsync(
   }
 }
 
+// TODO(ville): add the full type
+type BuildJob = unknown;
+
+type BuildStatusResult = {
+  jobs: BuildJob[];
+  err: null;
+  userHasBuiltAppBefore: boolean;
+  userHasBuiltExperienceBefore: boolean;
+  canPurchasePriorityBuilds: boolean;
+  numberOfRemainingPriorityBuilds: number;
+  hasUnlimitedPriorityBuilds: boolean;
+};
+
+type BuildCreatedResult = {
+  id: string;
+  ids: string[];
+  priority: 'normal' | 'high';
+  canPurchasePriorityBuilds: boolean;
+  numberOfRemainingPriorityBuilds: number;
+  hasUnlimitedPriorityBuilds: boolean;
+};
+
 export async function buildAsync(
   projectRoot: string,
   options: {
@@ -1429,7 +1455,7 @@ export async function buildAsync(
     publicUrl?: string;
     sdkVersion?: string;
   } = {}
-) {
+): Promise<BuildStatusResult | BuildCreatedResult> {
   await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
@@ -1648,7 +1674,7 @@ export async function startReactNativeServerAsync(
   projectRoot: string,
   options: StartOptions = {},
   verbose: boolean = true
-) {
+): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopReactNativeServerAsync(projectRoot);
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
@@ -1810,7 +1836,7 @@ function _nodePathForProjectRoot(projectRoot: string): string {
   }
   return paths.join(path.delimiter);
 }
-export async function stopReactNativeServerAsync(projectRoot: string) {
+export async function stopReactNativeServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (!packagerInfo.packagerPort || !packagerInfo.packagerPid) {
@@ -1849,7 +1875,7 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
-export async function startExpoServerAsync(projectRoot: string) {
+export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   let app = express();
@@ -2004,7 +2030,7 @@ export async function startExpoServerAsync(projectRoot: string) {
   await Exp.saveRecentExpRootAsync(projectRoot);
 }
 
-export async function stopExpoServerAsync(projectRoot: string) {
+export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
   if (packagerInfo && packagerInfo.expoServerPort) {
@@ -2067,7 +2093,7 @@ async function _connectToNgrokAsync(
   }
 }
 
-export async function startTunnelsAsync(projectRoot: string) {
+export async function startTunnelsAsync(projectRoot: string): Promise<void> {
   const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
   _assertValidProjectRoot(projectRoot);
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -2181,7 +2207,7 @@ export async function startTunnelsAsync(projectRoot: string) {
   ]);
 }
 
-export async function stopTunnelsAsync(projectRoot: string) {
+export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   // This will kill all ngrok tunnels in the process.
   // We'll need to change this if we ever support more than one project
@@ -2218,7 +2244,7 @@ export async function setOptionsAsync(
   options: {
     packagerPort?: number;
   }
-) {
+): Promise<void> {
   _assertValidProjectRoot(projectRoot); // Check to make sure all options are valid
   let schema = joi.object().keys({
     packagerPort: joi.number().integer(),
@@ -2229,7 +2255,9 @@ export async function setOptionsAsync(
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, options);
 }
-export async function getUrlAsync(projectRoot: string, options: Object = {}) {
+
+// DEPRECATED(2019-08-21): use UrlUtils.constructManifestUrlAsync
+export async function getUrlAsync(projectRoot: string, options: object = {}): Promise<string> {
   _assertValidProjectRoot(projectRoot);
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
@@ -2237,7 +2265,7 @@ export async function getUrlAsync(projectRoot: string, options: Object = {}) {
 export async function optimizeAsync(
   projectRoot: string = './',
   options: AssetUtils.OptimizationOptions
-) {
+): Promise<void> {
   logger.global.info(chalk.green('Optimizing assets...'));
 
   const { assetJson, assetInfo } = await readAssetJsonAsync(projectRoot);
@@ -2331,14 +2359,14 @@ export async function startAsync(
   projectRoot: string,
   options: StartOptions = {},
   verbose: boolean = true
-): Promise<any> {
+): Promise<ConfigUtils.ExpoConfig> {
   _assertValidProjectRoot(projectRoot);
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
   });
 
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   if (options.webOnly) {
     await Webpack.startAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
