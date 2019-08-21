@@ -22,7 +22,7 @@ export class ValidationError extends ExtendableError {
     data,
     meta,
   }: {
-    errorCode: keyof typeof ErrorCodes;
+    errorCode: ErrorCode;
     fieldPath: string;
     message: string;
     data: any;
@@ -36,6 +36,8 @@ export class ValidationError extends ExtendableError {
     this.meta = meta;
   }
 }
+
+export type ErrorCode = keyof typeof ErrorCodes;
 
 export const ErrorCodes = {
   SCHEMA_VALIDATION_ERROR: 'SCHEMA_VALIDATION_ERROR',

@@ -31,7 +31,7 @@ type Meta = {
 
 type AssetField = { fieldPath: string; data: string; meta: Meta };
 
-export { SchemerError, ValidationError, ErrorCodes } from './Error';
+export { SchemerError, ValidationError, ErrorCodes, ErrorCode } from './Error';
 export default class Schemer {
   options: Options;
   ajv: Ajv.Ajv;
