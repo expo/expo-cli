@@ -13,18 +13,18 @@ import logger from './Logger';
 /*
  * Calculate SHA256 Checksum value of a file based on its contents
  */
-export const calculateHash = (filePath: string): string => {
+export function calculateHash(filePath: string): string {
   const contents = fs.readFileSync(filePath);
   return crypto
     .createHash('sha256')
     .update(contents)
     .digest('hex');
-};
+}
 
 /*
  * Compress an inputted jpg or png
  */
-export const optimizeImageAsync = async (inputPath: string, quality: number): Promise<string> => {
+export async function optimizeImageAsync(inputPath: string, quality: number): Promise<string> {
   logger.global.info(`Optimizing ${inputPath}`);
   const outputPath = temporary.directory();
   await sharpAsync({
@@ -33,7 +33,7 @@ export const optimizeImageAsync = async (inputPath: string, quality: number): Pr
     quality,
   });
   return path.join(outputPath, path.basename(inputPath));
-};
+}
 
 export type OptimizationOptions = {
   quality: number;
@@ -47,10 +47,10 @@ export type AssetInfo = { [hash: string]: boolean };
 /*
  * Returns a boolean indicating whether or not there are assets to optimize
  */
-export const hasUnoptimizedAssetsAsync = async (
+export async function hasUnoptimizedAssetsAsync(
   projectDir: string,
   options: OptimizationOptions
-): Promise<boolean> => {
+): Promise<boolean> {
   if (!fs.existsSync(path.join(projectDir, '.expo-shared/assets.json'))) {
     return true;
   }
@@ -65,16 +65,16 @@ export const hasUnoptimizedAssetsAsync = async (
   }
 
   return false;
-};
+}
 
 /*
  * Find all project assets under assetBundlePatterns in app.json excluding node_modules.
  * If --include of --exclude flags were passed in those results are filtered out.
  */
-export const getAssetFilesAsync = async (
+export async function getAssetFilesAsync(
   projectDir: string,
   options: OptimizationOptions
-): Promise<{ allFiles: string[]; selectedFiles: string[] }> => {
+): Promise<{ allFiles: string[]; selectedFiles: string[] }> {
   const { exp } = await readConfigJsonAsync(projectDir);
   const { assetBundlePatterns } = exp;
   const globOptions = {
@@ -102,24 +102,24 @@ export const getAssetFilesAsync = async (
     allFiles: filterImages(allFiles, projectDir),
     selectedFiles: filterImages(filtered, projectDir),
   };
-};
+}
 
 /*
  * Formats an array of files to include the project directory and filters out PNGs and JPGs.
  */
-const filterImages = (files: string[], projectDir: string) => {
+function filterImages(files: string[], projectDir: string) {
   const regex = /\.(png|jpg|jpeg)$/;
   const withDirectory = files.map(file => `${projectDir}/${file}`.replace('//', '/'));
   const allImages = withDirectory.filter(file => regex.test(file.toLowerCase()));
   return allImages;
-};
+}
 
 /*
  * Read the contents of assets.json under .expo-shared folder. Create the file/directory if they don't exist.
  */
-export const readAssetJsonAsync = async (
+export async function readAssetJsonAsync(
   projectDir: string
-): Promise<{ assetJson: JsonFile<AssetInfo>; assetInfo: AssetInfo }> => {
+): Promise<{ assetJson: JsonFile<AssetInfo>; assetInfo: AssetInfo }> {
   const dirPath = path.join(projectDir, '.expo-shared');
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath);
@@ -138,12 +138,12 @@ export const readAssetJsonAsync = async (
   }
   const assetInfo = await assetJson.readAsync();
   return { assetJson, assetInfo };
-};
+}
 
 /*
  * Add .orig extension to a filename in a path string
  */
-export const createNewFilename = (imagePath: string): string => {
+export function createNewFilename(imagePath: string): string {
   const { dir, name, ext } = path.parse(imagePath);
   return path.join(dir, name + '.orig' + ext);
-};
+}
