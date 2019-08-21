@@ -181,49 +181,50 @@ export default class Schemer {
         const probeResult = fs.existsSync(filePath)
           ? imageProbe.sync(await readChunk(filePath, 0, 4100))
           : await imageProbe(data, { useElectronNet: false });
+        if (!probeResult) {
+          return;
+        }
 
-        if (probeResult) {
-          const { width, height, type, mime } = probeResult;
+        const { width, height, type, mime } = probeResult;
 
-          if (contentTypePattern && !mime.match(new RegExp(contentTypePattern))) {
-            this.manualValidationErrors.push(
-              new ValidationError({
-                errorCode: 'INVALID_CONTENT_TYPE',
-                fieldPath,
-                message: `field '${fieldPath}' should point to ${
-                  meta.contentTypeHuman
-                } but the file at '${data}' has type ${type}`,
-                data,
-                meta,
-              })
-            );
-          }
+        if (contentTypePattern && !mime.match(new RegExp(contentTypePattern))) {
+          this.manualValidationErrors.push(
+            new ValidationError({
+              errorCode: 'INVALID_CONTENT_TYPE',
+              fieldPath,
+              message: `field '${fieldPath}' should point to ${
+                meta.contentTypeHuman
+              } but the file at '${data}' has type ${type}`,
+              data,
+              meta,
+            })
+          );
+        }
 
-          if (dimensions && (dimensions.height !== height || dimensions.width !== width)) {
-            this.manualValidationErrors.push(
-              new ValidationError({
-                errorCode: 'INVALID_DIMENSIONS',
-                fieldPath,
-                message: `'${fieldPath}' should have dimensions ${dimensions.width}x${
-                  dimensions.height
-                }, but the file at '${data}' has dimensions ${width}x${height}`,
-                data,
-                meta,
-              })
-            );
-          }
+        if (dimensions && (dimensions.height !== height || dimensions.width !== width)) {
+          this.manualValidationErrors.push(
+            new ValidationError({
+              errorCode: 'INVALID_DIMENSIONS',
+              fieldPath,
+              message: `'${fieldPath}' should have dimensions ${dimensions.width}x${
+                dimensions.height
+              }, but the file at '${data}' has dimensions ${width}x${height}`,
+              data,
+              meta,
+            })
+          );
+        }
 
-          if (square && width !== height) {
-            this.manualValidationErrors.push(
-              new ValidationError({
-                errorCode: 'NOT_SQUARE',
-                fieldPath,
-                message: `image should be square, but the file at '${data}' has dimensions ${width}x${height}`,
-                data,
-                meta,
-              })
-            );
-          }
+        if (square && width !== height) {
+          this.manualValidationErrors.push(
+            new ValidationError({
+              errorCode: 'NOT_SQUARE',
+              fieldPath,
+              message: `image should be square, but the file at '${data}' has dimensions ${width}x${height}`,
+              data,
+              meta,
+            })
+          );
         }
       } catch (e) {
         this.manualValidationErrors.push(
