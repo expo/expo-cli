@@ -29,7 +29,7 @@ type Meta = {
   contentTypeHuman?: string;
 };
 
-type Asset = { fieldPath: string; data: string; meta: Meta };
+type AssetField = { fieldPath: string; data: string; meta: Meta };
 
 export { SchemerError, ValidationError, ErrorCodes } from './Error';
 export default class Schemer {
@@ -151,7 +151,7 @@ export default class Schemer {
   }
 
   async _validateAssetsAsync(data: any) {
-    let assets: Asset[] = [];
+    let assets: AssetField[] = [];
     traverse(this.schema, { allKeys: true }, (subSchema, jsonPointer, a, b, c, d, property) => {
       if (property && subSchema.meta && subSchema.meta.asset) {
         const fieldPath = schemaPointerToFieldPath(jsonPointer);
@@ -165,7 +165,7 @@ export default class Schemer {
     await Promise.all(assets.map(this._validateAssetAsync.bind(this)));
   }
 
-  async _validateImageAsync({ fieldPath, data, meta }: Asset) {
+  async _validateImageAsync({ fieldPath, data, meta }: AssetField) {
     if (meta && meta.asset && data) {
       const { dimensions, square, contentTypePattern }: Meta = meta;
       // filePath could be an URL
@@ -239,7 +239,7 @@ export default class Schemer {
     }
   }
 
-  async _validateAssetAsync({ fieldPath, data, meta }: Asset) {
+  async _validateAssetAsync({ fieldPath, data, meta }: AssetField) {
     if (meta && meta.asset && data) {
       if (meta.contentTypePattern && meta.contentTypePattern.startsWith('^image')) {
         await this._validateImageAsync({ fieldPath, data, meta });
