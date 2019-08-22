@@ -109,6 +109,7 @@
     "@types/analytics-node": "^3.1.1",
     "@types/concat-stream": "^1.6.0",
     "@types/getenv": "^0.7.0",
+    "@types/globby": "6.1.0",
     "@types/hashids": "^1.0.30",
     "@types/joi": "^14.3.3",
     "@types/minipass": "^2.2.0",
