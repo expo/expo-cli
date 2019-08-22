@@ -230,7 +230,11 @@ async function getResolvedLocalesAsync(exp: ExpoConfig): Promise<LocaleMap> {
   return locales;
 }
 
-async function regexFileAsync(regex: RegExp, replace: string, filename: string): Promise<void> {
+async function regexFileAsync(
+  regex: RegExp | string,
+  replace: string,
+  filename: string
+): Promise<void> {
   let file = await fs.readFile(filename);
   let fileString = file.toString();
   await fs.writeFile(filename, fileString.replace(regex, replace));
@@ -238,8 +242,8 @@ async function regexFileAsync(regex: RegExp, replace: string, filename: string):
 
 // Matches sed /d behavior
 async function deleteLinesInFileAsync(
-  startRegex: RegExp,
-  endRegex: RegExp,
+  startRegex: RegExp | string,
+  endRegex: RegExp | string,
   filename: string
 ): Promise<void> {
   let file = await fs.readFile(filename);

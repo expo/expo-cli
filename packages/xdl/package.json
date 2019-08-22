@@ -16,8 +16,7 @@
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "watch": "concurrently \"tsc --emitDeclarationOnly --watch\" \"gulp watch\"",
     "test": "jest --config jest/unit-test-config.json --rootDir .",
-    "integration-tests": "jest --config jest/integration-test-config.json --rootDir .",
-    "flow-typed": "flow-typed install --flowVersion=\"$(flow version | awk '{ print $9 }')\""
+    "integration-tests": "jest --config jest/integration-test-config.json --rootDir ."
   },
   "repository": {
     "type": "git",
@@ -110,10 +109,12 @@
     "@types/analytics-node": "^3.1.1",
     "@types/concat-stream": "^1.6.0",
     "@types/getenv": "^0.7.0",
+    "@types/hashids": "^1.0.30",
     "@types/joi": "^14.3.3",
     "@types/minipass": "^2.2.0",
     "@types/ncp": "^2.0.1",
     "@types/npm-package-arg": "^6.1.0",
+    "@types/plist": "^3.0.2",
     "@types/raven": "^2.5.3",
     "@types/react-dev-utils": "^9.0.1",
     "@types/request": "^2.48.1",
@@ -121,6 +122,7 @@
     "@types/semver": "^6.0.0",
     "@types/source-map-support": "^0.5.0",
     "@types/tar": "^4.0.1",
+    "@types/url-join": "^4.0.0",
     "@types/uuid": "^3.4.4",
     "@types/validator": "^10.11.1",
     "babel-jest": "^23.4.0",

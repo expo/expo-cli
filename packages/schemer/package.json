@@ -6,11 +6,9 @@
   "scripts": {
     "test": "jest --testPathIgnorePatterns network",
     "test-integration": "jest",
-    "watch": "babel -w src -d build",
-    "build": "babel src -d build",
-    "prepare": "npm run build",
-    "testWatch": "npm run buildbg; jest --watch",
-    "buildbg": "babel -w src -d build &"
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "yarn build"
   },
   "license": "MIT",
   "repository": {
@@ -26,21 +24,19 @@
     "build"
   ],
   "devDependencies": {
-    "babel-cli": "^6.24.1",
+    "@expo/babel-preset-cli": "^0.2.0",
+    "@types/node": "^12.7.2",
     "babel-jest": "^20.0.3",
-    "babel-preset-env": "^1.6.0",
-    "flow-bin": "^0.51.1",
-    "jest": "^20.0.4"
+    "jest": "^20.0.4",
+    "typescript": "3.4.5"
   },
   "dependencies": {
     "ajv": "^5.2.2",
-    "babel-polyfill": "^6.23.0",
-    "babel-preset-flow": "^6.23.0",
     "es6-error": "^4.0.2",
     "json-schema-traverse": "0.3.1",
     "lodash": "^4.17.11",
     "probe-image-size": "^3.1.0",
-    "read-chunk": "^2.0.0"
+    "read-chunk": "^3.2.0"
   },
   "publishConfig": {
     "access": "public"
