@@ -199,7 +199,9 @@ export default class Schemer {
             new ValidationError({
               errorCode: ErrorCodes.INVALID_CONTENT_TYPE,
               fieldPath,
-              message: `field '${fieldPath}' should point to ${meta.contentTypeHuman} but the file at '${data}' has type ${type}`,
+              message: `field '${fieldPath}' should point to ${
+                meta.contentTypeHuman
+              } but the file at '${data}' has type ${type}`,
               data,
               meta,
             })
@@ -211,7 +213,9 @@ export default class Schemer {
             new ValidationError({
               errorCode: ErrorCodes.INVALID_DIMENSIONS,
               fieldPath,
-              message: `'${fieldPath}' should have dimensions ${dimensions.width}x${dimensions.height}, but the file at '${data}' has dimensions ${width}x${height}`,
+              message: `'${fieldPath}' should have dimensions ${dimensions.width}x${
+                dimensions.height
+              }, but the file at '${data}' has dimensions ${width}x${height}`,
               data,
               meta,
             })
@@ -253,7 +257,7 @@ export default class Schemer {
     meta: Meta,
   }) {
     if (meta && meta.asset && data) {
-      if (meta.asset.contentTypePattern && meta.asset.contentTypePattern.startsWith('^image')) {
+      if (meta.contentTypePattern && meta.contentTypePattern.startsWith('^image')) {
         await this._validateImageAsync({ fieldPath, data, meta });
       }
     }
