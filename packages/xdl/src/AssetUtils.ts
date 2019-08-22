@@ -42,7 +42,7 @@ export type OptimizationOptions = {
   save?: boolean;
 };
 
-export type AssetInfo = { [hash: string]: boolean };
+export type AssetOptimizationState = { [hash: string]: boolean };
 
 /*
  * Returns a boolean indicating whether or not there are assets to optimize
@@ -119,13 +119,13 @@ function filterImages(files: string[], projectDir: string) {
  */
 export async function readAssetJsonAsync(
   projectDir: string
-): Promise<{ assetJson: JsonFile<AssetInfo>; assetInfo: AssetInfo }> {
+): Promise<{ assetJson: JsonFile<AssetOptimizationState>; assetInfo: AssetOptimizationState }> {
   const dirPath = path.join(projectDir, '.expo-shared');
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath);
   }
 
-  const assetJson = new JsonFile<AssetInfo>(path.join(dirPath, 'assets.json'));
+  const assetJson = new JsonFile<AssetOptimizationState>(path.join(dirPath, 'assets.json'));
   if (!fs.existsSync(assetJson.file)) {
     const message =
       `Creating ${chalk.italic('.expo-shared/assets.json')} in the project's root directory.\n` +
