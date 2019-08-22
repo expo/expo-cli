@@ -171,7 +171,6 @@ export default class Schemer {
       // filePath could be an URL
       const filePath = path.resolve(this.rootDir, data);
       try {
-        // Assumption: All assets are images. This may change in the future.
         // NOTE(nikki): The '4100' below should be enough for most file types, though we
         //              could probably go shorter....
         //              http://www.garykessler.net/library/file_sigs.html
