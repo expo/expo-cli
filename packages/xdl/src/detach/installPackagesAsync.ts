@@ -1,5 +1,3 @@
-// @flow
-
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import path from 'path';
@@ -10,7 +8,7 @@ import logger from './Logger';
 export default async function installPackagesAsync(
   projectDir: string,
   packages: string[],
-  options?: any = {}
+  options: any = {}
 ): Promise<void> {
   let packageManager = 'npm';
   if (options.packageManager) {
@@ -31,7 +29,7 @@ export default async function installPackagesAsync(
     });
   } else {
     logger.info(`Installing dependencies using npm...`);
-    if (!(await fs.pathExists(path.join(projectDir, 'node_modules')))) {
+    if (!await fs.pathExists(path.join(projectDir, 'node_modules'))) {
       await spawnAsync('npm', ['install', '--loglevel', 'error'], {
         cwd: projectDir,
         stdio: 'inherit',

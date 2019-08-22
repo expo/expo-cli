@@ -154,7 +154,7 @@ async function spawnAsync(
   }
 }
 
-function createSpawner(buildPhase: string, logger: Logger) {
+function createSpawner(buildPhase: string, logger?: Logger) {
   return (command: string, ...args: any[]) => {
     const lastArg = _.last(args);
     const optionsFromArg = _.isObject(lastArg) ? args.pop() : {};

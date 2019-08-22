@@ -5,7 +5,7 @@ import plist from 'plist';
 import { spawnAsyncThrowError } from './ExponentTools';
 import logger from './Logger';
 
-function _getNormalizedPlistFilename(plistName) {
+function _getNormalizedPlistFilename(plistName: string) {
   let plistFilename;
   if (plistName.indexOf('.') !== -1) {
     plistFilename = plistName;
@@ -18,7 +18,7 @@ function _getNormalizedPlistFilename(plistName) {
 /**
  *  @param plistName base filename of property list. if no extension, assumes .plist
  */
-async function modifyAsync(plistPath, plistName, transform) {
+async function modifyAsync(plistPath: string, plistName: string, transform: (config: any) => any) {
   let plistFilename = _getNormalizedPlistFilename(plistName);
   let configPlistName = path.join(plistPath, plistFilename);
   let configFilename = path.join(plistPath, `${plistName}.json`);
@@ -67,7 +67,7 @@ async function modifyAsync(plistPath, plistName, transform) {
   return config;
 }
 
-async function createBlankAsync(plistPath, plistName) {
+async function createBlankAsync(plistPath: string, plistName: string) {
   // write empty json file
   const emptyConfig = {};
   const tmpConfigFile = path.join(plistPath, `${plistName}.json`);
@@ -92,13 +92,13 @@ async function createBlankAsync(plistPath, plistName) {
   await spawnAsyncThrowError('/bin/rm', [tmpConfigFile]);
 }
 
-async function cleanBackupAsync(plistPath, plistName, restoreOriginal = true) {
+async function cleanBackupAsync(plistPath: string, plistName: string, restoreOriginal = true) {
   let plistFilename = _getNormalizedPlistFilename(plistName);
   let configPlistName = path.join(plistPath, plistFilename);
   let configFilename = path.join(plistPath, `${plistName}.json`);
   const backupPlistPath = `${configPlistName}.bak`;
 
-  if (restoreOriginal && (await fs.exists(backupPlistPath))) {
+  if (restoreOriginal && (await fs.pathExists(backupPlistPath))) {
     await fs.copy(backupPlistPath, configPlistName);
   }
 

@@ -1,10 +1,10 @@
-/**
- *  @flow
- */
 import path from 'path';
 
 import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
-import StandaloneContext from './StandaloneContext';
+import StandaloneContext, {
+  StandaloneContextDataUser,
+  StandaloneContextDataService,
+} from './StandaloneContext';
 import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
 import logger from './Logger';
 
@@ -25,16 +25,18 @@ function _getAppleIconQualifier(iconSize: number, iconResolution: number): strin
 
 async function _saveDefaultIconToPathAsync(context: StandaloneContext, path: string) {
   if (context.type === 'user') {
-    if (context.data.exp.icon) {
-      await saveImageToPathAsync(context.data.projectPath, context.data.exp.icon, path);
+    const data = context.data as StandaloneContextDataUser;
+    if (data.exp.icon) {
+      await saveImageToPathAsync(data.projectPath, data.exp.icon, path);
     } else {
       throw new Error('Cannot save icon because app.json has no exp.icon key.');
     }
   } else {
-    if (context.data.manifest.ios && context.data.manifest.ios.iconUrl) {
-      await saveUrlToPathAsync(context.data.manifest.ios.iconUrl, path);
-    } else if (context.data.manifest.iconUrl) {
-      await saveUrlToPathAsync(context.data.manifest.iconUrl, path);
+    const data = context.data as StandaloneContextDataService;
+    if (data.manifest.ios && data.manifest.ios.iconUrl) {
+      await saveUrlToPathAsync(data.manifest.ios.iconUrl, path);
+    } else if (data.manifest.iconUrl) {
+      await saveUrlToPathAsync(data.manifest.iconUrl, path);
     } else {
       throw new Error('Cannot save icon because manifest has no iconUrl or ios.iconUrl key.');
     }
@@ -52,7 +54,7 @@ async function createAndWriteIconsToPathAsync(
   context: StandaloneContext,
   destinationIconPath: string
 ) {
-  let defaultIconFilename = 'exp-icon.png';
+  let defaultIconFilename: string | null = 'exp-icon.png';
   try {
     await _saveDefaultIconToPathAsync(context, path.join(destinationIconPath, defaultIconFilename));
   } catch (e) {
@@ -86,7 +88,7 @@ async function createAndWriteIconsToPathAsync(
           let usesDefault = false;
           if (context.type === 'service') {
             // TODO(nikki): Support local paths for these icons
-            const manifest = context.data.manifest;
+            const manifest = (context.data as StandaloneContextDataService).manifest;
             if (manifest.ios && manifest.ios.hasOwnProperty(iconKey)) {
               // manifest specifies an image just for this size/resolution, use that
               rawIconFilename = `exp-icon${iconQualifier}.png`;

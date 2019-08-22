@@ -1,6 +1,3 @@
-/**
- * @flow
- */
 import fs from 'fs-extra';
 import invariant from 'invariant';
 import path from 'path';
@@ -23,10 +20,7 @@ import * as Versions from '../Versions';
 import * as Modules from '../modules/Modules';
 import installPackagesAsync from './installPackagesAsync';
 
-async function _getVersionedExpoKitConfigAsync(
-  sdkVersion: string,
-  skipServerValidation: boolean
-): any {
+async function _getVersionedExpoKitConfigAsync(sdkVersion, skipServerValidation) {
   const versions = await Versions.versionsAsync();
   let sdkVersionConfig = versions.sdkVersions[sdkVersion];
   if (!sdkVersionConfig) {
@@ -44,10 +38,7 @@ async function _getVersionedExpoKitConfigAsync(
   };
 }
 
-async function _getOrCreateTemplateDirectoryAsync(
-  context: StandaloneContext,
-  iosExpoViewUrl: ?string
-) {
+async function _getOrCreateTemplateDirectoryAsync(context, iosExpoViewUrl) {
   if (context.type === 'service') {
     return path.join(context.data.expoSourcePath, '..');
   } else if (context.type === 'user') {
@@ -72,11 +63,7 @@ async function _getOrCreateTemplateDirectoryAsync(
   }
 }
 
-async function _renameAndMoveProjectFilesAsync(
-  context: StandaloneContext,
-  projectDirectory: string,
-  projectName: string
-) {
+async function _renameAndMoveProjectFilesAsync(context, projectDirectory, projectName) {
   // remove .gitignore, as this actually pertains to internal expo template management
   try {
     const gitIgnorePath = path.join(projectDirectory, '.gitignore');
@@ -139,11 +126,7 @@ async function _renameAndMoveProjectFilesAsync(
   });
 }
 
-async function _configureVersionsPlistAsync(
-  configFilePath: string,
-  standaloneSdkVersion: string,
-  isServiceContext: boolean
-) {
+async function _configureVersionsPlistAsync(configFilePath, standaloneSdkVersion) {
   await IosPlist.modifyAsync(configFilePath, 'EXSDKVersions', versionConfig => {
     versionConfig.sdkVersions = [standaloneSdkVersion];
     versionConfig.detachedNativeVersions = {
@@ -154,10 +137,7 @@ async function _configureVersionsPlistAsync(
   });
 }
 
-async function _configureBuildConstantsPlistAsync(
-  configFilePath: string,
-  context: StandaloneContext
-) {
+async function _configureBuildConstantsPlistAsync(configFilePath, context) {
   await IosPlist.modifyAsync(configFilePath, 'EXBuildConstants', constantsConfig => {
     constantsConfig.STANDALONE_CONTEXT_TYPE = context.type;
     return constantsConfig;
@@ -165,14 +145,14 @@ async function _configureBuildConstantsPlistAsync(
 }
 
 async function _renderPodfileFromTemplateAsync(
-  context: StandaloneContext,
-  expoRootTemplateDirectory: string,
-  sdkVersion: string,
-  iosClientVersion: ?string
+  context,
+  expoRootTemplateDirectory,
+  sdkVersion,
+  iosClientVersion
 ) {
   const { iosProjectDirectory, projectName } = getPaths(context);
   let podfileTemplateFilename;
-  let podfileSubstitutions: any = {
+  let podfileSubstitutions = {
     TARGET_NAME: projectName,
   };
   let reactNativeDependencyPath;
@@ -257,7 +237,7 @@ async function _renderPodfileFromTemplateAsync(
   );
 }
 
-async function createDetachedAsync(context: StandaloneContext) {
+async function createDetachedAsync(context) {
   const { iosProjectDirectory, projectName, supportingDirectory, projectRootDirectory } = getPaths(
     context
   );
@@ -309,7 +289,7 @@ async function createDetachedAsync(context: StandaloneContext) {
   logger.info('Configuring iOS dependencies...');
   // this configuration must happen prior to build time because it affects which
   // native versions of RN we depend on.
-  await _configureVersionsPlistAsync(supportingDirectory, standaloneSdkVersion, isServiceContext);
+  await _configureVersionsPlistAsync(supportingDirectory, standaloneSdkVersion);
   await _configureBuildConstantsPlistAsync(supportingDirectory, context);
   await _renderPodfileFromTemplateAsync(
     context,
@@ -347,7 +327,7 @@ async function _installRequiredPackagesAsync(projectRoot, sdkVersion) {
   }
 }
 
-function addDetachedConfigToExp(exp: Object, context: StandaloneContext): Object {
+function addDetachedConfigToExp(exp, context) {
   if (context.type !== 'user') {
     logger.warn(`Tried to modify exp for a non-user StandaloneContext, ignoring`);
     return exp;
@@ -374,7 +354,7 @@ function addDetachedConfigToExp(exp: Object, context: StandaloneContext): Object
  *    intermediatesDirectory - temporary spot to write whatever files are needed during the
  *      detach/build process but can be discarded afterward.
  */
-function getPaths(context: StandaloneContext) {
+function getPaths(context) {
   let iosProjectDirectory;
   let projectName;
   let supportingDirectory;
@@ -426,7 +406,7 @@ function getPaths(context: StandaloneContext) {
  *  Get the newest sdk version supported given the standalone context.
  *  Not all contexts support the newest sdk version.
  */
-async function getNewestSdkVersionSupportedAsync(context: StandaloneContext) {
+async function getNewestSdkVersionSupportedAsync(context) {
   if (context.type === 'user') {
     return context.data.exp.sdkVersion;
   } else if (context.type === 'service') {

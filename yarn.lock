@@ -2167,6 +2167,13 @@
     "@types/minimatch" "*"
     "@types/node" "*"
 
+"@types/globby@6.1.0":
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/@types/globby/-/globby-6.1.0.tgz#7c25b975512a89effea2a656ca8cf6db7fb29d11"
+  integrity sha512-j3XSDNoK4LO5T+ZviQD6PqfEjm07QFEacOTbJR3hnLWuWX0ZMLJl9oRPgj1PyrfGbXhfHFkksC9QZ9HFltJyrw==
+  dependencies:
+    "@types/glob" "*"
+
 "@types/globby@^9.1.0":
   version "9.1.0"
   resolved "https://registry.yarnpkg.com/@types/globby/-/globby-9.1.0.tgz#08e2cf99c64f8e45c6cfbe05e9d8ac763aca6482"

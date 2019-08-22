@@ -1,6 +1,3 @@
-/**
- *  @flow
- */
 import fs from 'fs-extra';
 import path from 'path';
 import globby from 'globby';
@@ -11,7 +8,7 @@ import {
   saveUrlToPathAsync,
   spawnAsyncThrowError,
 } from './ExponentTools';
-import StandaloneContext from './StandaloneContext';
+import StandaloneContext, { StandaloneContextDataUser } from './StandaloneContext';
 import { resizeImageAsync, getImageDimensionsAsync } from '../tools/ImageUtils';
 
 const iconScales = {
@@ -56,7 +53,8 @@ async function _resizeIconsAsync(
 
   try {
     if (isDetached) {
-      await saveImageToPathAsync(context.data.projectPath, url, baseImagePath);
+      const data = context.data as StandaloneContextDataUser;
+      await saveImageToPathAsync(data.projectPath, url, baseImagePath);
     } else {
       await saveUrlToPathAsync(url, baseImagePath);
     }

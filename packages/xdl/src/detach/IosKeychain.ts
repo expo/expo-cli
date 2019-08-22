@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import _logger from './Logger';
 import { spawnAsyncThrowError, createSpawner } from './ExponentTools';
 
-export async function createKeychain(appUUID, saveResultToFile = true) {
+export async function createKeychain(appUUID: string, saveResultToFile = true) {
   const BUILD_PHASE = 'creating keychain';
   const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
   const spawn = createSpawner(BUILD_PHASE, logger);
@@ -41,7 +41,7 @@ export async function createKeychain(appUUID, saveResultToFile = true) {
   return keychainInfo;
 }
 
-export async function deleteKeychain({ path, appUUID }) {
+export async function deleteKeychain({ path, appUUID }: { path: string; appUUID?: string }) {
   const BUILD_PHASE = 'deleting keychain';
   const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
 
@@ -54,7 +54,15 @@ export async function deleteKeychain({ path, appUUID }) {
   }
 }
 
-export async function importIntoKeychain({ keychainPath, certPath, certPassword }) {
+export async function importIntoKeychain({
+  keychainPath,
+  certPath,
+  certPassword,
+}: {
+  keychainPath: string;
+  certPath: string;
+  certPassword?: string;
+}) {
   const BUILD_PHASE = 'importing certificate into keychain';
   const logger = _logger.withFields({ buildPhase: BUILD_PHASE });
   const spawn = createSpawner(BUILD_PHASE);
@@ -79,7 +87,9 @@ export async function cleanUpKeychains() {
       ['list-keychains'],
       { stdio: 'pipe' }
     );
-    const allKeychainsList = keychainsListRaw.match(/"(.*)"/g).map(i => i.slice(1, i.length - 1));
+    const allKeychainsList = (keychainsListRaw.match(/"(.*)"/g) || []).map(i =>
+      i.slice(1, i.length - 1)
+    );
     const turtleKeychainsList = keychainsListRaw.match(/\/private\/tmp\/xdl\/(.*).keychain/g);
     let shouldCleanSearchList = false;
     if (turtleKeychainsList) {
@@ -106,11 +116,11 @@ export async function cleanUpKeychains() {
   }
 }
 
-async function runFastlane(fastlaneArgs) {
+async function runFastlane(fastlaneArgs: string[]) {
   const fastlaneEnvVars = {
-    FASTLANE_DISABLE_COLORS: 1,
-    FASTLANE_SKIP_UPDATE_CHECK: 1,
-    CI: 1,
+    FASTLANE_DISABLE_COLORS: '1',
+    FASTLANE_SKIP_UPDATE_CHECK: '1',
+    CI: '1',
     LC_ALL: 'en_US.UTF-8',
   };
   await spawnAsyncThrowError('fastlane', fastlaneArgs, {
@@ -118,5 +128,5 @@ async function runFastlane(fastlaneArgs) {
   });
 }
 
-const getKeychainPath = name => `/private/tmp/xdl/${name}.keychain`;
-const getKeychainInfoPath = appUUID => `/private/tmp/${appUUID}-keychain-info.json`;
+const getKeychainPath = (name: string) => `/private/tmp/xdl/${name}.keychain`;
+const getKeychainInfoPath = (appUUID: string) => `/private/tmp/${appUUID}-keychain-info.json`;

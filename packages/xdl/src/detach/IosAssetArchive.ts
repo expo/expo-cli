@@ -1,13 +1,12 @@
-/**
- *  @flow
- */
-
 import fs from 'fs-extra';
 import path from 'path';
 
 import { spawnAsyncThrowError, parseSdkMajorVersion } from './ExponentTools';
 import * as IosIcons from './IosIcons';
-import StandaloneContext from './StandaloneContext';
+import StandaloneContext, {
+  StandaloneContextDataUser,
+  StandaloneContextDataService,
+} from './StandaloneContext';
 
 /**
  *  Compile a .car file from the icons in a manifest.
@@ -20,6 +19,7 @@ async function buildAssetArchiveAsync(
   if (context.type !== 'service') {
     throw new Error('buildAssetArchive is only supported for service standalone contexts.');
   }
+  const data = context.data as StandaloneContextDataService;
   fs.mkdirpSync(intermediatesDirectory);
 
   // copy expoSourceRoot/.../Images.xcassets into intermediates
@@ -27,7 +27,7 @@ async function buildAssetArchiveAsync(
     '/bin/cp',
     [
       '-R',
-      path.join(context.data.expoSourcePath, 'Exponent', 'Images.xcassets'),
+      path.join(data.expoSourcePath, 'Exponent', 'Images.xcassets'),
       path.join(intermediatesDirectory, 'Images.xcassets'),
     ],
     {
@@ -41,11 +41,11 @@ async function buildAssetArchiveAsync(
     path.join(intermediatesDirectory, 'Images.xcassets', 'AppIcon.appiconset')
   );
 
-  const sdkMajorVersion = parseSdkMajorVersion(context.data.manifest.sdkVersion);
+  const sdkMajorVersion = parseSdkMajorVersion(data.manifest.sdkVersion);
   const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0'; // SDK31 drops support for iOS 9.0
 
   // compile asset archive
-  let xcrunargs = [].concat(
+  let xcrunargs = ([] as string[]).concat(
     ['actool'],
     ['--minimum-deployment-target', deploymentTarget],
     ['--platform', 'iphoneos'],
