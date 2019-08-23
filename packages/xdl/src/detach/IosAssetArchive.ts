@@ -45,20 +45,21 @@ async function buildAssetArchiveAsync(
   const deploymentTarget = sdkMajorVersion > 30 ? '10.0' : '9.0'; // SDK31 drops support for iOS 9.0
 
   // compile asset archive
-  let xcrunargs = ([] as string[]).concat(
-    ['actool'],
-    ['--minimum-deployment-target', deploymentTarget],
-    ['--platform', 'iphoneos'],
-    ['--app-icon', 'AppIcon'],
-    ['--output-partial-info-plist', 'assetcatalog_generated_info.plist'],
-    ['--compress-pngs'],
-    ['--enable-on-demand-resources', 'YES'],
-    ['--product-type', 'com.apple.product-type.application'],
-    ['--target-device', 'iphone'],
-    ['--target-device', 'ipad'],
-    ['--compile', path.relative(intermediatesDirectory, destinationCARPath)],
-    ['Images.xcassets']
-  );
+  // prettier-ignore
+  const xcrunargs = [
+    'actool',
+    '--minimum-deployment-target', deploymentTarget,
+    '--platform', 'iphoneos',
+    '--app-icon', 'AppIcon',
+    '--output-partial-info-plist', 'assetcatalog_generated_info.plist',
+    '--compress-pngs',
+    '--enable-on-demand-resources', 'YES',
+    '--product-type', 'com.apple.product-type.application',
+    '--target-device', 'iphone',
+    '--target-device', 'ipad',
+    '--compile', path.relative(intermediatesDirectory, destinationCARPath),
+    'Images.xcassets',
+  ]
   /*
    *  Note: if you want to debug issues with `actool`, try changing to stdio: 'inherit'.
    *  In both success and failure cases, actool will write an enormous .plist to stdout
