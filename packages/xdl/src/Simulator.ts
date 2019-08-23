@@ -264,10 +264,9 @@ export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
     return false;
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob(
-    './data/Containers/Data/Application/*/Library/Caches/Snapshots/host.exp.Exponent',
-    { cwd: simDir }
-  );
+  let matches = await glob('./data/Containers/Bundle/Application/*/Exponent*', {
+    cwd: simDir,
+  });
 
   return matches.length > 0;
 }
