@@ -26,7 +26,9 @@ const logArtifactUrl = platform => async (projectDir, options) => {
   if (url) {
     log.nested(url);
   } else {
-    throw new Error(`No ${platform} binary file found. Use "exp build:${platform}" to create one.`);
+    throw new Error(
+      `No ${platform} binary file found. Use "expo build:${platform}" to create one.`
+    );
   }
 };
 
