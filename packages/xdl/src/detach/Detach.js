@@ -111,9 +111,9 @@ async function _detachAsync(projectRoot, options) {
     throw new Error(`${configName} is missing \`sdkVersion\``);
   }
 
-  if (!Versions.gteSdkVersion(exp, '24.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '25.0.0')) {
     throw new Error(
-      `The app must be updated to SDK 24.0.0 or newer to be compatible with this tool.`
+      `The app must be updated to SDK 25.0.0 or newer to be compatible with this tool.`
     );
   }
 
