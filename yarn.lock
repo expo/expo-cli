@@ -2321,6 +2321,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/node-forge@^0.8.6":
+  version "0.8.6"
+  resolved "https://registry.yarnpkg.com/@types/node-forge/-/node-forge-0.8.6.tgz#5d13614e865ccf31f44856d0dda2cb0a288032aa"
+  integrity sha512-m2G+ipvx+1+BU4LrwrHcEGDk1MnioEVxTnCrkFsKT+BdDl/8OD3WbtspPFj3osnix9fzDIfy2O9p/AFyH3fTzg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/node@*":
   version "11.13.2"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-11.13.2.tgz#dc85dde46aa8740bb4aed54b8104250f8f849503"
