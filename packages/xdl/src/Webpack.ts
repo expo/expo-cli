@@ -1,28 +1,28 @@
 import * as ConfigUtils from '@expo/config';
-import fs from 'fs-extra';
-import path from 'path';
 import chalk from 'chalk';
+import express from 'express';
+import fs from 'fs-extra';
+import getenv from 'getenv';
+import http from 'http';
+import path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import express from 'express';
-import http from 'http';
 
-import getenv from 'getenv';
 import createWebpackCompiler, {
   printInstructions,
   printSuccessMessages,
 } from './createWebpackCompiler';
-import ip from './ip';
+import ip from './ip'; 
+// @ts-ignore
+import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
-// @ts-ignore missing types for Doctor until it gets converted to TypeScript
-import * as Doctor from './project/Doctor';
 import XDLError from './XDLError';
-import { User as ExpUser } from './User';
 
+// @ts-ignore missing types for Doctor until it gets converted to TypeScript
 export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
 export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';
@@ -184,12 +184,11 @@ export async function startAsync(
       // Create a webpack compiler that is configured with custom messages.
       const compiler = createWebpackCompiler({
         projectRoot,
-        nonInteractive,
-        webpackFactory: webpack,
         appName,
         config,
         urls,
-        useYarn,
+        nonInteractive,
+        webpackFactory: webpack,
         onFinished: () => resolve(server),
       });
       const server = new WebpackDevServer(compiler, config.devServer);

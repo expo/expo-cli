@@ -103,7 +103,6 @@ export default function createWebpackCompiler({
   config,
   urls,
   nonInteractive,
-  useYarn,
   webpackFactory,
   onFinished,
 }: {
@@ -112,7 +111,6 @@ export default function createWebpackCompiler({
   config: webpack.Configuration;
   urls: Urls;
   nonInteractive?: boolean;
-  useYarn: boolean;
   webpackFactory: (options?: webpack.Configuration) => webpack.Compiler;
   onFinished: () => void;
 }) {
@@ -211,6 +209,11 @@ export function printSuccessMessages({
   logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
 
   if (!nonInteractive || isFirstCompile) {
-    printInstructions(projectRoot, appName, urls, isFirstCompile);
+    printInstructions(projectRoot, {
+      appName,
+      urls,
+      showInDevtools: isFirstCompile,
+      showHelp: false,
+    });
   }
 }
