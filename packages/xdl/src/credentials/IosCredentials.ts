@@ -1,30 +1,28 @@
-/* @flow */
-
 import Api from '../Api';
-import * as IosCodeSigning from '../detach/IosCodeSigning';
+import { findP12CertSerialNumber } from '../detach/PKCS12Utils';
 
 export type Credentials = {
-  appleId?: string,
-  password?: string,
-  teamId?: string,
-  certP12?: string,
-  certPassword?: string,
-  pushP12?: string,
-  pushPassword?: string,
-  provisioningProfile?: string,
-  enterpriseAccount?: string,
+  appleId?: string;
+  password?: string;
+  teamId?: string;
+  certP12?: string;
+  certPassword?: string;
+  pushP12?: string;
+  pushPassword?: string;
+  provisioningProfile?: string;
+  enterpriseAccount?: string;
   // These are ids on the spaceship object (implementation detail), Spaceship::Portal::Certificate
-  certId?: string,
-  pushId?: string,
-  provisioningProfileId?: string,
+  certId?: string;
+  pushId?: string;
+  provisioningProfileId?: string;
 };
 
 export type CredObject = {
-  name: string,
+  name: string;
   value: {
-    userCredentialsId?: string,
-    serialNumber?: string,
-  },
+    userCredentialsId?: string;
+    serialNumber?: string;
+  };
 };
 
 export type CredsList = Array<CredObject>;
@@ -33,16 +31,16 @@ export async function getExistingDistCerts(
   username: string,
   appleTeamId: string,
   options: { provideFullCertificate?: boolean } = {}
-): Promise<?CredsList> {
+): Promise<CredsList> {
   const distCerts = await getExistingUserCredentials(username, appleTeamId, 'dist-cert');
   return formatDistCerts(distCerts, options);
 }
 
-export function formatDistCerts(distCerts, options) {
-  return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }) => {
+export function formatDistCerts(distCerts: any, options: { provideFullCertificate?: boolean }) {
+  return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }: any) => {
     let serialNumber;
     try {
-      serialNumber = IosCodeSigning.findP12CertSerialNumber(certP12, certPassword);
+      serialNumber = findP12CertSerialNumber(certP12, certPassword);
     } catch (error) {
       serialNumber = '------';
     }
@@ -56,9 +54,9 @@ export function formatDistCerts(distCerts, options) {
     return {
       value: {
         distCertSerialNumber: serialNumber,
-        ...(options.provideFullCertificate
+        ...options.provideFullCertificate
           ? { certP12, certId, certPassword }
-          : { userCredentialsId: String(userCredentialsId) }),
+          : { userCredentialsId: String(userCredentialsId) },
       },
       name,
     };
@@ -69,22 +67,22 @@ export async function getExistingPushKeys(
   username: string,
   appleTeamId: string,
   options: { provideFullPushKey?: boolean } = {}
-): Promise<?CredsList> {
+): Promise<CredsList> {
   const pushKeys = await getExistingUserCredentials(username, appleTeamId, 'push-key');
   return formatPushKeys(pushKeys, options);
 }
 
-export function formatPushKeys(pushKeys, options) {
-  return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId, apnsKeyP8 }) => {
+export function formatPushKeys(pushKeys: any, options: { provideFullPushKey?: boolean }) {
+  return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId, apnsKeyP8 }: any) => {
     let name = `Key ID: ${apnsKeyId}`;
     if (usedByApps) {
       name = `Used in apps: ${usedByApps.join(', ')} (${name})`;
     }
     return {
       value: {
-        ...(options.provideFullPushKey
+        ...options.provideFullPushKey
           ? { apnsKeyId, apnsKeyP8 }
-          : { userCredentialsId: String(userCredentialsId) }),
+          : { userCredentialsId: String(userCredentialsId) },
       },
       name,
       short: apnsKeyId,
@@ -96,7 +94,7 @@ async function getExistingUserCredentials(
   username: string,
   appleTeamId: string,
   type: string
-): Promise<?CredsList> {
+): Promise<CredsList> {
   const { err, certs } = await Api.callMethodAsync('getExistingUserCredentials', [], 'post', {
     username,
     appleTeamId,
@@ -106,7 +104,7 @@ async function getExistingUserCredentials(
   if (err) {
     throw new Error('Error getting existing distribution certificates.');
   } else {
-    return certs.map(({ usedByApps, userCredentialsId, ...rest }) => ({
+    return certs.map(({ usedByApps, userCredentialsId, ...rest }: any) => ({
       usedByApps: usedByApps && usedByApps.split(';'),
       userCredentialsId: String(userCredentialsId),
       ...rest,
