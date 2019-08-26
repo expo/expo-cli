@@ -975,13 +975,15 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     }
 
     // Google Mobile Ads App ID
-    // Delete existing Google Mobile Ads App ID.
-    await deleteLinesInFileAsync(
-      `BEGIN GOOGLE MOBILE ADS CONFIG`,
-      `END GOOGLE MOBILE ADS CONFIG`,
-      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
-    );
+    // The app crashes if the app ID isn't provided, so if the user
+    // doesn't provide the ID, we leave the sample one.
     if (googleMobileAdsAppId) {
+      // Delete existing Google Mobile Ads App ID.
+      await deleteLinesInFileAsync(
+        `BEGIN GOOGLE MOBILE ADS CONFIG`,
+        `END GOOGLE MOBILE ADS CONFIG`,
+        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+      );
       // Put user's Google Mobile Ads App ID if provided.
       await regexFileAsync(
         '<!-- ADD GOOGLE MOBILE ADS CONFIG HERE -->',

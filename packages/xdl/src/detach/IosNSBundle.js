@@ -322,8 +322,6 @@ async function _configureInfoPlistAsync(context) {
     // add or remove google mobile ads app id
     if (privateConfig && privateConfig.googleMobileAdsAppId) {
       infoPlist.GADApplicationIdentifier = privateConfig.googleMobileAdsAppId;
-    } else {
-      delete infoPlist['GADApplicationIdentifier'];
     }
 
     // use version from manifest
