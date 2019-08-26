@@ -1,4 +1,3 @@
-/* @flow */
 import { Cacher } from '../../tools/FsCache';
 
 jest.mock('analytics-node');
@@ -8,7 +7,7 @@ const path = require('path');
 
 describe('Cacher', () => {
   it('works without a bootstrap file', async () => {
-    const dateCacher: Cacher<Date> = new Cacher(
+    const dateCacher = new Cacher(
       async () => {
         return new Date();
       },

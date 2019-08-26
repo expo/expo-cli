@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import fs from 'fs-extra';
 import path from 'path';
 import HashIds from 'hashids';
@@ -12,7 +8,7 @@ import { UserManagerInstance } from '../User';
 import UserSettings from '../UserSettings';
 import FormData from '../tools/FormData';
 
-const _makeShortId = (salt: string, minLength: number = 10): string => {
+const _makeShortId = (salt, minLength = 10) => {
   const hashIds = new HashIds(salt, minLength);
   return hashIds.encode(Date.now());
 };
