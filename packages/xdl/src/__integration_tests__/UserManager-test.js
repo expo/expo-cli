@@ -94,7 +94,6 @@ describe('UserManager', () => {
 
     // Spy on getProfileAsync
     const _getProfileSpy = jest.fn(UserManager._getProfileAsync);
-    // $FlowFixMe
     UserManager._getProfileAsync = _getProfileSpy;
 
     await UserManager.getCurrentUserAsync();
@@ -113,7 +112,6 @@ describe('UserManager', () => {
 
     // Spy on getProfileAsync
     const _getProfileSpy = jest.fn(UserManager._getProfileAsync);
-    // $FlowFixMe
     UserManager._getProfileAsync = _getProfileSpy;
 
     const users = await Promise.all([
