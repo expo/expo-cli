@@ -371,6 +371,14 @@ async function _configureInfoPlistAsync(context) {
     // Cast to make sure that it is a boolean.
     infoPlist.UIRequiresFullScreen = Boolean(infoPlist.UIRequiresFullScreen);
 
+    // Put `ios.userInterfaceStyle` into `UIUserInterfaceStyle` property of Info.plist
+    const userInterfaceStyle = config.ios && config.ios.userInterfaceStyle;
+    if (userInterfaceStyle) {
+      // To convert our config value to the InfoPlist value, we can just capitalize it.
+      infoPlist.UIUserInterfaceStyle =
+        userInterfaceStyle.charAt(0).toUpperCase() + userInterfaceStyle.substr(1);
+    }
+
     // context-specific plist changes
     if (context.type === 'user') {
       infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
