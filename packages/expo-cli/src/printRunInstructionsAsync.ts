@@ -12,7 +12,7 @@ export default async function printRunInstructionsAsync(): Promise<void> {
     log(`${chalk.underline('Android devices')}: scan the above QR code.`);
     log(
       `${chalk.underline('iOS devices')}: run ${chalk.bold(
-        'exp send -s <your-email-address>'
+        'expo send -s <your-email-address>'
       )} in this project directory in another terminal window to send the URL to your device.`
     );
 
@@ -27,8 +27,8 @@ export default async function printRunInstructionsAsync(): Promise<void> {
   log.newLine();
   log(chalk.bold('Instructions to open this project on a simulator'));
   log(
-    `If you already have the simulator installed, run ${chalk.bold('exp ios')} or ${chalk.bold(
-      'exp android'
+    `If you already have the simulator installed, run ${chalk.bold('expo ios')} or ${chalk.bold(
+      'expo android'
     )} in this project directory in another terminal window.`
   );
   log.newLine();

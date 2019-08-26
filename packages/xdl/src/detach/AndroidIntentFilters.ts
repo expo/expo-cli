@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-export default function renderIntentFilters(intentFilters) {
+export default function renderIntentFilters(intentFilters: any) {
   // returns an array of <intent-filter> tags:
   // [
   //   `<intent-filter>
@@ -14,7 +14,7 @@ export default function renderIntentFilters(intentFilters) {
   //   </intent-filter>`,
   //   ...
   // ]
-  return intentFilters.map(intentFilter => {
+  return intentFilters.map((intentFilter: any) => {
     const autoVerify = intentFilter.autoVerify ? ' android:autoVerify="true"' : '';
 
     return `<intent-filter${autoVerify}>
@@ -25,19 +25,19 @@ export default function renderIntentFilters(intentFilters) {
   });
 }
 
-function renderIntentFilterDatumEntries(datum) {
+function renderIntentFilterDatumEntries(datum: any) {
   return _.toPairs(datum)
     .map(entry => `android:${entry[0]}="${entry[1]}"`)
     .join(' ');
 }
 
-function renderIntentFilterData(data) {
+function renderIntentFilterData(data: any) {
   return (Array.isArray(data) ? data : [data])
     .map(datum => `<data ${renderIntentFilterDatumEntries(datum)}/>`)
     .join('\n');
 }
 
-function renderIntentFilterCategory(category) {
+function renderIntentFilterCategory(category: any) {
   return (Array.isArray(category) ? category : [category])
     .map(cat => `<category android:name="android.intent.category.${cat}"/>`)
     .join('\n');

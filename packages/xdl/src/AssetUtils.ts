@@ -13,18 +13,18 @@ import logger from './Logger';
 /*
  * Calculate SHA256 Checksum value of a file based on its contents
  */
-export const calculateHash = (filePath: string) => {
+export function calculateHash(filePath: string): string {
   const contents = fs.readFileSync(filePath);
   return crypto
     .createHash('sha256')
     .update(contents)
     .digest('hex');
-};
+}
 
 /*
  * Compress an inputted jpg or png
  */
-export const optimizeImageAsync = async (inputPath: string, quality: number) => {
+export async function optimizeImageAsync(inputPath: string, quality: number): Promise<string> {
   logger.global.info(`Optimizing ${inputPath}`);
   const outputPath = temporary.directory();
   await sharpAsync({
@@ -33,14 +33,24 @@ export const optimizeImageAsync = async (inputPath: string, quality: number) => 
     quality,
   });
   return path.join(outputPath, path.basename(inputPath));
+}
+
+export type OptimizationOptions = {
+  quality: number;
+  include?: string;
+  exclude?: string;
+  save?: boolean;
 };
 
-type Options = { quality: number; include: string; exclude: string };
+export type AssetOptimizationState = { [hash: string]: boolean };
 
 /*
  * Returns a boolean indicating whether or not there are assets to optimize
  */
-export const hasUnoptimizedAssetsAsync = async (projectDir: string, options: Options) => {
+export async function hasUnoptimizedAssetsAsync(
+  projectDir: string,
+  options: OptimizationOptions
+): Promise<boolean> {
   if (!fs.existsSync(path.join(projectDir, '.expo-shared/assets.json'))) {
     return true;
   }
@@ -55,13 +65,16 @@ export const hasUnoptimizedAssetsAsync = async (projectDir: string, options: Opt
   }
 
   return false;
-};
+}
 
 /*
  * Find all project assets under assetBundlePatterns in app.json excluding node_modules.
  * If --include of --exclude flags were passed in those results are filtered out.
  */
-export const getAssetFilesAsync = async (projectDir: string, options: Options) => {
+export async function getAssetFilesAsync(
+  projectDir: string,
+  options: OptimizationOptions
+): Promise<{ allFiles: string[]; selectedFiles: string[] }> {
   const { exp } = await readConfigJsonAsync(projectDir);
   const { assetBundlePatterns } = exp;
   const globOptions = {
@@ -89,28 +102,30 @@ export const getAssetFilesAsync = async (projectDir: string, options: Options) =
     allFiles: filterImages(allFiles, projectDir),
     selectedFiles: filterImages(filtered, projectDir),
   };
-};
+}
 
 /*
  * Formats an array of files to include the project directory and filters out PNGs and JPGs.
  */
-const filterImages = (files: string[], projectDir: string) => {
+function filterImages(files: string[], projectDir: string) {
   const regex = /\.(png|jpg|jpeg)$/;
   const withDirectory = files.map(file => `${projectDir}/${file}`.replace('//', '/'));
   const allImages = withDirectory.filter(file => regex.test(file.toLowerCase()));
   return allImages;
-};
+}
 
 /*
  * Read the contents of assets.json under .expo-shared folder. Create the file/directory if they don't exist.
  */
-export const readAssetJsonAsync = async (projectDir: string) => {
+export async function readAssetJsonAsync(
+  projectDir: string
+): Promise<{ assetJson: JsonFile<AssetOptimizationState>; assetInfo: AssetOptimizationState }> {
   const dirPath = path.join(projectDir, '.expo-shared');
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath);
   }
 
-  const assetJson = new JsonFile(path.join(dirPath, 'assets.json'));
+  const assetJson = new JsonFile<AssetOptimizationState>(path.join(dirPath, 'assets.json'));
   if (!fs.existsSync(assetJson.file)) {
     const message =
       `Creating ${chalk.italic('.expo-shared/assets.json')} in the project's root directory.\n` +
@@ -123,12 +138,12 @@ export const readAssetJsonAsync = async (projectDir: string) => {
   }
   const assetInfo = await assetJson.readAsync();
   return { assetJson, assetInfo };
-};
+}
 
 /*
  * Add .orig extension to a filename in a path string
  */
-export const createNewFilename = (imagePath: string) => {
+export function createNewFilename(imagePath: string): string {
   const { dir, name, ext } = path.parse(imagePath);
   return path.join(dir, name + '.orig' + ext);
-};
+}

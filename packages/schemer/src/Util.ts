@@ -1,11 +1,11 @@
-/**
- * @flow
- **/
+import fill from 'lodash/fill';
+import flatten from 'lodash/flatten';
+import get from 'lodash/get';
+import zip from 'lodash/zip';
 
-import _ from 'lodash';
 export const fieldPathToSchemaPath = (fieldPath: string) => {
-  let newPath = _.zip(_.fill(fieldPath.split('.'), 'properties'), fieldPath.split('.'));
-  return _.flatten(((newPath: any): Array<Array<string>>)).join('.');
+  let newPath = zip(fill(fieldPath.split('.'), 'properties'), fieldPath.split('.'));
+  return flatten(newPath).join('.');
 };
 // Assumption: used only for jsonPointer returned from traverse
 export const schemaPointerToFieldPath = (jsonPointer: string) => {
@@ -17,5 +17,5 @@ export const schemaPointerToFieldPath = (jsonPointer: string) => {
 };
 
 export const fieldPathToSchema = (schema: Object, fieldPath: string) => {
-  return _.get(schema, fieldPathToSchemaPath(fieldPath));
+  return get(schema, fieldPathToSchemaPath(fieldPath));
 };

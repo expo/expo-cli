@@ -1,10 +1,3 @@
-// Copyright 2015-present 650 Industries. All rights reserved.
-/**
- * @flow
- */
-
-'use strict';
-
 import fs from 'fs-extra';
 import path from 'path';
 import replaceString from 'replace-string';
@@ -32,8 +25,6 @@ const {
 
 const imageKeys = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
 
-type BuildMode = 'debug' | 'release';
-
 // Do not call this from anything used by detach
 function exponentDirectory(workingDir) {
   if (workingDir) {
@@ -53,7 +44,7 @@ function xmlWeirdAndroidEscape(original) {
   return replaceString(noApos, "'", "\\'");
 }
 
-exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(args: any) {
+exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(args) {
   let { url, sdkVersion, releaseChannel, workingDir } = args;
 
   releaseChannel = releaseChannel ? releaseChannel : 'default';
@@ -226,8 +217,8 @@ function shouldShowLoadingView(manifest, sdkVersion) {
 export async function copyInitialShellAppFilesAsync(
   androidSrcPath,
   shellPath,
-  isDetached: boolean,
-  sdkVersion: ?string
+  isDetached,
+  sdkVersion
 ) {
   if (androidSrcPath && !isDetached) {
     // check if Android template files exist
@@ -283,7 +274,7 @@ export async function copyInitialShellAppFilesAsync(
   }
 }
 
-exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(args: any) {
+exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(args) {
   let {
     url,
     sdkVersion,
@@ -367,7 +358,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   }
 };
 
-function shellPathForContext(context: StandaloneContext) {
+function shellPathForContext(context) {
   if (context.type === 'user') {
     return path.join(context.data.projectPath, 'android');
   } else {
@@ -380,15 +371,11 @@ function shellPathForContext(context: StandaloneContext) {
   }
 }
 
-export async function runShellAppModificationsAsync(
-  context: StandaloneContext,
-  sdkVersion: ?string,
-  buildMode: ?BuildMode
-) {
+export async function runShellAppModificationsAsync(context, sdkVersion, buildMode) {
   const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
 
   let shellPath = shellPathForContext(context);
-  let url: string = context.published.url;
+  let url = context.published.url;
   let manifest = context.config; // manifest or app.json
   let releaseChannel = context.published.releaseChannel;
 
@@ -416,7 +403,7 @@ export async function runShellAppModificationsAsync(
 
   let name = manifest.name;
   let scheme = manifest.scheme || (manifest.detach && manifest.detach.scheme);
-  let bundleUrl: ?string = manifest.bundleUrl;
+  let bundleUrl = manifest.bundleUrl;
   let isFullManifest = !!bundleUrl;
   let version = manifest.version ? manifest.version : '0.0.0';
   let backgroundImages = backgroundImagesForApp(shellPath, manifest, isRunningInUserContext);
@@ -1059,12 +1046,7 @@ export async function runShellAppModificationsAsync(
   );
 }
 
-async function buildShellAppAsync(
-  context: StandaloneContext,
-  sdkVersion: string,
-  buildType: string,
-  buildMode: BuildMode
-) {
+async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
   let shellPath = shellPathForContext(context);
   const ext = buildType === 'app-bundle' ? 'aab' : 'apk';
 
@@ -1215,7 +1197,7 @@ async function buildShellAppAsync(
   }
 }
 
-export function addDetachedConfigToExp(exp: Object, context: StandaloneContext): Object {
+export function addDetachedConfigToExp(exp, context) {
   if (context.type !== 'user') {
     console.warn(`Tried to modify exp for a non-user StandaloneContext, ignoring`);
     return exp;
@@ -1293,7 +1275,7 @@ const removeInvalidSdkLinesWhenPreparingShell = async (majorSdkVersion, filePath
   );
 };
 
-async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string) {
+async function removeObsoleteSdks(shellPath, requiredSdkVersion) {
   const filePathsToTransform = {
     // Remove obsolete `expoview-abiXX_X_X` dependencies
     appBuildGradle: path.join(shellPath, 'app/build.gradle'),
@@ -1334,10 +1316,7 @@ async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string)
   );
 }
 
-async function prepareEnabledModules(
-  shellPath: string,
-  modules?: Array<{ name: string, version: string, dirname: string }>
-) {
+async function prepareEnabledModules(shellPath, modules) {
   const enabledModulesDir = path.join(shellPath, 'enabled-modules');
   const packagesDir = path.join(shellPath, '..', 'packages');
   await fs.remove(enabledModulesDir);

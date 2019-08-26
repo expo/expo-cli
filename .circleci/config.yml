@@ -138,5 +138,5 @@ jobs:
           at: '~'
       - run:
           name: Install test project dependencies
-          command: cd tests/basic && yarn && cd ../..
+          command: cd tests/basic && yarn && cd ../nextjs && yarn && cd ../..
       - run: yarn test:e2e
