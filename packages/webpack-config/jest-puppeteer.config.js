@@ -27,7 +27,9 @@ const config = {
     url: 'http://localhost:5000',
     launch,
     server: {
-      command: `node jest/build-project.js tests/basic/ && serve tests/basic/web-build`,
+      command: process.env.EXPO_E2E_SKIP_BUILD
+        ? `serve tests/basic/web-build`
+        : `node jest/build-project.js tests/basic/ && serve tests/basic/web-build`,
       // The default serve-cli port
       port: 5000,
       launchTimeout: 30000,

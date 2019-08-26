@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <title>%WEB_TITLE%</title>
+    <link rel="shortcut icon" href="%WEB_PUBLIC_URL%favicon.ico" />
     <!-- TODO: Bacon: build a reliable system for testing these style changes -->
     <style>
       /**
@@ -57,7 +58,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/service-worker.js');
+          navigator.serviceWorker.register('%WEB_PUBLIC_URL%service-worker.js');
         });
       }
     </script>

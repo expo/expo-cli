@@ -6,7 +6,7 @@ const getPathsAsync = require('./utils/getPathsAsync');
 const host = process.env.HOST || '0.0.0.0';
 
 module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) {
-  const { https = false, config: { web: { build: { publicPath = '/' } = {} } = {} } = {} } = env;
+  const { https = false } = env;
   const locations = await getPathsAsync(env);
   // https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpackDevServer.config.js
   const CRA = {
@@ -23,9 +23,9 @@ module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) 
     // project directory is dangerous because we may expose sensitive files.
     // Instead, we establish a convention that only files in `public` directory
     // get served. Our build script will copy `public` into the `build` folder.
-    // In `index.html`, you can get URL of `public` folder with %PUBLIC_URL%:
-    // <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
-    // In JavaScript code, you can access it with `process.env.PUBLIC_URL`.
+    // In `index.html`, you can get URL of `public` folder with %WEB_PUBLIC_URL%:
+    // <link rel="shortcut icon" href="%WEB_PUBLIC_URL%/favicon.ico">
+    // In JavaScript code, you can access it with `process.env.WEB_PUBLIC_URL`.
     // Note that we only recommend to use `public` folder as an escape hatch
     // for files like `favicon.ico`, `manifest.json`, and libraries that are
     // for some reason broken when imported through Webpack. If you just want to
@@ -41,7 +41,7 @@ module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) 
     hot: true,
     // It is important to tell WebpackDevServer to use the same "root" path
     // as we specified in the config. In development, we always serve from /.
-    publicPath,
+    publicPath: '/',
     // WebpackDevServer is noisy by default so we emit custom message instead
     // by listening to the compiler events with `compiler.hooks[...].tap` calls above.
     quiet: true,

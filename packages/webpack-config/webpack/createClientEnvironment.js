@@ -1,7 +1,7 @@
 /**
  * This creates environment variables that won't be tree shaken.
  */
-module.exports = function createClientEnvironment(mode, publicPath, nativeAppManifest) {
+module.exports = function createClientEnvironment(mode, publicUrl, nativeAppManifest) {
   const environment = mode || 'development';
   const __DEV__ = environment !== 'production';
 
@@ -23,11 +23,11 @@ module.exports = function createClientEnvironment(mode, publicPath, nativeAppMan
 
         /**
          * Useful for resolving the correct path to static assets in `public`.
-         * For example, <img src={process.env.PUBLIC_URL + '/img/logo.png'} />.
+         * For example, <img src={process.env.WEB_PUBLIC_URL + '/img/logo.png'} />.
          * This should only be used as an escape hatch. Normally you would put
          * images into the root folder and `import` them in code to get their paths.
          */
-        PUBLIC_URL: JSON.stringify(publicPath),
+        WEB_PUBLIC_URL: JSON.stringify(publicUrl),
 
         /**
          * Surfaces the `app.json` (config) as an environment variable which is then parsed by

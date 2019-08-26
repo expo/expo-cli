@@ -97,11 +97,6 @@ const imageLoaderConfiguration = {
   },
 };
 
-const styleLoaderConfiguration = {
-  test: /\.(css)$/,
-  use: [require.resolve('style-loader'), require.resolve('css-loader')],
-};
-
 // "file" loader makes sure those assets get served by WebpackDevServer.
 // When you `import` an asset, you get its (virtual) filename.
 // In production, they would get copied to the `build` folder.
@@ -160,11 +155,21 @@ module.exports = async function(env = {}, argv) {
   const locations = await getPathsAsync(env);
   const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
+  // Webpack uses `publicPath` to determine where the app is being served from.
+  // It requires a trailing slash, or the file assets will get an incorrect path.
+  // In development, we always serve from the root. This makes config easier.
+  const publicPath = isProd ? locations.servedPath : '/';
+
+  // `publicUrl` is just like `publicPath`, but we will provide it to our app
+  // as %WEB_PUBLIC_URL% in `index.html` and `process.env.WEB_PUBLIC_URL` in JavaScript.
+  // Omit trailing slash as %WEB_PUBLIC_URL%/xyz looks better than %WEB_PUBLIC_URL%xyz.
+  const publicUrl = isProd ? publicPath.slice(0, -1) : '';
+
   const middlewarePlugins = [];
 
   const { build: buildConfig } = config.web;
   const { lang } = config.web;
-  const { publicPath, rootId, babel: babelAppConfig = {} } = config.web.build;
+  const { rootId, babel: babelAppConfig = {} } = config.web.build;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
@@ -190,7 +195,7 @@ module.exports = async function(env = {}, argv) {
           /^\bapple.*\.png$/,
         ],
         /// SINGLE PAGE:
-        // navigateFallback: `${publicPath}index.html`,
+        navigateFallback: `${publicUrl}/index.html`,
         clientsClaim: true,
         importWorkboxFrom: 'cdn',
         navigateFallbackBlacklist: [
@@ -274,8 +279,10 @@ module.exports = async function(env = {}, argv) {
     imageLoaderConfiguration,
     babelLoader,
     createFontLoader({ locations }),
-
-    styleLoaderConfiguration,
+    {
+      test: /\.(css)$/,
+      use: [require.resolve('style-loader'), require.resolve('css-loader')],
+    },
     // This needs to be the last loader
     fallbackLoaderConfiguration,
   ].filter(Boolean);
@@ -313,7 +320,7 @@ module.exports = async function(env = {}, argv) {
     appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
   }
 
-  const environmentVariables = createClientEnvironment(mode, publicPath, publicAppManifest);
+  const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest);
 
   return {
     mode,
@@ -330,7 +337,8 @@ module.exports = async function(env = {}, argv) {
       // Build folder (default `web-build`)
       path: locations.production.folder,
       sourceMapFilename: '[chunkhash].map',
-      // This is the URL that app is served from. We use "/" in development.
+      // We inferred the "public path" (such as / or /my-project) from homepage.
+      // We use "/" in development.
       publicPath,
     },
     plugins: [
@@ -365,7 +373,7 @@ module.exports = async function(env = {}, argv) {
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
-        PUBLIC_URL: publicPath,
+        WEB_PUBLIC_URL: publicPath,
         WEB_TITLE: config.web.name,
         NO_SCRIPT: noJSComponent,
         LANG_ISO_CODE: lang,
