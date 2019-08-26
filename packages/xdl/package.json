@@ -115,6 +115,7 @@
     "@types/joi": "^14.3.3",
     "@types/minipass": "^2.2.0",
     "@types/ncp": "^2.0.1",
+    "@types/node-forge": "^0.8.6",
     "@types/npm-package-arg": "^6.1.0",
     "@types/plist": "^3.0.2",
     "@types/raven": "^2.5.3",
