@@ -2368,8 +2368,9 @@ export async function startAsync(
 
   let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   if (options.webOnly) {
-    await Webpack.startAsync(projectRoot, options);
+    await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
+    return exp;
   } else {
     await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
@@ -2388,12 +2389,11 @@ export async function startAsync(
 
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
+  await Webpack.stopAsync(projectRoot);
+  ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Closing Expo server');
   await stopExpoServerAsync(projectRoot);
+  ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
   await stopReactNativeServerAsync(projectRoot);
-  const hasWebSupport = await Doctor.hasWebSupportAsync(projectRoot);
-  if (hasWebSupport) {
-    await Webpack.stopAsync(projectRoot);
-  }
   if (!Config.offline) {
     try {
       await stopTunnelsAsync(projectRoot);
@@ -2401,6 +2401,11 @@ async function _stopInternalAsync(projectRoot: string): Promise<void> {
       ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
     }
   }
+}
+
+export async function stopWebOnlyAsync(projectDir: string): Promise<void> {
+  await Webpack.stopAsync(projectDir);
+  await DevSession.stopSession();
 }
 
 export async function stopAsync(projectDir: string): Promise<void> {

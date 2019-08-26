@@ -1,7 +1,10 @@
 import chalk from 'chalk';
 import { Project } from '@expo/xdl';
 
-export function installExitHooks(projectDir: string): void {
+export function installExitHooks(
+  projectDir: string,
+  onStop: (projectDir: string) => Promise<void> = Project.stopAsync
+): void {
   // install ctrl+c handler that writes non-running state to directory
   if (process.platform === 'win32') {
     require('readline')
@@ -14,11 +17,14 @@ export function installExitHooks(projectDir: string): void {
       });
   }
 
-  process.on('SIGINT', () => {
-    console.log(chalk.blue('\nStopping packager...'));
-    Project.stopAsync(projectDir).then(() => {
-      console.log(chalk.green('Packager stopped.'));
-      process.exit();
+  const killSignals: ['SIGINT', 'SIGTERM'] = ['SIGINT', 'SIGTERM'];
+  for (const signal of killSignals) {
+    process.on(signal, () => {
+      console.log(chalk.blue('\nStopping packager...'));
+      onStop(projectDir).then(() => {
+        console.log(chalk.green('Packager stopped.'));
+        process.exit();
+      });
     });
-  });
+  }
 }
