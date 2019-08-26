@@ -319,6 +319,13 @@ async function _configureInfoPlistAsync(context) {
       infoPlist.GMSApiKey = privateConfig.googleMapsApiKey;
     }
 
+    // add or remove google mobile ads app id
+    if (privateConfig && privateConfig.googleMobileAdsAppId) {
+      infoPlist.GADApplicationIdentifier = privateConfig.googleMobileAdsAppId;
+    } else {
+      delete infoPlist['GADApplicationIdentifier'];
+    }
+
     // use version from manifest
     let version = config.version ? config.version : '0.0.0';
     let buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
