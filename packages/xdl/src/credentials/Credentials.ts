@@ -1,42 +1,40 @@
-/* @flow */
-
 import Api from '../Api';
 import * as Ios from './IosCredentials';
 
 export type Credentials = Ios.Credentials; // can't import android types from typescript
 
 export type CredentialMetadata = {
-  username: string,
-  experienceName: string,
-  bundleIdentifier?: string,
-  platform: string,
+  username: string;
+  experienceName: string;
+  bundleIdentifier?: string;
+  platform: string;
 };
 
 export { Ios };
 
 export async function credentialsExistForPlatformAsync(
   metadata: CredentialMetadata
-): Promise<?Credentials> {
-  const creds = await fetchCredentials(metadata, false);
-  return !!(creds: any); // !! performed on awaited creds
+): Promise<boolean> {
+  const credentials = await fetchCredentials(metadata, false);
+  return !!credentials;
 }
 
 export async function getEncryptedCredentialsForPlatformAsync(
   metadata: CredentialMetadata
-): Promise<?Credentials> {
+): Promise<Credentials | null> {
   return fetchCredentials(metadata, false);
 }
 
 export async function getCredentialsForPlatform(
   metadata: CredentialMetadata
-): Promise<?Credentials> {
+): Promise<Credentials | null> {
   return fetchCredentials(metadata, true);
 }
 
 async function fetchCredentials(
   { username, experienceName, bundleIdentifier, platform }: CredentialMetadata,
   decrypt: boolean
-): Promise<?Credentials> {
+): Promise<Credentials | null> {
   // this doesn't hit our mac rpc channel, so it needs significantly less debugging
   const { err, credentials } = await Api.callMethodAsync('getCredentials', [], 'post', {
     username,
