@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
+    "@babel/preset-flow": "^7.0.0",
     "@expo/babel-preset-cli": "^0.2.0",
     "@types/ansi-regex": "^4.0.0",
     "@types/dateformat": "^3.0.0",
