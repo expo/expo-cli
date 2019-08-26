@@ -10,7 +10,10 @@ import express from 'express';
 import http from 'http';
 
 import getenv from 'getenv';
-import createWebpackCompiler, { printInstructions, printSuccessMessages } from './createWebpackCompiler';
+import createWebpackCompiler, {
+  printInstructions,
+  printSuccessMessages,
+} from './createWebpackCompiler';
 import ip from './ip';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
@@ -28,6 +31,14 @@ export type DevServer = WebpackDevServer | http.Server;
 
 let webpackDevServerInstance: DevServer | null = null;
 let webpackServerPort: number | null = null;
+
+interface WebpackSettings {
+  url: string;
+  server: DevServer;
+  port: number;
+  protocol: 'http' | 'https';
+  host?: string;
+}
 
 type CLIWebOptions = {
   dev?: boolean;
@@ -86,14 +97,6 @@ export function printConnectionInstructions(projectRoot: string, options = {}) {
   });
 }
 
-interface WebpackSettings {
-  url: string;
-  server: DevServer;
-  port: number;
-  protocol: 'http' | 'https';
-  host?: string;
-}
-
 export async function startAsync(
   projectRoot: string,
   options: CLIWebOptions = {},
@@ -132,7 +135,9 @@ export async function startAsync(
   ProjectUtils.logInfo(
     projectRoot,
     WEBPACK_LOG_TAG,
-    withTag(`Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`)
+    withTag(
+      `Starting ${serverName} on port ${webpackServerPort} in ${chalk.underline(env.mode)} mode.`
+    )
   );
 
   const protocol = env.https ? 'https' : 'http';
@@ -235,70 +240,68 @@ export async function openAsync(projectRoot: string, options?: BundlingOptions):
   await Web.openProjectAsync(projectRoot);
 }
 
-export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
-  const usingNextJs = await getProjectUseNextJsAsync(projectRoot);
+export async function compileWebAppAsync(
+  projectRoot: string,
+  compiler: webpack.Compiler
+): Promise<any> {
+  // We generate the stats.json file in the webpack-config
+  const { warnings } = await new Promise((resolve, reject) =>
+    compiler.run((error, stats) => {
+      let messages;
+      if (error) {
+        if (!error.message) {
+          return reject(error);
+        }
+        messages = formatWebpackMessages({
+          errors: [error.message],
+          warnings: [],
+          _showErrors: true,
+          _showWarnings: true,
+        });
+      } else {
+        messages = formatWebpackMessages(
+          stats.toJson({ all: false, warnings: true, errors: true })
+        );
+      }
 
-  const { config } = await createWebpackConfigAsync(projectRoot, {
-    ...options,
-    unimodulesOnly: usingNextJs,
-  });
+      if (messages.errors.length) {
+        // Only keep the first error. Others are often indicative
+        // of the same problem, but confuse the reader with noise.
+        if (messages.errors.length > 1) {
+          messages.errors.length = 1;
+        }
+        return reject(new Error(messages.errors.join('\n\n')));
+      }
+      if (
+        process.env.CI &&
+        (typeof process.env.CI !== 'string' || process.env.CI.toLowerCase() !== 'false') &&
+        messages.warnings.length
+      ) {
+        ProjectUtils.logWarning(
+          projectRoot,
+          WEBPACK_LOG_TAG,
+          withTag(
+            chalk.yellow(
+              '\nTreating warnings as errors because process.env.CI = true.\n' +
+                'Most CI servers set it automatically.\n'
+            )
+          )
+        );
+        return reject(new Error(messages.warnings.join('\n\n')));
+      }
+      resolve({
+        warnings: messages.warnings,
+      });
+    })
+  );
+  return { warnings };
+}
 
-  if (usingNextJs) {
-    await bundleNextJsAsync({ projectRoot, expoWebpackConfig: config });
-  } else {
-    const compiler = webpack(config);
+export async function bundleWebAppAsync(projectRoot: string, config: Web.WebpackConfiguration) {
+  const compiler = webpack(config);
 
-    try {
-      // We generate the stats.json file in the webpack-config
-      const { stats, warnings } = await new Promise((resolve, reject) =>
-        compiler.run((error, stats) => {
-          let messages;
-          if (error) {
-            if (!error.message) {
-              return reject(error);
-            }
-            messages = formatWebpackMessages({
-              errors: [error.message],
-              warnings: [],
-              _showErrors: true,
-              _showWarnings: true,
-            });
-          } else {
-            messages = formatWebpackMessages(
-              stats.toJson({ all: false, warnings: true, errors: true })
-            );
-          }
-
-          if (messages.errors.length) {
-            // Only keep the first error. Others are often indicative
-            // of the same problem, but confuse the reader with noise.
-            if (messages.errors.length > 1) {
-              messages.errors.length = 1;
-            }
-            return reject(new Error(messages.errors.join('\n\n')));
-          }
-          if (
-            process.env.CI &&
-            (typeof process.env.CI !== 'string' || process.env.CI.toLowerCase() !== 'false') &&
-            messages.warnings.length
-          ) {
-            ProjectUtils.logWarning(
-              projectRoot,
-              WEBPACK_LOG_TAG,
-              withTag(
-                chalk.yellow(
-                  '\nTreating warnings as errors because process.env.CI = true.\n' +
-                    'Most CI servers set it automatically.\n'
-                )
-              )
-            );
-            return reject(new Error(messages.warnings.join('\n\n')));
-          }
-          resolve({
-            stats,
-            warnings: messages.warnings,
-          });
-        }));
+  try {
+    const { warnings } = await compileWebAppAsync(projectRoot, compiler);
     if (warnings.length) {
       ProjectUtils.logWarning(
         projectRoot,
@@ -316,6 +319,21 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
   } catch (error) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, withTag(chalk.red('Failed to compile.\n')));
     throw error;
+  }
+}
+
+export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
+  const isUsingNextJs = await getProjectUseNextJsAsync(projectRoot);
+
+  const { config } = await createWebpackConfigAsync(projectRoot, {
+    ...options,
+    unimodulesOnly: isUsingNextJs,
+  });
+
+  if (isUsingNextJs) {
+    await bundleNextJsAsync({ projectRoot, expoWebpackConfig: config });
+  } else {
+    await bundleWebAppAsync(projectRoot, config);
   }
 }
 
