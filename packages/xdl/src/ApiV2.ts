@@ -38,7 +38,7 @@ type RequestOptions = {
   body?: JSONObject;
 };
 
-type QueryParameters = { [key: string]: string | number | boolean | null };
+type QueryParameters = { [key: string]: string | number | boolean | null | undefined };
 
 type APIV2ClientOptions = {
   sessionSecret?: string;
