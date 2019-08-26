@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import os from 'os';
 import Segment from 'analytics-node';
 import ip from './ip';
