@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import _ from 'lodash';
 import semver from 'semver';
 import fs from 'fs-extra';
@@ -12,7 +8,7 @@ import * as ConfigUtils from '@expo/config';
 
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import Schemer, { SchemerError } from '@expo/schemer';
+import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 
 import * as ExpSchema from './ExpSchema';
 import * as ProjectUtils from './ProjectUtils';
@@ -34,11 +30,11 @@ const CORRECT_NPM_VERSION = 'latest';
 const WARN_NPM_VERSION_RANGES = ['>= 5.0.0 < 5.7.0'];
 const BAD_NPM_VERSION_RANGES = ['>= 5.0.0 <= 5.0.3'];
 
-function _isNpmVersionWithinRanges(npmVersion, ranges) {
+function _isNpmVersionWithinRanges(npmVersion: string, ranges: string[]) {
   return _.some(ranges, range => semver.satisfies(npmVersion, range));
 }
 
-async function _checkNpmVersionAsync(projectRoot) {
+async function _checkNpmVersionAsync(projectRoot: string) {
   try {
     try {
       let yarnVersionResponse = await spawnAsync('yarnpkg', ['--version']);
@@ -84,7 +80,7 @@ async function _checkNpmVersionAsync(projectRoot) {
   return NO_ISSUES;
 }
 
-async function _checkWatchmanVersionAsync(projectRoot) {
+async function _checkWatchmanVersionAsync(projectRoot: string) {
   // There's no point in checking any of this stuff if watchman isn't supported on this platform
   if (!Watchman.isPlatformSupported()) {
     ProjectUtils.clearNotification(projectRoot, 'doctor-watchman-version');
@@ -116,7 +112,7 @@ async function _checkWatchmanVersionAsync(projectRoot) {
 export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
-): Promise<{ schemaErrorMessage: ?string, assetsErrorMessage: ?string }> {
+): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
@@ -129,7 +125,7 @@ export async function validateWithSchema(
   configName: string,
   sdkVersion: string,
   validateAssets: boolean
-): Promise<{ schemaErrorMessage: ?string, assetsErrorMessage: ?string }> {
+): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
   let schemaErrorMessage;
   let assetsErrorMessage;
   let validator = new Schemer(schema, { rootDir: projectRoot });
@@ -139,9 +135,9 @@ export async function validateWithSchema(
     await validator.validateSchemaAsync(exp);
   } catch (e) {
     if (e instanceof SchemerError) {
-      schemaErrorMessage = `Error: Problem${
-        e.errors.length > 1 ? 's' : ''
-      } validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
+      schemaErrorMessage = `Error: Problem${e.errors.length > 1
+        ? 's'
+        : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
@@ -151,9 +147,9 @@ export async function validateWithSchema(
       await validator.validateAssetsAsync(exp);
     } catch (e) {
       if (e instanceof SchemerError) {
-        assetsErrorMessage = `Error: Problem${
-          e.errors.length > 1 ? '' : 's'
-        } validating asset fields in ${configName}. See ${Config.helpUrl}`;
+        assetsErrorMessage = `Error: Problem${e.errors.length > 1
+          ? ''
+          : 's'} validating asset fields in ${configName}. See ${Config.helpUrl}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -161,13 +157,18 @@ export async function validateWithSchema(
   return { schemaErrorMessage, assetsErrorMessage };
 }
 
-function formatValidationError(validationError) {
-  return `\n • ${validationError.fieldPath ? 'Field: ' + validationError.fieldPath + ' - ' : ''}${
-    validationError.message
-  }.`;
+function formatValidationError(validationError: ValidationError) {
+  return `\n • ${validationError.fieldPath
+    ? 'Field: ' + validationError.fieldPath + ' - '
+    : ''}${validationError.message}.`;
 }
 
-async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promise<number> {
+async function _validateExpJsonAsync(
+  exp: ConfigUtils.ExpoConfig,
+  pkg: ConfigUtils.PackageJSONConfig,
+  projectRoot: string,
+  allowNetwork: boolean
+): Promise<number> {
   if (!exp || !pkg) {
     // readConfigJsonAsync already logged an error
     return FATAL;
@@ -203,7 +204,10 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
   const configName = await ConfigUtils.configFilenameAsync(projectRoot);
 
   // Skip validation if the correct token is set in env
-  if (!(sdkVersion === 'UNVERSIONED' && process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN)) {
+  if (
+    sdkVersion &&
+    !(sdkVersion === 'UNVERSIONED' && process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN)
+  ) {
     try {
       let schema = await ExpSchema.getSchemaAsync(sdkVersion);
       let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
@@ -266,7 +270,7 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-versions-endpoint-failed');
 
-  if (!sdkVersions[sdkVersion]) {
+  if (!sdkVersion || !sdkVersions[sdkVersion]) {
     ProjectUtils.logError(
       projectRoot,
       'expo',
@@ -295,11 +299,11 @@ async function _validateExpJsonAsync(exp, pkg, projectRoot, allowNetwork): Promi
 }
 
 async function _validateReactNativeVersionAsync(
-  exp,
-  pkg,
-  projectRoot,
-  sdkVersions,
-  sdkVersion
+  exp: ConfigUtils.ExpoConfig,
+  pkg: ConfigUtils.PackageJSONConfig,
+  projectRoot: string,
+  sdkVersions: Versions.SDKVersions,
+  sdkVersion: string
 ): Promise<number> {
   if (Config.validation.reactNativeVersionWarnings) {
     let reactNative = pkg.dependencies ? pkg.dependencies['react-native'] : null;
@@ -351,9 +355,9 @@ async function _validateReactNativeVersionAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${
-            sdkVersionObject['expoReactNativeTag']
-          }`,
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject[
+            'expoReactNativeTag'
+          ]}`,
           'doctor-invalid-version-of-react-native'
         );
         return WARNING;
@@ -375,8 +379,8 @@ async function _validateReactNativeVersionAsync(
   return NO_ISSUES;
 }
 
-async function _validateNodeModulesAsync(projectRoot): Promise<number> {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
+  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
@@ -434,10 +438,10 @@ export async function validateWithNetworkAsync(projectRoot: string): Promise<num
   return validateAsync(projectRoot, true);
 }
 
-export async function hasWebSupportAsync(projectRoot, exp) {
+export async function hasWebSupportAsync(projectRoot: string, exp?: ConfigUtils.ExpoConfig) {
   let inputExp = exp;
-  if (!exp) {
-    inputExp = (await ProjectUtils.readConfigJsonAsync(projectRoot)).exp;
+  if (!inputExp) {
+    inputExp = (await ConfigUtils.readConfigJsonAsync(projectRoot)).exp;
   }
   const { platforms } = inputExp;
   if (!Array.isArray(platforms)) {
@@ -460,7 +464,7 @@ function getWebSetupLogs(): string {
   )} ${appJsonRules}`;
 }
 
-export async function validateWebSupportAsync(projectRoot) {
+export async function validateWebSupportAsync(projectRoot: string): Promise<void> {
   const isInteractive = process.stdout.isTTY;
 
   await validateWebPlatformAddedAsync(projectRoot, isInteractive);
@@ -471,7 +475,7 @@ export async function validateWebSupportAsync(projectRoot) {
 export async function validateWebPlatformAddedAsync(
   projectRoot: string,
   isInteractive: boolean = true
-): Promise<void> {
+): Promise<boolean> {
   const hasWebSupport = await hasWebSupportAsync(projectRoot);
   if (hasWebSupport) {
     return true;
@@ -485,13 +489,12 @@ export async function validateWebPlatformAddedAsync(
 }
 
 async function promptAsync(message: string): Promise<boolean> {
-  const question = {
+  const { should } = await inquirer.prompt({
     type: 'confirm',
     name: 'should',
     message,
     default: true,
-  };
-  const { should } = await inquirer.prompt(question);
+  });
   return should;
 }
 
@@ -510,7 +513,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
     return NO_ISSUES;
   }
 
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   let status = await _checkNpmVersionAsync(projectRoot);
   if (status === FATAL) {
@@ -541,7 +544,7 @@ export const EXPO_SDK_NOT_INSTALLED = 1;
 export const EXPO_SDK_NOT_IMPORTED = 2;
 
 export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
-  let { pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   try {
     let sdkPkg;
