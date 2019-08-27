@@ -203,11 +203,43 @@ async function _validateExpJsonAsync(
   let sdkVersion = exp.sdkVersion;
   const configName = await ConfigUtils.configFilenameAsync(projectRoot);
 
+  // Warn if sdkVersion is UNVERSIONED
+  if (sdkVersion === 'UNVERSIONED' && !process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: Using unversioned Expo SDK. Do not publish until you set sdkVersion in ${configName}`,
+      'doctor-unversioned'
+    );
+    return ERROR;
+  }
+  ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
+
+  let sdkVersions = await Versions.sdkVersionsAsync();
+  if (!sdkVersions) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: Couldn't connect to SDK versions server`,
+      'doctor-versions-endpoint-failed'
+    );
+    return ERROR;
+  }
+  ProjectUtils.clearNotification(projectRoot, 'doctor-versions-endpoint-failed');
+
+  if (!sdkVersion || !sdkVersions[sdkVersion]) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`,
+      'doctor-invalid-sdk-version'
+    );
+    return ERROR;
+  }
+  ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-sdk-version');
+
   // Skip validation if the correct token is set in env
-  if (
-    sdkVersion &&
-    !(sdkVersion === 'UNVERSIONED' && process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN)
-  ) {
+  if (sdkVersion !== 'UNVERSIONED') {
     try {
       let schema = await ExpSchema.getSchemaAsync(sdkVersion);
       let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
@@ -245,41 +277,6 @@ async function _validateExpJsonAsync(
       );
     }
   }
-
-  // Warn if sdkVersion is UNVERSIONED
-  if (sdkVersion === 'UNVERSIONED' && !process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: Using unversioned Expo SDK. Do not publish until you set sdkVersion in ${configName}`,
-      'doctor-unversioned'
-    );
-    return ERROR;
-  }
-  ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-
-  let sdkVersions = await Versions.sdkVersionsAsync();
-  if (!sdkVersions) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: Couldn't connect to SDK versions server`,
-      'doctor-versions-endpoint-failed'
-    );
-    return ERROR;
-  }
-  ProjectUtils.clearNotification(projectRoot, 'doctor-versions-endpoint-failed');
-
-  if (!sdkVersion || !sdkVersions[sdkVersion]) {
-    ProjectUtils.logError(
-      projectRoot,
-      'expo',
-      `Error: Invalid sdkVersion. Valid options are ${_.keys(sdkVersions).join(', ')}`,
-      'doctor-invalid-sdk-version'
-    );
-    return ERROR;
-  }
-  ProjectUtils.clearNotification(projectRoot, 'doctor-invalid-sdk-version');
 
   const reactNativeIssue = await _validateReactNativeVersionAsync(
     exp,
