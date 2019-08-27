@@ -21,20 +21,20 @@ export async function credentialsExistForPlatformAsync(
 
 export async function getEncryptedCredentialsForPlatformAsync(
   metadata: CredentialMetadata
-): Promise<Credentials | null> {
+): Promise<Credentials | undefined> {
   return fetchCredentials(metadata, false);
 }
 
 export async function getCredentialsForPlatform(
   metadata: CredentialMetadata
-): Promise<Credentials | null> {
+): Promise<Credentials | undefined> {
   return fetchCredentials(metadata, true);
 }
 
 async function fetchCredentials(
   { username, experienceName, bundleIdentifier, platform }: CredentialMetadata,
   decrypt: boolean
-): Promise<Credentials | null> {
+): Promise<Credentials | undefined> {
   // this doesn't hit our mac rpc channel, so it needs significantly less debugging
   const { err, credentials } = await Api.callMethodAsync('getCredentials', [], 'post', {
     username,
