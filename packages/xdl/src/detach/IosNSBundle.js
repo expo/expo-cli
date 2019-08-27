@@ -375,8 +375,7 @@ async function _configureInfoPlistAsync(context) {
     const userInterfaceStyle = config.ios && config.ios.userInterfaceStyle;
     if (userInterfaceStyle) {
       // To convert our config value to the InfoPlist value, we can just capitalize it.
-      infoPlist.UIUserInterfaceStyle =
-        userInterfaceStyle.charAt(0).toUpperCase() + userInterfaceStyle.substr(1);
+      infoPlist.UIUserInterfaceStyle = _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
     }
 
     // context-specific plist changes
@@ -554,6 +553,21 @@ async function configureAsync(context) {
       _cleanPropertyListBackupsAsync(context, supportingDirectory),
       fs.remove(intermediatesDirectory),
     ]);
+  }
+}
+
+async function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle) {
+  switch (userInterfaceStyle) {
+    case 'light':
+      return 'Light';
+    case 'dark':
+      return 'Dark';
+    case 'automatic':
+      return 'Automatic';
+    default:
+      logger.warn(
+        `User interface style "${userInterfaceStyle}" is not supported. Supported values: "light", "dark", "automatic".`
+      );
   }
 }
 
