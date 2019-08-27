@@ -371,6 +371,13 @@ async function _configureInfoPlistAsync(context) {
     // Cast to make sure that it is a boolean.
     infoPlist.UIRequiresFullScreen = Boolean(infoPlist.UIRequiresFullScreen);
 
+    // Put `ios.userInterfaceStyle` into `UIUserInterfaceStyle` property of Info.plist
+    const userInterfaceStyle = config.ios && config.ios.userInterfaceStyle;
+    if (userInterfaceStyle) {
+      // To convert our config value to the InfoPlist value, we can just capitalize it.
+      infoPlist.UIUserInterfaceStyle = _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
+    }
+
     // context-specific plist changes
     if (context.type === 'user') {
       infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
@@ -546,6 +553,21 @@ async function configureAsync(context) {
       _cleanPropertyListBackupsAsync(context, supportingDirectory),
       fs.remove(intermediatesDirectory),
     ]);
+  }
+}
+
+async function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle) {
+  switch (userInterfaceStyle) {
+    case 'light':
+      return 'Light';
+    case 'dark':
+      return 'Dark';
+    case 'automatic':
+      return 'Automatic';
+    default:
+      logger.warn(
+        `User interface style "${userInterfaceStyle}" is not supported. Supported values: "light", "dark", "automatic".`
+      );
   }
 }
 
