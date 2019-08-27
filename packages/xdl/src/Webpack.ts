@@ -558,7 +558,6 @@ function _createNextJsConfig({
   }
   const includeFunc = expoBabelLoader.include as ((path: string) => boolean);
 
-  // TODO: IT DOES NOT WORK WHEN THERE'S NO `withTM`
   return {
     // https://github.com/zeit/next.js#configuring-extensions-looked-for-when-resolving-pages-in-pages
     // Remove the `.` before each file extension
