@@ -505,9 +505,10 @@ async function startNextJsAsync({
   dev: boolean;
   expoWebpackConfig: Web.WebpackConfiguration;
 }): Promise<DevServer> {
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+
   let next;
   try {
-    const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
     next = require(ConfigUtils.resolveModule('next', projectRoot, exp));
   } catch {
     throw new XDLError(
@@ -530,6 +531,7 @@ async function startNextJsAsync({
     conf: _createNextJsConfig({
       projectRoot,
       expoWebpackConfig,
+      exp,
     }),
   });
   const handle = app.getRequestHandler();
@@ -555,9 +557,10 @@ async function bundleNextJsAsync({
   projectRoot: string;
   expoWebpackConfig: Web.WebpackConfiguration;
 }) {
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+
   let nextBuild;
   try {
-    const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
     nextBuild = require(ConfigUtils.resolveModule('next/dist/build', projectRoot, exp)).default;
   } catch {
     throw new XDLError(
@@ -567,20 +570,55 @@ async function bundleNextJsAsync({
   }
 
   await _copyCustomNextJsTemplatesAsync(projectRoot);
-  await nextBuild(projectRoot, _createNextJsConfig({ projectRoot, expoWebpackConfig }));
+  await nextBuild(
+    projectRoot,
+    _createNextJsConfig({
+      projectRoot,
+      expoWebpackConfig,
+      exp,
+    })
+  );
 }
 
 function _createNextJsConfig({
   projectRoot,
   expoWebpackConfig,
+  exp,
 }: {
   projectRoot: string;
   expoWebpackConfig: Web.WebpackConfiguration;
+  exp: ConfigUtils.ExpoConfig;
 }): { [key: string]: any } {
+  let nextLoadConfig, nextConstant;
+  try {
+    nextLoadConfig = require(ConfigUtils.resolveModule(
+      'next-server/dist/server/config',
+      projectRoot,
+      exp
+    )).default;
+    nextConstant = require(ConfigUtils.resolveModule('next-server/constants', projectRoot, exp));
+  } catch {
+    throw new XDLError(
+      'NEXTJS_NOT_INSTALLED',
+      'Next.js (or its server component) is not installed in your app. See https://docs.expo.io/versions/latest/guides/using-nextjs/'
+    );
+  }
+
   let userNextJsConfig: any = {};
   const userNextConfigJsPath = path.join(projectRoot, 'next.config.js');
   if (fs.existsSync(userNextConfigJsPath)) {
     userNextJsConfig = require(userNextConfigJsPath);
+
+    // Reference:
+    // https://github.com/zeit/next.js/blob/9efed17503f302bfbdca5795d4443a89d48f93fa/packages/next-server/server/config.ts#L86-L97
+    if (typeof userNextJsConfig === 'function') {
+      const isDev = expoWebpackConfig.mode === 'development';
+      const phase = isDev
+        ? nextConstant.PHASE_DEVELOPMENT_SERVER
+        : nextConstant.PHASE_PRODUCTION_BUILD;
+      const defaultConfig = nextLoadConfig(phase, '', {});
+      userNextJsConfig = userNextJsConfig(phase, { defaultConfig });
+    }
   }
 
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
