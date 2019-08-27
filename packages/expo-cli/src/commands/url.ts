@@ -1,6 +1,6 @@
+import { Command } from 'commander';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
-
 import { Project, UrlUtils } from '@expo/xdl';
 
 import CommandError from '../CommandError';
@@ -8,7 +8,18 @@ import log from '../log';
 import urlOpts from '../urlOpts';
 import printRunInstructionsAsync from '../printRunInstructionsAsync';
 
-const logArtifactUrl = platform => async (projectDir, options) => {
+type ProjectUrlOptions = Command & {
+  web?: boolean;
+};
+
+type ArtifactUrlOptions = {
+  publicUrl?: string;
+};
+
+const logArtifactUrl = (platform: 'ios' | 'android') => async (
+  projectDir: string,
+  options: ArtifactUrlOptions
+) => {
   if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
@@ -20,9 +31,9 @@ const logArtifactUrl = platform => async (projectDir, options) => {
   const url = fp.compose(
     fp.get(['artifacts', 'url']),
     fp.head,
-    fp.filter(job => platform && job.platform === platform),
+    fp.filter((job: any) => platform && job.platform === platform),
     fp.getOr([], 'jobs')
-  )(res);
+  )(res as any);
   if (url) {
     log.nested(url);
   } else {
@@ -32,21 +43,29 @@ const logArtifactUrl = platform => async (projectDir, options) => {
   }
 };
 
-async function action(projectDir, options) {
+async function getWebAppUrlAsync(projectDir: string): Promise<string> {
+  const webAppUrl = await UrlUtils.constructWebAppUrlAsync(projectDir);
+  if (!webAppUrl) {
+    throw new CommandError(
+      'NOT_RUNNING',
+      `Expo web server is not running. Please start it with \`expo start:web\`.`
+    );
+  }
+  return webAppUrl;
+}
+
+async function action(projectDir: string, options: ProjectUrlOptions) {
   await urlOpts.optsAsync(projectDir, options);
 
   if ((await Project.currentStatus(projectDir)) !== 'running') {
     throw new CommandError(
       'NOT_RUNNING',
-      `Project is not running. Please start it with \`${options.parent.name} start\`.`
+      `Project is not running. Please start it with \`expo start\`.`
     );
   }
-  let url;
-  if (options.web) {
-    url = await UrlUtils.constructWebAppUrlAsync(projectDir);
-  } else {
-    url = await UrlUtils.constructManifestUrlAsync(projectDir);
-  }
+  const url = options.web
+    ? await getWebAppUrlAsync(projectDir)
+    : await UrlUtils.constructManifestUrlAsync(projectDir);
 
   log.newLine();
   urlOpts.printQRCode(url);
@@ -60,7 +79,7 @@ async function action(projectDir, options) {
   }
 }
 
-export default program => {
+export default (program: Command) => {
   program
     .command('url [project-dir]')
     .alias('u')
