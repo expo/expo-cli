@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import spawnAsync from '@expo/spawn-async';
-import ConfigUtils from '@expo/config';
+import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
 // @ts-ignore enquirer has no exported member 'MultiSelect'
 import { MultiSelect } from 'enquirer';
