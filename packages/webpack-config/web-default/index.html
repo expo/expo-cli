@@ -8,8 +8,8 @@
     <!-- TODO: Bacon: build a reliable system for testing these style changes -->
     <style>
       /**
-       * Building on the RNWeb reset: 
-       * https://github.com/necolas/react-native-web/blob/master/packages/react-native-web/src/exports/StyleSheet/initialRules.js 
+       * Building on the RNWeb reset:
+       * https://github.com/necolas/react-native-web/blob/master/packages/react-native-web/src/exports/StyleSheet/initialRules.js
        */
       html,
       body,
@@ -58,7 +58,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('%WEB_PUBLIC_URL%service-worker.js');
+          navigator.serviceWorker.register('%WEB_PUBLIC_URL%expo-service-worker.js');
         });
       }
     </script>
