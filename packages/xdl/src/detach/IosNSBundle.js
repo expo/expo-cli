@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import fs from 'fs-extra';
 import path from 'path';
 import get from 'lodash/get';
@@ -27,7 +23,7 @@ import logger from './Logger';
 const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
 const KERNEL_URL = 'https://expo.io/@exponent/home';
 
-function _configureInfoPlistForLocalDevelopment(config: any, exp: any) {
+function _configureInfoPlistForLocalDevelopment(config, exp) {
   // add detached scheme
   if (exp.isDetached && exp.detach.scheme) {
     if (!config.CFBundleURLTypes) {
@@ -49,7 +45,7 @@ function _configureInfoPlistForLocalDevelopment(config: any, exp: any) {
 /**
  *  Prints warnings or info about the configured environment for local development.
  */
-function _logDeveloperInfoForLocalDevelopment(infoPlist: any) {
+function _logDeveloperInfoForLocalDevelopment(infoPlist) {
   // warn about *UsageDescription changes
   let usageKeysConfigured = [];
   for (let key in infoPlist) {
@@ -68,7 +64,7 @@ function _logDeveloperInfoForLocalDevelopment(infoPlist: any) {
   }
 }
 
-async function _cleanPropertyListBackupsAsync(context: StandaloneContext, backupPath: string) {
+async function _cleanPropertyListBackupsAsync(context, backupPath) {
   if (get(context, 'build.ios.buildType') !== 'client') {
     await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
   }
@@ -84,10 +80,10 @@ async function _cleanPropertyListBackupsAsync(context: StandaloneContext, backup
  * Write the manifest and JS bundle to the NSBundle.
  */
 async function _preloadManifestAndBundleAsync(
-  manifest: any,
-  supportingDirectory: string,
-  manifestFilename: string,
-  bundleFilename: string
+  manifest,
+  supportingDirectory,
+  manifestFilename,
+  bundleFilename
 ) {
   const bundleUrl = manifest.bundleUrl;
   await fs.writeFile(path.join(supportingDirectory, manifestFilename), JSON.stringify(manifest));
@@ -98,9 +94,9 @@ async function _preloadManifestAndBundleAsync(
  *  This method only makes sense when operating on a context with sdk version < 26.
  */
 async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
-  context: StandaloneContext,
-  manifestFilename: string,
-  bundleFilename: string
+  context,
+  manifestFilename,
+  bundleFilename
 ) {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   let sdkVersionSupported = await IosWorkspace.getNewestSdkVersionSupportedAsync(context);
@@ -124,7 +120,7 @@ async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
 /**
  * Configure a standalone entitlements file.
  */
-async function _configureEntitlementsAsync(context: StandaloneContext) {
+async function _configureEntitlementsAsync(context) {
   if (context.type === 'user') {
     // don't modify .entitlements, print info/instructions
     const exp = context.data.exp;
@@ -205,7 +201,7 @@ async function _configureEntitlementsAsync(context: StandaloneContext) {
  *  For standalone apps, this is copied into a separate context field context.data.privateConfig
  *  by the turtle builder. For a local project, this is available in app.json under ios.config.
  */
-function _getPrivateConfig(context: StandaloneContext): any {
+function _getPrivateConfig(context) {
   let privateConfig;
   if (context.type === 'service') {
     privateConfig = context.data.privateConfig;
@@ -218,14 +214,14 @@ function _getPrivateConfig(context: StandaloneContext): any {
   return privateConfig;
 }
 
-function _isAppleUsageDescriptionKey(key: string): boolean {
+function _isAppleUsageDescriptionKey(key) {
   return key.indexOf('UsageDescription') !== -1;
 }
 
 /**
  * Configure an iOS Info.plist for a standalone app.
  */
-async function _configureInfoPlistAsync(context: StandaloneContext) {
+async function _configureInfoPlistAsync(context) {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
   const privateConfig = _getPrivateConfig(context);
@@ -323,6 +319,11 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
       infoPlist.GMSApiKey = privateConfig.googleMapsApiKey;
     }
 
+    // add or remove google mobile ads app id
+    if (privateConfig && privateConfig.googleMobileAdsAppId) {
+      infoPlist.GADApplicationIdentifier = privateConfig.googleMobileAdsAppId;
+    }
+
     // use version from manifest
     let version = config.version ? config.version : '0.0.0';
     let buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
@@ -375,6 +376,13 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
     // Cast to make sure that it is a boolean.
     infoPlist.UIRequiresFullScreen = Boolean(infoPlist.UIRequiresFullScreen);
 
+    // Put `ios.userInterfaceStyle` into `UIUserInterfaceStyle` property of Info.plist
+    const userInterfaceStyle = config.ios && config.ios.userInterfaceStyle;
+    if (userInterfaceStyle) {
+      // To convert our config value to the InfoPlist value, we can just capitalize it.
+      infoPlist.UIUserInterfaceStyle = _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
+    }
+
     // context-specific plist changes
     if (context.type === 'user') {
       infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
@@ -393,7 +401,7 @@ async function _configureInfoPlistAsync(context: StandaloneContext) {
 /**
  *  Configure EXShell.plist for a standalone app.
  */
-async function _configureShellPlistAsync(context: StandaloneContext) {
+async function _configureShellPlistAsync(context) {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
@@ -435,7 +443,7 @@ async function _configureShellPlistAsync(context: StandaloneContext) {
   });
 }
 
-async function _configureConstantsPlistAsync(context: StandaloneContext) {
+async function _configureConstantsPlistAsync(context) {
   if (context.type === 'user') {
     return;
   }
@@ -450,7 +458,7 @@ async function _configureConstantsPlistAsync(context: StandaloneContext) {
   });
 }
 
-async function _configureGoogleServicesPlistAsync(context: StandaloneContext) {
+async function _configureGoogleServicesPlistAsync(context) {
   if (context.type === 'user') {
     return;
   }
@@ -464,7 +472,7 @@ async function _configureGoogleServicesPlistAsync(context: StandaloneContext) {
   }
 }
 
-async function configureAsync(context: StandaloneContext) {
+async function configureAsync(context) {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
   let {
@@ -517,8 +525,7 @@ async function configureAsync(context: StandaloneContext) {
         await AssetBundle.bundleAsync(
           context,
           context.data.manifest.bundledAssets,
-          supportingDirectory,
-          context.data.manifest.sdkVersion === '24.0.0'
+          supportingDirectory
         );
       } catch (e) {
         throw new Error(`Asset bundling failed: ${e}`);
@@ -551,6 +558,21 @@ async function configureAsync(context: StandaloneContext) {
       _cleanPropertyListBackupsAsync(context, supportingDirectory),
       fs.remove(intermediatesDirectory),
     ]);
+  }
+}
+
+async function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle) {
+  switch (userInterfaceStyle) {
+    case 'light':
+      return 'Light';
+    case 'dark':
+      return 'Dark';
+    case 'automatic':
+      return 'Automatic';
+    default:
+      logger.warn(
+        `User interface style "${userInterfaceStyle}" is not supported. Supported values: "light", "dark", "automatic".`
+      );
   }
 }
 

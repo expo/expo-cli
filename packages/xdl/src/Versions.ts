@@ -12,7 +12,7 @@ import { Cacher } from './tools/FsCache';
 import XDLError from './XDLError';
 import UserManager from './User';
 
-type SDKVersion = {
+export type SDKVersion = {
   androidExpoViewUrl?: string;
   expoReactNativeTag: string;
   /* deprecated */ exponentReactNativeTag?: string;
@@ -27,7 +27,7 @@ type SDKVersion = {
   releaseNoteUrl?: string;
 };
 
-type SDKVersions = { [version: string]: SDKVersion };
+export type SDKVersions = { [version: string]: SDKVersion };
 type TurtleSDKVersions = { android: string[]; ios: string[] };
 type TurtleSDKVersionsOld = { android: string; ios: string };
 

@@ -27,12 +27,36 @@ const config = {
     url: 'http://localhost:5000',
     launch,
     server: {
-      command: `node jest/build-project.js tests/basic/ && serve tests/basic/web-build`,
+      command: process.env.EXPO_E2E_SKIP_BUILD
+        ? `serve tests/basic/web-build`
+        : `node jest/build-project.js tests/basic/ && serve tests/basic/web-build`,
       // The default serve-cli port
       port: 5000,
       launchTimeout: 30000,
       debug: true,
     },
+  },
+  startNextJs: {
+    url: 'http://localhost:8000',
+    launch,
+    server: {
+      command: `../expo-cli/bin/expo.js start tests/nextjs/ --web-only --dev --non-interactive --no-https`,
+      port: 8000,
+      launchTimeout: 30000,
+      debug: true,
+    },
+    hasServerSideRendering: true,
+  },
+  buildNextJs: {
+    url: 'http://localhost:8000',
+    launch,
+    server: {
+      command: `../expo-cli/bin/expo.js start tests/nextjs/ --web-only --no-dev --non-interactive --no-https`,
+      port: 8000,
+      launchTimeout: 30000,
+      debug: true,
+    },
+    hasServerSideRendering: true,
   },
 }[process.env.EXPO_E2E_COMMAND];
 

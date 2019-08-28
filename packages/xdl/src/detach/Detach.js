@@ -1,10 +1,3 @@
-// Copyright 2015-present 650 Industries. All rights reserved.
-/**
- * @flow
- */
-
-'use strict';
-
 // Set EXPO_VIEW_DIR to universe/exponent to test locally
 
 import fs from 'fs-extra';
@@ -49,7 +42,7 @@ async function yesnoAsync(message) {
   return ok;
 }
 
-export async function detachAsync(projectRoot: string, options: any = {}) {
+export async function detachAsync(projectRoot, options = {}) {
   let originalLogger = logger.loggerObj;
   logger.configure({
     trace: options.verbose ? console.trace.bind(console) : () => {},
@@ -118,9 +111,9 @@ async function _detachAsync(projectRoot, options) {
     throw new Error(`${configName} is missing \`sdkVersion\``);
   }
 
-  if (!Versions.gteSdkVersion(exp, '24.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '25.0.0')) {
     throw new Error(
-      `The app must be updated to SDK 24.0.0 or newer to be compatible with this tool.`
+      `The app must be updated to SDK 25.0.0 or newer to be compatible with this tool.`
     );
   }
 
@@ -133,9 +126,7 @@ async function _detachAsync(projectRoot, options) {
   ) {
     if (process.env.EXPO_VIEW_DIR) {
       logger.warn(
-        `Detaching is not supported for SDK ${
-          exp.sdkVersion
-        }; ignoring this because you provided EXPO_VIEW_DIR`
+        `Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPO_VIEW_DIR`
       );
       sdkVersionConfig = {};
     } else {
@@ -248,9 +239,7 @@ async function _detachAsync(projectRoot, options) {
 
   if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
     packagesToInstall.push(
-      `react-native@https://github.com/expo/react-native/archive/${
-        sdkVersionConfig.expoReactNativeTag
-      }.tar.gz`
+      `react-native@https://github.com/expo/react-native/archive/${sdkVersionConfig.expoReactNativeTag}.tar.gz`
     );
   } else if (process.env.EXPO_VIEW_DIR) {
     // ignore, using test directory
@@ -289,7 +278,7 @@ async function _detachAsync(projectRoot, options) {
 /**
  *  Create a detached Expo iOS app pointing at the given project.
  */
-async function detachIOSAsync(context: StandaloneContext) {
+async function detachIOSAsync(context) {
   await IosWorkspace.createDetachedAsync(context);
 
   logger.info('Configuring iOS project...');
@@ -298,7 +287,7 @@ async function detachIOSAsync(context: StandaloneContext) {
   logger.info(`iOS detach is complete!`);
 }
 
-async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: string) {
+async function detachAndroidAsync(context, expoViewUrl) {
   if (context.type !== 'user') {
     throw new Error(`detachAndroidAsync only supports user standalone contexts`);
   }
@@ -338,7 +327,7 @@ async function detachAndroidAsync(context: StandaloneContext, expoViewUrl: strin
   logger.info('Android detach is complete!\n');
 }
 
-async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
+async function ensureBuildConstantsExistsIOSAsync(configFilePath) {
   // EXBuildConstants is included in newer ExpoKit projects.
   // create it if it doesn't exist.
   const doesBuildConstantsExist = fs.existsSync(
@@ -350,7 +339,7 @@ async function ensureBuildConstantsExistsIOSAsync(configFilePath: string) {
   }
 }
 
-async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory: string) {
+async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
   let expoKitVersion = '';
   const podfileLockPath = path.join(iosProjectDirectory, 'Podfile.lock');
   try {
@@ -366,7 +355,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory: string)
   return expoKitVersion;
 }
 
-async function prepareDetachedBuildIosAsync(projectDir: string, args: any) {
+async function prepareDetachedBuildIosAsync(projectDir, args) {
   const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
   if (exp) {
     return prepareDetachedUserContextIosAsync(projectDir, exp, args);
@@ -375,7 +364,7 @@ async function prepareDetachedBuildIosAsync(projectDir: string, args: any) {
   }
 }
 
-async function prepareDetachedServiceContextIosAsync(projectDir: string, args: any) {
+async function prepareDetachedServiceContextIosAsync(projectDir, args) {
   // service context
   // TODO: very brittle hack: the paths here are hard coded to match the single workspace
   // path generated inside IosShellApp. When we support more than one path, this needs to
@@ -426,7 +415,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir: string, args: a
   });
 }
 
-async function _readDefaultApiKeysAsync(jsonFilePath: string) {
+async function _readDefaultApiKeysAsync(jsonFilePath) {
   if (fs.existsSync(jsonFilePath)) {
     let keys = {};
     const allKeys = await new JsonFile(jsonFilePath).readAsync();
@@ -441,7 +430,7 @@ async function _readDefaultApiKeysAsync(jsonFilePath: string) {
   return null;
 }
 
-async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, args: any) {
+async function prepareDetachedUserContextIosAsync(projectDir, exp, args) {
   const context = StandaloneContext.createUserContext(projectDir, exp);
   let { iosProjectDirectory, supportingDirectory } = IosWorkspace.getPaths(context);
 
@@ -490,7 +479,7 @@ async function prepareDetachedUserContextIosAsync(projectDir: string, exp: any, 
   }
 }
 
-export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
+export async function prepareDetachedBuildAsync(projectDir, args) {
   if (args.platform === 'ios') {
     await prepareDetachedBuildIosAsync(projectDir, args);
   } else {
@@ -510,17 +499,13 @@ export async function prepareDetachedBuildAsync(projectDir: string, args: any) {
   }
 }
 
-type BundleAssetsArgs = {
-  platform: 'ios' | 'android',
-  // This is the path where assets will be copied to. It should be
-  // `$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH` on iOS
-  // (see `exponent-view-template.xcodeproj/project.pbxproj` for an example)
-  // and `$buildDir/intermediates/assets/$targetPath` on Android (see
-  // `android/app/expo.gradle` for an example).
-  dest: string,
-};
-
-export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsArgs) {
+// args.dest: string,
+// This is the path where assets will be copied to. It should be
+// `$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH` on iOS
+// (see `exponent-view-template.xcodeproj/project.pbxproj` for an example)
+// and `$buildDir/intermediates/assets/$targetPath` on Android (see
+// `android/app/expo.gradle` for an example).
+export async function bundleAssetsAsync(projectDir, args) {
   let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
   if (!exp) {
     // Don't run assets bundling for the service context.
@@ -530,9 +515,7 @@ export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsAr
     args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
   if (!publishManifestPath) {
     logger.warn(
-      `Skipped assets bundling because the '${
-        args.platform
-      }.publishManifestPath' key is not specified in the app manifest.`
+      `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
@@ -542,9 +525,7 @@ export async function bundleAssetsAsync(projectDir: string, args: BundleAssetsAr
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
   } catch (ex) {
     throw new Error(
-      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${
-        ex.message
-      }`
+      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
     );
   }
   await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);

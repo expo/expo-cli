@@ -88,9 +88,6 @@ function applyEnvironmentVariables(config: WebpackConfiguration): WebpackConfigu
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
     output.pathinfo = true;
-
-    // Prevent minimizing when running in debug mode.
-    optimization.minimize = false;
     // Instead of numeric ids, give modules readable names for better debugging.
     optimization.namedModules = true;
     // Instead of numeric ids, give chunks readable names for better debugging.

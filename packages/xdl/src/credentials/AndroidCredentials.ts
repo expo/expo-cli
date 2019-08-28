@@ -1,5 +1,3 @@
-/* @flow */
-
 import path from 'path';
 
 import fs from 'fs-extra';
@@ -18,23 +16,22 @@ const NEWLINE = process.platform === 'win32' ? '\r\n' : '\n';
 const javaExecutable = process.platform === 'win32' ? 'java.exe' : 'java';
 
 export type Keystore = {
-  keystore: string,
-  keystorePassword: string,
-  keyPassword: string,
-  keyAlias: string,
+  keystore: string;
+  keystorePassword: string;
+  keyPassword: string;
+  keyAlias: string;
 };
 
 type KeystoreInfo = {
-  keystorePath: string,
-  keystorePassword: string,
-  keyPassword: string,
-  keyAlias: string,
+  keystorePath: string;
+  keystorePassword: string;
+  keyPassword: string;
+  keyAlias: string;
 };
-
 
 export async function exportCertBinary(
   { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
-  certFile: string,
+  certFile: string
 ): Promise<SpawnResult> {
   try {
     return spawnAsync('keytool', [
@@ -63,7 +60,7 @@ export async function exportCertBinary(
 
 export async function exportCertBase64(
   { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
-  certFile: string,
+  certFile: string
 ): Promise<SpawnResult> {
   try {
     return spawnAsync('keytool', [
@@ -94,7 +91,7 @@ export async function exportCertBase64(
 export async function exportPrivateKey(
   { keystorePath, keystorePassword, keyAlias, keyPassword }: KeystoreInfo,
   encryptionKey: string,
-  outputPath: string,
+  outputPath: string
 ) {
   let nodePty;
   const ptyTmpDir = '/tmp/pty-tmp-install';
@@ -184,10 +181,7 @@ export async function exportPrivateKey(
   }
 }
 
-export async function logKeystoreHashes(
-  keystoreInfo: KeystoreInfo,
-  linePrefix: string = '',
-) {
+export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: string = '') {
   const { keystorePath, keystorePassword, keyAlias } = keystoreInfo;
   const certFile = `${keystorePath}.cer`;
   try {
@@ -207,7 +201,12 @@ export async function logKeystoreHashes(
       .createHash('sha1')
       .update(data)
       .digest('base64');
-    log.info(`${linePrefix}Google Certificate Fingerprint:     ${googleHash.replace(/(.{2}(?!$))/g, '$1:')}`);
+    log.info(
+      `${linePrefix}Google Certificate Fingerprint:     ${googleHash.replace(
+        /(.{2}(?!$))/g,
+        '$1:'
+      )}`
+    );
     log.info(`${linePrefix}Google Certificate Hash (SHA-1):    ${googleHash}`);
     log.info(`${linePrefix}Google Certificate Hash (SHA-256):  ${googleHash256}`);
     log.info(`${linePrefix}Facebook Key Hash:                  ${fbHash}`);
@@ -238,7 +237,7 @@ export async function logKeystoreHashes(
 export function logKeystoreCredentials(
   { keystorePassword, keyAlias, keyPassword }: Keystore,
   title: string = 'Keystore credentials',
-  linePrefix: string = '',
+  linePrefix: string = ''
 ) {
   log.info(`${linePrefix}${title}
 ${linePrefix}    Keystore password: ${chalk.bold(keystorePassword)}
@@ -249,7 +248,7 @@ ${linePrefix}    Key password:      ${chalk.bold(keyPassword)}
 
 export async function createKeystore(
   { keystorePath, keystorePassword, keyAlias, keyPassword }: KeystoreInfo,
-  androidPackage: string,
+  androidPackage: string
 ): Promise<SpawnResult> {
   try {
     return await spawnAsync('keytool', [
@@ -287,7 +286,7 @@ export async function createKeystore(
 export async function generateUploadKeystore(
   uploadKeystorePath: string,
   androidPackage: string,
-  experienceName: string,
+  experienceName: string
 ): Promise<KeystoreInfo> {
   const keystoreData = {
     keystorePassword: uuidv4().replace(/-/g, ''),

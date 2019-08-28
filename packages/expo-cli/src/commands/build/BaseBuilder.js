@@ -282,7 +282,7 @@ ${job.id}
         platform: this.platform(),
       });
       if (!release) {
-        throw new BuildError('No releases found. Please create one using `exp publish` first.');
+        throw new BuildError('No releases found. Please create one using `expo publish` first.');
       }
       log(
         `Using existing release on channel "${release.channel}":\n` +
@@ -395,7 +395,7 @@ ${job.id}
         : completedJob.artifacts.url;
       log(`${chalk.green('Successfully built standalone app:')} ${chalk.underline(artifactUrl)}`);
     } else {
-      log('Alternatively, run `exp build:status` to monitor it from the command line.');
+      log('Alternatively, run `expo build:status` to monitor it from the command line.');
     }
   }
 

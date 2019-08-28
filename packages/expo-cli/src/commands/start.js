@@ -21,61 +21,46 @@ import { installExitHooks } from '../exit';
 import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 
-async function parseStartOptionsAsync(projectDir: string, options: Object): Promise<Object> {
+function parseStartOptions(projectDir: string, options: Object): Object {
   let startOpts = {};
 
   if (options.clear) {
     startOpts.reset = true;
   }
 
-  if (options.parent && options.parent.nonInteractive) {
+  if (options.nonInteractive) {
     startOpts.nonInteractive = true;
+  }
+
+  if (options.webOnly) {
+    startOpts.webOnly = true;
   }
 
   if (options.maxWorkers) {
     startOpts.maxWorkers = options.maxWorkers;
   }
 
-  if (options.webOnly) {
-    startOpts.webOnly = options.webOnly;
-  } else {
-    startOpts.webOnly = await Web.onlySupportsWebAsync(projectDir);
-  }
   return startOpts;
 }
 
-async function action(projectDir, options) {
-  installExitHooks(projectDir);
+async function startWebAction(projectDir, options) {
+  const { exp, rootPath } = await configureProjectAsync(projectDir, options);
+  const startOpts = parseStartOptions(projectDir, options);
+  await Project.startAsync(rootPath, startOpts);
 
-  await urlOpts.optsAsync(projectDir, options);
+  await urlOpts.handleMobileOptsAsync(projectDir, options);
 
-  log(chalk.gray('Starting project at', projectDir));
-
-  let rootPath = path.resolve(projectDir);
-  let devToolsUrl = await DevToolsServer.startAsync(rootPath);
-  log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
-
-  const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectDir);
-  if (exp === null) {
-    log.warn('No Expo configuration found. Are you sure this is a project directory?');
-    process.exit(1);
+  if (!options.nonInteractive && !exp.isDetached) {
+    await TerminalUI.startAsync(projectDir, startOpts);
   }
+}
+
+async function action(projectDir, options) {
+  const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
 
   await validateDependenciesVersions(projectDir, exp, pkg);
 
-  const nonInteractive = options.parent && options.parent.nonInteractive;
-  if (!nonInteractive && !exp.isDetached) {
-    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
-      log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
-      openBrowser(devToolsUrl);
-    } else {
-      log(
-        `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
-      );
-    }
-  }
-
-  const startOpts = await parseStartOptionsAsync(projectDir, options);
+  const startOpts = parseStartOptions(projectDir, options);
 
   await Project.startAsync(rootPath, startOpts);
 
@@ -88,16 +73,15 @@ async function action(projectDir, options) {
 
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
-  if (!nonInteractive && !exp.isDetached) {
+  if (!startOpts.nonInteractive && !exp.isDetached) {
     await TerminalUI.startAsync(projectDir, startOpts);
-  } else if (!options.webOnly) {
+  } else {
     if (!exp.isDetached) {
       log.newLine();
       urlOpts.printQRCode(url);
     }
     log(`Your native app is running at ${chalk.underline(url)}`);
   }
-
   log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
 }
 
@@ -158,6 +142,71 @@ async function validateDependenciesVersions(projectDir, exp, pkg) {
   }
 }
 
+async function normalizeOptionsAsync(projectDir: string, options: Object): Object {
+  const nonInteractive = options.parent && options.parent.nonInteractive;
+
+  let webOnly: boolean = false;
+
+  if (typeof options.webOnly !== 'undefined') {
+    webOnly = options.webOnly;
+  } else {
+    webOnly = await Web.onlySupportsWebAsync(projectDir);
+  }
+
+  return {
+    ...options,
+    webOnly,
+    nonInteractive,
+  };
+}
+
+async function tryOpeningDevToolsAsync({ rootPath, exp, options }): Promise<void> {
+  const devToolsUrl = await DevToolsServer.startAsync(rootPath);
+  log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
+
+  if (!options.nonInteractive && !exp.isDetached) {
+    if (await UserSettings.getAsync('openDevToolsAtStartup', true)) {
+      log(`Opening DevTools in the browser... (press ${chalk.bold`shift-d`} to disable)`);
+      openBrowser(devToolsUrl);
+    } else {
+      log(
+        `Press ${chalk.bold`d`} to open DevTools now, or ${chalk.bold`shift-d`} to always open it automatically.`
+      );
+    }
+  }
+}
+
+async function configureProjectAsync(projectDir, options) {
+  if (options.webOnly) {
+    installExitHooks(projectDir, Project.stopWebOnlyAsync);
+  } else {
+    installExitHooks(projectDir);
+  }
+  await urlOpts.optsAsync(projectDir, options);
+
+  log(chalk.gray(`Starting project at ${projectDir}`));
+
+  const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  if (exp === null) {
+    log.warn(`No Expo configuration found. Are you sure this is a project directory?`);
+    process.exit(1);
+  }
+
+  const rootPath = path.resolve(projectDir);
+
+  await tryOpeningDevToolsAsync({
+    rootPath,
+    exp,
+    options,
+  });
+
+  return {
+    rootPath,
+    exp,
+    pkg,
+  };
+}
+
 export default (program: any) => {
   program
     .command('start [project-dir]')
@@ -165,10 +214,40 @@ export default (program: any) => {
     .description('Starts or restarts a local server for your app and gives you a URL to it')
     .option('-s, --send-to [dest]', 'An email address to send a link to')
     .option('-c, --clear', 'Clear the React Native packager cache')
-    .option('--web-only', 'Only start the webpack server')
+    .option(
+      '--web-only',
+      'Only start the Webpack dev server for web. [Deprecated]: use `expo start:web`'
+    )
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .urlOpts()
     .allowOffline()
-    .asyncActionProjectDir(action, true, true);
+    .asyncActionProjectDir(
+      async (projectDir, options) => {
+        const normalizedOptions = await normalizeOptionsAsync(projectDir, options);
+        if (normalizedOptions.webOnly) {
+          return await startWebAction(projectDir, normalizedOptions);
+        }
+        return await action(projectDir, normalizedOptions);
+      },
+      /* skipProjectValidation: */ true,
+      /* skipAuthCheck: */ true
+    );
+
+  program
+    .command('start:web [project-dir]')
+    .alias('web')
+    .description('Starts the Webpack dev server for web projects')
+    .urlOpts()
+    .allowOffline()
+    .asyncActionProjectDir(
+      async (projectDir, options) => {
+        return startWebAction(
+          projectDir,
+          await normalizeOptionsAsync(projectDir, { ...options, webOnly: true })
+        );
+      },
+      /* skipProjectValidation: */ true,
+      /* skipAuthCheck: */ true
+    );
 };

@@ -17,7 +17,8 @@ import UserSettings from './UserSettings';
 import * as UrlUtils from './UrlUtils';
 import * as Versions from './Versions';
 import { getImageDimensionsAsync } from './tools/ImageUtils';
-
+// @ts-ignore
+import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
@@ -256,6 +257,27 @@ export async function openProjectAsync(
     return { success: true, url: projectUrl };
   } catch (e) {
     Logger.global.error(`Couldn't start project on Android: ${e.message}`);
+    return { success: false, error: e };
+  }
+}
+
+export async function openWebProjectAsync(
+  projectRoot: string
+): Promise<{ success: true; url: string } | { success: false; error: string }> {
+  try {
+    await startAdbReverseAsync(projectRoot);
+
+    const projectUrl = await getWebpackUrlAsync(projectRoot);  
+    if (projectUrl === null) {
+      return { 
+        success: false, 
+        error: `The web project has not been started yet`
+      };
+    }
+    await openUrlAsync(projectUrl, true);
+    return { success: true, url: projectUrl };
+  } catch (e) {
+    Logger.global.error(`Couldn't open the web project on Android: ${e.message}`);
     return { success: false, error: e };
   }
 }
