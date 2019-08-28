@@ -917,6 +917,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     let fabric = privateConfig.fabric;
     let googleMaps = privateConfig.googleMaps;
     let googleSignIn = privateConfig.googleSignIn;
+    let googleMobileAdsAppId = privateConfig.googleMobileAdsAppId;
 
     // Branch
     if (branch) {
@@ -969,6 +970,26 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
         `<meta-data
       android:name="com.google.android.geo.API_KEY"
       android:value="${googleMaps.apiKey}"/>`,
+        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+      );
+    }
+
+    // Google Mobile Ads App ID
+    // The app crashes if the app ID isn't provided, so if the user
+    // doesn't provide the ID, we leave the sample one.
+    if (googleMobileAdsAppId) {
+      // Delete existing Google Mobile Ads App ID.
+      await deleteLinesInFileAsync(
+        `BEGIN GOOGLE MOBILE ADS CONFIG`,
+        `END GOOGLE MOBILE ADS CONFIG`,
+        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+      );
+      // Put user's Google Mobile Ads App ID if provided.
+      await regexFileAsync(
+        '<!-- ADD GOOGLE MOBILE ADS CONFIG HERE -->',
+        `<meta-data
+      android:name="com.google.android.gms.ads.APPLICATION_ID"
+      android:value="${googleMobileAdsAppId}"/>`,
         path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
       );
     }
