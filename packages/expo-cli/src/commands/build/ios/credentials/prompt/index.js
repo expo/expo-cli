@@ -25,7 +25,7 @@ async function prompt(appleCtx, options, missingCredentials) {
   }
 
   const names = stillMissingCredentials.map(id => constants.CREDENTIALS[id].name).join(', ');
-  log.warn(`We do not have some credentials for you: ${names}`);
+  log.warn(`We are missing the following credentials from you: ${names}`);
 
   const { credentials: answers, metadata } = (await _shouldExpoGenerateCerts())
     ? await promptForOverrides(appleCtx, stillMissingCredentials)
