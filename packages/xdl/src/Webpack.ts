@@ -14,7 +14,7 @@ import createWebpackCompiler, {
   printInstructions,
   printSuccessMessages,
 } from './createWebpackCompiler';
-import ip from './ip'; 
+import ip from './ip';
 // @ts-ignore
 import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -539,6 +539,11 @@ async function startNextJsAsync({
   await app.prepare();
 
   const server = express();
+
+  server.get('/expo-service-worker.js', (req, res) => {
+    res.sendFile(path.resolve(projectRoot, '.expo', 'expo-service-worker.js'));
+  });
+
   server.get('*', handle);
 
   webpackDevServerInstance = server.listen(port, err => {
@@ -708,6 +713,15 @@ async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
     } catch (e) {
       throw new Error(`Could not write to pages/_document.js: ${e.toString()}`);
     }
+  }
+
+  try {
+    await fs.copyFile(
+      require.resolve('@expo/webpack-config/web-default/expo-service-worker.js'),
+      path.join(projectRoot, '.expo', 'expo-service-worker.js')
+    );
+  } catch (e) {
+    throw new Error(`Could not copy expo-service-worker.js: ${e.toString()}`);
   }
 }
 
