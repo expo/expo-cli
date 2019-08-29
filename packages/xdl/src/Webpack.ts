@@ -544,6 +544,17 @@ async function startNextJsAsync({
     res.sendFile(path.resolve(projectRoot, '.expo', 'expo-service-worker.js'));
   });
 
+  server.get('/service-worker.js', (req, res) => {
+    // This file should be provided by https://github.com/hanford/next-offline if installed.
+    const serviceWorkerPath = path.resolve(projectRoot, '.next', 'service-worker.js');
+    if (!fs.existsSync(serviceWorkerPath)) {
+      // Simply return a blank service worker file if the user is not using `next-offline`.
+      res.type('.js').send();
+      return;
+    }
+    res.sendFile(serviceWorkerPath);
+  });
+
   server.get('*', handle);
 
   webpackDevServerInstance = server.listen(port, err => {
