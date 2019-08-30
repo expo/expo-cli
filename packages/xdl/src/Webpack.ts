@@ -549,7 +549,7 @@ async function startNextJsAsync({
     const serviceWorkerPath = path.resolve(projectRoot, '.next', 'service-worker.js');
     if (!fs.existsSync(serviceWorkerPath)) {
       // Simply return a blank service worker file if the user is not using `next-offline`.
-      res.type('.js').send();
+      res.sendFile(path.resolve(projectRoot, '.expo', 'service-worker.js'));
       return;
     }
     res.sendFile(serviceWorkerPath);
@@ -733,6 +733,13 @@ async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
     );
   } catch (e) {
     throw new Error(`Could not copy expo-service-worker.js: ${e.toString()}`);
+  }
+
+  // Write a blank service-worker.js file for users who do not use any other service worker.
+  try {
+    await fs.writeFile(path.join(projectRoot, '.expo', 'service-worker.js'), "");
+  } catch (e) {
+    throw new Error(`Could not write to service-worker.js: ${e.toString()}`);
   }
 }
 
