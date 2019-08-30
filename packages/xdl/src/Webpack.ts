@@ -541,7 +541,7 @@ async function startNextJsAsync({
   const server = express();
 
   server.get('/expo-service-worker.js', (req, res) => {
-    res.sendFile(path.resolve(projectRoot, '.expo', 'expo-service-worker.js'));
+    res.sendFile(path.resolve(projectRoot, 'static', 'expo-service-worker.js'));
   });
 
   server.get('/service-worker.js', (req, res) => {
@@ -549,7 +549,7 @@ async function startNextJsAsync({
     const serviceWorkerPath = path.resolve(projectRoot, '.next', 'service-worker.js');
     if (!fs.existsSync(serviceWorkerPath)) {
       // Simply return a blank service worker file if the user is not using `next-offline`.
-      res.sendFile(path.resolve(projectRoot, '.expo', 'service-worker.js'));
+      res.sendFile(path.resolve(projectRoot, 'static', 'service-worker.js'));
       return;
     }
     res.sendFile(serviceWorkerPath);
@@ -726,10 +726,16 @@ async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
     }
   }
 
+  // TODO: Use `public/` folder when Next.js eventually deprecates `static/` folder.
+  const staticFolder = path.join(projectRoot, 'static');
+  if (!fs.existsSync(staticFolder)) {
+    fs.mkdirSync(staticFolder);
+  }
+
   try {
     await fs.copyFile(
       require.resolve('@expo/webpack-config/web-default/expo-service-worker.js'),
-      path.join(projectRoot, '.expo', 'expo-service-worker.js')
+      path.join(staticFolder, 'expo-service-worker.js')
     );
   } catch (e) {
     throw new Error(`Could not copy expo-service-worker.js: ${e.toString()}`);
@@ -737,7 +743,7 @@ async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
 
   // Write a blank service-worker.js file for users who do not use any other service worker.
   try {
-    await fs.writeFile(path.join(projectRoot, '.expo', 'service-worker.js'), "");
+    await fs.writeFile(path.join(staticFolder, 'service-worker.js'), '');
   } catch (e) {
     throw new Error(`Could not write to service-worker.js: ${e.toString()}`);
   }
