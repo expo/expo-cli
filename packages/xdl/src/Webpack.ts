@@ -741,11 +741,14 @@ async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
     throw new Error(`Could not copy expo-service-worker.js: ${e.toString()}`);
   }
 
-  // Write a blank service-worker.js file for users who do not use any other service worker.
-  try {
-    await fs.writeFile(path.join(staticFolder, 'service-worker.js'), '');
-  } catch (e) {
-    throw new Error(`Could not write to service-worker.js: ${e.toString()}`);
+  const serviceWorkerPath = path.join(staticFolder, 'service-worker.js');
+  if (!fs.existsSync(serviceWorkerPath)) {
+    // Write a blank service-worker.js file for users who do not use any other service worker.
+    try {
+      await fs.writeFile(serviceWorkerPath, '');
+    } catch (e) {
+      throw new Error(`Could not write to service-worker.js: ${e.toString()}`);
+    }
   }
 }
 
