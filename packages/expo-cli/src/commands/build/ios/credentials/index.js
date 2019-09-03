@@ -32,7 +32,7 @@ async function update(projectMetadata, credentials, userCredentialsIds) {
     userCredentialsIds,
     projectMetadata
   );
-  log.warn('Encrypted credentials and saved to the Expo servers');
+  log.warn(`Encrypted Apple credentials and saved to the Expo's servers.`);
 }
 
 async function clear({ username, experienceName, bundleIdentifier }, only) {
@@ -42,7 +42,7 @@ async function clear({ username, experienceName, bundleIdentifier }, only) {
     bundleIdentifier,
     only,
   });
-  log.warn('Removed existing credentials from expo servers');
+  log.warn(`Removed existing Apple credentials from Expo's servers.`);
 }
 
 export {

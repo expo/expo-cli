@@ -29,7 +29,7 @@ async function _askWhatToRevoke(choices) {
   const { ids } = await prompt({
     type: 'checkbox',
     name: 'ids',
-    message: `What would you like to revoke?`,
+    message: `Which would you like to revoke?`,
     pageSize: Infinity,
     choices,
   });
