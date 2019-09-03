@@ -9,7 +9,7 @@ const projectDir = path.join(temporary.directory(), 'my-app');
 
 beforeAll(async () => {
   jest.setTimeout(60000);
-  await runAsync(['init', projectDir, '--template', 'blank', '--name', 'My App', '--yarn']);
+  await runAsync(['init', projectDir, '--template', 'blank', '--name', 'My App']);
 });
 
 test('start --offline', async () => {

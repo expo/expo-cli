@@ -20,7 +20,7 @@ test('init', async () => {
   jest.setTimeout(60000);
   const cwd = temporary.directory();
   const { stdout } = await runAsync(
-    ['init', 'hello-world', '--template', 'blank', '--name', 'Hello', '--yarn'],
+    ['init', 'hello-world', '--template', 'blank', '--name', 'Hello'],
     { cwd }
   );
   expect(stdout).toMatch(`Your project is ready at ${cwd}`);
