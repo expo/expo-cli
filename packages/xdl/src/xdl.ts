@@ -82,6 +82,9 @@ export { IosIPABuilder };
 import * as IosKeychain from './detach/IosKeychain';
 export { IosKeychain };
 
+const IosWorkspace = require('./detach/IosWorkspace');
+export { IosWorkspace };
+
 import * as IosPlist from './detach/IosPlist';
 export { IosPlist };
 
