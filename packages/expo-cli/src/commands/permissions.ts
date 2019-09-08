@@ -1,3 +1,4 @@
+import * as Manifest from '@expo/android-manifest';
 import * as ConfigUtils from '@expo/config';
 import { IosPlist, IosWorkspace, UserManager } from '@expo/xdl';
 import StandaloneContext from '@expo/xdl/build/detach/StandaloneContext';
@@ -40,76 +41,6 @@ const DefaultiOSPermissionNames: any = {
   NSRemindersUsageDescription: `Reminders`,
 };
 
-// TODO: Bacon: link to resources about required permission prompts
-
-const AndroidPermissions: any = {
-  ACCESS_COARSE_LOCATION: 'ACCESS_COARSE_LOCATION',
-  ACCESS_FINE_LOCATION: 'ACCESS_FINE_LOCATION',
-  CAMERA: 'CAMERA',
-  MANAGE_DOCUMENTS: 'MANAGE_DOCUMENTS',
-  READ_CONTACTS: 'READ_CONTACTS',
-  READ_CALENDAR: 'READ_CALENDAR',
-  WRITE_CALENDAR: 'WRITE_CALENDAR',
-  READ_EXTERNAL_STORAGE: 'READ_EXTERNAL_STORAGE',
-  READ_PHONE_STATE: 'READ_PHONE_STATE',
-  RECORD_AUDIO: 'RECORD_AUDIO',
-  USE_FINGERPRINT: 'USE_FINGERPRINT',
-  VIBRATE: 'VIBRATE',
-  WAKE_LOCK: 'WAKE_LOCK',
-  WRITE_EXTERNAL_STORAGE: 'WRITE_EXTERNAL_STORAGE',
-  'com.anddoes.launcher.permission.UPDATE_COUNT': 'com.anddoes.launcher.permission.UPDATE_COUNT',
-  'com.android.launcher.permission.INSTALL_SHORTCUT':
-    'com.android.launcher.permission.INSTALL_SHORTCUT',
-  'com.google.android.c2dm.permission.RECEIVE': 'com.google.android.c2dm.permission.RECEIVE',
-  'com.google.android.gms.permission.ACTIVITY_RECOGNITION':
-    'com.google.android.gms.permission.ACTIVITY_RECOGNITION',
-  'com.google.android.providers.gsf.permission.READ_GSERVICES':
-    'com.google.android.providers.gsf.permission.READ_GSERVICES',
-  'com.htc.launcher.permission.READ_SETTINGS': 'com.htc.launcher.permission.READ_SETTINGS',
-  'com.htc.launcher.permission.UPDATE_SHORTCUT': 'com.htc.launcher.permission.UPDATE_SHORTCUT',
-  'com.majeur.launcher.permission.UPDATE_BADGE': 'com.majeur.launcher.permission.UPDATE_BADGE',
-  'com.sec.android.provider.badge.permission.READ':
-    'com.sec.android.provider.badge.permission.READ',
-  'com.sec.android.provider.badge.permission.WRITE':
-    'com.sec.android.provider.badge.permission.WRITE',
-  'com.sonyericsson.home.permission.BROADCAST_BADGE':
-    'com.sonyericsson.home.permission.BROADCAST_BADGE',
-};
-
-const AndroidPermissionDescriptions: any = {
-  ACCESS_COARSE_LOCATION: 'cool description ACCESS_COARSE_LOCATION',
-  ACCESS_FINE_LOCATION: 'cool description ACCESS_FINE_LOCATION',
-  CAMERA: 'cool description CAMERA',
-  MANAGE_DOCUMENTS: 'cool description MANAGE_DOCUMENTS',
-  READ_CONTACTS: 'cool description READ_CONTACTS',
-  READ_CALENDAR: 'cool description READ_CALENDAR',
-  WRITE_CALENDAR: 'cool description WRITE_CALENDAR',
-  READ_EXTERNAL_STORAGE: 'cool description READ_EXTERNAL_STORAGE',
-  READ_PHONE_STATE: 'cool description READ_PHONE_STATE',
-  RECORD_AUDIO: 'cool description RECORD_AUDIO',
-  USE_FINGERPRINT: 'cool description USE_FINGERPRINT',
-  VIBRATE: 'cool description VIBRATE',
-  WAKE_LOCK: 'cool description WAKE_LOCK',
-  WRITE_EXTERNAL_STORAGE: 'cool description WRITE_EXTERNAL_STORAGE',
-  'com.anddoes.launcher.permission.UPDATE_COUNT': 'com.anddoes.launcher.permission.UPDATE_COUNT',
-  'com.android.launcher.permission.INSTALL_SHORTCUT':
-    'com.android.launcher.permission.INSTALL_SHORTCUT',
-  'com.google.android.c2dm.permission.RECEIVE': 'com.google.android.c2dm.permission.RECEIVE',
-  'com.google.android.gms.permission.ACTIVITY_RECOGNITION':
-    'com.google.android.gms.permission.ACTIVITY_RECOGNITION',
-  'com.google.android.providers.gsf.permission.READ_GSERVICES':
-    'com.google.android.providers.gsf.permission.READ_GSERVICES',
-  'com.htc.launcher.permission.READ_SETTINGS': 'com.htc.launcher.permission.READ_SETTINGS',
-  'com.htc.launcher.permission.UPDATE_SHORTCUT': 'com.htc.launcher.permission.UPDATE_SHORTCUT',
-  'com.majeur.launcher.permission.UPDATE_BADGE': 'com.majeur.launcher.permission.UPDATE_BADGE',
-  'com.sec.android.provider.badge.permission.READ':
-    'com.sec.android.provider.badge.permission.READ',
-  'com.sec.android.provider.badge.permission.WRITE':
-    'com.sec.android.provider.badge.permission.WRITE',
-  'com.sonyericsson.home.permission.BROADCAST_BADGE':
-    'com.sonyericsson.home.permission.BROADCAST_BADGE',
-};
-
 async function writePermissionsToIOSAsync(projectDir: string, exp: any, permissions: any) {
   console.log(chalk.magenta('\u203A Updating the universal app.json...'));
 
@@ -140,28 +71,45 @@ function getDefaultExpoPermissionDescription(appName: string, permission: string
   return getDefault(appName);
 }
 
+async function getActiveAndroidPermissionsAsync(projectDir: string, exp: any): Promise<string[]> {
+  const manifestPath = await Manifest.getProjectAndroidManifestPathAsync(projectDir);
+  let permissions: string[];
+  // The Android Manifest takes priority over the app.json
+  if (manifestPath) {
+    const manifest = await Manifest.readAsync(manifestPath);
+    permissions = Manifest.getPermissions(manifest);
+  } else {
+    permissions = (exp.android || {}).permissions;
+  }
+
+  if (!Array.isArray(permissions)) {
+    permissions = [];
+  }
+
+  // Ensure the names are formatted correctly
+  permissions = permissions.map(permission => Manifest.ensurePermissionNameFormat(permission));
+
+  return permissions;
+}
+
 export async function actionAndroid(projectDir: string = './') {
   const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
 
-  let { permissions = [] } = exp.android || {};
-
-  if (!Array.isArray(permissions)) permissions = [];
+  const permissions = await getActiveAndroidPermissionsAsync(projectDir, exp);
 
   let choices = [];
-  for (const permission of Object.keys(AndroidPermissions)) {
+  for (const permission of Object.keys(Manifest.UnimodulePermissions)) {
     choices.push({
-      name: AndroidPermissions[permission],
+      name: Manifest.UnimodulePermissions[permission],
       message: permissions.includes(permission) ? chalk.green(permission) : chalk.gray(permission),
     });
   }
   const prompt = new MultiSelect({
     header() {
-      let dude = 'Welcome to my awesome generator!';
-      if (this.index > 5) {
-        dude = dude.replace('_\u001b[33m´U`\u001b[39m_', '@\u001b[33m´U`\u001b[39m@');
-        dude = dude.replace('~', 'O');
-      }
-      return AndroidPermissionDescriptions[Object.keys(AndroidPermissions)[this.index]]; //!this.state.submitted ? dude + '\n' : '';
+      const descriptions: { [key: string]: string } = {
+        // TODO(Bacon): Add descriptions of what each permission is used for
+      };
+      return descriptions[Object.keys(Manifest.UnimodulePermissions)[this.index]];
     },
     initial: permissions,
     hint: '(Use <space> to select, <return> to submit)',
@@ -176,6 +124,8 @@ export async function actionAndroid(projectDir: string = './') {
       permissions: answer,
     },
   });
+
+  await Manifest.persistAndroidPermissionsAsync(projectDir, answer);
 }
 
 async function getContextAsync(projectDir: string, exp: any): Promise<any> {
