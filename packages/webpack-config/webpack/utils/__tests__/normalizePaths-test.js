@@ -1,7 +1,13 @@
-import normalizePaths from '../normalizePaths';
-
+'use strict';
+var __importDefault =
+  (this && this.__importDefault) ||
+  function(mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
+const normalizePaths_1 = __importDefault(require('../normalizePaths'));
 it('transforms deep nested obejct', () => {
-  const object = normalizePaths(
+  const object = normalizePaths_1.default(
     {
       prop1: '/foo/bar/1',
       prop2: true,
@@ -30,6 +36,6 @@ it('transforms deep nested obejct', () => {
     },
     value => value.split('/foo').pop()
   );
-
   expect(object).toMatchSnapshot();
 });
+//# sourceMappingURL=normalizePaths-test.js.map

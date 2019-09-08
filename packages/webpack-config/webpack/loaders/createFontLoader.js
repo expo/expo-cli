@@ -1,4 +1,6 @@
-module.exports = function createFontLoader({ locations }) {
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+function createFontLoader({ locations }) {
   return {
     test: /\.(ttf|otf|woff)$/,
     use: [
@@ -16,4 +18,6 @@ module.exports = function createFontLoader({ locations }) {
       locations.includeModule('@expo/vector-icons'),
     ],
   };
-};
+}
+exports.default = createFontLoader;
+//# sourceMappingURL=createFontLoader.js.map

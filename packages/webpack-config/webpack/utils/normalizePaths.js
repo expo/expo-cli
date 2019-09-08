@@ -1,4 +1,6 @@
-module.exports = function normalizePaths(initial, transformString) {
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+function normalizePaths(initial, transformString) {
   if (initial == null) {
     return initial;
   } else if (typeof initial === 'string') {
@@ -14,4 +16,6 @@ module.exports = function normalizePaths(initial, transformString) {
   } else {
     return initial;
   }
-};
+}
+exports.default = normalizePaths;
+//# sourceMappingURL=normalizePaths.js.map
