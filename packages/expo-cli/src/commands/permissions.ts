@@ -338,6 +338,7 @@ function getInfoPlistDirectory(context: any) {
   return null;
 }
 
+// @ts-ignore
 export default (program: Command) => {
   program
     .command('permissions:ios [project-dir]')
