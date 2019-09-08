@@ -1,5 +1,5 @@
-import * as Manifest from '@expo/android-manifest';
 import * as ConfigUtils from '@expo/config';
+import * as Manifest from '@expo/android-manifest';
 import { IosPlist, IosWorkspace, UserManager } from '@expo/xdl';
 import StandaloneContext from '@expo/xdl/build/detach/StandaloneContext';
 import chalk from 'chalk';

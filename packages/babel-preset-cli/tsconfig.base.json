@@ -12,7 +12,6 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2016",
-    "types": ["jest"],
     "typeRoots": ["ts-declarations", "node_modules/@types"]
   }
 }
