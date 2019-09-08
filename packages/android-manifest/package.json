@@ -2,7 +2,8 @@
   "name": "@expo/android-manifest",
   "version": "0.0.0",
   "description": "A library for interacting with the app.json",
-  "main": "build/Config.js",
+  "main": "build/Manifest.js",
+  "types": "build/Manifest.d.ts",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
