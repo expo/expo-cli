@@ -145,7 +145,7 @@ export async function actionAndroid(projectDir: string = './') {
     initial: permissions,
     hint:
       '(Use <space> to select, <return> to submit, <a> to toggle, <i> to inverse the selection)',
-    message: `Select permissions`,
+    message: `Select Android permissions`,
     choices,
   });
 
@@ -167,12 +167,14 @@ export async function actionAndroid(projectDir: string = './') {
       `\u203A Saving selection to the ${chalk.underline`expo.android.permissions`} array in the ${chalk.bold`app.json`}...`
     )
   );
-  if (isExpo && selectedAll) {
-    console.log(
-      chalk.magenta(
-        `\u203A Expo will default to using all permissions in your project by deleting the ${chalk.underline`expo.android.permissions`} array.`
-      )
-    );
+  if (isExpo) {
+    if (selectedAll) {
+      console.log(
+        chalk.magenta(
+          `\u203A Expo will default to using all permissions in your project by deleting the ${chalk.underline`expo.android.permissions`} array.`
+        )
+      );
+    }
   }
 
   await ConfigUtils.writeConfigJsonAsync(projectDir, {
@@ -224,8 +226,8 @@ async function promptForPermissionDescriptionsAsync(
   console.log('');
   const keys = Object.keys(DefaultiOSPermissionNames);
   const prompt = new Form({
-    name: 'iOS Permission Descriptions',
-    message: hasNativeConfig ? 'Native project' : 'Universal Project',
+    name: hasNativeConfig ? 'Native project' : 'Universal Project',
+    message: 'Modify iOS Permissions',
     header() {
       const permission = keys[this.index];
       if (!currentDescriptions[permission]) {
@@ -353,6 +355,11 @@ export async function action(projectDir: string = './') {
       }
       return infoPlist;
     });
+  } else {
+    console.log(
+      `\u203A ${chalk.bold`Remember:`} ${chalk.reset
+        .dim`Permission messages are a build-time configuration. Your selection will only be available in Standalone, or native builds. You will continue to see the predefined permission dialogs when using your app in the Expo client.`}`
+    );
   }
 }
 
