@@ -1,14 +1,14 @@
-import * as ConfigUtils from '@expo/config';
 import * as Manifest from '@expo/android-manifest';
+import * as ConfigUtils from '@expo/config';
 import { IosPlist, IosWorkspace, UserManager } from '@expo/xdl';
 import StandaloneContext from '@expo/xdl/build/detach/StandaloneContext';
 import chalk from 'chalk';
 import { Command } from 'commander';
-// @ts-ignore
 import { Form, MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
 
+// @ts-ignore
 const DefaultiOSPermissions: any = {
   NSCalendarsUsageDescription: (name: string) =>
     `Allow ${name} experiences to access your calendar`,
@@ -42,7 +42,11 @@ const DefaultiOSPermissionNames: any = {
 };
 
 async function writePermissionsToIOSAsync(projectDir: string, exp: any, permissions: any) {
-  console.log(chalk.magenta('\u203A Updating the universal app.json...'));
+  console.log(
+    chalk.magenta(
+      `\u203A Saving selection to the ${chalk.underline`expo.ios.infoPlist`} object in your universal ${chalk.bold`app.json`}...`
+    )
+  );
 
   await ConfigUtils.writeConfigJsonAsync(projectDir, {
     ios: {
@@ -75,17 +79,32 @@ async function getActiveAndroidPermissionsAsync(
   manifestPath: string | null,
   exp: any
 ): Promise<string[]> {
+  console.log('');
+
   let permissions: string[];
   // The Android Manifest takes priority over the app.json
   if (manifestPath) {
+    console.log(
+      chalk.magenta(`\u203A Getting permissions from the native ${chalk.bold`AndroidManifest.xml`}`)
+    );
     const manifest = await Manifest.readAsync(manifestPath);
     permissions = Manifest.getPermissions(manifest);
     // Remove the required permissions
     permissions = permissions.filter(v => v !== 'android.permission.INTERNET');
   } else {
+    console.log(
+      chalk.magenta(
+        `\u203A Getting permissions from the ${chalk.underline`expo.android.permissions`} array in the universal ${chalk.bold`app.json`}...`
+      )
+    );
     permissions = (exp.android || {}).permissions;
     // If no array is defined then that means all permissions will be used
     if (!Array.isArray(permissions)) {
+      console.log(
+        chalk.magenta(
+          `\u203A ${chalk.underline`expo.android.permissions`} does not exist in the ${chalk.bold`app.json`}, the default value is ${chalk.bold`all permissions`}`
+        )
+      );
       permissions = Object.keys(Manifest.UnimodulePermissions);
     }
   }
@@ -103,6 +122,8 @@ export async function actionAndroid(projectDir: string = './') {
 
   const permissions = await getActiveAndroidPermissionsAsync(manifestPath, exp);
 
+  const isExpo = !manifestPath;
+
   let choices = [];
   const allPermissions = [
     ...new Set([...permissions, ...Object.keys(Manifest.UnimodulePermissions)]),
@@ -110,25 +131,17 @@ export async function actionAndroid(projectDir: string = './') {
   for (const permission of allPermissions) {
     choices.push({
       name: permission,
-      // name: Manifest.UnimodulePermissions[permission],
       message: permissions.includes(permission) ? chalk.green(permission) : chalk.gray(permission),
     });
   }
 
-  const isExpo = !manifestPath;
-  // const message = isExpo ? `Select permissions` : `Select permissions`
-  // return;
   const prompt = new MultiSelect({
-    // header() {
-    //   console.log(Object.keys(this.answer).filter(key => Array.isArray(this.answer[key])));
-    //   const descriptions: { [key: string]: string } = {
-    //     // TODO(Bacon): Add descriptions of what each permission is used for
-    //   };
-    //   return descriptions[Object.keys(Manifest.UnimodulePermissions)[this.index]];
-    //   // if (isExpo) {
-    //   //   return `Selecting no `
-    //   // }
-    // },
+    header() {
+      const descriptions: { [key: string]: string } = {
+        // TODO(Bacon): Add descriptions of what each permission is used for
+      };
+      return descriptions[Object.keys(Manifest.UnimodulePermissions)[this.index]];
+    },
     initial: permissions,
     hint:
       '(Use <space> to select, <return> to submit, <a> to toggle, <i> to inverse the selection)',
@@ -136,9 +149,31 @@ export async function actionAndroid(projectDir: string = './') {
     choices,
   });
 
-  const answer = await prompt.run();
+  console.log('');
+
+  let answer;
+
+  try {
+    answer = await prompt.run();
+  } catch (error) {
+    console.log(chalk.yellow('\u203A Exiting...'));
+    return;
+  }
 
   const selectedAll = choices.length === answer.length;
+
+  console.log(
+    chalk.magenta(
+      `\u203A Saving selection to the ${chalk.underline`expo.android.permissions`} array in the ${chalk.bold`app.json`}...`
+    )
+  );
+  if (isExpo && selectedAll) {
+    console.log(
+      chalk.magenta(
+        `\u203A Expo will default to using all permissions in your project by deleting the ${chalk.underline`expo.android.permissions`} array.`
+      )
+    );
+  }
 
   await ConfigUtils.writeConfigJsonAsync(projectDir, {
     android: {
@@ -156,10 +191,16 @@ export async function actionAndroid(projectDir: string = './') {
     },
   });
 
-  await Manifest.persistAndroidPermissionsAsync(projectDir, [
-    'android.permission.INTERNET',
-    ...answer,
-  ]);
+  if (!isExpo) {
+    console.log(
+      chalk.magenta(`\u203A Saving selection to the native ${chalk.bold`AndroidManifest.xml`}`)
+    );
+
+    await Manifest.persistAndroidPermissionsAsync(projectDir, [
+      'android.permission.INTERNET',
+      ...answer,
+    ]);
+  }
 }
 
 async function getContextAsync(projectDir: string, exp: any): Promise<any> {
@@ -169,8 +210,7 @@ async function getContextAsync(projectDir: string, exp: any): Promise<any> {
     throw new Error('Internal error -- somehow detach is being run in offline mode.');
   }
 
-  let username = user.username;
-
+  const { username } = user;
   let experienceName = `@${username}/${exp.slug}`;
   let experienceUrl = `exp://exp.host/${experienceName}`;
   return StandaloneContext.createUserContext(projectDir, exp, experienceUrl);
@@ -220,7 +260,7 @@ export async function action(projectDir: string = './') {
   let currentDescriptions: any = {};
   let defaultExpoDescriptions: any = {};
   if (supportingDirectory) {
-    console.log(chalk.magenta('\u203A Using native ios Info.plist'));
+    console.log(chalk.magenta(`\u203A Using native ios ${chalk.bold`Info.plist`}`));
     infoPlist = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => infoPlist);
 
     for (const key of Object.keys(DefaultiOSPermissionNames)) {
@@ -231,7 +271,11 @@ export async function action(projectDir: string = './') {
       }
     }
   } else {
-    console.log(chalk.magenta('\u203A Using the universal app.json...'));
+    console.log(
+      chalk.magenta(
+        `\u203A Getting permissions from the ${chalk.underline`expo.ios.infoPlist`} object in the universal ${chalk.bold`app.json`}...`
+      )
+    );
     defaultExpoDescriptions = Object.keys(DefaultiOSPermissions).reduce(
       (previous, current) => ({
         ...previous,
@@ -296,7 +340,9 @@ export async function action(projectDir: string = './') {
   await writePermissionsToIOSAsync(projectDir, exp, modifiedAnswers);
 
   if (infoPlist) {
-    console.log(chalk.magenta('\u203A Updating native Info.plist...'));
+    console.log(
+      chalk.magenta(`\u203A Saving selection to the native ${chalk.bold`Info.plist`}...`)
+    );
     await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
       for (const key of Object.keys(answer)) {
         if (answer[key]) {
