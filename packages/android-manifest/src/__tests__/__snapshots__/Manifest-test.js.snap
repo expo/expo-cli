@@ -49,3 +49,10 @@ exports[`Permissions can write with a pretty format 1`] = `
 </manifest
 >"
 `;
+
+exports[`Permissions ensures multiple permissions 1`] = `
+Object {
+  "VALUE_1": true,
+  "VALUE_2": true,
+}
+`;
