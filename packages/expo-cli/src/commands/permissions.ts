@@ -71,19 +71,23 @@ function getDefaultExpoPermissionDescription(appName: string, permission: string
   return getDefault(appName);
 }
 
-async function getActiveAndroidPermissionsAsync(projectDir: string, exp: any): Promise<string[]> {
-  const manifestPath = await Manifest.getProjectAndroidManifestPathAsync(projectDir);
+async function getActiveAndroidPermissionsAsync(
+  manifestPath: string | null,
+  exp: any
+): Promise<string[]> {
   let permissions: string[];
   // The Android Manifest takes priority over the app.json
   if (manifestPath) {
     const manifest = await Manifest.readAsync(manifestPath);
     permissions = Manifest.getPermissions(manifest);
+    // Remove the required permissions
+    permissions = permissions.filter(v => v !== 'android.permission.INTERNET');
   } else {
     permissions = (exp.android || {}).permissions;
-  }
-
-  if (!Array.isArray(permissions)) {
-    permissions = [];
+    // If no array is defined then that means all permissions will be used
+    if (!Array.isArray(permissions)) {
+      permissions = Object.keys(Manifest.UnimodulePermissions);
+    }
   }
 
   // Ensure the names are formatted correctly
@@ -95,37 +99,67 @@ async function getActiveAndroidPermissionsAsync(projectDir: string, exp: any): P
 export async function actionAndroid(projectDir: string = './') {
   const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
 
-  const permissions = await getActiveAndroidPermissionsAsync(projectDir, exp);
+  const manifestPath = await Manifest.getProjectAndroidManifestPathAsync(projectDir);
+
+  const permissions = await getActiveAndroidPermissionsAsync(manifestPath, exp);
 
   let choices = [];
-  for (const permission of Object.keys(Manifest.UnimodulePermissions)) {
+  const allPermissions = [
+    ...new Set([...permissions, ...Object.keys(Manifest.UnimodulePermissions)]),
+  ];
+  for (const permission of allPermissions) {
     choices.push({
-      name: Manifest.UnimodulePermissions[permission],
+      name: permission,
+      // name: Manifest.UnimodulePermissions[permission],
       message: permissions.includes(permission) ? chalk.green(permission) : chalk.gray(permission),
     });
   }
+
+  const isExpo = !manifestPath;
+  // const message = isExpo ? `Select permissions` : `Select permissions`
+  // return;
   const prompt = new MultiSelect({
-    header() {
-      const descriptions: { [key: string]: string } = {
-        // TODO(Bacon): Add descriptions of what each permission is used for
-      };
-      return descriptions[Object.keys(Manifest.UnimodulePermissions)[this.index]];
-    },
+    // header() {
+    //   console.log(Object.keys(this.answer).filter(key => Array.isArray(this.answer[key])));
+    //   const descriptions: { [key: string]: string } = {
+    //     // TODO(Bacon): Add descriptions of what each permission is used for
+    //   };
+    //   return descriptions[Object.keys(Manifest.UnimodulePermissions)[this.index]];
+    //   // if (isExpo) {
+    //   //   return `Selecting no `
+    //   // }
+    // },
     initial: permissions,
-    hint: '(Use <space> to select, <return> to submit)',
-    message: 'Select permissions',
+    hint:
+      '(Use <space> to select, <return> to submit, <a> to toggle, <i> to inverse the selection)',
+    message: `Select permissions`,
     choices,
   });
 
   const answer = await prompt.run();
+
+  const selectedAll = choices.length === answer.length;
+
   await ConfigUtils.writeConfigJsonAsync(projectDir, {
     android: {
       ...(exp.android || {}),
-      permissions: answer,
+      // An empty array means no permissions
+      // No value means all permissions
+      permissions: selectedAll
+        ? undefined
+        : answer.map((permission: string) => {
+            if (permission.startsWith('android.permission.')) {
+              return permission.split('.').pop();
+            }
+            return permission;
+          }),
     },
   });
 
-  await Manifest.persistAndroidPermissionsAsync(projectDir, answer);
+  await Manifest.persistAndroidPermissionsAsync(projectDir, [
+    'android.permission.INTERNET',
+    ...answer,
+  ]);
 }
 
 async function getContextAsync(projectDir: string, exp: any): Promise<any> {
