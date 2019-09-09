@@ -38,19 +38,20 @@ function checkPackage {
     }
 
     export EXPO_NONINTERACTIVE="true"
-    
+
+    ### To test TypeScript builds like expo/expo:
+
     # strictlyRunScript clean
     # strictlyRunScript build
-
-    if [ "$(git status --porcelain ${buildFolder})" != "" ]; then
-        printf "\e[0;31m\n▶️  The path ${buildFolder} in ${packageName} has uncommitted changes after building. Please rebuild and commit the following files:\n\n\e[00m"
-        printf "\e[0;33m$(git status --porcelain ${buildFolder})\e[00m\n\n"
-        exit 1
-    fi
+    # if [ "$(git status --porcelain ${buildFolder})" != "" ]; then
+    #     printf "\e[0;31m\n▶️  The path ${buildFolder} in ${packageName} has uncommitted changes after building. Please rebuild and commit the following files:\n\n\e[00m"
+    #     printf "\e[0;33m$(git status --porcelain ${buildFolder})\e[00m\n\n"
+    #     exit 1
+    # fi
 
     # optionallyRunScript lint --max-warnings=0
 
-    # optionallyRunScript test --watch=false --passWithNoTests --maxWorkers=1
+    optionallyRunScript test --watch=false --passWithNoTests --maxWorkers=1
 
     printf "✨ \e[1m\e[32m${packageName}\e[00m checks passed!\n";
 }
