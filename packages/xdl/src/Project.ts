@@ -312,6 +312,7 @@ async function _resolveManifestAssets(
     const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
       manifest.sdkVersion
     )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+
     // Get the URLs
     const urls = await Promise.all(
       assetSchemas.map(async (assetSchema: ExpSchema.AssetSchema) => {
