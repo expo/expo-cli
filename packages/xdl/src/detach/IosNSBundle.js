@@ -7,6 +7,7 @@ import {
   saveUrlToPathAsync,
   manifestUsesSplashApi,
   parseSdkMajorVersion,
+  spawnAsyncThrowError,
 } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as AssetBundle from './AssetBundle';
@@ -472,6 +473,51 @@ async function _configureGoogleServicesPlistAsync(context) {
   }
 }
 
+/**
+ * Copy sound files for notifications to the bundle.
+ */
+async function _copyNotificationsSoundsAsync(context) {
+  const bundledSounds =
+    context.data.exp.notification && context.data.exp.notification.bundledSounds;
+  console.warn(JSON.stringify(context.data.exp));
+  if (!bundledSounds) {
+    return;
+  }
+  let bundledSoundsUrls = null;
+  if (context.type === 'service') {
+    bundledSoundsUrls =
+      context.data.exp.notification && context.data.exp.notification.bundledSoundsUrl;
+    if (!bundledSoundsUrls) {
+      console.error('NO URL!');
+    }
+  }
+
+  logger.info('Copying sound files for notifications to the bundle...');
+  const { supportingDirectory } = IosWorkspace.getPaths(context);
+  const bundledSoundSupportingDirectory = path.join(supportingDirectory, 'NotificationSounds');
+  console.warn(bundledSoundSupportingDirectory);
+  if (!fs.existsSync(bundledSoundSupportingDirectory)) {
+    fs.mkdirSync(bundledSoundSupportingDirectory);
+  }
+
+  for (let i = 0; i < bundledSounds.length; i++) {
+    const bundledSound = bundledSounds[i];
+    const bundledSoundFilename = path.join(
+      bundledSoundSupportingDirectory,
+      path.basename(bundledSound)
+    );
+    if (context.type === 'user') {
+      const sourcePath = path.resolve(context.data.projectPath, bundledSound);
+      await spawnAsyncThrowError('/bin/cp', [sourcePath, bundledSoundFilename], {
+        stdio: 'inherit',
+      });
+    } else {
+      const bundledSoundUrl = bundledSoundsUrls[i];
+      await saveUrlToPathAsync(bundledSoundUrl, bundledSoundFilename);
+    }
+  }
+}
+
 async function configureAsync(context) {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
@@ -505,6 +551,7 @@ async function configureAsync(context) {
         supportingDirectory,
         context,
       });
+      await _copyNotificationsSoundsAsync(context);
     }
 
     if (context.build.isExpoClientBuild()) {
