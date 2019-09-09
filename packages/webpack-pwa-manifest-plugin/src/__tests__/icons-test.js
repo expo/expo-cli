@@ -14,10 +14,29 @@ it(`matches`, async () => {
 
   const [icons] = retrieveIcons(manifest);
 
-  const { icons: parsedIcons, assets } = await parseIconsAsync(icons, false, '/DEMO_PATH');
+  const publicPath = '/DEMO_PATH';
+  const { icons: parsedIcons, assets } = await parseIconsAsync(icons, false, publicPath);
 
-  expect(parsedIcons).toMatchSnapshot();
-  expect(
-    assets.map(({ source, ...asset }) => ({ ...asset, source: '<removed>' }))
-  ).toMatchSnapshot();
+  for (const icon of parsedIcons) {
+    const { sizes } = icon;
+    // Ensure format: 100x200
+    expect(sizes.split('x').length).toBe(2);
+    // Ensure format: icon_1334x750.png
+    expect(icon.src.startsWith(publicPath)).toBe(true);
+    expect(icon.src.includes(sizes)).toBe(true);
+    expect(icon.src.includes('png')).toBe(true);
+    expect(icon.type).toBe('image/png');
+  }
+
+  const parsedAssets = assets.map(({ source, ...asset }) => ({ ...asset, source: '<removed>' }));
+
+  expect(parsedAssets).toMatchSnapshot();
+
+  // Ensure the splash props are being used from the app.json splash object
+  const startupImages = parsedAssets.filter(({ ios }) => ios && ios.valid === 'startup');
+
+  for (const image of startupImages) {
+    expect(image.color).toBe(config.splash.backgroundColor);
+    expect(image.resizeMode).toBe(config.splash.resizeMode);
+  }
 });
