@@ -228,14 +228,18 @@ export async function parseIconsAsync(
   await Promise.all(promises);
 
   return {
-    icons: icons
-      .filter(icon => icon)
-      .sort(({ sizes }, { sizes: sizesB }) => {
-        if (sizes < sizesB) return -1;
-        else if (sizes > sizesB) return 1;
-        return 0;
-      }),
+    icons: sortByAttribute(icons, 'sizes'),
     // startupImages: icons.filter(({ isStartupImage }) => isStartupImage),
-    assets,
+    assets: sortByAttribute(assets, 'output'),
   };
+}
+
+function sortByAttribute(arr, key) {
+  return arr
+      .filter(Boolean)
+      .sort((valueA, valueB) => {
+        if (valueA[key] < valueB[key]) return -1;
+        else if (valueA[key] > valueB[key]) return 1;
+        return 0;
+      });
 }
