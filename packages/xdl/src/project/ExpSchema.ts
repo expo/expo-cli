@@ -5,7 +5,12 @@ import Api from '../Api';
 import * as ConfigUtils from '@expo/config';
 
 export type Schema = any;
-export type AssetSchema = { schema: Schema; fieldPath: string };
+export type AssetSchema = {
+  schema: Schema;
+  fieldPath: string;
+  // Whether the asset is an array which contains multiple filepaths.
+  isArray: boolean;
+};
 
 let _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
 
@@ -27,15 +32,24 @@ export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
 export async function getAssetSchemasAsync(sdkVersion: string): Promise<AssetSchema[]> {
   const schema = await getSchemaAsync(sdkVersion);
   const assetSchemas: AssetSchema[] = [];
-  const visit = (node: Schema, fieldPath: string) => {
+  const visit = (node: Schema, fieldPath: string, isArray: boolean = false) => {
     if (node.meta && node.meta.asset) {
-      assetSchemas.push({ schema: node, fieldPath });
+      assetSchemas.push({
+        schema: node,
+        fieldPath,
+        isArray,
+      });
     }
     const properties = node.properties;
     if (properties) {
       Object.keys(properties).forEach(property =>
         visit(properties[property], `${fieldPath}${fieldPath.length > 0 ? '.' : ''}${property}`)
       );
+    }
+
+    if (node.items) {
+      // Check if an array's item is an asset
+      visit(node.items, fieldPath, true);
     }
   };
   visit(schema, '');

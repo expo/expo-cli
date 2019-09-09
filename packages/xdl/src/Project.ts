@@ -282,6 +282,25 @@ async function _resolveGoogleServicesFile(projectRoot: string, manifest: ConfigU
   }
 }
 
+async function _resolvePathOrURLAsync(
+  pathOrURL: string,
+  assetSchema: ExpSchema.AssetSchema,
+  projectRoot: string,
+  resolver: (assetPath: string) => Promise<string>
+): Promise<string> {
+  if (pathOrURL.match(/^https?:\/\/(.*)$/)) {
+    // It's a remote URL
+    return pathOrURL;
+  } else if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
+    return await resolver(pathOrURL);
+  } else {
+    const err: ManifestResolutionError = new Error('Could not resolve local asset.');
+    err.localAssetPath = pathOrURL;
+    err.manifestField = assetSchema.fieldPath;
+    throw err;
+  }
+}
+
 async function _resolveManifestAssets(
   projectRoot: string,
   manifest: PublicConfig,
@@ -293,21 +312,19 @@ async function _resolveManifestAssets(
     const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
       manifest.sdkVersion
     )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
-
     // Get the URLs
     const urls = await Promise.all(
       assetSchemas.map(async (assetSchema: ExpSchema.AssetSchema) => {
-        const pathOrURL = get(manifest, assetSchema.fieldPath);
-        if (pathOrURL.match(/^https?:\/\/(.*)$/)) {
-          // It's a remote URL
-          return pathOrURL;
-        } else if (fs.existsSync(path.resolve(projectRoot, pathOrURL))) {
-          return await resolver(pathOrURL);
+        if (assetSchema.isArray) {
+          const pathsOrURLs: string[] = get(manifest, assetSchema.fieldPath);
+          return await Promise.all(
+            pathsOrURLs.map(async pathOrURL => {
+              return await _resolvePathOrURLAsync(pathOrURL, assetSchema, projectRoot, resolver);
+            })
+          );
         } else {
-          const err: ManifestResolutionError = new Error('Could not resolve local asset.');
-          err.localAssetPath = pathOrURL;
-          err.manifestField = assetSchema.fieldPath;
-          throw err;
+          const pathOrURL = get(manifest, assetSchema.fieldPath);
+          return await _resolvePathOrURLAsync(pathOrURL, assetSchema, projectRoot, resolver);
         }
       })
     );
