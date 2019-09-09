@@ -315,7 +315,7 @@ async function _resolveManifestAssets(
     // Get the URLs
     const urls = await Promise.all(
       assetSchemas.map(async (assetSchema: ExpSchema.AssetSchema) => {
-        if (assetSchema.isArray) {
+        if (assetSchema.schema.type === 'array') {
           const pathsOrURLs: string[] = get(manifest, assetSchema.fieldPath);
           return await Promise.all(
             pathsOrURLs.map(async pathOrURL => {
