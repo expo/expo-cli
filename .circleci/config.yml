@@ -23,38 +23,6 @@ workflows:
       - build:
           name: puppeteerEnv
           e: puppeteer
-      - test-dev-tools:
-          e: node-12
-          requires:
-            - build12
-      - test-dev-tools:
-          e: node-10
-          requires:
-            - build10
-      - test-json-file:
-          e: node-12
-          requires:
-            - build12
-      - test-json-file:
-          e: node-10
-          requires:
-            - build10
-      - test-expo-codemod:
-          e: node-12
-          requires:
-            - build12
-      - test-expo-codemod:
-          e: node-10
-          requires:
-            - build10
-      - test-webpack-config-unit:
-          e: node-12
-          requires:
-            - build12
-      - test-webpack-config-unit:
-          e: node-10
-          requires:
-            - build10
       - test-webpack-config-e2e:
           e: puppeteer
           requires:
@@ -87,37 +55,7 @@ jobs:
           key: yarn-{{ parameters.e }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
-  test-dev-tools:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/dev-tools
-    steps:
-      - attach_workspace:
-          at: '~'
-      - run: yarn test
-  test-json-file:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/json-file
-    steps:
-      - attach_workspace:
-          at: '~'
-      - run: yarn test
-  test-expo-codemod:
-    parameters:
-      e:
-        type: executor
-    executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/expo-codemod
-    steps:
-      - attach_workspace:
-          at: '~'
-      - run: yarn test
-  test-webpack-config-unit:
+  test-webpack-config-e2e:
     parameters:
       e:
         type: executor
@@ -126,17 +64,4 @@ jobs:
     steps:
       - attach_workspace:
           at: '~'
-      - run: yarn test:unit
-  # test-webpack-config-e2e:
-  #   parameters:
-  #     e:
-  #       type: executor
-  #   executor: << parameters.e >>
-  #   working_directory: ~/expo-cli/packages/webpack-config
-  #   steps:
-  #     - attach_workspace:
-  #         at: '~'
-  #     - run:
-  #         name: Install test project dependencies
-  #         command: cd tests/basic && yarn && cd ../nextjs && yarn && cd ../..
-  #     - run: yarn test:e2e
+      - run: yarn test:e2e
