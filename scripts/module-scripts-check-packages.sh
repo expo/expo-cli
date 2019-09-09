@@ -58,9 +58,15 @@ function checkPackage {
 
 for file in $PWD/packages/*/
 do
-    if [ -f "$file/package.json" ]; then
-        pushd $file > /dev/null
-        checkPackage
-        popd > /dev/null
+    FILE_NAME=$(basename $file)
+    match=$(echo "$FILE_NAME" | awk "${1}" || :)
+    if ! [ -z $match ]; then
+        if [ -f "$file/package.json" ]; then
+            pushd $file > /dev/null
+            checkPackage
+            popd > /dev/null
+        fi
+    else 
+        echo "skipping ${FILE_NAME}"
     fi
 done

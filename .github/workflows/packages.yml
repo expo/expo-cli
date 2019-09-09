@@ -39,6 +39,7 @@ jobs:
         env:
           CI: true
       - name: Check packages
-        run: ./scripts/module-scripts-check-packages.sh
+        # ignore xdl in the test check
+        run: ./scripts/module-scripts-check-packages.sh \!/xdl/
         env:
           CI: true
