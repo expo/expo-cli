@@ -38,8 +38,19 @@ jobs:
       - run: yarn bootstrap
         env:
           CI: true
-      - name: Check packages
-        # ignore xdl in the test check
-        run: ./scripts/module-scripts-check-packages.sh \!/xdl/
+      - name: Test @expo/dev-tools
+        run: cd packages/dev-tools && ../../scripts/module-scripts-check-packages.sh
+        env:
+          CI: true
+      - name: Test @expo/json-file
+        run: cd packages/json-file && ../../scripts/module-scripts-check-packages.sh
+        env:
+          CI: true
+      - name: Test @expo/expo-codemod
+        run: cd packages/expo-codemod && ../../scripts/module-scripts-check-packages.sh
+        env:
+          CI: true
+      - name: Test @expo/webpack-config
+        run: cd packages/webpack-config && ../../scripts/module-scripts-check-packages.sh
         env:
           CI: true

@@ -4,69 +4,69 @@
 # exit when any command fails
 set -e
 
-function checkPackage {
-    buildFolder=${1:-"./build/"}
+# function checkPackage {
+buildFolder=${1:-"./build/"}
 
-    packageName=$(cat package.json | grep name | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
+packageName=$(cat package.json | grep name | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')
 
-    printf "🔍 Checking the \e[1m\e[32m${packageName}\e[00m package...\n\n";
+printf "🔍 Checking the \e[1m\e[32m${packageName}\e[00m package...\n\n";
 
-    function hasScript {
-        echo "$(cat package.json | grep "\"$1\"\:" | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')"
-    }
-
-    function strictlyRunScript {
-        if [ "$(hasScript $1)" != "" ]; then
-            runScript $@
-        else
-            printf "🤷‍♀️ \e[31mRequired script \`\e[0;36m${1}\e[00m\e[31m\` not found, exiting...\e[00m\n";
-            exit 1
-        fi
-    }
-
-    function optionallyRunScript {
-        if [ "$(hasScript $1)" != "" ]; then
-            runScript $@
-        else
-            printf "🤷‍♀️ \e[33mOptional script \`\e[0;36m${1}\e[00m\e[33m\` not found, skipping...\e[00m\n\n";
-        fi
-    }
-
-    function runScript {
-        printf "🏃‍♀️ Running \`\e[0;36mnpm run ${1}\e[00m\` ...\n";
-        npm run $@
-    }
-
-    export EXPO_NONINTERACTIVE="true"
-
-    ### To test TypeScript builds like expo/expo:
-
-    # strictlyRunScript clean
-    # strictlyRunScript build
-    # if [ "$(git status --porcelain ${buildFolder})" != "" ]; then
-    #     printf "\e[0;31m\n▶️  The path ${buildFolder} in ${packageName} has uncommitted changes after building. Please rebuild and commit the following files:\n\n\e[00m"
-    #     printf "\e[0;33m$(git status --porcelain ${buildFolder})\e[00m\n\n"
-    #     exit 1
-    # fi
-
-    # optionallyRunScript lint --max-warnings=0
-
-    optionallyRunScript test --watch=false --passWithNoTests --maxWorkers=1
-
-    printf "✨ \e[1m\e[32m${packageName}\e[00m checks passed!\n";
+function hasScript {
+    echo "$(cat package.json | grep "\"$1\"\:" | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[[:space:]]')"
 }
 
-for file in $PWD/packages/*/
-do
-    FILE_NAME=$(basename $file)
-    match=$(echo "$FILE_NAME" | awk "${1}" || :)
-    if ! [ -z $match ]; then
-        if [ -f "$file/package.json" ]; then
-            pushd $file > /dev/null
-            checkPackage
-            popd > /dev/null
-        fi
-    else 
-        echo "skipping ${FILE_NAME}"
+function strictlyRunScript {
+    if [ "$(hasScript $1)" != "" ]; then
+        runScript $@
+    else
+        printf "🤷‍♀️ \e[31mRequired script \`\e[0;36m${1}\e[00m\e[31m\` not found, exiting...\e[00m\n";
+        exit 1
     fi
-done
+}
+
+function optionallyRunScript {
+    if [ "$(hasScript $1)" != "" ]; then
+        runScript $@
+    else
+        printf "🤷‍♀️ \e[33mOptional script \`\e[0;36m${1}\e[00m\e[33m\` not found, skipping...\e[00m\n\n";
+    fi
+}
+
+function runScript {
+    printf "🏃‍♀️ Running \`\e[0;36mnpm run ${1}\e[00m\` ...\n";
+    npm run $@
+}
+
+export EXPO_NONINTERACTIVE="true"
+
+### To test TypeScript builds like expo/expo:
+
+# strictlyRunScript clean
+# strictlyRunScript build
+# if [ "$(git status --porcelain ${buildFolder})" != "" ]; then
+#     printf "\e[0;31m\n▶️  The path ${buildFolder} in ${packageName} has uncommitted changes after building. Please rebuild and commit the following files:\n\n\e[00m"
+#     printf "\e[0;33m$(git status --porcelain ${buildFolder})\e[00m\n\n"
+#     exit 1
+# fi
+
+# optionallyRunScript lint --max-warnings=0
+
+optionallyRunScript test --watch=false --passWithNoTests --maxWorkers=1
+
+printf "✨ \e[1m\e[32m${packageName}\e[00m checks passed!\n";
+# }
+
+# for file in $PWD/packages/*/
+# do
+#     FILE_NAME=$(basename $file)
+#     match=$(echo "$FILE_NAME" | awk "${1}" || :)
+#     if ! [ -z $match ]; then
+#         if [ -f "$file/package.json" ]; then
+#             pushd $file > /dev/null
+#             checkPackage
+#             popd > /dev/null
+#         fi
+#     else 
+#         echo "skipping ${FILE_NAME}"
+#     fi
+# done
