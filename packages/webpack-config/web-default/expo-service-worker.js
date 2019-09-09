@@ -29,8 +29,8 @@ self.addEventListener('push', event => {
   let options = {
     body: payload.body,
     data: payload.data || {},
-    icon: payload.data._icon || self.notificationIcon || null,
   };
+  options.icon = options.data._icon || self.notificationIcon || null;
   if (options.data._tag) {
     options.tag = options.data._tag;
     options.renotify = options.data._renotify;
