@@ -67,6 +67,7 @@
     "@babel/core": "^7.4.5",
     "@babel/preset-flow": "^7.0.0",
     "@expo/babel-preset-cli": "^0.2.0",
+    "jest": "^24.9.0",
     "jest-puppeteer": "^4.3.0",
     "puppeteer": "^1.19.0",
     "serve": "^11.1.0"
