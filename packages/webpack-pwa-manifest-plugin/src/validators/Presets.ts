@@ -1,4 +1,4 @@
-import PresetError from '../errors/PresetError';
+import { PresetError } from '../Errors';
 
 // CSS can target this with https://developer.mozilla.org/en-US/docs/Web/CSS/@media/display-mode
 const VALID_DISPLAY_TYPES = [
@@ -41,11 +41,12 @@ const presets = {
   crossorigin: ['anonymous', 'use-credentials'],
 };
 
-function hasPreset(key, value) {
-  return presets[key].indexOf(value) >= 0;
+function hasPreset(key: string, value: any): boolean {
+  // @ts-ignore
+  return presets[key].includes(value);
 }
 
-export default function(config, ...properties) {
+export default function(config: any, ...properties: string[]) {
   if (!config) return;
   for (let property of properties) {
     let value = config[property];

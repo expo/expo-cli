@@ -29,14 +29,14 @@ const LANDSCAPE_ORIENTATIONS = [
   'omit',
 ];
 
-export function isValid(orientation) {
+export function isValid(orientation: string): boolean {
   return VALID_ORIENTATIONS.includes(orientation);
 }
 
-export function isLandscape(orientation) {
+export function isLandscape(orientation: string): boolean {
   return LANDSCAPE_ORIENTATIONS.includes(orientation);
 }
 
-export function isPortrait(orientation) {
+export function isPortrait(orientation: string): boolean {
   return PORTRAIT_ORIENTATIONS.includes(orientation);
 }

@@ -1,1 +1,7 @@
-export { sharpAsync, SharpGlobalOptions, SharpCommandOptions } from './sharp'; 
+export {
+  sharpAsync,
+  SharpGlobalOptions,
+  SharpCommandOptions,
+  ResizeMode,
+  ImageFormat,
+} from './sharp';
