@@ -479,43 +479,43 @@ async function _configureGoogleServicesPlistAsync(context) {
 async function _copyNotificationsSoundsAsync(context) {
   const bundledSounds =
     context.data.exp.notification && context.data.exp.notification.bundledSounds;
-  console.warn(JSON.stringify(context.data.exp));
   if (!bundledSounds) {
     return;
   }
+
   let bundledSoundsUrls = null;
   if (context.type === 'service') {
     bundledSoundsUrls =
       context.data.exp.notification && context.data.exp.notification.bundledSoundsUrl;
     if (!bundledSoundsUrls) {
-      console.error('NO URL!');
+      throw new Error('`bundledSoundsUrl` not found.');
     }
   }
 
   logger.info('Copying sound files for notifications to the bundle...');
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const bundledSoundSupportingDirectory = path.join(supportingDirectory, 'NotificationSounds');
-  console.warn(bundledSoundSupportingDirectory);
   if (!fs.existsSync(bundledSoundSupportingDirectory)) {
     fs.mkdirSync(bundledSoundSupportingDirectory);
   }
 
-  for (let i = 0; i < bundledSounds.length; i++) {
-    const bundledSound = bundledSounds[i];
-    const bundledSoundFilename = path.join(
-      bundledSoundSupportingDirectory,
-      path.basename(bundledSound)
-    );
-    if (context.type === 'user') {
-      const sourcePath = path.resolve(context.data.projectPath, bundledSound);
-      await spawnAsyncThrowError('/bin/cp', [sourcePath, bundledSoundFilename], {
-        stdio: 'inherit',
-      });
-    } else {
-      const bundledSoundUrl = bundledSoundsUrls[i];
-      await saveUrlToPathAsync(bundledSoundUrl, bundledSoundFilename);
-    }
-  }
+  await Promise.all(
+    bundledSounds.map(async (bundledSound, index) => {
+      const bundledSoundFilename = path.join(
+        bundledSoundSupportingDirectory,
+        path.basename(bundledSound)
+      );
+      if (context.type === 'user') {
+        const sourcePath = path.resolve(context.data.projectPath, bundledSound);
+        await spawnAsyncThrowError('/bin/cp', [sourcePath, bundledSoundFilename], {
+          stdio: 'inherit',
+        });
+      } else {
+        const bundledSoundUrl = bundledSoundsUrls[index];
+        await saveUrlToPathAsync(bundledSoundUrl, bundledSoundFilename);
+      }
+    })
+  );
 }
 
 async function configureAsync(context) {
