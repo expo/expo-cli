@@ -241,6 +241,7 @@ export default class Schemer {
 
   async _validateAssetAsync({ fieldPath, data, meta }: AssetField) {
     if (meta && meta.asset && data) {
+      // TODO: Validate the length and size of the audio file(s) for custom notification sounds.
       if (meta.contentTypePattern && meta.contentTypePattern.startsWith('^image')) {
         await this._validateImageAsync({ fieldPath, data, meta });
       }
