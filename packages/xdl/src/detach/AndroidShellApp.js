@@ -6,6 +6,7 @@ import globby from 'globby';
 import uuid from 'uuid';
 
 import { createAndWriteIconsToPathAsync } from './AndroidIcons';
+import * as NotificationSounds from './NotificationSounds';
 import * as AssetBundle from './AssetBundle';
 import * as ExponentTools from './ExponentTools';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
@@ -902,6 +903,11 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       })
     );
   }
+
+  await NotificationSounds.copyNotificationSoundsAsync(
+    context,
+    path.join(shellPath, 'app', 'src', 'main', 'res', 'raw')
+  );
 
   await AssetBundle.bundleAsync(
     context,

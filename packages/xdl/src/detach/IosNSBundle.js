@@ -7,7 +7,6 @@ import {
   saveUrlToPathAsync,
   manifestUsesSplashApi,
   parseSdkMajorVersion,
-  spawnAsyncThrowError,
 } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as AssetBundle from './AssetBundle';
@@ -17,6 +16,7 @@ import * as IosLaunchScreen from './IosLaunchScreen';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';
 import * as IosLocalization from './IosLocalization';
+import * as NotificationSounds from './NotificationSounds';
 import logger from './Logger';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
@@ -473,51 +473,6 @@ async function _configureGoogleServicesPlistAsync(context) {
   }
 }
 
-/**
- * Copy sound files for notifications to the bundle.
- */
-async function _copyNotificationsSoundsAsync(context) {
-  const bundledSounds =
-    context.data.exp.notification && context.data.exp.notification.bundledSounds;
-  if (!bundledSounds) {
-    return;
-  }
-
-  let bundledSoundsUrls = null;
-  if (context.type === 'service') {
-    bundledSoundsUrls =
-      context.data.exp.notification && context.data.exp.notification.bundledSoundsUrl;
-    if (!bundledSoundsUrls) {
-      throw new Error('`bundledSoundsUrl` not found.');
-    }
-  }
-
-  logger.info('Copying sound files for notifications to the bundle...');
-  const { supportingDirectory } = IosWorkspace.getPaths(context);
-  const bundledSoundSupportingDirectory = path.join(supportingDirectory, 'NotificationSounds');
-  if (!fs.existsSync(bundledSoundSupportingDirectory)) {
-    fs.mkdirSync(bundledSoundSupportingDirectory);
-  }
-
-  await Promise.all(
-    bundledSounds.map(async (bundledSound, index) => {
-      const bundledSoundFilename = path.join(
-        bundledSoundSupportingDirectory,
-        path.basename(bundledSound)
-      );
-      if (context.type === 'user') {
-        const sourcePath = path.resolve(context.data.projectPath, bundledSound);
-        await spawnAsyncThrowError('/bin/cp', [sourcePath, bundledSoundFilename], {
-          stdio: 'inherit',
-        });
-      } else {
-        const bundledSoundUrl = bundledSoundsUrls[index];
-        await saveUrlToPathAsync(bundledSoundUrl, bundledSoundFilename);
-      }
-    })
-  );
-}
-
 async function configureAsync(context) {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
@@ -551,7 +506,10 @@ async function configureAsync(context) {
         supportingDirectory,
         context,
       });
-      await _copyNotificationsSoundsAsync(context);
+      await NotificationSounds.copyNotificationSoundsAsync(
+        context,
+        path.join(supportingDirectory, 'NotificationSounds')
+      );
     }
 
     if (context.build.isExpoClientBuild()) {
