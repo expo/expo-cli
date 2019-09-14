@@ -1,3 +1,5 @@
 /tests
 /jest
+/jest-puppeteer.config.js
+/babel.config.js
 /scripts
