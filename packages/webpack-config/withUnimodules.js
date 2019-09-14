@@ -1,5 +1,5 @@
 const merge = require('webpack-merge');
-const webpackConfig = require('./webpack/webpack.config.unimodules');
+const webpackConfig = require('./webpack/webpack.config.unimodules').default;
 
 // Wrap your existing webpack config with support for Unimodules.
 // ex: Storybook `({ config }) => withUnimodules(config)`

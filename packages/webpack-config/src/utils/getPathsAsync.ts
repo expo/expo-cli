@@ -1,4 +1,4 @@
-import ConfigUtils from '@expo/config';
+import * as ConfigUtils from '@expo/config';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs';
 import path from 'path';

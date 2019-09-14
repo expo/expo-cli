@@ -218,7 +218,7 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
    *   reportFilename: "report.html"
    * }
    */
-  let reportPlugins = [];
+  let reportPlugins: any[] = [];
 
   const reportConfig = enableWithPropertyOrConfig(env.report, DEFAULT_REPORT_CONFIG, true);
   if (typeof config.web.build.report !== 'undefined') {
