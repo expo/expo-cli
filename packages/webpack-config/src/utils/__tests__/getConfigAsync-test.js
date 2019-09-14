@@ -7,7 +7,7 @@ const mode = 'development';
 const env = { projectRoot, mode };
 
 it(`has consistent defaults`, async () => {
-  const config = await getConfigAsync(env as any);
+  const config = await getConfigAsync(env);
   const normalized = normalizePaths(config, value => value.split('packages/webpack-config/').pop());
   expect(normalized).toMatchSnapshot();
 });

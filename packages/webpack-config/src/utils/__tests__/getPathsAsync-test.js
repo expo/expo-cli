@@ -6,7 +6,7 @@ const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 const projectRootCustomHomepage = path.resolve(__dirname, '../../../tests/custom-homepage');
 
 function defaultNormalize(locations) {
-  return normalizePaths(locations, value => value.split('packages/webpack-config/').pop()!);
+  return normalizePaths(locations, value => value.split('packages/webpack-config/').pop());
 }
 
 beforeEach(() => {

@@ -8,7 +8,7 @@ it(`accepts boolean`, () => {
 it(`accepts a "mode" option`, () => {
   expect(getMode({ mode: 'production' })).toBe('production');
   expect(getMode({ development: true, mode: 'production' })).toBe('production');
-  expect(getMode({ mode: 'invalid' as any })).toBe('development');
+  expect(getMode({ mode: 'invalid' })).toBe('development');
 });
 
 it(`reads from the NODE_ENV environment variable`, () => {

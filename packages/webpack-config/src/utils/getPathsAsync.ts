@@ -122,7 +122,7 @@ export default async function getPathsAsync({
   function getServedPath(appPackageJson: string): string {
     const publicUrl = getPublicUrl(appPackageJson);
     const servedUrl = envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : '/');
-    return ensureSlash(servedUrl, true);
+    return ensureSlash(servedUrl!, true);
   }
 
   const config = ConfigUtils.ensurePWAConfig(nativeAppManifest, absolute, {
