@@ -44,7 +44,7 @@ function parseQuality(options: Options): number {
   return quality;
 }
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('optimize [project-dir]')
     .alias('o')
@@ -64,4 +64,4 @@ export default (program: Command) => {
     )
     .allowOffline()
     .asyncAction(action);
-};
+}
