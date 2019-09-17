@@ -2,7 +2,7 @@ import { Command } from 'commander';
 
 import { login } from '../accounts';
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('login')
     .alias('signin')
@@ -10,4 +10,4 @@ export default (program: Command) => {
     .option('-u, --username [string]', 'Username')
     .option('-p, --password [string]', 'Password')
     .asyncAction(login);
-};
+}

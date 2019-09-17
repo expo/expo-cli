@@ -39,6 +39,14 @@ workflows:
           e: node-10
           requires:
             - build10
+      - test-expo-cli:
+          e: node-12
+          requires:
+            - build12
+      - test-expo-cli:
+          e: node-10
+          requires:
+            - build10
       - test-expo-codemod:
           e: node-12
           requires:
@@ -103,6 +111,16 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/json-file
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-expo-cli:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/expo-cli
     steps:
       - attach_workspace:
           at: '~'

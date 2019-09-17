@@ -10,7 +10,7 @@ type Options = { url?: string; secret?: string; event?: string };
 
 const WEBHOOK_TYPES = ['build'];
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('webhooks:set [project-dir]')
     .option('--url <webhook-url>', 'Webhook to be called after building the app.')
@@ -87,7 +87,7 @@ export default (program: Command) => {
       }
       log('All done!');
     }, true);
-};
+}
 
 async function _sanitizeOptions(options: Options): Promise<Webhooks.WebhookData> {
   let { url, secret, event: _event = 'build' } = options;
