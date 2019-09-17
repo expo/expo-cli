@@ -234,7 +234,7 @@ export async function parseIconsAsync(
   };
 }
 
-function sortByAttribute(arr, key) {
+function sortByAttribute(arr: any[], key: string): any[] {
   return arr
       .filter(Boolean)
       .sort((valueA, valueB) => {
