@@ -179,6 +179,12 @@ async function _configureEntitlementsAsync(context) {
         });
       }
 
+      if (manifest.ios && manifest.ios.usesAppleSignIn) {
+        entitlements['com.apple.developer.applesignin'] = ['Default'];
+      } else if (entitlements.hasOwnProperty('com.apple.developer.applesignin')) {
+        delete entitlements['com.apple.developer.applesignin'];
+      }
+
       // Add app associated domains remove exp-specific ones.
       if (manifest.ios && manifest.ios.associatedDomains) {
         entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
