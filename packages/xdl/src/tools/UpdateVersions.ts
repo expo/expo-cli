@@ -91,12 +91,12 @@ async function updateClientUrlAndVersionAsync(
   // Unfortunately it needs to be of `any` type to be able to change dynamic keys in the object.
   const versions: any = await Versions.versionsAsync();
 
-  // Create new SDK version config if not there yet.
+  // Create new SDK version config if it's not there yet.
   if (sdkVersion && !versions.sdkVersions[sdkVersion]) {
     versions.sdkVersions[sdkVersion] = {};
   }
 
-  // For compatibility reason we have to maintain that global config, but only when we're updating the most recent SDK.
+  // For compatibility reasons we have to maintain that global config, but only when we're updating the most recent SDK.
   if (!sdkVersion || Object.keys(versions.sdkVersions).sort(semver.rcompare)[0] === sdkVersion) {
     versions[`${platform}Version`] = appVersion;
     versions[`${platform}Url`] = clientUrl;
