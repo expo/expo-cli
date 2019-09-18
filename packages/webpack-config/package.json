@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.7.4",
+  "version": "0.7.5-alpha.0",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "repository": {
@@ -28,8 +28,8 @@
     "@babel/core": "^7.0.0",
     "@babel/polyfill": "^7.2.5",
     "@babel/runtime": "^7.3.4",
-    "@expo/config": "^2.1.4",
-    "@expo/webpack-pwa-manifest-plugin": "^1.2.4",
+    "@expo/config": "^2.1.5-alpha.0",
+    "@expo/webpack-pwa-manifest-plugin": "^1.2.5-alpha.0",
     "babel-loader": "^8.0.5",
     "brotli-webpack-plugin": "^1.1.0",
     "case-sensitive-paths-webpack-plugin": "^2.2.0",
@@ -65,7 +65,7 @@
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@babel/preset-flow": "^7.0.0",
-    "@expo/babel-preset-cli": "^0.2.0",
+    "@expo/babel-preset-cli": "^0.2.1-alpha.0",
     "jest-puppeteer": "^4.3.0",
     "puppeteer": "^1.19.0",
     "serve": "^11.1.0"
