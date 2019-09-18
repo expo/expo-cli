@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "3.0.11-alpha.0",
+  "version": "3.0.11-alpha.1",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -66,11 +66,11 @@
   "dependencies": {
     "@expo/bunyan": "3.0.2",
     "@expo/config": "^2.1.5-alpha.0",
-    "@expo/dev-tools": "^0.5.47-alpha.0",
+    "@expo/dev-tools": "^0.5.47-alpha.1",
     "@expo/json-file": "^8.1.12-alpha.0",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
-    "@expo/xdl": "^56.2.2-alpha.0",
+    "@expo/xdl": "^56.2.2-alpha.2",
     "@types/untildify": "^3.0.0",
     "ansi-regex": "^4.1.0",
     "axios": "0.19.0",
