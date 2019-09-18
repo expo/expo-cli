@@ -21,6 +21,7 @@ import logger from './Logger';
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
 const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
+const DEFAULT_GAD_APPLICATION_ID = 'ca-app-pub-3940256099942544~1458002511';
 const KERNEL_URL = 'https://expo.io/@exponent/home';
 
 function _configureInfoPlistForLocalDevelopment(config, exp) {
@@ -325,10 +326,11 @@ async function _configureInfoPlistAsync(context) {
       infoPlist.GMSApiKey = privateConfig.googleMapsApiKey;
     }
 
-    // add or remove google mobile ads app id
-    if (privateConfig && privateConfig.googleMobileAdsAppId) {
-      infoPlist.GADApplicationIdentifier = privateConfig.googleMobileAdsAppId;
-    }
+    // Google Mobile Ads App ID
+    // The app crashes if the app ID isn't provided, so if the user
+    // doesn't provide the ID, we leave the sample one.
+    infoPlist.GADApplicationIdentifier =
+      (privateConfig && privateConfig.googleMobileAdsAppId) || DEFAULT_GAD_APPLICATION_ID;
 
     // use version from manifest
     let version = config.version ? config.version : '0.0.0';
