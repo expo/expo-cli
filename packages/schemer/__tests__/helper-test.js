@@ -1,4 +1,4 @@
-import { fieldPathToSchemaPath, schemaPointerToFieldPath } from '../src/Util';
+import { fieldPathToSchemaPath, schemaPointerToFieldPath } from '../src/Util.js';
 
 describe('Helper function unit tests', () => {
   it('fieldPathToSchemaPath short path', () => {
