@@ -19,18 +19,18 @@ function getMode({
     }
   } else if (isValidMode(mode)) {
     return mode.toLowerCase() as Mode;
-  } else if (production) {
+  }
+  if (production) {
     return 'production';
   } else if (development) {
     return 'development';
   }
-
   return 'development';
 }
 
 function isValidMode(inputMode?: string): boolean {
   let mode;
-  if (inputMode && inputMode.toLowerCase) {
+  if (typeof inputMode === 'string') {
     mode = inputMode.toLowerCase();
   }
   return mode === 'production' || mode === 'development';
