@@ -1,11 +1,12 @@
-const chalk = require('chalk');
-const diff = require('deep-diff');
-const { ensurePWAConfig, readConfigJson } = require('@expo/config');
-const fs = require('fs');
-const getPathsAsync = require('./getPathsAsync');
+import chalk from 'chalk';
+import diff from 'deep-diff';
+import { ensurePWAConfig, readConfigJson } from '@expo/config';
+import fs from 'fs';
+import getPathsAsync from './getPathsAsync';
+import { DevConfiguration, Environment, FilePaths } from '../types';
 
 // https://stackoverflow.com/a/51319962/4047926
-function colorizeKeys(json) {
+function colorizeKeys(json: { [key: string]: any } | string) {
   if (typeof json !== 'string') {
     json = JSON.stringify(json, undefined, 2);
   }
@@ -34,23 +35,23 @@ function colorizeKeys(json) {
   );
 }
 
-function logHeader(title) {
+function logHeader(title: string): void {
   console.log(
     chalk.hidden('<details><summary>\n') +
       chalk.bgGreen.black(`[${title}]\n`) +
       chalk.hidden('</summary>\n')
   );
 }
-function logMdHelper(...messages) {
+function logMdHelper(...messages: any[]): void {
   console.log(chalk.hidden(...messages));
 }
 
-function logFooter() {
+function logFooter(): void {
   logMdHelper('</details>');
 }
 
 // Log the main risky parts of webpack.config
-function logWebpackConfigComponents(webpackConfig) {
+function logWebpackConfigComponents(webpackConfig: DevConfiguration) {
   logHeader('Webpack Info');
   const {
     mode,
@@ -58,8 +59,9 @@ function logWebpackConfigComponents(webpackConfig) {
     entry,
     devtool,
     context,
-    devServer: { https, hot, contentBase } = {},
+    devServer: { https, hot, contentBase } = {} as any,
   } = webpackConfig;
+
   // console.log('WEBPACK', JSON.stringify(webpackConfig, null, 2));
   logMdHelper('```json');
   console.log(
@@ -78,13 +80,13 @@ function logWebpackConfigComponents(webpackConfig) {
   logFooter();
 }
 
-async function logStaticsAsync(env = {}) {
+async function logStaticsAsync(env: Environment) {
   logHeader('Statics Info');
 
   const paths = await getPathsAsync(env);
 
   // Detect if the default template files aren't being used.
-  const { template: statics = {} } = paths;
+  const { template: statics = {} as any } = paths;
 
   const expectedLocation = 'webpack-config/web-default/';
 
@@ -92,7 +94,7 @@ async function logStaticsAsync(env = {}) {
     const filePath = statics[key];
     if (typeof filePath !== 'string') continue;
     const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
-    let message = chalk.default(`- **${key}**: `) + chalk.blue(`\`${fileName}\``) + ' : ';
+    let message = chalk.reset(`- **${key}**: `) + chalk.blue(`\`${fileName}\``) + ' : ';
     if (filePath.includes(expectedLocation)) {
       message += chalk.bgGreen.black(`\`${filePath}\``);
     } else {
@@ -104,7 +106,7 @@ async function logStaticsAsync(env = {}) {
   logFooter();
 }
 
-function logEnvironment({ config, ...env } = {}) {
+function logEnvironment({ config, ...env }: Environment) {
   logHeader('Environment Info');
   logMdHelper('```json');
   console.log(colorizeKeys(env));
@@ -112,11 +114,12 @@ function logEnvironment({ config, ...env } = {}) {
   logFooter();
 }
 
-function setDeepValue(pathComponents, object, value) {
+function setDeepValue(pathComponents: string[], object: { [key: string]: any }, value: any): void {
   if (!pathComponents.length) {
     return;
   }
   const key = pathComponents.shift();
+  if (!key) return;
   if (!(key in object)) {
     if (pathComponents.length) object[key] = {};
     else {
@@ -131,7 +134,7 @@ function setDeepValue(pathComponents, object, value) {
   setDeepValue(pathComponents, object[key], value);
 }
 
-async function logAutoConfigValuesAsync(env) {
+async function logAutoConfigValuesAsync(env: Environment) {
   const locations = await getPathsAsync(env);
 
   const config = readConfigJson(env.projectRoot);
@@ -143,6 +146,7 @@ async function logAutoConfigValuesAsync(env) {
     templateIcon: locations.template.get('icon.png'),
   });
 
+  // @ts-ignore
   const nonStandard = diff(standardConfig, pwaConfig);
 
   let obj = {};
@@ -164,7 +168,7 @@ async function logAutoConfigValuesAsync(env) {
   logFooter();
 }
 
-async function reportAsync(webpackConfig, { config, ...env } = {}) {
+async function reportAsync(webpackConfig: DevConfiguration, env: Environment) {
   console.log(chalk.bold('\n\nStart Copy\n\n'));
 
   logWebpackConfigComponents(webpackConfig);
@@ -179,17 +183,17 @@ async function reportAsync(webpackConfig, { config, ...env } = {}) {
   console.log(chalk.bold('\nEnd Copy\n\n'));
 }
 
-async function testBabelPreset(locations) {
+async function testBabelPreset(locations: FilePaths) {
   logHeader('Babel Preset');
 
   const babelrc = locations.absolute('.babelrc');
   const babelConfig = locations.absolute('babel.config.js');
 
-  const printPassed = (message, ...messages) =>
+  const printPassed = (message: string, ...messages: any[]) =>
     console.log(chalk.bgGreen.black(`- [✔︎ ${message}]`, ...messages));
-  const printWarning = (message, ...messages) =>
+  const printWarning = (message: string, ...messages: any[]) =>
     console.log(chalk.bgYellow.black(`- [${message}]`, ...messages));
-  const printFailed = (message, ...messages) =>
+  const printFailed = (message: string, ...messages: any[]) =>
     console.log(chalk.bgRed.black(`- [x ${message}]`, ...messages));
 
   if (fs.existsSync(babelrc)) {
@@ -201,10 +205,10 @@ async function testBabelPreset(locations) {
     printPassed('Not using .babelrc', 'Expo web runs best with Babel 7+');
   }
 
-  const printFailedToParse = (...messages) =>
+  const printFailedToParse = (...messages: any[]) =>
     printWarning(`Expo CLI cannot parse your babel.config.js at ${babelConfig}.`, ...messages);
 
-  function testBabelConfig(config, isFunction) {
+  function testBabelConfig(config: any, isFunction?: any) {
     const preferred =
       'It should be returning an object with `{ "presets: ["babel-preset-expo"]" }`.';
     if (!config) {
@@ -230,7 +234,7 @@ async function testBabelPreset(locations) {
       return;
     }
 
-    const isExpo = preset => preset === 'expo' || preset === 'babel-preset-expo';
+    const isExpo = (preset: string) => preset === 'expo' || preset === 'babel-preset-expo';
     const hasExpoPreset = (() => {
       for (const preset of config.presets) {
         if (
@@ -275,7 +279,7 @@ async function testBabelPreset(locations) {
   logFooter();
 }
 
-function isFunction(functionToCheck) {
+function isFunction(functionToCheck: any): boolean {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 

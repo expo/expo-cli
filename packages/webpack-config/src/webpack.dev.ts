@@ -1,11 +1,13 @@
-const path = require('path');
-const merge = require('webpack-merge');
-const common = require('./webpack.common.js');
-const getConfigAsync = require('./utils/getConfigAsync');
+import path from 'path';
+import webpack from 'webpack';
+import merge from 'webpack-merge';
 
-const createDevServerConfigAsync = require('./createDevServerConfigAsync');
+import createDevServerConfigAsync from './createDevServerConfigAsync';
+import { Arguments, DevConfiguration, Environment } from './types';
+import getConfigAsync from './utils/getConfigAsync';
+import common from './webpack.common';
 
-module.exports = async function(env = {}, argv) {
+export default async function(env: Environment, argv: Arguments): Promise<DevConfiguration> {
   if (!env.config) {
     // Fill all config values with PWA defaults
     env.config = await getConfigAsync(env);
@@ -23,9 +25,9 @@ module.exports = async function(env = {}, argv) {
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: 'static/js/[name].chunk.js',
       // Point sourcemap entries to original disk location (format as URL on Windows)
-      devtoolModuleFilenameTemplate: info =>
+      devtoolModuleFilenameTemplate: (info: webpack.DevtoolModuleFilenameTemplateInfo) =>
         path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
     },
     devServer,
   });
-};
+}
