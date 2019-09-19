@@ -82,10 +82,15 @@ jobs:
     working_directory: ~/expo-cli
     steps:
       - checkout
+      - run:
+          # https://discuss.circleci.com/t/cannot-use-circle-yml-environment-variables-in-cache-keys/10994/20
+          name: Configure env
+          command: |
+            echo "$EXECUTOR_NAME" >> ~/__circle_ci_hack.txt
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - yarn-{{ $EXECUTOR_NAME }}-{{ checksum "yarn.lock" }}
+            - yarn-{{ checksum "~/__circle_ci_hack.txt" }}-{{ checksum "yarn.lock" }}
       - run:
           name: Install Dependencies
           command: yarn install --frozen-lockfile
@@ -98,7 +103,7 @@ jobs:
             - expo-cli
       - save_cache:
           name: Save Yarn Package Cache
-          key: yarn-{{ $EXECUTOR_NAME }}-{{ checksum "yarn.lock" }}
+          key: yarn-{{ checksum "~/__circle_ci_hack.txt" }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
   test-dev-tools:
