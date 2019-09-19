@@ -1,8 +1,9 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { overrideWithPropertyOrConfig } = require('./utils/config');
-const getPathsAsync = require('./utils/getPathsAsync');
-const getConfigAsync = require('./utils/getConfigAsync');
-const getMode = require('./utils/getMode');
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { overrideWithPropertyOrConfig } from './utils/config';
+import getPathsAsync from './utils/getPathsAsync';
+import getConfigAsync from './utils/getConfigAsync';
+import getMode from './utils/getMode';
+import { Environment } from './types';
 
 const DEFAULT_MINIFY = {
   removeComments: true,
@@ -17,12 +18,14 @@ const DEFAULT_MINIFY = {
   minifyURLs: true,
 };
 
-module.exports = async function createIndexHTMLFromAppJSONAsync(env) {
+export default async function createIndexHTMLFromAppJSONAsync(
+  env: Environment
+): Promise<HtmlWebpackPlugin> {
   const locations = await getPathsAsync(env);
   const config = await getConfigAsync(env);
   const isProduction = getMode(env) === 'production';
 
-  const { web: { name, build = {} } = {} } = config;
+  const { name, build = {} } = config.web;
   /**
    * The user can disable minify with
    * `web.minifyHTML = false || {}`
@@ -44,4 +47,4 @@ module.exports = async function createIndexHTMLFromAppJSONAsync(env) {
     // The `webpack` require path to the template.
     template: locations.template.indexHtml,
   });
-};
+}

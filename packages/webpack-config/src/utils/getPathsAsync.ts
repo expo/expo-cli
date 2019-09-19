@@ -1,8 +1,11 @@
-const path = require('path');
-const fs = require('fs');
-const url = require('url');
-const findWorkspaceRoot = require('find-yarn-workspace-root');
-const ConfigUtils = require('@expo/config');
+import * as ConfigUtils from '@expo/config';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
+import fs from 'fs';
+import path from 'path';
+import url from 'url';
+
+import { FilePaths } from '../types';
+
 const possibleMainFiles = [
   'index.web.ts',
   'index.ts',
@@ -22,7 +25,7 @@ const possibleMainFiles = [
   'src/index.jsx',
 ];
 
-function ensureSlash(inputPath, needsSlash) {
+function ensureSlash(inputPath: string, needsSlash: boolean): string {
   const hasSlash = inputPath.endsWith('/');
   if (hasSlash && !needsSlash) {
     return inputPath.substr(0, inputPath.length - 1);
@@ -33,17 +36,24 @@ function ensureSlash(inputPath, needsSlash) {
   }
 }
 
-module.exports = async function getPaths({ locations, projectRoot }) {
-  const envPublicUrl = process.env.WEB_PUBLIC_URL;
-  const appDirectory = fs.realpathSync(process.cwd());
-
+export default async function getPathsAsync({
+  locations,
+  projectRoot,
+}: {
+  projectRoot?: string;
+  locations?: FilePaths;
+} = {}): Promise<FilePaths> {
   // Recycle locations
   if (locations) {
     return locations;
   }
+
+  const envPublicUrl = process.env.WEB_PUBLIC_URL;
+  const appDirectory = fs.realpathSync(process.cwd());
+
   const inputProjectRoot = projectRoot || appDirectory;
 
-  function absolute(...pathComponents) {
+  function absolute(...pathComponents: string[]) {
     // Simple check if we are dealing with an URL
     if (pathComponents && pathComponents.length === 1 && pathComponents[0].startsWith('http')) {
       return pathComponents[0];
@@ -73,7 +83,7 @@ module.exports = async function getPaths({ locations, projectRoot }) {
     }
   }
 
-  const { exp: nativeAppManifest, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp: nativeAppManifest, pkg } = await ConfigUtils.readConfigJsonAsync(inputProjectRoot);
 
   const packageJsonPath = absolute('package.json');
   const modulesPath = getModulesPath();
@@ -102,38 +112,39 @@ module.exports = async function getPaths({ locations, projectRoot }) {
     }
   }
 
-  const getPublicUrl = appPackageJson => envPublicUrl || require(packageJsonPath).homepage;
+  const getPublicUrl = (appPackageJson: string) => envPublicUrl || require(appPackageJson).homepage;
   // We use `WEB_PUBLIC_URL` environment variable or "homepage" field to infer
   // "public path" at which the app is served.
   // Webpack needs to know it to put the right <script> hrefs into HTML even in
   // single-page apps that may serve index.html for nested URLs like /todos/42.
   // We can't use a relative path in HTML because we don't want to load something
   // like /todos/42/static/js/bundle.7289d.js. We have to know the root.
-  function getServedPath(appPackageJson) {
+  function getServedPath(appPackageJson: string): string {
     const publicUrl = getPublicUrl(appPackageJson);
     const servedUrl = envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : '/');
-    return ensureSlash(servedUrl, true);
+    return ensureSlash(servedUrl!, true);
   }
 
-  const config = ConfigUtils.ensurePWAConfig(nativeAppManifest);
+  const config = ConfigUtils.ensurePWAConfig(nativeAppManifest, absolute, {
+    templateIcon: templatePath('icon.png'),
+  });
 
   const productionPath = absolute(config.web.build.output);
 
-  function templatePath(filename = '') {
+  function templatePath(filename: string = ''): string {
     const overridePath = absolute('web', filename);
     if (fs.existsSync(overridePath)) {
       return overridePath;
-    } else {
-      return path.join(__dirname, '../../web-default', filename);
     }
+    return path.join(__dirname, '../../web-default', filename);
   }
 
-  function getProductionPath(...props) {
+  function getProductionPath(...props: string[]): string {
     return path.resolve(productionPath, ...props);
   }
 
-  function getIncludeModule(...pathComponents) {
-    return path.resolve(modulesPath, ...pathComponents);
+  function getIncludeModule(...props: string[]): string {
+    return path.resolve(modulesPath, ...props);
   }
 
   return {
@@ -161,4 +172,4 @@ module.exports = async function getPaths({ locations, projectRoot }) {
       favicon: getProductionPath('favicon.ico'),
     },
   };
-};
+}

@@ -1,14 +1,18 @@
-const getenv = require('getenv');
-const merge = require('webpack-merge');
-const TerserPlugin = require('terser-webpack-plugin');
-const isWsl = require('is-wsl');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const safePostCssParser = require('postcss-safe-parser');
-const getConfigAsync = require('./utils/getConfigAsync');
-const getPathsAsync = require('./utils/getPathsAsync');
-const common = require('./webpack.common.js');
+import TerserPlugin from 'terser-webpack-plugin';
+import isWsl from 'is-wsl';
+import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
+// @ts-ignore
+import merge from 'webpack-merge';
+// @ts-ignore
+import safePostCssParser from 'postcss-safe-parser';
+import webpack from 'webpack';
+import { boolish } from 'getenv';
+import getConfigAsync from './utils/getConfigAsync';
+import getPathsAsync from './utils/getPathsAsync';
+import common from './webpack.common';
+import { Environment, Arguments } from './types';
 
-module.exports = async function(env = {}, argv) {
+export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
   if (!env.config) {
     // Fill all config values with PWA defaults
     env.config = await getConfigAsync(env);
@@ -20,7 +24,7 @@ module.exports = async function(env = {}, argv) {
 
   const shouldUseSourceMap = commonConfig.devtool !== null;
 
-  const isDebugMode = getenv.boolish('EXPO_WEB_DEBUG', false);
+  const isDebugMode = boolish('EXPO_WEB_DEBUG', false);
 
   return merge(commonConfig, {
     output: {
@@ -29,7 +33,7 @@ module.exports = async function(env = {}, argv) {
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       // Point sourcemap entries to original disk location (format as URL on Windows)
-      devtoolModuleFilenameTemplate: info =>
+      devtoolModuleFilenameTemplate: (info: webpack.DevtoolModuleFilenameTemplateInfo): string =>
         locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/'),
     },
     optimization: {
@@ -47,8 +51,7 @@ module.exports = async function(env = {}, argv) {
               ecma: 8,
             },
             compress: {
-              ecma: 5,
-              warnings: isDebugMode ? 'verbose' : false,
+              warnings: isDebugMode,
               // Disabled because of an issue with Uglify breaking seemingly valid code:
               // https://github.com/facebook/create-react-app/issues/2376
               // Pending further investigation:
@@ -114,4 +117,4 @@ module.exports = async function(env = {}, argv) {
       noEmitOnErrors: true,
     },
   });
-};
+}

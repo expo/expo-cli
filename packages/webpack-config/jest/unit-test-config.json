@@ -1,6 +1,6 @@
 {
   "testEnvironment": "node",
-  "roots": ["webpack"],
-  "moduleFileExtensions": ["js", "json", "node"],
+  "roots": ["src"],
+  "moduleFileExtensions": ["ts", "js", "json", "node"],
   "resetModules": false
 }
