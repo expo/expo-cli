@@ -21,8 +21,22 @@ workflows:
   build-and-test:
     jobs:
       - build:
+          name: build12
+          e: node-12
+      - build:
+          name: build10
+          e: node-10
+      - build:
           name: puppeteerEnv
           e: puppeteer
+      - test-expo-cli:
+          e: node-12
+          requires:
+            - build12
+      - test-expo-cli:
+          e: node-10
+          requires:
+            - build10
       - test-webpack-config-e2e:
           e: puppeteer
           requires:
@@ -60,6 +74,16 @@ jobs:
           key: yarn-{{ checksum "/tmp/.executor_name" }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
+   test-expo-cli:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/expo-cli
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
   test-webpack-config-e2e:
     parameters:
       e:
