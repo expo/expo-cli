@@ -1,6 +1,6 @@
 # Useful resource: https://github.com/actions/starter-workflows
 
-name: Check Packages
+name: Test Package
 
 on:
   pull_request
@@ -27,7 +27,7 @@ jobs:
         node-version: [10.x, 12.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
-    name: Check ${{ matrix.package }}
+    name: ${{ matrix.package }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v1
