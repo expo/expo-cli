@@ -19,6 +19,33 @@ on:
   #     - '!*.md'
 
 jobs:
+  dependencies:
+    strategy:
+      matrix:
+        # Run tests with all of these node versions/systems :]
+        node-version: [10.x, 12.x]
+        # os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest]
+    runs-on: ubuntu-latest
+    name: Yarn Install with Node ${{ matrix.node-version }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@master
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@master
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install
+        run: yarn install --frozen-lockfile
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: dependencies-${{ matrix.os }}-${{ matrix.node-version }}
+          path: node_modules
+
   test:
     strategy:
       matrix:
@@ -27,18 +54,26 @@ jobs:
         node-version: [10.x, 12.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
+    needs: dependencies
     name: ${{ matrix.package }} with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v1
+      - name: checkout
+        uses: actions/checkout@master
+      
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: yarn install --frozen-lockfile
+
+      - uses: actions/download-artifact@master
+        with:
+          name: dependencies-${{ matrix.os }}-${{ matrix.node-version }}
+
       - run: yarn bootstrap
         env:
           CI: true
+
       - name: Test ${{ matrix.package }}
         run: cd packages/${{ matrix.package }} && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
