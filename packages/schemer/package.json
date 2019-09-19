@@ -26,8 +26,7 @@
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1-alpha.0",
     "@types/node": "^12.7.2",
-    "babel-jest": "^20.0.3",
-    "jest": "^20.0.4",
+    "jest": "^24.9.0",
     "typescript": "3.4.5"
   },
   "dependencies": {
