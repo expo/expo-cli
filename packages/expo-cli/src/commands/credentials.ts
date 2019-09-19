@@ -28,4 +28,4 @@ export default function (program: CommanderStatic) {
       }
       await runCredentialsManager(context, mainpage);
     }, /* skip project validation */ true);
-};
+}; 

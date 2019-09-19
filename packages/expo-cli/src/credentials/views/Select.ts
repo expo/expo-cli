@@ -41,7 +41,7 @@ export class SelectIosExperience implements IView {
 
     const projectSpecificActions: ChoiceType<string>[] = ctx.hasProjectContext
       ? [
-          prompt.separator('---- Current project actions ----'),
+          prompt.separator(`---- Current project (${ctx._manifest.name}) actions ----`),
           {
             value: 'use-existing-push-ios',
             name: 'Use existing Push Notifications Key in current project',

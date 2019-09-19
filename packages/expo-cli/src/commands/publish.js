@@ -96,6 +96,7 @@ export async function action(projectDir: string, options: Options = {}) {
     result = await Project.publishAsync(projectDir, {
       releaseChannel: options.releaseChannel,
     });
+    console.log('pub result');
 
     let url = result.url;
 

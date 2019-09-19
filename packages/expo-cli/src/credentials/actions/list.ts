@@ -15,16 +15,15 @@ import {
 import log from '../../log';
 
 export async function displayIosCredentials(credentials: IosCredentials) {
-  log(chalk.bold('Available credentials for iOS apps\n'));
 
-  log(chalk.bold('Application credentials\n'));
+  log(chalk.bold('App-specific Credentials:\n'));
   for (const cred of credentials.appCredentials) {
     displayIosAppCredentials(cred);
     log();
   }
 
   log();
-  log(chalk.bold('User credentials\n'));
+  log(chalk.bold('User Credentials:\n'));
   for (const cred of credentials.userCredentials) {
     displayIosUserCredentials(cred, credentials);
     log();

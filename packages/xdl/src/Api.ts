@@ -101,33 +101,42 @@ async function _callMethodAsync(
       options = { ...options, ...requestOptions };
     }
   }
-  let response = await axios.request(options);
-  if (!response) {
-    throw new Error('Unexpected error: Request failed.');
-  }
-  let responseBody = response.data;
-  var responseObj;
-  if (isString(responseBody)) {
-    try {
-      responseObj = JSON.parse(responseBody);
-    } catch (e) {
-      throw new XDLError(
-        'INVALID_JSON',
-        'Invalid JSON returned from API: ' + e + '. Response body: ' + responseBody
-      );
+  try {
+    let response = await axios.request(options);
+    if (!response) {
+      throw new Error('Unexpected error: Request failed.');
     }
-  } else {
-    responseObj = responseBody;
-  }
-  if (responseObj.err) {
-    let err = new ApiError(
-      responseObj.code || 'API_ERROR',
-      'API Response Error: ' + responseObj.err
+    let responseBody = response.data;
+    var responseObj;
+    if (isString(responseBody)) {
+      try {
+        responseObj = JSON.parse(responseBody);
+      } catch (e) {
+        throw new XDLError(
+          'INVALID_JSON',
+          'Invalid JSON returned from API: ' + e + '. Response body: ' + responseBody
+        );
+      }
+    } else {
+      responseObj = responseBody;
+    }
+    if (responseObj.err) {
+      let err = new ApiError(
+        responseObj.code || 'API_ERROR',
+        'API Response Error: ' + responseObj.err
+      );
+      err.serverError = responseObj.err;
+      throw err;
+    } else {
+      return returnEntireResponse ? response : responseObj;
+    }
+  } catch (error) {
+    const { response } = error;
+    const { ...errorObject } = response;
+    throw new Error(
+      `Request failed with status code ${errorObject.data.code}: ${errorObject.data
+        .err}`
     );
-    err.serverError = responseObj.err;
-    throw err;
-  } else {
-    return returnEntireResponse ? response : responseObj;
   }
 }
 
@@ -171,7 +180,7 @@ async function _downloadAsync(
     response.data
       .on('data', (chunk: Buffer) => {
         downloadProgress += chunk.length;
-        const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
+        const roundedProgress = Math.floor(downloadProgress / totalDownloadSize * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);

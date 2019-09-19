@@ -26,7 +26,7 @@ export class IosApi {
 
   async getAllCredentials(): Promise<IosCredentials> {
     if (this.shouldRefetch) {
-      log('Fetching available credentials');
+      log('Fetching available iOS credentials...\n');
       this.credentials = await this.api.getAsync('credentials/ios');
       this.shouldRefetch = false;
     }
