@@ -983,17 +983,6 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@expo/babel-preset-cli@^0.2.0":
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/@expo/babel-preset-cli/-/babel-preset-cli-0.2.0.tgz#a9ee7e3ac93ca55e69c42e5edd32e6ecd04a12d9"
-  integrity sha512-13XJl6UxwA0mzDHr3IV63yuk9TwcRfehf8w+jPHjue9HQ84RoCwRo5+kUenWQubS69YQZlNWUmpE4G/U/b25zg==
-  dependencies:
-    "@babel/core" "^7.4.5"
-    "@babel/plugin-proposal-class-properties" "^7.4.4"
-    "@babel/plugin-transform-modules-commonjs" "^7.5.0"
-    "@babel/preset-env" "^7.4.4"
-    "@babel/preset-typescript" "^7.3.3"
-
 "@expo/bunyan@3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@expo/bunyan/-/bunyan-3.0.2.tgz#775680bd479a8b79ada4a5676936a58eef1579c9"
@@ -1089,18 +1078,6 @@
     logfmt "^1.2.0"
     request "^2.81.0"
     uuid "^3.0.0"
-
-"@expo/schemer@^1.2.8-alpha.0":
-  version "1.2.8-alpha.0"
-  resolved "https://registry.yarnpkg.com/@expo/schemer/-/schemer-1.2.8-alpha.0.tgz#cc4dae052ee8d61e7b1fa6db37a9086c499badba"
-  integrity sha512-laod+GYhP9wAyjfAF4zMNnA7L4YdNvyC40izFEtNjEpvGFDkqHn4xiEVrSqSNlFWa3Czloer65A8H0LTksLwKQ==
-  dependencies:
-    ajv "^5.2.2"
-    es6-error "^4.0.2"
-    json-schema-traverse "0.3.1"
-    lodash "^4.17.11"
-    probe-image-size "^3.1.0"
-    read-chunk "^3.2.0"
 
 "@expo/simple-spinner@1.0.2":
   version "1.0.2"
