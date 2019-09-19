@@ -4,12 +4,18 @@ executors:
   node-10:
     docker:
       - image: circleci/node:10
+    environment:
+      EXECUTOR_NAME: node-10
   node-12:
     docker:
       - image: circleci/node:12
+    environment:
+      EXECUTOR_NAME: node-12
   puppeteer:
     docker:
       - image: circleci/node:latest-browsers
+    environment:
+      EXECUTOR_NAME: puppeteer
 workflows:
   version: 2
   build-and-test:
@@ -79,7 +85,7 @@ jobs:
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - yarn-{{ << parameters.e >> }}-{{ checksum "yarn.lock" }}
+            - yarn-{{ "$EXECUTOR_NAME" }}-{{ checksum "yarn.lock" }}
       - run:
           name: Install Dependencies
           command: yarn install --frozen-lockfile
@@ -92,7 +98,7 @@ jobs:
             - expo-cli
       - save_cache:
           name: Save Yarn Package Cache
-          key: yarn-{{ << parameters.e >> }}-{{ checksum "yarn.lock" }}
+          key: yarn-{{ "$EXECUTOR_NAME" }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
   test-dev-tools:
