@@ -39,18 +39,18 @@ jobs:
         env:
           CI: true
       - name: Test @expo/dev-tools
-        run: cd packages/dev-tools && ../../scripts/module-scripts-check-packages.sh
+        run: cd packages/dev-tools && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
           CI: true
       - name: Test @expo/json-file
-        run: cd packages/json-file && ../../scripts/module-scripts-check-packages.sh
+        run: cd packages/json-file && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
           CI: true
       - name: Test @expo/expo-codemod
-        run: cd packages/expo-codemod && ../../scripts/module-scripts-check-packages.sh
+        run: cd packages/expo-codemod && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
           CI: true
       - name: Test @expo/webpack-config
-        run: cd packages/webpack-config && ../../scripts/module-scripts-check-packages.sh
+        run: cd packages/webpack-config && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
           CI: true
