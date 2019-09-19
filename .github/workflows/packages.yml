@@ -26,11 +26,10 @@ jobs:
         node-version: [10.x, 12.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
-    runs-on: ubuntu-latest
     name: Yarn Install with Node ${{ matrix.node-version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     steps:
-      - name: checkout
+      - name: Checkout
         uses: actions/checkout@master
 
       - name: Use Node.js ${{ matrix.node-version }}
@@ -41,7 +40,8 @@ jobs:
       - name: Install
         run: yarn install --frozen-lockfile
 
-      - uses: actions/upload-artifact@master
+      - name: Cache Modules
+        uses: actions/upload-artifact@master
         with:
           name: dependencies-${{ matrix.os }}-${{ matrix.node-version }}
           path: node_modules
@@ -60,7 +60,7 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@master
-      
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
