@@ -171,7 +171,7 @@ jobs:
       e:
         type: executor
     executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/expo-schemer
+    working_directory: ~/expo-cli/packages/schemer
     steps:
       - attach_workspace:
           at: '~'
