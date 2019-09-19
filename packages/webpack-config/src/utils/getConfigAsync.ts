@@ -1,7 +1,9 @@
-const { getConfigForPWA } = require('@expo/config');
-const getPathsAsync = require('./getPathsAsync');
+import { ExpoConfig, getConfigForPWA } from '@expo/config';
 
-module.exports = async function(env) {
+import { Environment } from '../types';
+import getPathsAsync from './getPathsAsync';
+
+async function getConfigAsync(env: Environment): Promise<ExpoConfig> {
   if (env.config) {
     return env.config;
   }
@@ -10,4 +12,6 @@ module.exports = async function(env) {
   return getConfigForPWA(env.projectRoot, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),
   });
-};
+}
+
+export default getConfigAsync;

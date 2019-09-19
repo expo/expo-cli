@@ -1,54 +1,46 @@
-const { createEnvironmentConstants } = require('@expo/config');
-const WebpackPWAManifestPlugin = require('@expo/webpack-pwa-manifest-plugin');
-const chalk = require('chalk');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ProgressBarPlugin = require('progress-bar-webpack-plugin');
-const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
-const { DefinePlugin, HotModuleReplacementPlugin } = require('webpack');
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-const WebpackDeepScopeAnalysisPlugin = require('webpack-deep-scope-plugin').default;
-const WorkboxPlugin = require('workbox-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
-const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
-const PnpWebpackPlugin = require('pnp-webpack-plugin');
-const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
-const ManifestPlugin = require('webpack-manifest-plugin');
-const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
-const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CompressionPlugin = require('compression-webpack-plugin');
-const BrotliPlugin = require('brotli-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const createIndexHTMLFromAppJSONAsync = require('./createIndexHTMLFromAppJSONAsync');
-const createClientEnvironment = require('./createClientEnvironment');
-const getPathsAsync = require('./utils/getPathsAsync');
-const { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } = require('./utils/config');
-const createFontLoader = require('./loaders/createFontLoader');
-const createBabelLoaderAsync = require('./loaders/createBabelLoaderAsync');
-const getMode = require('./utils/getMode');
-const getConfigAsync = require('./utils/getConfigAsync');
+// @ts-ignore
+import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
+// @ts-ignore
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
+import webpack, { HotModuleReplacementPlugin } from 'webpack';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+// @ts-ignore
+import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
+import WorkboxPlugin from 'workbox-webpack-plugin';
+// @ts-ignore
+import CleanWebpackPlugin from 'clean-webpack-plugin';
+// @ts-ignore
+import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
+// @ts-ignore
+import PnpWebpackPlugin from 'pnp-webpack-plugin';
+import ModuleScopePlugin from 'react-dev-utils/ModuleScopePlugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
+// @ts-ignore
+import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
+import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
+// @ts-ignore
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+// @ts-ignore
+import CompressionPlugin from 'compression-webpack-plugin';
+// @ts-ignore
+import BrotliPlugin from 'brotli-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import createIndexHTMLFromAppJSONAsync from './createIndexHTMLFromAppJSONAsync';
+import getPathsAsync from './utils/getPathsAsync';
 
-const DEFAULT_ALIAS = {
-  // Alias direct react-native imports to react-native-web
-  'react-native$': 'react-native-web',
-  '@react-native-community/netinfo': 'react-native-web/dist/exports/NetInfo',
-  // Add polyfills for modules that react-native-web doesn't support
-  // Depends on expo-asset
-  'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
-  'react-native/Libraries/Image/assetPathUtils$': 'expo-asset/build/Image/assetPathUtils',
-  'react-native/Libraries/Image/resolveAssetSource$': 'expo-asset/build/resolveAssetSource',
-  // Alias internal react-native modules to react-native-web
-  'react-native/Libraries/Components/View/ViewStylePropTypes$':
-    'react-native-web/dist/exports/View/ViewStylePropTypes',
-  'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
-    'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
-  'react-native/Libraries/vendor/emitter/EventEmitter$':
-    'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
-  'react-native/Libraries/vendor/emitter/EventSubscriptionVendor$':
-    'react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor',
-  'react-native/Libraries/EventEmitter/NativeEventEmitter$':
-    'react-native-web/dist/vendor/react-native/NativeEventEmitter',
-};
+import { ExpoDefinePlugin, ExpoProgressBarPlugin } from './plugins';
+import {
+  DEFAULT_ALIAS,
+  getModuleFileExtensions,
+  enableWithPropertyOrConfig,
+  overrideWithPropertyOrConfig,
+} from './utils/config';
+import createFontLoader from './loaders/createFontLoader';
+import createBabelLoaderAsync from './loaders/createBabelLoaderAsync';
+import getMode from './utils/getMode';
+import getConfigAsync from './utils/getConfigAsync';
+import { Environment, Arguments } from './types';
 
 const DEFAULT_GZIP = {
   test: /\.(js|css)$/,
@@ -116,12 +108,15 @@ const fallbackLoaderConfiguration = {
   },
 };
 
-function createNoJSComponent(message) {
+function createNoJSComponent(message: string): string {
   // from twitter.com
   return `" <form action="location.reload()" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 20px; padding: 6px 16px;">Reload</button> </p> </div> </form> "`;
 }
 
-function getDevtool({ production, development }, { devtool }) {
+function getDevtool(
+  { production, development }: { production: boolean; development: boolean },
+  { devtool }: { devtool?: webpack.Options.Devtool }
+): webpack.Options.Devtool {
   if (production) {
     // string or false
     if (devtool !== undefined) {
@@ -136,7 +131,7 @@ function getDevtool({ production, development }, { devtool }) {
   return false;
 }
 
-module.exports = async function(env = {}, argv) {
+export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
   const config = await getConfigAsync(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
@@ -153,7 +148,6 @@ module.exports = async function(env = {}, argv) {
   );
 
   const locations = await getPathsAsync(env);
-  const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
 
   // Webpack uses `publicPath` to determine where the app is being served from.
   // It requires a trailing slash, or the file assets will get an incorrect path.
@@ -174,6 +168,7 @@ module.exports = async function(env = {}, argv) {
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
   if (deepScopeAnalysisEnabled) {
+    // @ts-ignore
     middlewarePlugins.push(new WebpackDeepScopeAnalysisPlugin());
   }
 
@@ -223,7 +218,7 @@ module.exports = async function(env = {}, argv) {
    *   reportFilename: "report.html"
    * }
    */
-  let reportPlugins = [];
+  let reportPlugins: any[] = [];
 
   const reportConfig = enableWithPropertyOrConfig(env.report, DEFAULT_REPORT_CONFIG, true);
   if (typeof config.web.build.report !== 'undefined') {
@@ -320,8 +315,6 @@ module.exports = async function(env = {}, argv) {
     appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
   }
 
-  const environmentVariables = createClientEnvironment(mode, publicUrl, publicAppManifest);
-
   return {
     mode,
     entry: {
@@ -391,7 +384,12 @@ module.exports = async function(env = {}, argv) {
       // the requesting resource.
       new ModuleNotFoundPlugin(locations.root),
 
-      new DefinePlugin(environmentVariables),
+      new ExpoDefinePlugin({
+        mode,
+        publicUrl,
+        config,
+        productionManifestPath: locations.production.manifest,
+      }),
 
       // This is necessary to emit hot updates (currently CSS only):
       isDev && new HotModuleReplacementPlugin(),
@@ -427,13 +425,7 @@ module.exports = async function(env = {}, argv) {
       gzipConfig && new CompressionPlugin(gzipConfig),
       brotliConfig && new BrotliPlugin(brotliConfig),
 
-      new ProgressBarPlugin({
-        format: `[:bar] ${chalk.green.bold(':percent')} (:elapsed seconds)`,
-        clear: false,
-        complete: '=',
-        incomplete: ' ',
-        summary: false,
-      }),
+      new ExpoProgressBarPlugin(),
 
       ...reportPlugins,
     ].filter(Boolean),
@@ -457,17 +449,7 @@ module.exports = async function(env = {}, argv) {
     },
     resolve: {
       alias: DEFAULT_ALIAS,
-      extensions: [
-        '.web.ts',
-        '.web.tsx',
-        '.ts',
-        '.tsx',
-        '.web.js',
-        '.web.jsx',
-        '.js',
-        '.jsx',
-        '.json',
-      ],
+      extensions: getModuleFileExtensions('web'),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
         // guards against forgotten dependencies and such.
@@ -498,4 +480,4 @@ module.exports = async function(env = {}, argv) {
     // our own (CRA) hints via the FileSizeReporter
     // performance: false,
   };
-};
+}

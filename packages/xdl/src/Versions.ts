@@ -25,6 +25,10 @@ export type SDKVersion = {
   isDeprecated?: boolean;
   packagesToInstallWhenEjecting?: { [name: string]: string };
   releaseNoteUrl?: string;
+  iosClientUrl?: string;
+  iosClientVersion?: string;
+  androidClientUrl?: string;
+  androidClientVersion?: string;
 };
 
 export type SDKVersions = { [version: string]: SDKVersion };

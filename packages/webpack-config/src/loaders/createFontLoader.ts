@@ -1,4 +1,7 @@
-module.exports = function createFontLoader({ locations }) {
+import { Rule } from 'webpack';
+import { FilePaths } from '../types';
+
+function createFontLoader({ locations }: { locations: FilePaths }): Rule {
   return {
     test: /\.(ttf|otf|woff)$/,
     use: [
@@ -16,4 +19,6 @@ module.exports = function createFontLoader({ locations }) {
       locations.includeModule('@expo/vector-icons'),
     ],
   };
-};
+}
+
+export default createFontLoader;

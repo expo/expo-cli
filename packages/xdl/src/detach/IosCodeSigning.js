@@ -253,6 +253,9 @@ async function createEntitlementsFile({
   if (!manifest.ios.associatedDomains) {
     generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.associated-domains');
   }
+  if (!manifest.ios.usesAppleSignIn) {
+    generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.applesignin');
+  }
   if (generatedEntitlements[icloudContainerEnvKey]) {
     const envs = generatedEntitlements[icloudContainerEnvKey].filter(i => i === 'Production');
     generatedEntitlements[icloudContainerEnvKey] = envs;

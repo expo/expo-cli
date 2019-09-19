@@ -6,41 +6,28 @@
  * like react-scripts and storybook.
  */
 
-const ManifestPlugin = require('webpack-manifest-plugin');
-const { createEnvironmentConstants } = require('@expo/config');
-const { DefinePlugin } = require('webpack');
-const createClientEnvironment = require('./createClientEnvironment');
-const getPathsAsync = require('./utils/getPathsAsync');
-const { overrideWithPropertyOrConfig } = require('./utils/config');
-const getMode = require('./utils/getMode');
-const DEFAULT_ALIAS = {
-  // Alias direct react-native imports to react-native-web
-  'react-native$': 'react-native-web',
-  '@react-native-community/netinfo': 'react-native-web/dist/exports/NetInfo',
-  // Add polyfills for modules that react-native-web doesn't support
-  // Depends on expo-asset
-  'react-native/Libraries/Image/AssetSourceResolver$': 'expo-asset/build/AssetSourceResolver',
-  'react-native/Libraries/Image/assetPathUtils$': 'expo-asset/build/Image/assetPathUtils',
-  'react-native/Libraries/Image/resolveAssetSource$': 'expo-asset/build/resolveAssetSource',
-  // Alias internal react-native modules to react-native-web
-  'react-native/Libraries/Components/View/ViewStylePropTypes$':
-    'react-native-web/dist/exports/View/ViewStylePropTypes',
-  'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
-    'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
-  'react-native/Libraries/vendor/emitter/EventEmitter$':
-    'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
-  'react-native/Libraries/vendor/emitter/EventSubscriptionVendor$':
-    'react-native-web/dist/vendor/react-native/emitter/EventSubscriptionVendor',
-  'react-native/Libraries/EventEmitter/NativeEventEmitter$':
-    'react-native-web/dist/vendor/react-native/NativeEventEmitter',
-};
+import { createEnvironmentConstants } from '@expo/config';
+import webpack from 'webpack';
+import ManifestPlugin from 'webpack-manifest-plugin';
+import { ExpoDefinePlugin } from './plugins';
+// @ts-ignore
 
-const createFontLoader = require('./loaders/createFontLoader');
-const createBabelLoaderAsync = require('./loaders/createBabelLoaderAsync');
-const getConfigAsync = require('./utils/getConfigAsync');
+import createClientEnvironment from './createClientEnvironment';
+import { Arguments, Environment } from './types';
+import {
+  DEFAULT_ALIAS,
+  getModuleFileExtensions,
+  overrideWithPropertyOrConfig,
+} from './utils/config';
+import getMode from './utils/getMode';
+import getPathsAsync from './utils/getPathsAsync';
+
+import createFontLoader from './loaders/createFontLoader';
+import createBabelLoaderAsync from './loaders/createBabelLoaderAsync';
+import getConfigAsync from './utils/getConfigAsync';
 
 // { production, development, mode, projectRoot }
-module.exports = async function(env = {}, argv = {}) {
+export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
   const {
     /**
      * **Dangerously** disable, extend, or clobber the default alias.
@@ -82,6 +69,11 @@ module.exports = async function(env = {}, argv = {}) {
 
   const environmentVariables = createClientEnvironment(mode, publicPath, publicAppManifest);
 
+  // `publicUrl` is just like `publicPath`, but we will provide it to our app
+  // as %WEB_PUBLIC_URL% in `index.html` and `process.env.WEB_PUBLIC_URL` in JavaScript.
+  // Omit trailing slash as %WEB_PUBLIC_URL%/xyz looks better than %WEB_PUBLIC_URL%xyz.
+  const publicUrl = mode === 'production' ? publicPath.slice(0, -1) : '';
+
   const loaders = [
     {
       test: /\.html$/,
@@ -114,11 +106,12 @@ module.exports = async function(env = {}, argv = {}) {
         fileName: 'asset-manifest.json',
         publicPath,
       }),
-      /**
-       * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/
-       * This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
-       */
-      new DefinePlugin(environmentVariables),
+      new ExpoDefinePlugin({
+        mode,
+        publicUrl,
+        config,
+        productionManifestPath: locations.production.manifest,
+      }),
     ],
     module: {
       strictExportPresence: false,
@@ -128,17 +121,7 @@ module.exports = async function(env = {}, argv = {}) {
     resolve: {
       symlinks: false,
       alias,
-      extensions: [
-        '.web.ts',
-        '.web.tsx',
-        '.ts',
-        '.tsx',
-        '.web.js',
-        '.web.jsx',
-        '.js',
-        '.jsx',
-        '.json',
-      ],
+      extensions: getModuleFileExtensions('web'),
     },
   };
-};
+}

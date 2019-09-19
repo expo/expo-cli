@@ -1,7 +1,10 @@
-const path = require('path');
-const chalk = require('chalk');
-const getPathsAsync = require('../utils/getPathsAsync');
-const getModule = name => path.join('node_modules', name);
+import path from 'path';
+import chalk from 'chalk';
+import { Rule } from 'webpack';
+import getPathsAsync from '../utils/getPathsAsync';
+import { Mode } from '../types';
+
+const getModule = (name: string) => path.join('node_modules', name);
 
 // Only compile files from the react ecosystem.
 const includeModulesThatContainPaths = [
@@ -21,27 +24,30 @@ const excludedRootPaths = [
   '(webpack)',
 ];
 
-const parsedPackageNames = [];
+const parsedPackageNames: string[] = [];
 // TODO: Bacon: Support internal packages. ex: react/fbjs
-function packageNameFromPath(inputPath) {
+function packageNameFromPath(inputPath: string): string | null {
   const modules = inputPath.split('node_modules/');
   const libAndFile = modules.pop();
+  if (!libAndFile) return null;
   if (libAndFile.charAt(0) === '@') {
     const [org, lib] = libAndFile.split('/');
     return org + '/' + lib;
   } else {
-    return libAndFile.split('/').shift();
+    const components = libAndFile.split('/');
+    const first = components.shift();
+    return first || null;
   }
 }
 
-function logPackage(packageName) {
+function logPackage(packageName: string) {
   if (!parsedPackageNames.includes(packageName)) {
     parsedPackageNames.push(packageName);
     console.log(chalk.cyan('\nCompiling module: ' + chalk.bold(packageName)));
   }
 }
 
-async function ensureRootAsync(possibleProjectRoot) {
+async function ensureRootAsync(possibleProjectRoot?: string): Promise<string> {
   if (typeof possibleProjectRoot === 'string') {
     return path.resolve(possibleProjectRoot);
   }
@@ -51,19 +57,23 @@ async function ensureRootAsync(possibleProjectRoot) {
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
  */
-module.exports = async function(
-  {
-    /**
+export default async function createBabelLoaderAsync({
+  /**
    * The webpack mode: `"production" | "development"`
    */
-    mode,
-    babelProjectRoot,
-    include = [],
-    verbose,
-    platform,
-    ...options
-  } = {}
-) {
+  mode,
+  babelProjectRoot,
+  include = [],
+  verbose,
+  platform,
+  ...options
+}: {
+  mode?: Mode;
+  babelProjectRoot?: string;
+  include?: string[];
+  verbose?: boolean;
+  [key: string]: any;
+} = {}): Promise<Rule> {
   const ensuredProjectRoot = await ensureRootAsync(babelProjectRoot);
   const modules = [...includeModulesThatContainPaths, ...include];
   const customUse = options.use || {};
@@ -76,14 +86,14 @@ module.exports = async function(
     // Prevent clobbering the `include` and `use` values.
     ...options,
 
-    include(inputPath) {
+    include(inputPath: string): boolean {
       for (const possibleModule of modules) {
         if (inputPath.includes(possibleModule)) {
           if (verbose) {
             const packageName = packageNameFromPath(inputPath);
-            logPackage(packageName);
+            if (packageName) logPackage(packageName);
           }
-          return inputPath;
+          return !!inputPath;
         }
       }
       // Is inside the project and is not one of designated modules
@@ -124,4 +134,4 @@ module.exports = async function(
       },
     },
   };
-};
+}

@@ -1,15 +1,24 @@
-const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
-const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
-const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-const getPathsAsync = require('./utils/getPathsAsync');
+import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
+// @ts-ignore
+import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
+import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
+import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
+import { Arguments, Environment } from './types';
+import getPathsAsync from './utils/getPathsAsync';
+
+// @ts-ignore
 const host = process.env.HOST || '0.0.0.0';
 
-module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) {
+export default async function createDevServerConfigAsync(
+  env: Environment,
+  argv: Arguments
+): Promise<WebpackDevServerConfiguration> {
+  const { allowedHost, proxy } = argv;
   const { https = false } = env;
   const locations = await getPathsAsync(env);
   // https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpackDevServer.config.js
-  const CRA = {
+  return {
     // Enable gzip compression of generated files.
     compress: true,
     // Silence WebpackDevServer's own logs since they're generally not useful.
@@ -79,9 +88,7 @@ module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) 
 
     // Enable HTTPS if the HTTPS environment variable is set to 'true'
     // https: protocol === 'https',
-  };
 
-  const custom = {
     https,
     disableHostCheck: !proxy,
     // allowedHosts: [host, 'localhost'],
@@ -91,9 +98,4 @@ module.exports = async function(env = {}, argv, allowedHost, proxy = undefined) 
       'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
     },
   };
-
-  return {
-    ...CRA,
-    ...custom,
-  };
-};
+}
