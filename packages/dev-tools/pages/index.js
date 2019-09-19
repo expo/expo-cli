@@ -2,6 +2,7 @@ import React from 'react';
 import gql from 'graphql-tag';
 import { ApolloProvider, Query } from 'react-apollo';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
+import pTimeout from 'p-timeout';
 
 import * as State from 'app/common/state';
 import createApolloClient from 'app/common/createApolloClient';
@@ -459,26 +460,36 @@ export default class IndexPage extends React.Component {
     super(props);
     this.state = {
       disconnected: false,
+      client: null,
     };
     this.unsubscribers = [];
     if (process.browser) {
-      this.subscriptionClient = new SubscriptionClient(`ws://${window.location.host}/graphql`, {
-        reconnect: true,
-      });
-      this.client = createApolloClient(this.subscriptionClient);
+      this.connect().catch(error => this.setState({ disconnected: true }));
     }
   }
 
-  _handleConnected = () => this.setState({ disconnected: false });
-  _handleDisconnected = () => this.setState({ disconnected: true });
-
-  componentDidMount() {
+  async connect() {
+    const response = await pTimeout(fetch('/dev-tools-info'), 10000);
+    if (!response.ok) {
+      throw new Error(`Dev Tools API returned an error: ${response.status}`);
+    }
+    const { webSocketGraphQLUrl, clientAuthenticationToken } = await response.json();
+    this.subscriptionClient = new SubscriptionClient(webSocketGraphQLUrl, {
+      reconnect: true,
+      connectionParams: {
+        clientAuthenticationToken,
+      },
+    });
     this.unsubscribers.push(
       this.subscriptionClient.on('connected', this._handleConnected),
       this.subscriptionClient.on('reconnected', this._handleConnected),
       this.subscriptionClient.on('disconnected', this._handleDisconnected)
     );
+    this.setState({ client: createApolloClient(this.subscriptionClient) });
   }
+
+  _handleConnected = () => this.setState({ disconnected: false });
+  _handleDisconnected = () => this.setState({ disconnected: true });
 
   componentWillUnmount() {
     this.unsubscribers.forEach(unsubscribe => unsubscribe());
@@ -490,8 +501,12 @@ export default class IndexPage extends React.Component {
       return null;
     }
 
+    if (!this.state.client) {
+      return null;
+    }
+
     return (
-      <ApolloProvider client={this.client}>
+      <ApolloProvider client={this.state.client}>
         <Query query={query}>
           {result => {
             if (!result.loading && !result.error) {
