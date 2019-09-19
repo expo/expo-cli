@@ -23,6 +23,7 @@ jobs:
     name: Check Packages
     strategy:
       matrix:
+        package: [dev-tools, json-file, expo-codemod, webpack-config]
         # Run tests with all of these node versions/systems :]
         node-version: [10.x, 12.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
@@ -38,23 +39,7 @@ jobs:
       - run: yarn bootstrap
         env:
           CI: true
-      - name: Test @expo/dev-tools
-        run: cd packages/dev-tools && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
-        env:
-          CI: true
-      - name: Test @expo/json-file
-        run: cd packages/json-file && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
-        env:
-          CI: true
-      - name: Test expo-cli
-        run: cd packages/expo-cli && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
-        env:
-          CI: true
-      - name: Test @expo/expo-codemod
-        run: cd packages/expo-codemod && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
-        env:
-          CI: true
-      - name: Test @expo/webpack-config
-        run: cd packages/webpack-config && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
+      - name: Test ${{ matrix.package }}
+        run: cd packages/${{ matrix.package }} && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
           CI: true
