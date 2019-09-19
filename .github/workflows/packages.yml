@@ -20,7 +20,6 @@ on:
 
 jobs:
   test:
-    name: Check Packages
     strategy:
       matrix:
         package: [dev-tools, json-file, expo-codemod, webpack-config]
@@ -28,6 +27,7 @@ jobs:
         node-version: [10.x, 12.x]
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
+    name: Check ${{ matrix.package }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v1
