@@ -12,7 +12,7 @@ type VapidData = {
   vapidPvtkey?: string;
 };
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('push:android:upload [project-dir]')
     .description('Uploads a Firebase Cloud Messaging key for Android push notifications.')
@@ -161,7 +161,7 @@ export default (program: Command) => {
 
       await apiClient.deleteAsync(`credentials/push/web/${remotePackageName}`);
     }, true);
-};
+}
 
 async function _uploadWebPushCredientials(projectDir: string, options: VapidData) {
   const isGeneration = !(options.vapidPubkey && options.vapidPvtkey);

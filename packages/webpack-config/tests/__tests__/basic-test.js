@@ -26,3 +26,10 @@ it(`should be aware of process.env.CI`, async () => {
     text: 'Has CI env',
   });
 });
+
+if (config.hasServerSideRendering) {
+  it(`should be aware of process.env.CI server-side`, async () => {
+    const sourceCode = await response.text();
+    expect(sourceCode).toEqual(expect.stringContaining('Has CI env'));
+  });
+}

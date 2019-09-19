@@ -14,7 +14,7 @@ import createWebpackCompiler, {
   printInstructions,
   printSuccessMessages,
 } from './createWebpackCompiler';
-import ip from './ip'; 
+import ip from './ip';
 // @ts-ignore
 import * as Doctor from './project/Doctor';
 import * as ProjectUtils from './project/ProjectUtils';
@@ -539,6 +539,22 @@ async function startNextJsAsync({
   await app.prepare();
 
   const server = express();
+
+  server.get('/expo-service-worker.js', (req, res) => {
+    res.sendFile(path.resolve(projectRoot, 'static', 'expo-service-worker.js'));
+  });
+
+  server.get('/service-worker.js', (req, res) => {
+    // This file should be provided by https://github.com/hanford/next-offline if installed.
+    const serviceWorkerPath = path.resolve(projectRoot, '.next', 'service-worker.js');
+    if (!fs.existsSync(serviceWorkerPath)) {
+      // Simply return a blank service worker file if the user is not using `next-offline`.
+      res.sendFile(path.resolve(projectRoot, 'static', 'service-worker.js'));
+      return;
+    }
+    res.sendFile(serviceWorkerPath);
+  });
+
   server.get('*', handle);
 
   webpackDevServerInstance = server.listen(port, err => {
@@ -707,6 +723,31 @@ async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
       await fs.writeFile(pagesDocument, nextJsImportDocument);
     } catch (e) {
       throw new Error(`Could not write to pages/_document.js: ${e.toString()}`);
+    }
+  }
+
+  // TODO: Use `public/` folder when Next.js eventually deprecates `static/` folder.
+  const staticFolder = path.join(projectRoot, 'static');
+  if (!fs.existsSync(staticFolder)) {
+    fs.mkdirSync(staticFolder);
+  }
+
+  try {
+    await fs.copyFile(
+      require.resolve('@expo/webpack-config/web-default/expo-service-worker.js'),
+      path.join(staticFolder, 'expo-service-worker.js')
+    );
+  } catch (e) {
+    throw new Error(`Could not copy expo-service-worker.js: ${e.toString()}`);
+  }
+
+  const serviceWorkerPath = path.join(staticFolder, 'service-worker.js');
+  if (!fs.existsSync(serviceWorkerPath)) {
+    // Write a blank service-worker.js file for users who do not use any other service worker.
+    try {
+      await fs.writeFile(serviceWorkerPath, '');
+    } catch (e) {
+      throw new Error(`Could not write to service-worker.js: ${e.toString()}`);
     }
   }
 }

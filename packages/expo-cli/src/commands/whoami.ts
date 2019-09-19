@@ -15,10 +15,10 @@ async function action() {
   }
 }
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('whoami')
     .alias('w')
     .description('Checks with the server and then says who you are logged in as')
     .asyncAction(action);
-};
+}

@@ -1,6 +1,6 @@
 {
   "name": "@expo/image-utils",
-  "version": "0.2.5",
+  "version": "0.2.6-alpha.0",
   "description": "A package used by Expo CLI for processing images",
   "main": "build/index.js",
   "scripts": {
@@ -36,7 +36,7 @@
     "sharp-cli": "1.10.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "^0.2.0",
+    "@expo/babel-preset-cli": "^0.2.1-alpha.0",
     "@types/semver": "^6.0.0",
     "typescript": "3.4.5"
   },
