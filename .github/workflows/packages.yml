@@ -46,6 +46,10 @@ jobs:
         run: cd packages/json-file && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
           CI: true
+      - name: Test expo-cli
+        run: cd packages/expo-cli && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
+        env:
+          CI: true
       - name: Test @expo/expo-codemod
         run: cd packages/expo-codemod && "$GITHUB_WORKSPACE/scripts/module-scripts-check-packages.sh"
         env:
