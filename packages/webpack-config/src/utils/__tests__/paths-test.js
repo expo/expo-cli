@@ -1,5 +1,5 @@
 import path from 'path';
-import { getPathsAsync } from '../paths';
+import { getPathsAsync, getPaths } from '../paths';
 import normalizePaths from '../normalizePaths';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
@@ -20,6 +20,16 @@ it(`has consistent defaults`, async () => {
   expect(normalized).toMatchSnapshot();
 
   expect(locations.servedPath).toBe('/');
+});
+
+it(`matches sync and async results`, async () => {
+  const locations = getPaths(projectRoot);
+  const normalized = defaultNormalize(locations);
+
+  const locationsAsync = await getPathsAsync(projectRoot);
+  const normalizedAsync = defaultNormalize(locationsAsync);
+
+  expect(JSON.stringify(normalized)).toBe(JSON.stringify(normalizedAsync));
 });
 
 it(`uses a custom public path from WEB_PUBLIC_URL over the homepage field from package.json`, async () => {
