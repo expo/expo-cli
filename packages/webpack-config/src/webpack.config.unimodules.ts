@@ -5,29 +5,24 @@
  * This should be used to inject basic support into systems
  * like react-scripts and storybook.
  */
-
-import { createEnvironmentConstants } from '@expo/config';
 import webpack from 'webpack';
 import ManifestPlugin from 'webpack-manifest-plugin';
-import { ExpoDefinePlugin } from './plugins';
-// @ts-ignore
 
-import createClientEnvironment from './createClientEnvironment';
+import createBabelLoader from './loaders/createBabelLoader';
+import createFontLoader from './loaders/createFontLoader';
+import { ExpoDefinePlugin } from './plugins';
 import { Arguments, Environment } from './types';
 import {
   DEFAULT_ALIAS,
   getModuleFileExtensions,
   overrideWithPropertyOrConfig,
 } from './utils/config';
+import getConfig from './utils/getConfig';
 import getMode from './utils/getMode';
-import getPathsAsync from './utils/getPathsAsync';
-
-import createFontLoader from './loaders/createFontLoader';
-import createBabelLoaderAsync from './loaders/createBabelLoaderAsync';
-import getConfigAsync from './utils/getConfigAsync';
+import { getPaths } from './utils/paths';
 
 // { production, development, mode, projectRoot }
-export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
+export default function(env: Environment, argv: Arguments): webpack.Configuration {
   const {
     /**
      * **Dangerously** disable, extend, or clobber the default alias.
@@ -54,20 +49,16 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
     supportsFontLoading = true,
   } = argv;
 
-  const config = expoConfig || (await getConfigAsync(env));
+  const config = expoConfig || getConfig(env);
   const alias = overrideWithPropertyOrConfig(aliasProp, DEFAULT_ALIAS, true);
 
-  const locations = await getPathsAsync(env);
+  const locations = env.locations || getPaths(env.projectRoot);
   const mode = getMode(env);
 
-  const babelConfig = await createBabelLoaderAsync({
+  const babelConfig = createBabelLoader({
     mode,
     babelProjectRoot: locations.root,
   });
-
-  const publicAppManifest = createEnvironmentConstants(config, locations.production.manifest);
-
-  const environmentVariables = createClientEnvironment(mode, publicPath, publicAppManifest);
 
   // `publicUrl` is just like `publicPath`, but we will provide it to our app
   // as %WEB_PUBLIC_URL% in `index.html` and `process.env.WEB_PUBLIC_URL` in JavaScript.

@@ -178,7 +178,7 @@ export function getConfigForPWA(
   getAbsolutePath: (...pathComponents: string[]) => string,
   options: object
 ) {
-  const config = readConfigJson(projectRoot);
+  const { exp: config } = readConfigJson(projectRoot);
   return ensurePWAConfig(config, getAbsolutePath, options);
 }
 
@@ -465,7 +465,7 @@ const APP_JSON_EXAMPLE = JSON.stringify({
   },
 });
 
-export function readConfigJson(projectRoot: string): ExpoConfig {
+export function readConfigJson(projectRoot: string): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
 
   const rootConfig = require(configPath);
@@ -476,7 +476,34 @@ export function readConfigJson(projectRoot: string): ExpoConfig {
       'NO_EXPO'
     );
   }
-  return rootConfig.expo;
+
+  const packageJsonPath =
+    'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
+      ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
+      : path.join(projectRoot, 'package.json');
+  const pkg = require(packageJsonPath);
+
+  if (exp && !exp.name && typeof pkg.name === 'string') {
+    exp.name = pkg.name;
+  }
+
+  if (exp && !exp.slug && typeof exp.name === 'string') {
+    exp.slug = slug(exp.name.toLowerCase());
+  }
+
+  if (exp && !exp.version) {
+    exp.version = pkg.version;
+  }
+
+  if (exp && !exp.platforms) {
+    exp.platforms = ['android', 'ios'];
+  }
+
+  if (exp.nodeModulesPath) {
+    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
+  }
+
+  return { exp, pkg, rootConfig: rootConfig as AppJSONConfig };
 }
 
 export async function readConfigJsonAsync(projectRoot: string): Promise<ProjectConfig> {
