@@ -169,7 +169,7 @@ async function logAutoConfigValuesAsync(env: Environment) {
   logFooter();
 }
 
-async function reportAsync(webpackConfig: DevConfiguration, env: Environment) {
+export async function reportAsync(webpackConfig: DevConfiguration, env: Environment) {
   console.log(chalk.bold('\n\nStart Copy\n\n'));
 
   logWebpackConfigComponents(webpackConfig);
@@ -283,7 +283,3 @@ async function testBabelPreset(locations: FilePaths) {
 function isFunction(functionToCheck: any): boolean {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
-
-module.exports = {
-  reportAsync,
-};
