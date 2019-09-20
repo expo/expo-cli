@@ -1,7 +1,7 @@
 // @ts-ignore
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
-import webpack, { HotModuleReplacementPlugin } from 'webpack';
+import { Options, Configuration, HotModuleReplacementPlugin } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
@@ -112,8 +112,8 @@ function createNoJSComponent(message: string): string {
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
-  { devtool }: { devtool?: webpack.Options.Devtool }
-): webpack.Options.Devtool {
+  { devtool }: { devtool?: Options.Devtool }
+): Options.Devtool {
   if (production) {
     // string or false
     if (devtool !== undefined) {
@@ -128,7 +128,7 @@ function getDevtool(
   return false;
 }
 
-export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
+export default async function(env: Environment, argv: Arguments): Promise<Configuration> {
   const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
@@ -422,7 +422,7 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
       gzipConfig && new CompressionPlugin(gzipConfig),
       brotliConfig && new BrotliPlugin(brotliConfig),
 
-      // new ExpoProgressBarPlugin(),
+      new ExpoProgressBarPlugin(),
 
       ...reportPlugins,
     ].filter(Boolean),
