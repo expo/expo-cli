@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "watch": "tsc --watch",
     "build": "tsc",
+    "clean": "rm -rf webpack/ && rm tsconfig.tsbuildinfo",
     "prepare": "yarn build",
     "test": "npm run test:unit; npm run test:e2e",
     "test:unit": "jest --config jest/unit-test-config.json --rootDir .",

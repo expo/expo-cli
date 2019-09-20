@@ -1,9 +1,7 @@
 // @ts-ignore
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
-// @ts-ignore
-import HtmlWebpackPlugin from 'html-webpack-plugin';
 import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
-import webpack, { HotModuleReplacementPlugin } from 'webpack';
+import { Options, Configuration, HotModuleReplacementPlugin } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
@@ -26,10 +24,9 @@ import CompressionPlugin from 'compression-webpack-plugin';
 // @ts-ignore
 import BrotliPlugin from 'brotli-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import createIndexHTMLFromAppJSON from './createIndexHTMLFromAppJSON';
 import { getPathsAsync } from './utils/paths';
 
-import { ExpoDefinePlugin, ExpoProgressBarPlugin } from './plugins';
+import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
 import {
   DEFAULT_ALIAS,
   getModuleFileExtensions,
@@ -115,8 +112,8 @@ function createNoJSComponent(message: string): string {
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
-  { devtool }: { devtool?: webpack.Options.Devtool }
-): webpack.Options.Devtool {
+  { devtool }: { devtool?: Options.Devtool }
+): Options.Devtool {
   if (production) {
     // string or false
     if (devtool !== undefined) {
@@ -131,7 +128,7 @@ function getDevtool(
   return false;
 }
 
-export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
+export default async function(env: Environment, argv: Arguments): Promise<Configuration> {
   const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
@@ -362,10 +359,10 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
         ]),
 
       // Generate the `index.html`
-      createIndexHTMLFromAppJSON(env),
+      new ExpoHtmlWebpackPlugin(env),
 
       // Add variables to the `index.html`
-      new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
+      new InterpolateHtmlPlugin(ExpoHtmlWebpackPlugin, {
         WEB_PUBLIC_URL: publicPath,
         WEB_TITLE: config.web.name,
         NO_SCRIPT: noJSComponent,
@@ -377,7 +374,7 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
         publicPath,
         noResources: isDev || !env.pwa,
         filename: locations.production.manifest,
-        HtmlWebpackPlugin,
+        HtmlWebpackPlugin: ExpoHtmlWebpackPlugin,
       }),
 
       // This gives some necessary context to module not found errors, such as

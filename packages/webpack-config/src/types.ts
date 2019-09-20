@@ -10,6 +10,7 @@ export interface DevConfiguration extends WebpackConfiguration {
 }
 
 export interface Environment {
+  info?: boolean;
   https: boolean;
   config: { [key: string]: any };
   locations?: FilePaths;
