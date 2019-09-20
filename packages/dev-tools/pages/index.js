@@ -463,9 +463,10 @@ export default class IndexPage extends React.Component {
       client: null,
     };
     this.unsubscribers = [];
-    if (process.browser) {
-      this.connect().catch(error => this.setState({ disconnected: true }));
-    }
+  }
+
+  componentDidMount() {
+    this.connect().catch(error => this.setState({ disconnected: true }));
   }
 
   async connect() {
@@ -493,6 +494,7 @@ export default class IndexPage extends React.Component {
 
   componentWillUnmount() {
     this.unsubscribers.forEach(unsubscribe => unsubscribe());
+    this.unsubscribers = [];
   }
 
   render() {
