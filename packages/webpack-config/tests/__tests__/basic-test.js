@@ -33,3 +33,16 @@ if (config.hasServerSideRendering) {
     expect(sourceCode).toEqual(expect.stringContaining('Has CI env'));
   });
 }
+
+it(`should have manifest from expo-constants`, async () => {
+  await expect(page).toMatchElement('div[data-testid="expo-constants-manifest"]', {
+    text: `A Neat Expo App`,
+  });
+});
+
+if (config.hasServerSideRendering) {
+  it(`should have manifest from expo-constants server-side`, async () => {
+    const sourceCode = await response.text();
+    expect(sourceCode).toEqual(expect.stringContaining(`A Neat Expo App`));
+  });
+}
