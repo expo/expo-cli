@@ -36,22 +36,17 @@ function ensureSlash(inputPath: string, needsSlash: boolean): string {
   }
 }
 
-export default async function getPathsAsync({
-  locations,
-  projectRoot,
-}: {
-  projectRoot?: string;
-  locations?: FilePaths;
-} = {}): Promise<FilePaths> {
-  // Recycle locations
-  if (locations) {
-    return locations;
-  }
+export function getPossibleProjectRoot(): string {
+  return fs.realpathSync(process.cwd());
+}
 
+function parsePaths(
+  projectRoot: string,
+  { exp: nativeAppManifest, pkg }: ConfigUtils.ExpoConfig
+): FilePaths {
   const envPublicUrl = process.env.WEB_PUBLIC_URL;
-  const appDirectory = fs.realpathSync(process.cwd());
 
-  const inputProjectRoot = projectRoot || appDirectory;
+  const inputProjectRoot = projectRoot || getPossibleProjectRoot();
 
   function absolute(...pathComponents: string[]) {
     // Simple check if we are dealing with an URL
@@ -82,8 +77,6 @@ export default async function getPathsAsync({
       return absolute('node_modules');
     }
   }
-
-  const { exp: nativeAppManifest, pkg } = await ConfigUtils.readConfigJsonAsync(inputProjectRoot);
 
   const packageJsonPath = absolute('package.json');
   const modulesPath = getModulesPath();
@@ -172,4 +165,14 @@ export default async function getPathsAsync({
       favicon: getProductionPath('favicon.ico'),
     },
   };
+}
+
+export function getPaths(projectRoot: string) {
+  const config = ConfigUtils.readConfigJson(projectRoot);
+  return parsePaths(projectRoot, config);
+}
+
+export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
+  const config = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  return parsePaths(projectRoot, config);
 }

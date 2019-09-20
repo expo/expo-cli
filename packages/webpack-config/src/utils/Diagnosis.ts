@@ -1,9 +1,10 @@
+import { ensurePWAConfig, readConfigJson } from '@expo/config';
 import chalk from 'chalk';
 import diff from 'deep-diff';
-import { ensurePWAConfig, readConfigJson } from '@expo/config';
 import fs from 'fs';
-import getPathsAsync from './getPathsAsync';
+
 import { DevConfiguration, Environment, FilePaths } from '../types';
+import { getPathsAsync } from './paths';
 
 // https://stackoverflow.com/a/51319962/4047926
 function colorizeKeys(json: { [key: string]: any } | string) {
@@ -83,7 +84,7 @@ function logWebpackConfigComponents(webpackConfig: DevConfiguration) {
 async function logStaticsAsync(env: Environment) {
   logHeader('Statics Info');
 
-  const paths = await getPathsAsync(env);
+  const paths = env.locations || (await getPathsAsync(env.projectRoot));
 
   // Detect if the default template files aren't being used.
   const { template: statics = {} as any } = paths;
@@ -135,9 +136,9 @@ function setDeepValue(pathComponents: string[], object: { [key: string]: any }, 
 }
 
 async function logAutoConfigValuesAsync(env: Environment) {
-  const locations = await getPathsAsync(env);
+  const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
-  const config = readConfigJson(env.projectRoot);
+  const { exp: config } = readConfigJson(env.projectRoot);
 
   const standardConfig = ensurePWAConfig({}, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),
@@ -176,7 +177,7 @@ async function reportAsync(webpackConfig: DevConfiguration, env: Environment) {
   await logStaticsAsync(env);
   await logAutoConfigValuesAsync(env);
 
-  const locations = await getPathsAsync(env);
+  const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   await testBabelPreset(locations);
 

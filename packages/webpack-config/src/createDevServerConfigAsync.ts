@@ -5,7 +5,7 @@ import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddle
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
 import { Arguments, Environment } from './types';
-import getPathsAsync from './utils/getPathsAsync';
+import { getPathsAsync } from './utils/paths';
 
 // @ts-ignore
 const host = process.env.HOST || '0.0.0.0';
@@ -16,7 +16,7 @@ export default async function createDevServerConfigAsync(
 ): Promise<WebpackDevServerConfiguration> {
   const { allowedHost, proxy } = argv;
   const { https = false } = env;
-  const locations = await getPathsAsync(env);
+  const locations = env.locations || (await getPathsAsync(env.projectRoot));
   // https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpackDevServer.config.js
   return {
     // Enable gzip compression of generated files.

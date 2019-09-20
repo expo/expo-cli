@@ -7,18 +7,18 @@ import merge from 'webpack-merge';
 import safePostCssParser from 'postcss-safe-parser';
 import webpack from 'webpack';
 import { boolish } from 'getenv';
-import getConfigAsync from './utils/getConfigAsync';
-import getPathsAsync from './utils/getPathsAsync';
+import getConfig from './utils/getConfig';
+import { getPathsAsync } from './utils/paths';
 import common from './webpack.common';
 import { Environment, Arguments } from './types';
 
 export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
   if (!env.config) {
     // Fill all config values with PWA defaults
-    env.config = await getConfigAsync(env);
+    env.config = getConfig(env);
   }
 
-  const locations = await getPathsAsync(env);
+  const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   const commonConfig = await common(env, argv);
 

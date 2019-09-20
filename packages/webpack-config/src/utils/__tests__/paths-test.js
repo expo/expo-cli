@@ -1,5 +1,5 @@
 import path from 'path';
-import getPathsAsync from '../getPathsAsync';
+import getPathsAsync from '../paths';
 import normalizePaths from '../normalizePaths';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');

@@ -1,7 +1,7 @@
 import path from 'path';
 import chalk from 'chalk';
 import { Rule } from 'webpack';
-import getPathsAsync from '../utils/getPathsAsync';
+import { getPossibleProjectRoot } from '../utils/paths';
 import { Mode } from '../types';
 
 const getModule = (name: string) => path.join('node_modules', name);
@@ -47,17 +47,17 @@ function logPackage(packageName: string) {
   }
 }
 
-async function ensureRootAsync(possibleProjectRoot?: string): Promise<string> {
+function ensureRoot(possibleProjectRoot?: string): string {
   if (typeof possibleProjectRoot === 'string') {
     return path.resolve(possibleProjectRoot);
   }
-  return (await getPathsAsync()).root;
+  return getPossibleProjectRoot();
 }
 /**
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
  */
-export default async function createBabelLoaderAsync({
+export default function createBabelLoader({
   /**
    * The webpack mode: `"production" | "development"`
    */
@@ -73,8 +73,8 @@ export default async function createBabelLoaderAsync({
   include?: string[];
   verbose?: boolean;
   [key: string]: any;
-} = {}): Promise<Rule> {
-  const ensuredProjectRoot = await ensureRootAsync(babelProjectRoot);
+} = {}): Rule {
+  const ensuredProjectRoot = ensureRoot(babelProjectRoot);
   const modules = [...includeModulesThatContainPaths, ...include];
   const customUse = options.use || {};
   const customUseOptions = customUse.options || {};

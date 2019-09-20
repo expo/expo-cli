@@ -4,13 +4,13 @@ import merge from 'webpack-merge';
 
 import createDevServerConfigAsync from './createDevServerConfigAsync';
 import { Arguments, DevConfiguration, Environment } from './types';
-import getConfigAsync from './utils/getConfigAsync';
+import getConfig from './utils/getConfig';
 import common from './webpack.common';
 
 export default async function(env: Environment, argv: Arguments): Promise<DevConfiguration> {
   if (!env.config) {
     // Fill all config values with PWA defaults
-    env.config = await getConfigAsync(env);
+    env.config = getConfig(env);
   }
 
   const devServer = await createDevServerConfigAsync(env, argv);

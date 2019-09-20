@@ -26,8 +26,8 @@ import CompressionPlugin from 'compression-webpack-plugin';
 // @ts-ignore
 import BrotliPlugin from 'brotli-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import createIndexHTMLFromAppJSONAsync from './createIndexHTMLFromAppJSONAsync';
-import getPathsAsync from './utils/getPathsAsync';
+import createIndexHTMLFromAppJSON from './createIndexHTMLFromAppJSON';
+import { getPathsAsync } from './utils/paths';
 
 import { ExpoDefinePlugin, ExpoProgressBarPlugin } from './plugins';
 import {
@@ -37,9 +37,9 @@ import {
   overrideWithPropertyOrConfig,
 } from './utils/config';
 import createFontLoader from './loaders/createFontLoader';
-import createBabelLoaderAsync from './loaders/createBabelLoaderAsync';
+import createBabelLoader from './loaders/createBabelLoader';
 import getMode from './utils/getMode';
-import getConfigAsync from './utils/getConfigAsync';
+import getConfig from './utils/getConfig';
 import { Environment, Arguments } from './types';
 
 const DEFAULT_GZIP = {
@@ -132,7 +132,7 @@ function getDevtool(
 }
 
 export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
-  const config = await getConfigAsync(env);
+  const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
   const isProd = mode === 'production';
@@ -147,7 +147,7 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
     // isProd
   );
 
-  const locations = await getPathsAsync(env);
+  const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
   // Webpack uses `publicPath` to determine where the app is being served from.
   // It requires a trailing slash, or the file assets will get an incorrect path.
@@ -257,7 +257,7 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
 
   const babelProjectRoot = babelAppConfig.root || locations.root;
 
-  const babelLoader = await createBabelLoaderAsync({
+  const babelLoader = createBabelLoader({
     mode,
     platform,
     babelProjectRoot,
@@ -362,7 +362,7 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
         ]),
 
       // Generate the `index.html`
-      await createIndexHTMLFromAppJSONAsync(env),
+      createIndexHTMLFromAppJSON(env),
 
       // Add variables to the `index.html`
       new InterpolateHtmlPlugin(HtmlWebpackPlugin, {

@@ -1,7 +1,7 @@
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { overrideWithPropertyOrConfig } from './utils/config';
-import getPathsAsync from './utils/getPathsAsync';
-import getConfigAsync from './utils/getConfigAsync';
+import { getPaths } from './utils/paths';
+import getConfig from './utils/getConfig';
 import getMode from './utils/getMode';
 import { Environment } from './types';
 
@@ -18,11 +18,9 @@ const DEFAULT_MINIFY = {
   minifyURLs: true,
 };
 
-export default async function createIndexHTMLFromAppJSONAsync(
-  env: Environment
-): Promise<HtmlWebpackPlugin> {
-  const locations = await getPathsAsync(env);
-  const config = await getConfigAsync(env);
+export default function createIndexHTMLFromAppJSON(env: Environment): HtmlWebpackPlugin {
+  const locations = env.locations || getPaths(env.projectRoot);
+  const config = getConfig(env);
   const isProduction = getMode(env) === 'production';
 
   const { name, build = {} } = config.web;

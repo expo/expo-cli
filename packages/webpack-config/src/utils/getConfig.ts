@@ -1,17 +1,17 @@
 import { ExpoConfig, getConfigForPWA } from '@expo/config';
 
 import { Environment } from '../types';
-import getPathsAsync from './getPathsAsync';
+import { getPaths } from './paths';
 
-async function getConfigAsync(env: Environment): Promise<ExpoConfig> {
+function getConfig(env: Environment): ExpoConfig {
   if (env.config) {
     return env.config;
   }
-  const locations = await getPathsAsync(env);
+  const locations = env.locations || getPaths(env.projectRoot);
   // Fill all config values with PWA defaults
   return getConfigForPWA(env.projectRoot, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),
   });
 }
 
-export default getConfigAsync;
+export default getConfig;
