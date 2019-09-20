@@ -5,7 +5,7 @@ import http from 'http';
 import next from 'next';
 import openBrowser from 'react-dev-utils/openBrowser';
 
-import { startGraphQLServer } from './DevToolsServer';
+import { startGraphQLServer, createAuthenticationContextAsync } from './DevToolsServer';
 
 const PORT = 3333;
 
@@ -20,16 +20,26 @@ async function run() {
     await app.prepare();
 
     const server = express();
-    server.get('/graphiql', graphiqlExpress({ endpointURL: `ws://localhost:${PORT}/graphql` }));
+    const authenticationContext = await createAuthenticationContextAsync({ port: PORT });
+    server.get('/dev-tools-info', authenticationContext.requestHandler);
+    server.get(
+      '/graphiql',
+      graphiqlExpress({
+        endpointURL: authenticationContext.webSocketGraphQLUrl,
+        websocketConnectionParams: {
+          clientAuthenticationToken: authenticationContext.clientAuthenticationToken,
+        },
+      })
+    );
     server.get('*', app.getRequestHandler());
 
     const httpServer = http.createServer(server);
     await new Promise((resolve, reject) => {
       httpServer.once('error', reject);
       httpServer.once('listening', resolve);
-      httpServer.listen(PORT);
+      httpServer.listen(PORT, 'localhost');
     });
-    startGraphQLServer(projectDir, httpServer);
+    startGraphQLServer(projectDir, httpServer, authenticationContext);
     console.log('Starting project...');
     await Project.startAsync(projectDir);
     let url = `http://localhost:${PORT}`;
