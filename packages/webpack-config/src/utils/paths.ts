@@ -169,7 +169,7 @@ function parsePaths(
 
 export function getPaths(projectRoot: string) {
   const config = ConfigUtils.readConfigJson(projectRoot);
-  return parsePaths(projectRoot, { exp: config });
+  return parsePaths(projectRoot, config);
 }
 
 export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
