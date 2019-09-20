@@ -1,6 +1,6 @@
 {
   "name": "@expo/image-utils",
-  "version": "0.2.6-alpha.0",
+  "version": "0.2.6",
   "description": "A package used by Expo CLI for processing images",
   "main": "build/index.js",
   "scripts": {
