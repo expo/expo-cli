@@ -23,14 +23,13 @@ module.exports = function withUnimodules(inputWebpackConfig = {}, env = {}, argv
     argv
   );
 
-  const expoBabelLoader = _findBabelLoader(expoConfig.module.rules);
-  const includeFunc = expoBabelLoader.include;
-
   // We have to transpile these modules and make them not external too.
   // We have to do this because next.js by default externals all `node_modules`'s js files.
   // Reference:
   // https://github.com/martpie/next-transpile-modules/blob/77450a0c0307e4b650d7acfbc18641ef9465f0da/index.js#L48-L62
   // https://github.com/zeit/next.js/blob/0b496a45e85f3c9aa3cf2e77eef10888be5884fc/packages/next/build/webpack-config.ts#L185-L258
+  const expoBabelLoader = _findBabelLoader(expoConfig.module.rules);
+  const includeFunc = expoBabelLoader.include;
   if (inputWebpackConfig.externals) {
     inputWebpackConfig.externals = inputWebpackConfig.externals.map(external => {
       if (typeof external !== 'function') return external;
@@ -39,5 +38,6 @@ module.exports = function withUnimodules(inputWebpackConfig = {}, env = {}, argv
       };
     });
   }
+
   return merge(expoConfig, inputWebpackConfig);
 };
