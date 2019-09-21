@@ -487,8 +487,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     mode,
     https,
     polyfill: validateBoolOption('isPolyfillEnabled', options.isPolyfillEnabled, false),
-    development: dev,
-    production: !dev,
     info: isDebugInfoEnabled,
     ...(options.webpackEnv || {}),
   };
