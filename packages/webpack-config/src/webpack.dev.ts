@@ -7,14 +7,14 @@ import { Arguments, DevConfiguration, Environment } from './types';
 import getConfig from './utils/getConfig';
 import common from './webpack.common';
 
-export default async function(env: Environment, argv: Arguments): Promise<DevConfiguration> {
+export default async function(env: Environment, argv: Arguments = {}): Promise<DevConfiguration> {
   if (!env.config) {
     // Fill all config values with PWA defaults
     env.config = getConfig(env);
   }
 
   const devServer = await createDevServerConfigAsync(env, argv);
-  return merge(await common(env, argv), {
+  return merge(await common(env), {
     output: {
       // Add comments that describe the file import/exports.
       // This will make it easier to debug.

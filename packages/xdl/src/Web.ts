@@ -28,8 +28,6 @@ export type WebEnvironment = {
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   polyfill: boolean;
-  development: boolean;
-  production: boolean;
   https: boolean;
   info: boolean;
 };

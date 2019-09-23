@@ -128,7 +128,7 @@ function getDevtool(
   return false;
 }
 
-export default async function(env: Environment, argv: Arguments): Promise<Configuration> {
+export default async function(env: Environment): Promise<Configuration> {
   const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';

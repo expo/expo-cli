@@ -1,26 +1,26 @@
 import { Configuration } from 'webpack';
-import { Environment, Arguments } from './types';
+import { Environment, InputEnvironment, Arguments, DevConfiguration } from './types';
 import developmentConfig from './webpack.dev';
 import productionConfig from './webpack.prod';
-import { getMode, getConfig } from './utils';
+import { getMode } from './utils';
 import * as Diagnosis from './utils/Diagnosis';
+import { validateEnvironment } from './utils/validate';
 
-export default async function(env: Environment, argv: Arguments): Promise<Configuration> {
-  // Fill all config values with PWA defaults
-  if (!env.config) {
-    env.config = getConfig(env);
-  }
-
-  const mode = getMode(env);
-  let config;
+export default async function(
+  env: InputEnvironment,
+  argv: Arguments = {}
+): Promise<Configuration | DevConfiguration> {
+  const environment: Environment = validateEnvironment(env);
+  const mode = getMode(environment);
+  let config: Configuration | DevConfiguration;
   if (mode === 'development') {
-    config = await developmentConfig(env, argv);
+    config = await developmentConfig(environment, argv);
   } else {
-    config = await productionConfig(env, argv);
+    config = await productionConfig(environment, argv);
   }
 
-  if (env.info) {
-    Diagnosis.reportAsync(config, env);
+  if (environment.info) {
+    Diagnosis.reportAsync(config, environment);
   }
 
   return config;

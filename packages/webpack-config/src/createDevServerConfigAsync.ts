@@ -12,7 +12,7 @@ const host = process.env.HOST || '0.0.0.0';
 
 export default async function createDevServerConfigAsync(
   env: Environment,
-  argv: Arguments
+  argv: Arguments = {}
 ): Promise<WebpackDevServerConfiguration> {
   const { allowedHost, proxy } = argv;
   const { https = false } = env;

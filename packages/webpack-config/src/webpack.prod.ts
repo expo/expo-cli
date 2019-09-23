@@ -12,7 +12,10 @@ import { getPathsAsync } from './utils/paths';
 import common from './webpack.common';
 import { Environment, Arguments } from './types';
 
-export default async function(env: Environment, argv: Arguments): Promise<webpack.Configuration> {
+export default async function(
+  env: Environment,
+  argv: Arguments = {}
+): Promise<webpack.Configuration> {
   if (!env.config) {
     // Fill all config values with PWA defaults
     env.config = getConfig(env);
@@ -20,7 +23,7 @@ export default async function(env: Environment, argv: Arguments): Promise<webpac
 
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
-  const commonConfig = await common(env, argv);
+  const commonConfig = await common(env);
 
   const shouldUseSourceMap = commonConfig.devtool !== null;
 
