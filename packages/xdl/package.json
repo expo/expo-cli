@@ -1,6 +1,6 @@
 {
   "name": "@expo/xdl",
-  "version": "56.2.3",
+  "version": "56.2.4",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
   "files": [
@@ -37,7 +37,7 @@
     "@expo/osascript": "^2.0.6-alpha.0",
     "@expo/schemer": "^1.2.8",
     "@expo/spawn-async": "1.5.0",
-    "@expo/webpack-config": "^0.7.5",
+    "@expo/webpack-config": "^0.7.6",
     "@types/webpack": "^4.32.1",
     "@types/webpack-dev-server": "^3.1.7",
     "analytics-node": "3.3.0",
