@@ -34,9 +34,13 @@ import * as Manifest from 'android-manifest';
 // Read the project's manifest
 const manifest = await Manifest.readAsync(manifestPath);
 
-// Get the permissions as an array
+// Get the Android app permissions as an array
 const permissions: string[] = Manifest.getPermissions(manifest);
 ```
+
+## License
+
+The Expo source code is made available under the [MIT license](LICENSE). Some of the dependencies are licensed differently, with the BSD license, for example.
 
 <!-- Footer -->
 
