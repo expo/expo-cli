@@ -81,6 +81,14 @@ workflows:
           e: node-10
           requires:
             - build10
+      - test-android-manifest:
+          e: node-12
+          requires:
+            - build12
+      - test-android-manifest:
+          e: node-10
+          requires:
+            - build10
 jobs:
   build:
     parameters:
@@ -183,6 +191,16 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/schemer
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-android-manifest:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/android-manifest
     steps:
       - attach_workspace:
           at: '~'
