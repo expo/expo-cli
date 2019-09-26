@@ -1,5 +1,5 @@
 import Schemer from '../src/index';
-import { ErrorCodes } from '../src/Error.js';
+import { ErrorCodes } from '../src/Error';
 
 describe('Sanity Tests', () => {
   it('is a class', () => {
@@ -71,7 +71,7 @@ describe('Manual Validation Individual Unit Tests', () => {
   });
 });
 
-describe('Individual Unit Tests', async () => {
+describe('Individual Unit Tests', () => {
   it('Error when missing Required Property', async () => {
     let S = new Schemer({
       properties: {

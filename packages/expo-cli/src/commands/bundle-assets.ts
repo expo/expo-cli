@@ -10,7 +10,7 @@ async function action(projectDir: string, options: Options) {
   await Detach.bundleAssetsAsync(projectDir, options);
 }
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('bundle-assets [project-dir]')
     .option('--dest [dest]', 'Destination directory for assets')
@@ -19,4 +19,4 @@ export default (program: Command) => {
       'Bundles assets for a detached app. This command should be executed from xcode or gradle.'
     )
     .asyncActionProjectDir(action, true);
-};
+}

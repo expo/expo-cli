@@ -79,7 +79,7 @@ async function action(projectDir: string, options: ProjectUrlOptions) {
   }
 }
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('url [project-dir]')
     .alias('u')
@@ -102,4 +102,4 @@ export default (program: Command) => {
       'Displays the standalone Android binary URL you can use to download your app binary'
     )
     .asyncActionProjectDir(logArtifactUrl('android'), true);
-};
+}
