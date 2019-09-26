@@ -698,8 +698,10 @@ function _findBabelLoader(rules: webpack.RuleSetRule[]): webpack.RuleSetRule | n
   for (const rule of rules) {
     if (
       rule.use &&
-      (rule.use as any).loader &&
-      (rule.use as any).loader.includes('/babel-loader')
+      (rule.use as any).loader && (
+        (rule.use as any).loader.includes('/babel-loader') ||
+        (rule.use as any).loader.includes('\\babel-loader')
+      )
     ) {
       return rule;
     }
