@@ -60,13 +60,7 @@ describe('Permissions', () => {
     expect(Manifest.ensurePermission(manifest, 'NEW_PERMISSION_2')).toBe(true);
     expect(Manifest.getPermissions(manifest).length).toBe(3);
 
-    expect(
-      Manifest.getRoot(manifest).toString({
-        declaration: false,
-        whitespace: true,
-        selfCloseEmpty: true,
-      })
-    ).toMatchSnapshot();
+    expect(Manifest.format(Manifest.getRoot(manifest).toString())).toMatchSnapshot();
   });
 
   describe('E2E', () => {

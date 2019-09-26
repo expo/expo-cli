@@ -35,11 +35,13 @@
   ],
   "dependencies": {
     "fs-extra": "^7.0.1",
-    "libxmljs": "^0.19.5"
+    "libxmljs": "^0.19.5",
+    "xml-formatter": "^1.1.0"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.0",
     "@types/libxmljs": "^0.18.3",
+    "@types/xml-formatter": "^1.1.0",
     "typescript": "3.4.5"
   },
   "publishConfig": {

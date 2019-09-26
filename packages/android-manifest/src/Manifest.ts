@@ -1,7 +1,7 @@
-import path from 'path';
-
 import fs from 'fs-extra';
-import { Attribute, parseXml, Document, Element } from 'libxmljs';
+import { Attribute, Document, Element, parseXml } from 'libxmljs';
+import { EOL } from 'os';
+import path from 'path';
 
 const USES_PERMISSION = 'uses-permission';
 
@@ -129,6 +129,50 @@ export function getPermissions(doc: Document): string[] {
 
 export function logManifest(doc: Document) {
   console.log(getRoot(doc).toString());
+}
+
+const stringTimesN = (n: number, char: string) => Array(n + 1).join(char);
+
+export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): string {
+  let xmlInput: string;
+  if (typeof manifest === 'string') {
+    xmlInput = manifest;
+  } else if (manifest.toString) {
+    xmlInput = manifest.toString();
+  } else {
+    throw new Error(`android-manifest: invalid manifest value passed in: ${manifest}`);
+  }
+  const indentString = stringTimesN(indentLevel, ' ');
+
+  let formatted = '';
+  const regex = /(>)(<)(\/*)/g;
+  const xml = xmlInput.replace(regex, `$1${newline}$2$3`);
+  let pad = 0;
+  xml
+    .split(/\r?\n/)
+    .map((line: string) => line.trim())
+    .forEach((line: string) => {
+      let indent = 0;
+      if (line.match(/.+<\/\w[^>]*>$/)) {
+        indent = 0;
+      } else if (line.match(/^<\/\w/)) {
+        // Somehow istanbul doesn't see the else case as covered, although it is. Skip it.
+        /* istanbul ignore else  */
+        if (pad !== 0) {
+          pad -= 1;
+        }
+      } else if (line.match(/^<\w([^>]*[^\/])?>.*$/)) {
+        indent = 1;
+      } else {
+        indent = 0;
+      }
+
+      const padding = stringTimesN(pad, indentString);
+      formatted += padding + line + newline; // eslint-disable-line prefer-template
+      pad += indent;
+    });
+
+  return formatted.trim();
 }
 
 export async function writeAndroidManifestAsync(
