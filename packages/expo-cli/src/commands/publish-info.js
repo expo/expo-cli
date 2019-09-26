@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Api, Project, FormData, UserManager } from '@expo/xdl';
+import { Api, Project, ProjectUtils, FormData, UserManager } from '@expo/xdl';
 import * as table from '../commands/utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
@@ -36,6 +36,10 @@ export default (program: any) => {
       // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
       let formData = new FormData();
       formData.append('queryType', 'history');
+      let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+      if (exp.owner) {
+        formData.append('owner', exp.owner);
+      }
       formData.append('slug', await Project.getSlugAsync(projectDir, options));
       formData.append('version', VERSION);
       if (options.releaseChannel) {
@@ -111,6 +115,11 @@ export default (program: any) => {
 
       let formData = new FormData();
       formData.append('queryType', 'details');
+
+      let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+      if (exp.owner) {
+        formData.append('owner', exp.owner);
+      }
       formData.append('publishId', options.publishId);
       formData.append('slug', await Project.getSlugAsync(projectDir, options));
 
