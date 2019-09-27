@@ -61,7 +61,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async _clearCredentials() {
-    const username = this.user.username;
+    const username = this.manifest.owner || this.user.username;
     const experienceName = `@${username}/${this.manifest.slug}`;
 
     const credentialMetadata = {
@@ -110,7 +110,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async collectAndValidateCredentials() {
-    const username = this.user.username;
+    const username = this.manifest.owner || this.user.username;
     const experienceName = `@${username}/${this.manifest.slug}`;
 
     const credentialMetadata = {
