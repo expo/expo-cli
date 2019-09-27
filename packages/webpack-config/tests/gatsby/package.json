@@ -1,0 +1,39 @@
+{
+  "name": "expo-gatsby",
+  "private": true,
+  "version": "0.0.0",
+  "author": "Evan Bacon",
+  "scripts": {
+    "build": "gatsby build",
+    "develop": "gatsby develop",
+    "start": "npm run develop",
+    "serve": "gatsby serve",
+    "test": "echo \"Write tests! -> https://gatsby.dev/unit-testing\""
+  },
+  "dependencies": {
+    "@unimodules/core": "^4.0.0",
+    "@unimodules/react-native-adapter": "^4.0.0",
+    "expo": "^35.0.0",
+    "expo-asset": "^7.0.0",
+    "expo-blur": "^7.0.0",
+    "expo-camera": "^7.0.0",
+    "expo-constants": "^7.0.0",
+    "expo-file-system": "^7.0.0",
+    "expo-font": "^7.0.0",
+    "expo-linear-gradient": "^7.0.0",
+    "gatsby": "^2.3.3",
+    "gatsby-plugin-react-native-web": "^2.0.0-beta.0",
+    "gatsby-plugin-webpack-bundle-analyzer": "^1.0.4",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-native": "^0.55",
+    "react-native-vector-icons": "^6.4.2",
+    "react-native-web": "^0.11.1",
+    "react-native-web-hooks": "^1.0.2"
+  },
+  "devDependencies": {
+    "@expo/webpack-config": "^0.7.6",
+    "babel-preset-expo": "^7.0.0"
+  },
+  "license": "MIT"
+}
