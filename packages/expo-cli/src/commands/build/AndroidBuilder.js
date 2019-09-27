@@ -61,14 +61,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async _clearCredentials() {
-    const username = this.manifest.owner || this.user.username;
-    const experienceName = `@${username}/${this.manifest.slug}`;
-
-    const credentialMetadata = {
-      username,
-      experienceName,
-      platform: ANDROID,
-    };
+    const credentialMetadata = await Credentials.getCredentialMetadataAsync(
+      this.projectDir,
+      ANDROID
+    );
 
     log.warn(
       `Clearing your Android build credentials from our build servers is a ${chalk.red(
@@ -110,14 +106,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async collectAndValidateCredentials() {
-    const username = this.manifest.owner || this.user.username;
-    const experienceName = `@${username}/${this.manifest.slug}`;
-
-    const credentialMetadata = {
-      username,
-      experienceName,
-      platform: ANDROID,
-    };
+    const credentialMetadata = await Credentials.getCredentialMetadataAsync(
+      this.projectDir,
+      ANDROID
+    );
 
     const credentialsExist = await Credentials.credentialsExistForPlatformAsync(credentialMetadata);
 

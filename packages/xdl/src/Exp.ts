@@ -307,9 +307,6 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   let { username } = user;
 
   const { exp } = await ConfigUtils.readConfigJsonAsync(root);
-  if (exp.owner) {
-    username = exp.owner;
-  }
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;
