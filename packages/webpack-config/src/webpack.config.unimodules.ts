@@ -5,13 +5,13 @@
  * This should be used to inject basic support into systems
  * like react-scripts and storybook.
  */
-import webpack from 'webpack';
+import { Configuration } from 'webpack';
 import ManifestPlugin from 'webpack-manifest-plugin';
 
 import createBabelLoader from './loaders/createBabelLoader';
 import createFontLoader from './loaders/createFontLoader';
 import { ExpoDefinePlugin } from './plugins';
-import { Arguments, Environment } from './types';
+import { Arguments, DevConfiguration, Environment } from './types';
 import {
   DEFAULT_ALIAS,
   getModuleFileExtensions,
@@ -22,7 +22,7 @@ import getMode from './utils/getMode';
 import { getPaths } from './utils/paths';
 
 // { production, development, mode, projectRoot }
-export default function(env: Environment, argv: Arguments): webpack.Configuration {
+export default function(env: Environment, argv: Arguments): DevConfiguration | Configuration {
   const {
     /**
      * **Dangerously** disable, extend, or clobber the default alias.

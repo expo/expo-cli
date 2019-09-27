@@ -9,17 +9,17 @@ export interface DevConfiguration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;
 }
 
-export interface Environment {
-  info?: boolean;
-  https: boolean;
-  config: { [key: string]: any };
-  locations?: FilePaths;
+export type InputEnvironment = {
   projectRoot: string;
+  platform: 'ios' | 'android' | 'web';
+  info?: boolean;
+  https?: boolean;
   production?: boolean;
   development?: boolean;
+  config?: { [key: string]: any };
+  locations?: FilePaths;
   polyfill?: boolean;
   mode?: Mode;
-  platform: 'ios' | 'android' | 'web';
   removeUnusedImportExports?: boolean;
   pwa?: boolean;
   report?: {
@@ -28,7 +28,28 @@ export interface Environment {
     statsFilename: string;
     reportFilename: string;
   };
-}
+};
+
+export type Environment = {
+  info: boolean;
+  https: boolean;
+  config: { [key: string]: any };
+  locations: FilePaths;
+  projectRoot: string;
+  polyfill?: boolean;
+  mode: Mode;
+  platform: 'ios' | 'android' | 'web';
+  removeUnusedImportExports?: boolean;
+  pwa?: boolean;
+  report?: Report;
+};
+
+export type Report = {
+  verbose: boolean;
+  path: string;
+  statsFilename: string;
+  reportFilename: string;
+};
 
 type PathResolver = (...input: string[]) => string;
 

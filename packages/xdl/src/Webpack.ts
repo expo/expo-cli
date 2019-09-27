@@ -465,6 +465,10 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   projectRoot: string,
   options: BundlingOptions
 ): Promise<Web.WebEnvironment> {
+  // Bacon: Prevent dev flag from being used in production
+  if (options.mode === 'production') {
+    options.dev = false;
+  }
   let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
 
   const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';
@@ -486,8 +490,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     mode,
     https,
     polyfill: validateBoolOption('isPolyfillEnabled', options.isPolyfillEnabled, false),
-    development: dev,
-    production: !dev,
     info: isDebugInfoEnabled,
     ...(options.webpackEnv || {}),
   };

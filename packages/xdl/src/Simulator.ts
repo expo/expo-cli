@@ -267,7 +267,7 @@ export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
   let matches = await glob(
-    './data/Containers/Data/Application/*/Library/Caches/Snapshots/host.exp.Exponent',
+    './data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}',
     { cwd: simDir }
   );
 
@@ -489,11 +489,11 @@ export async function openProjectAsync(
 export async function openWebProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
-  const projectUrl = await getWebpackUrlAsync(projectRoot);  
+  const projectUrl = await getWebpackUrlAsync(projectRoot);
   if (projectUrl === null) {
-    return { 
-      success: false, 
-      error: `The web project has not been started yet`
+    return {
+      success: false,
+      error: `The web project has not been started yet`,
     };
   }
   const result = await openUrlInSimulatorSafeAsync(projectUrl, true);
