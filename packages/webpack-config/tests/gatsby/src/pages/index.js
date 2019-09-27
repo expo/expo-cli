@@ -1,18 +1,26 @@
-import { BlurView } from 'expo-blur';
+/* global alert */
 import { Camera } from 'expo-camera';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
-import * as SMS from 'expo-sms';
-import * as MailComposer from 'expo-mail-composer';
-
 import Constants from 'expo-constants';
+import * as DocumentPicker from 'expo-document-picker';
 import * as Font from 'expo-font';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Location from 'expo-location';
+import * as MailComposer from 'expo-mail-composer';
+import * as Permissions from 'expo-permissions';
+import * as Print from 'expo-print';
+import * as SMS from 'expo-sms';
 import React, { useEffect, useState } from 'react';
-import { Image, Button, ScrollView, StyleSheet, Text } from 'react-native';
+import { Button, ScrollView, Text, View } from 'react-native';
 
+import Accelerometer from '../components/Accelerometer';
+import Battery from '../components/Battery';
+import BlurView from '../components/Blur';
+import ChatHeads from '../components/ChatHeads';
 import Example from '../components/example';
 import Layout from '../components/layout';
+import * as SVGExamples from '../components/SVGExamples';
+import Video from '../components/Video';
 
 function FontExample() {
   const [loaded, setLoaded] = useState(false);
@@ -26,7 +34,7 @@ function FontExample() {
     })();
   }, []);
   return (
-    <Example title="Font">
+    <Example title="Font" style={{ justifyContent: 'space-around' }}>
       {loaded && (
         <Text
           style={{
@@ -46,7 +54,7 @@ function ImagePickerExample() {
   const [item, setItem] = useState(null);
 
   return (
-    <Example title="Image Picker">
+    <Example title="Image Picker" style={{ justifyContent: 'space-around' }}>
       <Button
         title="Open Camera"
         onPress={async () => {
@@ -75,11 +83,94 @@ function ImagePickerExample() {
   );
 }
 
+function LocationExample() {
+  const [item, setItem] = useState(null);
+
+  return (
+    <Example title="Location" style={{ justifyContent: 'space-around' }}>
+      <Button
+        title="Get Location"
+        onPress={async () => {
+          try {
+            setItem(await Location.getCurrentPositionAsync());
+          } catch ({ message }) {
+            alert('Something went wrong: ' + message);
+          }
+        }}
+      />
+      {item && <JSONView json={item} />}
+    </Example>
+  );
+}
+
+function PermissionsExample() {
+  const permissions = [
+    ['CAMERA', Permissions.CAMERA],
+    ['AUDIO_RECORDING', Permissions.AUDIO_RECORDING],
+    ['LOCATION', Permissions.LOCATION],
+    ['USER_FACING_NOTIFICATIONS', Permissions.USER_FACING_NOTIFICATIONS],
+    ['NOTIFICATIONS', Permissions.NOTIFICATIONS],
+    ['CONTACTS', Permissions.CONTACTS],
+    ['SYSTEM_BRIGHTNESS', Permissions.SYSTEM_BRIGHTNESS],
+    ['CAMERA_ROLL', Permissions.CAMERA_ROLL],
+    ['CALENDAR', Permissions.CALENDAR],
+    ['REMINDERS', Permissions.REMINDERS],
+  ];
+
+  return (
+    <Example title="Permissions">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ alignItems: 'stretch', flex: 1 }}>
+        {permissions.map(([permissionName, permissionType]) => (
+          <View style={{ marginBottom: 12 }}>
+            <Text style={{ marginBottom: 8 }}>{permissionName}</Text>
+            <View style={{ flexDirection: 'row', flex: 1, justifyContent: 'space-around' }}>
+              <Button
+                style={{ marginVertical: 4 }}
+                key={permissionType}
+                onPress={async () => {
+                  alert((await Permissions.getAsync(permissionType)).status);
+                }}
+                title={`Get Status`}
+              />
+              <Button
+                style={{ marginVertical: 4 }}
+                key={permissionType}
+                onPress={async () => {
+                  alert((await Permissions.askAsync(permissionType)).status);
+                }}
+                title={`Request`}
+              />
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </Example>
+  );
+}
+
+function PrintExample() {
+  return (
+    <Example title="Print" style={{ justifyContent: 'space-around' }}>
+      <Button
+        title="Print something"
+        onPress={async () => {
+          try {
+            await Print.printAsync({
+              html: 'Dear Friend! <b>Happy</b> Birthday, enjoy your day! 🎈',
+            });
+          } catch ({ message }) {
+            alert('Something went wrong: ' + message);
+          }
+        }}
+      />
+    </Example>
+  );
+}
 function DocumentPickerExample() {
   const [item, setItem] = useState(null);
 
   return (
-    <Example title="Document Picker">
+    <Example title="Document Picker" style={{ justifyContent: 'space-around' }}>
       <Button
         title="Pick item"
         onPress={async () => {
@@ -101,7 +192,7 @@ function MailComposerExample() {
   const [status, setStatus] = useState(null);
 
   return (
-    <Example title="Mail Composer">
+    <Example title="Mail Composer" style={{ justifyContent: 'space-around' }}>
       <Button
         title="Compose Email"
         onPress={async () => {
@@ -130,7 +221,7 @@ function SMSExample() {
   }, []);
 
   return (
-    <Example title="SMS">
+    <Example title="SMS" style={{ justifyContent: 'space-around' }}>
       {status && <Text> Status: {status}</Text>}
 
       {isAvailable == null && <Text>Checking capability for this device...</Text>}
@@ -144,6 +235,37 @@ function SMSExample() {
           }}
         />
       )}
+    </Example>
+  );
+}
+
+function SensorsExample() {
+  return (
+    <Example title="Sensors" row>
+      <Accelerometer />
+    </Example>
+  );
+}
+
+function SVGExample() {
+  return (
+    <Example title="SVG" row>
+      {Object.keys(SVGExamples).map(key => {
+        const SVGExample = SVGExamples[key];
+        return (
+          <React.Fragment key={key}>
+            <Text style={{ paddingVertical: 8 }}>{key}</Text>
+            <SVGExample />
+          </React.Fragment>
+        );
+      })}
+    </Example>
+  );
+}
+function BatteryExample() {
+  return (
+    <Example title="Battery">
+      <Battery />
     </Example>
   );
 }
@@ -193,25 +315,20 @@ function LinearGradientExample() {
 function BlurViewExample() {
   return (
     <Example title="BlurView">
-      <Image
-        source={{ uri: 'https://i.ytimg.com/vi/y588qNiCZZo/maxresdefault.jpg' }}
-        style={{ flex: 1, height: 300 }}
-      />
-      <BlurView
-        style={[StyleSheet.absoluteFill, { padding: 15, alignItems: 'center', borderRadius: 5 }]}>
-        <Text
-          style={{
-            backgroundColor: 'transparent',
-            fontSize: 15,
-            color: '#fff',
-          }}>
-          Blur View
-        </Text>
-      </BlurView>
+      <ScrollView style={{ flex: 1 }}>
+        <BlurView />
+      </ScrollView>
     </Example>
   );
 }
 
+function VideoExample() {
+  return (
+    <Example title="Video">
+      <Video />
+    </Example>
+  );
+}
 function CameraExample() {
   return (
     <Example title="Camera">
@@ -220,16 +337,32 @@ function CameraExample() {
   );
 }
 
+function GesturesExample() {
+  return (
+    <Example title="Gestures">
+      <ChatHeads />
+    </Example>
+  );
+}
+
 export default () => (
-  <Layout title="Expo Examples">
+  <Layout title="Expo Gatsby Examples">
+    <VideoExample />
+    <CameraExample />
+    <GesturesExample />
+    <BlurViewExample />
+    <SVGExample />
+    <LinearGradientExample />
+    <PermissionsExample />
+    <LocationExample />
+    <SensorsExample />
+    <BatteryExample />
+    <PrintExample />
     <MailComposerExample />
     <SMSExample />
     <ImagePickerExample />
     <DocumentPickerExample />
     <FontExample />
-    <CameraExample />
-    <BlurViewExample />
-    <LinearGradientExample />
     <ConstantsExample />
   </Layout>
 );
