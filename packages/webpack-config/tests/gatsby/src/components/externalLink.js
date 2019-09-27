@@ -1,10 +1,8 @@
-import './layout.css';
-
 import React, { useRef } from 'react';
 import { Linking, Platform, StyleSheet, Text } from 'react-native';
 import { useActive, useFocus, useHover } from 'react-native-web-hooks';
 
-function ExternalLink({ target = '_blank', href, ...props }) {
+export default function ExternalLink({ target = '_blank', href, ...props }) {
   const ref = useRef(null);
 
   const { isHovered } = useHover(ref);
@@ -56,5 +54,3 @@ const styles = StyleSheet.create({
     borderBottomColor: 'black',
   },
 });
-
-export default ExternalLink;
