@@ -20,6 +20,7 @@ const secondsToMilliseconds = seconds => seconds * 1000;
 
 type BuilderOptions = {
   wait: boolean,
+  generateKeystore: boolean,
   clearCredentials: boolean,
   type?: string,
   releaseChannel: string,
