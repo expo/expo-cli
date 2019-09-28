@@ -184,7 +184,7 @@ export class DownloadKeystore implements IView {
   }
 
   async fetch(ctx: Context): Promise<void> {
-    const credentials = await ApiV2.clientForUser(ctx.user).getAsync(`credentials/android/@${ctx.user.username}/${ctx.manifest.slug}`);
+    const credentials = await ApiV2.clientForUser(ctx.user).getAsync(`credentials/android/@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`);
     if (credentials && credentials.keystore) {
       this.credentials = credentials.keystore;
     }

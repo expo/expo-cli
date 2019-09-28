@@ -3,7 +3,7 @@ import pick from 'lodash/pick';
 import intersection from 'lodash/intersection';
 import chalk from 'chalk';
 
-import { Credentials, Exp, UrlUtils } from '@expo/xdl';
+import { Credentials, UrlUtils } from '@expo/xdl';
 import BaseUploader from './BaseUploader';
 import log from '../../log';
 import prompt from '../../prompt';
@@ -111,23 +111,8 @@ export default class IOSUploader extends BaseUploader {
   }
 
   async _getAppleTeamId() {
-    const publicUrl = this.options.publicUrl;
-    const {
-      args: {
-        username,
-        remoteFullPackageName: experienceName,
-        iosBundleIdentifier: bundleIdentifier,
-      },
-    } = publicUrl
-      ? await Exp.getThirdPartyInfoAsync(publicUrl)
-      : await Exp.getPublishInfoAsync(this.projectDir);
-
-    const { teamId } = await Credentials.getCredentialsForPlatform({
-      username,
-      experienceName,
-      bundleIdentifier,
-      platform: 'ios',
-    });
+    const credentialMetadata = await Credentials.getCredentialMetadataAsync(this.projectDir, 'ios');
+    const { teamId } = await Credentials.getCredentialsForPlatform(credentialMetadata);
 
     return teamId;
   }
