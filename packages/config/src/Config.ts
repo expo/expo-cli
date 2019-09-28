@@ -482,8 +482,16 @@ export function readConfigJson(
 ): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
 
-  const rootConfig = require(configPath);
-  let exp = rootConfig.expo;
+  let rootConfig: any;
+
+  try {
+    rootConfig = require(configPath);
+  } catch (error) {
+    rootConfig = {};
+  }
+
+  let { expo: exp } = rootConfig;
+
   if (!exp) {
     if (skipValidation) {
       exp = {};
