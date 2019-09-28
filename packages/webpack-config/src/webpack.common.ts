@@ -28,8 +28,11 @@ import { getPathsAsync } from './utils/paths';
 
 import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
 import {
-  DEFAULT_ALIAS,
   getModuleFileExtensions,
+} from './utils';
+
+import {
+  DEFAULT_ALIAS,
   enableWithPropertyOrConfig,
   overrideWithPropertyOrConfig,
 } from './utils/config';
