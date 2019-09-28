@@ -8,19 +8,14 @@ import log from '../../log';
 
 async function fetchIosCerts(projectDir) {
   const {
-    args: {
-      username,
-      remotePackageName,
-      remoteFullPackageName: experienceName,
-      iosBundleIdentifier: bundleIdentifier,
-    },
+    args: { remotePackageName },
   } = await Exp.getPublishInfoAsync(projectDir);
 
   const inProjectDir = filename => path.resolve(projectDir, filename);
+  const credentialMetadata = await Credentials.getCredentialMetadataAsync(projectDir, 'ios');
+  const { experienceName } = credentialMetadata;
 
-  const credentialMetadata = { username, experienceName, platform: 'ios', bundleIdentifier };
-
-  log(`Retrieving iOS credentials for ${experienceName}`);
+  log(`Retrieving iOS credentials for ${credentialMetadata.experienceName}`);
 
   try {
     const {

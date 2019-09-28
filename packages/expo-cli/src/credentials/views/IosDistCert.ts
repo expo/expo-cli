@@ -180,7 +180,8 @@ export class UseExistingDistributionCert implements IView {
       return null;
     }
     const experience = get(ctx, 'manifest.slug');
-    const experienceName = `@${ctx.user.username}/${experience}`;
+    const owner = get(ctx, 'manifest.owner')
+    const experienceName = `@${owner || ctx.user.username}/${experience}`;
     const bundleIdentifier = get(ctx, 'manifest.ios.bundleIdentifier');
     if (!experience || !bundleIdentifier) {
       log.error(`slug and ios.bundleIdentifier needs to be defined`);
