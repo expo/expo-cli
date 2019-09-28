@@ -1,4 +1,4 @@
-import { getModuleFileExtensions } from '../config';
+import { getModuleFileExtensions } from '../extensions';
 
 it(`creates extensions for web`, async () => {
   expect(getModuleFileExtensions('web')).toMatchSnapshot();
