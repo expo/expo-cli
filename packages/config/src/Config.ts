@@ -178,8 +178,8 @@ export function getConfigForPWA(
   getAbsolutePath: (...pathComponents: string[]) => string,
   options: object
 ) {
-  const { exp: config } = readConfigJson(projectRoot);
-  return ensurePWAConfig(config, getAbsolutePath, options);
+  const { exp } = readConfigJson(projectRoot, true);
+  return ensurePWAConfig(exp, getAbsolutePath, options);
 }
 
 export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
@@ -217,9 +217,20 @@ function ensurePWAorientation(orientation: string): string {
   return DEFAULT_ORIENTATION;
 }
 
+function getWebManifestFromConfig(config: { [key: string]: any } = {}): { [key: string]: any } {
+  const appManifest = config.expo || config || {};
+  return appManifest.web || {};
+}
+
+export function getWebOutputPath(config: { [key: string]: any } = {}): string {
+  const web = getWebManifestFromConfig(config);
+  const { build = {} } = web;
+  return build.output || DEFAULT_BUILD_PATH;
+}
+
 function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   // For RN CLI support
-  const appManifest = appJSON.expo || appJSON;
+  const appManifest = appJSON.expo || appJSON || {};
   const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
   const { build: webBuild = {}, webDangerous = {}, meta = {} } = webManifest;
   const { apple = {} } = meta;
@@ -230,7 +241,7 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
   const rootId = webBuild.rootId || DEFAULT_ROOT_ID;
-  const buildOutputPath = webBuild.output || DEFAULT_BUILD_PATH;
+  const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = appManifest.description || DEFAULT_DESCRIPTION;
@@ -465,16 +476,23 @@ const APP_JSON_EXAMPLE = JSON.stringify({
   },
 });
 
-export function readConfigJson(projectRoot: string): ProjectConfig {
+export function readConfigJson(
+  projectRoot: string,
+  skipValidation: boolean = false
+): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
 
   const rootConfig = require(configPath);
-  const exp = rootConfig.expo;
+  let exp = rootConfig.expo;
   if (!exp) {
-    throw new ConfigError(
-      `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
-      'NO_EXPO'
-    );
+    if (skipValidation) {
+      exp = {};
+    } else {
+      throw new ConfigError(
+        `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
+        'NO_EXPO'
+      );
+    }
   }
 
   const packageJsonPath =

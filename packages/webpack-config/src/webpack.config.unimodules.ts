@@ -12,11 +12,7 @@ import createBabelLoader from './loaders/createBabelLoader';
 import createFontLoader from './loaders/createFontLoader';
 import { ExpoDefinePlugin } from './plugins';
 import { Arguments, DevConfiguration, Environment } from './types';
-import {
-  DEFAULT_ALIAS,
-  getModuleFileExtensions,
-  overrideWithPropertyOrConfig,
-} from './utils/config';
+import { DEFAULT_ALIAS, getModuleFileExtensions } from './utils/config';
 import getConfig from './utils/getConfig';
 import getMode from './utils/getMode';
 import { getPaths } from './utils/paths';
@@ -24,14 +20,6 @@ import { getPaths } from './utils/paths';
 // { production, development, mode, projectRoot }
 export default function(env: Environment, argv: Arguments): DevConfiguration | Configuration {
   const {
-    /**
-     * **Dangerously** disable, extend, or clobber the default alias.
-     *
-     * Disable by passing in `alias: false`
-     * Clobber with `alias: { ... }` setting existing `DEFAULT_ALIAS` values to `undefined`
-     * Extend by defining new values in `alias: { ... }`
-     */
-    alias: aliasProp,
     publicPath = '/',
     /**
      * The project's `app.json`
@@ -50,7 +38,6 @@ export default function(env: Environment, argv: Arguments): DevConfiguration | C
   } = argv;
 
   const config = expoConfig || getConfig(env);
-  const alias = overrideWithPropertyOrConfig(aliasProp, DEFAULT_ALIAS, true);
 
   const locations = env.locations || getPaths(env.projectRoot);
   const mode = getMode(env);
@@ -111,7 +98,7 @@ export default function(env: Environment, argv: Arguments): DevConfiguration | C
     },
     resolve: {
       symlinks: false,
-      alias,
+      alias: DEFAULT_ALIAS,
       extensions: getModuleFileExtensions('web'),
     },
   };

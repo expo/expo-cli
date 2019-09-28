@@ -68,7 +68,7 @@ export interface FilePaths {
   production: FilePathsFolder;
   packageJson: string;
   root: string;
-  appMain: string;
+  appMain: string | null;
   modules: string;
   servedPath: string;
   //   [route: string]: string | PathResolver | FilePathsFolder;
