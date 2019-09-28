@@ -1,5 +1,5 @@
 import path from 'path';
-import { getPathsAsync, getServedPath, getPaths } from '../paths';
+import { getPathsAsync, getPublicPaths, getServedPath, getPaths } from '../paths';
 import normalizePaths from '../normalizePaths';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
@@ -42,5 +42,25 @@ it(`uses a custom public path from the homepage field of a project's package.jso
   const servedPath = await getServedPath(projectRootCustomHomepage);
   expect(servedPath).toMatchSnapshot();
 });
+
+it(`changes public paths based on mode`, async () => {
+  process.env.WEB_PUBLIC_URL = 'WEB_PUBLIC_URL-defined';
+
+  const devPaths = await getPublicPaths({
+    projectRoot: projectRootCustomHomepage,
+    mode: 'development',
+  });
+
+  const prodPaths = await getPublicPaths({
+    projectRoot: projectRootCustomHomepage,
+    mode: 'production',
+  });
+
+  expect(devPaths.publicPath).not.toBe(prodPaths.publicPath);
+  expect(devPaths.publicUrl).not.toBe(prodPaths.publicUrl);
+
+  expect(prodPaths.publicUrl).toBe(process.env.WEB_PUBLIC_URL);
+});
+
 // TODO: Bacon: Add test for resolving entry point
 // TODO: Bacon: Add test for custom config paths
