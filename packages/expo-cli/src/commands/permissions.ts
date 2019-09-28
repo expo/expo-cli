@@ -1,9 +1,11 @@
-import * as Manifest from '@expo/android-manifest';
 import * as ConfigUtils from '@expo/config';
 import { IosPlist, IosWorkspace, UserManager } from '@expo/xdl';
 import StandaloneContext from '@expo/xdl/build/detach/StandaloneContext';
+import * as Manifest from 'android-manifest';
 import chalk from 'chalk';
 import { Command } from 'commander';
+
+// @ts-ignore
 import { Form, MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
@@ -206,15 +208,15 @@ export async function actionAndroid(projectDir: string = './') {
 }
 
 async function getContextAsync(projectDir: string, exp: any): Promise<any> {
-  let user = await UserManager.ensureLoggedInAsync();
+  // let user = await UserManager.ensureLoggedInAsync();
 
-  if (!user) {
-    throw new Error('Internal error -- somehow detach is being run in offline mode.');
-  }
+  // if (!user) {
+  //   throw new Error('Internal error -- somehow detach is being run in offline mode.');
+  // }
 
-  const { username } = user;
-  let experienceName = `@${username}/${exp.slug}`;
-  let experienceUrl = `exp://exp.host/${experienceName}`;
+  // const { username } = user;
+  // let experienceName = `@${username}/${exp.slug}`;
+  let experienceUrl = ''; // `exp://exp.host/${experienceName}`;
   return StandaloneContext.createUserContext(projectDir, exp, experienceUrl);
 }
 
