@@ -12,11 +12,10 @@ import createBabelLoader from './loaders/createBabelLoader';
 import createFontLoader from './loaders/createFontLoader';
 import { ExpoDefinePlugin } from './plugins';
 import { Arguments, DevConfiguration, Environment } from './types';
-import {
-  DEFAULT_ALIAS,
-  getModuleFileExtensions,
-  overrideWithPropertyOrConfig,
-} from './utils/config';
+
+import { DEFAULT_ALIAS, getModuleFileExtensions } from './utils';
+
+import { overrideWithPropertyOrConfig } from './utils/config';
 import getConfig from './utils/getConfig';
 import getMode from './utils/getMode';
 import { getPaths } from './utils/paths';
