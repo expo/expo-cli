@@ -151,9 +151,8 @@ export default async function(env: Environment): Promise<Configuration> {
 
   const middlewarePlugins = [];
 
-  const { build: buildConfig } = config.web;
-  const { lang } = config.web;
-  const { rootId, babel: babelAppConfig = {} } = config.web.build;
+  const { build: buildConfig = {}, lang } = config.web;
+  const { rootId, babel: babelAppConfig = {} } = buildConfig;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
@@ -164,7 +163,7 @@ export default async function(env: Environment): Promise<Configuration> {
 
   const serviceWorker = overrideWithPropertyOrConfig(
     // Prevent service worker in development mode
-    config.web.build.serviceWorker,
+    buildConfig.serviceWorker,
     DEFAULT_SERVICE_WORKER
   );
   if (serviceWorker) {
@@ -211,7 +210,7 @@ export default async function(env: Environment): Promise<Configuration> {
   let reportPlugins: any[] = [];
 
   const reportConfig = enableWithPropertyOrConfig(env.report, DEFAULT_REPORT_CONFIG, true);
-  if (typeof config.web.build.report !== 'undefined') {
+  if (typeof buildConfig.report !== 'undefined') {
     throw new Error(
       'expo.web.build.report is deprecated. Please extend webpack.config.js and use env.report instead.'
     );
@@ -243,7 +242,7 @@ export default async function(env: Environment): Promise<Configuration> {
     ];
   }
 
-  const devtool = getDevtool({ production: isProd, development: isDev }, config.web.build);
+  const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig);
 
   const babelProjectRoot = babelAppConfig.root || locations.root;
 
@@ -284,11 +283,20 @@ export default async function(env: Environment): Promise<Configuration> {
   const gzipConfig = isProd && overrideWithPropertyOrConfig(buildConfig.gzip, DEFAULT_GZIP);
   const brotliConfig = isProd && enableWithPropertyOrConfig(buildConfig.brotli, DEFAULT_BROTLI);
 
-  const appEntry = [locations.appMain];
+  const appEntry: string[] = [];
+
+  // In solutions like Gatsby the main entry point doesn't need to be known.
+  if (locations.appMain) {
+    appEntry.push(locations.appMain);
+  } else {
+    throw new Error(
+      `The entry point for your project couldn't be found. Please define it in the package.json main field`
+    );
+  }
 
   if (isProd) {
     if (env.polyfill) {
-      appEntry.unshift('@babel/polyfill');
+      appEntry.unshift(require.resolve('@babel/polyfill'));
     }
   } else {
     // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144

@@ -4,6 +4,7 @@ import normalizePaths from '../normalizePaths';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 const projectRootCustomHomepage = path.resolve(__dirname, '../../../tests/custom-homepage');
+const projectRootMinimum = path.resolve(__dirname, '../../../tests/minimum');
 
 function defaultNormalize(locations) {
   return normalizePaths(locations, value => value.split('packages/webpack-config/').pop());
@@ -11,6 +12,15 @@ function defaultNormalize(locations) {
 
 beforeEach(() => {
   delete process.env.WEB_PUBLIC_URL;
+});
+
+it(`works with no app.json`, async () => {
+  const locations = await getPathsAsync(projectRootMinimum);
+
+  const normalized = defaultNormalize(locations);
+  expect(normalized).toMatchSnapshot();
+
+  expect(locations.servedPath).toBe('/');
 });
 
 it(`has consistent defaults`, async () => {
