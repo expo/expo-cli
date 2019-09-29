@@ -158,7 +158,7 @@ export async function startAsync(
     server = await startNextJsAsync({
       projectRoot,
       port: webpackServerPort,
-      dev: env.development,
+      dev: env.mode !== "production",
     });
     printSuccessMessages({
       projectRoot,
