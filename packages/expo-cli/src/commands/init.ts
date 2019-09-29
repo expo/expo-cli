@@ -29,6 +29,7 @@ type Options = {
   androidPackage?: string;
   iosBundleIdentifier?: string;
   parent?: Command;
+  yes?: true;
 };
 
 const FEATURED_TEMPLATES = [
@@ -88,7 +89,14 @@ async function action(projectDir: string, options: Options) {
       'The project dir argument is required in non-interactive mode.'
     );
   } else {
-    parentDir = process.cwd();
+    action(process.cwd(), options);
+    return;
+  }
+
+  if (options.yes) {
+    options.name = path.basename(process.cwd());
+    options.parent!.nonInteractive = true;
+    options.template = 'blank';
   }
 
   let templateSpec;
@@ -406,6 +414,7 @@ export default function(program: Command) {
       '-t, --template [name]',
       'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or any npm package that includes an Expo project template.'
     )
+    .option('-y, --yes', 'Skip the questionnaire altogether')
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
     .option('--workflow [name]', '(Deprecated) The workflow to use. managed (default) or advanced')
