@@ -55,7 +55,7 @@ export function getPossibleProjectRoot(): string {
 
 function parsePaths(
   projectRoot: string,
-  { exp: nativeAppManifest, pkg }: ConfigUtils.ExpoConfig
+  { exp: nativeAppManifest, pkg, web }: ConfigUtils.ExpoConfig
 ): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
 
@@ -118,7 +118,8 @@ function parsePaths(
   const productionPath = absolute(config.web.build.output);
 
   function templatePath(filename: string = ''): string {
-    const overridePath = absolute('web', filename);
+    const staticDir = web.staticDir || 'web';
+    const overridePath = absolute(staticDir, filename);
     if (fs.existsSync(overridePath)) {
       return overridePath;
     }

@@ -113,7 +113,9 @@ export async function invokeWebpackConfigAsync(
   argv?: string[]
 ): Promise<WebpackConfiguration> {
   // Check if the project has a webpack.config.js in the root.
-  const projectWebpackConfig = path.resolve(env.projectRoot, 'webpack.config.js');
+  const { exp } = await readConfigJsonAsync(env.projectRoot);
+  const webpackConfigPath = exp.web.webpackConfigPath || 'webpack.config.js';
+  const projectWebpackConfig = path.resolve(env.projectRoot, webpackConfigPath);
   let config: WebpackConfiguration;
   if (fs.existsSync(projectWebpackConfig)) {
     const webpackConfig = require(projectWebpackConfig);
