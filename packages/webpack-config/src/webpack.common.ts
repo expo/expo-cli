@@ -24,12 +24,10 @@ import CompressionPlugin from 'compression-webpack-plugin';
 // @ts-ignore
 import BrotliPlugin from 'brotli-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { getPathsAsync } from './utils/paths';
+import { getPathsAsync, getPublicPaths } from './utils/paths';
 
 import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
-import {
-  getModuleFileExtensions,
-} from './utils';
+import { getModuleFileExtensions } from './utils';
 
 import {
   DEFAULT_ALIAS,
@@ -149,15 +147,7 @@ export default async function(env: Environment): Promise<Configuration> {
 
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
-  // Webpack uses `publicPath` to determine where the app is being served from.
-  // It requires a trailing slash, or the file assets will get an incorrect path.
-  // In development, we always serve from the root. This makes config easier.
-  const publicPath = isProd ? locations.servedPath : '/';
-
-  // `publicUrl` is just like `publicPath`, but we will provide it to our app
-  // as %WEB_PUBLIC_URL% in `index.html` and `process.env.WEB_PUBLIC_URL` in JavaScript.
-  // Omit trailing slash as %WEB_PUBLIC_URL%/xyz looks better than %WEB_PUBLIC_URL%xyz.
-  const publicUrl = isProd ? publicPath.slice(0, -1) : '';
+  const { publicPath, publicUrl } = getPublicPaths(env);
 
   const middlewarePlugins = [];
 

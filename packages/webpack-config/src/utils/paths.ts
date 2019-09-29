@@ -4,7 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import url from 'url';
 
-import { FilePaths } from '../types';
+import { Environment, FilePaths } from '../types';
+import getMode from './getMode';
 
 const possibleMainFiles = [
   'index.web.ts',
@@ -36,10 +37,6 @@ function ensureSlash(inputPath: string, needsSlash: boolean): string {
   }
 }
 
-export function getPossibleProjectRoot(): string {
-  return fs.realpathSync(process.cwd());
-}
-
 export function getAbsolutePathWithProjectRoot(
   projectRoot: string,
   ...pathComponents: string[]
@@ -52,9 +49,11 @@ export function getAbsolutePathWithProjectRoot(
   return path.resolve(projectRoot, ...pathComponents);
 }
 
-function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
-  const envPublicUrl = process.env.WEB_PUBLIC_URL;
+export function getPossibleProjectRoot(): string {
+  return fs.realpathSync(process.cwd());
+}
 
+function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
 
   function absolute(...pathComponents: string[]): string {
@@ -74,19 +73,6 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
 
   const packageJsonPath = absolute('package.json');
   const modulesPath = getModulesPath();
-
-  const getPublicUrl = (appPackageJson: string) => envPublicUrl || require(appPackageJson).homepage;
-  // We use `WEB_PUBLIC_URL` environment variable or "homepage" field to infer
-  // "public path" at which the app is served.
-  // Webpack needs to know it to put the right <script> hrefs into HTML even in
-  // single-page apps that may serve index.html for nested URLs like /todos/42.
-  // We can't use a relative path in HTML because we don't want to load something
-  // like /todos/42/static/js/bundle.7289d.js. We have to know the root.
-  function getServedPath(appPackageJson: string): string {
-    const publicUrl = getPublicUrl(appPackageJson);
-    const servedUrl = envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : '/');
-    return ensureSlash(servedUrl!, true);
-  }
 
   const productionPath = absolute(getWebOutputPath(nativeAppManifest));
 
@@ -113,7 +99,7 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
     root: absoluteProjectRoot,
     appMain: getEntryPoint(inputProjectRoot),
     modules: modulesPath,
-    servedPath: getServedPath(absolute('package.json')),
+    servedPath: getServedPath(inputProjectRoot),
     template: {
       get: templatePath,
       folder: templatePath(),
@@ -175,4 +161,48 @@ export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
     exp = (await readConfigJsonAsync(projectRoot, true)).exp;
   } catch (error) {}
   return parsePaths(projectRoot, exp);
+}
+
+export function getServedPath(projectRoot: string): string {
+  const { pkg } = readConfigJson(projectRoot, true);
+  const envPublicUrl = process.env.WEB_PUBLIC_URL;
+
+  // We use `WEB_PUBLIC_URL` environment variable or "homepage" field to infer
+  // "public path" at which the app is served.
+  // Webpack needs to know it to put the right <script> hrefs into HTML even in
+  // single-page apps that may serve index.html for nested URLs like /todos/42.
+  // We can't use a relative path in HTML because we don't want to load something
+  // like /todos/42/static/js/bundle.7289d.js. We have to know the root.
+  const publicUrl = envPublicUrl || pkg.homepage;
+  const servedUrl = envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : '/');
+  return ensureSlash(servedUrl!, true);
+}
+
+export function getPublicPaths({
+  projectRoot,
+  ...env
+}: Environment): {
+  /**
+   * Webpack uses `publicPath` to determine where the app is being served from.
+   * It requires a trailing slash, or the file assets will get an incorrect path.
+   * In development, we always serve from the root. This makes config easier.
+   */
+  publicPath: string;
+
+  /**
+   * `publicUrl` is just like `publicPath`, but we will provide it to our app
+   * as %WEB_PUBLIC_URL% in `index.html` and `process.env.WEB_PUBLIC_URL` in JavaScript.
+   * Omit trailing slash as %WEB_PUBLIC_URL%/xyz looks better than %WEB_PUBLIC_URL%xyz.
+   */
+  publicUrl: string;
+} {
+  if (getMode(env) === 'production') {
+    const publicPath = getServedPath(projectRoot);
+    return {
+      publicPath,
+      publicUrl: publicPath.slice(0, -1),
+    };
+  }
+
+  return { publicUrl: '', publicPath: '/' };
 }
