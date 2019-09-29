@@ -53,6 +53,15 @@ export function getPossibleProjectRoot(): string {
   return fs.realpathSync(process.cwd());
 }
 
+export function getModulesPath(projectRoot: string): string {
+  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
+  if (workspaceRoot) {
+    return path.resolve(workspaceRoot, 'node_modules');
+  }
+
+  return path.resolve(projectRoot, 'node_modules');
+}
+
 function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
 
@@ -60,20 +69,8 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
     return getAbsolutePathWithProjectRoot(inputProjectRoot, ...pathComponents);
   }
 
-  const absoluteProjectRoot = absolute();
-
-  function getModulesPath() {
-    const workspaceRoot = findWorkspaceRoot(absoluteProjectRoot); // Absolute path or null
-    if (workspaceRoot) {
-      return path.resolve(workspaceRoot, 'node_modules');
-    } else {
-      return absolute('node_modules');
-    }
-  }
-
   const packageJsonPath = absolute('package.json');
-  const modulesPath = getModulesPath();
-
+  const modulesPath = getModulesPath(inputProjectRoot);
   const productionPath = absolute(getWebOutputPath(nativeAppManifest));
 
   function templatePath(filename: string = ''): string {
@@ -96,7 +93,7 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
     absolute,
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
-    root: absoluteProjectRoot,
+    root: path.resolve(inputProjectRoot),
     appMain: getEntryPoint(inputProjectRoot),
     modules: modulesPath,
     servedPath: getServedPath(inputProjectRoot),
