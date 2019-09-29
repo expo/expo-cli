@@ -18,7 +18,7 @@ import { DEFAULT_ALIAS, getModuleFileExtensions } from './utils';
 import { overrideWithPropertyOrConfig } from './utils/config';
 import getConfig from './utils/getConfig';
 import getMode from './utils/getMode';
-import { getPaths } from './utils/paths';
+import { getPaths, getPublicPaths } from './utils/paths';
 
 // { production, development, mode, projectRoot }
 export default function(env: Environment, argv: Arguments): DevConfiguration | Configuration {
@@ -31,7 +31,6 @@ export default function(env: Environment, argv: Arguments): DevConfiguration | C
      * Extend by defining new values in `alias: { ... }`
      */
     alias: aliasProp,
-    publicPath = '/',
     /**
      * The project's `app.json`
      * This will be used to populate the `Constants.manifest` in the Unimodule `expo-constants`
@@ -59,10 +58,7 @@ export default function(env: Environment, argv: Arguments): DevConfiguration | C
     babelProjectRoot: locations.root,
   });
 
-  // `publicUrl` is just like `publicPath`, but we will provide it to our app
-  // as %WEB_PUBLIC_URL% in `index.html` and `process.env.WEB_PUBLIC_URL` in JavaScript.
-  // Omit trailing slash as %WEB_PUBLIC_URL%/xyz looks better than %WEB_PUBLIC_URL%xyz.
-  const publicUrl = mode === 'production' ? publicPath.slice(0, -1) : '';
+  const { publicPath, publicUrl } = getPublicPaths(env);
 
   const loaders = [
     {
