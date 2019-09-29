@@ -172,7 +172,7 @@ export function getPaths(projectRoot: string): FilePaths {
 export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
   let exp;
   try {
-    exp = (await readConfigJsonAsync(projectRoot)).exp;
+    exp = (await readConfigJsonAsync(projectRoot, true)).exp;
   } catch (error) {}
   return parsePaths(projectRoot, exp);
 }

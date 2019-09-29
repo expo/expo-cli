@@ -1,7 +1,7 @@
 import path from 'path';
 
 import fs from 'fs-extra';
-import JsonFile, { JSONValue } from '@expo/json-file';
+import JsonFile, { JSONValue, JSONObject } from '@expo/json-file';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
@@ -44,23 +44,6 @@ const DEFAULT_ORIENTATION = 'any';
 const ICON_SIZES = [192, 512];
 const MAX_SHORT_NAME_LENGTH = 12;
 const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
-
-export async function addPlatform(
-  projectRoot: string,
-  platform: 'ios' | 'android' | 'web'
-): Promise<ProjectConfig> {
-  const { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
-
-  let currentPlatforms: Platform[] = [];
-  if (Array.isArray(exp.platforms) && exp.platforms.length) {
-    currentPlatforms = exp.platforms;
-  }
-  if (currentPlatforms.includes(platform)) {
-    return { exp, pkg, rootConfig };
-  }
-
-  return await writeConfigJsonAsync(projectRoot, { platforms: [...currentPlatforms, platform] });
-}
 
 export function isUsingYarn(projectRoot: string): boolean {
   const workspaceRoot = findWorkspaceRoot(projectRoot);
@@ -532,11 +515,22 @@ export function readConfigJson(
   return { exp, pkg, rootConfig: rootConfig as AppJSONConfig };
 }
 
-export async function readConfigJsonAsync(projectRoot: string): Promise<ProjectConfig> {
+export async function readConfigJsonAsync(
+  projectRoot: string,
+  skipValidation: boolean = false
+): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
-  const rootConfig = await JsonFile.readAsync(configPath, { json5: true });
+  let rootConfig: JSONObject | null = null;
+  try {
+    rootConfig = await JsonFile.readAsync(configPath, { json5: true });
+  } catch (error) {}
+
   if (rootConfig === null || typeof rootConfig !== 'object') {
-    throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+    if (skipValidation) {
+      rootConfig = { expo: {} };
+    } else {
+      throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+    }
   }
   const exp = rootConfig.expo as ExpoConfig;
   if (exp === null || typeof exp !== 'object') {

@@ -54,7 +54,6 @@ type BundlingOptions = {
   dev?: boolean;
   polyfill?: boolean;
   pwa?: boolean;
-  isValidationEnabled?: boolean;
   isImageEditingEnabled?: boolean;
   isDebugInfoEnabled?: boolean;
   isPolyfillEnabled?: boolean;
@@ -336,13 +335,13 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, true);
   const { webName } = ConfigUtils.getNameFromConfig(exp);
   return webName;
 }
 
 export async function getProjectUseNextJsAsync(projectRoot: string): Promise<boolean> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, true);
   const { use = null } = exp.web || {};
   return use === 'nextjs';
 }
@@ -422,9 +421,6 @@ async function createWebpackConfigAsync(
   options: CLIWebOptions = {}
 ): Promise<{ env: any; config: Web.WebpackConfiguration }> {
   const fullOptions = transformCLIOptions(options);
-  if (validateBoolOption('isValidationEnabled', fullOptions.isValidationEnabled, true)) {
-    await Doctor.validateWebSupportAsync(projectRoot);
-  }
 
   const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
 
@@ -504,7 +500,7 @@ async function startNextJsAsync({
   port: number;
   dev: boolean;
 }): Promise<DevServer> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, true);
 
   let next;
   try {
@@ -561,7 +557,7 @@ async function startNextJsAsync({
 }
 
 async function bundleNextJsAsync(projectRoot: string) {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, true);
 
   let nextBuild;
   try {
