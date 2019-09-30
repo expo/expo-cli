@@ -9,6 +9,7 @@ import prompt from '../prompt';
 import log from '../log';
 import path from 'path';
 import fs from 'fs';
+import semver from 'semver';
 
 type Options = {
   npm?: boolean;
@@ -16,13 +17,12 @@ type Options = {
 };
 
 function maybeFormatSdkVersion(sdkVersionString: string | null) {
-  if (!sdkVersionString) {
-    return sdkVersionString;
-  } else if (sdkVersionString.includes('.')) {
+  if (typeof sdkVersionString !== 'string') {
     return sdkVersionString;
   }
 
-  return `${sdkVersionString}.0.0`;
+  // semver.valid type doesn't accept null, so need to ensure we pass a string
+  return semver.valid(semver.coerce(sdkVersionString) || '');
 }
 
 type DependencyList = { [key: string]: string };
@@ -51,7 +51,7 @@ async function getUpdatedDependenciesAsync(
     // - TODO: how do we know what version of react-native-web, react-dom to use?
     // - TODO: we need to track supported devDependencies versions somewhere programmatic too
   } else {
-    console.log(`Supported React Native version unknown, please update it manually.`);
+    log.warn(`Supported React Native version unknown, please update it manually.`);
   }
 
   // Get the updated version for any bundled modules
@@ -74,34 +74,33 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
   let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
-  if (Versions.lteSdkVersion(exp, '32.0.0')) {
+  if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     log.error('The upgrade command is only available on SDK 33 and higher. Please refer to https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/ for upgrade instructions.');
-    return;
+    throw new CommandError('SDK_VERSION_NOT_SUPPORTED_FOR_UPGRADE_COMMAND');
   }
 
   // Can't upgrade if we don't have a SDK version
   if (!exp.sdkVersion) {
     log.error('No sdkVersion field is present in app.json, cannot upgrade project.');
-    return;
+    throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND');
   }
 
   let currentSdkVersionString = exp.sdkVersion;
   let sdkVersions = await Versions.sdkVersionsAsync();
   let latestSdkVersion = await Versions.newestSdkVersionAsync();
   let latestSdkVersionString = latestSdkVersion.version;
-  let targetSdkVersionString =
-    maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
+  let targetSdkVersionString = maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
   let targetSdkVersion = sdkVersions[targetSdkVersionString];
 
   // TODO: figure out how this should work for bare workflow
   if (workflow === 'bare') {
-    console.log('This command is currently only supported on the managed workflow.');
-    return;
+    log.warn('This command is currently only supported on the managed workflow.');
+    throw new CommandError('UPGRADE_UNSUPPORTED_WITH_BARE_WORKFLOW');
   }
 
   // Bail out early if people are trying to update to the current version
   if (targetSdkVersionString === currentSdkVersionString) {
-    console.log(
+    log.warn(
       'You are already using the latest SDK version. Follow https://blog.expo.io for new release information.'
     );
     return;
@@ -210,6 +209,7 @@ async function findProjectRootAsync(base: string) {
 export default function(program: Command) {
   program
     .command('upgrade [targetSdkVersion]')
+    .alias('update')
     .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
     .description('Upgrades your project dependencies and app.json and to the given SDK version')
