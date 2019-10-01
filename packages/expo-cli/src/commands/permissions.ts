@@ -245,7 +245,7 @@ async function promptForPermissionDescriptionsAsync(
         );
       }
       return chalk.magenta(
-        `${CHEVRON} Update the description for using the "${chalk.bold(permission)}" permission`
+        `${CHEVRON} Update the description for the permission "${chalk.bold(permission)}"`
       );
     },
     choices,
@@ -262,7 +262,7 @@ async function promptForPermissionDescriptionsAsync(
       {}
     );
   } catch (error) {
-    console.log(chalk.yellow('${CHEVRON} Exiting...'));
+    console.log(chalk.yellow(`${CHEVRON} Exiting...`));
     process.exit(0);
   }
   return {};
@@ -298,11 +298,19 @@ export async function actionIOS(projectDir: string = './'): Promise<void> {
       }
     }
   } else {
-    console.log(
-      chalk.magenta(
-        `${CHEVRON} Getting permissions from the ${chalk.underline`expo.ios.infoPlist`} object in the universal ${chalk.bold`app.json`}...`
-      )
-    );
+    if ((exp.ios || {}).infoPlist) {
+      console.log(
+        chalk.magenta(
+          `${CHEVRON} Getting permissions from the ${chalk.underline`expo.ios.infoPlist`} object in the universal ${chalk.bold`app.json`}...`
+        )
+      );
+    } else {
+      console.log(
+        chalk.magenta(
+          `${CHEVRON} Showing the default permissions used by ${chalk.bold`Turtle`} to build your project...`
+        )
+      );
+    }
     defaultExpoDescriptions = Object.keys(DefaultiOSPermissions).reduce(
       (previous, current) => ({
         ...previous,
