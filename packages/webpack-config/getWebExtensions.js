@@ -1,4 +1,4 @@
-const { getModuleFileExtensionsWithoutDotPrefix } = require('./webpack/utils/config');
+const { getModuleFileExtensionsWithoutDotPrefix } = require('./utils');
 
 module.exports = function getWebExtensions() {
   return getModuleFileExtensionsWithoutDotPrefix('web');

@@ -47,7 +47,6 @@ async function startWebAction(projectDir, options) {
   const { exp, rootPath } = await configureProjectAsync(projectDir, options);
   const startOpts = parseStartOptions(projectDir, options);
   await Project.startAsync(rootPath, startOpts);
-
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
   if (!options.nonInteractive && !exp.isDetached) {
@@ -186,7 +185,7 @@ async function configureProjectAsync(projectDir, options) {
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectDir, options.webOnly);
   if (exp === null) {
     log.warn(`No Expo configuration found. Are you sure this is a project directory?`);
     process.exit(1);
