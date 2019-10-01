@@ -1,17 +1,16 @@
-import * as ConfigUtils from '@expo/config';
-import { IosPlist, IosWorkspace, UserManager } from '@expo/xdl';
+import { ExpoConfig, readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
+import { IosPlist, IosWorkspace } from '@expo/xdl';
 import StandaloneContext from '@expo/xdl/build/detach/StandaloneContext';
 import * as Manifest from 'android-manifest';
 import chalk from 'chalk';
 import { Command } from 'commander';
-
 // @ts-ignore
 import { Form, MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
 
 // @ts-ignore
-const DefaultiOSPermissions: any = {
+const DefaultiOSPermissions: { [permission: string]: (name: string) => string } = {
   NSCalendarsUsageDescription: (name: string) =>
     `Allow ${name} experiences to access your calendar`,
   NSCameraUsageDescription: (name: string) =>
@@ -31,7 +30,7 @@ const DefaultiOSPermissions: any = {
     `Allow ${name} experiences to access your reminders`,
 };
 
-const DefaultiOSPermissionNames: any = {
+const DefaultiOSPermissionNames: { [key: string]: string } = {
   NSCalendarsUsageDescription: `Calendars`,
   NSCameraUsageDescription: `Camera`,
   NSContactsUsageDescription: `Contacts`,
@@ -43,27 +42,39 @@ const DefaultiOSPermissionNames: any = {
   NSRemindersUsageDescription: `Reminders`,
 };
 
-async function writePermissionsToIOSAsync(projectDir: string, exp: any, permissions: any) {
+const CHEVRON = `\u203A`;
+
+type AnyPermissions = { [permission: string]: string };
+
+async function writePermissionsToIOSAsync(
+  projectDir: string,
+  { ios = {} }: ExpoConfig,
+  permissions: { [permission: string]: string | undefined }
+): Promise<void> {
   console.log(
     chalk.magenta(
-      `\u203A Saving selection to the ${chalk.underline`expo.ios.infoPlist`} object in your universal ${chalk.bold`app.json`}...`
+      `${CHEVRON} Saving selection to the ${chalk.underline`expo.ios.infoPlist`} object in your universal ${chalk.bold`app.json`}...`
     )
   );
 
-  await ConfigUtils.writeConfigJsonAsync(projectDir, {
+  await writeConfigJsonAsync(projectDir, {
     ios: {
-      ...(exp.ios || {}),
+      ...ios,
       infoPlist: {
-        ...((exp.ios || {}).infoPlist || {}),
+        ...(ios.infoPlist || {}),
         ...permissions,
       },
     },
   });
 }
 
-function getPermissionDescription(appName: string, exp: any, permission: string): Promise<string> {
+function getPermissionDescription(
+  appName: string,
+  { ios = {} }: ExpoConfig,
+  permission: string
+): string {
   // @ts-ignore
-  const { infoPlist = {} } = (exp || {}).ios || {};
+  const { infoPlist = {} } = ios;
 
   if (permission in infoPlist && typeof infoPlist[permission] === 'string') {
     return infoPlist[permission];
@@ -71,15 +82,17 @@ function getPermissionDescription(appName: string, exp: any, permission: string)
   return getDefaultExpoPermissionDescription(appName, permission);
 }
 
-function getDefaultExpoPermissionDescription(appName: string, permission: string): Promise<string> {
+function getDefaultExpoPermissionDescription(appName: string, permission: string): string {
   const getDefault = DefaultiOSPermissions[permission];
-  if (!getDefault) throw new Error('No permission for ' + permission);
+  if (!getDefault) {
+    throw new Error(`No permission for ${permission}`);
+  }
   return getDefault(appName);
 }
 
 async function getActiveAndroidPermissionsAsync(
   manifestPath: string | null,
-  exp: any
+  exp: ExpoConfig
 ): Promise<string[]> {
   console.log('');
 
@@ -87,7 +100,9 @@ async function getActiveAndroidPermissionsAsync(
   // The Android Manifest takes priority over the app.json
   if (manifestPath) {
     console.log(
-      chalk.magenta(`\u203A Getting permissions from the native ${chalk.bold`AndroidManifest.xml`}`)
+      chalk.magenta(
+        `${CHEVRON} Getting permissions from the native ${chalk.bold`AndroidManifest.xml`}`
+      )
     );
     const manifest = await Manifest.readAsync(manifestPath);
     permissions = Manifest.getPermissions(manifest);
@@ -96,7 +111,7 @@ async function getActiveAndroidPermissionsAsync(
   } else {
     console.log(
       chalk.magenta(
-        `\u203A Getting permissions from the ${chalk.underline`expo.android.permissions`} array in the universal ${chalk.bold`app.json`}...`
+        `${CHEVRON} Getting permissions from the ${chalk.underline`expo.android.permissions`} array in the universal ${chalk.bold`app.json`}...`
       )
     );
     permissions = (exp.android || {}).permissions;
@@ -104,7 +119,7 @@ async function getActiveAndroidPermissionsAsync(
     if (!Array.isArray(permissions)) {
       console.log(
         chalk.magenta(
-          `\u203A ${chalk.underline`expo.android.permissions`} does not exist in the ${chalk.bold`app.json`}, the default value is ${chalk.bold`all permissions`}`
+          `${CHEVRON} ${chalk.underline`expo.android.permissions`} does not exist in the ${chalk.bold`app.json`}, the default value is ${chalk.bold`all permissions`}`
         )
       );
       permissions = Object.keys(Manifest.UnimodulePermissions);
@@ -117,8 +132,8 @@ async function getActiveAndroidPermissionsAsync(
   return permissions;
 }
 
-export async function actionAndroid(projectDir: string = './') {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
+export async function actionAndroid(projectDir: string = './'): Promise<void> {
+  const { exp } = await readConfigJsonAsync(projectDir);
 
   const manifestPath = await Manifest.getProjectAndroidManifestPathAsync(projectDir);
 
@@ -126,7 +141,7 @@ export async function actionAndroid(projectDir: string = './') {
 
   const isExpo = !manifestPath;
 
-  let choices = [];
+  const choices: { name: string; message: string }[] = [];
   const allPermissions = [
     ...new Set([...permissions, ...Object.keys(Manifest.UnimodulePermissions)]),
   ];
@@ -139,7 +154,7 @@ export async function actionAndroid(projectDir: string = './') {
 
   const prompt = new MultiSelect({
     header() {
-      const descriptions: { [key: string]: string } = {
+      const descriptions: AnyPermissions = {
         // TODO(Bacon): Add descriptions of what each permission is used for
       };
       return descriptions[Object.keys(Manifest.UnimodulePermissions)[this.index]];
@@ -153,12 +168,12 @@ export async function actionAndroid(projectDir: string = './') {
 
   console.log('');
 
-  let answer;
+  let answer: string[];
 
   try {
     answer = await prompt.run();
   } catch (error) {
-    console.log(chalk.yellow('\u203A Exiting...'));
+    console.log(chalk.yellow(`${CHEVRON} Exiting...`));
     return;
   }
 
@@ -166,20 +181,20 @@ export async function actionAndroid(projectDir: string = './') {
 
   console.log(
     chalk.magenta(
-      `\u203A Saving selection to the ${chalk.underline`expo.android.permissions`} array in the ${chalk.bold`app.json`}...`
+      `${CHEVRON} Saving selection to the ${chalk.underline`expo.android.permissions`} array in the ${chalk.bold`app.json`}...`
     )
   );
   if (isExpo) {
     if (selectedAll) {
       console.log(
         chalk.magenta(
-          `\u203A Expo will default to using all permissions in your project by deleting the ${chalk.underline`expo.android.permissions`} array.`
+          `${CHEVRON} Expo will default to using all permissions in your project by deleting the ${chalk.underline`expo.android.permissions`} array.`
         )
       );
     }
   }
 
-  await ConfigUtils.writeConfigJsonAsync(projectDir, {
+  await writeConfigJsonAsync(projectDir, {
     android: {
       ...(exp.android || {}),
       // An empty array means no permissions
@@ -197,7 +212,7 @@ export async function actionAndroid(projectDir: string = './') {
 
   if (!isExpo) {
     console.log(
-      chalk.magenta(`\u203A Saving selection to the native ${chalk.bold`AndroidManifest.xml`}`)
+      chalk.magenta(`${CHEVRON} Saving selection to the native ${chalk.bold`AndroidManifest.xml`}`)
     );
 
     await Manifest.persistAndroidPermissionsAsync(projectDir, [
@@ -207,25 +222,15 @@ export async function actionAndroid(projectDir: string = './') {
   }
 }
 
-async function getContextAsync(projectDir: string, exp: any): Promise<any> {
-  // let user = await UserManager.ensureLoggedInAsync();
-
-  // if (!user) {
-  //   throw new Error('Internal error -- somehow detach is being run in offline mode.');
-  // }
-
-  // const { username } = user;
-  // let experienceName = `@${username}/${exp.slug}`;
-  let experienceUrl = ''; // `exp://exp.host/${experienceName}`;
-  return StandaloneContext.createUserContext(projectDir, exp, experienceUrl);
-}
+type IOSPermissionChoice = { name: string; message: string; initial: string };
 
 async function promptForPermissionDescriptionsAsync(
-  choices: any,
+  choices: IOSPermissionChoice[],
   hasNativeConfig: boolean,
-  currentDescriptions: any
-) {
+  currentDescriptions: AnyPermissions
+): Promise<AnyPermissions> {
   console.log('');
+
   const keys = Object.keys(DefaultiOSPermissionNames);
   const prompt = new Form({
     name: hasNativeConfig ? 'Native project' : 'Universal Project',
@@ -234,38 +239,56 @@ async function promptForPermissionDescriptionsAsync(
       const permission = keys[this.index];
       if (!currentDescriptions[permission]) {
         return chalk.magenta(
-          `\u203A Add a description to enable the "${chalk.bold(
+          `${CHEVRON} Add a description to enable the "${chalk.bold(
             permission
           )}" permission in your iOS app`
         );
       }
       return chalk.magenta(
-        `\u203A Update the description for using the "${chalk.bold(permission)}" permission`
+        `${CHEVRON} Update the description for using the "${chalk.bold(permission)}" permission`
       );
     },
     choices,
   });
 
-  return await prompt.run();
+  try {
+    const answer: AnyPermissions = await prompt.run();
+    // Trimming allows users to pass in " " to delete a permission
+    return Object.keys(answer).reduce(
+      (prev, curr) => ({
+        ...prev,
+        [curr]: answer[curr].trim(),
+      }),
+      {}
+    );
+  } catch (error) {
+    console.log(chalk.yellow('${CHEVRON} Exiting...'));
+    process.exit(0);
+  }
+  return {};
 }
 
-export async function action(projectDir: string = './') {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
+export async function actionIOS(projectDir: string = './'): Promise<void> {
+  const { exp } = await readConfigJsonAsync(projectDir);
 
   const appName = exp.name!;
 
-  const context = await getContextAsync(projectDir, exp);
+  const context = await StandaloneContext.createUserContext(projectDir, exp, '');
 
   const supportingDirectory = getInfoPlistDirectory(context);
 
-  let infoPlist: any;
+  let infoPlist: AnyPermissions | undefined;
 
   console.log('');
-  let currentDescriptions: any = {};
-  let defaultExpoDescriptions: any = {};
+  let currentDescriptions: AnyPermissions = {};
+  let defaultExpoDescriptions: AnyPermissions = {};
   if (supportingDirectory) {
-    console.log(chalk.magenta(`\u203A Using native ios ${chalk.bold`Info.plist`}`));
-    infoPlist = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => infoPlist);
+    console.log(chalk.magenta(`${CHEVRON} Using native ios ${chalk.bold`Info.plist`}`));
+    infoPlist = (await IosPlist.modifyAsync(
+      supportingDirectory,
+      'Info',
+      infoPlist => infoPlist
+    )) as AnyPermissions;
 
     for (const key of Object.keys(DefaultiOSPermissionNames)) {
       if (key in infoPlist && infoPlist[key]) {
@@ -277,7 +300,7 @@ export async function action(projectDir: string = './') {
   } else {
     console.log(
       chalk.magenta(
-        `\u203A Getting permissions from the ${chalk.underline`expo.ios.infoPlist`} object in the universal ${chalk.bold`app.json`}...`
+        `${CHEVRON} Getting permissions from the ${chalk.underline`expo.ios.infoPlist`} object in the universal ${chalk.bold`app.json`}...`
       )
     );
     defaultExpoDescriptions = Object.keys(DefaultiOSPermissions).reduce(
@@ -296,7 +319,7 @@ export async function action(projectDir: string = './') {
     );
   }
 
-  let choices = [];
+  const choices: IOSPermissionChoice[] = [];
   for (const key of Object.keys(currentDescriptions)) {
     choices.push({
       name: key,
@@ -304,48 +327,36 @@ export async function action(projectDir: string = './') {
       initial: currentDescriptions[key],
     });
   }
-  let answer: any;
 
-  try {
-    answer = await promptForPermissionDescriptionsAsync(
-      choices,
-      !!supportingDirectory,
-      currentDescriptions
-    );
-  } catch (error) {
-    console.log(chalk.yellow('\u203A Exiting...'));
-    return;
-  }
+  const answer = await promptForPermissionDescriptionsAsync(
+    choices,
+    !!supportingDirectory,
+    currentDescriptions
+  );
 
-  // Trimming allows users to pass in " " to delete a permission
-  answer = Object.keys(answer).reduce(
-    (prev, curr) => ({
-      ...prev,
-      [curr]: answer[curr].trim(),
-    }),
+  const modifiedAnswers: { [key: string]: string | undefined } = Object.keys(answer).reduce(
+    (previous, current) => {
+      const permissionDescription = answer[current];
+
+      if (permissionDescription !== defaultExpoDescriptions[current] && permissionDescription) {
+        return {
+          ...previous,
+          [current]: permissionDescription,
+        };
+      }
+      return {
+        ...previous,
+        [current]: undefined,
+      };
+    },
     {}
   );
 
-  const modifiedAnswers: any = Object.keys(answer).reduce((previous, current) => {
-    const permissionDescription = answer[current];
-
-    if (permissionDescription !== defaultExpoDescriptions[current] && permissionDescription) {
-      return {
-        ...previous,
-        [current]: permissionDescription,
-      };
-    }
-    return {
-      ...previous,
-      [current]: undefined,
-    };
-  }, {});
-
   await writePermissionsToIOSAsync(projectDir, exp, modifiedAnswers);
 
-  if (infoPlist) {
+  if (supportingDirectory && infoPlist) {
     console.log(
-      chalk.magenta(`\u203A Saving selection to the native ${chalk.bold`Info.plist`}...`)
+      chalk.magenta(`${CHEVRON} Saving selection to the native ${chalk.bold`Info.plist`}...`)
     );
     await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
       for (const key of Object.keys(answer)) {
@@ -359,7 +370,7 @@ export async function action(projectDir: string = './') {
     });
   } else {
     console.log(
-      `\u203A ${chalk.bold`Remember:`} ${chalk.reset
+      `${CHEVRON} ${chalk.bold`Remember:`} ${chalk.reset
         .dim`Permission messages are a build-time configuration. Your selection will only be available in Standalone, or native builds. You will continue to see the predefined permission dialogs when using your app in the Expo client.`}`
     );
   }
@@ -367,7 +378,7 @@ export async function action(projectDir: string = './') {
 
 // Find the location of the native iOS info.plist if it exists
 // TODO(Bacon): Search better
-function getInfoPlistDirectory(context: any) {
+function getInfoPlistDirectory(context: any): string | null {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   if (fs.existsSync(path.resolve(supportingDirectory, 'Info.plist'))) {
     return supportingDirectory;
@@ -377,17 +388,19 @@ function getInfoPlistDirectory(context: any) {
   return null;
 }
 
-// @ts-ignore
-export default (program: Command) => {
+function command(program: Command) {
   program
     .command('permissions:ios [project-dir]')
     .description('Manage permissions in your native iOS project.')
     .allowOffline()
-    .asyncAction(action);
+    .asyncAction(actionIOS);
 
   program
     .command('permissions:android [project-dir]')
     .description('Manage permissions in your native Android project.')
     .allowOffline()
     .asyncAction(actionAndroid);
-};
+}
+
+// @ts-ignore
+export default command;
