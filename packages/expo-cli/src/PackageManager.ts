@@ -6,6 +6,8 @@ import { Transform } from 'stream';
 import npmPackageArg from 'npm-package-arg';
 import fs from 'fs-extra';
 import path from 'path';
+import detectIndent from 'detect-indent';
+import detectNewline from 'detect-newline';
 
 import log from './log';
 
@@ -86,7 +88,7 @@ export class NpmPackageManager implements PackageManager {
     if (specs.length) {
       const pkgPath = path.join(this.options.cwd, 'package.json');
       log(`> patching ${specs.map(spec => spec.raw).join(' ')}`);
-      const pkgUnpatched = await fs.readJson(pkgPath);
+      const pkgRaw = await fs.readFile(pkgPath, { encoding: 'utf8', flag: 'r' });
       const pkgPatched = specs.reduce((pkg, spec) => {
         if (pkg.dependencies && pkg.dependencies[spec.name]) {
           pkg.dependencies[spec.name] = spec.rawSpec;
@@ -97,8 +99,11 @@ export class NpmPackageManager implements PackageManager {
         }
 
         return pkg;
-      }, pkgUnpatched);
-      await fs.writeJson(pkgPath, pkgPatched);
+      }, JSON.parse(pkgRaw));
+      await fs.writeJson(pkgPath, pkgPatched, {
+        spaces: detectIndent(pkgRaw).indent,
+        EOL: detectNewline(pkgRaw),
+      });
     }
   }
 }
