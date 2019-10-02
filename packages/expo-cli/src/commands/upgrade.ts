@@ -3,14 +3,14 @@ import { Versions } from '@expo/xdl';
 import JsonFile from '@expo/json-file';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
+import semver from 'semver';
+import _ from 'lodash';
+
 import * as PackageManager from '../PackageManager';
 import CommandError from '../CommandError';
 import prompt from '../prompt';
 import log from '../log';
-import path from 'path';
-import fs from 'fs';
-import semver from 'semver';
-import _ from 'lodash';
+import { findProjectRootAsync, validateGitStatusAsync } from './utils/ProjectUtils';
 
 type Options = {
   npm?: boolean;
@@ -97,7 +97,24 @@ async function getUpdatedDependenciesAsync(
 async function upgradeAsync(requestedSdkVersion: string | null, options: Options) {
   let { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
   let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let isGitStatusClean = await validateGitStatusAsync();
 
+  // Give people a chance to bail out if git working tree is dirty
+  if (!isGitStatusClean) {
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'ignoreDirtyGit',
+      message: `Would you like to proceed?`,
+    });
+
+    if (!answer.ignoreDirtyGit) {
+      return;
+    }
+
+    log.newLine();
+  }
+
+  // Give people a chance to bail out if they're updating from a super old version because YMMV
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     let answer = await prompt({
       type: 'confirm',
@@ -108,9 +125,11 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     if (!answer.attemptOldUpdate) {
       return;
     }
+
+    log.newLine();
   }
 
-  // Can't upgrade if we don't have a SDK version
+  // Can't upgrade if we don't have a SDK version (tapping on head meme)
   if (!exp.sdkVersion) {
     log.error('No sdkVersion field is present in app.json, cannot upgrade project.');
     throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND');
@@ -156,6 +175,8 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
       }?`,
     });
 
+    log.newLine();
+
     if (!answer.updateToLatestSdkVersion) {
       let sdkVersionStringOptions = Object.keys(sdkVersions).filter(
         v => !Versions.gteSdkVersion(exp, v) && semver.gte('33.0.0', v)
@@ -175,6 +196,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
       // This has to exist because it's based on keys already present in sdkVersions
       targetSdkVersion = sdkVersions[selectedSdkVersionString];
       targetSdkVersionString = selectedSdkVersionString;
+      log.newLine();
     }
   } else if (!targetSdkVersion) {
     // If they provide an apparently unsupported sdk version then let people try
@@ -215,7 +237,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let devDependencies = _.pickBy(updates, (_version, name) => _.has(pkg.devDependencies, name));
   let devDependenciesAsStringArray = Object.keys(devDependencies).map(
     name => `${name}@${updates[name]}`
-    );
+  );
   let dependencies = _.pickBy(updates, (_version, name) => _.has(pkg.dependencies, name));
   let dependenciesAsStringArray = Object.keys(dependencies).map(name => `${name}@${updates[name]}`);
 
@@ -231,9 +253,32 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
 
   log.addNewLineIfNone();
   log(chalk.underline.bold.green(`Automated upgrade steps complete.`));
+  log(chalk.bold.grey(`...but this doesn't mean everything is done yet!`));
+  log.newLine();
 
-  // TODO: List packages that were updated
-  // TODO: List packages that were not updated
+  // List packages that were updated
+  log(chalk.bold(`The following packages were updated:`));
+  log(chalk.grey.bold([...Object.keys(updates), ...['expo']].join(', ')));
+  log.addNewLineIfNone();
+
+  // List packages that were not updated
+  let allDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
+  let untouchedDependencies = _.difference(Object.keys(allDependencies), [
+    ...Object.keys(updates),
+    'expo',
+  ]);
+  if (untouchedDependencies.length) {
+    log.addNewLineIfNone();
+    log(
+      chalk.bold(
+        `The following packages were ${chalk.underline(
+          'not'
+        )} updated. You should check the READMEs for those repositories to determine what version is compatible with your new set of packages:`
+      )
+    );
+    log(chalk.grey.bold(untouchedDependencies.join(', ')));
+    log.addNewLineIfNone();
+  }
 
   if (targetSdkVersion && targetSdkVersion.releaseNoteUrl) {
     log(
@@ -246,30 +291,13 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     );
   }
 
+  // get list of sdkVersions between target and current
+  // if (/* sdk versions between target and current */) {
+
+  // }
+
   // TODO: If we updated multiple SDK versions, log the link to release notes for each of those versions
-
   log.addNewLineIfNone();
-}
-
-// TODO: extract to another helper and update in install.js too
-async function findProjectRootAsync(base: string) {
-  let previous = null;
-  let dir = base;
-
-  do {
-    if (await JsonFile.getAsync(path.join(dir, 'app.json'), 'expo', null)) {
-      return { projectRoot: dir, workflow: 'managed' };
-    } else if (fs.existsSync(path.join(dir, 'package.json'))) {
-      return { projectRoot: dir, workflow: 'bare' };
-    }
-    previous = dir;
-    dir = path.dirname(dir);
-  } while (dir !== previous);
-
-  throw new CommandError(
-    'NO_PROJECT',
-    'No managed or bare projects found. Please make sure you are inside a project folder.'
-  );
 }
 
 export default function(program: Command) {

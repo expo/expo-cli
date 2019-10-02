@@ -2,18 +2,16 @@
 
 import chalk from 'chalk';
 import fse from 'fs-extra';
-import matchRequire from 'match-require';
 import npmPackageArg from 'npm-package-arg';
 import path from 'path';
-import spawn from 'cross-spawn';
 import semver from 'semver';
 import pacote from 'pacote';
 import temporary from 'tempy';
-import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
 import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 import * as PackageManager from '../../PackageManager';
+import { validateGitStatusAsync } from './utils/ProjectUtils';
 
 import log from '../../log';
 import prompt from '../../prompt';
@@ -60,31 +58,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
 }
 
 export async function ejectAsync(projectRoot: string, options) {
-  let workingTreeStatus = 'unknown';
-  try {
-    let result = await spawnAsync('git', ['status', '--porcelain']);
-    workingTreeStatus = result.stdout === '' ? 'clean' : 'dirty';
-  } catch (e) {
-    // Maybe git is not installed?
-    // Maybe this project is not using git?
-  }
-
-  if (workingTreeStatus === 'clean') {
-    log.nested(`Your git working tree is ${chalk.green('clean')}`);
-    log.nested('To revert the changes from ejecting later, you can use these commands:');
-    log.nested('  git clean --force && git reset --hard');
-  } else if (workingTreeStatus === 'dirty') {
-    log.nested(`${chalk.bold('Warning!')} Your git working tree is ${chalk.red('dirty')}.`);
-    log.nested(
-      `It's recommended to ${chalk.bold(
-        'commit all your changes before proceeding'
-      )},\nso you can revert the changes made by this command if necessary.`
-    );
-  } else {
-    log.nested("We couldn't find a git repository in your project directory.");
-    log.nested("It's recommended to back up your project before proceeding.");
-  }
-
+  await validateGitStatusAsync();
   log.nested('');
 
   let reactNativeOptionMessage = "Bare: I'd like a bare React Native project.";
