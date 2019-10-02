@@ -291,10 +291,33 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     );
   }
 
-  // get list of sdkVersions between target and current
-  // if (/* sdk versions between target and current */) {
+  let skippedSdkVersions = _.pickBy(sdkVersions, (_data, sdkVersionString) => {
+    return (
+      semver.lt(sdkVersionString, targetSdkVersionString) &&
+      semver.gt(sdkVersionString, currentSdkVersionString)
+    );
+  });
 
-  // }
+  let skippedSdkVersionKeys = Object.keys(skippedSdkVersions);
+  if (skippedSdkVersionKeys.length) {
+    log.newLine();
+
+    let releaseNotesUrls = Object.values(skippedSdkVersions)
+      .map(data => data.releaseNoteUrl)
+      .filter(releaseNotesUrl => releaseNotesUrl)
+      .reverse();
+    if (releaseNotesUrls.length === 1) {
+      log(`You should also look at the breaking changes from a release that you skipped:`);
+      log(chalk.bold(`- ${releaseNotesUrls[0]}`));
+    } else {
+      log(
+        `In addition to the most recent release notes, you should go over the breaking changes from skipped releases:`
+      );
+      releaseNotesUrls.forEach(url => {
+        log(chalk.bold(`- ${url}`));
+      });
+    }
+  }
 
   // TODO: If we updated multiple SDK versions, log the link to release notes for each of those versions
   log.addNewLineIfNone();
