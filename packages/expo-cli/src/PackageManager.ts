@@ -62,12 +62,24 @@ export class NpmPackageManager implements PackageManager {
     await this._runAsync(['install']);
   }
   async addAsync(...names: string[]) {
-    await this._patchAsync(names);
-    await this._runAsync(['install']);
+    const { versioned, unversioned } = this._parseSpecs(names);
+    if (versioned.length) {
+      await this._patchAsync(versioned);
+      await this._runAsync(['install']);
+    }
+    if (unversioned.length) {
+      await this._runAsync(['install', '--save', ...unversioned.map(spec => spec.raw)]);
+    }
   }
   async addDevAsync(...names: string[]) {
-    await this._patchAsync(names, true);
-    await this._runAsync(['install']);
+    const { versioned, unversioned } = this._parseSpecs(names);
+    if (versioned.length) {
+      await this._patchAsync(versioned, true);
+      await this._runAsync(['install']);
+    }
+    if (unversioned.length) {
+      await this._runAsync(['install', '--save-dev', ...unversioned.map(spec => spec.raw)]);
+    }
   }
 
   // Private
@@ -83,26 +95,37 @@ export class NpmPackageManager implements PackageManager {
     await promise;
   }
 
-  async _patchAsync(names: string[], isDev = false) {
-    const specs = names.map(name => npmPackageArg(name)).filter(spec => spec.rawSpec);
-    if (specs.length) {
-      const pkgPath = path.join(this.options.cwd, 'package.json');
-      const pkgRaw = await fs.readFile(pkgPath, { encoding: 'utf8', flag: 'r' });
-      const pkgPatched = specs.reduce((pkg, spec) => {
-        if (isDev) {
-          pkg.devDependencies = pkg.devDependencies || {};
-          pkg.devDependencies[spec.name] = spec.rawSpec;
+  _parseSpecs(names: string[]) {
+    const result = { versioned: [], unversioned: [] };
+    names
+      .map(name => npmPackageArg(name))
+      .forEach(spec => {
+        if (spec.rawSpec) {
+          result.versioned.push(spec);
         } else {
-          pkg.dependencies = pkg.dependencies || {};
-          pkg.dependencies[spec.name] = spec.rawSpec;
+          result.unversioned.push(spec);
         }
-        return pkg;
-      }, JSON.parse(pkgRaw));
-      await fs.writeJson(pkgPath, pkgPatched, {
-        spaces: detectIndent(pkgRaw).indent,
-        EOL: detectNewline(pkgRaw),
       });
-    }
+    return result;
+  }
+
+  async _patchAsync(specs: { name: string; rawSpec: string}[], isDev = false) {
+    const pkgPath = path.join(this.options.cwd, 'package.json');
+    const pkgRaw = await fs.readFile(pkgPath, { encoding: 'utf8', flag: 'r' });
+    const pkg = JSON.parse(pkgRaw);
+    specs.forEach(spec => {
+      if (isDev) {
+        pkg.devDependencies = pkg.devDependencies || {};
+        pkg.devDependencies[spec.name] = spec.rawSpec;
+      } else {
+        pkg.dependencies = pkg.dependencies || {};
+        pkg.dependencies[spec.name] = spec.rawSpec;
+      }
+    });
+    await fs.writeJson(pkgPath, pkg, {
+      spaces: detectIndent(pkgRaw).indent,
+      EOL: detectNewline(pkgRaw),
+    });
   }
 }
 
