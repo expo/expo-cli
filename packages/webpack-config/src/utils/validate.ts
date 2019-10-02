@@ -48,7 +48,7 @@ export function validateReport(report: boolean | Report): Report | null {
 }
 
 export function validateEnvironment(env: InputEnvironment): Environment {
-  if (!env.projectRoot) {
+  if (typeof env.projectRoot !== 'string') {
     throw new Error(
       `@expo/webpack-config requires a valid projectRoot string value which points to the root of your project`
     );
