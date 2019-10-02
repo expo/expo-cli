@@ -3,6 +3,9 @@ import { isUsingYarn } from '@expo/config';
 import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import split from 'split';
 import { Transform } from 'stream';
+import npmPackageArg from 'npm-package-arg';
+import fs from 'fs-extra';
+import path from 'path';
 
 import log from './log';
 
@@ -58,9 +61,11 @@ export class NpmPackageManager implements PackageManager {
   }
   async addAsync(...names: string[]) {
     await this._runAsync(['install', '--save', ...names]);
+    await this._patchAsync(names);
   }
   async addDevAsync(...names: string[]) {
     await this._runAsync(['install', '--save-dev', ...names]);
+    await this._patchAsync(names);
   }
 
   // Private
@@ -74,6 +79,27 @@ export class NpmPackageManager implements PackageManager {
         .pipe(process.stderr);
     }
     await promise;
+  }
+
+  async _patchAsync(names: string[]) {
+    const specs = names.map(name => npmPackageArg(name)).filter(spec => spec.rawSpec);
+    if (specs.length) {
+      const pkgPath = path.join(this.options.cwd, 'package.json');
+      log(`> patching ${specs.map(spec => spec.raw).join(' ')}`);
+      const pkgUnpatched = await fs.readJson(pkgPath);
+      const pkgPatched = specs.reduce((pkg, spec) => {
+        if (pkg.dependencies && pkg.dependencies[spec.name]) {
+          pkg.dependencies[spec.name] = spec.rawSpec;
+        }
+
+        if (pkg.devDependencies && pkg.devDependencies[spec.name]) {
+          pkg.devDependencies[spec.name] = spec.rawSpec;
+        }
+
+        return pkg;
+      }, pkgUnpatched);
+      await fs.writeJson(pkgPath, pkgPatched);
+    }
   }
 }
 
