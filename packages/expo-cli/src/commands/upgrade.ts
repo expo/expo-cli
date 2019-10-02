@@ -10,6 +10,7 @@ import log from '../log';
 import path from 'path';
 import fs from 'fs';
 import semver from 'semver';
+import _ from 'lodash';
 
 type Options = {
   npm?: boolean;
@@ -32,27 +33,13 @@ type DependencyList = { [key: string]: string };
  */
 async function getUpdatedDependenciesAsync(
   projectRoot: string,
-  targetSdkVersion: { expoReactNativeTag: string; facebookReactVersion?: string } | null
+  targetSdkVersion: {
+    expoReactNativeTag: string;
+    facebookReactVersion?: string;
+    relatedPackages?: { [name: string]: string };
+  } | null
 ): Promise<DependencyList> {
   let result: DependencyList = {};
-
-  // Get the supported react-native version.
-  // * We can't update the react-native version if the version data isn't published
-  if (targetSdkVersion) {
-    result['react-native'] = `https://github.com/expo/react-native/archive/${
-      targetSdkVersion.expoReactNativeTag
-    }.tar.gz`;
-
-    // React version apparently is optional in SDK version data
-    if (targetSdkVersion.facebookReactVersion) {
-      result['react'] = targetSdkVersion.facebookReactVersion;
-    }
-
-    // - TODO: how do we know what version of react-native-web, react-dom to use?
-    // - TODO: we need to track supported devDependencies versions somewhere programmatic too
-  } else {
-    log.warn(`Supported React Native version unknown, please update it manually.`);
-  }
 
   // Get the updated version for any bundled modules
   let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
@@ -60,23 +47,67 @@ async function getUpdatedDependenciesAsync(
     ConfigUtils.resolveModule('expo/bundledNativeModules.json', projectRoot, exp)
   )) as DependencyList;
 
-  let { dependencies } = pkg;
+  // Smoosh regular and dev dependencies together for now
+  let dependencies = { ...pkg.dependencies, ...pkg.devDependencies };
+
   Object.keys(bundledNativeModules).forEach(name => {
     if (dependencies[name]) {
       result[name] = bundledNativeModules[name];
     }
   });
 
+  if (!targetSdkVersion) {
+    log.warn(
+      `Supported React, React Native, and React DOM versions are unknown because we don't have version information for the target SDK, please update them manually.`
+    );
+    return result;
+  }
+
+  if (dependencies['jest-expo']) {
+    result['jest-expo'] = `^${exp.sdkVersion}`;
+  }
+
+  // Get the supported react/react-native/react-dom versions and other related packages
+  result['react-native'] = `https://github.com/expo/react-native/archive/${
+    targetSdkVersion.expoReactNativeTag
+  }.tar.gz`;
+
+  // React version apparently is optional in SDK version data
+  if (targetSdkVersion.facebookReactVersion) {
+    result['react'] = targetSdkVersion.facebookReactVersion;
+
+    // react-dom version is always the same as the react version
+    if (dependencies['react-dom']) {
+      result['react-dom'] = targetSdkVersion.facebookReactVersion;
+    }
+  }
+
+  // Update any related packages
+  if (targetSdkVersion.relatedPackages) {
+    Object.keys(targetSdkVersion.relatedPackages).forEach(name => {
+      if (dependencies[name]) {
+        result[name] = targetSdkVersion.relatedPackages![name];
+      }
+    });
+  }
+
   return result;
 }
 
 async function upgradeAsync(requestedSdkVersion: string | null, options: Options) {
   let { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    log.error('The upgrade command is only available on SDK 33 and higher. Please refer to https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/ for upgrade instructions.');
-    throw new CommandError('SDK_VERSION_NOT_SUPPORTED_FOR_UPGRADE_COMMAND');
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'attemptOldUpdate',
+      message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
+    });
+
+    if (!answer.attemptOldUpdate) {
+      return;
+    }
   }
 
   // Can't upgrade if we don't have a SDK version
@@ -89,7 +120,8 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let sdkVersions = await Versions.sdkVersionsAsync();
   let latestSdkVersion = await Versions.newestSdkVersionAsync();
   let latestSdkVersionString = latestSdkVersion.version;
-  let targetSdkVersionString = maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
+  let targetSdkVersionString =
+    maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
   let targetSdkVersion = sdkVersions[targetSdkVersionString];
 
   // TODO: figure out how this should work for bare workflow
@@ -98,15 +130,24 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     throw new CommandError('UPGRADE_UNSUPPORTED_WITH_BARE_WORKFLOW');
   }
 
-  // Bail out early if people are trying to update to the current version
+  // Maybe bail out early if people are trying to update to the current version
   if (targetSdkVersionString === currentSdkVersionString) {
-    log.warn(
-      'You are already using the latest SDK version. Follow https://blog.expo.io for new release information.'
-    );
-    return;
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'attemptUpdateAgain',
+      message: `You are already using the latest SDK version. Do you want to run the update anyways? This may be useful to ensure that all of your packages are set to the correct version.`,
+    });
+
+    if (!answer.attemptUpdateAgain) {
+      log('Follow the Expo blog at https://blog.expo.io for new release information!');
+      return;
+    }
   }
 
-  if (targetSdkVersionString === latestSdkVersionString) {
+  if (
+    targetSdkVersionString === latestSdkVersionString &&
+    currentSdkVersionString !== targetSdkVersionString
+  ) {
     let answer = await prompt({
       type: 'confirm',
       name: 'updateToLatestSdkVersion',
@@ -117,7 +158,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
 
     if (!answer.updateToLatestSdkVersion) {
       let sdkVersionStringOptions = Object.keys(sdkVersions).filter(
-        v => !Versions.gteSdkVersion(exp, v)
+        v => !Versions.gteSdkVersion(exp, v) && semver.gte('33.0.0', v)
       );
 
       let { selectedSdkVersionString } = await prompt({
@@ -166,12 +207,34 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
 
   log(chalk.bold.underline('Updating packages to compatible versions (where known)...'));
   log.addNewLineIfNone();
+
+  // Get all updated packages
   let updates = await getUpdatedDependenciesAsync(projectRoot, targetSdkVersion);
-  let updatesAsStringArray = Object.keys(updates).map(name => `${name}@${updates[name]}`);
-  await packageManager.addAsync(...updatesAsStringArray);
+
+  // Split updated packages by dependencies and devDependencies
+  let devDependencies = _.pickBy(updates, (_version, name) => _.has(pkg.devDependencies, name));
+  let devDependenciesAsStringArray = Object.keys(devDependencies).map(
+    name => `${name}@${updates[name]}`
+    );
+  let dependencies = _.pickBy(updates, (_version, name) => _.has(pkg.dependencies, name));
+  let dependenciesAsStringArray = Object.keys(dependencies).map(name => `${name}@${updates[name]}`);
+
+  // Install dev dependencies
+  if (devDependenciesAsStringArray.length) {
+    await packageManager.addDevAsync(...devDependenciesAsStringArray);
+  }
+
+  // Install dependencies
+  if (dependenciesAsStringArray.length) {
+    await packageManager.addAsync(...dependenciesAsStringArray);
+  }
 
   log.addNewLineIfNone();
   log(chalk.underline.bold.green(`Automated upgrade steps complete.`));
+
+  // TODO: List packages that were updated
+  // TODO: List packages that were not updated
+
   if (targetSdkVersion && targetSdkVersion.releaseNoteUrl) {
     log(
       `Please refer to the release notes for information on any further required steps to update and information about breaking changes:`
@@ -182,6 +245,9 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
       `Unable to find release notes for ${targetSdkVersionString}, please try to find them on https://blog.expo.io to learn more about other potentially important upgrade steps and breaking changes.`
     );
   }
+
+  // TODO: If we updated multiple SDK versions, log the link to release notes for each of those versions
+
   log.addNewLineIfNone();
 }
 
