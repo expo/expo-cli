@@ -10,8 +10,8 @@ export interface DevConfiguration extends WebpackConfiguration {
 }
 
 export type InputEnvironment = {
-  projectRoot: string;
-  platform: 'ios' | 'android' | 'web';
+  projectRoot?: string;
+  platform?: 'ios' | 'android' | 'web';
   info?: boolean;
   https?: boolean;
   production?: boolean;
