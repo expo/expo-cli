@@ -121,6 +121,11 @@ export function getRulesByMatchingFiles(
   return selectedRules;
 }
 
+export function rulesMatchAnyFiles(config: AnyConfiguration, files: string[]): boolean {
+  const rules = getRulesByMatchingFiles(config, files);
+  return Object.keys(rules).some(filename => !!rules[filename].length);
+}
+
 export function resolveRuleSetUse(rule?: RuleSetUse | RuleSetUse[]): ResolvedRuleSet[] {
   if (!rule) return [];
   if (Array.isArray(rule)) {
