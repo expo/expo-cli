@@ -64,7 +64,7 @@ export class NpmPackageManager implements PackageManager {
   async addAsync(...names: string[]) {
     const { versioned, unversioned } = this._parseSpecs(names);
     if (versioned.length) {
-      await this._patchAsync(versioned);
+      await this._patchAsync(versioned, 'dependencies');
       await this._runAsync(['install']);
     }
     if (unversioned.length) {
@@ -74,7 +74,7 @@ export class NpmPackageManager implements PackageManager {
   async addDevAsync(...names: string[]) {
     const { versioned, unversioned } = this._parseSpecs(names);
     if (versioned.length) {
-      await this._patchAsync(versioned, true);
+      await this._patchAsync(versioned, 'devDependencies');
       await this._runAsync(['install']);
     }
     if (unversioned.length) {
@@ -109,18 +109,16 @@ export class NpmPackageManager implements PackageManager {
     return result;
   }
 
-  async _patchAsync(specs: { name: string; rawSpec: string}[], isDev = false) {
+  async _patchAsync(
+    specs: { name: string; rawSpec: string }[],
+    packageType: 'dependencies' | 'devDependencies'
+  ) {
     const pkgPath = path.join(this.options.cwd, 'package.json');
     const pkgRaw = await fs.readFile(pkgPath, { encoding: 'utf8', flag: 'r' });
     const pkg = JSON.parse(pkgRaw);
     specs.forEach(spec => {
-      if (isDev) {
-        pkg.devDependencies = pkg.devDependencies || {};
-        pkg.devDependencies[spec.name] = spec.rawSpec;
-      } else {
-        pkg.dependencies = pkg.dependencies || {};
-        pkg.dependencies[spec.name] = spec.rawSpec;
-      }
+      pkg[packageType] = pkg[packageType] || {};
+      pkg[packageType][spec.name] = spec.rawSpec;
     });
     await fs.writeJson(pkgPath, pkg, {
       spaces: detectIndent(pkgRaw).indent,
