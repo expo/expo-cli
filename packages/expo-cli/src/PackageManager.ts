@@ -62,12 +62,12 @@ export class NpmPackageManager implements PackageManager {
     await this._runAsync(['install']);
   }
   async addAsync(...names: string[]) {
-    await this._runAsync(['install', '--save', ...names]);
     await this._patchAsync(names);
+    await this._runAsync(['install']);
   }
   async addDevAsync(...names: string[]) {
-    await this._runAsync(['install', '--save-dev', ...names]);
-    await this._patchAsync(names);
+    await this._patchAsync(names, true);
+    await this._runAsync(['install']);
   }
 
   // Private
@@ -83,21 +83,20 @@ export class NpmPackageManager implements PackageManager {
     await promise;
   }
 
-  async _patchAsync(names: string[]) {
+  async _patchAsync(names: string[], isDev = false) {
     const specs = names.map(name => npmPackageArg(name)).filter(spec => spec.rawSpec);
     if (specs.length) {
       const pkgPath = path.join(this.options.cwd, 'package.json');
       log(`> patching ${specs.map(spec => spec.raw).join(' ')}`);
       const pkgRaw = await fs.readFile(pkgPath, { encoding: 'utf8', flag: 'r' });
       const pkgPatched = specs.reduce((pkg, spec) => {
-        if (pkg.dependencies && pkg.dependencies[spec.name]) {
+        if (isDev) {
+          pkg.devDependencies = pkg.devDependencies || {};
+          pkg.devDependencies[spec.name] = spec.rawSpec;
+        } else {
+          pkg.dependencies = pkg.dependencies || {};
           pkg.dependencies[spec.name] = spec.rawSpec;
         }
-
-        if (pkg.devDependencies && pkg.devDependencies[spec.name]) {
-          pkg.devDependencies[spec.name] = spec.rawSpec;
-        }
-
         return pkg;
       }, JSON.parse(pkgRaw));
       await fs.writeJson(pkgPath, pkgPatched, {
