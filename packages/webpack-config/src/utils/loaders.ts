@@ -174,10 +174,6 @@ export function getPlugins({ plugins = [] }: AnyConfiguration): PluginItem[] {
   return plugins.map((plugin, index) => ({ index, plugin }));
 }
 
-export function getPluginsByType(config: AnyConfiguration, type: any): PluginItem[] {
-  return getPlugins(config).filter(({ plugin }: PluginItem) => plugin instanceof type);
-}
-
 export function getPluginsByName(config: AnyConfiguration, name: string): PluginItem[] {
   return getPlugins(config).filter(({ plugin }: PluginItem) => {
     if (plugin && plugin.constructor) {
