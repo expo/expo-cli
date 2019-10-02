@@ -5,7 +5,7 @@ import path from 'path';
 import { Arguments, DevConfiguration, InputEnvironment, Environment } from './types';
 import * as Diagnosis from './utils/Diagnosis';
 import { validateEnvironment } from './utils/validate';
-import { findLoader, getRulesByMatchingFiles } from './utils/loaders';
+import { findLoader, rulesMatchAnyFiles } from './utils/loaders';
 import webpackConfig from './webpack.config.unimodules';
 
 function _findBabelLoader(rules: RuleSetRule[]): RuleSetRule {
@@ -34,8 +34,7 @@ export default function withUnimodules(
     const testFontFileNames = supportedFonts.map(ext =>
       path.resolve(environment.projectRoot, `cool-font.${ext}`)
     );
-    const rules = getRulesByMatchingFiles(inputWebpackConfig, testFontFileNames);
-    if (Object.keys(rules).some(filename => !!rules[filename].length)) {
+    if (rulesMatchAnyFiles(inputWebpackConfig, testFontFileNames)) {
       supportsFontLoading = false;
     }
   }
