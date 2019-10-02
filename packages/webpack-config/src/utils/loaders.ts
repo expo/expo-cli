@@ -1,3 +1,7 @@
+/**
+ * Loader flattening inspired by:
+ * https://github.com/preactjs/preact-cli-experiment/tree/7b80623/packages/cli-plugin-legacy-config
+ */
 import { isRegExp } from 'util';
 import {
   Configuration,
