@@ -35,7 +35,7 @@ export default function withUnimodules(
       path.resolve(environment.projectRoot, `cool-font.${ext}`)
     );
     const rules = getRulesByMatchingFiles(inputWebpackConfig, testFontFileNames);
-    if (Object.keys(rules).some(filename => rules[filename].length)) {
+    if (Object.keys(rules).some(filename => !!rules[filename].length)) {
       supportsFontLoading = false;
     }
   }
