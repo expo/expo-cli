@@ -87,7 +87,6 @@ export class NpmPackageManager implements PackageManager {
     const specs = names.map(name => npmPackageArg(name)).filter(spec => spec.rawSpec);
     if (specs.length) {
       const pkgPath = path.join(this.options.cwd, 'package.json');
-      log(`> patching ${specs.map(spec => spec.raw).join(' ')}`);
       const pkgRaw = await fs.readFile(pkgPath, { encoding: 'utf8', flag: 'r' });
       const pkgPatched = specs.reduce((pkg, spec) => {
         if (isDev) {
