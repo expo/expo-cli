@@ -27,7 +27,6 @@ export type WebEnvironment = {
   projectRoot: string;
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
-  polyfill: boolean;
   https: boolean;
   info: boolean;
 };

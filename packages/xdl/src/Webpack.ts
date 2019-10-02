@@ -42,7 +42,6 @@ interface WebpackSettings {
 
 type CLIWebOptions = {
   dev?: boolean;
-  polyfill?: boolean;
   pwa?: boolean;
   nonInteractive?: boolean;
   port?: number;
@@ -52,11 +51,9 @@ type CLIWebOptions = {
 
 type BundlingOptions = {
   dev?: boolean;
-  polyfill?: boolean;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
   isDebugInfoEnabled?: boolean;
-  isPolyfillEnabled?: boolean;
   webpackEnv?: Object;
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
@@ -158,7 +155,7 @@ export async function startAsync(
     server = await startNextJsAsync({
       projectRoot,
       port: webpackServerPort,
-      dev: env.mode !== "production",
+      dev: env.mode !== 'production',
     });
     printSuccessMessages({
       projectRoot,
@@ -412,7 +409,6 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
   return {
     ...options,
     isImageEditingEnabled: options.pwa,
-    isPolyfillEnabled: options.polyfill,
   };
 }
 
@@ -485,7 +481,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     pwa: isImageEditingEnabled,
     mode,
     https,
-    polyfill: validateBoolOption('isPolyfillEnabled', options.isPolyfillEnabled, false),
     info: isDebugInfoEnabled,
     ...(options.webpackEnv || {}),
   };
