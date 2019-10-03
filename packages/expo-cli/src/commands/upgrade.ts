@@ -70,7 +70,7 @@ async function getUpdatedDependenciesAsync(
   }
 
   // Get the supported react/react-native/react-dom versions and other related packages
-  if (workflow === 'managed') {
+  if (workflow === 'managed' || dependencies['expokit']) {
     result['react-native'] = `https://github.com/expo/react-native/archive/${
       targetSdkVersion.expoReactNativeTag
     }.tar.gz`;

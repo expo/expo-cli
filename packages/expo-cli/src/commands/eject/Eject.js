@@ -11,7 +11,7 @@ import JsonFile from '@expo/json-file';
 import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 import * as PackageManager from '../../PackageManager';
-import { validateGitStatusAsync } from './utils/ProjectUtils';
+import { validateGitStatusAsync } from '../utils/ProjectUtils';
 
 import log from '../../log';
 import prompt from '../../prompt';
