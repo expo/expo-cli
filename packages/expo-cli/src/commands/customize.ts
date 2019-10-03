@@ -31,11 +31,32 @@ async function maybeWarnToCommitAsync(projectRoot: string) {
   }
 }
 
-const dependencyMap: { [key: string]: string[] } = {
-  'pages/_document.js': ['@expo/next-document'],
-  'babel.config.js': ['babel-preset-expo'],
-  'jest.config.js': ['jest-expo'],
-  'webpack.config.js': ['@expo/webpack-config'],
+const dependencyMap: {
+  [key: string]: { devDependencies: string[]; main: string; output?: string };
+} = {
+  'Expo Webpack config': { devDependencies: ['@expo/webpack-config'], main: 'webpack.config.js' },
+  'Babel Config': { devDependencies: ['babel-preset-expo'], main: 'babel.config.js' },
+  'Jest Universal': { devDependencies: ['jest-expo'], main: 'jest.config.js' },
+  'Next.js Document': {
+    devDependencies: ['@expo/next-document'],
+    output: 'pages/_document.js',
+    main: 'next/_document.js',
+  },
+  'Next.js Service Worker': {
+    devDependencies: [],
+    output: 'static/expo-service-worker.js',
+    main: 'next/expo-service-worker.js',
+  },
+  'Gatsby Config': {
+    devDependencies: ['gatsby-plugin-react-native-web'],
+    output: 'gatsby-config.js',
+    main: 'gatsby/gatsby-config.js',
+  },
+  'Storybook Webpack config': {
+    devDependencies: ['@expo/webpack-config'],
+    main: 'storybook/webpack.config.js',
+    output: '.storybook/webpack.config.js',
+  },
 };
 
 async function generateFilesAsync({
@@ -54,22 +75,22 @@ async function generateFilesAsync({
   let promises = [];
 
   for (const file of answer) {
-    if (Object.keys(dependencyMap).includes(file)) {
-      const projectFilePath = path.resolve(projectDir, file);
+    if (file in dependencyMap) {
+      const { main, output, devDependencies } = dependencyMap[file];
+
+      const projectFilePath = path.resolve(projectDir, output || main);
       // copy the file from template
       promises.push(
         fs.copy(
-          require.resolve(path.join('@expo/webpack-config/template', file)),
+          require.resolve(path.join('@expo/webpack-config/template', main)),
           projectFilePath,
           { overwrite: true, recursive: true }
         )
       );
 
-      if (file in dependencyMap) {
-        const packageManager = PackageManager.createForProject(projectDir);
-        for (const dependency of dependencyMap[file]) {
-          promises.push(packageManager.addDevAsync(dependency));
-        }
+      const packageManager = PackageManager.createForProject(projectDir);
+      for (const dependency of devDependencies) {
+        promises.push(packageManager.addDevAsync(dependency));
       }
     } else {
       const fileName = path.basename(file);
@@ -103,7 +124,10 @@ export async function action(projectDir: string = './', options: Options = { for
   let values = [];
 
   for (const file of allFiles) {
-    const localProjectFile = path.resolve(projectDir, file);
+    const localProjectFile = path.resolve(
+      projectDir,
+      file in dependencyMap ? dependencyMap[file].output || dependencyMap[file].main : file
+    );
     const exists = fs.existsSync(localProjectFile);
 
     values.push({
