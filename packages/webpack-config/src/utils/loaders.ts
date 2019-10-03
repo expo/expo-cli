@@ -42,7 +42,7 @@ export function findLoader(loaderName: string, rules: RuleSetRule[]): RuleSetRul
     if (
       rule.use &&
       (rule.use as any).loader &&
-      ((rule.use as any).loader.includes(`/${loaderName}`) ||
+      ((rule.use as RuleSetLoader).loader!.includes(`/${loaderName}`) ||
         (rule.use as any).loader.includes(`\\${loaderName}`))
     ) {
       return rule;
