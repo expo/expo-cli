@@ -9,6 +9,7 @@ import { Versions } from '@expo/xdl';
 
 import CommandError from '../CommandError';
 import * as PackageManager from '../PackageManager';
+import { findProjectRootAsync } from './utils/ProjectUtils';
 import log from '../log';
 
 async function installAsync(packages, options) {
@@ -74,29 +75,10 @@ async function installAsync(packages, options) {
   await packageManager.addAsync(...versionedPackages);
 }
 
-async function findProjectRootAsync(base) {
-  let previous = null;
-  let dir = base;
-
-  do {
-    if (await JsonFile.getAsync(path.join(dir, 'app.json'), 'expo', null)) {
-      return { projectRoot: dir, workflow: 'managed' };
-    } else if (fs.existsSync(path.join(dir, 'package.json'))) {
-      return { projectRoot: dir, workflow: 'bare' };
-    }
-    previous = dir;
-    dir = path.dirname(dir);
-  } while (dir !== previous);
-
-  throw new CommandError(
-    'NO_PROJECT',
-    'No managed or bare projects found. Please make sure you are inside a project folder.'
-  );
-}
-
 export default program => {
   program
     .command('install [packages...]')
+    .alias('add')
     .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
     .description('Installs a unimodule or other package to a project.')
