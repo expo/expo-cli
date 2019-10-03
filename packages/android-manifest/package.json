@@ -1,5 +1,5 @@
 {
-  "name": "android-manifest",
+  "name": "@expo/android-manifest",
   "version": "0.1.0",
   "description": "A library for interacting with the app.json",
   "main": "build/Manifest.js",
