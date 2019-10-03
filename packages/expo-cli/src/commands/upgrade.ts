@@ -104,6 +104,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
   let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   let isGitStatusClean = await validateGitStatusAsync();
+  log.newLine();
 
   // Give people a chance to bail out if git working tree is dirty
   if (!isGitStatusClean) {
@@ -137,8 +138,13 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
 
   // Can't upgrade if we don't have a SDK version (tapping on head meme)
   if (!exp.sdkVersion) {
-    log.error('No sdkVersion field is present in app.json, cannot upgrade project.');
-    throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND');
+    if (workflow === 'bare') {
+      log.error('This command only works for bare workflow projects that also have the expo package installed and sdkVersion configured in app.json.');
+      throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND_IN_BARE');
+    } else {
+      log.error('No sdkVersion field is present in app.json, cannot upgrade project.');
+      throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND_IN_MANAGED');
+    }
   }
 
   let currentSdkVersionString = exp.sdkVersion;
@@ -148,12 +154,6 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let targetSdkVersionString =
     maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
   let targetSdkVersion = sdkVersions[targetSdkVersionString];
-
-  // TODO: figure out how this should work for bare workflow
-  if (workflow === 'bare') {
-    log.warn('This command is currently only supported on the managed workflow.');
-    throw new CommandError('UPGRADE_UNSUPPORTED_WITH_BARE_WORKFLOW');
-  }
 
   // Maybe bail out early if people are trying to update to the current version
   if (targetSdkVersionString === currentSdkVersionString) {
@@ -286,6 +286,13 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     log.addNewLineIfNone();
   }
 
+  // Add some basic additional instructions for bare workflow
+  if (workflow === 'bare') {
+      log.addNewLineIfNone();
+      log(chalk.bold(`It will be necessary to re-build your native projects to compile the updated dependencies. You will need to run ${chalk.grey('pod install')} in your ios directory before re-building the iOS project.`));
+      log.addNewLineIfNone();
+  }
+
   if (targetSdkVersion && targetSdkVersion.releaseNoteUrl) {
     log(
       `Please refer to the release notes for information on any further required steps to update and information about breaking changes:`
@@ -325,7 +332,6 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     }
   }
 
-  // TODO: If we updated multiple SDK versions, log the link to release notes for each of those versions
   log.addNewLineIfNone();
 }
 
