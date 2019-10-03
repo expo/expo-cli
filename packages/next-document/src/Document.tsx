@@ -2,6 +2,7 @@
 // and https://github.com/expo/expo-cli/blob/master/packages/webpack-config/web-default/index.html
 import Document, { Head, Main, NextScript } from 'next/document';
 import React from 'react';
+// @ts-ignore: Next requires this to be `react-native` but we want to support react-native-web only projects as well.
 import { AppRegistry } from 'react-native';
 
 export const style = `
@@ -26,7 +27,6 @@ html, body, #__next {
   flex: 1;
 }
 html {
-  font-size: 14px;
   scroll-behavior: smooth;
   /* Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138 */
   -webkit-text-size-adjust: 100%;
