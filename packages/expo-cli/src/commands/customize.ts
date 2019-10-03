@@ -32,7 +32,9 @@ async function maybeWarnToCommitAsync(projectRoot: string) {
 }
 
 const dependencyMap: { [key: string]: string[] } = {
+  'pages/_document.js': ['@expo/next-document'],
   'babel.config.js': ['babel-preset-expo'],
+  'jest.config.js': ['jest-expo'],
   'webpack.config.js': ['@expo/webpack-config'],
 };
 
