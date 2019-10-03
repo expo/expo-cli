@@ -139,10 +139,6 @@ export function getEntryPoint(projectRoot: string): string | null {
         return filePath;
       }
     }
-
-    throw new Error(
-      'Could not determine the main file in your project (index, src/index). Please define it with the `main` field in your `package.json`'
-    );
   }
   return null;
 }
