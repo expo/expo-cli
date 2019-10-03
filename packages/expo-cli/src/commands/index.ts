@@ -28,6 +28,7 @@ const COMMANDS = [
   require('./register'),
   require('./send'),
   require('./start'),
+  require('./upgrade'),
   require('./upload'),
   require('./url'),
   require('./webhooks'),

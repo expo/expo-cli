@@ -29,6 +29,7 @@ export type SDKVersion = {
   iosClientVersion?: string;
   androidClientUrl?: string;
   androidClientVersion?: string;
+  relatedPackages?: { [name: string]: string };
 };
 
 export type SDKVersions = { [version: string]: SDKVersion };

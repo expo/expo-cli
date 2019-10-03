@@ -96,7 +96,10 @@ export class NpmPackageManager implements PackageManager {
   }
 
   _parseSpecs(names: string[]) {
-    const result = { versioned: [], unversioned: [] };
+    const result: {
+      versioned: npmPackageArg.Result[],
+      unversioned: npmPackageArg.Result[],
+    } = { versioned: [], unversioned: [] };
     names
       .map(name => npmPackageArg(name))
       .forEach(spec => {
@@ -110,15 +113,15 @@ export class NpmPackageManager implements PackageManager {
   }
 
   async _patchAsync(
-    specs: { name: string; rawSpec: string }[],
+    specs: npmPackageArg.Result[],
     packageType: 'dependencies' | 'devDependencies'
   ) {
-    const pkgPath = path.join(this.options.cwd, 'package.json');
+    const pkgPath = path.join(this.options.cwd || '.', 'package.json');
     const pkgRaw = await fs.readFile(pkgPath, { encoding: 'utf8', flag: 'r' });
     const pkg = JSON.parse(pkgRaw);
     specs.forEach(spec => {
       pkg[packageType] = pkg[packageType] || {};
-      pkg[packageType][spec.name] = spec.rawSpec;
+      pkg[packageType][spec.name!] = spec.rawSpec;
     });
     await fs.writeJson(pkgPath, pkg, {
       spaces: detectIndent(pkgRaw).indent,
