@@ -294,11 +294,7 @@ export default async function(env: Environment): Promise<Configuration> {
     );
   }
 
-  if (isProd) {
-    if (env.polyfill) {
-      appEntry.unshift(require.resolve('@babel/polyfill'));
-    }
-  } else {
+  if (isDev) {
     // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
     // Include an alternative client for WebpackDevServer. A client's job is to
     // connect to WebpackDevServer by a socket and get notified about changes.
