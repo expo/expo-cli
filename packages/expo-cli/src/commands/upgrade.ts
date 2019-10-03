@@ -33,9 +33,11 @@ type DependencyList = { [key: string]: string };
  */
 async function getUpdatedDependenciesAsync(
   projectRoot: string,
+  workflow: 'managed' | 'bare',
   targetSdkVersion: {
     expoReactNativeTag: string;
     facebookReactVersion?: string;
+    facebookReactNativeVersion: string;
     relatedPackages?: { [name: string]: string };
   } | null
 ): Promise<DependencyList> {
@@ -68,9 +70,13 @@ async function getUpdatedDependenciesAsync(
   }
 
   // Get the supported react/react-native/react-dom versions and other related packages
-  result['react-native'] = `https://github.com/expo/react-native/archive/${
-    targetSdkVersion.expoReactNativeTag
-  }.tar.gz`;
+  if (workflow === 'managed') {
+    result['react-native'] = `https://github.com/expo/react-native/archive/${
+      targetSdkVersion.expoReactNativeTag
+    }.tar.gz`;
+  } else {
+    result['react-native'] = targetSdkVersion.facebookReactNativeVersion;
+  }
 
   // React version apparently is optional in SDK version data
   if (targetSdkVersion.facebookReactVersion) {
@@ -231,7 +237,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   log.addNewLineIfNone();
 
   // Get all updated packages
-  let updates = await getUpdatedDependenciesAsync(projectRoot, targetSdkVersion);
+  let updates = await getUpdatedDependenciesAsync(projectRoot, workflow, targetSdkVersion);
 
   // Split updated packages by dependencies and devDependencies
   let devDependencies = _.pickBy(updates, (_version, name) => _.has(pkg.devDependencies, name));
