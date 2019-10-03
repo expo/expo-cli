@@ -140,7 +140,7 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
   } else if (manifest.toString) {
     xmlInput = manifest.toString();
   } else {
-    throw new Error(`android-manifest: invalid manifest value passed in: ${manifest}`);
+    throw new Error(`@expo/android-manifest: invalid manifest value passed in: ${manifest}`);
   }
   const indentString = stringTimesN(indentLevel, ' ');
 
