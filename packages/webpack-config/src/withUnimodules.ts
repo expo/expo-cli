@@ -21,9 +21,15 @@ function _findBabelLoader(rules: RuleSetRule[]): RuleSetRule {
 // ex: Storybook `({ config }) => withUnimodules(config)`
 export default function withUnimodules(
   inputWebpackConfig: DevConfiguration | Configuration = {},
-  env: InputEnvironment,
+  env: InputEnvironment = {},
   argv: Arguments = {}
 ): DevConfiguration | Configuration {
+  // @ts-ignore: We should attempt to use the project root that the other config is already using (used for Gatsby support).
+  env.projectRoot = env.projectRoot || inputWebpackConfig.context;
+
+  // Attempt to use the input webpack config mode
+  env.mode = env.mode || inputWebpackConfig.mode;
+
   const environment: Environment = validateEnvironment(env);
 
   let { supportsFontLoading } = argv;
@@ -39,17 +45,10 @@ export default function withUnimodules(
     }
   }
 
-  const config = webpackConfig(
-    {
-      // Attempt to use the input webpack config mode
-      mode: inputWebpackConfig.mode,
-      ...environment,
-    },
-    {
-      ...argv,
-      supportsFontLoading,
-    }
-  );
+  const config = webpackConfig(environment, {
+    ...argv,
+    supportsFontLoading,
+  });
 
   // We have to transpile these modules and make them not external too.
   // We have to do this because next.js by default externals all `node_modules`'s js files.

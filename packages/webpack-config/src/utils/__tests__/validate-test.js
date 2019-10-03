@@ -46,7 +46,9 @@ it(`can override a report value`, () => {
 });
 
 it(`throws when the projectRoot isn't defined`, () => {
-  expect(() => validateEnvironment({})).toThrowError('projectRoot is a required field');
+  expect(() => validateEnvironment({})).toThrowError(
+    'webpack-config requires a valid projectRoot string value which points to the root of your project'
+  );
 });
 
 it(`throws when an invalid mode is provided`, () => {
