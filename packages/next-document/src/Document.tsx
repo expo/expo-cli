@@ -44,15 +44,15 @@ body {
 }
 `;
 
-export default class ExpoDocument extends Document {
-  static async getInitialProps({ renderPage }) {
-    AppRegistry.registerComponent('Main', () => Main);
-    const { getStyleElement } = AppRegistry.getApplication('Main');
-    const page = renderPage();
-    const styles = [<style dangerouslySetInnerHTML={{ __html: style }} />, getStyleElement()];
-    return { ...page, styles: React.Children.toArray(styles) };
-  }
+export async function getInitialProps({ renderPage }) {
+  AppRegistry.registerComponent('Main', () => Main);
+  const { getStyleElement } = AppRegistry.getApplication('Main');
+  const page = renderPage();
+  const styles = [<style dangerouslySetInnerHTML={{ __html: style }} />, getStyleElement()];
+  return { ...page, styles: React.Children.toArray(styles) };
+}
 
+class ExpoDocument extends Document {
   render() {
     return (
       <html>
@@ -67,3 +67,7 @@ export default class ExpoDocument extends Document {
     );
   }
 }
+
+ExpoDocument.getInitialProps = getInitialProps;
+
+export default ExpoDocument;

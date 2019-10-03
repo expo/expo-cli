@@ -26,10 +26,58 @@ yarn add @expo/next-document
 
 ## ⚽️ Usage
 
+Re-export this component from the `pages/_document.js` file of your Next.js project.
+
 ```js
+// pages/_document.js
 import Document from '@expo/next-document';
 
 export default Document;
+```
+
+## Customizing the Document
+
+You can import the following fragments from the custom Document:
+
+```js
+import Document, { getInitialProps, style } from '@expo/next-document';
+```
+
+Then recompose the Document how you like
+
+```js
+import { getInitialProps } from '@expo/next-document';
+import Document, { Head, Main, NextScript } from 'next/document';
+import React from 'react';
+
+class CustomDocument extends Document {
+  render() {
+    return (
+      <html>
+        <Head>
+          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        </Head>
+        <body>
+          <Main />
+          <NextScript />
+        </body>
+      </html>
+    );
+  }
+}
+
+// Import the getInitialProps method and assign it to your component
+CustomDocument.getInitialProps = getInitialProps;
+
+// OR...
+
+CustomDocument.getInitialProps = async props => {
+  const result = await getInitialProps(props);
+  // Mutate result...
+  return result;
+};
+
+export default CustomDocument;
 ```
 
 ## License

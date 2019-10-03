@@ -17,11 +17,14 @@
     "directory": "packages/next-document"
   },
   "keywords": [
-    "json",
-    "react-native",
     "expo",
+    "expo-web",
+    "json",
+    "next",
     "react",
-    "next"
+    "react-native",
+    "react-dom",
+    "react-native-web"
   ],
   "license": "MIT",
   "bugs": {
@@ -35,13 +38,13 @@
     "@expo/babel-preset-cli": "^0.2.1-alpha.0",
     "expo-module-scripts": "^1.1.1",
     "next": "^9.0.7",
-    "react-native": "^0.61.1",
+    "react-native-web": "^0.11.7",
     "typescript": "3.4.5"
   },
   "peerDependencies": {
     "next": "^9",
     "react": "^16",
-    "react-native": "*"
+    "react-native-web": "^0.11.7"
   },
   "publishConfig": {
     "access": "public"
