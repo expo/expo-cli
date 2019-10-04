@@ -24,6 +24,7 @@ import CompressionPlugin from 'compression-webpack-plugin';
 // @ts-ignore
 import BrotliPlugin from 'brotli-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { boolish } from 'getenv';
 import { getPathsAsync, getPublicPaths } from './utils/paths';
 
 import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
@@ -38,7 +39,7 @@ import createFontLoader from './loaders/createFontLoader';
 import createBabelLoader from './loaders/createBabelLoader';
 import getMode from './utils/getMode';
 import getConfig from './utils/getConfig';
-import { Environment, Arguments } from './types';
+import { Environment } from './types';
 
 const DEFAULT_GZIP = {
   test: /\.(js|css)$/,
@@ -472,6 +473,6 @@ export default async function(env: Environment): Promise<Configuration> {
     },
     // Turn off performance processing because we utilize
     // our own (CRA) hints via the FileSizeReporter
-    // performance: false,
+    performance: boolish('CI', false) ? false : undefined,
   };
 }
