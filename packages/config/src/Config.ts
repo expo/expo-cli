@@ -1,10 +1,9 @@
-import path from 'path';
-
+import JsonFile, { JSONObject } from '@expo/json-file';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs-extra';
-import JsonFile, { JSONValue, JSONObject } from '@expo/json-file';
+import path from 'path';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
