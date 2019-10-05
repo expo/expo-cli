@@ -1,10 +1,10 @@
 // Based on https://github.com/zeit/next.js/tree/canary/examples/with-react-native-web
 // and https://github.com/expo/expo-cli/blob/master/packages/webpack-config/web-default/index.html
-import Document, { Head, Main, NextScript } from 'next/document';
+import NextDocument, { Head, Main, NextScript } from 'next/document';
 import React from 'react';
-// @ts-ignore: Next requires this to be `react-native` but we want to support react-native-web only projects as well.
 import { AppRegistry } from 'react-native';
 
+// @ts-ignore: Next requires this to be `react-native` but we want to support react-native-web only projects as well.
 export const style = `
 /**
  * Building on the RNWeb reset:
@@ -52,7 +52,7 @@ export async function getInitialProps({ renderPage }) {
   return { ...page, styles: React.Children.toArray(styles) };
 }
 
-class ExpoDocument extends Document {
+export class Document extends NextDocument {
   render() {
     return (
       <html>
@@ -68,6 +68,4 @@ class ExpoDocument extends Document {
   }
 }
 
-ExpoDocument.getInitialProps = getInitialProps;
-
-export default ExpoDocument;
+Document.getInitialProps = getInitialProps;

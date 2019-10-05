@@ -30,7 +30,7 @@ Re-export this component from the `pages/_document.js` file of your Next.js proj
 
 ```js
 // pages/_document.js
-import Document from '@expo/next-adapter';
+import { Document } from '@expo/next-adapter';
 
 export default Document;
 ```
@@ -40,7 +40,7 @@ export default Document;
 You can import the following fragments from the custom Document:
 
 ```js
-import Document, { getInitialProps, style } from '@expo/next-adapter';
+import { Document, getInitialProps, style } from '@expo/next-adapter';
 ```
 
 Then recompose the Document how you like
