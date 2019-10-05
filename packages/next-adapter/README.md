@@ -1,6 +1,6 @@
 <!-- Title -->
 <h1 align="center">
-👋 Welcome to <br/><code>@expo/next-document</code>
+👋 Welcome to <br/><code>@expo/next-adapter</code>
 </h1>
 
 <!-- Header -->
@@ -18,10 +18,10 @@
 
 ## 🏁 Setup
 
-Install `@expo/next-document` in your project.
+Install `@expo/next-adapter` in your project.
 
 ```sh
-yarn add @expo/next-document
+yarn add @expo/next-adapter
 ```
 
 ## ⚽️ Usage
@@ -30,7 +30,7 @@ Re-export this component from the `pages/_document.js` file of your Next.js proj
 
 ```js
 // pages/_document.js
-import Document from '@expo/next-document';
+import Document from '@expo/next-adapter';
 
 export default Document;
 ```
@@ -40,13 +40,13 @@ export default Document;
 You can import the following fragments from the custom Document:
 
 ```js
-import Document, { getInitialProps, style } from '@expo/next-document';
+import Document, { getInitialProps, style } from '@expo/next-adapter';
 ```
 
 Then recompose the Document how you like
 
 ```js
-import { getInitialProps } from '@expo/next-document';
+import { getInitialProps } from '@expo/next-adapter';
 import Document, { Head, Main, NextScript } from 'next/document';
 import React from 'react';
 
@@ -92,7 +92,7 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
     <a aria-label="sponsored by expo" href="http://expo.io">
         <img src="https://img.shields.io/badge/Sponsored_by-Expo-4630EB.svg?style=for-the-badge&logo=EXPO&labelColor=000&logoColor=fff" target="_blank" />
     </a>
-    <a aria-label="expo next-document is free to use" href="/LICENSE" target="_blank">
+    <a aria-label="expo next-adapter is free to use" href="/LICENSE" target="_blank">
         <img align="right" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge&color=33CC12" target="_blank" />
     </a>
 </p>
