@@ -1,2 +1,2 @@
-import ExpoDocument from '../../../../next-document';
-export default ExpoDocument;
+import { Document } from '../../../../next-document';
+export default Document;
