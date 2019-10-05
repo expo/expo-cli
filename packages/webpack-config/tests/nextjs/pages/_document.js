@@ -1,2 +1,2 @@
-import { Document } from '../../../../next-document';
+import { Document } from '../../../../next-adapter';
 export default Document;
