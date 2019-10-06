@@ -81,7 +81,7 @@ export default function createBabelLoader({
 
   const isProduction = mode === 'production';
   return {
-    test: /\.[jt]sx?$/,
+    test: /\.(mjs|[jt]sx?)$/,
     // Can only clobber test
     // Prevent clobbering the `include` and `use` values.
     ...options,

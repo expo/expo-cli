@@ -101,7 +101,7 @@ const fallbackLoaderConfiguration = {
   // by webpacks internal loaders.
 
   // Excludes: js, jsx, ts, tsx, html, json
-  exclude: [/\.jsx?$/, /\.tsx?$/, /\.html$/, /\.json$/],
+  exclude: [/\.(mjs|[jt]sx?)$/, /\.html$/, /\.json$/],
   options: {
     name: 'static/media/[name].[hash:8].[ext]',
   },
