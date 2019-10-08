@@ -4,12 +4,12 @@ import { Configuration } from 'webpack';
 import CompressionPlugin from 'compression-webpack-plugin';
 // @ts-ignore
 import BrotliPlugin from 'brotli-webpack-plugin';
+import { ExpoConfig } from '@expo/config';
 import { DevConfiguration, Environment } from './types';
 import { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } from './utils/config';
 import getConfig from './utils/getConfig';
-import getMode from './utils/getMode';
 
-const DEFAULT_GZIP = {
+export const DEFAULT_GZIP_OPTIONS = {
   test: /\.(js|css)$/,
   filename: '[path].gz[query]',
   algorithm: 'gzip',
@@ -17,7 +17,7 @@ const DEFAULT_GZIP = {
   minRatio: 0.8,
 };
 
-const DEFAULT_BROTLI = {
+export const DEFAULT_BROTLI_OPTIONS = {
   asset: '[path].br[query]',
   test: /\.(js|css)$/,
   threshold: 1024,
@@ -28,16 +28,21 @@ export default function withCompression(
   webpackConfig: Configuration | DevConfiguration,
   env: Environment
 ): Configuration | DevConfiguration {
-  const mode = getMode(env);
-
-  if (mode !== 'production') {
+  if (webpackConfig.mode !== 'production') {
     return webpackConfig;
   }
 
   const config = getConfig(env);
-  const { build: buildConfig = {} } = config.web;
-  const gzipConfig = overrideWithPropertyOrConfig(buildConfig.gzip, DEFAULT_GZIP);
-  const brotliConfig = enableWithPropertyOrConfig(buildConfig.brotli, DEFAULT_BROTLI);
+  return addCompressionPlugins(webpackConfig, config);
+}
+
+export function addCompressionPlugins(
+  webpackConfig: Configuration | DevConfiguration,
+  config: ExpoConfig
+): Configuration | DevConfiguration {
+  const { build = {} } = config.web;
+  const gzipConfig = overrideWithPropertyOrConfig(build.gzip, DEFAULT_GZIP_OPTIONS, true);
+  const brotliConfig = enableWithPropertyOrConfig(build.brotli, DEFAULT_BROTLI_OPTIONS, true);
 
   if (!Array.isArray(webpackConfig.plugins)) webpackConfig.plugins = [];
 
