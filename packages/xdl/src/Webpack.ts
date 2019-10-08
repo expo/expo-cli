@@ -15,8 +15,7 @@ import createWebpackCompiler, {
   printSuccessMessages,
 } from './createWebpackCompiler';
 import ip from './ip';
-// @ts-ignore
-import * as Doctor from './project/Doctor';
+
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
@@ -121,7 +120,11 @@ export async function startAsync(
     return null;
   }
 
-  const { env, config } = await createWebpackConfigAsync(projectRoot, options);
+  const fullOptions = transformCLIOptions(options);
+
+  const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
+
+  const config = await createWebpackConfigAsync(env, fullOptions);
 
   const port = await getAvailablePortAsync({
     defaultPort: options.port,
@@ -319,10 +322,18 @@ export async function bundleWebAppAsync(projectRoot: string, config: Web.Webpack
 export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
   const isUsingNextJs = await getProjectUseNextJsAsync(projectRoot);
 
-  const { config } = await createWebpackConfigAsync(projectRoot, {
+  const fullOptions = transformCLIOptions({
     ...options,
     unimodulesOnly: isUsingNextJs,
   });
+
+  const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, {
+    ...fullOptions,
+    // Force production
+    mode: 'production',
+  });
+
+  const config = await createWebpackConfigAsync(env, fullOptions);
 
   if (isUsingNextJs) {
     await bundleNextJsAsync(projectRoot);
@@ -413,13 +424,9 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
 }
 
 async function createWebpackConfigAsync(
-  projectRoot: string,
+  env: Web.WebEnvironment,
   options: CLIWebOptions = {}
-): Promise<{ env: any; config: Web.WebpackConfiguration }> {
-  const fullOptions = transformCLIOptions(options);
-
-  const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
-
+): Promise<Web.WebpackConfiguration> {
   setMode(env.mode);
 
   let config;
@@ -430,7 +437,7 @@ async function createWebpackConfigAsync(
     config = await Web.invokeWebpackConfigAsync(env);
   }
 
-  return { env, config };
+  return config;
 }
 
 async function applyOptionsToProjectSettingsAsync(
@@ -441,9 +448,6 @@ async function applyOptionsToProjectSettingsAsync(
   // Change settings before reading them
   if (typeof options.https === 'boolean') {
     newSettings.https = options.https;
-  }
-  if (typeof options.dev === 'boolean') {
-    newSettings.dev = options.dev;
   }
 
   if (Object.keys(newSettings).length) {
@@ -457,10 +461,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   projectRoot: string,
   options: BundlingOptions
 ): Promise<Web.WebEnvironment> {
-  // Bacon: Prevent dev flag from being used in production
-  if (options.mode === 'production') {
-    options.dev = false;
-  }
   let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
 
   const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';
