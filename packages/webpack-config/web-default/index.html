@@ -53,13 +53,5 @@
   <body>
     <noscript>%NO_SCRIPT%</noscript>
     <div id="%ROOT_ID%"></div>
-
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('%WEB_PUBLIC_URL%expo-service-worker.js');
-        });
-      }
-    </script>
   </body>
 </html>
