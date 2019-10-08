@@ -4,26 +4,24 @@ import withCompression, { addCompressionPlugins } from '../withCompression';
 
 const projectRoot = path.resolve(__dirname, '../../tests/basic');
 
-describe('withCompression', () => {
-  it(`only uses compression in production`, () => {
-    expect(
-      withCompression(
-        {
-          mode: 'production',
-        },
-        { projectRoot }
-      ).plugins.length
-    ).toBe(1);
+it(`only uses compression in production`, () => {
+  expect(
+    withCompression(
+      {
+        mode: 'production',
+      },
+      { projectRoot }
+    ).plugins.length
+  ).toBe(1);
 
-    expect(
-      withCompression(
-        {
-          mode: 'development',
-        },
-        { projectRoot }
-      ).plugins
-    ).not.toBeDefined();
-  });
+  expect(
+    withCompression(
+      {
+        mode: 'development',
+      },
+      { projectRoot }
+    ).plugins
+  ).not.toBeDefined();
 });
 
 describe('addCompressionPlugins', () => {
