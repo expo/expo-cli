@@ -6,14 +6,17 @@ import safePostCssParser from 'postcss-safe-parser';
 import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
 
-import { DevConfiguration } from './types';
+export function isDebugMode() {
+  return boolish('EXPO_WEB_DEBUG', false);
+}
 
-export default function withOptimizations(
-  config: Configuration | DevConfiguration
-): Configuration | DevConfiguration {
+export default function withOptimizations(config: Configuration): Configuration {
+  if (config.mode !== 'production') {
+    return config;
+  }
   const shouldUseSourceMap = config.devtool !== null;
 
-  const isDebugMode = boolish('EXPO_WEB_DEBUG', false);
+  const _isDebugMode = isDebugMode();
 
   config.optimization = {
     ...(config.optimization || {}),
@@ -31,7 +34,7 @@ export default function withOptimizations(
             ecma: 8,
           },
           compress: {
-            warnings: isDebugMode,
+            warnings: _isDebugMode,
             // Disabled because of an issue with Uglify breaking seemingly valid code:
             // https://github.com/facebook/create-react-app/issues/2376
             // Pending further investigation:
@@ -43,14 +46,14 @@ export default function withOptimizations(
             // https://github.com/terser-js/terser/issues/120
             inline: 2,
           },
-          mangle: isDebugMode
+          mangle: _isDebugMode
             ? false
             : {
                 safari10: true,
               },
           output: {
             ecma: 5,
-            comments: isDebugMode,
+            comments: _isDebugMode,
             // Turned on because emoji and regex is not minified properly using default
             // https://github.com/facebook/create-react-app/issues/2488
             ascii_only: true,

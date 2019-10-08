@@ -345,10 +345,10 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
   if (isDev) {
     webpackConfig.devServer = await createDevServerConfigAsync(env, argv);
   } else if (isProd) {
-    webpackConfig = withOptimizations(webpackConfig);
+    webpackConfig = withCompression(withOptimizations(webpackConfig), env);
   }
 
-  return withReporting(withCompression(withNodeMocks(webpackConfig), env), env);
+  return withReporting(withNodeMocks(webpackConfig), env);
 }
 
 // Some libraries import Node modules but don't use them in the browser.
