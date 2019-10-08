@@ -1,9 +1,10 @@
 import { Rule } from 'webpack';
 
-import { Environment } from '../types';
+import { ExpoConfig } from '@expo/config';
+import { Environment, Mode, FilePaths } from '../types';
 import getConfig from '../utils/getConfig';
 import getMode from '../utils/getMode';
-import { getPathsAsync } from '../utils/paths';
+import { getPaths } from '../utils/paths';
 import createBabelLoader from './createBabelLoader';
 import createFontLoader from './createFontLoader';
 
@@ -12,7 +13,7 @@ import createFontLoader from './createFontLoader';
 // smaller than specified limit in bytes as data URLs to avoid requests.
 // A missing `test` is equivalent to a match.
 // TODO: Bacon: Move SVG
-const imageLoaderConfiguration = {
+export const imageLoaderRule: Rule = {
   test: /\.(gif|jpe?g|png|svg)$/,
   use: {
     loader: require.resolve('url-loader'),
@@ -35,7 +36,7 @@ const imageLoaderConfiguration = {
 // In production, they would get copied to the `build` folder.
 // This loader doesn't use a "test" so it will catch all modules
 // that fall through the other loaders.
-const fallbackLoaderConfiguration = {
+export const fallbackLoaderRule: Rule = {
   loader: require.resolve('file-loader'),
   // Exclude `js` files to keep "css" loader working as it injects
   // its runtime that would otherwise be processed through "file" loader.
@@ -49,41 +50,72 @@ const fallbackLoaderConfiguration = {
   },
 };
 
-export default async function createAllLoadersAsync(env: Environment): Promise<Rule[]> {
+export const styleLoaderRule: Rule = {
+  test: /\.(css)$/,
+  use: [require.resolve('style-loader'), require.resolve('css-loader')],
+};
+
+export default function createAllLoaders(env: Environment): Rule[] {
   const config = getConfig(env);
   const mode = getMode(env);
   const { platform = 'web' } = env;
 
-  const locations = env.locations || (await getPathsAsync(env.projectRoot));
+  const locations = env.locations || getPaths(env.projectRoot);
 
-  const { build: buildConfig = {} } = config.web;
-  const { babel: babelAppConfig = {} } = buildConfig;
+  return getAllLoaderRules(config, mode, locations, platform);
+}
 
-  const babelProjectRoot = babelAppConfig.root || locations.root;
+export function getBabelLoaderRuleFromEnv(env: Environment): Rule {
+  const config = getConfig(env);
+  const mode = getMode(env);
+  const { platform = 'web' } = env;
 
-  const babelLoader = createBabelLoader({
+  const locations = env.locations || getPaths(env.projectRoot);
+
+  return getBabelLoaderRule(locations.root, config, mode, platform);
+}
+
+export function getBabelLoaderRule(
+  projectRoot: string,
+  { web = {} }: ExpoConfig,
+  mode: Mode,
+  platform: string = 'web'
+): Rule {
+  const { root, verbose, include, use } = (web.build || {}).babel || {};
+
+  const babelProjectRoot = root || projectRoot;
+
+  return createBabelLoader({
     mode,
     platform,
     babelProjectRoot,
-    verbose: babelAppConfig.verbose,
-    include: babelAppConfig.include,
-    use: babelAppConfig.use,
+    verbose,
+    include,
+    use,
   });
+}
 
+export function getHtmlLoaderRule(exclude: string): Rule {
+  return {
+    test: /\.html$/,
+    use: [require.resolve('html-loader')],
+    exclude,
+  };
+}
+
+export function getAllLoaderRules(
+  config: ExpoConfig,
+  mode: Mode,
+  { root, includeModule, template }: FilePaths,
+  platform: string = 'web'
+): Rule[] {
   return [
-    {
-      test: /\.html$/,
-      use: [require.resolve('html-loader')],
-      exclude: locations.template.folder,
-    },
-    imageLoaderConfiguration,
-    babelLoader,
-    createFontLoader({ locations }),
-    {
-      test: /\.(css)$/,
-      use: [require.resolve('style-loader'), require.resolve('css-loader')],
-    },
+    getHtmlLoaderRule(template.folder),
+    imageLoaderRule,
+    getBabelLoaderRule(root, config, mode, platform),
+    createFontLoader(root, includeModule),
+    styleLoaderRule,
     // This needs to be the last loader
-    fallbackLoaderConfiguration,
+    fallbackLoaderRule,
   ].filter(Boolean);
 }

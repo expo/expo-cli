@@ -21,7 +21,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import { getPathsAsync, getPublicPaths } from './utils/paths';
-import createAllLoadersAsync from './loaders/createAllLoaders';
+import createAllLoaders from './loaders/createAllLoaders';
 import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
 import { getModuleFileExtensions } from './utils';
 import withOptimizations from './withOptimizations';
@@ -309,7 +309,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
         // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
         {
-          oneOf: await createAllLoadersAsync(env),
+          oneOf: createAllLoaders(env),
         },
       ].filter(Boolean),
     },

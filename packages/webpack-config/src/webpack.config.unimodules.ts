@@ -59,7 +59,7 @@ export default function(env: Environment, argv: Arguments): DevConfiguration | C
   ];
 
   if (supportsFontLoading) {
-    const fontLoaderConfiguration = createFontLoader({ locations });
+    const fontLoaderConfiguration = createFontLoader(locations.root, locations.includeModule);
     loaders.push(fontLoaderConfiguration);
   }
 
