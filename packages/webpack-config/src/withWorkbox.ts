@@ -1,7 +1,5 @@
-import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
-import { cwd } from 'process';
 import { Entry } from 'webpack';
 import {
   GenerateSW,
@@ -87,11 +85,15 @@ export default function withWorkbox(
   config: AnyConfiguration,
   options: OfflineOptions = {}
 ): AnyConfiguration {
+  // Do nothing in dev mode
+  if (config.mode !== 'production') {
+    return config;
+  }
+
   if (!config.plugins) config.plugins = [];
 
   const {
     projectRoot,
-    // serviceWorkerPath = require.resolve('../web-default/expo-service-worker.js'),
     autoRegister = true,
     publicUrl = '',
     scope = '/',
@@ -100,57 +102,51 @@ export default function withWorkbox(
     injectManifestOptions = {},
   } = options;
 
-  if (config.mode !== 'production') {
-    // Copy over a noop
-    // config.plugins.push(new CopyWebpackPlugin([serviceWorkerPath]));
-  } else {
-    const customManifestProps = {
-      // swDest: 'service-worker-manifest.js',
-      navigateFallback: join(publicUrl, 'index.html'),
-    };
+  const customManifestProps = {
+    navigateFallback: join(publicUrl, 'index.html'),
+  };
 
-    if (useServiceWorker) {
-      config.plugins.push(
-        new GenerateSW({
-          ...defaultGenerateSWOptions,
-          ...customManifestProps,
-          ...generateSWOptions,
-        })
-      );
-    } else {
-      const props = {
-        ...defaultInjectManifestOptions,
+  if (useServiceWorker) {
+    config.plugins.push(
+      new GenerateSW({
+        ...defaultGenerateSWOptions,
         ...customManifestProps,
-        ...injectManifestOptions,
-      };
-
-      config.plugins.push(
-        // @ts-ignore: unused swSrc
-        new InjectManifest(props)
-      );
-    }
-
-    // Register
-    const originalEntry = config.entry;
-    config.entry = async () => {
-      const entries = await ensureEntryAsync(originalEntry);
-      const swPath = join(projectRoot!, 'register-service-worker.js');
-      if (entries.app && !entries.app.includes(swPath) && autoRegister) {
-        const content = (await readFile(
-          require.resolve('../web-default/register-service-worker.js'),
-          'utf8'
-        ))
-          .replace('SW_PUBLIC_URL', publicUrl)
-          .replace('SW_PUBLIC_SCOPE', scope);
-        await writeFile(swPath, content, 'utf8');
-
-        if (!Array.isArray(entries.app)) {
-          entries.app = [entries.app];
-        }
-        entries.app.unshift(swPath);
-      }
-      return entries;
+        ...generateSWOptions,
+      })
+    );
+  } else {
+    const props = {
+      ...defaultInjectManifestOptions,
+      ...customManifestProps,
+      ...injectManifestOptions,
     };
+
+    config.plugins.push(
+      // @ts-ignore: unused swSrc
+      new InjectManifest(props)
+    );
   }
+
+  const expoEntry = config.entry;
+  config.entry = async () => {
+    const entries = await ensureEntryAsync(expoEntry);
+    const swPath = join(projectRoot!, 'register-service-worker.js');
+    if (entries.app && !entries.app.includes(swPath) && autoRegister) {
+      const content = (await readFile(
+        require.resolve('../web-default/register-service-worker.js'),
+        'utf8'
+      ))
+        .replace('SW_PUBLIC_URL', publicUrl)
+        .replace('SW_PUBLIC_SCOPE', scope);
+      await writeFile(swPath, content, 'utf8');
+
+      if (!Array.isArray(entries.app)) {
+        entries.app = [entries.app];
+      }
+      entries.app.unshift(swPath);
+    }
+    return entries;
+  };
+
   return config;
 }
