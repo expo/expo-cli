@@ -1,8 +1,7 @@
 // @ts-ignore
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
-import { Options, Configuration, HotModuleReplacementPlugin } from 'webpack';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import { Options, Configuration, HotModuleReplacementPlugin, Output } from 'webpack';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 // @ts-ignore
@@ -18,91 +17,29 @@ import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 // @ts-ignore
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-// @ts-ignore
-import CompressionPlugin from 'compression-webpack-plugin';
-// @ts-ignore
-import BrotliPlugin from 'brotli-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import { getPathsAsync, getPublicPaths } from './utils/paths';
-
+import createAllLoaders from './loaders/createAllLoaders';
 import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
 import { getModuleFileExtensions } from './utils';
+import withOptimizations from './withOptimizations';
+import withReporting from './withReporting';
+import withCompression from './withCompression';
+
+import path from 'path';
+import webpack from 'webpack';
+
+import createDevServerConfigAsync from './createDevServerConfigAsync';
+import { Arguments, DevConfiguration, FilePaths, Mode } from './types';
 
 import {
   DEFAULT_ALIAS,
-  enableWithPropertyOrConfig,
   overrideWithPropertyOrConfig,
 } from './utils/config';
-import createFontLoader from './loaders/createFontLoader';
-import createBabelLoader from './loaders/createBabelLoader';
 import getMode from './utils/getMode';
 import getConfig from './utils/getConfig';
 import { Environment } from './types';
-
-const DEFAULT_GZIP = {
-  test: /\.(js|css)$/,
-  filename: '[path].gz[query]',
-  algorithm: 'gzip',
-  threshold: 1024,
-  minRatio: 0.8,
-};
-
-const DEFAULT_BROTLI = {
-  asset: '[path].br[query]',
-  test: /\.(js|css)$/,
-  threshold: 1024,
-  minRatio: 0.8,
-};
-
-const DEFAULT_REPORT_CONFIG = {
-  verbose: false,
-  path: 'web-report',
-  statsFilename: 'stats.json',
-  reportFilename: 'report.html',
-};
-
-// This is needed for webpack to import static images in JavaScript files.
-// "url" loader works like "file" loader except that it embeds assets
-// smaller than specified limit in bytes as data URLs to avoid requests.
-// A missing `test` is equivalent to a match.
-// TODO: Bacon: Move SVG
-const imageLoaderConfiguration = {
-  test: /\.(gif|jpe?g|png|svg)$/,
-  use: {
-    loader: require.resolve('url-loader'),
-    options: {
-      // Inline resources as Base64 when there is less reason to parallelize their download. The
-      // heuristic we use is whether the resource would fit within a TCP/IP packet that we would
-      // send to request the resource.
-      //
-      // An Ethernet MTU is usually 1500. IP headers are 20 (v4) or 40 (v6) bytes and TCP
-      // headers are 40 bytes. HTTP response headers vary and are around 400 bytes. This leaves
-      // about 1000 bytes for content to fit in a packet.
-      limit: 1000,
-      name: 'static/media/[name].[hash:8].[ext]',
-    },
-  },
-};
-
-// "file" loader makes sure those assets get served by WebpackDevServer.
-// When you `import` an asset, you get its (virtual) filename.
-// In production, they would get copied to the `build` folder.
-// This loader doesn't use a "test" so it will catch all modules
-// that fall through the other loaders.
-const fallbackLoaderConfiguration = {
-  loader: require.resolve('file-loader'),
-  // Exclude `js` files to keep "css" loader working as it injects
-  // its runtime that would otherwise be processed through "file" loader.
-  // Also exclude `html` and `json` extensions so they get processed
-  // by webpacks internal loaders.
-
-  // Excludes: js, jsx, ts, tsx, html, json
-  exclude: [/\.(mjs|[jt]sx?)$/, /\.html$/, /\.json$/],
-  options: {
-    name: 'static/media/[name].[hash:8].[ext]',
-  },
-};
 
 function createNoJSComponent(message: string): string {
   // from twitter.com
@@ -127,12 +64,46 @@ function getDevtool(
   return false;
 }
 
-export default async function(env: Environment): Promise<Configuration> {
+function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output {
+  const commonOutput: Output = {
+      sourceMapFilename: '[chunkhash].map',
+      // We inferred the "public path" (such as / or /my-project) from homepage.
+      // We use "/" in development.
+      publicPath,
+      // Build folder (default `web-build`)
+      path: locations.production.folder,
+  }
+
+  if (mode === 'production') {
+    commonOutput.filename = 'static/js/[name].[contenthash:8].js';
+    // There are also additional JS chunk files if you use code splitting.
+    commonOutput.chunkFilename = 'static/js/[name].[contenthash:8].chunk.js';
+    // Point sourcemap entries to original disk location (format as URL on Windows)
+    commonOutput.devtoolModuleFilenameTemplate = (info: webpack.DevtoolModuleFilenameTemplateInfo): string =>
+      locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/');
+  } else {
+    // Add comments that describe the file import/exports.
+    // This will make it easier to debug.
+    commonOutput.pathinfo = true;
+    // Give the output bundle a constant name to prevent caching.
+    // Also there are no actual files generated in dev.
+    commonOutput.filename = 'static/js/bundle.js';
+    // There are also additional JS chunk files if you use code splitting.
+    commonOutput.chunkFilename = 'static/js/[name].chunk.js';
+    // Point sourcemap entries to original disk location (format as URL on Windows)
+    commonOutput.devtoolModuleFilenameTemplate = (info: webpack.DevtoolModuleFilenameTemplateInfo): string =>
+      path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
+  }
+
+  return commonOutput;
+}
+
+
+export default async function(env: Environment, argv: Arguments = {}): Promise<Configuration | DevConfiguration> {
   const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
   const isProd = mode === 'production';
-  const { platform = 'web' } = env;
 
   // Enables deep scope analysis in production mode.
   // Remove unused import/exports
@@ -147,101 +118,14 @@ export default async function(env: Environment): Promise<Configuration> {
 
   const { publicPath, publicUrl } = getPublicPaths(env);
 
-  const middlewarePlugins = [];
-
   const { build: buildConfig = {}, lang } = config.web;
   const { rootId, babel: babelAppConfig = {} } = buildConfig;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
-  if (deepScopeAnalysisEnabled) {
-    // @ts-ignore
-    middlewarePlugins.push(new WebpackDeepScopeAnalysisPlugin());
-  }
-
-  /**
-   * report: {
-   *   verbose: false,
-   *   path: "web-report",
-   *   statsFilename: "stats.json",
-   *   reportFilename: "report.html"
-   * }
-   */
-  let reportPlugins: any[] = [];
-
-  const reportConfig = enableWithPropertyOrConfig(env.report, DEFAULT_REPORT_CONFIG, true);
-  if (typeof buildConfig.report !== 'undefined') {
-    throw new Error(
-      'expo.web.build.report is deprecated. Please extend webpack.config.js and use env.report instead.'
-    );
-  }
-
-  if (reportConfig) {
-    if (isDev && reportConfig.verbose) {
-      console.log('Generating a report, this will add noticeably more time to rebuilds.');
-    }
-    const reportDir = reportConfig.path;
-    reportPlugins = [
-      // Delete the report folder
-      new CleanWebpackPlugin([locations.absolute(reportDir)], {
-        root: locations.root,
-        dry: false,
-        verbose: reportConfig.verbose,
-      }),
-      // Generate the report.html and stats.json
-      new BundleAnalyzerPlugin({
-        analyzerMode: 'static',
-        defaultSizes: 'gzip',
-        generateStatsFile: true,
-        openAnalyzer: false,
-        ...reportConfig,
-        logLevel: reportConfig.verbose ? 'info' : 'silent',
-        statsFilename: locations.absolute(reportDir, reportConfig.statsFilename),
-        reportFilename: locations.absolute(reportDir, reportConfig.reportFilename),
-      }),
-    ];
-  }
-
   const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig);
 
   const babelProjectRoot = babelAppConfig.root || locations.root;
-
-  const babelLoader = createBabelLoader({
-    mode,
-    platform,
-    babelProjectRoot,
-    verbose: babelAppConfig.verbose,
-    include: babelAppConfig.include,
-    use: babelAppConfig.use,
-  });
-  const allLoaders = [
-    {
-      test: /\.html$/,
-      use: [require.resolve('html-loader')],
-      exclude: locations.template.folder,
-    },
-    imageLoaderConfiguration,
-    babelLoader,
-    createFontLoader({ locations }),
-    {
-      test: /\.(css)$/,
-      use: [require.resolve('style-loader'), require.resolve('css-loader')],
-    },
-    // This needs to be the last loader
-    fallbackLoaderConfiguration,
-  ].filter(Boolean);
-
-  /**
-   * web: {
-   *   build: {
-   *     verbose: boolean,
-   *     brotli: boolean | {}, // (Brotli Options)
-   *     gzip: boolean | CompressionPlugin.Options<O>,
-   *   }
-   * }
-   */
-  const gzipConfig = isProd && overrideWithPropertyOrConfig(buildConfig.gzip, DEFAULT_GZIP);
-  const brotliConfig = isProd && enableWithPropertyOrConfig(buildConfig.brotli, DEFAULT_BROTLI);
 
   const appEntry: string[] = [];
 
@@ -269,7 +153,7 @@ export default async function(env: Environment): Promise<Configuration> {
     appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
   }
 
-  return {
+  let webpackConfig: DevConfiguration = {
     mode,
     entry: {
       app: appEntry,
@@ -280,14 +164,7 @@ export default async function(env: Environment): Promise<Configuration> {
     devtool,
     context: __dirname,
     // configures where the build ends up
-    output: {
-      // Build folder (default `web-build`)
-      path: locations.production.folder,
-      sourceMapFilename: '[chunkhash].map',
-      // We inferred the "public path" (such as / or /my-project) from homepage.
-      // We use "/" in development.
-      publicPath,
-    },
+    output: getOutput(locations, mode, publicPath),
     plugins: [
       // Delete the build folder
       isProd &&
@@ -374,14 +251,9 @@ export default async function(env: Environment): Promise<Configuration> {
         publicPath,
       }),
 
-      ...middlewarePlugins,
-
-      gzipConfig && new CompressionPlugin(gzipConfig),
-      brotliConfig && new BrotliPlugin(brotliConfig),
+      deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
 
       new ExpoProgressBarPlugin(),
-
-      ...reportPlugins,
     ].filter(Boolean),
     module: {
       strictExportPresence: false,
@@ -389,7 +261,7 @@ export default async function(env: Environment): Promise<Configuration> {
         // Disable require.ensure because it breaks tree shaking.
         { parser: { requireEnsure: false } },
         {
-          oneOf: allLoaders,
+          oneOf: createAllLoaders(env),
         },
       ].filter(Boolean),
     },
@@ -417,21 +289,33 @@ export default async function(env: Environment): Promise<Configuration> {
       ],
       symlinks: false,
     },
-
-    // Some libraries import Node modules but don't use them in the browser.
-    // Tell Webpack to provide empty mocks for them so importing them works.
-    node: {
-      module: 'empty',
-      dgram: 'empty',
-      dns: 'mock',
-      fs: 'empty',
-      http2: 'empty',
-      net: 'empty',
-      tls: 'empty',
-      child_process: 'empty',
-    },
     // Turn off performance processing because we utilize
     // our own (CRA) hints via the FileSizeReporter
     performance: boolish('CI', false) ? false : undefined,
   };
+
+  if (isDev) {
+    webpackConfig.devServer = await createDevServerConfigAsync(env, argv);
+  } else if (isProd) {
+    webpackConfig = withCompression(withOptimizations(webpackConfig), env);
+  }
+
+  return withReporting(withNodeMocks(webpackConfig), env);
+}
+
+// Some libraries import Node modules but don't use them in the browser.
+// Tell Webpack to provide empty mocks for them so importing them works.
+function withNodeMocks(webpackConfig: Configuration | DevConfiguration): Configuration | DevConfiguration {
+  webpackConfig.node = {
+    ...(webpackConfig.node || {}),
+    module: 'empty',
+    dgram: 'empty',
+    dns: 'mock',
+    fs: 'empty',
+    http2: 'empty',
+    net: 'empty',
+    tls: 'empty',
+    child_process: 'empty',
+  }
+  return webpackConfig;
 }
