@@ -167,6 +167,11 @@ const expoUniversalModules = [
     sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
+    podName: 'EXCellular',
+    libName: 'expo-cellular',
+    sdkVersions: '>=34.0.0',
+  },
+  {
     podName: 'EXConstants',
     libName: 'expo-constants',
     sdkVersions: '>=29.0.0',
