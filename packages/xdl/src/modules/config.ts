@@ -428,6 +428,11 @@ const expoUniversalModules = [
     sdkVersions: '>=30.0.0',
   },
   {
+    podName: 'EXNetwork',
+    libName: 'expo-network',
+    sdkVersions: '>=34.0.0',
+  },
+  {
     podName: 'EXPaymentsStripe',
     libName: 'expo-payments-stripe',
     sdkVersions: '>=30.0.0',
