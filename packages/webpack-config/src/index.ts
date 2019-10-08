@@ -5,6 +5,7 @@ import productionConfig from './webpack.prod';
 import { getMode } from './utils';
 import * as Diagnosis from './utils/Diagnosis';
 import { validateEnvironment } from './utils/validate';
+import withWorkbox from './withWorkbox';
 
 export default async function(
   env: InputEnvironment,
@@ -23,5 +24,5 @@ export default async function(
     Diagnosis.reportAsync(config, environment);
   }
 
-  return config;
+  return withWorkbox(config, { projectRoot: environment.projectRoot, ...argv.workbox});
 }

@@ -5,7 +5,6 @@ import { Options, Configuration, HotModuleReplacementPlugin } from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import WorkboxPlugin from 'workbox-webpack-plugin';
 // @ts-ignore
 import CleanWebpackPlugin from 'clean-webpack-plugin';
 // @ts-ignore
@@ -55,8 +54,6 @@ const DEFAULT_BROTLI = {
   threshold: 1024,
   minRatio: 0.8,
 };
-
-const DEFAULT_SERVICE_WORKER = {};
 
 const DEFAULT_REPORT_CONFIG = {
   verbose: false,
@@ -160,44 +157,6 @@ export default async function(env: Environment): Promise<Configuration> {
   if (deepScopeAnalysisEnabled) {
     // @ts-ignore
     middlewarePlugins.push(new WebpackDeepScopeAnalysisPlugin());
-  }
-
-  const serviceWorker = overrideWithPropertyOrConfig(
-    // Prevent service worker in development mode
-    buildConfig.serviceWorker,
-    DEFAULT_SERVICE_WORKER
-  );
-  if (serviceWorker) {
-    // Generate a service worker script that will precache, and keep up to date,
-    // the HTML & assets that are part of the Webpack build.
-    middlewarePlugins.push(
-      new WorkboxPlugin.GenerateSW({
-        exclude: [
-          /\.LICENSE$/,
-          /\.map$/,
-          /asset-manifest\.json$/,
-          // Exclude all apple touch images as they are cached locally after the PWA is added.
-          /^\bapple.*\.png$/,
-        ],
-        /// SINGLE PAGE:
-        navigateFallback: `${publicUrl}/index.html`,
-        clientsClaim: true,
-        importWorkboxFrom: 'cdn',
-        navigateFallbackBlacklist: [
-          // Exclude URLs starting with /_, as they're likely an API call
-          new RegExp('^/_'),
-          // Exclude URLs containing a dot, as they're likely a resource in
-          // public/ and not a SPA route
-          new RegExp('/[^/]+\\.[^/]+$'),
-        ],
-        ...(isDev
-          ? {
-              include: [], // Don't cache any assets in dev mode.
-            }
-          : {}),
-        ...serviceWorker,
-      })
-    );
   }
 
   /**
