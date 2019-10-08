@@ -37,6 +37,17 @@ const defaultInjectManifestOptions = {
   ],
 };
 
+const runtimeCache = {
+  handler: 'networkFirst',
+  urlPattern: /^https?.*/,
+  options: {
+    cacheName: 'offlineCache',
+    expiration: {
+      maxEntries: 200,
+    },
+  },
+};
+
 const defaultGenerateSWOptions: GenerateSWOptions = {
   ...defaultInjectManifestOptions,
   clientsClaim: true,
@@ -48,19 +59,8 @@ const defaultGenerateSWOptions: GenerateSWOptions = {
     // public/ and not a SPA route
     new RegExp('/[^/]+\\.[^/]+$'),
   ],
-  runtimeCaching: [
-    {
-      // @ts-ignore
-      handler: 'networkFirst',
-      urlPattern: /^https?.*/,
-      options: {
-        cacheName: 'offlineCache',
-        expiration: {
-          maxEntries: 200,
-        },
-      },
-    },
-  ],
+  // @ts-ignore: Webpack throws if `NetworkFirst` is not `networkFirst`
+  runtimeCaching: [runtimeCache],
 };
 
 export async function ensureEntryAsync(arg: any): Promise<Entry> {
@@ -118,12 +118,15 @@ export default function withWorkbox(
         })
       );
     } else {
+      const props = {
+        ...defaultInjectManifestOptions,
+        ...customManifestProps,
+        ...injectManifestOptions,
+      };
+
       config.plugins.push(
-        new InjectManifest({
-          ...defaultInjectManifestOptions,
-          ...customManifestProps,
-          ...injectManifestOptions,
-        })
+        // @ts-ignore: unused swSrc
+        new InjectManifest(props)
       );
     }
 
