@@ -10,6 +10,7 @@ import {
   RuleSetRule,
   RuleSetUse,
   RuleSetUseItem,
+  Entry,
 } from 'webpack';
 
 import { DevConfiguration } from '../types';
@@ -198,4 +199,16 @@ export function isRuleSetItem(loader: RuleSetUse): loader is RuleSetUseItem {
 
 export function isRuleSetLoader(loader: RuleSetUse): loader is RuleSetLoader {
   return Object.keys(loader).some(k => ['loader', 'options', 'indent', 'query'].includes(k));
+}
+
+export function isEntry(arg: any): arg is Entry {
+  if (typeof arg !== 'object' || arg === null) {
+    return false;
+  }
+  return Object.values(arg).every(value => {
+    if (Array.isArray(value)) {
+      return value.every(value => typeof value === 'string');
+    }
+    return typeof value === 'string';
+  });
 }

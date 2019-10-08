@@ -4,7 +4,6 @@ import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 import { Options, Configuration, HotModuleReplacementPlugin, Output } from 'webpack';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
-import WorkboxPlugin from 'workbox-webpack-plugin';
 // @ts-ignore
 import CleanWebpackPlugin from 'clean-webpack-plugin';
 // @ts-ignore
@@ -41,8 +40,6 @@ import {
 import getMode from './utils/getMode';
 import getConfig from './utils/getConfig';
 import { Environment } from './types';
-
-const DEFAULT_SERVICE_WORKER = {};
 
 function createNoJSComponent(message: string): string {
   // from twitter.com
@@ -121,55 +118,10 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
 
   const { publicPath, publicUrl } = getPublicPaths(env);
 
-  const middlewarePlugins = [];
-
   const { build: buildConfig = {}, lang } = config.web;
   const { rootId, babel: babelAppConfig = {} } = buildConfig;
   const { noJavaScriptMessage } = config.web.dangerous;
   const noJSComponent = createNoJSComponent(noJavaScriptMessage);
-
-  if (deepScopeAnalysisEnabled) {
-    // @ts-ignore
-    middlewarePlugins.push(new WebpackDeepScopeAnalysisPlugin());
-  }
-
-  const serviceWorker = overrideWithPropertyOrConfig(
-    // Prevent service worker in development mode
-    buildConfig.serviceWorker,
-    DEFAULT_SERVICE_WORKER
-  );
-  if (serviceWorker) {
-    // Generate a service worker script that will precache, and keep up to date,
-    // the HTML & assets that are part of the Webpack build.
-    middlewarePlugins.push(
-      new WorkboxPlugin.GenerateSW({
-        exclude: [
-          /\.LICENSE$/,
-          /\.map$/,
-          /asset-manifest\.json$/,
-          // Exclude all apple touch images as they are cached locally after the PWA is added.
-          /^\bapple.*\.png$/,
-        ],
-        /// SINGLE PAGE:
-        navigateFallback: `${publicUrl}/index.html`,
-        clientsClaim: true,
-        importWorkboxFrom: 'cdn',
-        navigateFallbackBlacklist: [
-          // Exclude URLs starting with /_, as they're likely an API call
-          new RegExp('^/_'),
-          // Exclude URLs containing a dot, as they're likely a resource in
-          // public/ and not a SPA route
-          new RegExp('/[^/]+\\.[^/]+$'),
-        ],
-        ...(isDev
-          ? {
-              include: [], // Don't cache any assets in dev mode.
-            }
-          : {}),
-        ...serviceWorker,
-      })
-    );
-  }
 
   const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig);
 
@@ -299,7 +251,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
         publicPath,
       }),
 
-      ...middlewarePlugins,
+      deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
 
       new ExpoProgressBarPlugin(),
     ].filter(Boolean),

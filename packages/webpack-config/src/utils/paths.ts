@@ -199,3 +199,8 @@ export function getPublicPaths({
 
   return { publicUrl: '', publicPath: '/' };
 }
+
+export function getProductionPath(projectRoot: string): string {
+  const { exp, pkg } = readConfigJson(projectRoot, true);
+  return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
+}
