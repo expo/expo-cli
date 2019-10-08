@@ -32,10 +32,10 @@ export async function action(projectDir = './', options: Options = {}) {
   const optimizeOptions = await Project.optimizeAsync(projectDir, optimizationOptions);
 }
 
-function parseQuality(options: Options): number {
+function parseQuality(options: Options): number | undefined {
   const defaultQuality = 80;
   if (options.quality == null) {
-    return defaultQuality;
+    return undefined;
   }
   const quality = Number(options.quality);
   if (!(Number.isInteger(quality) && quality > 0 && quality <= 100)) {
