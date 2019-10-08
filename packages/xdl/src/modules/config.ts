@@ -87,6 +87,11 @@ const expoUniversalModules = [
     sdkVersions: '>=32.0.0',
   },
   {
+    podName: 'EXApplication',
+    libName: 'expo-application',
+    sdkVersions: '>=34.0.0',
+  },
+  {
     podName: 'EXAppLoaderProvider',
     libName: 'expo-app-loader-provider',
     sdkVersions: '>=32.0.0',
