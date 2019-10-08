@@ -39,21 +39,27 @@ export function enableWithPropertyOrConfig(
   config: boolean | { [key: string]: any },
   merge: boolean = false
 ): any {
-  // Value is truthy but not a replacement config.
+  // Value is truthy.
   if (prop) {
-    if (isObject(prop) && merge) {
-      if (config == null || typeof config !== 'object') {
-        throw new Error('enableWithPropertyOrConfig cannot merge config: ' + config);
+    if (isObject(prop)) {
+      if (merge) {
+        if (config == null || typeof config !== 'object') {
+          throw new Error('enableWithPropertyOrConfig cannot merge config: ' + config);
+        }
+        return {
+          ...config,
+          ...prop,
+        };
       }
-      return {
-        ...config,
-        ...prop,
-      };
+
+      // Return property
+      return prop;
     }
-    // Return the default config
+
+    // Value is truthy but not a replacement config, thus return the default config.
     return config;
   }
-  // Return falsey or replacement config.
+  // Return falsey.
   return prop;
 }
 

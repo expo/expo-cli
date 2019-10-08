@@ -515,7 +515,9 @@ export async function bundleAssetsAsync(projectDir, args) {
     args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
   if (!publishManifestPath) {
     logger.warn(
-      `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
+      `Skipped assets bundling because the '${
+        args.platform
+      }.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
