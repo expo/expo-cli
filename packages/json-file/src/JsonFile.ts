@@ -32,6 +32,7 @@ type Options<TJSONObject extends JSONObject> = {
   default?: TJSONObject;
   json5?: boolean;
   space?: number;
+  addNewLineAtEOF?: boolean;
 };
 
 const DEFAULT_OPTIONS = {
@@ -41,6 +42,7 @@ const DEFAULT_OPTIONS = {
   default: undefined,
   json5: false,
   space: 2,
+  addNewLineAtEOF: true,
 };
 
 /**
@@ -54,7 +56,9 @@ export default class JsonFile<TJSONObject extends JSONObject> {
   file: string;
   options: Options<TJSONObject>;
 
+  static read = read;
   static readAsync = readAsync;
+  static parseJsonString = parseJsonString;
   static writeAsync = writeAsync;
   static getAsync = getAsync;
   static setAsync = setAsync;
@@ -68,12 +72,20 @@ export default class JsonFile<TJSONObject extends JSONObject> {
     this.options = options;
   }
 
+  read(options?: Options<TJSONObject>): TJSONObject {
+    return read(this.file, this._getOptions(options));
+  }
+
   async readAsync(options?: Options<TJSONObject>): Promise<TJSONObject> {
     return readAsync(this.file, this._getOptions(options));
   }
 
   async writeAsync(object: TJSONObject, options?: Options<TJSONObject>) {
     return writeAsync(this.file, object, this._getOptions(options));
+  }
+
+  parseJsonString(json: string, options?: Options<TJSONObject>): TJSONObject {
+    return parseJsonString(json, options);
   }
 
   async getAsync<K extends keyof TJSONObject, TDefault extends TJSONObject[K] | null>(
@@ -115,6 +127,24 @@ export default class JsonFile<TJSONObject extends JSONObject> {
   }
 }
 
+function read<TJSONObject extends JSONObject>(
+  file: string,
+  options?: Options<TJSONObject>
+): TJSONObject {
+  let json;
+  try {
+    json = fs.readFileSync(file, 'utf8');
+  } catch (error) {
+    let defaultValue = cantReadFileDefault(options);
+    if (defaultValue === undefined) {
+      throw new JsonFileError(`Can't read JSON file: ${file}`, error, error.code);
+    } else {
+      return defaultValue;
+    }
+  }
+  return parseJsonString(json, options);
+}
+
 async function readAsync<TJSONObject extends JSONObject>(
   file: string,
   options?: Options<TJSONObject>
@@ -130,6 +160,13 @@ async function readAsync<TJSONObject extends JSONObject>(
       return defaultValue;
     }
   }
+  return parseJsonString(json, options);
+}
+
+function parseJsonString<TJSONObject extends JSONObject>(
+  json: string,
+  options?: Options<TJSONObject>
+): TJSONObject {
   try {
     if (_getOption(options, 'json5')) {
       return JSON5.parse(json);
@@ -145,7 +182,7 @@ async function readAsync<TJSONObject extends JSONObject>(
         e.codeFrame = codeFrame;
         e.message += `\n${codeFrame}`;
       }
-      throw new JsonFileError(`Error parsing JSON file: ${file}`, e, 'EJSONPARSE');
+      throw new JsonFileError(`Error parsing JSON: ${json}`, e, 'EJSONPARSE');
     } else {
       return defaultValue;
     }
@@ -172,6 +209,7 @@ async function writeAsync<TJSONObject extends JSONObject>(
 ): Promise<TJSONObject> {
   const space = _getOption(options, 'space');
   const json5 = _getOption(options, 'json5');
+  const addNewLineAtEOF = _getOption(options, 'addNewLineAtEOF');
   let json;
   try {
     if (json5) {
@@ -182,7 +220,8 @@ async function writeAsync<TJSONObject extends JSONObject>(
   } catch (e) {
     throw new JsonFileError(`Couldn't JSON.stringify object for file: ${file}`, e);
   }
-  await writeFileAtomicAsync(file, json, {});
+  const data = addNewLineAtEOF ? `${json}\n` : json;
+  await writeFileAtomicAsync(file, data, {});
   return object;
 }
 

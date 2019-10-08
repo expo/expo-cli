@@ -395,7 +395,7 @@ async function promptForManagedConfig(
   return { expo: values };
 }
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('init [project-dir]')
     .alias('i')
@@ -413,4 +413,4 @@ export default (program: Command) => {
     .option('--android-package [name]', 'The package name for your Android app.')
     .option('--ios-bundle-identifier [name]', 'The bundle identifier for your iOS app.')
     .asyncAction(action);
-};
+}

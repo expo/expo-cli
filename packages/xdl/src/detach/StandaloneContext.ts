@@ -8,7 +8,7 @@ type StandaloneContextTestEnvironment = 'none' | 'local' | 'ci';
  *  A user context is used when we are configuring a standalone app locally on a user's machine,
  *  such as during `exp detach`.
  */
-type StandaloneContextDataUser = {
+export type StandaloneContextDataUser = {
   projectPath: string;
   exp: any;
 };
@@ -17,7 +17,7 @@ type StandaloneContextDataUser = {
  *  A service context is used when we are generating a standalone app remotely on an Expo
  *  service machine, such as during `exp build`.
  */
-type StandaloneContextDataService = {
+export type StandaloneContextDataService = {
   expoSourcePath: string;
   archivePath: string | null;
   manifest: any;

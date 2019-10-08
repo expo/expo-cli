@@ -4,12 +4,18 @@ executors:
   node-10:
     docker:
       - image: circleci/node:10
+    environment:
+      EXECUTOR_NAME: node-10
   node-12:
     docker:
       - image: circleci/node:12
+    environment:
+      EXECUTOR_NAME: node-12
   puppeteer:
     docker:
       - image: circleci/node:latest-browsers
+    environment:
+      EXECUTOR_NAME: puppeteer
 workflows:
   version: 2
   build-and-test:
@@ -39,6 +45,14 @@ workflows:
           e: node-10
           requires:
             - build10
+      - test-expo-cli:
+          e: node-12
+          requires:
+            - build12
+      - test-expo-cli:
+          e: node-10
+          requires:
+            - build10
       - test-expo-codemod:
           e: node-12
           requires:
@@ -59,6 +73,22 @@ workflows:
           e: puppeteer
           requires:
             - puppeteerEnv
+      - test-expo-schemer:
+          e: node-12
+          requires:
+            - build12
+      - test-expo-schemer:
+          e: node-10
+          requires:
+            - build10
+      - test-android-manifest:
+          e: node-12
+          requires:
+            - build12
+      - test-android-manifest:
+          e: node-10
+          requires:
+            - build10
 jobs:
   build:
     parameters:
@@ -68,10 +98,15 @@ jobs:
     working_directory: ~/expo-cli
     steps:
       - checkout
+      - run:
+          # https://discuss.circleci.com/t/cannot-use-circle-yml-environment-variables-in-cache-keys/10994/20
+          name: Configure env
+          command: |
+            echo "$EXECUTOR_NAME" > /tmp/.executor_name
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - yarn-{{ parameters.e }}-{{ checksum "yarn.lock" }}
+            - yarn-{{ checksum "/tmp/.executor_name" }}-{{ checksum "yarn.lock" }}
       - run:
           name: Install Dependencies
           command: yarn install --frozen-lockfile
@@ -84,7 +119,7 @@ jobs:
             - expo-cli
       - save_cache:
           name: Save Yarn Package Cache
-          key: yarn-{{ parameters.e }}-{{ checksum "yarn.lock" }}
+          key: yarn-{{ checksum "/tmp/.executor_name" }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
   test-dev-tools:
@@ -103,6 +138,16 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/json-file
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-expo-cli:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/expo-cli
     steps:
       - attach_workspace:
           at: '~'
@@ -140,3 +185,23 @@ jobs:
           name: Install test project dependencies
           command: cd tests/basic && yarn && cd ../nextjs && yarn && cd ../..
       - run: yarn test:e2e
+  test-expo-schemer:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/schemer
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-android-manifest:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/android-manifest
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test

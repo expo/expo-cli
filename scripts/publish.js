@@ -34,7 +34,7 @@ async function run() {
 
     const packageView = JSON.parse(packageViewStdout);
     if (!packageView.versions.includes(version)) {
-      toPublish.push({ name, location });
+      toPublish.push({ name, location, version });
       console.log(`* ${name}`);
     }
   }
@@ -44,10 +44,16 @@ async function run() {
     return;
   }
 
-  for (const { name, location } of toPublish) {
+  for (const { name, location, version } of toPublish) {
     console.log();
     console.log('🚢 Publishing', name);
-    await spawnAsync('npm', ['publish', '--access', 'public'], {
+    const args = ['publish', '--access', 'public'];
+    if (name === 'expo-cli') {
+      args.push('--tag', 'next');
+      console.log(`  using dist-tag 'next', run 'npm dist-tag add ${name}@${version} latest'`);
+      console.log(`  after testing the release to promote it to the latest tag`);
+    }
+    await spawnAsync('npm', args, {
       cwd: location,
       stdio: 'inherit',
     });

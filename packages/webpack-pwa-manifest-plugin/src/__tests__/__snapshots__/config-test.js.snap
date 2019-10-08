@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`matches 1`] = `
+Object {
+  "background_color": "#ffffff",
+  "crossorigin": undefined,
+  "description": "A Neat Expo App",
+  "dir": "auto",
+  "display": "standalone",
+  "icons": Array [
+    Object {
+      "destination": "apple/icons",
+      "size": Array [
+        192,
+        512,
+      ],
+    },
+    Object {
+      "destination": "apple/icons",
+      "ios": true,
+      "sizes": 180,
+    },
+  ],
+  "lang": "en",
+  "name": "b12",
+  "orientation": "portrait",
+  "prefer_related_applications": true,
+  "related_applications": Array [],
+  "scope": undefined,
+  "short_name": "b12",
+  "start_url": ".",
+  "startupImages": Array [
+    Object {
+      "color": "#ffffff",
+      "destination": "apple/splash",
+      "orientation": "portrait",
+      "resizeMode": "contain",
+      "supportsTablet": true,
+    },
+  ],
+  "theme_color": "#4630EB",
+}
+`;

@@ -9,7 +9,6 @@ import findLastIndex from 'lodash/findLastIndex';
 import boxen from 'boxen';
 import bunyan from '@expo/bunyan';
 import chalk from 'chalk';
-import glob from 'glob';
 import ora from 'ora';
 import simpleSpinner from '@expo/simple-spinner';
 import getenv from 'getenv';
@@ -29,7 +28,6 @@ import {
   Project,
   ProjectUtils,
   UserManager,
-  XDLError,
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
@@ -38,6 +36,7 @@ import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import packageJSON from '../package.json';
+import { registerCommands } from './commands';
 
 Api.setClientName(packageJSON.version);
 ApiV2.setClientName(packageJSON.version);
@@ -116,7 +115,11 @@ Command.prototype.asyncAction = function(asyncFn: Action, skipUpdateCheck: boole
 // - Attaches the bundling logger
 // - Checks if the project directory is valid or not
 // - Runs AsyncAction with the projectDir as an argument
-Command.prototype.asyncActionProjectDir = function(asyncFn: Action, skipProjectValidation: boolean, skipAuthCheck: boolean) {
+Command.prototype.asyncActionProjectDir = function(
+  asyncFn: Action,
+  skipProjectValidation: boolean,
+  skipAuthCheck: boolean
+) {
   this.option('--config [file]', 'Specify a path to app.json');
   return this.asyncAction(async (projectDir: string, ...args: any[]) => {
     const opts = args[0];
@@ -145,7 +148,11 @@ Command.prototype.asyncActionProjectDir = function(asyncFn: Action, skipProjectV
       }
     };
 
-    const logStackTrace = (chunk: LogRecord, logFn: (...args: any[]) => void, nestedLogFn: (...args: any[]) => void) => {
+    const logStackTrace = (
+      chunk: LogRecord,
+      logFn: (...args: any[]) => void,
+      nestedLogFn: (...args: any[]) => void
+    ) => {
       let traceInfo;
       try {
         traceInfo = JSON.parse(chunk.msg);
@@ -255,7 +262,12 @@ Command.prototype.asyncActionProjectDir = function(asyncFn: Action, skipProjectV
           if (err) {
             log(chalk.red('Failed building JavaScript bundle.'));
           } else {
-            log(chalk.green(`Finished building JavaScript bundle in ${endTime.getTime() - startTime.getTime()}ms.`));
+            log(
+              chalk.green(
+                `Finished building JavaScript bundle in ${endTime.getTime() -
+                  startTime.getTime()}ms.`
+              )
+            );
           }
         }
       },
@@ -324,7 +336,7 @@ function runAsync(programName: string) {
         serverUrl = `http://${serverUrl}`;
       }
       let parsedUrl = url.parse(serverUrl);
-      const port = parseInt(parsedUrl.port || '')
+      const port = parseInt(parsedUrl.port || '');
       if (parsedUrl.hostname && port) {
         Config.api.host = parsedUrl.hostname;
         Config.api.port = port;
@@ -346,20 +358,7 @@ function runAsync(programName: string) {
       );
 
     // Load each module found in ./commands by 'registering' it with our commander instance
-    const commandFiles = ([] as string[]).concat(
-      glob.sync('commands/*.js', { cwd: __dirname }),
-      glob.sync('commands/*/index.js', { cwd: __dirname })
-    );
-    commandFiles.sort().forEach(file => {
-      const commandModule = require(`./${file}`);
-      if (typeof commandModule === 'function') {
-        commandModule(program);
-      } else if (typeof commandModule.default === 'function') {
-        commandModule.default(program);
-      } else {
-        log.error(`'${file}.js' is not a properly formatted command.`);
-      }
-    });
+    registerCommands(program);
 
     let subCommand = process.argv[2];
     let argv = process.argv.filter(arg => {
@@ -417,7 +416,9 @@ async function checkCliVersionAsync() {
       boxen(
         chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
-Run \`npm install -g ${packageJSON.name}\` to get the latest version`),
+Install expo-cli globally using the package manager of your choice; for example: \`npm install -g ${
+          packageJSON.name
+        }\` to get the latest version`),
         { borderColor: 'green', padding: 1 }
       )
     );

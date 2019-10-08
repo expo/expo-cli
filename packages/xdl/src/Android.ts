@@ -17,7 +17,8 @@ import UserSettings from './UserSettings';
 import * as UrlUtils from './UrlUtils';
 import * as Versions from './Versions';
 import { getImageDimensionsAsync } from './tools/ImageUtils';
-
+// @ts-ignore
+import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
@@ -28,7 +29,7 @@ export function isPlatformSupported(): boolean {
   );
 }
 
-async function _getAdbOutputAsync(args: string[]): Promise<string> {
+export async function getAdbOutputAsync(args: string[]): Promise<string> {
   await Binaries.addToPathAsync('adb');
 
   try {
@@ -45,14 +46,14 @@ async function _getAdbOutputAsync(args: string[]): Promise<string> {
 
 // Device attached
 async function _isDeviceAttachedAsync() {
-  let devices = await _getAdbOutputAsync(['devices']);
+  let devices = await getAdbOutputAsync(['devices']);
   let lines = _.trim(devices).split(/\r?\n/);
   // First line is "List of devices".
   return lines.length > 1;
 }
 
 async function _isDeviceAuthorizedAsync() {
-  let devices = await _getAdbOutputAsync(['devices']);
+  let devices = await getAdbOutputAsync(['devices']);
   let lines = _.trim(devices).split(/\r?\n/);
   lines.shift();
   let listOfDevicesWithoutFirstLine = lines.join('\n');
@@ -63,7 +64,7 @@ async function _isDeviceAuthorizedAsync() {
 
 // Expo installed
 async function _isExpoInstalledAsync() {
-  let packages = await _getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
+  let packages = await getAdbOutputAsync(['shell', 'pm', 'list', 'packages', '-f']);
   let lines = packages.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
@@ -80,7 +81,7 @@ async function _isExpoInstalledAsync() {
 }
 
 async function _expoVersionAsync() {
-  let info = await _getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
+  let info = await getAdbOutputAsync(['shell', 'dumpsys', 'package', 'host.exp.exponent']);
 
   let regex = /versionName=([0-9.]+)/;
   let regexMatch = regex.exec(info);
@@ -110,7 +111,7 @@ function _apkCacheDirectory() {
   return dir;
 }
 
-async function _downloadApkAsync() {
+export async function downloadApkAsync(url?: string) {
   let versions = await Versions.versionsAsync();
   let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
@@ -119,38 +120,38 @@ async function _downloadApkAsync() {
   }
 
   await Api.downloadAsync(
-    versions.androidUrl,
+    url || versions.androidUrl,
     path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`)
   );
   return apkPath;
 }
 
-async function _installExpoAsync() {
+export async function installExpoAsync(url?: string) {
   Logger.global.info(`Downloading latest version of Expo`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
-  let path = await _downloadApkAsync();
+  let path = await downloadApkAsync(url);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   Logger.global.info(`Installing Expo on device`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
-  let result = await _getAdbOutputAsync(['install', path]);
+  let result = await getAdbOutputAsync(['install', path]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   return result;
 }
 
-async function _uninstallExpoAsync() {
+export async function uninstallExpoAsync() {
   Logger.global.info('Uninstalling Expo from Android device.');
-  return await _getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
+  return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
 }
 
 export async function upgradeExpoAsync(): Promise<boolean> {
   try {
-    await _assertDeviceReadyAsync();
+    await assertDeviceReadyAsync();
 
-    await _uninstallExpoAsync();
-    await _installExpoAsync();
+    await uninstallExpoAsync();
+    await installExpoAsync();
     if (_lastUrl) {
       Logger.global.info(`Opening ${_lastUrl} in Expo.`);
-      await _getAdbOutputAsync([
+      await getAdbOutputAsync([
         'shell',
         'am',
         'start',
@@ -170,7 +171,7 @@ export async function upgradeExpoAsync(): Promise<boolean> {
 }
 
 // Open Url
-async function _assertDeviceReadyAsync() {
+export async function assertDeviceReadyAsync() {
   const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
 
   if (!(await _isDeviceAttachedAsync())) {
@@ -187,7 +188,7 @@ async function _assertDeviceReadyAsync() {
 }
 
 async function _openUrlAsync(url: string) {
-  let output = await _getAdbOutputAsync([
+  let output = await getAdbOutputAsync([
     'shell',
     'am',
     'start',
@@ -205,11 +206,11 @@ async function _openUrlAsync(url: string) {
 
 async function openUrlAsync(url: string, isDetached: boolean = false): Promise<void> {
   try {
-    await _assertDeviceReadyAsync();
+    await assertDeviceReadyAsync();
 
     let installedExpo = false;
     if (!isDetached && !(await _isExpoInstalledAsync())) {
-      await _installExpoAsync();
+      await installExpoAsync();
       installedExpo = true;
     }
 
@@ -260,6 +261,27 @@ export async function openProjectAsync(
   }
 }
 
+export async function openWebProjectAsync(
+  projectRoot: string
+): Promise<{ success: true; url: string } | { success: false; error: string }> {
+  try {
+    await startAdbReverseAsync(projectRoot);
+
+    const projectUrl = await getWebpackUrlAsync(projectRoot);  
+    if (projectUrl === null) {
+      return { 
+        success: false, 
+        error: `The web project has not been started yet`
+      };
+    }
+    await openUrlAsync(projectUrl, true);
+    return { success: true, url: projectUrl };
+  } catch (e) {
+    Logger.global.error(`Couldn't open the web project on Android: ${e.message}`);
+    return { success: false, error: e };
+  }
+}
+
 // Adb reverse
 export async function startAdbReverseAsync(projectRoot: string): Promise<boolean> {
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
@@ -303,7 +325,7 @@ async function adbReverse(port: number) {
   }
 
   try {
-    await _getAdbOutputAsync(['reverse', `tcp:${port}`, `tcp:${port}`]);
+    await getAdbOutputAsync(['reverse', `tcp:${port}`, `tcp:${port}`]);
     return true;
   } catch (e) {
     Logger.global.warn(`Couldn't adb reverse: ${e.message}`);
@@ -317,7 +339,7 @@ async function adbReverseRemove(port: number) {
   }
 
   try {
-    await _getAdbOutputAsync(['reverse', '--remove', `tcp:${port}`]);
+    await getAdbOutputAsync(['reverse', '--remove', `tcp:${port}`]);
     return true;
   } catch (e) {
     // Don't send this to warn because we call this preemptively sometimes

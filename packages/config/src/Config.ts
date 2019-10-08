@@ -1,10 +1,9 @@
-import path from 'path';
-
+import JsonFile, { JSONObject } from '@expo/json-file';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs-extra';
-import JsonFile, { JSONValue } from '@expo/json-file';
+import path from 'path';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
@@ -17,6 +16,7 @@ export type ExpoConfig = {
   nodeModulesPath?: string;
   [key: string]: any;
 };
+export type ExpRc = { [key: string]: any };
 export type Platform = 'android' | 'ios' | 'web';
 
 export type PackageJSONConfig = { [key: string]: any };
@@ -43,23 +43,6 @@ const DEFAULT_ORIENTATION = 'any';
 const ICON_SIZES = [192, 512];
 const MAX_SHORT_NAME_LENGTH = 12;
 const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
-
-export async function addPlatform(
-  projectRoot: string,
-  platform: 'ios' | 'android' | 'web'
-): Promise<ProjectConfig> {
-  const { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
-
-  let currentPlatforms: Platform[] = [];
-  if (Array.isArray(exp.platforms) && exp.platforms.length) {
-    currentPlatforms = exp.platforms;
-  }
-  if (currentPlatforms.includes(platform)) {
-    return { exp, pkg, rootConfig };
-  }
-
-  return await writeConfigJsonAsync(projectRoot, { platforms: [...currentPlatforms, platform] });
-}
 
 export function isUsingYarn(projectRoot: string): boolean {
   const workspaceRoot = findWorkspaceRoot(projectRoot);
@@ -119,7 +102,7 @@ export function configFilename(projectRoot: string): string {
   return findConfigFile(projectRoot).configName;
 }
 
-export async function readExpRcAsync(projectRoot: string): Promise<object> {
+export async function readExpRcAsync(projectRoot: string): Promise<ExpRc> {
   const expRcPath = path.join(projectRoot, '.exprc');
   return await JsonFile.readAsync(expRcPath, { json5: true, cantReadFileDefault: {} });
 }
@@ -133,7 +116,7 @@ export function setCustomConfigPath(projectRoot: string, configPath: string): vo
 export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestLocation: string) {
   let web;
   try {
-    web = require(pwaManifestLocation);
+    web = JsonFile.read(pwaManifestLocation);
   } catch (e) {
     web = {};
   }
@@ -177,8 +160,8 @@ export function getConfigForPWA(
   getAbsolutePath: (...pathComponents: string[]) => string,
   options: object
 ) {
-  const config = readConfigJson(projectRoot);
-  return ensurePWAConfig(config, getAbsolutePath, options);
+  const { exp } = readConfigJson(projectRoot, true);
+  return ensurePWAConfig(exp, getAbsolutePath, options);
 }
 
 export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
@@ -216,9 +199,20 @@ function ensurePWAorientation(orientation: string): string {
   return DEFAULT_ORIENTATION;
 }
 
+function getWebManifestFromConfig(config: { [key: string]: any } = {}): { [key: string]: any } {
+  const appManifest = config.expo || config || {};
+  return appManifest.web || {};
+}
+
+export function getWebOutputPath(config: { [key: string]: any } = {}): string {
+  const web = getWebManifestFromConfig(config);
+  const { build = {} } = web;
+  return build.output || DEFAULT_BUILD_PATH;
+}
+
 function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   // For RN CLI support
-  const appManifest = appJSON.expo || appJSON;
+  const appManifest = appJSON.expo || appJSON || {};
   const { web: webManifest = {}, splash = {}, ios = {}, android = {} } = appManifest;
   const { build: webBuild = {}, webDangerous = {}, meta = {} } = webManifest;
   const { apple = {} } = meta;
@@ -229,7 +223,7 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const languageISOCode = webManifest.lang || DEFAULT_LANGUAGE_ISO_CODE;
   const noJavaScriptMessage = webDangerous.noJavaScriptMessage || DEFAULT_NO_JS_MESSAGE;
   const rootId = webBuild.rootId || DEFAULT_ROOT_ID;
-  const buildOutputPath = webBuild.output || DEFAULT_BUILD_PATH;
+  const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
   const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
   const description = appManifest.description || DEFAULT_DESCRIPTION;
@@ -464,25 +458,76 @@ const APP_JSON_EXAMPLE = JSON.stringify({
   },
 });
 
-export function readConfigJson(projectRoot: string): ExpoConfig {
+export function readConfigJson(
+  projectRoot: string,
+  skipValidation: boolean = false
+): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
+  let rootConfig: JSONObject | null = null;
+  try {
+    rootConfig = JsonFile.read(configPath, { json5: true });
+  } catch (error) {}
 
-  const rootConfig = require(configPath);
-  const exp = rootConfig.expo;
-  if (!exp) {
+  if (rootConfig === null || typeof rootConfig !== 'object') {
+    if (skipValidation) {
+      rootConfig = { expo: {} };
+    } else {
+      throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+    }
+  }
+  const exp = rootConfig.expo as ExpoConfig;
+  if (exp === null || typeof exp !== 'object') {
     throw new ConfigError(
       `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
       'NO_EXPO'
     );
   }
-  return rootConfig.expo;
+
+  const packageJsonPath =
+    'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
+      ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
+      : path.join(projectRoot, 'package.json');
+  const pkg = JsonFile.read(packageJsonPath);
+
+  if (exp && !exp.name && typeof pkg.name === 'string') {
+    exp.name = pkg.name;
+  }
+
+  if (exp && !exp.slug && typeof exp.name === 'string') {
+    exp.slug = slug(exp.name.toLowerCase());
+  }
+
+  if (exp && !exp.version) {
+    exp.version = pkg.version;
+  }
+
+  if (exp && !exp.platforms) {
+    exp.platforms = ['android', 'ios'];
+  }
+
+  if (exp.nodeModulesPath) {
+    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
+  }
+
+  return { exp, pkg, rootConfig: rootConfig as AppJSONConfig };
 }
 
-export async function readConfigJsonAsync(projectRoot: string): Promise<ProjectConfig> {
+export async function readConfigJsonAsync(
+  projectRoot: string,
+  skipValidation: boolean = false
+): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
-  const rootConfig = await JsonFile.readAsync(configPath, { json5: true });
+  let rootConfig: JSONObject | null = null;
+  try {
+    rootConfig = await JsonFile.readAsync(configPath, { json5: true });
+  } catch (error) {}
+
   if (rootConfig === null || typeof rootConfig !== 'object') {
-    throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+    if (skipValidation) {
+      rootConfig = { expo: {} };
+    } else {
+      throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+    }
   }
   const exp = rootConfig.expo as ExpoConfig;
   if (exp === null || typeof exp !== 'object') {

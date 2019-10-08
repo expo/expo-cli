@@ -17,6 +17,8 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 import * as UrlUtils from './UrlUtils';
+// @ts-ignore
+import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 
 let _lastUrl: string | null = null;
 
@@ -265,7 +267,7 @@ export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
   }
   let simDir = await _dirForSimulatorDevice(device.udid);
   let matches = await glob(
-    './data/Containers/Data/Application/*/Library/Caches/Snapshots/host.exp.Exponent',
+    './data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}',
     { cwd: simDir }
   );
 
@@ -477,6 +479,24 @@ export async function openProjectAsync(
   let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
+  if (result.success) {
+    return { success: true, url: projectUrl };
+  } else {
+    return { success: result.success, error: result.msg };
+  }
+}
+
+export async function openWebProjectAsync(
+  projectRoot: string
+): Promise<{ success: true; url: string } | { success: false; error: string }> {
+  const projectUrl = await getWebpackUrlAsync(projectRoot);
+  if (projectUrl === null) {
+    return {
+      success: false,
+      error: `The web project has not been started yet`,
+    };
+  }
+  const result = await openUrlInSimulatorSafeAsync(projectUrl, true);
   if (result.success) {
     return { success: true, url: projectUrl };
   } else {

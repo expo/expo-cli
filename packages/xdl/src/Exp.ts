@@ -304,7 +304,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
     throw new Error('Attempted to login in offline mode. This is a bug.');
   }
 
-  const { username } = user;
+  let { username } = user;
 
   const { exp } = await ConfigUtils.readConfigJsonAsync(root);
 

@@ -1,35 +1,16 @@
-// Copyright 2015-present 650 Industries. All rights reserved.
-/**
- * @flow
- */
-
 import _ from 'lodash';
 import fs from 'fs-extra';
 import path from 'path';
 import url from 'url';
 
 import { saveUrlToPathAsync } from './ExponentTools';
-import StandaloneContext from './StandaloneContext';
 
 const EXPO_DOMAINS = ['expo.io', 'exp.host', 'expo.test', 'localhost'];
 const ASSETS_DIR_DEFAULT_URL = 'https://d1wp6m56sqw74a.cloudfront.net/~assets';
 
-export async function bundleAsync(
-  context: StandaloneContext,
-  assets: ?(Array<string> | Array<Object>),
-  dest: string,
-  oldFormat: boolean = false
-): Promise<void> {
+export async function bundleAsync(context, assets, dest) {
   if (!assets) {
     return;
-  }
-  // Compat with exp 46.x.x, can remove when this version is phasing out.
-  if (typeof assets[0] === 'object') {
-    assets = assets.reduce(
-      (res, cur) =>
-        res.concat(cur.fileHashes.map(h => 'asset_' + h + (cur.type ? '.' + cur.type : ''))),
-      []
-    );
   }
 
   await fs.ensureDir(dest);
@@ -46,11 +27,7 @@ export async function bundleAsync(
           extensionIndex >= 0
             ? asset.substring(prefixLength, extensionIndex)
             : asset.substring(prefixLength);
-        await saveUrlToPathAsync(
-          urlResolver(hash),
-          // For sdk24 the runtime expects only the hash as the filename.
-          path.join(dest, oldFormat ? hash : asset)
-        );
+        await saveUrlToPathAsync(urlResolver(hash), path.join(dest, asset));
       })
     );
   }
@@ -58,7 +35,7 @@ export async function bundleAsync(
 
 function createAssetsUrlResolver(context) {
   let assetsDirUrl = ASSETS_DIR_DEFAULT_URL;
-  if (context) {
+  if (context && context.published) {
     const { assetUrlOverride = './assets' } = context.config;
     const publishedUrl = context.published.url;
     const { hostname } = url.parse(publishedUrl);

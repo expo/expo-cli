@@ -4,11 +4,12 @@
     <meta charset="utf-8" />
     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
     <title>%WEB_TITLE%</title>
+    <link rel="shortcut icon" href="%WEB_PUBLIC_URL%favicon.ico" />
     <!-- TODO: Bacon: build a reliable system for testing these style changes -->
     <style>
       /**
-       * Building on the RNWeb reset: 
-       * https://github.com/necolas/react-native-web/blob/master/packages/react-native-web/src/exports/StyleSheet/initialRules.js 
+       * Building on the RNWeb reset:
+       * https://github.com/necolas/react-native-web/blob/master/packages/react-native-web/src/exports/StyleSheet/initialRules.js
        */
       html,
       body,
@@ -30,7 +31,6 @@
       }
 
       html {
-        font-size: 14px;
         scroll-behavior: smooth;
         /* Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138 */
         -webkit-text-size-adjust: 100%;
@@ -57,7 +57,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/service-worker.js');
+          navigator.serviceWorker.register('%WEB_PUBLIC_URL%expo-service-worker.js');
         });
       }
     </script>

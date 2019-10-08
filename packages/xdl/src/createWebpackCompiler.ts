@@ -7,6 +7,7 @@
 import chalk from 'chalk';
 import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
+import boxen from 'boxen';
 import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 
@@ -17,6 +18,10 @@ const CONSOLE_TAG = 'expo';
 
 const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
 
+const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
+
+const withTag = (...messages: any[]) => [PLATFORM_TAG + ' ', ...messages].join('');
+
 function log(projectRoot: string, message: string, showInDevtools = true) {
   if (showInDevtools) {
     ProjectUtils.logInfo(projectRoot, CONSOLE_TAG, message);
@@ -26,38 +31,67 @@ function log(projectRoot: string, message: string, showInDevtools = true) {
 }
 
 function logWarning(projectRoot: string, message: string) {
-  ProjectUtils.logWarning(projectRoot, CONSOLE_TAG, message);
+  ProjectUtils.logWarning(projectRoot, CONSOLE_TAG, withTag(message));
 }
 
 function logError(projectRoot: string, message: string) {
-  ProjectUtils.logError(projectRoot, CONSOLE_TAG, message);
+  ProjectUtils.logError(projectRoot, CONSOLE_TAG, withTag(message));
 }
 
-function printInstructions(
+export function printInstructions(
   projectRoot: string,
-  appName: string,
-  urls: Urls,
-  showInDevtools: boolean
+  {
+    appName,
+    urls,
+    showInDevtools,
+    showHelp,
+  }: {
+    appName: string;
+    urls: Urls;
+    showInDevtools: boolean;
+    showHelp: boolean;
+  }
 ) {
-  let message = `You can now view ${chalk.bold(appName)} in the browser.\n\n`;
+  printPreviewNotice(projectRoot, showInDevtools);
+
+  let message = '\n';
+  message += `${ProjectUtils.getPlatformTag('React')} You can now view ${chalk.bold(
+    appName
+  )} in the browser.\n`;
+
   if (urls.lanUrlForTerminal) {
-    message += `  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}\n`;
-    message += `  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}\n`;
+    message += `\n  ${chalk.bold('Local:')}            ${urls.localUrlForTerminal}`;
+    message += `\n  ${chalk.bold('On Your Network:')}  ${urls.lanUrlForTerminal}`;
   } else {
-    message += `  ${urls.localUrlForTerminal}\n`;
+    message += `\n  ${urls.localUrlForTerminal}`;
   }
 
-  message += `\nNote that the development build is not optimized. To create a production build, use ${chalk.bold(
-    `expo build:web`
-  )}.`;
+  message += `\n\nNote that the development build is not optimized.\n`;
+
+  message += `\n \u203A To create a production build, run ${chalk.bold(`expo build:web`)}`;
+  message += `\n \u203A Press ${chalk.bold(`Ctrl+C`)} to exit.`;
+
   log(projectRoot, message, showInDevtools);
+
+  if (showHelp) {
+    const PLATFORM_TAG = ProjectUtils.getPlatformTag('Expo');
+    log(
+      projectRoot,
+      `\n${PLATFORM_TAG} Press ${chalk.bold('?')} to show a list of all available commands.`,
+      showInDevtools
+    );
+  }
 }
 
 export function printPreviewNotice(projectRoot: string, showInDevtools: boolean) {
   log(
     projectRoot,
-    chalk.underline.yellow(
-      '\nWeb support in Expo is experimental and subject to breaking changes. Do not use this in production yet.'
+    boxen(
+      chalk.yellow(
+        'Web support in Expo is experimental and subject to breaking changes.\n' +
+          'Do not use this in production yet.'
+      ),
+      { borderColor: 'yellow', padding: 1 }
     ),
     showInDevtools
   );
@@ -69,7 +103,6 @@ export default function createWebpackCompiler({
   config,
   urls,
   nonInteractive,
-  useYarn,
   webpackFactory,
   onFinished,
 }: {
@@ -78,9 +111,8 @@ export default function createWebpackCompiler({
   config: webpack.Configuration;
   urls: Urls;
   nonInteractive?: boolean;
-  useYarn: boolean;
   webpackFactory: (options?: webpack.Configuration) => webpack.Compiler;
-  onFinished: (() => void);
+  onFinished: () => void;
 }) {
   // "Compiler" is a low-level interface to Webpack.
   // It lets us listen to some events and provide our own custom messages.
@@ -91,9 +123,6 @@ export default function createWebpackCompiler({
   // bundle, so if you refresh, it'll wait instead of serving the old one.
   // "invalid" is short for "bundle invalidated", it doesn't imply any errors.
   compiler.hooks.invalid.tap('invalid', () => {
-    if (SHOULD_CLEAR_CONSOLE && !nonInteractive) {
-      clearConsole();
-    }
     log(projectRoot, '\nCompiling...');
   });
 
@@ -120,16 +149,18 @@ export default function createWebpackCompiler({
     const messages = formatWebpackMessages(statsData);
 
     const isSuccessful = !messages.errors.length && !messages.warnings.length;
+
     if (isSuccessful) {
-      printSuccessMessages({ projectRoot, appName, urls, config, isFirstCompile, nonInteractive });
+      logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
     }
 
-    if (!isFirstCompile) {
-      log(
-        projectRoot,
-        `Press ${chalk.bold('?')} to show a list of all available commands.\n`,
-        false
-      );
+    if (isSuccessful && !isFirstCompile && !nonInteractive) {
+      printInstructions(projectRoot, {
+        appName,
+        urls,
+        showInDevtools: isFirstCompile,
+        showHelp: true,
+      });
     }
 
     onFinished();
@@ -178,6 +209,11 @@ export function printSuccessMessages({
   logEnvironmentInfo(projectRoot, CONSOLE_TAG, config);
 
   if (!nonInteractive || isFirstCompile) {
-    printInstructions(projectRoot, appName, urls, isFirstCompile);
+    printInstructions(projectRoot, {
+      appName,
+      urls,
+      showInDevtools: isFirstCompile,
+      showHelp: false,
+    });
   }
 }

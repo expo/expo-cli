@@ -1,6 +1,6 @@
 import * as ConfigUtils from '@expo/config';
 import path from 'path';
-
+import chalk from 'chalk';
 import * as Analytics from '../Analytics';
 import Logger, { LogStream, Log } from '../Logger';
 
@@ -26,6 +26,11 @@ export type LogFields = {
   issueId?: string;
   issueCleared?: boolean;
   includesStack?: boolean;
+  deviceId?: string;
+  deviceName?: string;
+  groupDepth?: number;
+  shouldHide?: boolean;
+  _expoEventType?: 'TUNNEL_READY';
 };
 
 export function logWithLevel(
@@ -61,6 +66,22 @@ export function logWithLevel(
 
 export function logDebug(projectRoot: string, tag: LogTag, message: string, id?: string) {
   _getLogger(projectRoot).debug({ tag }, message.toString());
+}
+
+export function getPlatformTag(platform: string): string {
+  const input = platform.toLowerCase().trim();
+  switch (input) {
+    case 'ios':
+      return chalk.bgWhite.black(' iOS ');
+    case 'android':
+      return chalk.bgGreen.black(' Android ');
+    case 'node':
+      return chalk.bgCyan.black(' Node ');
+    case 'web':
+      return chalk.bgMagenta.black(' web ');
+    default:
+      return chalk.bgWhite.black(` ${platform} `);
+  }
 }
 
 export function logInfo(projectRoot: string, tag: LogTag, message: string, id?: string) {
@@ -135,10 +156,11 @@ export async function readExpRcAsync(projectRoot: string): Promise<any> {
 }
 
 export async function readConfigJsonAsync(
-  projectRoot: string
+  projectRoot: string,
+  skipValidation: boolean = false
 ): Promise<ConfigUtils.ProjectConfig | { exp: null; pkg: null }> {
   try {
-    return await ConfigUtils.readConfigJsonAsync(projectRoot);
+    return await ConfigUtils.readConfigJsonAsync(projectRoot, skipValidation);
   } catch (error) {
     logError(projectRoot, 'expo', error.message);
     return { exp: null, pkg: null };
