@@ -77,11 +77,11 @@ export function getBabelLoaderRuleFromEnv(env: Environment): Rule {
 
 export function getBabelLoaderRule(
   projectRoot: string,
-  { web = {} }: ExpoConfig,
+  { web: { build: { babel = {} } = {} } = {} }: ExpoConfig,
   mode: Mode,
   platform: string = 'web'
 ): Rule {
-  const { root, verbose, include, use } = (web.build || {}).babel || {};
+  const { root, verbose, include, use } = babel;
 
   const babelProjectRoot = root || projectRoot;
 
