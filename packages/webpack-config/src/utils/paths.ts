@@ -1,5 +1,4 @@
 import { ExpoConfig, getWebOutputPath, readConfigJson, readConfigJsonAsync } from '@expo/config';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
@@ -7,60 +6,13 @@ import url from 'url';
 import { Environment, FilePaths } from '../types';
 import getMode from './getMode';
 
-const possibleMainFiles = [
-  'index.web.ts',
-  'index.ts',
-  'index.web.tsx',
-  'index.tsx',
-  'src/index.web.ts',
-  'src/index.ts',
-  'src/index.web.tsx',
-  'src/index.tsx',
-  'index.web.js',
-  'index.js',
-  'index.web.jsx',
-  'index.jsx',
-  'src/index.web.js',
-  'src/index.js',
-  'src/index.web.jsx',
-  'src/index.jsx',
-];
-
-function ensureSlash(inputPath: string, needsSlash: boolean): string {
-  const hasSlash = inputPath.endsWith('/');
-  if (hasSlash && !needsSlash) {
-    return inputPath.substr(0, inputPath.length - 1);
-  } else if (!hasSlash && needsSlash) {
-    return `${inputPath}/`;
-  } else {
-    return inputPath;
-  }
-}
-
-export function getAbsolutePathWithProjectRoot(
-  projectRoot: string,
-  ...pathComponents: string[]
-): string {
-  // Simple check if we are dealing with an URL
-  if (pathComponents && pathComponents.length === 1 && pathComponents[0].startsWith('http')) {
-    return pathComponents[0];
-  }
-
-  return path.resolve(projectRoot, ...pathComponents);
-}
-
-export function getPossibleProjectRoot(): string {
-  return fs.realpathSync(process.cwd());
-}
-
-export function getModulesPath(projectRoot: string): string {
-  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
-  if (workspaceRoot) {
-    return path.resolve(workspaceRoot, 'node_modules');
-  }
-
-  return path.resolve(projectRoot, 'node_modules');
-}
+import {
+  getPossibleProjectRoot,
+  ensureSlash,
+  getModulesPath,
+  getEntryPoint,
+  getAbsolutePathWithProjectRoot,
+} from '@expo/config/paths';
 
 function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
@@ -94,7 +46,7 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     root: path.resolve(inputProjectRoot),
-    appMain: getEntryPoint(inputProjectRoot),
+    appMain: getEntryPoint(inputProjectRoot, ['index', 'src/index'], ['web']),
     modules: modulesPath,
     servedPath: getServedPath(inputProjectRoot),
     template: {
@@ -114,33 +66,6 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
       favicon: getProductionPath('favicon.ico'),
     },
   };
-}
-
-export function getEntryPoint(projectRoot: string): string | null {
-  const { exp, pkg } = readConfigJson(projectRoot, true);
-
-  /**
-   *  The main file is resolved like so:
-   * * `app.json` -> `expo.entryPoint`
-   * * `package.json` -> `"main"`
-   * * `possibleMainFiles`
-   */
-  if (exp && exp.entryPoint && typeof exp.entryPoint === 'string') {
-    return getAbsolutePathWithProjectRoot(projectRoot, exp.entryPoint);
-  } else if (pkg) {
-    const { main } = pkg;
-    if (main && typeof main === 'string') {
-      return getAbsolutePathWithProjectRoot(projectRoot, main);
-    }
-    // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
-    for (const fileName of possibleMainFiles) {
-      const filePath = getAbsolutePathWithProjectRoot(projectRoot, fileName);
-      if (fs.existsSync(filePath)) {
-        return filePath;
-      }
-    }
-  }
-  return null;
 }
 
 export function getPaths(projectRoot: string): FilePaths {
@@ -201,6 +126,6 @@ export function getPublicPaths({
 }
 
 export function getProductionPath(projectRoot: string): string {
-  const { exp, pkg } = readConfigJson(projectRoot, true);
+  const { exp } = readConfigJson(projectRoot, true);
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }

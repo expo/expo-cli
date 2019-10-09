@@ -27,7 +27,8 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/config#readme",
   "files": [
-    "build"
+    "build",
+    "paths.js"
   ],
   "dependencies": {
     "@expo/json-file": "^8.1.12",
