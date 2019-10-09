@@ -30,11 +30,11 @@ async function generateSecureRandomTokenAsync() {
   });
 }
 
-export async function createAuthenticationContextAsync({ port }) {
+export async function createAuthenticationContextAsync({ listenHostname, port }) {
   const clientAuthenticationToken = await generateSecureRandomTokenAsync();
   const endpointUrlToken = await generateSecureRandomTokenAsync();
   const graphQLEndpointPath = `/${endpointUrlToken}/graphql`;
-  const hostname = `localhost:${port}`;
+  const hostname = `${listenHostname}:${port}`;
   const webSocketGraphQLUrl = `ws://${hostname}${graphQLEndpointPath}`;
   const allowedOrigin = `http://${hostname}`;
   return {
@@ -51,8 +51,17 @@ export async function createAuthenticationContextAsync({ port }) {
 export async function startAsync(projectDir) {
   const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
+  const listenHostname = () => {
+    let listenHostname;
+    if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
+      listenHostname = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
+    } else {
+      listenHostname = `localhost`;
+    }
+    return listenHostname;
+  };
 
-  const authenticationContext = await createAuthenticationContextAsync({ port });
+  const authenticationContext = await createAuthenticationContextAsync({ listenHostname, port });
   const { webSocketGraphQLUrl, clientAuthenticationToken } = authenticationContext;
   server.get('/dev-tools-info', authenticationContext.requestHandler);
   server.use(
@@ -70,11 +79,11 @@ export async function startAsync(projectDir) {
   await new Promise((resolve, reject) => {
     httpServer.once('error', reject);
     httpServer.once('listening', resolve);
-    httpServer.listen(port, 'localhost');
+    httpServer.listen(port, listenHostname);
   });
   startGraphQLServer(projectDir, httpServer, authenticationContext);
   await ProjectSettings.setPackagerInfoAsync(projectDir, { devToolsPort: port });
-  return `http://localhost:${port}`;
+  return `http://${listenHostname}:${port}`;
 }
 
 export function startGraphQLServer(projectDir, httpServer, authenticationContext) {
