@@ -1,4 +1,4 @@
-import { Logger, PackagerLogsStream, ProjectUtils, ProjectSettings } from '@expo/xdl';
+import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from '@expo/xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import * as graphql from 'graphql';
 import express from 'express';
@@ -30,11 +30,11 @@ async function generateSecureRandomTokenAsync() {
   });
 }
 
-export async function createAuthenticationContextAsync({ listenHostname, port }) {
+export async function createAuthenticationContextAsync({ graphqlHostname, port }) {
   const clientAuthenticationToken = await generateSecureRandomTokenAsync();
   const endpointUrlToken = await generateSecureRandomTokenAsync();
   const graphQLEndpointPath = `/${endpointUrlToken}/graphql`;
-  const hostname = `${listenHostname}:${port}`;
+  const hostname = `${graphqlHostname}:${port}`;
   const webSocketGraphQLUrl = `ws://${hostname}${graphQLEndpointPath}`;
   const allowedOrigin = `http://${hostname}`;
   return {
@@ -51,17 +51,32 @@ export async function createAuthenticationContextAsync({ listenHostname, port })
 export async function startAsync(projectDir) {
   const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
-  const listenHostname = () => {
-    let listenHostname;
-    if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
-      listenHostname = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
-    } else {
-      listenHostname = `localhost`;
-    }
-    return listenHostname;
-  };
 
-  const authenticationContext = await createAuthenticationContextAsync({ listenHostname, port });
+  const devtoolsHost = () => {
+    let devtoolHost;
+    if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
+      devtoolHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
+    } else {
+      devtoolHost = `localhost`;
+    }
+    return devtoolHost;
+  };
+  const listenHostname = devtoolsHost();
+
+  const devtoolsGraphQLHost = () => {
+    let devtoolsGraphQLHost;
+    if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS && process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
+      devtoolsGraphQLHost = process.env.REACT_NATIVE_PACKAGER_HOSTNAME.trim();
+    } else if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
+      devtoolsGraphQLHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS;
+    } else {
+      devtoolsGraphQLHost = `localhost`;
+    }
+    return devtoolsGraphQLHost;
+  };
+  const graphqlHostname = devtoolsGraphQLHost();
+
+  const authenticationContext = await createAuthenticationContextAsync({ graphqlHostname, port });
   const { webSocketGraphQLUrl, clientAuthenticationToken } = authenticationContext;
   server.get('/dev-tools-info', authenticationContext.requestHandler);
   server.use(
