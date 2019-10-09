@@ -27,7 +27,7 @@ type ReadEntry = any;
 
 // TODO(Bacon): Add support for index.ts, index.tsx, index.jsx, index.mjs, index.ios.js...
 // TODO(Bacon): Test monorepos with expo/AppEntry module path
-export async function determineEntryPointAsync(projectRoot: string) {
+export async function determineEntryPointAsync(projectRoot: string): Promise<string> {
   let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   // entryPoint is relative to the packager root and main is relative
@@ -90,6 +90,7 @@ function createFileTransform(config: AppJSONConfig | BareAppConfig) {
     if (!binaryExtensions.includes(path.extname(entry.path)) && config.name) {
       return new Transformer(config);
     }
+    return undefined;
   };
 }
 
