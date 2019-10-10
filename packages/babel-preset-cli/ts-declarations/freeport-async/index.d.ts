@@ -1,4 +1,8 @@
 declare module 'freeport-async' {
-  function freePortAsync(rangeStart: number): Promise<number>;
+  interface FreePortOptions {
+    hostnames?: Array<string | null>;
+  }
+
+  function freePortAsync(rangeStart: number, options?: FreePortOptions): Promise<number>;
   export = freePortAsync;
 }

@@ -50,7 +50,7 @@
     "es6-error": "4.1.1",
     "express": "4.16.4",
     "form-data": "2.3.2",
-    "freeport-async": "1.1.1",
+    "freeport-async": "2.0.0",
     "fs-extra": "6.0.1",
     "getenv": "0.7.0",
     "glob": "7.1.2",
