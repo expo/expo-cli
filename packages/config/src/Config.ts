@@ -501,6 +501,14 @@ export function readConfigJson(
     exp.version = pkg.version;
   }
 
+  if (exp && !exp.sdkVersion) {
+    try {
+      const packageJsonPath = resolveModule('expo/package.json', projectRoot, exp);
+      const expoPackageJson = require(packageJsonPath);
+      exp.sdkVersion = expoPackageJson.version;
+    } catch (_) {}
+  }
+
   if (exp && !exp.platforms) {
     exp.platforms = ['android', 'ios'];
   }
@@ -553,6 +561,14 @@ export async function readConfigJsonAsync(
 
   if (exp && !exp.version) {
     exp.version = pkg.version;
+  }
+
+  if (exp && !exp.sdkVersion) {
+    try {
+      const packageJsonPath = resolveModule('expo/package.json', projectRoot, exp);
+      const expoPackageJson = require(packageJsonPath);
+      exp.sdkVersion = expoPackageJson.version;
+    } catch (_) {}
   }
 
   if (exp && !exp.platforms) {

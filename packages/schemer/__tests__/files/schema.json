@@ -470,10 +470,6 @@
       }
     },
     "additionalProperties": false,
-    "required": [
-      "name",
-      "slug",
-      "sdkVersion"
-    ]
+    "required": []
   }
 }
