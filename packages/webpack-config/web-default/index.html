@@ -19,8 +19,9 @@
         -webkit-overflow-scrolling: touch;
         margin: 0px;
         padding: 0px;
-        /* Allows content to fill the viewport and go beyond the bottom */
-        min-height: 100%;
+        /* Content should vertically fill the viewport, this may impact body scrolling. */
+        /* @see https://github.com/expo/expo/issues/5081 */
+        height: 100%;
       }
       #%ROOT_ID% {
         flex-shrink: 0;
@@ -28,6 +29,8 @@
         flex-grow: 1;
         display: flex;
         flex: 1;
+        /* Don't scroll anythink, like native platforms screens */
+        overflow: hidden;
       }
 
       html {
@@ -39,9 +42,6 @@
 
       body {
         display: flex;
-        /* Allows you to scroll below the viewport; default value is visible */
-        overflow-y: auto;
-        overscroll-behavior-y: none;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
