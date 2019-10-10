@@ -1,6 +1,6 @@
 {
   "name": "@expo/xdl",
-  "version": "56.2.7",
+  "version": "56.3.0",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
   "files": [
@@ -30,14 +30,14 @@
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/xdl#readme",
   "dependencies": {
     "@expo/bunyan": "3.0.2",
-    "@expo/config": "^2.1.6",
+    "@expo/config": "^2.2.0",
     "@expo/image-utils": "^0.2.6",
-    "@expo/json-file": "^8.1.12",
+    "@expo/json-file": "^8.2.0",
     "@expo/ngrok": "2.4.3",
     "@expo/osascript": "^2.0.6-alpha.0",
     "@expo/schemer": "^1.2.8",
     "@expo/spawn-async": "1.5.0",
-    "@expo/webpack-config": "^0.7.11",
+    "@expo/webpack-config": "^0.7.12",
     "@types/webpack": "^4.32.1",
     "@types/webpack-dev-server": "^3.1.7",
     "analytics-node": "3.3.0",
