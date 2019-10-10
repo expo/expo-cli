@@ -18,3 +18,7 @@ export function getModuleFileExtensions(...platforms: string[]): string[] {
   // Webpack requires a `.` before each value
   return getModuleFileExtensionsWithoutDotPrefix(...platforms).map(value => `.${value}`);
 }
+
+export function getWebExtensions(): string[] {
+  return getModuleFileExtensionsWithoutDotPrefix('web');
+}

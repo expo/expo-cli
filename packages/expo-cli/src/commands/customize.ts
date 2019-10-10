@@ -38,20 +38,26 @@ const dependencyMap: {
   'Babel Config': { devDependencies: ['babel-preset-expo'], main: 'babel.config.js' },
   'Jest Universal': { devDependencies: ['jest-expo'], main: 'jest.config.js' },
   'Next.js Document': {
-    devDependencies: ['@expo/next-document'],
+    devDependencies: [],
+    // devDependencies: ['@expo/next-document'],
     output: 'pages/_document.js',
     main: 'next/_document.js',
+  },
+  'Next.js Config': {
+    devDependencies: ['@expo/webpack-config'],
+    output: 'next.config.js',
+    main: 'next/next.config.js',
   },
   'Next.js Service Worker': {
     devDependencies: [],
     output: 'static/expo-service-worker.js',
     main: 'next/expo-service-worker.js',
   },
-  'Gatsby Config': {
-    devDependencies: ['gatsby-plugin-react-native-web'],
-    output: 'gatsby-config.js',
-    main: 'gatsby/gatsby-config.js',
-  },
+  // 'Gatsby Config': {
+  //   devDependencies: ['gatsby-plugin-react-native-web'],
+  //   output: 'gatsby-config.js',
+  //   main: 'gatsby/gatsby-config.js',
+  // },
   'Storybook Webpack config': {
     devDependencies: ['@expo/webpack-config'],
     main: 'storybook/webpack.config.js',
@@ -139,7 +145,7 @@ export async function action(projectDir: string = './', options: Options = { for
 
   if (!values.filter(({ disabled }) => !disabled).length) {
     log(
-      chalk.yellow('\nAll of the custom web files already exist.') +
+      chalk.black.bgYellow('\nAll of the custom web files already exist.') +
         '\nTo regenerate the files run:' +
         chalk.bold(' expo customize:web --force\n')
     );
