@@ -1,74 +1,71 @@
+import * as ConfigUtils from '@expo/config';
+import JsonFile from '@expo/json-file';
+import ngrok from '@expo/ngrok';
 import axios from 'axios';
 import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
-import delayAsync from 'delay-async';
 import decache from 'decache';
+import delayAsync from 'delay-async';
 import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import HashIds from 'hashids';
 import joi from 'joi';
-import JsonFile, { JSONObject } from '@expo/json-file';
-import { promisify } from 'util';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
 import reduce from 'lodash/reduce';
 import set from 'lodash/set';
 import uniq from 'lodash/uniq';
+import md5hex from 'md5hex';
 import minimatch from 'minimatch';
-import ngrok from '@expo/ngrok';
+import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
+import prettyBytes from 'pretty-bytes';
+import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import split from 'split';
 import treekill from 'tree-kill';
-import md5hex from 'md5hex';
-import prettyBytes from 'pretty-bytes';
 import urljoin from 'url-join';
+import { promisify } from 'util';
 import uuid from 'uuid';
-import readLastLines from 'read-last-lines';
 
-import * as ConfigUtils from '@expo/config';
 import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
-import {
-  readAssetJsonAsync,
-  getAssetFilesAsync,
-  optimizeImageAsync,
-  calculateHash,
-  createNewFilename,
-} from './AssetUtils';
+import * as AssetUtils from './AssetUtils';
+import { calculateHash, createNewFilename, getAssetFilesAsync, optimizeImageAsync, readAssetJsonAsync } from './AssetUtils';
 import Config from './Config';
-// @ts-ignore Doctor not yet converted to TypeScript
-import * as Doctor from './project/Doctor';
-import * as DevSession from './DevSession';
-import logger from './Logger';
 import * as ExponentTools from './detach/ExponentTools';
-import * as Exp from './Exp';
-import * as ExpSchema from './project/ExpSchema';
-import FormData from './tools/FormData';
-// @ts-ignore IosPlist not yet converted to TypeScript
-import * as IosPlist from './detach/IosPlist';
-// @ts-ignore IosWorkspace not yet converted to TypeScript
-import * as IosWorkspace from './detach/IosWorkspace';
-import * as ProjectSettings from './ProjectSettings';
-import * as ProjectUtils from './project/ProjectUtils';
-import * as Sentry from './Sentry';
 import StandaloneContext from './detach/StandaloneContext';
+import * as DevSession from './DevSession';
+import { skipManifestValidation } from './Env';
+import { ErrorCode } from './ErrorCode';
+import * as Exp from './Exp';
+import logger from './Logger';
+import * as ExpSchema from './project/ExpSchema';
+import * as ProjectUtils from './project/ProjectUtils';
+import * as ProjectSettings from './ProjectSettings';
+import * as Sentry from './Sentry';
 import * as ThirdParty from './ThirdParty';
+import FormData from './tools/FormData';
 import * as UrlUtils from './UrlUtils';
 import UserManager, { ANONYMOUS_USERNAME, User } from './User';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import * as Watchman from './Watchman';
-import XDLError from './XDLError';
 import * as Webpack from './Webpack';
-import { ErrorCode, AssetUtils } from './xdl';
-import { AddressInfo } from 'net';
+import XDLError from './XDLError';
+
+// @ts-ignore Doctor not yet converted to TypeScript
+import * as Doctor from './project/Doctor';
+// @ts-ignore IosPlist not yet converted to TypeScript
+import * as IosPlist from './detach/IosPlist';
+// @ts-ignore IosWorkspace not yet converted to TypeScript
+import * as IosWorkspace from './detach/IosWorkspace';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -988,23 +985,13 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
   // Verify that exp/app.json and package.json exist
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
   if (!exp || !pkg) {
     const configName = await ConfigUtils.configFilenameAsync(projectRoot);
     throw new XDLError(
       'NO_PACKAGE_JSON',
       `Couldn't read ${configName} file in project at ${projectRoot}`
     );
-  }
-
-  // Support version and name being specified in package.json for legacy
-  // support pre: exp.json
-  if (!exp.version && pkg.version) {
-    exp.version = pkg.version;
-  }
-
-  if (!exp.slug && pkg.name) {
-    exp.slug = pkg.name;
   }
 
   if (exp.android && exp.android.config) {
@@ -1015,13 +1002,14 @@ async function _getPublishExpConfigAsync(
     delete exp.ios.config;
   }
 
-  const sdkVersion = exp.sdkVersion;
+  const { sdkVersion } = exp;
+
   if (!sdkVersion) {
     throw new XDLError('INVALID_OPTIONS', `Cannot publish with sdkVersion '${exp.sdkVersion}'.`);
   }
 
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
-  if (sdkVersion === 'UNVERSIONED' && !process.env['EXPO_SKIP_MANIFEST_VALIDATION_TOKEN']) {
+  if (sdkVersion === 'UNVERSIONED' && !skipManifestValidation()) {
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
