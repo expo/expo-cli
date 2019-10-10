@@ -24,6 +24,7 @@ const possibleMainFiles = [
   'src/index.js',
   'src/index.web.jsx',
   'src/index.jsx',
+  'node_modules/expo/AppEntry.js',
 ];
 
 function ensureSlash(inputPath: string, needsSlash: boolean): string {
@@ -139,10 +140,6 @@ export function getEntryPoint(projectRoot: string): string | null {
         return filePath;
       }
     }
-
-    throw new Error(
-      'Could not determine the main file in your project (index, src/index). Please define it with the `main` field in your `package.json`'
-    );
   }
   return null;
 }
@@ -202,4 +199,9 @@ export function getPublicPaths({
   }
 
   return { publicUrl: '', publicPath: '/' };
+}
+
+export function getProductionPath(projectRoot: string): string {
+  const { exp, pkg } = readConfigJson(projectRoot, true);
+  return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }

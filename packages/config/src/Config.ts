@@ -1,10 +1,9 @@
-import path from 'path';
-
+import JsonFile, { JSONObject } from '@expo/json-file';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs-extra';
-import JsonFile, { JSONValue, JSONObject } from '@expo/json-file';
+import path from 'path';
 import resolveFrom from 'resolve-from';
 import slug from 'slugify';
-import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
@@ -117,7 +116,7 @@ export function setCustomConfigPath(projectRoot: string, configPath: string): vo
 export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestLocation: string) {
   let web;
   try {
-    web = require(pwaManifestLocation);
+    web = JsonFile.read(pwaManifestLocation);
   } catch (e) {
     web = {};
   }
@@ -464,33 +463,31 @@ export function readConfigJson(
   skipValidation: boolean = false
 ): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
-
-  let rootConfig: any;
-
+  let rootConfig: JSONObject | null = null;
   try {
-    rootConfig = require(configPath);
-  } catch (error) {
-    rootConfig = {};
-  }
+    rootConfig = JsonFile.read(configPath, { json5: true });
+  } catch (error) {}
 
-  let { expo: exp } = rootConfig;
-
-  if (!exp) {
+  if (rootConfig === null || typeof rootConfig !== 'object') {
     if (skipValidation) {
-      exp = {};
+      rootConfig = { expo: {} };
     } else {
-      throw new ConfigError(
-        `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
-        'NO_EXPO'
-      );
+      throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
     }
+  }
+  const exp = rootConfig.expo as ExpoConfig;
+  if (exp === null || typeof exp !== 'object') {
+    throw new ConfigError(
+      `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
+      'NO_EXPO'
+    );
   }
 
   const packageJsonPath =
     'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
       ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
       : path.join(projectRoot, 'package.json');
-  const pkg = require(packageJsonPath);
+  const pkg = JsonFile.read(packageJsonPath);
 
   if (exp && !exp.name && typeof pkg.name === 'string') {
     exp.name = pkg.name;

@@ -9,6 +9,8 @@ export interface DevConfiguration extends WebpackConfiguration {
   devServer?: WebpackDevServerConfiguration;
 }
 
+export type AnyConfiguration = DevConfiguration | WebpackConfiguration;
+
 export type InputEnvironment = {
   projectRoot?: string;
   platform?: 'ios' | 'android' | 'web';

@@ -87,6 +87,11 @@ const expoUniversalModules = [
     sdkVersions: '>=32.0.0',
   },
   {
+    podName: 'EXApplication',
+    libName: 'expo-application',
+    sdkVersions: '>=35.0.0',
+  },
+  {
     podName: 'EXAppLoaderProvider',
     libName: 'expo-app-loader-provider',
     sdkVersions: '>=32.0.0',
@@ -114,7 +119,7 @@ const expoUniversalModules = [
   {
     podName: 'EXBattery',
     libName: 'expo-battery',
-    sdkVersions: '>=34.0.0',
+    sdkVersions: '>=35.0.0',
   },
   {
     podName: 'EXBluetooth',
@@ -162,6 +167,11 @@ const expoUniversalModules = [
     sdkVersions: '>=29.0.0 <33.0.0',
   },
   {
+    podName: 'EXCellular',
+    libName: 'expo-cellular',
+    sdkVersions: '>=35.0.0',
+  },
+  {
     podName: 'EXConstants',
     libName: 'expo-constants',
     sdkVersions: '>=29.0.0',
@@ -189,7 +199,7 @@ const expoUniversalModules = [
   {
     podName: 'EXDevice',
     libName: 'expo-device',
-    sdkVersions: '>=34.0.0',
+    sdkVersions: '>=35.0.0',
   },
   {
     podName: 'EXDocumentPicker',
@@ -426,6 +436,11 @@ const expoUniversalModules = [
     podName: 'EXMediaLibrary',
     libName: 'expo-media-library',
     sdkVersions: '>=30.0.0',
+  },
+  {
+    podName: 'EXNetwork',
+    libName: 'expo-network',
+    sdkVersions: '>=35.0.0',
   },
   {
     podName: 'EXPaymentsStripe',
