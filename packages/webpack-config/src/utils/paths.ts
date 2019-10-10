@@ -24,6 +24,7 @@ const possibleMainFiles = [
   'src/index.js',
   'src/index.web.jsx',
   'src/index.jsx',
+  'node_modules/expo/AppEntry.js',
 ];
 
 function ensureSlash(inputPath: string, needsSlash: boolean): string {

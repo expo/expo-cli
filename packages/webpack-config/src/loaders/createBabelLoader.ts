@@ -1,6 +1,7 @@
 import path from 'path';
 import chalk from 'chalk';
 import { Rule } from 'webpack';
+import fs from 'fs-extra';
 import { getPossibleProjectRoot } from '../utils/paths';
 import { Mode } from '../types';
 
@@ -80,6 +81,25 @@ export default function createBabelLoader({
   const customUseOptions = customUse.options || {};
 
   const isProduction = mode === 'production';
+
+  const projectRoot = getPossibleProjectRoot();
+  let presetOptions: any = {
+    // Explicitly use babel.config.js instead of .babelrc
+    babelrc: false,
+    // Attempt to use local babel.config.js file for compiling project.
+    configFile: true,
+  };
+  if (
+    !fs.existsSync(path.join(projectRoot, 'babel.config.js')) &&
+    !fs.existsSync(path.join(projectRoot, '.babelrc'))
+  ) {
+    presetOptions = {
+      babelrc: false,
+      configFile: false,
+      presets: [require.resolve('babel-preset-expo')],
+    };
+  }
+
   return {
     test: /\.(mjs|[jt]sx?)$/,
     // Can only clobber test
@@ -113,11 +133,8 @@ export default function createBabelLoader({
       options: {
         // TODO: Bacon: Caching seems to break babel
         cacheDirectory: false,
-        // Explicitly use babel.config.js instead of .babelrc
-        babelrc: false,
-        // Attempt to use local babel.config.js file for compiling project.
-        configFile: true,
 
+        ...presetOptions,
         // Only clobber hard coded values.
         ...(customUseOptions || {}),
 
