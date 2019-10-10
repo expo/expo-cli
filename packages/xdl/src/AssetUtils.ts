@@ -36,7 +36,7 @@ export async function optimizeImageAsync(inputPath: string, quality: number): Pr
 }
 
 export type OptimizationOptions = {
-  quality: number;
+  quality?: number;
   include?: string;
   exclude?: string;
   save?: boolean;

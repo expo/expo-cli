@@ -2264,7 +2264,7 @@ export async function getUrlAsync(projectRoot: string, options: object = {}): Pr
 
 export async function optimizeAsync(
   projectRoot: string = './',
-  options: AssetUtils.OptimizationOptions
+  options: AssetUtils.OptimizationOptions = {}
 ): Promise<void> {
   logger.global.info(chalk.green('Optimizing assets...'));
 
@@ -2288,7 +2288,8 @@ export async function optimizeAsync(
     delete assetInfo[outdatedHash];
   });
 
-  const { quality, include, exclude, save } = options;
+  const { include, exclude, save } = options;
+  const quality = options.quality == null ? 80 : options.quality;
 
   const images = include || exclude ? selectedFiles : allFiles;
   for (const image of images) {
