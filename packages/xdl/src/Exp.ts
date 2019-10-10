@@ -44,8 +44,7 @@ export async function determineEntryPointAsync(projectRoot: string): Promise<str
     entryPoint = ConfigUtils.resolveModule('expo/AppEntry', projectRoot, exp);
     const expoEntryPointExists = await fs.pathExists(entryPoint);
     // Remove project root from file path
-    entryPoint = entryPoint.split(projectRoot).pop();
-
+    entryPoint = path.relative(projectRoot, entryPoint);
     // Final existence check
     if (!expoEntryPointExists) {
       throw new Error(
@@ -53,8 +52,6 @@ export async function determineEntryPointAsync(projectRoot: string): Promise<str
       );
     }
   }
-
-  Logger.global.info('\u203A start: ', entryPoint);
 
   return entryPoint;
 }
