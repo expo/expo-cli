@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { Project, Simulator, Versions } from '@expo/xdl';
+import { Android, Project, Simulator, Versions } from '@expo/xdl';
 import JsonFile from '@expo/json-file';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
@@ -239,6 +239,24 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
       let result = await Simulator.upgradeExpoAsync();
       if (!result) {
         log.error('The upgrade of your simulator didn\'t go as planned. You might have to reinstall it manually with expo client:install:ios.');
+      }
+    }
+
+    log.newLine();
+  }
+
+  // Check if we can, and probably should, upgrade the android client
+  if (Android.isPlatformSupported()) {
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'upgradeAndroid',
+      message: 'You might have to upgrade your Android client. Do you want to upgrade it now?',
+    });
+
+    if (answer.upgradeAndroid) {
+      let result = await Android.upgradeExpoAsync();
+      if (!result) {
+        log.error('The upgrade of your Android client didn\'t go as planned. You might have to reinstall it manually with expo client:install:android.');
       }
     }
 
