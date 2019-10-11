@@ -42,7 +42,7 @@ import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
 import * as DevSession from './DevSession';
-import { skipManifestValidation } from './Env';
+import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
 import * as Exp from './Exp';
 import logger from './Logger';
@@ -1009,7 +1009,7 @@ async function _getPublishExpConfigAsync(
   }
 
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
-  if (sdkVersion === 'UNVERSIONED' && !skipManifestValidation()) {
+  if (sdkVersion === 'UNVERSIONED' && !maySkipManifestValidation()) {
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
