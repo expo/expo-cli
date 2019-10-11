@@ -26,7 +26,6 @@ export function projectHasModule(
   }
 }
 
-// TODO: Bacon: Unit test
 export function moduleNameFromPath(modulePath: string): string {
   if (modulePath.startsWith('@')) {
     const [org, packageName] = modulePath.split('/');
