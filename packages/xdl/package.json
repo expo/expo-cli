@@ -72,6 +72,8 @@
     "mv": "2.1.1",
     "ncp": "2.0.0",
     "node-forge": "0.7.6",
+    "p-map": "^3.0.0",
+    "p-retry": "^4.1.0",
     "p-timeout": "3.1.0",
     "package-json": "6.4.0",
     "pacote": "9.3.0",
