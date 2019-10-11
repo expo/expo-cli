@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { Versions } from '@expo/xdl';
+import { Project, Versions } from '@expo/xdl';
 import JsonFile from '@expo/json-file';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
@@ -145,6 +145,23 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
       log.error('No sdkVersion field is present in app.json, cannot upgrade project.');
       throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND_IN_MANAGED');
     }
+  }
+
+  // Can't upgrade if Expo is running
+  let status = await Project.currentStatus(projectRoot);
+  if (status === 'running') {
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'closeExpo',
+      message: 'Expo needs to close before we can upgrade your dependencies. Do you want to close it?',
+    });
+
+    if (!answer.closeExpo) {
+      return;
+    }
+
+    await Project.stopAsync(projectRoot);
+    log.newLine();
   }
 
   let currentSdkVersionString = exp.sdkVersion;
