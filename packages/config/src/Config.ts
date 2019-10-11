@@ -149,7 +149,7 @@ export function getConfigForPWA(
   getAbsolutePath: (...pathComponents: string[]) => string,
   options: object
 ) {
-  const { exp } = readConfigJson(projectRoot, true);
+  const { exp } = readConfigJson(projectRoot, true, true);
   return ensurePWAConfig(exp, getAbsolutePath, options);
 }
 
@@ -488,7 +488,8 @@ function getNodeModulesPath(projectRoot: string, exp: ExpoConfig): string {
 
 export function readConfigJson(
   projectRoot: string,
-  skipValidation: boolean = false
+  skipValidation: boolean = false,
+  skipNativeValidation: boolean = false
 ): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
   let rawConfig: JSONObject | null = null;
@@ -501,14 +502,15 @@ export function readConfigJson(
   const pkg = JsonFile.read(packageJsonPath);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg),
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
     rootConfig: rootConfig as AppJSONConfig,
   };
 }
 
 export async function readConfigJsonAsync(
   projectRoot: string,
-  skipValidation: boolean = false
+  skipValidation: boolean = false,
+  skipNativeValidation: boolean = false
 ): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
   let rawConfig: JSONObject | null = null;
@@ -521,12 +523,15 @@ export async function readConfigJsonAsync(
   const pkg = await JsonFile.readAsync(packageJsonPath);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg),
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
     rootConfig: rootConfig as AppJSONConfig,
   };
 }
 
 export function getExpoSDKVersion(projectRoot: string, exp: ExpoConfig): string {
+  if (exp && exp.sdkVersion) {
+    return exp.sdkVersion;
+  }
   const packageJsonPath = projectHasModule('expo/package.json', projectRoot, exp);
   if (packageJsonPath) {
     const expoPackageJson = require(packageJsonPath);
@@ -543,7 +548,8 @@ export function getExpoSDKVersion(projectRoot: string, exp: ExpoConfig): string 
 function ensureConfigHasDefaultValues(
   projectRoot: string,
   exp: ExpoConfig,
-  pkg: JSONObject
+  pkg: JSONObject,
+  skipNativeValidation: boolean = false
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (exp && !exp.name && typeof pkg.name === 'string') {
     exp.name = pkg.name;
@@ -557,8 +563,10 @@ function ensureConfigHasDefaultValues(
     exp.version = pkg.version;
   }
 
-  if (exp && !exp.sdkVersion) {
+  try {
     exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
+  } catch (error) {
+    if (!skipNativeValidation) throw error;
   }
 
   if (exp && !exp.platforms) {
