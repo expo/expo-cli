@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { Project, Versions } from '@expo/xdl';
+import { Project, Simulator, Versions } from '@expo/xdl';
 import JsonFile from '@expo/json-file';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
@@ -225,6 +225,24 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     if (!answer.attemptUnknownUpdate) {
       return;
     }
+  }
+
+  // Check if we can, and probably should, upgrade the (ios) simulator
+  if (Simulator.isPlatformSupported()) {
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'upgradeSimulator',
+      message: 'You might have to upgrade your iOS simulator. Do you want to upgrade it now?',
+    });
+
+    if (answer.upgradeSimulator) {
+      let result = await Simulator.upgradeExpoAsync();
+      if (!result) {
+        log.error('The upgrade of your simulator didn\'t go as planned. You might have to reinstall it manually with expo client:install:ios.');
+      }
+    }
+
+    log.newLine();
   }
 
   let packageManager = PackageManager.createForProject(projectRoot, {
