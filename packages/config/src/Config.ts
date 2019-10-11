@@ -497,7 +497,28 @@ export function readConfigJson(
   } catch (_) {}
   const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
   const packageJsonPath = getNodeModulesPath(projectRoot, exp);
+  exp.nodeModulesPath = packageJsonPath;
   const pkg = JsonFile.read(packageJsonPath);
+
+  return {
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg),
+    rootConfig: rootConfig as AppJSONConfig,
+  };
+}
+
+export async function readConfigJsonAsync(
+  projectRoot: string,
+  skipValidation: boolean = false
+): Promise<ProjectConfig> {
+  const { configPath } = findConfigFile(projectRoot);
+  let rawConfig: JSONObject | null = null;
+  try {
+    rawConfig = await JsonFile.readAsync(configPath, { json5: true });
+  } catch (_) {}
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
+  const packageJsonPath = getNodeModulesPath(projectRoot, exp);
+  exp.nodeModulesPath = packageJsonPath;
+  const pkg = await JsonFile.readAsync(packageJsonPath);
 
   return {
     ...ensureConfigHasDefaultValues(projectRoot, exp, pkg),
@@ -517,25 +538,6 @@ export function getExpoSDKVersion(projectRoot: string, exp: ExpoConfig): string 
     `Cannot determine which native SDK version your project uses because the module \`expo\` is not installed. Please install it with \`yarn add expo\` and try again.`,
     'MODULE_NOT_FOUND'
   );
-}
-
-export async function readConfigJsonAsync(
-  projectRoot: string,
-  skipValidation: boolean = false
-): Promise<ProjectConfig> {
-  const { configPath } = findConfigFile(projectRoot);
-  let rawConfig: JSONObject | null = null;
-  try {
-    rawConfig = await JsonFile.readAsync(configPath, { json5: true });
-  } catch (_) {}
-  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
-  const packageJsonPath = getNodeModulesPath(projectRoot, exp);
-  const pkg = await JsonFile.readAsync(packageJsonPath);
-
-  return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg),
-    rootConfig: rootConfig as AppJSONConfig,
-  };
 }
 
 function ensureConfigHasDefaultValues(
@@ -561,10 +563,6 @@ function ensureConfigHasDefaultValues(
 
   if (exp && !exp.platforms) {
     exp.platforms = ['android', 'ios'];
-  }
-
-  if (exp.nodeModulesPath) {
-    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }
 
   return { exp, pkg };
