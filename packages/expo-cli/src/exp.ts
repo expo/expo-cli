@@ -12,7 +12,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import simpleSpinner from '@expo/simple-spinner';
 import getenv from 'getenv';
-import program, { Command } from 'commander';
+import program, { Command, Option } from 'commander';
 import {
   Api,
   ApiV2,
@@ -483,10 +483,97 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
+// The type definition for Option seems to be wrong - doesn't include defaultValue
+function optionAsJSON(option: Option & { defaultValue: any }) {
+  return {
+    flags: option.flags,
+    required: option.required,
+    description: option.description,
+    default: option.defaultValue,
+  };
+}
+
+function commandAsJSON(command: Command) {
+  return {
+    name: command.name(),
+    description: command.description(),
+    alias: command.alias(),
+    options: command.options.map(optionAsJSON),
+  };
+}
+
+function generateCommandJSON() {
+  // Setup our commander instance
+  program.name('expo');
+  program
+    .version(packageJSON.version)
+    .option('-o, --output [format]', 'Output format. pretty (default), raw')
+    .option(
+      '--non-interactive',
+      'Fail, if an interactive prompt would be required to continue. Enabled by default if stdin is not a TTY.'
+    );
+
+  // Load each module found in ./commands by 'registering' it with our commander instance
+  registerCommands(program);
+  return program.commands.map(commandAsJSON);
+}
+
+function sanitizeFlags(flags: string) {
+  return flags.replace('<', '[').replace('>', ']');
+}
+
+// TODO: we can't have <> in text in markdown or it'll be treated as html
+function formatOptionAsMarkdown(option: any) {
+  return `| \`${sanitizeFlags(option.flags)}\` | ${option.description} |`;
+}
+
+function formatOptionsAsMarkdown(options: any) {
+  if (!options || !options.length) {
+    return 'This command does not take any options.';
+  }
+
+  return `| Option         | Description             |
+| ------------ | ----------------------- |
+${options.map(formatOptionAsMarkdown).join('\n')}
+`;
+}
+
+function formatCommandAsMarkdown(command: any) {
+  return `
+<details><summary><h3>expo ${command.name}</h3><p>${command.description}</p></summary>
+<p>${
+    command.alias
+      ? `
+
+Alias: \`expo ${command.alias}\``
+      : ''
+  }
+
+${formatOptionsAsMarkdown(command.options)}
+
+</p>
+</details>
+  `;
+}
+
+// todo: type json var
+function formatCommandsAsMarkdown(json: any) {
+  return json.map(formatCommandAsMarkdown).join('\n');
+}
+
 // This is the entry point of the CLI
-export function run(programName: string) {
+export function run(programName: string, ...args: any[]) {
   (async function() {
-    await Promise.all([writePathAsync(), runAsync(programName)]);
+    if (process.argv[2] == 'introspect') {
+      let json = generateCommandJSON();
+      if (process.argv[3] && process.argv[3].includes('markdown')) {
+        log(formatCommandsAsMarkdown(json));
+      } else {
+        log(JSON.stringify(json));
+      }
+    } else {
+      await Promise.all([writePathAsync(), runAsync(programName)]);
+    }
   })().catch(e => {
     console.error('Uncaught Error', e);
     process.exit(1);
