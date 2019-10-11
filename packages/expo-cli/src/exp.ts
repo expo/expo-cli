@@ -483,8 +483,30 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
+type OptionData = {
+  flags: string;
+  required: boolean;
+  description: string;
+  default: any;
+};
+
+type CommandData = {
+  name: string;
+  description: string;
+  alias?: string;
+  options: OptionData[];
+};
+
+// Sets up commander with a minimal setup for inspecting commands and extracting
+// data from them.
+function generateCommandJSON() {
+  program.name('expo');
+  registerCommands(program);
+  return program.commands.map(commandAsJSON);
+}
+
 // The type definition for Option seems to be wrong - doesn't include defaultValue
-function optionAsJSON(option: Option & { defaultValue: any }) {
+function optionAsJSON(option: Option & { defaultValue: any }): OptionData {
   return {
     flags: option.flags,
     required: option.required,
@@ -493,7 +515,7 @@ function optionAsJSON(option: Option & { defaultValue: any }) {
   };
 }
 
-function commandAsJSON(command: Command) {
+function commandAsJSON(command: Command): CommandData {
   return {
     name: command.name(),
     description: command.description(),
@@ -502,32 +524,15 @@ function commandAsJSON(command: Command) {
   };
 }
 
-function generateCommandJSON() {
-  // Setup our commander instance
-  program.name('expo');
-  program
-    .version(packageJSON.version)
-    .option('-o, --output [format]', 'Output format. pretty (default), raw')
-    .option(
-      '--non-interactive',
-      'Fail, if an interactive prompt would be required to continue. Enabled by default if stdin is not a TTY.'
-    );
-
-  // Load each module found in ./commands by 'registering' it with our commander instance
-  registerCommands(program);
-  return program.commands.map(commandAsJSON);
-}
-
 function sanitizeFlags(flags: string) {
   return flags.replace('<', '[').replace('>', ']');
 }
 
-// TODO: we can't have <> in text in markdown or it'll be treated as html
-function formatOptionAsMarkdown(option: any) {
+function formatOptionAsMarkdown(option: OptionData) {
   return `| \`${sanitizeFlags(option.flags)}\` | ${option.description} |`;
 }
 
-function formatOptionsAsMarkdown(options: any) {
+function formatOptionsAsMarkdown(options: OptionData[]) {
   if (!options || !options.length) {
     return 'This command does not take any options.';
   }
@@ -538,7 +543,7 @@ ${options.map(formatOptionAsMarkdown).join('\n')}
 `;
 }
 
-function formatCommandAsMarkdown(command: any) {
+function formatCommandAsMarkdown(command: CommandData) {
   return `
 <details><summary><h3>expo ${command.name}</h3><p>${command.description}</p></summary>
 <p>${
@@ -556,20 +561,19 @@ ${formatOptionsAsMarkdown(command.options)}
   `;
 }
 
-// todo: type json var
-function formatCommandsAsMarkdown(json: any) {
-  return json.map(formatCommandAsMarkdown).join('\n');
+function formatCommandsAsMarkdown(commands: CommandData[]) {
+  return commands.map(formatCommandAsMarkdown).join('\n');
 }
 
 // This is the entry point of the CLI
-export function run(programName: string, ...args: any[]) {
+export function run(programName: string) {
   (async function() {
     if (process.argv[2] == 'introspect') {
-      let json = generateCommandJSON();
+      let commands = generateCommandJSON();
       if (process.argv[3] && process.argv[3].includes('markdown')) {
-        log(formatCommandsAsMarkdown(json));
+        log(formatCommandsAsMarkdown(commands));
       } else {
-        log(JSON.stringify(json));
+        log(JSON.stringify(commands));
       }
     } else {
       await Promise.all([writePathAsync(), runAsync(programName)]);
