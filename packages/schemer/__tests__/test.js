@@ -36,7 +36,7 @@ describe('Holistic Unit Test', () => {
     } catch (e) {
       console.log(e);
       expect(e).toBeTruthy();
-      expect(e.errors.length).toBe(5);
+      expect(e.errors.length).toBe(4);
     }
   });
 });
