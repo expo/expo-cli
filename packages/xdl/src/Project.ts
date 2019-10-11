@@ -1672,9 +1672,20 @@ export async function startReactNativeServerAsync(
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
+  let customLogReporterPath: string | undefined;
+
+  const possibleLogReporterPath = ConfigUtils.projectHasModule('expo/tools/LogReporter', projectRoot, exp);
+  if (possibleLogReporterPath) {
+    customLogReporterPath = possibleLogReporterPath;
+  } else {
+    // TODO: Bacon: Prompt to install expo?
+    logger.global.warn(`Expo is not installed: Using default reporter to format logs.`);
+  }
+
+
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
-    customLogReporterPath: ConfigUtils.resolveModule('expo/tools/LogReporter', projectRoot, exp),
+    customLogReporterPath,
     assetExts: ['ttf'],
     sourceExts: ['expo.js', 'expo.ts', 'expo.tsx', 'expo.json', 'js', 'json', 'ts', 'tsx'],
     nonPersistent: !!options.nonPersistent,

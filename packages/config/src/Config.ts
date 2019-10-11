@@ -2,24 +2,18 @@ import JsonFile, { JSONObject } from '@expo/json-file';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 import fs from 'fs-extra';
 import path from 'path';
-import resolveFrom from 'resolve-from';
 import slug from 'slugify';
 
-export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfig: AppJSONConfig };
-export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
-export type BareAppConfig = { name: string; displayName: string; [key: string]: any };
-export type ExpoConfig = {
-  name?: string;
-  slug?: string;
-  sdkVersion?: string;
-  platforms?: Array<Platform>;
-  nodeModulesPath?: string;
-  [key: string]: any;
-};
-export type ExpRc = { [key: string]: any };
-export type Platform = 'android' | 'ios' | 'web';
-
-export type PackageJSONConfig = { [key: string]: any };
+import {
+  AppJSONConfig,
+  BareAppConfig,
+  ExpoConfig,
+  ExpRc,
+  PackageJSONConfig,
+  Platform,
+  ProjectConfig,
+} from './Config.types';
+import { projectHasModule } from './Modules';
 
 const APP_JSON_FILE_NAME = 'app.json';
 
@@ -67,11 +61,6 @@ export function fileExists(file: string): boolean {
   } catch (e) {
     return false;
   }
-}
-
-export function resolveModule(request: string, projectRoot: string, exp: ExpoConfig): string {
-  const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
-  return resolveFrom(fromDir, request);
 }
 
 // DEPRECATED: Use findConfigFile
@@ -439,7 +428,7 @@ export function ensurePWAConfig(
   return config;
 }
 
-type ConfigErrorCode = 'NO_APP_JSON' | 'NOT_OBJECT' | 'NO_EXPO';
+type ConfigErrorCode = 'NO_APP_JSON' | 'NOT_OBJECT' | 'NO_EXPO' | 'MODULE_NOT_FOUND';
 
 class ConfigError extends Error {
   code: ConfigErrorCode;
@@ -458,66 +447,76 @@ const APP_JSON_EXAMPLE = JSON.stringify({
   },
 });
 
-export function readConfigJson(
-  projectRoot: string,
-  skipValidation: boolean = false
-): ProjectConfig {
-  const { configPath } = findConfigFile(projectRoot);
-  let rootConfig: JSONObject | null = null;
-  try {
-    rootConfig = JsonFile.read(configPath, { json5: true });
-  } catch (error) {}
-
-  if (rootConfig === null || typeof rootConfig !== 'object') {
+function parseAndValidateRootConfig(
+  rootConfig: JSONObject | null,
+  skipValidation: boolean
+): { exp: ExpoConfig; rootConfig: JSONObject } {
+  let outputRootConfig: JSONObject | null = rootConfig;
+  if (outputRootConfig === null || typeof outputRootConfig !== 'object') {
     if (skipValidation) {
-      rootConfig = { expo: {} };
+      outputRootConfig = { expo: {} };
     } else {
       throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
     }
   }
-  const exp = rootConfig.expo as ExpoConfig;
+  const exp = outputRootConfig.expo as ExpoConfig;
   if (exp === null || typeof exp !== 'object') {
     throw new ConfigError(
       `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
       'NO_EXPO'
     );
   }
+  return {
+    exp,
+    rootConfig: outputRootConfig,
+  };
+}
 
+function getNodeModulesPath(projectRoot: string, exp: ExpoConfig): string {
   const packageJsonPath =
     'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
       ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
       : path.join(projectRoot, 'package.json');
+  if (!fs.existsSync(packageJsonPath)) {
+    throw new ConfigError(
+      `The expected package.json path: ${packageJsonPath} does not exist`,
+      'MODULE_NOT_FOUND'
+    );
+  }
+  return packageJsonPath;
+}
+
+export function readConfigJson(
+  projectRoot: string,
+  skipValidation: boolean = false
+): ProjectConfig {
+  const { configPath } = findConfigFile(projectRoot);
+  let rawConfig: JSONObject | null = null;
+  try {
+    rawConfig = JsonFile.read(configPath, { json5: true });
+  } catch (_) {}
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
+  const packageJsonPath = getNodeModulesPath(projectRoot, exp);
   const pkg = JsonFile.read(packageJsonPath);
 
-  if (exp && !exp.name && typeof pkg.name === 'string') {
-    exp.name = pkg.name;
-  }
+  return {
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg),
+    rootConfig: rootConfig as AppJSONConfig,
+  };
+}
 
-  if (exp && !exp.slug && typeof exp.name === 'string') {
-    exp.slug = slug(exp.name.toLowerCase());
+export function getExpoSDKVersion(projectRoot: string, exp: ExpoConfig): string {
+  const packageJsonPath = projectHasModule('expo/package.json', projectRoot, exp);
+  if (packageJsonPath) {
+    const expoPackageJson = require(packageJsonPath);
+    const { version: packageVersion } = expoPackageJson;
+    const majorVersion = packageVersion.split('.').shift();
+    return `${majorVersion}.0.0`;
   }
-
-  if (exp && !exp.version) {
-    exp.version = pkg.version;
-  }
-
-  if (exp && !exp.sdkVersion) {
-    try {
-      const packageJsonPath = resolveModule('expo/package.json', projectRoot, exp);
-      const expoPackageJson = require(packageJsonPath);
-      exp.sdkVersion = expoPackageJson.version;
-    } catch (_) {}
-  }
-
-  if (exp && !exp.platforms) {
-    exp.platforms = ['android', 'ios'];
-  }
-
-  if (exp.nodeModulesPath) {
-    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
-  }
-
-  return { exp, pkg, rootConfig: rootConfig as AppJSONConfig };
+  throw new ConfigError(
+    `Cannot determine which native SDK version your project uses because the module \`expo\` is not installed. Please install it with \`yarn add expo\` and try again.`,
+    'MODULE_NOT_FOUND'
+  );
 }
 
 export async function readConfigJsonAsync(
@@ -525,32 +524,25 @@ export async function readConfigJsonAsync(
   skipValidation: boolean = false
 ): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
-  let rootConfig: JSONObject | null = null;
+  let rawConfig: JSONObject | null = null;
   try {
-    rootConfig = await JsonFile.readAsync(configPath, { json5: true });
-  } catch (error) {}
-
-  if (rootConfig === null || typeof rootConfig !== 'object') {
-    if (skipValidation) {
-      rootConfig = { expo: {} };
-    } else {
-      throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
-    }
-  }
-  const exp = rootConfig.expo as ExpoConfig;
-  if (exp === null || typeof exp !== 'object') {
-    throw new ConfigError(
-      `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
-      'NO_EXPO'
-    );
-  }
-
-  const packageJsonPath =
-    'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
-      ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
-      : path.join(projectRoot, 'package.json');
+    rawConfig = await JsonFile.readAsync(configPath, { json5: true });
+  } catch (_) {}
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
+  const packageJsonPath = getNodeModulesPath(projectRoot, exp);
   const pkg = await JsonFile.readAsync(packageJsonPath);
 
+  return {
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg),
+    rootConfig: rootConfig as AppJSONConfig,
+  };
+}
+
+function ensureConfigHasDefaultValues(
+  projectRoot: string,
+  exp: ExpoConfig,
+  pkg: JSONObject
+): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (exp && !exp.name && typeof pkg.name === 'string') {
     exp.name = pkg.name;
   }
@@ -564,11 +556,7 @@ export async function readConfigJsonAsync(
   }
 
   if (exp && !exp.sdkVersion) {
-    try {
-      const packageJsonPath = resolveModule('expo/package.json', projectRoot, exp);
-      const expoPackageJson = require(packageJsonPath);
-      exp.sdkVersion = expoPackageJson.version;
-    } catch (_) {}
+    exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
   }
 
   if (exp && !exp.platforms) {
@@ -579,7 +567,7 @@ export async function readConfigJsonAsync(
     exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }
 
-  return { exp, pkg, rootConfig: rootConfig as AppJSONConfig };
+  return { exp, pkg };
 }
 
 export async function writeConfigJsonAsync(
@@ -599,3 +587,15 @@ export async function writeConfigJsonAsync(
     rootConfig,
   };
 }
+
+export {
+  PackageJSONConfig,
+  ProjectConfig,
+  AppJSONConfig,
+  BareAppConfig,
+  ExpoConfig,
+  ExpRc,
+  Platform,
+};
+
+export * from './Modules';
