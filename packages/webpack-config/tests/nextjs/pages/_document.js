@@ -1,2 +1,2 @@
-import ExpoDocument from '../.expo/next_document';
-export default ExpoDocument;
+import { Document } from '../../../../next-adapter';
+export default Document;

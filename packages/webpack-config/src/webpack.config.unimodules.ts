@@ -36,14 +36,25 @@ export default function(env: Environment, argv: Arguments): DevConfiguration | C
     supportsFontLoading = true,
   } = argv;
 
+  const { platform = 'web' } = env;
+
   const config = expoConfig || getConfig(env);
 
   const locations = env.locations || getPaths(env.projectRoot);
   const mode = getMode(env);
 
+  const { build: buildConfig = {} } = config.web || {};
+  const { babel: babelAppConfig = {} } = buildConfig;
+
+  const babelProjectRoot = babelAppConfig.root || locations.root;
+
   const babelConfig = createBabelLoader({
     mode,
-    babelProjectRoot: locations.root,
+    platform,
+    babelProjectRoot,
+    verbose: babelAppConfig.verbose,
+    include: babelAppConfig.include,
+    use: babelAppConfig.use,
   });
 
   const { publicPath, publicUrl } = getPublicPaths(env);

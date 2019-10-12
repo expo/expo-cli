@@ -126,7 +126,9 @@ async function _detachAsync(projectRoot, options) {
   ) {
     if (process.env.EXPO_VIEW_DIR) {
       logger.warn(
-        `Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPO_VIEW_DIR`
+        `Detaching is not supported for SDK ${
+          exp.sdkVersion
+        }; ignoring this because you provided EXPO_VIEW_DIR`
       );
       sdkVersionConfig = {};
     } else {
@@ -239,7 +241,9 @@ async function _detachAsync(projectRoot, options) {
 
   if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
     packagesToInstall.push(
-      `react-native@https://github.com/expo/react-native/archive/${sdkVersionConfig.expoReactNativeTag}.tar.gz`
+      `react-native@https://github.com/expo/react-native/archive/${
+        sdkVersionConfig.expoReactNativeTag
+      }.tar.gz`
     );
   } else if (process.env.EXPO_VIEW_DIR) {
     // ignore, using test directory
@@ -527,7 +531,9 @@ export async function bundleAssetsAsync(projectDir, args) {
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
   } catch (ex) {
     throw new Error(
-      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
+      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${
+        ex.message
+      }`
     );
   }
   await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);
