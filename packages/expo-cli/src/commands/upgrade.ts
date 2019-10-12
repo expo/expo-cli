@@ -12,6 +12,12 @@ import prompt from '../prompt';
 import log from '../log';
 import { findProjectRootAsync, validateGitStatusAsync } from './utils/ProjectUtils';
 
+import { isUsingYarn } from '@expo/config';
+const npmCheck = require('yarn-check');
+const npmInteractiveUpdate = require('yarn-check/lib/out/interactive-update');
+const yarnCheck = require('npm-check');
+const yarnInteractiveUpdate = require('npm-check/lib/out/interactive-update');
+
 type Options = {
   npm?: boolean;
   yarn?: boolean;
@@ -273,7 +279,8 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     ...Object.keys(updates),
     'expo',
   ]);
-  if (untouchedDependencies.length) {
+
+  if(untouchedDependencies.length) {
     log.addNewLineIfNone();
     log(
       chalk.bold(
@@ -284,6 +291,31 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     );
     log(chalk.grey.bold(untouchedDependencies.join(', ')));
     log.addNewLineIfNone();
+
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'attemptInteractiveUpdate',
+      message: `Do you want update 3rd party packages using are interactive update utility?`,
+    });
+
+    if (!answer.attemptInteractiveUpdate) {
+      return;
+    }
+
+    log.addNewLineIfNone();
+    if(isUsingYarn(projectRoot)) {
+      let currentState = await yarnCheck({
+        ignore: Object.keys(updates)
+      });
+      log.addNewLineIfNone();
+      yarnInteractiveUpdate(currentState);
+    } else{
+      let currentState = await npmCheck({
+        ignore: Object.keys(updates)
+      });
+      log.addNewLineIfNone();
+      npmInteractiveUpdate(currentState);
+    }
   }
 
   // Add some basic additional instructions for bare workflow

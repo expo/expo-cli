@@ -97,6 +97,7 @@
     "klaw-sync": "6.0.0",
     "lodash": "4.17.15",
     "match-require": "2.1.0",
+    "npm-check": "^5.9.0",
     "npm-package-arg": "6.1.0",
     "open": "6.3.0",
     "ora": "3.4.0",
@@ -113,7 +114,8 @@
     "tempy": "^0.3.0",
     "untildify": "3.0.3",
     "validator": "10.5.0",
-    "wordwrap": "1.0.0"
+    "wordwrap": "1.0.0",
+    "yarn-check": "^0.0.3"
   },
   "optionalDependencies": {
     "@expo/traveling-fastlane-darwin": "1.10.0",
