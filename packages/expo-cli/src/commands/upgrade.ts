@@ -295,7 +295,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     let answer = await prompt({
       type: 'confirm',
       name: 'attemptInteractiveUpdate',
-      message: `Do you want update 3rd party packages using are interactive update utility?`,
+      message: `Do you want to update 3rd party packages using our interactive update utility??`,
     });
 
     if (!answer.attemptInteractiveUpdate) {
