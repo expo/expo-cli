@@ -13,6 +13,9 @@ module.exports = {
       }
     }
 
-    return path.join(fromDirectory, 'node_modules', request);
+    const outputPath = path.join(fromDirectory, 'node_modules', request);
+    if (fs.existsSync(outputPath)) {
+      return outputPath;
+    }
   },
 };
