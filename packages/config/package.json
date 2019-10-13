@@ -11,6 +11,18 @@
     "lint": "eslint .",
     "test": "jest"
   },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": [
+      "__mocks__",
+      "src"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json"
+    ],
+    "resetModules": false
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
@@ -39,6 +51,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1-alpha.0",
+    "memfs": "^2.15.5",
     "typescript": "3.4.5"
   },
   "publishConfig": {
