@@ -37,6 +37,9 @@ describe('readConfigJson', () => {
       '/from-package/package.json': packageJson,
       '/from-package/app.json': JSON.stringify({ expo: { ...appJson, sdkVersion: undefined } }),
       '/from-package/node_modules/expo/package.json': expoPackageJson,
+
+      '/no-version/package.json': packageJson,
+      '/no-version/app.json': JSON.stringify({ expo: { ...appJson, sdkVersion: undefined } }),
     });
   });
   it('reads the SDK version from the config', async () => {
@@ -47,6 +50,11 @@ describe('readConfigJson', () => {
   it('reads the SDK version from the installed version of expo', async () => {
     const { exp } = await readConfigJson('/from-package');
     expect(exp.sdkVersion).toBe('650.0.0');
+  });
+
+  it('skips resolution of the SDK version', async () => {
+    const { exp } = await readConfigJson('/no-version', true, true);
+    expect(exp.sdkVersion).not.toBeDefined();
   });
   afterAll(() => {
     vol.reset();
