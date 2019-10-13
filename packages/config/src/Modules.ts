@@ -7,7 +7,6 @@ export function resolveModule(request: string, projectRoot: string, exp: ExpoCon
   return resolveFrom(fromDir, request);
 }
 
-// TODO: Bacon: E2E test
 export function projectHasModule(
   modulePath: string,
   projectRoot: string,
