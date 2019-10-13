@@ -8,7 +8,8 @@
     "build": "tsc",
     "prepare": "yarn run clean && yarn build",
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "jest"
   },
   "repository": {
     "type": "git",

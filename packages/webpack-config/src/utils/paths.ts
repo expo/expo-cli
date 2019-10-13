@@ -118,7 +118,7 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
 }
 
 export function getEntryPoint(projectRoot: string): string | null {
-  const { exp, pkg } = readConfigJson(projectRoot, true);
+  const { exp, pkg } = readConfigJson(projectRoot, true, true);
 
   /**
    *  The main file is resolved like so:
@@ -145,20 +145,20 @@ export function getEntryPoint(projectRoot: string): string | null {
 }
 
 export function getPaths(projectRoot: string): FilePaths {
-  const { exp } = readConfigJson(projectRoot, true);
+  const { exp } = readConfigJson(projectRoot, true, true);
   return parsePaths(projectRoot, exp);
 }
 
 export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
   let exp;
   try {
-    exp = (await readConfigJsonAsync(projectRoot, true)).exp;
+    exp = (await readConfigJsonAsync(projectRoot, true, true)).exp;
   } catch (error) {}
   return parsePaths(projectRoot, exp);
 }
 
 export function getServedPath(projectRoot: string): string {
-  const { pkg } = readConfigJson(projectRoot, true);
+  const { pkg } = readConfigJson(projectRoot, true, true);
   const envPublicUrl = process.env.WEB_PUBLIC_URL;
 
   // We use `WEB_PUBLIC_URL` environment variable or "homepage" field to infer
@@ -202,6 +202,6 @@ export function getPublicPaths({
 }
 
 export function getProductionPath(projectRoot: string): string {
-  const { exp, pkg } = readConfigJson(projectRoot, true);
+  const { exp } = readConfigJson(projectRoot, true, true);
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }
