@@ -195,7 +195,7 @@ async function _assertValidProjectRoot(projectRoot: string) {
 }
 
 async function _getFreePortAsync(rangeStart: number) {
-  let port = await freeportAsync(rangeStart);
+  let port = await freeportAsync(rangeStart, { hostnames: [null, 'localhost'] });
   if (!port) {
     throw new XDLError('NO_PORT_FOUND', 'No available port found');
   }
