@@ -5,6 +5,7 @@ import url from 'url';
 import takeRight from 'lodash/takeRight';
 import pMap from 'p-map';
 import pRetry from 'p-retry';
+import urlJoin from 'url-join';
 
 import StandaloneContext from './StandaloneContext';
 import { saveUrlToPathAsync } from './ExponentTools';
@@ -51,5 +52,5 @@ function createAssetsUrlResolver(context: StandaloneContext): UrlResolver {
       assetsDirUrl = url.resolve(publishedUrl, assetUrlOverride);
     }
   }
-  return hash => `${assetsDirUrl}/${hash}`;
+  return hash => urlJoin(assetsDirUrl, hash);
 }
