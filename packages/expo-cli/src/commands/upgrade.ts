@@ -157,7 +157,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     });
 
     if (!answer.closeExpo) {
-      return;
+      throw new CommandError('EXPO_RUNNING_FOR_UPGRADE_COMMAND');
     }
 
     await Project.stopAsync(projectRoot);
