@@ -83,23 +83,23 @@ export default function(program: Command) {
   program
     .command('url [project-dir]')
     .alias('u')
-    .option('-w, --web', 'Return the URL of the web app')
-    .description('Displays the URL you can use to view your project in Expo')
+    .option('-w, --web', 'Returns the url of the web app.')
+    .description('Displays the url you can use to view your project in Expo.')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(action, /* skipProjectValidation: */ true, /* skipAuthCheck: */ true);
 
   program
     .command('url:ipa [project-dir]')
-    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-    .description('Displays the standalone iOS binary URL you can use to download your app binary')
+    .option('--public-url [url]', 'The url of an externally hosted manifest for self-host apps.')
+    .description('Displays the standalone iOS binary URL you can use to download your app binary.')
     .asyncActionProjectDir(logArtifactUrl('ios'), true);
 
   program
     .command('url:apk [project-dir]')
-    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
+    .option('--public-url [url]', 'The url of an externally hosted manifest for self-host apps.')
     .description(
-      'Displays the standalone Android binary URL you can use to download your app binary'
+      'Displays the standalone Android binary URL you can use to download your app binary.'
     )
     .asyncActionProjectDir(logArtifactUrl('android'), true);
 }

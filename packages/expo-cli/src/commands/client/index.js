@@ -27,8 +27,8 @@ export default program => {
   program
     .command('client:ios [project-dir]')
     .option(
-      '--apple-id <login>',
-      'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
+      '--apple-id [username]',
+      'Apple ID username. Set your Apple ID password as EXPO_APPLE_PASSWORD env variable.'
     )
     .description(
       'Build a custom version of the Expo Client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
@@ -242,7 +242,7 @@ export default program => {
 
   program
     .command('client:install:ios')
-    .description('Install the latest version of Expo Client for iOS on the simulator')
+    .description('Install the latest version of Expo client for iOS on the simulator.')
     .asyncAction(async () => {
       if (await Simulator.upgradeExpoAsync()) {
         log('Done!');
@@ -252,7 +252,7 @@ export default program => {
   program
     .command('client:install:android')
     .description(
-      'Install the latest version of Expo Client for Android on a connected device or emulator'
+      'Install the latest version of Expo client for Android on a connected device or emulator.'
     )
     .asyncAction(async () => {
       if (await Android.upgradeExpoAsync()) {

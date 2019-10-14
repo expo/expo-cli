@@ -26,30 +26,27 @@ export default (program: any) => {
       'Revoke credentials on developer.apple.com, select appropriate using --clear-* options.'
     )
     .option(
-      '--apple-id <login>',
-      'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
+      '--apple-id [id]',
+      'Apple ID username. Set your Apple ID password as EXPO_APPLE_PASSWORD env variable.'
     )
     .option(
-      '-t --type <build>',
-      'Type of build: [archive|simulator].',
+      '-t --type [type]',
+      'Select the type of build: [archive or simulator]',
       /^(archive|simulator)$/i,
       'archive'
     )
-    .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
-    .option('--no-publish', 'Disable automatic publishing before building.')
+    .option('--release-channel [channel]', 'Pull bundle from specified release channel.', 'default')
+    .option('--no-publish', 'Prevents an OTA update from occurring during the build process.')
     .option('--no-wait', 'Exit immediately after scheduling build.')
-    .option('--team-id <apple-teamId>', 'Apple Team ID.')
+    .option('--team-id [id]', 'Apple Team ID.')
     .option(
-      '--dist-p12-path <dist.p12>',
-      'Path to your Distribution Certificate P12 (set password as EXPO_IOS_DIST_P12_PASSWORD environment variable).'
+      '--dist-p12-path [path]',
+      'Path to your Distribution Certificate. Set password as EXPO_IOS_DIST_P12_PASSWORD env variable.'
     )
-    .option('--push-id <push-id>', 'Push Key ID (ex: 123AB4C56D).')
-    .option('--push-p8-path <push.p12>', 'Path to your Push Key .p8 file.')
-    .option('--provisioning-profile-path <.mobileprovision>', 'Path to your Provisioning Profile.')
-    .option(
-      '--public-url <url>',
-      'The URL of an externally hosted manifest (for self-hosted apps).'
-    )
+    .option('--push-id [id]', 'Push Notification Key. Ex: 123AB4C56D')
+    .option('--push-p8-path [path]', 'Path to your Push Notification Key .p8 file.')
+    .option('--provisioning-profile-path [path]', 'Path to your Provisioning Profile.')
+    .option('--public-url [url]', 'The url of an externally hosted manifest for self-hosted apps.')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
@@ -80,13 +77,18 @@ export default (program: any) => {
     .command('build:android [project-dir]')
     .alias('ba')
     .option('-c, --clear-credentials', 'Clear stored credentials.')
-    .option('--release-channel <channel-name>', 'Pull from specified release channel.', 'default')
-    .option('--no-publish', 'Disable automatic publishing before building.')
+    .option('--release-channel [channel]', 'Pull bundle from specified release channel.', 'default')
+    .option('--no-publish', 'Prevents an OTA update from occurring during the build process.')
     .option('--no-wait', 'Exit immediately after triggering build.')
-    .option('--keystore-path <app.jks>', 'Path to your Keystore.')
-    .option('--keystore-alias <alias>', 'Keystore Alias')
-    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
-    .option('-t --type <build>', 'Type of build: [app-bundle|apk].', /^(app-bundle|apk)$/i, 'apk')
+    .option('--keystore-path [path]', 'Path to your Keystore .jks file.')
+    .option('--keystore-alias [alias]', 'Keystore Alias')
+    .option('--public-url [url]', 'The url of an externally hosted manifest for self-hosted apps.')
+    .option(
+      '-t --type [type]',
+      'Select the type of build: [app-bundle|apk].',
+      /^(app-bundle|apk)$/i,
+      'apk'
+    )
     .description(
       'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
@@ -127,10 +129,7 @@ export default (program: any) => {
   program
     .command('build:status [project-dir]')
     .alias('bs')
-    .option(
-      '--public-url <url>',
-      'The URL of an externally hosted manifest (for self-hosted apps).'
-    )
+    .option('--public-url [url]', 'The url of an externally hosted manifest for self-hosted apps.')
     .description(`Gets the status of a current (or most recently finished) build for your project.`)
     .asyncActionProjectDir(async (projectDir, options) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {

@@ -339,8 +339,8 @@ export default function(program: Command) {
   program
     .command('upgrade [targetSdkVersion]')
     .alias('update')
-    .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
-    .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
-    .description('Upgrades your project dependencies and app.json and to the given SDK version')
+    .option('--npm', 'Use npm to install dependencies. Used by default when package-lock.json exists.')
+    .option('--yarn', 'Use Yarn to install dependencies. Used by default when yarn.lock exists.')
+    .description('Upgrades your project dependencies and app.json and to the given SDK version.')
     .asyncAction(upgradeAsync);
 }

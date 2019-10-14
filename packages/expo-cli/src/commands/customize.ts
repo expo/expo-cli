@@ -142,7 +142,7 @@ export default function(program: Command) {
   program
     .command('customize:web [project-dir]')
     .description('Generate static web files into your project.')
-    .option('-f, --force', 'Allows replacing existing files')
+    .option('-f, --force', 'Allows replacing existing files.')
     .allowOffline()
     .asyncAction(action);
 }

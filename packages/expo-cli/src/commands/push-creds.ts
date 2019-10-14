@@ -16,7 +16,7 @@ export default function(program: Command) {
   program
     .command('push:android:upload [project-dir]')
     .description('Uploads a Firebase Cloud Messaging key for Android push notifications.')
-    .option('--api-key [api-key]', 'Server API key for FCM.')
+    .option('--api-key [key]', 'Server API key for FCM.')
     .asyncActionProjectDir(async (projectDir: string, options: { apiKey?: string }) => {
       if (!options.apiKey || options.apiKey.length === 0) {
         throw new Error('Must specify an API key to upload with --api-key.');
@@ -44,7 +44,7 @@ export default function(program: Command) {
 
   program
     .command('push:android:show [project-dir]')
-    .description('Print the value currently in use for FCM notifications for this project.')
+    .description('Prints the value currently in use for FCM notifications for this project.')
     .asyncActionProjectDir(async (projectDir: string) => {
       const {
         args: { remotePackageName },
@@ -87,9 +87,9 @@ export default function(program: Command) {
   program
     .command('push:web:upload [project-dir]')
     .description('Uploads VAPID key pair and VAPID subject for web push notifications.')
-    .option('--vapid-pubkey [vapid-public-key]', 'URL-safe base64-encoded VAPID public key.')
-    .option('--vapid-pvtkey [vapid-private-key]', 'URL-safe base64-encoded VAPID private key.')
-    .option('--vapid-subject [vapid-subject]', vapidSubjectDescription)
+    .option('--vapid-pubkey [key]', 'URL-safe base64-encoded VAPID public key.')
+    .option('--vapid-pvtkey [key]', 'URL-safe base64-encoded VAPID private key.')
+    .option('--vapid-subject [subject]', vapidSubjectDescription)
     .asyncActionProjectDir(async (projectDir: string, options: VapidData) => {
       if (!options.vapidPubkey || !options.vapidPvtkey || !options.vapidSubject) {
         throw new Error(
@@ -103,7 +103,7 @@ export default function(program: Command) {
   program
     .command('push:web:generate [project-dir]')
     .description('Generates VAPID key pair for web push notifications.')
-    .option('--vapid-subject [vapid-subject]', vapidSubjectDescription)
+    .option('--vapid-subject [subject]', vapidSubjectDescription)
     .asyncActionProjectDir(async (projectDir: string, options: VapidData) => {
       if (!options.vapidSubject) {
         throw new Error('Must specify --vapid-subject.');

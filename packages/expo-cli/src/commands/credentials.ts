@@ -12,8 +12,8 @@ type Options = {
 export default function (program: CommanderStatic) {
   program
     .command('credentials:manager')
-    .description('Manage your credentials')
-    .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
+    .description('Manage your iOS or Android credentials.')
+    .option('-p --platform [platform]', 'Select platform [android or ios]', /^(android|ios)$/i)
     .asyncAction(async (options: Options) => {
       const projectDir = process.cwd();
       const context = new Context();

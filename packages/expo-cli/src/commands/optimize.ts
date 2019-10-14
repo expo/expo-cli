@@ -48,19 +48,19 @@ export default function(program: Command) {
   program
     .command('optimize [project-dir]')
     .alias('o')
-    .description('Compress the assets in your Expo project')
-    .option('-s, --save', 'Save the original assets with a .orig extension')
+    .description('Compress the assets in your Expo project.')
+    .option('-s, --save', 'Saves the original assets with a .orig file extension.')
     .option(
-      '--quality [number]',
-      'Specify the quality the compressed image is reduced to. Default is 80'
+      '--quality [num]',
+      'Specify the quality the compressed image is reduced to. Default: 80'
     )
     .option(
       '--include [pattern]',
-      'Include only assets that match this glob pattern relative to the project root'
+      'Include only assets that match this glob pattern relative to the project root.'
     )
     .option(
       '--exclude [pattern]',
-      'Exclude all assets that match this glob pattern relative to the project root'
+      'Exclude all assets that match this glob pattern relative to the project root.'
     )
     .allowOffline()
     .asyncAction(action);

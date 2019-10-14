@@ -49,7 +49,7 @@ Command.prototype.urlOpts = function() {
 };
 
 Command.prototype.allowOffline = function() {
-  this.option('--offline', 'Allows this command to run while offline');
+  this.option('--offline', 'Allows this command to run while offline.');
   return this;
 };
 
@@ -120,7 +120,7 @@ Command.prototype.asyncActionProjectDir = function(
   skipProjectValidation: boolean,
   skipAuthCheck: boolean
 ) {
-  this.option('--config [file]', 'Specify a path to app.json');
+  this.option('--config [path]', 'Specify a path to app.json.');
   return this.asyncAction(async (projectDir: string, ...args: any[]) => {
     const opts = args[0];
 

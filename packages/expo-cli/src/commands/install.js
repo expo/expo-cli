@@ -79,8 +79,11 @@ export default program => {
   program
     .command('install [packages...]')
     .alias('add')
-    .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
-    .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
+    .option(
+      '--npm',
+      'Use npm to install dependencies. Used by default when package-lock.json exists.'
+    )
+    .option('--yarn', 'Use Yarn to install dependencies. Used by default when yarn.lock exists.')
     .description('Installs a unimodule or other package to a project.')
     .asyncAction(installAsync);
 };

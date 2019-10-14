@@ -19,6 +19,6 @@ export default function(program: Command) {
   program
     .command('whoami')
     .alias('w')
-    .description('Checks with the server and then says who you are logged in as')
+    .description('Checks with the server to see if you are logged in to an Expo account and if you are, returns the account name.')
     .asyncAction(action);
 }

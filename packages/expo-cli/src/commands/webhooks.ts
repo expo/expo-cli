@@ -13,13 +13,13 @@ const WEBHOOK_TYPES = ['build'];
 export default function(program: Command) {
   program
     .command('webhooks:set [project-dir]')
-    .option('--url <webhook-url>', 'Webhook to be called after building the app.')
-    .option('--event <webhook-type>', 'Type of webhook: [build].')
+    .option('--url [url]', 'Webhook to be called after building the app.')
+    .option('--event [type]', 'Type of webhook. Only current option is: build.')
     .option(
-      '--secret <webhook-secret>',
-      'Secret to be used to calculate the webhook request payload signature (check docs for more details). It has to be at least 16 characters long.'
+      '--secret [secret]',
+      'Secret to be used to calculate the webhook request payload signature. See docs for more details. Must be at least 16 characters long.'
     )
-    .description(`Set a webhook for the project.`)
+    .description(`Sets a webhook for the project.`)
     .asyncActionProjectDir(async (projectDir: string, _options: Options) => {
       const options = await _sanitizeOptions(_options);
       const secret = options.secret;
@@ -40,7 +40,7 @@ export default function(program: Command) {
 
   program
     .command('webhooks:show [project-dir]')
-    .description(`Show webhooks for the project.`)
+    .description(`Shows webhooks for the project.`)
     .asyncActionProjectDir(async (projectDir: string) => {
       const {
         args: { remoteFullPackageName: experienceName },
@@ -69,8 +69,8 @@ export default function(program: Command) {
 
   program
     .command('webhooks:clear [project-dir]')
-    .option('--event <webhook-type>', 'Type of webhook: [build].')
-    .description(`Clear a webhook associated with this project.`)
+    .option('--event [type]', 'Type of webhook. Only current option is: build.')
+    .description(`Clears a webhook associated with this project.`)
     .asyncActionProjectDir(async (projectDir: string, options: { event?: string }) => {
       const event = _sanitizeEvent(options.event);
       const {

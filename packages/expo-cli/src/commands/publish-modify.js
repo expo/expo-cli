@@ -12,11 +12,11 @@ export default (program: any) => {
     .alias('ps')
     .description('Set a published release to be served from a specified channel.')
     .option(
-      '-c, --release-channel <channel-name>',
+      '-c, --release-channel [channel]',
       'The channel to set the published release. (Required)'
     )
     .option(
-      '-p, --publish-id <publish-id>',
+      '-p, --publish-id [id]',
       'The id of the published release to serve from the channel. (Required)'
     )
     .asyncActionProjectDir(async (projectDir, options) => {
@@ -48,7 +48,7 @@ export default (program: any) => {
     .command('publish:rollback [project-dir]')
     .alias('pr')
     .description('Rollback an update to a channel.')
-    .option('--channel-id <channel-id>', 'The channel id to rollback in the channel. (Required)')
+    .option('--channel-id [channel]', 'The channel id to rollback in the channel. (Required)')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.channelId) {
         throw new Error('You must specify a channel id. You can find ids using publish:history.');

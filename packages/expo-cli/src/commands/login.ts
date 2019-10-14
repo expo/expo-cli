@@ -6,8 +6,8 @@ export default function(program: Command) {
   program
     .command('login')
     .alias('signin')
-    .description('Login with your Expo account')
-    .option('-u, --username [string]', 'Username')
-    .option('-p, --password [string]', 'Password')
+    .description('Log in with your Expo account.')
+    .option('-u, --username [username]', 'Expo username.')
+    .option('-p, --password [password]', 'Expo password.')
     .asyncAction(login);
 }

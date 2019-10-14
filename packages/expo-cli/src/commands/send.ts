@@ -47,9 +47,9 @@ async function action(projectDir: string, options: { sendTo?: string }) {
 export default function(program: Command) {
   program
     .command('send [project-dir]')
-    .description('Sends a link to your project to an email address')
+    .description('Sends a link to your project to an email address.')
     //.help('You must have the server running for this command to work')
-    .option('-s, --send-to  [dest]', 'Specifies the email address to send this URL to')
+    .option('-s, --send-to  [email]', 'Specifies the email address to send this url to.')
     .urlOpts()
     .asyncActionProjectDir(action);
 }

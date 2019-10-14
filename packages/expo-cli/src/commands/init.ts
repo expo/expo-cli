@@ -404,11 +404,11 @@ export default function(program: Command) {
     )
     .option(
       '-t, --template [name]',
-      'Specify which template to use. Valid options are "blank", "tabs", "bare-minimum" or any npm package that includes an Expo project template.'
+      'Specify which template to use. Options: "blank", "tabs", "bare-minimum" or any npm package that includes an Expo project template.'
     )
-    .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
-    .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
-    .option('--workflow [name]', '(Deprecated) The workflow to use. managed (default) or advanced')
+    .option('--npm', 'Use npm to install dependencies. Used by default when Yarn is not installed.')
+    .option('--yarn', 'Use Yarn to install dependencies. Used by default when Yarn is installed.')
+    .option('--workflow [name]', '(Deprecated) The workflow to use. managed (default) or advanced.')
     .option('--name [name]', 'The name of your app visible on the home screen.')
     .option('--android-package [name]', 'The package name for your Android app.')
     .option('--ios-bundle-identifier [name]', 'The bundle identifier for your iOS app.')

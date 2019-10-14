@@ -8,7 +8,7 @@ async function action(projectDir: string) {
 export default function(program: Command) {
   program
     .command('android [project-dir]')
-    .description('Opens your app in Expo on a connected Android device')
+    .description('Opens your app in the Expo client on a connected Android device.')
     .allowOffline()
     .asyncActionProjectDir(action);
 }

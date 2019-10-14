@@ -13,8 +13,8 @@ async function action(projectDir: string, options: Options) {
 export default function(program: Command) {
   program
     .command('bundle-assets [project-dir]')
-    .option('--dest [dest]', 'Destination directory for assets')
-    .option('--platform [platform]', 'detached project platform')
+    .option('--dest [dir]', 'Destination directory for assets')
+    .option('--platform [platform]', 'Detached project platform')
     .description(
       'Bundles assets for a detached app. This command should be executed from xcode or gradle.'
     )

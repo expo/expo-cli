@@ -8,7 +8,7 @@ async function action(projectDir: string) {
 export default function(program: Command) {
   program
     .command('ios [project-dir]')
-    .description('Opens your app in Expo in an iOS simulator on your computer')
+    .description('Opens your app in the Expo client in an iOS simulator on your computer')
     .allowOffline()
     .asyncActionProjectDir(action);
 }

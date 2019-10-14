@@ -210,9 +210,9 @@ export default (program: any) => {
   program
     .command('start [project-dir]')
     .alias('r')
-    .description('Starts or restarts a local server for your app and gives you a URL to it')
-    .option('-s, --send-to [dest]', 'An email address to send a link to')
-    .option('-c, --clear', 'Clear the React Native packager cache')
+    .description('Starts or restarts a local server for your app and gives you a url to it.')
+    .option('-s, --send-to [email]', 'An email address to send a link to.')
+    .option('-c, --clear', 'Clear the React Native packager cache.')
     .option(
       '--web-only',
       'Only start the Webpack dev server for web. [Deprecated]: use `expo start:web`'
@@ -236,7 +236,7 @@ export default (program: any) => {
   program
     .command('start:web [project-dir]')
     .alias('web')
-    .description('Starts the Webpack dev server for web projects')
+    .description('Starts the Webpack dev server for web projects.')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(

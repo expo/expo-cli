@@ -20,6 +20,6 @@ async function action(options) {
 export default program => {
   program
     .command('diagnostics [project-dir]')
-    .description('Prints environment info to console.')
+    .description('Prints environment info to the console.')
     .asyncAction(action);
 };

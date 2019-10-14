@@ -152,15 +152,11 @@ export default (program: any) => {
   program
     .command('export [project-dir]')
     .description('Exports the static files of the app for hosting it on a web server.')
-    .option('-p, --public-url <url>', 'The public url that will host the static files. (Required)')
+    .option('-p, --public-url [url]', 'The public url that will host the static files. (Required)')
+    .option('--output-dir [dir]', 'The directory to export the static files to.', 'dist')
     .option(
-      '--output-dir <dir>',
-      'The directory to export the static files to. Default directory is `dist`',
-      'dist'
-    )
-    .option(
-      '-a, --asset-url <url>',
-      "The absolute or relative url that will host the asset files. Default is './assets', which will be resolved against the public-url.",
+      '-a, --asset-url [url]',
+      "The absolute or relative url that will host the asset files. Defaults to './assets', which will be resolved against the public-url.",
       './assets'
     )
     .option('-d, --dump-assetmap', 'Dump the asset map for further processing.')

@@ -15,15 +15,11 @@ export default (program: any) => {
     .alias('ph')
     .description('View a log of your published releases.')
     .option(
-      '-c, --release-channel <channel-name>',
-      'Filter by release channel. If this flag is not included, the most recent publications will be shown.'
+      '-c, --release-channel [channel]',
+      'Filter by release channel. If this option is not included, the most recent publications will be shown.'
     )
-    .option(
-      '-count, --count <number-of-logs>',
-      'Number of logs to view, maximum 100, default 5.',
-      parseInt
-    )
-    .option('-p, --platform <ios|android>', 'Filter by platform, android or ios.')
+    .option('-count, --count [number]', 'Number of logs to view. Default: 5. Max: 100.', parseInt)
+    .option('-p, --platform [platform]', 'Filter by platform. Options: android or ios.')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
@@ -103,7 +99,7 @@ export default (program: any) => {
     .command('publish:details [project-dir]')
     .alias('pd')
     .description('View the details of a published release.')
-    .option('--publish-id <publish-id>', 'Publication id. (Required)')
+    .option('--publish-id [id]', 'Publication id. (Required)')
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.publishId) {

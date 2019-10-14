@@ -12,10 +12,10 @@ export default program => {
   const androidCommand = program.command('upload:android [projectDir]').alias('ua');
   setCommonOptions(androidCommand, '.apk');
   androidCommand
-    .option('--key <key>', 'path to the JSON key used to authenticate with Google Play')
+    .option('--key [key]', 'Path to the JSON key used to authenticate with Google Play.')
     .option(
-      '--track <track>',
-      'the track of the application to use, choose from: production, beta, alpha, internal, rollout',
+      '--track [track]',
+      'The track of the application to use. Options: production, beta, alpha, internal, rollout.',
       /^(production|beta|alpha|internal|rollout)$/i,
       'internal'
     )
@@ -38,34 +38,34 @@ export default program => {
   setCommonOptions(iosCommand, '.ipa');
   iosCommand
     .option(
-      '--apple-id <apple-id>',
-      'your Apple ID username (you can also set EXPO_APPLE_ID env variable)'
+      '--apple-id [id]',
+      'Apple ID username. You can also set your username as `EXPO_APPLE_ID` env variable.'
     )
     // apple unified App Store Connect and Developer Portal teams, this is temporary solution until fastlane implements those changes
     // https://github.com/fastlane/fastlane/issues/14229
     // after updating fastlane this value will be unnecessary
     .option(
-      '--itc-team-id <itc-team-id>',
-      'App Store Connect Team ID (optional if there is only one team available)'
+      '--itc-team-id [id]',
+      'App Store Connect Team ID (optional if there is only one team available).'
     )
     .option(
-      '--apple-id-password <apple-id-password>',
-      'your Apple ID password (you can also set EXPO_APPLE_ID_PASSWORD env variable)'
+      '--apple-id-password [password]',
+      'Apple ID password. You can also set your password as `EXPO_APPLE_ID_PASSWORD` env variable.'
     )
     .option(
-      '--app-name <app-name>',
-      `the name of your app as it will appear on the App Store, this can't be longer than 30 characters (default: expo.name from app.json)`
+      '--app-name [name]',
+      `The name of your app as it will appear on the App Store. Max character limit: 30. Default: expo.name from app.json.`
     )
     .option(
       '--sku <sku>',
-      'a unique ID for your app that is not visible on the App Store, will be generated unless provided'
+      'A unique ID for your app that is not visible on the App Store which will be generated unless provided.'
     )
     .option(
       '--language <language>',
-      `primary language (e.g. English, German; run \`expo upload:ios --help\` to see the list of available languages)`,
+      `Sets the primary language. Run \`expo upload:ios --help\` to see the list of available languages.`,
       'English'
     )
-    .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
+    .option('--public-url [url]', 'The url of an externally hosted manifest for self-host apps.')
     .description(
       'Uploads a standalone app to Apple TestFlight (works on macOS only). Uploads the latest build by default.'
     )
@@ -79,9 +79,9 @@ export default program => {
 
 function setCommonOptions(command, fileExtension) {
   command
-    .option('--latest', 'uploads the latest build (default)')
-    .option('--id <id>', 'id of the build to upload')
-    .option('--path <path>', `path to the ${fileExtension} file`);
+    .option('--latest', 'Uploads the latest build. This is the default behavior.')
+    .option('--id [id]', 'Id of the build to upload.')
+    .option('--path [path]', `Path to the ${fileExtension} file.`);
 }
 
 function createUploadAction(UploaderClass, optionKeys) {

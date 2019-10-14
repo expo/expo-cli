@@ -8,25 +8,25 @@ import CommandError from './CommandError';
 
 function addOptions(program: Command) {
   program
-    .option('-a, --android', 'Opens your app in Expo on a connected Android device')
+    .option('-a, --android', 'Opens your app in the Expo client on a connected Android device.')
     .option(
       '-i, --ios',
-      'Opens your app in Expo in a currently running iOS simulator on your computer'
+      'Opens your app in the Expo client in a currently running iOS simulator on your computer.'
     )
-    .option('-w, --web', 'Opens your app in a web browser')
+    .option('-w, --web', 'Opens your app in a web browser.')
     .option(
       '-m, --host [mode]',
-      'lan (default), tunnel, localhost. Type of host to use. "tunnel" allows you to view your link on other networks'
+      'Type of host to use. Options: lan, localhost or tunnel. Tunnel allows you to view your link from other networks. Default: lan.'
     )
-    .option('--tunnel', 'Same as --host tunnel')
-    .option('--lan', 'Same as --host lan')
-    .option('--localhost', 'Same as --host localhost')
-    .option('--dev', 'Turns dev flag on')
-    .option('--no-dev', 'Turns dev flag off')
-    .option('--minify', 'Turns minify flag on')
-    .option('--no-minify', 'Turns minify flag off')
-    .option('--https', 'To start webpack with https protocol')
-    .option('--no-https', 'To start webpack with http protocol');
+    .option('--tunnel', 'Same as --host tunnel.')
+    .option('--lan', 'Same as --host lan.')
+    .option('--localhost', 'Same as --host localhost.')
+    .option('--dev', 'Turns dev flag on.')
+    .option('--no-dev', 'Turns dev flag off.')
+    .option('--minify', 'Turns minify flag on.')
+    .option('--no-minify', 'Turns minify flag off.')
+    .option('--https', 'To start webpack with https protocol.')
+    .option('--no-https', 'To start webpack with http protocol.');
 }
 
 function hasBooleanArg(rawArgs: string[], argName: string) {
