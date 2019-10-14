@@ -41,7 +41,7 @@ function createAssetsUrlResolver(context: StandaloneContext): UrlResolver {
     const publishedUrl = context.published.url;
     const hostname = url.parse(publishedUrl).hostname || '';
     const maybeExpoDomain = _.takeRight(hostname.split('.'), 2).join('.');
-    if (!_.includes(EXPO_DOMAINS, maybeExpoDomain)) {
+    if (!EXPO_DOMAINS.includes(maybeExpoDomain)) {
       assetsDirUrl = url.resolve(publishedUrl, assetUrlOverride);
     }
   }
