@@ -12,7 +12,6 @@ Object {
     "supportsTablet": true,
   },
   "name": "basic",
-  "nodeModulesPath": "tests/basic/package.json",
   "orientation": "portrait",
   "platforms": Array [
     "ios",

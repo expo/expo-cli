@@ -7,23 +7,13 @@ export function resolveModule(request: string, projectRoot: string, exp: ExpoCon
   return resolveFrom(fromDir, request);
 }
 
-// TODO: Bacon: E2E test
 export function projectHasModule(
   modulePath: string,
   projectRoot: string,
   exp: ExpoConfig
-): string | false {
-  try {
-    return resolveModule(modulePath, projectRoot, exp);
-  } catch (error) {
-    if (error.code === 'MODULE_NOT_FOUND') {
-      const moduleName = moduleNameFromPath(modulePath);
-      if (error.message.includes(moduleName)) {
-        return false;
-      }
-    }
-    throw error;
-  }
+): string | undefined {
+  const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
+  return resolveFrom.silent(fromDir, modulePath);
 }
 
 export function moduleNameFromPath(modulePath: string): string {

@@ -472,7 +472,7 @@ function parseAndValidateRootConfig(
   };
 }
 
-function getNodeModulesPath(projectRoot: string, exp: ExpoConfig): string {
+function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
   const packageJsonPath =
     'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
       ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
@@ -497,8 +497,7 @@ export function readConfigJson(
     rawConfig = JsonFile.read(configPath, { json5: true });
   } catch (_) {}
   const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
-  const packageJsonPath = getNodeModulesPath(projectRoot, exp);
-  exp.nodeModulesPath = packageJsonPath;
+  const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = JsonFile.read(packageJsonPath);
 
   return {
@@ -518,8 +517,7 @@ export async function readConfigJsonAsync(
     rawConfig = await JsonFile.readAsync(configPath, { json5: true });
   } catch (_) {}
   const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
-  const packageJsonPath = getNodeModulesPath(projectRoot, exp);
-  exp.nodeModulesPath = packageJsonPath;
+  const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = await JsonFile.readAsync(packageJsonPath);
 
   return {
@@ -534,10 +532,12 @@ export function getExpoSDKVersion(projectRoot: string, exp: ExpoConfig): string 
   }
   const packageJsonPath = projectHasModule('expo/package.json', projectRoot, exp);
   if (packageJsonPath) {
-    const expoPackageJson = require(packageJsonPath);
+    const expoPackageJson = JsonFile.read(packageJsonPath, { json5: true });
     const { version: packageVersion } = expoPackageJson;
-    const majorVersion = packageVersion.split('.').shift();
-    return `${majorVersion}.0.0`;
+    if (typeof packageVersion === 'string') {
+      const majorVersion = packageVersion.split('.').shift();
+      return `${majorVersion}.0.0`;
+    }
   }
   throw new ConfigError(
     `Cannot determine which native SDK version your project uses because the module \`expo\` is not installed. Please install it with \`yarn add expo\` and try again.`,
@@ -561,6 +561,10 @@ function ensureConfigHasDefaultValues(
 
   if (exp && !exp.version) {
     exp.version = pkg.version;
+  }
+
+  if (exp && exp.nodeModulesPath) {
+    exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }
 
   try {
