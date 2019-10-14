@@ -323,6 +323,27 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       delete infoPlist['FacebookDisplayName'];
     }
 
+    // if the developer has set a non-empty value or if Facebook SDK will want to autoinitialize itself
+    // (given the default is to autoinitialize and all the prerequisites are there)
+    if (config.facebookAutoInitEnabled !== undefined || config.facebookAppID) {
+      infoPlist.FacebookAutoInitEnabled = config.facebookAutoInitEnabled || false;
+    } else {
+      delete infoPlist['FacebookAutoInitEnabled'];
+    }
+
+    if (config.facebookAutoLogAppEventsEnabled !== undefined) {
+      infoPlist.FacebookAutoLogAppEventsEnabled = config.facebookAutoLogAppEventsEnabled;
+    } else {
+      delete infoPlist['FacebookAutoLogAppEventsEnabled'];
+    }
+
+    if (config.facebookAdvertiserIDCollectionEnabled !== undefined) {
+      infoPlist.FacebookAdvertiserIDCollectionEnabled =
+        config.facebookAdvertiserIDCollectionEnabled;
+    } else {
+      delete infoPlist['FacebookAdvertiserIDCollectionEnabled'];
+    }
+
     // set ITSAppUsesNonExemptEncryption to let people skip manually
     // entering it in iTunes Connect
     if (
