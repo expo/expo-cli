@@ -138,7 +138,7 @@ function setDeepValue(pathComponents: string[], object: { [key: string]: any }, 
 async function logAutoConfigValuesAsync(env: Environment) {
   const locations = env.locations || (await getPathsAsync(env.projectRoot));
 
-  const { exp: config } = readConfigJson(env.projectRoot);
+  const { exp: config } = readConfigJson(env.projectRoot, true, true);
 
   const standardConfig = ensurePWAConfig({}, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),

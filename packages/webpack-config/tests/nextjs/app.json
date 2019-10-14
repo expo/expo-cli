@@ -22,7 +22,12 @@
       "supportsTablet": true
     },
     "web": {
-      "use": "nextjs"
+      "use": "nextjs",
+      "build": {
+        "babel": {
+          "include": ["packages/next-adapter"]
+        }
+      }
     }
   }
 }

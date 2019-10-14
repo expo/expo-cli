@@ -5,6 +5,8 @@ import { InputEnvironment, Environment, Report } from '../types';
 import { getPaths } from './paths';
 import getConfig from './getConfig';
 
+import { enableWithPropertyOrConfig } from './config';
+
 const environmentSchema = yup.object({
   config: yup.object().notRequired(),
   locations: yup.object().notRequired(),
@@ -22,8 +24,6 @@ const environmentSchema = yup.object({
     .oneOf(['ios', 'android', 'web'])
     .default('web'),
 });
-
-import { enableWithPropertyOrConfig } from './config';
 
 const DEFAULT_REPORT = {
   verbose: false,
@@ -48,6 +48,11 @@ export function validateReport(report: boolean | Report): Report | null {
 }
 
 export function validateEnvironment(env: InputEnvironment): Environment {
+  if (typeof env.projectRoot !== 'string') {
+    throw new Error(
+      `@expo/webpack-config requires a valid projectRoot string value which points to the root of your project`
+    );
+  }
   warnEnvironmentDeprecation(env, true);
 
   const filledEnv: any = environmentSchema.validateSync(env);

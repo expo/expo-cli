@@ -1,5 +1,12 @@
+# Testing
 /tests
 /jest
 /jest-puppeteer.config.js
-/babel.config.js
 /scripts
+
+# We only use this for tests
+/babel.config.js
+
+# Building
+/src
+/tsconfig.tsbuildinfo

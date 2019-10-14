@@ -15,8 +15,7 @@ import createWebpackCompiler, {
   printSuccessMessages,
 } from './createWebpackCompiler';
 import ip from './ip';
-// @ts-ignore
-import * as Doctor from './project/Doctor';
+
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
@@ -42,7 +41,6 @@ interface WebpackSettings {
 
 type CLIWebOptions = {
   dev?: boolean;
-  polyfill?: boolean;
   pwa?: boolean;
   nonInteractive?: boolean;
   port?: number;
@@ -52,11 +50,9 @@ type CLIWebOptions = {
 
 type BundlingOptions = {
   dev?: boolean;
-  polyfill?: boolean;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
   isDebugInfoEnabled?: boolean;
-  isPolyfillEnabled?: boolean;
   webpackEnv?: Object;
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
@@ -124,7 +120,11 @@ export async function startAsync(
     return null;
   }
 
-  const { env, config } = await createWebpackConfigAsync(projectRoot, options);
+  const fullOptions = transformCLIOptions(options);
+
+  const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
+
+  const config = await createWebpackConfigAsync(env, fullOptions);
 
   const port = await getAvailablePortAsync({
     defaultPort: options.port,
@@ -158,7 +158,7 @@ export async function startAsync(
     server = await startNextJsAsync({
       projectRoot,
       port: webpackServerPort,
-      dev: env.mode !== "production",
+      dev: env.mode !== 'production',
     });
     printSuccessMessages({
       projectRoot,
@@ -322,10 +322,18 @@ export async function bundleWebAppAsync(projectRoot: string, config: Web.Webpack
 export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
   const isUsingNextJs = await getProjectUseNextJsAsync(projectRoot);
 
-  const { config } = await createWebpackConfigAsync(projectRoot, {
+  const fullOptions = transformCLIOptions({
     ...options,
     unimodulesOnly: isUsingNextJs,
   });
+
+  const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, {
+    ...fullOptions,
+    // Force production
+    mode: 'production',
+  });
+
+  const config = await createWebpackConfigAsync(env, fullOptions);
 
   if (isUsingNextJs) {
     await bundleNextJsAsync(projectRoot);
@@ -412,18 +420,13 @@ function transformCLIOptions(options: CLIWebOptions): BundlingOptions {
   return {
     ...options,
     isImageEditingEnabled: options.pwa,
-    isPolyfillEnabled: options.polyfill,
   };
 }
 
 async function createWebpackConfigAsync(
-  projectRoot: string,
+  env: Web.WebEnvironment,
   options: CLIWebOptions = {}
-): Promise<{ env: any; config: Web.WebpackConfiguration }> {
-  const fullOptions = transformCLIOptions(options);
-
-  const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
-
+): Promise<Web.WebpackConfiguration> {
   setMode(env.mode);
 
   let config;
@@ -434,7 +437,7 @@ async function createWebpackConfigAsync(
     config = await Web.invokeWebpackConfigAsync(env);
   }
 
-  return { env, config };
+  return config;
 }
 
 async function applyOptionsToProjectSettingsAsync(
@@ -445,9 +448,6 @@ async function applyOptionsToProjectSettingsAsync(
   // Change settings before reading them
   if (typeof options.https === 'boolean') {
     newSettings.https = options.https;
-  }
-  if (typeof options.dev === 'boolean') {
-    newSettings.dev = options.dev;
   }
 
   if (Object.keys(newSettings).length) {
@@ -461,10 +461,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   projectRoot: string,
   options: BundlingOptions
 ): Promise<Web.WebEnvironment> {
-  // Bacon: Prevent dev flag from being used in production
-  if (options.mode === 'production') {
-    options.dev = false;
-  }
   let { dev, https } = await applyOptionsToProjectSettingsAsync(projectRoot, options);
 
   const mode = typeof options.mode === 'string' ? options.mode : dev ? 'development' : 'production';
@@ -485,7 +481,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     pwa: isImageEditingEnabled,
     mode,
     https,
-    polyfill: validateBoolOption('isPolyfillEnabled', options.isPolyfillEnabled, false),
     info: isDebugInfoEnabled,
     ...(options.webpackEnv || {}),
   };
@@ -574,12 +569,7 @@ async function bundleNextJsAsync(projectRoot: string) {
 }
 
 async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
-  try {
-    await fs.writeFile(path.join(projectRoot, '.expo', 'next_document.js'), nextJsDocument);
-  } catch (e) {
-    throw new Error(`Could not write to _document.js: ${e.toString()}`);
-  }
-
+  // TODO(Bacon): Ensure @expo/next-adapter is installed
   const pagesDocument = path.join(projectRoot, 'pages', '_document.js');
   if (!fs.existsSync(pagesDocument)) {
     // Only write to `pages/_document.js` if it doesn't exists.
@@ -616,82 +606,7 @@ async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
   }
 }
 
-const nextJsDocument = `\
-// Based on https://github.com/zeit/next.js/tree/canary/examples/with-react-native-web
-// and https://github.com/expo/expo-cli/blob/master/packages/webpack-config/web-default/index.html
-import Document, { Head, Main, NextScript } from 'next/document'
-import React from 'react'
-import { AppRegistry } from 'react-native'
-
-const normalizeNextElements = \`
-/**
- * Building on the RNWeb reset:
- * https://github.com/necolas/react-native-web/blob/master/packages/react-native-web/src/exports/StyleSheet/initialRules.js
- */
-html, body, #__next {
-  width: 100%;
-  /* To smooth any scrolling behavior */
-  -webkit-overflow-scrolling: touch;
-  margin: 0px;
-  padding: 0px;
-  /* Allows content to fill the viewport and go beyond the bottom */
-  min-height: 100%;
-}
-#__next {
-  flex-shrink: 0;
-  flex-basis: auto;
-  flex-grow: 1;
-  display: flex;
-  flex: 1;
-}
-html {
-  font-size: 14px;
-  scroll-behavior: smooth;
-  /* Prevent text size change on orientation change https://gist.github.com/tfausak/2222823#file-ios-8-web-app-html-L138 */
-  -webkit-text-size-adjust: 100%;
-  height: 100%;
-}
-body {
-  display: flex;
-  /* Allows you to scroll below the viewport; default value is visible */
-  overflow-y: auto;
-  overscroll-behavior-y: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -ms-overflow-style: scrollbar;
-}
-\`;
-
-export default class ExpoDocument extends Document {
-  static async getInitialProps ({ renderPage }) {
-    AppRegistry.registerComponent('Main', () => Main)
-    const { getStyleElement } = AppRegistry.getApplication('Main')
-    const page = renderPage()
-    const styles = [
-      <style dangerouslySetInnerHTML={{ __html: normalizeNextElements }} />,
-      getStyleElement()
-    ]
-    return { ...page, styles: React.Children.toArray(styles) }
-  }
-
-  render () {
-    return (
-      <html>
-        <Head>
-          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </html>
-    );
-  }
-}
-`;
-
 const nextJsImportDocument = `\
-import ExpoDocument from '../.expo/next_document';
-export default ExpoDocument;
+import { Document } from '@expo/next-adapter';
+export default Document;
 `;

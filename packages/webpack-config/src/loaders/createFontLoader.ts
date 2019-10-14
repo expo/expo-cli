@@ -1,7 +1,9 @@
 import { Rule } from 'webpack';
-import { FilePaths } from '../types';
 
-function createFontLoader({ locations }: { locations: FilePaths }): Rule {
+function createFontLoader(
+  projectRoot: string,
+  includeModule: (...props: string[]) => string
+): Rule {
   return {
     test: /\.(ttf|otf|woff)$/,
     use: [
@@ -14,9 +16,9 @@ function createFontLoader({ locations }: { locations: FilePaths }): Rule {
       },
     ],
     include: [
-      locations.root,
-      locations.includeModule('react-native-vector-icons'),
-      locations.includeModule('@expo/vector-icons'),
+      projectRoot,
+      includeModule('react-native-vector-icons'),
+      includeModule('@expo/vector-icons'),
     ],
   };
 }
