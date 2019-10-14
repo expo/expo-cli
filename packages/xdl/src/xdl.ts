@@ -130,6 +130,9 @@ export { Simulator };
 import * as ThirdParty from './ThirdParty';
 export { ThirdParty };
 
+import TurtleApi from './TurtleApi';
+export { TurtleApi };
+
 import * as UpdateVersions from './tools/UpdateVersions';
 export { UpdateVersions };
 
