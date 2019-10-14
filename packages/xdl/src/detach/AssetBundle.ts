@@ -1,7 +1,8 @@
-import _ from 'lodash';
 import fs from 'fs-extra';
 import path from 'path';
 import url from 'url';
+
+import takeRight from 'lodash/takeRight';
 import pMap from 'p-map';
 import pRetry from 'p-retry';
 
@@ -40,7 +41,7 @@ function createAssetsUrlResolver(context: StandaloneContext): UrlResolver {
     const { assetUrlOverride = './assets' } = context.config;
     const publishedUrl = context.published.url;
     const hostname = url.parse(publishedUrl).hostname || '';
-    const maybeExpoDomain = _.takeRight(hostname.split('.'), 2).join('.');
+    const maybeExpoDomain = takeRight(hostname.split('.'), 2).join('.');
     if (!EXPO_DOMAINS.includes(maybeExpoDomain)) {
       assetsDirUrl = url.resolve(publishedUrl, assetUrlOverride);
     }
