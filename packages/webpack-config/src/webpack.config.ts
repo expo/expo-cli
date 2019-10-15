@@ -204,7 +204,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
         ROOT_ID: rootId,
       }),
 
-      new WebpackPWAManifestPlugin(config, {
+      new WebpackPWAManifestPlugin.default(config, {
         publicPath,
         noResources: isDev || !env.pwa,
         filename: locations.production.manifest,
