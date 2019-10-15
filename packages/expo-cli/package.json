@@ -65,7 +65,7 @@
     "typescript": "^3.5.1"
   },
   "dependencies": {
-    "@expo/android-manifest": "0.0.0",
+    "@expo/android-manifest": "^0.2.0",
     "@expo/bunyan": "3.0.2",
     "@expo/config": "^2.2.0",
     "@expo/dev-tools": "^0.6.6",
