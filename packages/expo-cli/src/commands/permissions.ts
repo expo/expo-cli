@@ -1,7 +1,7 @@
 import { ExpoConfig, readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
 import { IosPlist, IosWorkspace } from '@expo/xdl';
 import StandaloneContext from '@expo/xdl/build/detach/StandaloneContext';
-import * as Manifest from 'android-manifest';
+import * as Manifest from '@expo/android-manifest';
 import chalk from 'chalk';
 import { Command } from 'commander';
 // @ts-ignore
