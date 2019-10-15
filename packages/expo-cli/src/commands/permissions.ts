@@ -11,30 +11,32 @@ import path from 'path';
 
 // @ts-ignore
 const DefaultiOSPermissions: { [permission: string]: (name: string) => string } = {
-  NSCalendarsUsageDescription: (name: string) =>
-    `Allow ${name} experiences to access your calendar`,
-  NSCameraUsageDescription: (name: string) =>
-    `${name} uses your camera to scan project QR codes. ${name} experiences you open may use the camera with the ${name} camera API.`,
-  NSContactsUsageDescription: (name: string) => `Allow ${name} experiences to access your contacts`,
+  NSCalendarsUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to access your calendar`,
+  NSCameraUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to use the camera`,
+  NSContactsUsageDescription: (name: string) =>
+    `Allow $(PRODUCT_NAME) experiences to access your contacts`,
+  NSLocationAlwaysUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to use your location`,
+  NSLocationAlwaysAndWhenInUseUsageDescription: (name: string) =>
+    `Allow $(PRODUCT_NAME) to use your location`,
   NSLocationWhenInUseUsageDescription: (name: string) =>
-    `Allow ${name} experiences to use your location`,
-  NSMicrophoneUsageDescription: (name: string) =>
-    `Allow ${name} experiences to access your microphone`,
+    `Allow $(PRODUCT_NAME) experiences to use your location`,
+  NSMicrophoneUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to access your microphone`,
   NSMotionUsageDescription: (name: string) =>
-    `Allow ${name} experiences to access your device's accelerometer`,
+    `Allow $(PRODUCT_NAME) to access your device's accelerometer`,
   NSPhotoLibraryAddUsageDescription: (name: string) =>
-    `Give Expo experiences permission to save photos`,
+    `Give $(PRODUCT_NAME) experiences permission to save photos`,
   NSPhotoLibraryUsageDescription: (name: string) =>
-    `Give ${name} experiences permission to access your photos`,
-  NSRemindersUsageDescription: (name: string) =>
-    `Allow ${name} experiences to access your reminders`,
+    `Give $(PRODUCT_NAME) experiences permission to access your photos`,
+  NSRemindersUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to access your reminders`,
 };
 
 const DefaultiOSPermissionNames: { [key: string]: string } = {
   NSCalendarsUsageDescription: `Calendars`,
   NSCameraUsageDescription: `Camera`,
   NSContactsUsageDescription: `Contacts`,
-  NSLocationWhenInUseUsageDescription: `Location in-use`,
+  NSLocationAlwaysUsageDescription: `Always location`,
+  NSLocationAlwaysAndWhenInUseUsageDescription: `Always location and when in use`,
+  NSLocationWhenInUseUsageDescription: `Location when in use`,
   NSMicrophoneUsageDescription: `Microphone`,
   NSMotionUsageDescription: `Motion`,
   NSPhotoLibraryAddUsageDescription: `Saving Photos`,
