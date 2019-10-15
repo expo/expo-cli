@@ -2,7 +2,7 @@
 
 We're looking to keep questions on our forums and bug reports on the GitHub repo -- please choose whichever you feel is more appropriate for your issue:
 
-- Post in our community forums (log in with your Expo developer account): https://forums.expo.io/c/help
+- For questions and help using Expo CLI, post in our community forums (log in with your Expo developer account): https://forums.expo.io/c/expo-cli
 - File a bug on the Expo CLI repo (for bugs related to the Expo CLI tools): https://github.com/expo/expo-cli/issues/new
 - File a bug on the main Expo repo (for other bugs): https://github.com/expo/expo/issues/new
 - Request a feature on Canny: https://expo.canny.io/feature-requests
