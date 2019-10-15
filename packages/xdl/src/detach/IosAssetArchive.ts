@@ -1,12 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { spawnAsyncThrowError, parseSdkMajorVersion } from './ExponentTools';
+import { parseSdkMajorVersion, spawnAsyncThrowError } from './ExponentTools';
 import * as IosIcons from './IosIcons';
-import StandaloneContext, {
-  StandaloneContextDataUser,
-  StandaloneContextDataService,
-} from './StandaloneContext';
+import StandaloneContext, { StandaloneContextDataService } from './StandaloneContext';
 
 /**
  *  Compile a .car file from the icons in a manifest.

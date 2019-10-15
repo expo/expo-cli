@@ -1,17 +1,16 @@
-import path from 'path';
-
+import { JSONObject } from '@expo/json-file';
 import axios, { AxiosRequestConfig, Canceler } from 'axios';
 import concat from 'concat-stream';
 import ExtendableError from 'es6-error';
 import FormData from 'form-data';
 import fs from 'fs-extra';
-import { JSONObject } from '@expo/json-file';
 import isString from 'lodash/isString';
+import path from 'path';
 
-import { Cacher } from './tools/FsCache';
 import Config from './Config';
 import * as Extract from './Extract';
 import * as Session from './Session';
+import { Cacher } from './tools/FsCache';
 import UserManager from './User';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
@@ -171,7 +170,7 @@ async function _downloadAsync(
     response.data
       .on('data', (chunk: Buffer) => {
         downloadProgress += chunk.length;
-        const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
+        const roundedProgress = Math.floor(downloadProgress / totalDownloadSize * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);

@@ -1,7 +1,7 @@
-import fs from 'fs-extra';
-import tar from 'tar';
-import path from 'path';
 import spawnAsync from '@expo/spawn-async';
+import fs from 'fs-extra';
+import path from 'path';
+import tar from 'tar';
 import uuid from 'uuid';
 
 import * as Binaries from './Binaries';

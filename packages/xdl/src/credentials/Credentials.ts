@@ -1,7 +1,6 @@
 import { Platform, readConfigJsonAsync } from '@expo/config';
 
 import Api from '../Api';
-
 import UserManager from '../User';
 import * as Ios from './IosCredentials';
 
