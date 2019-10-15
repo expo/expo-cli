@@ -212,7 +212,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson);
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
-    const { dependencies } = JsonFile.read(path.join(tempDir, 'package.json'), { json5: true });
+    const { dependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     if (isStringObject(dependencies)) {
       defaultDependencies = dependencies;
     }
