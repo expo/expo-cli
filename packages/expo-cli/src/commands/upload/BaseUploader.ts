@@ -6,18 +6,27 @@ import chalk from 'chalk';
 
 import { downloadFile } from './utils';
 import log from '../../log';
+import { ExpoConfig, Platform } from '@expo/config';
+
+export type PlatformOptions = {
+  id?: string;
+  path?: string;
+};
 
 export default class BaseUploader {
-  constructor(platform, projectDir, options) {
-    this.platform = platform;
-    this.projectDir = projectDir;
-    this.options = options;
+  _exp?: ExpoConfig;
+  fastlane: { [key: string]: string };
 
+  constructor(
+    public platform: Platform,
+    public projectDir: string,
+    public options: PlatformOptions
+  ) {
     // it has to happen in constructor because we don't want to load this module on a different platform than darwin
     this.fastlane = require('@expo/traveling-fastlane-darwin')();
   }
 
-  async upload() {
+  async upload(): Promise<void> {
     await this._getProjectConfig();
     const buildPath = await this._getBinaryFilePath();
     const platformData = await this._getPlatformSpecificOptions();
@@ -30,7 +39,7 @@ export default class BaseUploader {
     );
   }
 
-  async _getProjectConfig() {
+  async _getProjectConfig(): Promise<void> {
     const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
     if (!exp) {
       throw new Error(`Couldn't read project config file in ${this.projectDir}.`);
@@ -39,7 +48,7 @@ export default class BaseUploader {
     this._exp = exp;
   }
 
-  async _getBinaryFilePath() {
+  async _getBinaryFilePath(): Promise<string> {
     const { path, id } = this.options;
     if (path) {
       return path;
@@ -50,9 +59,10 @@ export default class BaseUploader {
     }
   }
 
-  async _downloadBuildById(id) {
+  async _downloadBuildById(id: string): Promise<string> {
     const { platform } = this;
-    const { slug } = this._exp;
+    const slug = this._getSlug();
+    // @ts-ignore: TODO: Fix the limit param
     const build = await StandaloneBuild.getStandaloneBuilds({ id, slug, platform });
     if (!build) {
       throw new Error(`We couldn't find build with id ${id}`);
@@ -60,9 +70,17 @@ export default class BaseUploader {
     return this._downloadBuild(build.artifacts.url);
   }
 
+  _getSlug(): string {
+    if (!this._exp || !this._exp.slug) {
+      throw new Error(`slug doesn't exist`);
+    }
+    return this._exp.slug;
+  }
+
   async _downloadLastestBuild() {
     const { platform } = this;
-    const { slug } = this._exp;
+
+    const slug = this._getSlug();
     const build = await StandaloneBuild.getStandaloneBuilds({
       slug,
       platform,
@@ -76,10 +94,10 @@ export default class BaseUploader {
     return this._downloadBuild(build.artifacts.url);
   }
 
-  async _downloadBuild(urlOrPath) {
+  async _downloadBuild(urlOrPath: string): Promise<string> {
     const filename = path.basename(urlOrPath);
     const destinationPath = `/tmp/${filename}`;
-    if (await fs.exists(destinationPath)) {
+    if (await fs.pathExists(destinationPath)) {
       await fs.remove(destinationPath);
     }
     if (urlOrPath.startsWith('/')) {
@@ -91,21 +109,21 @@ export default class BaseUploader {
     }
   }
 
-  async _removeBuildFileIfDownloaded(buildPath) {
+  async _removeBuildFileIfDownloaded(buildPath: string): Promise<void> {
     if (!this.options.path) {
       await fs.remove(buildPath);
     }
   }
 
-  _ensureExperienceIsValid() {
+  _ensureExperienceIsValid(exp: ExpoConfig): void {
     throw new Error('Not implemented');
   }
 
-  _getPlatformSpecificOptions() {
+  async _getPlatformSpecificOptions(): Promise<{ [key: string]: any }> {
     throw new Error('Not implemented');
   }
 
-  _uploadToTheStore(platformData, buildPath) {
+  async _uploadToTheStore(platformData: PlatformOptions, buildPath: string): Promise<void> {
     throw new Error('Not implemented');
   }
 }

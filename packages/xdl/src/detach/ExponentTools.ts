@@ -111,14 +111,16 @@ async function _retryPromise<T>(fn: (...args: any[]) => T, retries = 5): Promise
   }
 }
 
+export type AsyncSpawnOptions = SpawnOptions & {
+  loggerFields?: any;
+  pipeToLogger?: boolean | { stdout?: boolean; stderr?: boolean };
+  stdoutOnly?: boolean;
+};
+
 async function spawnAsyncThrowError(
   command: string,
   args: string[],
-  options: SpawnOptions & {
-    loggerFields?: any;
-    pipeToLogger?: boolean | { stdout?: boolean; stderr?: boolean };
-    stdoutOnly?: boolean;
-  } = {
+  options: AsyncSpawnOptions = {
     stdio: 'inherit',
     cwd: process.cwd(),
   }

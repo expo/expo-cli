@@ -1,6 +1,4 @@
-/* @flow */
-
-export function getExpoDomainUrl() {
+export function getExpoDomainUrl(): string {
   if (process.env.EXPO_STAGING) {
     return `https://staging.expo.io`;
   } else if (process.env.EXPO_LOCAL) {
@@ -10,7 +8,7 @@ export function getExpoDomainUrl() {
   }
 }
 
-export function constructBuildLogsUrl(buildId) {
+export function constructBuildLogsUrl(buildId: string): string {
   return `${getExpoDomainUrl()}/builds/${buildId}`;
 }
 
