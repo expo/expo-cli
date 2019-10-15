@@ -1,24 +1,22 @@
+import * as ConfigUtils from '@expo/config';
+import * as osascript from '@expo/osascript';
+import spawnAsync from '@expo/spawn-async';
+import delayAsync from 'delay-async';
+import fs from 'fs-extra';
+import glob from 'glob-promise';
 import os from 'os';
 import path from 'path';
-
-import * as ConfigUtils from '@expo/config';
-import delayAsync from 'delay-async';
-import glob from 'glob-promise';
-import * as osascript from '@expo/osascript';
 import semver from 'semver';
-import spawnAsync from '@expo/spawn-async';
-import fs from 'fs-extra';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
-import XDLError from './XDLError';
-import * as UrlUtils from './UrlUtils';
-// @ts-ignore
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import XDLError from './XDLError';
 
 let _lastUrl: string | null = null;
 
