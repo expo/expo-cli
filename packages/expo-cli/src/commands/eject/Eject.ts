@@ -237,13 +237,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   // with the ones in the template.
   const combinedDependencies = { ...defaultDependencies, ...pkg.dependencies };
 
-  for (const dependenciesKey of [
-    'react',
-    'react-dom',
-    'react-native-web',
-    'react-native-unimodules',
-    'react-native',
-  ]) {
+  for (const dependenciesKey of ['react', 'react-native-unimodules', 'react-native']) {
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
   pkg.dependencies = combinedDependencies;
