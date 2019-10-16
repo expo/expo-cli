@@ -418,10 +418,8 @@ async function _configureShellPlistAsync(context: AnyStandaloneContext): Promise
     if (parseSdkMajorVersion(config.sdkVersion) < 28) {
       shellPlist.isShell = true;
     }
-    if (context.published) {
-      shellPlist.manifestUrl = context.published.url;
-      shellPlist.releaseChannel = context.published.releaseChannel;
-    }
+    shellPlist.manifestUrl = context.published.url;
+    shellPlist.releaseChannel = context.published.releaseChannel;
     if (isStandaloneContextDataService(context.data) && context.data.testEnvironment) {
       shellPlist.testEnvironment = context.data.testEnvironment;
     }
@@ -493,7 +491,7 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
 
   const isExpoClientBuild = context.build.isExpoClientBuild();
 
-  if (!isExpoClientBuild && !(context.published || {}).url) {
+  if (!isExpoClientBuild && !context.published.url) {
     throw new Error(`Can't configure a NSBundle without a published url.`);
   }
 

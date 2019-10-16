@@ -48,10 +48,6 @@ export type StandaloneContextDataService = {
 class StandaloneContext {
   data?: StandaloneContextDataUser | StandaloneContextDataService;
   config: any; // same as underlying app.json or manifest
-  published?: {
-    url?: string;
-    releaseChannel: string;
-  };
 
   static createUserContext = (
     projectPath: string,
