@@ -16,7 +16,7 @@ import * as IosPlist from './IosPlist';
 import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
 import { ExpoConfig } from '@expo/config';
-import { AnyStandaloneContext, isStandaloneContextDataUser, StandaloneContextService, StandaloneContextUser, isStandaloneContextDataService } from './StandaloneContext';
+import { AnyStandaloneContext, StandaloneContextService, StandaloneContextUser, isStandaloneContextDataService } from './StandaloneContext';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.

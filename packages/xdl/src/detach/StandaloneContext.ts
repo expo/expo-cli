@@ -4,6 +4,7 @@ type StandaloneContextDataType = 'user' | 'service';
 
 type StandaloneContextTestEnvironment = 'none' | 'local' | 'ci';
 
+// currently unused
 export function isStandaloneContextDataUser(value: any): value is StandaloneContextDataUser {
   return value && typeof value.projectPath === 'string' && 'exp' in value;
 }
