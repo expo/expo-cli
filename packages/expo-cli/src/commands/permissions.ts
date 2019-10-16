@@ -4,30 +4,23 @@ import StandaloneContext from '@expo/xdl/build/detach/StandaloneContext';
 import * as Manifest from '@expo/android-manifest';
 import chalk from 'chalk';
 import { Command } from 'commander';
-// @ts-ignore
+// @ts-ignore: MultiSelect is not typed
 import { Form, MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
 
-// @ts-ignore
-const DefaultiOSPermissions: { [permission: string]: (name: string) => string } = {
-  NSCalendarsUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to access your calendar`,
-  NSCameraUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to use the camera`,
-  NSContactsUsageDescription: (name: string) =>
-    `Allow $(PRODUCT_NAME) experiences to access your contacts`,
-  NSLocationAlwaysUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to use your location`,
-  NSLocationAlwaysAndWhenInUseUsageDescription: (name: string) =>
-    `Allow $(PRODUCT_NAME) to use your location`,
-  NSLocationWhenInUseUsageDescription: (name: string) =>
-    `Allow $(PRODUCT_NAME) experiences to use your location`,
-  NSMicrophoneUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to access your microphone`,
-  NSMotionUsageDescription: (name: string) =>
-    `Allow $(PRODUCT_NAME) to access your device's accelerometer`,
-  NSPhotoLibraryAddUsageDescription: (name: string) =>
-    `Give $(PRODUCT_NAME) experiences permission to save photos`,
-  NSPhotoLibraryUsageDescription: (name: string) =>
-    `Give $(PRODUCT_NAME) experiences permission to access your photos`,
-  NSRemindersUsageDescription: (name: string) => `Allow $(PRODUCT_NAME) to access your reminders`,
+const DefaultiOSPermissions: { [permission: string]: string } = {
+  NSCalendarsUsageDescription: `Allow $(PRODUCT_NAME) to access your calendar`,
+  NSCameraUsageDescription: `Allow $(PRODUCT_NAME) to use the camera`,
+  NSContactsUsageDescription: `Allow $(PRODUCT_NAME) experiences to access your contacts`,
+  NSLocationAlwaysUsageDescription: `Allow $(PRODUCT_NAME) to use your location`,
+  NSLocationAlwaysAndWhenInUseUsageDescription: `Allow $(PRODUCT_NAME) to use your location`,
+  NSLocationWhenInUseUsageDescription: `Allow $(PRODUCT_NAME) experiences to use your location`,
+  NSMicrophoneUsageDescription: `Allow $(PRODUCT_NAME) to access your microphone`,
+  NSMotionUsageDescription: `Allow $(PRODUCT_NAME) to access your device's accelerometer`,
+  NSPhotoLibraryAddUsageDescription: `Give $(PRODUCT_NAME) experiences permission to save photos`,
+  NSPhotoLibraryUsageDescription: `Give $(PRODUCT_NAME) experiences permission to access your photos`,
+  NSRemindersUsageDescription: `Allow $(PRODUCT_NAME) to access your reminders`,
 };
 
 const DefaultiOSPermissionNames: { [key: string]: string } = {
@@ -75,21 +68,21 @@ function getPermissionDescription(
   { ios = {} }: ExpoConfig,
   permission: string
 ): string {
-  // @ts-ignore
   const { infoPlist = {} } = ios;
 
-  if (permission in infoPlist && typeof infoPlist[permission] === 'string') {
+  if (typeof infoPlist[permission] === 'string') {
     return infoPlist[permission];
   }
   return getDefaultExpoPermissionDescription(appName, permission);
 }
 
 function getDefaultExpoPermissionDescription(appName: string, permission: string): string {
-  const getDefault = DefaultiOSPermissions[permission];
-  if (!getDefault) {
+  // TODO(Bacon): Maybe use name instead of $(PRODUCT_NAME)
+  const permissionDescription = DefaultiOSPermissions[permission];
+  if (!permissionDescription) {
     throw new Error(`No permission for ${permission}`);
   }
-  return getDefault(appName);
+  return permissionDescription;
 }
 
 async function getActiveAndroidPermissionsAsync(
@@ -162,8 +155,7 @@ export async function actionAndroid(projectDir: string = './'): Promise<void> {
       return descriptions[Object.keys(Manifest.UnimodulePermissions)[this.index]];
     },
     initial: permissions,
-    hint:
-      '(Use <space> to select, <return> to submit, <a> to toggle, <i> to invert the selection)',
+    hint: '(Use <space> to select, <return> to submit, <a> to toggle, <i> to invert the selection)',
     message: `Select Android permissions`,
     choices,
   });
@@ -256,13 +248,10 @@ async function promptForPermissionDescriptionsAsync(
   try {
     const answer: AnyPermissions = await prompt.run();
     // Trimming allows users to pass in " " to delete a permission
-    return Object.keys(answer).reduce(
-      (prev, curr) => ({
-        ...prev,
-        [curr]: answer[curr].trim(),
-      }),
-      {}
-    );
+    for (const key of Object.keys(answer)) {
+      answer[key] = answer[key].trim();
+    }
+    return answer;
   } catch (error) {
     console.log(chalk.yellow(`${CHEVRON} Exiting...`));
     process.exit(0);
@@ -387,7 +376,7 @@ export async function actionIOS(projectDir: string = './'): Promise<void> {
 }
 
 // Find the location of the native iOS info.plist if it exists
-// TODO(Bacon): Search better
+// TODO(Bacon): Do a deep search for the Info.plist in case the app name was changed
 function getInfoPlistDirectory(context: any): string | null {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   if (fs.existsSync(path.resolve(supportingDirectory, 'Info.plist'))) {
