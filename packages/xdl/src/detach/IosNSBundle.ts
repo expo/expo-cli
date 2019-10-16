@@ -409,8 +409,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       _logDeveloperInfoForLocalDevelopment(infoPlist);
     }
 
-    if (context instanceof StandaloneContextService) {
-      infoPlist.CFBundleExecutable = (context.build.ios || {}).bundleExecutable;
+    if (context instanceof StandaloneContextService && context.build.ios) {
+      infoPlist.CFBundleExecutable = context.build.ios.bundleExecutable;
     }
 
     return infoPlist;
