@@ -3,7 +3,12 @@ import get from 'lodash/get';
 import path from 'path';
 
 import * as AssetBundle from './AssetBundle';
-import { getManifestAsync, manifestUsesSplashApi, parseSdkMajorVersion, saveUrlToPathAsync } from './ExponentTools';
+import {
+  getManifestAsync,
+  manifestUsesSplashApi,
+  parseSdkMajorVersion,
+  saveUrlToPathAsync,
+} from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
 import * as IosIcons from './IosIcons';
 
@@ -16,7 +21,12 @@ import * as IosPlist from './IosPlist';
 import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
 import { ExpoConfig } from '@expo/config';
-import { AnyStandaloneContext, StandaloneContextService, StandaloneContextUser, isStandaloneContextDataService } from './StandaloneContext';
+import {
+  AnyStandaloneContext,
+  StandaloneContextService,
+  StandaloneContextUser,
+  isStandaloneContextDataService,
+} from './StandaloneContext';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -65,7 +75,10 @@ function _logDeveloperInfoForLocalDevelopment(infoPlist: any[]): void {
   }
 }
 
-async function _cleanPropertyListBackupsAsync(context: AnyStandaloneContext, backupPath: string): Promise<void> {
+async function _cleanPropertyListBackupsAsync(
+  context: AnyStandaloneContext,
+  backupPath: string
+): Promise<void> {
   if (get(context, 'build.ios.buildType') !== 'client') {
     await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
   }
@@ -81,7 +94,7 @@ async function _cleanPropertyListBackupsAsync(context: AnyStandaloneContext, bac
  * Write the manifest and JS bundle to the NSBundle.
  */
 async function _preloadManifestAndBundleAsync(
-  manifest: { bundleUrl: string, [key: string]: any },
+  manifest: { bundleUrl: string; [key: string]: any },
   supportingDirectory: string,
   manifestFilename: string,
   bundleFilename: string
@@ -147,7 +160,7 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
     const { projectName, supportingDirectory } = IosWorkspace.getPaths(context);
     const manifest = isStandaloneContextDataService(context.data) && context.data.manifest;
     const entitlementsFilename = `${projectName}.entitlements`;
-    const { appleTeamId } = (context.build.ios || {});
+    const { appleTeamId } = context.build.ios || ({} as any);
     if (!fs.existsSync(path.join(supportingDirectory, entitlementsFilename))) {
       await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
     }
