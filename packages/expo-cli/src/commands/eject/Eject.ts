@@ -1,32 +1,33 @@
+import * as ConfigUtils from '@expo/config';
+import JsonFile from '@expo/json-file';
+import { Detach, Exp, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
+import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
-import pacote from 'pacote';
 import temporary from 'tempy';
-import JsonFile from '@expo/json-file';
-import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
-import * as ConfigUtils from '@expo/config';
+
+import { loginOrRegisterIfLoggedOut } from '../../accounts';
+import log from '../../log';
 import * as PackageManager from '../../PackageManager';
+import prompt, { Question } from '../../prompt';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
 
-import log from '../../log';
-import prompt, { Question } from '../../prompt';
-import { loginOrRegisterIfLoggedOut } from '../../accounts';
+type ValidationErrorMessage = string;
+
+type StringObject = { [key: string]: string };
 
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
-  const { exp, pkg: pkgJson } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (!exp || !pkgJson) {
-    return;
-  }
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
   );
-  const packagesToWarn: string[] = Object.keys(pkgJson.dependencies).filter(pkgName =>
+  const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(pkgName =>
     pkgsWithExtraSetup.hasOwnProperty(pkgName)
   );
 
@@ -139,8 +140,6 @@ export async function ejectAsync(
   }
 }
 
-type StringObject = { [key: string]: string };
-
 function isStringObject(value: any): value is StringObject {
   return (
     value != null &&
@@ -153,7 +152,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   const useYarn = ConfigUtils.isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
   const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
-  const { exp, pkg: pkgJson } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
@@ -161,8 +160,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   /**
    * Perform validations
    */
-  if (!exp || !exp.sdkVersion) throw new Error(`Couldn't read ${configName}`);
-  if (!pkgJson) throw new Error(`Couldn't read package.json`);
+  if (!exp.sdkVersion) throw new Error(`Couldn't read ${configName}`);
 
   if (!Versions.gteSdkVersion(exp, '34.0.0')) {
     throw new Error(`Ejecting to a bare project is only available for SDK 34 and higher`);
@@ -225,19 +223,19 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   }
 
   log(`Updating your package.json...`);
-  if (!pkgJson.scripts) {
-    pkgJson.scripts = {};
+  if (!pkg.scripts) {
+    pkg.scripts = {};
   }
-  delete pkgJson.scripts.eject;
-  pkgJson.scripts.start = 'react-native start';
-  pkgJson.scripts.ios = 'react-native run-ios';
-  pkgJson.scripts.android = 'react-native run-android';
+  delete pkg.scripts.eject;
+  pkg.scripts.start = 'react-native start';
+  pkg.scripts.ios = 'react-native run-ios';
+  pkg.scripts.android = 'react-native run-android';
 
   // The template may have some dependencies beyond react/react-native/react-native-unimodules,
   // for example RNGH and Reanimated. We should prefer the version that is already being used
   // in the project for those, but swap the react/react-native/react-native-unimodules versions
   // with the ones in the template.
-  const combinedDependencies = { ...defaultDependencies, ...pkgJson.dependencies };
+  const combinedDependencies = { ...defaultDependencies, ...pkg.dependencies };
 
   for (const dependenciesKey of [
     'react',
@@ -248,20 +246,20 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   ]) {
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
-  pkgJson.dependencies = combinedDependencies;
-  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
+  pkg.dependencies = combinedDependencies;
+  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
   log(chalk.green('Your package.json is up to date!'));
 
   log(`Adding entry point...`);
-  if (pkgJson.main !== EXPO_APP_ENTRY) {
+  if (pkg.main !== EXPO_APP_ENTRY) {
     log(
       chalk.yellow(
-        `Removing "main": ${pkgJson.main} from package.json. We recommend using index.js instead.`
+        `Removing "main": ${pkg.main} from package.json. We recommend using index.js instead.`
       )
     );
   }
-  delete pkgJson.main;
-  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
+  delete pkg.main;
+  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
 
   const indexjs = `import { AppRegistry, Platform } from 'react-native';
 import App from './App';
@@ -295,7 +293,7 @@ async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
   const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
-  const { exp, pkg: pkgJson } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
@@ -309,15 +307,15 @@ async function getAppNamesAsync(
           name: 'displayName',
           message: "What should your app appear as on a user's home screen?",
           default: name || exp.name,
-          validate({ length }: string) {
+          validate({ length }: string): true | ValidationErrorMessage {
             return length ? true : 'App display name cannot be empty.';
           },
         },
         {
           name: 'name',
           message: 'What should your Android Studio and Xcode projects be called?',
-          default: pkgJson.name ? stripDashes(pkgJson.name) : undefined,
-          validate(value: string) {
+          default: pkg.name ? stripDashes(pkg.name) : undefined,
+          validate(value: string): true | ValidationErrorMessage {
             if (value.length === 0) {
               return 'Project name cannot be empty.';
             } else if (value.includes('-') || value.includes(' ')) {
