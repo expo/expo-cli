@@ -147,7 +147,7 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
     const { projectName, supportingDirectory } = IosWorkspace.getPaths(context);
     const manifest = isStandaloneContextDataService(context.data) && context.data.manifest;
     const entitlementsFilename = `${projectName}.entitlements`;
-    const appleTeamId = (context.build.ios || {}).appleTeamId;
+    const { appleTeamId } = (context.build.ios || {});
     if (!fs.existsSync(path.join(supportingDirectory, entitlementsFilename))) {
       await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
     }
