@@ -17,7 +17,7 @@ import { validateGitStatusAsync } from '../utils/ProjectUtils';
 
 type ValidationErrorMessage = string;
 
-type StringObject = { [key: string]: string };
+type DependenciesMap = { [key: string]: string | number };
 
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
@@ -140,12 +140,30 @@ export async function ejectAsync(
   }
 }
 
-function isStringObject(value: any): value is StringObject {
-  return (
-    value != null &&
-    typeof value === 'object' &&
-    Object.keys(value).every(key => typeof key === 'string')
-  );
+function isStringOrNumber(value: any): value is string | number {
+  return typeof value === 'string' || typeof value === 'number';
+}
+
+function ensureDependenciesMap(value: any): DependenciesMap {
+  if (typeof value !== 'object') {
+    throw new Error(`Dependency map is invalid, expected object but got ${typeof value}`);
+  }
+
+  const outputMap: DependenciesMap = {};
+  if (!value) return outputMap;
+
+  for (const key of Object.keys(value)) {
+    if (key in value) {
+      if (isStringOrNumber(value)) {
+        outputMap[key] = value;
+      } else {
+        throw new Error(
+          `Dependency for key \`${key}\` should be a \`string\` or \`number\`, instead got: \`{ ${key}: ${value} }\``
+        );
+      }
+    }
+  }
+  return outputMap;
 }
 
 async function ejectToBareAsync(projectRoot: string): Promise<void> {
@@ -200,7 +218,8 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   await fse.writeFile(path.resolve('app.json'), JSON.stringify(appJson, null, 2));
   log(chalk.green('Wrote to app.json, please update it manually in the future.'));
 
-  let defaultDependencies: StringObject = {};
+  // This is validated later...
+  let defaultDependencies: any = {};
 
   /**
    * Extract the template and copy it over
@@ -211,9 +230,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
     const { dependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
-    if (isStringObject(dependencies)) {
-      defaultDependencies = dependencies;
-    }
+    defaultDependencies = ensureDependenciesMap(dependencies);
     log('Successfully copied template native code.');
   } catch (e) {
     log(chalk.red(e.message));
@@ -235,7 +252,10 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   // for example RNGH and Reanimated. We should prefer the version that is already being used
   // in the project for those, but swap the react/react-native/react-native-unimodules versions
   // with the ones in the template.
-  const combinedDependencies = { ...defaultDependencies, ...pkg.dependencies };
+  const combinedDependencies: DependenciesMap = ensureDependenciesMap({
+    ...defaultDependencies,
+    ...pkg.dependencies,
+  });
 
   for (const dependenciesKey of ['react', 'react-native-unimodules', 'react-native']) {
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
