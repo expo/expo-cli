@@ -131,9 +131,12 @@ export default class IOSUploader extends BaseUploader {
     return;
   }
 
-  async _getAppleIdCredentials(): Promise<IosPlatformOptions> {
+  async _getAppleIdCredentials(): Promise<Pick<IosPlatformOptions, 'appleId' | 'appleIdPassword'>> {
     const appleCredsKeys = ['appleId', 'appleIdPassword'];
-    const result: any = pick(this.options, appleCredsKeys);
+    const result: Partial<Pick<IosPlatformOptions, 'appleId' | 'appleIdPassword'>> = pick(
+      this.options,
+      appleCredsKeys
+    );
 
     if (process.env.EXPO_APPLE_ID) {
       result.appleId = process.env.EXPO_APPLE_ID;
@@ -142,16 +145,23 @@ export default class IOSUploader extends BaseUploader {
       result.appleIdPassword = process.env.EXPO_APPLE_ID_PASSWORD;
     }
 
-    const credsPresent = intersection(Object.keys(result), appleCredsKeys);
-    if (credsPresent.length !== appleCredsKeys.length) {
-      const questions = APPLE_CREDS_QUESTIONS.filter(({ name }) => {
-        return name && !credsPresent.includes(name);
-      });
-      const answers = await prompt(questions);
-      return { ...result, ...answers };
-    } else {
-      return result;
+    const { appleId, appleIdPassword } = result;
+    if (appleId && appleIdPassword) {
+      return {
+        appleId,
+        appleIdPassword,
+      };
     }
+    const credsPresent = intersection(Object.keys(result), appleCredsKeys);
+
+    const questions = APPLE_CREDS_QUESTIONS.filter(({ name }) => {
+      return name && !credsPresent.includes(name);
+    });
+    const answers = await prompt(questions);
+    return {
+      appleId: appleId || answers.appleId,
+      appleIdPassword: appleIdPassword || answers.appleIdPassword,
+    };
   }
 
   async _getAppName(): Promise<string> {
