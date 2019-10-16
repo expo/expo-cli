@@ -12,8 +12,6 @@ import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
 import ModuleScopePlugin from 'react-dev-utils/ModuleScopePlugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
-// @ts-ignore
-import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 // @ts-ignore
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -224,10 +222,6 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
 
       // This is necessary to emit hot updates (currently CSS only):
       isDev && new HotModuleReplacementPlugin(),
-      // Watcher doesn't work well if you mistype casing in a path so we use
-      // a plugin that prints an error when you attempt to do this.
-      // See https://github.com/facebook/create-react-app/issues/240
-      isDev && new CaseSensitivePathsPlugin(),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
