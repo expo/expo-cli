@@ -163,7 +163,7 @@ export async function actionAndroid(projectDir: string = './'): Promise<void> {
     },
     initial: permissions,
     hint:
-      '(Use <space> to select, <return> to submit, <a> to toggle, <i> to inverse the selection)',
+      '(Use <space> to select, <return> to submit, <a> to toggle, <i> to invert the selection)',
     message: `Select Android permissions`,
     choices,
   });
