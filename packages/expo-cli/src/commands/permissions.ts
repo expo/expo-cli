@@ -235,7 +235,7 @@ async function promptForPermissionDescriptionsAsync(
 
   const keys = Object.keys(DefaultiOSPermissionNames);
   const prompt = new Form({
-    name: hasNativeConfig ? 'Native project' : 'Universal Project',
+    name: hasNativeConfig ? 'Native project' : 'Universal project',
     message: 'Modify iOS Permissions',
     header() {
       const permission = keys[this.index];
