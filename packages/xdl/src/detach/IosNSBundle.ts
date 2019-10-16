@@ -16,7 +16,7 @@ import * as IosPlist from './IosPlist';
 import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
 import { ExpoConfig } from '@expo/config';
-import StandaloneContext, { StandaloneContextDataUser, isStandaloneContextDataUser, StandaloneContextService, StandaloneContextUser, isStandaloneContextDataService } from './StandaloneContext';
+import { AnyStandaloneContext, isStandaloneContextDataUser, StandaloneContextService, StandaloneContextUser, isStandaloneContextDataService } from './StandaloneContext';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -65,7 +65,7 @@ function _logDeveloperInfoForLocalDevelopment(infoPlist: any[]): void {
   }
 }
 
-async function _cleanPropertyListBackupsAsync(context: StandaloneContext, backupPath: string): Promise<void> {
+async function _cleanPropertyListBackupsAsync(context: AnyStandaloneContext, backupPath: string): Promise<void> {
   if (get(context, 'build.ios.buildType') !== 'client') {
     await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
   }
@@ -95,7 +95,7 @@ async function _preloadManifestAndBundleAsync(
  *  This method only makes sense when operating on a context with sdk version < 26.
  */
 async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
-  context: StandaloneContext,
+  context: AnyStandaloneContext,
   manifestFilename: string,
   bundleFilename: string
 ): Promise<void> {
@@ -121,7 +121,7 @@ async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
 /**
  * Configure a standalone entitlements file.
  */
-async function _configureEntitlementsAsync(context: StandaloneContext): Promise<any> {
+async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promise<any> {
   if (context instanceof StandaloneContextUser) {
     // don't modify .entitlements, print info/instructions
     const exp = isStandaloneContextDataUser(context.data) && context.data.exp;
@@ -147,14 +147,14 @@ async function _configureEntitlementsAsync(context: StandaloneContext): Promise<
     const { projectName, supportingDirectory } = IosWorkspace.getPaths(context);
     const manifest = isStandaloneContextDataService(context.data) && context.data.manifest;
     const entitlementsFilename = `${projectName}.entitlements`;
-    const appleTeamId = ((context.build || {}).ios || {}).appleTeamId;
+    const appleTeamId = (context.build.ios || {}).appleTeamId;
     if (!fs.existsSync(path.join(supportingDirectory, entitlementsFilename))) {
       await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
     }
     const result = IosPlist.modifyAsync(supportingDirectory, entitlementsFilename, entitlements => {
       // push notif entitlement changes based on build configuration
       entitlements['aps-environment'] =
-        (context.build || {}).configuration === 'Release' ? 'production' : 'development';
+        context.build.configuration === 'Release' ? 'production' : 'development';
 
       // remove iCloud-specific entitlements if the developer isn't using iCloud Storage with DocumentPicker
       if (manifest.ios && manifest.ios.usesIcloudStorage && appleTeamId) {
@@ -208,10 +208,10 @@ async function _configureEntitlementsAsync(context: StandaloneContext): Promise<
  *  For standalone apps, this is copied into a separate context field context.data.privateConfig
  *  by the turtle builder. For a local project, this is available in app.json under ios.config.
  */
-function _getPrivateConfig(context: StandaloneContext): { [key: string]: any } | undefined {
+function _getPrivateConfig(context: AnyStandaloneContext): { [key: string]: any } | undefined {
   if (context instanceof StandaloneContextService) {
     return context.data.privateConfig;
-  } else if (context instanceof StandaloneContextUser) {
+  } else {
     const exp = context.data.exp;
     if (exp && exp.ios) {
       return exp.ios.config;
@@ -227,7 +227,7 @@ function _isAppleUsageDescriptionKey(key: string): boolean {
 /**
  * Configure an iOS Info.plist for a standalone app.
  */
-async function _configureInfoPlistAsync(context: StandaloneContext): Promise<void> {
+async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
   const privateConfig = _getPrivateConfig(context);
@@ -259,7 +259,7 @@ async function _configureInfoPlistAsync(context: StandaloneContext): Promise<voi
 
     // app name
     infoPlist.CFBundleName = config.name;
-    infoPlist.CFBundleDisplayName = context.build && context.build.isExpoClientBuild()
+    infoPlist.CFBundleDisplayName = context.build.isExpoClientBuild()
       ? 'Expo (Custom)'
       : config.name;
 
@@ -408,7 +408,7 @@ async function _configureInfoPlistAsync(context: StandaloneContext): Promise<voi
 /**
  *  Configure EXShell.plist for a standalone app.
  */
-async function _configureShellPlistAsync(context: StandaloneContext): Promise<void> {
+async function _configureShellPlistAsync(context: AnyStandaloneContext): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
@@ -452,7 +452,7 @@ async function _configureShellPlistAsync(context: StandaloneContext): Promise<vo
   });
 }
 
-async function _configureConstantsPlistAsync(context: StandaloneContext) {
+async function _configureConstantsPlistAsync(context: AnyStandaloneContext) {
   if (context instanceof StandaloneContextUser) {
     return;
   }
@@ -467,7 +467,7 @@ async function _configureConstantsPlistAsync(context: StandaloneContext) {
   });
 }
 
-async function _configureGoogleServicesPlistAsync(context: StandaloneContext): Promise<void> {
+async function _configureGoogleServicesPlistAsync(context: AnyStandaloneContext): Promise<void> {
   if (context instanceof StandaloneContextUser) {
     return;
   }
@@ -481,7 +481,7 @@ async function _configureGoogleServicesPlistAsync(context: StandaloneContext): P
   }
 }
 
-export async function configureAsync(context: StandaloneContext): Promise<void> {
+export async function configureAsync(context: AnyStandaloneContext): Promise<void> {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
   let {
@@ -491,7 +491,7 @@ export async function configureAsync(context: StandaloneContext): Promise<void> 
     supportingDirectory,
   } = IosWorkspace.getPaths(context);
 
-  const isExpoClientBuild = context.build && context.build.isExpoClientBuild();
+  const isExpoClientBuild = context.build.isExpoClientBuild();
 
   if (!isExpoClientBuild && !(context.published || {}).url) {
     throw new Error(`Can't configure a NSBundle without a published url.`);

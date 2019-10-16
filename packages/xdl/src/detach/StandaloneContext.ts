@@ -52,7 +52,6 @@ class StandaloneContext {
     url?: string;
     releaseChannel: string;
   };
-  build?: StandaloneBuildFlags;
 
   static createUserContext = (
     projectPath: string,
@@ -142,5 +141,7 @@ export class StandaloneContextService extends StandaloneContext {
     super();
   }
 }
+
+export type AnyStandaloneContext = StandaloneContextUser | StandaloneContextService;
 
 export default StandaloneContext;

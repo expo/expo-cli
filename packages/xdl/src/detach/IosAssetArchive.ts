@@ -3,23 +3,20 @@ import path from 'path';
 
 import { spawnAsyncThrowError, parseSdkMajorVersion } from './ExponentTools';
 import * as IosIcons from './IosIcons';
-import StandaloneContext, {
-  StandaloneContextDataUser,
-  StandaloneContextDataService,
-} from './StandaloneContext';
+import { StandaloneContextUser, StandaloneContextService } from './StandaloneContext';
 
 /**
  *  Compile a .car file from the icons in a manifest.
  */
 async function buildAssetArchiveAsync(
-  context: StandaloneContext,
+  context: StandaloneContextUser | StandaloneContextService,
   destinationCARPath: string,
   intermediatesDirectory: string
 ) {
-  if (context.type !== 'service') {
+  if (!(context instanceof StandaloneContextService)) {
     throw new Error('buildAssetArchive is only supported for service standalone contexts.');
   }
-  const data = context.data as StandaloneContextDataService;
+  const { data } = context;
   fs.mkdirpSync(intermediatesDirectory);
 
   // copy expoSourceRoot/.../Images.xcassets into intermediates
