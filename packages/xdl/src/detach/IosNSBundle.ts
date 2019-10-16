@@ -124,7 +124,7 @@ async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
 async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promise<any> {
   if (context instanceof StandaloneContextUser) {
     // don't modify .entitlements, print info/instructions
-    const exp = isStandaloneContextDataUser(context.data) && context.data.exp;
+    const { exp } = context.data;
     logger.info(
       'Your iOS ExpoKit project will not contain an .entitlements file by default. If you need specific Apple entitlements, enable them manually via Xcode or the Apple Developer website.'
     );
