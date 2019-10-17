@@ -54,6 +54,7 @@ export default function(env: Environment, argv: Arguments): DevConfiguration | C
     babelProjectRoot,
     verbose: babelAppConfig.verbose,
     include: babelAppConfig.include,
+    useCustom: true,
     use: babelAppConfig.use,
   });
 
@@ -99,8 +100,6 @@ export default function(env: Environment, argv: Arguments): DevConfiguration | C
       }),
     ],
     module: {
-      strictExportPresence: false,
-
       rules: loaders,
     },
     resolve: {

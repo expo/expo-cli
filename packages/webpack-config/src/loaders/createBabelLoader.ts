@@ -84,8 +84,10 @@ export default function createBabelLoader({
   include = [],
   verbose,
   platform,
+  useCustom,
   ...options
 }: {
+  useCustom?: boolean;
   mode?: Mode;
   babelProjectRoot?: string;
   include?: string[];
@@ -124,7 +126,7 @@ export default function createBabelLoader({
     // Prevent clobbering the `include` and `use` values.
     ...options,
     include(inputPath: string): boolean {
-      if (/node_modules[\\/]react-native-web/.test(inputPath)) {
+      if (!useCustom && /node_modules[\\/]react-native-web/.test(inputPath)) {
         return false;
       }
 
