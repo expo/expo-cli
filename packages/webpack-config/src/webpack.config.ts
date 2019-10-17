@@ -269,6 +269,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
     },
     resolve: {
       alias: DEFAULT_ALIAS,
+      mainFields: ['browser', 'module', 'main'],
       extensions: getModuleFileExtensions('web'),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
