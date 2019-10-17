@@ -199,8 +199,8 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
         delete entitlements['com.apple.developer.applesignin'];
       }
 
-      if (manifest.ios && manifest.ios.notes) {
-        entitlements['com.apple.developer.contacts.notes'] = manifest.ios.notes;
+      if (manifest.ios && manifest.ios.accessesContactNotes) {
+        entitlements['com.apple.developer.contacts.notes'] = manifest.ios.accessesContactNotes;
       } else if (entitlements.hasOwnProperty('com.apple.developer.contacts.notes')) {
         delete entitlements['com.apple.developer.contacts.notes'];
       }
