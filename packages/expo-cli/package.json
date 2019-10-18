@@ -50,6 +50,7 @@
     "@types/ansi-regex": "^4.0.0",
     "@types/dateformat": "^3.0.0",
     "@types/inquirer": "^6.0.3",
+    "@types/klaw-sync": "^6.0.0",
     "@types/npm-package-arg": "^6.1.0",
     "@types/progress": "^2.0.3",
     "@types/slash": "^2.0.0",
