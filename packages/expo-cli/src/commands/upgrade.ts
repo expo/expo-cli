@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { Versions } from '@expo/xdl';
+import { Project, Versions } from '@expo/xdl';
 import JsonFile from '@expo/json-file';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
@@ -256,6 +256,12 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   if (dependenciesAsStringArray.length) {
     await packageManager.addAsync(...dependenciesAsStringArray);
   }
+
+  // Clear metro bundler cache
+  log.addNewLineIfNone();
+  log(chalk.bold.underline('Clearing your cache to remove old references...'));
+  await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
+  await Project.stopReactNativeServerAsync(projectRoot);
 
   log.addNewLineIfNone();
   log(chalk.underline.bold.green(`Automated upgrade steps complete.`));
