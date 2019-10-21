@@ -140,10 +140,6 @@ export async function ejectAsync(
   }
 }
 
-function isStringOrNumber(value: any): value is string | number {
-  return typeof value === 'string' || typeof value === 'number';
-}
-
 function ensureDependenciesMap(value: any): DependenciesMap {
   if (typeof value !== 'object') {
     throw new Error(`Dependency map is invalid, expected object but got ${typeof value}`);
@@ -154,11 +150,11 @@ function ensureDependenciesMap(value: any): DependenciesMap {
 
   for (const key of Object.keys(value)) {
     if (key in value) {
-      if (isStringOrNumber(value)) {
+      if (typeof value === 'string') {
         outputMap[key] = value;
       } else {
         throw new Error(
-          `Dependency for key \`${key}\` should be a \`string\` or \`number\`, instead got: \`{ ${key}: ${value} }\``
+          `Dependency for key \`${key}\` should be a \`string\`, instead got: \`{ ${key}: ${value} }\``
         );
       }
     }
