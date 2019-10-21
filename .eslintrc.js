@@ -5,6 +5,12 @@ module.exports = {
   },
   rules: {
     'no-constant-condition': ['warn', { checkLoops: false }],
+    'sort-imports': [
+      'warn',
+      {
+        ignoreCase: false,
+      },
+    ],
   },
   settings: {
     react: {
