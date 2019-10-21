@@ -8,7 +8,7 @@ import semver from 'semver';
 import pacote from 'pacote';
 import temporary from 'tempy';
 import JsonFile from '@expo/json-file';
-import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
+import { Detach, Exp, ProjectUtils, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 import * as PackageManager from '../../PackageManager';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
