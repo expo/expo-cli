@@ -4,6 +4,7 @@ import { Rule } from 'webpack';
 import fs from 'fs-extra';
 import { getPossibleProjectRoot } from '../utils/paths';
 import { Mode } from '../types';
+import { loadPartialConfig } from '@babel/core';
 
 const getModule = (name: string) => path.join('node_modules', name);
 
@@ -21,6 +22,8 @@ const includeModulesThatContainPaths = [
 
 const excludedRootPaths = [
   'node_modules',
+  'bower_components',
+  '.expo',
   // Prevent transpiling webpack generated files.
   '(webpack)',
 ];
@@ -54,6 +57,20 @@ function ensureRoot(possibleProjectRoot?: string): string {
   }
   return getPossibleProjectRoot();
 }
+
+function generateCacheIdentifier(projectRoot: string, version: string = '1'): string {
+  const filename = path.join(projectRoot, 'foobar.js');
+  const cacheKey = `babel-cache-${version}-`;
+
+  const partial = loadPartialConfig({
+    filename,
+    cwd: projectRoot,
+    sourceFileName: filename,
+  });
+
+  return `${cacheKey}${JSON.stringify(partial!.options)}`;
+}
+
 /**
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
@@ -67,8 +84,10 @@ export default function createBabelLoader({
   include = [],
   verbose,
   platform,
+  useCustom,
   ...options
 }: {
+  useCustom?: boolean;
   mode?: Mode;
   babelProjectRoot?: string;
   include?: string[];
@@ -100,20 +119,24 @@ export default function createBabelLoader({
     };
   }
 
+  const cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot);
   return {
     test: /\.(mjs|[jt]sx?)$/,
     // Can only clobber test
     // Prevent clobbering the `include` and `use` values.
     ...options,
-
     include(inputPath: string): boolean {
+      if (!useCustom && /node_modules[\\/]react-native-web/.test(inputPath)) {
+        return false;
+      }
+
       for (const possibleModule of modules) {
         if (inputPath.includes(possibleModule)) {
           if (verbose) {
             const packageName = packageNameFromPath(inputPath);
             if (packageName) logPackage(packageName);
           }
-          return !!inputPath;
+          return true;
         }
       }
       // Is inside the project and is not one of designated modules
@@ -131,10 +154,19 @@ export default function createBabelLoader({
       ...customUse,
       loader: require.resolve('babel-loader'),
       options: {
-        // TODO: Bacon: Caching seems to break babel
-        cacheDirectory: false,
-
         ...presetOptions,
+
+        cacheCompression: !isProduction,
+        cacheDirectory: path.join(
+          ensuredProjectRoot,
+          '.expo',
+          'web',
+          'cache',
+          mode || 'development',
+          'babel-loader'
+        ),
+        cacheIdentifier,
+
         // Only clobber hard coded values.
         ...(customUseOptions || {}),
 
@@ -145,8 +177,6 @@ export default function createBabelLoader({
         },
         sourceType: 'unambiguous',
         root: ensuredProjectRoot,
-        // Cache babel files in production
-        cacheCompression: isProduction,
         compact: isProduction,
       },
     },

@@ -216,6 +216,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
 
   // This is validated later...
   let defaultDependencies: any = {};
+  let defaultDevDependencies: any = {};
 
   /**
    * Extract the template and copy it over
@@ -225,8 +226,9 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
     await Exp.extractTemplateAppAsync(templateSpec, tempDir, appJson);
     fse.copySync(path.join(tempDir, 'ios'), path.join(projectRoot, 'ios'));
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
-    const { dependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
+    const { dependencies, devDependencies } = JsonFile.read(path.join(tempDir, 'package.json'));
     defaultDependencies = ensureDependenciesMap(dependencies);
+    defaultDevDependencies = devDependencies;
     log('Successfully copied template native code.');
   } catch (e) {
     log(chalk.red(e.message));
@@ -244,6 +246,13 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   pkg.scripts.ios = 'react-native run-ios';
   pkg.scripts.android = 'react-native run-android';
 
+  if (pkg.scripts.postinstall) {
+    pkg.scripts.postinstall = `jetify && ${pkg.scripts.postinstall}`;
+    log(chalk.bgYellow.black('jetifier has added to your existing postinstall script.'));
+  } else {
+    pkg.scripts.postinstall = `jetify`;
+  }
+
   // The template may have some dependencies beyond react/react-native/react-native-unimodules,
   // for example RNGH and Reanimated. We should prefer the version that is already being used
   // in the project for those, but swap the react/react-native/react-native-unimodules versions
@@ -257,6 +266,14 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
     combinedDependencies[dependenciesKey] = defaultDependencies[dependenciesKey];
   }
   pkg.dependencies = combinedDependencies;
+
+  const combinedDevDependencies: DependenciesMap = ensureDependenciesMap({
+    ...defaultDevDependencies,
+    ...pkg.devDependencies,
+  });
+  combinedDevDependencies['jetifier'] = defaultDevDependencies['jetifier'];
+  pkg.devDependencies = combinedDevDependencies;
+
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkg, null, 2));
   log(chalk.green('Your package.json is up to date!'));
 

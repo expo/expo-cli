@@ -7,7 +7,7 @@ import pMap from 'p-map';
 import pRetry from 'p-retry';
 import urlJoin from 'url-join';
 
-import StandaloneContext from './StandaloneContext';
+import { AnyStandaloneContext } from './StandaloneContext';
 import { saveUrlToPathAsync } from './ExponentTools';
 
 const EXPO_DOMAINS = ['expo.io', 'exp.host', 'expo.test', 'localhost'];
@@ -36,7 +36,7 @@ async function downloadAssetAsync(urlResolver: UrlResolver, dest: string, asset:
   await pRetry(() => saveUrlToPathAsync(urlResolver(hash), path.join(dest, asset)), { retries: 3 });
 }
 
-function createAssetsUrlResolver(context: StandaloneContext): UrlResolver {
+function createAssetsUrlResolver(context: AnyStandaloneContext): UrlResolver {
   let assetsDirUrl = ASSETS_DIR_DEFAULT_URL;
   if (context && context.published && context.published.url) {
     const { assetUrlOverride = './assets' } = context.config;

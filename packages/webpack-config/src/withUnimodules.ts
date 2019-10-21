@@ -62,7 +62,8 @@ export default function withUnimodules(
     inputWebpackConfig.externals = (inputWebpackConfig.externals as any).map((external: any) => {
       if (typeof external !== 'function') return external;
       return (ctx: any, req: any, cb: any) => {
-        return includeFunc(path.join('node_modules', req)) ? cb() : external(ctx, req, cb);
+        const relPath = path.join('node_modules', req);
+        return includeFunc(relPath) ? cb() : external(ctx, req, cb);
       };
     });
   }

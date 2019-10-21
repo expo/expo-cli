@@ -1682,14 +1682,16 @@ export async function startReactNativeServerAsync(
     logger.global.warn(`Expo is not installed: Using default reporter to format logs.`);
   }
 
-
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
     customLogReporterPath,
     assetExts: ['ttf'],
     sourceExts: ['expo.js', 'expo.ts', 'expo.tsx', 'expo.json', 'js', 'json', 'ts', 'tsx'],
-    nonPersistent: !!options.nonPersistent,
   };
+
+  if (options.nonPersistent && Versions.lteSdkVersion(exp, '32.0.0')) {
+    packagerOpts.nonPersistent = true;
+  }
 
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
     packagerOpts.assetPlugins = ConfigUtils.resolveModule(
