@@ -26,16 +26,158 @@ yarn add @expo/next-adapter
 
 ## ⚽️ Usage
 
-Re-export this component from the `pages/_document.js` file of your Next.js project.
+0. Bootstrap your project with `Next.js`
+1. Re-export this component from the `pages/_document.js` file of your Next.js project.
+
+   `pages/_document.js`
+
+   ```js
+   import Document from '@expo/next-adapter/document';
+
+   export default Document;
+   ```
+
+1. Create a `babel.config.js` and install the Expo Babel preset:
+
+   `babel.config.js`
+
+   ```js
+   module.exports = { presets: ['babel-preset-expo'] };
+   ```
+
+1. Start your project with `yarn next dev`
+
+**Adding Expo PWA features**
+
+1. Install `next-offline` to emulate Expo PWA features: `yarn add next-offline` (this is optional)
+1. Configure your Next.js project to resolve React Native Unimodules:
+
+   `next.config.js`
+
+   ```js
+   const withOffline = require('next-offline');
+   const { withExpo } = require('@expo/next-adapter');
+
+   // If you didn't install next-offline, then simply delete this method and the import.
+   module.exports = withOffline(
+     withExpo({
+       workboxOpts: {
+         swDest: 'workbox-service-worker.js',
+       },
+       projectRoot: __dirname,
+     })
+   );
+   ```
+
+1. Create a custom server to host your service worker:
+   `server.js`
+
+   ```js
+   const { startServerAsync } = require('@expo/next-adapter');
+
+   startServerAsync(/* port: 3000 */);
+   ```
+
+1. Copy the Expo service worker into your project's public folder: `cp node_modules/\@expo/next-adapter/workbox-service-worker.js public/workbox-service-worker.js`
+
+1. Start your project with `node server.js`
+
+## Handle server requests
+
+You may want to intercept server requests, this will allow for that:
+
+`server.js`
 
 ```js
-// pages/_document.js
-import { Document } from '@expo/next-adapter/document';
+const { createServerAsync } = require('@expo/next-adapter');
 
-export default Document;
+createServerAsync({
+  handleRequest(res, req) {
+    const parsedUrl = parse(req.url, true);
+    const { pathname } = parsedUrl;
+
+    // handle GET request to /cool-file.png
+    if (pathname === '/cool-file.png') {
+      const filePath = join(__dirname, '.next', pathname);
+
+      app.serveStatic(req, res, filePath);
+      // Return true to prevent the default handler
+      return true;
+    }
+  },
+}).then(({ server, app }) => {
+  const port = 3000;
+
+  server.listen(port, () => {
+    console.log(`> Ready on http://localhost:${port}`);
+  });
+});
 ```
 
-## Customizing the Document
+# Publishing
+
+If you wish to use services such as [ZEIT Now](https://zeit.co/now) to host your website, you should ask the service to run `expo build:web`.
+
+For [ZEIT Now](https://zeit.co/now) specifically, you could simply set `scripts.build` and `scripts.now-build` to `"expo build:web"` in your `package.json` file. Then run `now` to publish. Learn more [here](https://zeit.co/guides/upgrade-to-zero-configuration#frameworks-with-zero-configuration).
+
+```json
+{
+  "scripts": {
+    "build": "expo build:web",
+    "now-build": "expo build:web"
+  }
+}
+```
+
+You also export the website as static files by running the following commands. Learn more [here](https://nextjs.org/features/static-exporting).
+
+```
+expo build:web
+yarn next export
+```
+
+### Web push notifications support
+
+With `expo start`, [web push notifications](https://docs.expo.io/versions/latest/guides/push-notifications/) are supported without any additional configuration.
+
+To use it with other services such as ZEIT Now, you would need appropriate configuration to
+
+- let `/service-worker.js` serve the file content of `/static/service-worker.js`, and
+- let `/workbox-service-worker.js` serve the file content of a service worker, which be:
+  - `/static/workbox-service-worker.js` (which will by default be a blank file) if you do not want to use any other service worker, or
+  - `/_next/static/workbox-service-worker.js` if you are using [next-offline](https://github.com/hanford/next-offline), or
+  - your own service worker file.
+
+Here is an example `now.json` configuration file:
+
+```jsonc
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/service-worker.js",
+      "dest": "/static/service-worker.js",
+      "headers": {
+        "cache-control": "public, max-age=43200, immutable",
+        "Service-Worker-Allowed": "/"
+      }
+    },
+    // If you are using next-offline, change the object below according to their guide.
+    {
+      "src": "/workbox-service-worker.js",
+      "dest": "/static/workbox-service-worker.js",
+      "headers": {
+        "cache-control": "public, max-age=43200, immutable",
+        "Service-Worker-Allowed": "/"
+      }
+    }
+  ]
+}
+```
+
+### Customizing `pages/_document.js`
+
+Next.js uses the `pages/_document.js` file to augment your app's `<html>` and `<body>` tags. Learn more [here](https://nextjs.org/docs#custom-document).
 
 You can import the following fragments from the custom Document:
 
@@ -80,67 +222,15 @@ CustomDocument.getInitialProps = async props => {
 export default CustomDocument;
 ```
 
-## Server
+## Limitations or differences comparing to the default Expo for Web
 
-Create a `./server.js` file:
+- Unlike the default Expo for Web, Workbox and PWA are not supported by default. Use Next.js plugins such as [next-offline](https://github.com/hanford/next-offline) instead. Learn more [here](https://nextjs.org/features/progressive-web-apps).
+- You might need to use the [next-transpile-modules](https://github.com/martpie/next-transpile-modules) plugin to transpile certain third-party modules in order for them to work (such as Emotion).
+- Only the Next.js default page-based routing is supported.
 
-```js
-const { startServerAsync } = require('@expo/next-adapter');
+## Learn more about Next.js
 
-startServerAsync(/* port: 3000 */).then(({ app, handle, server }) => {
-  // started
-});
-```
-
-### Handle server requests
-
-`server.js`
-
-```js
-const { createServerAsync } = require('@expo/next-adapter');
-
-createServerAsync({
-  handleRequest(res, req) {
-    const parsedUrl = parse(req.url, true);
-    const { pathname } = parsedUrl;
-
-    // handle GET request to /cool-file.png
-    if (pathname === '/cool-file.png') {
-      const filePath = join(__dirname, '.next', pathname);
-
-      app.serveStatic(req, res, filePath);
-      // Return true to prevent the default handler
-      return true;
-    }
-  },
-}).then(({ server, app }) => {
-  const port = 3000;
-
-  server.listen(port, () => {
-    console.log(`> Ready on http://localhost:${port}`);
-  });
-});
-```
-
-## Service Worker (Notifications)
-
-- Copy the expo service worker into your project with `cp node_modules/\@expo/next-adapter/service-worker.js public/service-worker.js`
-- install next-offline: `yarn add next-offline`
-
-```js
-// next.config.js
-const withOffline = require('next-offline');
-const { withExpo } = require('@expo/next-adapter');
-
-const nextConfig = {
-  workboxOpts: {
-    swDest: 'workbox-service-worker.js',
-  },
-  /* ... */
-};
-
-module.exports = withExpo(withOffline(nextConfig));
-```
+Learn more about how to use Next.js from their [docs](https://nextjs.org/docs).
 
 ## License
 
