@@ -32,10 +32,8 @@
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/next-adapter#readme",
   "files": [
     "build",
-    "server.js",
     "document.tsx",
-    "service-worker.js",
-    "withExpo.js"
+    "service-worker.js"
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
