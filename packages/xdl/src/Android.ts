@@ -142,12 +142,12 @@ export async function uninstallExpoAsync() {
   return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
 }
 
-export async function upgradeExpoAsync(): Promise<boolean> {
+export async function upgradeExpoAsync(url?: string): Promise<boolean> {
   try {
     await assertDeviceReadyAsync();
 
     await uninstallExpoAsync();
-    await installExpoAsync();
+    await installExpoAsync(url);
     if (_lastUrl) {
       Logger.global.info(`Opening ${_lastUrl} in Expo.`);
       await getAdbOutputAsync([
