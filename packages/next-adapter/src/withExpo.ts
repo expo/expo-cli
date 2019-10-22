@@ -11,6 +11,8 @@ export default (nextConfig: any = {}): any => ({
       projectRoot: nextConfig.projectRoot || process.cwd(),
     });
 
+    // TODO: Bacon: use commonjs for RNW babel maybe...
+
     if (typeof nextConfig.webpack === 'function') {
       return nextConfig.webpack(config, options);
     }
