@@ -1,12 +1,11 @@
-const withUnimodules = require('../../withUnimodules');
-const getWebExtensions = require('../../getWebExtensions');
+const withOffline = require('next-offline');
+const { withExpo } = require('../../../next-adapter/build');
 
-module.exports = {
-  pageExtensions: getWebExtensions(),
-  webpack(config, options) {
-    // Further custom configuration here
-    return withUnimodules(config, {
-      projectRoot: __dirname,
-    });
-  },
-};
+module.exports = withOffline(
+  withExpo({
+    workboxOpts: {
+      swDest: 'workbox-service-worker.js',
+    },
+    projectRoot: __dirname,
+  })
+);

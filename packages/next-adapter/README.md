@@ -30,7 +30,7 @@ Re-export this component from the `pages/_document.js` file of your Next.js proj
 
 ```js
 // pages/_document.js
-import { Document } from '@expo/next-adapter';
+import { Document } from '@expo/next-adapter/document';
 
 export default Document;
 ```
@@ -40,13 +40,13 @@ export default Document;
 You can import the following fragments from the custom Document:
 
 ```js
-import { Document, getInitialProps, style } from '@expo/next-adapter';
+import { Document, getInitialProps, style } from '@expo/next-adapter/document';
 ```
 
 Then recompose the Document how you like
 
 ```js
-import { getInitialProps } from '@expo/next-adapter';
+import { getInitialProps } from '@expo/next-adapter/document';
 import Document, { Head, Main, NextScript } from 'next/document';
 import React from 'react';
 
@@ -78,6 +78,68 @@ CustomDocument.getInitialProps = async props => {
 };
 
 export default CustomDocument;
+```
+
+## Server
+
+Create a `./server.js` file:
+
+```js
+const { startServerAsync } = require('@expo/next-adapter');
+
+startServerAsync(/* port: 3000 */).then(({ app, handle, server }) => {
+  // started
+});
+```
+
+### Handle server requests
+
+`server.js`
+
+```js
+const { createServerAsync } = require('@expo/next-adapter');
+
+createServerAsync({
+  handleRequest(res, req) {
+    const parsedUrl = parse(req.url, true);
+    const { pathname } = parsedUrl;
+
+    // handle GET request to /cool-file.png
+    if (pathname === '/cool-file.png') {
+      const filePath = join(__dirname, '.next', pathname);
+
+      app.serveStatic(req, res, filePath);
+      // Return true to prevent the default handler
+      return true;
+    }
+  },
+}).then(({ server, app }) => {
+  const port = 3000;
+
+  server.listen(port, () => {
+    console.log(`> Ready on http://localhost:${port}`);
+  });
+});
+```
+
+## Service Worker (Notifications)
+
+- Copy the expo service worker into your project with `cp node_modules/\@expo/next-adapter/service-worker.js public/service-worker.js`
+- install next-offline: `yarn add next-offline`
+
+```js
+// next.config.js
+const withOffline = require('next-offline');
+const { withExpo } = require('@expo/next-adapter');
+
+const nextConfig = {
+  workboxOpts: {
+    swDest: 'workbox-service-worker.js',
+  },
+  /* ... */
+};
+
+module.exports = withExpo(withOffline(nextConfig));
 ```
 
 ## License
