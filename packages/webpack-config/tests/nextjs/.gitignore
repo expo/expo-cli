@@ -11,6 +11,7 @@ npm-debug.*
 *.orig.*
 web-build/
 web-report/
+.next
 
 # Editors
 .vscode
