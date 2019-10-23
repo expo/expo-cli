@@ -1,5 +1,5 @@
 import * as ConfigUtils from '@expo/config';
-import { Android, Credentials, Simulator, UserManager } from '@expo/xdl';
+import { Android, Credentials, Simulator, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table';
 import fs from 'fs-extra';
@@ -12,8 +12,14 @@ import log from '../../log';
 import prompt from '../../prompt';
 import urlOpts from '../../urlOpts';
 import { PLATFORMS } from '../build/constants';
+<<<<<<< HEAD
 import * as appleApi from '../../appleApi';
 import { runAction, travelingFastlane } from '../../appleApi/fastlane';
+=======
+import * as appleApi from '../build/ios/appleApi';
+import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
+import { findProjectRootAsync } from '../utils/ProjectUtils';
+>>>>>>> refactor(expo-cli): add guide to install simulator clients
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
 import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
@@ -245,10 +251,99 @@ export default program => {
 
   program
     .command('client:install:ios')
-    .description('Install the latest version of Expo Client for iOS on the simulator')
+    .description('Install the Expo Client for iOS on the simulator')
     .asyncAction(async () => {
-      if (await Simulator.upgradeExpoAsync()) {
-        log('Done!');
+      let currentSdkVersionString;
+      const getIosVersion = sdkVersion => sdkVersion.iosClientVersion || sdkVersion.iosVersion;
+
+      try {
+        const { projectRoot } = await findProjectRootAsync(process.cwd());
+        const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+        currentSdkVersionString = exp.sdkVersion;
+      } catch (error) {
+        // When a developer runs the installs command outside the project,
+        // they should be able to install any version
+        if (error.code !== 'NO_PROJECT') {
+          throw error;
+        }
+        log(
+          'Could not find your Expo project. If you run this command from a project, we can help pick the right Expo Client version!'
+        );
+      }
+
+      let targetSdkVersion;
+      let targetSdkVersionString;
+
+      const latestSdk = await Versions.newestSdkVersionAsync();
+      const sdkVersions = await Versions.sdkVersionsAsync();
+      const currentSdkVersion = currentSdkVersionString
+        ? sdkVersions[currentSdkVersionString]
+        : null;
+
+      if (!currentSdkVersionString || currentSdkVersionString === latestSdk.version) {
+        const answer = await prompt({
+          type: 'confirm',
+          name: 'updateToLatestClient',
+          message:
+            currentSdkVersionString === latestSdk.version
+              ? 'You are using the latest SDK. Do you want to install the latest client?'
+              : 'Do you want to install the latest client?',
+        });
+        if (answer.updateToLatestClient) {
+          await Simulator.upgradeExpoAsync();
+          log('Done!');
+          return;
+        }
+      } else if (currentSdkVersion && currentSdkVersion.iosClientUrl) {
+        const answer = await prompt({
+          type: 'confirm',
+          name: 'updateToRecommendedVersion',
+          message: `You are currently using SDK ${currentSdkVersionString}. Would you like to install the client version ${getIosVersion(
+            currentSdkVersion
+          )} released for this SDK?`,
+        });
+        if (answer.updateToRecommendedVersion) {
+          targetSdkVersion = currentSdkVersion;
+          targetSdkVersionString = currentSdkVersionString;
+        }
+      } else {
+        log(
+          `You are currently using SDK ${currentSdkVersionString}. Unfortunately, we couldn't detect the proper client version for this SDK.`
+        );
+      }
+
+      if (!targetSdkVersion) {
+        const sdkVersionStringOptions = Object.keys(sdkVersions)
+          .reverse()
+          .filter(
+            version => !sdkVersions[version].isDeprecated && sdkVersions[version].iosClientUrl
+          );
+        const answer = await prompt({
+          type: 'list',
+          name: 'selectedSdkVersionString',
+          message: 'Choose an SDK version to install the client for:',
+          pageSize: 20,
+          choices: sdkVersionStringOptions.map(optionSdkVersionString => {
+            const optionSdkVersion = sdkVersions[optionSdkVersionString];
+            return {
+              value: optionSdkVersionString,
+              name: `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
+                `- client ${getIosVersion(optionSdkVersion)}`
+              )}`,
+            };
+          }),
+        });
+
+        targetSdkVersion = sdkVersions[answer.selectedSdkVersionString];
+        targetSdkVersionString = answer.selectedSdkVersionString;
+      }
+
+      if (await Simulator.upgradeExpoAsync(targetSdkVersion.iosClientUrl)) {
+        log(
+          `Done! We installed the client for SDK ${targetSdkVersionString}, version ${getIosVersion(
+            targetSdkVersion
+          )}`
+        );
       }
     }, true);
 
