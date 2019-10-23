@@ -1551,7 +1551,7 @@ async function _waitForRunningAsync(
   }
 }
 
-function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
+function _logPackagerOutput(projectRoot: string, level: string, data: object) {
   let output = data.toString();
   if (!output) {
     return;
@@ -1567,6 +1567,11 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
     );
     return;
   }
+  if (_isIgnorableMetroConsoleOutput(output)) {
+    ProjectUtils.logDebug(projectRoot, 'expo', output);
+    return;
+  }
+
   if (/^Scanning folders for symlinks in /.test(output)) {
     ProjectUtils.logDebug(projectRoot, 'metro', output);
     return;
@@ -1576,6 +1581,19 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   } else {
     ProjectUtils.logError(projectRoot, 'metro', output);
   }
+}
+
+function _isIgnorableMetroConsoleOutput(output: string) {
+  // As of React Native 0.61.x, Metro prints console logs from the device to console, without
+  // passing them through the custom log rgeporter.
+  //
+  // Managed apps have a separate remote logging implementation included in the Expo SDK,
+  // (see: _handleDeviceLogs), so we can just ignore these device logs from Metro.
+  // if (/^ () /)
+  //
+  // These logs originate from:
+  // https://github.com/facebook/metro/blob/e8181fb9db7db31adf7d1ed9ab840f54449ef238/packages/metro/src/lib/logToConsole.js#L50
+  return /^\s+(INFO|WARN|LOG|GROUP|DEBUG) /.test(output);
 }
 
 function _isIgnorableDuplicateModuleWarning(
@@ -1608,7 +1626,11 @@ function _isIgnorableBugReportingExtraData(body: any[]) {
 }
 
 function _isAppRegistryStartupMessage(body: any[]) {
-  return body.length === 1 && /^Running application "main" with appParams:/.test(body[0]);
+  return (
+    body.length === 1 &&
+    (/^Running application "main" with appParams:/.test(body[0]) ||
+      /^Running "main" with \{/.test(body[0]))
+  );
 }
 
 function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
@@ -1674,7 +1696,11 @@ export async function startReactNativeServerAsync(
 
   let customLogReporterPath: string | undefined;
 
-  const possibleLogReporterPath = ConfigUtils.projectHasModule('expo/tools/LogReporter', projectRoot, exp);
+  const possibleLogReporterPath = ConfigUtils.projectHasModule(
+    'expo/tools/LogReporter',
+    projectRoot,
+    exp
+  );
   if (possibleLogReporterPath) {
     customLogReporterPath = possibleLogReporterPath;
   } else {
