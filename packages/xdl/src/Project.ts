@@ -1585,7 +1585,7 @@ function _logPackagerOutput(projectRoot: string, level: string, data: object) {
 
 function _isIgnorableMetroConsoleOutput(output: string) {
   // As of React Native 0.61.x, Metro prints console logs from the device to console, without
-  // passing them through the custom log rgeporter.
+  // passing them through the custom log reporter.
   //
   // Managed apps have a separate remote logging implementation included in the Expo SDK,
   // (see: _handleDeviceLogs), so we can just ignore these device logs from Metro.
