@@ -370,12 +370,16 @@ export async function getLatestReleaseAsync(
   options: {
     releaseChannel: string;
     platform: string;
+    owner?: string;
   }
 ): Promise<Release | null> {
   // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
   let formData = new FormData();
   formData.append('queryType', 'history');
   formData.append('slug', await getSlugAsync(projectRoot));
+  if (options.owner) {
+    formData.append('owner', options.owner);
+  }
   formData.append('version', '2');
   formData.append('count', '1');
   formData.append('releaseChannel', options.releaseChannel);
