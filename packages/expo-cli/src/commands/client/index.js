@@ -347,12 +347,19 @@ export default program => {
             message: 'Choose an SDK version to install the client for:',
             pageSize: 20,
             choices: sdkVersionStringOptions.map(optionSdkVersionString => {
-              const optionSdkVersion = sdkVersions[optionSdkVersionString];
+              const optionClientVersion = getIosVersion(sdkVersions[optionSdkVersionString]);
+              const message =
+                optionSdkVersionString === latestSdk.version
+                  ? `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
+                      `- client ${optionClientVersion} (latest)`
+                    )}`
+                  : `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
+                      `- client ${optionClientVersion}`
+                    )}`;
+
               return {
                 value: optionSdkVersionString,
-                name: `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
-                  `- client ${getIosVersion(optionSdkVersion)}`
-                )}`,
+                name: message,
               };
             }),
           });
