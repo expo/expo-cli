@@ -126,7 +126,7 @@ export default function createBabelLoader({
     // Prevent clobbering the `include` and `use` values.
     ...options,
     include(inputPath: string): boolean {
-      if (!useCustom && /node_modules[\\/]react-native-web/.test(inputPath)) {
+      if (!useCustom && !isProduction && /node_modules[\\/]react-native-web/.test(inputPath)) {
         return false;
       }
 
