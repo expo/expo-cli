@@ -253,13 +253,13 @@ export default program => {
     .command('client:install:ios')
     .description('Install the Expo Client for iOS on the simulator')
     .asyncAction(async () => {
-      let currentSdkVersionString;
+      let currentSdk;
       const getIosVersion = sdkVersion => sdkVersion.iosClientVersion || sdkVersion.iosVersion;
 
       try {
         const { projectRoot } = await findProjectRootAsync(process.cwd());
         const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-        currentSdkVersionString = exp.sdkVersion;
+        currentSdk = exp;
       } catch (error) {
         // When a developer runs the installs command outside the project,
         // they should be able to install any version
@@ -276,16 +276,14 @@ export default program => {
 
       const latestSdk = await Versions.newestSdkVersionAsync();
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const currentSdkVersion = currentSdkVersionString
-        ? sdkVersions[currentSdkVersionString]
-        : null;
+      const currentSdkVersion = currentSdk.sdkVersion ? sdkVersions[currentSdk.sdkVersion] : null;
 
-      if (!currentSdkVersionString || currentSdkVersionString === latestSdk.version) {
+      if (!currentSdk.sdkVersion || currentSdk.sdkVersion === latestSdk.version) {
         const answer = await prompt({
           type: 'confirm',
           name: 'updateToLatestClient',
           message:
-            currentSdkVersionString === latestSdk.version
+            currentSdk && currentSdk.sdkVersion === latestSdk.version
               ? 'You are using the latest SDK. Do you want to install the latest client?'
               : 'Do you want to install the latest client?',
         });
@@ -298,26 +296,37 @@ export default program => {
         const answer = await prompt({
           type: 'confirm',
           name: 'updateToRecommendedVersion',
-          message: `You are currently using SDK ${currentSdkVersionString}. Would you like to install the client version ${getIosVersion(
+          message: `You are currently using SDK ${
+            currentSdk.sdkVersion
+          }. Would you like to install the client version ${getIosVersion(
             currentSdkVersion
           )} released for this SDK?`,
         });
         if (answer.updateToRecommendedVersion) {
           targetSdkVersion = currentSdkVersion;
-          targetSdkVersionString = currentSdkVersionString;
+          targetSdkVersionString = currentSdk.sdkVersion;
         }
       } else {
         log(
-          `You are currently using SDK ${currentSdkVersionString}. Unfortunately, we couldn't detect the proper client version for this SDK.`
+          `You are currently using SDK ${
+            currentSdk.sdkVersion
+          }. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
 
       if (!targetSdkVersion) {
         const sdkVersionStringOptions = Object.keys(sdkVersions)
           .reverse()
-          .filter(
-            version => !sdkVersions[version].isDeprecated && sdkVersions[version].iosClientUrl
-          );
+          .filter(version => {
+            const versionHasClient =
+              !sdkVersions[version].isDeprecated && sdkVersions[version].iosClientUrl;
+
+            const versionIsCompatible = currentSdk
+              ? Versions.lteSdkVersion(currentSdk, version)
+              : null;
+
+            return versionHasClient && versionIsCompatible;
+          });
         const answer = await prompt({
           type: 'list',
           name: 'selectedSdkVersionString',
