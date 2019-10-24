@@ -327,24 +327,39 @@ export default program => {
 
             return versionHasClient && versionIsCompatible;
           });
-        const answer = await prompt({
-          type: 'list',
-          name: 'selectedSdkVersionString',
-          message: 'Choose an SDK version to install the client for:',
-          pageSize: 20,
-          choices: sdkVersionStringOptions.map(optionSdkVersionString => {
-            const optionSdkVersion = sdkVersions[optionSdkVersionString];
-            return {
-              value: optionSdkVersionString,
-              name: `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
-                `- client ${getIosVersion(optionSdkVersion)}`
-              )}`,
-            };
-          }),
-        });
+        if (sdkVersionStringOptions.length === 0) {
+          const answer = await prompt({
+            type: 'confirm',
+            name: 'updateToAClient',
+            message:
+              "It looks like we don't have a compatible client for your project. Do you want to try the latest client?",
+          });
 
-        targetSdkVersion = sdkVersions[answer.selectedSdkVersionString];
-        targetSdkVersionString = answer.selectedSdkVersionString;
+          if (answer.updateToAClient) {
+            await Simulator.upgradeExpoAsync();
+            log('Done!');
+            return;
+          }
+        } else {
+          const answer = await prompt({
+            type: 'list',
+            name: 'selectedSdkVersionString',
+            message: 'Choose an SDK version to install the client for:',
+            pageSize: 20,
+            choices: sdkVersionStringOptions.map(optionSdkVersionString => {
+              const optionSdkVersion = sdkVersions[optionSdkVersionString];
+              return {
+                value: optionSdkVersionString,
+                name: `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
+                  `- client ${getIosVersion(optionSdkVersion)}`
+                )}`,
+              };
+            }),
+          });
+
+          targetSdkVersion = sdkVersions[answer.selectedSdkVersionString];
+          targetSdkVersionString = answer.selectedSdkVersionString;
+        }
       }
 
       if (!targetSdkVersion) {
