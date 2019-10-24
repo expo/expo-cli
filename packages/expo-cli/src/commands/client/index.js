@@ -347,6 +347,11 @@ export default program => {
         targetSdkVersionString = answer.selectedSdkVersionString;
       }
 
+      if (!targetSdkVersion) {
+        log('No client to install.');
+        return;
+      }
+
       if (await Simulator.upgradeExpoAsync(targetSdkVersion.iosClientUrl)) {
         log(
           `Done! We installed the client for SDK ${targetSdkVersionString}, version ${getIosVersion(
