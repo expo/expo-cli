@@ -14,6 +14,7 @@ Object {
     "indexHtml": "tests/basic/web-build/index.html",
     "manifest": "tests/basic/web-build/manifest.json",
     "serveJson": "tests/basic/web-build/serve.json",
+    "serviceWorker": "tests/basic/web-build/expo-service-worker.js",
   },
   "root": "tests/basic",
   "servedPath": "/",
@@ -24,6 +25,7 @@ Object {
     "indexHtml": "web-default/index.html",
     "manifest": "web-default/manifest.json",
     "serveJson": "web-default/serve.json",
+    "serviceWorker": "web-default/expo-service-worker.js",
   },
 }
 `;
@@ -44,6 +46,7 @@ Object {
     "indexHtml": "tests/minimum/web-build/index.html",
     "manifest": "tests/minimum/web-build/manifest.json",
     "serveJson": "tests/minimum/web-build/serve.json",
+    "serviceWorker": "tests/minimum/web-build/expo-service-worker.js",
   },
   "root": "tests/minimum",
   "servedPath": "/",
@@ -54,6 +57,7 @@ Object {
     "indexHtml": "web-default/index.html",
     "manifest": "web-default/manifest.json",
     "serveJson": "web-default/serve.json",
+    "serviceWorker": "web-default/expo-service-worker.js",
   },
 }
 `;
