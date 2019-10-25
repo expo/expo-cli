@@ -213,7 +213,7 @@ async function ejectToBareAsync(projectRoot, options) {
 
   if (pkgJson.scripts.postinstall) {
     pkgJson.scripts.postinstall = `jetify && ${pkgJson.scripts.postinstall}`;
-    log(chalk.warn('jetifier has added to your existing postinstall script.'));
+    log(chalk.warn('jetifier has been added to your existing postinstall script.'));
   } else {
     pkgJson.scripts.postinstall = `jetify`;
   }
