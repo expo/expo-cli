@@ -22,7 +22,6 @@
       "supportsTablet": true
     },
     "web": {
-      "use": "nextjs",
       "build": {
         "babel": {
           "include": ["packages/next-adapter"]
