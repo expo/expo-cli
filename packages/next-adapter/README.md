@@ -27,7 +27,7 @@ yarn add @expo/next-adapter
 ## ⚽️ Usage
 
 0. Bootstrap your project with `Next.js`
-1. Re-export this component from the `pages/_document.js` file of your Next.js project.
+1. Re-export this component from the `pages/_document.js` file of your Next.js project. (`mkdir pages; touch pages/_document.js`)
 
    `pages/_document.js`
 
@@ -37,12 +37,23 @@ yarn add @expo/next-adapter
    export default Document;
    ```
 
-1. Create a `babel.config.js` and install the Expo Babel preset:
+1. Create a `babel.config.js` and install the Expo Babel preset: `yarn add -D babel-preset-expo`
 
    `babel.config.js`
 
    ```js
    module.exports = { presets: ['babel-preset-expo'] };
+   ```
+
+1. Update the Next.js config file to support loading React Native and Expo packages:
+   `next.config.js`
+
+   ```js
+   const { withExpo } = require('@expo/next-adapter');
+
+   module.exports = withExpo({
+     projectRoot: __dirname,
+   });
    ```
 
 1. Start your project with `yarn next dev`
@@ -59,14 +70,31 @@ yarn add @expo/next-adapter
    const { withExpo } = require('@expo/next-adapter');
 
    // If you didn't install next-offline, then simply delete this method and the import.
-   module.exports = withOffline(
-     withExpo({
-       workboxOpts: {
-         swDest: 'workbox-service-worker.js',
-       },
+   module.exports = withOffline({
+     workboxOpts: {
+       swDest: 'workbox-service-worker.js',
+
+       /* changing any value means you'll have to copy over all the defaults  */
+       /* next-offline */
+       globPatterns: ['static/**/*'],
+       globDirectory: '.',
+       runtimeCaching: [
+         {
+           urlPattern: /^https?.*/,
+           handler: 'NetworkFirst',
+           options: {
+             cacheName: 'offlineCache',
+             expiration: {
+               maxEntries: 200,
+             },
+           },
+         },
+       ],
+     },
+     ...withExpo({
        projectRoot: __dirname,
-     })
-   );
+     }),
+   });
    ```
 
 1. Create a custom server to host your service worker:
@@ -75,10 +103,12 @@ yarn add @expo/next-adapter
    ```js
    const { startServerAsync } = require('@expo/next-adapter');
 
-   startServerAsync(/* port: 3000 */);
+   startServerAsync(__dirname, {
+     /* port: 3000 */
+   });
    ```
 
-1. Copy the Expo service worker into your project's public folder: `cp node_modules/\@expo/next-adapter/workbox-service-worker.js public/workbox-service-worker.js`
+1. Copy the Expo service worker into your project's public folder: `mkdir public; cp node_modules/\@expo/next-adapter/service-worker.js public/service-worker.js`
 
 1. Start your project with `node server.js`
 
@@ -91,7 +121,7 @@ You may want to intercept server requests, this will allow for that:
 ```js
 const { createServerAsync } = require('@expo/next-adapter');
 
-createServerAsync({
+createServerAsync(projectRoot, {
   handleRequest(res, req) {
     const parsedUrl = parse(req.url, true);
     const { pathname } = parsedUrl;

@@ -6,7 +6,7 @@ import { parse } from 'url';
 import next from 'next';
 
 export function handleRequest(
-  { app, handle }: { app: NextApp; handle: Function },
+  { projectRoot, app, handle }: { projectRoot: string; app: NextApp; handle: Function },
   req: IncomingMessage,
   res: ServerResponse
 ) {
@@ -23,7 +23,7 @@ export function handleRequest(
       pathname
     )
   ) {
-    const filePath = join(__dirname, '.next', pathname);
+    const filePath = join(projectRoot, '.next', pathname);
 
     app.serveStatic(req, res, filePath);
   } else {
@@ -39,13 +39,16 @@ type ServerOptions = {
   server: Server;
 };
 
-export async function createServerAsync({
-  app: possibleApp,
-  handleRequest: possiblyHandleRequest,
-}: {
-  app?: NextApp;
-  handleRequest?: (req: IncomingMessage, res: ServerResponse) => Promise<void> | void;
-}): Promise<ServerOptions> {
+export async function createServerAsync(
+  projectRoot: string,
+  {
+    app: possibleApp,
+    handleRequest: possiblyHandleRequest,
+  }: {
+    app?: NextApp;
+    handleRequest?: (req: IncomingMessage, res: ServerResponse) => Promise<void> | void;
+  }
+): Promise<ServerOptions> {
   const app = possibleApp || next({ dev: process.env.NODE_ENV !== 'production' });
   const handle = app.getRequestHandler();
 
@@ -55,7 +58,7 @@ export async function createServerAsync({
     if (possiblyHandleRequest && (await possiblyHandleRequest(req, res))) {
       return;
     }
-    handleRequest({ app, handle }, req, res);
+    handleRequest({ projectRoot, app, handle }, req, res);
   });
   return {
     server,
@@ -64,8 +67,11 @@ export async function createServerAsync({
   };
 }
 
-export async function startServerAsync(port: number = 3000): Promise<ServerOptions> {
-  const options = await createServerAsync({});
+export async function startServerAsync(
+  projectRoot: string,
+  { port = 3000 }: { port?: number } = {}
+): Promise<ServerOptions> {
+  const options = await createServerAsync(projectRoot, {});
   options.server.listen(port, () => {});
   return options;
 }

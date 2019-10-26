@@ -2,7 +2,8 @@
   "name": "@expo/next-adapter",
   "version": "1.0.1",
   "description": "The document component for Next.js projects using Unimodules",
-  "main": "index.js",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",

@@ -45,9 +45,8 @@ body {
 }
 `;
 
-export async function getInitialProps({ renderPage }: any): Promise<any> {
+export async function getInitialProps({ renderPage }) {
   AppRegistry.registerComponent('Main', () => Main);
-  // @ts-ignore: RNWeb types
   const { getStyleElement } = AppRegistry.getApplication('Main');
   const page = renderPage();
   const styles = [<style dangerouslySetInnerHTML={{ __html: style }} />, getStyleElement()];
