@@ -739,14 +739,17 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Add shell app scheme
-  if (scheme) {
+  const schemes = [scheme, manifest.facebookScheme].filter(e => e);
+  if (schemes.length > 0) {
     const searchLine = isDetached
       ? '<!-- ADD DETACH SCHEME HERE -->'
       : '<!-- ADD SHELL SCHEME HERE -->';
+    const schemesTags = schemes.map(scheme => `<data android:scheme="${scheme}"/>`).join(`
+    `);
     await regexFileAsync(
       searchLine,
       `<intent-filter>
-        <data android:scheme="${scheme}"/>
+        ${schemesTags}
 
         <action android:name="android.intent.action.VIEW"/>
 
@@ -1065,6 +1068,47 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     `"certificate_hash": "${certificateHash}"`,
     path.join(shellPath, 'app', 'google-services.json')
   );
+
+  // Facebook configuration
+  if (manifest.facebookAppId) {
+    await regexFileAsync(
+      '<!-- ADD FACEBOOK APP ID CONFIG HERE -->',
+      `<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="${
+        manifest.facebookAppId
+      }"/>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  if (manifest.facebookDisplayName) {
+    await regexFileAsync(
+      '<!-- ADD FACEBOOK APP DISPLAY NAME CONFIG HERE -->',
+      `<meta-data android:name="com.facebook.sdk.ApplicationName" android:value="${
+        manifest.facebookDisplayName
+      }"/>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  if (manifest.facebookAutoInitEnabled) {
+    await regexFileAsync(
+      '<meta-data android:name="com.facebook.sdk.AutoInitEnabled" android:value="false"/>',
+      '<meta-data android:name="com.facebook.sdk.AutoInitEnabled" android:value="true"/>',
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  if (manifest.facebookAutoLogAppEventsEnabled) {
+    await regexFileAsync(
+      '<meta-data android:name="com.facebook.sdk.AutoLogAppEventsEnabled" android:value="false"/>',
+      '<meta-data android:name="com.facebook.sdk.AutoLogAppEventsEnabled" android:value="true"/>',
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  if (manifest.facebookAdvertiserIDCollectionEnabled) {
+    await regexFileAsync(
+      '<meta-data android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled" android:value="false"/>',
+      '<meta-data android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled" android:value="true"/>',
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
 }
 
 async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
