@@ -64,8 +64,14 @@ async function optsAsync(projectDir: string, options: any) {
   }
 
   let rawArgs = options.parent.rawArgs;
+
   if (hasBooleanArg(rawArgs, 'dev')) {
     opts.dev = getBooleanArg(rawArgs, 'dev');
+  } else {
+    if (rawArgs.includes('start') || rawArgs.includes('r')) {
+      opts.dev = true;
+      opts.minify = false;
+    }
   }
   if (hasBooleanArg(rawArgs, 'minify')) {
     opts.minify = getBooleanArg(rawArgs, 'minify');
