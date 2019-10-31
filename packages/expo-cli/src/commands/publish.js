@@ -81,9 +81,9 @@ export async function action(projectDir: string, options: Options = {}) {
     !exp.isDetached
   ) {
     log.warn(
-      'We noticed you did not build a standalone app with this SDK version and release channel before. ' +
-        'Remember that OTA updates will not work with the app built with different SDK version and/or release channel. ' +
-        'Read more: https://docs.expo.io/versions/latest/workflow/publishing/#limitations'
+      'We noticed that you have not built a standalone app with this SDK version and release channel before. ' +
+        'Remember that OTA updates will only work for builds with matching SDK versions and release channels. ' +
+        'Read more here: https://docs.expo.io/versions/latest/workflow/publishing/#limitations'
     );
   }
 

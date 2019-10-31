@@ -1,7 +1,3 @@
-// Copyright 2015-present 650 Industries. All rights reserved.
-
-'use strict';
-
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';

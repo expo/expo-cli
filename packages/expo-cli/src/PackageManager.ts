@@ -3,6 +3,11 @@ import { isUsingYarn } from '@expo/config';
 import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import split from 'split';
 import { Transform } from 'stream';
+import npmPackageArg from 'npm-package-arg';
+import fs from 'fs-extra';
+import path from 'path';
+import detectIndent from 'detect-indent';
+import detectNewline from 'detect-newline';
 
 import log from './log';
 
@@ -57,10 +62,24 @@ export class NpmPackageManager implements PackageManager {
     await this._runAsync(['install']);
   }
   async addAsync(...names: string[]) {
-    await this._runAsync(['install', '--save', ...names]);
+    const { versioned, unversioned } = this._parseSpecs(names);
+    if (versioned.length) {
+      await this._patchAsync(versioned, 'dependencies');
+      await this._runAsync(['install']);
+    }
+    if (unversioned.length) {
+      await this._runAsync(['install', '--save', ...unversioned.map(spec => spec.raw)]);
+    }
   }
   async addDevAsync(...names: string[]) {
-    await this._runAsync(['install', '--save-dev', ...names]);
+    const { versioned, unversioned } = this._parseSpecs(names);
+    if (versioned.length) {
+      await this._patchAsync(versioned, 'devDependencies');
+      await this._runAsync(['install']);
+    }
+    if (unversioned.length) {
+      await this._runAsync(['install', '--save-dev', ...unversioned.map(spec => spec.raw)]);
+    }
   }
 
   // Private
@@ -74,6 +93,40 @@ export class NpmPackageManager implements PackageManager {
         .pipe(process.stderr);
     }
     await promise;
+  }
+
+  _parseSpecs(names: string[]) {
+    const result: {
+      versioned: npmPackageArg.Result[],
+      unversioned: npmPackageArg.Result[],
+    } = { versioned: [], unversioned: [] };
+    names
+      .map(name => npmPackageArg(name))
+      .forEach(spec => {
+        if (spec.rawSpec) {
+          result.versioned.push(spec);
+        } else {
+          result.unversioned.push(spec);
+        }
+      });
+    return result;
+  }
+
+  async _patchAsync(
+    specs: npmPackageArg.Result[],
+    packageType: 'dependencies' | 'devDependencies'
+  ) {
+    const pkgPath = path.join(this.options.cwd || '.', 'package.json');
+    const pkgRaw = await fs.readFile(pkgPath, { encoding: 'utf8', flag: 'r' });
+    const pkg = JSON.parse(pkgRaw);
+    specs.forEach(spec => {
+      pkg[packageType] = pkg[packageType] || {};
+      pkg[packageType][spec.name!] = spec.rawSpec;
+    });
+    await fs.writeJson(pkgPath, pkg, {
+      spaces: detectIndent(pkgRaw).indent,
+      EOL: detectNewline(pkgRaw),
+    });
   }
 }
 

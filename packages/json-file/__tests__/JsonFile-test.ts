@@ -127,3 +127,13 @@ it('Continuous updating!', async () => {
     await expect(file.readAsync()).resolves.toEqual({ i });
   }
 });
+
+it('adds a new line at the eof', async () => {
+  let filename = path.join(FIXTURES, 'test.json');
+  let file = new JsonFile(filename, { json5: true });
+  await file.writeAsync(obj1);
+  expect(fs.existsSync(filename)).toBe(true);
+  const data = await fs.readFile(filename, 'utf-8');
+  const lastChar = data[data.length - 1];
+  expect(lastChar).toEqual('\n');
+});

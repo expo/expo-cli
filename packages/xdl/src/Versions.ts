@@ -12,7 +12,7 @@ import { Cacher } from './tools/FsCache';
 import XDLError from './XDLError';
 import UserManager from './User';
 
-type SDKVersion = {
+export type SDKVersion = {
   androidExpoViewUrl?: string;
   expoReactNativeTag: string;
   /* deprecated */ exponentReactNativeTag?: string;
@@ -25,9 +25,14 @@ type SDKVersion = {
   isDeprecated?: boolean;
   packagesToInstallWhenEjecting?: { [name: string]: string };
   releaseNoteUrl?: string;
+  iosClientUrl?: string;
+  iosClientVersion?: string;
+  androidClientUrl?: string;
+  androidClientVersion?: string;
+  relatedPackages?: { [name: string]: string };
 };
 
-type SDKVersions = { [version: string]: SDKVersion };
+export type SDKVersions = { [version: string]: SDKVersion };
 type TurtleSDKVersions = { android: string[]; ios: string[] };
 type TurtleSDKVersionsOld = { android: string; ios: string };
 

@@ -4,7 +4,7 @@ import XDLError from './XDLError';
 
 export async function getManifest(
   publicUrl: string,
-  opts: { platform?: 'android' | 'ios' | 'all' } = {}
+  { platform = 'all' }: { platform?: 'android' | 'ios' | 'all' } = {}
 ) {
   const req: AxiosRequestConfig = {
     url: publicUrl,
@@ -23,10 +23,10 @@ export async function getManifest(
     );
   }
   exp = await _extractManifest(exp, publicUrl);
-  if (opts.platform && exp.platform !== opts.platform && opts.platform !== 'all') {
+  if (exp.platform !== platform && platform !== 'all') {
     throw new XDLError(
       'INVALID_MANIFEST',
-      `Manifest from ${publicUrl} is not compatible with the ${opts.platform} platform`
+      `Manifest from ${publicUrl} is not compatible with the ${platform} platform`
     );
   }
   return exp;

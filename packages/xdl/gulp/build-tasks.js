@@ -4,7 +4,6 @@ const babel = require('gulp-babel');
 const changed = require('gulp-changed');
 const fs = require('fs');
 const plumber = require('gulp-plumber');
-const rename = require('gulp-rename');
 const request = require('request');
 const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
@@ -40,15 +39,8 @@ const tasks = {
       .pipe(gulp.dest(paths.build));
   },
 
-  flow() {
-    return gulp
-      .src(paths.source.js)
-      .pipe(rename({ extname: '.js.flow' }))
-      .pipe(gulp.dest(paths.build));
-  },
-
   watchBabel(done) {
-    gulp.watch([paths.source.js, paths.source.ts], gulp.parallel(tasks.flow, tasks.babel));
+    gulp.watch([paths.source.js, paths.source.ts], tasks.babel);
     done();
   },
 

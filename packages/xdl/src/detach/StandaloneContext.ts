@@ -4,11 +4,31 @@ type StandaloneContextDataType = 'user' | 'service';
 
 type StandaloneContextTestEnvironment = 'none' | 'local' | 'ci';
 
+// currently unused
+export function isStandaloneContextDataUser(value: any): value is StandaloneContextDataUser {
+  return value && typeof value.projectPath === 'string' && 'exp' in value;
+}
+
+export function isStandaloneContextTestEnvironment(
+  value: string
+): value is StandaloneContextTestEnvironment {
+  return ['none', 'local', 'ci'].includes(value);
+}
+
+export function isStandaloneContextDataService(value: any): value is StandaloneContextDataService {
+  return (
+    value &&
+    isStandaloneContextTestEnvironment(value.testEnvironment) &&
+    typeof value.expoSourcePath === 'string' &&
+    typeof value.shellAppSdkVersion === 'string'
+  );
+}
+
 /**
  *  A user context is used when we are configuring a standalone app locally on a user's machine,
  *  such as during `exp detach`.
  */
-type StandaloneContextDataUser = {
+export type StandaloneContextDataUser = {
   projectPath: string;
   exp: any;
 };
@@ -17,7 +37,7 @@ type StandaloneContextDataUser = {
  *  A service context is used when we are generating a standalone app remotely on an Expo
  *  service machine, such as during `exp build`.
  */
-type StandaloneContextDataService = {
+export type StandaloneContextDataService = {
   expoSourcePath: string;
   archivePath: string | null;
   manifest: any;
@@ -27,33 +47,27 @@ type StandaloneContextDataService = {
 };
 
 class StandaloneContext {
-  type?: StandaloneContextDataType;
   data?: StandaloneContextDataUser | StandaloneContextDataService;
   config: any; // same as underlying app.json or manifest
-  published?: {
-    url?: string;
-    releaseChannel: string;
-  };
-  build?: StandaloneBuildFlags;
 
   static createUserContext = (
     projectPath: string,
     exp: any,
     publishedUrl?: string
-  ): StandaloneContext => {
-    let context = new StandaloneContext();
-    context.type = 'user';
-    context.data = {
-      projectPath,
-      exp,
-    };
+  ): StandaloneContextUser => {
+    const context = new StandaloneContextUser(
+      {
+        projectPath,
+        exp,
+      },
+      {
+        url: publishedUrl,
+        releaseChannel: 'default',
+      },
+      // we never expect to handle the build step for user contexts right now
+      StandaloneBuildFlags.createEmpty()
+    );
     context.config = exp;
-    context.published = {
-      url: publishedUrl,
-      releaseChannel: 'default',
-    };
-    // we never expect to handle the build step for user contexts right now
-    context.build = StandaloneBuildFlags.createEmpty();
     return context;
   };
 
@@ -67,23 +81,24 @@ class StandaloneContext {
     publishedUrl: string,
     releaseChannel: string,
     shellAppSdkVersion: string
-  ): StandaloneContext => {
-    let context = new StandaloneContext();
-    context.type = 'service';
-    context.data = {
-      expoSourcePath,
-      archivePath,
-      manifest,
-      privateConfig,
-      testEnvironment,
-      shellAppSdkVersion,
-    };
+  ): StandaloneContextService => {
+    const context = new StandaloneContextService(
+      {
+        expoSourcePath,
+        archivePath,
+        manifest,
+        privateConfig,
+        testEnvironment,
+        shellAppSdkVersion,
+      },
+      {
+        url: publishedUrl,
+        releaseChannel: releaseChannel ? releaseChannel : 'default',
+      },
+      build
+    );
     context.config = manifest;
-    context.build = build;
-    context.published = {
-      url: publishedUrl,
-      releaseChannel: releaseChannel ? releaseChannel : 'default',
-    };
+
     return context;
   };
 
@@ -92,8 +107,38 @@ class StandaloneContext {
    *  project's manifest.
    */
   isAnonymous = () => {
-    return this.type === 'service' && !this.config;
+    return this instanceof StandaloneContextService && !this.config;
   };
 }
+
+export class StandaloneContextUser extends StandaloneContext {
+  type: StandaloneContextDataType = 'user';
+  constructor(
+    public data: StandaloneContextDataUser,
+    public published: {
+      url?: string;
+      releaseChannel: 'default';
+    },
+    public build: StandaloneBuildFlags
+  ) {
+    super();
+  }
+}
+
+export class StandaloneContextService extends StandaloneContext {
+  type: StandaloneContextDataType = 'service';
+  constructor(
+    public data: StandaloneContextDataService,
+    public published: {
+      url: string;
+      releaseChannel: string;
+    },
+    public build: StandaloneBuildFlags
+  ) {
+    super();
+  }
+}
+
+export type AnyStandaloneContext = StandaloneContextUser | StandaloneContextService;
 
 export default StandaloneContext;

@@ -1,4 +1,3 @@
-import forge from 'node-forge';
 import _ from 'lodash';
 import fs from 'fs-extra';
 import path from 'path';
@@ -6,54 +5,18 @@ import glob from 'glob-promise';
 import plist from 'plist';
 import crypto from 'crypto';
 
+import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
 import { spawnAsyncThrowError } from './ExponentTools';
 
 async function ensureCertificateValid({ certPath, certPassword, teamID }) {
   const certData = await fs.readFile(certPath);
-  const fingerprint = _genP12CertFingerprint(certData, certPassword);
+  const fingerprint = getP12CertFingerprint(certData, certPassword);
   const identities = await _findIdentitiesByTeamID(teamID);
   const isValid = identities.indexOf(fingerprint) !== -1;
   if (!isValid) {
     throw new Error(`codesign ident not present in find-identity: ${fingerprint}\n${identities}`);
   }
   return fingerprint;
-}
-
-function _genP12CertFingerprint(p12Buffer, passwordRaw) {
-  const certData = _getCertData(p12Buffer, passwordRaw);
-  const certAsn1 = forge.pki.certificateToAsn1(certData);
-  const certDer = forge.asn1.toDer(certAsn1).getBytes();
-  return forge.md.sha1
-    .create()
-    .update(certDer)
-    .digest()
-    .toHex()
-    .toUpperCase();
-}
-
-function findP12CertSerialNumber(p12Buffer, passwordRaw) {
-  const certData = _getCertData(p12Buffer, passwordRaw);
-  const { serialNumber } = certData;
-  return serialNumber ? certData.serialNumber.replace(/^0+/, '').toUpperCase() : null;
-}
-
-function _getCertData(p12Buffer, passwordRaw) {
-  if (Buffer.isBuffer(p12Buffer)) {
-    p12Buffer = p12Buffer.toString('base64');
-  } else if (typeof p12Buffer !== 'string') {
-    throw new Error('_getCertData only takes strings and buffers.');
-  }
-
-  const password = String(passwordRaw || '');
-  const p12Der = forge.util.decode64(p12Buffer);
-  const p12Asn1 = forge.asn1.fromDer(p12Der);
-  const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
-  const certBagType = forge.pki.oids.certBag;
-  const certData = _.get(p12.getBags({ bagType: certBagType }), [certBagType, 0, 'cert']);
-  if (!certData) {
-    throw new Error("_getCertData: couldn't find cert bag");
-  }
-  return certData;
 }
 
 async function _findIdentitiesByTeamID(teamID) {
@@ -289,6 +252,9 @@ async function createEntitlementsFile({
   }
   if (!manifest.ios.associatedDomains) {
     generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.associated-domains');
+  }
+  if (!manifest.ios.usesAppleSignIn) {
+    generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.applesignin');
   }
   if (generatedEntitlements[icloudContainerEnvKey]) {
     const envs = generatedEntitlements[icloudContainerEnvKey].filter(i => i === 'Production');

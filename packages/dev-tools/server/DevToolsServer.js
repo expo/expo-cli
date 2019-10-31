@@ -5,6 +5,8 @@ import express from 'express';
 import freeportAsync from 'freeport-async';
 import path from 'path';
 import http from 'http';
+import crypto from 'crypto';
+import base64url from 'base64url';
 
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
 import GraphQLSchema from './graphql/GraphQLSchema';
@@ -19,10 +21,40 @@ function setHeaders(res) {
   res.setHeader('Last-Modified', serverStartTimeUTCString);
 }
 
+async function generateSecureRandomTokenAsync() {
+  return new Promise((resolve, reject) => {
+    crypto.randomBytes(32, (error, buffer) => {
+      if (error) reject(error);
+      else resolve(base64url.fromBase64(buffer.toString('base64')));
+    });
+  });
+}
+
+export async function createAuthenticationContextAsync({ port }) {
+  const clientAuthenticationToken = await generateSecureRandomTokenAsync();
+  const endpointUrlToken = await generateSecureRandomTokenAsync();
+  const graphQLEndpointPath = `/${endpointUrlToken}/graphql`;
+  const hostname = `localhost:${port}`;
+  const webSocketGraphQLUrl = `ws://${hostname}${graphQLEndpointPath}`;
+  const allowedOrigin = `http://${hostname}`;
+  return {
+    clientAuthenticationToken,
+    graphQLEndpointPath,
+    webSocketGraphQLUrl,
+    allowedOrigin,
+    requestHandler: (request, response) => {
+      response.json({ webSocketGraphQLUrl, clientAuthenticationToken });
+    },
+  };
+}
+
 export async function startAsync(projectDir) {
-  const port = await freeportAsync(19002);
+  const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
 
+  const authenticationContext = await createAuthenticationContextAsync({ port });
+  const { webSocketGraphQLUrl, clientAuthenticationToken } = authenticationContext;
+  server.get('/dev-tools-info', authenticationContext.requestHandler);
   server.use(
     '/_next',
     express.static(path.join(__dirname, '../client/_next'), {
@@ -38,18 +70,17 @@ export async function startAsync(projectDir) {
   await new Promise((resolve, reject) => {
     httpServer.once('error', reject);
     httpServer.once('listening', resolve);
-    httpServer.listen(port);
+    httpServer.listen(port, 'localhost');
   });
-  startGraphQLServer(projectDir, httpServer);
+  startGraphQLServer(projectDir, httpServer, authenticationContext);
   await ProjectSettings.setPackagerInfoAsync(projectDir, { devToolsPort: port });
   return `http://localhost:${port}`;
 }
 
-export function startGraphQLServer(projectDir, httpServer) {
+export function startGraphQLServer(projectDir, httpServer, authenticationContext) {
   const layout = createLayout();
   const issues = new Issues();
   const messageBuffer = createMessageBuffer(projectDir, issues);
-
   SubscriptionServer.create(
     {
       schema: GraphQLSchema,
@@ -64,8 +95,24 @@ export function startGraphQLServer(projectDir, httpServer) {
           issues,
         }),
       }),
+      onConnect: connectionParams => {
+        if (
+          !connectionParams.clientAuthenticationToken ||
+          connectionParams.clientAuthenticationToken !==
+            authenticationContext.clientAuthenticationToken
+        ) {
+          throw new Error('Dev Tools API authentication failed.');
+        }
+        return true;
+      },
     },
-    { server: httpServer, path: '/graphql' }
+    {
+      server: httpServer,
+      path: authenticationContext.graphQLEndpointPath,
+      verifyClient: info => {
+        return info.origin === authenticationContext.allowedOrigin;
+      },
+    }
   );
 }
 

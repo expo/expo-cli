@@ -3,7 +3,7 @@ import spawnAsync from '@expo/spawn-async';
 
 export type SharpGlobalOptions = {
   compressionLevel?: '';
-  format?: 'input' | 'jpeg' | 'jpg' | 'png' | 'raw' | 'tiff' | 'webp';
+  format?: ImageFormat;
   input: string;
   limitInputPixels?: number;
   output: string;
@@ -13,7 +13,16 @@ export type SharpGlobalOptions = {
   [key: string]: string | number | boolean | undefined | null;
 };
 
-export type SharpCommandOptions = RemoveAlphaOptions | ResizeOptions;
+export type SharpCommandOptions = RemoveAlphaOptions | ResizeOptions | FlattenOptions;
+
+type FlattenOptions = {
+  operation: 'flatten';
+  background: string;
+};
+
+export type ResizeMode = 'contain' | 'cover' | 'fill' | 'inside' | 'outside';
+
+export type ImageFormat = 'input' | 'jpeg' | 'jpg' | 'png' | 'raw' | 'tiff' | 'webp';
 
 type RemoveAlphaOptions = {
   operation: 'removeAlpha';
@@ -23,7 +32,7 @@ type ResizeOptions = {
   operation: 'resize';
   background?: string;
   fastShrinkOnLoad?: boolean;
-  fit?: 'contain' | 'cover' | 'fill' | 'inside' | 'outside';
+  fit?: ResizeMode;
   height?: number;
   kernel?: 'nearest' | 'cubic' | 'mitchell' | 'lanczos2' | 'lanczos3';
   position?:

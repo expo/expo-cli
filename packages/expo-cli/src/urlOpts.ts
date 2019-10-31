@@ -85,11 +85,19 @@ function printQRCode(url: string) {
 
 async function handleMobileOptsAsync(projectDir: string, options: any) {
   if (options.android) {
-    await Android.openProjectAsync(projectDir);
+    if (options.webOnly) {
+      await Android.openWebProjectAsync(projectDir);
+    } else {
+      await Android.openProjectAsync(projectDir);
+    }
   }
 
   if (options.ios) {
-    await Simulator.openProjectAsync(projectDir);
+    if (options.webOnly) {
+      await Simulator.openWebProjectAsync(projectDir);
+    } else {
+      await Simulator.openProjectAsync(projectDir);
+    }
   }
 
   if (options.web) {

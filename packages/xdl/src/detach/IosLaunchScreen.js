@@ -1,6 +1,3 @@
-/**
- *  @flow
- */
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
@@ -75,7 +72,7 @@ function _setBackgroundColor(manifest, dom) {
   }
 }
 
-async function _saveImageAssetsAsync(context: StandaloneContext) {
+async function _saveImageAssetsAsync(context) {
   let tabletImagePathOrUrl, phoneImagePathOrUrl;
 
   if (context.type === 'user') {
@@ -156,10 +153,7 @@ function _setBackgroundImageResizeMode(manifest, dom) {
   }
 }
 
-async function _copyIntermediateLaunchScreenAsync(
-  context: StandaloneContext,
-  launchScreenPath: string
-) {
+async function _copyIntermediateLaunchScreenAsync(context, launchScreenPath) {
   let splashTemplateFilename;
   if (context.type === 'user') {
     const { supportingDirectory } = IosWorkspace.getPaths(context);
@@ -185,10 +179,7 @@ async function _copyIntermediateLaunchScreenAsync(
   });
 }
 
-async function configureLaunchAssetsAsync(
-  context: StandaloneContext,
-  intermediatesDirectory: string
-) {
+async function configureLaunchAssetsAsync(context, intermediatesDirectory) {
   logger.info('Configuring iOS Launch Screen...');
 
   fs.mkdirpSync(intermediatesDirectory);

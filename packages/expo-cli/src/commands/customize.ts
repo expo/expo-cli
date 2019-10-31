@@ -1,7 +1,7 @@
-import { Command } from 'commander';
+import * as ConfigUtils from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
-import ConfigUtils from '@expo/config';
 import chalk from 'chalk';
+import { Command } from 'commander';
 // @ts-ignore enquirer has no exported member 'MultiSelect'
 import { MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
@@ -31,6 +31,11 @@ async function maybeWarnToCommitAsync(projectRoot: string) {
   }
 }
 
+const dependencyMap: { [key: string]: string[] } = {
+  'babel.config.js': ['babel-preset-expo'],
+  'webpack.config.js': ['@expo/webpack-config'],
+};
+
 async function generateFilesAsync({
   projectDir,
   staticPath,
@@ -47,19 +52,23 @@ async function generateFilesAsync({
   let promises = [];
 
   for (const file of answer) {
-    if (file.includes('webpack.config.js')) {
-      const projectWebpackConfig = path.resolve(projectDir, file);
+    if (Object.keys(dependencyMap).includes(file)) {
+      const projectFilePath = path.resolve(projectDir, file);
       // copy the file from template
       promises.push(
         fs.copy(
-          require.resolve('@expo/webpack-config/template/webpack.config.js'),
-          projectWebpackConfig,
+          require.resolve(path.join('@expo/webpack-config/template', file)),
+          projectFilePath,
           { overwrite: true, recursive: true }
         )
       );
 
-      const packageManager = PackageManager.createForProject(projectDir);
-      promises.push(packageManager.addDevAsync('@expo/webpack-config'));
+      if (file in dependencyMap) {
+        const packageManager = PackageManager.createForProject(projectDir);
+        for (const dependency of dependencyMap[file]) {
+          promises.push(packageManager.addDevAsync(dependency));
+        }
+      }
     } else {
       const fileName = path.basename(file);
       const src = path.resolve(templateFolder, fileName);
@@ -85,7 +94,10 @@ export async function action(projectDir: string = './', options: Options = { for
   // { expo: { web: { staticPath: ... } } }
   const { web: { staticPath = 'web' } = {} } = exp;
 
-  const allFiles = ['webpack.config.js', ...files.map(file => path.join(staticPath, file))];
+  const allFiles = [
+    ...Object.keys(dependencyMap),
+    ...files.map(file => path.join(staticPath, file)),
+  ];
   let values = [];
 
   for (const file of allFiles) {
@@ -126,11 +138,11 @@ export async function action(projectDir: string = './', options: Options = { for
   await generateFilesAsync({ projectDir, staticPath, options, answer, templateFolder });
 }
 
-export default (program: Command) => {
+export default function(program: Command) {
   program
     .command('customize:web [project-dir]')
     .description('Generate static web files into your project.')
     .option('-f, --force', 'Allows replacing existing files')
     .allowOffline()
     .asyncAction(action);
-};
+}

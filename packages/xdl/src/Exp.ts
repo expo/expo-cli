@@ -25,8 +25,10 @@ export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 // TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
 type ReadEntry = any;
 
-export async function determineEntryPointAsync(root: string) {
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(root);
+// TODO(Bacon): Add support for index.ts, index.tsx, index.jsx, index.mjs, index.ios.js...
+// TODO(Bacon): Test monorepos with expo/AppEntry module path
+export async function determineEntryPointAsync(projectRoot: string): Promise<string> {
+  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   // entryPoint is relative to the packager root and main is relative
   // to the project root. So if your rn-cli.config.js points to a different
@@ -35,6 +37,20 @@ export async function determineEntryPointAsync(root: string) {
   let entryPoint = pkg.main || 'index.js';
   if (exp && exp.entryPoint) {
     entryPoint = exp.entryPoint;
+  }
+
+  const userDefinedEntryPointExists = await fs.pathExists(path.resolve(projectRoot, entryPoint));
+  if (!userDefinedEntryPointExists) {
+    entryPoint = ConfigUtils.resolveModule('expo/AppEntry', projectRoot, exp);
+    const expoEntryPointExists = await fs.pathExists(entryPoint);
+    // Remove project root from file path
+    entryPoint = path.relative(projectRoot, entryPoint);
+    // Final existence check
+    if (!expoEntryPointExists) {
+      throw new Error(
+        `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
+      );
+    }
   }
 
   return entryPoint;
@@ -71,7 +87,7 @@ function createFileTransform(config: AppJSONConfig | BareAppConfig) {
     if (!binaryExtensions.includes(path.extname(entry.path)) && config.name) {
       return new Transformer(config);
     }
-    return;
+    return undefined;
   };
 }
 
@@ -304,7 +320,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
     throw new Error('Attempted to login in offline mode. This is a bug.');
   }
 
-  const { username } = user;
+  let { username } = user;
 
   const { exp } = await ConfigUtils.readConfigJsonAsync(root);
 

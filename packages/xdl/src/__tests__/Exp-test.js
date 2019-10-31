@@ -42,7 +42,7 @@ describe('determineEntryPointAsync', () => {
       version: '0.2.0',
     });
 
-    const expJson = JSON.stringify(
+    const appJson = JSON.stringify(
       {
         name: 'testing 123',
         version: '0.1.0',
@@ -52,7 +52,7 @@ describe('determineEntryPointAsync', () => {
       2
     );
 
-    const expJsonWithEntry = JSON.stringify({
+    const appJsonWithEntry = JSON.stringify({
       name: 'testing567',
       version: '0.6.0',
       entryPoint: 'main.js',
@@ -60,24 +60,28 @@ describe('determineEntryPointAsync', () => {
 
     fs.__configureFs({
       '/exists-no-platform/package.json': packageJson,
-      '/exists-no-platform/exp.json': expJson,
+      '/exists-no-platform/app.json': appJson,
       '/exists-no-platform/index.js': 'console.log("lol")',
 
       '/exists-no-platform-no-main/package.json': packageJsonNoMain,
-      '/exists-no-platform-no-main/exp.json': expJson,
+      '/exists-no-platform-no-main/app.json': appJson,
       '/exists-no-platform-no-main/index.js': 'console.log("lol")',
 
       '/exists-android/package.json': packageJsonAndroid,
-      '/exists-android/exp.json': expJson,
+      '/exists-android/app.json': appJson,
       '/exists-android/index.android.js': 'console.log("lol")',
 
       '/exists-ios/package.json': packageJsonIos,
-      '/exists-ios/exp.json': expJson,
+      '/exists-ios/app.json': appJson,
       '/exists-ios/index.ios.js': 'console.log("lol")',
 
       '/exists-expjson/package.json': packageJson,
-      '/exists-expjson/exp.json': expJsonWithEntry,
+      '/exists-expjson/app.json': appJsonWithEntry,
       '/exists-expjson/main.js': 'console.log("lol")',
+
+      '/expo-app-entry/package.json': packageJsonNoMain,
+      '/expo-app-entry/app.json': appJson,
+      '/expo-app-entry/App.js': 'console.log("lol")',
     });
   });
 
@@ -108,5 +112,10 @@ describe('determineEntryPointAsync', () => {
   it('exists-expjson', async () => {
     const entryPoint = await Exp.determineEntryPointAsync('/exists-expjson');
     expect(entryPoint).toBe('main.js');
+  });
+
+  it('uses node_modules/expo/AppEntry as a last resort', async () => {
+    const entryPoint = await Exp.determineEntryPointAsync('/expo-app-entry');
+    expect(entryPoint).toBe('node_modules/expo/AppEntry.js');
   });
 });
