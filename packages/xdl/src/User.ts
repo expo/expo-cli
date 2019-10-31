@@ -190,7 +190,7 @@ export class UserManagerInstance {
    * Get the current user based on the available token.
    * If there is no current token, returns null.
    */
-  async getCurrentUserAsync(): Promise<User | null> {
+  async getCurrentUserAsync(options?: { silent?: boolean }): Promise<User | null> {
     await this._getSessionLock.acquire();
 
     try {
@@ -216,8 +216,10 @@ export class UserManagerInstance {
           sessionSecret: data.sessionSecret,
         });
       } catch (e) {
-        Logger.global.warn('Fetching the user profile failed');
-        Logger.global.warn(e);
+        if (!(options && options.silent)) {
+          Logger.global.warn('Fetching the user profile failed');
+          Logger.global.warn(e);
+        }
         return null;
       }
     } finally {

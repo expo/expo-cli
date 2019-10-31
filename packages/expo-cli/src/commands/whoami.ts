@@ -6,10 +6,10 @@ import log from '../log';
 import CommandError from '../CommandError';
 
 async function action() {
-  const username = await UserManager.getCurrentUsernameAsync();
-  if (username) {
-    log(`Logged in as ${chalk.green(username)}`);
-    log.raw(username);
+  const user = await UserManager.getCurrentUserAsync({ silent: true });
+  if (user) {
+    log(`Logged in as ${chalk.green(user.username)}`);
+    log.raw(user.username);
   } else {
     throw new CommandError('NOT_LOGGED_IN', 'Not logged in');
   }
