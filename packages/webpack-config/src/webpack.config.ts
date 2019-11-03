@@ -1,4 +1,3 @@
-// @ts-ignore
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 import { Options, Configuration, HotModuleReplacementPlugin, Output } from 'webpack';

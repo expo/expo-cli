@@ -36,7 +36,7 @@ export default function withUnimodules(
 
   // If the args don't specify this then we'll check if the input already supports font loading.
   if (typeof supportsFontLoading === 'undefined') {
-    const supportedFonts = ['ttf', 'otf', 'woff'];
+    const supportedFonts = ['ttf', 'otf', 'woff', 'woff2', 'eot'];
     const testFontFileNames = supportedFonts.map(ext =>
       path.resolve(environment.projectRoot, `cool-font.${ext}`)
     );
