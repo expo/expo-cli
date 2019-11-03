@@ -177,7 +177,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
             from: locations.template.folder,
             to: locations.production.folder,
             // We generate new versions of these based on the templates
-            ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
+            ignore: ['expo-service-worker.js', 'favicon.ico', 'serve.json', 'index.html', 'icon.png'],
           },
           {
             from: locations.template.serveJson,
@@ -186,6 +186,10 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
           {
             from: locations.template.favicon,
             to: locations.production.favicon,
+          },
+          {
+            from: locations.template.serviceWorker,
+            to: locations.production.serviceWorker,
           },
         ]),
 
@@ -268,6 +272,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
     },
     resolve: {
       alias: DEFAULT_ALIAS,
+      mainFields: ['browser', 'module', 'main'],
       extensions: getModuleFileExtensions('web'),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding

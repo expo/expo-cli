@@ -1,22 +1,32 @@
 import fs from 'fs-extra';
-import path from 'path';
 import get from 'lodash/get';
+import path from 'path';
 
+import * as AssetBundle from './AssetBundle';
 import {
   getManifestAsync,
-  saveUrlToPathAsync,
   manifestUsesSplashApi,
   parseSdkMajorVersion,
+  saveUrlToPathAsync,
 } from './ExponentTools';
 import * as IosAssetArchive from './IosAssetArchive';
-import * as AssetBundle from './AssetBundle';
 import * as IosIcons from './IosIcons';
-import * as IosPlist from './IosPlist';
+
+// @ts-ignore: No TS support
 import * as IosLaunchScreen from './IosLaunchScreen';
-import * as IosWorkspace from './IosWorkspace';
-import StandaloneContext from './StandaloneContext';
+// @ts-ignore: No TS support
 import * as IosLocalization from './IosLocalization';
+import * as IosPlist from './IosPlist';
+// @ts-ignore: No TS support
+import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
+import { ExpoConfig } from '@expo/config';
+import {
+  AnyStandaloneContext,
+  StandaloneContextService,
+  StandaloneContextUser,
+  isStandaloneContextDataService,
+} from './StandaloneContext';
 
 // TODO: move this somewhere else. this is duplicated in universe/exponent/template-files/keys,
 // but xdl doesn't have access to that.
@@ -24,7 +34,7 @@ const DEFAULT_FABRIC_KEY = '81130e95ea13cd7ed9a4f455e96214902c721c99';
 const DEFAULT_GAD_APPLICATION_ID = 'ca-app-pub-3940256099942544~1458002511';
 const KERNEL_URL = 'https://expo.io/@exponent/home';
 
-function _configureInfoPlistForLocalDevelopment(config, exp) {
+function _configureInfoPlistForLocalDevelopment(config: any, exp: ExpoConfig): ExpoConfig {
   // add detached scheme
   if (exp.isDetached && exp.detach.scheme) {
     if (!config.CFBundleURLTypes) {
@@ -46,11 +56,11 @@ function _configureInfoPlistForLocalDevelopment(config, exp) {
 /**
  *  Prints warnings or info about the configured environment for local development.
  */
-function _logDeveloperInfoForLocalDevelopment(infoPlist) {
+function _logDeveloperInfoForLocalDevelopment(infoPlist: any[]): void {
   // warn about *UsageDescription changes
   let usageKeysConfigured = [];
   for (let key in infoPlist) {
-    if (infoPlist.hasOwnProperty(key) && key.indexOf('UsageDescription') !== -1) {
+    if (key in infoPlist && key.includes('UsageDescription')) {
       usageKeysConfigured.push(key);
     }
   }
@@ -65,13 +75,16 @@ function _logDeveloperInfoForLocalDevelopment(infoPlist) {
   }
 }
 
-async function _cleanPropertyListBackupsAsync(context, backupPath) {
+async function _cleanPropertyListBackupsAsync(
+  context: AnyStandaloneContext,
+  backupPath: string
+): Promise<void> {
   if (get(context, 'build.ios.buildType') !== 'client') {
     await IosPlist.cleanBackupAsync(backupPath, 'EXShell', false);
   }
   await IosPlist.cleanBackupAsync(backupPath, 'Info', false);
   // TODO: support this in user contexts as well
-  if (context.type === 'service') {
+  if (context instanceof StandaloneContextService) {
     const { projectName } = IosWorkspace.getPaths(context);
     await IosPlist.cleanBackupAsync(backupPath, `${projectName}.entitlements`, false);
   }
@@ -81,11 +94,11 @@ async function _cleanPropertyListBackupsAsync(context, backupPath) {
  * Write the manifest and JS bundle to the NSBundle.
  */
 async function _preloadManifestAndBundleAsync(
-  manifest,
-  supportingDirectory,
-  manifestFilename,
-  bundleFilename
-) {
+  manifest: { bundleUrl: string; [key: string]: any },
+  supportingDirectory: string,
+  manifestFilename: string,
+  bundleFilename: string
+): Promise<void> {
   const bundleUrl = manifest.bundleUrl;
   await fs.writeFile(path.join(supportingDirectory, manifestFilename), JSON.stringify(manifest));
   await saveUrlToPathAsync(bundleUrl, path.join(supportingDirectory, bundleFilename));
@@ -95,10 +108,10 @@ async function _preloadManifestAndBundleAsync(
  *  This method only makes sense when operating on a context with sdk version < 26.
  */
 async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
-  context,
-  manifestFilename,
-  bundleFilename
-) {
+  context: AnyStandaloneContext,
+  manifestFilename: string,
+  bundleFilename: string
+): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   let sdkVersionSupported = await IosWorkspace.getNewestSdkVersionSupportedAsync(context);
 
@@ -121,10 +134,10 @@ async function _maybeLegacyPreloadKernelManifestAndBundleAsync(
 /**
  * Configure a standalone entitlements file.
  */
-async function _configureEntitlementsAsync(context) {
-  if (context.type === 'user') {
+async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promise<any> {
+  if (context instanceof StandaloneContextUser) {
     // don't modify .entitlements, print info/instructions
-    const exp = context.data.exp;
+    const { exp } = context.data;
     logger.info(
       'Your iOS ExpoKit project will not contain an .entitlements file by default. If you need specific Apple entitlements, enable them manually via Xcode or the Apple Developer website.'
     );
@@ -145,9 +158,9 @@ async function _configureEntitlementsAsync(context) {
   } else {
     // modify the .entitlements file
     const { projectName, supportingDirectory } = IosWorkspace.getPaths(context);
-    const manifest = context.data.manifest;
+    const manifest = isStandaloneContextDataService(context.data) && context.data.manifest;
     const entitlementsFilename = `${projectName}.entitlements`;
-    const appleTeamId = context.build.ios.appleTeamId;
+    const { appleTeamId } = context.build.ios || ({} as any);
     if (!fs.existsSync(path.join(supportingDirectory, entitlementsFilename))) {
       await IosPlist.createBlankAsync(supportingDirectory, entitlementsFilename);
     }
@@ -208,27 +221,26 @@ async function _configureEntitlementsAsync(context) {
  *  For standalone apps, this is copied into a separate context field context.data.privateConfig
  *  by the turtle builder. For a local project, this is available in app.json under ios.config.
  */
-function _getPrivateConfig(context) {
-  let privateConfig;
-  if (context.type === 'service') {
-    privateConfig = context.data.privateConfig;
-  } else if (context.type === 'user') {
+function _getPrivateConfig(context: AnyStandaloneContext): { [key: string]: any } | undefined {
+  if (context instanceof StandaloneContextService) {
+    return context.data.privateConfig;
+  } else {
     const exp = context.data.exp;
     if (exp && exp.ios) {
-      privateConfig = exp.ios.config;
+      return exp.ios.config;
     }
   }
-  return privateConfig;
+  return;
 }
 
-function _isAppleUsageDescriptionKey(key) {
-  return key.indexOf('UsageDescription') !== -1;
+function _isAppleUsageDescriptionKey(key: string): boolean {
+  return key.includes('UsageDescription');
 }
 
 /**
  * Configure an iOS Info.plist for a standalone app.
  */
-async function _configureInfoPlistAsync(context) {
+async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
   const privateConfig = _getPrivateConfig(context);
@@ -236,7 +248,7 @@ async function _configureInfoPlistAsync(context) {
   let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
     // apply any custom information from ios.infoPlist prior to all other exponent config
-    let usageDescriptionKeysConfigured = {};
+    let usageDescriptionKeysConfigured: { [key: string]: any } = {};
     if (config.ios && config.ios.infoPlist) {
       let extraConfig = config.ios.infoPlist;
       for (let key in extraConfig) {
@@ -310,6 +322,10 @@ async function _configureInfoPlistAsync(context) {
     } else {
       delete infoPlist['FacebookDisplayName'];
     }
+
+    infoPlist.FacebookAutoInitEnabled = config.facebookAutoInitEnabled || false;
+    infoPlist.FacebookAutoLogAppEventsEnabled = config.facebookAutoLogAppEventsEnabled || false;
+    infoPlist.FacebookAdvertiserIDCollectionEnabled = config.facebookAdvertiserIDCollectionEnabled || false;
 
     // set ITSAppUsesNonExemptEncryption to let people skip manually
     // entering it in iTunes Connect
@@ -392,12 +408,12 @@ async function _configureInfoPlistAsync(context) {
     }
 
     // context-specific plist changes
-    if (context.type === 'user') {
+    if (context instanceof StandaloneContextUser) {
       infoPlist = _configureInfoPlistForLocalDevelopment(infoPlist, context.data.exp);
       _logDeveloperInfoForLocalDevelopment(infoPlist);
     }
 
-    if (context.type === 'service') {
+    if (context instanceof StandaloneContextService && context.build.ios) {
       infoPlist.CFBundleExecutable = context.build.ios.bundleExecutable;
     }
 
@@ -409,7 +425,7 @@ async function _configureInfoPlistAsync(context) {
 /**
  *  Configure EXShell.plist for a standalone app.
  */
-async function _configureShellPlistAsync(context) {
+async function _configureShellPlistAsync(context: AnyStandaloneContext): Promise<void> {
   const { supportingDirectory } = IosWorkspace.getPaths(context);
   const config = context.config;
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
@@ -421,13 +437,13 @@ async function _configureShellPlistAsync(context) {
     }
     shellPlist.manifestUrl = context.published.url;
     shellPlist.releaseChannel = context.published.releaseChannel;
-    if (context.data.testEnvironment) {
+    if (isStandaloneContextDataService(context.data) && context.data.testEnvironment) {
       shellPlist.testEnvironment = context.data.testEnvironment;
     }
     if (config.ios && config.ios.permissions) {
       shellPlist.permissions = config.ios.permissions;
     }
-    if (context.type === 'user') {
+    if (context instanceof StandaloneContextUser) {
       // disable manifest verification on detached apps until
       // the developer adds the correct entitlements to their bundle id.
       shellPlist.isManifestVerificationBypassed = true;
@@ -451,8 +467,8 @@ async function _configureShellPlistAsync(context) {
   });
 }
 
-async function _configureConstantsPlistAsync(context) {
-  if (context.type === 'user') {
+async function _configureConstantsPlistAsync(context: AnyStandaloneContext) {
+  if (context instanceof StandaloneContextUser) {
     return;
   }
 
@@ -466,8 +482,8 @@ async function _configureConstantsPlistAsync(context) {
   });
 }
 
-async function _configureGoogleServicesPlistAsync(context) {
-  if (context.type === 'user') {
+async function _configureGoogleServicesPlistAsync(context: AnyStandaloneContext): Promise<void> {
+  if (context instanceof StandaloneContextUser) {
     return;
   }
   if (get(context, 'data.manifest.ios.googleServicesFile')) {
@@ -480,7 +496,7 @@ async function _configureGoogleServicesPlistAsync(context) {
   }
 }
 
-async function configureAsync(context) {
+export async function configureAsync(context: AnyStandaloneContext): Promise<void> {
   const buildPhaseLogger = logger.withFields({ buildPhase: 'configuring NSBundle' });
 
   let {
@@ -489,7 +505,10 @@ async function configureAsync(context) {
     projectName,
     supportingDirectory,
   } = IosWorkspace.getPaths(context);
-  if (!context.build.isExpoClientBuild() && !context.published.url) {
+
+  const isExpoClientBuild = context.build.isExpoClientBuild();
+
+  if (!isExpoClientBuild && !context.published.url) {
     throw new Error(`Can't configure a NSBundle without a published url.`);
   }
 
@@ -501,13 +520,13 @@ async function configureAsync(context) {
     // common configuration for all contexts
     buildPhaseLogger.info(`Modifying NSBundle configuration at ${supportingDirectory}...`);
     await _configureInfoPlistAsync(context);
-    if (!context.build.isExpoClientBuild()) {
+    if (!isExpoClientBuild) {
       await _configureShellPlistAsync(context);
     }
     await _configureEntitlementsAsync(context);
     await _configureConstantsPlistAsync(context);
     await _configureGoogleServicesPlistAsync(context);
-    if (!context.build.isExpoClientBuild()) {
+    if (!isExpoClientBuild) {
       await IosLaunchScreen.configureLaunchAssetsAsync(context, intermediatesDirectory);
       await IosLocalization.writeLocalizationResourcesAsync({
         supportingDirectory,
@@ -515,11 +534,11 @@ async function configureAsync(context) {
       });
     }
 
-    if (context.build.isExpoClientBuild()) {
+    if (isExpoClientBuild) {
       return;
     }
 
-    if (context.type === 'user') {
+    if (context instanceof StandaloneContextUser) {
       const iconPath = path.join(
         iosProjectDirectory,
         projectName,
@@ -527,7 +546,7 @@ async function configureAsync(context) {
         'AppIcon.appiconset'
       );
       await IosIcons.createAndWriteIconsToPathAsync(context, iconPath);
-    } else if (context.type === 'service') {
+    } else if (context instanceof StandaloneContextService) {
       buildPhaseLogger.info('Bundling assets...');
       try {
         await AssetBundle.bundleAsync(
@@ -569,7 +588,7 @@ async function configureAsync(context) {
   }
 }
 
-async function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle) {
+function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle: string): string | undefined {
   switch (userInterfaceStyle) {
     case 'light':
       return 'Light';
@@ -582,6 +601,5 @@ async function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle) {
         `User interface style "${userInterfaceStyle}" is not supported. Supported values: "light", "dark", "automatic".`
       );
   }
+  return;
 }
-
-export { configureAsync };
