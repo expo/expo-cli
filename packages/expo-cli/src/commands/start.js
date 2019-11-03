@@ -36,6 +36,10 @@ function parseStartOptions(projectDir: string, options: Object): Object {
     startOpts.webOnly = true;
   }
 
+  if (options.electron) {
+    startOpts.electron = true;
+  }
+
   if (options.maxWorkers) {
     startOpts.maxWorkers = options.maxWorkers;
   }

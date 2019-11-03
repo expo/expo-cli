@@ -10,6 +10,9 @@ import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerU
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
+// @ts-ignore
+import * as Electron from '@expo/electron-adapter';
+
 import createWebpackCompiler, {
   printInstructions,
   printSuccessMessages,
@@ -58,6 +61,7 @@ type BundlingOptions = {
   https?: boolean;
   nonInteractive?: boolean;
   unimodulesOnly?: boolean;
+  electron?: boolean;
   onWebpackFinished?: (error?: Error) => void;
 };
 
@@ -124,7 +128,14 @@ export async function startAsync(
 
   const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
 
-  const config = await createWebpackConfigAsync(env, fullOptions);
+  const _createWebpackConfig = () => createWebpackConfigAsync(env, fullOptions);
+
+  let config: any;
+  if (env.electron) {
+    config = await Electron.withElectronAsync({ webpack: _createWebpackConfig, projectRoot });
+  } else {
+    config = await _createWebpackConfig();
+  }
 
   const port = await getAvailablePortAsync({
     defaultPort: options.port,
@@ -208,6 +219,16 @@ export async function startAsync(
 
   const host = ip.address();
   const url = `${protocol}://${host}:${webpackServerPort}`;
+
+  if (env.electron) {
+    Electron.start(projectRoot, {
+      url,
+      port: webpackServerPort,
+      host,
+      protocol,
+    });
+  }
+
   return {
     url,
     server,
@@ -333,12 +354,25 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     mode: 'production',
   });
 
-  const config = await createWebpackConfigAsync(env, fullOptions);
+  const _createWebpackConfig = () => createWebpackConfigAsync(env, fullOptions);
+  let config: any;
+  if (env.electron) {
+    config = await Electron.withElectronAsync({ webpack: _createWebpackConfig, projectRoot });
+  } else {
+    config = await _createWebpackConfig();
+  }
 
   if (isUsingNextJs) {
     await bundleNextJsAsync(projectRoot);
   } else {
     await bundleWebAppAsync(projectRoot, config);
+  }
+
+  if (options && options.electron) {
+    if (!(config.output || {}).path) throw new Error('output path cannot be null');
+    Electron.buildAsync(projectRoot, {
+      outputPath: (config.output || {}).path!,
+    });
   }
 }
 
@@ -482,6 +516,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     mode,
     https,
     info: isDebugInfoEnabled,
+    electron: !!options.electron,
     ...(options.webpackEnv || {}),
   };
 }

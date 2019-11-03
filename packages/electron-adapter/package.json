@@ -1,0 +1,54 @@
+{
+  "name": "@expo/electron-adapter",
+  "version": "1.0.0",
+  "description": "Use Electron with Expo",
+  "main": "build/Electron.js",
+  "types": "build/Electron.d.ts",
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "lint": "eslint ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/electron-adapter"
+  },
+  "keywords": [
+    "expo",
+    "expo-web",
+    "json",
+    "electron",
+    "pwa",
+    "react",
+    "react-native",
+    "react-dom",
+    "react-native-web"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/electron-adapter#readme",
+  "files": [
+    "build"
+  ],
+  "devDependencies": {
+    "@expo/babel-preset-cli": "^0.2.1",
+    "typescript": "3.4.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@expo/webpack-config": "^0.8.0",
+    "async-exit-hook": "^2.0.1",
+    "chalk": "^2.4.2",
+    "electron": "^6.0.12",
+    "electron-builder": "^21.2.0",
+    "lazy-val": "^1.0.4",
+    "read-config-file": "^5.0.0"
+  }
+}

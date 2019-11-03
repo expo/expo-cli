@@ -37,7 +37,13 @@ import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import * as AssetUtils from './AssetUtils';
-import { calculateHash, createNewFilename, getAssetFilesAsync, optimizeImageAsync, readAssetJsonAsync } from './AssetUtils';
+import {
+  calculateHash,
+  createNewFilename,
+  getAssetFilesAsync,
+  optimizeImageAsync,
+  readAssetJsonAsync,
+} from './AssetUtils';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
@@ -123,6 +129,7 @@ type StartOptions = {
   nonPersistent?: boolean;
   maxWorkers?: number;
   webOnly?: boolean;
+  electron?: boolean;
 };
 
 type PublishOptions = {
@@ -1674,14 +1681,17 @@ export async function startReactNativeServerAsync(
 
   let customLogReporterPath: string | undefined;
 
-  const possibleLogReporterPath = ConfigUtils.projectHasModule('expo/tools/LogReporter', projectRoot, exp);
+  const possibleLogReporterPath = ConfigUtils.projectHasModule(
+    'expo/tools/LogReporter',
+    projectRoot,
+    exp
+  );
   if (possibleLogReporterPath) {
     customLogReporterPath = possibleLogReporterPath;
   } else {
     // TODO: Bacon: Prompt to install expo?
     logger.global.warn(`Expo is not installed: Using default reporter to format logs.`);
   }
-
 
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,

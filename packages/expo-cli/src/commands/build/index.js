@@ -112,6 +112,7 @@ export default (program: any) => {
       'Prevent webpack from generating the manifest.json and injecting meta into the index.html head.'
     )
     .option('-d, --dev', 'Turns dev flag on before bundling')
+    .option('-e, --electron', 'Builds your app with Electron')
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir(
       (projectDir, options) => {

@@ -5,17 +5,12 @@ import fs from 'fs-extra';
 import getenv from 'getenv';
 import openBrowser from 'react-dev-utils/openBrowser';
 import { readConfigJsonAsync } from '@expo/config';
-import set from 'lodash/set';
+
 import webpack from 'webpack';
-import {
-  Configuration as WebpackDevServerConfiguration,
-  ProxyConfigMap,
-  ProxyConfigArray,
-} from 'webpack-dev-server';
+import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
 import Logger from './Logger';
-// @ts-ignore missing types for Doctor until it gets converted to TypeScript
-import * as Doctor from './project/Doctor';
+
 import { logWarning, LogTag } from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
 
@@ -28,6 +23,7 @@ export type WebEnvironment = {
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
+  electron: boolean;
   info: boolean;
 };
 
