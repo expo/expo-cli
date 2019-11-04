@@ -50,16 +50,30 @@ export function getEntryPoint(
   entryFiles: string[],
   platforms: string[]
 ): string | null {
-  const { exp, pkg } = readConfigJson(projectRoot, true, true);
   const extensions = getManagedExtensions(platforms);
+  return getEntryPointWithExtensions(projectRoot, entryFiles, extensions);
+}
 
-  /**
-   *  The main file is resolved like so:
-   * * `app.json: expo.entryPoint`
-   * * `package.json: main`
-   * * `entryFiles[]`
-   */
+/**
+ *  The main file is resolved like so:
+ * * `app.json: expo.entryPoint`
+ * * `package.json: main`
+ * * `entryFiles[]`
+ */
+
+// Used to resolve the main entry file for a project.
+export function getEntryPointWithExtensions(
+  projectRoot: string,
+  entryFiles: string[],
+  extensions: string[]
+): string {
+  const { exp, pkg } = readConfigJson(projectRoot, true, true);
+
+  // This will first look in the `app.json`s `expo.entryPoint` field for a potential main file.
+  // We check the Expo config first in case you want your project to start differently with Expo then in a standalone environment.
   if (exp && exp.entryPoint && typeof exp.entryPoint === 'string') {
+    // If the field exists then we want to test it against every one of the supplied extensions
+    // to ensure the bundler resolves the same way.
     const entry = resolveFromSilentWithExtensions(projectRoot, exp.entryPoint, extensions);
     if (!entry)
       throw new Error(
@@ -67,8 +81,10 @@ export function getEntryPoint(
       );
     return entry;
   } else if (pkg) {
+    // If the config doesn't define a custom entry then we want to look at the `package.json`s `main` field, and try again.
     const { main } = pkg;
     if (main && typeof main === 'string') {
+      // Testing the main field against all of the provided extensions.
       const entry = resolveFromSilentWithExtensions(projectRoot, main, extensions);
 
       if (!entry)
@@ -79,14 +95,19 @@ export function getEntryPoint(
     }
   }
 
-  // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
+  // Now we will start looking for a default entry point using the provided `entryFiles` argument.
+  // This will add support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
   for (const fileName of entryFiles) {
     const entry = resolveFromSilentWithExtensions(projectRoot, fileName, extensions);
     if (entry) return entry;
   }
 
   try {
-    // Fallback on expo/AppEntry
+    // If none of the default files exist then we will attempt to use the main Expo entry point.
+    // This requires `expo` to be installed in the project to work as it will use `node_module/expo/AppEntry.js`
+    // Doing this enables us to create a bare minimum Expo project.
+
+    // TODO(Bacon): We may want to do a check against `./App` and `expo` in the `package.json` `dependencies` as we can more accurately ensure that the project is expo-min without needing the modules installed.
     return resolveModule('expo/AppEntry', projectRoot, exp);
   } catch (_) {
     throw new Error(
