@@ -43,8 +43,6 @@ export function getAbsolutePathWithProjectRoot(
   return path.resolve(projectRoot, ...pathComponents);
 }
 
-// getEntryPoint('/', ['./index', './src/index'], ['web']);
-
 export function getEntryPoint(
   projectRoot: string,
   entryFiles: string[],
@@ -53,13 +51,6 @@ export function getEntryPoint(
   const extensions = getManagedExtensions(platforms);
   return getEntryPointWithExtensions(projectRoot, entryFiles, extensions);
 }
-
-/**
- *  The main file is resolved like so:
- * * `app.json: expo.entryPoint`
- * * `package.json: main`
- * * `entryFiles[]`
- */
 
 // Used to resolve the main entry file for a project.
 export function getEntryPointWithExtensions(
