@@ -5,6 +5,7 @@ import findWorkspaceRoot from 'find-yarn-workspace-root';
 import { readConfigJson, resolveModule } from '../Config';
 import { getManagedExtensions } from './extensions';
 
+// https://github.com/facebook/create-react-app/blob/9750738cce89a967cc71f28390daf5d4311b193c/packages/react-scripts/config/paths.js#L22
 export function ensureSlash(inputPath: string, needsSlash: boolean): string {
   const hasSlash = inputPath.endsWith('/');
   if (hasSlash && !needsSlash) {
