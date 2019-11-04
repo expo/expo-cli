@@ -3,7 +3,7 @@
 exports[`has consistent defaults 1`] = `
 Object {
   "absolute": [Function],
-  "appMain": "tests/basic/index",
+  "appMain": "tests/basic/index.js",
   "includeModule": [Function],
   "modules": "tests/basic/node_modules",
   "packageJson": "tests/basic/package.json",

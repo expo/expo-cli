@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 
+import resolveFrom from 'resolve-from';
 import { readConfigJson, resolveModule } from '../Config';
 import { getManagedExtensions } from './extensions';
 
@@ -42,7 +43,7 @@ export function getAbsolutePathWithProjectRoot(
   return path.resolve(projectRoot, ...pathComponents);
 }
 
-// getEntryPoint('/', ['index', 'src/index'], ['web']);
+// getEntryPoint('/', ['./index', './src/index'], ['web']);
 
 export function getEntryPoint(
   projectRoot: string,
@@ -50,16 +51,17 @@ export function getEntryPoint(
   platforms: string[]
 ): string | null {
   const { exp, pkg } = readConfigJson(projectRoot, true, true);
+  const extensions = getManagedExtensions(platforms);
 
   /**
    *  The main file is resolved like so:
-   * * `app.json` -> `expo.entryPoint`
-   * * `package.json` -> `"main"`
-   * * `entryFiles`
+   * * `app.json: expo.entryPoint`
+   * * `package.json: main`
+   * * `entryFiles[]`
    */
   if (exp && exp.entryPoint && typeof exp.entryPoint === 'string') {
-    const entry = getAbsolutePathWithProjectRoot(projectRoot, exp.entryPoint);
-    if (!fs.existsSync(entry))
+    const entry = resolveFromSilentWithExtensions(projectRoot, exp.entryPoint, extensions);
+    if (!entry)
       throw new Error(
         `Cannot resolve entry file: The \`expo.entryPoint\` field defined in your \`app.json\` points to a non-existent path.`
       );
@@ -67,8 +69,9 @@ export function getEntryPoint(
   } else if (pkg) {
     const { main } = pkg;
     if (main && typeof main === 'string') {
-      const entry = getAbsolutePathWithProjectRoot(projectRoot, main);
-      if (!fs.existsSync(entry))
+      const entry = resolveFromSilentWithExtensions(projectRoot, main, extensions);
+
+      if (!entry)
         throw new Error(
           `Cannot resolve entry file: The \`main\` field defined in your \`package.json\` points to a non-existent path.`
         );
@@ -76,26 +79,33 @@ export function getEntryPoint(
     }
   }
 
-  const extensions = getManagedExtensions(platforms);
   // Adds support for create-react-app (src/index.js) and react-native-cli (index.js) which don't define a main.
   for (const fileName of entryFiles) {
-    for (const extension of extensions) {
-      const filePath = getAbsolutePathWithProjectRoot(projectRoot, [fileName, extension].join('.'));
-      if (fs.existsSync(filePath)) {
-        return filePath;
-      }
-    }
+    const entry = resolveFromSilentWithExtensions(projectRoot, fileName, extensions);
+    if (entry) return entry;
   }
 
-  // Fallback on expo/AppEntry
-  const entryPoint = resolveModule('expo/AppEntry', projectRoot, exp);
-  const expoEntryPointExists = fs.existsSync(entryPoint);
-
-  if (!expoEntryPointExists) {
+  try {
+    // Fallback on expo/AppEntry
+    return resolveModule('expo/AppEntry', projectRoot, exp);
+  } catch (_) {
     throw new Error(
       `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
     );
   }
-  // Remove project root from file path
-  return entryPoint.split(projectRoot).pop() || entryPoint;
+}
+
+// Resolve from but with the ability to resolve like a bundler
+export function resolveFromSilentWithExtensions(
+  fromDirectory: string,
+  moduleId: string,
+  extensions: string[]
+): string | undefined {
+  for (const extension of extensions) {
+    const modulePath = resolveFrom.silent(fromDirectory, `${moduleId}.${extension}`);
+    if (modulePath && modulePath.endsWith(extension)) {
+      return modulePath;
+    }
+  }
+  return resolveFrom.silent(fromDirectory, moduleId);
 }

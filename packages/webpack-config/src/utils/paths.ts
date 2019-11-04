@@ -46,7 +46,7 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     root: path.resolve(inputProjectRoot),
-    appMain: getEntryPoint(inputProjectRoot, ['index', 'src/index'], ['web']),
+    appMain: getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']),
     modules: modulesPath,
     servedPath: getServedPath(inputProjectRoot),
     template: {
