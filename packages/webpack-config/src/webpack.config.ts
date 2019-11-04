@@ -1,4 +1,3 @@
-// @ts-ignore
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 import { Options, Configuration, HotModuleReplacementPlugin, Output } from 'webpack';
@@ -12,8 +11,6 @@ import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
 import ModuleScopePlugin from 'react-dev-utils/ModuleScopePlugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
-// @ts-ignore
-import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 // @ts-ignore
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -180,7 +177,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
             from: locations.template.folder,
             to: locations.production.folder,
             // We generate new versions of these based on the templates
-            ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
+            ignore: ['expo-service-worker.js', 'favicon.ico', 'serve.json', 'index.html', 'icon.png'],
           },
           {
             from: locations.template.serveJson,
@@ -189,6 +186,10 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
           {
             from: locations.template.favicon,
             to: locations.production.favicon,
+          },
+          {
+            from: locations.template.serviceWorker,
+            to: locations.production.serviceWorker,
           },
         ]),
 
@@ -224,10 +225,6 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
 
       // This is necessary to emit hot updates (currently CSS only):
       isDev && new HotModuleReplacementPlugin(),
-      // Watcher doesn't work well if you mistype casing in a path so we use
-      // a plugin that prints an error when you attempt to do this.
-      // See https://github.com/facebook/create-react-app/issues/240
-      isDev && new CaseSensitivePathsPlugin(),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
@@ -275,6 +272,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
     },
     resolve: {
       alias: DEFAULT_ALIAS,
+      mainFields: ['browser', 'module', 'main'],
       extensions: getModuleFileExtensions('web'),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding

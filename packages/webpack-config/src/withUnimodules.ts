@@ -36,7 +36,7 @@ export default function withUnimodules(
 
   // If the args don't specify this then we'll check if the input already supports font loading.
   if (typeof supportsFontLoading === 'undefined') {
-    const supportedFonts = ['ttf', 'otf', 'woff'];
+    const supportedFonts = ['ttf', 'otf', 'woff', 'woff2', 'eot'];
     const testFontFileNames = supportedFonts.map(ext =>
       path.resolve(environment.projectRoot, `cool-font.${ext}`)
     );
@@ -62,7 +62,8 @@ export default function withUnimodules(
     inputWebpackConfig.externals = (inputWebpackConfig.externals as any).map((external: any) => {
       if (typeof external !== 'function') return external;
       return (ctx: any, req: any, cb: any) => {
-        return includeFunc(path.join('node_modules', req)) ? cb() : external(ctx, req, cb);
+        const relPath = path.join('node_modules', req);
+        return includeFunc(relPath) ? cb() : external(ctx, req, cb);
       };
     });
   }

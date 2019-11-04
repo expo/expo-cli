@@ -8,7 +8,7 @@ import {
   saveUrlToPathAsync,
   spawnAsyncThrowError,
 } from './ExponentTools';
-import StandaloneContext, { StandaloneContextDataUser } from './StandaloneContext';
+import { AnyStandaloneContext, StandaloneContextDataUser } from './StandaloneContext';
 import { resizeImageAsync, getImageDimensionsAsync } from '../tools/ImageUtils';
 
 const iconScales = {
@@ -41,7 +41,7 @@ async function _regexFileInResSubfoldersAsync(
 let _hasShownResizeErrorWindowsLinux = false;
 
 async function _resizeIconsAsync(
-  context: StandaloneContext,
+  context: AnyStandaloneContext,
   resPath: string,
   prefix: string,
   mdpiSize: number,
@@ -108,7 +108,7 @@ async function _resizeIconsAsync(
 }
 
 async function createAndWriteIconsToPathAsync(
-  context: StandaloneContext,
+  context: AnyStandaloneContext,
   resPath: string,
   isDetached: boolean
 ) {

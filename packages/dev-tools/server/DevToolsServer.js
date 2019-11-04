@@ -49,7 +49,7 @@ export async function createAuthenticationContextAsync({ port }) {
 }
 
 export async function startAsync(projectDir) {
-  const port = await freeportAsync(19002);
+  const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
 
   const authenticationContext = await createAuthenticationContextAsync({ port });

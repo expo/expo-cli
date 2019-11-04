@@ -181,6 +181,7 @@ async function ejectToBareAsync(projectRoot, options) {
   log(chalk.green('Wrote to app.json, please update it manually in the future.'));
 
   let defaultDependencies = {};
+  let defaultDevDependencies = {};
 
   /**
    * Extract the template and copy it over
@@ -192,6 +193,7 @@ async function ejectToBareAsync(projectRoot, options) {
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
     let packageJson = fse.readJsonSync(path.join(tempDir, 'package.json'));
     defaultDependencies = packageJson.dependencies;
+    defaultDevDependencies = packageJson.devDependencies;
     log('Successfully copied template native code.');
   } catch (e) {
     log(chalk.red(e.message));
@@ -209,6 +211,13 @@ async function ejectToBareAsync(projectRoot, options) {
   pkgJson.scripts.ios = 'react-native run-ios';
   pkgJson.scripts.android = 'react-native run-android';
 
+  if (pkgJson.scripts.postinstall) {
+    pkgJson.scripts.postinstall = `jetify && ${pkgJson.scripts.postinstall}`;
+    log(chalk.warn('jetifier has been added to your existing postinstall script.'));
+  } else {
+    pkgJson.scripts.postinstall = `jetify`;
+  }
+
   // The template may have some dependencies beyond react/react-native/react-native-unimodules,
   // for example RNGH and Reanimated. We should prefer the version that is already being used
   // in the project for those, but swap the react/react-native/react-native-unimodules versions
@@ -218,6 +227,10 @@ async function ejectToBareAsync(projectRoot, options) {
   combinedDependencies['react'] = defaultDependencies['react'];
   combinedDependencies['react-native-unimodules'] = defaultDependencies['react-native-unimodules'];
   pkgJson.dependencies = combinedDependencies;
+  let combinedDevDependencies = { ...defaultDevDependencies, ...pkgJson.devDependencies };
+  combinedDevDependencies['jetifier'] = defaultDevDependencies['jetifier'];
+  pkgJson.devDependencies = combinedDevDependencies;
+
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
   log(chalk.green('Your package.json is up to date!'));
 

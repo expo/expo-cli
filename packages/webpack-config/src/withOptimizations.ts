@@ -20,6 +20,7 @@ export default function withOptimizations(config: Configuration): Configuration 
 
   config.optimization = {
     ...(config.optimization || {}),
+    nodeEnv: false,
     minimize: true,
     minimizer: [
       // This is only used in production mode
