@@ -65,23 +65,30 @@ export function getEntryPointWithExtensions(
   if (exp && exp.entryPoint && typeof exp.entryPoint === 'string') {
     // If the field exists then we want to test it against every one of the supplied extensions
     // to ensure the bundler resolves the same way.
-    const entry = resolveFromSilentWithExtensions(projectRoot, exp.entryPoint, extensions);
-    if (!entry)
-      throw new Error(
-        `Cannot resolve entry file: The \`expo.entryPoint\` field defined in your \`app.json\` points to a non-existent path.`
-      );
+    let entry = getFileWithExtensions(projectRoot, exp.entryPoint, extensions);
+    if (!entry) {
+      // Allow for paths like: `{ "main": "expo/AppEntry" }`
+      entry = resolveFromSilentWithExtensions(projectRoot, exp.entryPoint, extensions);
+      if (!entry)
+        throw new Error(
+          `Cannot resolve entry file: The \`expo.entryPoint\` field defined in your \`app.json\` points to a non-existent path.`
+        );
+    }
     return entry;
   } else if (pkg) {
     // If the config doesn't define a custom entry then we want to look at the `package.json`s `main` field, and try again.
     const { main } = pkg;
     if (main && typeof main === 'string') {
-      // Testing the main field against all of the provided extensions.
-      const entry = resolveFromSilentWithExtensions(projectRoot, main, extensions);
-
-      if (!entry)
-        throw new Error(
-          `Cannot resolve entry file: The \`main\` field defined in your \`package.json\` points to a non-existent path.`
-        );
+      // Testing the main field against all of the provided extensions - for legacy reasons we can't use node module resolution as the package.json allows you to pass in a file without a relative path and expect it as a relative path.
+      let entry = getFileWithExtensions(projectRoot, main, extensions);
+      if (!entry) {
+        // Allow for paths like: `{ "main": "expo/AppEntry" }`
+        entry = resolveFromSilentWithExtensions(projectRoot, main, extensions);
+        if (!entry)
+          throw new Error(
+            `Cannot resolve entry file: The \`main\` field defined in your \`package.json\` points to a non-existent path.`
+          );
+      }
       return entry;
     }
   }
@@ -120,4 +127,23 @@ export function resolveFromSilentWithExtensions(
     }
   }
   return resolveFrom.silent(fromDirectory, moduleId);
+}
+
+// Statically attempt to resolve a module but with the ability to resolve like a bundler.
+// This won't use node module resolution.
+export function getFileWithExtensions(
+  fromDirectory: string,
+  moduleId: string,
+  extensions: string[]
+): string | undefined {
+  const modulePath = path.join(fromDirectory, moduleId);
+  if (fs.existsSync(modulePath)) {
+    return modulePath;
+  }
+  for (const extension of extensions) {
+    const modulePath = path.join(fromDirectory, `${moduleId}.${extension}`);
+    if (fs.existsSync(modulePath)) {
+      return modulePath;
+    }
+  }
 }
