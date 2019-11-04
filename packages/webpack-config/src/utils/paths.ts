@@ -12,7 +12,7 @@ import {
   getModulesPath,
   getEntryPoint,
   getAbsolutePathWithProjectRoot,
-} from '@expo/config/paths';
+} from '@expo/config/build/paths';
 
 function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();

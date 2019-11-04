@@ -48,7 +48,7 @@ export function getEntryPoint(
   entryFiles: string[],
   platforms: string[]
 ): string | null {
-  const { exp, pkg } = readConfigJson(projectRoot, true);
+  const { exp, pkg } = readConfigJson(projectRoot, true, true);
 
   /**
    *  The main file is resolved like so:
