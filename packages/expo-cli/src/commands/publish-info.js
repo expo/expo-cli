@@ -2,7 +2,7 @@
  * @flow
  */
 
-import { Api, Project, ProjectUtils, FormData, UserManager } from '@expo/xdl';
+import { Api, FormData, Project, ProjectUtils, UserManager } from '@expo/xdl';
 import * as table from '../commands/utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;

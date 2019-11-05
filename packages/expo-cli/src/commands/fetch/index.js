@@ -1,6 +1,6 @@
 import {
-  fetchAndroidKeystoreAsync,
   fetchAndroidHashesAsync,
+  fetchAndroidKeystoreAsync,
   fetchAndroidUploadCertAsync,
 } from './android';
 import fetchIosCerts from './ios';

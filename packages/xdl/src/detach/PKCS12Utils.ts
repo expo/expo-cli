@@ -1,5 +1,5 @@
-import forge from 'node-forge';
 import get from 'lodash/get';
+import forge from 'node-forge';
 
 export function getP12CertFingerprint(
   p12Buffer: Buffer | string,

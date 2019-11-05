@@ -1,5 +1,5 @@
-import UserManager from './User';
 import ApiV2Client from './ApiV2';
+import UserManager from './User';
 
 export type WebhookEvent = string;
 

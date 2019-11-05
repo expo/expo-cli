@@ -1,16 +1,15 @@
-import path from 'path';
-
 import { ExpoConfig } from '@expo/config';
 import { JSONObject } from '@expo/json-file';
 import forEach from 'lodash/forEach';
-import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
+import pickBy from 'lodash/pickBy';
+import path from 'path';
 import semver from 'semver';
 
 import ApiV2Client from './ApiV2';
 import { Cacher } from './tools/FsCache';
-import XDLError from './XDLError';
 import UserManager from './User';
+import XDLError from './XDLError';
 
 export type SDKVersion = {
   androidExpoViewUrl?: string;

@@ -1,11 +1,11 @@
-import fs from 'fs-extra';
-import path from 'path';
-import crypto from 'crypto';
-import chalk from 'chalk';
-import glob from 'glob';
+import { readConfigJsonAsync } from '@expo/config';
 import { sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
-import { readConfigJsonAsync } from '@expo/config';
+import chalk from 'chalk';
+import crypto from 'crypto';
+import fs from 'fs-extra';
+import glob from 'glob';
+import path from 'path';
 import temporary from 'tempy';
 
 import logger from './Logger';

@@ -1,12 +1,10 @@
-import path from 'path';
-
+import { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';
 import getenv from 'getenv';
-import idx from 'idx';
-import { JSONObject } from '@expo/json-file';
+import path from 'path';
 
-import * as ProjectUtils from '../project/ProjectUtils';
 import Logger from '../Logger';
+import * as ProjectUtils from '../project/ProjectUtils';
 
 type BuildEventType =
   | 'METRO_INITIALIZE_STARTED'

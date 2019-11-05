@@ -1,4 +1,5 @@
 import Raven from 'raven';
+
 import Config from './Config';
 
 const SENTRY_DSN =
