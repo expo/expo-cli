@@ -119,14 +119,14 @@ export function resolveFromSilentWithExtensions(
   fromDirectory: string,
   moduleId: string,
   extensions: string[]
-): string | undefined {
+): string | null {
   for (const extension of extensions) {
     const modulePath = resolveFrom.silent(fromDirectory, `${moduleId}.${extension}`);
     if (modulePath && modulePath.endsWith(extension)) {
       return modulePath;
     }
   }
-  return resolveFrom.silent(fromDirectory, moduleId);
+  return resolveFrom.silent(fromDirectory, moduleId) || null;
 }
 
 // Statically attempt to resolve a module but with the ability to resolve like a bundler.
@@ -135,7 +135,7 @@ export function getFileWithExtensions(
   fromDirectory: string,
   moduleId: string,
   extensions: string[]
-): string | undefined {
+): string | null {
   const modulePath = path.join(fromDirectory, moduleId);
   if (fs.existsSync(modulePath)) {
     return modulePath;
@@ -146,4 +146,5 @@ export function getFileWithExtensions(
       return modulePath;
     }
   }
+  return null;
 }
