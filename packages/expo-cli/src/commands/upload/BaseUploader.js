@@ -1,7 +1,7 @@
 import path from 'path';
 
 import fs from 'fs-extra';
-import { StandaloneBuild, ProjectUtils } from '@expo/xdl';
+import { ProjectUtils, StandaloneBuild } from '@expo/xdl';
 import chalk from 'chalk';
 
 import { downloadFile } from './utils';

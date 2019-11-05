@@ -1,5 +1,5 @@
-import crypto from 'crypto';
 import { Encoder as Base32Encoder } from 'base32.js';
+import crypto from 'crypto';
 
 export default function generateBundleIdentifier(teamId) {
   return `dev.expo.client.${base32(sha(teamId))}`;

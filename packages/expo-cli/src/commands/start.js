@@ -7,7 +7,7 @@ import path from 'path';
 import * as ConfigUtils from '@expo/config';
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
-import { ProjectUtils, Web, Project, UserSettings, UrlUtils, Versions } from '@expo/xdl';
+import { Project, ProjectUtils, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import intersection from 'lodash/intersection';

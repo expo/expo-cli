@@ -1,6 +1,6 @@
-import defaults from 'lodash/defaults';
 import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
+import defaults from 'lodash/defaults';
 import path from 'path';
 
 export type ProjectSettings = {

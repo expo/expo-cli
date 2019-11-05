@@ -2,7 +2,7 @@ import { Credentials, IosCodeSigning } from '@expo/xdl';
 
 import prompt from './prompt';
 import revoke from './revoke';
-import { generate, determineMissingCredentials } from './generate';
+import { determineMissingCredentials, generate } from './generate';
 import { PLATFORMS } from '../../constants';
 import log from '../../../../log';
 

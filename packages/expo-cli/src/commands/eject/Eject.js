@@ -8,7 +8,7 @@ import semver from 'semver';
 import pacote from 'pacote';
 import temporary from 'tempy';
 import JsonFile from '@expo/json-file';
-import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
+import { Detach, Exp, ProjectUtils, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 import * as PackageManager from '../../PackageManager';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
@@ -36,18 +36,18 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
   log.nested('');
   log.nested(
     chalk.yellow(
-      `Warning: your app includes ${chalk.bold(packagesToWarn.length)} package${
-        plural ? 's' : ''
-      } that require${plural ? '' : 's'} additional setup. See the following URL${
-        plural ? 's' : ''
-      } for instructions.`
+      `Warning: your app includes ${chalk.bold(packagesToWarn.length)} package${plural
+        ? 's'
+        : ''} that require${plural ? '' : 's'} additional setup. See the following URL${plural
+        ? 's'
+        : ''} for instructions.`
     )
   );
   log.nested(
     chalk.yellow(
-      `Your app may not build/run until the additional setup for ${
-        plural ? 'these packages' : 'this package'
-      } has been completed.`
+      `Your app may not build/run until the additional setup for ${plural
+        ? 'these packages'
+        : 'this package'} has been completed.`
     )
   );
   log.nested('');

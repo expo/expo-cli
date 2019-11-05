@@ -1,6 +1,5 @@
-import os from 'os';
-
 import getenv from 'getenv';
+import os from 'os';
 
 export function home(): string {
   return os.homedir();

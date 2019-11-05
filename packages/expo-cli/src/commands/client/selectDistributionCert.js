@@ -1,15 +1,14 @@
+import { Credentials } from '@expo/xdl';
 import open from 'open';
 import ora from 'ora';
-import { Credentials } from '@expo/xdl';
 
+import log from '../../log';
+import prompt from '../../prompt';
 import * as appleApi from '../build/ios/appleApi';
 import * as credentials from '../build/ios/credentials';
 import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
-import log from '../../log';
-import prompt from '../../prompt';
-import { tagForUpdate } from './tagger';
-
 import { choosePreferredCreds } from './selectUtils';
+import { tagForUpdate } from './tagger';
 
 export default async function selectDistributionCert(context, options = {}) {
   const certificates = context.username ? await chooseUnrevokedDistributionCert(context) : [];

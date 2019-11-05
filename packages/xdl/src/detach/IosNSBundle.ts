@@ -199,6 +199,12 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
         delete entitlements['com.apple.developer.applesignin'];
       }
 
+      if (manifest.ios && manifest.ios.accessesContactNotes) {
+        entitlements['com.apple.developer.contacts.notes'] = manifest.ios.accessesContactNotes;
+      } else if (entitlements.hasOwnProperty('com.apple.developer.contacts.notes')) {
+        delete entitlements['com.apple.developer.contacts.notes'];
+      }
+
       // Add app associated domains remove exp-specific ones.
       if (manifest.ios && manifest.ios.associatedDomains) {
         entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
