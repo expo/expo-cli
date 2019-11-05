@@ -66,9 +66,7 @@ import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 
-// @ts-ignore Doctor not yet converted to TypeScript
 import * as Doctor from './project/Doctor';
-// @ts-ignore IosPlist not yet converted to TypeScript
 import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';

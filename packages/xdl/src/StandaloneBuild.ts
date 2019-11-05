@@ -1,8 +1,8 @@
+import { Platform } from '@expo/config';
 import _ from 'lodash';
 
 import ApiV2Client from './ApiV2';
 import UserManager from './User';
-import { Platform } from '@expo/config';
 
 export async function getStandaloneBuilds({
   id,

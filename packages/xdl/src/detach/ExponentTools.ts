@@ -1,18 +1,17 @@
+import { ExpoConfig, Platform } from '@expo/config';
+import spawnAsyncQuiet, { SpawnOptions, SpawnResult } from '@expo/spawn-async';
+import fs from 'fs-extra';
+import _ from 'lodash';
 import path from 'path';
+import pipeRequest from 'request';
+import Request from 'request-promise-native';
 import { Readable } from 'stream';
 
-import fs from 'fs-extra';
-import Request from 'request-promise-native';
+import XDLError from '../XDLError';
+import LoggerDetach, { Logger, pipeOutputToLogger } from './Logger';
+
 // `request-promise-native` discourages using pipe. Noticed some issues with
 // error handling so when using pipe use the original request lib instead.
-import pipeRequest from 'request';
-import spawnAsyncQuiet, { SpawnResult, SpawnOptions } from '@expo/spawn-async';
-import _ from 'lodash';
-import { ExpoConfig, Platform } from '@expo/config';
-
-import LoggerDetach, { pipeOutputToLogger, Logger } from './Logger';
-import XDLError from '../XDLError';
-
 const request = Request.defaults({
   resolveWithFullResponse: true,
 });

@@ -1,8 +1,7 @@
-import path from 'path';
-
-import fs from 'fs-extra';
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
+import fs from 'fs-extra';
 import pTimeout from 'p-timeout';
+import path from 'path';
 
 import * as Binaries from './Binaries';
 

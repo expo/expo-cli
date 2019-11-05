@@ -1,8 +1,9 @@
 import * as ConfigUtils from '@expo/config';
-import path from 'path';
 import chalk from 'chalk';
+import path from 'path';
+
 import * as Analytics from '../Analytics';
-import Logger, { LogStream, Log } from '../Logger';
+import Logger, { Log, LogStream } from '../Logger';
 
 const MAX_MESSAGE_LENGTH = 200;
 let _projectRootToLogger: { [projectRoot: string]: Log } = {};
