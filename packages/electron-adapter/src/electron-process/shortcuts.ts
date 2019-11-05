@@ -41,7 +41,6 @@ export function register(
 }
 
 export function unregister(browserWindow: Electron.BrowserWindow, keyBindings: string[]): void {
-  // here is the fix bug #3778, if you know alternative ways, please write them
   // @ts-ignore
   browserWindow.addListener('beforeunload', () => {
     for (const keyBinding of keyBindings) {

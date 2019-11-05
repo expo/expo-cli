@@ -9,10 +9,6 @@ import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
 import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import boxen from 'boxen';
-
-// @ts-ignore
-import * as Electron from '@expo/electron-adapter';
 
 import createWebpackCompiler, {
   printInstructions,
@@ -127,14 +123,7 @@ export async function startAsync(
 
   const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, fullOptions);
 
-  const _createWebpackConfig = () => createWebpackConfigAsync(env, fullOptions);
-
-  let config: any;
-  if (env.electron) {
-    config = await Electron.withElectronAsync({ webpack: _createWebpackConfig, projectRoot });
-  } else {
-    config = await _createWebpackConfig();
-  }
+  const config = await createWebpackConfigAsync(env, fullOptions);
 
   const port = await getAvailablePortAsync({
     defaultPort: options.port,
@@ -218,15 +207,6 @@ export async function startAsync(
 
   const host = ip.address();
   const url = `${protocol}://${host}:${webpackServerPort}`;
-
-  if (env.electron) {
-    Electron.start(projectRoot, {
-      url,
-      port: webpackServerPort,
-      host,
-      protocol,
-    });
-  }
 
   return {
     url,
@@ -353,36 +333,12 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
     mode: 'production',
   });
 
-  const _createWebpackConfig = () => createWebpackConfigAsync(env, fullOptions);
-  let config: any;
-  if (env.electron) {
-    config = await Electron.withElectronAsync({ webpack: _createWebpackConfig, projectRoot });
-  } else {
-    config = await _createWebpackConfig();
-  }
+  const config = await createWebpackConfigAsync(env, fullOptions);
 
   if (isUsingNextJs) {
     await bundleNextJsAsync(projectRoot);
   } else {
     await bundleWebAppAsync(projectRoot, config);
-  }
-
-  if (options && options.electron) {
-    if (!(config.output || {}).path) throw new Error('output path cannot be null');
-
-    console.log(
-      boxen(
-        chalk.yellow(
-          'Electron production builds with Expo CLI are very experimental (Nov 2019) and subject to breaking changes.\n' +
-            'Do not use this in production yet.'
-        ),
-        { borderColor: 'yellow', padding: 1, color: 'yellow' }
-      )
-    );
-
-    Electron.buildAsync(projectRoot, {
-      outputPath: (config.output || {}).path!,
-    });
   }
 }
 

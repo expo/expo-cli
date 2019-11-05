@@ -70,8 +70,8 @@ export async function getConfiguration(
   context: ConfigurationRequest
 ): Promise<PackagerOptions | null> {
   const result = await getConfig<PackagerOptions>({
-    packageKey: 'electronExpo',
-    configFilename: 'electron-expo.config',
+    packageKey: 'expoElectron',
+    configFilename: 'expo-electron.config',
     projectDir: context.projectRoot,
     packageMetadata: context.packageMetadata,
   });

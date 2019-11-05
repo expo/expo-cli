@@ -6,7 +6,7 @@
 <!-- Header -->
 
 <p align="center">
-    <b>The document component for Next.js projects using Unimodules</b>
+    <b>Create Desktop apps with Expo and Electron!</b>
     <br/>
     <br/>
     <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
@@ -26,7 +26,36 @@ yarn add @expo/electron-adapter
 
 ## ⚽️ Usage
 
-// TODO: Bacon: Add ME
+
+- Run `expo customize:web` and select `webpack.config.js`
+- Replace the contents with: 
+
+    `webpack.config.js`
+    ```js
+    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+    const { withElectronAsync } = require('@expo/electron-adapter');
+
+    module.exports = function(env, argv) {
+        if (process.env.EXPO_ELECTRON_ENABLED) {
+            return withElectronAsync({
+            webpack: () => createExpoWebpackConfigAsync(env, argv),
+            projectRoot: env.projectRoot,
+            });
+        }
+
+        return createExpoWebpackConfigAsync(env, argv);
+    };
+    ```
+
+- Start the project with `yarn expo-electron start`
+- (Heavy WIP) Build for production with `yarn expo-electron build`
+  - To test builds faster use `EXPO_ELECTRON_DEBUG_REBUILD=true yarn expo-electron build`
+  - Builds are done with `electron-builder` you can configure it by creating a `expo-electron.config.json` or `expo-electron.config.js` file in your root.
+
+
+## 🥨 Behavior
+
+- Expo resolves files with `.electron.js` & `.web.js` extensions in that order. If you want to use `electron` features then put them in a file like `foo.electron.js`.
 
 ## License
 

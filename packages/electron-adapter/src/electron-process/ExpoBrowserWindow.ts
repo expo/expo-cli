@@ -1,4 +1,4 @@
-import { BrowserWindow, shell } from 'electron';
+import { BrowserWindow } from 'electron';
 
 import Environment from './Environment';
 import * as Shortcuts from './shortcuts';

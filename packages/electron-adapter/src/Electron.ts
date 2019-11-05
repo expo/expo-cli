@@ -221,11 +221,12 @@ export async function buildAsync(
     },
   };
 
-  if (process.env.ELECTRON_ADAPTER_FASTEST_REBUILD) {
+  if (process.env.EXPO_ELECTRON_DEBUG_REBUILD) {
+    console.log('Building Electron in debug mode...')
     finalConfig.config = {
       ...finalConfig.config,
       compression: 'store',
-      asar: false,
+      // asar: false,
       npmRebuild: false,
       mac: {
         identity: null,

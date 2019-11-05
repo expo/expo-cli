@@ -11,6 +11,9 @@
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "lint": "eslint ."
   },
+  "bin": {
+    "expo-electron": "./bin/expo-electron.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
@@ -33,7 +36,9 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/electron-adapter#readme",
   "files": [
-    "build"
+    "build",
+    "scripts",
+    "bin"
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
@@ -43,7 +48,9 @@
     "access": "public"
   },
   "dependencies": {
+    "@expo/spawn-async": "^1.5.0",
     "@expo/webpack-config": "^0.8.0",
+    "@expo/xdl": "^53.7.4",
     "async-exit-hook": "^2.0.1",
     "chalk": "^2.4.2",
     "electron": "^6.0.12",
