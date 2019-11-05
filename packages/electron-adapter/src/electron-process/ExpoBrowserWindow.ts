@@ -18,7 +18,10 @@ export default class ExpoBrowserWindow extends BrowserWindow {
     });
 
     withTouchBar(this);
-    this.webContents.openDevTools();
+
+    if (Environment.__DEV__) {
+      this.webContents.openDevTools();
+    }
 
     // TODO: Bacon: Only in prod ??
     // in dev mode this will cause chrome to open every time the render-process is updated - very annoying

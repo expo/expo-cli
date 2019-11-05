@@ -1,4 +1,4 @@
-import { readJson, stat, Stats } from 'fs-extra';
+import { Stats, readJson, stat } from 'fs-extra';
 import { Lazy } from 'lazy-val';
 import * as path from 'path';
 import { getConfig } from 'read-config-file';
@@ -71,7 +71,7 @@ export async function getConfiguration(
 ): Promise<PackagerOptions | null> {
   const result = await getConfig<PackagerOptions>({
     packageKey: 'electronExpo',
-    configFilename: 'electron-expo',
+    configFilename: 'electron-expo.config',
     projectDir: context.projectRoot,
     packageMetadata: context.packageMetadata,
   });

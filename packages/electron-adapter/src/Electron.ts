@@ -6,11 +6,12 @@ import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { build, createTargets, Platform } from 'electron-builder';
 import fs from 'fs-extra';
+import { Lazy } from 'lazy-val';
 import * as path from 'path';
 import { Configuration } from 'webpack';
 
-import { getCommonEnv, logProcess, logProcessErrorOutput } from './dev-utils';
 import { getConfiguration } from './config';
+import { getCommonEnv, logProcess, logProcessErrorOutput } from './dev-utils';
 
 const debug = require('debug')('electron-adapter');
 
@@ -184,8 +185,6 @@ async function copyElectronFilesToBuildFolder(
     recursive: true,
   });
 }
-import { Lazy } from 'lazy-val';
-
 export async function buildAsync(
   projectRoot: string,
   options: { outputPath: string }
@@ -225,6 +224,7 @@ export async function buildAsync(
   if (process.env.ELECTRON_ADAPTER_FASTEST_REBUILD) {
     finalConfig.config = {
       ...finalConfig.config,
+      compression: 'store',
       asar: false,
       npmRebuild: false,
       mac: {
