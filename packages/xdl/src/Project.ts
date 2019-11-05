@@ -127,7 +127,6 @@ type StartOptions = {
   nonPersistent?: boolean;
   maxWorkers?: number;
   webOnly?: boolean;
-  electron?: boolean;
 };
 
 type PublishOptions = {

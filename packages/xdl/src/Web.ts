@@ -20,7 +20,6 @@ export type WebEnvironment = {
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;
-  electron: boolean;
   info: boolean;
 };
 

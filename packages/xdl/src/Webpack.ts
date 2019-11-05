@@ -56,7 +56,6 @@ type BundlingOptions = {
   https?: boolean;
   nonInteractive?: boolean;
   unimodulesOnly?: boolean;
-  electron?: boolean;
   onWebpackFinished?: (error?: Error) => void;
 };
 
@@ -207,7 +206,6 @@ export async function startAsync(
 
   const host = ip.address();
   const url = `${protocol}://${host}:${webpackServerPort}`;
-
   return {
     url,
     server,
@@ -482,7 +480,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     mode,
     https,
     info: isDebugInfoEnabled,
-    electron: !!options.electron,
     ...(options.webpackEnv || {}),
   };
 }

@@ -14,7 +14,6 @@ function addOptions(program: Command) {
       'Opens your app in Expo in a currently running iOS simulator on your computer'
     )
     .option('-w, --web', 'Opens your app in a web browser')
-    .option('-e, --electron', 'Opens your app in electron web browser')
     .option(
       '-m, --host [mode]',
       'lan (default), tunnel, localhost. Type of host to use. "tunnel" allows you to view your link on other networks'
@@ -101,7 +100,7 @@ async function handleMobileOptsAsync(projectDir: string, options: any) {
     }
   }
 
-  if (options.web && !options.electron) {
+  if (options.web) {
     await Webpack.openAsync(projectDir);
   }
 
