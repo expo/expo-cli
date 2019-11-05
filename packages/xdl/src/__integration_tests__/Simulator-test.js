@@ -19,7 +19,7 @@ describe('simulator', () => {
     await delayAsync(1000); // 3 seconds
 
     // Open the simulator
-    await Simulator._openSimulatorAsync();
+    await Simulator._openAndBootSimulatorAsync();
 
     await delayAsync(9000); // 3 seconds
 

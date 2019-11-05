@@ -259,7 +259,6 @@ export default class PackagerLogsStream {
         break;
       case 'initialize_failed': {
         // SDK <=22
-        // $FlowFixMe
         let code = msg.error.code;
         chunk.msg =
           code === 'EADDRINUSE'
@@ -377,7 +376,7 @@ export default class PackagerLogsStream {
       progressChunk.msg = `Building JavaScript bundle: error`;
       progressChunk.level = Logger.ERROR;
     } else if (msg.type === 'bundle_transform_progressed') {
-      percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
+      percentProgress = Math.floor(msg.transformedFileCount / msg.totalFileCount * 100);
       progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
     } else {
       return;
@@ -424,7 +423,7 @@ export default class PackagerLogsStream {
       return null;
     }
     const match = /^Unable to resolve module `(.+?)`/.exec(error.message);
-    const originModulePath = error.originModulePath as (string | null);
+    const originModulePath = error.originModulePath as string | null;
     if (!match || !originModulePath) {
       return null;
     }

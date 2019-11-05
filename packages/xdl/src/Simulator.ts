@@ -17,6 +17,8 @@ import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 import * as UrlUtils from './UrlUtils';
+// @ts-ignore
+import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
 
 let _lastUrl: string | null = null;
 
@@ -131,11 +133,16 @@ export async function _isSimulatorInstalledAsync() {
 }
 
 // Simulator opened
-export async function _openSimulatorAsync() {
-  if (!(await _isSimulatorRunningAsync())) {
+export async function _openAndBootSimulatorAsync() {
+  if (!await _isSimulatorRunningAsync()) {
     Logger.global.info('Opening iOS simulator');
     await spawnAsync('open', ['-a', 'Simulator']);
-    await _waitForSimulatorRunningAsync();
+    await _waitForDeviceToBoot();
+  } else {
+    let bootedDevice = await _bootedSimulatorDeviceAsync();
+    if (!bootedDevice) {
+      await _bootDefaultSimulatorDeviceAsync();
+    }
   }
 }
 
@@ -147,13 +154,7 @@ export async function _isSimulatorRunningAsync() {
     return false;
   }
 
-  let bootedDevice = await _bootedSimulatorDeviceAsync();
-
-  if (!bootedDevice) {
-    return await _bootDefaultSimulatorDeviceAsync();
-  }
-
-  return !!bootedDevice;
+  return true;
 }
 
 async function _bootDefaultSimulatorDeviceAsync() {
@@ -185,24 +186,17 @@ async function _getDefaultSimulatorDeviceUDIDAsync() {
   }
 }
 
-async function _waitForSimulatorRunningAsync(): Promise<boolean> {
-  if (await _isSimulatorRunningAsync()) {
-    return true;
-  } else {
-    await delayAsync(100);
-    return await _waitForSimulatorRunningAsync();
-  }
-}
-
 async function _getFirstAvailableDeviceAsync() {
-  const simulatorDeviceInfo = await _listSimulatorDevicesAsync();
-  for (const runtime in simulatorDeviceInfo.devices) {
-    const devices = simulatorDeviceInfo.devices[runtime];
-    for (let i = 0; i < devices.length; i++) {
-      const device = devices[i];
-      if (device.isAvailable && device.name.includes('iPhone')) {
-        return device;
-      }
+  const simulatorDeviceInfo = (await _listSimulatorDevicesAsync()).devices;
+  let iOSRuntimesNewestToOldest = Object.keys(simulatorDeviceInfo)
+    .filter(runtime => runtime.includes('iOS'))
+    .reverse();
+
+  const devices = simulatorDeviceInfo[iOSRuntimesNewestToOldest[0]];
+  for (let i = 0; i < devices.length; i++) {
+    const device = devices[i];
+    if (device.isAvailable && device.name.includes('iPhone')) {
+      return device;
     }
   }
   throw new Error('No iPhone devices available in Simulator.');
@@ -226,6 +220,21 @@ async function _listSimulatorDevicesAsync() {
   const result = await _xcrunAsync(['simctl', 'list', 'devices', '--json']);
   const info = JSON.parse(result.stdout) as SimulatorDeviceList;
   return info;
+}
+
+async function _waitForDeviceToBoot() {
+  let bootedDevice;
+  const start = Date.now();
+  do {
+    await delayAsync(100);
+    bootedDevice = await _bootedSimulatorDeviceAsync();
+    if (Date.now() - start > 10000) {
+      Logger.global.error(
+        `iOS Simulator device failed to boot. Try opening Simulator first, then running your app.`
+      );
+      throw new Error('Timed out waiting for iOS Simulator device to boot.');
+    }
+  } while (!bootedDevice);
 }
 
 async function _bootedSimulatorDeviceAsync() {
@@ -252,17 +261,8 @@ export async function _quitSimulatorAsync() {
 
 // Expo installed
 export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
-  let device = await _bootedSimulatorDeviceAsync();
-  if (!device) {
-    return false;
-  }
-  let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob(
-    './data/Containers/Data/Application/*/Library/Caches/Snapshots/host.exp.Exponent',
-    { cwd: simDir }
-  );
-
-  return matches.length > 0;
+  let expoClientVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
+  return !!expoClientVersion;
 }
 
 export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync(): Promise<boolean> {
@@ -375,11 +375,11 @@ export function _simulatorCacheDirectory() {
 }
 
 export async function upgradeExpoAsync(): Promise<boolean> {
-  if (!(await _isSimulatorInstalledAsync())) {
+  if (!await _isSimulatorInstalledAsync()) {
     return false;
   }
 
-  await _openSimulatorAsync();
+  await _openAndBootSimulatorAsync();
   await _uninstallExpoAppFromSimulatorAsync();
   let installResult = await _installExpoOnSimulatorAsync();
   if (installResult.status !== 0) {
@@ -404,7 +404,7 @@ export async function openUrlInSimulatorSafeAsync(
   url: string,
   isDetached: boolean = false
 ): Promise<{ success: true } | { success: false; msg: string }> {
-  if (!(await _isSimulatorInstalledAsync())) {
+  if (!await _isSimulatorInstalledAsync()) {
     return {
       success: false,
       msg: 'Unable to verify Xcode and Simulator installation.',
@@ -412,9 +412,9 @@ export async function openUrlInSimulatorSafeAsync(
   }
 
   try {
-    await _openSimulatorAsync();
+    await _openAndBootSimulatorAsync();
 
-    if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
+    if (!isDetached && !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
     }
@@ -470,6 +470,24 @@ export async function openProjectAsync(
   let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
+  if (result.success) {
+    return { success: true, url: projectUrl };
+  } else {
+    return { success: result.success, error: result.msg };
+  }
+}
+
+export async function openWebProjectAsync(
+  projectRoot: string
+): Promise<{ success: true; url: string } | { success: false; error: string }> {
+  const projectUrl = await getWebpackUrlAsync(projectRoot);
+  if (projectUrl === null) {
+    return {
+      success: false,
+      error: `The web project has not been started yet`,
+    };
+  }
+  const result = await openUrlInSimulatorSafeAsync(projectUrl, true);
   if (result.success) {
     return { success: true, url: projectUrl };
   } else {

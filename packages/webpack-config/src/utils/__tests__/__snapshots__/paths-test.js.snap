@@ -1,0 +1,63 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`has consistent defaults 1`] = `
+Object {
+  "absolute": [Function],
+  "appMain": "tests/basic/index",
+  "includeModule": [Function],
+  "modules": "tests/basic/node_modules",
+  "packageJson": "tests/basic/package.json",
+  "production": Object {
+    "favicon": "tests/basic/web-build/favicon.ico",
+    "folder": "tests/basic/web-build",
+    "get": [Function],
+    "indexHtml": "tests/basic/web-build/index.html",
+    "manifest": "tests/basic/web-build/manifest.json",
+    "serveJson": "tests/basic/web-build/serve.json",
+    "serviceWorker": "tests/basic/web-build/expo-service-worker.js",
+  },
+  "root": "tests/basic",
+  "servedPath": "/",
+  "template": Object {
+    "favicon": "web-default/favicon.ico",
+    "folder": "web-default",
+    "get": [Function],
+    "indexHtml": "web-default/index.html",
+    "manifest": "web-default/manifest.json",
+    "serveJson": "web-default/serve.json",
+    "serviceWorker": "web-default/expo-service-worker.js",
+  },
+}
+`;
+
+exports[`uses a custom public path from the homepage field of a project's package.json 1`] = `"/homepage-defined/"`;
+
+exports[`works with no app.json 1`] = `
+Object {
+  "absolute": [Function],
+  "appMain": "tests/minimum/index.js",
+  "includeModule": [Function],
+  "modules": "tests/minimum/node_modules",
+  "packageJson": "tests/minimum/package.json",
+  "production": Object {
+    "favicon": "tests/minimum/web-build/favicon.ico",
+    "folder": "tests/minimum/web-build",
+    "get": [Function],
+    "indexHtml": "tests/minimum/web-build/index.html",
+    "manifest": "tests/minimum/web-build/manifest.json",
+    "serveJson": "tests/minimum/web-build/serve.json",
+    "serviceWorker": "tests/minimum/web-build/expo-service-worker.js",
+  },
+  "root": "tests/minimum",
+  "servedPath": "/",
+  "template": Object {
+    "favicon": "web-default/favicon.ico",
+    "folder": "web-default",
+    "get": [Function],
+    "indexHtml": "web-default/index.html",
+    "manifest": "web-default/manifest.json",
+    "serveJson": "web-default/serve.json",
+    "serviceWorker": "web-default/expo-service-worker.js",
+  },
+}
+`;

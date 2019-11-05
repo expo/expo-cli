@@ -2,17 +2,16 @@
 
 import chalk from 'chalk';
 import fse from 'fs-extra';
-import matchRequire from 'match-require';
 import npmPackageArg from 'npm-package-arg';
 import path from 'path';
-import spawn from 'cross-spawn';
 import semver from 'semver';
 import pacote from 'pacote';
 import temporary from 'tempy';
-import spawnAsync from '@expo/spawn-async';
+import JsonFile from '@expo/json-file';
 import { Exp, ProjectUtils, Detach, Versions } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 import * as PackageManager from '../../PackageManager';
+import { validateGitStatusAsync } from '../utils/ProjectUtils';
 
 import log from '../../log';
 import prompt from '../../prompt';
@@ -20,32 +19,46 @@ import { loginOrRegisterIfLoggedOut } from '../../accounts';
 
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
+async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string) {
+  const { exp, pkg: pkgJson } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const pkgsWithExtraSetup = await JsonFile.readAsync(
+    ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
+  );
+  const packagesToWarn = Object.keys(pkgJson.dependencies).filter(pkgName =>
+    pkgsWithExtraSetup.hasOwnProperty(pkgName)
+  );
+
+  if (packagesToWarn.length === 0) {
+    return;
+  }
+
+  let plural = packagesToWarn.length > 1;
+  log.nested('');
+  log.nested(
+    chalk.yellow(
+      `Warning: your app includes ${chalk.bold(packagesToWarn.length)} package${
+        plural ? 's' : ''
+      } that require${plural ? '' : 's'} additional setup. See the following URL${
+        plural ? 's' : ''
+      } for instructions.`
+    )
+  );
+  log.nested(
+    chalk.yellow(
+      `Your app may not build/run until the additional setup for ${
+        plural ? 'these packages' : 'this package'
+      } has been completed.`
+    )
+  );
+  log.nested('');
+  packagesToWarn.forEach(pkgName => {
+    log.nested(chalk.yellow(`- ${chalk.bold(pkgName)}: ${pkgsWithExtraSetup[pkgName]}`));
+  });
+  log.nested('');
+}
+
 export async function ejectAsync(projectRoot: string, options) {
-  let workingTreeStatus = 'unknown';
-  try {
-    let result = await spawnAsync('git', ['status', '--porcelain']);
-    workingTreeStatus = result.stdout === '' ? 'clean' : 'dirty';
-  } catch (e) {
-    // Maybe git is not installed?
-    // Maybe this project is not using git?
-  }
-
-  if (workingTreeStatus === 'clean') {
-    log.nested(`Your git working tree is ${chalk.green('clean')}`);
-    log.nested('To revert the changes from ejecting later, you can use these commands:');
-    log.nested('  git clean --force && git reset --hard');
-  } else if (workingTreeStatus === 'dirty') {
-    log.nested(`${chalk.bold('Warning!')} Your git working tree is ${chalk.red('dirty')}.`);
-    log.nested(
-      `It's recommended to ${chalk.bold(
-        'commit all your changes before proceeding'
-      )},\nso you can revert the changes made by this command if necessary.`
-    );
-  } else {
-    log.nested("We couldn't find a git repository in your project directory.");
-    log.nested("It's recommended to back up your project before proceeding.");
-  }
-
+  await validateGitStatusAsync();
   log.nested('');
 
   let reactNativeOptionMessage = "Bare: I'd like a bare React Native project.";
@@ -101,6 +114,7 @@ export async function ejectAsync(projectRoot: string, options) {
     let packageManager = ConfigUtils.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
     log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
     log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
+    await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
   } else if (ejectMethod === 'expokit') {
     await loginOrRegisterIfLoggedOut();
     await Detach.detachAsync(projectRoot, options);
@@ -167,6 +181,7 @@ async function ejectToBareAsync(projectRoot, options) {
   log(chalk.green('Wrote to app.json, please update it manually in the future.'));
 
   let defaultDependencies = {};
+  let defaultDevDependencies = {};
 
   /**
    * Extract the template and copy it over
@@ -178,6 +193,7 @@ async function ejectToBareAsync(projectRoot, options) {
     fse.copySync(path.join(tempDir, 'android'), path.join(projectRoot, 'android'));
     let packageJson = fse.readJsonSync(path.join(tempDir, 'package.json'));
     defaultDependencies = packageJson.dependencies;
+    defaultDevDependencies = packageJson.devDependencies;
     log('Successfully copied template native code.');
   } catch (e) {
     log(chalk.red(e.message));
@@ -195,6 +211,13 @@ async function ejectToBareAsync(projectRoot, options) {
   pkgJson.scripts.ios = 'react-native run-ios';
   pkgJson.scripts.android = 'react-native run-android';
 
+  if (pkgJson.scripts.postinstall) {
+    pkgJson.scripts.postinstall = `jetify && ${pkgJson.scripts.postinstall}`;
+    log(chalk.warn('jetifier has been added to your existing postinstall script.'));
+  } else {
+    pkgJson.scripts.postinstall = `jetify`;
+  }
+
   // The template may have some dependencies beyond react/react-native/react-native-unimodules,
   // for example RNGH and Reanimated. We should prefer the version that is already being used
   // in the project for those, but swap the react/react-native/react-native-unimodules versions
@@ -204,13 +227,23 @@ async function ejectToBareAsync(projectRoot, options) {
   combinedDependencies['react'] = defaultDependencies['react'];
   combinedDependencies['react-native-unimodules'] = defaultDependencies['react-native-unimodules'];
   pkgJson.dependencies = combinedDependencies;
+  let combinedDevDependencies = { ...defaultDevDependencies, ...pkgJson.devDependencies };
+  combinedDevDependencies['jetifier'] = defaultDevDependencies['jetifier'];
+  pkgJson.devDependencies = combinedDevDependencies;
 
   await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
-
   log(chalk.green('Your package.json is up to date!'));
 
   log(`Adding entry point...`);
+  if (pkgJson.main !== EXPO_APP_ENTRY) {
+    log(
+      chalk.yellow(
+        `Removing "main": ${pkgJson.main} from package.json. We recommend using index.js instead.`
+      )
+    );
+  }
   delete pkgJson.main;
+  await fse.writeFile(path.resolve('package.json'), JSON.stringify(pkgJson, null, 2));
 
   const indexjs = `import { AppRegistry } from 'react-native';
 import App from './App';

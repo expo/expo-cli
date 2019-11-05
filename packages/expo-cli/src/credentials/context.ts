@@ -2,6 +2,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { ApiV2, Exp, User, UserManager, ProjectUtils, Doctor } from '@expo/xdl';
 import log from '../log';
+import { AppleCtx, authenticate } from '../appleApi';
+import { IosApi } from './api';
 
 export interface IView {
   open(ctx: Context): Promise<IView | null>
@@ -12,6 +14,8 @@ export class Context {
   _user?: User;
   _manifest: any;
   _apiClient?: ApiV2;
+  _iosApiClient?: IosApi;
+  _appleCtx?: AppleCtx;
 
   get user(): User {
     return this._user as User;
@@ -25,6 +29,21 @@ export class Context {
   get api(): ApiV2 {
     return this._apiClient as ApiV2;
   }
+  get ios(): IosApi {
+    return this._iosApiClient as IosApi;
+  }
+  get appleCtx(): AppleCtx {
+    if (!this._appleCtx) {
+      throw new Error('Apple context not initialized.');
+    }
+    return this._appleCtx;
+  }
+
+  async ensureAppleCtx() {
+    if (!this._appleCtx) {
+      this._appleCtx = await authenticate(); 
+    }
+  }
 
   async init(projectDir: string) {
     const status = await Doctor.validateLowLatencyAsync(projectDir);
@@ -37,5 +56,6 @@ export class Context {
 
     this._user = await UserManager.ensureLoggedInAsync();
     this._apiClient = ApiV2.clientForUser(this.user);
+    this._iosApiClient = new IosApi(this._user);
   }
 }

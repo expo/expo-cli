@@ -1,4 +1,5 @@
 import * as ConfigUtils from '@expo/config';
+import { AppJSONConfig, BareAppConfig } from '@expo/config';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import path from 'path';
@@ -24,14 +25,10 @@ export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
 // TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
 type ReadEntry = any;
 
-type InitialConfig = {
-  displayName?: string;
-  name: string;
-  [key: string]: any;
-};
-
-export async function determineEntryPointAsync(root: string) {
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(root);
+// TODO(Bacon): Add support for index.ts, index.tsx, index.jsx, index.mjs, index.ios.js...
+// TODO(Bacon): Test monorepos with expo/AppEntry module path
+export async function determineEntryPointAsync(projectRoot: string): Promise<string> {
+  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   // entryPoint is relative to the packager root and main is relative
   // to the project root. So if your rn-cli.config.js points to a different
@@ -42,19 +39,31 @@ export async function determineEntryPointAsync(root: string) {
     entryPoint = exp.entryPoint;
   }
 
+  const userDefinedEntryPointExists = await fs.pathExists(path.resolve(projectRoot, entryPoint));
+  if (!userDefinedEntryPointExists) {
+    entryPoint = ConfigUtils.resolveModule('expo/AppEntry', projectRoot, exp);
+    const expoEntryPointExists = await fs.pathExists(entryPoint);
+    // Remove project root from file path
+    entryPoint = path.relative(projectRoot, entryPoint);
+    // Final existence check
+    if (!expoEntryPointExists) {
+      throw new Error(
+        `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
+      );
+    }
+  }
+
   return entryPoint;
 }
 
 class Transformer extends Minipass {
   data: string;
-  config: InitialConfig;
-  displayName: string;
+  config: AppJSONConfig | BareAppConfig;
 
-  constructor(config: InitialConfig) {
+  constructor(config: AppJSONConfig | BareAppConfig) {
     super();
     this.data = '';
     this.config = config;
-    this.displayName = config.displayName || config.name;
   }
   write(data: string) {
     this.data += data;
@@ -73,12 +82,12 @@ class Transformer extends Minipass {
 // Binary files, don't process these (avoid decoding as utf8)
 const binaryExtensions = ['.png', '.jar'];
 
-function createFileTransform(config: InitialConfig) {
+function createFileTransform(config: AppJSONConfig | BareAppConfig) {
   return function transformFile(entry: ReadEntry) {
     if (!binaryExtensions.includes(path.extname(entry.path)) && config.name) {
       return new Transformer(config);
     }
-    return;
+    return undefined;
   };
 }
 
@@ -86,7 +95,7 @@ export async function extractAndInitializeTemplateApp(
   templateSpec: PackageSpec,
   projectRoot: string,
   packageManager: 'yarn' | 'npm' = 'npm',
-  config: InitialConfig
+  config: AppJSONConfig | BareAppConfig
 ) {
   Logger.notifications.info({ code: NotificationCode.PROGRESS }, 'Extracting project files...');
   await extractTemplateAppAsync(templateSpec, projectRoot, config);
@@ -124,7 +133,7 @@ export async function extractAndInitializeTemplateApp(
 export async function extractTemplateAppAsync(
   templateSpec: PackageSpec,
   targetPath: string,
-  config: InitialConfig
+  config: AppJSONConfig | BareAppConfig
 ) {
   let tarStream = await pacote.tarball.stream(templateSpec, {
     cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
@@ -161,11 +170,6 @@ export async function extractTemplateAppAsync(
 }
 
 async function initGitRepoAsync(root: string) {
-  if (process.platform === 'darwin' && !Binaries.isXcodeInstalled()) {
-    Logger.global.warn(`Unable to initialize git repo. \`git\` not installed.`);
-    return;
-  }
-
   // let's see if we're in a git tree
   let insideGit = true;
   try {
@@ -174,6 +178,9 @@ async function initGitRepoAsync(root: string) {
     });
     Logger.global.debug('New project is already inside of a git repo, skipping git init.');
   } catch (e) {
+    if (e.errno == 'ENOENT') {
+      Logger.global.warn('Unable to initialize git repo. `git` not in PATH.');
+    }
     insideGit = false;
   }
 
@@ -313,7 +320,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
     throw new Error('Attempted to login in offline mode. This is a bug.');
   }
 
-  const { username } = user;
+  let { username } = user;
 
   const { exp } = await ConfigUtils.readConfigJsonAsync(root);
 

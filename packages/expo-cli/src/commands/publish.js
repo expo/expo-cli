@@ -32,8 +32,14 @@ export async function action(projectDir: string, options: Options = {}) {
   const hasOptimized = fs.existsSync(path.join(projectDir, '/.expo-shared/assets.json'));
   const nonInteractive = options.parent && options.parent.nonInteractive;
   if (!hasOptimized && !nonInteractive) {
-    log.warn('It seems your assets have not been optimized yet.');
-    log.warn('To compress the images in your project run `expo optimize`');
+    log.warn(
+      'Warning: Your project may contain unoptimized image assets. Smaller image sizes can improve app performance.'
+    );
+    log.warn(
+      `To compress the images in your project, abort publishing and run ${chalk.bold(
+        'expo optimize'
+      )}.`
+    );
   }
   const status = await Project.currentStatus(projectDir);
 
@@ -75,9 +81,9 @@ export async function action(projectDir: string, options: Options = {}) {
     !exp.isDetached
   ) {
     log.warn(
-      'We noticed you did not build a standalone app with this SDK version and release channel before. ' +
-        'Remember that OTA updates will not work with the app built with different SDK version and/or release channel. ' +
-        'Read more: https://docs.expo.io/versions/latest/workflow/publishing/#limitations'
+      'We noticed that you have not built a standalone app with this SDK version and release channel before. ' +
+        'Remember that OTA updates will only work for builds with matching SDK versions and release channels. ' +
+        'Read more here: https://docs.expo.io/versions/latest/workflow/publishing/#limitations'
     );
   }
 

@@ -44,8 +44,8 @@ async function promptForOverrides(appleCtx, types) {
     }
   }
   const userProvidedCredentials = await promptForCredentials(appleCtx, toAskUserFor, false);
-  const credentialsToReturn = { ...credentials, ...userProvidedCredentials };
-  return [credentialsToReturn, null];
+  const credentialsToReturn = { ...credentials, ...userProvidedCredentials.credentials };
+  return { credentials: credentialsToReturn, metadata: userProvidedCredentials.metadata };
 }
 
 async function _willUserProvideCredentialsType(name) {

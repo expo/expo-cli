@@ -31,16 +31,16 @@ export { Webhooks };
 import Config from './Config';
 export { Config };
 
-const Credentials: any = require('./credentials/Credentials.js');
+import * as Credentials from './credentials/Credentials';
 export { Credentials };
 
 import * as AndroidCredentials from './credentials/AndroidCredentials';
 export { AndroidCredentials };
 
-const  Detach: any = require('./detach/Detach.js');
+const Detach: any = require('./detach/Detach.js');
 export { Detach };
 
-const Doctor: any = require('./project/Doctor.js');
+import * as Doctor from './project/Doctor';
 export { Doctor };
 
 import * as Env from './Env';
@@ -55,7 +55,7 @@ export { ErrorCode };
 import * as Exp from './Exp';
 export { Exp };
 
-const ExpSchema: any = require('./project/ExpSchema.js');
+import * as ExpSchema from './project/ExpSchema';
 export { ExpSchema };
 
 import * as FileSystem from './FileSystem';
@@ -70,19 +70,19 @@ export { FsCache };
 import * as ImageUtils from './tools/ImageUtils';
 export { ImageUtils };
 
-const StandaloneBuild: any = require('./StandaloneBuild.js');
+import * as StandaloneBuild from './StandaloneBuild';
 export { StandaloneBuild };
 
-const IosIcons = require('./detach/IosIcons.js');
+import * as IosIcons from './detach/IosIcons';
 export { IosIcons };
 
 const IosIPABuilder = require('./detach/IosIPABuilder.js').default;
 export { IosIPABuilder };
 
-const IosKeychain = require('./detach/IosKeychain.js');
+import * as IosKeychain from './detach/IosKeychain';
 export { IosKeychain };
 
-const IosPlist = require('./detach/IosPlist.js');
+import * as IosPlist from './detach/IosPlist';
 export { IosPlist };
 
 const IosPodsTools = require('./detach/IosPodsTools.js');
@@ -112,7 +112,7 @@ export { NotificationCode };
 import PackagerLogsStream, { LogRecord, LogUpdater } from './logs/PackagerLogsStream';
 export { PackagerLogsStream, LogRecord, LogUpdater };
 
-const Project = require('./Project.js');
+import * as Project from './Project';
 export { Project };
 
 import * as ProjectSettings from './ProjectSettings';
@@ -145,10 +145,10 @@ export { Utils };
 import * as Versions from './Versions';
 export { Versions };
 
-const Web = require('./Web.js');
+import * as Web from './Web';
 export { Web };
 
-const Webpack = require('./Webpack.js');
+import * as Webpack from './Webpack';
 export { Webpack };
 
 import XDLError from './XDLError';

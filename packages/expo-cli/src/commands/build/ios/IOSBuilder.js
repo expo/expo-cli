@@ -51,9 +51,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async prepareCredentials() {
+    const username = this.manifest.owner || this.user.username;
     const projectMetadata = {
-      username: this.user.username,
-      experienceName: `@${this.user.username}/${this.manifest.slug}`,
+      username,
+      experienceName: `@${username}/${this.manifest.slug}`,
       sdkVersion: this.manifest.sdkVersion,
       bundleIdentifier: get(this.manifest, 'ios.bundleIdentifier'),
     };

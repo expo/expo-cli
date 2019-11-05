@@ -1,7 +1,3 @@
-// Copyright 2015-present 650 Industries. All rights reserved.
-
-'use strict';
-
 import fs from 'fs-extra';
 import glob from 'glob-promise';
 import indentString from 'indent-string';
@@ -356,7 +352,10 @@ async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
       builder += dependency.comments.map(commentLine => `  # ${commentLine}`).join('\n');
       builder += '\n';
     }
-    builder += `  ${type} '${dependency.name}', '${dependency.version}'${noWarningsFlag}`;
+    const otherPodfileFlags = options.isPodfile && dependency.otherPodfileFlags;
+    builder += `  ${type} '${dependency.name}', '${
+      dependency.version
+    }'${noWarningsFlag}${otherPodfileFlags || ''}`;
     return builder;
   });
   return depsStrings.join('\n');
@@ -395,7 +394,8 @@ require_relative '../node_modules/react-native-unimodules/cocoapods.rb'
 use_unimodules!(
   modules_paths: ['${universalModulesPath}'],
   exclude: [
-    'expo-face-detector',
+    'expo-bluetooth',
+    'expo-in-app-purchases',
     'expo-payments-stripe',
   ],
 )`,
