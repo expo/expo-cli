@@ -50,7 +50,7 @@
   "dependencies": {
     "@expo/spawn-async": "^1.5.0",
     "@expo/webpack-config": "^0.8.0",
-    "@expo/xdl": "^53.7.4",
+    "@expo/xdl": "^56.5.0",
     "async-exit-hook": "^2.0.1",
     "chalk": "^2.4.2",
     "electron": "^6.0.12",
