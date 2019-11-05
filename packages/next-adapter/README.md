@@ -18,15 +18,23 @@
 
 ## 🏁 Setup
 
-Install `@expo/next-adapter` in your project.
+### Expo projects using Next
 
-```sh
-yarn add @expo/next-adapter
-```
+Using SSR in your universal project
 
-## ⚽️ Usage
+- Bootstrap your project with Expo - `expo init`
+- Install - `yarn add next @expo/next-adapter`
+- Create a front page for your Next project with `cp App.js pages/index.js`
 
-0. Bootstrap your project with `Next.js`
+### Next projects using Expo
+
+If you want to use Expo components in your web-only projects
+
+- Bootstrap your project with `Next.js` - `npx create-next-app`
+- Install - `yarn add react-native-web @expo/next-adapter && yarn add -D babel-preset-expo`
+
+### Common steps
+
 1. Re-export this component from the `pages/_document.js` file of your Next.js project. (`mkdir pages; touch pages/_document.js`)
 
    `pages/_document.js`
@@ -42,7 +50,17 @@ yarn add @expo/next-adapter
    `babel.config.js`
 
    ```js
-   module.exports = { presets: ['babel-preset-expo'] };
+   module.exports = function(api) {
+     const isWeb = api.caller(caller => caller && caller.name === 'babel-loader');
+
+     return {
+       presets: [
+         'babel-preset-expo',
+         // Only use next in the browser
+         isWeb && 'next/babel',
+       ].filter(Boolean),
+     };
+   };
    ```
 
 1. Update the Next.js config file to support loading React Native and Expo packages:
@@ -56,7 +74,7 @@ yarn add @expo/next-adapter
    });
    ```
 
-1. Start your project with `yarn next dev`
+1. Start your project with `yarn next dev` or `yarn dev`
 
 **Adding Expo PWA features**
 
@@ -96,6 +114,10 @@ yarn add @expo/next-adapter
      }),
    });
    ```
+
+1. You can now test your project in production mode using the following: `yarn next build && yarn next export && serve -p 3000 ./out`
+
+**Using a custom server**
 
 1. Create a custom server to host your service worker:
    `server.js`
