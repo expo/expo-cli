@@ -63,6 +63,7 @@ export interface FilePathsFolder {
   serveJson: string;
   favicon: string;
   serviceWorker: string;
+  registerServiceWorker: string;
 }
 export interface FilePaths {
   absolute: PathResolver;
