@@ -127,7 +127,7 @@ export default function createBabelLoader({
     ...options,
     include(inputPath: string): boolean {
       for (const possibleModule of modules) {
-        if (inputPath.includes(possibleModule)) {
+        if (inputPath.includes(path.normalize(possibleModule))) {
           if (verbose) {
             const packageName = packageNameFromPath(inputPath);
             if (packageName) logPackage(packageName);
@@ -138,7 +138,7 @@ export default function createBabelLoader({
       // Is inside the project and is not one of designated modules
       if (inputPath.includes(ensuredProjectRoot)) {
         for (const excluded of excludedRootPaths) {
-          if (inputPath.includes(excluded)) {
+          if (inputPath.includes(path.normalize(excluded))) {
             return false;
           }
         }
