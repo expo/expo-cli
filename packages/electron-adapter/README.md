@@ -21,29 +21,24 @@
 Install `@expo/electron-adapter` in your project.
 
 ```sh
-yarn add @expo/electron-adapter
+yarn add @expo/electron-adapter && yarn add -D @expo/webpack-config
 ```
 
 ## ⚽️ Usage
 
 
 - Run `expo customize:web` and select `webpack.config.js`
-- Replace the contents with: 
+- Replace the contents of your Webpack config with the following:
 
     `webpack.config.js`
     ```js
-    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
     const { withElectronAsync } = require('@expo/electron-adapter');
 
     module.exports = function(env, argv) {
-        if (process.env.EXPO_ELECTRON_ENABLED) {
-            return withElectronAsync({
-            webpack: () => createExpoWebpackConfigAsync(env, argv),
-            projectRoot: env.projectRoot,
-            });
-        }
-
-        return createExpoWebpackConfigAsync(env, argv);
+        // This will automatically toggle between web and electron support based on how you run it:
+        // expo start:web or expo start --web will use web
+        // yarn expo-electron start will use Electron
+        return withElectronAsync(env, argv, /* (env, argv) => { create a custom config } */);
     };
     ```
 
@@ -51,7 +46,6 @@ yarn add @expo/electron-adapter
 - (Heavy WIP) Build for production with `yarn expo-electron build`
   - To test builds faster use `EXPO_ELECTRON_DEBUG_REBUILD=true yarn expo-electron build`
   - Builds are done with `electron-builder` you can configure it by creating a `expo-electron.config.json` or `expo-electron.config.js` file in your root.
-
 
 ## 🥨 Behavior
 

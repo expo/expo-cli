@@ -6,8 +6,10 @@ import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { build, createTargets, Platform } from 'electron-builder';
 import fs from 'fs-extra';
+import { boolish } from 'getenv';
 import { Lazy } from 'lazy-val';
 import * as path from 'path';
+import resolveFrom from 'resolve-from';
 import { Configuration } from 'webpack';
 
 import { getConfiguration } from './config';
@@ -15,14 +17,40 @@ import { getCommonEnv, logProcess, logProcessErrorOutput } from './dev-utils';
 
 const debug = require('debug')('electron-adapter');
 
-export async function withElectronAsync(options: {
-  webpack: () => Configuration | Promise<Configuration>;
-  projectRoot: string;
-  outputFolder?: string;
-}): Promise<Configuration> {
-  configureEnvironment(options.projectRoot, options.outputFolder);
-  const config = await options.webpack();
-  return withElectronInjected(config);
+export type Environment = { projectRoot: string; [key: string]: any };
+
+export type Arguments = { [key: string]: any };
+
+export type WebpackConfigFactory = (env: Environment, argv: Arguments) => Configuration | Promise<Configuration>
+
+function ensureExpoWebpackConfigInstalled(projectRoot: string) {
+  const projectHasWebpackConfig = !!resolveFrom.silent(projectRoot, '@expo/webpack-config');
+    if (!projectHasWebpackConfig) {
+      throw new Error(`\`@expo/electron-adapter\` requires the package \`@expo/webpack-config\` to be installed in your project. To continue, run the following then try again: \`yarn add --dev @expo/webpack-config\``)
+    }
+}
+
+export async function withElectronAsync(env: Environment, argv: Arguments, createWebpackConfigAsync?: WebpackConfigFactory): Promise<Configuration> {
+  if (typeof createWebpackConfigAsync !== 'function') {
+    // No custom config factory was passed, attempt to invoke method again with @expo/webpack-config.
+    ensureExpoWebpackConfigInstalled(env.projectRoot);
+    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+    return await withElectronAsync(env, argv, createExpoWebpackConfigAsync);
+  } 
+
+  const shouldStartElectron = boolish('EXPO_ELECTRON_ENABLED', false);
+
+  if (shouldStartElectron) {
+    configureEnvironment(env.projectRoot);
+  }
+
+  const config = await createWebpackConfigAsync(env, argv);
+
+  if (!config) {
+    throw new Error(`The config returned from \`createWebpackConfigAsync(env, argv)\` was null. Expected a valid \`Webpack.Configuration\``);
+  }
+
+  return shouldStartElectron ? injectElectronAdapterSupport(config) : config;
 }
 
 export function configureEnvironment(projectRoot: string, outputFolder: string = 'electron-build') {
@@ -33,7 +61,7 @@ export function configureEnvironment(projectRoot: string, outputFolder: string =
 /**
  * Configure @expo/webpack-config to work with Electron
  */
-export function withElectronInjected(config: Configuration): Configuration {
+export function injectElectronAdapterSupport(config: Configuration): Configuration {
   config.target = 'electron-renderer';
 
   const isProduction = config.mode === 'production';
