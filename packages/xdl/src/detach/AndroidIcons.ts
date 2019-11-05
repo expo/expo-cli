@@ -1,15 +1,15 @@
 import fs from 'fs-extra';
-import path from 'path';
 import globby from 'globby';
+import path from 'path';
 
+import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
 import {
   regexFileAsync,
   saveImageToPathAsync,
   saveUrlToPathAsync,
   spawnAsyncThrowError,
 } from './ExponentTools';
-import StandaloneContext, { StandaloneContextDataUser } from './StandaloneContext';
-import { resizeImageAsync, getImageDimensionsAsync } from '../tools/ImageUtils';
+import { AnyStandaloneContext, StandaloneContextDataUser } from './StandaloneContext';
 
 const iconScales = {
   mdpi: 1,
@@ -41,7 +41,7 @@ async function _regexFileInResSubfoldersAsync(
 let _hasShownResizeErrorWindowsLinux = false;
 
 async function _resizeIconsAsync(
-  context: StandaloneContext,
+  context: AnyStandaloneContext,
   resPath: string,
   prefix: string,
   mdpiSize: number,
@@ -108,7 +108,7 @@ async function _resizeIconsAsync(
 }
 
 async function createAndWriteIconsToPathAsync(
-  context: StandaloneContext,
+  context: AnyStandaloneContext,
   resPath: string,
   isDetached: boolean
 ) {

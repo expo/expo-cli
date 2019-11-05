@@ -37,7 +37,13 @@ import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import * as AssetUtils from './AssetUtils';
-import { calculateHash, createNewFilename, getAssetFilesAsync, optimizeImageAsync, readAssetJsonAsync } from './AssetUtils';
+import {
+  calculateHash,
+  createNewFilename,
+  getAssetFilesAsync,
+  optimizeImageAsync,
+  readAssetJsonAsync,
+} from './AssetUtils';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
@@ -60,9 +66,7 @@ import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 
-// @ts-ignore Doctor not yet converted to TypeScript
 import * as Doctor from './project/Doctor';
-// @ts-ignore IosPlist not yet converted to TypeScript
 import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
@@ -1551,7 +1555,7 @@ async function _waitForRunningAsync(
   }
 }
 
-function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
+function _logPackagerOutput(projectRoot: string, level: string, data: object) {
   let output = data.toString();
   if (!output) {
     return;
@@ -1567,6 +1571,11 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
     );
     return;
   }
+  if (_isIgnorableMetroConsoleOutput(output) || _isIgnorableRnpmWarning(output)) {
+    ProjectUtils.logDebug(projectRoot, 'expo', output);
+    return;
+  }
+
   if (/^Scanning folders for symlinks in /.test(output)) {
     ProjectUtils.logDebug(projectRoot, 'metro', output);
     return;
@@ -1576,6 +1585,25 @@ function _logPackagerOutput(projectRoot: string, level: string, data: Object) {
   } else {
     ProjectUtils.logError(projectRoot, 'metro', output);
   }
+}
+
+function _isIgnorableMetroConsoleOutput(output: string) {
+  // As of React Native 0.61.x, Metro prints console logs from the device to console, without
+  // passing them through the custom log reporter.
+  //
+  // Managed apps have a separate remote logging implementation included in the Expo SDK,
+  // (see: _handleDeviceLogs), so we can just ignore these device logs from Metro.
+  // if (/^ () /)
+  //
+  // These logs originate from:
+  // https://github.com/facebook/metro/blob/e8181fb9db7db31adf7d1ed9ab840f54449ef238/packages/metro/src/lib/logToConsole.js#L50
+  return /^\s+(INFO|WARN|LOG|GROUP|DEBUG) /.test(output);
+}
+
+function _isIgnorableRnpmWarning(output: string) {
+  return output.startsWith(
+    'warn The following packages use deprecated "rnpm" config that will stop working from next release'
+  );
 }
 
 function _isIgnorableDuplicateModuleWarning(
@@ -1608,7 +1636,11 @@ function _isIgnorableBugReportingExtraData(body: any[]) {
 }
 
 function _isAppRegistryStartupMessage(body: any[]) {
-  return body.length === 1 && /^Running application "main" with appParams:/.test(body[0]);
+  return (
+    body.length === 1 &&
+    (/^Running application "main" with appParams:/.test(body[0]) ||
+      /^Running "main" with \{/.test(body[0]))
+  );
 }
 
 function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
@@ -1674,7 +1706,11 @@ export async function startReactNativeServerAsync(
 
   let customLogReporterPath: string | undefined;
 
-  const possibleLogReporterPath = ConfigUtils.projectHasModule('expo/tools/LogReporter', projectRoot, exp);
+  const possibleLogReporterPath = ConfigUtils.projectHasModule(
+    'expo/tools/LogReporter',
+    projectRoot,
+    exp
+  );
   if (possibleLogReporterPath) {
     customLogReporterPath = possibleLogReporterPath;
   } else {
@@ -1682,14 +1718,16 @@ export async function startReactNativeServerAsync(
     logger.global.warn(`Expo is not installed: Using default reporter to format logs.`);
   }
 
-
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
     customLogReporterPath,
     assetExts: ['ttf'],
     sourceExts: ['expo.js', 'expo.ts', 'expo.tsx', 'expo.json', 'js', 'json', 'ts', 'tsx'],
-    nonPersistent: !!options.nonPersistent,
   };
+
+  if (options.nonPersistent && Versions.lteSdkVersion(exp, '32.0.0')) {
+    packagerOpts.nonPersistent = true;
+  }
 
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
     packagerOpts.assetPlugins = ConfigUtils.resolveModule(

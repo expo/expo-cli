@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'fs-extra';
+import { readFile, writeFile, ensureDir } from 'fs-extra';
 import { join } from 'path';
 import { Entry } from 'webpack';
 import {
@@ -10,6 +10,7 @@ import {
 
 import { AnyConfiguration } from './types';
 import { isEntry } from './utils/loaders';
+import { getPaths } from './utils';
 
 export type OfflineOptions = {
   projectRoot?: string;
@@ -102,6 +103,8 @@ export default function withWorkbox(
     injectManifestOptions = {},
   } = options;
 
+  const locations = getPaths(projectRoot!);
+
   const customManifestProps = {
     navigateFallback: join(publicUrl, 'index.html'),
   };
@@ -130,14 +133,15 @@ export default function withWorkbox(
   const expoEntry = config.entry;
   config.entry = async () => {
     const entries = await ensureEntryAsync(expoEntry);
-    const swPath = join(projectRoot!, 'register-service-worker.js');
+    const swPath = join(locations.production.registerServiceWorker);
     if (entries.app && !entries.app.includes(swPath) && autoRegister) {
       const content = (await readFile(
-        require.resolve('../web-default/register-service-worker.js'),
+        require.resolve(locations.template.registerServiceWorker),
         'utf8'
       ))
         .replace('SW_PUBLIC_URL', publicUrl)
         .replace('SW_PUBLIC_SCOPE', scope);
+      await ensureDir(locations.production.folder);
       await writeFile(swPath, content, 'utf8');
 
       if (!Array.isArray(entries.app)) {

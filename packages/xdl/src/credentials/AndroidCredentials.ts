@@ -1,12 +1,11 @@
-import path from 'path';
-
-import fs from 'fs-extra';
-import chalk from 'chalk';
-import crypto from 'crypto';
-import uuidv4 from 'uuid/v4';
 import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import axios from 'axios';
+import chalk from 'chalk';
+import crypto from 'crypto';
+import fs from 'fs-extra';
+import path from 'path';
 import ProgressBar from 'progress';
+import uuidv4 from 'uuid/v4';
 
 import logger from '../Logger';
 import UserSettings from '../UserSettings';

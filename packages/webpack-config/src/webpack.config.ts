@@ -1,4 +1,3 @@
-// @ts-ignore
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 import { Options, Configuration, HotModuleReplacementPlugin, Output } from 'webpack';
@@ -12,13 +11,13 @@ import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
 import ModuleScopePlugin from 'react-dev-utils/ModuleScopePlugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
-// @ts-ignore
-import CaseSensitivePathsPlugin from 'case-sensitive-paths-webpack-plugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 // @ts-ignore
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
+import path from 'path';
+import webpack from 'webpack';
 import { getPathsAsync, getPublicPaths } from './utils/paths';
 import createAllLoaders from './loaders/createAllLoaders';
 import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
@@ -27,16 +26,10 @@ import withOptimizations from './withOptimizations';
 import withReporting from './withReporting';
 import withCompression from './withCompression';
 
-import path from 'path';
-import webpack from 'webpack';
-
 import createDevServerConfigAsync from './createDevServerConfigAsync';
 import { Arguments, DevConfiguration, FilePaths, Mode } from './types';
 
-import {
-  DEFAULT_ALIAS,
-  overrideWithPropertyOrConfig,
-} from './utils/config';
+import { DEFAULT_ALIAS, overrideWithPropertyOrConfig } from './utils/config';
 import getMode from './utils/getMode';
 import getConfig from './utils/getConfig';
 import { Environment } from './types';
@@ -66,21 +59,22 @@ function getDevtool(
 
 function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output {
   const commonOutput: Output = {
-      sourceMapFilename: '[chunkhash].map',
-      // We inferred the "public path" (such as / or /my-project) from homepage.
-      // We use "/" in development.
-      publicPath,
-      // Build folder (default `web-build`)
-      path: locations.production.folder,
-  }
+    sourceMapFilename: '[chunkhash].map',
+    // We inferred the "public path" (such as / or /my-project) from homepage.
+    // We use "/" in development.
+    publicPath,
+    // Build folder (default `web-build`)
+    path: locations.production.folder,
+  };
 
   if (mode === 'production') {
     commonOutput.filename = 'static/js/[name].[contenthash:8].js';
     // There are also additional JS chunk files if you use code splitting.
     commonOutput.chunkFilename = 'static/js/[name].[contenthash:8].chunk.js';
     // Point sourcemap entries to original disk location (format as URL on Windows)
-    commonOutput.devtoolModuleFilenameTemplate = (info: webpack.DevtoolModuleFilenameTemplateInfo): string =>
-      locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/');
+    commonOutput.devtoolModuleFilenameTemplate = (
+      info: webpack.DevtoolModuleFilenameTemplateInfo
+    ): string => locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/');
   } else {
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
@@ -91,15 +85,18 @@ function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output
     // There are also additional JS chunk files if you use code splitting.
     commonOutput.chunkFilename = 'static/js/[name].chunk.js';
     // Point sourcemap entries to original disk location (format as URL on Windows)
-    commonOutput.devtoolModuleFilenameTemplate = (info: webpack.DevtoolModuleFilenameTemplateInfo): string =>
-      path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
+    commonOutput.devtoolModuleFilenameTemplate = (
+      info: webpack.DevtoolModuleFilenameTemplateInfo
+    ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
   return commonOutput;
 }
 
-
-export default async function(env: Environment, argv: Arguments = {}): Promise<Configuration | DevConfiguration> {
+export default async function(
+  env: Environment,
+  argv: Arguments = {}
+): Promise<Configuration | DevConfiguration> {
   const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
@@ -180,7 +177,15 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
             from: locations.template.folder,
             to: locations.production.folder,
             // We generate new versions of these based on the templates
-            ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
+            ignore: [
+              'expo-service-worker.js',
+              'favicon.ico',
+              'serve.json',
+              'index.html',
+              'icon.png',
+              // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
+              'register-service-worker.js',
+            ],
           },
           {
             from: locations.template.serveJson,
@@ -189,6 +194,10 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
           {
             from: locations.template.favicon,
             to: locations.production.favicon,
+          },
+          {
+            from: locations.template.serviceWorker,
+            to: locations.production.serviceWorker,
           },
         ]),
 
@@ -224,10 +233,6 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
 
       // This is necessary to emit hot updates (currently CSS only):
       isDev && new HotModuleReplacementPlugin(),
-      // Watcher doesn't work well if you mistype casing in a path so we use
-      // a plugin that prints an error when you attempt to do this.
-      // See https://github.com/facebook/create-react-app/issues/240
-      isDev && new CaseSensitivePathsPlugin(),
 
       // If you require a missing module and then `npm install` it, you still have
       // to restart the development server for Webpack to discover it. This plugin
@@ -275,6 +280,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
     },
     resolve: {
       alias: DEFAULT_ALIAS,
+      mainFields: ['browser', 'module', 'main'],
       extensions: getModuleFileExtensions('web'),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
@@ -305,7 +311,9 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
 
 // Some libraries import Node modules but don't use them in the browser.
 // Tell Webpack to provide empty mocks for them so importing them works.
-function withNodeMocks(webpackConfig: Configuration | DevConfiguration): Configuration | DevConfiguration {
+function withNodeMocks(
+  webpackConfig: Configuration | DevConfiguration
+): Configuration | DevConfiguration {
   webpackConfig.node = {
     ...(webpackConfig.node || {}),
     module: 'empty',
@@ -316,6 +324,6 @@ function withNodeMocks(webpackConfig: Configuration | DevConfiguration): Configu
     net: 'empty',
     tls: 'empty',
     child_process: 'empty',
-  }
+  };
   return webpackConfig;
 }

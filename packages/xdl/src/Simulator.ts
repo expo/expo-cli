@@ -1,24 +1,22 @@
+import * as ConfigUtils from '@expo/config';
+import * as osascript from '@expo/osascript';
+import spawnAsync from '@expo/spawn-async';
+import delayAsync from 'delay-async';
+import fs from 'fs-extra';
+import glob from 'glob-promise';
 import os from 'os';
 import path from 'path';
-
-import * as ConfigUtils from '@expo/config';
-import delayAsync from 'delay-async';
-import glob from 'glob-promise';
-import * as osascript from '@expo/osascript';
 import semver from 'semver';
-import spawnAsync from '@expo/spawn-async';
-import fs from 'fs-extra';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
-import XDLError from './XDLError';
-import * as UrlUtils from './UrlUtils';
-// @ts-ignore
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import XDLError from './XDLError';
 
 let _lastUrl: string | null = null;
 
@@ -261,17 +259,8 @@ export async function _quitSimulatorAsync() {
 
 // Expo installed
 export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
-  let device = await _bootedSimulatorDeviceAsync();
-  if (!device) {
-    return false;
-  }
-  let simDir = await _dirForSimulatorDevice(device.udid);
-  let matches = await glob(
-    './data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}',
-    { cwd: simDir }
-  );
-
-  return matches.length > 0;
+  let expoClientVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
+  return !!expoClientVersion;
 }
 
 export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync(): Promise<boolean> {

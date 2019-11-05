@@ -1,14 +1,14 @@
+import * as ConfigUtils from '@expo/config';
 import joi from 'joi';
 import os from 'os';
 import url from 'url';
 import validator from 'validator';
-import * as ConfigUtils from '@expo/config';
 
-import ip from './ip';
 import Config from './Config';
 import * as Exp from './Exp';
-import * as ProjectSettings from './ProjectSettings';
+import ip from './ip';
 import * as ProjectUtils from './project/ProjectUtils';
+import * as ProjectSettings from './ProjectSettings';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
 
