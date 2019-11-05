@@ -3063,6 +3063,11 @@
     "@types/through" "*"
     rxjs "^6.4.0"
 
+"@types/invariant@^2.2.30":
+  version "2.2.30"
+  resolved "https://registry.yarnpkg.com/@types/invariant/-/invariant-2.2.30.tgz#20efa342807606ada5483731a8137cb1561e5fe9"
+  integrity sha512-98fB+yo7imSD2F7PF7GIpELNgtLNgo5wjivu0W5V4jx+KVVJxo6p/qN4zdzSTBWy4/sN3pPyXwnhRSD28QX+ag==
+
 "@types/is-color@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/is-color/-/is-color-1.0.0.tgz#ab904db6223de45b34d0cb746ac15d4f2d2c85f0"
