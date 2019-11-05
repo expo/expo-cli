@@ -133,10 +133,10 @@ export default function withWorkbox(
   const expoEntry = config.entry;
   config.entry = async () => {
     const entries = await ensureEntryAsync(expoEntry);
-    const swPath = join(locations.production.folder, 'register-service-worker.js');
+    const swPath = join(locations.production.registerServiceWorker);
     if (entries.app && !entries.app.includes(swPath) && autoRegister) {
       const content = (await readFile(
-        require.resolve('../web-default/register-service-worker.js'),
+        require.resolve(locations.template.registerServiceWorker),
         'utf8'
       ))
         .replace('SW_PUBLIC_URL', publicUrl)

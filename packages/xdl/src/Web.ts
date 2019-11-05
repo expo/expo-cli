@@ -1,22 +1,14 @@
-import path from 'path';
-
+import { readConfigJsonAsync } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
+import path from 'path';
 import openBrowser from 'react-dev-utils/openBrowser';
-import { readConfigJsonAsync } from '@expo/config';
-import set from 'lodash/set';
 import webpack from 'webpack';
-import {
-  Configuration as WebpackDevServerConfiguration,
-  ProxyConfigMap,
-  ProxyConfigArray,
-} from 'webpack-dev-server';
+import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
 import Logger from './Logger';
-// @ts-ignore missing types for Doctor until it gets converted to TypeScript
-import * as Doctor from './project/Doctor';
-import { logWarning, LogTag } from './project/ProjectUtils';
+import { LogTag, logWarning } from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
 
 export interface WebpackConfiguration extends webpack.Configuration {
@@ -30,10 +22,6 @@ export type WebEnvironment = {
   https: boolean;
   info: boolean;
 };
-
-type AsyncWebpackConfig =
-  | WebpackConfiguration
-  | ((env: WebEnvironment, argv: string[]) => Promise<WebpackConfiguration> | WebpackConfiguration);
 
 // When you have errors in the production build that aren't present in the development build you can use `EXPO_WEB_DEBUG=true expo start --no-dev` to debug those errors.
 // - Prevent the production build from being minified

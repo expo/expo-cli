@@ -54,9 +54,9 @@ export function formatDistCerts(distCerts: any, options: { provideFullCertificat
     return {
       value: {
         distCertSerialNumber: serialNumber,
-        ...options.provideFullCertificate
+        ...(options.provideFullCertificate
           ? { certP12, certId, certPassword }
-          : { userCredentialsId: String(userCredentialsId) },
+          : { userCredentialsId: String(userCredentialsId) }),
       },
       name,
     };
@@ -80,9 +80,9 @@ export function formatPushKeys(pushKeys: any, options: { provideFullPushKey?: bo
     }
     return {
       value: {
-        ...options.provideFullPushKey
+        ...(options.provideFullPushKey
           ? { apnsKeyId, apnsKeyP8 }
-          : { userCredentialsId: String(userCredentialsId) },
+          : { userCredentialsId: String(userCredentialsId) }),
       },
       name,
       short: apnsKeyId,

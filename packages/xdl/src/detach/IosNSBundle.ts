@@ -199,6 +199,12 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
         delete entitlements['com.apple.developer.applesignin'];
       }
 
+      if (manifest.ios && manifest.ios.accessesContactNotes) {
+        entitlements['com.apple.developer.contacts.notes'] = manifest.ios.accessesContactNotes;
+      } else if (entitlements.hasOwnProperty('com.apple.developer.contacts.notes')) {
+        delete entitlements['com.apple.developer.contacts.notes'];
+      }
+
       // Add app associated domains remove exp-specific ones.
       if (manifest.ios && manifest.ios.associatedDomains) {
         entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
@@ -322,6 +328,10 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     } else {
       delete infoPlist['FacebookDisplayName'];
     }
+
+    infoPlist.FacebookAutoInitEnabled = config.facebookAutoInitEnabled || false;
+    infoPlist.FacebookAutoLogAppEventsEnabled = config.facebookAutoLogAppEventsEnabled || false;
+    infoPlist.FacebookAdvertiserIDCollectionEnabled = config.facebookAdvertiserIDCollectionEnabled || false;
 
     // set ITSAppUsesNonExemptEncryption to let people skip manually
     // entering it in iTunes Connect

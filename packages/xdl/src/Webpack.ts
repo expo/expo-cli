@@ -14,7 +14,6 @@ import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
 import XDLError from './XDLError';
 
-// @ts-ignore missing types for Doctor until it gets converted to TypeScript
 export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
 export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';

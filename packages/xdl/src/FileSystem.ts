@@ -1,7 +1,6 @@
-import { execSync } from 'child_process';
-
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
+import { execSync } from 'child_process';
 
 import XDLError from './XDLError';
 

@@ -37,7 +37,13 @@ import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import * as AssetUtils from './AssetUtils';
-import { calculateHash, createNewFilename, getAssetFilesAsync, optimizeImageAsync, readAssetJsonAsync } from './AssetUtils';
+import {
+  calculateHash,
+  createNewFilename,
+  getAssetFilesAsync,
+  optimizeImageAsync,
+  readAssetJsonAsync,
+} from './AssetUtils';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
@@ -60,9 +66,7 @@ import * as Watchman from './Watchman';
 import * as Webpack from './Webpack';
 import XDLError from './XDLError';
 
-// @ts-ignore Doctor not yet converted to TypeScript
 import * as Doctor from './project/Doctor';
-// @ts-ignore IosPlist not yet converted to TypeScript
 import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
@@ -1567,7 +1571,7 @@ function _logPackagerOutput(projectRoot: string, level: string, data: object) {
     );
     return;
   }
-  if (_isIgnorableMetroConsoleOutput(output)) {
+  if (_isIgnorableMetroConsoleOutput(output) || _isIgnorableRnpmWarning(output)) {
     ProjectUtils.logDebug(projectRoot, 'expo', output);
     return;
   }
@@ -1594,6 +1598,12 @@ function _isIgnorableMetroConsoleOutput(output: string) {
   // These logs originate from:
   // https://github.com/facebook/metro/blob/e8181fb9db7db31adf7d1ed9ab840f54449ef238/packages/metro/src/lib/logToConsole.js#L50
   return /^\s+(INFO|WARN|LOG|GROUP|DEBUG) /.test(output);
+}
+
+function _isIgnorableRnpmWarning(output: string) {
+  return output.startsWith(
+    'warn The following packages use deprecated "rnpm" config that will stop working from next release'
+  );
 }
 
 function _isIgnorableDuplicateModuleWarning(

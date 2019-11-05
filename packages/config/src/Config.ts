@@ -194,6 +194,9 @@ function getWebManifestFromConfig(config: { [key: string]: any } = {}): { [key: 
 }
 
 export function getWebOutputPath(config: { [key: string]: any } = {}): string {
+  if (process.env.WEBPACK_BUILD_OUTPUT_PATH) {
+    return process.env.WEBPACK_BUILD_OUTPUT_PATH;
+  }
   const web = getWebManifestFromConfig(config);
   const { build = {} } = web;
   return build.output || DEFAULT_BUILD_PATH;
