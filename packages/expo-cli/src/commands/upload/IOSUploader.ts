@@ -11,6 +11,7 @@ import prompt, { Question } from '../../prompt';
 import { runFastlaneAsync } from './utils';
 import CommandError from '../../CommandError';
 import { nonEmptyInput } from '../../validators';
+import getenv from 'getenv';
 
 const PLATFORM = 'ios';
 
@@ -77,14 +78,16 @@ export const LANGUAGES = [
 ];
 
 export type IosPlatformOptions = PlatformOptions & {
-  appleId: string;
-  appleIdPassword: string;
+  appleId?: string;
+  appleIdPassword?: string;
   appName: string;
   language?: string;
   appleTeamId?: string;
   itcTeamId?: string;
   publicUrl?: string;
 };
+
+type AppleCreds = Pick<IosPlatformOptions, 'appleId' | 'appleIdPassword'>;
 
 export default class IOSUploader extends BaseUploader {
   static validateOptions(options: IosPlatformOptions): void {
@@ -131,19 +134,13 @@ export default class IOSUploader extends BaseUploader {
     return;
   }
 
-  async _getAppleIdCredentials(): Promise<Pick<IosPlatformOptions, 'appleId' | 'appleIdPassword'>> {
+  async _getAppleIdCredentials(): Promise<{ appleId: string; appleIdPassword: string }> {
     const appleCredsKeys = ['appleId', 'appleIdPassword'];
-    const result: Partial<Pick<IosPlatformOptions, 'appleId' | 'appleIdPassword'>> = pick(
-      this.options,
-      appleCredsKeys
-    );
 
-    if (process.env.EXPO_APPLE_ID) {
-      result.appleId = process.env.EXPO_APPLE_ID;
-    }
-    if (process.env.EXPO_APPLE_ID_PASSWORD) {
-      result.appleIdPassword = process.env.EXPO_APPLE_ID_PASSWORD;
-    }
+    const result: AppleCreds = {
+      appleId: getenv.string('EXPO_APPLE_ID', this.options.appleId),
+      appleIdPassword: getenv.string('EXPO_APPLE_ID_PASSWORD', this.options.appleIdPassword),
+    };
 
     const { appleId, appleIdPassword } = result;
     if (appleId && appleIdPassword) {
