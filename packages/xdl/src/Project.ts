@@ -291,9 +291,9 @@ async function _resolveManifestAssets(
 ) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+    const assetSchemas = (
+      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
+    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -790,7 +790,8 @@ export async function publishAsync(
   if (
     validPostPublishHooks.length ||
     (exp.ios && exp.ios.publishManifestPath) ||
-    (exp.android && exp.android.publishManifestPath)
+    (exp.android && exp.android.publishManifestPath) ||
+    (exp.android && exp.android.appDirectory)
   ) {
     let [androidManifest, iosManifest] = await Promise.all([
       ExponentTools.getManifestAsync(response.url, {
@@ -858,6 +859,38 @@ export async function publishAsync(
       });
     }
 
+    if (exp.updates.enabled) {
+      const context = StandaloneContext.createUserContext(projectRoot, exp);
+      const { supportingDirectory } = IosWorkspace.getPaths(context);
+      if (!fs.existsSync(supportingDirectory)) {
+        logger.global.warn(
+          'Supporting dir does not exist, creating at ',
+          path.join(projectRoot, supportingDirectory)
+        );
+        fs.mkdirpSync(supportingDirectory);
+      }
+      await _writeArtifactSafelyAsync(
+        supportingDirectory,
+        'ios.publishManifestToAssets',
+        'shell-app-manifest.json',
+        JSON.stringify(iosManifest)
+      );
+      logger.global.info(
+        'Ios manifest written to',
+        path.join(projectRoot, supportingDirectory, 'shell-app.bundle')
+      );
+      await _writeArtifactSafelyAsync(
+        supportingDirectory,
+        'ios.publishBundleToAssets',
+        'shell-app.bundle',
+        iosBundle
+      );
+      logger.global.info(
+        'Ios manifest written to',
+        path.join(supportingDirectory, 'shell-app-manifest.json')
+      );
+    }
+
     if (exp.android && exp.android.publishManifestPath) {
       await _writeArtifactSafelyAsync(
         projectRoot,
@@ -903,6 +936,27 @@ export async function publishAsync(
         /RELEASE_CHANNEL = "[^"]*"/,
         `RELEASE_CHANNEL = "${options.releaseChannel}"`,
         constantsPath
+      );
+    }
+
+    if (exp.updates.enabled && exp.android.appDirectory) {
+      let assetsPath = path.join('android', exp.android.appDirectory, 'src', 'main', 'assets');
+      if (!fs.existsSync(path.join(projectRoot, assetsPath))) {
+        fs.mkdirpSync(path.join(projectRoot, assetsPath));
+      }
+      let manifestPath = path.join(assetsPath, 'shell-app-manifest.json');
+      let bundlePath = path.join(assetsPath, 'shell-app.bundle');
+      await _writeArtifactSafelyAsync(
+        projectRoot,
+        'android.publishManifestToAssets',
+        manifestPath,
+        JSON.stringify(androidManifest)
+      );
+      await _writeArtifactSafelyAsync(
+        projectRoot,
+        'android.publishBundleToAssets',
+        bundlePath,
+        androidBundle
       );
     }
   }
@@ -1335,9 +1389,11 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   });
 
   // Collect list of assets missing on host
-  const metas = (await Api.callMethodAsync('assetsMetadata', [], 'post', {
-    keys: Object.keys(paths),
-  })).metadata;
+  const metas = (
+    await Api.callMethodAsync('assetsMetadata', [], 'post', {
+      keys: Object.keys(paths),
+    })
+  ).metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
 
   if (missing.length === 0) {
@@ -1775,7 +1831,7 @@ export async function startReactNativeServerAsync(
       ...process.env,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...nodePath ? { NODE_PATH: nodePath } : {},
+      ...(nodePath ? { NODE_PATH: nodePath } : {}),
     },
     silent: true,
   });
@@ -2321,7 +2377,7 @@ export async function stopWebOnlyAsync(projectDir: string): Promise<void> {
 export async function stopAsync(projectDir: string): Promise<void> {
   const result = await Promise.race([
     _stopInternalAsync(projectDir),
-    new Promise((resolve) => setTimeout(resolve, 2000, 'stopFailed')),
+    new Promise(resolve => setTimeout(resolve, 2000, 'stopFailed')),
   ]);
   if (result === 'stopFailed') {
     // find RN packager and ngrok pids, attempt to kill them manually
