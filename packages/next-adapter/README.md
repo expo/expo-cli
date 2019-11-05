@@ -166,38 +166,16 @@ createServerAsync(projectRoot, {
 });
 ```
 
-# Publishing
-
-If you wish to use services such as [ZEIT Now](https://zeit.co/now) to host your website, you should ask the service to run `expo build:web`.
-
-For [ZEIT Now](https://zeit.co/now) specifically, you could simply set `scripts.build` and `scripts.now-build` to `"expo build:web"` in your `package.json` file. Then run `now` to publish. Learn more [here](https://zeit.co/guides/upgrade-to-zero-configuration#frameworks-with-zero-configuration).
-
-```json
-{
-  "scripts": {
-    "build": "expo build:web",
-    "now-build": "expo build:web"
-  }
-}
-```
-
-You also export the website as static files by running the following commands. Learn more [here](https://nextjs.org/features/static-exporting).
-
-```
-expo build:web
-yarn next export
-```
-
 ### Web push notifications support
 
 With `expo start`, [web push notifications](https://docs.expo.io/versions/latest/guides/push-notifications/) are supported without any additional configuration.
 
 To use it with other services such as ZEIT Now, you would need appropriate configuration to
 
-- let `/service-worker.js` serve the file content of `/static/service-worker.js`, and
+- let `/service-worker.js` serve the file content of `/public/service-worker.js`, and
 - let `/workbox-service-worker.js` serve the file content of a service worker, which be:
-  - `/static/workbox-service-worker.js` (which will by default be a blank file) if you do not want to use any other service worker, or
-  - `/_next/static/workbox-service-worker.js` if you are using [next-offline](https://github.com/hanford/next-offline), or
+  - `/public/workbox-service-worker.js` (which will by default be a blank file) if you do not want to use any other service worker, or
+  - `/_next/public/workbox-service-worker.js` if you are using [next-offline](https://github.com/hanford/next-offline), or
   - your own service worker file.
 
 Here is an example `now.json` configuration file:
@@ -208,7 +186,7 @@ Here is an example `now.json` configuration file:
   "routes": [
     {
       "src": "/service-worker.js",
-      "dest": "/static/service-worker.js",
+      "dest": "/public/service-worker.js",
       "headers": {
         "cache-control": "public, max-age=43200, immutable",
         "Service-Worker-Allowed": "/"
@@ -217,7 +195,7 @@ Here is an example `now.json` configuration file:
     // If you are using next-offline, change the object below according to their guide.
     {
       "src": "/workbox-service-worker.js",
-      "dest": "/static/workbox-service-worker.js",
+      "dest": "/public/workbox-service-worker.js",
       "headers": {
         "cache-control": "public, max-age=43200, immutable",
         "Service-Worker-Allowed": "/"
