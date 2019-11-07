@@ -1,7 +1,7 @@
 import { BrowserWindow } from 'electron';
 
 import Environment from './Environment';
-import * as Shortcuts from './shortcuts';
+import * as Shortcuts from './Shortcuts';
 import withTouchBar from './withTouchBar';
 
 export default class ExpoBrowserWindow extends BrowserWindow {
@@ -22,13 +22,6 @@ export default class ExpoBrowserWindow extends BrowserWindow {
     if (Environment.__DEV__) {
       this.webContents.openDevTools();
     }
-
-    // TODO: Bacon: Only in prod ??
-    // in dev mode this will cause chrome to open every time the render-process is updated - very annoying
-    // this.webContents.on('will-navigate', (event: Event, newURL: string) => {
-    //   event.preventDefault();
-    //   shell.openExternal(newURL);
-    // });
   }
 
   showOrRestore(): boolean {
