@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const { realpathSync } = require('fs');
 const { Webpack } = require('@expo/xdl');
 const { buildAsync } = require('../');
@@ -11,7 +12,7 @@ const projectRoot = realpathSync(process.cwd());
 process.env.EXPO_ELECTRON_ENABLED = true;
 
 console.log();
-console.log('Building Expo Electron project...');
+console.log(chalk.magenta('\u203A Building Expo Electron project...'));
 
 Webpack.bundleAsync(projectRoot, {
   mode: 'production',

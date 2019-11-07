@@ -1,3 +1,4 @@
+const chalk = require('chalk');
 const fs = require('fs');
 const { Webpack } = require('@expo/xdl');
 const { startAsync } = require('../');
@@ -10,7 +11,7 @@ process.on('unhandledRejection', err => {
 process.env.EXPO_ELECTRON_ENABLED = true;
 
 console.log();
-console.log('Starting Expo Electron project...');
+console.log(chalk.magenta('\u203A Starting Expo Electron project...'));
 
 Webpack.startAsync(projectRoot, {
   mode: process.env.NODE_ENV || 'development',

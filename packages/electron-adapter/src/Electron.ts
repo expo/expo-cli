@@ -3,25 +3,21 @@ import chalk from 'chalk';
 import { spawn } from 'child_process';
 import { build, createTargets, PackagerOptions, Platform } from 'electron-builder';
 import fs from 'fs-extra';
-import { Lazy } from 'lazy-val';
 import * as path from 'path';
 import { getConfig } from 'read-config-file';
 
-import { getCommonEnv, logProcess, logProcessErrorOutput } from './Logger';
+import { getMainProcessEnvironment, logProcess, logProcessErrorOutput } from './Logger';
 
 export * from './Webpack';
 
 const debug = require('debug')('electron-adapter');
 
-export async function getConfiguration(context: {
-  projectRoot: string;
-  packageMetadata: Lazy<{ [key: string]: any } | null> | null;
-}): Promise<PackagerOptions | null> {
+export async function getConfiguration(projectRoot: string): Promise<PackagerOptions | null> {
   const result = await getConfig<PackagerOptions>({
     packageKey: 'expoElectron',
     configFilename: 'expo-electron.config',
-    projectDir: context.projectRoot,
-    packageMetadata: context.packageMetadata,
+    projectDir: projectRoot,
+    packageMetadata: null,
   });
 
   if (result) {
@@ -41,11 +37,7 @@ export async function buildAsync(
   await copyElectronFilesToBuildFolder(projectRoot, outputPath);
   await transformPackageJsonAsync(projectRoot, outputPath);
 
-  const config =
-    (await getConfiguration({
-      projectRoot,
-      packageMetadata: new Lazy(async () => ({})),
-    })) || {};
+  const config = getConfiguration(projectRoot);
 
   const finalConfig = {
     targets: createTargets([
@@ -68,7 +60,9 @@ export async function buildAsync(
   };
 
   if (process.env.EXPO_ELECTRON_DEBUG_REBUILD) {
-    console.log('Building Electron in debug mode...');
+    console.log();
+    console.log(chalk.magenta(`\u203A Building Expo Electron in ${chalk.bold`debug`} mode...`));
+
     finalConfig.config = {
       ...finalConfig.config,
       compression: 'store',
@@ -94,7 +88,7 @@ export function startAsync(
       : [`--inspect=${port}`];
 
   const innerEnv = {
-    ...getCommonEnv(),
+    ...getMainProcessEnvironment(),
     ...env,
     EXPO_ELECTRON_URL: url,
     // Hide the warnings in chrome dev tools during development
@@ -110,7 +104,7 @@ export function startAsync(
 }
 
 function startElectronAsync(electronArgs: Array<string>, env: any): Promise<any> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     let hasReturned: boolean = false;
 
     const _resolve = () => {
@@ -165,6 +159,7 @@ async function transformPackageJsonAsync(projectRoot: string, outputPath: string
 
   // Rewrite package.json with new main entry
   const packageJson = await JsonFile.readAsync(path.resolve(projectRoot, 'package.json'));
+  
   packageJson.main = './index.js';
 
   if (!packageJson.devDependencies) packageJson.devDependencies = {};

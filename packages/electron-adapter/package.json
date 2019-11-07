@@ -57,7 +57,6 @@
     "electron": "^6.0.12",
     "electron-builder": "^21.2.0",
     "getenv": "^1.0.0",
-    "lazy-val": "^1.0.4",
     "read-config-file": "^5.0.0",
     "resolve-from": "^5.0.0"
   }
