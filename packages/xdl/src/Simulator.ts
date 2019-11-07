@@ -259,8 +259,17 @@ export async function _quitSimulatorAsync() {
 
 // Expo installed
 export async function _isExpoAppInstalledOnCurrentBootedSimulatorAsync() {
-  let expoClientVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
-  return !!expoClientVersion;
+  let device = await _bootedSimulatorDeviceAsync();
+  if (!device) {
+    return false;
+  }
+  let simDir = await _dirForSimulatorDevice(device.udid);
+  let matches = await glob(
+    './data/Containers/Data/Application/**/Snapshots/host.exp.Exponent{,**}',
+    { cwd: simDir }
+  );
+
+  return matches.length > 0;
 }
 
 export async function _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync(): Promise<boolean> {
