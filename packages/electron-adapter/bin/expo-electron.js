@@ -30,7 +30,6 @@ if (['build', 'start'].includes(script)) {
     nodeArgs.concat(require.resolve('../scripts/' + script)).concat(args.slice(scriptIndex + 1)),
     { stdio: 'inherit' }
   ).then(result => {
-    console.log('resolvee', result);
     if (result.signal) {
       if (result.signal === 'SIGKILL') {
         console.log(

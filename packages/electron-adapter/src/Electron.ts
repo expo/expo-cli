@@ -21,22 +21,31 @@ export type Environment = { projectRoot: string; [key: string]: any };
 
 export type Arguments = { [key: string]: any };
 
-export type WebpackConfigFactory = (env: Environment, argv: Arguments) => Configuration | Promise<Configuration>
+export type WebpackConfigFactory = (
+  env: Environment,
+  argv: Arguments
+) => Configuration | Promise<Configuration>;
 
 function ensureExpoWebpackConfigInstalled(projectRoot: string) {
   const projectHasWebpackConfig = !!resolveFrom.silent(projectRoot, '@expo/webpack-config');
-    if (!projectHasWebpackConfig) {
-      throw new Error(`\`@expo/electron-adapter\` requires the package \`@expo/webpack-config\` to be installed in your project. To continue, run the following then try again: \`yarn add --dev @expo/webpack-config\``)
-    }
+  if (!projectHasWebpackConfig) {
+    throw new Error(
+      `\`@expo/electron-adapter\` requires the package \`@expo/webpack-config\` to be installed in your project. To continue, run the following then try again: \`yarn add --dev @expo/webpack-config\``
+    );
+  }
 }
 
-export async function withElectronAsync(env: Environment, argv: Arguments, createWebpackConfigAsync?: WebpackConfigFactory): Promise<Configuration> {
+export async function withElectronAsync(
+  env: Environment,
+  argv: Arguments,
+  createWebpackConfigAsync?: WebpackConfigFactory
+): Promise<Configuration> {
   if (typeof createWebpackConfigAsync !== 'function') {
     // No custom config factory was passed, attempt to invoke method again with @expo/webpack-config.
     ensureExpoWebpackConfigInstalled(env.projectRoot);
     const createExpoWebpackConfigAsync = require('@expo/webpack-config');
     return await withElectronAsync(env, argv, createExpoWebpackConfigAsync);
-  } 
+  }
 
   const shouldStartElectron = boolish('EXPO_ELECTRON_ENABLED', false);
 
@@ -47,7 +56,9 @@ export async function withElectronAsync(env: Environment, argv: Arguments, creat
   const config = await createWebpackConfigAsync(env, argv);
 
   if (!config) {
-    throw new Error(`The config returned from \`createWebpackConfigAsync(env, argv)\` was null. Expected a valid \`Webpack.Configuration\``);
+    throw new Error(
+      `The config returned from \`createWebpackConfigAsync(env, argv)\` was null. Expected a valid \`Webpack.Configuration\``
+    );
   }
 
   return shouldStartElectron ? injectElectronAdapterSupport(config) : config;
@@ -103,7 +114,10 @@ export function injectElectronAdapterSupport(config: Configuration): Configurati
   return config;
 }
 
-export function start(projectRoot: string, { port, url, ...env }: { [key: string]: any }): void {
+export function startAsync(
+  projectRoot: string,
+  { port, url, ...env }: { [key: string]: any }
+): Promise<any> {
   let electronArgs = process.env.ELECTRON_ARGS;
   const args: string[] =
     electronArgs != null && electronArgs.length > 0
@@ -123,46 +137,57 @@ export function start(projectRoot: string, { port, url, ...env }: { [key: string
   args.push(relativeFilePath);
   args.push(...process.argv.slice(3));
 
-  startElectron(args, innerEnv);
+  return startElectronAsync(args, innerEnv);
 }
 
-function startElectron(electronArgs: Array<string>, env: any) {
-  const electronProcess = spawn(require('electron').toString(), electronArgs, {
-    env,
-  });
+function startElectronAsync(electronArgs: Array<string>, env: any): Promise<any> {
+  return new Promise((resolve, reject) => {
+    let hasReturned: boolean = false;
 
-  // required on windows
-  require('async-exit-hook')(() => {
-    electronProcess.kill('SIGINT');
-  });
+    const _resolve = () => {
+      if (hasReturned) return;
+      hasReturned = true;
+      resolve();
+    };
 
-  let queuedData: string | null = null;
-  electronProcess.stdout.on('data', data => {
-    data = data.toString();
-    if (data.trim() === '[HMR] Updated modules:') {
-      queuedData = data;
-      return;
-    }
+    const electronProcess = spawn(require('electron').toString(), electronArgs, {
+      env,
+    });
 
-    if (queuedData != null) {
-      data = queuedData + data;
-      queuedData = null;
-    }
+    // required on windows
+    require('async-exit-hook')(() => {
+      _resolve();
+      electronProcess.kill('SIGINT');
+    });
 
-    logProcess('Electron', data, chalk.blue);
-  });
+    let queuedData: string | null = null;
+    electronProcess.stdout.on('data', data => {
+      data = data.toString();
+      if (data.trim() === '[HMR] Updated modules:') {
+        queuedData = data;
+        return;
+      }
 
-  logProcessErrorOutput('Electron', electronProcess);
+      if (queuedData != null) {
+        data = queuedData + data;
+        queuedData = null;
+      }
 
-  electronProcess.on('close', exitCode => {
-    debug(`Electron exited with exit code ${exitCode}`);
-    if (exitCode === 100) {
-      setImmediate(() => {
-        startElectron(electronArgs, env);
-      });
-    } else {
-      (process as any).emit('message', 'shutdown');
-    }
+      logProcess('Electron', data, chalk.blue);
+    });
+
+    logProcessErrorOutput('Electron', electronProcess, _resolve);
+
+    electronProcess.on('close', exitCode => {
+      debug(`Electron exited with exit code ${exitCode}`);
+      if (exitCode === 100) {
+        setImmediate(() => {
+          startElectronAsync(electronArgs, env)
+        });
+      } else {
+        (process as any).emit('message', 'shutdown');
+      }
+    });
   });
 }
 
@@ -250,7 +275,7 @@ export async function buildAsync(
   };
 
   if (process.env.EXPO_ELECTRON_DEBUG_REBUILD) {
-    console.log('Building Electron in debug mode...')
+    console.log('Building Electron in debug mode...');
     finalConfig.config = {
       ...finalConfig.config,
       compression: 'store',

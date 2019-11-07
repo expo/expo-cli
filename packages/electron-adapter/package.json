@@ -7,6 +7,7 @@
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
+    "test": "cd example && yarn && yarn test:start && yarn test:build",
     "prepare": "yarn run clean && yarn build",
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "lint": "eslint ."

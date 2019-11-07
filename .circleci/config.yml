@@ -97,6 +97,10 @@ workflows:
           e: node-10
           requires:
             - build10
+      - test-electron-adapter:
+          e: node-10
+          requires:
+            - build10
 jobs:
   build:
     parameters:
@@ -219,6 +223,16 @@ jobs:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/android-manifest
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-electron-adapter:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/electron-adapter
     steps:
       - attach_workspace:
           at: '~'

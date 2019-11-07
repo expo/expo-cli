@@ -39,10 +39,12 @@ function filterText(s: string, lineFilter: LineFilter | null) {
 
 export function logProcessErrorOutput(
   label: 'Electron' | 'Renderer' | 'Main',
-  childProcess: ChildProcess
+  childProcess: ChildProcess,
+  callback: (data: any) => void
 ) {
   childProcess.stderr!!.on('data', data => {
     logProcess(label, data.toString(), chalk.cyan);
+    callback(data);
   });
 }
 

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { Webpack } = require('@expo/xdl');
-const { start } = require('../');
+const { startAsync } = require('../');
 const projectRoot = fs.realpathSync(process.cwd());
 
 process.on('unhandledRejection', err => {
@@ -23,10 +23,14 @@ Webpack.startAsync(projectRoot, {
     });
   });
 
-  start(projectRoot, {
+  startAsync(projectRoot, {
     url,
     port,
     host,
     protocol,
+  }).then(data => {
+    if (process.env.EXPO_ELECTRON_TEST_START) {
+      process.exit(data ? 1 : 0);
+    }
   });
 });
