@@ -1,117 +1,86 @@
 import JsonFile from '@expo/json-file';
-// @ts-ignore
-import { getModuleFileExtensions } from '@expo/webpack-config/utils';
-import { getPluginsByName } from '@expo/webpack-config/webpack/utils/loaders';
 import chalk from 'chalk';
 import { spawn } from 'child_process';
-import { build, createTargets, Platform } from 'electron-builder';
+import { build, createTargets, PackagerOptions, Platform } from 'electron-builder';
 import fs from 'fs-extra';
-import { boolish } from 'getenv';
 import { Lazy } from 'lazy-val';
 import * as path from 'path';
-import resolveFrom from 'resolve-from';
-import { Configuration } from 'webpack';
+import { getConfig } from 'read-config-file';
 
-import { getConfiguration } from './config';
-import { getCommonEnv, logProcess, logProcessErrorOutput } from './dev-utils';
+import { getCommonEnv, logProcess, logProcessErrorOutput } from './Logger';
+
+export * from './Webpack';
 
 const debug = require('debug')('electron-adapter');
 
-export type Environment = { projectRoot: string; [key: string]: any };
+export async function getConfiguration(context: {
+  projectRoot: string;
+  packageMetadata: Lazy<{ [key: string]: any } | null> | null;
+}): Promise<PackagerOptions | null> {
+  const result = await getConfig<PackagerOptions>({
+    packageKey: 'expoElectron',
+    configFilename: 'expo-electron.config',
+    projectDir: context.projectRoot,
+    packageMetadata: context.packageMetadata,
+  });
 
-export type Arguments = { [key: string]: any };
-
-export type WebpackConfigFactory = (
-  env: Environment,
-  argv: Arguments
-) => Configuration | Promise<Configuration>;
-
-function ensureExpoWebpackConfigInstalled(projectRoot: string) {
-  const projectHasWebpackConfig = !!resolveFrom.silent(projectRoot, '@expo/webpack-config');
-  if (!projectHasWebpackConfig) {
-    throw new Error(
-      `\`@expo/electron-adapter\` requires the package \`@expo/webpack-config\` to be installed in your project. To continue, run the following then try again: \`yarn add --dev @expo/webpack-config\``
-    );
+  if (result) {
+    return result.result;
   }
+
+  return null;
 }
 
-export async function withElectronAsync(
-  env: Environment,
-  argv: Arguments,
-  createWebpackConfigAsync?: WebpackConfigFactory
-): Promise<Configuration> {
-  if (typeof createWebpackConfigAsync !== 'function') {
-    // No custom config factory was passed, attempt to invoke method again with @expo/webpack-config.
-    ensureExpoWebpackConfigInstalled(env.projectRoot);
-    const createExpoWebpackConfigAsync = require('@expo/webpack-config');
-    return await withElectronAsync(env, argv, createExpoWebpackConfigAsync);
-  }
+export async function buildAsync(
+  projectRoot: string,
+  options: { outputPath: string }
+): Promise<void> {
+  const outputPath = path.resolve(options.outputPath, '../');
 
-  const shouldStartElectron = boolish('EXPO_ELECTRON_ENABLED', false);
+  await fs.ensureDir(outputPath);
+  await copyElectronFilesToBuildFolder(projectRoot, outputPath);
+  await transformPackageJsonAsync(projectRoot, outputPath);
 
-  if (shouldStartElectron) {
-    configureEnvironment(env.projectRoot);
-  }
+  const config =
+    (await getConfiguration({
+      projectRoot,
+      packageMetadata: new Lazy(async () => ({})),
+    })) || {};
 
-  const config = await createWebpackConfigAsync(env, argv);
+  const finalConfig = {
+    targets: createTargets([
+      // Platform.MAC,
+      // builder.Platform.WINDOWS,
+      Platform.LINUX,
+    ]),
+    projectDir: outputPath,
+    ...config,
+    config: {
+      directories: {
+        output: outputPath,
+        app: outputPath,
+      },
+      // @ts-ignore
+      ...(config.config || {}),
 
-  if (!config) {
-    throw new Error(
-      `The config returned from \`createWebpackConfigAsync(env, argv)\` was null. Expected a valid \`Webpack.Configuration\``
-    );
-  }
-
-  return shouldStartElectron ? injectElectronAdapterSupport(config) : config;
-}
-
-export function configureEnvironment(projectRoot: string, outputFolder: string = 'electron-build') {
-  process.env.WEBPACK_BUILD_OUTPUT_PATH = path.join(projectRoot, outputFolder, 'web');
-  process.env.WEB_PUBLIC_URL = './';
-}
-
-/**
- * Configure @expo/webpack-config to work with Electron
- */
-export function injectElectronAdapterSupport(config: Configuration): Configuration {
-  config.target = 'electron-renderer';
-
-  const isProduction = config.mode === 'production';
-
-  if (isProduction) {
-    config.devtool = 'nosources-source-map';
-  }
-
-  // It's important that we overwrite the existing node mocks
-  config.node = {
-    __filename: !isProduction,
-    __dirname: !isProduction,
+      // build options, see https://goo.gl/QQXmcV
+    },
   };
 
-  if (!config.output) config.output = {};
-
-  // Remove compression plugins
-  for (const pluginName of ['CompressionPlugin', 'BrotliPlugin']) {
-    const [plugin] = getPluginsByName(config, pluginName);
-    if (plugin) {
-      config.plugins!.splice(plugin.index, 1);
-    }
+  if (process.env.EXPO_ELECTRON_DEBUG_REBUILD) {
+    console.log('Building Electron in debug mode...');
+    finalConfig.config = {
+      ...finalConfig.config,
+      compression: 'store',
+      // asar: false,
+      npmRebuild: false,
+      mac: {
+        identity: null,
+      },
+    };
   }
 
-  config.output = {
-    ...config.output,
-    filename: '[name].js',
-    chunkFilename: '[name].bundle.js',
-    libraryTarget: 'commonjs2',
-  };
-
-  if (!config.resolve) {
-    config.resolve = {};
-  }
-
-  // Make electron projects resolve files with a .electron extension first
-  config.resolve.extensions = getModuleFileExtensions('electron', 'web');
-
-  return config;
+  await build(finalConfig);
 }
 
 export function startAsync(
@@ -237,55 +206,4 @@ async function copyElectronFilesToBuildFolder(
     overwrite: true,
     recursive: true,
   });
-}
-export async function buildAsync(
-  projectRoot: string,
-  options: { outputPath: string }
-): Promise<void> {
-  const outputPath = path.resolve(options.outputPath, '../');
-
-  await fs.ensureDir(outputPath);
-  await copyElectronFilesToBuildFolder(projectRoot, outputPath);
-  await transformPackageJsonAsync(projectRoot, outputPath);
-
-  const config =
-    (await getConfiguration({
-      projectRoot,
-      packageMetadata: new Lazy(async () => ({})),
-    })) || {};
-
-  const finalConfig = {
-    targets: createTargets([
-      // Platform.MAC,
-      // builder.Platform.WINDOWS,
-      Platform.LINUX,
-    ]),
-    projectDir: outputPath,
-    ...config,
-    config: {
-      directories: {
-        output: outputPath,
-        app: outputPath,
-      },
-      // @ts-ignore
-      ...(config.config || {}),
-
-      // build options, see https://goo.gl/QQXmcV
-    },
-  };
-
-  if (process.env.EXPO_ELECTRON_DEBUG_REBUILD) {
-    console.log('Building Electron in debug mode...');
-    finalConfig.config = {
-      ...finalConfig.config,
-      compression: 'store',
-      // asar: false,
-      npmRebuild: false,
-      mac: {
-        identity: null,
-      },
-    };
-  }
-
-  await build(finalConfig);
 }
