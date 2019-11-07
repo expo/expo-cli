@@ -2,8 +2,8 @@ import { BrowserWindow } from 'electron';
 
 import Environment from './Environment';
 import * as Shortcuts from './shortcuts';
-
 import withTouchBar from './withTouchBar';
+
 export default class ExpoBrowserWindow extends BrowserWindow {
   constructor(options?: Electron.BrowserWindowConstructorOptions) {
     super(options);

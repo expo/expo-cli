@@ -1,37 +1,35 @@
-import { BrowserWindow } from 'electron';
-
-const path = require('path');
-const { ipcMain, TouchBar } = require('electron');
+import { BrowserWindow, ipcMain, TouchBar } from 'electron';
+import path from 'path';
 
 const cwd = process.cwd();
 
-interface TouchBarItem { id: string; props: { icon?: string; items?: any[]; segments?: any[] } }
+interface TouchBarItem {
+  id: string;
+  props: { icon?: string; items?: any[]; segments?: any[] };
+}
 
 interface Segment extends TouchBarItem {
   segments: any[];
-  type: 'TouchBarSegmentedControl'
+  type: 'TouchBarSegmentedControl';
 }
 
 interface Scrubber extends TouchBarItem {
-  type: 'TouchBarScrubber'
+  type: 'TouchBarScrubber';
   items: any[];
 }
 
 type AnyItem = TouchBarItem | Segment | Scrubber;
-
 
 const isSegment = (item: any): item is Segment => item && item.type === 'TouchBarSegmentedControl';
 
 const isScrubber = (item: any): item is Scrubber => item && item.type === 'TouchBarScrubber';
 
 class TouchBarWrapper {
-
   items: { [key: string]: any } = {};
-  
+
   sender: any;
 
   constructor(public browserWindow: BrowserWindow) {
-  
     ipcMain.on('setTouchBar', (event, items) => {
       this.items = {};
 
@@ -51,7 +49,7 @@ class TouchBarWrapper {
     return (...args: any[]): void => {
       this.sender.send('TouchBarEvent', { event, id, args });
     };
-  }
+  };
 
   getItem = (item: AnyItem) => {
     let props: { [key: string]: any } = {
@@ -75,7 +73,7 @@ class TouchBarWrapper {
 
     // @ts-ignore
     return (this.items[item.id] = new TouchBar[item.type](Object.assign({}, item.props, props)));
-  }
+  };
 
   getSegments(segments: any[]): any[] {
     return segments.map(segment =>
@@ -88,7 +86,7 @@ class TouchBarWrapper {
   getIcon(icon?: string): string | null {
     return icon ? path.join(cwd, icon) : null;
   }
-  
+
   updateItems(event: any, item: AnyItem): void {
     for (const prop of Object.keys(item.props)) {
       if (isSegment(item) && prop === 'items') {
