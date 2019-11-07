@@ -256,9 +256,9 @@ export async function buildAsync(
 
   const finalConfig = {
     targets: createTargets([
-      Platform.MAC,
+      // Platform.MAC,
       // builder.Platform.WINDOWS,
-      // builder.Platform.LINUX,
+      Platform.LINUX,
     ]),
     projectDir: outputPath,
     ...config,
