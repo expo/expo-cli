@@ -20,13 +20,16 @@ function addOptions(program: Command) {
     )
     .option('--tunnel', 'Same as --host tunnel')
     .option('--lan', 'Same as --host lan')
-    .option('--localhost', 'Same as --host localhost')
-    .option('--dev', 'Turns dev flag on')
-    .option('--no-dev', 'Turns dev flag off')
-    .option('--minify', 'Turns minify flag on')
-    .option('--no-minify', 'Turns minify flag off')
-    .option('--https', 'To start webpack with https protocol')
-    .option('--no-https', 'To start webpack with http protocol');
+    .option('--localhost', 'Same as --host localhost');
+  if (program._name.includes('start')) {
+    program
+      .option('--dev', 'Turns dev flag on')
+      .option('--no-dev', 'Turns dev flag off')
+      .option('--minify', 'Turns minify flag on')
+      .option('--no-minify', 'Turns minify flag off')
+      .option('--https', 'To start webpack with https protocol')
+      .option('--no-https', 'To start webpack with http protocol');
+  }
 }
 
 function hasBooleanArg(rawArgs: string[], argName: string) {
@@ -68,10 +71,8 @@ async function optsAsync(projectDir: string, options: any) {
   if (hasBooleanArg(rawArgs, 'dev')) {
     opts.dev = getBooleanArg(rawArgs, 'dev');
   } else {
-    if (rawArgs.includes('start') || rawArgs.includes('r')) {
-      opts.dev = true;
-      opts.minify = false;
-    }
+    opts.dev = true;
+    opts.minify = false;
   }
   if (hasBooleanArg(rawArgs, 'minify')) {
     opts.minify = getBooleanArg(rawArgs, 'minify');
