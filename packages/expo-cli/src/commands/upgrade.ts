@@ -259,7 +259,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
 
   // Clear metro bundler cache
   log.addNewLineIfNone();
-  log(chalk.bold.underline('Clearing your cache to remove old references...'));
+  log(chalk.bold.underline('Clearing the packager cache...'));
   await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
   await Project.stopReactNativeServerAsync(projectRoot);
 
