@@ -1722,7 +1722,18 @@ export async function startReactNativeServerAsync(
     port: packagerPort,
     customLogReporterPath,
     assetExts: ['ttf'],
-    sourceExts: ['expo.js', 'expo.ts', 'expo.tsx', 'expo.json', 'js', 'json', 'ts', 'tsx'],
+    sourceExts: [
+      'expo.js',
+      'expo.jsx',
+      'expo.ts',
+      'expo.tsx',
+      'expo.json',
+      'js',
+      'jsx',
+      'json',
+      'ts',
+      'tsx',
+    ],
   };
 
   if (options.nonPersistent && Versions.lteSdkVersion(exp, '32.0.0')) {
