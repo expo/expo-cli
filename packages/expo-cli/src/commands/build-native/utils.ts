@@ -5,17 +5,19 @@ import delayAsync from 'delay-async';
 import ora from 'ora';
 
 import log from '../../log';
+import { BuildInfo } from './Builder';
+
 
 export interface ProjectConfig {
   data: Buffer;
   headers: JSONObject;
 }
 
-async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeout = 1800, interval = 30 } = {}) {
-  log(`Waiting for build to complete. You can press Ctrl+C to exit.`);
-  let spinner = ora().start();
+async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeoutSec = 1800, intervalSec = 30 } = {}) {
+  log('Waiting for build to complete. You can press Ctrl+C to exit.');
+  const spinner = ora().start();
   let time = new Date().getTime();
-  const endTime = time + timeout * 1000;
+  const endTime = time + timeoutSec * 1000;
   while (time <= endTime) {
     const buildInfo = await client.getAsync(`build/status/${buildId}`);
     switch (buildInfo.status) {
@@ -36,22 +38,38 @@ async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeout = 1
         throw new Error(`Unknown status: ${buildInfo} - aborting!`);
     }
     time = new Date().getTime();
-    await delayAsync(interval * 1000);
+    await delayAsync(intervalSec * 1000);
   }
   spinner.warn('Timed out.');
   throw new Error(
-    'Timeout reached! Project is taking longer than expected to finish building, aborting wait...'
+    'Timeout reached! It is taking longer than expected to finish the build, aborting...'
   );
 }
 
 async function makeProjectTarball(tarPath: string) {
+  const spinner = ora().start();
+  spinner.text = 'Making project tarball';
   const changes = (await spawnAsync('git', ['status', '-s'])).stdout;
   if (changes.length > 0) {
+    spinner.fail('Could not make tarball');
     throw new Error(
-      'Commit all files before trying to build your project. Aborting...'
+      'Please commit all files before trying to build your project. Aborting...'
     );
   }
-  await spawnAsync('git', ['archive', '--format=tar.gz', '--prefix', 'project/', '-o', `${tarPath}`, 'HEAD']);
+  await spawnAsync('git', ['archive', '--format=tar.gz', '--prefix', 'project/', '-o', tarPath, 'HEAD']);
+  spinner.succeed('Tarball created.');
 }
 
-export { waitForBuildEnd, makeProjectTarball };
+function printBuildTable(builds: BuildInfo[]) {
+  const table: any = require('../utils/cli-table.js');
+  const headers = ['platform', 'status', 'artifacts'];
+  const colWidths = [15, 15, 160];
+  const refactoredBuilds = builds.map(build => ({
+    ...build,
+    artifacts: build.artifacts ? build.artifacts.s3Url : 'not available',
+  }));
+  const buildTable = table.printTableJsonArray(headers, refactoredBuilds, colWidths);
+  console.log(buildTable);
+}
+
+export { waitForBuildEnd, makeProjectTarball, printBuildTable };

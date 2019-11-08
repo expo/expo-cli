@@ -15,18 +15,24 @@ async function getUserData(options: Options, projectUrl: string, projectDir: str
     type: options.type,
   }
 
-  const validatedData = JobSchema.validate(userData).value as Job;
-  return validatedData;
+  const { value, error } = JobSchema.validate(userData);
+  if (error) {
+    throw error;
+  } else {
+    return value as Job;
+  }
 }
 
 async function getPlatformCredentials(platform: Platform, projectDir: string)
   : Promise<Android.Credentials | iOS.Credentials> {
   const jsonCredentials = await BuildConfig.read(projectDir);
-  const prepareCredentials = {
-    android: BuildConfig.prepareAndroidJobCredentials,
-    ios: BuildConfig.prepareiOSJobCredentials,
+  if (platform === Platform.Android) {
+    return await BuildConfig.prepareAndroidJobCredentials(jsonCredentials);
+  } else if (platform === Platform.iOS) {
+    return await BuildConfig.prepareiOSJobCredentials(jsonCredentials);
+  } else {
+    throw Error('Unsupported platform');
   }
-  return await prepareCredentials[platform](jsonCredentials);
 }
 
 export { getUserData };

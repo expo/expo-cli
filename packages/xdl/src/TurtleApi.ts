@@ -1,6 +1,6 @@
 import QueryString from 'querystring';
+import { URL } from 'url';
 
-import FormData from './tools/FormData';
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
 import concat from 'concat-stream';
@@ -10,9 +10,10 @@ import idx from 'idx';
 import merge from 'lodash/merge';
 
 import Config from './Config';
+import FormData from './tools/FormData';
 
 
-const apiBaseUrl = `${Config.turtleApi.scheme}://${Config.turtleApi.host}:${Config.turtleApi.port}`;
+const apiBaseUrl = new URL(`${Config.turtleApi.scheme}://${Config.turtleApi.host}:${Config.turtleApi.port}`);
 
 export class TurtleApiError extends ExtendableError {
   code: string;
@@ -35,24 +36,18 @@ type RequestOptions = {
 type QueryParameters = { [key: string]: string | number | boolean | null | undefined };
 
 type TurtleApiClientOptions = {
-  sessionSecret?: string;
+  sessionSecret: string;
 };
 
 export default class TurtleApiClient {
-  sessionSecret: string | null = null;
+  sessionSecret: string;
 
-  static clientForUser(user?: TurtleApiClientOptions | null): TurtleApiClient {
-    if (user && user.sessionSecret) {
-      return new TurtleApiClient({ sessionSecret: user.sessionSecret });
-    }
-    return new TurtleApiClient(
-    );
+  static clientForUser(sessionSecret: string): TurtleApiClient {
+    return new TurtleApiClient({ sessionSecret });
   }
 
-  constructor(options: TurtleApiClientOptions = {}) {
-    if (options.sessionSecret) {
-      this.sessionSecret = options.sessionSecret;
-    }
+  constructor(options: TurtleApiClientOptions) {
+    this.sessionSecret = options.sessionSecret;
   }
 
   async getAsync(
@@ -118,9 +113,10 @@ export default class TurtleApiClient {
     options: RequestOptions,
     extraRequestOptions?: Partial<RequestOptions>,
   ) {
-    const url = `${apiBaseUrl}/${methodName}`;
+    const formattedUrl = new URL(methodName, apiBaseUrl);
+
     let reqOptions: AxiosRequestConfig = {
-      url,
+      url: formattedUrl.toString(),
       method: options.httpMethod,
       headers: {
         'Expo-Session': this.sessionSecret || null,
@@ -142,7 +138,7 @@ export default class TurtleApiClient {
   }
 
   async uploadFile(tarPath: string) {
-    const url = `${apiBaseUrl}/upload`;
+    const formattedUrl = new URL('upload', apiBaseUrl);
 
     const projectFormData = new FormData();
     projectFormData.append('file', fs.createReadStream(tarPath));
@@ -152,7 +148,7 @@ export default class TurtleApiClient {
 
     let reqOptions: AxiosRequestConfig = {
       method: 'post',
-      url,
+      url: formattedUrl.toString(),
       data,
       headers,
       maxContentLength: data.byteLength,

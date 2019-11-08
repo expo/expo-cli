@@ -56,7 +56,7 @@ const turtleApiConfig: { [env in Environment]: ApiConfig } = {
     port: 443,
   },
   production: {
-    scheme: 'http',
+    scheme: 'https',
     host: 'turtle.expo.io',
     port: 443,
   },

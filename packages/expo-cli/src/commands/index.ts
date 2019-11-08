@@ -3,6 +3,7 @@ import { Command } from 'commander';
 const COMMANDS = [
   require('./android'),
   require('./build'),
+  // new command only for testing, shouldn't be visible for users
   ...(process.env.EXPO_ENABLE_TURTLEV2 ? [require('./build-native')] : []),
   require('./bundle-assets'),
   require('./client'),
