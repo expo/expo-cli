@@ -20,11 +20,11 @@ const spawnAsync = require('@expo/spawn-async');
 
 const args = process.argv.slice(2);
 
-const scriptIndex = args.findIndex(x => x === 'build' || x === 'start');
+const scriptIndex = args.findIndex(x => x === 'build' || x === 'start' || x === 'customize');
 const script = scriptIndex === -1 ? args[0] : args[scriptIndex];
 const nodeArgs = scriptIndex > 0 ? args.slice(0, scriptIndex) : [];
 
-if (['build', 'start'].includes(script)) {
+if (['build', 'start', 'customize'].includes(script)) {
   spawnAsync(
     'node',
     nodeArgs.concat(require.resolve('../scripts/' + script)).concat(args.slice(scriptIndex + 1)),

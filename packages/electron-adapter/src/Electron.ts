@@ -7,6 +7,7 @@ import * as path from 'path';
 import { getConfig } from 'read-config-file';
 
 import { getMainProcessEnvironment, logProcess, logProcessErrorOutput } from './Logger';
+import resolveFrom from 'resolve-from';
 
 export * from './Webpack';
 
@@ -77,7 +78,29 @@ export async function buildAsync(
   await build(finalConfig);
 }
 
-export function startAsync(
+async function validateMainProcessFolderAsync(mainProcessPath: string): Promise<boolean> {
+  // TODO: Bacon: Validate more
+  return !!resolveFrom.silent(mainProcessPath, './index');
+}
+
+export const LOCAL_SOURCE_FOLDER = 'electron';
+
+async function getMainProcessSourceFolderAsync(projectRoot: string): Promise<string> {
+  const projectMainProcessPath = path.resolve(projectRoot, LOCAL_SOURCE_FOLDER);
+
+  if (await fs.pathExists(projectMainProcessPath)) {
+    if (await validateMainProcessFolderAsync(projectMainProcessPath)) {
+      return projectMainProcessPath;
+    } else {
+      // TODO: Bacon: warn about misconfiguration
+    }
+  }
+
+  const defaultMainProcessPath = path.resolve(__dirname, '../template');
+  return defaultMainProcessPath;
+}
+
+export async function startAsync(
   projectRoot: string,
   { port, url, ...env }: { [key: string]: any }
 ): Promise<any> {
@@ -95,7 +118,9 @@ export function startAsync(
     ELECTRON_DISABLE_SECURITY_WARNINGS: '1',
   };
 
-  const mainFile = require.resolve('./electron-process/index');
+  const mainProcessPath = await getMainProcessSourceFolderAsync(projectRoot);
+
+  const mainFile = require.resolve(path.resolve(mainProcessPath, 'index'));
   const relativeFilePath = path.relative(projectRoot, mainFile);
   args.push(relativeFilePath);
   args.push(...process.argv.slice(3));
@@ -104,7 +129,7 @@ export function startAsync(
 }
 
 function startElectronAsync(electronArgs: Array<string>, env: any): Promise<any> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     let hasReturned: boolean = false;
 
     const _resolve = () => {
@@ -145,7 +170,7 @@ function startElectronAsync(electronArgs: Array<string>, env: any): Promise<any>
       debug(`Electron exited with exit code ${exitCode}`);
       if (exitCode === 100) {
         setImmediate(() => {
-          startElectronAsync(electronArgs, env)
+          startElectronAsync(electronArgs, env);
         });
       } else {
         (process as any).emit('message', 'shutdown');
@@ -159,7 +184,7 @@ async function transformPackageJsonAsync(projectRoot: string, outputPath: string
 
   // Rewrite package.json with new main entry
   const packageJson = await JsonFile.readAsync(path.resolve(projectRoot, 'package.json'));
-  
+
   packageJson.main = './index.js';
 
   if (!packageJson.devDependencies) packageJson.devDependencies = {};
@@ -185,19 +210,8 @@ async function copyElectronFilesToBuildFolder(
   projectRoot: string,
   outputPath: string
 ): Promise<void> {
-  const overwriteTemplate = path.join(projectRoot, 'electron-process');
-  const defaultTemplate = path.resolve(__dirname, 'electron-process');
-  let shouldOverwrite = false;
-  try {
-    require.resolve(overwriteTemplate);
-    shouldOverwrite = true;
-  } catch (_) {
-    shouldOverwrite = false;
-  }
-
-  const targetPath = shouldOverwrite ? overwriteTemplate : defaultTemplate;
-
-  await fs.copy(targetPath, outputPath, {
+  const mainProcessPath = await getMainProcessSourceFolderAsync(projectRoot);
+  await fs.copy(mainProcessPath, outputPath, {
     overwrite: true,
     recursive: true,
   });

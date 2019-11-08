@@ -1,15 +1,13 @@
 import { app, ipcMain } from 'electron';
 
-import ExpoBrowserWindow from './ExpoBrowserWindow';
+import ExpoBrowserWindow from './lib/ExpoBrowserWindow';
 
-let browserWindow: ExpoBrowserWindow | null;
+let browserWindow;
 
-function createWindow(): void {
-  /**
-   * Create a new browser window that uses the Expo serving URL
-   */
+function createWindow() {
+  // Create a new browser window that uses the Expo serving URL
   browserWindow = new ExpoBrowserWindow({
-    width: 800,
+    width: 1200,
     minWidth: 700,
     height: 620,
     minHeight: 500,
