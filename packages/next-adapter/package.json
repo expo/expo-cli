@@ -1,7 +1,7 @@
 {
   "name": "@expo/next-adapter",
   "version": "2.0.0-beta.0",
-  "description": "The document component for Next.js projects using Unimodules",
+  "description": "Adapter document and server for Next.js projects using Unimodules",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {

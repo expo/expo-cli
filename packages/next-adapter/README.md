@@ -6,7 +6,7 @@
 <!-- Header -->
 
 <p align="center">
-    <b>The document component for Next.js projects using Unimodules</b>
+    <b>Adapter document and server for Next.js projects using Unimodules</b>
     <br/>
     <br/>
     <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
