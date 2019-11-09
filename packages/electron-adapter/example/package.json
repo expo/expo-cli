@@ -2,7 +2,11 @@
   "name": "electron-example",
   "version": "1.0.0",
   "scripts": {
-    "start": "../bin/expo-electron.js start",
+    "start": "ELECTRON_DISABLE_SECURITY_WARNINGS=1 electron-webpack dev",
+    "compile": "electron-webpack",
+    "dist": "yarn compile && electron-builder",
+    "dist:dir": "yarn dist --dir -c.compression=store -c.mac.identity=null",
+    "start:custom": "../bin/expo-electron.js start",
     "build": "../bin/expo-electron.js build",
     "customize": "../bin/expo-electron.js customize",
     "test:start": "EXPO_ELECTRON_TEST_START=true ../bin/expo-electron.js start",
@@ -13,9 +17,25 @@
     "react": "16.8.3",
     "react-dom": "^16.8.6",
     "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
-    "react-native-web": "^0.11.5"
+    "react-native-web": "^0.11.5",
+    "source-map-support": "^0.5.16"
   },
   "devDependencies": {
-    "babel-preset-expo": "^6.0.0"
+    "babel-preset-expo": "^6.0.0",
+    "electron": "5.0.6",
+    "electron-builder": "^21.0.11",
+    "electron-webpack": "^2.7.4"
+  },
+  "electronWebpack": {
+    "commonSourceDirectory": "./electron/common",
+    "staticSourceDirectory": "./electron/static",
+    "main": {
+      "sourceDirectory": "./electron/main"
+    },
+    "renderer": {
+      "sourceDirectory": "./",
+      "template": "../../webpack-config/web-default/index.html",
+      "webpackConfig": "./custom.webpack.additions.js"
+    }
   }
 }

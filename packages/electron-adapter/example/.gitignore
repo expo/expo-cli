@@ -9,3 +9,4 @@ npm-debug.*
 web-build/
 web-report/
 electron-build/
+dist/
