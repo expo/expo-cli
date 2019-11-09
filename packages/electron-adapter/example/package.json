@@ -3,14 +3,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "ELECTRON_DISABLE_SECURITY_WARNINGS=1 electron-webpack dev",
-    "compile": "electron-webpack",
-    "dist": "yarn compile && electron-builder",
-    "dist:dir": "yarn dist --dir -c.compression=store -c.mac.identity=null",
-    "start:custom": "../bin/expo-electron.js start",
-    "build": "../bin/expo-electron.js build",
-    "customize": "../bin/expo-electron.js customize",
-    "test:start": "EXPO_ELECTRON_TEST_START=true ../bin/expo-electron.js start",
-    "test:build": "EXPO_ELECTRON_DEBUG_REBUILD=true ../bin/expo-electron.js build"
+    "build": "electron-webpack && electron-builder --dir -c.compression=store",
+    "test:build": "electron-webpack && electron-builder --dir -c.compression=store -c.mac.identity=null"
   },
   "dependencies": {
     "expo": "^33.0.0",
@@ -25,17 +19,5 @@
     "electron": "5.0.6",
     "electron-builder": "^21.0.11",
     "electron-webpack": "^2.7.4"
-  },
-  "electronWebpack": {
-    "commonSourceDirectory": "./electron/common",
-    "staticSourceDirectory": "./electron/static",
-    "main": {
-      "sourceDirectory": "./electron/main"
-    },
-    "renderer": {
-      "sourceDirectory": "./",
-      "template": "../../webpack-config/web-default/index.html",
-      "webpackConfig": "./custom.webpack.additions.js"
-    }
   }
 }

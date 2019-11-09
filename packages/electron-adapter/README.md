@@ -16,50 +16,52 @@
 
 ---
 
+This package wraps `electron-webpack` and adds support for Expo web and other universal React packages.
+
 ## 🏁 Setup
 
-Install `@expo/electron-adapter` in your project.
+- Install the package in your project: `yarn add @expo/electron-adapter`
+- Create a new `electron-webpack` config file: `touch ./electron-webpack.js`
+- Replace the contents of your config with the following:
 
-```sh
-yarn add @expo/electron-adapter && yarn add -D @expo/webpack-config
-```
+  `electron-webpack.js`
+
+  ```js
+  const { withExpoAdapter } = require('@expo/electron-adapter');
+
+  module.exports = withExpoAdapter({
+    projectRoot: __dirname,
+    // Provide any overrides for electron-webpack: https://github.com/electron-userland/electron-webpack/blob/master/docs/en/configuration.md
+  });
+  ```
 
 ## ⚽️ Usage
 
-- Run `expo customize:web` and select `webpack.config.js`
-- Replace the contents of your Webpack config with the following:
-
-  `webpack.config.js`
-
-  ```js
-  const { withElectronAsync } = require('@expo/electron-adapter');
-
-  module.exports = function(env, argv) {
-    // This will automatically toggle between web and electron support based on how you run it:
-    // expo start:web or expo start --web will use web
-    // yarn expo-electron start will use Electron
-    return withElectronAsync(env, argv /* (env, argv) => { create a custom config } */);
-  };
-  ```
+### Starting a project
 
 - Start the project with `yarn expo-electron start`
-- (Heavy WIP) Build for production with `yarn expo-electron build`
-  - To test builds faster use `EXPO_ELECTRON_DEBUG_REBUILD=true yarn expo-electron build`
-  - Builds are done with `electron-builder` you can configure it by creating a `expo-electron.config.json` or `expo-electron.config.js` file in your root.
+  - Currently this is just an alias for the following script: `ELECTRON_DISABLE_SECURITY_WARNINGS=1 electron-webpack dev`
+  - `ELECTRON_DISABLE_SECURITY_WARNINGS=1` disables the useless warnings in your project.
+
+### Customizing the main process
+
+- To reveal the main process (highly recommended) use: `yarn expo-electron customize`
+  - This will generate the `electron/main/` and `electron/webpack.config.js` files for you to customize.
+  - Everything running in the `electron/main/` folder is on a different process to the rest of your app. Think of this like the native code in the Expo Client app (but not really because it's JavaScript and easy).
+- To revert back to the default main process or reset to the latest default template simply delete the `electron/` folder and the adapter will go back to using the hidden version.
+
+### Building your project
+
+`@expo/electron-adapter` doesn't do anything to streamline building Expo Electron projects just yet. But until it does here is a guide for building projects using [`electron-builder`](https://www.electron.build/).
+
+- Install the package with `yarn add -D electron-builder`
+- Use the builder with: `yarn electron-webpack && yarn electron-builder --dir -c.compression=store -c.mac.identity=null` (`-c.compression=store` speeds the builds up a lot, delete this for actual production builds)
+- Learn more about configuring your build here: [Configuring electron-builder](https://www.electron.build/configuration/configuration)
 
 ## 🥨 Behavior
 
 - Expo resolves files with `.electron.js` & `.web.js` extensions in that order. If you want to use `electron` features then put them in a file like `foo.electron.js`.
-
-## Main Process
-
-TL;DR: `yarn expo-electron customize`
-
-To get you started as fast as possible this library starts you with a default "main process" that will update with the library and become more robust in the future. Think of this like the native code in the Expo Client app (but not really because it's still JS and easy).
-
-You'll probably want to customize this main process code to enable more robust native functionality, to do this simply run `yarn expo-electron customize`. This will generate an `electron/` folder and copy all of the default main process code to it. Notice that `@expo/electron-adapter` will completely skip the default template if an `electron/` folder exists in the root of your project.
-
-To revert back to the default or reset to the latest default template simply delete the `electron/` folder and the adapter will go back to using the hidden default code.
+- Every universal package you have installed will be transpiled automatically, this includes packages that start with the name: `expo`, `@expo`, `@unimodules`, `@react-navigation`, `react-navigation`, `react-native`. You can add more by appending them to the array for key `expo.web.build.babel.include` in your `app.json` (this feature is experimental and subject to change).
 
 ## License
 
