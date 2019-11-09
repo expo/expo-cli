@@ -4,6 +4,7 @@
   "scripts": {
     "start": "../bin/expo-electron.js start",
     "build": "../bin/expo-electron.js build",
+    "customize": "../bin/expo-electron.js customize",
     "test:start": "EXPO_ELECTRON_TEST_START=true ../bin/expo-electron.js start",
     "test:build": "EXPO_ELECTRON_DEBUG_REBUILD=true ../bin/expo-electron.js build"
   },
