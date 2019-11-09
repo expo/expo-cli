@@ -1,11 +1,12 @@
 import { loadPartialConfig } from '@babel/core';
+import { getPossibleProjectRoot } from '@expo/config/build/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import { Rule } from 'webpack';
 
-import { Mode, Environment } from '../types';
-import { getPossibleProjectRoot, getConfig, getMode, getPaths } from '../utils';
+import { Environment, Mode } from '../types';
+import { getConfig, getMode, getPaths } from '../utils';
 
 const getModule = (name: string) => path.join('node_modules', name);
 

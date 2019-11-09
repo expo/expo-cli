@@ -1,5 +1,5 @@
-const { getModuleFileExtensionsWithoutDotPrefix } = require('./utils');
+const { getManagedExtensions } = require('@expo/config/build/paths');
 
 module.exports = function getWebExtensions() {
-  return getModuleFileExtensionsWithoutDotPrefix('web');
+  return getManagedExtensions(['web']);
 };

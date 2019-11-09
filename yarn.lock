@@ -3488,6 +3488,11 @@
     "@types/through" "*"
     rxjs "^6.4.0"
 
+"@types/invariant@^2.2.30":
+  version "2.2.30"
+  resolved "https://registry.yarnpkg.com/@types/invariant/-/invariant-2.2.30.tgz#20efa342807606ada5483731a8137cb1561e5fe9"
+  integrity sha512-98fB+yo7imSD2F7PF7GIpELNgtLNgo5wjivu0W5V4jx+KVVJxo6p/qN4zdzSTBWy4/sN3pPyXwnhRSD28QX+ag==
+
 "@types/is-color@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@types/is-color/-/is-color-1.0.0.tgz#ab904db6223de45b34d0cb746ac15d4f2d2c85f0"
@@ -9368,10 +9373,19 @@ enhanced-resolve@^3.4.0:
     object-assign "^4.0.1"
     tapable "^0.2.7"
 
-enquirer@2.1.1:
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/enquirer/-/enquirer-2.1.1.tgz#14422b1204571cdbd1396a371767d8addaed1675"
-  integrity sha512-Ky4Uo7q/dY9jSJIDkPf+y5nM+9F4ESINZaWJSSJbJqOVY15kVXIa/goQR6XmHNcS/MQ38wZT/N2+1pBwQeC2wQ==
+enhanced-resolve@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/enhanced-resolve/-/enhanced-resolve-4.1.0.tgz#41c7e0bfdfe74ac1ffe1e57ad6a5c6c9f3742a7f"
+  integrity sha512-F/7vkyTtyc/llOIn8oWclcB25KdRaiPBpZYDgJHgh/UHtpgT2p2eldQgtQnLtUvfMKPKxbRaQM/hHkvLHt1Vng==
+  dependencies:
+    graceful-fs "^4.1.2"
+    memory-fs "^0.4.0"
+    tapable "^1.0.0"
+
+enquirer@^2.3.2:
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/enquirer/-/enquirer-2.3.2.tgz#1c30284907cadff5ed2404bd8396036dd3da070e"
+  integrity sha512-PLhTMPUXlnaIv9D3Cq3/Zr1xb7soeDDgunobyCmYLUG19n24dvC8i+ZZgm2DekGpDnx7JvFSHV7lxfM58PMtbA==
   dependencies:
     ansi-colors "^3.2.1"
 
