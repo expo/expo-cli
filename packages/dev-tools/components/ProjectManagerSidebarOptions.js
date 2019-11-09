@@ -139,7 +139,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
         {this.props.processInfo.webAppUrl ? (
           <a
             className={STYLES_CONTENT_GROUP}
-            href={this.props.processInfo.webAppUrl}
+            href={getWebAppUrl(this.props.hostType, this.props.processInfo.webAppUrl)}
             target="_blank">
             <span className={STYLES_CONTENT_GROUP_LEFT}>Run on web browser</span>
           </a>
@@ -203,5 +203,13 @@ export default class ProjectManagerSidebarOptions extends React.Component {
         </div>
       </div>
     );
+  }
+}
+
+function getWebAppUrl(hostType, webAppUrl) {
+  if (hostType === 'localhost') {
+    return webAppUrl.replace(/^https?:\/\/[^:/]+/, 'http://localhost');
+  } else {
+    return webAppUrl;
   }
 }
