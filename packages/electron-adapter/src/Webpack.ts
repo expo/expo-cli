@@ -38,7 +38,7 @@ export function withExpoWebpack(config: Configuration, options: { projectRoot?: 
       plugin.index + 1,
       0,
       // Add variables to the `index.html`
-      ExpoInterpolateHtmlPlugin.fromEnv(HtmlWebpackPlugin, env)
+      ExpoInterpolateHtmlPlugin.fromEnv(env, HtmlWebpackPlugin)
     );
   }
 
