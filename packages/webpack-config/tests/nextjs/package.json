@@ -1,12 +1,11 @@
 {
   "name": "webpack-config-nextjs-test",
   "scripts": {
-    "dev": "next dev",
-    "start": "expo start",
+    "start": "next dev",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "npm run dev",
-    "build": "expo build:web",
+    "web": "npm run start",
+    "build": "next build",
     "eject": "expo eject"
   },
   "dependencies": {
