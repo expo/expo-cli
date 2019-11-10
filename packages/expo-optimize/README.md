@@ -1,6 +1,6 @@
 # optimze
 
-Compress the assets in your React project. This library uses the natively powered package [Sharp](https://sharp.pixelplumbing.com) behind the scenes to optimally reduce your project's assets without creating any visual regressions.
+Compress the assets in your React project. This library uses the natively powered package [Sharp](https://sharp.pixelplumbing.com) behind the scenes to optimally reduce your project's assets for use in an app or website.
 
 👋 **Notice:** This package is not limited to Expo projects! This can be used with projects bootstrapped with community CLIs like [ignite](https://github.com/infinitered/ignite) by Infinite Red, or [react-native-cli](https://github.com/react-native-community/cli) by the React Native community.
 
