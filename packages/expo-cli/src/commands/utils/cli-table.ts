@@ -1,7 +1,12 @@
 import CliTable from 'cli-table';
+import { JSONObject } from '@expo/json-file';
 
-export function printTableJsonArray(headers, jsonArray, colWidths) {
-  let table = new CliTable({
+export function printTableJsonArray(
+  headers: string[],
+  jsonArray: JSONObject[],
+  colWidths: number[]
+): string {
+  const table = new CliTable({
     head: headers,
     colWidths,
   });
@@ -14,7 +19,7 @@ export function printTableJsonArray(headers, jsonArray, colWidths) {
 }
 
 const VERTICAL_CELL_WIDTH = 80;
-export function printTableJson(json, header1, header2) {
+export function printTableJson(json: JSONObject, header1?: string, header2?: string): string {
   let table = new CliTable();
   if (header1 || header2) {
     header1 = header1 ? header1 : '';
