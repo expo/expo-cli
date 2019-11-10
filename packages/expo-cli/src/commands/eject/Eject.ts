@@ -9,6 +9,8 @@ import path from 'path';
 import semver from 'semver';
 import temporary from 'tempy';
 
+import { loginOrRegisterIfLoggedOut } from '../../accounts';
+import log from '../../log';
 import * as PackageManager from '../../PackageManager';
 import prompt, { Question } from '../../prompt';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
