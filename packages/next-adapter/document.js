@@ -1,7 +1,8 @@
 // Based on https://github.com/zeit/next.js/tree/canary/examples/with-react-native-web
 // and https://github.com/expo/expo-cli/blob/master/packages/webpack-config/web-default/index.html
 import NextDocument, { Head, Main, NextScript } from 'next/document';
-import React from 'react';
+import * as React from 'react';
+
 import { AppRegistry } from 'react-native';
 
 // @ts-ignore: Next requires this to be `react-native` but we want to support react-native-web only projects as well.
@@ -53,6 +54,7 @@ export async function getInitialProps({ renderPage }) {
 }
 
 export class Document extends NextDocument {
+  static getInitialProps = getInitialProps;
   render() {
     return (
       <html>
@@ -68,4 +70,4 @@ export class Document extends NextDocument {
   }
 }
 
-Document.getInitialProps = getInitialProps;
+export default Document;

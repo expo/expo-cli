@@ -1,26 +1,25 @@
 {
   "name": "webpack-config-nextjs-test",
-  "version": "1.0.0",
-  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
+    "dev": "next dev",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
+    "web": "npm run dev",
     "build": "expo build:web",
     "eject": "expo eject"
   },
   "dependencies": {
     "expo": "^35.0.0",
     "expo-constants": "~7.0.0",
-    "next": "^9.0.3",
-    "react": "16.8.3",
-    "react-dom": "16.8.3",
+    "next": "^9.1.1",
+    "next-offline": "^4.0.6",
+    "react": "16.8.2",
+    "react-dom": "16.8.2",
     "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
     "react-native-web": "^0.11.7"
   },
   "devDependencies": {
-    "babel-preset-expo": "^7.0.0"
-  },
-  "private": true
+    "babel-preset-expo": "^7.1.0"
+  }
 }

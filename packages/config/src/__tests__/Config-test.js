@@ -68,6 +68,7 @@ describe('readConfigJson', () => {
         {
           name: 'testing123',
           version: '0.1.0',
+          description: 'fake description',
           main: 'index.js',
         },
         null,
@@ -142,11 +143,13 @@ describe('readConfigJson', () => {
     it(`can skip throwing when the app.json is missing`, () => {
       const { exp, pkg } = readConfigJson('/no-config', true);
       expect(exp.name).toBe(pkg.name);
+      expect(exp.description).toBe(pkg.description);
     });
 
     it(`can skip throwing when the app.json is missing and expo isn't installed`, () => {
       const { exp, pkg } = readConfigJson('/no-package', true, true);
       expect(exp.name).toBe(pkg.name);
+      expect(exp.description).toBe(pkg.description);
     });
 
     it(`will throw if the app.json is missing`, () => {
