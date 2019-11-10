@@ -9,7 +9,7 @@ import glob from 'glob-promise';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
-import * as ConfigUtils from '@expo/config';
+import { findConfigFileAsync, readConfigJsonAsync } from '@expo/config';
 import isPlainObject from 'lodash/isPlainObject';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
@@ -21,7 +21,6 @@ import * as IosWorkspace from './IosWorkspace';
 import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
-import * as ProjectUtils from '../project/ProjectUtils';
 import UserManager from '../User';
 import XDLError from '../XDLError';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
@@ -67,10 +66,8 @@ async function _detachAsync(projectRoot, options) {
   }
 
   let username = user.username;
-  const { configName, configPath, configNamespace } = await ConfigUtils.findConfigFileAsync(
-    projectRoot
-  );
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  const { configName, configPath, configNamespace } = await findConfigFileAsync(projectRoot);
+  let { exp, pkg } = await readConfigJsonAsync(projectRoot);
   if (!exp) throw new Error(`Couldn't read ${configName}`);
   if (!pkg) throw new Error(`Couldn't read package.json`);
   let experienceName = `@${username}/${exp.slug}`;
@@ -360,7 +357,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
 }
 
 async function prepareDetachedBuildIosAsync(projectDir, args) {
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir);
   if (exp) {
     return prepareDetachedUserContextIosAsync(projectDir, exp, args);
   } else {
@@ -394,7 +391,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
-  const { exp } = await ProjectUtils.readConfigJsonAsync(expoRootDir);
+  const { exp } = await readConfigJsonAsync(expoRootDir);
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project
@@ -510,7 +507,7 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
 // and `$buildDir/intermediates/assets/$targetPath` on Android (see
 // `android/app/expo.gradle` for an example).
 export async function bundleAssetsAsync(projectDir, args) {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  let { exp } = await readConfigJsonAsync(projectDir);
   if (!exp) {
     // Don't run assets bundling for the service context.
     return;

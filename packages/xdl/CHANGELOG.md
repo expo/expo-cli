@@ -17,6 +17,8 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 
 ### Removed
 
+- `ProjectUtils.readConfigJsonAsync` from `xdl` in favor of `readConfigJsonAsync` from `@expo/config`
+- `ProjectUtils.readExpRcAsync` from `xdl` in favor of `readExpRcAsync` from `@expo/config`
 - Dropped support for SDK 24, `Detach.detachAsync` now requires SDK version 25.0.0 or newer.
 
 ## [51.1.0] - 2018-08-28

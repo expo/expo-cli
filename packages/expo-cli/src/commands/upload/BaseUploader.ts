@@ -1,12 +1,11 @@
+import { ExpoConfig, Platform, readConfigJsonAsync } from '@expo/config';
+import { StandaloneBuild } from '@expo/xdl';
+import chalk from 'chalk';
+import fs from 'fs-extra';
 import path from 'path';
 
-import fs from 'fs-extra';
-import { ProjectUtils, StandaloneBuild } from '@expo/xdl';
-import chalk from 'chalk';
-
-import { downloadFile } from './utils';
 import log from '../../log';
-import { ExpoConfig, Platform } from '@expo/config';
+import { downloadFile } from './utils';
 
 export type PlatformOptions = {
   id?: string;
@@ -40,7 +39,7 @@ export default class BaseUploader {
   }
 
   async _getProjectConfig(): Promise<void> {
-    const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
+    const { exp } = await readConfigJsonAsync(this.projectDir);
     if (!exp) {
       throw new Error(`Couldn't read project config file in ${this.projectDir}.`);
     }

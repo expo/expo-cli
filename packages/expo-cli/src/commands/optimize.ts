@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { Project, ProjectUtils, AssetUtils } from '@expo/xdl';
-
+import { AssetUtils, Project } from '@expo/xdl';
+import { readConfigJsonAsync } from '@expo/config';
 import log from '../log';
 
 type Options = {
@@ -11,7 +11,7 @@ type Options = {
 };
 
 export async function action(projectDir = './', options: Options = {}) {
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir);
   if (exp === null) {
     log.warn('No Expo configuration found. Are you sure this is a project directory?');
     process.exit(1);

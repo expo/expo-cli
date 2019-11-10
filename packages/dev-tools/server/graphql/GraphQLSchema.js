@@ -1,5 +1,5 @@
 /* @flow */
-import * as ConfigUtils from '@expo/config';
+import { readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
 import {
   Android,
   Config,
@@ -434,7 +434,7 @@ const resolvers = {
       return ProjectSettings.readAsync(project.projectDir);
     },
     async config(project) {
-      let { exp } = await ProjectUtils.readConfigJsonAsync(project.projectDir);
+      let { exp } = await readConfigJsonAsync(project.projectDir);
       return exp;
     },
     sources(project, args, context) {
@@ -509,7 +509,7 @@ const resolvers = {
     },
     async processInfo(parent, args, context) {
       const currentProject = context.getCurrentProject();
-      const { exp } = await ProjectUtils.readConfigJsonAsync(currentProject.projectDir);
+      const { exp } = await readConfigJsonAsync(currentProject.projectDir);
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
@@ -572,10 +572,7 @@ const resolvers = {
         ...input,
         githubUrl: input.githubUrl.match(/^https:\/\/github.com\//) ? input.githubUrl : undefined,
       };
-      let { exp } = await ConfigUtils.writeConfigJsonAsync(
-        currentProject.projectDir,
-        filteredInput
-      );
+      let { exp } = await writeConfigJsonAsync(currentProject.projectDir, filteredInput);
       return {
         ...currentProject,
         config: exp,

@@ -9,9 +9,10 @@ https://paper.dropbox.com/doc/Expo-Schema-Validation-Library-mQU07rRejSnEe4Vf5dk
 ### Usage with XDL
 
 ```javascript
-import { ProjectUtils, ExpSchema } from '@expo/xdl';
+import { ExpSchema } from '@expo/xdl';
+import { readConfigJsonAsync } from '@expo/config';
 import Schemer from '@expo/schemer';
-const { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+const { exp } = await readConfigJsonAsync(projectRoot);
 const schema = await getSchemaAsync(exp.sdkVersion);
 const validator = new Schemer(schema);
 validator.validateName('Wilson Zhao');
