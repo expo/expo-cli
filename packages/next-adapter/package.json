@@ -1,9 +1,9 @@
 {
   "name": "@expo/next-adapter",
-  "version": "1.0.1",
-  "description": "The document component for Next.js projects using Unimodules",
-  "main": "build/Document.js",
-  "types": "build/Document.d.ts",
+  "version": "2.0.0-beta.0",
+  "description": "Adapter document and server for Next.js projects using Unimodules",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
@@ -32,14 +32,12 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/next-adapter#readme",
   "files": [
-    "build"
+    "build",
+    "document.js",
+    "service-worker.js"
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
-    "expo-module-scripts": "^1.1.1",
-    "next": "^9.0.7",
-    "react-native": "^0.61.2",
-    "react-native-web": "^0.11.7",
     "typescript": "3.4.5"
   },
   "peerDependencies": {
@@ -49,5 +47,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@expo/webpack-config": "^0.8.0",
+    "@types/next": "^8.0.6"
   }
 }
