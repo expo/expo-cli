@@ -248,7 +248,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
 
   if (pkg.scripts.postinstall) {
     pkg.scripts.postinstall = `jetify && ${pkg.scripts.postinstall}`;
-    log(chalk.warn('jetifier has been added to your existing postinstall script.'));
+    log(chalk.bgYellow.black('jetifier has been added to your existing postinstall script.'));
   } else {
     pkg.scripts.postinstall = `jetify`;
   }
