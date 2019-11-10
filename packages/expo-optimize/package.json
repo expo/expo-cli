@@ -10,7 +10,7 @@
     "react-native",
     "react-native-web"
   ],
-  "description": "Compress the assets in your Expo project",
+  "description": "Compress the assets in your project",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
