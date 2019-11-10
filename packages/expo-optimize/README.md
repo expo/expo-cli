@@ -1,6 +1,24 @@
-# optimze
+<!-- Title -->
+<h1 align="center">
+👋 Welcome to <br><code>expo-optimize</code>
+</h1>
 
-Compress the assets in your React project. This library uses the natively powered package [Sharp](https://sharp.pixelplumbing.com) behind the scenes to optimally reduce your project's assets for use in an app or website.
+<!-- Header -->
+
+<p align="center">
+    <b>Compress the assets in your project</b>
+    <br/>
+    <br/>
+    <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
+        <img alt="Circle CI" src="https://flat.badgen.net/circleci/github/expo/expo-cli?label=Circle%20CI&labelColor=555555&icon=circleci">
+    </a>
+</p>
+
+---
+
+<!-- Body -->
+
+This library uses the natively powered package [Sharp](https://sharp.pixelplumbing.com) behind the scenes to optimally reduce your project's assets for use in an app or website.
 
 👋 **Notice:** This package is not limited to Expo projects! This can be used with projects bootstrapped with community CLIs like [ignite](https://github.com/infinitered/ignite) by Infinite Red, or [react-native-cli](https://github.com/react-native-community/cli) by the React Native community.
 
