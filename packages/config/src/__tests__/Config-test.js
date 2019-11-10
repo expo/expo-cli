@@ -1,9 +1,65 @@
 import { vol } from 'memfs';
 
-import { readConfigJson } from '../Config';
+import { getWebOutputPath, readConfigJson } from '../Config';
 
 jest.mock('fs');
 jest.mock('resolve-from');
+
+describe('getWebOutputPath', () => {
+  beforeAll(() => {
+    const packageJson = JSON.stringify(
+      {
+        name: 'testing123',
+        version: '0.1.0',
+        main: 'index.js',
+      },
+      null,
+      2
+    );
+
+    const appJson = {
+      name: 'testing 123',
+      version: '0.1.0',
+      slug: 'testing-123',
+      sdkVersion: '100.0.0',
+    };
+
+    vol.fromJSON({
+      '/standard/package.json': JSON.stringify(packageJson),
+      '/standard/app.json': JSON.stringify({ expo: appJson }),
+      '/custom/package.json': JSON.stringify(packageJson),
+      '/custom/app.json': JSON.stringify({
+        expo: { ...appJson, web: { build: { output: 'defined-in-config' } } },
+      }),
+    });
+  });
+  afterAll(() => vol.reset());
+
+  it('uses the default output build path for web', () => {
+    const { exp } = readConfigJson('/standard');
+    const outputPath = getWebOutputPath(exp);
+    expect(outputPath).toBe('web-build');
+  });
+
+  it('uses a custom output build path from the config', () => {
+    const { exp } = readConfigJson('/custom');
+    const outputPath = getWebOutputPath(exp);
+    expect(outputPath).toBe('defined-in-config');
+  });
+
+  beforeEach(() => {
+    delete process.env.WEBPACK_BUILD_OUTPUT_PATH;
+  });
+  it('uses an env variable for the web build path', () => {
+    process.env.WEBPACK_BUILD_OUTPUT_PATH = 'custom-env-path';
+
+    for (const project of ['/custom', '/standard']) {
+      const { exp } = readConfigJson(project);
+      const outputPath = getWebOutputPath(exp);
+      expect(outputPath).toBe('custom-env-path');
+    }
+  });
+});
 
 describe('readConfigJson', () => {
   describe('sdkVersion', () => {
@@ -12,6 +68,7 @@ describe('readConfigJson', () => {
         {
           name: 'testing123',
           version: '0.1.0',
+          description: 'fake description',
           main: 'index.js',
         },
         null,
@@ -86,11 +143,13 @@ describe('readConfigJson', () => {
     it(`can skip throwing when the app.json is missing`, () => {
       const { exp, pkg } = readConfigJson('/no-config', true);
       expect(exp.name).toBe(pkg.name);
+      expect(exp.description).toBe(pkg.description);
     });
 
     it(`can skip throwing when the app.json is missing and expo isn't installed`, () => {
       const { exp, pkg } = readConfigJson('/no-package', true, true);
       expect(exp.name).toBe(pkg.name);
+      expect(exp.description).toBe(pkg.description);
     });
 
     it(`will throw if the app.json is missing`, () => {

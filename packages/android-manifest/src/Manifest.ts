@@ -231,6 +231,7 @@ export async function persistAndroidPermissionsAsync(
 
 // TODO(Bacon): link to resources about required permission prompts
 export const UnimodulePermissions: { [key: string]: string } = {
+  'android.permission.READ_INTERNAL_STORAGE': 'READ_INTERNAL_STORAGE',
   'android.permission.ACCESS_COARSE_LOCATION': 'ACCESS_COARSE_LOCATION',
   'android.permission.ACCESS_FINE_LOCATION': 'ACCESS_FINE_LOCATION',
   'android.permission.CAMERA': 'CAMERA',

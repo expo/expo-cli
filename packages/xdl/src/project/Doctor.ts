@@ -1,23 +1,17 @@
-import _ from 'lodash';
-import semver from 'semver';
+import * as ConfigUtils from '@expo/config';
+import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
+import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
+import _ from 'lodash';
 import path from 'path';
-import spawnAsync from '@expo/spawn-async';
-import * as ConfigUtils from '@expo/config';
+import semver from 'semver';
 
-import chalk from 'chalk';
-import inquirer from 'inquirer';
-import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
-
-import * as ExpSchema from './ExpSchema';
-import * as ProjectUtils from './ProjectUtils';
-import * as AssetUtils from '../AssetUtils';
-import * as Binaries from '../Binaries';
 import Config from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
-import XDLError from '../XDLError';
+import * as ExpSchema from './ExpSchema';
+import * as ProjectUtils from './ProjectUtils';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -135,9 +129,9 @@ export async function validateWithSchema(
     await validator.validateSchemaAsync(exp);
   } catch (e) {
     if (e instanceof SchemerError) {
-      schemaErrorMessage = `Error: Problem${e.errors.length > 1
-        ? 's'
-        : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
+      schemaErrorMessage = `Error: Problem${
+        e.errors.length > 1 ? 's' : ''
+      } validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
@@ -147,9 +141,9 @@ export async function validateWithSchema(
       await validator.validateAssetsAsync(exp);
     } catch (e) {
       if (e instanceof SchemerError) {
-        assetsErrorMessage = `Error: Problem${e.errors.length > 1
-          ? ''
-          : 's'} validating asset fields in ${configName}. See ${Config.helpUrl}`;
+        assetsErrorMessage = `Error: Problem${
+          e.errors.length > 1 ? '' : 's'
+        } validating asset fields in ${configName}. See ${Config.helpUrl}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -158,9 +152,9 @@ export async function validateWithSchema(
 }
 
 function formatValidationError(validationError: ValidationError) {
-  return `\n • ${validationError.fieldPath
-    ? 'Field: ' + validationError.fieldPath + ' - '
-    : ''}${validationError.message}.`;
+  return `\n • ${validationError.fieldPath ? 'Field: ' + validationError.fieldPath + ' - ' : ''}${
+    validationError.message
+  }.`;
 }
 
 async function _validateExpJsonAsync(
@@ -352,9 +346,9 @@ async function _validateReactNativeVersionAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject[
-            'expoReactNativeTag'
-          ]}`,
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${
+            sdkVersionObject['expoReactNativeTag']
+          }`,
           'doctor-invalid-version-of-react-native'
         );
         return WARNING;

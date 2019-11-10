@@ -10,7 +10,6 @@ import pacote, { PackageSpec } from 'pacote';
 import tar from 'tar';
 
 import Api from './Api';
-import * as Binaries from './Binaries';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import * as ThirdParty from './ThirdParty';

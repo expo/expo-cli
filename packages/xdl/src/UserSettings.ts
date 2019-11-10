@@ -1,11 +1,10 @@
+import JsonFile from '@expo/json-file';
 import fs from 'fs-extra';
-import uuid from 'uuid';
-import JsonFile, { JSONArray } from '@expo/json-file';
 import path from 'path';
-
-import { ConnectionType } from './User';
+import uuid from 'uuid';
 
 import * as Env from './Env';
+import { ConnectionType } from './User';
 
 export type UserSettingsData = {
   accessToken?: string;

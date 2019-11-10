@@ -194,6 +194,9 @@ function getWebManifestFromConfig(config: { [key: string]: any } = {}): { [key: 
 }
 
 export function getWebOutputPath(config: { [key: string]: any } = {}): string {
+  if (process.env.WEBPACK_BUILD_OUTPUT_PATH) {
+    return process.env.WEBPACK_BUILD_OUTPUT_PATH;
+  }
   const web = getWebManifestFromConfig(config);
   const { build = {} } = web;
   return build.output || DEFAULT_BUILD_PATH;
@@ -551,19 +554,25 @@ function ensureConfigHasDefaultValues(
   pkg: JSONObject,
   skipNativeValidation: boolean = false
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
-  if (exp && !exp.name && typeof pkg.name === 'string') {
+  if (!exp) exp = {};
+
+  if (!exp.name && typeof pkg.name === 'string') {
     exp.name = pkg.name;
   }
 
-  if (exp && !exp.slug && typeof exp.name === 'string') {
+  if (!exp.description && typeof pkg.description === 'string') {
+    exp.description = pkg.description;
+  }
+
+  if (!exp.slug && typeof exp.name === 'string') {
     exp.slug = slug(exp.name.toLowerCase());
   }
 
-  if (exp && !exp.version) {
+  if (!exp.version) {
     exp.version = pkg.version;
   }
 
-  if (exp && exp.nodeModulesPath) {
+  if (exp.nodeModulesPath) {
     exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }
 
@@ -573,7 +582,7 @@ function ensureConfigHasDefaultValues(
     if (!skipNativeValidation) throw error;
   }
 
-  if (exp && !exp.platforms) {
+  if (!exp.platforms) {
     exp.platforms = ['android', 'ios'];
   }
 

@@ -2,7 +2,8 @@ import path from 'path';
 import chalk from 'chalk';
 import { Rule } from 'webpack';
 import fs from 'fs-extra';
-import { getPossibleProjectRoot } from '../utils/paths';
+import { getPossibleProjectRoot } from '@expo/config/build/paths';
+
 import { Mode } from '../types';
 import { loadPartialConfig } from '@babel/core';
 
@@ -126,10 +127,6 @@ export default function createBabelLoader({
     // Prevent clobbering the `include` and `use` values.
     ...options,
     include(inputPath: string): boolean {
-      if (!useCustom && /node_modules[\\/]react-native-web/.test(inputPath)) {
-        return false;
-      }
-
       for (const possibleModule of modules) {
         if (inputPath.includes(possibleModule)) {
           if (verbose) {

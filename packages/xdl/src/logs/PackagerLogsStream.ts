@@ -1,12 +1,10 @@
-import path from 'path';
-
+import { JSONObject } from '@expo/json-file';
 import chalk from 'chalk';
 import getenv from 'getenv';
-import idx from 'idx';
-import { JSONObject } from '@expo/json-file';
+import path from 'path';
 
-import * as ProjectUtils from '../project/ProjectUtils';
 import Logger from '../Logger';
+import * as ProjectUtils from '../project/ProjectUtils';
 
 type BuildEventType =
   | 'METRO_INITIALIZE_STARTED'
@@ -315,27 +313,15 @@ export default class PackagerLogsStream {
     if (msg.type === 'bundle_build_started') {
       chunk._metroEventType = 'BUILD_STARTED';
       this._handleNewBundleTransformStarted(chunk);
-    } else if (msg.type === 'bundle_transform_progressed') {
+    } else if (msg.type === 'bundle_transform_progressed' && this._bundleBuildChunkID) {
       chunk._metroEventType = 'BUILD_PROGRESS';
-      if (this._bundleBuildChunkID) {
-        this._handleUpdateBundleTransformProgress(chunk);
-      } else {
-        this._handleNewBundleTransformStarted(chunk);
-      }
-    } else if (msg.type === 'bundle_build_failed') {
+      this._handleUpdateBundleTransformProgress(chunk);
+    } else if (msg.type === 'bundle_build_failed' && this._bundleBuildChunkID) {
       chunk._metroEventType = 'BUILD_FAILED';
-      if (!this._bundleBuildChunkID) {
-        // maybe?
-      } else {
-        this._handleUpdateBundleTransformProgress(chunk);
-      }
-    } else if (msg.type === 'bundle_build_done') {
+      this._handleUpdateBundleTransformProgress(chunk);
+    } else if (msg.type === 'bundle_build_done' && this._bundleBuildChunkID) {
       chunk._metroEventType = 'BUILD_DONE';
-      if (!this._bundleBuildChunkID) {
-        // maybe?
-      } else {
-        this._handleUpdateBundleTransformProgress(chunk);
-      }
+      this._handleUpdateBundleTransformProgress(chunk);
     }
   };
 
