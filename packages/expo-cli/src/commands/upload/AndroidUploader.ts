@@ -1,46 +1,49 @@
 import has from 'lodash/has';
 import fs from 'fs-extra';
 
-import BaseUploader from './BaseUploader';
+import { ExpoConfig } from '@expo/config';
+import BaseUploader, { PlatformOptions } from './BaseUploader';
 import { runFastlaneAsync } from './utils';
-import prompt from '../../prompt';
+import prompt, { Question } from '../../prompt';
 import log from '../../log';
 
 const PLATFORM = 'android';
 
-const FILE_DOESNT_EXIST_ERROR = path => `File ${path} doesn't exist.`;
+const FILE_DOESNT_EXIST_ERROR = (path: string): string => `File ${path} doesn't exist.`;
 
-const SERVICE_ACCOUNT_JSON_QUESTION = {
+const SERVICE_ACCOUNT_JSON_QUESTION: Question = {
   name: 'key',
   message:
     'The path to the file containing service account JSON, used to authenticate with Google:',
   type: 'input',
-  validate: function validate(path) {
-    const done = this.async();
-    fs.pathExists(path)
-      .then(exists => {
-        if (exists) {
-          done(null, true);
-        } else {
-          done(FILE_DOESNT_EXIST_ERROR(path));
-        }
-      })
-      .catch(err => done(err));
+  async validate(path: string): Promise<boolean | string> {
+    const exists = await fs.pathExists(path);
+
+    if (exists) {
+      return true;
+    } else {
+      return FILE_DOESNT_EXIST_ERROR(path);
+    }
   },
 };
 
+export type AndroidPlatformOptions = PlatformOptions & {
+  track: string;
+  key: string;
+};
+
 export default class AndroidUploader extends BaseUploader {
-  constructor(projectDir, options) {
+  constructor(projectDir: string, public options: AndroidPlatformOptions) {
     super(PLATFORM, projectDir, options);
   }
 
-  _ensureExperienceIsValid(exp) {
+  _ensureExperienceIsValid(exp: ExpoConfig) {
     if (!has(exp, 'android.package')) {
       throw new Error('You must specify an Android package in app.json.');
     }
   }
 
-  async _getPlatformSpecificOptions() {
+  async _getPlatformSpecificOptions(): Promise<AndroidPlatformOptions> {
     const key = await this._getServiceAccountJSONPath();
     return { key, track: this.options.track };
   }
@@ -62,9 +65,11 @@ export default class AndroidUploader extends BaseUploader {
     return answer.key;
   }
 
-  async _uploadToTheStore(platformData, path) {
+  async _uploadToTheStore(platformData: AndroidPlatformOptions, path: string): Promise<void> {
     const { fastlane } = this;
     const { key, track } = platformData;
+    if (!this._exp) throw new Error('Expo Config is not defined');
+
     const { package: androidPackage } = this._exp.android;
     await runFastlaneAsync(fastlane.supplyAndroid, [path, androidPackage, key, track], {}, true);
   }

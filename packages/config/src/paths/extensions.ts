@@ -19,10 +19,10 @@ export function getExtensions(
   const fileExtensions = [];
   // support .expo files
   for (const workflow of [...workflows, '']) {
-    // Support both TypeScript and JavaScript
-    for (const extension of extensions) {
-      // Ensure order is correct: [platformA.js, platformB.js, js]
-      for (const platform of [...platforms, '']) {
+    // Ensure order is correct: [platformA.js, platformB.js, js]
+    for (const platform of [...platforms, '']) {
+      // Support both TypeScript and JavaScript
+      for (const extension of extensions) {
         fileExtensions.push([platform, workflow, extension].filter(Boolean).join('.'));
       }
     }
