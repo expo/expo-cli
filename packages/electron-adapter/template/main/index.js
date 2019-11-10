@@ -10,16 +10,16 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 let mainWindow;
 
 function createMainWindow() {
-  const window = new BrowserWindow({ webPreferences: { nodeIntegration: true } });
+  const browserWindow = new BrowserWindow({ webPreferences: { nodeIntegration: true } });
 
   if (isDevelopment) {
-    window.webContents.openDevTools();
+    browserWindow.webContents.openDevTools();
   }
 
   if (isDevelopment) {
-    window.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`);
+    browserWindow.loadURL(`http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`);
   } else {
-    window.loadURL(
+    browserWindow.loadURL(
       formatUrl({
         pathname: path.join(__dirname, 'index.html'),
         protocol: 'file',
@@ -28,18 +28,18 @@ function createMainWindow() {
     );
   }
 
-  window.on('closed', () => {
+  browserWindow.on('closed', () => {
     mainWindow = null;
   });
 
-  window.webContents.on('devtools-opened', () => {
-    window.focus();
+  browserWindow.webContents.on('devtools-opened', () => {
+    browserWindow.focus();
     setImmediate(() => {
-      window.focus();
+      browserWindow.focus();
     });
   });
 
-  return window;
+  return browserWindow;
 }
 
 // quit application when all windows are closed
