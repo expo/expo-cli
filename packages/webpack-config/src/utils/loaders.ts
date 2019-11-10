@@ -11,6 +11,7 @@ import {
   RuleSetUse,
   RuleSetUseItem,
   Entry,
+  Plugin,
 } from 'webpack';
 
 import { DevConfiguration } from '../types';
@@ -27,7 +28,7 @@ interface RuleItem {
 type ResolvedRuleSet = string | RuleSetLoader;
 
 interface PluginItem {
-  plugin: object;
+  plugin: Plugin;
   index: number;
 }
 

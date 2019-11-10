@@ -103,7 +103,7 @@ export function getServedPath(projectRoot: string): string {
 export function getPublicPaths({
   projectRoot,
   ...env
-}: Environment): {
+}: Pick<Environment, 'mode' | 'projectRoot'>): {
   /**
    * Webpack uses `publicPath` to determine where the app is being served from.
    * It requires a trailing slash, or the file assets will get an incorrect path.
