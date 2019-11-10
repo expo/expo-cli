@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import * as yup from 'yup';
 
-import { InputEnvironment, Environment, Report } from '../types';
+import { Environment, InputEnvironment, Report } from '../types';
 import { getPaths } from './paths';
 import getConfig from './getConfig';
 
@@ -20,8 +20,8 @@ const environmentSchema = yup.object({
     .mixed<'production' | 'development' | 'none'>()
     .oneOf(['production', 'development', 'none']),
   platform: yup
-    .mixed<'ios' | 'android' | 'web'>()
-    .oneOf(['ios', 'android', 'web'])
+    .mixed<'ios' | 'android' | 'web' | 'electron'>()
+    .oneOf(['ios', 'android', 'web', 'electron'])
     .default('web'),
 });
 

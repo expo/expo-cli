@@ -5,12 +5,13 @@ import createBabelLoader from './loaders/createBabelLoader';
 import createFontLoader from './loaders/createFontLoader';
 import { ExpoDefinePlugin } from './plugins';
 import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
-import { DEFAULT_ALIAS, getModuleFileExtensions } from './utils';
+import { getModuleFileExtensions } from './utils';
 import getConfig from './utils/getConfig';
 import getMode from './utils/getMode';
 import { rulesMatchAnyFiles } from './utils/loaders';
 import { getPaths, getPublicPaths } from './utils/paths';
 import { validateEnvironment } from './utils/validate';
+import withAlias from './withAlias';
 
 // import ManifestPlugin from 'webpack-manifest-plugin';
 
@@ -21,6 +22,8 @@ export default function withUnimodules(
   env: InputEnvironment = {},
   argv: Arguments = {}
 ): DevConfiguration | Configuration {
+  inputWebpackConfig = withAlias(inputWebpackConfig);
+
   if (!inputWebpackConfig.module) inputWebpackConfig.module = { rules: [] };
   else if (!inputWebpackConfig.module.rules)
     inputWebpackConfig.module = { ...inputWebpackConfig.module, rules: [] };
@@ -131,17 +134,10 @@ export default function withUnimodules(
     rules,
   };
 
-  // Support platform extensions like .web.js
-  const alias = {
-    ...DEFAULT_ALIAS,
-    ...(inputWebpackConfig.resolve.alias || {}),
-  };
-
   inputWebpackConfig.resolve = {
     ...inputWebpackConfig.resolve,
     symlinks: false,
-    // Add react-native-web aliases
-    alias,
+    // Support platform extensions like .web.js
     extensions: getModuleFileExtensions('web'),
   };
 

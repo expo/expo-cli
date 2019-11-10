@@ -1,6 +1,5 @@
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
-import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
-import { Options, Configuration, HotModuleReplacementPlugin, Output } from 'webpack';
+import { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 // @ts-ignore
@@ -20,24 +19,22 @@ import path from 'path';
 import webpack from 'webpack';
 import { getPathsAsync, getPublicPaths } from './utils/paths';
 import createAllLoaders from './loaders/createAllLoaders';
-import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
+import {
+  ExpoDefinePlugin,
+  ExpoHtmlWebpackPlugin,
+  ExpoInterpolateHtmlPlugin,
+  ExpoProgressBarPlugin,
+} from './plugins';
 import { getModuleFileExtensions } from './utils';
-import withOptimizations from './withOptimizations';
-import withReporting from './withReporting';
-import withCompression from './withCompression';
+import { withAlias, withCompression, withOptimizations, withReporting } from './extensions';
 
 import createDevServerConfigAsync from './createDevServerConfigAsync';
 import { Arguments, DevConfiguration, FilePaths, Mode } from './types';
 
-import { DEFAULT_ALIAS, overrideWithPropertyOrConfig } from './utils/config';
+import { overrideWithPropertyOrConfig } from './utils/config';
 import getMode from './utils/getMode';
 import getConfig from './utils/getConfig';
 import { Environment } from './types';
-
-function createNoJSComponent(message: string): string {
-  // from twitter.com
-  return `" <form action="location.reload()" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-weight: bold; line-height: 20px; padding: 6px 16px;">Reload</button> </p> </div> </form> "`;
-}
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -115,10 +112,8 @@ export default async function(
 
   const { publicPath, publicUrl } = getPublicPaths(env);
 
-  const { build: buildConfig = {}, lang } = config.web;
-  const { rootId, babel: babelAppConfig = {} } = buildConfig;
-  const { noJavaScriptMessage } = config.web.dangerous;
-  const noJSComponent = createNoJSComponent(noJavaScriptMessage);
+  const { build: buildConfig = {} } = config.web;
+  const { babel: babelAppConfig = {} } = buildConfig;
 
   const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig);
 
@@ -204,14 +199,7 @@ export default async function(
       // Generate the `index.html`
       new ExpoHtmlWebpackPlugin(env),
 
-      // Add variables to the `index.html`
-      new InterpolateHtmlPlugin(ExpoHtmlWebpackPlugin, {
-        WEB_PUBLIC_URL: publicPath,
-        WEB_TITLE: config.web.name,
-        NO_SCRIPT: noJSComponent,
-        LANG_ISO_CODE: lang,
-        ROOT_ID: rootId,
-      }),
+      ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
       new WebpackPWAManifestPlugin(config, {
         publicPath,
@@ -279,7 +267,6 @@ export default async function(
       ],
     },
     resolve: {
-      alias: DEFAULT_ALIAS,
       mainFields: ['browser', 'module', 'main'],
       extensions: getModuleFileExtensions('web'),
       plugins: [
@@ -306,7 +293,7 @@ export default async function(
     webpackConfig = withCompression(withOptimizations(webpackConfig), env);
   }
 
-  return withReporting(withNodeMocks(webpackConfig), env);
+  return withReporting(withNodeMocks(withAlias(webpackConfig)), env);
 }
 
 // Some libraries import Node modules but don't use them in the browser.

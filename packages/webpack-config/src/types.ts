@@ -1,8 +1,8 @@
 import { Configuration as WebpackConfiguration } from 'webpack';
 import {
-  Configuration as WebpackDevServerConfiguration,
-  ProxyConfigMap,
   ProxyConfigArray,
+  ProxyConfigMap,
+  Configuration as WebpackDevServerConfiguration,
 } from 'webpack-dev-server';
 
 export interface DevConfiguration extends WebpackConfiguration {
@@ -13,7 +13,7 @@ export type AnyConfiguration = DevConfiguration | WebpackConfiguration;
 
 export type InputEnvironment = {
   projectRoot?: string;
-  platform?: 'ios' | 'android' | 'web';
+  platform?: 'ios' | 'android' | 'web' | 'electron';
   info?: boolean;
   https?: boolean;
   production?: boolean;
@@ -40,7 +40,7 @@ export type Environment = {
   projectRoot: string;
   polyfill?: boolean;
   mode: Mode;
-  platform: 'ios' | 'android' | 'web';
+  platform: 'ios' | 'android' | 'web' | 'electron';
   removeUnusedImportExports?: boolean;
   pwa?: boolean;
   report?: Report;
