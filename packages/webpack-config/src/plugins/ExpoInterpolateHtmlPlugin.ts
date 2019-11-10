@@ -1,5 +1,6 @@
 import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { Environment } from '../types';
 import { getConfig, getPublicPaths } from '../utils';
 
@@ -10,8 +11,8 @@ export function createNoJSComponent(message: string): string {
 
 export default class ExpoInterpolateHtmlPlugin extends InterpolateHtmlPlugin {
   static fromEnv = (
-    HtmlWebpackPlugin: any,
-    env: Pick<Environment, 'mode' | 'config' | 'locations' | 'projectRoot'>
+    env: Pick<Environment, 'mode' | 'config' | 'locations' | 'projectRoot'>,
+    HtmlWebpackPlugin: HtmlWebpackPlugin
   ): ExpoInterpolateHtmlPlugin => {
     const config = env.config || getConfig(env);
     const { publicUrl } = getPublicPaths(env);
