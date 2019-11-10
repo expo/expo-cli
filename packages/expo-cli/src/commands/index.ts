@@ -19,6 +19,7 @@ const COMMANDS = [
   require('./login'),
   require('./logout'),
   require('./opt-into-google-play-signing'),
+  require('./optimize'),
   require('./prepare-detached-build'),
   require('./publish-info'),
   require('./publish-modify'),

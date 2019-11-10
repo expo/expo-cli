@@ -1,6 +1,7 @@
 {
   "name": "expo-optimize",
   "version": "0.0.0",
+  "main": "build",
   "preferGlobal": true,
   "keywords": [
     "expo",
