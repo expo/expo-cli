@@ -1,4 +1,4 @@
-import { getExtensions, getManagedExtensions, getLanguageExtensionsInOrder } from '../extensions';
+import { getExtensions, getLanguageExtensionsInOrder, getManagedExtensions } from '../extensions';
 
 describe('getExtensions', () => {
   it(`enforces \`string[]\``, async () => {
