@@ -17,6 +17,8 @@ export interface WebpackConfiguration extends webpack.Configuration {
 
 export type WebEnvironment = {
   projectRoot: string;
+  isImageEditingEnabled: boolean;
+  // deprecated
   pwa: boolean;
   mode: 'development' | 'production' | 'test' | 'none';
   https: boolean;

@@ -14,7 +14,7 @@
     "build": "tsc",
     "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
-    "test": "npm run test:unit; npm run test:e2e",
+    "test": "npm run test:unit; npm run test:e2e; npm run test:e2e:nextjs",
     "test:unit": "jest --config jest/unit-test-config.json --rootDir .",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:build": "EXPO_E2E_COMMAND='build' jest --config jest/e2e-test-config.json --rootDir .",
@@ -24,7 +24,8 @@
     "test:e2e:buildNextJsFromExpoCLI": "EXPO_E2E_COMMAND='buildNextJsFromExpoCLI' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:startNextJsFromNextCLI": "EXPO_E2E_COMMAND='startNextJsFromNextCLI' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:buildNextJsFromNextCLI": "EXPO_E2E_COMMAND='buildNextJsFromNextCLI' jest --config jest/e2e-test-config.json --rootDir .",
-    "test:e2e": "npm run test:e2e:start; npm run test:e2e:build; npm run test:e2e:startNextJs; npm run test:e2e:buildNextJs"
+    "test:e2e": "yarn test:e2e:start; yarn test:e2e:build",
+    "test:e2e:nextjs": "yarn test:e2e:startNextJs; yarn test:e2e:buildNextJs"
   },
   "license": "MIT",
   "engines": {

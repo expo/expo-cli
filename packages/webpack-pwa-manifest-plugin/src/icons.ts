@@ -1,4 +1,4 @@
-import { ImageFormat, ResizeMode, sharpAsync } from '@expo/image-utils';
+import { ImageFormat, isAvailableAsync, ResizeMode, sharpAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import mime from 'mime';
 import fetch from 'node-fetch';
@@ -6,6 +6,7 @@ import path from 'path';
 import stream from 'stream';
 import temporary from 'tempy';
 import util from 'util';
+import chalk from 'chalk';
 
 import { IconError } from './Errors';
 import { AnySize, generateFingerprint, joinURI, toArray, ImageSize, toSize } from './utils';
@@ -205,6 +206,22 @@ export async function parseIconsAsync(
     return {};
   }
 
+  if (await isAvailableAsync()) {
+    // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
+    console.log();
+    console.log(
+      chalk.bgRed.black(
+        `PWA Error: It was not possible to generate the images for your progressive web app (splash screens and icons) because the host computer does not have \`sharp\` installed, and \`image-utils\` was unable to install it automatically.`
+      )
+    );
+    console.log(
+      chalk.red(
+        `- You may stop the process and try again after successfully running \`npm install -g sharp\`.\n- If you are using \`expo-cli\` to build your project then you could use the \`--no-pwa\` flag to skip the PWA asset generation step entirely.`
+      )
+    );
+    return {};
+  }
+
   const icons: ManifestIcon[] = [];
   const assets: WebpackAsset[] = [];
 
@@ -235,11 +252,9 @@ export async function parseIconsAsync(
 }
 
 function sortByAttribute(arr: any[], key: string): any[] {
-  return arr
-      .filter(Boolean)
-      .sort((valueA, valueB) => {
-        if (valueA[key] < valueB[key]) return -1;
-        else if (valueA[key] > valueB[key]) return 1;
-        return 0;
-      });
+  return arr.filter(Boolean).sort((valueA, valueB) => {
+    if (valueA[key] < valueB[key]) return -1;
+    else if (valueA[key] > valueB[key]) return 1;
+    return 0;
+  });
 }
