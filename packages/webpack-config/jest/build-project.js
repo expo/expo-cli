@@ -9,6 +9,7 @@ async function main(args) {
   try {
     await Webpack.bundleAsync(projectRoot, {
       nonInteractive: true,
+      isImageEditingEnabled: false,
       verbose: true,
       mode: 'production',
       webpackEnv: {
