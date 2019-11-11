@@ -35,10 +35,10 @@ describe('DefinePlugin', () => {
     } else {
       await expect(page).not.toMatchElement(ciID);
     }
-    it(`should have manifest from expo-constants`, async () => {
-      await expect(page).toMatchElement('div[data-testid="expo-constants-manifest"]', {
-        text: `A Neat Expo App`,
-      });
+  });
+  it(`should have manifest from expo-constants`, async () => {
+    await expect(page).toMatchElement('div[data-testid="expo-constants-manifest"]', {
+      text: `A Neat Expo App`,
     });
   });
 
