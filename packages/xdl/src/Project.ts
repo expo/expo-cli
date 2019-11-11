@@ -1,4 +1,13 @@
-import { Platform, readExpRcAsync, projectHasModule, configFilenameAsync, PackageJSONConfig, resolveModule, ExpoConfig, readConfigJsonAsync } from '@expo/config';
+import {
+  Platform,
+  readExpRcAsync,
+  projectHasModule,
+  configFilenameAsync,
+  PackageJSONConfig,
+  resolveModule,
+  ExpoConfig,
+  readConfigJsonAsync,
+} from '@expo/config';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
@@ -990,13 +999,6 @@ async function _getPublishExpConfigAsync(
 
   // Verify that exp/app.json and package.json exist
   const { exp, pkg } = await readConfigJsonAsync(projectRoot);
-  if (!exp || !pkg) {
-    const configName = await configFilenameAsync(projectRoot);
-    throw new XDLError(
-      'NO_PACKAGE_JSON',
-      `Couldn't read ${configName} file in project at ${projectRoot}`
-    );
-  }
 
   if (exp.android && exp.android.config) {
     delete exp.android.config;
@@ -1133,11 +1135,7 @@ async function _collectAssets(
  * @modifies {exp}
  *
  */
-async function _configureExpForAssets(
-  projectRoot: string,
-  exp: ExpoConfig,
-  assets: Asset[]
-) {
+async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, assets: Asset[]) {
   // Add google services file if it exists
   await _resolveGoogleServicesFile(projectRoot, exp);
 
@@ -1706,11 +1704,7 @@ export async function startReactNativeServerAsync(
 
   let customLogReporterPath: string | undefined;
 
-  const possibleLogReporterPath = projectHasModule(
-    'expo/tools/LogReporter',
-    projectRoot,
-    exp
-  );
+  const possibleLogReporterPath = projectHasModule('expo/tools/LogReporter', projectRoot, exp);
   if (possibleLogReporterPath) {
     customLogReporterPath = possibleLogReporterPath;
   } else {
@@ -1730,11 +1724,7 @@ export async function startReactNativeServerAsync(
   }
 
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
-    packagerOpts.assetPlugins = resolveModule(
-      'expo/tools/hashAssetFiles',
-      projectRoot,
-      exp
-    );
+    packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
   }
 
   if (options.maxWorkers) {
@@ -1937,10 +1927,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
       let { exp: manifest } = await readConfigJsonAsync(projectRoot);
-      if (!manifest) {
-        const configName = await configFilenameAsync(projectRoot);
-        throw new Error(`No ${configName} file found`);
-      } // Get packager opts and then copy into bundleUrlPackagerOpts
+      // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';

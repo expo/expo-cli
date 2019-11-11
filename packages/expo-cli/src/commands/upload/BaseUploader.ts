@@ -40,9 +40,6 @@ export default class BaseUploader {
 
   async _getProjectConfig(): Promise<void> {
     const { exp } = await readConfigJsonAsync(this.projectDir);
-    if (!exp) {
-      throw new Error(`Couldn't read project config file in ${this.projectDir}.`);
-    }
     this._ensureExperienceIsValid(exp);
     this._exp = exp;
   }

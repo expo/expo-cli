@@ -186,10 +186,6 @@ async function configureProjectAsync(projectDir, options) {
   log(chalk.gray(`Starting project at ${projectDir}`));
 
   const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectDir, options.webOnly);
-  if (exp === null) {
-    log.warn(`No Expo configuration found. Are you sure this is a project directory?`);
-    process.exit(1);
-  }
 
   const rootPath = path.resolve(projectDir);
 
