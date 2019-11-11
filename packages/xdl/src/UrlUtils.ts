@@ -153,9 +153,9 @@ export async function constructWebAppUrlAsync(projectRoot: string): Promise<stri
     return null;
   }
 
-  const host = ip.address();
+  const { https, hostType } = await ProjectSettings.readAsync(projectRoot);
+  const host = hostType === 'localhost' ? 'localhost' : ip.address();
 
-  const { https } = await ProjectSettings.readAsync(projectRoot);
   let urlType = 'http';
   if (https === true) {
     urlType = 'https';
