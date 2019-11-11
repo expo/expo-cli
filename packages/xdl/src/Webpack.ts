@@ -435,6 +435,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   return {
     projectRoot,
     pwa: isImageEditingEnabled,
+    isImageEditingEnabled,
     mode,
     https,
     info: isDebugInfoEnabled,

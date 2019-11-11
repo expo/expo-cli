@@ -145,6 +145,11 @@ export default async function(
     appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
   }
 
+  let generatePWAImageAssets: boolean = !isDev;
+  if (!isDev && typeof env.pwa !== 'undefined') {
+    generatePWAImageAssets = env.pwa;
+  }
+
   let webpackConfig: DevConfiguration = {
     mode,
     entry: {
@@ -203,7 +208,7 @@ export default async function(
 
       new WebpackPWAManifestPlugin(config, {
         publicPath,
-        noResources: isDev || !env.pwa,
+        noResources: !generatePWAImageAssets,
         filename: locations.production.manifest,
         HtmlWebpackPlugin: ExpoHtmlWebpackPlugin,
       }),
