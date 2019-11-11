@@ -4,7 +4,6 @@
   "main": "./index",
   "scripts": {
     "start": "expo start",
-    "desktop": "../../../electron-adapter/bin/expo-electron.js start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
