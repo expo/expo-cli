@@ -81,6 +81,10 @@ workflows:
           e: puppeteer
           requires:
             - puppeteerEnv
+      - test-webpack-config-e2e-next-js:
+          e: puppeteer
+          requires:
+            - puppeteerEnv
       - test-expo-schemer:
           e: node-12
           requires:
@@ -205,8 +209,21 @@ jobs:
           at: '~'
       - run:
           name: Install test project dependencies
-          command: cd tests/basic && yarn && cd ../nextjs && yarn && cd ../..
+          command: cd tests/basic && yarn; cd ../..
       - run: yarn test:e2e
+  test-webpack-config-e2e-next-js:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/webpack-config
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run:
+          name: Install test project dependencies
+          command: cd tests/nextjs && yarn; cd ../..
+      - run: yarn test:e2e:nextjs
   test-expo-schemer:
     parameters:
       e:
