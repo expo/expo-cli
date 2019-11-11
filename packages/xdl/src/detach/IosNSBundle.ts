@@ -354,6 +354,12 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     infoPlist.GADApplicationIdentifier =
       (privateConfig && privateConfig.googleMobileAdsAppId) || DEFAULT_GAD_APPLICATION_ID;
 
+    // Auto-init of Google App Measurement
+    // unless the user explicitly specifies they want to auto-init, we set delay to true
+    infoPlist.GADDelayAppMeasurementInit = !(
+      privateConfig && privateConfig.googleMobileAdsAutoInit
+    );
+
     // use version from manifest
     let version = config.version ? config.version : '0.0.0';
     let buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';

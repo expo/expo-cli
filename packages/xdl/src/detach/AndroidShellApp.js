@@ -921,6 +921,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     let googleMaps = privateConfig.googleMaps;
     let googleSignIn = privateConfig.googleSignIn;
     let googleMobileAdsAppId = privateConfig.googleMobileAdsAppId;
+    let googleMobileAdsAutoInit = privateConfig.googleMobileAdsAutoInit;
 
     // Branch
     if (branch) {
@@ -993,6 +994,16 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
         `<meta-data
       android:name="com.google.android.gms.ads.APPLICATION_ID"
       android:value="${googleMobileAdsAppId}"/>`,
+        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+      );
+    }
+
+    // Auto-init of Google App Measurement
+    // unless the user explicitly specifies they want to auto-init, we leave delay set to true
+    if (googleMobileAdsAutoInit) {
+      await regexFileAsync(
+        '<meta-data android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT" android:value="true"/>',
+        '<meta-data android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT" android:value="false"/>',
         path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
       );
     }
