@@ -1,4 +1,3 @@
-import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
 import path from 'path';
 
@@ -143,27 +142,4 @@ export function clearNotification(projectRoot: string, id: string) {
 
 export function attachLoggerStream(projectRoot: string, stream: LogStream) {
   _getLogger(projectRoot).addStream(stream);
-}
-
-// Wrap with logger
-
-export async function readExpRcAsync(projectRoot: string): Promise<any> {
-  try {
-    return await ConfigUtils.readExpRcAsync(projectRoot);
-  } catch (e) {
-    logError(projectRoot, 'expo', e.message);
-    return {};
-  }
-}
-
-export async function readConfigJsonAsync(
-  projectRoot: string,
-  skipValidation: boolean = false
-): Promise<ConfigUtils.ProjectConfig | { exp: null; pkg: null }> {
-  try {
-    return await ConfigUtils.readConfigJsonAsync(projectRoot, skipValidation);
-  } catch (error) {
-    logError(projectRoot, 'expo', error.message);
-    return { exp: null, pkg: null };
-  }
 }

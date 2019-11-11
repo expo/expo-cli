@@ -1,4 +1,13 @@
-import * as ConfigUtils from '@expo/config';
+import {
+  Platform,
+  readExpRcAsync,
+  projectHasModule,
+  configFilenameAsync,
+  PackageJSONConfig,
+  resolveModule,
+  ExpoConfig,
+  readConfigJsonAsync,
+} from '@expo/config';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
@@ -113,7 +122,7 @@ type ManifestResolutionError = Error & {
   manifestField?: string;
 };
 
-type PublicConfig = ConfigUtils.ExpoConfig & {
+type PublicConfig = ExpoConfig & {
   sdkVersion: string;
 };
 
@@ -210,7 +219,7 @@ async function _getFreePortAsync(rangeStart: number) {
 async function _getForPlatformAsync(
   projectRoot: string,
   url: string,
-  platform: ConfigUtils.Platform,
+  platform: Platform,
   { errorCode, minLength }: { errorCode: ErrorCode; minLength?: number }
 ): Promise<string> {
   url = UrlUtils.getPlatformSpecificBundleUrl(url, platform);
@@ -266,7 +275,7 @@ async function _getForPlatformAsync(
   return response.data;
 }
 
-async function _resolveGoogleServicesFile(projectRoot: string, manifest: ConfigUtils.ExpoConfig) {
+async function _resolveGoogleServicesFile(projectRoot: string, manifest: ExpoConfig) {
   if (manifest.android && manifest.android.googleServicesFile) {
     const contents = await fs.readFile(
       path.resolve(projectRoot, manifest.android.googleServicesFile),
@@ -342,9 +351,9 @@ async function _resolveManifestAssets(
   }
 }
 
-function _requireFromProject(modulePath: string, projectRoot: string, exp: ConfigUtils.ExpoConfig) {
+function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoConfig) {
   try {
-    let fullPath = ConfigUtils.resolveModule(modulePath, projectRoot, exp);
+    let fullPath = resolveModule(modulePath, projectRoot, exp);
     // Clear the require cache for this module so get a fresh version of it
     // without requiring the user to restart Expo CLI
     decache(fullPath);
@@ -356,7 +365,7 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: Confi
 }
 
 export async function getSlugAsync(projectRoot: string, options = {}): Promise<string> {
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
   if (exp.slug) {
     return exp.slug;
   }
@@ -935,11 +944,11 @@ async function _uploadArtifactsAsync({
   options,
   pkg,
 }: {
-  exp: ConfigUtils.ExpoConfig;
+  exp: ExpoConfig;
   iosBundle: string;
   androidBundle: string;
   options: PublishOptions;
-  pkg: ConfigUtils.PackageJSONConfig;
+  pkg: PackageJSONConfig;
 }) {
   logger.global.info('Uploading JavaScript bundles');
   let formData = new FormData();
@@ -975,7 +984,7 @@ async function _getPublishExpConfigAsync(
   options: PublishOptions
 ): Promise<{
   exp: PublicConfig;
-  pkg: ConfigUtils.PackageJSONConfig;
+  pkg: PackageJSONConfig;
 }> {
   let schema = joi.object().keys({
     releaseChannel: joi.string(),
@@ -989,14 +998,7 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
   // Verify that exp/app.json and package.json exist
-  const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (!exp || !pkg) {
-    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
-    throw new XDLError(
-      'NO_PACKAGE_JSON',
-      `Couldn't read ${configName} file in project at ${projectRoot}`
-    );
-  }
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   if (exp.android && exp.android.config) {
     delete exp.android.config;
@@ -1047,7 +1049,7 @@ async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOpt
 
 async function _maybeBuildSourceMapsAsync(
   projectRoot: string,
-  exp: ConfigUtils.ExpoConfig,
+  exp: ExpoConfig,
   options = { force: false }
 ) {
   if (options.force) {
@@ -1062,7 +1064,7 @@ async function _maybeBuildSourceMapsAsync(
 // enable sourcemap building, but for now it's very fast, most apps in
 // production should use sourcemaps for error reporting, and in the worst
 // case, adding a few seconds to a postPublish hook isn't too annoying
-async function _buildSourceMapsAsync(projectRoot: string, exp: ConfigUtils.ExpoConfig) {
+async function _buildSourceMapsAsync(projectRoot: string, exp: ExpoConfig) {
   let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
   let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
 
@@ -1133,11 +1135,7 @@ async function _collectAssets(
  * @modifies {exp}
  *
  */
-async function _configureExpForAssets(
-  projectRoot: string,
-  exp: ConfigUtils.ExpoConfig,
-  assets: Asset[]
-) {
+async function _configureExpForAssets(projectRoot: string, exp: ExpoConfig, assets: Asset[]) {
   // Add google services file if it exists
   await _resolveGoogleServicesFile(projectRoot, exp);
 
@@ -1251,7 +1249,7 @@ async function _maybeWriteArtifactsToDiskAsync({
   iosSourceMap,
   androidSourceMap,
 }: {
-  exp: ConfigUtils.ExpoConfig;
+  exp: ExpoConfig;
   projectRoot: string;
   iosBundle: string;
   androidBundle: string;
@@ -1303,7 +1301,7 @@ async function _handleKernelPublishedAsync({
 }: {
   projectRoot: string;
   user: User;
-  exp: ConfigUtils.ExpoConfig;
+  exp: ExpoConfig;
   url: string;
 }) {
   let kernelBundleUrl = `${Config.api.scheme}://${Config.api.host}`;
@@ -1393,12 +1391,12 @@ async function getConfigAsync(
 ) {
   if (!options.publicUrl) {
     // get the manifest from the project directory
-    const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-    const configName = await ConfigUtils.configFilenameAsync(projectRoot);
+    const { exp, pkg } = await readConfigJsonAsync(projectRoot);
+    const configName = await configFilenameAsync(projectRoot);
     return {
       exp,
       pkg,
-      configName: await ConfigUtils.configFilenameAsync(projectRoot),
+      configName: await configFilenameAsync(projectRoot),
       configPrefix: configName === 'app.json' ? 'expo.' : '',
     };
   } else {
@@ -1700,17 +1698,13 @@ export async function startReactNativeServerAsync(
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
 
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await readConfigJsonAsync(projectRoot);
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
   let customLogReporterPath: string | undefined;
 
-  const possibleLogReporterPath = ConfigUtils.projectHasModule(
-    'expo/tools/LogReporter',
-    projectRoot,
-    exp
-  );
+  const possibleLogReporterPath = projectHasModule('expo/tools/LogReporter', projectRoot, exp);
   if (possibleLogReporterPath) {
     customLogReporterPath = possibleLogReporterPath;
   } else {
@@ -1730,11 +1724,7 @@ export async function startReactNativeServerAsync(
   }
 
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
-    packagerOpts.assetPlugins = ConfigUtils.resolveModule(
-      'expo/tools/hashAssetFiles',
-      projectRoot,
-      exp
-    );
+    packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
   }
 
   if (options.maxWorkers) {
@@ -1785,7 +1775,7 @@ export async function startReactNativeServerAsync(
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
-  let defaultCliPath = ConfigUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+  let defaultCliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
   const cliPath = exp.rnCliPath || defaultCliPath;
   let nodePath;
   // When using a custom path for the RN CLI, we want it to use the project
@@ -1936,11 +1926,8 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       // if there is a potential error in the package.json and don't want to slow
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
-      let { exp: manifest } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-      if (!manifest) {
-        const configName = await ConfigUtils.configFilenameAsync(projectRoot);
-        throw new Error(`No ${configName} file found`);
-      } // Get packager opts and then copy into bundleUrlPackagerOpts
+      let { exp: manifest } = await readConfigJsonAsync(projectRoot);
+      // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
@@ -2053,7 +2040,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     server.close();
     res.send('Success');
   });
-  let expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+  let expRc = await readExpRcAsync(projectRoot);
   let expoServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort,
@@ -2153,7 +2140,7 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
     );
   }
   let packageShortName = path.parse(projectRoot).base;
-  let expRc = await ConfigUtils.readExpRcAsync(projectRoot);
+  let expRc = await readExpRcAsync(projectRoot);
 
   let startedTunnelsSuccessfully = false;
 
@@ -2397,14 +2384,14 @@ export async function startAsync(
   projectRoot: string,
   options: StartOptions = {},
   verbose: boolean = true
-): Promise<ConfigUtils.ExpoConfig> {
+): Promise<ExpoConfig> {
   _assertValidProjectRoot(projectRoot);
   Analytics.logEvent('Start Project', {
     projectRoot,
     developerTool: Config.developerTool,
   });
 
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, options.webOnly);
+  let { exp } = await readConfigJsonAsync(projectRoot, options.webOnly);
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
