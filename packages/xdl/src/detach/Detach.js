@@ -354,7 +354,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
   return expoKitVersion;
 }
 
-async function readNullableConfigJsonAsync(projectDir: string): Promise<ProjectConfig | null> {
+async function readNullableConfigJsonAsync(projectDir) {
   try {
     return await readConfigJsonAsync(projectDir);
   } catch (_) {
