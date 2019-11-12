@@ -1,1 +1,1 @@
-export * from '../build/paths';
+module.exports = require('../build/paths');
