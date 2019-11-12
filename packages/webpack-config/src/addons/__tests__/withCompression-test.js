@@ -2,7 +2,7 @@ import path from 'path';
 
 import withCompression, { addCompressionPlugins } from '../withCompression';
 
-const projectRoot = path.resolve(__dirname, '../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 
 it(`only uses compression in production`, () => {
   expect(

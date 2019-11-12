@@ -26,7 +26,7 @@ import {
   ExpoProgressBarPlugin,
 } from './plugins';
 import { getModuleFileExtensions } from './utils';
-import { withAlias, withCompression, withOptimizations, withReporting } from './extensions';
+import { withAlias, withCompression, withOptimizations, withReporting } from './addons';
 
 import createDevServerConfigAsync from './createDevServerConfigAsync';
 import { Arguments, DevConfiguration, FilePaths, Mode } from './types';

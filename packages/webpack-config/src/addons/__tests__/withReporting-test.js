@@ -3,7 +3,7 @@ import path from 'path';
 import normalizePaths from '../utils/normalizePaths';
 import withReporting, { throwDeprecatedConfig } from '../withReporting';
 
-const projectRoot = path.resolve(__dirname, '../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 
 it(`throws an error if the deprecated app.json value is used`, () => {
   expect(() =>

@@ -4,7 +4,7 @@ import { Arguments, DevConfiguration, Environment, InputEnvironment } from './ty
 import * as Diagnosis from './utils/Diagnosis';
 import { validateEnvironment } from './utils/validate';
 import webpackConfig from './webpack.config';
-import withWorkbox from './withWorkbox';
+import { withWorkbox } from './addons';
 
 export default async function(
   env: InputEnvironment,

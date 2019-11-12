@@ -1,5 +1,5 @@
-import { AnyConfiguration } from './types';
-import { DEFAULT_ALIAS } from './utils/config';
+import { AnyConfiguration } from '../types';
+import { DEFAULT_ALIAS } from '../utils/config';
 
 export default function withAlias(
   webpackConfig: AnyConfiguration,
