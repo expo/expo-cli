@@ -2,7 +2,7 @@ import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { Environment } from '../types';
-import { getConfig, getPublicPaths } from '../utils';
+import { getConfig, getPublicPaths } from '../env';
 
 export function createNoJSComponent(message: string): string {
   // from twitter.com

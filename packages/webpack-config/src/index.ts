@@ -1,8 +1,8 @@
 import { Configuration } from 'webpack';
 
 import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
-import * as Diagnosis from './utils/Diagnosis';
-import { validateEnvironment } from './utils/validate';
+import * as Diagnosis from './Diagnosis';
+import { validateEnvironment } from './env';
 import webpackConfig from './webpack.config';
 import { withWorkbox } from './addons';
 

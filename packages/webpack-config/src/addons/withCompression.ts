@@ -6,8 +6,8 @@ import CompressionPlugin from 'compression-webpack-plugin';
 import BrotliPlugin from 'brotli-webpack-plugin';
 import { ExpoConfig } from '@expo/config';
 import { DevConfiguration, Environment } from '../types';
-import { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } from '../utils/config';
-import getConfig from '../utils/getConfig';
+import { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } from '../utils';
+import { getConfig } from '../env';
 
 export const DEFAULT_GZIP_OPTIONS = {
   test: /\.(js|css)$/,

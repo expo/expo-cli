@@ -1,12 +1,12 @@
 import withAlias from '../withAlias';
-import { DEFAULT_ALIAS } from '../utils/config';
+import { aliases } from '../../env';
 
 it(`defines default aliases`, () => {
   expect(
     withAlias({
       mode: 'production',
     }).resolve.alias
-  ).toStrictEqual(DEFAULT_ALIAS);
+  ).toStrictEqual(aliases);
 });
 
 it(`uses existing aliases over defaults`, () => {

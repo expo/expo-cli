@@ -1,16 +1,18 @@
 import path from 'path';
 import { Configuration } from 'webpack';
 
-import createBabelLoader from '../loaders/createBabelLoader';
-import createFontLoader from '../loaders/createFontLoader';
+import { createBabelLoader, createFontLoader } from '../loaders';
 import { ExpoDefinePlugin } from '../plugins';
 import { Arguments, DevConfiguration, Environment, InputEnvironment } from '../types';
-import { getModuleFileExtensions } from '../utils';
-import getConfig from '../utils/getConfig';
-import getMode from '../utils/getMode';
-import { rulesMatchAnyFiles } from '../utils/loaders';
-import { getPaths, getPublicPaths } from '../utils/paths';
-import { validateEnvironment } from '../utils/validate';
+import {
+  validateEnvironment,
+  getPaths,
+  getPublicPaths,
+  getMode,
+  getConfig,
+  getModuleFileExtensions,
+} from '../env';
+import { rulesMatchAnyFiles } from '../utils';
 import withAlias from './withAlias';
 
 // import ManifestPlugin from 'webpack-manifest-plugin';

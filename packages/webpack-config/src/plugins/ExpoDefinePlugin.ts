@@ -3,7 +3,7 @@ import { DefinePlugin } from 'webpack';
 
 import createClientEnvironment from '../createClientEnvironment';
 import { Environment, Mode } from '../types';
-import { getConfig, getMode, getPaths, getPublicPaths } from '../utils';
+import { getConfig, getMode, getPaths, getPublicPaths } from '../env';
 
 /**
  * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/

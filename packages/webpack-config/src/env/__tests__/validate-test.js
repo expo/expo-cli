@@ -1,10 +1,10 @@
 import path from 'path';
 
 import {
-  validateEnvironment,
-  warnEnvironmentDeprecation,
-  validateReport,
   _resetWarnings,
+  validateEnvironment,
+  validateReport,
+  warnEnvironmentDeprecation,
 } from '../validate';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');

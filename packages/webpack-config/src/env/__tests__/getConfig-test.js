@@ -1,6 +1,6 @@
 import path from 'path';
 import getConfig from '../getConfig';
-import normalizePaths from '../normalizePaths';
+import { normalizePaths } from '../../utils';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 const mode = 'development';

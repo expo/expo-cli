@@ -6,7 +6,7 @@ import path from 'path';
 import { Rule } from 'webpack';
 
 import { Environment, Mode } from '../types';
-import { getConfig, getMode, getPaths } from '../utils';
+import { getConfig, getMode, getPaths } from '../env';
 
 const getModule = (name: string) => path.join('node_modules', name);
 
