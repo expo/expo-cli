@@ -16,67 +16,100 @@
 
 ---
 
+> Warning: Support for Next.js is experimental. Please open an issue at [expo-cli/issues](https://github.com/expo/expo-cli/issues) if you encountered any problems.
+
+[Next.js](https://nextjs.org/) is a React framework that provides simple page-based routing as well as server-side rendering.
+
+Using Expo with Next.js means you can share all of your existing components and APIs across your mobile and web. Next.js has it's own Webpack config so you'll need to start your web projects with the `next-cli` and not with `expo start:web`.
+
 ## 🏁 Setup
 
-### Expo projects using Next
+### Expo projects with Next.js
 
 Using SSR in your universal project
+
+<details><summary>Instructions</summary>
+<p>
 
 - Bootstrap your project with Expo - `expo init`
 - Install - `yarn add next @expo/next-adapter`
 - Create a front page for your Next project with `cp App.js pages/index.js`
+- Follow the shared steps
 
-### Next projects using Expo
+</p>
+</details>
+
+### Next.js projects with Expo
 
 If you want to use Expo components in your web-only projects
 
+<details><summary>Instructions</summary>
+<p>
+
 - Bootstrap your project with `Next.js` - `npx create-next-app`
 - Install - `yarn add react-native-web @expo/next-adapter && yarn add -D babel-preset-expo`
+- Follow the shared steps
 
-### Common steps
+</p>
+</details>
 
-1. Re-export this component from the `pages/_document.js` file of your Next.js project. (`mkdir pages; touch pages/_document.js`)
+### Shared steps
 
-   `pages/_document.js`
+After following the project specific setup do these:
 
-   ```js
-   import Document from '@expo/next-adapter/document';
+<details><summary>Instructions</summary>
+<p>
 
-   export default Document;
-   ```
+- Re-export the default Expo Document component from the `pages/_document.js` file of your Next.js project. (`mkdir pages; touch pages/_document.js`). This will ensure `react-native-web` styling works.
 
-1. Create a `babel.config.js` and install the Expo Babel preset: `yarn add -D babel-preset-expo`
+  `pages/_document.js`
 
-   `babel.config.js`
+  ```js
+  import Document from '@expo/next-adapter/document';
 
-   ```js
-   module.exports = function(api) {
-     const isWeb = api.caller(caller => caller && caller.name === 'babel-loader');
+  export default Document;
+  ```
 
-     return {
-       presets: [
-         'babel-preset-expo',
-         // Only use next in the browser
-         isWeb && 'next/babel',
-       ].filter(Boolean),
-     };
-   };
-   ```
+- Create a `babel.config.js` and install the Expo Babel preset: `yarn add -D babel-preset-expo`
 
-1. Update the Next.js config file to support loading React Native and Expo packages:
-   `next.config.js`
+  `babel.config.js`
 
-   ```js
-   const { withExpo } = require('@expo/next-adapter');
+  ```js
+  module.exports = function(api) {
+    const isWeb = api.caller(caller => caller && caller.name === 'babel-loader');
 
-   module.exports = withExpo({
-     projectRoot: __dirname,
-   });
-   ```
+    return {
+      presets: [
+        'babel-preset-expo',
+        // Only use next in the browser
+        isWeb && 'next/babel',
+      ].filter(Boolean),
+    };
+  };
+  ```
 
-1. Start your project with `yarn next dev` or `yarn dev`
+- Update the Next.js config file to support loading React Native and Expo packages:
+  `next.config.js`
 
-**Adding Expo PWA features**
+  ```js
+  const { withExpo } = require('@expo/next-adapter');
+
+  module.exports = withExpo({
+    projectRoot: __dirname,
+  });
+  ```
+
+- Start your project with `yarn next dev` or `yarn dev`
+
+</p>
+</details>
+
+### Adding PWA features
+
+Unlike the default Expo for web workflow, Workbox and PWA are not supported by default. Here you can learn how to use the plugin [next-offline][next-offline] to get offline support in your Next.js + Expo app.
+
+<details><summary>Instructions</summary>
+<p>
 
 1. Install `next-offline` to emulate Expo PWA features: `yarn add next-offline` (this is optional)
 1. Configure your Next.js project to resolve React Native Unimodules:
@@ -117,7 +150,15 @@ If you want to use Expo components in your web-only projects
 
 1. You can now test your project in production mode using the following: `yarn next build && yarn next export && serve -p 3000 ./out`
 
-**Using a custom server**
+</p>
+</details>
+
+### Using a custom server
+
+If you have a complex project that requires custom server control then you can extend the default server to control hosting.
+
+<details><summary>Instructions</summary>
+<p>
 
 1. Create a custom server to host your service worker:
    `server.js`
@@ -134,7 +175,7 @@ If you want to use Expo components in your web-only projects
 
 1. Start your project with `node server.js`
 
-## Handle server requests
+### Handle server requests
 
 You may want to intercept server requests, this will allow for that:
 
@@ -165,6 +206,9 @@ createServerAsync(projectRoot, {
   });
 });
 ```
+
+</p>
+</details>
 
 ### Web push notifications support
 
@@ -205,9 +249,12 @@ Here is an example `now.json` configuration file:
 }
 ```
 
-### Customizing `pages/_document.js`
+### Customizing the Document
 
 Next.js uses the `pages/_document.js` file to augment your app's `<html>` and `<body>` tags. Learn more [here](https://nextjs.org/docs#custom-document).
+
+<details><summary>Instructions</summary>
+<p>
 
 You can import the following fragments from the custom Document:
 
@@ -252,6 +299,9 @@ CustomDocument.getInitialProps = async props => {
 export default CustomDocument;
 ```
 
+</p>
+</details>
+
 ## Limitations or differences comparing to the default Expo for Web
 
 - Unlike the default Expo for Web, Workbox and PWA are not supported by default. Use Next.js plugins such as [next-offline](https://github.com/hanford/next-offline) instead. Learn more [here](https://nextjs.org/features/progressive-web-apps).
@@ -278,3 +328,10 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
         <img align="right" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge&color=33CC12" target="_blank" />
     </a>
 </p>
+
+[nextjs]: https://nextjs.org/
+[next-docs]: https://nextjs.org/docs
+[custom-document]: https://nextjs.org/docs#custom-document
+[next-offline]: https://github.com/hanford/next-offline
+[next-pwa]: https://nextjs.org/features/progressive-web-apps
+[next-transpile-modules]: https://github.com/martpie/next-transpile-modules
