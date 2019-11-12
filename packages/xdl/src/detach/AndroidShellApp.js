@@ -371,6 +371,22 @@ function shellPathForContext(context) {
   }
 }
 
+/**
+ *  Resolve the private config for a project.
+ *  For standalone apps, this is copied into a separate context field context.data.privateConfig
+ *  by the turtle builder. For a local project, this is available in app.json under android.config.
+ */
+function getPrivateConfig(context) {
+  if (context.data.privateConfig) {
+    return context.data.privateConfig;
+  } else {
+    const exp = context.data.exp;
+    if (exp && exp.android) {
+      return exp.android.config;
+    }
+  }
+}
+
 export async function runShellAppModificationsAsync(context, sdkVersion, buildMode) {
   const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
 
@@ -383,7 +399,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   // In SDK32 we've unified build process for shell and ejected apps
   const isDetached = ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32 || isRunningInUserContext;
 
-  if (!context.data.privateConfig) {
+  const privateConfig = getPrivateConfig(context);
+  if (!privateConfig) {
     fnLogger.info('No config file specified.');
   }
 
@@ -914,7 +931,6 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
 
   let certificateHash = '';
   let googleAndroidApiKey = '';
-  let privateConfig = context.data.privateConfig;
   if (privateConfig) {
     let branch = privateConfig.branch;
     let fabric = privateConfig.fabric;
