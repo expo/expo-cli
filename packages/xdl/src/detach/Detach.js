@@ -259,11 +259,13 @@ async function _detachAsync(projectRoot, options) {
     packagesToInstall.push(sdkVersionConfig.expokitNpmPackage);
   }
 
-  const { packagesToInstallWhenEjecting } = sdkVersionConfig;
-  if (isPlainObject(packagesToInstallWhenEjecting)) {
-    Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
-      packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
-    });
+  if (sdkVersionConfig) {
+    const { packagesToInstallWhenEjecting } = sdkVersionConfig;
+    if (isPlainObject(packagesToInstallWhenEjecting)) {
+      Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
+        packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
+      });
+    }
   }
 
   if (packagesToInstall.length) {
