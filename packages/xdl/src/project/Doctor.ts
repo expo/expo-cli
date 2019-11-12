@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { resolveModule, configFilenameAsync, fileExistsAsync, ExpoConfig, PackageJSONConfig, readConfigJsonAsync } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
@@ -107,7 +107,7 @@ export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await readConfigJsonAsync(projectRoot);
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
@@ -158,8 +158,8 @@ function formatValidationError(validationError: ValidationError) {
 }
 
 async function _validateExpJsonAsync(
-  exp: ConfigUtils.ExpoConfig,
-  pkg: ConfigUtils.PackageJSONConfig,
+  exp: ExpoConfig,
+  pkg: PackageJSONConfig,
   projectRoot: string,
   allowNetwork: boolean
 ): Promise<number> {
@@ -180,8 +180,8 @@ async function _validateExpJsonAsync(
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-watchman-version');
 
-  const expJsonExists = await ConfigUtils.fileExistsAsync(path.join(projectRoot, 'exp.json'));
-  const appJsonExists = await ConfigUtils.fileExistsAsync(path.join(projectRoot, 'app.json'));
+  const expJsonExists = await fileExistsAsync(path.join(projectRoot, 'exp.json'));
+  const appJsonExists = await fileExistsAsync(path.join(projectRoot, 'app.json'));
 
   if (expJsonExists && appJsonExists) {
     ProjectUtils.logWarning(
@@ -195,7 +195,7 @@ async function _validateExpJsonAsync(
   ProjectUtils.clearNotification(projectRoot, 'doctor-both-app-and-exp-json');
 
   let sdkVersion = exp.sdkVersion;
-  const configName = await ConfigUtils.configFilenameAsync(projectRoot);
+  const configName = await configFilenameAsync(projectRoot);
 
   // Warn if sdkVersion is UNVERSIONED
   if (sdkVersion === 'UNVERSIONED' && !process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN) {
@@ -290,8 +290,8 @@ async function _validateExpJsonAsync(
 }
 
 async function _validateReactNativeVersionAsync(
-  exp: ConfigUtils.ExpoConfig,
-  pkg: ConfigUtils.PackageJSONConfig,
+  exp: ExpoConfig,
+  pkg: PackageJSONConfig,
   projectRoot: string,
   sdkVersions: Versions.SDKVersions,
   sdkVersion: string
@@ -371,7 +371,7 @@ async function _validateReactNativeVersionAsync(
 }
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await readConfigJsonAsync(projectRoot);
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
@@ -403,7 +403,7 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
 
   // Check to make sure react native is installed
   try {
-    ConfigUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+    resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
     ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
@@ -434,7 +434,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
     return NO_ISSUES;
   }
 
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   let status = await _checkNpmVersionAsync(projectRoot);
   if (status === FATAL) {
@@ -465,7 +465,7 @@ export const EXPO_SDK_NOT_INSTALLED = 1;
 export const EXPO_SDK_NOT_IMPORTED = 2;
 
 export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
-  let { pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { pkg } = await readConfigJsonAsync(projectRoot);
 
   try {
     let sdkPkg;

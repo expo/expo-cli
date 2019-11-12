@@ -1,5 +1,5 @@
 /* @flow */
-import * as ConfigUtils from '@expo/config';
+import { readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import {
   Android,
@@ -13,6 +13,7 @@ import {
   UrlUtils,
   UserManager,
   UserSettings,
+  Webpack,
 } from '@expo/xdl';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
@@ -435,8 +436,13 @@ const resolvers = {
       return ProjectSettings.readAsync(project.projectDir);
     },
     async config(project) {
-      let { exp } = await ProjectUtils.readConfigJsonAsync(project.projectDir);
-      return exp;
+      try {
+        const { exp } = await readConfigJsonAsync(project.projectDir);
+        return exp;
+      } catch (error) {
+        ProjectUtils.logError(project.projectRoot, 'expo', error.message);
+        return null;
+      }
     },
     sources(project, args, context) {
       return context.getSources();
@@ -510,11 +516,10 @@ const resolvers = {
     },
     async processInfo(parent, args, context) {
       const currentProject = context.getCurrentProject();
-      const { exp } = await ProjectUtils.readConfigJsonAsync(currentProject.projectDir);
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: exp.platforms.includes('web')
+        webAppUrl: Webpack.isRunning()
           ? await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir)
           : null,
       };
@@ -577,10 +582,7 @@ const resolvers = {
         ...input,
         githubUrl: input.githubUrl.match(/^https:\/\/github.com\//) ? input.githubUrl : undefined,
       };
-      let { exp } = await ConfigUtils.writeConfigJsonAsync(
-        currentProject.projectDir,
-        filteredInput
-      );
+      const { exp } = await writeConfigJsonAsync(currentProject.projectDir, filteredInput);
       return {
         ...currentProject,
         config: exp,

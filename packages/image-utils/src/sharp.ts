@@ -68,6 +68,14 @@ type Options =
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
 
+export async function isAvailableAsync(): Promise<boolean> {
+  try {
+    return !!(await findSharpBinAsync());
+  } catch (_) {
+    return false;
+  }
+}
+
 export async function sharpAsync(
   options: SharpGlobalOptions,
   commands: SharpCommandOptions[] = []

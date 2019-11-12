@@ -5,7 +5,6 @@ import * as React from 'react';
 
 import { AppRegistry } from 'react-native';
 
-// @ts-ignore: Next requires this to be `react-native` but we want to support react-native-web only projects as well.
 export const style = `
 /**
  * Building on the RNWeb reset:

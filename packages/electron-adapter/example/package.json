@@ -1,0 +1,23 @@
+{
+  "name": "electron-example",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "ELECTRON_DISABLE_SECURITY_WARNINGS=1 electron-webpack dev",
+    "build": "electron-webpack && electron-builder --dir -c.compression=store",
+    "test:build": "electron-webpack && electron-builder --dir -c.compression=store -c.mac.identity=null"
+  },
+  "dependencies": {
+    "expo": "^33.0.0",
+    "react": "16.8.3",
+    "react-dom": "^16.8.6",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
+    "react-native-web": "^0.11.5",
+    "source-map-support": "^0.5.16"
+  },
+  "devDependencies": {
+    "babel-preset-expo": "^6.0.0",
+    "electron": "5.0.6",
+    "electron-builder": "^21.0.11",
+    "electron-webpack": "^2.7.4"
+  }
+}

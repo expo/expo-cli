@@ -3,7 +3,7 @@ import { ExpoConfig, getConfigForPWA } from '@expo/config';
 import { Environment } from '../types';
 import { getPaths } from './paths';
 
-function getConfig(env: Environment): ExpoConfig {
+function getConfig(env: Pick<Environment, 'config' | 'locations' | 'projectRoot'>): ExpoConfig {
   if (env.config) {
     return env.config;
   }

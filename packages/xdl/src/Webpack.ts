@@ -310,6 +310,10 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
   return webName;
 }
 
+export function isRunning(): boolean {
+  return !!webpackDevServerInstance;
+}
+
 export function getServer(projectRoot: string): DevServer | null {
   if (webpackDevServerInstance == null) {
     ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, withTag('Webpack is not running.'));
@@ -435,6 +439,7 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   return {
     projectRoot,
     pwa: isImageEditingEnabled,
+    isImageEditingEnabled,
     mode,
     https,
     info: isDebugInfoEnabled,

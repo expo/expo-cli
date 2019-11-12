@@ -7,7 +7,7 @@ import path from 'path';
 import * as ConfigUtils from '@expo/config';
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
-import { Project, ProjectUtils, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
+import { Project, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import intersection from 'lodash/intersection';
@@ -185,11 +185,7 @@ async function configureProjectAsync(projectDir, options) {
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectDir, options.webOnly);
-  if (exp === null) {
-    log.warn(`No Expo configuration found. Are you sure this is a project directory?`);
-    process.exit(1);
-  }
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectDir, options.webOnly);
 
   const rootPath = path.resolve(projectDir);
 
