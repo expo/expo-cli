@@ -1,5 +1,5 @@
 import { getManagedExtensions } from '@expo/config/build/paths';
-import { withUnimodules } from '@expo/webpack-config/webpack/extensions';
+import { withUnimodules } from '@expo/webpack-config/addons';
 
 export default (nextConfig: any = {}): any => ({
   ...nextConfig,
