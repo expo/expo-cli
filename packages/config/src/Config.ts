@@ -75,11 +75,6 @@ export function findConfigFile(
   return { configPath, configName: APP_JSON_FILE_NAME, configNamespace: 'expo' };
 }
 
-// DEPRECATED: Use configFilename
-export async function configFilenameAsync(projectRoot: string): Promise<string> {
-  return findConfigFile(projectRoot).configName;
-}
-
 export function configFilename(projectRoot: string): string {
   return findConfigFile(projectRoot).configName;
 }
