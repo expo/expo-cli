@@ -150,18 +150,9 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   // Can't upgrade if Expo is running
   let status = await Project.currentStatus(projectRoot);
   if (status === 'running') {
-    let answer = await prompt({
-      type: 'confirm',
-      name: 'closeExpo',
-      message: 'Expo needs to close before we can upgrade your dependencies. Do you want to close it?',
-    });
-
-    if (!answer.closeExpo) {
-      throw new CommandError('EXPO_RUNNING_FOR_UPGRADE_COMMAND');
-    }
-
     await Project.stopAsync(projectRoot);
-    log.newLine();
+    log(chalk.bold.underline('We found an existing expo-cli instance running for this project and closed it to continue.'));
+    log.addNewLineIfNone();
   }
 
   let currentSdkVersionString = exp.sdkVersion;
