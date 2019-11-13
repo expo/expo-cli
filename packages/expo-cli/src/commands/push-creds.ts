@@ -220,7 +220,7 @@ async function _uploadWebPushCredientials(projectDir: string, options: VapidData
    * Customize app.json
    */
   log(`Reading app.json...`);
-  const { configPath } = await ConfigUtils.findConfigFileAsync(projectDir);
+  const { configPath } = ConfigUtils.findConfigFile(projectDir);
   const appJson = JSON.parse(await fse.readFile(configPath).then(value => value.toString()));
   let changedProperties = [];
 

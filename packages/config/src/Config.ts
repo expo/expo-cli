@@ -64,13 +64,6 @@ export function fileExists(file: string): boolean {
   }
 }
 
-// DEPRECATED: Use findConfigFile
-export async function findConfigFileAsync(
-  projectRoot: string
-): Promise<{ configPath: string; configName: string; configNamespace: 'expo' }> {
-  return findConfigFile(projectRoot);
-}
-
 export function findConfigFile(
   projectRoot: string
 ): { configPath: string; configName: string; configNamespace: 'expo' } {
@@ -81,11 +74,6 @@ export function findConfigFile(
     configPath = path.join(projectRoot, APP_JSON_FILE_NAME);
   }
   return { configPath, configName: APP_JSON_FILE_NAME, configNamespace: 'expo' };
-}
-
-// DEPRECATED: Use configFilename
-export async function configFilenameAsync(projectRoot: string): Promise<string> {
-  return findConfigFile(projectRoot).configName;
 }
 
 export function configFilename(projectRoot: string): string {

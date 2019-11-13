@@ -165,7 +165,7 @@ function ensureDependenciesMap(value: any): DependenciesMap {
 async function ejectToBareAsync(projectRoot: string): Promise<void> {
   const useYarn = ConfigUtils.isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
-  const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
+  const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
   const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
@@ -319,7 +319,7 @@ if (Platform.OS === 'web') {
 async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
-  const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
+  const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
   const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
