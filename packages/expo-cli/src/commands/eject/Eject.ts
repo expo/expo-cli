@@ -140,23 +140,24 @@ export async function ejectAsync(
   }
 }
 
-function ensureDependenciesMap(value: any): DependenciesMap {
-  if (typeof value !== 'object') {
-    throw new Error(`Dependency map is invalid, expected object but got ${typeof value}`);
+function ensureDependenciesMap(dependencies: any): DependenciesMap {
+  if (typeof dependencies !== 'object') {
+    throw new Error(`Dependency map is invalid, expected object but got ${typeof dependencies}`);
   }
 
   const outputMap: DependenciesMap = {};
-  if (!value) return outputMap;
+  if (!dependencies) return outputMap;
 
-  for (const key of Object.keys(value)) {
-    if (key in value) {
-      if (typeof value === 'string') {
-        outputMap[key] = value;
-      } else {
-        throw new Error(
-          `Dependency for key \`${key}\` should be a \`string\`, instead got: \`{ ${key}: ${value} }\``
-        );
-      }
+  for (const key of Object.keys(dependencies)) {
+    const value = dependencies[key];
+    if (typeof value === 'string') {
+      outputMap[key] = value;
+    } else {
+      throw new Error(
+        `Dependency for key \`${key}\` should be a \`string\`, instead got: \`{ ${key}: ${JSON.stringify(
+          value
+        )} }\``
+      );
     }
   }
   return outputMap;
