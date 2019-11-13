@@ -149,7 +149,7 @@ export function getConfigForPWA(
   getAbsolutePath: (...pathComponents: string[]) => string,
   options: object
 ) {
-  const { exp } = readConfigJson(projectRoot, true, true);
+  const { exp } = readConfigJson(projectRoot);
   return ensurePWAConfig(exp, getAbsolutePath, options);
 }
 
@@ -489,11 +489,7 @@ function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
   return packageJsonPath;
 }
 
-export function readConfigJson(
-  projectRoot: string,
-  skipValidation: boolean = false,
-  skipNativeValidation: boolean = false
-): ProjectConfig {
+export function readConfigJson(projectRoot: string, skipValidation: boolean = true): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
   let rawConfig: JSONObject | null = null;
   try {
@@ -504,15 +500,14 @@ export function readConfigJson(
   const pkg = JsonFile.read(packageJsonPath);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipValidation),
     rootConfig: rootConfig as AppJSONConfig,
   };
 }
 
 export async function readConfigJsonAsync(
   projectRoot: string,
-  skipValidation: boolean = false,
-  skipNativeValidation: boolean = false
+  skipValidation: boolean = true
 ): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
   let rawConfig: JSONObject | null = null;
@@ -524,7 +519,7 @@ export async function readConfigJsonAsync(
   const pkg = await JsonFile.readAsync(packageJsonPath);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipValidation),
     rootConfig: rootConfig as AppJSONConfig,
   };
 }

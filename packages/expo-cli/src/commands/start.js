@@ -185,7 +185,7 @@ async function configureProjectAsync(projectDir, options) {
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectDir, options.webOnly);
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectDir);
 
   const rootPath = path.resolve(projectDir);
 

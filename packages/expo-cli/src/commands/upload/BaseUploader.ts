@@ -39,7 +39,7 @@ export default class BaseUploader {
   }
 
   async _getProjectConfig(): Promise<void> {
-    const { exp } = await readConfigJsonAsync(this.projectDir);
+    const { exp } = await readConfigJsonAsync(this.projectDir, false);
     this._ensureExperienceIsValid(exp);
     this._exp = exp;
   }

@@ -113,7 +113,7 @@ describe('readConfigJson', () => {
     });
 
     it('skips resolution of the SDK version', () => {
-      const { exp } = readConfigJson('/no-version', true, true);
+      const { exp } = readConfigJson('/no-version');
       expect(exp.sdkVersion).not.toBeDefined();
     });
   });
@@ -141,13 +141,13 @@ describe('readConfigJson', () => {
     afterAll(() => vol.reset());
 
     it(`can skip throwing when the app.json is missing`, () => {
-      const { exp, pkg } = readConfigJson('/no-config', true);
+      const { exp, pkg } = readConfigJson('/no-config');
       expect(exp.name).toBe(pkg.name);
       expect(exp.description).toBe(pkg.description);
     });
 
     it(`can skip throwing when the app.json is missing and expo isn't installed`, () => {
-      const { exp, pkg } = readConfigJson('/no-package', true, true);
+      const { exp, pkg } = readConfigJson('/no-package');
       expect(exp.name).toBe(pkg.name);
       expect(exp.description).toBe(pkg.description);
     });
@@ -157,7 +157,7 @@ describe('readConfigJson', () => {
     });
 
     it(`will throw if the expo package is missing`, () => {
-      expect(() => readConfigJson('/no-package', true)).toThrow(
+      expect(() => readConfigJson('/no-package')).toThrow(
         /Cannot determine which native SDK version your project uses/
       );
     });

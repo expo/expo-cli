@@ -47,7 +47,7 @@ export default program => {
       const spinner = ora(`Finding custom configuration for the Expo client...`).start();
       const appJsonPath = options.config || path.join(projectDir, 'app.json');
       const appJsonExists = await ConfigUtils.fileExistsAsync(appJsonPath);
-      const { exp } = appJsonExists ? await ConfigUtils.readConfigJsonAsync(projectDir) : {};
+      const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
 
       if (exp) {
         spinner.succeed(`Found custom configuration for the Expo client at ${appJsonPath}`);

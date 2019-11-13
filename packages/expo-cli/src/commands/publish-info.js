@@ -37,7 +37,7 @@ export default (program: any) => {
       // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
       let formData = new FormData();
       formData.append('queryType', 'history');
-      let { exp } = await readConfigJsonAsync(projectDir);
+      let { exp } = await readConfigJsonAsync(projectDir, false);
       if (exp.owner) {
         formData.append('owner', exp.owner);
       }
@@ -117,7 +117,7 @@ export default (program: any) => {
       let formData = new FormData();
       formData.append('queryType', 'details');
 
-      let { exp } = await readConfigJsonAsync(projectDir);
+      let { exp } = await readConfigJsonAsync(projectDir, false);
       if (exp.owner) {
         formData.append('owner', exp.owner);
       }

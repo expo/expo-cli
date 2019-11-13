@@ -48,7 +48,7 @@ export class Context {
     const status = await Doctor.validateLowLatencyAsync(projectDir);
     if (status !== Doctor.FATAL) {
       /* This manager does not need to work in project context */
-      const { exp } = await readConfigJsonAsync(projectDir);
+      const { exp } = await readConfigJsonAsync(projectDir, false);
       this._manifest = exp;
       this._hasProjectContext = true;
     }

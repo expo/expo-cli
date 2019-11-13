@@ -58,7 +58,7 @@ export function getEntryPointWithExtensions(
   entryFiles: string[],
   extensions: string[]
 ): string {
-  const { exp, pkg } = readConfigJson(projectRoot, true, true);
+  const { exp, pkg } = readConfigJson(projectRoot);
 
   // This will first look in the `app.json`s `expo.entryPoint` field for a potential main file.
   // We check the Expo config first in case you want your project to start differently with Expo then in a standalone environment.

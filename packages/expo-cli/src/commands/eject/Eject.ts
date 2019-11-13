@@ -22,7 +22,7 @@ type DependenciesMap = { [key: string]: string | number };
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot, false);
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
@@ -166,7 +166,7 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   const useYarn = ConfigUtils.isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
   const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot, false);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
@@ -320,7 +320,7 @@ async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
   const { configPath, configName } = await ConfigUtils.findConfigFileAsync(projectRoot);
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot, false);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
