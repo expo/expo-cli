@@ -289,7 +289,9 @@ export default async function(
     },
     // Turn off performance processing because we utilize
     // our own (CRA) hints via the FileSizeReporter
-    performance: boolish('CI', false) ? false : undefined,
+
+    // TODO: Bacon: Remove this higher value
+    performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
   if (isDev) {
