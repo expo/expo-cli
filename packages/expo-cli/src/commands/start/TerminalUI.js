@@ -38,6 +38,11 @@ const printHelp = () => {
   log.nested(`${PLATFORM_TAG} Press ${b('?')} to show a list of all available commands.`);
 };
 
+async function hasReactNativeWebAsync(projectDir) {
+  const { exp } = await readConfigJsonAsync(projectDir);
+  return projectHasModule('react-native-web', projectDir, exp);
+}
+
 const printUsage = async (projectDir, options = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
@@ -45,7 +50,8 @@ const printUsage = async (projectDir, options = {}) => {
   const devMode = dev ? 'development' : 'production';
   const androidInfo = `${b`a`} to run on ${u`A`}ndroid device/emulator`;
   const iosInfo = process.platform === 'darwin' ? `${b`i`} to run on ${u`i`}OS simulator` : '';
-  const webInfo = projectHasModule('react-native-web') ? `${b`w`} to run on ${u`w`}eb` : '';
+  const isWebAvailable = await hasReactNativeWebAsync(projectDir);
+  const webInfo = isWebAvailable ? `${b`w`} to run on ${u`w`}eb` : '';
   const platformInfo = [androidInfo, iosInfo, webInfo].filter(Boolean).join(', or ');
   log.nested(`
  \u203A Press ${platformInfo}.
