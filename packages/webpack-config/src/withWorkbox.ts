@@ -32,7 +32,7 @@ const defaultInjectManifestOptions = {
     /\.map$/,
     /asset-manifest\.json$/,
     // Exclude all apple touch images because they're cached locally after the PWA is added.
-    /^\bapple.*\.png$/,
+    // /^\bapple.*\.png$/,
   ],
 };
 
