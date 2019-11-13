@@ -1,5 +1,5 @@
 import { loadPartialConfig } from '@babel/core';
-import { getPossibleProjectRoot } from '@expo/config/build/paths';
+import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';

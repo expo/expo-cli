@@ -2,7 +2,7 @@ import {
   Platform,
   readExpRcAsync,
   projectHasModule,
-  configFilenameAsync,
+  configFilename,
   PackageJSONConfig,
   resolveModule,
   ExpoConfig,
@@ -1392,11 +1392,11 @@ async function getConfigAsync(
   if (!options.publicUrl) {
     // get the manifest from the project directory
     const { exp, pkg } = await readConfigJsonAsync(projectRoot);
-    const configName = await configFilenameAsync(projectRoot);
+    const configName = configFilename(projectRoot);
     return {
       exp,
       pkg,
-      configName: await configFilenameAsync(projectRoot),
+      configName: configFilename(projectRoot),
       configPrefix: configName === 'app.json' ? 'expo.' : '',
     };
   } else {

@@ -206,7 +206,7 @@ export async function parseIconsAsync(
     return {};
   }
 
-  if (await isAvailableAsync()) {
+  if (!(await isAvailableAsync())) {
     // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
     console.log();
     console.log(

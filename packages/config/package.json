@@ -40,7 +40,8 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/config#readme",
   "files": [
-    "build"
+    "build",
+    "paths"
   ],
   "dependencies": {
     "@expo/json-file": "^8.2.1",
