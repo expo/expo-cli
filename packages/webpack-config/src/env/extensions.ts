@@ -1,4 +1,4 @@
-import { getManagedExtensions } from '@expo/config/build/paths';
+import { getManagedExtensions } from '@expo/config/paths';
 
 export function getModuleFileExtensions(...platforms: string[]): string[] {
   // Webpack requires a `.` before each value

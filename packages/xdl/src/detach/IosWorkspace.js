@@ -6,8 +6,8 @@ import rimraf from 'rimraf';
 import Api from '../Api';
 import {
   isDirectory,
-  rimrafDontThrow,
   parseSdkMajorVersion,
+  rimrafDontThrow,
   spawnAsyncThrowError,
   transformFileContentsAsync,
 } from './ExponentTools';
@@ -308,7 +308,9 @@ async function createDetachedAsync(context) {
 
 async function _getPackagesToInstallWhenEjecting(sdkVersion) {
   const versions = await Versions.versionsAsync();
-  return versions.sdkVersions[sdkVersion].packagesToInstallWhenEjecting;
+  return versions.sdkVersions[sdkVersion]
+    ? versions.sdkVersions[sdkVersion].packagesToInstallWhenEjecting
+    : null;
 }
 
 // @tsapeta: Temporarily copied from Detach._detachAsync. This needs to be invoked also when creating a shell app workspace

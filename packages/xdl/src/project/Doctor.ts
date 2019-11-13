@@ -1,4 +1,4 @@
-import { resolveModule, configFilenameAsync, fileExistsAsync, ExpoConfig, PackageJSONConfig, readConfigJsonAsync } from '@expo/config';
+import { resolveModule, configFilename, fileExistsAsync, ExpoConfig, PackageJSONConfig, readConfigJsonAsync } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
@@ -195,7 +195,7 @@ async function _validateExpJsonAsync(
   ProjectUtils.clearNotification(projectRoot, 'doctor-both-app-and-exp-json');
 
   let sdkVersion = exp.sdkVersion;
-  const configName = await configFilenameAsync(projectRoot);
+  const configName = configFilename(projectRoot);
 
   // Warn if sdkVersion is UNVERSIONED
   if (sdkVersion === 'UNVERSIONED' && !process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN) {

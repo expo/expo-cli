@@ -33,7 +33,7 @@ Object {
   "version": "1.0.0",
   "web": Object {
     "backgroundColor": "#ffffff",
-    "barStyle": "default",
+    "barStyle": "black-translucent",
     "build": Object {
       "output": "web-build",
       "publicPath": "/",
@@ -65,7 +65,7 @@ Object {
     "lang": "en",
     "meta": Object {
       "apple": Object {
-        "barStyle": "default",
+        "barStyle": "black-translucent",
         "formatDetection": "telephone=no",
         "mobileWebAppCapable": "yes",
         "touchFullscreen": "yes",
