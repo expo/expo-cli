@@ -4,7 +4,7 @@ const COMMANDS = [
   require('./android'),
   require('./build'),
   // new command only for testing, shouldn't be visible for users
-  ...(process.env.EXPO_ENABLE_TURTLEV2 ? [require('./build-native')] : []),
+  ...(process.env.EXPO_ENABLE_NEW_TURTLE ? [require('./build-native')] : []),
   require('./bundle-assets'),
   require('./client'),
   require('./credentials'),

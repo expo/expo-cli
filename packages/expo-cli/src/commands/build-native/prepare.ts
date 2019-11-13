@@ -5,7 +5,7 @@ export type Options = {
   type: BuildType;
 }
 
-async function getUserData(options: Options, projectUrl: string, projectDir: string)
+async function prepareJob(options: Options, projectUrl: string, projectDir: string)
   : Promise<Job> {
   const credentials = await getPlatformCredentials(options.platform, projectDir);
   const userData = {
@@ -35,4 +35,4 @@ async function getPlatformCredentials(platform: Platform, projectDir: string)
   }
 }
 
-export { getUserData };
+export { prepareJob };

@@ -5,8 +5,12 @@ import log from '../../log';
 import Builder from './Builder';
 import { Options } from './prepare';
 import { printBuildTable } from './utils'
+import { Platform } from '@expo/build-tools';
 
 async function buildAction(projectDir: string, options: Options) {
+  if (!options.platform || (options.platform !== Platform.Android && options.platform !== Platform.iOS)) {
+    throw Error('Pass valid platform: [android|ios]');
+  }
   const user: User = await UserManager.ensureLoggedInAsync();
   const builder = new Builder(user);
   const buildArtifactUrl = await builder.buildProject(projectDir, options);

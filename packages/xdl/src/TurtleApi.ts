@@ -13,7 +13,7 @@ import Config from './Config';
 import FormData from './tools/FormData';
 
 
-const apiBaseUrl = new URL(`${Config.turtleApi.scheme}://${Config.turtleApi.host}:${Config.turtleApi.port}`);
+const apiBaseUrl = `${Config.turtleApi.scheme}://${Config.turtleApi.host}:${Config.turtleApi.port}`;
 
 export class TurtleApiError extends ExtendableError {
   code: string;
@@ -116,7 +116,7 @@ export default class TurtleApiClient {
     const formattedUrl = new URL(methodName, apiBaseUrl);
 
     let reqOptions: AxiosRequestConfig = {
-      url: formattedUrl.toString(),
+      url: formattedUrl.href,
       method: options.httpMethod,
       headers: {
         'Expo-Session': this.sessionSecret || null,
@@ -148,7 +148,7 @@ export default class TurtleApiClient {
 
     let reqOptions: AxiosRequestConfig = {
       method: 'post',
-      url: formattedUrl.toString(),
+      url: formattedUrl.href,
       data,
       headers,
       maxContentLength: data.byteLength,

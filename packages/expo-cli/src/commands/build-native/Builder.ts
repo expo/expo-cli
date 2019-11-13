@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import ora from 'ora';
 import uuidv4 from 'uuid/v4';
 
-import { getUserData, Options } from './prepare';
+import { prepareJob, Options } from './prepare';
 import { makeProjectTarball, waitForBuildEnd } from './utils';
 
 export interface StatusResult {
@@ -36,8 +36,8 @@ export default class Builder {
       spinner.text = 'Uploading project to server.';
       const { s3Url } = await this.client.uploadFile(tarPath);
       spinner.succeed('Project uploaded.');
-      const data = await getUserData(options, s3Url, projectDir);
-      const response = await this.client.postAsync('build/start', data);
+      const job = await prepareJob(options, s3Url, projectDir);
+      const response = await this.client.postAsync('build/start', job);
       return await waitForBuildEnd(this.client, response.buildId);
     } finally {
       await fs.remove(tarPath);
