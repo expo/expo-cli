@@ -31,7 +31,8 @@ const DEFAULT_DESCRIPTION = 'A Neat Expo App';
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
 const DEFAULT_DISPLAY = 'standalone';
-const DEFAULT_STATUS_BAR = 'default';
+// Enable full-screen iOS PWAs
+const DEFAULT_STATUS_BAR = 'black-translucent';
 const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
 const ICON_SIZES = [192, 512];
