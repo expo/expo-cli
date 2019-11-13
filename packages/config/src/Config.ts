@@ -63,13 +63,6 @@ export function fileExists(file: string): boolean {
   }
 }
 
-// DEPRECATED: Use findConfigFile
-export async function findConfigFileAsync(
-  projectRoot: string
-): Promise<{ configPath: string; configName: string; configNamespace: 'expo' }> {
-  return findConfigFile(projectRoot);
-}
-
 export function findConfigFile(
   projectRoot: string
 ): { configPath: string; configName: string; configNamespace: 'expo' } {
