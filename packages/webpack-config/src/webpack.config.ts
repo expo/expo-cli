@@ -291,7 +291,7 @@ export default async function(
     // our own (CRA) hints via the FileSizeReporter
 
     // TODO: Bacon: Remove this higher value
-    performance: boolish('CI', false) ? false : undefined, //{ maxAssetSize: 600000, maxEntrypointSize: 600000 },
+    performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
   if (isDev) {
