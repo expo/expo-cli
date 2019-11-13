@@ -8,6 +8,8 @@ import {
   ExpoConfig,
   readConfigJsonAsync,
 } from '@expo/config';
+
+import { getManagedExtensions } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
@@ -1716,7 +1718,8 @@ export async function startReactNativeServerAsync(
     port: packagerPort,
     customLogReporterPath,
     assetExts: ['ttf'],
-    sourceExts: ['expo.js', 'expo.ts', 'expo.tsx', 'expo.json', 'js', 'json', 'ts', 'tsx'],
+    // TODO: Bacon: Support MJS (Modern JS)
+    sourceExts: getManagedExtensions([], { isTS: true, isReact: true, isModern: false }),
   };
 
   if (options.nonPersistent && Versions.lteSdkVersion(exp, '32.0.0')) {
