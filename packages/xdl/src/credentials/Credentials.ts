@@ -19,7 +19,7 @@ export async function getCredentialMetadataAsync(
   projectRoot: string,
   platform: Platform
 ): Promise<CredentialMetadata> {
-  const { exp } = await readConfigJsonAsync(projectRoot, false);
+  const { exp } = await readConfigJsonAsync(projectRoot, { requireLocalConfig: true });
 
   const user = await UserManager.ensureLoggedInAsync();
   let { username } = user;

@@ -998,7 +998,7 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
   // Verify that exp/app.json and package.json exist
-  const { exp, pkg } = await readConfigJsonAsync(projectRoot, false);
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot, { requireLocalConfig: true });
 
   if (exp.android && exp.android.config) {
     delete exp.android.config;
@@ -1926,7 +1926,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       // if there is a potential error in the package.json and don't want to slow
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
-      let { exp: manifest } = await readConfigJsonAsync(projectRoot, false);
+      let { exp: manifest } = await readConfigJsonAsync(projectRoot, { requireLocalConfig: true });
       // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));

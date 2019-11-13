@@ -67,7 +67,7 @@ async function _detachAsync(projectRoot, options) {
 
   let username = user.username;
   const { configName, configPath, configNamespace } = findConfigFile(projectRoot);
-  let { exp } = await readConfigJsonAsync(projectRoot, false);
+  let { exp } = await readConfigJsonAsync(projectRoot, { requireLocalConfig: true });
   let experienceName = `@${username}/${exp.slug}`;
   let experienceUrl = `exp://exp.host/${experienceName}`;
 
@@ -354,7 +354,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
 
 async function readNullableConfigJsonAsync(projectDir) {
   try {
-    return await readConfigJsonAsync(projectDir, false);
+    return await readConfigJsonAsync(projectDir, { requireLocalConfig: true });
   } catch (_) {
     return null;
   }
@@ -395,7 +395,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
-  const { exp } = await readConfigJsonAsync(expoRootDir, false);
+  const { exp } = await readConfigJsonAsync(expoRootDir, { requireLocalConfig: true });
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project

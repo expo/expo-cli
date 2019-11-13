@@ -69,7 +69,7 @@ export async function action(projectDir: string, options: Options = {}) {
     sdkVersion,
   });
 
-  const { exp } = await readConfigJsonAsync(projectDir, false);
+  const { exp } = await readConfigJsonAsync(projectDir, { requireLocalConfig: true });
 
   if (
     buildStatus.userHasBuiltExperienceBefore &&

@@ -238,7 +238,7 @@ export async function expInfoSafeAsync(root: string) {
   try {
     let {
       exp: { name, description, icon, iconUrl },
-    } = await ConfigUtils.readConfigJsonAsync(root, false);
+    } = await ConfigUtils.readConfigJsonAsync(root, { requireLocalConfig: true });
     let pathOrUrl =
       icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
     let resolvedPath = path.resolve(root, pathOrUrl);
@@ -321,7 +321,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
   let { username } = user;
 
-  const { exp } = await ConfigUtils.readConfigJsonAsync(root, false);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(root, { requireLocalConfig: true });
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;

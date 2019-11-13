@@ -11,7 +11,7 @@ export type AssetSchema = { schema: Schema; fieldPath: string };
 let _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
 
 export async function validatorFromProjectRoot(projectRoot: string): Promise<Schemer> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, false);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, { requireLocalConfig: true });
   if (!exp.sdkVersion) throw new Error(`Couldn't read local manifest`);
   const schema = await getSchemaAsync(exp.sdkVersion);
   const validator = new Schemer(schema);

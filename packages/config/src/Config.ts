@@ -441,15 +441,14 @@ const APP_JSON_EXAMPLE = JSON.stringify({
 
 function parseAndValidateRootConfig(
   rootConfig: JSONObject | null,
-  skipValidation: boolean
+  options: ReadConfigOptions = {}
 ): { exp: ExpoConfig; rootConfig: JSONObject } {
   let outputRootConfig: JSONObject | null = rootConfig;
   if (outputRootConfig === null || typeof outputRootConfig !== 'object') {
-    if (skipValidation) {
-      outputRootConfig = { expo: {} };
-    } else {
+    if (options.requireLocalConfig) {
       throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
     }
+    outputRootConfig = { expo: {} };
   }
   const exp = outputRootConfig.expo as ExpoConfig;
   if (exp === null || typeof exp !== 'object') {
@@ -478,37 +477,44 @@ function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
   return packageJsonPath;
 }
 
-export function readConfigJson(projectRoot: string, skipValidation: boolean = true): ProjectConfig {
+export type ReadConfigOptions = {
+  requireLocalConfig?: boolean;
+};
+
+export function readConfigJson(
+  projectRoot: string,
+  options: ReadConfigOptions = {}
+): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
   let rawConfig: JSONObject | null = null;
   try {
     rawConfig = JsonFile.read(configPath, { json5: true });
   } catch (_) {}
-  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, options);
   const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = JsonFile.read(packageJsonPath);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipValidation),
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, options),
     rootConfig: rootConfig as AppJSONConfig,
   };
 }
 
 export async function readConfigJsonAsync(
   projectRoot: string,
-  skipValidation: boolean = true
+  options: ReadConfigOptions = {}
 ): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
   let rawConfig: JSONObject | null = null;
   try {
     rawConfig = await JsonFile.readAsync(configPath, { json5: true });
   } catch (_) {}
-  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, options);
   const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = await JsonFile.readAsync(packageJsonPath);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipValidation),
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, options),
     rootConfig: rootConfig as AppJSONConfig,
   };
 }
@@ -536,7 +542,7 @@ function ensureConfigHasDefaultValues(
   projectRoot: string,
   exp: ExpoConfig,
   pkg: JSONObject,
-  skipNativeValidation: boolean = false
+  options: ReadConfigOptions
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (!exp) exp = {};
 
@@ -563,7 +569,7 @@ function ensureConfigHasDefaultValues(
   try {
     exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
   } catch (error) {
-    if (!skipNativeValidation) throw error;
+    if (options.requireLocalConfig) throw error;
   }
 
   if (!exp.platforms) {
