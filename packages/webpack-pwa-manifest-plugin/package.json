@@ -49,8 +49,7 @@
     "eslint": "^5.15.1",
     "eslint-config-universe": "^1.0.6",
     "typescript": "3.4.5",
-    "webpack": "^4.29.6",
-    "webpack-cli": "^3.2.3"
+    "webpack": "^4.29.6"
   },
   "files": [
     "build",
