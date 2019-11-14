@@ -133,7 +133,7 @@ export class UpdateKeystore implements IView {
       };
     } catch (error) {
       log.warn(
-        "If you don't provide your own Android Kkeystore, it will be generated on our servers during next build"
+        "If you don't provide your own Android keystore, it will be generated on our servers during the next build"
       );
       throw error;
     } finally {
