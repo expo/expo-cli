@@ -1718,7 +1718,7 @@ export async function startReactNativeServerAsync(
     port: packagerPort,
     customLogReporterPath,
     assetExts: ['ttf'],
-    // TODO: Bacon: Support MJS (Modern JS)
+    // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
     sourceExts: getManagedExtensions([], { isTS: true, isReact: true, isModern: false }),
   };
 
