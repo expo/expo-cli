@@ -1,6 +1,6 @@
 {
   "name": "@expo/electron-adapter",
-  "version": "0.0.0-alpha.1",
+  "version": "0.0.0-alpha.2",
   "description": "Use Electron with Expo",
   "main": "build/Electron.js",
   "types": "build/Electron.d.ts",
@@ -52,7 +52,7 @@
   "dependencies": {
     "@expo/spawn-async": "^1.5.0",
     "@expo/webpack-config": "^0.10.0",
-    "@expo/xdl": "^56.7.0",
+    "@expo/xdl": "^56.7.1",
     "async-exit-hook": "^2.0.1",
     "chalk": "^2.4.2",
     "electron": "^6.0.12",
