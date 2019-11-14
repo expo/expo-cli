@@ -3,7 +3,7 @@ import createDistributionCertManager from './distributionCert';
 import createPushKeyManager from './pushKey';
 import createProvisioningProfileManager from './provisioningProfile';
 import ensureAppExists from './ensureAppExists';
-import setup from './setup';
+import setup from '../../../../appleApi/setup';
 
 const createManagers = ctx => ({
   distributionCert: createDistributionCertManager(ctx),
