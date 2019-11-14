@@ -1,6 +1,6 @@
 import path from 'path';
-import { getPathsAsync, getPublicPaths, getServedPath, getPaths } from '../paths';
-import normalizePaths from '../normalizePaths';
+import { getPaths, getPathsAsync, getPublicPaths, getServedPath } from '../paths';
+import { normalizePaths } from '../../utils';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 const projectRootCustomHomepage = path.resolve(__dirname, '../../../tests/custom-homepage');

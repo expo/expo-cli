@@ -3,8 +3,8 @@ import chalk from 'chalk';
 import diff from 'deep-diff';
 import fs from 'fs';
 
-import { DevConfiguration, Environment, FilePaths } from '../types';
-import { getPathsAsync } from './paths';
+import { DevConfiguration, Environment, FilePaths } from './types';
+import { getPathsAsync } from './env';
 
 // https://stackoverflow.com/a/51319962/4047926
 function colorizeKeys(json: { [key: string]: any } | string) {

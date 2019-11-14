@@ -8,9 +8,9 @@ import {
   InjectManifestOptions,
 } from 'workbox-webpack-plugin';
 
-import { AnyConfiguration } from './types';
-import { isEntry } from './utils/loaders';
-import { getPaths } from './utils';
+import { AnyConfiguration } from '../types';
+import { isEntry } from '../utils';
+import { getPaths } from '../env';
 
 export type OfflineOptions = {
   projectRoot?: string;
@@ -32,7 +32,7 @@ const defaultInjectManifestOptions = {
     /\.map$/,
     /asset-manifest\.json$/,
     // Exclude all apple touch images because they're cached locally after the PWA is added.
-    /^\bapple.*\.png$/,
+    // /^\bapple.*\.png$/,
   ],
 };
 

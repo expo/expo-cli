@@ -391,7 +391,7 @@ async function createWebpackConfigAsync(
 
   let config;
   if (options.unimodulesOnly) {
-    const withUnimodules = require('@expo/webpack-config/withUnimodules');
+    const { withUnimodules } = require('@expo/webpack-config/addons');
     config = withUnimodules({}, env);
   } else {
     config = await Web.invokeWebpackConfigAsync(env);

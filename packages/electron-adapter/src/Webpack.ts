@@ -1,13 +1,8 @@
-import { withAlias } from '@expo/webpack-config/webpack/extensions';
-import { createBabelLoaderFromEnvironment } from '@expo/webpack-config/webpack/loaders/createBabelLoader';
-import { ExpoDefinePlugin, ExpoInterpolateHtmlPlugin } from '@expo/webpack-config/webpack/plugins';
-import { getModuleFileExtensions } from '@expo/webpack-config/webpack/utils';
-import getConfig from '@expo/webpack-config/webpack/utils/getConfig';
-import {
-  getPluginsByName,
-  getRulesByMatchingFiles,
-} from '@expo/webpack-config/webpack/utils/loaders';
-import { getPaths } from '@expo/webpack-config/webpack/utils/paths';
+import { withAlias } from '@expo/webpack-config/addons';
+import { createBabelLoaderFromEnvironment } from '@expo/webpack-config/loaders';
+import { ExpoDefinePlugin, ExpoInterpolateHtmlPlugin } from '@expo/webpack-config/plugins';
+import { getPaths, getConfig, getModuleFileExtensions } from '@expo/webpack-config/env';
+import { getPluginsByName, getRulesByMatchingFiles } from '@expo/webpack-config/utils';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import * as path from 'path';
 import { Configuration } from 'webpack';

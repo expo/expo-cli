@@ -1,7 +1,7 @@
 import path from 'path';
 
 import createWebpackConfigAsync from '../..';
-import * as LoaderUtils from '../loaders';
+import * as LoaderUtils from '../search';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 

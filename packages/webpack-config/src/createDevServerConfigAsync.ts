@@ -5,7 +5,7 @@ import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddle
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
 import { Arguments, Environment } from './types';
-import { getPathsAsync } from './utils/paths';
+import { getPathsAsync } from './env';
 
 // @ts-ignore
 const host = process.env.HOST || '0.0.0.0';
