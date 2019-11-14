@@ -12,7 +12,6 @@ import {
   UrlUtils,
   UserManager,
   UserSettings,
-  Webpack,
 } from '@expo/xdl';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
@@ -515,10 +514,11 @@ const resolvers = {
     },
     async processInfo(parent, args, context) {
       const currentProject = context.getCurrentProject();
+      const { exp } = await ProjectUtils.readConfigJsonAsync(currentProject.projectDir);
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: Webpack.isRunning()
+        webAppUrl: exp.platforms.includes('web')
           ? await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir)
           : null,
       };
