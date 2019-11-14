@@ -1,4 +1,4 @@
-import authenticate from './authenticate';
+import authenticate from '../../../../appleApi/authenticate';
 import createDistributionCertManager from './distributionCert';
 import createPushKeyManager from './pushKey';
 import createProvisioningProfileManager from './provisioningProfile';
