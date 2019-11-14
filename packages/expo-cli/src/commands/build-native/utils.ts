@@ -1,4 +1,3 @@
-import { JSONObject } from '@expo/json-file';
 import spawnAsync from '@expo/spawn-async';
 import { TurtleApi } from '@expo/xdl';
 import delayAsync from 'delay-async';
@@ -19,7 +18,7 @@ async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeoutSec 
     switch (buildInfo.status) {
       case 'finished':
         spinner.succeed('Build finished.');
-        return buildInfo.artifacts ? buildInfo.artifacts.s3Url : '';
+        return buildInfo.artifacts ? buildInfo.artifacts.buildUrl : '';
       case 'in-queue':
         spinner.text = 'Build queued...';
         break;

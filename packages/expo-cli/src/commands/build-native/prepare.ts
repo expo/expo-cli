@@ -8,14 +8,14 @@ export type Options = {
 async function prepareJob(options: Options, projectUrl: string, projectDir: string)
   : Promise<Job> {
   const credentials = await getPlatformCredentials(options.platform, projectDir);
-  const userData = {
+  const rawJob = {
     credentials,
     platform: options.platform,
     projectUrl,
     type: options.type,
   }
 
-  const { value, error } = JobSchema.validate(userData);
+  const { value, error } = JobSchema.validate(rawJob);
   if (error) {
     throw error;
   } else {
@@ -31,7 +31,7 @@ async function getPlatformCredentials(platform: Platform, projectDir: string)
   } else if (platform === Platform.iOS) {
     return await BuildConfig.prepareiOSJobCredentials(jsonCredentials);
   } else {
-    throw Error('Unsupported platform');
+    throw new Error('Unsupported platform');
   }
 }
 
