@@ -153,13 +153,13 @@ describe('readConfigJson', () => {
     });
 
     it(`will throw if the app.json is missing`, () => {
-      expect(() => readConfigJson('/no-config', false)).toThrow(
+      expect(() => readConfigJson('/no-config', { requireLocalConfig: true })).toThrow(
         /app.json must include a JSON object./
       );
     });
 
     xit(`will throw if the expo package is missing`, () => {
-      expect(() => readConfigJson('/no-package', false)).toThrow(
+      expect(() => readConfigJson('/no-package', { requireLocalConfig: true })).toThrow(
         /Cannot determine which native SDK version your project uses/
       );
     });
