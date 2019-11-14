@@ -33,14 +33,14 @@ async function statusAction() {
 
 export default function (program: Command) {
   program
-    .command('build-native [project-dir]')
+    .command('build [project-dir]')
     .description('Build an app binary for your project, signed and ready for submission to the Google Play Store / App Store.')
     .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
     .option('-t --type <type>', 'Type: [generic|managed|]', /^(generic|managed)$/i)
     .asyncActionProjectDir(buildAction);
 
   program
-    .command('build-native:status')
+    .command('build:status')
     .description(`Get the status of the latest builds for your project.`)
     .asyncAction(statusAction);
 }
