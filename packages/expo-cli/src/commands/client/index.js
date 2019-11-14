@@ -88,11 +88,13 @@ export default program => {
       const experienceName = await getExperienceName({ user, appleTeamId: authData.team.id });
       const context = {
         ...authData,
-        bundleIdentifier,
-        experienceName,
         username: user ? user.username : null,
       };
-      await appleApi.ensureAppExists(context, { enablePushNotifications: true });
+      await appleApi.ensureAppExists(
+        context,
+        { bundleIdentifier, experienceName },
+        { enablePushNotifications: true }
+      );
 
       const { devices } = await runAction(travelingFastlane.listDevices, [
         '--all-ios-profile-devices',
@@ -107,6 +109,7 @@ export default program => {
       const provisioningProfile = await selectAdhocProvisioningProfile(
         context,
         udids,
+        bundleIdentifier,
         distributionCert.distCertSerialNumber
       );
 

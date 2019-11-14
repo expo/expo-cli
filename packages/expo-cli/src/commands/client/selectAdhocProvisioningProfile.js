@@ -6,6 +6,7 @@ import { tagForUpdate } from './tagger';
 export default async function selectAdhocProvisioningProfile(
   context,
   udids,
+  bundleIdentifier,
   distCertSerialNumber,
   options = {}
 ) {
@@ -17,7 +18,7 @@ export default async function selectAdhocProvisioningProfile(
     context.appleIdPassword,
     context.team.id,
     udids,
-    context.bundleIdentifier,
+    bundleIdentifier,
     distCertSerialNumber,
   ];
   const adhocProvisioningProfile = await runAction(

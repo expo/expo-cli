@@ -11,7 +11,11 @@ async function generate(appleCtx, credentialsToGenerate, metadata) {
     return {};
   }
 
-  await apple.ensureAppExists(appleCtx, { enablePushNotifications: true });
+  await apple.ensureAppExists(
+    appleCtx,
+    { experienceName: appleCtx.experienceName, bundleIdentifier: appleCtx.bundleIdentifier },
+    { enablePushNotifications: true }
+  );
 
   log(`We're going to generate:`);
   credentialsToGenerate.forEach(type => {

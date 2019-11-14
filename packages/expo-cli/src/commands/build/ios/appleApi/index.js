@@ -2,7 +2,7 @@ import authenticate from './authenticate';
 import createDistributionCertManager from './distributionCert';
 import createPushKeyManager from './pushKey';
 import createProvisioningProfileManager from './provisioningProfile';
-import ensureAppExists from './ensureAppExists';
+import ensureAppExists from '../../../../appleApi/ensureAppExists';
 import setup from '../../../../appleApi/setup';
 
 const createManagers = ctx => ({
