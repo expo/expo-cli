@@ -1,5 +1,5 @@
-import { AnyConfiguration } from './types';
-import { DEFAULT_ALIAS } from './utils/config';
+import { AnyConfiguration } from '../types';
+import { aliases } from '../env';
 
 export default function withAlias(
   webpackConfig: AnyConfiguration,
@@ -8,7 +8,7 @@ export default function withAlias(
   // Mix in aliases
   if (!webpackConfig.resolve) webpackConfig.resolve = {};
   webpackConfig.resolve.alias = {
-    ...DEFAULT_ALIAS,
+    ...aliases,
     ...(webpackConfig.resolve.alias || {}),
     ...alias,
   };

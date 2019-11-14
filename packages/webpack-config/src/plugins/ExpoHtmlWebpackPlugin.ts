@@ -1,8 +1,8 @@
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 import { Environment } from '../types';
-import { getConfig, getMode, getPaths } from '../utils';
-import { overrideWithPropertyOrConfig } from '../utils/config';
+import { getConfig, getMode, getPaths } from '../env';
+import { overrideWithPropertyOrConfig } from '../utils';
 
 const DEFAULT_MINIFY = {
   removeComments: true,

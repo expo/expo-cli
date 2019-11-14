@@ -3,6 +3,7 @@
   "version": "0.9.0",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
+  "types": "webpack.config.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",

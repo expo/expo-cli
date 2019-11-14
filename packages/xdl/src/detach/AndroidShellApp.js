@@ -1100,18 +1100,14 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   if (manifest.facebookAppId) {
     await regexFileAsync(
       '<!-- ADD FACEBOOK APP ID CONFIG HERE -->',
-      `<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="${
-        manifest.facebookAppId
-      }"/>`,
+      `<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="${manifest.facebookAppId}"/>`,
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
   if (manifest.facebookDisplayName) {
     await regexFileAsync(
       '<!-- ADD FACEBOOK APP DISPLAY NAME CONFIG HERE -->',
-      `<meta-data android:name="com.facebook.sdk.ApplicationName" android:value="${
-        manifest.facebookDisplayName
-      }"/>`,
+      `<meta-data android:name="com.facebook.sdk.ApplicationName" android:value="${manifest.facebookDisplayName}"/>`,
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }

@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { conditionMatchesFile, getRules } from '../../utils/loaders';
+import { conditionMatchesFile, getRules } from '../../utils/search';
 import { getBabelLoaderRuleFromEnv } from '../createAllLoaders';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');

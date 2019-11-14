@@ -8,9 +8,9 @@ import {
   InjectManifestOptions,
 } from 'workbox-webpack-plugin';
 
-import { AnyConfiguration } from './types';
-import { isEntry } from './utils/loaders';
-import { getPaths } from './utils';
+import { AnyConfiguration } from '../types';
+import { isEntry } from '../utils';
+import { getPaths } from '../env';
 
 export type OfflineOptions = {
   projectRoot?: string;

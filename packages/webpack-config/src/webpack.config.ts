@@ -17,24 +17,19 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
 import webpack from 'webpack';
-import { getPathsAsync, getPublicPaths } from './utils/paths';
-import createAllLoaders from './loaders/createAllLoaders';
+import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
+import { createAllLoaders } from './loaders';
 import {
   ExpoDefinePlugin,
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
 } from './plugins';
-import { getModuleFileExtensions } from './utils';
-import { withAlias, withCompression, withOptimizations, withReporting } from './extensions';
+import { withAlias, withCompression, withOptimizations, withReporting } from './addons';
 
 import createDevServerConfigAsync from './createDevServerConfigAsync';
-import { Arguments, DevConfiguration, FilePaths, Mode } from './types';
-
-import { overrideWithPropertyOrConfig } from './utils/config';
-import getMode from './utils/getMode';
-import getConfig from './utils/getConfig';
-import { Environment } from './types';
+import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
+import { overrideWithPropertyOrConfig } from './utils';
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },

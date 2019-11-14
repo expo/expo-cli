@@ -5,7 +5,7 @@ import { Environment, InputEnvironment, Report } from '../types';
 import { getPaths } from './paths';
 import getConfig from './getConfig';
 
-import { enableWithPropertyOrConfig } from './config';
+import { enableWithPropertyOrConfig } from '../utils';
 
 const environmentSchema = yup.object({
   config: yup.object().notRequired(),
