@@ -86,7 +86,8 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       if (credsToClear && this.options.revokeCredentials) {
         await credentials.revoke(
           await this.getAppleCtx(projectMetadata),
-          Object.keys(credsToClear)
+          Object.keys(credsToClear),
+          projectMetadata
         );
       }
     }
@@ -141,7 +142,12 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
     Object.assign(metadata, metadataFromPrompt);
 
-    const generatedCredentials = await credentials.generate(appleCtx, toGenerate, metadata);
+    const generatedCredentials = await credentials.generate(
+      appleCtx,
+      toGenerate,
+      metadata,
+      projectMetadata
+    );
 
     const newCredentials = {
       ...userProvidedCredentials,
