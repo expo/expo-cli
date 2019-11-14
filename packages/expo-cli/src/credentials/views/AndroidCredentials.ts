@@ -31,10 +31,12 @@ export class ExperienceView implements IView {
 
   async open(ctx: Context): Promise<IView | null> {
     if (this.shouldRefetch) {
-      const appCredentials: AndroidCredentials = await ctx.api.getAsync(`credentials/android/@${ctx.user.username}/${this.experience}`);
+      const appCredentials: AndroidCredentials = await ctx.api.getAsync(
+        `credentials/android/@${ctx.user.username}/${this.experience}`
+      );
       this.experienceName = get(appCredentials, 'experienceName');
       this.keystore = get(appCredentials, 'keystore');
-      this.pushCredentials = get(appCredentials, 'pushCredentials')
+      this.pushCredentials = get(appCredentials, 'pushCredentials');
     }
     if (!this.experienceName) {
       this.experienceName = `@${ctx.user.username}/${this.experience}`;
@@ -100,7 +102,10 @@ export class UpdateKeystore implements IView {
 
   async open(ctx: Context): Promise<IView | null> {
     const keystore = await this.provideOrGenerate(ctx);
-    await ctx.api.putAsync(`credentials/android/keystore/@${ctx.user.username}/${this.experience}`, { keystore });
+    await ctx.api.putAsync(
+      `credentials/android/keystore/@${ctx.user.username}/${this.experience}`,
+      { keystore }
+    );
     log(chalk.green('Updated Keystore successfully'));
     return null;
   }
@@ -119,7 +124,7 @@ export class UpdateKeystore implements IView {
       const keystoreData = await Credentials.generateUploadKeystore(
         tmpKeystoreName,
         '---------------', // TODO: add android package (it's not required)
-        `@${ctx.user.username}/${this.experience}`,
+        `@${ctx.user.username}/${this.experience}`
       );
 
       return {
@@ -128,7 +133,7 @@ export class UpdateKeystore implements IView {
       };
     } catch (error) {
       log.warn(
-        "If you don't provide your own Android Kkeystore, it will be generated on our servers durring next build"
+        "If you don't provide your own Android Kkeystore, it will be generated on our servers during next build"
       );
       throw error;
     } finally {
@@ -156,7 +161,9 @@ export class UpdateFcmKey implements IView {
       },
     ]);
 
-    await ctx.api.putAsync(`credentials/android/push/@${ctx.user.username}/${this.experience}`, { fcmApiKey });
+    await ctx.api.putAsync(`credentials/android/push/@${ctx.user.username}/${this.experience}`, {
+      fcmApiKey,
+    });
     log(chalk.green('Updated successfully'));
     return null;
   }
@@ -179,12 +186,14 @@ export class DownloadKeystore implements IView {
       message: 'Do you want to display the Android Keystore credentials?',
     });
     log(chalk.green(`Saving Keystore to ${keystoreName}`));
-    await this.save(ctx, keystoreName, confirm); 
+    await this.save(ctx, keystoreName, confirm);
     return null;
   }
 
   async fetch(ctx: Context): Promise<void> {
-    const credentials = await ApiV2.clientForUser(ctx.user).getAsync(`credentials/android/@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`);
+    const credentials = await ApiV2.clientForUser(ctx.user).getAsync(
+      `credentials/android/@${ctx.manifest.owner || ctx.user.username}/${ctx.manifest.slug}`
+    );
     if (credentials && credentials.keystore) {
       this.credentials = credentials.keystore;
     }
@@ -194,7 +203,7 @@ export class DownloadKeystore implements IView {
     if (await fs.pathExists(keystorePath)) {
       await fs.unlink(keystorePath);
     }
-    const { keystore, keystorePassword, keyAlias, keyPassword }: any = this.credentials || {}; 
+    const { keystore, keystorePassword, keyAlias, keyPassword }: any = this.credentials || {};
     if (!keystore || !keystorePassword || !keyAlias || !keyPassword) {
       log.warn('There is no valid Keystore defined for this app');
       return;
