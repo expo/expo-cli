@@ -17,7 +17,7 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
 import webpack from 'webpack';
-import { getConfig, getMode, withNodeMocks, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
+import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
 import { createAllLoaders } from './loaders';
 import {
   ExpoDefinePlugin,
@@ -29,6 +29,7 @@ import {
   withAlias,
   withCompression,
   withDevServer,
+  withNodeMocks,
   withOptimizations,
   withReporting,
 } from './addons';
