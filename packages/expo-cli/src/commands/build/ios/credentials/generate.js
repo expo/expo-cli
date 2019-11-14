@@ -14,7 +14,10 @@ async function generate(appleCtx, credentialsToGenerate, metadata, projectMetada
 
   await apple.ensureAppExists(
     appleCtx,
-    { experienceName: appleCtx.experienceName, bundleIdentifier: appleCtx.bundleIdentifier },
+    {
+      experienceName: projectMetadata.experienceName,
+      bundleIdentifier: projectMetadata.bundleIdentifier,
+    },
     { enablePushNotifications: true }
   );
 
