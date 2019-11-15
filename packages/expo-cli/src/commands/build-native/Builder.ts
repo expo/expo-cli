@@ -15,10 +15,15 @@ export interface StatusResult {
 }
 
 export interface BuildInfo {
-  status: string,
-  platform: Platform,
-  createdAt: string,
-  artifacts?: { buildUrl: string };
+  status: string;
+  platform: Platform;
+  createdAt: string;
+  artifacts?: BuildArtifacts;
+}
+
+interface BuildArtifacts {
+  buildUrl?: string;
+  logsUrl: string;
 }
 
 export default class Builder {

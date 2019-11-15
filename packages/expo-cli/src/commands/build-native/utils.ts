@@ -1,7 +1,9 @@
 import spawnAsync from '@expo/spawn-async';
 import { TurtleApi } from '@expo/xdl';
 import delayAsync from 'delay-async';
+import get from 'lodash/get';
 import ora from 'ora';
+
 
 import log from '../../log';
 import { printTableJsonArray } from '../utils/cli-table';
@@ -14,11 +16,11 @@ async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeoutSec 
   let time = new Date().getTime();
   const endTime = time + timeoutSec * 1000;
   while (time <= endTime) {
-    const buildInfo = await client.getAsync(`build/status/${buildId}`);
+    const buildInfo: BuildInfo = await client.getAsync(`build/status/${buildId}`);
     switch (buildInfo.status) {
       case 'finished':
         spinner.succeed('Build finished.');
-        return buildInfo.artifacts ? buildInfo.artifacts.buildUrl : '';
+        return get(buildInfo, 'artifacts.buildUrl', '');
       case 'in-queue':
         spinner.text = 'Build queued...';
         break;
@@ -59,7 +61,7 @@ function printBuildTable(builds: BuildInfo[]) {
   const colWidths = [10, 15, 80];
   const refactoredBuilds = builds.map(build => ({
     ...build,
-    artifacts: (build.artifacts && build.artifacts.buildUrl) ? build.artifacts.buildUrl : 'not available',
+    artifacts: get(build, 'artifacts.buildUrl', 'not available'),
   }));
   const buildTable = printTableJsonArray(headers, refactoredBuilds, colWidths);
   console.log(buildTable);
