@@ -4,8 +4,7 @@ import intersection from 'lodash/intersection';
 
 import * as constants from './constants';
 import log from '../../../../log';
-import * as apple from '../appleApi';
-import { ProvisioningProfileManager } from '../../../../appleApi';
+import * as apple from '../../../../appleApi';
 
 async function generate(appleCtx, credentialsToGenerate, metadata, projectMetadata) {
   if (!credentialsToGenerate || credentialsToGenerate.length === 0) {
@@ -44,7 +43,7 @@ async function generate(appleCtx, credentialsToGenerate, metadata, projectMetada
 
 async function _create(appleCtx, type, metadata, projectMetadata) {
   const manager = apple.createManagers(appleCtx)[type];
-  if (manager instanceof ProvisioningProfileManager) {
+  if (manager instanceof apple.ProvisioningProfileManager) {
     const { bundleIdentifier } = projectMetadata;
     return await manager.create(bundleIdentifier, metadata);
   }

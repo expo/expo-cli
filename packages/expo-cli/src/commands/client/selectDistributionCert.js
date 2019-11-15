@@ -4,7 +4,7 @@ import ora from 'ora';
 
 import log from '../../log';
 import prompt from '../../prompt';
-import * as appleApi from '../build/ios/appleApi';
+import * as appleApi from '../../appleApi';
 import * as credentials from '../build/ios/credentials';
 import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import { choosePreferredCreds } from './selectUtils';
@@ -112,7 +112,7 @@ async function chooseUnrevokedDistributionCert(context) {
 
 async function filterRevokedDistributionCerts(context, distributionCerts) {
   // if the credentials are valid, check it against apple to make sure it hasnt been revoked
-  const distCertManager = appleApi.createManagers(context).distributionCert;
+  const distCertManager = new appleApi.DistCertManager(context);
   const certsOnAppleServer = await distCertManager.list();
   const validCertSerialsOnAppleServer = certsOnAppleServer
     .filter(
@@ -128,7 +128,7 @@ async function filterRevokedDistributionCerts(context, distributionCerts) {
 }
 
 async function generateDistributionCert(context) {
-  const manager = appleApi.createManagers(context).distributionCert;
+  const manager = new appleApi.DistCertManager(context);
   try {
     const distributionCert = await manager.create();
 

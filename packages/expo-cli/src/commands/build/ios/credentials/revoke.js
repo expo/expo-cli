@@ -1,6 +1,5 @@
-import * as apple from '../appleApi';
+import * as apple from '../../../../appleApi';
 import prompt from '../../../../prompt';
-import { ProvisioningProfileManager } from '../../../../appleApi';
 
 async function revoke(appleCtx, typesToRevoke, projectMetadata = {}) {
   const managers = apple.createManagers(appleCtx);
@@ -13,7 +12,7 @@ async function revoke(appleCtx, typesToRevoke, projectMetadata = {}) {
 }
 
 async function _revokeByType(manager, projectMetadata) {
-  if (manager instanceof ProvisioningProfileManager) {
+  if (manager instanceof apple.ProvisioningProfileManager) {
     const { bundleIdentifier } = projectMetadata;
     await manager.revoke(bundleIdentifier);
     return;

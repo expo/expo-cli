@@ -8,7 +8,7 @@ import { PLATFORMS } from '../constants';
 import * as constants from './credentials/constants';
 import * as utils from '../utils';
 import * as credentials from './credentials';
-import * as apple from './appleApi';
+import * as apple from '../../../appleApi';
 import { ensurePNGIsNotTransparent } from './utils/image';
 
 class IOSBuilder extends BaseBuilder {

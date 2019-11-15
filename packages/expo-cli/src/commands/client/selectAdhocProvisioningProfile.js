@@ -1,6 +1,6 @@
 import ora from 'ora';
 
-import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
+import { runAction, travelingFastlane } from '../../appleApi/fastlane';
 import { tagForUpdate } from './tagger';
 
 export default async function selectAdhocProvisioningProfile(
