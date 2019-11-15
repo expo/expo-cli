@@ -130,7 +130,7 @@ async function filterRevokedDistributionCerts(context, distributionCerts) {
 async function generateDistributionCert(context) {
   const manager = appleApi.createManagers(context).distributionCert;
   try {
-    const distributionCert = await manager.create({});
+    const distributionCert = await manager.create();
 
     // tag for updating to Expo servers
     tagForUpdate(distributionCert);

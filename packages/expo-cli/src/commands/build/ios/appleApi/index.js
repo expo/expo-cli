@@ -1,12 +1,12 @@
 import authenticate from '../../../../appleApi/authenticate';
-import createDistributionCertManager from './distributionCert';
+import { DistCertManager } from '../../../../appleApi/distributionCert';
 import { PushKeyManager } from '../../../../appleApi/pushKey';
 import { ProvisioningProfileManager } from '../../../../appleApi/provisioningProfile';
 import ensureAppExists from '../../../../appleApi/ensureAppExists';
 import setup from '../../../../appleApi/setup';
 
 const createManagers = ctx => ({
-  distributionCert: createDistributionCertManager(ctx),
+  distributionCert: new DistCertManager(ctx),
   pushKey: new PushKeyManager(ctx),
   provisioningProfile: new ProvisioningProfileManager(ctx),
 });
