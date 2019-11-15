@@ -465,7 +465,7 @@ export const EXPO_SDK_NOT_INSTALLED = 1;
 export const EXPO_SDK_NOT_IMPORTED = 2;
 
 export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
-  let { pkg } = await readConfigJsonAsync(projectRoot);
+  let { pkg } = await readConfigJsonAsync(projectRoot, { skipSDKVersionRequirement: true });
 
   try {
     let sdkPkg;

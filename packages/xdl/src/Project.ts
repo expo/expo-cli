@@ -6,6 +6,7 @@ import {
   PackageJSONConfig,
   resolveModule,
   ExpoConfig,
+  readConfigJson,
   readConfigJsonAsync,
 } from '@expo/config';
 
@@ -367,12 +368,9 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoC
 }
 
 export async function getSlugAsync(projectRoot: string, options = {}): Promise<string> {
-  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
+  const { exp } = await readConfigJsonAsync(projectRoot, { skipSDKVersionRequirement: true });
   if (exp.slug) {
     return exp.slug;
-  }
-  if (pkg.name) {
-    return pkg.name;
   }
   throw new XDLError(
     'INVALID_MANIFEST',
@@ -1000,7 +998,7 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
   // Verify that exp/app.json and package.json exist
-  const { exp, pkg } = await readConfigJsonAsync(projectRoot, { requireLocalConfig: true });
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   if (exp.android && exp.android.config) {
     delete exp.android.config;
@@ -1012,16 +1010,12 @@ async function _getPublishExpConfigAsync(
 
   const { sdkVersion } = exp;
 
-  if (!sdkVersion) {
-    throw new XDLError('INVALID_OPTIONS', `Cannot publish with sdkVersion '${exp.sdkVersion}'.`);
-  }
-
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
   if (sdkVersion === 'UNVERSIONED' && !maySkipManifestValidation()) {
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
-  return { exp: { ...exp, sdkVersion }, pkg };
+  return { exp: { ...exp, sdkVersion: sdkVersion! }, pkg };
 }
 
 // Fetch iOS and Android bundles for publishing
@@ -1035,13 +1029,13 @@ async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOpt
   );
 
   logger.global.info('Building iOS bundle');
-  let iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
+  const iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
     errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
   logger.global.info('Building Android bundle');
-  let androidBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'android', {
+  const androidBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'android', {
     errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
@@ -1929,7 +1923,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       // if there is a potential error in the package.json and don't want to slow
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
-      let { exp: manifest } = await readConfigJsonAsync(projectRoot, { requireLocalConfig: true });
+      let { exp: manifest } = readConfigJson(projectRoot);
       // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));

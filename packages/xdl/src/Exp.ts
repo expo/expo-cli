@@ -12,7 +12,6 @@ import tar from 'tar';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-import * as ThirdParty from './ThirdParty';
 import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
@@ -221,45 +220,6 @@ export async function saveRecentExpRootAsync(root: string) {
   return await recentExpsJsonFile.writeAsync(recentExps.slice(0, 100));
 }
 
-function getHomeDir(): string {
-  return process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || '';
-}
-
-function makePathReadable(pth: string) {
-  let homedir = getHomeDir();
-  if (pth.substr(0, homedir.length) === homedir) {
-    return `~${pth.substr(homedir.length)}`;
-  } else {
-    return pth;
-  }
-}
-
-export async function expInfoSafeAsync(root: string) {
-  try {
-    let {
-      exp: { name, description, icon, iconUrl },
-    } = await ConfigUtils.readConfigJsonAsync(root, { requireLocalConfig: true });
-    let pathOrUrl =
-      icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
-    let resolvedPath = path.resolve(root, pathOrUrl);
-    if (fs.existsSync(resolvedPath)) {
-      icon = `file://${resolvedPath}`;
-    } else {
-      icon = pathOrUrl; // Assume already a URL
-    }
-
-    return {
-      readableRoot: makePathReadable(root),
-      root,
-      name,
-      description,
-      icon,
-    };
-  } catch (e) {
-    return null;
-  }
-}
-
 type PublishInfo = {
   args: {
     username: string;
@@ -272,45 +232,6 @@ type PublishInfo = {
   };
 };
 
-export async function getThirdPartyInfoAsync(publicUrl: string): Promise<PublishInfo> {
-  const user = await UserManager.ensureLoggedInAsync();
-
-  if (!user) {
-    throw new Error('Attempted to login in offline mode. This is a bug.');
-  }
-
-  const { username } = user;
-
-  const exp = await ThirdParty.getManifest(publicUrl);
-  const { slug, sdkVersion, version } = exp;
-  if (!sdkVersion) {
-    throw new Error(`sdkVersion is missing from ${publicUrl}`);
-  }
-
-  if (!slug) {
-    // slug is made programmatically for app.json
-    throw new Error(`slug field is missing from exp.json.`);
-  }
-
-  if (!version) {
-    throw new Error(`Can't get version of package.`);
-  }
-
-  const iosBundleIdentifier = exp.ios ? exp.ios.bundleIdentifier : null;
-  const androidPackage = exp.android ? exp.android.package : null;
-  return {
-    args: {
-      username,
-      remoteUsername: username,
-      remotePackageName: slug,
-      remoteFullPackageName: `@${username}/${slug}`,
-      sdkVersion,
-      iosBundleIdentifier,
-      androidPackage,
-    },
-  };
-}
-
 // TODO: remove / change, no longer publishInfo, this is just used for signing
 export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const user = await UserManager.ensureLoggedInAsync();
@@ -321,16 +242,12 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
   let { username } = user;
 
-  const { exp } = await ConfigUtils.readConfigJsonAsync(root, { requireLocalConfig: true });
+  const { exp } = await ConfigUtils.readConfigJsonAsync(root, {
+    requireLocalConfig: true,
+  });
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;
-
-  const configName = ConfigUtils.configFilename(root);
-
-  if (!sdkVersion) {
-    throw new Error(`sdkVersion is missing from ${configName}`);
-  }
 
   if (!name) {
     // slug is made programmatically for app.json
@@ -353,20 +270,11 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
       remoteUsername,
       remotePackageName,
       remoteFullPackageName,
-      sdkVersion,
+      sdkVersion: sdkVersion!,
       iosBundleIdentifier,
       androidPackage,
     },
   };
-}
-
-export async function recentValidExpsAsync() {
-  let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
-  let recentExps = await recentExpsJsonFile.readAsync();
-
-  let results = await Promise.all(recentExps.map(expInfoSafeAsync));
-  let filteredResults = results.filter(result => result);
-  return filteredResults;
 }
 
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
@@ -389,12 +297,4 @@ export async function resetProjectRandomnessAsync(projectRoot: string) {
   let randomness = UrlUtils.someRandomness();
   ProjectSettings.setAsync(projectRoot, { urlRandomness: randomness });
   return randomness;
-}
-
-export async function clearXDLCacheAsync() {
-  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  fs.removeSync(path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache'));
-  fs.removeSync(path.join(dotExpoHomeDirectory, 'android-apk-cache'));
-  fs.removeSync(path.join(dotExpoHomeDirectory, 'starter-app-cache'));
-  Logger.notifications.info(`Cleared cache`);
 }

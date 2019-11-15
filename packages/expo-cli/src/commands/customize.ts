@@ -84,7 +84,9 @@ async function generateFilesAsync({
 }
 
 export async function action(projectDir: string = './', options: Options = { force: false }) {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir, {
+    skipSDKVersionRequirement: true,
+  });
 
   const templateFolder = path.dirname(
     require.resolve('@expo/webpack-config/web-default/index.html')

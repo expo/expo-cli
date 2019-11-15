@@ -482,6 +482,7 @@ function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
 
 export type ReadConfigOptions = {
   requireLocalConfig?: boolean;
+  skipSDKVersionRequirement?: boolean;
 };
 
 export function readConfigJson(
@@ -572,11 +573,17 @@ function ensureConfigHasDefaultValues(
   try {
     exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
   } catch (error) {
-    if (options.requireLocalConfig) throw error;
+    if (!options.skipSDKVersionRequirement) throw error;
   }
 
   if (!exp.platforms) {
-    exp.platforms = ['android', 'ios'];
+    exp.platforms = [];
+    if (projectHasModule('react-native', projectRoot, exp)) {
+      exp.platforms.push('ios', 'android');
+    }
+    if (projectHasModule('react-native-web', projectRoot, exp)) {
+      exp.platforms.push('web');
+    }
   }
 
   return { exp, pkg };
@@ -587,7 +594,9 @@ export async function writeConfigJsonAsync(
   options: Object
 ): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
-  let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
+  let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   exp = { ...exp, ...options };
   rootConfig = { ...rootConfig, expo: exp };
 

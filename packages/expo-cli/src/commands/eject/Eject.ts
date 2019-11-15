@@ -22,9 +22,7 @@ type DependenciesMap = { [key: string]: string | number };
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot, {
-    requireLocalConfig: true,
-  });
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
@@ -179,14 +177,12 @@ async function ejectToBareAsync(projectRoot: string): Promise<void> {
   /**
    * Perform validations
    */
-  if (!exp.sdkVersion) throw new Error(`Couldn't read ${configName}`);
-
   if (!Versions.gteSdkVersion(exp, '34.0.0')) {
     throw new Error(`Ejecting to a bare project is only available for SDK 34 and higher`);
   }
 
   // Validate that the template exists
-  let sdkMajorVersionNumber = semver.major(exp.sdkVersion);
+  let sdkMajorVersionNumber = semver.major(exp.sdkVersion!);
   let templateSpec = npmPackageArg(`expo-template-bare-minimum@sdk-${sdkMajorVersionNumber}`);
   try {
     await pacote.manifest(templateSpec);
@@ -326,7 +322,7 @@ async function getAppNamesAsync(
 ): Promise<{ displayName: string; name: string }> {
   const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
   const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot, {
-    requireLocalConfig: true,
+    skipSDKVersionRequirement: true,
   });
 
   const configBuffer = await fse.readFile(configPath);

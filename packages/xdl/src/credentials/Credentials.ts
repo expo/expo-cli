@@ -19,19 +19,24 @@ export async function getCredentialMetadataAsync(
   projectRoot: string,
   platform: Platform
 ): Promise<CredentialMetadata> {
-  const { exp } = await readConfigJsonAsync(projectRoot, { requireLocalConfig: true });
+  const {
+    exp: { owner, ios, slug },
+  } = await readConfigJsonAsync(projectRoot, {
+    requireLocalConfig: true,
+    skipSDKVersionRequirement: true,
+  });
 
-  const user = await UserManager.ensureLoggedInAsync();
-  let { username } = user;
-  if (exp.owner) {
-    username = exp.owner;
+  let username: string = owner;
+  if (!username) {
+    const user = await UserManager.ensureLoggedInAsync();
+    username = user.username;
   }
 
-  const bundleIdentifier = platform === 'ios' ? exp.ios.bundleIdentifier : undefined;
+  const bundleIdentifier = platform === 'ios' ? ios.bundleIdentifier : undefined;
 
   return {
     username,
-    experienceName: `@${username}/${exp.slug}`,
+    experienceName: `@${username}/${slug}`,
     bundleIdentifier,
     platform,
   };

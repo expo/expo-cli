@@ -474,7 +474,9 @@ export async function openProjectAsync(
     hostType: 'localhost',
   });
 
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
 
   let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
   if (result.success) {

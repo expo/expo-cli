@@ -73,17 +73,17 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
 }
 
 export function getPaths(projectRoot: string): FilePaths {
-  const { exp } = readConfigJson(projectRoot);
+  const { exp } = readConfigJson(projectRoot, { skipSDKVersionRequirement: true });
   return parsePaths(projectRoot, exp);
 }
 
 export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
-  const exp = (await readConfigJsonAsync(projectRoot)).exp;
+  const exp = (await readConfigJsonAsync(projectRoot, { skipSDKVersionRequirement: true })).exp;
   return parsePaths(projectRoot, exp);
 }
 
 export function getServedPath(projectRoot: string): string {
-  const { pkg } = readConfigJson(projectRoot);
+  const { pkg } = readConfigJson(projectRoot, { skipSDKVersionRequirement: true });
   const envPublicUrl = process.env.WEB_PUBLIC_URL;
 
   // We use `WEB_PUBLIC_URL` environment variable or "homepage" field to infer
@@ -127,6 +127,6 @@ export function getPublicPaths({
 }
 
 export function getProductionPath(projectRoot: string): string {
-  const { exp } = readConfigJson(projectRoot);
+  const { exp } = readConfigJson(projectRoot, { skipSDKVersionRequirement: true });
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }

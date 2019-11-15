@@ -75,7 +75,7 @@ export async function getAssetFilesAsync(
   projectDir: string,
   options: OptimizationOptions
 ): Promise<{ allFiles: string[]; selectedFiles: string[] }> {
-  const { exp } = await readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir, { skipSDKVersionRequirement: true });
   const { assetBundlePatterns } = exp;
   const globOptions = {
     cwd: projectDir,

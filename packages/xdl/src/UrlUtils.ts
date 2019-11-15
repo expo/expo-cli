@@ -208,7 +208,9 @@ export async function constructUrlAsync(
   } else {
     protocol = 'exp';
 
-    let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+    let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, {
+      skipSDKVersionRequirement: true,
+    });
     if (exp.detach) {
       if (exp.scheme && Versions.gteSdkVersion(exp, '27.0.0')) {
         protocol = exp.scheme;

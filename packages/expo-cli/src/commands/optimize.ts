@@ -12,7 +12,7 @@ type Options = {
 };
 
 export async function action(projectDir = './', options: Options = {}) {
-  const { exp } = await readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir, { skipSDKVersionRequirement: true });
   if (exp === null) {
     log.warn('No Expo configuration found. Are you sure this is a project directory?');
     process.exit(1);

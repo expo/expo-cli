@@ -128,7 +128,7 @@ async function getActiveAndroidPermissionsAsync(
 }
 
 export async function actionAndroid(projectDir: string = './'): Promise<void> {
-  const { exp } = await readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir, { skipSDKVersionRequirement: true });
 
   const manifestPath = await Manifest.getProjectAndroidManifestPathAsync(projectDir);
 
@@ -260,7 +260,7 @@ async function promptForPermissionDescriptionsAsync(
 }
 
 export async function actionIOS(projectDir: string = './'): Promise<void> {
-  const { exp } = await readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir, { skipSDKVersionRequirement: true });
 
   const appName = exp.name!;
 

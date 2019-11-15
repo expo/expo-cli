@@ -250,7 +250,7 @@ export async function openProjectAsync(
     await startAdbReverseAsync(projectRoot);
 
     let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
-    let { exp } = await readConfigJsonAsync(projectRoot);
+    let { exp } = await readConfigJsonAsync(projectRoot, { skipSDKVersionRequirement: true });
 
     await openUrlAsync(projectUrl, !!exp.isDetached);
     return { success: true, url: projectUrl };
@@ -377,7 +377,7 @@ const splashScreenDPIConstraints = [
  * @since SDK33
  */
 export async function checkSplashScreenImages(projectDir: string): Promise<void> {
-  const { exp } = await readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir, { skipSDKVersionRequirement: true });
 
   // return before SDK33
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {

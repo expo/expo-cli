@@ -185,7 +185,9 @@ async function configureProjectAsync(projectDir, options) {
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectDir);
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectDir, {
+    skipSDKVersionRequirement: true,
+  });
 
   const rootPath = path.resolve(projectDir);
 
