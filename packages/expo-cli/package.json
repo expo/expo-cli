@@ -66,6 +66,7 @@
   },
   "dependencies": {
     "@expo/android-manifest": "^0.2.1",
+    "@expo/build-tools": "0.1.0-alpha.7",
     "@expo/bunyan": "3.0.2",
     "@expo/config": "^2.5.0",
     "@expo/dev-tools": "^0.7.1",
