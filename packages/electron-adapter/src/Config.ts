@@ -27,7 +27,9 @@ function getFile(projectRoot: string, localPath: string, packagePath: string): s
   if (fs.pathExistsSync(localTemplate)) {
     return localTemplate;
   }
-  return path.relative(projectRoot, path.resolve(projectRoot, packagePath));
+  const resolvedFullPath =
+    resolveFrom.silent(projectRoot, packagePath) || path.resolve(projectRoot, packagePath);
+  return path.relative(projectRoot, resolvedFullPath);
 }
 
 function resolveFile(projectRoot: string, localPath: string, packagePath: string): string {
