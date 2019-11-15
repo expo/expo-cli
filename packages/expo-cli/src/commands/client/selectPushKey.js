@@ -117,7 +117,7 @@ async function filterRevokedPushKeys(context, pushKeys) {
 async function generatePushKey(context) {
   const manager = appleApi.createManagers(context).pushKey;
   try {
-    const pushKey = await manager.create({});
+    const pushKey = await manager.create();
 
     // tag for updating to Expo servers
     tagForUpdate(pushKey);

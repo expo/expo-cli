@@ -49,7 +49,7 @@ async function _create(appleCtx, type, metadata, projectMetadata) {
     return await manager.create(bundleIdentifier, metadata);
   }
 
-  return await manager.create(metadata);
+  return await manager.create();
 }
 
 function determineMissingCredentials(existingCredentials = {}) {
