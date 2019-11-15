@@ -446,7 +446,10 @@ function parseAndValidateRootConfig(
   let outputRootConfig: JSONObject | null = rootConfig;
   if (outputRootConfig === null || typeof outputRootConfig !== 'object') {
     if (options.requireLocalConfig) {
-      throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+      throw new ConfigError(
+        `An app.json is required for this action. Learn more about creating one here: https://docs.expo.io/versions/latest/workflow/configuration/`,
+        'NOT_OBJECT'
+      );
     }
     outputRootConfig = { expo: {} };
   }

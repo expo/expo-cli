@@ -154,7 +154,7 @@ describe('readConfigJson', () => {
 
     it(`will throw if the app.json is missing`, () => {
       expect(() => readConfigJson('/no-config', { requireLocalConfig: true })).toThrow(
-        /app.json must include a JSON object./
+        /An app.json is required for this action./
       );
     });
 
