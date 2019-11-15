@@ -4,9 +4,9 @@ import delayAsync from 'delay-async';
 import ora from 'ora';
 
 import log from '../../log';
+import { printTableJsonArray } from '../utils/cli-table';
 import { BuildInfo } from './Builder';
 
-const table: any = require('../utils/cli-table.js');
 
 async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeoutSec = 1800, intervalSec = 30 } = {}) {
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
@@ -42,8 +42,7 @@ async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeoutSec 
 }
 
 async function makeProjectTarball(tarPath: string) {
-  const spinner = ora().start();
-  spinner.text = 'Making project tarball';
+  const spinner = ora('Making project tarball').start();
   const changes = (await spawnAsync('git', ['status', '-s'])).stdout;
   if (changes.length > 0) {
     spinner.fail('Could not make project tarball');
@@ -52,7 +51,7 @@ async function makeProjectTarball(tarPath: string) {
     );
   }
   await spawnAsync('git', ['archive', '--format=tar.gz', '--prefix', 'project/', '-o', tarPath, 'HEAD']);
-  spinner.succeed('Tarball created.');
+  spinner.succeed('Project tarball created.');
 }
 
 function printBuildTable(builds: BuildInfo[]) {
@@ -60,9 +59,9 @@ function printBuildTable(builds: BuildInfo[]) {
   const colWidths = [10, 15, 80];
   const refactoredBuilds = builds.map(build => ({
     ...build,
-    artifacts: build.artifacts ? build.artifacts.buildUrl : 'not available',
+    artifacts: (build.artifacts && build.artifacts.buildUrl) ? build.artifacts.buildUrl : 'not available',
   }));
-  const buildTable = table.printTableJsonArray(headers, refactoredBuilds, colWidths);
+  const buildTable = printTableJsonArray(headers, refactoredBuilds, colWidths);
   console.log(buildTable);
 }
 

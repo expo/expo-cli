@@ -1812,10 +1812,10 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@expo/build-tools@0.1.0-alpha.6":
-  version "0.1.0-alpha.6"
-  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.0-alpha.6.tgz#defed1c4907b6816e8ac3de1f1db47151eeadd8e"
-  integrity sha512-FuyHANFzNjR7PAtYBhkoWuUrsC4WBueZ5ce0XgBoPi2XtNpc6k0ubZZDkul3JnxpUn21NVPRI4uMNFHAxHoH4g==
+"@expo/build-tools@0.1.0-alpha.7":
+  version "0.1.0-alpha.7"
+  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.0-alpha.7.tgz#eca466de72a116bb32ab64e3c51bda37d36f212c"
+  integrity sha512-cS4ZxDMDi4HDau0ugXjGEUyKFD5D8WDdLAhs+R0MNG/cJcnDEAdefsMg67PNaJ9Z7OnSelmJOdEurYMcRedafw==
   dependencies:
     "@expo/spawn-async" "^1.5.0"
     "@hapi/boom" "^7.4.3"
