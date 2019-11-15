@@ -25,9 +25,15 @@ import {
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
 } from './plugins';
-import { withAlias, withCompression, withOptimizations, withReporting } from './addons';
+import {
+  withAlias,
+  withCompression,
+  withDevServer,
+  withNodeMocks,
+  withOptimizations,
+  withReporting,
+} from './addons';
 
-import createDevServerConfigAsync from './createDevServerConfigAsync';
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
 
@@ -289,30 +295,12 @@ export default async function(
     performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
-  if (isDev) {
-    webpackConfig.devServer = await createDevServerConfigAsync(env, argv);
-  } else if (isProd) {
+  if (isProd) {
     webpackConfig = withCompression(withOptimizations(webpackConfig), env);
   }
 
-  return withReporting(withNodeMocks(withAlias(webpackConfig)), env);
-}
-
-// Some libraries import Node modules but don't use them in the browser.
-// Tell Webpack to provide empty mocks for them so importing them works.
-function withNodeMocks(
-  webpackConfig: Configuration | DevConfiguration
-): Configuration | DevConfiguration {
-  webpackConfig.node = {
-    ...(webpackConfig.node || {}),
-    module: 'empty',
-    dgram: 'empty',
-    dns: 'mock',
-    fs: 'empty',
-    http2: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    child_process: 'empty',
-  };
-  return webpackConfig;
+  return withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
+    allowedHost: argv.allowedHost,
+    proxy: argv.proxy,
+  });
 }
