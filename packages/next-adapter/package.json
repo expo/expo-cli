@@ -50,6 +50,8 @@
   },
   "dependencies": {
     "@expo/webpack-config": "^0.10.0",
-    "@types/next": "^8.0.6"
+    "@types/next": "^8.0.6",
+    "next-fonts": "^0.19.0",
+    "next-images": "^1.2.0"
   }
 }

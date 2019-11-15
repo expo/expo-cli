@@ -1,18 +1,29 @@
 import { getManagedExtensions } from '@expo/config/paths';
 import { withUnimodules } from '@expo/webpack-config/addons';
+import { imageLoaderRule } from '@expo/webpack-config/loaders';
+// @ts-ignore
+import withImages from 'next-images';
+// @ts-ignore
+import withFonts from 'next-fonts';
 
-export default (nextConfig: any = {}): any => ({
+const withExpo = (nextConfig: any = {}): any => ({
   ...nextConfig,
   pageExtensions: getManagedExtensions(['web']),
   webpack(config: any, options: any): any {
-    const expoConfig = withUnimodules(config, {
-      projectRoot: nextConfig.projectRoot || process.cwd(),
-    });
+    const expoConfig = withUnimodules(
+      config,
+      {
+        projectRoot: nextConfig.projectRoot || process.cwd(),
+      },
+      { supportsFontLoading: true }
+    );
     // Use original public path
     (expoConfig.output || {}).publicPath = (config.output || {}).publicPath;
 
-    // TODO: Bacon: use commonjs for RNW babel maybe...
+    // Support image loading
+    expoConfig.module!.rules!.push(imageLoaderRule);
 
+    // TODO: Bacon: use commonjs for RNW babel maybe...
     if (typeof nextConfig.webpack === 'function') {
       return nextConfig.webpack(expoConfig, options);
     }
@@ -20,3 +31,5 @@ export default (nextConfig: any = {}): any => ({
     return expoConfig;
   },
 });
+
+export default (nextConfig: any = {}): any => withImages(withFonts(withExpo(nextConfig)));

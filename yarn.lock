@@ -9652,6 +9652,14 @@ file-loader@4.2.0, file-loader@^4.0.0:
     loader-utils "^1.2.3"
     schema-utils "^2.0.0"
 
+file-loader@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/file-loader/-/file-loader-2.0.0.tgz#39749c82f020b9e85901dcff98e8004e6401cfde"
+  integrity sha512-YCsBfd1ZGCyonOKLxPiKPdu+8ld9HAaMEvJewzz+b2eTF7uL5Zm/HdBF6FjCrpCMRq25Mi0U1gl4pwn2TlH7hQ==
+  dependencies:
+    loader-utils "^1.0.2"
+    schema-utils "^1.0.0"
+
 filename-regex@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/filename-regex/-/filename-regex-2.0.1.tgz#c1c4b9bee3e09725ddb106b75c1e301fe2f18b26"
@@ -15402,6 +15410,22 @@ neo-async@^2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.1.tgz#ac27ada66167fa8849a6addd837f6b189ad2081c"
   integrity sha512-iyam8fBuCUpWeKPGpaNMetEocMt364qkCsfL9JuhjXX6dRnguRVOfk2GZaDpPjcOKiiXCPINZC1GczQ7iTq3Zw==
+
+next-fonts@^0.19.0:
+  version "0.19.0"
+  resolved "https://registry.yarnpkg.com/next-fonts/-/next-fonts-0.19.0.tgz#0a6d7d8235579d419e55e75a960c17cf19169f51"
+  integrity sha512-1/1GVBtxTEzGA/WYCWetegnVVzSp3tF0aacRY5mc973R6uPogMfid/nkLLlBgFBrFUy8wtv87Sag7vhNNzuSnA==
+  dependencies:
+    file-loader "^2.0.0"
+    url-loader "^1.1.1"
+
+next-images@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/next-images/-/next-images-1.2.0.tgz#9bbcc4ea8787bc5ed4abc0da575a212bd75bbbd0"
+  integrity sha512-NhOiUk5StO82074KpnrcITM0OdONUu0T15Sd0VbipxHJueofKAw9zdmAejht0EhwgQDFt63+1OLFYA5web0x9w==
+  dependencies:
+    file-loader "^4.0.0"
+    url-loader "^2.0.0"
 
 next-tick@1, next-tick@^1.0.0:
   version "1.0.0"
@@ -21325,7 +21349,7 @@ url-join@4.0.0:
   resolved "https://registry.yarnpkg.com/url-join/-/url-join-4.0.0.tgz#4d3340e807d3773bda9991f8305acdcc2a665d2a"
   integrity sha1-TTNA6AfTdzvamZH4MFrNzCpmXSo=
 
-url-loader@^1.1.2:
+url-loader@^1.1.1, url-loader@^1.1.2:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/url-loader/-/url-loader-1.1.2.tgz#b971d191b83af693c5e3fea4064be9e1f2d7f8d8"
   integrity sha512-dXHkKmw8FhPqu8asTc1puBfe3TehOCo2+RmOOev5suNCIYBcT626kxiWg1NBVkwc4rO8BGa7gP70W7VXuqHrjg==
@@ -21334,7 +21358,7 @@ url-loader@^1.1.2:
     mime "^2.0.3"
     schema-utils "^1.0.0"
 
-url-loader@^2.0.1:
+url-loader@^2.0.0, url-loader@^2.0.1:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/url-loader/-/url-loader-2.2.0.tgz#af321aece1fd0d683adc8aaeb27829f29c75b46e"
   integrity sha512-G8nk3np8ZAnwhHXas1JxJEwJyQdqFXAKJehfgZ/XrC48volFBRtO+FIKtF2u0Ma3bw+4vnDVjHPAQYlF9p2vsw==
