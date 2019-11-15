@@ -568,7 +568,6 @@ const resolvers = {
     async optimizeAssets(parent, { settings }, context) {
       const currentProject = context.getCurrentProject();
 
-      // TODO: Bacon: Ensure npx is installed
       await spawnAsync(require.resolve('expo-optimize'), [], {
         cwd: currentProject.projectDir,
       });
