@@ -140,6 +140,7 @@ export default function createBabelLoader({
     };
   }
 
+  const pathCache: { [key: string]: boolean } = {};
   const cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot);
   return {
     test: /\.(mjs|[jt]sx?)$/,
@@ -147,25 +148,32 @@ export default function createBabelLoader({
     // Prevent clobbering the `include` and `use` values.
     ...options,
     include(inputPath: string): boolean {
-      for (const possibleModule of modules) {
-        if (inputPath.includes(possibleModule)) {
-          if (verbose) {
-            const packageName = packageNameFromPath(inputPath);
-            if (packageName) logPackage(packageName);
+      if (inputPath in pathCache) return pathCache[inputPath];
+
+      const result = (() => {
+        for (const possibleModule of modules) {
+          if (inputPath.includes(possibleModule)) {
+            if (verbose) {
+              const packageName = packageNameFromPath(inputPath);
+              if (packageName) logPackage(packageName);
+            }
+            return true;
+          }
+        }
+        // Is inside the project and is not one of designated modules
+        if (inputPath.includes(ensuredProjectRoot)) {
+          for (const excluded of excludedRootPaths) {
+            if (inputPath.includes(excluded)) {
+              return false;
+            }
           }
           return true;
         }
-      }
-      // Is inside the project and is not one of designated modules
-      if (inputPath.includes(ensuredProjectRoot)) {
-        for (const excluded of excludedRootPaths) {
-          if (inputPath.includes(excluded)) {
-            return false;
-          }
-        }
-        return true;
-      }
-      return false;
+        return false;
+      })();
+
+      pathCache[inputPath] = result;
+      return result;
     },
     use: {
       ...customUse,
