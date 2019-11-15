@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import spawnAsync from '@expo/spawn-async';
 import { Command } from 'commander';
 import { readConfigJsonAsync } from '@expo/config';
 
@@ -20,7 +20,7 @@ export async function action(projectDir = './', options: Options = {}) {
 
   // Everything after this is a redirect for the deprecated optimize command
   log.warn(
-    '\u203A Deprecated: Please use `npx expo-optimize` as a drop-in replacement for `expo optimize`.'
+    '\u203A `expo optimize` is deprecated please use `npx expo-optimize` as a drop-in replacement for `expo optimize`.'
   );
 
   const args: string[] = [projectDir];
@@ -30,10 +30,7 @@ export async function action(projectDir = './', options: Options = {}) {
   if (options.include) args.push('--include', options.include);
   if (options.exclude) args.push('--exclude', options.exclude);
 
-  const child = spawn(require.resolve('expo-optimize'), args);
-
-  child.stdout.on('data', data => process.stdout.write(data.toString()));
-  child.stderr.on('data', data => process.stdout.write(data.toString()));
+  await spawnAsync(require.resolve('expo-optimize'), args, { stdio: 'inherit' });
 }
 
 export default function(program: Command) {
