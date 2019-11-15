@@ -44,9 +44,7 @@ async function getUpdatedDependenciesAsync(
   let result: DependencyList = {};
 
   // Get the updated version for any bundled modules
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot, {
-    requireLocalConfig: true,
-  });
+  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   let bundledNativeModules = (await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/bundledNativeModules.json', projectRoot, exp)
   )) as DependencyList;
@@ -104,9 +102,7 @@ async function getUpdatedDependenciesAsync(
 
 async function upgradeAsync(requestedSdkVersion: string | null, options: Options) {
   let { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot, {
-    requireLocalConfig: true,
-  });
+  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   let isGitStatusClean = await validateGitStatusAsync();
   log.newLine();
 
@@ -157,7 +153,11 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let status = await Project.currentStatus(projectRoot);
   if (status === 'running') {
     await Project.stopAsync(projectRoot);
-    log(chalk.bold.underline('We found an existing expo-cli instance running for this project and closed it to continue.'));
+    log(
+      chalk.bold.underline(
+        'We found an existing expo-cli instance running for this project and closed it to continue.'
+      )
+    );
     log.addNewLineIfNone();
   }
 
