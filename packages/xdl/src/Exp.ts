@@ -326,7 +326,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const name = exp.slug;
   const { version, sdkVersion } = exp;
 
-  const configName = await ConfigUtils.configFilenameAsync(root);
+  const configName = ConfigUtils.configFilename(root);
 
   if (!sdkVersion) {
     throw new Error(`sdkVersion is missing from ${configName}`);

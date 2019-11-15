@@ -1,6 +1,6 @@
 {
   "name": "@expo/config",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "A library for interacting with the app.json",
   "main": "build/Config.js",
   "scripts": {
@@ -40,7 +40,8 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/config#readme",
   "files": [
-    "build"
+    "build",
+    "paths"
   ],
   "dependencies": {
     "@expo/json-file": "^8.2.1",

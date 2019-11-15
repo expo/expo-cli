@@ -17,24 +17,25 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
 import webpack from 'webpack';
-import { getPathsAsync, getPublicPaths } from './utils/paths';
-import createAllLoaders from './loaders/createAllLoaders';
+import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
+import { createAllLoaders } from './loaders';
 import {
   ExpoDefinePlugin,
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
 } from './plugins';
-import { getModuleFileExtensions } from './utils';
-import { withAlias, withCompression, withOptimizations, withReporting } from './extensions';
+import {
+  withAlias,
+  withCompression,
+  withDevServer,
+  withNodeMocks,
+  withOptimizations,
+  withReporting,
+} from './addons';
 
-import createDevServerConfigAsync from './createDevServerConfigAsync';
-import { Arguments, DevConfiguration, FilePaths, Mode } from './types';
-
-import { overrideWithPropertyOrConfig } from './utils/config';
-import getMode from './utils/getMode';
-import getConfig from './utils/getConfig';
-import { Environment } from './types';
+import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
+import { overrideWithPropertyOrConfig } from './utils';
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -289,33 +290,17 @@ export default async function(
     },
     // Turn off performance processing because we utilize
     // our own (CRA) hints via the FileSizeReporter
-    performance: boolish('CI', false) ? false : undefined,
+
+    // TODO: Bacon: Remove this higher value
+    performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
-  if (isDev) {
-    webpackConfig.devServer = await createDevServerConfigAsync(env, argv);
-  } else if (isProd) {
+  if (isProd) {
     webpackConfig = withCompression(withOptimizations(webpackConfig), env);
   }
 
-  return withReporting(withNodeMocks(withAlias(webpackConfig)), env);
-}
-
-// Some libraries import Node modules but don't use them in the browser.
-// Tell Webpack to provide empty mocks for them so importing them works.
-function withNodeMocks(
-  webpackConfig: Configuration | DevConfiguration
-): Configuration | DevConfiguration {
-  webpackConfig.node = {
-    ...(webpackConfig.node || {}),
-    module: 'empty',
-    dgram: 'empty',
-    dns: 'mock',
-    fs: 'empty',
-    http2: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    child_process: 'empty',
-  };
-  return webpackConfig;
+  return withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
+    allowedHost: argv.allowedHost,
+    proxy: argv.proxy,
+  });
 }

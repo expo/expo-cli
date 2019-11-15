@@ -9,7 +9,7 @@ import glob from 'glob-promise';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
-import { ProjectConfig, findConfigFileAsync, readConfigJsonAsync } from '@expo/config';
+import { findConfigFile, readConfigJsonAsync } from '@expo/config';
 import isPlainObject from 'lodash/isPlainObject';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
@@ -66,7 +66,7 @@ async function _detachAsync(projectRoot, options) {
   }
 
   let username = user.username;
-  const { configName, configPath, configNamespace } = await findConfigFileAsync(projectRoot);
+  const { configName, configPath, configNamespace } = findConfigFile(projectRoot);
   let { exp } = await readConfigJsonAsync(projectRoot);
   let experienceName = `@${username}/${exp.slug}`;
   let experienceUrl = `exp://exp.host/${experienceName}`;
@@ -255,11 +255,13 @@ async function _detachAsync(projectRoot, options) {
     packagesToInstall.push(sdkVersionConfig.expokitNpmPackage);
   }
 
-  const { packagesToInstallWhenEjecting } = sdkVersionConfig;
-  if (isPlainObject(packagesToInstallWhenEjecting)) {
-    Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
-      packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
-    });
+  if (sdkVersionConfig) {
+    const { packagesToInstallWhenEjecting } = sdkVersionConfig;
+    if (isPlainObject(packagesToInstallWhenEjecting)) {
+      Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
+        packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
+      });
+    }
   }
 
   if (packagesToInstall.length) {
