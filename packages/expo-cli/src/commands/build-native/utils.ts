@@ -4,11 +4,9 @@ import delayAsync from 'delay-async';
 import get from 'lodash/get';
 import ora from 'ora';
 
-
 import log from '../../log';
 import { printTableJsonArray } from '../utils/cli-table';
 import { BuildInfo } from './Builder';
-
 
 async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeoutSec = 1800, intervalSec = 30 } = {}) {
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
