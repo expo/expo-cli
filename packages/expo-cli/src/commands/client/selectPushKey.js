@@ -5,6 +5,7 @@ import ora from 'ora';
 import log from '../../log';
 import prompt from '../../prompt';
 import * as appleApi from '../../appleApi';
+import { ErrorCodes } from '../../CommandError';
 import * as credentials from '../build/ios/credentials';
 import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import { choosePreferredCreds } from './selectUtils';
@@ -124,7 +125,7 @@ async function generatePushKey(context) {
 
     return pushKey;
   } catch (e) {
-    if (e.code === 'APPLE_KEYS_TOO_MANY_GENERATED_ERROR') {
+    if (e.code === ErrorCodes.APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR) {
       const keys = await manager.list();
       log.warn(`Maximum number (${keys.length}) of keys generated.`);
       const { answer } = await prompt({

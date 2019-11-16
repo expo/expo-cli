@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import dateformat from 'dateformat';
 import chalk from 'chalk';
-import CommandError from '../CommandError';
+import CommandError, { ErrorCodes } from '../CommandError';
 
 import { AppleCtx } from './authenticate';
 import { runAction, travelingFastlane } from './fastlane';
@@ -44,7 +44,7 @@ export class PushKeyManager {
       const resultString = get(err, 'rawDump.resultString');
       if (resultString && resultString.match(/maximum allowed number of Keys/)) {
         throw new CommandError(
-          'APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR',
+          ErrorCodes.APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR,
           APPLE_KEYS_TOO_MANY_GENERATED_ERROR
         );
       }

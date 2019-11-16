@@ -5,6 +5,7 @@ import ora from 'ora';
 import log from '../../log';
 import prompt from '../../prompt';
 import * as appleApi from '../../appleApi';
+import { ErrorCodes } from '../../CommandError';
 import * as credentials from '../build/ios/credentials';
 import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import { choosePreferredCreds } from './selectUtils';
@@ -137,7 +138,7 @@ async function generateDistributionCert(context) {
 
     return distributionCert;
   } catch (e) {
-    if (e.code === 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR') {
+    if (e.code === ErrorCodes.APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR) {
       const certificates = await manager.list();
       log.warn(`Maximum number (${certificates.length}) of certificates generated.`);
       const { answer } = await prompt({
