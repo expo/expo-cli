@@ -153,6 +153,7 @@ export default function createBabelLoader({
             const packageName = packageNameFromPath(inputPath);
             if (packageName) logPackage(packageName);
           }
+          return true;
         }
       }
       // Is inside the project and is not one of designated modules
