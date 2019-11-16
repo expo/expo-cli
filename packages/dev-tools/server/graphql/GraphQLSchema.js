@@ -438,7 +438,7 @@ const resolvers = {
         const { exp } = await readConfigJsonAsync(project.projectDir);
         return exp;
       } catch (error) {
-        ProjectUtils.logError(project.projectRoot, 'expo', error.message);
+        ProjectUtils.logError(project.projectDir, 'expo', error.message);
         return null;
       }
     },
@@ -514,11 +514,19 @@ const resolvers = {
     },
     async processInfo(parent, args, context) {
       const currentProject = context.getCurrentProject();
-      const { exp } = await ProjectUtils.readConfigJsonAsync(currentProject.projectDir);
+
+      let platforms = [];
+      try {
+        const { exp } = await readConfigJsonAsync(currentProject.projectDir);
+        platforms = exp.platforms;
+      } catch (error) {
+        ProjectUtils.logError(currentProject.projectDir, 'expo', error.message);
+      }
+
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: exp.platforms.includes('web')
+        webAppUrl: platforms.includes('web')
           ? await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir)
           : null,
       };
