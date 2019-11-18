@@ -61,6 +61,8 @@ async function optimizeImageAsync(
     input: inputPath,
     output: outputPath,
     quality,
+    // https://sharp.pixelplumbing.com/en/stable/api-output/#parameters_4
+    adaptiveFiltering: true,
   });
   return join(outputPath, basename(inputPath));
 }
@@ -200,14 +202,13 @@ export async function optimizeAsync(
       await move(optimizedImage, image);
     } else {
       assetInfo[hash] = true;
-      console.log(chalk.dim(` \u203A Skipping: Asset is already optimal`));
-      // console.log(
-      //   chalk.dim(
-      //     amountSaved === 0
-      //       ? ` \u203A Compressed version of ${image} same size as original. Using original instead.`
-      //       : ` \u203A Compressed version of ${image} was larger than original by ${amountSaved}. Using original instead.`
-      //   )
-      // );
+      console.log(
+        chalk.dim(
+          amountSaved === 0
+            ? ` \u203A Skipping: Original was identical in size.`
+            : ` \u203A Skipping: Original was ${prettyBytes(amountSaved * -1)} smaller.`
+        )
+      );
       continue;
     }
     // Recalculate hash since the image has changed
