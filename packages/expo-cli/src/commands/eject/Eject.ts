@@ -19,6 +19,13 @@ type ValidationErrorMessage = string;
 
 type DependenciesMap = { [key: string]: string | number };
 
+export type EjectAsyncOptions = {
+  ejectMethod: 'bare' | 'expokit' | 'cancel';
+  verbose?: boolean;
+  force?: boolean;
+  packageManager?: 'npm' | 'yarn';
+};
+
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
@@ -62,12 +69,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
 
 export async function ejectAsync(
   projectRoot: string,
-  options: {
-    ejectMethod: 'bare' | 'expokit' | 'cancel';
-    verbose?: boolean;
-    force?: boolean;
-    packageManager?: 'npm' | 'yarn';
-  }
+  options: EjectAsyncOptions,
 ) {
   await validateGitStatusAsync();
   log.nested('');
