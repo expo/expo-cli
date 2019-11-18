@@ -36,7 +36,7 @@ export async function action(projectDir: string, options: Options = {}) {
     );
     log.warn(
       `To compress the images in your project, abort publishing and run ${chalk.bold(
-        'expo optimize'
+        'npx expo-optimize'
       )}.`
     );
   }
@@ -59,9 +59,7 @@ export async function action(projectDir: string, options: Options = {}) {
   let recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
-  const {
-    args: { sdkVersion },
-  } = await Exp.getPublishInfoAsync(projectDir);
+  const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(projectDir);
 
   const buildStatus = await Project.buildAsync(projectDir, {
     mode: 'status',

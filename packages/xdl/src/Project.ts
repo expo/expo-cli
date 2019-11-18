@@ -14,7 +14,6 @@ import { getManagedExtensions } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
-import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import decache from 'decache';
@@ -35,7 +34,6 @@ import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
-import prettyBytes from 'pretty-bytes';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import split from 'split';
@@ -48,14 +46,6 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
-import * as AssetUtils from './AssetUtils';
-import {
-  calculateHash,
-  createNewFilename,
-  getAssetFilesAsync,
-  optimizeImageAsync,
-  readAssetJsonAsync,
-} from './AssetUtils';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
@@ -2279,100 +2269,6 @@ export async function setOptionsAsync(
 export async function getUrlAsync(projectRoot: string, options: object = {}): Promise<string> {
   _assertValidProjectRoot(projectRoot);
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
-}
-
-export async function optimizeAsync(
-  projectRoot: string = './',
-  options: AssetUtils.OptimizationOptions = {}
-): Promise<void> {
-  logger.global.info(chalk.green('Optimizing assets...'));
-
-  const { assetJson, assetInfo } = await readAssetJsonAsync(projectRoot);
-  // Keep track of which hash values in assets.json are no longer in use
-  const outdated = new Set<string>();
-  for (const fileHash in assetInfo) outdated.add(fileHash);
-
-  let totalSaved = 0;
-  const { allFiles, selectedFiles } = await getAssetFilesAsync(projectRoot, options);
-  const hashes: { [filePath: string]: string } = {};
-  // Remove assets that have been deleted/modified from assets.json
-  allFiles.forEach(filePath => {
-    const hash = calculateHash(filePath);
-    if (assetInfo[hash]) {
-      outdated.delete(hash);
-    }
-    hashes[filePath] = hash;
-  });
-  outdated.forEach(outdatedHash => {
-    delete assetInfo[outdatedHash];
-  });
-
-  const { include, exclude, save } = options;
-  const quality = options.quality == null ? 80 : options.quality;
-
-  const images = include || exclude ? selectedFiles : allFiles;
-  for (const image of images) {
-    const hash = hashes[image];
-    if (assetInfo[hash]) {
-      continue;
-    }
-    const { size: prevSize } = fs.statSync(image);
-
-    const newName = createNewFilename(image);
-    const optimizedImage = await optimizeImageAsync(image, quality);
-
-    const { size: newSize } = fs.statSync(optimizedImage);
-    const amountSaved = prevSize - newSize;
-    if (amountSaved > 0) {
-      await fs.move(image, newName);
-      await fs.move(optimizedImage, image);
-    } else {
-      assetInfo[hash] = true;
-      logger.global.info(
-        chalk.gray(
-          amountSaved === 0
-            ? `Compressed version of ${image} same size as original. Using original instead.`
-            : `Compressed version of ${image} was larger than original. Using original instead.`
-        )
-      );
-      continue;
-    }
-    // Recalculate hash since the image has changed
-    const newHash = calculateHash(image);
-    assetInfo[newHash] = true;
-
-    if (save) {
-      if (hash === newHash) {
-        logger.global.info(
-          chalk.gray(
-            `Compressed asset ${image} is identical to the original. Using original instead.`
-          )
-        );
-        fs.unlinkSync(newName);
-      } else {
-        logger.global.info(chalk.gray(`Saving original asset to ${newName}`));
-        // Save the old hash to prevent reoptimizing
-        assetInfo[hash] = true;
-      }
-    } else {
-      // Delete the renamed original asset
-      fs.unlinkSync(newName);
-    }
-    if (amountSaved) {
-      totalSaved += amountSaved;
-      logger.global.info(`Saved ${prettyBytes(amountSaved)}`);
-    } else {
-      logger.global.info(chalk.gray(`Nothing to compress.`));
-    }
-  }
-  if (totalSaved === 0) {
-    logger.global.info('No assets optimized. Everything is fully compressed!');
-  } else {
-    logger.global.info(
-      `Finished compressing assets. ${chalk.green(prettyBytes(totalSaved))} saved.`
-    );
-  }
-  assetJson.writeAsync(assetInfo);
 }
 
 export async function startAsync(

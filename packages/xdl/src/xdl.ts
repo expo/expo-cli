@@ -19,9 +19,6 @@ export { Api };
 import ApiV2 from './ApiV2';
 export { ApiV2 };
 
-import * as AssetUtils from './AssetUtils';
-export { AssetUtils };
-
 import * as Binaries from './Binaries';
 export { Binaries };
 

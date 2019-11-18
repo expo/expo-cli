@@ -1,5 +1,6 @@
 /* @flow */
 import { readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
+import spawnAsync from '@expo/spawn-async';
 import {
   Android,
   Config,
@@ -574,7 +575,10 @@ const resolvers = {
     },
     async optimizeAssets(parent, { settings }, context) {
       const currentProject = context.getCurrentProject();
-      await Project.optimizeAsync(currentProject.projectDir);
+
+      await spawnAsync('npx', ['expo-optimize'], {
+        cwd: currentProject.projectDir,
+      });
       return {
         ...currentProject,
       };
