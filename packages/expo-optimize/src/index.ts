@@ -34,6 +34,9 @@ const program = new Command(packageJson().name)
   .parse(process.argv);
 
 async function run() {
+  // Space out first line
+  console.log();
+
   if (typeof projectDirectory === 'string') {
     projectDirectory = projectDirectory.trim();
   }
@@ -52,7 +55,7 @@ async function run() {
     optimizationOptions
   );
   if (!program.save && !isProjectOptimized) {
-    console.warn('\u203A This will overwrite the original assets.');
+    console.warn(chalk.bgYellow.black('This will overwrite the original assets.'));
   }
   await optimizeAsync(resolvedProjectRoot, optimizationOptions);
 }
