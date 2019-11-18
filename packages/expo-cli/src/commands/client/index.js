@@ -12,14 +12,9 @@ import log from '../../log';
 import prompt from '../../prompt';
 import urlOpts from '../../urlOpts';
 import { PLATFORMS } from '../build/constants';
-<<<<<<< HEAD
 import * as appleApi from '../../appleApi';
 import { runAction, travelingFastlane } from '../../appleApi/fastlane';
-=======
-import * as appleApi from '../build/ios/appleApi';
-import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
 import { findProjectRootAsync } from '../utils/ProjectUtils';
->>>>>>> refactor(expo-cli): add guide to install simulator clients
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
 import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
