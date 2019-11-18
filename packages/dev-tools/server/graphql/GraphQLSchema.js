@@ -568,7 +568,7 @@ const resolvers = {
     async optimizeAssets(parent, { settings }, context) {
       const currentProject = context.getCurrentProject();
 
-      await spawnAsync(require.resolve('expo-optimize'), [], {
+      await spawnAsync('npx', ['expo-optimize'], {
         cwd: currentProject.projectDir,
       });
       return {
