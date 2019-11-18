@@ -4,14 +4,21 @@ import intersection from 'lodash/intersection';
 
 import * as constants from './constants';
 import log from '../../../../log';
-import * as apple from '../appleApi';
+import * as apple from '../../../../appleApi';
 
-async function generate(appleCtx, credentialsToGenerate, metadata) {
+async function generate(appleCtx, credentialsToGenerate, metadata, projectMetadata) {
   if (!credentialsToGenerate || credentialsToGenerate.length === 0) {
     return {};
   }
 
-  await apple.ensureAppExists(appleCtx, { enablePushNotifications: true });
+  await apple.ensureAppExists(
+    appleCtx,
+    {
+      experienceName: projectMetadata.experienceName,
+      bundleIdentifier: projectMetadata.bundleIdentifier,
+    },
+    { enablePushNotifications: true }
+  );
 
   log(`We're going to generate:`);
   credentialsToGenerate.forEach(type => {
@@ -23,7 +30,7 @@ async function generate(appleCtx, credentialsToGenerate, metadata) {
     const { name } = constants.CREDENTIALS[id];
     const spinner = ora(`Generating ${name}...`).start();
     try {
-      const generated = await _create(appleCtx, id, metadata);
+      const generated = await _create(appleCtx, id, metadata, projectMetadata);
       spinner.succeed(`Generated ${name}`);
       newCredentials = { ...newCredentials, ...generated };
     } catch (err) {
@@ -34,9 +41,14 @@ async function generate(appleCtx, credentialsToGenerate, metadata) {
   return newCredentials;
 }
 
-async function _create(appleCtx, type, metadata) {
+async function _create(appleCtx, type, metadata, projectMetadata) {
   const manager = apple.createManagers(appleCtx)[type];
-  return await manager.create(metadata);
+  if (manager instanceof apple.ProvisioningProfileManager) {
+    const { bundleIdentifier } = projectMetadata;
+    return await manager.create(bundleIdentifier, metadata);
+  }
+
+  return await manager.create();
 }
 
 function determineMissingCredentials(existingCredentials = {}) {
