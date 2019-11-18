@@ -232,7 +232,8 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     let answer = await prompt({
       type: 'confirm',
       name: 'upgradeSimulator',
-      message: 'You might have to upgrade your iOS simulator. Do you want to upgrade it now?',
+      message: 'You might have to upgrade your iOS simulator, but before you can do that, you have to run the simulator. Do you want to upgrade it later?',
+      default: false,
     });
 
     if (answer.upgradeSimulator) {
@@ -250,7 +251,8 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     let answer = await prompt({
       type: 'confirm',
       name: 'upgradeAndroid',
-      message: 'You might have to upgrade your Android client. Do you want to upgrade it now?',
+      message: 'You might have to upgrade your Android client, but before you can do that, you have to run the emulator, or a device plugged in. Do you want to upgrade it later?',
+      default: false,
     });
 
     if (answer.upgradeAndroid) {
