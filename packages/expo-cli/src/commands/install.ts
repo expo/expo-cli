@@ -1,4 +1,3 @@
-/* @flow */
 import * as ConfigUtils from '@expo/config';
 import fs from 'fs';
 import { inflect } from 'inflection';
@@ -6,13 +5,14 @@ import JsonFile from '@expo/json-file';
 import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 import { Versions } from '@expo/xdl';
+import { Command } from 'commander';
 
 import * as PackageManager from '@expo/package-manager';
 import CommandError from '../CommandError';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import log from '../log';
 
-async function installAsync(packages, options) {
+async function installAsync(packages: string[], options: PackageManager.CreateForProjectOptions) {
   const { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
@@ -74,7 +74,7 @@ async function installAsync(packages, options) {
   await packageManager.addAsync(...versionedPackages);
 }
 
-export default program => {
+export default function (program: Command) {
   program
     .command('install [packages...]')
     .alias('add')
