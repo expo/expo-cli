@@ -52,7 +52,7 @@ async function run() {
     optimizationOptions
   );
   if (!program.save && !isProjectOptimized) {
-    console.warn('This will overwrite the original assets.');
+    console.warn('\u203A This will overwrite the original assets.');
   }
   await optimizeAsync(resolvedProjectRoot, optimizationOptions);
 }
@@ -73,11 +73,11 @@ run()
   .then(shouldUpdate)
   .catch(async reason => {
     console.log();
-    console.log('Aborting installation.');
+    console.log('Aborting run');
     if (reason.command) {
       console.log(`  ${chalk.magenta(reason.command)} has failed.`);
     } else {
-      console.log(chalk.red('An unexpected error was encountered. Please report it as a bug:'));
+      console.log(chalk.red`An unexpected error was encountered. Please report it as a bug:`);
       console.log(reason);
     }
     console.log();
