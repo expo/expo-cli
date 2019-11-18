@@ -55,7 +55,7 @@ Read more about how this package works here: [Image compression in Expo projects
 
 - [sharp](https://sharp.pixelplumbing.com/) - native image editing library for node
 - [expo-cli](https://docs.expo.io/versions/latest/workflow/expo-cli/) - the original location for this command
-- [react-native-cli optimize](https://github.com/react-native-community/cli/pull/419) - an alias for this command
+<!-- - [react-native-cli optimize](https://github.com/react-native-community/cli/pull/419) - an alias for this command -->
 
 ## License
 
