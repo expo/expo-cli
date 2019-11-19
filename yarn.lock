@@ -15563,6 +15563,22 @@ nested-error-stacks@^2.0.0, nested-error-stacks@^2.1.0:
   resolved "https://registry.yarnpkg.com/nested-error-stacks/-/nested-error-stacks-2.1.0.tgz#0fbdcf3e13fe4994781280524f8b96b0cdff9c61"
   integrity sha512-AO81vsIO1k1sM4Zrd6Hu7regmJN1NSiAja10gc4bX3F0wd+9rQmcuHQaHVQCYIEC8iFXnE+mavh23GOt7wBgug==
 
+next-fonts@^0.19.0:
+  version "0.19.0"
+  resolved "https://registry.yarnpkg.com/next-fonts/-/next-fonts-0.19.0.tgz#0a6d7d8235579d419e55e75a960c17cf19169f51"
+  integrity sha512-1/1GVBtxTEzGA/WYCWetegnVVzSp3tF0aacRY5mc973R6uPogMfid/nkLLlBgFBrFUy8wtv87Sag7vhNNzuSnA==
+  dependencies:
+    file-loader "^2.0.0"
+    url-loader "^1.1.1"
+
+next-images@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/next-images/-/next-images-1.2.0.tgz#9bbcc4ea8787bc5ed4abc0da575a212bd75bbbd0"
+  integrity sha512-NhOiUk5StO82074KpnrcITM0OdONUu0T15Sd0VbipxHJueofKAw9zdmAejht0EhwgQDFt63+1OLFYA5web0x9w==
+  dependencies:
+    file-loader "^4.0.0"
+    url-loader "^2.0.0"
+
 next-tick@1, next-tick@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/next-tick/-/next-tick-1.0.0.tgz#ca86d1fe8828169b0120208e3dc8424b9db8342c"

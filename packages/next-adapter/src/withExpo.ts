@@ -32,4 +32,7 @@ const withExpo = (nextConfig: any = {}): any => ({
   },
 });
 
-export default (nextConfig: any = {}): any => withImages(withFonts(withExpo(nextConfig)));
+export default (nextConfig: any = {}): any => {
+  // Add support for static images and fonts by default
+  return withImages(withFonts(withExpo(nextConfig)));
+};
