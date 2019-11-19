@@ -39,7 +39,7 @@ export function determineEntryPoint(projectRoot: string, platform?: string): str
       `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
     );
 
-  return entry;
+  return path.relative(projectRoot, entry);
 }
 
 class Transformer extends Minipass {
