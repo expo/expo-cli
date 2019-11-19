@@ -249,7 +249,8 @@ export default program => {
     .description('Install the Expo Client for iOS on the simulator')
     .asyncAction(async () => {
       let currentSdk;
-      const getIosVersion = sdkVersion => sdkVersion.iosClientVersion || sdkVersion.iosVersion;
+      const getIosVersion = sdkVersion =>
+        sdkVersion.iosClientVersion || sdkVersion.iosVersion || 'version unknown';
 
       try {
         const { projectRoot } = await findProjectRootAsync(process.cwd());
@@ -383,6 +384,8 @@ export default program => {
     .description('Install the Expo Client for Android on a connected device or emulator')
     .asyncAction(async () => {
       let currentSdk;
+      const getAndroidVersion = sdkVersion =>
+        sdkVersion.androidClientVersion || sdkVersion.androidVersion || 'version unknown';
 
       try {
         const { projectRoot } = await findProjectRootAsync(process.cwd());
@@ -406,8 +409,6 @@ export default program => {
       const sdkVersions = await Versions.sdkVersionsAsync();
       const currentSdkVersion = currentSdk.sdkVersion ? sdkVersions[currentSdk.sdkVersion] : null;
 
-      console.log({ latestSdk, sdkVersions, currentSdkVersion });
-
       if (!currentSdk.sdkVersion || currentSdk.sdkVersion === latestSdk.version) {
         const answer = await prompt({
           type: 'confirm',
@@ -428,9 +429,9 @@ export default program => {
           name: 'updateToRecommendedVersion',
           message: `You are currently using SDK ${
             currentSdk.sdkVersion
-          }. Would you like to install the client version ${
-            currentSdkVersion.androidClientVersion
-          } released for this SDK?`,
+          }. Would you like to install the client version ${getAndroidVersion(
+            currentSdkVersion
+          )} released for this SDK?`,
         });
         if (answer.updateToRecommendedVersion) {
           targetSdkVersion = currentSdkVersion;
@@ -477,7 +478,7 @@ export default program => {
             message: 'Choose an SDK version to install the client for:',
             pageSize: 20,
             choices: sdkVersionStringOptions.map(optionSdkVersionString => {
-              const optionClientVersion = sdkVersions[optionSdkVersionString].androidClientVersion;
+              const optionClientVersion = getAndroidVersion(sdkVersions[optionSdkVersionString]);
               const message =
                 optionSdkVersionString === latestSdk.version
                   ? `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
@@ -506,9 +507,9 @@ export default program => {
 
       if (await Android.upgradeExpoAsync(targetSdkVersion.androidClientUrl)) {
         log(
-          `Done! We installed the client for SDK ${targetSdkVersionString}, version ${
-            targetSdkVersion.androidClientUrl
-          }`
+          `Done! We installed the client for SDK ${targetSdkVersionString}, version ${getAndroidVersion(
+            targetSdkVersion
+          )}`
         );
       }
     }, true);
