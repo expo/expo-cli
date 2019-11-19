@@ -59,9 +59,7 @@ export async function action(projectDir: string, options: Options = {}) {
   let recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
-  const {
-    args: { sdkVersion },
-  } = await Exp.getPublishInfoAsync(projectDir);
+  const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(projectDir);
 
   const buildStatus = await Project.buildAsync(projectDir, {
     mode: 'status',
