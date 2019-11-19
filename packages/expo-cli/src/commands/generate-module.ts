@@ -1,6 +1,8 @@
+import { Command } from 'commander';
+
 import generateModuleAsync from './generate-module/generateModuleAsync';
 
-export default program => {
+export default (program: Command) => {
   program
     .command('generate-module [new-module-project]')
     .option(

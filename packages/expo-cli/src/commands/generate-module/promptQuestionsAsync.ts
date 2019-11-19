@@ -1,12 +1,13 @@
-import prompt from '../../prompt';
+import prompt, { Question } from '../../prompt';
+import { Answers } from 'inquirer';
 
 /**
  * Generates CocoaPod name in format `Namepart1Namepart2Namepart3`.
  * For these with `expo` as `partname1` would generate `EXNamepart2...`.
  * @param {string} moduleName - provided module name, expects format: `namepart1-namepart2-namepart3`
  */
-const generateCocoaPodDefaultName = moduleName => {
-  const wordsToUpperCase = s =>
+const generateCocoaPodDefaultName = (moduleName: string) => {
+  const wordsToUpperCase = (s: string) =>
     s
       .toLowerCase()
       .split('-')
@@ -23,8 +24,8 @@ const generateCocoaPodDefaultName = moduleName => {
  * Generates java package name in format `namepart1.namepart2.namepart3`.
  * @param {string} moduleName - provided module name, expects format: `namepart1-namepart2-namepart3`
  */
-const generateJavaModuleDefaultName = moduleName => {
-  const wordsToJavaModule = s =>
+const generateJavaModuleDefaultName = (moduleName: string) => {
+  const wordsToJavaModule = (s: string) =>
     s
       .toLowerCase()
       .split('-')
@@ -40,7 +41,7 @@ const generateJavaModuleDefaultName = moduleName => {
  * Generates JS/TS module name in format `Namepart1Namepart2Namepart3`.
  * @param {string} moduleName - provided module name, expects format: `namepart1-namepart2-namepart3`
  */
-const generateInCodeModuleDefaultName = moduleName => {
+const generateInCodeModuleDefaultName = (moduleName: string) => {
   return moduleName
     .toLowerCase()
     .split('-')
@@ -52,12 +53,12 @@ const generateInCodeModuleDefaultName = moduleName => {
  * Generates questions
  * @param {string} [suggestedModuleName]
  */
-const generateQuestions = suggestedModuleName => [
+const generateQuestions = (suggestedModuleName: string): Question[] => [
   {
     name: 'npmModuleName',
     message: 'How would you like to call your module in JS/npm? (eg. expo-camera)',
     default: suggestedModuleName,
-    validate: answer => {
+    validate: (answer: string) => {
       return !answer.length
         ? 'Module name cannot be empty'
         : /[A-Z]/.test(answer)
@@ -70,8 +71,8 @@ const generateQuestions = suggestedModuleName => [
   {
     name: 'podName',
     message: 'How would you like to call your module in CocoaPods? (eg. EXCamera)',
-    default: ({ npmModuleName }) => generateCocoaPodDefaultName(npmModuleName),
-    validate: answer =>
+    default: ({ npmModuleName }: Answers) => generateCocoaPodDefaultName(npmModuleName),
+    validate: (answer: string) =>
       !answer.length
         ? 'CocoaPod name cannot be empty'
         : /\s/.test(answer)
@@ -81,8 +82,8 @@ const generateQuestions = suggestedModuleName => [
   {
     name: 'javaPackage',
     message: 'How would you like to call your module in Java? (eg. expo.modules.camera)',
-    default: ({ npmModuleName }) => generateJavaModuleDefaultName(npmModuleName),
-    validate: answer =>
+    default: ({ npmModuleName }: Answers) => generateJavaModuleDefaultName(npmModuleName),
+    validate: (answer: string) =>
       !answer.length
         ? 'Java Package name cannot be empty'
         : /\s/.test(answer)
@@ -92,8 +93,8 @@ const generateQuestions = suggestedModuleName => [
   {
     name: 'jsModuleName',
     message: 'How would you like to call your module in JS/TS codebase (eg. ExpoCamera)?',
-    default: ({ npmModuleName }) => generateInCodeModuleDefaultName(npmModuleName),
-    validate: answer =>
+    default: ({ npmModuleName }: Answers) => generateInCodeModuleDefaultName(npmModuleName),
+    validate: (answer: string) =>
       !answer.length
         ? 'Module name cannot be empty'
         : /\s/.test(answer)
@@ -107,6 +108,6 @@ const generateQuestions = suggestedModuleName => [
  * @param {string} [suggestedModuleName] - suggested module name that would be used to generate all sugestions for each question
  * @returns {Promise<{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }>} - user's answers
  */
-export default async function promptQuestionsAsync(suggestedModuleName) {
+export default async function promptQuestionsAsync(suggestedModuleName: string): Promise<Answers> {
   return await prompt(generateQuestions(suggestedModuleName));
 }

@@ -11,8 +11,8 @@ const DEFAULT_TEMPLATE = 'expo-module-template@latest';
  * @param {path} destinationPath - destination for fetched template
  * @param {string?} template - optional template provided as npm package or local directory
  */
-export default async function fetchTemplate(destinationPath, template) {
-  if (template && (await fse.exists(path.resolve(template)))) {
+export default async function fetchTemplate(destinationPath: string, template: string | null) {
+  if (template && (await fse.pathExists(path.resolve(template)))) {
     // local template
     Logger.global.info(`Using local template: ${chalk.bold(path.resolve(template))}.`);
     await fse.copy(path.resolve(template), destinationPath);
@@ -34,7 +34,7 @@ export default async function fetchTemplate(destinationPath, template) {
   }
 }
 
-function isNpmPackage(template) {
+function isNpmPackage(template: string) {
   return (
     !template.match(/^\./) && // don't start with .
     !template.match(/^_/) && // don't start with _
