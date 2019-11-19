@@ -58,12 +58,13 @@ Expo CLI
 
 ## 🗺 Project Layout
 
+- [`expo-cli`](./packages/expo-cli)
+- [`expo-optimize`](./packages/expo-optimize)
 - [`@expo/android-manifest`](./packages/android-manifest)
 - [`@expo/babel-preset-cli`](./packages/babel-preset-cli)
 - [`@expo/config`](./packages/config)
 - [`@expo/dev-tools`](./packages/dev-tools)
 - [`@expo/electron-adapter`](./packages/electron-adapter)
-- [`@expo/expo-cli`](./packages/expo-cli)
 - [`@expo/expo-codemod`](./packages/expo-codemod)
 - [`@expo/image-utils`](./packages/image-utils)
 - [`@expo/json-file`](./packages/json-file)
