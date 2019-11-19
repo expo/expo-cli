@@ -1700,7 +1700,6 @@ export async function startReactNativeServerAsync(
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
     customLogReporterPath,
-    assetExts: ['ttf'],
     // TODO: Bacon: Support .mjs (short-lived JS modules extension that some packages use)
     sourceExts: getManagedExtensions([], { isTS: true, isReact: true, isModern: false }),
   };
@@ -1732,11 +1731,6 @@ export async function startReactNativeServerAsync(
     packagerOpts = {
       ...packagerOpts,
       ...userPackagerOpts,
-      ...userPackagerOpts.assetExts
-        ? {
-            assetExts: uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]),
-          }
-        : {},
     };
 
     if (userPackagerOpts.port !== undefined && userPackagerOpts.port !== null) {
