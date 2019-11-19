@@ -360,47 +360,26 @@ function runAsync(programName: string) {
     // Load each module found in ./commands by 'registering' it with our commander instance
     registerCommands(program);
 
-    let subCommand = process.argv[2];
-    let argv = process.argv.filter(arg => {
-      // Remove deprecated `--github` option here in order to fallback to password login/signup.
-      if (subCommand === 'login' && arg === '--github') {
-        log.nestedWarn(
-          'GitHub login is not currently available.\nPlease log in with your Expo account.'
-        );
-        return false;
-      }
-      if (subCommand === 'register' && arg === '--github') {
-        log.nestedWarn('GitHub sign up is not currently available.');
-        return false;
-      }
-      return true;
+    program.on('command:detach', () => {
+      log.warn('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
+      process.exit(0);
     });
-    program.parse(argv);
+
+    program.on('command:*', (subCommand) => {
+      log.warn(
+        `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
+      );
+    });
 
     if (typeof program.nonInteractive === 'undefined') {
       // Commander doesn't initialize boolean args with default values.
       program.nonInteractive = !process.stdin.isTTY;
     }
 
-    // Display a message if the user does not input a valid command
-    if (subCommand) {
-      let commands: string[] = [];
-      program.commands.forEach((command: Command) => {
-        commands.push(command['_name']);
-        let alias = command['_alias'];
-        if (alias) {
-          commands.push(alias);
-        }
-      });
-      if (!commands.includes(subCommand)) {
-        log.warn(
-          `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
-        );
-        if (subCommand === 'detach') {
-          log('To eject your project to ExpoKit (previously "detach"), use `expo eject`.');
-        }
-      }
-    } else {
+    program.parse(process.argv);
+
+    // Show help when no sub-command specified
+    if (program.args.length === 0) {
       program.help();
     }
   } catch (e) {
