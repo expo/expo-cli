@@ -9,6 +9,7 @@ const PACKAGE_MAIN_PROCESS_PATH = '@expo/electron-adapter/template/main';
 const PACKAGE_TEMPLATE_PATH = '@expo/webpack-config/web-default/index.html';
 const PACKAGE_RENDER_WEBPACK_CONFIG_PATH = '@expo/electron-adapter/template/webpack.config';
 
+const LOCAL_ELECTRON_PATH = './electron';
 const LOCAL_MAIN_PROCESS_PATH = './electron/main';
 const LOCAL_TEMPLATE_PATH = './electron/template/index.html';
 const LOCAL_RENDER_WEBPACK_CONFIG_PATH = './electron/webpack.config';
@@ -26,7 +27,9 @@ function getFile(projectRoot: string, localPath: string, packagePath: string): s
   if (fs.pathExistsSync(localTemplate)) {
     return localTemplate;
   }
-  return path.relative(projectRoot, path.resolve(projectRoot, packagePath));
+  const resolvedFullPath =
+    resolveFrom.silent(projectRoot, packagePath) || path.resolve(projectRoot, packagePath);
+  return path.relative(projectRoot, resolvedFullPath);
 }
 
 function resolveFile(projectRoot: string, localPath: string, packagePath: string): string {
@@ -76,7 +79,7 @@ export function withExpoAdapter({
 }
 
 export function copyTemplateToProject(projectPath: string) {
-  const outputPath = path.resolve(projectPath, LOCAL_MAIN_PROCESS_PATH);
+  const outputPath = path.resolve(projectPath, LOCAL_ELECTRON_PATH);
   if (!fs.pathExistsSync(outputPath)) {
     fs.ensureDirSync(path.dirname(outputPath));
     fs.copy(path.resolve(__dirname, '../template'), outputPath);

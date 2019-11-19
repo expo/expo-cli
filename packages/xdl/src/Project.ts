@@ -6,6 +6,7 @@ import {
   PackageJSONConfig,
   resolveModule,
   ExpoConfig,
+  readConfigJson,
   readConfigJsonAsync,
 } from '@expo/config';
 
@@ -13,7 +14,6 @@ import { getManagedExtensions } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
-import chalk from 'chalk';
 import child_process from 'child_process';
 import crypto from 'crypto';
 import decache from 'decache';
@@ -34,7 +34,6 @@ import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
-import prettyBytes from 'pretty-bytes';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
 import split from 'split';
@@ -47,14 +46,6 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
-import * as AssetUtils from './AssetUtils';
-import {
-  calculateHash,
-  createNewFilename,
-  getAssetFilesAsync,
-  optimizeImageAsync,
-  readAssetJsonAsync,
-} from './AssetUtils';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
@@ -224,8 +215,6 @@ async function _getForPlatformAsync(
   platform: Platform,
   { errorCode, minLength }: { errorCode: ErrorCode; minLength?: number }
 ): Promise<string> {
-  url = UrlUtils.getPlatformSpecificBundleUrl(url, platform);
-
   let fullUrl = `${url}&platform=${platform}`;
   let response;
 
@@ -366,13 +355,11 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoC
   }
 }
 
+// TODO: Move to @expo/config
 export async function getSlugAsync(projectRoot: string, options = {}): Promise<string> {
-  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
+  const { exp } = await readConfigJsonAsync(projectRoot);
   if (exp.slug) {
     return exp.slug;
-  }
-  if (pkg.name) {
-    return pkg.name;
   }
   throw new XDLError(
     'INVALID_MANIFEST',
@@ -1012,22 +999,18 @@ async function _getPublishExpConfigAsync(
 
   const { sdkVersion } = exp;
 
-  if (!sdkVersion) {
-    throw new XDLError('INVALID_OPTIONS', `Cannot publish with sdkVersion '${exp.sdkVersion}'.`);
-  }
-
   // Only allow projects to be published with UNVERSIONED if a correct token is set in env
   if (sdkVersion === 'UNVERSIONED' && !maySkipManifestValidation()) {
     throw new XDLError('INVALID_OPTIONS', 'Cannot publish with sdkVersion UNVERSIONED.');
   }
   exp.locales = await ExponentTools.getResolvedLocalesAsync(exp);
-  return { exp: { ...exp, sdkVersion }, pkg };
+  return { exp: { ...exp, sdkVersion: sdkVersion! }, pkg };
 }
 
 // Fetch iOS and Android bundles for publishing
 async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOptions) {
-  let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-  let publishUrl = await UrlUtils.constructPublishUrlAsync(
+  const entryPoint = Exp.determineEntryPoint(projectRoot);
+  const publishUrl = await UrlUtils.constructPublishUrlAsync(
     projectRoot,
     entryPoint,
     undefined,
@@ -1035,13 +1018,13 @@ async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOpt
   );
 
   logger.global.info('Building iOS bundle');
-  let iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
+  const iosBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'ios', {
     errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
 
   logger.global.info('Building Android bundle');
-  let androidBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'android', {
+  const androidBundle = await _getForPlatformAsync(projectRoot, publishUrl, 'android', {
     errorCode: 'INVALID_BUNDLE',
     minLength: MINIMUM_BUNDLE_SIZE,
   });
@@ -1067,7 +1050,7 @@ async function _maybeBuildSourceMapsAsync(
 // production should use sourcemaps for error reporting, and in the worst
 // case, adding a few seconds to a postPublish hook isn't too annoying
 async function _buildSourceMapsAsync(projectRoot: string, exp: ExpoConfig) {
-  let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
+  let entryPoint = Exp.determineEntryPoint(projectRoot);
   let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
 
   logger.global.info('Building sourcemaps');
@@ -1098,7 +1081,7 @@ async function _collectAssets(
   exp: PublicConfig,
   hostedAssetPrefix: string
 ): Promise<Asset[]> {
-  let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
+  let entryPoint = Exp.determineEntryPoint(projectRoot);
   let assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
 
   let iosAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
@@ -1929,7 +1912,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       // if there is a potential error in the package.json and don't want to slow
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
-      let { exp: manifest } = await readConfigJsonAsync(projectRoot);
+      let { exp: manifest } = readConfigJson(projectRoot);
       // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
@@ -1949,9 +1932,8 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
           manifest.env[key] = process.env[key];
         }
       }
-      let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
       let platform = (req.headers['exponent-platform'] || 'ios').toString();
-      entryPoint = UrlUtils.getPlatformSpecificBundleUrl(entryPoint, platform);
+      let entryPoint = Exp.determineEntryPoint(projectRoot, platform);
       let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
       let queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
       let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
@@ -2289,100 +2271,6 @@ export async function getUrlAsync(projectRoot: string, options: object = {}): Pr
   return await UrlUtils.constructManifestUrlAsync(projectRoot, options);
 }
 
-export async function optimizeAsync(
-  projectRoot: string = './',
-  options: AssetUtils.OptimizationOptions = {}
-): Promise<void> {
-  logger.global.info(chalk.green('Optimizing assets...'));
-
-  const { assetJson, assetInfo } = await readAssetJsonAsync(projectRoot);
-  // Keep track of which hash values in assets.json are no longer in use
-  const outdated = new Set<string>();
-  for (const fileHash in assetInfo) outdated.add(fileHash);
-
-  let totalSaved = 0;
-  const { allFiles, selectedFiles } = await getAssetFilesAsync(projectRoot, options);
-  const hashes: { [filePath: string]: string } = {};
-  // Remove assets that have been deleted/modified from assets.json
-  allFiles.forEach(filePath => {
-    const hash = calculateHash(filePath);
-    if (assetInfo[hash]) {
-      outdated.delete(hash);
-    }
-    hashes[filePath] = hash;
-  });
-  outdated.forEach(outdatedHash => {
-    delete assetInfo[outdatedHash];
-  });
-
-  const { include, exclude, save } = options;
-  const quality = options.quality == null ? 80 : options.quality;
-
-  const images = include || exclude ? selectedFiles : allFiles;
-  for (const image of images) {
-    const hash = hashes[image];
-    if (assetInfo[hash]) {
-      continue;
-    }
-    const { size: prevSize } = fs.statSync(image);
-
-    const newName = createNewFilename(image);
-    const optimizedImage = await optimizeImageAsync(image, quality);
-
-    const { size: newSize } = fs.statSync(optimizedImage);
-    const amountSaved = prevSize - newSize;
-    if (amountSaved > 0) {
-      await fs.move(image, newName);
-      await fs.move(optimizedImage, image);
-    } else {
-      assetInfo[hash] = true;
-      logger.global.info(
-        chalk.gray(
-          amountSaved === 0
-            ? `Compressed version of ${image} same size as original. Using original instead.`
-            : `Compressed version of ${image} was larger than original. Using original instead.`
-        )
-      );
-      continue;
-    }
-    // Recalculate hash since the image has changed
-    const newHash = calculateHash(image);
-    assetInfo[newHash] = true;
-
-    if (save) {
-      if (hash === newHash) {
-        logger.global.info(
-          chalk.gray(
-            `Compressed asset ${image} is identical to the original. Using original instead.`
-          )
-        );
-        fs.unlinkSync(newName);
-      } else {
-        logger.global.info(chalk.gray(`Saving original asset to ${newName}`));
-        // Save the old hash to prevent reoptimizing
-        assetInfo[hash] = true;
-      }
-    } else {
-      // Delete the renamed original asset
-      fs.unlinkSync(newName);
-    }
-    if (amountSaved) {
-      totalSaved += amountSaved;
-      logger.global.info(`Saved ${prettyBytes(amountSaved)}`);
-    } else {
-      logger.global.info(chalk.gray(`Nothing to compress.`));
-    }
-  }
-  if (totalSaved === 0) {
-    logger.global.info('No assets optimized. Everything is fully compressed!');
-  } else {
-    logger.global.info(
-      `Finished compressing assets. ${chalk.green(prettyBytes(totalSaved))} saved.`
-    );
-  }
-  assetJson.writeAsync(assetInfo);
-}
-
 export async function startAsync(
   projectRoot: string,
   options: StartOptions = {},
@@ -2394,7 +2282,7 @@ export async function startAsync(
     developerTool: Config.developerTool,
   });
 
-  let { exp } = await readConfigJsonAsync(projectRoot, options.webOnly);
+  let { exp } = await readConfigJsonAsync(projectRoot);
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
@@ -2439,7 +2327,7 @@ export async function stopWebOnlyAsync(projectDir: string): Promise<void> {
 export async function stopAsync(projectDir: string): Promise<void> {
   const result = await Promise.race([
     _stopInternalAsync(projectDir),
-    new Promise((resolve, reject) => setTimeout(resolve, 2000, 'stopFailed')),
+    new Promise((resolve) => setTimeout(resolve, 2000, 'stopFailed')),
   ]);
   if (result === 'stopFailed') {
     // find RN packager and ngrok pids, attempt to kill them manually

@@ -213,3 +213,23 @@ export function isEntry(arg: any): arg is Entry {
     return typeof value === 'string';
   });
 }
+
+export async function resolveEntryAsync(arg: any): Promise<Entry> {
+  if (typeof arg === 'undefined') {
+    throw new Error('Webpack config entry cannot be undefined');
+  }
+
+  if (typeof arg === 'function') {
+    return resolveEntryAsync(await arg());
+  } else if (typeof arg === 'string') {
+    return resolveEntryAsync([arg]);
+  } else if (Array.isArray(arg)) {
+    return {
+      app: arg,
+    };
+  } else if (isEntry(arg)) {
+    return arg;
+  }
+
+  throw new Error('Cannot resolve Webpack config entry prop: ' + arg);
+}
