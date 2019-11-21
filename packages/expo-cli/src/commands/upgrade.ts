@@ -227,8 +227,10 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     }
   }
 
+  const platforms = exp.platforms || [];
+
   // Check if we can, and probably should, upgrade the (ios) simulator
-  if (Simulator.isPlatformSupported()) {
+  if (Simulator.isPlatformSupported() && platforms.includes('ios')) {
     let answer = await prompt({
       type: 'confirm',
       name: 'upgradeSimulator',
@@ -247,7 +249,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   }
 
   // Check if we can, and probably should, upgrade the android client
-  if (Android.isPlatformSupported()) {
+  if (Android.isPlatformSupported() && platforms.includes('android')) {
     let answer = await prompt({
       type: 'confirm',
       name: 'upgradeAndroid',
