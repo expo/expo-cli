@@ -1,6 +1,6 @@
 {
   "name": "expo-optimize",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "build",
   "preferGlobal": true,
   "keywords": [
@@ -46,7 +46,7 @@
     "validate-npm-package-name": "3.0.0"
   },
   "dependencies": {
-    "@expo/config": "^2.4.0",
+    "@expo/config": "^2.5.1",
     "@expo/image-utils": "^0.2.7",
     "@expo/json-file": "^8.2.1"
   }
