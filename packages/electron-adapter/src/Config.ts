@@ -5,9 +5,10 @@ import resolveFrom from 'resolve-from';
 // const PACKAGE_MAIN_PROCESS_PATH = '../template/main';
 // const PACKAGE_TEMPLATE_PATH = '../../webpack-config/web-default/index.html';
 // const PACKAGE_RENDER_WEBPACK_CONFIG_PATH = '../template/webpack.config';
-const PACKAGE_MAIN_PROCESS_PATH = '@expo/electron-adapter/template/main';
+const PACKAGE_MAIN_PROCESS_PATH = '@expo/electron-adapter/template/electron/main';
 const PACKAGE_TEMPLATE_PATH = '@expo/webpack-config/web-default/index.html';
-const PACKAGE_RENDER_WEBPACK_CONFIG_PATH = '@expo/electron-adapter/template/webpack.config';
+const PACKAGE_RENDER_WEBPACK_CONFIG_PATH =
+  '@expo/electron-adapter/template/electron/webpack.config';
 
 const LOCAL_ELECTRON_PATH = './electron';
 const LOCAL_MAIN_PROCESS_PATH = './electron/main';
@@ -82,6 +83,13 @@ export function copyTemplateToProject(projectPath: string) {
   const outputPath = path.resolve(projectPath, LOCAL_ELECTRON_PATH);
   if (!fs.pathExistsSync(outputPath)) {
     fs.ensureDirSync(path.dirname(outputPath));
-    fs.copy(path.resolve(__dirname, '../template'), outputPath);
+    fs.copy(path.resolve(__dirname, '../template/electron'), outputPath);
+  }
+}
+
+export function ensureElectronConfig(projectPath: string) {
+  const outputPath = path.resolve(projectPath, 'electron-webpack.js');
+  if (!fs.pathExistsSync(outputPath)) {
+    fs.copy(path.resolve(__dirname, '../template/electron-webpack.js'), outputPath);
   }
 }
