@@ -99,7 +99,6 @@ export function ensureElectronConfig(projectPath: string) {
 }
 
 export async function ensureMinProjectSetupAsync(projectRoot: string): Promise<void> {
-  await ensureGitIgnoreAsync(projectRoot);
   ensureElectronConfig(projectRoot);
   await ensureDependenciesAreInstalledAsync(projectRoot);
 }
