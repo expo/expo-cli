@@ -1,5 +1,9 @@
-import * as path from 'path';
+import { projectHasModule } from '@expo/config';
+import chalk from 'chalk';
+// @ts-ignore
+import * as PackageManager from 'expo-cli/build/PackageManager';
 import fs from 'fs-extra';
+import * as path from 'path';
 import resolveFrom from 'resolve-from';
 
 // const PACKAGE_MAIN_PROCESS_PATH = '../template/main';
@@ -92,4 +96,84 @@ export function ensureElectronConfig(projectPath: string) {
   if (!fs.pathExistsSync(outputPath)) {
     fs.copy(path.resolve(__dirname, '../template/electron-webpack.js'), outputPath);
   }
+}
+
+export async function ensureMinProjectSetupAsync(projectRoot: string): Promise<void> {
+  await ensureGitIgnoreAsync(projectRoot);
+  ensureElectronConfig(projectRoot);
+  await ensureDependenciesAreInstalledAsync(projectRoot);
+}
+
+const generatedTag = `@generated: @expo/electron-adapter@${
+  require('@expo/electron-adapter/package.json').version
+}`;
+
+function createBashTag(): string {
+  return `# ${generatedTag}`;
+}
+
+export async function ensureGitIgnoreAsync(projectRoot: string): Promise<void> {
+  const destinationPath = path.resolve(projectRoot, '.gitignore');
+
+  // Ensure a default expo .gitignore exists
+  if (!(await fs.pathExists(destinationPath))) {
+    return;
+  }
+
+  // Ensure the .gitignore has the required fields
+  let contents = await fs.readFile(destinationPath, 'utf8');
+
+  const tag = createBashTag();
+  if (contents.includes(tag)) {
+    console.warn(chalk.yellow('The .gitignore already appears to contain expo generated files'));
+    return;
+  }
+
+  console.log(chalk.magenta(`\u203A Adding the generated folders to your .gitignore`));
+
+  const ignore = [
+    '',
+    tag,
+    '/.expo/*',
+    '# Expo Web',
+    '/web-build/*',
+    '/web-report/*',
+    '# electron-webpack',
+    '/dist',
+    '',
+  ];
+
+  contents += ignore.join('\n');
+  await fs.writeFile(destinationPath, contents);
+}
+
+function getDependencies(
+  projectRoot: string
+): { dependencies: string[]; devDependencies: string[] } {
+  const dependencies = ['react-native-web'].filter(
+    dependency => !projectHasModule(dependency, projectRoot, {})
+  );
+  const devDependencies = ['@expo/webpack-config'].filter(
+    dependency => !projectHasModule(dependency, projectRoot, {})
+  );
+
+  return { dependencies, devDependencies };
+}
+
+async function ensureDependenciesAreInstalledAsync(projectRoot: string): Promise<void> {
+  const { dependencies, devDependencies } = getDependencies(projectRoot);
+  const all = [...dependencies, ...devDependencies];
+  if (!all.length) {
+    console.log(chalk.magenta.dim(`\u203A All of the required dependencies are installed already`));
+    return;
+  } else {
+    console.log(chalk.magenta(`\u203A Installing the missing dependencies: ${all.join(', ')}`));
+  }
+
+  const packageManager = PackageManager.createForProject(projectRoot);
+
+  await Promise.all([
+    packageManager.addAsync(...dependencies),
+    packageManager.addDevAsync(...devDependencies),
+  ]);
 }
