@@ -3,6 +3,8 @@ import { execSync } from 'child_process';
 // @ts-ignore
 import checkForUpdate from 'update-check';
 
+const packageJson = () => require('@expo/next-adapter/package.json');
+
 function shouldUseYarn() {
   try {
     execSync('yarnpkg --version', { stdio: 'ignore' });
@@ -13,8 +15,6 @@ function shouldUseYarn() {
 }
 
 export default async function shouldUpdate() {
-  const packageJson = () => require('../package.json');
-
   const update = checkForUpdate(packageJson()).catch(() => null);
 
   try {

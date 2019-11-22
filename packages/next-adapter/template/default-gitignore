@@ -10,9 +10,13 @@ npm-debug.*
 web-build/
 web-report/
 
+# debug
+yarn-debug.log*
+yarn-error.log*
+
 # macOS
 .DS_Store
 
-# @generated: expo/next-adapter
-.expo/*
-.next/*
+# misc
+.DS_Store
+.env*

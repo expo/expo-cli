@@ -12,7 +12,7 @@
     "lint": "eslint ."
   },
   "bin": {
-    "next-expo": "./build/cli.js"
+    "next-expo": "./build/cli/index.js"
   },
   "repository": {
     "type": "git",
