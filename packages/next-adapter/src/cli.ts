@@ -13,13 +13,11 @@ import { runAsync } from './customize';
 
 const program = new Command(packageJson().name)
   .version(packageJson().version)
-  .command('customize [project-dir]')
   .arguments('<project-directory>')
   .usage(`${chalk.green('<project-directory>')} [options]`)
   .description('Generate static Next.js files into your project.')
+  .option('-c, --customize', 'Select template files you want to add to your project')
   .option('-f, --force', 'Allows replacing existing files')
-  .option('-y, --yes', 'Use the default features')
-  //   .option('--package [package-name]', 'Use a custom workflow')
   .action(
     (inputProjectDirectory: string, options: any) => (projectDirectory = inputProjectDirectory)
   )
@@ -33,7 +31,7 @@ async function run() {
 
   const resolvedProjectRoot = resolve(projectDirectory);
 
-  runAsync({ projectRoot: resolvedProjectRoot, force: program.force, yes: program.yes });
+  runAsync({ projectRoot: resolvedProjectRoot, force: program.force, yes: !program.customize });
 }
 
 run()

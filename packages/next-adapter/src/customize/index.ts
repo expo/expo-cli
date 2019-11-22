@@ -1,7 +1,11 @@
-import chalk from 'chalk';
-import path from 'path';
-import fs from 'fs-extra';
 import { projectHasModule } from '@expo/config';
+import chalk from 'chalk';
+// @ts-ignore
+import { MultiSelect } from 'enquirer';
+// @ts-ignore
+import * as PackageManager from 'expo-cli/build/PackageManager';
+import fs from 'fs-extra';
+import path from 'path';
 
 type SelectMethod = (context: { projectRoot: string; force: boolean }) => Promise<void>;
 type EnabledMethod = (context: { projectRoot: string; force: boolean }) => Promise<boolean>;
@@ -26,9 +30,6 @@ async function copyFileAsync(from: string, to: string, force: boolean): Promise<
     throw new Error(`Expected template file for ${from} doesn't exist at path: ${to}`);
   }
 }
-
-// @ts-ignore
-import * as PackageManager from 'expo-cli/build/PackageManager';
 
 const packageRoot = path.join(__dirname, '../../');
 
@@ -116,8 +117,6 @@ export const manifest: CustomizeOption[] = [
       const contents = fs.readFileSync(destinationPath, 'utf8');
 
       return !contents.includes('// @generated: @expo/next-adapter');
-      // const destinationPath = this.destinationPath(projectRoot);
-      // return !(await fs.existsSync(destinationPath));
     },
     async onSelectAsync({ projectRoot, force }): Promise<void> {
       console.log(chalk.magenta(`\u203A Creating ${this.description}`));
@@ -222,8 +221,6 @@ export const manifest: CustomizeOption[] = [
 ];
 
 // @ts-ignore enquirer has no exported member 'MultiSelect'
-import { MultiSelect } from 'enquirer';
-
 async function runNonInteractiveFlowAsync(projectRoot: string): Promise<void> {
   const customizations = manifest.filter(({ type }) => type === 'required');
   const promises: Promise<void>[] = [];
