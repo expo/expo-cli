@@ -35,6 +35,7 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/next-adapter#readme",
   "files": [
+    "babel",
     "customize",
     "template",
     "build",
