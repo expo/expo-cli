@@ -11,6 +11,9 @@
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "lint": "eslint ."
   },
+  "bin": {
+    "expo-next": "./build/cli.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
@@ -32,6 +35,8 @@
   },
   "homepage": "https://github.com/expo/expo-cli/tree/master/packages/next-adapter#readme",
   "files": [
+    "customize",
+    "template",
     "build",
     "document.js",
     "service-worker.js"

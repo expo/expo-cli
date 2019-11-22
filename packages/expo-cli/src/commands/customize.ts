@@ -9,8 +9,9 @@ import path from 'path';
 
 import log from '../log';
 import * as PackageManager from '../PackageManager';
+import { resolveModule } from '@expo/config';
 
-type Options = { force: boolean };
+type Options = { yes: boolean; force: boolean; package: string };
 
 async function maybeWarnToCommitAsync(projectRoot: string) {
   let workingTreeStatus = 'unknown';
@@ -83,7 +84,42 @@ async function generateFilesAsync({
   await Promise.all(promises);
 }
 
-export async function action(projectDir: string = './', options: Options = { force: false }) {
+// @ts-ignore
+import resolveFrom from 'resolve-from';
+
+export async function action(
+  projectDir: string = './',
+  options: Options = { yes: false, force: false, package: '' }
+) {
+  if (options.package) {
+    const [root, adapter] = (() => {
+      for (const root of [projectDir, path.resolve(__dirname, '../../../')]) {
+        const packagePath =
+          resolveFrom.silent(root, `${options.package}/customize`) ||
+          resolveFrom.silent(root, `@expo/${options.package}/customize`) ||
+          resolveFrom.silent(root, `@expo/${options.package}-adapter/customize`);
+        if (packagePath) return [root, packagePath];
+      }
+      return [];
+    })();
+
+    if (adapter) {
+      console.log(
+        chalk.magenta(
+          `\n\u203A Using customization from package ${chalk.bold(path.relative(root, adapter))}\n`
+        )
+      );
+      await require(adapter).runAsync({
+        projectRoot: projectDir,
+        force: options.force,
+        yes: options.yes,
+      });
+      return;
+    } else {
+      throw new Error(`No installed package had a valid customize folder to read from.`);
+    }
+  }
+
   const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
 
   const templateFolder = path.dirname(
@@ -143,6 +179,8 @@ export default function(program: Command) {
     .command('customize:web [project-dir]')
     .description('Generate static web files into your project.')
     .option('-f, --force', 'Allows replacing existing files')
+    .option('-y, --yes', 'Use the default features')
+    .option('--package [package-name]', 'Use a custom workflow')
     .allowOffline()
     .asyncAction(action);
 }
