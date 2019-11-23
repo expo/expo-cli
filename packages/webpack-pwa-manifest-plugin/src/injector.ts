@@ -80,7 +80,8 @@ export async function buildResourcesAsync(self: any, publicPath: string = '') {
     if (!self.options.noResources) {
       const [results, config] = retrieveIcons(self.manifest);
       self.manifest = config;
-      parsedIconsResult = await parseIconsAsync(results, self.options.fingerprints, publicPath);
+      // TODO: Bacon: Better dynamic path
+      parsedIconsResult = await parseIconsAsync(process.cwd(), results, publicPath);
     }
 
     const { icons, assets = [] } = parsedIconsResult;
