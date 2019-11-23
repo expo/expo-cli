@@ -209,6 +209,7 @@ export default async function(
 
       new WebpackPWAManifestPlugin(config, {
         publicPath,
+        projectRoot: env.projectRoot,
         noResources: !generatePWAImageAssets,
         filename: locations.production.manifest,
         HtmlWebpackPlugin: ExpoHtmlWebpackPlugin,
