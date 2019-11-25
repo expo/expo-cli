@@ -1,5 +1,5 @@
 import ansiRegex from 'ansi-regex';
-import { isUsingYarn } from '@expo/config';
+import findWorkspaceRoot from 'find-yarn-workspace-root';
 import spawnAsync, { SpawnOptions } from '@expo/spawn-async';
 import split from 'split';
 import { Transform } from 'stream';
@@ -8,8 +8,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
-
-import log from './log';
 
 const ansi = `(?:${ansiRegex().source})*`;
 const npmPeerDependencyWarningPattern = new RegExp(
@@ -20,6 +18,15 @@ const yarnPeerDependencyWarningPattern = new RegExp(
   `${ansi}warning${ansi} "[^"]+" has (?:unmet|incorrect) peer dependency "[^"]+"\\.\n`,
   'g'
 );
+
+export function isUsingYarn(projectRoot: string): boolean {
+  const workspaceRoot = findWorkspaceRoot(projectRoot);
+  if (workspaceRoot) {
+    return fs.existsSync(path.join(workspaceRoot, 'yarn.lock'));
+  } else {
+    return fs.existsSync(path.join(projectRoot, 'yarn.lock'));
+  }
+}
 
 class NpmStderrTransform extends Transform {
   _transform(
@@ -43,6 +50,8 @@ class YarnStderrTransform extends Transform {
   }
 }
 
+type Logger = (...args: any[]) => void;
+
 export interface PackageManager {
   installAsync(): Promise<void>;
   addAsync(...names: string[]): Promise<void>;
@@ -51,8 +60,10 @@ export interface PackageManager {
 
 export class NpmPackageManager implements PackageManager {
   options: SpawnOptions;
+  private log: Logger;
 
-  constructor({ cwd }: { cwd: string }) {
+  constructor({ cwd, log }: { cwd: string; log?: Logger }) {
+    this.log = log || console.log;
     this.options = { cwd, stdio: ['inherit', 'inherit', 'pipe'] };
   }
   get name() {
@@ -83,8 +94,8 @@ export class NpmPackageManager implements PackageManager {
   }
 
   // Private
-  async _runAsync(args: string[]) {
-    log(`> npm ${args.join(' ')}`);
+  private async _runAsync(args: string[]) {
+    this.log(`> npm ${args.join(' ')}`);
     const promise = spawnAsync('npm', [...args], this.options);
     if (promise.child.stderr) {
       promise.child.stderr
@@ -95,7 +106,7 @@ export class NpmPackageManager implements PackageManager {
     await promise;
   }
 
-  _parseSpecs(names: string[]) {
+  private _parseSpecs(names: string[]) {
     const result: {
       versioned: npmPackageArg.Result[];
       unversioned: npmPackageArg.Result[];
@@ -112,7 +123,7 @@ export class NpmPackageManager implements PackageManager {
     return result;
   }
 
-  async _patchAsync(
+  private async _patchAsync(
     specs: npmPackageArg.Result[],
     packageType: 'dependencies' | 'devDependencies'
   ) {
@@ -132,8 +143,10 @@ export class NpmPackageManager implements PackageManager {
 
 export class YarnPackageManager implements PackageManager {
   options: SpawnOptions;
+  private log: Logger;
 
-  constructor({ cwd }: { cwd: string }) {
+  constructor({ cwd, log }: { cwd: string; log?: Logger }) {
+    this.log = log || console.log;
     this.options = {
       cwd,
       stdio: ['inherit', 'inherit', 'pipe'],
@@ -153,8 +166,8 @@ export class YarnPackageManager implements PackageManager {
   }
 
   // Private
-  async _runAsync(args: string[]) {
-    log(`> yarn ${args.join(' ')}`);
+  private async _runAsync(args: string[]) {
+    this.log(`> yarn ${args.join(' ')}`);
     const promise = spawnAsync('yarnpkg', args, this.options);
     if (promise.child.stderr) {
       promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
@@ -165,11 +178,8 @@ export class YarnPackageManager implements PackageManager {
 
 export function createForProject(
   projectRoot: string,
-  options: { npm?: boolean; yarn?: boolean } = {}
+  options: { npm?: boolean; yarn?: boolean; log?: Logger } = {}
 ) {
-  console.warn(
-    '`createForProject` is deprecated in favor of `createForProject` from `@expo/package-manager`'
-  );
   let PackageManager;
   if (options.npm) {
     PackageManager = NpmPackageManager;
@@ -180,5 +190,18 @@ export function createForProject(
   } else {
     PackageManager = NpmPackageManager;
   }
-  return new PackageManager({ cwd: projectRoot });
+  return new PackageManager({ cwd: projectRoot, log: options.log });
+}
+
+export function getModulesPath(projectRoot: string): string {
+  const workspaceRoot = findWorkspaceRoot(path.resolve(projectRoot)); // Absolute path or null
+  if (workspaceRoot) {
+    return path.resolve(workspaceRoot, 'node_modules');
+  }
+
+  return path.resolve(projectRoot, 'node_modules');
+}
+
+export function getPossibleProjectRoot(): string {
+  return fs.realpathSync(process.cwd());
 }

@@ -7,8 +7,8 @@ import npmPackageArg from 'npm-package-arg';
 import path from 'path';
 import { Versions } from '@expo/xdl';
 
+import * as PackageManager from '@expo/package-manager';
 import CommandError from '../CommandError';
-import * as PackageManager from '../PackageManager';
 import { findProjectRootAsync } from './utils/ProjectUtils';
 import log from '../log';
 
@@ -17,6 +17,7 @@ async function installAsync(packages, options) {
   const packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
+    log,
   });
 
   if (workflow === 'bare') {

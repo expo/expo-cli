@@ -4268,6 +4268,11 @@ ansi-regex@^4.0.0, ansi-regex@^4.1.0:
   resolved "https://registry.yarnpkg.com/ansi-regex/-/ansi-regex-4.1.0.tgz#8b9f8f08cf1acb843756a839ca8c7e3168c51997"
   integrity sha512-1apePfXM1UOSqw0o9IiFAovVz9M5S1Dg+4TrDwfMewQ6p/rmMueb7tWZjQ1rx4Loy1ArBggoqGpfqqdI4rondg==
 
+ansi-regex@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/ansi-regex/-/ansi-regex-5.0.0.tgz#388539f55179bf39339c81af30a654d69f87cb75"
+  integrity sha512-bY6fj56OUQ0hU1KjFNDQuJFezqKdrAyFdIevADiqrWHwSlbmBNMHp5ak2f40Pm8JTFyM2mqxkG6ngkHO11f/lg==
+
 ansi-styles@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-2.2.1.tgz#b432dd3358b634cf75e1e4664368240533c1ddbe"
@@ -8354,6 +8359,11 @@ detect-newline@^3.0.0:
   resolved "https://registry.yarnpkg.com/detect-newline/-/detect-newline-3.0.0.tgz#8ae477c089e51872c264531cd6547719c0b86b2f"
   integrity sha512-JAP22dVPAqvhdRFFxK1G5GViIokyUn0UWXRNW0ztK96fsqi9cuM8w8ESbSk+T2w5OVorcMcL6m7yUg1RrX+2CA==
 
+detect-newline@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/detect-newline/-/detect-newline-3.1.0.tgz#576f5dfc63ae1a192ff192d8ad3af6308991b651"
+  integrity sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==
+
 detect-node@^2.0.4:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/detect-node/-/detect-node-2.0.4.tgz#014ee8f8f669c5c58023da64b8179c083a28c46c"
@@ -8744,6 +8754,11 @@ elliptic@^6.0.0:
     inherits "^2.0.1"
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.0"
+
+emitter-component@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/emitter-component/-/emitter-component-1.1.1.tgz#065e2dbed6959bf470679edabeaf7981d1003ab6"
+  integrity sha1-Bl4tvtaVm/RwZ57avq95gdEAOrY=
 
 emitter-mixin@0.0.3:
   version "0.0.3"
@@ -11213,6 +11228,13 @@ hosted-git-info@^2.1.4, hosted-git-info@^2.6.0:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.7.1.tgz#97f236977bd6e125408930ff6de3eec6281ec047"
   integrity sha512-7T/BxH19zbcCTa8XkMlbK5lTo1WtgkFi3GvdWEyNuc4Vex7/9Dqbnpsf4JMydcfj9HCg4zUWFTL3Za6lapg5/w==
+
+hosted-git-info@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-3.0.2.tgz#8b7e3bd114b59b51786f8bade0f39ddc80275a97"
+  integrity sha512-ezZMWtHXm7Eb7Rq4Mwnx2vs79WUx2QmRg3+ZqeGroKzfDO+EprOcgRPYghsOP9JuYBfK18VojmRTGCg8Ma+ktw==
+  dependencies:
+    lru-cache "^5.1.1"
 
 hpack.js@^2.1.6:
   version "2.1.6"
@@ -15966,6 +15988,16 @@ npm-package-arg@6.1.0, "npm-package-arg@^4.0.0 || ^5.0.0 || ^6.0.0", npm-package
     semver "^5.5.0"
     validate-npm-package-name "^3.0.0"
 
+npm-package-arg@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/npm-package-arg/-/npm-package-arg-7.0.0.tgz#52cdf08b491c0c59df687c4c925a89102ef794a5"
+  integrity sha512-xXxr8y5U0kl8dVkz2oK7yZjPBvqM2fwaO5l3Yg13p03v8+E3qQcD0JNhHzjL1vyGgxcKkD0cco+NLR72iuPk3g==
+  dependencies:
+    hosted-git-info "^3.0.2"
+    osenv "^0.1.5"
+    semver "^5.6.0"
+    validate-npm-package-name "^3.0.0"
+
 npm-packlist@^1.1.12, npm-packlist@^1.1.6, npm-packlist@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/npm-packlist/-/npm-packlist-1.4.1.tgz#19064cdf988da80ea3cee45533879d90192bbfbc"
@@ -20031,7 +20063,7 @@ split@0.2.x:
   dependencies:
     through "2"
 
-split@1.0.1, split@^1.0.0:
+split@1.0.1, split@^1.0.0, split@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/split/-/split-1.0.1.tgz#605bd9be303aa59fb35f9229fbea0ddec9ea07d9"
   integrity sha512-mTyOoPbrivtXnwnIxZRFYRrPNtEFKlpB2fvjSnCQUiAA6qAZzqwna5envK4uk6OIeP17CsdF3rSBGYVBsU0Tkg==
@@ -20180,6 +20212,13 @@ stream-shift@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/stream-shift/-/stream-shift-1.0.0.tgz#d5c752825e5367e786f78e18e445ea223a155952"
   integrity sha1-1cdSgl5TZ+eG944Y5EXqIjoVWVI=
+
+stream@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/stream/-/stream-0.0.2.tgz#7f5363f057f6592c5595f00bc80a27f5cec1f0ef"
+  integrity sha1-f1Nj8Ff2WSxVlfALyAon9c7B8O8=
+  dependencies:
+    emitter-component "^1.1.1"
 
 strict-uri-encode@^1.0.0:
   version "1.1.0"
