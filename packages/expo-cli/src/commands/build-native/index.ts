@@ -1,3 +1,4 @@
+import { Platform, BuildType } from '@expo/build-tools';
 import { UserManager, User } from '@expo/xdl';
 import { Command } from 'commander';
 
@@ -5,7 +6,6 @@ import log from '../../log';
 import Builder from './Builder';
 import { Options } from './prepare';
 import { printBuildTable } from './utils'
-import { Platform, BuildType } from '@expo/build-tools';
 
 async function buildAction(projectDir: string, options: Options) {
   if (!options.platform || !Object.values(Platform).includes(options.platform)) {
