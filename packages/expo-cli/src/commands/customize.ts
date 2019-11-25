@@ -7,6 +7,8 @@ import { Command } from 'commander';
 import { MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
+// @ts-ignore
+import resolveFrom from 'resolve-from';
 
 import log from '../log';
 
@@ -64,7 +66,7 @@ async function generateFilesAsync({
       );
 
       if (file in dependencyMap) {
-        const packageManager = createForProject(projectDir);
+        const packageManager = createForProject(projectDir, { log });
         for (const dependency of dependencyMap[file]) {
           promises.push(packageManager.addDevAsync(dependency));
         }
@@ -82,9 +84,6 @@ async function generateFilesAsync({
   }
   await Promise.all(promises);
 }
-
-// @ts-ignore
-import resolveFrom from 'resolve-from';
 
 export async function action(
   projectDir: string = './',
