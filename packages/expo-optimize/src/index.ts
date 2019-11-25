@@ -34,6 +34,9 @@ const program = new Command(packageJson().name)
   .parse(process.argv);
 
 async function run() {
+  // Space out first line
+  console.log();
+
   if (typeof projectDirectory === 'string') {
     projectDirectory = projectDirectory.trim();
   }
@@ -52,7 +55,7 @@ async function run() {
     optimizationOptions
   );
   if (!program.save && !isProjectOptimized) {
-    console.warn('This will overwrite the original assets.');
+    console.warn(chalk.bgYellow.black('This will overwrite the original assets.'));
   }
   await optimizeAsync(resolvedProjectRoot, optimizationOptions);
 }
@@ -73,11 +76,11 @@ run()
   .then(shouldUpdate)
   .catch(async reason => {
     console.log();
-    console.log('Aborting installation.');
+    console.log('Aborting run');
     if (reason.command) {
       console.log(`  ${chalk.magenta(reason.command)} has failed.`);
     } else {
-      console.log(chalk.red('An unexpected error was encountered. Please report it as a bug:'));
+      console.log(chalk.red`An unexpected error was encountered. Please report it as a bug:`);
       console.log(reason);
     }
     console.log();
