@@ -1,11 +1,13 @@
 import { getManagedExtensions } from '@expo/config/paths';
 import { withUnimodules } from '@expo/webpack-config/addons';
+import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
+import { NextConfig } from 'next';
 
-function withExpo(nextConfig: any = {}): any {
+export default function withExpo(nextConfig: NextConfig = {}): NextConfig {
   return {
     ...nextConfig,
     pageExtensions: getManagedExtensions(['web']),
-    webpack(config: any, options: any): any {
+    webpack(config: AnyConfiguration, options: any): AnyConfiguration {
       const expoConfig = withUnimodules(
         config,
         {
@@ -25,8 +27,3 @@ function withExpo(nextConfig: any = {}): any {
     },
   };
 }
-
-export default (nextConfig: any = {}): any => {
-  // Add support for static images and fonts by default
-  return withExpo(nextConfig);
-};
