@@ -29,11 +29,13 @@
     "lint": "eslint .",
     "watch": "yarn run build -w",
     "build": "ncc build ./src/index.ts -o build/ --external @expo/image-utils",
-    "build:prod": "yarn run build --minify --no-cache --no-source-map-register",
+    "build:prod": "ncc build ./src/index.ts -o build/ --external @expo/image-utils --minify --no-cache --no-source-map-register",
     "clean": "rimraf ./build/"
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
+    "@expo/config": "^2.5.1",
+    "@expo/json-file": "^8.2.1",
     "@types/node": "^12.6.8",
     "@zeit/ncc": "^0.20.5",
     "chalk": "2.4.2",
@@ -46,8 +48,6 @@
     "validate-npm-package-name": "3.0.0"
   },
   "dependencies": {
-    "@expo/config": "^2.5.1",
-    "@expo/image-utils": "^0.2.7",
-    "@expo/json-file": "^8.2.1"
+    "@expo/image-utils": "^0.2.7"
   }
 }
