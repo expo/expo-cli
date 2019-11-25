@@ -11,7 +11,7 @@ import temporary from 'tempy';
 
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 import log from '../../log';
-import * as PackageManager from '../../PackageManager';
+import * as PackageManager from '@expo/package-manager';
 import prompt, { Question } from '../../prompt';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
 
@@ -312,7 +312,7 @@ if (Platform.OS === 'web') {
   await fse.remove('node_modules');
 
   log('Installing new packages...');
-  const packageManager = PackageManager.createForProject(projectRoot);
+  const packageManager = PackageManager.createForProject(projectRoot, { log });
   await packageManager.installAsync();
   log.newLine();
 }
