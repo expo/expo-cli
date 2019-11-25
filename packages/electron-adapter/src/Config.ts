@@ -1,7 +1,5 @@
 import { projectHasModule } from '@expo/config';
 import chalk from 'chalk';
-// @ts-ignore
-import * as PackageManager from 'expo-cli/build/PackageManager';
 import fs from 'fs-extra';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
@@ -169,10 +167,12 @@ async function ensureDependenciesAreInstalledAsync(projectRoot: string): Promise
     console.log(chalk.magenta(`\u203A Installing the missing dependencies: ${all.join(', ')}`));
   }
 
-  const packageManager = PackageManager.createForProject(projectRoot);
+  // TODO: Bacon: Split install packages...
 
-  await Promise.all([
-    packageManager.addAsync(...dependencies),
-    packageManager.addDevAsync(...devDependencies),
-  ]);
+  // const packageManager = PackageManager.createForProject(projectRoot);
+
+  // await Promise.all([
+  //   packageManager.addAsync(...dependencies),
+  //   packageManager.addDevAsync(...devDependencies),
+  // ]);
 }
