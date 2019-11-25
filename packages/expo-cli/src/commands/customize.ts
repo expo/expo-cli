@@ -1,4 +1,5 @@
-import * as ConfigUtils from '@expo/config';
+import { readConfigJsonAsync } from '@expo/config';
+import { createForProject } from '@expo/package-manager';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { Command } from 'commander';
@@ -8,8 +9,6 @@ import fs from 'fs-extra';
 import path from 'path';
 
 import log from '../log';
-import * as PackageManager from '../PackageManager';
-import { resolveModule } from '@expo/config';
 
 type Options = { yes: boolean; force: boolean; package: string };
 
@@ -65,7 +64,7 @@ async function generateFilesAsync({
       );
 
       if (file in dependencyMap) {
-        const packageManager = PackageManager.createForProject(projectDir);
+        const packageManager = createForProject(projectDir);
         for (const dependency of dependencyMap[file]) {
           promises.push(packageManager.addDevAsync(dependency));
         }
@@ -120,7 +119,7 @@ export async function action(
     }
   }
 
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir);
 
   const templateFolder = path.dirname(
     require.resolve('@expo/webpack-config/web-default/index.html')
