@@ -7,16 +7,18 @@ import {
   getRulesByMatchingFiles,
   resolveEntryAsync,
 } from '@expo/webpack-config/utils';
+import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import * as path from 'path';
 import { Configuration } from 'webpack';
 
 // skipEntry defaults to false
 export function withExpoWebpack(
-  config: Configuration,
+  config: AnyConfiguration,
   options: { projectRoot?: string; skipEntry?: boolean } = {}
 ) {
   // Support React Native aliases
+  // @ts-ignore: webpack version mismatch
   config = withAlias(config);
 
   const projectRoot = options.projectRoot || process.cwd();
@@ -36,16 +38,19 @@ export function withExpoWebpack(
   if (plugin) {
     const { options } = plugin.plugin as any;
     // Replace HTML Webpack Plugin so we can interpolate it
+    // @ts-ignore: webpack version mismatch
     config.plugins.splice(plugin.index, 1, new HtmlWebpackPlugin(options));
     config.plugins.splice(
       plugin.index + 1,
       0,
       // Add variables to the `index.html`
+      // @ts-ignore
       ExpoInterpolateHtmlPlugin.fromEnv(env, HtmlWebpackPlugin)
     );
   }
 
   // Add support for expo-constants
+  // @ts-ignore: webpack version mismatch
   config.plugins.push(ExpoDefinePlugin.fromEnv(env));
 
   // Support platform extensions

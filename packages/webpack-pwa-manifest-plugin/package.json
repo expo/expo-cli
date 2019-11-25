@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-pwa-manifest-plugin",
-  "version": "1.2.11",
+  "version": "1.2.12",
   "description": "Generates a progressive web app (PWA) manifest.json from a React Native app.json",
   "main": "build/WebpackPWAManifestPlugin.js",
   "types": "build/WebpackPWAManifestPlugin.d.ts",
@@ -48,8 +48,7 @@
     "@types/node-fetch": "^2.5.0",
     "eslint": "^5.15.1",
     "eslint-config-universe": "^1.0.6",
-    "typescript": "3.4.5",
-    "webpack": "^4.29.6"
+    "typescript": "3.4.5"
   },
   "files": [
     "build",
