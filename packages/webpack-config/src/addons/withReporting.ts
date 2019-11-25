@@ -67,6 +67,7 @@ export default function withReporting(
       verbose: reportConfig.verbose,
     }),
     // Generate the report.html and stats.json
+    // @ts-ignore
     new BundleAnalyzerPlugin({
       ...reportConfig,
       logLevel: reportConfig.verbose ? 'info' : 'silent',
