@@ -1,7 +1,6 @@
 import { projectHasModule } from '@expo/config';
 import chalk from 'chalk';
-// @ts-ignore
-import * as PackageManager from 'expo-cli/build/PackageManager';
+import { createForProject } from '@expo/package-manager';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -99,7 +98,7 @@ export const manifest: CustomizeOption[] = [
         console.log(chalk.magenta(`\u203A Installing the missing dependencies: ${all.join(', ')}`));
       }
 
-      const packageManager = PackageManager.createForProject(projectRoot);
+      const packageManager = createForProject(projectRoot);
 
       await Promise.all([
         packageManager.addAsync(...dependencies),
