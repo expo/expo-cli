@@ -22,6 +22,7 @@ xdl.ProjectUtils = {
       slug: 'project-slug',
     });
   },
+  logError(projectRoot, tag, message, id) {},
 };
 
 xdl.UserSettings = {

@@ -1,8 +1,9 @@
+import * as ConfigUtils from '@expo/config';
+import Schemer from '@expo/schemer';
 import fs from 'fs';
 import path from 'path';
-import Schemer from '@expo/schemer';
+
 import Api from '../Api';
-import * as ConfigUtils from '@expo/config';
 
 export type Schema = any;
 export type AssetSchema = { schema: Schema; fieldPath: string };

@@ -1,10 +1,12 @@
-import path from 'path';
-import chalk from 'chalk';
-import { Rule } from 'webpack';
-import fs from 'fs-extra';
-import { getPossibleProjectRoot } from '../utils/paths';
-import { Mode } from '../types';
 import { loadPartialConfig } from '@babel/core';
+import { getPossibleProjectRoot } from '@expo/config/paths';
+import chalk from 'chalk';
+import fs from 'fs-extra';
+import path from 'path';
+import { Rule } from 'webpack';
+
+import { Environment, Mode } from '../types';
+import { getConfig, getMode, getPaths } from '../env';
 
 const getModule = (name: string) => path.join('node_modules', name);
 
@@ -71,6 +73,25 @@ function generateCacheIdentifier(projectRoot: string, version: string = '1'): st
   return `${cacheKey}${JSON.stringify(partial!.options)}`;
 }
 
+export function createBabelLoaderFromEnvironment(
+  env: Pick<Environment, 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
+): Rule {
+  const locations = env.locations || getPaths(env.projectRoot);
+  const appConfig = env.config || getConfig(env);
+  const mode = getMode(env);
+
+  const { build = {} } = appConfig.web;
+  const { babel = {} } = build;
+
+  return createBabelLoader({
+    mode: mode,
+    platform: env.platform,
+    babelProjectRoot: babel.root || locations.root,
+    verbose: babel.verbose,
+    include: babel.include,
+    use: babel.use,
+  });
+}
 /**
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
@@ -127,7 +148,7 @@ export default function createBabelLoader({
     ...options,
     include(inputPath: string): boolean {
       for (const possibleModule of modules) {
-        if (inputPath.includes(possibleModule)) {
+        if (inputPath.includes(path.normalize(possibleModule))) {
           if (verbose) {
             const packageName = packageNameFromPath(inputPath);
             if (packageName) logPackage(packageName);
@@ -138,7 +159,7 @@ export default function createBabelLoader({
       // Is inside the project and is not one of designated modules
       if (inputPath.includes(ensuredProjectRoot)) {
         for (const excluded of excludedRootPaths) {
-          if (inputPath.includes(excluded)) {
+          if (inputPath.includes(path.normalize(excluded))) {
             return false;
           }
         }

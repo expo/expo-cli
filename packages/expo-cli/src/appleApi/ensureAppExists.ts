@@ -4,12 +4,12 @@ import { AppleCtx } from './authenticate';
 import { runAction, travelingFastlane } from './fastlane';
 
 type Options = {
-  enablePushNotifications?: boolean
-}
+  enablePushNotifications?: boolean;
+};
 
-export default async function ensureAppExists(
-  appleCtx: AppleCtx, 
-  { experienceName, bundleIdentifier }: { experienceName: string, bundleIdentifier: string },
+export async function ensureAppExists(
+  appleCtx: AppleCtx,
+  { experienceName, bundleIdentifier }: { experienceName: string; bundleIdentifier: string },
   options: Options = {}
 ) {
   const { appleId, appleIdPassword, team } = appleCtx;

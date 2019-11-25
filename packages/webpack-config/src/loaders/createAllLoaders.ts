@@ -1,10 +1,8 @@
 import { Rule } from 'webpack';
 
 import { ExpoConfig } from '@expo/config';
-import { Environment, Mode, FilePaths } from '../types';
-import getConfig from '../utils/getConfig';
-import getMode from '../utils/getMode';
-import { getPaths } from '../utils/paths';
+import { Environment, FilePaths, Mode } from '../types';
+import { getConfig, getMode, getPaths } from '../env';
 import createBabelLoader from './createBabelLoader';
 import createFontLoader from './createFontLoader';
 

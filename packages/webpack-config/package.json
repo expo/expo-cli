@@ -1,8 +1,9 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.8.1",
+  "version": "0.10.2",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
+  "types": "webpack.config.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
@@ -14,7 +15,7 @@
     "build": "tsc",
     "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
-    "test": "npm run test:unit; npm run test:e2e",
+    "test": "npm run test:unit; npm run test:e2e; npm run test:e2e:nextjs",
     "test:unit": "jest --config jest/unit-test-config.json --rootDir .",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:build": "EXPO_E2E_COMMAND='build' jest --config jest/e2e-test-config.json --rootDir .",
@@ -24,7 +25,8 @@
     "test:e2e:buildNextJsFromExpoCLI": "EXPO_E2E_COMMAND='buildNextJsFromExpoCLI' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:startNextJsFromNextCLI": "EXPO_E2E_COMMAND='startNextJsFromNextCLI' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:buildNextJsFromNextCLI": "EXPO_E2E_COMMAND='buildNextJsFromNextCLI' jest --config jest/e2e-test-config.json --rootDir .",
-    "test:e2e": "npm run test:e2e:start; npm run test:e2e:build; npm run test:e2e:startNextJs; npm run test:e2e:buildNextJs"
+    "test:e2e": "yarn test:e2e:start; yarn test:e2e:build",
+    "test:e2e:nextjs": "yarn test:e2e:startNextJs; yarn test:e2e:buildNextJs"
   },
   "license": "MIT",
   "engines": {
@@ -36,8 +38,8 @@
   "dependencies": {
     "@babel/core": "^7.0.0",
     "@babel/runtime": "^7.3.4",
-    "@expo/config": "^2.3.0",
-    "@expo/webpack-pwa-manifest-plugin": "^1.2.8",
+    "@expo/config": "^2.5.1",
+    "@expo/webpack-pwa-manifest-plugin": "^1.2.11",
     "@types/yup": "^0.26.24",
     "babel-loader": "8.0.6",
     "babel-preset-expo": "^7.0.0",
@@ -64,7 +66,7 @@
     "style-loader": "^0.23.1",
     "terser-webpack-plugin": "^1.2.3",
     "url-loader": "^1.1.2",
-    "webpack": "4.39.0",
+    "webpack": "4.41.2",
     "webpack-bundle-analyzer": "^3.0.4",
     "webpack-deep-scope-plugin": "1.6.0",
     "webpack-manifest-plugin": "^2.0.4",

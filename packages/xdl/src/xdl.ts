@@ -19,9 +19,6 @@ export { Api };
 import ApiV2 from './ApiV2';
 export { ApiV2 };
 
-import * as AssetUtils from './AssetUtils';
-export { AssetUtils };
-
 import * as Binaries from './Binaries';
 export { Binaries };
 
@@ -82,6 +79,9 @@ export { IosIPABuilder };
 import * as IosKeychain from './detach/IosKeychain';
 export { IosKeychain };
 
+const IosWorkspace = require('./detach/IosWorkspace');
+export { IosWorkspace };
+
 import * as IosPlist from './detach/IosPlist';
 export { IosPlist };
 
@@ -126,6 +126,9 @@ export { Simulator };
 
 import * as ThirdParty from './ThirdParty';
 export { ThirdParty };
+
+import TurtleApi from './TurtleApi';
+export { TurtleApi };
 
 import * as UpdateVersions from './tools/UpdateVersions';
 export { UpdateVersions };

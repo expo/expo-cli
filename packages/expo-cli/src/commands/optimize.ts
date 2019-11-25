@@ -1,5 +1,6 @@
+import spawnAsync from '@expo/spawn-async';
 import { Command } from 'commander';
-import { Project, ProjectUtils, AssetUtils } from '@expo/xdl';
+import { readConfigJsonAsync } from '@expo/config';
 
 import log from '../log';
 
@@ -11,37 +12,25 @@ type Options = {
 };
 
 export async function action(projectDir = './', options: Options = {}) {
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir);
   if (exp === null) {
     log.warn('No Expo configuration found. Are you sure this is a project directory?');
     process.exit(1);
   }
 
-  const optimizationOptions = {
-    ...options,
-    quality: parseQuality(options),
-  };
-
-  const hasUnoptimizedAssets = await AssetUtils.hasUnoptimizedAssetsAsync(
-    projectDir,
-    optimizationOptions
+  // Everything after this is a redirect for the deprecated optimize command
+  log.warn(
+    '\u203A `expo optimize` is deprecated please use `npx expo-optimize` as a drop-in replacement for `expo optimize`.'
   );
-  if (!options.save && hasUnoptimizedAssets) {
-    log.warn('This will overwrite the original assets.');
-  }
-  const optimizeOptions = await Project.optimizeAsync(projectDir, optimizationOptions);
-}
 
-function parseQuality(options: Options): number | undefined {
-  const defaultQuality = 80;
-  if (options.quality == null) {
-    return undefined;
-  }
-  const quality = Number(options.quality);
-  if (!(Number.isInteger(quality) && quality > 0 && quality <= 100)) {
-    throw new Error('Invalid value for --quality flag. Must be an integer between 1 and 100.');
-  }
-  return quality;
+  const args: string[] = [projectDir];
+
+  if (options.save) args.push('--save');
+  if (options.quality) args.push('--quality', options.quality);
+  if (options.include) args.push('--include', options.include);
+  if (options.exclude) args.push('--exclude', options.exclude);
+
+  await spawnAsync(require.resolve('expo-optimize'), args, { stdio: 'inherit' });
 }
 
 export default function(program: Command) {

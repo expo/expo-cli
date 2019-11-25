@@ -199,6 +199,12 @@ async function _configureEntitlementsAsync(context: AnyStandaloneContext): Promi
         delete entitlements['com.apple.developer.applesignin'];
       }
 
+      if (manifest.ios && manifest.ios.accessesContactNotes) {
+        entitlements['com.apple.developer.contacts.notes'] = manifest.ios.accessesContactNotes;
+      } else if (entitlements.hasOwnProperty('com.apple.developer.contacts.notes')) {
+        delete entitlements['com.apple.developer.contacts.notes'];
+      }
+
       // Add app associated domains remove exp-specific ones.
       if (manifest.ios && manifest.ios.associatedDomains) {
         entitlements['com.apple.developer.associated-domains'] = manifest.ios.associatedDomains;
@@ -347,6 +353,12 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     // doesn't provide the ID, we leave the sample one.
     infoPlist.GADApplicationIdentifier =
       (privateConfig && privateConfig.googleMobileAdsAppId) || DEFAULT_GAD_APPLICATION_ID;
+
+    // Auto-init of Google App Measurement
+    // unless the user explicitly specifies they want to auto-init, we set delay to true
+    infoPlist.GADDelayAppMeasurementInit = !(
+      privateConfig && privateConfig.googleMobileAdsAutoInit
+    );
 
     // use version from manifest
     let version = config.version ? config.version : '0.0.0';

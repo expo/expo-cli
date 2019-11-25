@@ -1,16 +1,14 @@
-import isEmpty from 'lodash/isEmpty';
 import camelCase from 'lodash/camelCase';
+import isEmpty from 'lodash/isEmpty';
 import snakeCase from 'lodash/snakeCase';
 
-import ApiV2Client, { ApiV2Error } from './ApiV2';
 import * as Analytics from './Analytics';
+import ApiV2Client from './ApiV2';
 import Config from './Config';
-import XDLError from './XDLError';
 import Logger from './Logger';
-import idx from 'idx';
-import UserSettings, { UserSettingsData, UserData } from './UserSettings';
-
+import UserSettings, { UserData } from './UserSettings';
 import { Semaphore } from './Utils';
+import XDLError from './XDLError';
 
 export type User = {
   kind: 'user';
@@ -112,7 +110,10 @@ export class UserManagerInstance {
     }
   }
 
-  async registerAsync(userData: RegistrationData, user: UserOrLegacyUser | null = null): Promise<User> {
+  async registerAsync(
+    userData: RegistrationData,
+    user: UserOrLegacyUser | null = null
+  ): Promise<User> {
     if (!user) {
       user = await this.getCurrentUserAsync();
     }
@@ -152,7 +153,7 @@ export class UserManagerInstance {
    */
   async ensureLoggedInAsync(): Promise<User> {
     if (Config.offline) {
-      throw new XDLError('NETWORK_REQUIRED', 'Can\'t verify user without network access');
+      throw new XDLError('NETWORK_REQUIRED', "Can't verify user without network access");
     }
 
     let user = await this.getCurrentUserAsync();
@@ -190,7 +191,7 @@ export class UserManagerInstance {
    * Get the current user based on the available token.
    * If there is no current token, returns null.
    */
-  async getCurrentUserAsync(): Promise<User | null> {
+  async getCurrentUserAsync(options?: { silent?: boolean }): Promise<User | null> {
     await this._getSessionLock.acquire();
 
     try {
@@ -216,8 +217,10 @@ export class UserManagerInstance {
           sessionSecret: data.sessionSecret,
         });
       } catch (e) {
-        Logger.global.warn('Fetching the user profile failed');
-        Logger.global.warn(e);
+        if (!(options && options.silent)) {
+          Logger.global.warn('Fetching the user profile failed');
+          Logger.global.warn(e);
+        }
         return null;
       }
     } finally {

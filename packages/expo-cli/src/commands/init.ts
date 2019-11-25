@@ -106,6 +106,7 @@ async function action(projectDir: string, options: Options) {
     ) {
       templateSpec.escapedName = `expo-template-${templateSpec.name}`;
       templateSpec.name = templateSpec.escapedName;
+      templateSpec.raw = templateSpec.escapedName;
     }
   } else {
     let descriptionColumn =

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { Versions } from '@expo/xdl';
+import { Project, Versions } from '@expo/xdl';
 import JsonFile from '@expo/json-file';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
@@ -147,6 +147,14 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     }
   }
 
+  // Can't upgrade if Expo is running
+  let status = await Project.currentStatus(projectRoot);
+  if (status === 'running') {
+    await Project.stopAsync(projectRoot);
+    log(chalk.bold.underline('We found an existing expo-cli instance running for this project and closed it to continue.'));
+    log.addNewLineIfNone();
+  }
+
   let currentSdkVersionString = exp.sdkVersion;
   let sdkVersions = await Versions.sdkVersionsAsync();
   let latestSdkVersion = await Versions.newestSdkVersionAsync();
@@ -256,6 +264,12 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   if (dependenciesAsStringArray.length) {
     await packageManager.addAsync(...dependenciesAsStringArray);
   }
+
+  // Clear metro bundler cache
+  log.addNewLineIfNone();
+  log(chalk.bold.underline('Clearing the packager cache...'));
+  await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
+  await Project.stopReactNativeServerAsync(projectRoot);
 
   log.addNewLineIfNone();
   log(chalk.underline.bold.green(`Automated upgrade steps complete.`));

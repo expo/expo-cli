@@ -1,5 +1,6 @@
 /* @flow */
-import * as ConfigUtils from '@expo/config';
+import { readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
+import spawnAsync from '@expo/spawn-async';
 import {
   Android,
   Config,
@@ -434,8 +435,13 @@ const resolvers = {
       return ProjectSettings.readAsync(project.projectDir);
     },
     async config(project) {
-      let { exp } = await ProjectUtils.readConfigJsonAsync(project.projectDir);
-      return exp;
+      try {
+        const { exp } = await readConfigJsonAsync(project.projectDir);
+        return exp;
+      } catch (error) {
+        ProjectUtils.logError(project.projectDir, 'expo', error.message);
+        return null;
+      }
     },
     sources(project, args, context) {
       return context.getSources();
@@ -509,11 +515,19 @@ const resolvers = {
     },
     async processInfo(parent, args, context) {
       const currentProject = context.getCurrentProject();
-      const { exp } = await ProjectUtils.readConfigJsonAsync(currentProject.projectDir);
+
+      let platforms = [];
+      try {
+        const { exp } = await readConfigJsonAsync(currentProject.projectDir);
+        platforms = exp.platforms;
+      } catch (error) {
+        ProjectUtils.logError(currentProject.projectDir, 'expo', error.message);
+      }
+
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: exp.platforms.includes('web')
+        webAppUrl: platforms.includes('web')
           ? await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir)
           : null,
       };
@@ -561,7 +575,10 @@ const resolvers = {
     },
     async optimizeAssets(parent, { settings }, context) {
       const currentProject = context.getCurrentProject();
-      await Project.optimizeAsync(currentProject.projectDir);
+
+      await spawnAsync('npx', ['expo-optimize'], {
+        cwd: currentProject.projectDir,
+      });
       return {
         ...currentProject,
       };
@@ -572,10 +589,7 @@ const resolvers = {
         ...input,
         githubUrl: input.githubUrl.match(/^https:\/\/github.com\//) ? input.githubUrl : undefined,
       };
-      let { exp } = await ConfigUtils.writeConfigJsonAsync(
-        currentProject.projectDir,
-        filteredInput
-      );
+      const { exp } = await writeConfigJsonAsync(currentProject.projectDir, filteredInput);
       return {
         ...currentProject,
         config: exp,

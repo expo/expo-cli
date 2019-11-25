@@ -1,24 +1,24 @@
-import _ from 'lodash';
-import fs from 'fs-extra';
+import * as ConfigUtils from '@expo/config';
+import { Android, Credentials, Simulator, UserManager } from '@expo/xdl';
 import chalk from 'chalk';
+import CliTable from 'cli-table';
+import fs from 'fs-extra';
+import _ from 'lodash';
 import ora from 'ora';
 import path from 'path';
-import CliTable from 'cli-table';
-import * as ConfigUtils from '@expo/config';
-import { Android, Simulator, UserManager, Credentials } from '@expo/xdl';
 
 import CommandError from '../../CommandError';
-import urlOpts from '../../urlOpts';
-import * as appleApi from '../build/ios/appleApi';
-import { PLATFORMS } from '../build/constants';
-import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
-import selectDistributionCert from './selectDistributionCert';
-import selectPushKey from './selectPushKey';
-import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
-import generateBundleIdentifier from './generateBundleIdentifier';
-import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import log from '../../log';
 import prompt from '../../prompt';
+import urlOpts from '../../urlOpts';
+import { PLATFORMS } from '../build/constants';
+import * as appleApi from '../../appleApi';
+import { runAction, travelingFastlane } from '../../appleApi/fastlane';
+import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
+import generateBundleIdentifier from './generateBundleIdentifier';
+import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
+import selectDistributionCert from './selectDistributionCert';
+import selectPushKey from './selectPushKey';
 import { Updater, clearTags } from './tagger';
 
 const { IOS } = PLATFORMS;
@@ -88,11 +88,13 @@ export default program => {
       const experienceName = await getExperienceName({ user, appleTeamId: authData.team.id });
       const context = {
         ...authData,
-        bundleIdentifier,
-        experienceName,
         username: user ? user.username : null,
       };
-      await appleApi.ensureAppExists(context, { enablePushNotifications: true });
+      await appleApi.ensureAppExists(
+        context,
+        { bundleIdentifier, experienceName },
+        { enablePushNotifications: true }
+      );
 
       const { devices } = await runAction(travelingFastlane.listDevices, [
         '--all-ios-profile-devices',
@@ -107,6 +109,7 @@ export default program => {
       const provisioningProfile = await selectAdhocProvisioningProfile(
         context,
         udids,
+        bundleIdentifier,
         distributionCert.distCertSerialNumber
       );
 

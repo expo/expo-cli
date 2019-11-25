@@ -1,7 +1,8 @@
 import fs from 'fs-extra';
-import path from 'path';
 import globby from 'globby';
+import path from 'path';
 
+import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
 import {
   regexFileAsync,
   saveImageToPathAsync,
@@ -9,7 +10,6 @@ import {
   spawnAsyncThrowError,
 } from './ExponentTools';
 import { AnyStandaloneContext, StandaloneContextDataUser } from './StandaloneContext';
-import { resizeImageAsync, getImageDimensionsAsync } from '../tools/ImageUtils';
 
 const iconScales = {
   mdpi: 1,

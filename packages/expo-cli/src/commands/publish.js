@@ -1,17 +1,16 @@
 /**
  * @flow
  */
-
+import { readConfigJsonAsync } from '@expo/config';
+import simpleSpinner from '@expo/simple-spinner';
+import { Exp, Project } from '@expo/xdl';
+import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
-import simpleSpinner from '@expo/simple-spinner';
 
-import { Exp, Project, ProjectUtils } from '@expo/xdl';
-
+import { installExitHooks } from '../exit';
 import log from '../log';
 import sendTo from '../sendTo';
-import { installExitHooks } from '../exit';
 
 type Options = {
   clear?: boolean,
@@ -37,7 +36,7 @@ export async function action(projectDir: string, options: Options = {}) {
     );
     log.warn(
       `To compress the images in your project, abort publishing and run ${chalk.bold(
-        'expo optimize'
+        'npx expo-optimize'
       )}.`
     );
   }
@@ -60,9 +59,7 @@ export async function action(projectDir: string, options: Options = {}) {
   let recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
-  const {
-    args: { sdkVersion },
-  } = await Exp.getPublishInfoAsync(projectDir);
+  const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(projectDir);
 
   const buildStatus = await Project.buildAsync(projectDir, {
     mode: 'status',
@@ -72,7 +69,7 @@ export async function action(projectDir: string, options: Options = {}) {
     sdkVersion,
   });
 
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir);
 
   if (
     buildStatus.userHasBuiltExperienceBefore &&

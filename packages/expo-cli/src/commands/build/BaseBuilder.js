@@ -2,7 +2,8 @@
  * @flow
  */
 
-import { Project, ProjectUtils, UserManager, Versions } from '@expo/xdl';
+import { readConfigJsonAsync } from '@expo/config';
+import { Project, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import delayAsync from 'delay-async';
 import fp from 'lodash/fp';
@@ -20,6 +21,7 @@ const secondsToMilliseconds = seconds => seconds * 1000;
 
 type BuilderOptions = {
   wait: boolean,
+  generateKeystore: boolean,
   clearCredentials: boolean,
   type?: string,
   releaseChannel: string,
@@ -78,7 +80,7 @@ export default class BaseBuilder {
 
   async prepareProjectInfo(): Promise<void> {
     // always use local json to unify behaviour between regular apps and self hosted ones
-    const { exp } = await ProjectUtils.readConfigJsonAsync(this.projectDir);
+    const { exp } = await readConfigJsonAsync(this.projectDir);
     this.manifest = exp;
     this.user = await UserManager.ensureLoggedInAsync();
 

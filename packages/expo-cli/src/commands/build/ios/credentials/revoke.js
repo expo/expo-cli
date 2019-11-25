@@ -1,17 +1,23 @@
-import * as apple from '../appleApi';
+import * as apple from '../../../../appleApi';
 import prompt from '../../../../prompt';
 
-async function revoke(appleCtx, typesToRevoke) {
+async function revoke(appleCtx, typesToRevoke, projectMetadata = {}) {
   const managers = apple.createManagers(appleCtx);
   for (const type of typesToRevoke) {
     const manager = managers[type];
     if (manager) {
-      await _revokeByType(manager);
+      await _revokeByType(manager, projectMetadata);
     }
   }
 }
 
-async function _revokeByType(manager) {
+async function _revokeByType(manager, projectMetadata) {
+  if (manager instanceof apple.ProvisioningProfileManager) {
+    const { bundleIdentifier } = projectMetadata;
+    await manager.revoke(bundleIdentifier);
+    return;
+  }
+
   if (manager.list) {
     const list = await manager.list();
     if (!list || list.length === 0) {
