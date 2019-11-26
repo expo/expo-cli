@@ -1,9 +1,9 @@
 import { projectHasModule } from '@expo/config';
+import { createForProject } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import * as path from 'path';
 import resolveFrom from 'resolve-from';
-
 // const PACKAGE_MAIN_PROCESS_PATH = '../template/main';
 // const PACKAGE_TEMPLATE_PATH = '../../webpack-config/web-default/index.html';
 // const PACKAGE_RENDER_WEBPACK_CONFIG_PATH = '../template/webpack.config';
@@ -98,6 +98,7 @@ export function ensureElectronConfig(projectPath: string) {
 
 export async function ensureMinProjectSetupAsync(projectRoot: string): Promise<void> {
   ensureElectronConfig(projectRoot);
+  await ensureGitIgnoreAsync(projectRoot);
   await ensureDependenciesAreInstalledAsync(projectRoot);
 }
 
@@ -134,7 +135,6 @@ export async function ensureGitIgnoreAsync(projectRoot: string): Promise<void> {
     '/.expo/*',
     '# Expo Web',
     '/web-build/*',
-    '/web-report/*',
     '# electron-webpack',
     '/dist',
     '',
@@ -147,10 +147,10 @@ export async function ensureGitIgnoreAsync(projectRoot: string): Promise<void> {
 function getDependencies(
   projectRoot: string
 ): { dependencies: string[]; devDependencies: string[] } {
-  const dependencies = ['react-native-web'].filter(
-    dependency => !projectHasModule(dependency, projectRoot, {})
+  const dependencies = ['react-native-web', 'electron@^6.0.12'].filter(
+    dependency => !projectHasModule(dependency.split('@^').shift()!, projectRoot, {})
   );
-  const devDependencies = ['@expo/webpack-config'].filter(
+  const devDependencies = ['@expo/electron-adapter', '@expo/webpack-config'].filter(
     dependency => !projectHasModule(dependency, projectRoot, {})
   );
 
@@ -167,12 +167,10 @@ async function ensureDependenciesAreInstalledAsync(projectRoot: string): Promise
     console.log(chalk.magenta(`\u203A Installing the missing dependencies: ${all.join(', ')}`));
   }
 
-  // TODO: Bacon: Split install packages...
+  const packageManager = createForProject(projectRoot);
 
-  // const packageManager = PackageManager.createForProject(projectRoot);
-
-  // await Promise.all([
-  //   packageManager.addAsync(...dependencies),
-  //   packageManager.addDevAsync(...devDependencies),
-  // ]);
+  await Promise.all([
+    packageManager.addAsync(...dependencies),
+    packageManager.addDevAsync(...devDependencies),
+  ]);
 }
