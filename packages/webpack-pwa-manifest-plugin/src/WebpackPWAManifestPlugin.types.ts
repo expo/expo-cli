@@ -18,6 +18,7 @@ export interface ManifestProps {
   filename: string;
   publicPath: string;
   HtmlWebpackPlugin: any;
+  projectRoot: string;
 }
 
 export type Tags = { [key: string]: Tag[] | Tag };
