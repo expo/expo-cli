@@ -15,16 +15,19 @@
 process.on('unhandledRejection', err => {
   throw err;
 });
+const { realpathSync } = require('fs-extra');
+
+const { ensureMinProjectSetupAsync } = require('../');
 
 const spawnAsync = require('@expo/spawn-async');
 
 const args = process.argv.slice(2);
 
-const scriptIndex = args.findIndex(x => x === 'build' || x === 'start' || x === 'customize');
+const scriptIndex = args.findIndex(x => x === 'start' || x === 'customize');
 const script = scriptIndex === -1 ? args[0] : args[scriptIndex];
 const nodeArgs = scriptIndex > 0 ? args.slice(0, scriptIndex) : [];
 
-if (['build', 'start', 'customize'].includes(script)) {
+if (['start', 'customize'].includes(script)) {
   spawnAsync(
     'node',
     nodeArgs.concat(require.resolve('../scripts/' + script)).concat(args.slice(scriptIndex + 1)),
@@ -48,6 +51,10 @@ if (['build', 'start', 'customize'].includes(script)) {
     }
     process.exit(result.status);
   });
+} else if (script === undefined) {
+  const projectRoot = realpathSync(process.cwd());
+
+  ensureMinProjectSetupAsync(projectRoot);
 } else {
   console.log('Invalid command "' + script + '".');
 }

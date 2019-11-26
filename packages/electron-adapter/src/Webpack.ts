@@ -10,7 +10,6 @@ import {
 import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import * as path from 'path';
-import { Configuration } from 'webpack';
 
 // skipEntry defaults to false
 export function withExpoWebpack(
