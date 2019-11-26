@@ -1,4 +1,5 @@
 import { projectHasModule } from '@expo/config';
+// @ts-ignore: ???
 import { createForProject } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
