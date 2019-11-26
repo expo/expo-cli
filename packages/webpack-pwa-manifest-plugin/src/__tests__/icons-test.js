@@ -15,7 +15,7 @@ it(`matches`, async () => {
   const [icons] = retrieveIcons(manifest);
 
   const publicPath = '/DEMO_PATH';
-  const { icons: parsedIcons, assets } = await parseIconsAsync(icons, false, publicPath);
+  const { icons: parsedIcons, assets } = await parseIconsAsync(__dirname, icons, publicPath);
 
   for (const icon of parsedIcons) {
     const { sizes } = icon;
