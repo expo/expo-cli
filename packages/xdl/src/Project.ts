@@ -12,6 +12,7 @@ import slug from 'slugify';
 import { getBareExtensions, getManagedExtensions } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
+import { runMetroDevServerAsync } from '@expo/dev-server';
 import axios from 'axios';
 import child_process from 'child_process';
 import crypto from 'crypto';
@@ -28,7 +29,6 @@ import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
 import reduce from 'lodash/reduce';
 import set from 'lodash/set';
-import uniq from 'lodash/uniq';
 import md5hex from 'md5hex';
 import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
@@ -1949,7 +1949,10 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
-export async function startExpoServerAsync(projectRoot: string): Promise<void> {
+export async function startExpoServerAsync(
+  projectRoot: string,
+  options: { skipMetro?: boolean } = {}
+): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   let app = express();
@@ -2102,11 +2105,22 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     server.close();
     res.send('Success');
   });
+
   let expRc = await readExpRcAsync(projectRoot);
   let expoServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
+
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     expoServerPort,
   });
+
+  if (!options.skipMetro) {
+    await runMetroDevServerAsync({
+      projectRoot,
+      watchFolders: [projectRoot],
+      port: expoServerPort,
+    });
+  }
+
   let server = app.listen(expoServerPort, () => {
     const info = server.address() as AddressInfo;
     const host = info.address;
@@ -2114,6 +2128,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     ProjectUtils.logDebug(projectRoot, 'expo', `Local server listening at http://${host}:${port}`);
   });
   await Exp.saveRecentExpRootAsync(projectRoot);
+  return app;
 }
 
 export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
@@ -2365,8 +2380,12 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else {
-    await startExpoServerAsync(projectRoot);
-    await startReactNativeServerAsync(projectRoot, options, verbose);
+    if (Versions.gteSdkVersion(exp, '37.0.0')) {
+      await startExpoServerAsync(projectRoot);
+    } else {
+      await startExpoServerAsync(projectRoot, { skipMetro: true });
+      await startReactNativeServerAsync(projectRoot, options, verbose);
+    }
     DevSession.startSession(projectRoot, exp, 'native');
   }
 

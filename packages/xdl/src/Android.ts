@@ -432,7 +432,6 @@ export async function startAdbReverseAsync(projectRoot: string): Promise<boolean
 
   let adbReversePorts = [
     packagerInfo.packagerPort,
-    packagerInfo.expoServerPort,
     ...userDefinedAdbReversePorts,
   ];
 
@@ -452,7 +451,6 @@ export async function stopAdbReverseAsync(projectRoot: string): Promise<void> {
 
   let adbReversePorts = [
     packagerInfo.packagerPort,
-    packagerInfo.expoServerPort,
     ...userDefinedAdbReversePorts,
   ];
 
