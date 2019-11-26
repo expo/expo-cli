@@ -175,8 +175,6 @@ async function ensureDependenciesAreInstalledAsync(projectRoot: string): Promise
 
   const packageManager = createForProject(projectRoot);
 
-  await Promise.all([
-    packageManager.addAsync(...dependencies),
-    packageManager.addDevAsync(...devDependencies),
-  ]);
+  if (dependencies.length) await packageManager.addAsync(...dependencies);
+  if (devDependencies.length) await packageManager.addAsync(...devDependencies);
 }
