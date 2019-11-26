@@ -20,25 +20,7 @@ function addOptions(program: Command) {
     )
     .option('--tunnel', 'Same as --host tunnel')
     .option('--lan', 'Same as --host lan')
-    .option('--localhost', 'Same as --host localhost')
-    .option('--dev', 'Turns dev flag on')
-    .option('--no-dev', 'Turns dev flag off')
-    .option('--minify', 'Turns minify flag on')
-    .option('--no-minify', 'Turns minify flag off')
-    .option('--https', 'To start webpack with https protocol')
-    .option('--no-https', 'To start webpack with http protocol');
-}
-
-function hasBooleanArg(rawArgs: string[], argName: string) {
-  return rawArgs.includes('--' + argName) || rawArgs.includes('--no-' + argName);
-}
-
-function getBooleanArg(rawArgs: string[], argName: string) {
-  if (rawArgs.includes('--' + argName)) {
-    return true;
-  } else {
-    return false;
-  }
+    .option('--localhost', 'Same as --host localhost');
 }
 
 async function optsAsync(projectDir: string, options: any) {
@@ -61,17 +43,6 @@ async function optsAsync(projectDir: string, options: any) {
     opts.hostType = 'localhost';
   } else {
     opts.hostType = 'lan';
-  }
-
-  let rawArgs = options.parent.rawArgs;
-  if (hasBooleanArg(rawArgs, 'dev')) {
-    opts.dev = getBooleanArg(rawArgs, 'dev');
-  }
-  if (hasBooleanArg(rawArgs, 'minify')) {
-    opts.minify = getBooleanArg(rawArgs, 'minify');
-  }
-  if (hasBooleanArg(rawArgs, 'https')) {
-    opts.https = getBooleanArg(rawArgs, 'https');
   }
 
   await ProjectSettings.setAsync(projectDir, opts);

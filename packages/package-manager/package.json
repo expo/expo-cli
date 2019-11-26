@@ -1,0 +1,54 @@
+{
+  "name": "@expo/package-manager",
+  "version": "0.0.0",
+  "description": "A library for installing and finding packages in a node project",
+  "main": "build/PackageManager.js",
+  "types": "build/PackageManager.d.ts",
+  "scripts": {
+    "watch": "tsc --watch",
+    "build": "tsc",
+    "prepare": "yarn run clean && yarn build",
+    "clean": "rm -rf build ./tsconfig.tsbuildinfo",
+    "lint": "eslint .",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/expo/expo-cli.git",
+    "directory": "packages/package-manager"
+  },
+  "keywords": [
+    "react-native",
+    "package-manager",
+    "package-json",
+    "node",
+    "yarn",
+    "yarnpkg"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/expo/expo-cli/issues"
+  },
+  "homepage": "https://github.com/expo/expo-cli/tree/master/packages/package-manager#readme",
+  "files": [
+    "build"
+  ],
+  "dependencies": {
+    "@expo/spawn-async": "^1.5.0",
+    "ansi-regex": "^5.0.0",
+    "detect-indent": "^6.0.0",
+    "detect-newline": "^3.1.0",
+    "find-yarn-workspace-root": "^1.2.1",
+    "fs-extra": "^8.1.0",
+    "npm-package-arg": "^7.0.0",
+    "split": "^1.0.1",
+    "stream": "^0.0.2"
+  },
+  "devDependencies": {
+    "@expo/babel-preset-cli": "^0.2.0",
+    "typescript": "3.4.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

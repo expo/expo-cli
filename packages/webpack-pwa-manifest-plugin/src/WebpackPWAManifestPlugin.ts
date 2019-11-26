@@ -28,11 +28,13 @@ export default class WebpackPWAManifest {
   expoConfig: ExpoConfig;
   options: any;
   HtmlWebpackPlugin: any;
+  projectRoot: string;
 
   constructor(
     appJson: ExpoConfig,
-    { noResources, filename, publicPath, HtmlWebpackPlugin }: ManifestProps
+    { noResources, filename, publicPath, HtmlWebpackPlugin, projectRoot }: ManifestProps
   ) {
+    this.projectRoot = projectRoot || process.cwd();
     this.HtmlWebpackPlugin = HtmlWebpackPlugin;
 
     this.manifest = createPWAManifestFromExpoConfig(appJson);

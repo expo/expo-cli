@@ -4,7 +4,8 @@ import ora from 'ora';
 
 import log from '../../log';
 import prompt from '../../prompt';
-import * as appleApi from '../build/ios/appleApi';
+import * as appleApi from '../../appleApi';
+import { ErrorCodes } from '../../CommandError';
 import * as credentials from '../build/ios/credentials';
 import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import { choosePreferredCreds } from './selectUtils';
@@ -104,7 +105,7 @@ async function chooseUnrevokedPushKey(context) {
 
 async function filterRevokedPushKeys(context, pushKeys) {
   // if the credentials are valid, check it against apple to make sure it hasnt been revoked
-  const pushKeyManager = appleApi.createManagers(context).pushKey;
+  const pushKeyManager = new appleApi.PushKeyManager(context);
   const pushKeysOnAppleServer = await pushKeyManager.list();
   const validKeyIdsOnAppleServer = pushKeysOnAppleServer.map(pushKey => pushKey.id);
   const validPushKeysOnExpoServer = pushKeys.filter(pushKey => {
@@ -115,16 +116,16 @@ async function filterRevokedPushKeys(context, pushKeys) {
 }
 
 async function generatePushKey(context) {
-  const manager = appleApi.createManagers(context).pushKey;
+  const manager = new appleApi.PushKeyManager(context);
   try {
-    const pushKey = await manager.create({});
+    const pushKey = await manager.create();
 
     // tag for updating to Expo servers
     tagForUpdate(pushKey);
 
     return pushKey;
   } catch (e) {
-    if (e.code === 'APPLE_KEYS_TOO_MANY_GENERATED_ERROR') {
+    if (e.code === ErrorCodes.APPLE_PUSH_KEYS_TOO_MANY_GENERATED_ERROR) {
       const keys = await manager.list();
       log.warn(`Maximum number (${keys.length}) of keys generated.`);
       const { answer } = await prompt({

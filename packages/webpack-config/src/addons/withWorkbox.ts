@@ -9,7 +9,7 @@ import {
 } from 'workbox-webpack-plugin';
 
 import { AnyConfiguration } from '../types';
-import { isEntry } from '../utils';
+import { resolveEntryAsync } from '../utils';
 import { getPaths } from '../env';
 
 export type OfflineOptions = {
@@ -62,26 +62,6 @@ const defaultGenerateSWOptions: GenerateSWOptions = {
   runtimeCaching: [runtimeCache],
 };
 
-export async function ensureEntryAsync(arg: any): Promise<Entry> {
-  if (typeof arg === 'undefined') {
-    throw new Error('Webpack config entry cannot be undefined');
-  }
-
-  if (typeof arg === 'function') {
-    return ensureEntryAsync(await arg());
-  } else if (typeof arg === 'string') {
-    return ensureEntryAsync([arg]);
-  } else if (Array.isArray(arg)) {
-    return {
-      app: arg,
-    };
-  } else if (isEntry(arg)) {
-    return arg;
-  }
-
-  throw new Error('Cannot resolve Webpack config entry prop: ' + arg);
-}
-
 export default function withWorkbox(
   config: AnyConfiguration,
   options: OfflineOptions = {}
@@ -132,7 +112,7 @@ export default function withWorkbox(
 
   const expoEntry = config.entry;
   config.entry = async () => {
-    const entries = await ensureEntryAsync(expoEntry);
+    const entries = await resolveEntryAsync(expoEntry);
     const swPath = join(locations.production.registerServiceWorker);
     if (entries.app && !entries.app.includes(swPath) && autoRegister) {
       const content = (await readFile(

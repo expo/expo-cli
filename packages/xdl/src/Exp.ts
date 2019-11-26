@@ -1,5 +1,6 @@
-import * as ConfigUtils from '@expo/config';
+import { configFilename, readConfigJsonAsync } from '@expo/config';
 import { AppJSONConfig, BareAppConfig } from '@expo/config';
+import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import path from 'path';
@@ -12,47 +13,33 @@ import tar from 'tar';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-import * as ThirdParty from './ThirdParty';
 import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
 
-// FIXME(perry) eliminate usage of this template
-export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
-
 // TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
 type ReadEntry = any;
 
-// TODO(Bacon): Add support for index.ts, index.tsx, index.jsx, index.mjs, index.ios.js...
-// TODO(Bacon): Test monorepos with expo/AppEntry module path
-export async function determineEntryPointAsync(projectRoot: string): Promise<string> {
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+const supportedPlatforms = ['ios', 'android', 'web'];
 
-  // entryPoint is relative to the packager root and main is relative
-  // to the project root. So if your rn-cli.config.js points to a different
-  // root than the project root, these can be different. Most of the time
-  // you should use main.
-  let entryPoint = pkg.main || 'index.js';
-  if (exp && exp.entryPoint) {
-    entryPoint = exp.entryPoint;
+export function determineEntryPoint(projectRoot: string, platform?: string): string {
+  if (platform && !supportedPlatforms.includes(platform)) {
+    throw new Error(
+      `Failed to resolve the project's entry file: The platform "${platform}" is not supported.`
+    );
   }
+  // TODO: Bacon: support platform extension resolution like .ios, .native
+  // const platforms = [platform, 'native'].filter(Boolean) as string[];
+  const platforms: string[] = [];
 
-  const userDefinedEntryPointExists = await fs.pathExists(path.resolve(projectRoot, entryPoint));
-  if (!userDefinedEntryPointExists) {
-    entryPoint = ConfigUtils.resolveModule('expo/AppEntry', projectRoot, exp);
-    const expoEntryPointExists = await fs.pathExists(entryPoint);
-    // Remove project root from file path
-    entryPoint = path.relative(projectRoot, entryPoint);
-    // Final existence check
-    if (!expoEntryPointExists) {
-      throw new Error(
-        `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
-      );
-    }
-  }
+  const entry = getEntryPoint(projectRoot, ['./index'], platforms);
+  if (!entry)
+    throw new Error(
+      `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
+    );
 
-  return entryPoint;
+  return path.relative(projectRoot, entry);
 }
 
 class Transformer extends Minipass {
@@ -221,45 +208,6 @@ export async function saveRecentExpRootAsync(root: string) {
   return await recentExpsJsonFile.writeAsync(recentExps.slice(0, 100));
 }
 
-function getHomeDir(): string {
-  return process.env[process.platform === 'win32' ? 'USERPROFILE' : 'HOME'] || '';
-}
-
-function makePathReadable(pth: string) {
-  let homedir = getHomeDir();
-  if (pth.substr(0, homedir.length) === homedir) {
-    return `~${pth.substr(homedir.length)}`;
-  } else {
-    return pth;
-  }
-}
-
-export async function expInfoSafeAsync(root: string) {
-  try {
-    let {
-      exp: { name, description, icon, iconUrl },
-    } = await ConfigUtils.readConfigJsonAsync(root);
-    let pathOrUrl =
-      icon || iconUrl || 'https://d3lwq5rlu14cro.cloudfront.net/ExponentEmptyManifest_192.png';
-    let resolvedPath = path.resolve(root, pathOrUrl);
-    if (fs.existsSync(resolvedPath)) {
-      icon = `file://${resolvedPath}`;
-    } else {
-      icon = pathOrUrl; // Assume already a URL
-    }
-
-    return {
-      readableRoot: makePathReadable(root),
-      root,
-      name,
-      description,
-      icon,
-    };
-  } catch (e) {
-    return null;
-  }
-}
-
 type PublishInfo = {
   args: {
     username: string;
@@ -272,45 +220,6 @@ type PublishInfo = {
   };
 };
 
-export async function getThirdPartyInfoAsync(publicUrl: string): Promise<PublishInfo> {
-  const user = await UserManager.ensureLoggedInAsync();
-
-  if (!user) {
-    throw new Error('Attempted to login in offline mode. This is a bug.');
-  }
-
-  const { username } = user;
-
-  const exp = await ThirdParty.getManifest(publicUrl);
-  const { slug, sdkVersion, version } = exp;
-  if (!sdkVersion) {
-    throw new Error(`sdkVersion is missing from ${publicUrl}`);
-  }
-
-  if (!slug) {
-    // slug is made programmatically for app.json
-    throw new Error(`slug field is missing from exp.json.`);
-  }
-
-  if (!version) {
-    throw new Error(`Can't get version of package.`);
-  }
-
-  const iosBundleIdentifier = exp.ios ? exp.ios.bundleIdentifier : null;
-  const androidPackage = exp.android ? exp.android.package : null;
-  return {
-    args: {
-      username,
-      remoteUsername: username,
-      remotePackageName: slug,
-      remoteFullPackageName: `@${username}/${slug}`,
-      sdkVersion,
-      iosBundleIdentifier,
-      androidPackage,
-    },
-  };
-}
-
 // TODO: remove / change, no longer publishInfo, this is just used for signing
 export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   const user = await UserManager.ensureLoggedInAsync();
@@ -321,12 +230,12 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
   let { username } = user;
 
-  const { exp } = await ConfigUtils.readConfigJsonAsync(root);
+  const { exp } = await readConfigJsonAsync(root);
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;
 
-  const configName = ConfigUtils.configFilename(root);
+  const configName = configFilename(root);
 
   if (!sdkVersion) {
     throw new Error(`sdkVersion is missing from ${configName}`);
@@ -360,15 +269,6 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   };
 }
 
-export async function recentValidExpsAsync() {
-  let recentExpsJsonFile = UserSettings.recentExpsJsonFile();
-  let recentExps = await recentExpsJsonFile.readAsync();
-
-  let results = await Promise.all(recentExps.map(expInfoSafeAsync));
-  let filteredResults = results.filter(result => result);
-  return filteredResults;
-}
-
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
   let result = await Api.callMethodAsync('send', [recipient, url_, allowUnauthed]);
   return result;
@@ -389,12 +289,4 @@ export async function resetProjectRandomnessAsync(projectRoot: string) {
   let randomness = UrlUtils.someRandomness();
   ProjectSettings.setAsync(projectRoot, { urlRandomness: randomness });
   return randomness;
-}
-
-export async function clearXDLCacheAsync() {
-  let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
-  fs.removeSync(path.join(dotExpoHomeDirectory, 'ios-simulator-app-cache'));
-  fs.removeSync(path.join(dotExpoHomeDirectory, 'android-apk-cache'));
-  fs.removeSync(path.join(dotExpoHomeDirectory, 'starter-app-cache'));
-  Logger.notifications.info(`Cleared cache`);
 }

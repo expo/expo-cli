@@ -2,7 +2,11 @@ import resolveFrom from 'resolve-from';
 
 import { ExpoConfig } from './Config.types';
 
-export function resolveModule(request: string, projectRoot: string, exp: ExpoConfig): string {
+export function resolveModule(
+  request: string,
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'nodeModulesPath'>
+): string {
   const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
   return resolveFrom(fromDir, request);
 }
@@ -10,7 +14,7 @@ export function resolveModule(request: string, projectRoot: string, exp: ExpoCon
 export function projectHasModule(
   modulePath: string,
   projectRoot: string,
-  exp: ExpoConfig
+  exp: Pick<ExpoConfig, 'nodeModulesPath'>
 ): string | undefined {
   const fromDir = exp.nodeModulesPath ? exp.nodeModulesPath : projectRoot;
   return resolveFrom.silent(fromDir, modulePath);

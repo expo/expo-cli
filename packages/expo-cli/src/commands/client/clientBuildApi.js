@@ -9,13 +9,14 @@ async function createClientBuildRequest({
   udids,
   addUdid,
   email,
+  bundleIdentifier,
   customAppConfig = {},
 }) {
   return await ApiV2.clientForUser(user).postAsync('client-build/create-ios-request', {
     appleTeamId: context.team.id,
     appleTeamName: context.team.name,
     addUdid,
-    bundleIdentifier: context.bundleIdentifier,
+    bundleIdentifier,
     email,
     customAppConfig,
     credentials: {
