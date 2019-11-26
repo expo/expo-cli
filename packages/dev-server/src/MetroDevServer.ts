@@ -4,10 +4,10 @@ import { Server as HttpsServer } from 'https';
 import morgan from 'morgan';
 import { Server as WebSocketServer } from 'ws';
 
-import messageSocket from './messageSocket';
+import messageSocket from './common/messageSocket';
 import getDevToolsMiddleware from './middleware/getDevToolsMiddleware';
 import MiddlewareDevServer from './MiddlewareDevServer';
-import { attachToServer } from './webSocketProxy';
+import { attachToServer } from './common/webSocketProxy';
 
 type WebSocketProxy = {
   server?: WebSocketServer;

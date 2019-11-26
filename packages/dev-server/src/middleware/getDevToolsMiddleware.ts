@@ -6,7 +6,7 @@
  */
 import http from 'http';
 import { exec } from 'child_process';
-import launchDebugger from '../launchDebugger';
+import launchDebugger from '../common/launchDebugger';
 
 function launchDefaultDebugger(host: string, port: number, args = '') {
   const hostname = host || 'localhost';
