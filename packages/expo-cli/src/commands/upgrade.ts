@@ -139,7 +139,9 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   // Can't upgrade if we don't have a SDK version (tapping on head meme)
   if (!exp.sdkVersion) {
     if (workflow === 'bare') {
-      log.error('This command only works for bare workflow projects that also have the expo package installed and sdkVersion configured in app.json.');
+      log.error(
+        'This command only works for bare workflow projects that also have the expo package installed and sdkVersion configured in app.json.'
+      );
       throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND_IN_BARE');
     } else {
       log.error('No sdkVersion field is present in app.json, cannot upgrade project.');
@@ -151,7 +153,11 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let status = await Project.currentStatus(projectRoot);
   if (status === 'running') {
     await Project.stopAsync(projectRoot);
-    log(chalk.bold.underline('We found an existing expo-cli instance running for this project and closed it to continue.'));
+    log(
+      chalk.bold.underline(
+        'We found an existing expo-cli instance running for this project and closed it to continue.'
+      )
+    );
     log.addNewLineIfNone();
   }
 
@@ -268,8 +274,8 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   // Clear metro bundler cache
   log.addNewLineIfNone();
   log(chalk.bold.underline('Clearing the packager cache...'));
-  await Project.startReactNativeServerAsync(projectRoot, { reset: true, nonPersistent: true });
-  await Project.stopReactNativeServerAsync(projectRoot);
+  await Project.startMetroAsync(projectRoot, { reset: true, nonPersistent: true });
+  await Project.stopMetroAsync(projectRoot);
 
   log.addNewLineIfNone();
   log(chalk.underline.bold.green(`Automated upgrade steps complete.`));
@@ -302,9 +308,15 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
 
   // Add some basic additional instructions for bare workflow
   if (workflow === 'bare') {
-      log.addNewLineIfNone();
-      log(chalk.bold(`It will be necessary to re-build your native projects to compile the updated dependencies. You will need to run ${chalk.grey('pod install')} in your ios directory before re-building the iOS project.`));
-      log.addNewLineIfNone();
+    log.addNewLineIfNone();
+    log(
+      chalk.bold(
+        `It will be necessary to re-build your native projects to compile the updated dependencies. You will need to run ${chalk.grey(
+          'pod install'
+        )} in your ios directory before re-building the iOS project.`
+      )
+    );
+    log.addNewLineIfNone();
   }
 
   if (targetSdkVersion && targetSdkVersion.releaseNoteUrl) {

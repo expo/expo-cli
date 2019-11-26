@@ -26,7 +26,6 @@ const projectSettingsDefaults: ProjectSettings = {
 type PackagerInfo = {
   expoServerPort?: number | null;
   packagerPort?: number | null;
-  packagerPid?: number | null;
   expoServerNgrokUrl?: string | null;
   packagerNgrokUrl?: string | null;
   ngrokPid?: number | null;

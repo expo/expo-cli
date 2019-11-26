@@ -1,4 +1,4 @@
-import { Logger, PackagerLogsStream, ProjectUtils, ProjectSettings } from '@expo/xdl';
+import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from '@expo/xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import * as graphql from 'graphql';
 import express from 'express';
@@ -49,7 +49,7 @@ export async function createAuthenticationContextAsync({ port }) {
 }
 
 export async function startAsync(projectDir) {
-  const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
+  const port = await freeportAsync(19001, { hostnames: [null, 'localhost'] });
   const server = express();
 
   const authenticationContext = await createAuthenticationContextAsync({ port });

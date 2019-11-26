@@ -14,11 +14,9 @@ import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
 import axios from 'axios';
 import chalk from 'chalk';
-import child_process from 'child_process';
 import crypto from 'crypto';
 import decache from 'decache';
 import delayAsync from 'delay-async';
-import express from 'express';
 import freeportAsync from 'freeport-async';
 import fs from 'fs-extra';
 import HashIds from 'hashids';
@@ -26,22 +24,31 @@ import joi from 'joi';
 import chunk from 'lodash/chunk';
 import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
-import reduce from 'lodash/reduce';
 import set from 'lodash/set';
 import uniq from 'lodash/uniq';
 import md5hex from 'md5hex';
 import minimatch from 'minimatch';
-import { AddressInfo } from 'net';
 import os from 'os';
 import path from 'path';
 import prettyBytes from 'pretty-bytes';
 import readLastLines from 'read-last-lines';
 import semver from 'semver';
-import split from 'split';
 import treekill from 'tree-kill';
 import urljoin from 'url-join';
 import { promisify } from 'util';
 import uuid from 'uuid';
+
+import http from 'http';
+
+import { SimpleHandleFunction, NextHandleFunction } from 'connect';
+import {
+  debuggerUIMiddleware,
+  copyToClipBoardMiddleware,
+  openStackFrameInEditorMiddleware,
+  openURLMiddleware,
+  systraceProfileMiddleware,
+  clientLogsMiddleware,
+} from '@expo/dev-server/build/metro';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
@@ -86,7 +93,6 @@ const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
 const TUNNEL_TIMEOUT = 10 * 1000;
 
-const treekillAsync = promisify(treekill);
 const ngrokConnectAsync = promisify(ngrok.connect);
 const ngrokKillAsync = promisify(ngrok.kill);
 
@@ -183,14 +189,13 @@ type Release = {
 export type ProjectStatus = 'running' | 'ill' | 'exited';
 
 export async function currentStatus(projectDir: string): Promise<ProjectStatus> {
-  const { packagerPort, expoServerPort } = await ProjectSettings.readPackagerInfoAsync(projectDir);
-  if (packagerPort && expoServerPort) {
-    return 'running';
-  } else if (packagerPort || expoServerPort) {
+  const server = servers[projectDir];
+
+  if (server) {
+    if (server.isRunning) return 'running';
     return 'ill';
-  } else {
-    return 'exited';
   }
+  return 'exited';
 }
 
 // DECPRECATED: use UrlUtils.constructManifestUrlAsync
@@ -302,9 +307,9 @@ async function _resolveManifestAssets(
 ) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+    const assetSchemas = (
+      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
+    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -969,15 +974,16 @@ async function _uploadArtifactsAsync({
 async function _validatePackagerReadyAsync(projectRoot: string) {
   _assertValidProjectRoot(projectRoot);
 
+  const server = servers[projectRoot];
+  const isServerRunning = server && server.isRunning;
   // Ensure the packager is started
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.packagerPort) {
+  if (!isServerRunning) {
     ProjectUtils.logWarning(
       projectRoot,
       'expo',
       'Metro Bundler is not running. Trying to restart it...'
     );
-    await startReactNativeServerAsync(projectRoot, { reset: true });
+    await startMetroAsync(projectRoot, { reset: true });
   }
 }
 
@@ -1352,9 +1358,11 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   });
 
   // Collect list of assets missing on host
-  const metas = (await Api.callMethodAsync('assetsMetadata', [], 'post', {
-    keys: Object.keys(paths),
-  })).metadata;
+  const metas = (
+    await Api.callMethodAsync('assetsMetadata', [], 'post', {
+      keys: Object.keys(paths),
+    })
+  ).metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
 
   if (missing.length === 0) {
@@ -1631,88 +1639,249 @@ function _isIgnorableDuplicateModuleWarning(
   return reactNativeNodeModulesCollisionRegex.test(output);
 }
 
-function _isIgnorableBugReportingExtraData(body: any[]) {
-  return body.length === 2 && body[0] === 'BugReporting extraData:';
+export interface Dependency {
+  name: string;
+  root: string;
+  platforms: {
+    android?: any | null;
+    ios?: any | null;
+    [key: string]: any;
+  };
+  assets: string[];
+  hooks: {
+    prelink?: string;
+    postlink?: string;
+    preunlink?: string;
+    postunlink?: string;
+  };
+  params: any[];
 }
 
-function _isAppRegistryStartupMessage(body: any[]) {
-  return (
-    body.length === 1 &&
-    (/^Running application "main" with appParams:/.test(body[0]) ||
-      /^Running "main" with \{/.test(body[0]))
-  );
-}
+/**
+ * @property root - Root where the configuration has been resolved from
+ * @property reactNativePath - Path to React Native source
+ * @property project - Object that contains configuration for a project (null, when platform not available)
+ * @property assets - An array of assets as defined by the user
+ * @property dependencies - Map of the dependencies that are present in the project
+ * @property platforms - Map of available platforms (build-ins and dynamically loaded)
+ * @property commands - An array of commands that are present in 3rd party packages
+ * @property haste - Haste configuration resolved based on available plugins
+ */
+export type Config = {
+  root: string;
+  reactNativePath: string;
+  project: any;
+  assets: string[];
+  dependencies: { [key: string]: Dependency };
+  platforms: {
+    android: any;
+    ios: any;
+    [name: string]: any;
+  };
+  commands: any[];
+  haste: {
+    platforms: Array<string>;
+    providesModuleNodeModules: Array<string>;
+  };
+};
 
-function _handleDeviceLogs(projectRoot: string, deviceId: string, deviceName: string, logs: any) {
-  for (let i = 0; i < logs.length; i++) {
-    let log = logs[i];
-    let body = typeof log.body === 'string' ? [log.body] : log.body;
-    let { level } = log;
+import createMetroConfig from '@expo/metro-config';
+import { MetroDevServer } from '@expo/dev-server';
 
-    if (_isIgnorableBugReportingExtraData(body)) {
-      level = logger.DEBUG;
-    }
-    if (_isAppRegistryStartupMessage(body)) {
-      body = [`Running application on ${deviceName}.`];
-    }
-
-    let string = body
-      .map((obj: any) => {
-        if (typeof obj === 'undefined') {
-          return 'undefined';
-        }
-        if (obj === 'null') {
-          return 'null';
-        }
-        if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
-          return obj;
-        }
-        try {
-          return JSON.stringify(obj);
-        } catch (e) {
-          return obj.toString();
-        }
-      })
-      .join(' ');
-
-    ProjectUtils.logWithLevel(
-      projectRoot,
-      level,
-      {
-        tag: 'device',
-        deviceId,
-        deviceName,
-        groupDepth: log.groupDepth,
-        shouldHide: log.shouldHide,
-        includesStack: log.includesStack,
-      },
-      string
-    );
-  }
-}
 export async function startReactNativeServerAsync(
   projectRoot: string,
   options: StartOptions = {},
   verbose: boolean = true
 ): Promise<void> {
+  console.warn(`startReactNativeServerAsync is deprecated in favor of startMetroAsync`);
+  startMetroAsync(projectRoot, options, verbose);
+}
+
+export async function startMetroAsync(
+  projectRoot: string,
+  options: StartOptions = {},
+  verbose: boolean = true
+): Promise<void> {
   _assertValidProjectRoot(projectRoot);
-  await stopReactNativeServerAsync(projectRoot);
+  await stopMetroAsync(projectRoot);
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
 
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  await runMetroAsync(projectRoot, options);
+  await attachExpoMiddlewareToMetroServerAsync(projectRoot);
+}
 
-  let packagerPort = await _getFreePortAsync(19001); // Create packager options
+async function attachExpoMiddlewareToMetroServerAsync(projectRoot: string) {
+  const metroDevServer = servers[projectRoot];
+  metroDevServer.attachMiddlewareWithURL('/debugger-ui', debuggerUIMiddleware());
+  // @ts-ignore
+  metroDevServer.attachMiddleware(openStackFrameInEditorMiddleware(metroDevServer.options));
+  // @ts-ignore
+  metroDevServer.attachMiddleware(openURLMiddleware);
+  metroDevServer.attachMiddleware(copyToClipBoardMiddleware);
+  // @ts-ignore
+  metroDevServer.attachMiddleware(systraceProfileMiddleware);
 
-  let customLogReporterPath: string | undefined;
-
-  const possibleLogReporterPath = projectHasModule('expo/tools/LogReporter', projectRoot, exp);
-  if (possibleLogReporterPath) {
-    customLogReporterPath = possibleLogReporterPath;
-  } else {
-    // TODO: Bacon: Prompt to install expo?
-    logger.global.warn(`Expo is not installed: Using default reporter to format logs.`);
+  function createMiddlewareWithURL(
+    handle: SimpleHandleFunction | NextHandleFunction,
+    urls: string[]
+  ): SimpleHandleFunction | NextHandleFunction {
+    return async (
+      req: http.IncomingMessage,
+      res: http.ServerResponse,
+      next: (err?: any) => void
+    ) => {
+      if (!req.url || !urls.includes(req.url)) {
+        next();
+        return;
+      }
+      return handle(req, res, next);
+    };
   }
+
+  // Expo logs middleware
+  metroDevServer.attachMiddleware(clientLogsMiddleware(projectRoot));
+
+  // Shutdown method
+  metroDevServer.attachMiddleware(
+    createMiddlewareWithURL(
+      async (req: http.IncomingMessage, res: http.ServerResponse, next: (err?: any) => void) => {
+        metroDevServer.stopAsync();
+        res.end('Success');
+      },
+      ['/shutdown']
+    )
+  );
+
+  // Manifest method - used for starting expo on the client
+  metroDevServer.attachMiddleware(
+    createMiddlewareWithURL(
+      async (req: http.IncomingMessage, res: http.ServerResponse, next: (err?: any) => void) => {
+        try {
+          // We intentionally don't `await`. We want to continue trying even
+          // if there is a potential error in the package.json and don't want to slow
+          // down the request
+          Doctor.validateWithNetworkAsync(projectRoot);
+          let { exp: manifest } = await readConfigJsonAsync(projectRoot);
+          // Get packager opts and then copy into bundleUrlPackagerOpts
+          let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+          let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
+          bundleUrlPackagerOpts.urlType = 'http';
+          if (bundleUrlPackagerOpts.hostType === 'redirect') {
+            bundleUrlPackagerOpts.hostType = 'tunnel';
+          }
+          manifest.xde = true; // deprecated
+          manifest.developer = {
+            tool: Config.developerTool,
+            projectRoot,
+          };
+          manifest.packagerOpts = packagerOpts;
+          manifest.env = {};
+          for (let key of Object.keys(process.env)) {
+            if (shouldExposeEnvironmentVariableInManifest(key)) {
+              manifest.env[key] = process.env[key];
+            }
+          }
+          let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
+          let platform = (req.headers['exponent-platform'] || 'ios').toString();
+          entryPoint = UrlUtils.getPlatformSpecificBundleUrl(entryPoint, platform);
+          let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
+          let queryParams = await UrlUtils.constructBundleQueryParamsAsync(
+            projectRoot,
+            packagerOpts
+          );
+          let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
+            platform
+          )}&${queryParams}`;
+          const hostname = (req.headers.host || '').split(':').shift();
+          manifest.bundleUrl =
+            (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, hostname)) +
+            path;
+          manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, hostname);
+          manifest.mainModuleName = mainModuleName;
+          manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, hostname);
+          manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, hostname);
+          await _resolveManifestAssets(
+            projectRoot,
+            manifest as PublicConfig,
+            async path => manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path
+          ); // the server normally inserts this but if we're offline we'll do it here
+          await _resolveGoogleServicesFile(projectRoot, manifest);
+          const hostUUID = await UserSettings.anonymousIdentifier();
+          let currentSession = await UserManager.getSessionAsync();
+          if (!currentSession || Config.offline) {
+            manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
+          }
+          let manifestString = JSON.stringify(manifest);
+          if (req.headers['exponent-accept-signature']) {
+            if (_cachedSignedManifest.manifestString === manifestString) {
+              manifestString = _cachedSignedManifest.signedManifest;
+            } else {
+              if (!currentSession || Config.offline) {
+                const unsignedManifest = {
+                  manifestString,
+                  signature: 'UNSIGNED',
+                };
+                _cachedSignedManifest.manifestString = manifestString;
+                manifestString = JSON.stringify(unsignedManifest);
+                _cachedSignedManifest.signedManifest = manifestString;
+              } else {
+                let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
+                let signedManifest = await Api.callMethodAsync(
+                  'signManifest',
+                  [publishInfo.args],
+                  'post',
+                  manifest
+                );
+                _cachedSignedManifest.manifestString = manifestString;
+                _cachedSignedManifest.signedManifest = signedManifest.response;
+                manifestString = signedManifest.response;
+              }
+            }
+          }
+          const hostInfo = {
+            host: hostUUID,
+            server: 'xdl',
+            serverVersion: require('../package.json').version,
+            serverDriver: Config.developerTool,
+            serverOS: os.platform(),
+            serverOSVersion: os.release(),
+          };
+
+          res.setHeader('Exponent-Server', JSON.stringify(hostInfo));
+
+          // res['Exponent-Server'] = JSON.stringify(hostInfo);
+          // res.append('Exponent-Server', JSON.stringify(hostInfo));
+          res.end(manifestString);
+          Analytics.logEvent('Serve Manifest', {
+            projectRoot,
+            developerTool: Config.developerTool,
+          });
+        } catch (e) {
+          ProjectUtils.logError(projectRoot, 'expo', e.stack);
+
+          res.statusCode = 520;
+          // 5xx = Server Error HTTP code
+          res.end({ error: e.toString() });
+          // res.status(520).send({
+          //   error: e.toString(),
+          // });
+        }
+      },
+      ['/manifest', '/', '/index.exp']
+    )
+  );
+}
+
+async function transformStartOptionsToMetroOptionsAsync(
+  projectRoot: string,
+  options: StartOptions = {},
+  exp: ExpoConfig
+): Promise<any> {
+  let packagerPort = await _getFreePortAsync(19000); // Create packager options
+
+  let customLogReporterPath: string = require.resolve(path.resolve(__dirname, './LogReporter'));
+  // let customLogReporterPath: string = require.resolve('@expo/metro-config/build/reporter');
 
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
@@ -1726,17 +1895,15 @@ export async function startReactNativeServerAsync(
     packagerOpts.nonPersistent = true;
   }
 
+  const assetPlugins: string[] = [];
   if (Versions.gteSdkVersion(exp, '33.0.0')) {
-    packagerOpts.assetPlugins = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    assetPlugins.push(resolveModule('expo/tools/hashAssetFiles', projectRoot, exp));
   }
 
   if (options.maxWorkers) {
-    packagerOpts['max-workers'] = options.maxWorkers;
+    packagerOpts['maxWorkers'] = options.maxWorkers;
   }
 
-  if (!Versions.gteSdkVersion(exp, '16.0.0')) {
-    delete packagerOpts.customLogReporterPath;
-  }
   const userPackagerOpts = exp.packagerOpts;
   if (userPackagerOpts) {
     // The RN CLI expects rn-cli.config.js's path to be absolute. We use the
@@ -1749,144 +1916,103 @@ export async function startReactNativeServerAsync(
     packagerOpts = {
       ...packagerOpts,
       ...userPackagerOpts,
-      ...userPackagerOpts.assetExts
+      ...(userPackagerOpts.assetExts
         ? {
             assetExts: uniq([...packagerOpts.assetExts, ...userPackagerOpts.assetExts]),
           }
-        : {},
+        : {}),
     };
 
     if (userPackagerOpts.port !== undefined && userPackagerOpts.port !== null) {
       packagerPort = userPackagerOpts.port;
     }
   }
-  let cliOpts = reduce(
-    packagerOpts,
-    (opts, val, key) => {
-      // If the packager opt value is boolean, don't set
-      // --[opt] [value], just set '--opt'
-      if (val && typeof val === 'boolean') {
-        opts.push(`--${key}`);
-      } else if (val) {
-        opts.push(`--${key}`, val);
-      }
-      return opts;
-    },
-    ['start']
-  );
 
   if (options.reset) {
-    cliOpts.push('--reset-cache');
-  } // Get custom CLI path from project package.json, but fall back to node_module path
-  let defaultCliPath = resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
-  const cliPath = exp.rnCliPath || defaultCliPath;
-  let nodePath;
-  // When using a custom path for the RN CLI, we want it to use the project
-  // root to look up config files and Node modules
-  if (exp.rnCliPath) {
-    nodePath = _nodePathForProjectRoot(projectRoot);
-  } else {
-    nodePath = null;
+    packagerOpts.resetCache = true;
   }
-  // Run the copy of Node that's embedded in Electron by setting the
-  // ELECTRON_RUN_AS_NODE environment variable
-  // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
-  // child process
-  let packagerProcess = child_process.fork(cliPath, cliOpts, {
-    cwd: projectRoot,
-    env: {
-      ...process.env,
-      REACT_NATIVE_APP_ROOT: projectRoot,
-      ELECTRON_RUN_AS_NODE: '1',
-      ...nodePath ? { NODE_PATH: nodePath } : {},
-    },
-    silent: true,
-  });
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    packagerPort,
-    packagerPid: packagerProcess.pid,
-  }); // TODO: do we need this? don't know if it's ever called
-  process.on('exit', () => {
-    treekill(packagerProcess.pid);
-  });
-  if (!packagerProcess.stdout) {
-    throw new Error('Expected spawned process to have a stdout stream, but none was found.');
-  }
-  if (!packagerProcess.stderr) {
-    throw new Error('Expected spawned process to have a stderr stream, but none was found.');
-  }
-  packagerProcess.stdout.setEncoding('utf8');
-  packagerProcess.stderr.setEncoding('utf8');
-  packagerProcess.stdout.pipe(split()).on('data', data => {
-    if (verbose) {
-      _logPackagerOutput(projectRoot, 'info', data);
-    }
-  });
-  packagerProcess.stderr.on('data', data => {
-    if (verbose) {
-      _logPackagerOutput(projectRoot, 'error', data);
-    }
-  });
-  let exitPromise = new Promise((resolve, reject) => {
-    packagerProcess.once('exit', async code => {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Metro Bundler process exited with code ${code}`);
-      if (code) {
-        reject(new Error(`Metro Bundler process exited with code ${code}`));
-      } else {
-        resolve();
-      }
-      try {
-        await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-          packagerPort: null,
-          packagerPid: null,
-        });
-      } catch (e) {}
-    });
-  });
-  let packagerUrl = await UrlUtils.constructBundleUrlAsync(projectRoot, {
-    urlType: 'http',
-    hostType: 'localhost',
-  });
-  await Promise.race([_waitForRunningAsync(projectRoot, `${packagerUrl}/status`), exitPromise]);
+  // packagerOpts.resetCache = true;
+
+  return { ...packagerOpts, assetPlugins };
 }
 
-// Simulate the node_modules resolution
-// If you project dir is /Jesse/Expo/Universe/BubbleBounce, returns
-// "/Jesse/node_modules:/Jesse/Expo/node_modules:/Jesse/Expo/Universe/node_modules:/Jesse/Expo/Universe/BubbleBounce/node_modules"
-function _nodePathForProjectRoot(projectRoot: string): string {
-  let paths = [];
-  let directory = path.resolve(projectRoot);
-  while (true) {
-    paths.push(path.join(directory, 'node_modules'));
-    let parentDirectory = path.dirname(directory);
-    if (directory === parentDirectory) {
-      break;
-    }
-    directory = parentDirectory;
-  }
-  return paths.join(path.delimiter);
+async function runMetroAsync(projectRoot: string, options: StartOptions = {}): Promise<void> {
+  const { exp } = await readConfigJsonAsync(projectRoot);
+
+  // Transform CLI options into Metro options
+  // TODO: move this to @expo/metro-config
+  const metroOptions = await transformStartOptionsToMetroOptionsAsync(projectRoot, options, exp);
+
+  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+    packagerPort: metroOptions.port,
+  });
+
+  // Apply legacy side-effects for react-native-community/cli
+  await applyRNCLISideEffectsAsync(projectRoot, exp, metroOptions.port);
+
+  // Load custom Metro config
+  const metroConfig = await createMetroConfig(projectRoot, metroOptions);
+
+  const devServer = new MetroDevServer({ projectRoot, ...metroOptions }, metroConfig);
+
+  servers[projectRoot] = devServer;
+
+  // Start dev server
+  await devServer.startAsync();
 }
+
+const servers: { [projectRoot: string]: MetroDevServer } = {};
+
+async function applyRNCLISideEffectsAsync(
+  projectRoot: string,
+  exp: ExpoConfig,
+  packagerPort: number
+) {
+  process.env.REACT_NATIVE_APP_ROOT = projectRoot;
+  process.env.ELECTRON_RUN_AS_NODE = '1';
+
+  const PackageManager = require(resolveModule(
+    '@react-native-community/cli/build/tools/PackageManager.js',
+    projectRoot,
+    exp
+  ));
+
+  PackageManager.setProjectDir(projectRoot);
+
+  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
+    packagerPort,
+  });
+}
+
 export async function stopReactNativeServerAsync(projectRoot: string): Promise<void> {
+  console.warn(`stopReactNativeServerAsync is deprecated in favor of stopMetroAsync`);
+  stopMetroAsync(projectRoot);
+}
+
+/**
+ *  Wraps the metro-dev-server stop method with helpful logs
+ */
+export async function stopMetroAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.packagerPort || !packagerInfo.packagerPid) {
-    ProjectUtils.logDebug(projectRoot, 'expo', `No packager found for project at ${projectRoot}.`);
+  const metroDevServer = servers[projectRoot];
+  if (!metroDevServer) {
+    ProjectUtils.logDebug(projectRoot, 'metro', `No packager found for project at ${projectRoot}.`);
+    return;
+  } else if (!metroDevServer.isRunning) {
+    ProjectUtils.logDebug(
+      projectRoot,
+      'metro',
+      `The Metro bundler server running at \`${projectRoot}\` isn't running.`
+    );
     return;
   }
-  ProjectUtils.logDebug(
-    projectRoot,
-    'expo',
-    `Killing packager process tree: ${packagerInfo.packagerPid}`
-  );
+
+  ProjectUtils.logDebug(projectRoot, 'metro', `Stopping the Metro bundler`);
   try {
-    await treekillAsync(packagerInfo.packagerPid, 'SIGKILL');
+    await metroDevServer.stopAsync();
   } catch (e) {
-    ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping packager process: ${e.toString()}`);
+    ProjectUtils.logDebug(projectRoot, 'metro', `Error stopping packager process: ${e.toString()}`);
   }
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    packagerPort: null,
-    packagerPid: null,
-  });
 }
 
 let blacklistedEnvironmentVariables = new Set([
@@ -1903,171 +2029,6 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
     return false;
   }
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
-}
-
-export async function startExpoServerAsync(projectRoot: string): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
-  await stopExpoServerAsync(projectRoot);
-  let app = express();
-  app.use(
-    express.json({
-      limit: '10mb',
-    })
-  );
-  app.use(
-    express.urlencoded({
-      limit: '10mb',
-      extended: true,
-    })
-  );
-  if ((await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL) {
-    throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
-  } // Serve the manifest.
-  const manifestHandler = async (req: express.Request, res: express.Response) => {
-    try {
-      // We intentionally don't `await`. We want to continue trying even
-      // if there is a potential error in the package.json and don't want to slow
-      // down the request
-      Doctor.validateWithNetworkAsync(projectRoot);
-      let { exp: manifest } = await readConfigJsonAsync(projectRoot);
-      // Get packager opts and then copy into bundleUrlPackagerOpts
-      let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
-      let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
-      bundleUrlPackagerOpts.urlType = 'http';
-      if (bundleUrlPackagerOpts.hostType === 'redirect') {
-        bundleUrlPackagerOpts.hostType = 'tunnel';
-      }
-      manifest.xde = true; // deprecated
-      manifest.developer = {
-        tool: Config.developerTool,
-        projectRoot,
-      };
-      manifest.packagerOpts = packagerOpts;
-      manifest.env = {};
-      for (let key of Object.keys(process.env)) {
-        if (shouldExposeEnvironmentVariableInManifest(key)) {
-          manifest.env[key] = process.env[key];
-        }
-      }
-      let entryPoint = await Exp.determineEntryPointAsync(projectRoot);
-      let platform = (req.headers['exponent-platform'] || 'ios').toString();
-      entryPoint = UrlUtils.getPlatformSpecificBundleUrl(entryPoint, platform);
-      let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
-      let queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
-      let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(
-        platform
-      )}&${queryParams}`;
-      manifest.bundleUrl =
-        (await UrlUtils.constructBundleUrlAsync(projectRoot, bundleUrlPackagerOpts, req.hostname)) +
-        path;
-      manifest.debuggerHost = await UrlUtils.constructDebuggerHostAsync(projectRoot, req.hostname);
-      manifest.mainModuleName = mainModuleName;
-      manifest.logUrl = await UrlUtils.constructLogUrlAsync(projectRoot, req.hostname);
-      manifest.hostUri = await UrlUtils.constructHostUriAsync(projectRoot, req.hostname);
-      await _resolveManifestAssets(
-        projectRoot,
-        manifest as PublicConfig,
-        async path => manifest.bundleUrl.match(/^https?:\/\/.*?\//)[0] + 'assets/' + path
-      ); // the server normally inserts this but if we're offline we'll do it here
-      await _resolveGoogleServicesFile(projectRoot, manifest);
-      const hostUUID = await UserSettings.anonymousIdentifier();
-      let currentSession = await UserManager.getSessionAsync();
-      if (!currentSession || Config.offline) {
-        manifest.id = `@${ANONYMOUS_USERNAME}/${manifest.slug}-${hostUUID}`;
-      }
-      let manifestString = JSON.stringify(manifest);
-      if (req.headers['exponent-accept-signature']) {
-        if (_cachedSignedManifest.manifestString === manifestString) {
-          manifestString = _cachedSignedManifest.signedManifest;
-        } else {
-          if (!currentSession || Config.offline) {
-            const unsignedManifest = {
-              manifestString,
-              signature: 'UNSIGNED',
-            };
-            _cachedSignedManifest.manifestString = manifestString;
-            manifestString = JSON.stringify(unsignedManifest);
-            _cachedSignedManifest.signedManifest = manifestString;
-          } else {
-            let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
-            let signedManifest = await Api.callMethodAsync(
-              'signManifest',
-              [publishInfo.args],
-              'post',
-              manifest
-            );
-            _cachedSignedManifest.manifestString = manifestString;
-            _cachedSignedManifest.signedManifest = signedManifest.response;
-            manifestString = signedManifest.response;
-          }
-        }
-      }
-      const hostInfo = {
-        host: hostUUID,
-        server: 'xdl',
-        serverVersion: require('../package.json').version,
-        serverDriver: Config.developerTool,
-        serverOS: os.platform(),
-        serverOSVersion: os.release(),
-      };
-      res.append('Exponent-Server', JSON.stringify(hostInfo));
-      res.send(manifestString);
-      Analytics.logEvent('Serve Manifest', {
-        projectRoot,
-        developerTool: Config.developerTool,
-      });
-    } catch (e) {
-      ProjectUtils.logError(projectRoot, 'expo', e.stack);
-      // 5xx = Server Error HTTP code
-      res.status(520).send({
-        error: e.toString(),
-      });
-    }
-  };
-  app.get('/', manifestHandler);
-  app.get('/manifest', manifestHandler);
-  app.get('/index.exp', manifestHandler);
-  app.post('/logs', async (req, res) => {
-    try {
-      let deviceId = req.get('Device-Id');
-      let deviceName = req.get('Device-Name');
-      if (deviceId && deviceName && req.body) {
-        _handleDeviceLogs(projectRoot, deviceId, deviceName, req.body);
-      }
-    } catch (e) {
-      ProjectUtils.logError(projectRoot, 'expo', `Error getting device logs: ${e} ${e.stack}`);
-    }
-    res.send('Success');
-  });
-  app.post('/shutdown', async (req, res) => {
-    server.close();
-    res.send('Success');
-  });
-  let expRc = await readExpRcAsync(projectRoot);
-  let expoServerPort = expRc.manifestPort ? expRc.manifestPort : await _getFreePortAsync(19000);
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    expoServerPort,
-  });
-  let server = app.listen(expoServerPort, () => {
-    const info = server.address() as AddressInfo;
-    const host = info.address;
-    const port = info.port;
-    ProjectUtils.logDebug(projectRoot, 'expo', `Local server listening at http://${host}:${port}`);
-  });
-  await Exp.saveRecentExpRootAsync(projectRoot);
-}
-
-export async function stopExpoServerAsync(projectRoot: string): Promise<void> {
-  _assertValidProjectRoot(projectRoot);
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (packagerInfo && packagerInfo.expoServerPort) {
-    try {
-      await axios.post(`http://127.0.0.1:${packagerInfo.expoServerPort}/shutdown`);
-    } catch (e) {}
-  }
-  await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    expoServerPort: null,
-  });
 }
 
 async function _connectToNgrokAsync(
@@ -2123,17 +2084,15 @@ async function _connectToNgrokAsync(
 export async function startTunnelsAsync(projectRoot: string): Promise<void> {
   const username = (await UserManager.getCurrentUsernameAsync()) || ANONYMOUS_USERNAME;
   _assertValidProjectRoot(projectRoot);
+  const server = servers[projectRoot];
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.packagerPort) {
-    throw new XDLError('NO_PACKAGER_PORT', `No packager found for project at ${projectRoot}.`);
-  }
-  if (!packagerInfo.expoServerPort) {
+  if (!server) {
     throw new XDLError(
-      'NO_EXPO_SERVER_PORT',
-      `No Expo server found for project at ${projectRoot}.`
+      'NO_PACKAGER_PORT',
+      `No Metro bundler instance found for project at ${projectRoot}.`
     );
   }
-  const expoServerPort = packagerInfo.expoServerPort;
+
   await stopTunnelsAsync(projectRoot);
   if (await Android.startAdbReverseAsync(projectRoot)) {
     ProjectUtils.logInfo(
@@ -2157,31 +2116,11 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
       }
     })(),
     (async () => {
-      let expoServerNgrokUrl = await _connectToNgrokAsync(
-        projectRoot,
-        {
-          authtoken: Config.ngrok.authToken,
-          port: expoServerPort,
-          proto: 'http',
-        },
-        async () => {
-          let randomness = expRc.manifestTunnelRandomness
-            ? expRc.manifestTunnelRandomness
-            : await Exp.getProjectRandomnessAsync(projectRoot);
-          return [
-            randomness,
-            UrlUtils.domainify(username),
-            UrlUtils.domainify(packageShortName),
-            Config.ngrok.domain,
-          ].join('.');
-        },
-        packagerInfo.ngrokPid
-      );
       let packagerNgrokUrl = await _connectToNgrokAsync(
         projectRoot,
         {
           authtoken: Config.ngrok.authToken,
-          port: packagerInfo.packagerPort,
+          port: server.port,
           proto: 'http',
         },
         async () => {
@@ -2199,7 +2138,6 @@ export async function startTunnelsAsync(projectRoot: string): Promise<void> {
         packagerInfo.ngrokPid
       );
       await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-        expoServerNgrokUrl,
         packagerNgrokUrl,
         ngrokPid: ngrok.process().pid,
       });
@@ -2259,7 +2197,6 @@ export async function stopTunnelsAsync(projectRoot: string): Promise<void> {
     await ngrokKillAsync();
   }
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
-    expoServerNgrokUrl: null,
     packagerNgrokUrl: null,
     ngrokPid: null,
   });
@@ -2400,8 +2337,7 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else {
-    await startExpoServerAsync(projectRoot);
-    await startReactNativeServerAsync(projectRoot, options, verbose);
+    await startMetroAsync(projectRoot, options, verbose);
     DevSession.startSession(projectRoot, exp, 'native');
   }
 
@@ -2417,18 +2353,21 @@ export async function startAsync(
 
 async function _stopInternalAsync(projectRoot: string): Promise<void> {
   DevSession.stopSession();
-  await Webpack.stopAsync(projectRoot);
-  ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Closing Expo server');
-  await stopExpoServerAsync(projectRoot);
-  ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
-  await stopReactNativeServerAsync(projectRoot);
-  if (!Config.offline) {
-    try {
-      await stopTunnelsAsync(projectRoot);
-    } catch (e) {
-      ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
-    }
-  }
+
+  await Promise.all([
+    Webpack.stopAsync(projectRoot),
+    (async () => {
+      ProjectUtils.logInfo(projectRoot, 'expo', '\u203A Stopping Metro bundler');
+      await stopMetroAsync(projectRoot);
+      if (!Config.offline) {
+        try {
+          await stopTunnelsAsync(projectRoot);
+        } catch (e) {
+          ProjectUtils.logDebug(projectRoot, 'expo', `Error stopping ngrok ${e.message}`);
+        }
+      }
+    })(),
+  ]);
 }
 
 export async function stopWebOnlyAsync(projectDir: string): Promise<void> {
@@ -2443,10 +2382,11 @@ export async function stopAsync(projectDir: string): Promise<void> {
   ]);
   if (result === 'stopFailed') {
     // find RN packager and ngrok pids, attempt to kill them manually
-    const { packagerPid, ngrokPid } = await ProjectSettings.readPackagerInfoAsync(projectDir);
-    if (packagerPid) {
+    const { ngrokPid } = await ProjectSettings.readPackagerInfoAsync(projectDir);
+    const metroDevServer = servers[projectDir];
+    if (metroDevServer) {
       try {
-        process.kill(packagerPid);
+        await metroDevServer.stopAsync();
       } catch (e) {}
     }
     if (ngrokPid) {
@@ -2455,10 +2395,7 @@ export async function stopAsync(projectDir: string): Promise<void> {
       } catch (e) {}
     }
     await ProjectSettings.setPackagerInfoAsync(projectDir, {
-      expoServerPort: null,
       packagerPort: null,
-      packagerPid: null,
-      expoServerNgrokUrl: null,
       packagerNgrokUrl: null,
       ngrokPid: null,
       webpackServerPort: null,

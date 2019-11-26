@@ -240,7 +240,7 @@ export async function constructUrlAsync(
     }
   } else if (opts.hostType === 'localhost' || requestHostname === 'localhost') {
     hostname = '127.0.0.1';
-    port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
+    port = packagerInfo.packagerPort;
   } else if (opts.hostType === 'lan' || Config.offline) {
     if (process.env.EXPO_PACKAGER_HOSTNAME) {
       hostname = process.env.EXPO_PACKAGER_HOSTNAME.trim();
@@ -256,7 +256,7 @@ export async function constructUrlAsync(
       // Some old versions of OSX work with hostname but not local ip address.
       hostname = os.hostname();
     }
-    port = isPackager ? packagerInfo.packagerPort : packagerInfo.expoServerPort;
+    port = packagerInfo.packagerPort;
   } else {
     let ngrokUrl = isPackager ? packagerInfo.packagerNgrokUrl : packagerInfo.expoServerNgrokUrl;
     if (!ngrokUrl || typeof ngrokUrl !== 'string') {
