@@ -123,7 +123,11 @@ export async function ensureGitIgnoreAsync(projectRoot: string): Promise<void> {
 
   const tag = createBashTag();
   if (contents.includes(tag)) {
-    console.warn(chalk.yellow('The .gitignore already appears to contain expo generated files'));
+    console.warn(
+      chalk.yellow(
+        `\u203A The .gitignore already appears to contain expo generated files. To rengerate the code, delete everything from "# ${generatedTag}" to "# @end @expo/electron-adapter" and try again.`
+      )
+    );
     return;
   }
 
@@ -137,6 +141,7 @@ export async function ensureGitIgnoreAsync(projectRoot: string): Promise<void> {
     '/web-build/*',
     '# electron-webpack',
     '/dist',
+    '# @end @expo/electron-adapter',
     '',
   ];
 
@@ -161,10 +166,10 @@ async function ensureDependenciesAreInstalledAsync(projectRoot: string): Promise
   const { dependencies, devDependencies } = getDependencies(projectRoot);
   const all = [...dependencies, ...devDependencies];
   if (!all.length) {
-    console.log(chalk.magenta.dim(`\u203A All of the required dependencies are installed already`));
+    console.log(chalk.yellow(`\u203A All of the required dependencies are installed already.`));
     return;
   } else {
-    console.log(chalk.magenta(`\u203A Installing the missing dependencies: ${all.join(', ')}`));
+    console.log(chalk.magenta(`\u203A Installing the missing dependencies: ${all.join(', ')}.`));
   }
 
   const packageManager = createForProject(projectRoot);
