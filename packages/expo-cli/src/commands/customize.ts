@@ -1,5 +1,4 @@
-import { readConfigJsonAsync } from '@expo/config';
-import { createForProject } from '@expo/package-manager';
+import * as ConfigUtils from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import { Command } from 'commander';
@@ -7,12 +6,11 @@ import { Command } from 'commander';
 import { MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
-// @ts-ignore
-import resolveFrom from 'resolve-from';
 
 import log from '../log';
+import * as PackageManager from '@expo/package-manager';
 
-type Options = { yes: boolean; force: boolean; package: string };
+type Options = { force: boolean };
 
 async function maybeWarnToCommitAsync(projectRoot: string) {
   let workingTreeStatus = 'unknown';
@@ -66,7 +64,7 @@ async function generateFilesAsync({
       );
 
       if (file in dependencyMap) {
-        const packageManager = createForProject(projectDir, { log });
+        const packageManager = PackageManager.createForProject(projectDir, { log });
         for (const dependency of dependencyMap[file]) {
           promises.push(packageManager.addDevAsync(dependency));
         }
@@ -85,40 +83,8 @@ async function generateFilesAsync({
   await Promise.all(promises);
 }
 
-export async function action(
-  projectDir: string = './',
-  options: Options = { yes: false, force: false, package: '' }
-) {
-  if (options.package) {
-    const [root, adapter] = (() => {
-      for (const root of [projectDir, path.resolve(__dirname, '../../../')]) {
-        const packagePath =
-          resolveFrom.silent(root, `${options.package}/customize`) ||
-          resolveFrom.silent(root, `@expo/${options.package}/customize`) ||
-          resolveFrom.silent(root, `@expo/${options.package}-adapter/customize`);
-        if (packagePath) return [root, packagePath];
-      }
-      return [];
-    })();
-
-    if (adapter) {
-      console.log(
-        chalk.magenta(
-          `\n\u203A Using customization from package ${chalk.bold(path.relative(root, adapter))}\n`
-        )
-      );
-      await require(adapter).runAsync({
-        projectRoot: projectDir,
-        force: options.force,
-        yes: options.yes,
-      });
-      return;
-    } else {
-      throw new Error(`No installed package had a valid customize folder to read from.`);
-    }
-  }
-
-  const { exp } = await readConfigJsonAsync(projectDir);
+export async function action(projectDir: string = './', options: Options = { force: false }) {
+  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
 
   const templateFolder = path.dirname(
     require.resolve('@expo/webpack-config/web-default/index.html')
@@ -177,8 +143,6 @@ export default function(program: Command) {
     .command('customize:web [project-dir]')
     .description('Generate static web files into your project.')
     .option('-f, --force', 'Allows replacing existing files')
-    .option('-y, --yes', 'Use the default features')
-    .option('--package [package-name]', 'Use a custom workflow')
     .allowOffline()
     .asyncAction(action);
 }
