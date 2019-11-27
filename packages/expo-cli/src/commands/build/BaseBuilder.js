@@ -15,7 +15,6 @@ import * as UrlUtils from '../utils/url';
 import log from '../../log';
 import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
-import prompt from '../../prompt';
 
 const secondsToMilliseconds = seconds => seconds * 1000;
 
@@ -163,20 +162,6 @@ Please see the docs (${chalk.underline(
           reuseStatus.downloadUrl
         )}`
       );
-
-      let questions = [
-        {
-          type: 'confirm',
-          name: 'confirm',
-          message: 'Do you want to build app anyway?',
-        },
-      ];
-
-      const answers = await prompt(questions);
-      if (!answers.confirm) {
-        log('Stopping the build process');
-        process.exit(0);
-      }
     }
   }
 
