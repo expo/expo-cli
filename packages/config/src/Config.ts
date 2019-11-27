@@ -543,6 +543,9 @@ export async function getConfigAsync(
   };
 }
 
+/**
+ * @deprecated: use `getConfig` instead.
+ */
 export function readConfigJson(
   projectRoot: string,
   skipValidation: boolean = false,
@@ -554,6 +557,9 @@ export function readConfigJson(
   });
 }
 
+/**
+ * @deprecated: use `getConfigAsync` instead.
+ */
 export async function readConfigJsonAsync(
   projectRoot: string,
   skipValidation: boolean = false,
