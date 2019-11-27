@@ -12,8 +12,8 @@ import log from '../../log';
 import prompt from '../../prompt';
 import urlOpts from '../../urlOpts';
 import { PLATFORMS } from '../build/constants';
-import * as appleApi from '../build/ios/appleApi';
-import { runAction, travelingFastlane } from '../build/ios/appleApi/fastlane';
+import * as appleApi from '../../appleApi';
+import { runAction, travelingFastlane } from '../../appleApi/fastlane';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
 import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
@@ -88,11 +88,13 @@ export default program => {
       const experienceName = await getExperienceName({ user, appleTeamId: authData.team.id });
       const context = {
         ...authData,
-        bundleIdentifier,
-        experienceName,
         username: user ? user.username : null,
       };
-      await appleApi.ensureAppExists(context, { enablePushNotifications: true });
+      await appleApi.ensureAppExists(
+        context,
+        { bundleIdentifier, experienceName },
+        { enablePushNotifications: true }
+      );
 
       const { devices } = await runAction(travelingFastlane.listDevices, [
         '--all-ios-profile-devices',
@@ -107,6 +109,7 @@ export default program => {
       const provisioningProfile = await selectAdhocProvisioningProfile(
         context,
         udids,
+        bundleIdentifier,
         distributionCert.distCertSerialNumber
       );
 
@@ -212,6 +215,7 @@ export default program => {
         udids,
         addUdid,
         email,
+        bundleIdentifier,
         customAppConfig: exp,
       });
 

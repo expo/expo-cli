@@ -97,8 +97,8 @@ export class NpmPackageManager implements PackageManager {
 
   _parseSpecs(names: string[]) {
     const result: {
-      versioned: npmPackageArg.Result[],
-      unversioned: npmPackageArg.Result[],
+      versioned: npmPackageArg.Result[];
+      unversioned: npmPackageArg.Result[];
     } = { versioned: [], unversioned: [] };
     names
       .map(name => npmPackageArg(name))
@@ -167,6 +167,9 @@ export function createForProject(
   projectRoot: string,
   options: { npm?: boolean; yarn?: boolean } = {}
 ) {
+  console.warn(
+    '`createForProject` is deprecated in favor of `createForProject` from `@expo/package-manager`'
+  );
   let PackageManager;
   if (options.npm) {
     PackageManager = NpmPackageManager;

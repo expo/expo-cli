@@ -4,19 +4,42 @@ import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
-import { Arguments, Environment } from './types';
-import { getPathsAsync } from './env';
+import { AnyConfiguration, Environment, DevConfiguration } from '../types';
+import { getPaths } from '../env';
 
 // @ts-ignore
 const host = process.env.HOST || '0.0.0.0';
 
-export default async function createDevServerConfigAsync(
-  env: Environment,
-  argv: Arguments = {}
-): Promise<WebpackDevServerConfiguration> {
-  const { allowedHost, proxy } = argv;
+export function isDevConfig(input: AnyConfiguration): input is DevConfiguration {
+  return input && input.mode === 'development';
+}
+
+type SelectiveEnv = Pick<Environment, 'locations' | 'projectRoot' | 'https'>;
+
+import { ProxyConfigArray, ProxyConfigMap } from 'webpack-dev-server';
+
+type DevServerOptions = {
+  allowedHost?: string;
+  proxy?: ProxyConfigMap | ProxyConfigArray;
+};
+
+export default function withDevServer(
+  config: AnyConfiguration,
+  env: SelectiveEnv,
+  options: DevServerOptions = {}
+): AnyConfiguration {
+  if (isDevConfig(config)) {
+    config.devServer = createDevServer(env, options);
+  }
+  return config;
+}
+
+export function createDevServer(
+  env: SelectiveEnv,
+  { allowedHost, proxy }: DevServerOptions = {}
+): WebpackDevServerConfiguration {
   const { https = false } = env;
-  const locations = env.locations || (await getPathsAsync(env.projectRoot));
+  const locations = env.locations || getPaths(env.projectRoot);
   // https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpackDevServer.config.js
   return {
     // Enable gzip compression of generated files.

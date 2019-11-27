@@ -6,7 +6,7 @@ import chalk from 'chalk';
 import semver from 'semver';
 import _ from 'lodash';
 
-import * as PackageManager from '../PackageManager';
+import * as PackageManager from '@expo/package-manager';
 import CommandError from '../CommandError';
 import prompt from '../prompt';
 import log from '../log';
@@ -236,6 +236,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let packageManager = PackageManager.createForProject(projectRoot, {
     npm: options.npm,
     yarn: options.yarn,
+    log,
   });
 
   log.addNewLineIfNone();

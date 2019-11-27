@@ -1,11 +1,10 @@
-import * as ConfigUtils from '@expo/config';
+import { readConfigJsonAsync, resolveModule } from '@expo/config';
 import joi from 'joi';
 import os from 'os';
 import url from 'url';
 import validator from 'validator';
 
 import Config from './Config';
-import * as Exp from './Exp';
 import ip from './ip';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
@@ -126,7 +125,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   queryParams += '&hot=false';
 
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await readConfigJsonAsync(projectRoot);
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
@@ -134,7 +133,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   let usesAssetPluginsQueryParam = supportsAssetPlugins && Versions.lteSdkVersion(exp, '32.0.0');
   if (usesAssetPluginsQueryParam) {
     // Use an absolute path here so that we can not worry about symlinks/relative requires
-    let pluginModule = ConfigUtils.resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
+    let pluginModule = resolveModule('expo/tools/hashAssetFiles', projectRoot, exp);
     queryParams += `&assetPlugin=${encodeURIComponent(pluginModule)}`;
   } else if (!supportsAssetPlugins) {
     // Only sdk-10.1.0+ supports the assetPlugin parameter. We use only the
@@ -208,7 +207,7 @@ export async function constructUrlAsync(
   } else {
     protocol = 'exp';
 
-    let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, {
+    let { exp } = await readConfigJsonAsync(projectRoot, {
       skipSDKVersionRequirement: true,
     });
     if (exp.detach) {
@@ -340,14 +339,6 @@ export function domainify(s: string): string {
     .replace(/[^a-z0-9-]/g, '-')
     .replace(/^-+/, '')
     .replace(/-+$/, '');
-}
-
-export function getPlatformSpecificBundleUrl(url: string, platform: string): string {
-  if (url.includes(Exp.ENTRY_POINT_PLATFORM_TEMPLATE_STRING)) {
-    return url.replace(Exp.ENTRY_POINT_PLATFORM_TEMPLATE_STRING, platform);
-  } else {
-    return url;
-  }
 }
 
 export function isHttps(url: string): boolean {

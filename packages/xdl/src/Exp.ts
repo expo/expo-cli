@@ -1,5 +1,6 @@
-import * as ConfigUtils from '@expo/config';
+import { configFilename, readConfigJsonAsync } from '@expo/config';
 import { AppJSONConfig, BareAppConfig } from '@expo/config';
+import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';
 import path from 'path';
@@ -17,41 +18,28 @@ import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
 
-// FIXME(perry) eliminate usage of this template
-export const ENTRY_POINT_PLATFORM_TEMPLATE_STRING = 'PLATFORM_GOES_HERE';
-
 // TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
 type ReadEntry = any;
 
-// TODO(Bacon): Add support for index.ts, index.tsx, index.jsx, index.mjs, index.ios.js...
-// TODO(Bacon): Test monorepos with expo/AppEntry module path
-export async function determineEntryPointAsync(projectRoot: string): Promise<string> {
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+const supportedPlatforms = ['ios', 'android', 'web'];
 
-  // entryPoint is relative to the packager root and main is relative
-  // to the project root. So if your rn-cli.config.js points to a different
-  // root than the project root, these can be different. Most of the time
-  // you should use main.
-  let entryPoint = pkg.main || 'index.js';
-  if (exp && exp.entryPoint) {
-    entryPoint = exp.entryPoint;
+export function determineEntryPoint(projectRoot: string, platform?: string): string {
+  if (platform && !supportedPlatforms.includes(platform)) {
+    throw new Error(
+      `Failed to resolve the project's entry file: The platform "${platform}" is not supported.`
+    );
   }
+  // TODO: Bacon: support platform extension resolution like .ios, .native
+  // const platforms = [platform, 'native'].filter(Boolean) as string[];
+  const platforms: string[] = [];
 
-  const userDefinedEntryPointExists = await fs.pathExists(path.resolve(projectRoot, entryPoint));
-  if (!userDefinedEntryPointExists) {
-    entryPoint = ConfigUtils.resolveModule('expo/AppEntry', projectRoot, exp);
-    const expoEntryPointExists = await fs.pathExists(entryPoint);
-    // Remove project root from file path
-    entryPoint = path.relative(projectRoot, entryPoint);
-    // Final existence check
-    if (!expoEntryPointExists) {
-      throw new Error(
-        `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
-      );
-    }
-  }
+  const entry = getEntryPoint(projectRoot, ['./index'], platforms);
+  if (!entry)
+    throw new Error(
+      `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
+    );
 
-  return entryPoint;
+  return path.relative(projectRoot, entry);
 }
 
 class Transformer extends Minipass {
@@ -242,7 +230,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
   let { username } = user;
 
-  const { exp } = await ConfigUtils.readConfigJsonAsync(root, {
+  const { exp } = await readConfigJsonAsync(root, {
     requireLocalConfig: true,
   });
 

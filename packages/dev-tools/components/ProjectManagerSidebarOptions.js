@@ -37,6 +37,7 @@ const STYLES_URL_SECTION_BOTTOM = css`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  cursor: pointer;
 `;
 
 const STYLES_URL_SECTION_BOTTOM_LEFT = css`
@@ -99,7 +100,7 @@ const STYLES_CONTENT_GROUP_RIGHT = css`
 `;
 
 export default class ProjectManagerSidebarOptions extends React.Component {
-  state = { isSendFormVisible: false };
+  state = { isSendFormVisible: false, showCopiedMessage: false };
 
   _handleShowPublishView = () => {
     this.props.onUpdateState({
@@ -111,6 +112,10 @@ export default class ProjectManagerSidebarOptions extends React.Component {
 
   _handleCopyLink = () => {
     copyToClipboard(this.props.url, {});
+    this.setState({ showCopiedMessage: true });
+    setTimeout(() => {
+      this.setState({ showCopiedMessage: false });
+    }, 2000);
   };
 
   _handleSendHeaderClick = () => {
@@ -118,7 +123,8 @@ export default class ProjectManagerSidebarOptions extends React.Component {
   };
 
   render() {
-    let isDisabled = !this.props.url;
+    const { showCopiedMessage, isSendFormVisible } = this.state;
+    const isDisabled = !this.props.url;
 
     const sendHeader = (
       <div className={STYLES_CONTENT_GROUP} onClick={this._handleSendHeaderClick}>
@@ -145,7 +151,7 @@ export default class ProjectManagerSidebarOptions extends React.Component {
           </a>
         ) : null}
 
-        <ContentGroup header={sendHeader} isActive={this.state.isSendFormVisible}>
+        <ContentGroup header={sendHeader} isActive={isSendFormVisible}>
           <InputWithButton
             placeholder="Enter email address"
             value={this.props.recipient}
@@ -188,13 +194,14 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             </span>
           </div>
 
-          <div className={STYLES_URL_SECTION_BOTTOM}>
+          <div className={STYLES_URL_SECTION_BOTTOM} title="Click to copy to clipboard">
             <div className={STYLES_URL_SECTION_BOTTOM_LEFT} onClick={this._handleCopyLink}>
               <SVG.Link size="12px" />
             </div>
             <div className={STYLES_URL_SECTION_BOTTOM_RIGHT} onClick={this._handleCopyLink}>
-              {!isDisabled && !this.props.hostTypeLoading ? this.props.url : '—'}
+              {!isDisabled && !this.props.hostTypeLoading ? this.props.url : '-'}
             </div>
+            {showCopiedMessage ? <p>Copied!</p> : null}
           </div>
 
           <div className={STYLES_QR_SECTION}>

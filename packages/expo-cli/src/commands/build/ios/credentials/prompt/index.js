@@ -10,7 +10,7 @@ import * as constants from '../constants';
 import log from '../../../../../log';
 import _prompt from '../../../../../prompt';
 
-async function prompt(appleCtx, options, missingCredentials) {
+async function prompt(appleCtx, options, missingCredentials, projectMetadata) {
   const credentialsFromParams = await getFromParams(options);
   const stillMissingCredentials = difference(
     missingCredentials,
@@ -28,7 +28,7 @@ async function prompt(appleCtx, options, missingCredentials) {
   log.warn(`We are missing the following credentials from you: ${names}`);
 
   const { credentials: answers, metadata } = (await _shouldExpoGenerateCerts())
-    ? await promptForOverrides(appleCtx, stillMissingCredentials)
+    ? await promptForOverrides(appleCtx, stillMissingCredentials, projectMetadata)
     : await promptForCredentials(appleCtx, stillMissingCredentials);
 
   const reused = Object.values(answers)

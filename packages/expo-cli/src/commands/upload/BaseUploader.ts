@@ -58,8 +58,9 @@ export default class BaseUploader {
   async _downloadBuildById(id: string): Promise<string> {
     const { platform } = this;
     const slug = this._getSlug();
+    const owner = this._getOwner();
     // @ts-ignore: TODO: Fix the limit param
-    const build = await StandaloneBuild.getStandaloneBuilds({ id, slug, platform });
+    const build = await StandaloneBuild.getStandaloneBuilds({ id, slug, platform, owner });
     if (!build) {
       throw new Error(`We couldn't find build with id ${id}`);
     }
@@ -73,12 +74,21 @@ export default class BaseUploader {
     return this._exp.slug;
   }
 
+  _getOwner(): string | undefined {
+    if (!this._exp || !this._exp.owner) {
+      return undefined
+    }
+    return this._exp.owner;
+  }
+
   async _downloadLastestBuild() {
     const { platform } = this;
 
     const slug = this._getSlug();
+    const owner = this._getOwner();
     const build = await StandaloneBuild.getStandaloneBuilds({
       slug,
+      owner,
       platform,
       limit: 1,
     });

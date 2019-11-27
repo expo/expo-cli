@@ -36,7 +36,7 @@ export async function action(projectDir: string, options: Options = {}) {
     );
     log.warn(
       `To compress the images in your project, abort publishing and run ${chalk.bold(
-        'expo optimize'
+        'npx expo-optimize'
       )}.`
     );
   }

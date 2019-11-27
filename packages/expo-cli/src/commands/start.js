@@ -7,7 +7,7 @@ import path from 'path';
 import * as ConfigUtils from '@expo/config';
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
-import { Project, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
+import { Project, ProjectSettings, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import intersection from 'lodash/intersection';
@@ -20,6 +20,18 @@ import sendTo from '../sendTo';
 import { installExitHooks } from '../exit';
 import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
+
+function hasBooleanArg(rawArgs: string[], argName: string) {
+  return rawArgs.includes('--' + argName) || rawArgs.includes('--no-' + argName);
+}
+
+function getBooleanArg(rawArgs: string[], argName: string) {
+  if (rawArgs.includes('--' + argName)) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 function parseStartOptions(projectDir: string, options: Object): Object {
   let startOpts = {};
@@ -152,6 +164,25 @@ async function normalizeOptionsAsync(projectDir: string, options: Object): Objec
     webOnly = await Web.onlySupportsWebAsync(projectDir);
   }
 
+  let opts = {};
+  let rawArgs = options.parent.rawArgs;
+
+  if (hasBooleanArg(rawArgs, 'dev')) {
+    opts.dev = getBooleanArg(rawArgs, 'dev');
+  } else {
+    opts.dev = true;
+  }
+  if (hasBooleanArg(rawArgs, 'minify')) {
+    opts.minify = getBooleanArg(rawArgs, 'minify');
+  } else {
+    opts.minify = false;
+  }
+  if (hasBooleanArg(rawArgs, 'https')) {
+    opts.https = getBooleanArg(rawArgs, 'https');
+  }
+
+  await ProjectSettings.setAsync(projectDir, opts);
+
   return {
     ...options,
     webOnly,
@@ -217,6 +248,12 @@ export default (program: any) => {
     )
     // TODO(anp) set a default for this dynamically based on whether we're inside a container?
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
+    .option('--dev', 'Turn development mode on')
+    .option('--no-dev', 'Turn development mode off')
+    .option('--minify', 'Minify code')
+    .option('--no-minify', 'Do not minify code')
+    .option('--https', 'To start webpack with https protocol')
+    .option('--no-https', 'To start webpack with http protocol')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
@@ -235,6 +272,12 @@ export default (program: any) => {
     .command('start:web [project-dir]')
     .alias('web')
     .description('Starts the Webpack dev server for web projects')
+    .option('--dev', 'Turn development mode on')
+    .option('--no-dev', 'Turn development mode off')
+    .option('--minify', 'Minify code')
+    .option('--no-minify', 'Do not minify code')
+    .option('--https', 'To start webpack with https protocol')
+    .option('--no-https', 'To start webpack with http protocol')
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(

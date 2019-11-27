@@ -4,3 +4,5 @@ export { default as withOptimizations } from './withOptimizations';
 export { default as withReporting } from './withReporting';
 export { default as withCompression } from './withCompression';
 export { default as withAlias } from './withAlias';
+export { default as withDevServer } from './withDevServer';
+export { default as withNodeMocks } from './withNodeMocks';

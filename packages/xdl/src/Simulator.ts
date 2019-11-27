@@ -193,7 +193,10 @@ async function _getFirstAvailableDeviceAsync() {
   const devices = simulatorDeviceInfo[iOSRuntimesNewestToOldest[0]];
   for (let i = 0; i < devices.length; i++) {
     const device = devices[i];
-    if (device.isAvailable && device.name.includes('iPhone')) {
+    if (
+      (device.isAvailable || device.availability === '(available)') &&
+      device.name.includes('iPhone')
+    ) {
       return device;
     }
   }
