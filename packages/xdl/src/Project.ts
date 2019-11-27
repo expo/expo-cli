@@ -1687,7 +1687,7 @@ export async function startReactNativeServerAsync(
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
-  const customLogReporterPath: string = require.resolve(__dirname, 'reporter');
+  const customLogReporterPath: string = require.resolve(path.join(__dirname, 'reporter'))
 
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
