@@ -50,6 +50,7 @@ export default (program: any) => {
       '--public-url <url>',
       'The URL of an externally hosted manifest (for self-hosted apps).'
     )
+    .option('--force', 'Will attempt to perform the action without questioning, use at own risk')
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
@@ -88,6 +89,7 @@ export default (program: any) => {
     .option('--generate-keystore', 'Generate Keystore if one does not exist')
     .option('--public-url <url>', 'The URL of an externally hosted manifest (for self-hosted apps)')
     .option('-t --type <build>', 'Type of build: [app-bundle|apk].', /^(app-bundle|apk)$/i, 'apk')
+    .option('--force', 'Will attempt to perform the action without questioning, use at own risk')
     .description(
       'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )

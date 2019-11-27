@@ -40,6 +40,7 @@ export default class BaseBuilder {
     clearCredentials: false,
     releaseChannel: 'default',
     publish: false,
+    force: false,
   };
   manifest: Object = {};
   user: Object;
@@ -164,18 +165,17 @@ Please see the docs (${chalk.underline(
         )}`
       );
 
-      let questions = [
-        {
+      if (!this.options.force) {
+        const answer = await prompt({
           type: 'confirm',
           name: 'confirm',
           message: 'Do you want to build app anyway?',
-        },
-      ];
+        });
 
-      const answers = await prompt(questions);
-      if (!answers.confirm) {
-        log('Stopping the build process');
-        process.exit(0);
+        if (!answer.confirm) {
+          log('Stopping the build process');
+          process.exit(0);
+        }
       }
     }
   }
