@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { readConfigJsonAsync } from '@expo/config';
 import Schemer from '@expo/schemer';
 import fs from 'fs';
 import path from 'path';
@@ -11,7 +11,7 @@ export type AssetSchema = { schema: Schema; fieldPath: string };
 let _xdlSchemaJson: { [sdkVersion: string]: Schema } = {};
 
 export async function validatorFromProjectRoot(projectRoot: string): Promise<Schemer> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = await readConfigJsonAsync(projectRoot);
   const schema = await getSchemaAsync(exp.sdkVersion!);
   const validator = new Schemer(schema);
   return validator;
