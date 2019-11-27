@@ -441,15 +441,17 @@ const APP_JSON_EXAMPLE = JSON.stringify({
 
 function parseAndValidateRootConfig(
   rootConfig: JSONObject | null,
-  skipValidation: boolean
+  options: ReadConfigOptions = {}
 ): { exp: ExpoConfig; rootConfig: JSONObject } {
   let outputRootConfig: JSONObject | null = rootConfig;
   if (outputRootConfig === null || typeof outputRootConfig !== 'object') {
-    if (skipValidation) {
-      outputRootConfig = { expo: {} };
-    } else {
-      throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+    if (options.requireLocalConfig) {
+      throw new ConfigError(
+        `An app.json is required for this action. Learn more about creating one here: https://docs.expo.io/versions/latest/workflow/configuration/`,
+        'NOT_OBJECT'
+      );
     }
+    outputRootConfig = { expo: {} };
   }
   const exp = outputRootConfig.expo as ExpoConfig;
   if (exp === null || typeof exp !== 'object') {
@@ -464,7 +466,10 @@ function parseAndValidateRootConfig(
   };
 }
 
-function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
+function getRootPackageJsonPath(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'nodeModulesPath'>
+): string {
   const packageJsonPath =
     'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
       ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
@@ -478,24 +483,75 @@ function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
   return packageJsonPath;
 }
 
-export function readConfigJson(
-  projectRoot: string,
-  skipValidation: boolean = false,
-  skipNativeValidation: boolean = false
-): ProjectConfig {
+export type ReadConfigOptions = {
+  /**
+   * When enabled, this will throw an error if the project does not contain a valid Expo config file (`app.json`)
+   * in the root directory.
+   */
+  requireLocalConfig?: boolean;
+  /**
+   * By default this ensures that either expo is installed or an app.json with the value `expo.sdkVersion` exists.
+   * Skipping validation is useful when you just need a common value like the name or slug.
+   */
+  skipSDKVersionRequirement?: boolean;
+};
+
+/**
+ * Will evaluate or infer a project's Expo config synchronously
+ *
+ * @param projectRoot the root project directory
+ * @param options validation requirements
+ */
+export function getConfig(projectRoot: string, options: ReadConfigOptions = {}): ProjectConfig {
   const { configPath } = findConfigFile(projectRoot);
   let rawConfig: JSONObject | null = null;
   try {
     rawConfig = JsonFile.read(configPath, { json5: true });
   } catch (_) {}
-  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, options);
   const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = JsonFile.read(packageJsonPath);
 
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, options),
     rootConfig: rootConfig as AppJSONConfig,
   };
+}
+
+/**
+ * Evaluate or infer a project's Expo config asynchronously.
+ *
+ * @param projectRoot the root project directory
+ * @param options validation requirements
+ */
+export async function getConfigAsync(
+  projectRoot: string,
+  options: ReadConfigOptions = {}
+): Promise<ProjectConfig> {
+  const { configPath } = findConfigFile(projectRoot);
+  let rawConfig: JSONObject | null = null;
+  try {
+    rawConfig = await JsonFile.readAsync(configPath, { json5: true });
+  } catch (_) {}
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, options);
+  const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
+  const pkg = await JsonFile.readAsync(packageJsonPath);
+
+  return {
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, options),
+    rootConfig: rootConfig as AppJSONConfig,
+  };
+}
+
+export function readConfigJson(
+  projectRoot: string,
+  skipValidation: boolean = false,
+  skipNativeValidation: boolean = false
+): ProjectConfig {
+  return getConfig(projectRoot, {
+    requireLocalConfig: !skipValidation,
+    skipSDKVersionRequirement: skipNativeValidation,
+  });
 }
 
 export async function readConfigJsonAsync(
@@ -503,22 +559,16 @@ export async function readConfigJsonAsync(
   skipValidation: boolean = false,
   skipNativeValidation: boolean = false
 ): Promise<ProjectConfig> {
-  const { configPath } = findConfigFile(projectRoot);
-  let rawConfig: JSONObject | null = null;
-  try {
-    rawConfig = await JsonFile.readAsync(configPath, { json5: true });
-  } catch (_) {}
-  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
-  const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
-  const pkg = await JsonFile.readAsync(packageJsonPath);
-
-  return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
-    rootConfig: rootConfig as AppJSONConfig,
-  };
+  return await getConfigAsync(projectRoot, {
+    requireLocalConfig: !skipValidation,
+    skipSDKVersionRequirement: skipNativeValidation,
+  });
 }
 
-export function getExpoSDKVersion(projectRoot: string, exp: ExpoConfig): string {
+export function getExpoSDKVersion(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'nodeModulesPath' | 'sdkVersion'>
+): string {
   if (exp && exp.sdkVersion) {
     return exp.sdkVersion;
   }
@@ -541,7 +591,7 @@ function ensureConfigHasDefaultValues(
   projectRoot: string,
   exp: ExpoConfig,
   pkg: JSONObject,
-  skipNativeValidation: boolean = false
+  options: ReadConfigOptions
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (!exp) exp = {};
 
@@ -568,14 +618,36 @@ function ensureConfigHasDefaultValues(
   try {
     exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
   } catch (error) {
-    if (!skipNativeValidation) throw error;
+    if (!options.skipSDKVersionRequirement) throw error;
   }
 
+  // Only infer the platforms if `platforms` is falsey.
+  // This allows for an empty array to disable the platforms.
   if (!exp.platforms) {
-    exp.platforms = ['android', 'ios'];
+    exp.platforms = getSupportedPlatforms(projectRoot, exp);
   }
 
   return { exp, pkg };
+}
+
+/**
+ * Get all platforms that a project is currently capable of running.
+ *
+ * @param projectRoot
+ * @param exp
+ */
+function getSupportedPlatforms(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'nodeModulesPath'>
+): Platform[] {
+  const platforms: Platform[] = [];
+  if (projectHasModule('react-native', projectRoot, exp)) {
+    platforms.push('ios', 'android');
+  }
+  if (projectHasModule('react-native-web', projectRoot, exp)) {
+    platforms.push('web');
+  }
+  return platforms;
 }
 
 export async function writeConfigJsonAsync(
@@ -583,7 +655,7 @@ export async function writeConfigJsonAsync(
   options: Object
 ): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
-  let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
+  let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot, true, true);
   exp = { ...exp, ...options };
   rootConfig = { ...rootConfig, expo: exp };
 
