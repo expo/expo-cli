@@ -481,7 +481,15 @@ function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
 }
 
 export type ReadConfigOptions = {
+  /**
+   * When enabled, this will throw an error if the project does not contain a valid Expo config file (`app.json`)
+   * in the root directory.
+   */
   requireLocalConfig?: boolean;
+  /**
+   * By default this ensures that either expo is installed or an app.json with the value `expo.sdkVersion` exists.
+   * Skipping validation is useful when you just need a common value like the name or slug.
+   */
   skipSDKVersionRequirement?: boolean;
 };
 
