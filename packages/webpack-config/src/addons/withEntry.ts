@@ -1,0 +1,54 @@
+import { projectHasModule } from '@expo/config';
+import { getPossibleProjectRoot } from '@expo/config/paths';
+
+import { getConfig } from '../env';
+import { AnyConfiguration, InputEnvironment } from '../types';
+import { resolveEntryAsync } from '../utils';
+
+export default function withEntry(
+  webpackConfig: AnyConfiguration,
+  env: InputEnvironment = {},
+  options: { entryPath: string; strict?: boolean }
+): AnyConfiguration {
+  env.projectRoot = env.projectRoot || getPossibleProjectRoot();
+
+  const extraAppEntry = projectHasModule(
+    options.entryPath,
+    env.projectRoot,
+    // @ts-ignore
+    env.config || getConfig(env)
+  );
+
+  if (!extraAppEntry) {
+    if (options.strict) {
+      throw new Error(
+        `[WEBPACK]: The required app entry module: "${options.entryPath}" couldn't be found.`
+      );
+    }
+    // Couldn't resolve the app entry so return the config without modifying it.
+    return webpackConfig;
+  }
+
+  const expoEntry = webpackConfig.entry;
+  webpackConfig.entry = async () => {
+    const entries = await resolveEntryAsync(expoEntry);
+    if (entries.app) {
+      if (!entries.app.includes(extraAppEntry)) {
+        if (!Array.isArray(entries.app)) {
+          entries.app = [entries.app];
+        }
+        entries.app.unshift(extraAppEntry);
+      }
+    } else if (options.strict) {
+      // Better to be safe...
+      throw new Error(
+        `[WEBPACK]: Failed to include required app entry module: "${
+          options.entryPath
+        }" because the webpack entry object doesn't contain an \`app\` field.`
+      );
+    }
+    return entries;
+  };
+
+  return webpackConfig;
+}

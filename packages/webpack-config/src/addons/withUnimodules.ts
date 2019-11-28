@@ -1,29 +1,29 @@
 import path from 'path';
-import { Configuration } from 'webpack';
 
-import { createBabelLoader, createFontLoader } from '../loaders';
-import { ExpoDefinePlugin } from '../plugins';
-import { Arguments, DevConfiguration, Environment, InputEnvironment } from '../types';
 import {
-  validateEnvironment,
+  getConfig,
+  getMode,
+  getModuleFileExtensions,
   getPaths,
   getPublicPaths,
-  getMode,
-  getConfig,
-  getModuleFileExtensions,
+  validateEnvironment,
 } from '../env';
+import { createBabelLoader, createFontLoader } from '../loaders';
+import { ExpoDefinePlugin } from '../plugins';
+import { AnyConfiguration, Arguments, Environment, InputEnvironment } from '../types';
 import { rulesMatchAnyFiles } from '../utils';
 import withAlias from './withAlias';
+import withEntry from './withEntry';
 
 // import ManifestPlugin from 'webpack-manifest-plugin';
 
 // Wrap your existing webpack config with support for Unimodules.
 // ex: Storybook `({ config }) => withUnimodules(config)`
 export default function withUnimodules(
-  inputWebpackConfig: DevConfiguration | Configuration = {},
+  inputWebpackConfig: AnyConfiguration = {},
   env: InputEnvironment = {},
   argv: Arguments = {}
-): DevConfiguration | Configuration {
+): AnyConfiguration {
   inputWebpackConfig = withAlias(inputWebpackConfig);
 
   if (!inputWebpackConfig.module) inputWebpackConfig.module = { rules: [] };
@@ -159,6 +159,11 @@ export default function withUnimodules(
       };
     });
   }
+
+  // Add a loose requirement on the ResizeObserver polyfill if it's installed...
+  inputWebpackConfig = withEntry(inputWebpackConfig, env, {
+    entryPath: 'resize-observer-polyfill/dist/ResizeObserver.global',
+  });
 
   return inputWebpackConfig;
 }

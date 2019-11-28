@@ -36,6 +36,7 @@ import {
 
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
+import { projectHasModule } from '@expo/config';
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -129,6 +130,17 @@ export default async function(
     throw new Error(
       `The entry point for your project couldn't be found. Please define it in the package.json main field`
     );
+  }
+
+  // Add a loose requirement on the ResizeObserver polyfill if it's installed...
+  // Avoid `withEntry` as we don't need so much complexity with this config.
+  const resizeObserverPolyfill = projectHasModule(
+    'resize-observer-polyfill/dist/ResizeObserver.global',
+    env.projectRoot,
+    config
+  );
+  if (resizeObserverPolyfill) {
+    appEntry.unshift(resizeObserverPolyfill);
   }
 
   if (isDev) {
@@ -265,7 +277,6 @@ export default async function(
         },
       ].filter(Boolean),
     },
-
     resolveLoader: {
       plugins: [
         // Also related to Plug'n'Play, but this time it tells Webpack to load its loaders

@@ -25,6 +25,21 @@ if (config.hasServerSideRendering) {
   });
 }
 
+describe('Optional polyfills', () => {
+  if (!config.hasServerSideRendering) {
+    it(`should have resize-observer polyfill added`, async () => {
+      const ciID = 'div[data-testid="has-resize-observer"]';
+      if (isInCI) {
+        await expect(page).toMatchElement(ciID, {
+          text: 'Has ResizeObserver polyfill',
+        });
+      } else {
+        await expect(page).not.toMatchElement(ciID);
+      }
+    });
+  }
+});
+
 describe('DefinePlugin', () => {
   it(`should be aware of process.env.CI`, async () => {
     const ciID = 'div[data-testid="has-ci-text"]';
