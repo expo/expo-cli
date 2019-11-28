@@ -1687,15 +1687,7 @@ export async function startReactNativeServerAsync(
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
-  let customLogReporterPath: string | undefined;
-
-  const possibleLogReporterPath = projectHasModule('expo/tools/LogReporter', projectRoot, exp);
-  if (possibleLogReporterPath) {
-    customLogReporterPath = possibleLogReporterPath;
-  } else {
-    // TODO: Bacon: Prompt to install expo?
-    logger.global.warn(`Expo is not installed: Using default reporter to format logs.`);
-  }
+  const customLogReporterPath: string = require.resolve(path.join(__dirname, 'reporter'))
 
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
