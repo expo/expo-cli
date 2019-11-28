@@ -5,11 +5,11 @@ import { resolve } from 'path';
 
 import shouldUpdate from './update';
 
+import { runAsync } from '../customize';
+
 let projectDirectory: string = '';
 
 const packageJson = () => require('@expo/next-adapter/package.json');
-
-import { runAsync } from '../customize';
 
 const program = new Command(packageJson().name)
   .version(packageJson().version)

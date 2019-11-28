@@ -50,8 +50,8 @@ export async function runAsync({
     const enabled = await customization.onEnabledAsync({ projectRoot, force });
     values.push({
       name: customization.name,
-      disabled: !force && enabled ? '✔︎' : false,
-      message: force && enabled ? chalk.red(customization.name) : customization.name,
+      disabled: !force && !enabled ? '✔︎' : false,
+      message: force && !enabled ? chalk.red(customization.name) : customization.name,
     });
   }
 

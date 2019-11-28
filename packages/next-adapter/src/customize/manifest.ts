@@ -77,14 +77,14 @@ function getDependencies(
 
 export const manifest: CustomizeOption[] = [
   {
-    name: 'Install Next.js and Expo adapter',
+    name: 'Install Next.js dependencies',
     type: 'required',
     destinationPath: (projectRoot: string) => '',
     description: 'Ensure your project has all of the required dependencies',
     async onEnabledAsync({ projectRoot }): Promise<boolean> {
       const { dependencies, devDependencies } = getDependencies(projectRoot);
       const all = [...dependencies, ...devDependencies];
-      return !all.length;
+      return !!all.length;
     },
     async onSelectAsync({ projectRoot }): Promise<void> {
       const { dependencies, devDependencies } = getDependencies(projectRoot);
@@ -100,10 +100,8 @@ export const manifest: CustomizeOption[] = [
 
       const packageManager = createForProject(projectRoot);
 
-      await Promise.all([
-        packageManager.addAsync(...dependencies),
-        packageManager.addDevAsync(...devDependencies),
-      ]);
+      if (dependencies.length) await packageManager.addAsync(...dependencies);
+      if (devDependencies.length) await packageManager.addDevAsync(...devDependencies);
     },
   },
   {
@@ -232,7 +230,7 @@ export const manifest: CustomizeOption[] = [
         return true;
       }
       const contents = await fs.readFile(destinationPath, 'utf8');
-      return contents.includes(createBashTag());
+      return !contents.includes(createBashTag());
     },
     async onSelectAsync({ projectRoot, force }): Promise<void> {
       const destinationPath = this.destinationPath(projectRoot);
@@ -281,6 +279,7 @@ export const manifest: CustomizeOption[] = [
         '# Next.js dependencies',
         '/.pnp',
         '.pnp.js',
+        '# @end @expo/next-adapter',
         '',
       ];
 
