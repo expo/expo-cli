@@ -3,10 +3,8 @@ import findIndex from 'lodash/findIndex';
 import omit from 'lodash/omit';
 
 import log from '../log';
+import * as appleApi from '../appleApi';
 import {
-  DistCert,
-  PushKey,
-  TeamInfo,
   IosCredentials,
   IosAppCredentials,
   IosPushCredentials,
@@ -18,7 +16,7 @@ export class IosApi {
   api: ApiV2;
   credentials: IosCredentials;
   shouldRefetch: boolean = true;
-    
+
   constructor(user: User) {
     this.api = ApiV2.clientForUser(user);
     this.credentials = { appCredentials: [], userCredentials: [] };
@@ -33,13 +31,13 @@ export class IosApi {
     return this.credentials;
   }
 
-  async createDistCert(credentials: TeamInfo & DistCert): Promise<IosDistCredentials> {
+  async createDistCert(credentials: appleApi.DistCert): Promise<IosDistCredentials> {
     const { id } = await this.api.postAsync('credentials/ios/dist', { credentials });
     const newDistCert: IosDistCredentials = { ...credentials, id, type: 'dist-cert' };
     this.credentials.userCredentials.push(newDistCert);
     return newDistCert;
   }
-  async updateDistCert(credentialsId: number, credentials: TeamInfo & DistCert): Promise<IosDistCredentials> {
+  async updateDistCert(credentialsId: number, credentials: appleApi.DistCert): Promise<IosDistCredentials> {
     const { id } = await this.api.putAsync(`credentials/ios/dist/${credentialsId}`, { credentials });
     const updatedDistCert: IosDistCredentials = { ...credentials, id, type: 'dist-cert' };
     const credIndex = findIndex(this.credentials.userCredentials, ({ id }) => id === credentialsId);
@@ -68,13 +66,13 @@ export class IosApi {
     this.credentials.appCredentials[credIndex].distCredentialsId = userCredentialsId;
   }
 
-  async createPushKey(credentials: TeamInfo & PushKey): Promise<IosPushCredentials> {
+  async createPushKey(credentials: appleApi.PushKey): Promise<IosPushCredentials> {
     const { id } = await this.api.postAsync('credentials/ios/push', { credentials });
     const newPushKey: IosPushCredentials = { ...credentials, id, type: 'push-key' };
     this.credentials.userCredentials.push(newPushKey);
     return newPushKey;
   }
-  async updatePushKey(credentialsId: number, credentials: TeamInfo & PushKey): Promise<IosPushCredentials> {
+  async updatePushKey(credentialsId: number, credentials: appleApi.PushKey): Promise<IosPushCredentials> {
     const { id } = await this.api.putAsync(`credentials/ios/push/${credentialsId}`, {
       credentials
     });
@@ -115,7 +113,7 @@ export class IosApi {
       ['pushId', 'pushP12', 'pushPassword']
     );
   }
-  
+
   async deleteProvisioningProfile(experienceName: string, bundleIdentifier: string) {
     await this.api.postAsync(`credentials/ios/provisioningProfile/delete`, { experienceName, bundleIdentifier })
     const credIndex = findIndex(
@@ -126,8 +124,8 @@ export class IosApi {
       this.credentials.appCredentials[credIndex].credentials,
       ['provisioningProfile', 'provisioningProfileId'],
     );
-  } 
-  
+  }
+
   _ensureAppCredentials(experienceName: string, bundleIdentifier: string) {
     const exists = this.credentials.appCredentials.filter(
       i => i.experienceName === experienceName && i.bundleIdentifier === bundleIdentifier

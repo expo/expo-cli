@@ -11,6 +11,7 @@ module.exports = {
         ignoreDeclarationSort: true,
       },
     ],
+    'flowtype/no-types-missing-file-annotation': 'off',
   },
   settings: {
     react: {
