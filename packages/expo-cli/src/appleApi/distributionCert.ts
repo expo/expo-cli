@@ -22,8 +22,10 @@ export type DistCert = {
   certId: string;
   certP12: string;
   certPassword: string;
-  certPrivateSigningKey: string;
-  distCertSerialNumber: string;
+  certPrivateSigningKey?: string;
+  distCertSerialNumber?: string;
+  teamId: string;
+  teamName?: string;
 };
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
@@ -60,7 +62,11 @@ export class DistCertManager {
         this.ctx.team.id,
         String(this.ctx.team.inHouse),
       ];
-      return await runAction(travelingFastlane.manageDistCerts, args);
+      return {
+        ...(await runAction(travelingFastlane.manageDistCerts, args)),
+        teamId: this.ctx.team.id,
+        teamName: this.ctx.team.name,
+      };
     } catch (err) {
       const resultString = get(err, 'rawDump.resultString');
       if (resultString && resultString.match(/Maximum number of certificates generated/)) {

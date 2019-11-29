@@ -24,12 +24,7 @@ Please remember that Apple Distribution Certificates are not application specifi
 export class CreateIosDist implements IView {
   async create(ctx: Context): Promise<IosDistCredentials> {
     const newDistCert = await this.provideOrGenerate(ctx);
-    const credentials = {
-      ...newDistCert,
-      teamId: ctx.appleCtx.team.id,
-      teamName: ctx.appleCtx.team.name,
-    };
-    return await ctx.ios.createDistCert(credentials);
+    return await ctx.ios.createDistCert(newDistCert);
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -42,7 +37,7 @@ export class CreateIosDist implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
-    const userProvided = await askForUserProvided(distCertSchema);
+    const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
       return userProvided;
     }
@@ -173,7 +168,7 @@ export class UpdateIosDist implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
-    const userProvided = await askForUserProvided(distCertSchema);
+    const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
       return userProvided;
     }
@@ -255,7 +250,7 @@ function formatDistCertFromApple(appleInfo: DistCertInfo, credentials: IosCreden
   return `${name} (${status}) - Cert ID: ${id}, Serial number: ${serialNumber}, Team ID: ${
     appleInfo.ownerId
   }, Team name: ${ownerName}
-    expires: ${expiresDate}, created: ${createdDate}  
+    expires: ${expiresDate}, created: ${createdDate}
   ${usedByString}`;
 }
 
@@ -330,4 +325,23 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
     }
   }
   return await generateDistCert(ctx);
+}
+
+async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
+  const userProvided = await askForUserProvided(distCertSchema);
+  if (userProvided) {
+    try {
+      userProvided.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        userProvided.certP12,
+        userProvided.certPassword
+      );
+    } catch (error) {
+      log.warn('Unable to access certificate serial number.')
+      log.warn('Make sure that certificate and password are correct.')
+      log.warn(error);
+    }
+    return userProvided;
+  } else {
+    return null;
+  }
 }

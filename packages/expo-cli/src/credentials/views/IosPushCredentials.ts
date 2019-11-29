@@ -25,12 +25,7 @@ Please remember that Apple Keys are not application specific!
 export class CreateIosPush implements IView {
   async create(ctx: Context): Promise<IosPushCredentials> {
     const newPushKey = await this.provideOrGenerate(ctx);
-    const credentials = {
-      ...newPushKey,
-      teamId: ctx.appleCtx.team.id,
-      teamName: ctx.appleCtx.team.name,
-    };
-    return await ctx.ios.createPushKey(credentials);
+    return await ctx.ios.createPushKey(newPushKey);
   }
 
   async open(ctx: Context): Promise<IView | null> {

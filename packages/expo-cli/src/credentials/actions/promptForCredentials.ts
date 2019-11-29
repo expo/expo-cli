@@ -15,7 +15,7 @@ export type Question = {
 };
 
 type Results = {
-    [key: string]: string,
+    [key: string]: string | undefined;
 }
 
 export type CredentialSchema<T> = {
