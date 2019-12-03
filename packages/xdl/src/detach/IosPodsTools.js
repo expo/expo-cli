@@ -101,10 +101,20 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
  */
 function _renderUnversionedReactNativeDependency(options, sdkVersion) {
   let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
+
+  if (sdkMajorVersion >= 36) {
+    return indentString(
+      `
+# Install React Native and its dependencies
+require_relative '../node_modules/react-native/scripts/autolink-ios.rb'
+use_react_native!`
+    );
+  }
+
   const glogLibraryName = sdkMajorVersion < 26 ? 'GLog' : 'glog';
   return indentString(
     `
-${_renderUnversionedReactDependency(options, sdkVersion)}
+${_renderUnversionedReactDependency(options)}
 ${_renderUnversionedYogaDependency(options)}
 ${_renderUnversionedThirdPartyDependency(
   'DoubleConversion',
@@ -301,6 +311,10 @@ function _renderUnversionedPostinstall(sdkVersion) {
   const podsToChangeDeployTargetIfStart =
     sdkMajorVersion <= 33 ? `      if ${podsToChangeRB}.include? ${podNameExpression}` : '';
   const podsToChangeDeployTargetIfEnd = sdkMajorVersion <= 33 ? '      end' : '';
+  const gccPreprocessorDefinitionsCondition =
+    sdkMajorVersion < 36
+      ? `${podNameExpression} == 'React'`
+      : `${podNameExpression}.start_with?('React')`;
 
   return `
 ${podsToChangeDeployTargetIfStart}
@@ -320,7 +334,7 @@ ${podsToChangeDeployTargetIfEnd}
 
       # Build React Native with RCT_DEV enabled and RCT_ENABLE_INSPECTOR and
       # RCT_ENABLE_PACKAGER_CONNECTION disabled
-      next unless ${podNameExpression} == 'React'
+      next unless ${gccPreprocessorDefinitionsCondition}
       ${targetExpression}.native_target.build_configurations.each do |config|
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
         config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'RCT_DEV=1'
