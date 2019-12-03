@@ -116,12 +116,13 @@ async function _detachAsync(projectRoot, options) {
   let sdkVersionConfig = versions.sdkVersions[exp.sdkVersion];
   if (
     !sdkVersionConfig ||
-    !sdkVersionConfig.androidExpoViewUrl ||
-    !sdkVersionConfig.iosExpoViewUrl
+    (!sdkVersionConfig.androidExpoViewUrl && !sdkVersionConfig.iosExpoViewUrl)
   ) {
     if (process.env.EXPO_VIEW_DIR) {
       logger.warn(
-        `Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPO_VIEW_DIR`
+        `Detaching is not supported for SDK ${
+          exp.sdkVersion
+        }; ignoring this because you provided EXPO_VIEW_DIR`
       );
       sdkVersionConfig = {};
     } else {
@@ -168,7 +169,7 @@ async function _detachAsync(projectRoot, options) {
     }
   }
 
-  if (!hasIosDirectory && isIosSupported) {
+  if (!hasIosDirectory && isIosSupported && sdkVersionConfig.iosExpoViewUrl) {
     if (!exp.ios) {
       exp.ios = {};
     }
@@ -192,7 +193,7 @@ async function _detachAsync(projectRoot, options) {
   }
 
   // Android
-  if (!hasAndroidDirectory) {
+  if (!hasAndroidDirectory && sdkVersionConfig.androidExpoViewUrl) {
     if (!exp.android) {
       exp.android = {};
     }
@@ -234,7 +235,9 @@ async function _detachAsync(projectRoot, options) {
 
   if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
     packagesToInstall.push(
-      `react-native@https://github.com/expo/react-native/archive/${sdkVersionConfig.expoReactNativeTag}.tar.gz`
+      `react-native@https://github.com/expo/react-native/archive/${
+        sdkVersionConfig.expoReactNativeTag
+      }.tar.gz`
     );
   } else if (process.env.EXPO_VIEW_DIR) {
     // ignore, using test directory
@@ -521,7 +524,9 @@ export async function bundleAssetsAsync(projectDir, args) {
     args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
   if (!publishManifestPath) {
     logger.warn(
-      `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
+      `Skipped assets bundling because the '${
+        args.platform
+      }.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
@@ -531,7 +536,9 @@ export async function bundleAssetsAsync(projectDir, args) {
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
   } catch (ex) {
     throw new Error(
-      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
+      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${
+        ex.message
+      }`
     );
   }
   await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);
