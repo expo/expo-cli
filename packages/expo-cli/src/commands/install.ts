@@ -74,7 +74,7 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
   await packageManager.addAsync(...versionedPackages);
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('install [packages...]')
     .alias('add')
@@ -82,4 +82,4 @@ export default function (program: Command) {
     .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
     .description('Installs a unimodule or other package to a project.')
     .asyncAction(installAsync);
-};
+}
