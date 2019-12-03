@@ -2,9 +2,17 @@ import fse from 'fs-extra';
 import path from 'path';
 import walkSync from 'klaw-sync';
 
-export type ModuleConfigration = { npmModuleName: string; podName: string; javaPackage: string; jsModuleName: string; };
+export type ModuleConfigration = {
+  npmModuleName: string;
+  podName: string;
+  javaPackage: string;
+  jsModuleName: string;
+};
 
-const asyncForEach = async <T>(array: T[], callback: (element: T, index: number, arr: T[]) => Promise<void>) => {
+const asyncForEach = async <T>(
+  array: T[],
+  callback: (element: T, index: number, arr: T[]) => Promise<void>
+) => {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }
@@ -16,7 +24,11 @@ const asyncForEach = async <T>(array: T[], callback: (element: T, index: number,
  * @param {string[]} extensions - array of extensions for files that would be renamed, must be provided with leading dot or empty for no extension, e.g. ['.html', '']
  * @param {{ from: string, to: string }[]} renamings - array of filenames and their replacers
  */
-const renameFilesWithExtensions = async (directoryPath: string, extensions: string[], renamings: { from: string, to: string }[]) => {
+const renameFilesWithExtensions = async (
+  directoryPath: string,
+  extensions: string[],
+  renamings: { from: string; to: string }[]
+) => {
   await asyncForEach(
     renamings,
     async ({ from, to }) =>
@@ -40,8 +52,8 @@ const renameFilesWithExtensions = async (directoryPath: string, extensions: stri
  * @param {(contentOfSingleFile: string) => string} replaceFunction - function that converts current content into something different
  */
 const replaceContents = (
-  directoryPath: string, 
-  replaceFunction: (contentOfSingleFile: string) => string,
+  directoryPath: string,
+  replaceFunction: (contentOfSingleFile: string) => string
 ) => {
   for (let file of walkSync(directoryPath, { nodir: true })) {
     replaceContent(file.path, replaceFunction);
@@ -54,8 +66,8 @@ const replaceContents = (
  * @param {(contentOfSingleFile: string) => string} replaceFunction - function that converts current content into something different
  */
 const replaceContent = async (
-  filePath: string, 
-  replaceFunction: (contentOfSingleFile: string) => string,
+  filePath: string,
+  replaceFunction: (contentOfSingleFile: string) => string
 ) => {
   const content = await fse.readFile(filePath, 'utf8');
   const newContent = replaceFunction(content);
@@ -128,7 +140,10 @@ async function configureIOS(modulePath: string, { podName, jsModuleName }: Modul
  * @param {path} modulePath - module directory
  * @param {{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }} configuration - naming configuration
  */
-async function configureAndroid(modulePath: string, { javaPackage, jsModuleName }: ModuleConfigration) {
+async function configureAndroid(
+  modulePath: string,
+  { javaPackage, jsModuleName }: ModuleConfigration
+) {
   const androidPath = path.join(modulePath, 'android');
   const sourceFilesPath = path.join(
     androidPath,
@@ -184,7 +199,10 @@ async function configureAndroid(modulePath: string, { javaPackage, jsModuleName 
  * @param {string} modulePath - module directory
  * @param {{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }} configuration - naming configuration
  */
-async function configureTS(modulePath: string, { npmModuleName, podName, jsModuleName }: ModuleConfigration) {
+async function configureTS(
+  modulePath: string,
+  { npmModuleName, podName, jsModuleName }: ModuleConfigration
+) {
   await replaceContent(path.join(modulePath, 'package.json'), singleFileContent =>
     singleFileContent
       .replace(/expo-module-template/g, npmModuleName)
@@ -212,7 +230,10 @@ async function configureTS(modulePath: string, { npmModuleName, podName, jsModul
  * @param {string} modulePath - module directory
  * @param {{ npmModuleName: string, podName: string, javaPackage: string, jsModuleName: string }} configuration - naming configuration
  */
-export default async function configureModule(newModulePath: string, configuration: ModuleConfigration) {
+export default async function configureModule(
+  newModulePath: string,
+  configuration: ModuleConfigration
+) {
   await configureTS(newModulePath, configuration);
   await configureAndroid(newModulePath, configuration);
   await configureIOS(newModulePath, configuration);
