@@ -365,7 +365,7 @@ function runAsync(programName: string) {
       process.exit(0);
     });
 
-    program.on('command:*', (subCommand) => {
+    program.on('command:*', subCommand => {
       log.warn(
         `"${subCommand}" is not an ${programName} command. See "${programName} --help" for the full list of commands.`
       );
