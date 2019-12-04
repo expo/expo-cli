@@ -8,6 +8,23 @@ export interface IView {
   open(ctx: Context): Promise<IView | null>;
 }
 
+export interface ISelect<T> {
+  select(ctx: Context, options: ISelectOptions<T>): Promise<ISelect<T> | T>;
+}
+
+export type ISelectOptions<T> = {
+  backSelect: (ctx: Context, options: any) => Promise<ISelect<T> | T>;
+};
+
+type AppleCtxOptions = {
+  appleId?: string;
+  appleIdPassword?: string;
+};
+
+type CtxOptions = {
+  allowAnonymous?: boolean;
+};
+
 export class Context {
   _hasProjectContext: boolean = false;
   _user?: User;
@@ -38,9 +55,9 @@ export class Context {
     return this._appleCtx;
   }
 
-  async ensureAppleCtx() {
+  async ensureAppleCtx(options: AppleCtxOptions = {}) {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate();
+      this._appleCtx = await authenticate(options);
     }
   }
 
@@ -53,8 +70,12 @@ export class Context {
       this._hasProjectContext = true;
     }
 
-    this._user = await UserManager.ensureLoggedInAsync();
+    if (options.allowAnonymous) {
+      this._user = (await UserManager.getCurrentUserAsync()) || undefined;
+    } else {
+      this._user = await UserManager.ensureLoggedInAsync();
+    }
     this._apiClient = ApiV2.clientForUser(this.user);
-    this._iosApiClient = new IosApi(this._user);
+    this._iosApiClient = new IosApi(this.user);
   }
 }
