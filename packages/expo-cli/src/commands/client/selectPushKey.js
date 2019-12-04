@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { Credentials } from '@expo/xdl';
 import open from 'open';
 import ora from 'ora';
@@ -12,12 +13,13 @@ import { choosePreferredCreds } from './selectUtils';
 import { tagForUpdate } from './tagger';
 
 export default async function selectPushKey(context, options = {}) {
-  const pushKeys = context.username ? await chooseUnrevokedPushKey(context) : [];
+  const appleContext = context.appleCtx;
+  const pushKeys = _.get(context, 'user.username') ? await chooseUnrevokedPushKey(context) : [];
   const choices = [...pushKeys];
 
   // autoselect creds if we find valid ones
   if (pushKeys.length > 0 && !options.disableAutoSelectExisting) {
-    const autoselectedPushkey = choosePreferredCreds(context, pushKeys);
+    const autoselectedPushkey = choosePreferredCreds(appleContext, pushKeys);
     log(`Using Push Key: ${autoselectedPushkey.name}`);
     return autoselectedPushkey.value;
   }
@@ -39,8 +41,8 @@ export default async function selectPushKey(context, options = {}) {
   if (promptValue === 'GENERATE') {
     return await generatePushKey(context);
   } else if (promptValue === 'UPLOAD') {
-    const pushKey = (await promptForCredentials(context, ['pushKey'])).credentials.pushKey;
-    const isValid = await validateUploadedPushKey(context, pushKey);
+    const pushKey = (await promptForCredentials(appleContext, ['pushKey'])).credentials.pushKey;
+    const isValid = await validateUploadedPushKey(appleContext, pushKey);
     if (!isValid) {
       return await selectPushKey(context, { disableAutoSelectExisting: true });
     }
@@ -57,13 +59,16 @@ export default async function selectPushKey(context, options = {}) {
   }
 }
 
-async function validateUploadedPushKey(context, pushKey) {
+async function validateUploadedPushKey(appleContext, pushKey) {
   const spinner = ora(`Checking validity of push key on Apple Developer Portal...`).start();
 
   const formattedPushKeyArray = Credentials.Ios.formatPushKeys([pushKey], {
     provideFullPushKey: true,
   });
-  const filteredFormattedPushKeyArray = await filterRevokedPushKeys(context, formattedPushKeyArray);
+  const filteredFormattedPushKeyArray = await filterRevokedPushKeys(
+    appleContext,
+    formattedPushKeyArray
+  );
   const isValidPushKey = filteredFormattedPushKeyArray.length > 0;
   if (isValidPushKey) {
     const successMsg = `Successfully validated the Push Key you uploaded against Apple Servers`;
@@ -76,9 +81,10 @@ async function validateUploadedPushKey(context, pushKey) {
 }
 
 async function chooseUnrevokedPushKey(context) {
+  const appleContext = context.appleCtx;
   const pushKeysOnExpoServer = await Credentials.Ios.getExistingPushKeys(
-    context.username,
-    context.team.id,
+    context.user.username,
+    appleContext.team.id,
     {
       provideFullPushKey: true,
     }
@@ -89,7 +95,7 @@ async function chooseUnrevokedPushKey(context) {
   }
 
   const spinner = ora(`Checking validity of push keys on Apple Developer Portal...`).start();
-  const validPushKeysOnExpoServer = await filterRevokedPushKeys(context, pushKeysOnExpoServer);
+  const validPushKeysOnExpoServer = await filterRevokedPushKeys(appleContext, pushKeysOnExpoServer);
 
   const numValidKeys = validPushKeysOnExpoServer.length;
   const numRevokedKeys = pushKeysOnExpoServer.length - validPushKeysOnExpoServer.length;
@@ -103,9 +109,9 @@ async function chooseUnrevokedPushKey(context) {
   return validPushKeysOnExpoServer;
 }
 
-async function filterRevokedPushKeys(context, pushKeys) {
+async function filterRevokedPushKeys(appleContext, pushKeys) {
   // if the credentials are valid, check it against apple to make sure it hasnt been revoked
-  const pushKeyManager = new appleApi.PushKeyManager(context);
+  const pushKeyManager = new appleApi.PushKeyManager(appleContext);
   const pushKeysOnAppleServer = await pushKeyManager.list();
   const validKeyIdsOnAppleServer = pushKeysOnAppleServer.map(pushKey => pushKey.id);
   const validPushKeysOnExpoServer = pushKeys.filter(pushKey => {
@@ -116,7 +122,8 @@ async function filterRevokedPushKeys(context, pushKeys) {
 }
 
 async function generatePushKey(context) {
-  const manager = new appleApi.PushKeyManager(context);
+  const appleContext = context.appleCtx;
+  const manager = new appleApi.PushKeyManager(appleContext);
   try {
     const pushKey = await manager.create();
 
@@ -152,7 +159,7 @@ async function generatePushKey(context) {
         ],
       });
       if (answer === 'REVOKE') {
-        await credentials.revoke(context, ['pushKey']);
+        await credentials.revoke(appleContext, ['pushKey']);
         return await generatePushKey(context);
       } else if (answer === 'USE_EXISTING') {
         return await selectPushKey(context, {

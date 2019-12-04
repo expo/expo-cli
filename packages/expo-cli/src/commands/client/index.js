@@ -19,9 +19,10 @@ import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
 import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
-import selectDistributionCert from './selectDistributionCert';
 import selectPushKey from './selectPushKey';
 import { Updater, clearTags } from './tagger';
+import { SelectDistributionCert } from '../../credentials/views/SelectDistributionCert';
+import { Context } from '../../credentials/context';
 
 const { IOS } = PLATFORMS;
 
@@ -70,13 +71,17 @@ export default program => {
         exp.ios.googleServicesFile = contents;
       }
 
-      const authData = await appleApi.authenticate(options);
+      const context = new Context();
+      await context.init(projectDir, { allowAnonymous: true });
+      await context.ensureAppleCtx(options);
+      await context.ios.getAllCredentials(); // initialize credentials
+      const appleContext = context.appleCtx;
       const user = await UserManager.getCurrentUserAsync();
 
       // check if any builds are in flight
       const { isAllowed, errorMessage } = await isAllowedToBuild({
         user,
-        appleTeamId: authData.team.id,
+        appleTeamId: appleContext.team.id,
       });
 
       if (!isAllowed) {
@@ -86,30 +91,30 @@ export default program => {
         );
       }
 
-      const bundleIdentifier = generateBundleIdentifier(authData.team.id);
-      const experienceName = await getExperienceName({ user, appleTeamId: authData.team.id });
-      const context = {
-        ...authData,
-        username: user ? user.username : null,
-      };
+      const bundleIdentifier = generateBundleIdentifier(appleContext.team.id);
+      const experienceName = await getExperienceName({ user, appleTeamId: appleContext.team.id });
+
       await appleApi.ensureAppExists(
-        context,
+        appleContext,
         { bundleIdentifier, experienceName },
         { enablePushNotifications: true }
       );
 
       const { devices } = await runAction(travelingFastlane.listDevices, [
         '--all-ios-profile-devices',
-        context.appleId,
-        context.appleIdPassword,
-        context.team.id,
+        appleContext.appleId,
+        appleContext.appleIdPassword,
+        appleContext.team.id,
       ]);
       const udids = devices.map(device => device.deviceNumber);
-
-      const distributionCert = await selectDistributionCert(context);
+      const distSelector = new SelectDistributionCert();
+      const distributionCert = await distSelector.select(context, {
+        experienceName,
+        bundleIdentifier,
+      });
       const pushKey = await selectPushKey(context);
       const provisioningProfile = await selectAdhocProvisioningProfile(
-        context,
+        appleContext,
         udids,
         bundleIdentifier,
         distributionCert.distCertSerialNumber
@@ -156,7 +161,7 @@ export default program => {
             (acc, credential) => {
               return { ...acc, ...credential };
             },
-            { teamId: context.team.id }
+            { teamId: appleContext.team.id }
           );
           await Credentials.updateCredentialsForPlatform(IOS, credentials, [], {
             username: user.username,
@@ -210,7 +215,7 @@ export default program => {
 
       const result = await createClientBuildRequest({
         user,
-        context,
+        appleContext,
         distributionCert,
         provisioningProfile,
         pushKey,
