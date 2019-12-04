@@ -1,4 +1,11 @@
-import { resolveModule, configFilename, fileExistsAsync, ExpoConfig, PackageJSONConfig, readConfigJsonAsync } from '@expo/config';
+import {
+  resolveModule,
+  configFilename,
+  fileExistsAsync,
+  ExpoConfig,
+  PackageJSONConfig,
+  readConfigJsonAsync,
+} from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
@@ -346,9 +353,7 @@ async function _validateReactNativeVersionAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${
-            sdkVersionObject['expoReactNativeTag']
-          }`,
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
           'doctor-invalid-version-of-react-native'
         );
         return WARNING;
@@ -434,7 +439,20 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
     return NO_ISSUES;
   }
 
-  let { exp, pkg } = await readConfigJsonAsync(projectRoot);
+  let exp, pkg;
+  try {
+    const config = await readConfigJsonAsync(projectRoot);
+    exp = config.exp;
+    pkg = config.pkg;
+  } catch (e) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: could not load config json at ${projectRoot}: ${e.toString()}`,
+      'doctor-config-json-not-read'
+    );
+    return FATAL;
+  }
 
   let status = await _checkNpmVersionAsync(projectRoot);
   if (status === FATAL) {
