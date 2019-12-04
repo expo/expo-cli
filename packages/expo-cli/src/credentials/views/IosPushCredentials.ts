@@ -220,7 +220,7 @@ async function selectPushCredFromList(
         pushCert.experienceName
       })`;
     }
-    return 'unkown credentials';
+    return 'unknown credentials';
   };
 
   const question: Question = {
