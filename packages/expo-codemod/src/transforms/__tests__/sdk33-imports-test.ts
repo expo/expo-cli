@@ -1,5 +1,5 @@
 // @ts-ignore
-import { defineTest, defineInlineTest } from 'jscodeshift/dist/testUtils';
+import { defineInlineTest, defineTest } from 'jscodeshift/dist/testUtils';
 import transform from '../sdk33-imports';
 
 // Bigger example located in __testfixtures__

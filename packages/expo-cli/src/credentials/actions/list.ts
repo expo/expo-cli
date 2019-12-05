@@ -6,10 +6,10 @@ import get from 'lodash/get';
 import { AndroidCredentials as Android } from '@expo/xdl';
 import {
   AndroidCredentials,
-  IosCredentials,
   IosAppCredentials,
-  IosPushCredentials,
+  IosCredentials,
   IosDistCredentials,
+  IosPushCredentials,
 } from '../credentials';
 
 import log from '../../log';

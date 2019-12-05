@@ -6,7 +6,7 @@ import { Context, IView } from '../context';
 import { IosAppCredentials, IosCredentials } from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { ProvisioningProfileManager, ProvisioningProfile } from '../../appleApi';
+import { ProvisioningProfile, ProvisioningProfileManager } from '../../appleApi';
 
 export class RemoveProvisioningProfile implements IView {
   shouldRevoke: boolean;
@@ -47,9 +47,11 @@ export class RemoveProvisioningProfile implements IView {
   }
 }
 
-async function selectProfileFromList(iosCredentials: IosCredentials): Promise<IosAppCredentials | null> {
+async function selectProfileFromList(
+  iosCredentials: IosCredentials
+): Promise<IosAppCredentials | null> {
   const profiles = iosCredentials.appCredentials.filter(
-    ({ credentials })=> !!credentials.provisioningProfile && !!credentials.provisioningProfileId
+    ({ credentials }) => !!credentials.provisioningProfile && !!credentials.provisioningProfileId
   );
   if (profiles.length === 0) {
     log.warn('There are no Provisioning Profiles available in your account');

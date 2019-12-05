@@ -1,15 +1,16 @@
-import {
-  runCredentialsManager,
-  Context,
-} from '../credentials';
-import { SelectAndroidExperience, SelectIosExperience, SelectPlatform } from '../credentials/views/Select';
 import { CommanderStatic } from 'commander';
+import { Context, runCredentialsManager } from '../credentials';
+import {
+  SelectAndroidExperience,
+  SelectIosExperience,
+  SelectPlatform,
+} from '../credentials/views/Select';
 
 type Options = {
-  platform?: 'android' | 'ios'
-}
+  platform?: 'android' | 'ios';
+};
 
-export default function (program: CommanderStatic) {
+export default function(program: CommanderStatic) {
   program
     .command('credentials:manager')
     .description('Manage your credentials')
@@ -20,7 +21,7 @@ export default function (program: CommanderStatic) {
       await context.init(projectDir);
       let mainpage;
       if (options.platform === 'android') {
-        mainpage = new SelectAndroidExperience();  
+        mainpage = new SelectAndroidExperience();
       } else if (options.platform === 'ios') {
         mainpage = new SelectIosExperience();
       } else {
@@ -28,4 +29,4 @@ export default function (program: CommanderStatic) {
       }
       await runCredentialsManager(context, mainpage);
     }, /* skip project validation */ true);
-};
+}

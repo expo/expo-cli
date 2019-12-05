@@ -29,7 +29,7 @@ export default async function installPackagesAsync(
     });
   } else {
     logger.info(`Installing dependencies using npm...`);
-    if (!await fs.pathExists(path.join(projectDir, 'node_modules'))) {
+    if (!(await fs.pathExists(path.join(projectDir, 'node_modules')))) {
       await spawnAsync('npm', ['install', '--loglevel', 'error'], {
         cwd: projectDir,
         stdio: 'inherit',

@@ -1,8 +1,12 @@
 # Ignore all node_modules and vendored Ruby
 node_modules
 vendor
+**/ts-declarations/*
 
 # Ignore build artifacts
 /packages/*/build
 /packages/osascript/lib
 .next
+
+# Ignore webpack-config for now, there is a lot going on there...
+/packages/webpack-config/*

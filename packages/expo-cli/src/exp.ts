@@ -14,17 +14,17 @@ import simpleSpinner from '@expo/simple-spinner';
 import getenv from 'getenv';
 import program, { Command } from 'commander';
 import {
+  Analytics,
   Api,
   ApiV2,
-  Analytics,
   Binaries,
   Config,
   Doctor,
+  LogRecord,
+  LogUpdater,
   Logger,
   NotificationCode,
   PackagerLogsStream,
-  LogRecord,
-  LogUpdater,
   Project,
   ProjectUtils,
   UserManager,
@@ -416,9 +416,7 @@ async function checkCliVersionAsync() {
       boxen(
         chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
-Install expo-cli globally using the package manager of your choice; for example: \`npm install -g ${
-          packageJSON.name
-        }\` to get the latest version`),
+Install expo-cli globally using the package manager of your choice; for example: \`npm install -g ${packageJSON.name}\` to get the latest version`),
         { borderColor: 'green', padding: 1 }
       )
     );

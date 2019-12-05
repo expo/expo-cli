@@ -12,14 +12,14 @@ export type Options = {
   appleIdPassword?: string;
   appleId?: string;
   teamId?: string;
-}
+};
 
 type AppleCredentials = {
   appleIdPassword: string;
   appleId: string;
-}
+};
 
-export type Team =  {
+export type Team = {
   id: string;
   name: string;
   inHouse?: boolean;
@@ -37,7 +37,7 @@ export type AppleCtx = {
   appleIdPassword: string;
   team: Team;
   fastlaneSession: string;
-}
+};
 
 export async function authenticate(options: Options = {}): Promise<AppleCtx> {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);

@@ -46,9 +46,8 @@
     "@expo/babel-preset-cli": "^0.2.1",
     "@types/is-color": "^1.0.0",
     "@types/node-fetch": "^2.5.0",
-    "eslint": "^5.15.1",
-    "eslint-config-universe": "^1.0.6",
-    "typescript": "3.4.5"
+    "eslint": "^6.6.0",
+    "eslint-config-universe": "^2.1.0"
   },
   "files": [
     "build",

@@ -1,13 +1,13 @@
 import {
-  Platform,
-  readExpRcAsync,
-  projectHasModule,
-  configFilename,
-  PackageJSONConfig,
-  resolveModule,
   ExpoConfig,
+  PackageJSONConfig,
+  Platform,
+  configFilename,
+  projectHasModule,
   readConfigJson,
   readConfigJsonAsync,
+  readExpRcAsync,
+  resolveModule,
 } from '@expo/config';
 
 import { getManagedExtensions } from '@expo/config/paths';
@@ -291,9 +291,9 @@ async function _resolveManifestAssets(
 ) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+    const assetSchemas = (
+      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
+    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -1335,9 +1335,11 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   });
 
   // Collect list of assets missing on host
-  const metas = (await Api.callMethodAsync('assetsMetadata', [], 'post', {
-    keys: Object.keys(paths),
-  })).metadata;
+  const metas = (
+    await Api.callMethodAsync('assetsMetadata', [], 'post', {
+      keys: Object.keys(paths),
+    })
+  ).metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
 
   if (missing.length === 0) {
@@ -1687,7 +1689,7 @@ export async function startReactNativeServerAsync(
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
-  const customLogReporterPath: string = require.resolve(path.join(__dirname, 'reporter'))
+  const customLogReporterPath: string = require.resolve(path.join(__dirname, 'reporter'));
 
   let packagerOpts: { [key: string]: any } = {
     port: packagerPort,
@@ -1767,7 +1769,7 @@ export async function startReactNativeServerAsync(
       ...process.env,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...nodePath ? { NODE_PATH: nodePath } : {},
+      ...(nodePath ? { NODE_PATH: nodePath } : {}),
     },
     silent: true,
   });
@@ -2313,7 +2315,7 @@ export async function stopWebOnlyAsync(projectDir: string): Promise<void> {
 export async function stopAsync(projectDir: string): Promise<void> {
   const result = await Promise.race([
     _stopInternalAsync(projectDir),
-    new Promise((resolve) => setTimeout(resolve, 2000, 'stopFailed')),
+    new Promise(resolve => setTimeout(resolve, 2000, 'stopFailed')),
   ]);
   if (result === 'stopFailed') {
     // find RN packager and ngrok pids, attempt to kill them manually

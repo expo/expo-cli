@@ -904,10 +904,12 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
     // Delete the placeholder images
-    (await globby(['**/shell_launch_background_image.png'], {
-      cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-      absolute: true,
-    })).forEach(filePath => {
+    (
+      await globby(['**/shell_launch_background_image.png'], {
+        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+        absolute: true,
+      })
+    ).forEach(filePath => {
       fs.removeSync(filePath);
     });
 

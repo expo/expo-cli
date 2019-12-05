@@ -37,8 +37,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
-    "@types/semver": "^6.0.0",
-    "typescript": "3.4.5"
+    "@types/semver": "^6.0.0"
   },
   "publishConfig": {
     "access": "public"

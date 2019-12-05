@@ -41,9 +41,11 @@ async function osascriptSpawnAsync(
 }
 
 async function isAppRunningAsync(appName: string): Promise<boolean> {
-  let zeroMeansNo = (await osascriptExecAsync(
-    'tell app "System Events" to count processes whose name is ' + JSON.stringify(appName)
-  )).trim();
+  let zeroMeansNo = (
+    await osascriptExecAsync(
+      'tell app "System Events" to count processes whose name is ' + JSON.stringify(appName)
+    )
+  ).trim();
   return zeroMeansNo !== '0';
 }
 

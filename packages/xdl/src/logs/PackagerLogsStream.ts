@@ -46,19 +46,19 @@ type ErrorObject = {
 } & JSONObject;
 
 type MetroError =
-  | {
+  | ({
       originModulePath: string;
       message: string;
       errors: Array<Object>;
-    } & ErrorObject
-  | {
+    } & ErrorObject)
+  | ({
       type: 'TransformError';
       snippet: string;
       lineNumber: number;
       column: number;
       filename: string;
       errors: Array<Object>;
-    } & ErrorObject
+    } & ErrorObject)
   | ErrorObject;
 
 // Metro reporter types
@@ -362,7 +362,7 @@ export default class PackagerLogsStream {
       progressChunk.msg = `Building JavaScript bundle: error`;
       progressChunk.level = Logger.ERROR;
     } else if (msg.type === 'bundle_transform_progressed') {
-      percentProgress = Math.floor(msg.transformedFileCount / msg.totalFileCount * 100);
+      percentProgress = Math.floor((msg.transformedFileCount / msg.totalFileCount) * 100);
       progressChunk.msg = `Building JavaScript bundle: ${percentProgress}%`;
     } else {
       return;
