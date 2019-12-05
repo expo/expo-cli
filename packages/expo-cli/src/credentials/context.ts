@@ -9,11 +9,11 @@ export interface IView {
 }
 
 export interface ISelect<T> {
-  select(ctx: Context, options: ISelectOptions<T>): Promise<ISelect<T> | T>;
+  select(ctx: Context, options: ISelectOptions<T>): Promise<ISelect<T> | T | null>;
 }
 
 export type ISelectOptions<T> = {
-  backSelect: (ctx: Context, options: any) => Promise<ISelect<T> | T>;
+  goBack?: (ctx: Context, options: any) => Promise<ISelect<T> | T | null>;
 };
 
 type AppleCtxOptions = {
@@ -53,6 +53,10 @@ export class Context {
       throw new Error('Apple context not initialized.');
     }
     return this._appleCtx;
+  }
+
+  hasAppleCtx(): boolean {
+    return !!this._appleCtx;
   }
 
   async ensureAppleCtx(options: AppleCtxOptions = {}) {
