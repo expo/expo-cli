@@ -1,4 +1,5 @@
 import { ImageFormat, isAvailableAsync, ResizeMode, sharpAsync } from '@expo/image-utils';
+import crypto from 'crypto';
 import fs from 'fs-extra';
 import mime from 'mime';
 import fetch from 'node-fetch';
@@ -224,11 +225,10 @@ export function retrieveIcons(manifest: ManifestOptions): [Icon[], ManifestOptio
   return [response, config];
 }
 
-import crypto from 'crypto';
-
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
-  const contents = fs.readFileSync(filePath);
+  const contents = filePath.startsWith('http') ? filePath : fs.readFileSync(filePath);
+
   return crypto
     .createHash('sha256')
     .update(contents)
