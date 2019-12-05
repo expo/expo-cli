@@ -24,7 +24,7 @@ export class SelectDistributionCert implements ISelect<DistCert> {
     const appCredentialsForExperience = appCredentials.filter(
       cred => cred.experienceName === experienceName
     );
-    for (let distCert of distCerts) {
+    for (const distCert of distCerts) {
       if (appCredentialsForExperience.some(cred => cred.distCredentialsId === distCert.id)) {
         return distCert;
       }
@@ -33,10 +33,13 @@ export class SelectDistributionCert implements ISelect<DistCert> {
     return distCerts[0];
   }
 
-  async select(ctx: Context, options: DistCertOptions): Promise<ISelect<DistCert> | DistCert> {
-    const backSelect = async (ctx: Context, options: DistCertOptions) =>
+  async select(
+    ctx: Context,
+    options: DistCertOptions
+  ): Promise<ISelect<DistCert> | DistCert | null> {
+    const goBack = async (ctx: Context, options: DistCertOptions) =>
       await this.select(ctx, options);
-    const newOptions = { ...options, disableAutomode: true, backSelect };
+    const newOptions = { ...options, disableAutomode: true, goBack };
 
     const expoUsername = ctx.user && ctx.user.username;
     const existingCertificates = expoUsername
@@ -71,7 +74,7 @@ export class SelectDistributionCert implements ISelect<DistCert> {
       type: 'list',
       name: 'action',
       message: 'Select an iOS distribution certificate to use for code signing:',
-      choices: choices,
+      choices,
       pageSize: Infinity,
     };
 
@@ -83,7 +86,7 @@ export class SelectDistributionCert implements ISelect<DistCert> {
     ctx: Context,
     action: string,
     options: DistCertOptions
-  ): Promise<ISelect<DistCert> | DistCert> {
+  ): Promise<ISelect<DistCert> | DistCert | null> {
     switch (action) {
       case 'CHOOSE_EXISTING':
         return await new iosDistView.UseExistingDistributionCert().select(ctx, options);
