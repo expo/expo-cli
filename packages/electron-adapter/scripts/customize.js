@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 const fs = require('fs-extra');
-const { copyTemplateToProject } = require('../');
+const { copyTemplateToProject, ensureMinProjectSetupAsync } = require('../');
 process.on('unhandledRejection', err => {
   throw err;
 });
@@ -11,6 +11,7 @@ console.log();
 console.log(chalk.magenta('\u203A Copying Expo Electron main process to local project...'));
 
 copyTemplateToProject(projectRoot);
+ensureMinProjectSetupAsync(projectRoot);
 
 console.log(
   chalk.magenta(

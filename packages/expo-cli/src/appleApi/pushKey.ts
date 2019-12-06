@@ -14,6 +14,8 @@ export type PushKeyInfo = {
 export type PushKey = {
   apnsKeyP8: string;
   apnsKeyId: string;
+  teamId: string;
+  teamName?: string;
 };
 
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
@@ -39,7 +41,13 @@ export class PushKeyManager {
   ): Promise<PushKey> {
     try {
       const args = ['create', this.ctx.appleId, this.ctx.appleIdPassword, this.ctx.team.id, name];
-      return await runAction(travelingFastlane.managePushKeys, args);
+      const { apnsKeyId, apnsKeyP8 } = await runAction(travelingFastlane.managePushKeys, args);
+      return {
+        apnsKeyId,
+        apnsKeyP8,
+        teamId: this.ctx.team.id,
+        teamName: this.ctx.team.name,
+      };
     } catch (err) {
       const resultString = get(err, 'rawDump.resultString');
       if (resultString && resultString.match(/maximum allowed number of Keys/)) {

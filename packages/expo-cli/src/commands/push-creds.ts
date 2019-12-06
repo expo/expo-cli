@@ -206,11 +206,7 @@ async function _uploadWebPushCredientials(projectDir: string, options: VapidData
     );
     log(
       chalk.yellowBright(
-        `expo push:web:upload --vapid-pubkey ${
-          results.oldVapidData.vapidPublicKey
-        } --vapid-pvtkey ${results.oldVapidData.vapidPrivateKey} --vapid-subject ${
-          results.oldVapidData.vapidSubject
-        }`
+        `expo push:web:upload --vapid-pubkey ${results.oldVapidData.vapidPublicKey} --vapid-pvtkey ${results.oldVapidData.vapidPrivateKey} --vapid-subject ${results.oldVapidData.vapidSubject}`
       )
     );
   }
@@ -228,15 +224,7 @@ async function _uploadWebPushCredientials(projectDir: string, options: VapidData
     if (appJson.expo.owner && appJson.expo.owner !== user.username) {
       log(
         chalk.yellow(
-          `Warning: expo.owner is already configured to be "${
-            appJson.expo.owner
-          }" in app.json, but your current username is "${
-            user.username
-          }". You will not receive any push notification if you do not change expo.owner to "${
-            user.username
-          }" in app.json. Alternatively, you could choose to login to "${
-            appJson.expo.owner
-          }" and then execute this command again.`
+          `Warning: expo.owner is already configured to be "${appJson.expo.owner}" in app.json, but your current username is "${user.username}". You will not receive any push notification if you do not change expo.owner to "${user.username}" in app.json. Alternatively, you could choose to login to "${appJson.expo.owner}" and then execute this command again.`
         )
       );
     } else {

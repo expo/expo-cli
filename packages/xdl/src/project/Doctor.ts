@@ -1,4 +1,11 @@
-import { resolveModule, configFilename, fileExistsAsync, ExpoConfig, PackageJSONConfig, readConfigJsonAsync } from '@expo/config';
+import {
+  ExpoConfig,
+  PackageJSONConfig,
+  configFilename,
+  fileExistsAsync,
+  readConfigJsonAsync,
+  resolveModule,
+} from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
@@ -346,9 +353,7 @@ async function _validateReactNativeVersionAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${
-            sdkVersionObject['expoReactNativeTag']
-          }`,
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
           'doctor-invalid-version-of-react-native'
         );
         return WARNING;

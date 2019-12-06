@@ -2,9 +2,13 @@ import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 // @ts-ignore
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
-import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
+import {
+  ProxyConfigArray,
+  ProxyConfigMap,
+  Configuration as WebpackDevServerConfiguration,
+} from 'webpack-dev-server';
 
-import { AnyConfiguration, Environment, DevConfiguration } from '../types';
+import { AnyConfiguration, DevConfiguration, Environment } from '../types';
 import { getPaths } from '../env';
 
 // @ts-ignore
@@ -15,8 +19,6 @@ export function isDevConfig(input: AnyConfiguration): input is DevConfiguration 
 }
 
 type SelectiveEnv = Pick<Environment, 'locations' | 'projectRoot' | 'https'>;
-
-import { ProxyConfigArray, ProxyConfigMap } from 'webpack-dev-server';
 
 type DevServerOptions = {
   allowedHost?: string;

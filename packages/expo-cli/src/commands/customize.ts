@@ -7,8 +7,8 @@ import { MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
 
+import * as PackageManager from '@expo/package-manager';
 import log from '../log';
-import * as PackageManager from '../PackageManager';
 
 type Options = { force: boolean };
 
@@ -64,7 +64,7 @@ async function generateFilesAsync({
       );
 
       if (file in dependencyMap) {
-        const packageManager = PackageManager.createForProject(projectDir);
+        const packageManager = PackageManager.createForProject(projectDir, { log });
         for (const dependency of dependencyMap[file]) {
           promises.push(packageManager.addDevAsync(dependency));
         }

@@ -1,22 +1,23 @@
 import { withAlias } from '@expo/webpack-config/addons';
 import { createBabelLoaderFromEnvironment } from '@expo/webpack-config/loaders';
 import { ExpoDefinePlugin, ExpoInterpolateHtmlPlugin } from '@expo/webpack-config/plugins';
-import { getPaths, getConfig, getModuleFileExtensions } from '@expo/webpack-config/env';
+import { getConfig, getModuleFileExtensions, getPaths } from '@expo/webpack-config/env';
 import {
   getPluginsByName,
   getRulesByMatchingFiles,
   resolveEntryAsync,
 } from '@expo/webpack-config/utils';
+import { AnyConfiguration } from '@expo/webpack-config/webpack/types';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import * as path from 'path';
-import { Configuration } from 'webpack';
 
 // skipEntry defaults to false
 export function withExpoWebpack(
-  config: Configuration,
+  config: AnyConfiguration,
   options: { projectRoot?: string; skipEntry?: boolean } = {}
 ) {
   // Support React Native aliases
+  // @ts-ignore: webpack version mismatch
   config = withAlias(config);
 
   const projectRoot = options.projectRoot || process.cwd();
@@ -36,16 +37,19 @@ export function withExpoWebpack(
   if (plugin) {
     const { options } = plugin.plugin as any;
     // Replace HTML Webpack Plugin so we can interpolate it
+    // @ts-ignore: webpack version mismatch
     config.plugins.splice(plugin.index, 1, new HtmlWebpackPlugin(options));
     config.plugins.splice(
       plugin.index + 1,
       0,
       // Add variables to the `index.html`
+      // @ts-ignore
       ExpoInterpolateHtmlPlugin.fromEnv(env, HtmlWebpackPlugin)
     );
   }
 
   // Add support for expo-constants
+  // @ts-ignore: webpack version mismatch
   config.plugins.push(ExpoDefinePlugin.fromEnv(env));
 
   // Support platform extensions
@@ -100,7 +104,7 @@ export function withExpoWebpack(
   const babelConfig = createBabelLoaderFromEnvironment(env);
 
   // Modify externals https://github.com/electron-userland/electron-webpack/issues/81
-  const includeFunc = babelConfig.include as ((path: string) => boolean);
+  const includeFunc = babelConfig.include as (path: string) => boolean;
   if (config.externals) {
     config.externals = (config.externals as any)
       .map((external: any) => {

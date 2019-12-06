@@ -1,5 +1,5 @@
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
-import { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 // @ts-ignore
@@ -16,7 +16,8 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
-import webpack from 'webpack';
+
+import { projectHasModule } from '@expo/config';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
 import { createAllLoaders } from './loaders';
 import {
@@ -131,6 +132,17 @@ export default async function(
     );
   }
 
+  // Add a loose requirement on the ResizeObserver polyfill if it's installed...
+  // Avoid `withEntry` as we don't need so much complexity with this config.
+  const resizeObserverPolyfill = projectHasModule(
+    'resize-observer-polyfill/dist/ResizeObserver.global',
+    env.projectRoot,
+    config
+  );
+  if (resizeObserverPolyfill) {
+    appEntry.unshift(resizeObserverPolyfill);
+  }
+
   if (isDev) {
     // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
     // Include an alternative client for WebpackDevServer. A client's job is to
@@ -209,6 +221,7 @@ export default async function(
 
       new WebpackPWAManifestPlugin(config, {
         publicPath,
+        projectRoot: env.projectRoot,
         noResources: !generatePWAImageAssets,
         filename: locations.production.manifest,
         HtmlWebpackPlugin: ExpoHtmlWebpackPlugin,
@@ -264,7 +277,6 @@ export default async function(
         },
       ].filter(Boolean),
     },
-
     resolveLoader: {
       plugins: [
         // Also related to Plug'n'Play, but this time it tells Webpack to load its loaders

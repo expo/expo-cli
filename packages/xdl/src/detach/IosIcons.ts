@@ -3,10 +3,10 @@ import path from 'path';
 import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
 import {
   AnyStandaloneContext,
-  StandaloneContextUser,
-  StandaloneContextService,
-  StandaloneContextDataUser,
   StandaloneContextDataService,
+  StandaloneContextDataUser,
+  StandaloneContextService,
+  StandaloneContextUser,
 } from './StandaloneContext';
 import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
 import logger from './Logger';

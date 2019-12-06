@@ -25,7 +25,7 @@ export async function updateIOSSimulatorBuild(
   s3Client: any,
   pathToApp: string,
   appVersion: string,
-  sdkVersion?: string,
+  sdkVersion?: string
 ) {
   let tempAppPath = path.join(process.cwd(), 'temp-app.tar.gz');
 
@@ -52,7 +52,7 @@ export async function updateIOSSimulatorBuild(
   console.log('Adding to server config...');
 
   const clientUrl = `https://dpq5q02fu5f55.cloudfront.net/Exponent-${appVersion}.tar.gz`;
-  
+
   await updateClientUrlAndVersionAsync(sdkVersion, 'ios', clientUrl, appVersion);
 }
 
@@ -60,7 +60,7 @@ export async function updateAndroidApk(
   s3Client: any,
   pathToApp: string,
   appVersion: string,
-  sdkVersion?: string,
+  sdkVersion?: string
 ) {
   let file = fs.createReadStream(pathToApp);
 

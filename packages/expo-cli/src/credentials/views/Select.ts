@@ -1,5 +1,5 @@
 import get from 'lodash/get';
-import prompt, { Question, ChoiceType } from '../../prompt';
+import prompt, { ChoiceType, Question } from '../../prompt';
 import log from '../../log';
 
 import * as androidView from './AndroidCredentials';
@@ -11,10 +11,7 @@ import * as iosProvisionigProfileView from './IosProvisioningProfile';
 import { Context, IView } from '../context';
 import { AndroidCredentials, IosCredentials } from '../credentials';
 import { changeMainView } from '../route';
-import {
-  displayAndroidCredentials,
-  displayIosCredentials,
-} from '../actions/list';
+import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 
 export class SelectPlatform implements IView {
   async open(ctx: Context): Promise<IView | null> {
@@ -113,8 +110,6 @@ export class SelectIosExperience implements IView {
   }
 }
 
-
-
 export class SelectAndroidExperience implements IView {
   androidCredentials: AndroidCredentials[] = [];
   askAboutProjectMode = true;
@@ -138,7 +133,7 @@ export class SelectAndroidExperience implements IView {
     this.askAboutProjectMode = false;
 
     if (this.androidCredentials.length === 0) {
-      this.androidCredentials = get(await ctx.api.getAsync('credentials/android'), 'credentials')
+      this.androidCredentials = get(await ctx.api.getAsync('credentials/android'), 'credentials');
     }
     await displayAndroidCredentials(this.androidCredentials);
 

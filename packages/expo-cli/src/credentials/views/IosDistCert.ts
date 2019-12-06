@@ -6,10 +6,10 @@ import { IosCodeSigning } from '@expo/xdl';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
-import { distCertSchema, IosCredentials, IosDistCredentials } from '../credentials';
+import { IosCredentials, IosDistCredentials, distCertSchema } from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { DistCertManager, DistCertInfo, DistCert } from '../../appleApi';
+import { DistCert, DistCertInfo, DistCertManager } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 import { CreateAppCredentialsIos } from './IosAppCredentials';
 
@@ -24,12 +24,7 @@ Please remember that Apple Distribution Certificates are not application specifi
 export class CreateIosDist implements IView {
   async create(ctx: Context): Promise<IosDistCredentials> {
     const newDistCert = await this.provideOrGenerate(ctx);
-    const credentials = {
-      ...newDistCert,
-      teamId: ctx.appleCtx.team.id,
-      teamName: ctx.appleCtx.team.name,
-    };
-    return await ctx.ios.createDistCert(credentials);
+    return await ctx.ios.createDistCert(newDistCert);
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -42,7 +37,7 @@ export class CreateIosDist implements IView {
   }
 
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
-    const userProvided = await askForUserProvided(distCertSchema);
+    const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
       return userProvided;
     }
@@ -107,9 +102,7 @@ export class RemoveIosDist implements IView {
 
     for (const appCredentials of apps) {
       log(
-        `Removing Provisioning Profile for ${appCredentials.experienceName} (${
-          appCredentials.bundleIdentifier
-        })`
+        `Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`
       );
       await new RemoveProvisioningProfile(shouldRevoke || this.shouldRevoke).removeSpecific(
         ctx,
@@ -164,16 +157,14 @@ export class UpdateIosDist implements IView {
 
     for (const appCredentials of apps) {
       log(
-        `Removing Provisioning Profile for ${appCredentials.experienceName} (${
-          appCredentials.bundleIdentifier
-        })`
+        `Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`
       );
       await new RemoveProvisioningProfile(true).removeSpecific(ctx, appCredentials);
     }
   }
 
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
-    const userProvided = await askForUserProvided(distCertSchema);
+    const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
       return userProvided;
     }
@@ -245,17 +236,15 @@ function formatDistCertFromApple(appleInfo: DistCertInfo, credentials: IosCreden
     .map(i => `      ${i.experienceName} (${i.bundleIdentifier})`)
     .join('\n');
 
-  const usedByString = !!joinApps
+  const usedByString = joinApps
     ? `    ${chalk.gray(`used by\n${joinApps}`)}`
     : `    ${chalk.gray(`not used by any apps`)}`;
 
   const { name, status, id, expires, created, ownerName, serialNumber } = appleInfo;
   const expiresDate = dateformat(new Date(expires * 1000));
   const createdDate = dateformat(new Date(created * 1000));
-  return `${name} (${status}) - Cert ID: ${id}, Serial number: ${serialNumber}, Team ID: ${
-    appleInfo.ownerId
-  }, Team name: ${ownerName}
-    expires: ${expiresDate}, created: ${createdDate}  
+  return `${name} (${status}) - Cert ID: ${id}, Serial number: ${serialNumber}, Team ID: ${appleInfo.ownerId}, Team name: ${ownerName}
+    expires: ${expiresDate}, created: ${createdDate}
   ${usedByString}`;
 }
 
@@ -267,7 +256,7 @@ function formatDistCert(distCert: IosDistCredentials, credentials: IosCredential
     .map(i => `${i.experienceName} (${i.bundleIdentifier})`)
     .join(', ');
 
-  const usedByString = !!joinApps
+  const usedByString = joinApps
     ? `\n    ${chalk.gray(`used by ${joinApps}`)}`
     : `\n    ${chalk.gray(`not used by any apps`)}`;
 
@@ -282,9 +271,7 @@ function formatDistCert(distCert: IosDistCredentials, credentials: IosCredential
   } catch (error) {
     serialNumber = chalk.red('invalid serial number');
   }
-  return `Distribution Certificate (Cert ID: ${
-    distCert.certId
-  }, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}`;
+  return `Distribution Certificate (Cert ID: ${distCert.certId}, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}`;
 }
 
 async function generateDistCert(ctx: Context): Promise<DistCert> {
@@ -330,4 +317,23 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
     }
   }
   return await generateDistCert(ctx);
+}
+
+async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
+  const userProvided = await askForUserProvided(distCertSchema);
+  if (userProvided) {
+    try {
+      userProvided.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        userProvided.certP12,
+        userProvided.certPassword
+      );
+    } catch (error) {
+      log.warn('Unable to access certificate serial number.');
+      log.warn('Make sure that certificate and password are correct.');
+      log.warn(error);
+    }
+    return userProvided;
+  } else {
+    return null;
+  }
 }

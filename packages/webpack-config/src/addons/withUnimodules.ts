@@ -1,29 +1,29 @@
 import path from 'path';
-import { Configuration } from 'webpack';
 
-import { createBabelLoader, createFontLoader } from '../loaders';
-import { ExpoDefinePlugin } from '../plugins';
-import { Arguments, DevConfiguration, Environment, InputEnvironment } from '../types';
 import {
-  validateEnvironment,
+  getConfig,
+  getMode,
+  getModuleFileExtensions,
   getPaths,
   getPublicPaths,
-  getMode,
-  getConfig,
-  getModuleFileExtensions,
+  validateEnvironment,
 } from '../env';
+import { createBabelLoader, createFontLoader } from '../loaders';
+import { ExpoDefinePlugin } from '../plugins';
+import { AnyConfiguration, Arguments, Environment, InputEnvironment } from '../types';
 import { rulesMatchAnyFiles } from '../utils';
 import withAlias from './withAlias';
+import withEntry from './withEntry';
 
 // import ManifestPlugin from 'webpack-manifest-plugin';
 
 // Wrap your existing webpack config with support for Unimodules.
 // ex: Storybook `({ config }) => withUnimodules(config)`
 export default function withUnimodules(
-  inputWebpackConfig: DevConfiguration | Configuration = {},
+  inputWebpackConfig: AnyConfiguration = {},
   env: InputEnvironment = {},
   argv: Arguments = {}
-): DevConfiguration | Configuration {
+): AnyConfiguration {
   inputWebpackConfig = withAlias(inputWebpackConfig);
 
   if (!inputWebpackConfig.module) inputWebpackConfig.module = { rules: [] };
@@ -149,7 +149,7 @@ export default function withUnimodules(
   // https://github.com/martpie/next-transpile-modules/blob/77450a0c0307e4b650d7acfbc18641ef9465f0da/index.js#L48-L62
   // https://github.com/zeit/next.js/blob/0b496a45e85f3c9aa3cf2e77eef10888be5884fc/packages/next/build/webpack-config.ts#L185-L258
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
-  const includeFunc = babelLoader.include as ((path: string) => boolean);
+  const includeFunc = babelLoader.include as (path: string) => boolean;
   if (inputWebpackConfig.externals) {
     inputWebpackConfig.externals = (inputWebpackConfig.externals as any).map((external: any) => {
       if (typeof external !== 'function') return external;
@@ -159,6 +159,11 @@ export default function withUnimodules(
       };
     });
   }
+
+  // Add a loose requirement on the ResizeObserver polyfill if it's installed...
+  inputWebpackConfig = withEntry(inputWebpackConfig, env, {
+    entryPath: 'resize-observer-polyfill/dist/ResizeObserver.global',
+  });
 
   return inputWebpackConfig;
 }

@@ -15,13 +15,11 @@ export async function downloadFile(url: string, dest: string): Promise<string> {
     total: fileSize,
   });
   response.data.pipe(fs.createWriteStream(dest));
-  return new Promise(
-    (resolve, reject): void => {
-      response.data.on('data', (data: { length: number }) => bar.tick(data.length));
-      response.data.on('end', () => resolve(dest));
-      response.data.on('error', reject);
-    }
-  );
+  return new Promise((resolve, reject): void => {
+    response.data.on('data', (data: { length: number }) => bar.tick(data.length));
+    response.data.on('end', () => resolve(dest));
+    response.data.on('error', reject);
+  });
 }
 
 export async function runFastlaneAsync(

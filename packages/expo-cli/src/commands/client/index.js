@@ -216,6 +216,7 @@ export default program => {
         udids,
         addUdid,
         email,
+        bundleIdentifier,
         customAppConfig: exp,
       });
 

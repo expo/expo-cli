@@ -1,4 +1,5 @@
 module.exports = {
+  root: true,
   extends: ['universe/node'],
   globals: {
     jasmine: false,
@@ -11,6 +12,7 @@ module.exports = {
         ignoreDeclarationSort: true,
       },
     ],
+    'flowtype/no-types-missing-file-annotation': 'off',
   },
   settings: {
     react: {

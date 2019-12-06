@@ -7,8 +7,8 @@ import slug from 'slugify';
 import {
   AppJSONConfig,
   BareAppConfig,
-  ExpoConfig,
   ExpRc,
+  ExpoConfig,
   PackageJSONConfig,
   Platform,
   ProjectConfig,

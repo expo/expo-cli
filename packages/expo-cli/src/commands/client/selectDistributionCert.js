@@ -50,6 +50,7 @@ export default async function selectDistributionCert(context, options = {}) {
 
     // tag for updating to Expo servers
     tagForUpdate(distributionCert);
+    return distributionCert;
   } else if (promptValue === 'INFO') {
     open(
       'https://docs.expo.io/versions/latest/guides/adhoc-builds/#distribution-certificate-cli-options'

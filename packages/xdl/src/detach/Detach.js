@@ -116,8 +116,7 @@ async function _detachAsync(projectRoot, options) {
   let sdkVersionConfig = versions.sdkVersions[exp.sdkVersion];
   if (
     !sdkVersionConfig ||
-    !sdkVersionConfig.androidExpoViewUrl ||
-    !sdkVersionConfig.iosExpoViewUrl
+    (!sdkVersionConfig.androidExpoViewUrl && !sdkVersionConfig.iosExpoViewUrl)
   ) {
     if (process.env.EXPO_VIEW_DIR) {
       logger.warn(
@@ -168,7 +167,7 @@ async function _detachAsync(projectRoot, options) {
     }
   }
 
-  if (!hasIosDirectory && isIosSupported) {
+  if (!hasIosDirectory && isIosSupported && sdkVersionConfig.iosExpoViewUrl) {
     if (!exp.ios) {
       exp.ios = {};
     }
@@ -192,7 +191,7 @@ async function _detachAsync(projectRoot, options) {
   }
 
   // Android
-  if (!hasAndroidDirectory) {
+  if (!hasAndroidDirectory && sdkVersionConfig.androidExpoViewUrl) {
     if (!exp.android) {
       exp.android = {};
     }
@@ -395,7 +394,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
-  const { exp } = await readConfigJsonAsync(expoRootDir);
+  const { exp } = await readConfigJsonAsync(expoRootDir, true, true);
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project
