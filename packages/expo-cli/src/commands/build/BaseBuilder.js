@@ -282,6 +282,7 @@ ${job.id}
       const release = await Project.getLatestReleaseAsync(this.projectDir, {
         releaseChannel: this.options.releaseChannel,
         platform: this.platform(),
+        owner: this.manifest.owner,
       });
       if (!release) {
         throw new BuildError('No releases found. Please create one using `expo publish` first.');
