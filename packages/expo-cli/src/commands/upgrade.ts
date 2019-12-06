@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { Project, Versions } from '@expo/xdl';
+import { Android, Project, Simulator, Versions } from '@expo/xdl';
 import JsonFile from '@expo/json-file';
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
@@ -229,6 +229,46 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     if (!answer.attemptUnknownUpdate) {
       return;
     }
+  }
+
+  const platforms = exp.platforms || [];
+
+  // Check if we can, and probably should, upgrade the (ios) simulator
+  if (Simulator.isPlatformSupported() && platforms.includes('ios')) {
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'upgradeSimulator',
+      message: 'You might have to upgrade your iOS simulator. Before you can do that, you have to run the simulator. Do you want to upgrade it now?',
+      default: false,
+    });
+
+    if (answer.upgradeSimulator) {
+      let result = await Simulator.upgradeExpoAsync();
+      if (!result) {
+        log.error('The upgrade of your simulator didn\'t go as planned. You might have to reinstall it manually with expo client:install:ios.');
+      }
+    }
+
+    log.newLine();
+  }
+
+  // Check if we can, and probably should, upgrade the android client
+  if (Android.isPlatformSupported() && platforms.includes('android')) {
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'upgradeAndroid',
+      message: 'You might have to upgrade your Android client. Before you can do that, you have to run the emulator, or plug a device in. Do you want to upgrade it now?',
+      default: false,
+    });
+
+    if (answer.upgradeAndroid) {
+      let result = await Android.upgradeExpoAsync();
+      if (!result) {
+        log.error('The upgrade of your Android client didn\'t go as planned. You might have to reinstall it manually with expo client:install:android.');
+      }
+    }
+
+    log.newLine();
   }
 
   let packageManager = PackageManager.createForProject(projectRoot, {
