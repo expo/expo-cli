@@ -305,9 +305,7 @@ export default program => {
         }
       } else {
         log(
-          `You are currently using SDK ${
-            currentSdk.sdkVersion
-          }. Unfortunately, we couldn't detect the proper client version for this SDK.`
+          `You are currently using SDK ${currentSdk.sdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
 
@@ -440,9 +438,7 @@ export default program => {
         }
       } else {
         log(
-          `You are currently using SDK ${
-            currentSdk.sdkVersion
-          }. Unfortunately, we couldn't detect the proper client version for this SDK.`
+          `You are currently using SDK ${currentSdk.sdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
 

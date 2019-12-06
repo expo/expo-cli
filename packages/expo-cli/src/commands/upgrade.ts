@@ -238,14 +238,17 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     let answer = await prompt({
       type: 'confirm',
       name: 'upgradeSimulator',
-      message: 'You might have to upgrade your iOS simulator. Before you can do that, you have to run the simulator. Do you want to upgrade it now?',
+      message:
+        'You might have to upgrade your iOS simulator. Before you can do that, you have to run the simulator. Do you want to upgrade it now?',
       default: false,
     });
 
     if (answer.upgradeSimulator) {
       let result = await Simulator.upgradeExpoAsync();
       if (!result) {
-        log.error('The upgrade of your simulator didn\'t go as planned. You might have to reinstall it manually with expo client:install:ios.');
+        log.error(
+          "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
+        );
       }
     }
 
@@ -257,14 +260,17 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     let answer = await prompt({
       type: 'confirm',
       name: 'upgradeAndroid',
-      message: 'You might have to upgrade your Android client. Before you can do that, you have to run the emulator, or plug a device in. Do you want to upgrade it now?',
+      message:
+        'You might have to upgrade your Android client. Before you can do that, you have to run the emulator, or plug a device in. Do you want to upgrade it now?',
       default: false,
     });
 
     if (answer.upgradeAndroid) {
       let result = await Android.upgradeExpoAsync();
       if (!result) {
-        log.error('The upgrade of your Android client didn\'t go as planned. You might have to reinstall it manually with expo client:install:android.');
+        log.error(
+          "The upgrade of your Android client didn't go as planned. You might have to reinstall it manually with expo client:install:android."
+        );
       }
     }
 
