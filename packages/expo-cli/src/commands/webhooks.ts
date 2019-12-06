@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { Webhooks, Exp } from '@expo/xdl';
+import { Exp, Webhooks } from '@expo/xdl';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import validator from 'validator';

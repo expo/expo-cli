@@ -127,9 +127,10 @@ async function action(projectDir: string, options: Options) {
               name:
                 chalk.bold(padEnd(template.shortName, descriptionColumn)) +
                 trimStart(
-                  wordwrap(descriptionColumn + 2, process.stdout.columns || 80)(
-                    template.description
-                  )
+                  wordwrap(
+                    descriptionColumn + 2,
+                    process.stdout.columns || 80
+                  )(template.description)
                 ),
               short: template.name,
             };

@@ -1,9 +1,9 @@
 import semver from 'semver';
 
 import {
-  expoSdkUniversalModulesConfigs,
   ModuleConfig,
   NativeConfig,
+  expoSdkUniversalModulesConfigs,
   vendoredNativeModules,
 } from './config';
 

@@ -71,9 +71,7 @@ Transforms available:
     const packages = Object.keys(totalStats).sort();
     if (packages.length) {
       console.log(
-        `Added imports from ${
-          packages.length
-        } packages.\nTo install the correct versions of these packages you can run this expo-cli command:`
+        `Added imports from ${packages.length} packages.\nTo install the correct versions of these packages you can run this expo-cli command:`
       );
       console.log();
       console.log(`expo install ${packages.join(' ')}`);

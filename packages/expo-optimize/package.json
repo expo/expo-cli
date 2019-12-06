@@ -43,8 +43,7 @@
     "cpy": "7.3.0",
     "cross-spawn": "6.0.5",
     "rimraf": "2.6.3",
-    "typescript": "^3.5.3",
-    "update-check": "1.5.3",
+        "update-check": "1.5.3",
     "validate-npm-package-name": "3.0.0"
   },
   "dependencies": {

@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import ora from 'ora';
 import uuidv4 from 'uuid/v4';
 
-import { prepareJob, Options } from './prepare';
+import { Options, prepareJob } from './prepare';
 import { makeProjectTarball, waitForBuildEnd } from './utils';
 
 export interface StatusResult {

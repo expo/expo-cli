@@ -9,9 +9,9 @@ import path from 'path';
 import semver from 'semver';
 import temporary from 'tempy';
 
+import * as PackageManager from '@expo/package-manager';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 import log from '../../log';
-import * as PackageManager from '@expo/package-manager';
 import prompt, { Question } from '../../prompt';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
 
@@ -104,10 +104,12 @@ export async function ejectAsync(
 
   const ejectMethod =
     options.ejectMethod ||
-    (await prompt(questions, {
-      nonInteractiveHelp:
-        'Please specify eject method (bare, expokit) with the --eject-method option.',
-    })).ejectMethod;
+    (
+      await prompt(questions, {
+        nonInteractiveHelp:
+          'Please specify eject method (bare, expokit) with the --eject-method option.',
+      })
+    ).ejectMethod;
 
   if (ejectMethod === 'bare') {
     await ejectToBareAsync(projectRoot);

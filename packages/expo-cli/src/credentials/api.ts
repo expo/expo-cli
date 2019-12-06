@@ -5,12 +5,11 @@ import omit from 'lodash/omit';
 import log from '../log';
 import * as appleApi from '../appleApi';
 import {
-  IosCredentials,
   IosAppCredentials,
-  IosPushCredentials,
+  IosCredentials,
   IosDistCredentials,
+  IosPushCredentials,
 } from './credentials';
-
 
 export class IosApi {
   api: ApiV2;
@@ -37,8 +36,13 @@ export class IosApi {
     this.credentials.userCredentials.push(newDistCert);
     return newDistCert;
   }
-  async updateDistCert(credentialsId: number, credentials: appleApi.DistCert): Promise<IosDistCredentials> {
-    const { id } = await this.api.putAsync(`credentials/ios/dist/${credentialsId}`, { credentials });
+  async updateDistCert(
+    credentialsId: number,
+    credentials: appleApi.DistCert
+  ): Promise<IosDistCredentials> {
+    const { id } = await this.api.putAsync(`credentials/ios/dist/${credentialsId}`, {
+      credentials,
+    });
     const updatedDistCert: IosDistCredentials = { ...credentials, id, type: 'dist-cert' };
     const credIndex = findIndex(this.credentials.userCredentials, ({ id }) => id === credentialsId);
     this.credentials.userCredentials[credIndex] = updatedDistCert;
@@ -46,22 +50,26 @@ export class IosApi {
   }
   async deleteDistCert(credentialsId: number) {
     await this.api.deleteAsync(`credentials/ios/dist/${credentialsId}`);
-    this.credentials.userCredentials = this.credentials.userCredentials.filter(({ id }) => id !== credentialsId);
+    this.credentials.userCredentials = this.credentials.userCredentials.filter(
+      ({ id }) => id !== credentialsId
+    );
     this.credentials.appCredentials = this.credentials.appCredentials.map(record => {
       if (record.distCredentialsId === credentialsId) {
         return omit(record, 'distCredentialsId') as IosAppCredentials;
       }
       return record;
-    })
+    });
   }
   async useDistCert(experienceName: string, bundleIdentifier: string, userCredentialsId: number) {
     await this.api.postAsync('credentials/ios/use/dist', {
-      experienceName, bundleIdentifier, userCredentialsId,
+      experienceName,
+      bundleIdentifier,
+      userCredentialsId,
     });
     this._ensureAppCredentials(experienceName, bundleIdentifier);
     const credIndex = findIndex(
       this.credentials.appCredentials,
-      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier,
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     this.credentials.appCredentials[credIndex].distCredentialsId = userCredentialsId;
   }
@@ -72,9 +80,12 @@ export class IosApi {
     this.credentials.userCredentials.push(newPushKey);
     return newPushKey;
   }
-  async updatePushKey(credentialsId: number, credentials: appleApi.PushKey): Promise<IosPushCredentials> {
+  async updatePushKey(
+    credentialsId: number,
+    credentials: appleApi.PushKey
+  ): Promise<IosPushCredentials> {
     const { id } = await this.api.putAsync(`credentials/ios/push/${credentialsId}`, {
-      credentials
+      credentials,
     });
     const updatedPushKey: IosPushCredentials = { ...credentials, id, type: 'push-key' };
     const credIndex = findIndex(this.credentials.userCredentials, ({ id }) => id === credentialsId);
@@ -83,30 +94,37 @@ export class IosApi {
   }
   async deletePushKey(credentialsId: number) {
     await this.api.deleteAsync(`credentials/ios/push/${credentialsId}`);
-    this.credentials.userCredentials = this.credentials.userCredentials.filter(({ id }) => id !== credentialsId);
+    this.credentials.userCredentials = this.credentials.userCredentials.filter(
+      ({ id }) => id !== credentialsId
+    );
     this.credentials.appCredentials = this.credentials.appCredentials.map(record => {
       if (record.pushCredentialsId === credentialsId) {
         return omit(record, 'pushCredentialsId') as IosAppCredentials;
       }
       return record;
-    })
+    });
   }
   async usePushKey(experienceName: string, bundleIdentifier: string, userCredentialsId: number) {
     await this.api.postAsync('credentials/ios/use/push', {
-      experienceName, bundleIdentifier, userCredentialsId,
+      experienceName,
+      bundleIdentifier,
+      userCredentialsId,
     });
     this._ensureAppCredentials(experienceName, bundleIdentifier);
     const credIndex = findIndex(
       this.credentials.appCredentials,
-      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier,
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     this.credentials.appCredentials[credIndex].pushCredentialsId = userCredentialsId;
   }
   async deletePushCert(experienceName: string, bundleIdentifier: string) {
-    await this.api.postAsync(`credentials/ios/pushCert/delete`, { experienceName, bundleIdentifier })
+    await this.api.postAsync(`credentials/ios/pushCert/delete`, {
+      experienceName,
+      bundleIdentifier,
+    });
     const credIndex = findIndex(
       this.credentials.appCredentials,
-      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier,
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     this.credentials.appCredentials[credIndex].credentials = omit(
       this.credentials.appCredentials[credIndex].credentials,
@@ -115,25 +133,31 @@ export class IosApi {
   }
 
   async deleteProvisioningProfile(experienceName: string, bundleIdentifier: string) {
-    await this.api.postAsync(`credentials/ios/provisioningProfile/delete`, { experienceName, bundleIdentifier })
+    await this.api.postAsync(`credentials/ios/provisioningProfile/delete`, {
+      experienceName,
+      bundleIdentifier,
+    });
     const credIndex = findIndex(
       this.credentials.appCredentials,
-      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier,
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
     this.credentials.appCredentials[credIndex].credentials = omit(
       this.credentials.appCredentials[credIndex].credentials,
-      ['provisioningProfile', 'provisioningProfileId'],
+      ['provisioningProfile', 'provisioningProfileId']
     );
   }
 
   _ensureAppCredentials(experienceName: string, bundleIdentifier: string) {
-    const exists = this.credentials.appCredentials.filter(
-      i => i.experienceName === experienceName && i.bundleIdentifier === bundleIdentifier
-    ).length !== 0;
+    const exists =
+      this.credentials.appCredentials.filter(
+        i => i.experienceName === experienceName && i.bundleIdentifier === bundleIdentifier
+      ).length !== 0;
     if (!exists) {
       this.credentials.appCredentials.push({
-        experienceName, bundleIdentifier, credentials: {},
-      })
+        experienceName,
+        bundleIdentifier,
+        credentials: {},
+      });
     }
   }
 }

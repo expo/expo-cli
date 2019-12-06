@@ -9,40 +9,42 @@ import log from '../../log';
 import * as validators from '../../validators';
 
 export type Question = {
-  question: string,
-  type: 'file' | 'string' | 'password',
-  base64Encode?: boolean,
+  question: string;
+  type: 'file' | 'string' | 'password';
+  base64Encode?: boolean;
 };
 
 type Results = {
-    [key: string]: string | undefined;
-}
-
-export type CredentialSchema<T> = {
-  id: string,
-  canReuse?: boolean,
-  dependsOn?: string,
-  name: string,
-  required: Array<string>,
-  questions?: {
-    [key: string]: Question,
-  },
-  deprecated?: boolean,
-  migrationDocs?: string,
+  [key: string]: string | undefined;
 };
 
+export type CredentialSchema<T> = {
+  id: string;
+  canReuse?: boolean;
+  dependsOn?: string;
+  name: string;
+  required: Array<string>;
+  questions?: {
+    [key: string]: Question;
+  };
+  deprecated?: boolean;
+  migrationDocs?: string;
+};
 
-
-const EXPERT_PROMPT = once(() => log.warn(`
+const EXPERT_PROMPT = once(() =>
+  log.warn(`
 WARNING! In this mode, we won't be able to make sure that your crdentials are valid.
 Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!
 
 When building for IOS make sure you've created your App ID on the Apple Developer Portal, that your App ID
 is in app.json as \`bundleIdentifier\`, and that the provisioning profile you
 upload matches that Team ID and App ID.
-`));
+`)
+);
 
-export async function askForUserProvided<T extends Results>(schema: CredentialSchema<T>): Promise<T | null>  {
+export async function askForUserProvided<T extends Results>(
+  schema: CredentialSchema<T>
+): Promise<T | null> {
   if (await willUserProvideCredentialsType(schema.name)) {
     EXPERT_PROMPT();
     return await getCredentialsFromUser(schema);
@@ -50,7 +52,9 @@ export async function askForUserProvided<T extends Results>(schema: CredentialSc
   return null;
 }
 
-async function getCredentialsFromUser<T extends Results>(credentialType: CredentialSchema<T>): Promise<T | null> {
+async function getCredentialsFromUser<T extends Results>(
+  credentialType: CredentialSchema<T>
+): Promise<T | null> {
   const results: Results = {};
   for (const field of credentialType.required) {
     results[field] = await askQuestionAndProcessAnswer(get(credentialType, `questions.${field}`));
@@ -78,7 +82,7 @@ async function askQuestionAndProcessAnswer(definition: Question): Promise<string
 }
 
 function buildQuestionObject({ type, question }: Question): PromptQuestion {
-  switch(type) {
+  switch (type) {
     case 'string':
       return {
         type: 'input',

@@ -42,9 +42,7 @@ export default function withEntry(
     } else if (options.strict) {
       // Better to be safe...
       throw new Error(
-        `[WEBPACK]: Failed to include required app entry module: "${
-          options.entryPath
-        }" because the webpack entry object doesn't contain an \`app\` field.`
+        `[WEBPACK]: Failed to include required app entry module: "${options.entryPath}" because the webpack entry object doesn't contain an \`app\` field.`
       );
     }
     return entries;

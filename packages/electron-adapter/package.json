@@ -44,8 +44,7 @@
   ],
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
-    "@expo/webpack-config": "^0.10.5",
-    "typescript": "3.4.5"
+    "@expo/webpack-config": "^0.10.5"
   },
   "publishConfig": {
     "access": "public"

@@ -71,9 +71,9 @@ async function getUpdatedDependenciesAsync(
 
   // Get the supported react/react-native/react-dom versions and other related packages
   if (workflow === 'managed' || dependencies['expokit']) {
-    result['react-native'] = `https://github.com/expo/react-native/archive/${
-      targetSdkVersion.expoReactNativeTag
-    }.tar.gz`;
+    result[
+      'react-native'
+    ] = `https://github.com/expo/react-native/archive/${targetSdkVersion.expoReactNativeTag}.tar.gz`;
   } else {
     result['react-native'] = targetSdkVersion.facebookReactNativeVersion;
   }
@@ -190,9 +190,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     let answer = await prompt({
       type: 'confirm',
       name: 'updateToLatestSdkVersion',
-      message: `You are currently using SDK ${currentSdkVersionString}. Would you like to update to the latest version, ${
-        latestSdkVersion.version
-      }?`,
+      message: `You are currently using SDK ${currentSdkVersionString}. Would you like to update to the latest version, ${latestSdkVersion.version}?`,
     });
 
     log.newLine();

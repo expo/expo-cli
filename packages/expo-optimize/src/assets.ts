@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import crypto from 'crypto';
 import { ensureDirSync, move, readFileSync, statSync, unlinkSync } from 'fs-extra';
 import glob from 'glob';
-import { basename, relative, join, parse } from 'path';
+import { basename, join, parse, relative } from 'path';
 import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';
 

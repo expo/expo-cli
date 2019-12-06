@@ -1,7 +1,7 @@
 import { withAlias } from '@expo/webpack-config/addons';
 import { createBabelLoaderFromEnvironment } from '@expo/webpack-config/loaders';
 import { ExpoDefinePlugin, ExpoInterpolateHtmlPlugin } from '@expo/webpack-config/plugins';
-import { getPaths, getConfig, getModuleFileExtensions } from '@expo/webpack-config/env';
+import { getConfig, getModuleFileExtensions, getPaths } from '@expo/webpack-config/env';
 import {
   getPluginsByName,
   getRulesByMatchingFiles,
@@ -104,7 +104,7 @@ export function withExpoWebpack(
   const babelConfig = createBabelLoaderFromEnvironment(env);
 
   // Modify externals https://github.com/electron-userland/electron-webpack/issues/81
-  const includeFunc = babelConfig.include as ((path: string) => boolean);
+  const includeFunc = babelConfig.include as (path: string) => boolean;
   if (config.externals) {
     config.externals = (config.externals as any)
       .map((external: any) => {
