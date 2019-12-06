@@ -62,10 +62,10 @@ const replaceContent = async (filePath: string, replaceFunction: (contentOfSingl
 };
 
 /**
- * Removes all empty subsdirs up to rootDir
+ * Removes all empty subdirs up to and including dirPath
  * Recursively enters all subdirs and removes them if one is empty or cantained only empty subdirs
  * @param dirPath - directory path that is being inspected
- * @returns whether directory was deleted or not
+ * @returns whether the given base directory and any empty subdirectories were deleted or not
  */
 const removeUponEmptyOrOnlyEmptySubdirs = async (dirPath: string): Promise<boolean> => {
   const contents = await fse.readdir(dirPath);
@@ -131,7 +131,7 @@ async function configureIOS(modulePath: string, { podName, jsModuleName, viewMan
 
 /**
  * Prepares Android part, mainly by renaming all files and template words in files
- * Sets all version in gradle to 1.0.0
+ * Sets all versions in Gradle to 1.0.0
  * @param modulePath - module directory
  * @param configuration - naming configuration
  */

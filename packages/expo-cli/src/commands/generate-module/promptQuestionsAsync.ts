@@ -102,7 +102,7 @@ const generateQuestions = (suggestedModuleName: string): Question[] => [
   },
   {
     name: 'viewManager',
-    message: 'Would you like to create NativeViewManager?',
+    message: 'Would you like to create a NativeViewManager?',
     default: false,
     type: 'confirm',
   },

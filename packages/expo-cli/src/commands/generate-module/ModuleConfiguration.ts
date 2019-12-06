@@ -5,22 +5,22 @@ export interface ModuleConfiguration {
   npmModuleName: string;
 
   /**
-   * Name od `Pod` for `cocoapods` package manages in iOS.
+   * Name of the pod for this module, used by the CocoaPods iOS package manager.
    */
   podName: string;
 
   /**
-   * Package name for Android library.
+   * The Android library's package name.
    */
   javaPackage: string;
 
   /**
-   * Name of the module in JS/TS codebase.
+   * Name of the JavaScript package.
    */
-  jsModuleName: string;
+  jsPackageName: string;
 
   /**
-   * Indicates whether module have native ViewManager.
+   * Indicates whether the module has a native ViewManager.
    */
   viewManager: boolean;
 }
