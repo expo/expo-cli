@@ -7,8 +7,8 @@ import { MultiSelect } from 'enquirer';
 import fs from 'fs-extra';
 import path from 'path';
 
-import log from '../log';
 import * as PackageManager from '@expo/package-manager';
+import log from '../log';
 
 type Options = { force: boolean };
 

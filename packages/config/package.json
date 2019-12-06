@@ -54,8 +54,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.1",
-    "memfs": "^2.15.5",
-    "typescript": "3.4.5"
+    "memfs": "^2.15.5"
   },
   "publishConfig": {
     "access": "public"

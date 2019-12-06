@@ -1,13 +1,16 @@
 import program from 'commander';
 import get from 'lodash/get';
-import inquirer, { Question, ChoiceType } from 'inquirer';
-export { Question, ChoiceType };
+import inquirer, { ChoiceType, Question } from 'inquirer';
 
 import CommandError from './CommandError';
+export { Question, ChoiceType };
 
 type CliQuestions = Question | Question[];
 
-export default function prompt(questions: CliQuestions, { nonInteractiveHelp }: { nonInteractiveHelp?: string } = {}) {
+export default function prompt(
+  questions: CliQuestions,
+  { nonInteractiveHelp }: { nonInteractiveHelp?: string } = {}
+) {
   const nQuestions = Array.isArray(questions) ? questions.length : 1;
   if (program.nonInteractive && nQuestions !== 0) {
     let message = `Input is required, but Expo CLI is in non-interactive mode.\n`;

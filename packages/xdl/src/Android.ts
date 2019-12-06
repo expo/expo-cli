@@ -223,9 +223,7 @@ async function openUrlAsync(url: string, isDetached: boolean = false): Promise<v
       await _openUrlAsync(url);
     } catch (e) {
       if (isDetached) {
-        e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${
-          e.message
-        }`;
+        e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
       } else {
         e.message = `Error running app. ${e.message}`;
       }

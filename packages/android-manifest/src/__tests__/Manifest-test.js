@@ -1,4 +1,4 @@
-import { resolve, dirname } from 'path';
+import { dirname, resolve } from 'path';
 import fs from 'fs-extra';
 import * as Manifest from '../Manifest';
 const fixturesPath = resolve(__dirname, 'fixtures');

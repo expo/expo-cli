@@ -5,14 +5,14 @@ import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
 import {
-  pushKeySchema,
+  IosAppCredentials,
   IosCredentials,
   IosPushCredentials,
-  IosAppCredentials,
+  pushKeySchema,
 } from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { PushKeyManager, PushKeyInfo, PushKey } from '../../appleApi';
+import { PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 import { CreateAppCredentialsIos } from './IosAppCredentials';
 
@@ -262,7 +262,7 @@ function formatPushKeyFromApple(appleInfo: PushKeyInfo, credentials: IosCredenti
     .map(i => `      ${i.experienceName} (${i.bundleIdentifier})`)
     .join('\n');
 
-  const usedByString = !!joinApps
+  const usedByString = joinApps
     ? `    ${chalk.gray(`used by\n${joinApps}`)}`
     : `    ${chalk.gray(`not used by any apps`)}`;
 
@@ -283,13 +283,11 @@ function formatPushKey(pushKey: IosPushCredentials, credentials: IosCredentials)
     .map(i => `${i.experienceName} (${i.bundleIdentifier})`)
     .join(', ');
 
-  const usedByString = !!joinApps
+  const usedByString = joinApps
     ? `\n    ${chalk.gray(`used by ${joinApps}`)}`
     : `\n    ${chalk.gray(`not used by any apps`)}`;
 
-  return `Push Notifications Key (Key ID: ${pushKey.apnsKeyId}, Team ID: ${
-    pushKey.teamId
-  })${usedByString}`;
+  return `Push Notifications Key (Key ID: ${pushKey.apnsKeyId}, Team ID: ${pushKey.teamId})${usedByString}`;
 }
 
 async function generatePushKey(ctx: Context): Promise<PushKey> {

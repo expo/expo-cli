@@ -1,5 +1,5 @@
-import { isPortrait, isLandscape, isValid } from './Orientation';
-import { Orientation, StartupImage, Icon } from '../WebpackPWAManifestPlugin.types';
+import { isLandscape, isPortrait, isValid } from './Orientation';
+import { Icon, Orientation, StartupImage } from '../WebpackPWAManifestPlugin.types';
 
 interface Device {
   names: string[];

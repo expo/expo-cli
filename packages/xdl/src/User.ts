@@ -374,13 +374,10 @@ function _parseAuth0Profile(rawProfile: any) {
   if (!rawProfile || typeof rawProfile !== 'object') {
     return rawProfile;
   }
-  return Object.keys(rawProfile).reduce(
-    (p, key) => {
-      p[camelCase(key)] = _parseAuth0Profile(rawProfile[key]);
-      return p;
-    },
-    {} as any
-  );
+  return Object.keys(rawProfile).reduce((p, key) => {
+    p[camelCase(key)] = _parseAuth0Profile(rawProfile[key]);
+    return p;
+  }, {} as any);
 }
 
 function _prepareAuth0Profile(niceProfile: any) {
@@ -388,11 +385,8 @@ function _prepareAuth0Profile(niceProfile: any) {
     return niceProfile;
   }
 
-  return Object.keys(niceProfile).reduce(
-    (p, key) => {
-      p[snakeCase(key)] = _prepareAuth0Profile(niceProfile[key]);
-      return p;
-    },
-    {} as any
-  );
+  return Object.keys(niceProfile).reduce((p, key) => {
+    p[snakeCase(key)] = _prepareAuth0Profile(niceProfile[key]);
+    return p;
+  }, {} as any);
 }

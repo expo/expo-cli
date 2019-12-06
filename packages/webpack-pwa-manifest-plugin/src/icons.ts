@@ -1,4 +1,4 @@
-import { ImageFormat, isAvailableAsync, ResizeMode, sharpAsync } from '@expo/image-utils';
+import { ImageFormat, ResizeMode, isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import mime from 'mime';
 import fetch from 'node-fetch';
@@ -8,8 +8,9 @@ import temporary from 'tempy';
 import util from 'util';
 import chalk from 'chalk';
 
+import crypto from 'crypto';
 import { IconError } from './Errors';
-import { AnySize, joinURI, toArray, ImageSize, toSize } from './utils';
+import { AnySize, ImageSize, joinURI, toArray, toSize } from './utils';
 import { fromStartupImage } from './validators/Apple';
 import { Icon, ManifestIcon, ManifestOptions } from './WebpackPWAManifestPlugin.types';
 
@@ -111,7 +112,6 @@ async function cacheImageAsync(fileName: string, buffer: Buffer, cacheKey: strin
     await fs.writeFile(path.resolve(cacheKeys[cacheKey], fileName), buffer);
   } catch ({ message }) {
     console.warn(`error caching image: "${fileName}". ${message}`);
-    return;
   }
 }
 
@@ -223,8 +223,6 @@ export function retrieveIcons(manifest: ManifestOptions): [Icon[], ManifestOptio
   const response: Icon[] = parsedIcons.map(icon => sanitizeIcon(icon));
   return [response, config];
 }
-
-import crypto from 'crypto';
 
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {

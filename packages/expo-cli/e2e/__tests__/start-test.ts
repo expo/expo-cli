@@ -3,7 +3,7 @@ import path from 'path';
 import spawnAsync from '@expo/spawn-async';
 import temporary from 'tempy';
 
-import { runAsync, EXPO_CLI } from '../TestUtils';
+import { EXPO_CLI, runAsync } from '../TestUtils';
 
 const projectDir = path.join(temporary.directory(), 'my-app');
 

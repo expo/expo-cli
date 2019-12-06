@@ -1,13 +1,13 @@
 import {
-  Platform,
-  readExpRcAsync,
-  projectHasModule,
-  configFilename,
-  PackageJSONConfig,
-  resolveModule,
   ExpoConfig,
+  PackageJSONConfig,
+  Platform,
+  configFilename,
+  projectHasModule,
   readConfigJson,
   readConfigJsonAsync,
+  readExpRcAsync,
+  resolveModule,
 } from '@expo/config';
 
 import { getManagedExtensions } from '@expo/config/paths';

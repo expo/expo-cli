@@ -1,7 +1,7 @@
 import log from '../log';
 
-import { IView, Context } from './context';
-import { askQuit, SelectPlatform } from './views/Select';
+import { Context, IView } from './context';
+import { SelectPlatform, askQuit } from './views/Select';
 
 let mainView: IView = new SelectPlatform();
 
@@ -22,4 +22,3 @@ export async function runCredentialsManager(ctx: Context, startView: IView) {
     }
   }
 }
-

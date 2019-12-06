@@ -49,7 +49,7 @@
     "@expo/babel-preset-cli": "^0.2.1",
     "@types/ansi-regex": "^4.0.0",
     "@types/dateformat": "^3.0.0",
-    "@types/inquirer": "^6.0.3",
+    "@types/inquirer": "6.0.3",
     "@types/npm-package-arg": "^6.1.0",
     "@types/progress": "^2.0.3",
     "@types/slash": "^2.0.0",
@@ -61,8 +61,7 @@
     "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^2.6.4",
     "jest": "^24.9.0",
-    "pkg": "^4.2.1",
-    "typescript": "^3.5.1"
+    "pkg": "^4.2.1"
   },
   "dependencies": {
     "@expo/build-tools": "0.1.0-alpha.7",

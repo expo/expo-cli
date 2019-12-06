@@ -1,11 +1,11 @@
-import { Platform, BuildType } from '@expo/build-tools';
-import { UserManager, User } from '@expo/xdl';
+import { BuildType, Platform } from '@expo/build-tools';
+import { User, UserManager } from '@expo/xdl';
 import { Command } from 'commander';
 
 import log from '../../log';
 import Builder from './Builder';
 import { Options } from './prepare';
-import { printBuildTable } from './utils'
+import { printBuildTable } from './utils';
 
 async function buildAction(projectDir: string, options: Options) {
   if (!options.platform || !Object.values(Platform).includes(options.platform)) {
@@ -16,7 +16,7 @@ async function buildAction(projectDir: string, options: Options) {
   }
   // it will accept all types of builds but will fail later on unsupported types.
   if (!Object.values(BuildType).includes(options.type)) {
-    throw new Error(`--type option must be 'generic' or 'managed'`)
+    throw new Error(`--type option must be 'generic' or 'managed'`);
   }
   const user: User = await UserManager.ensureLoggedInAsync();
   const builder = new Builder(user);
@@ -31,10 +31,12 @@ async function statusAction() {
   printBuildTable(result.builds);
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('build [project-dir]')
-    .description('Build an app binary for your project, signed and ready for submission to the Google Play Store / App Store.')
+    .description(
+      'Build an app binary for your project, signed and ready for submission to the Google Play Store / App Store.'
+    )
     .option('-p --platform <platform>', 'Platform: [android|ios]', /^(android|ios)$/i)
     .option('-t --type <type>', 'Type: [generic|managed|]', /^(generic|managed)$/i)
     .asyncActionProjectDir(buildAction);

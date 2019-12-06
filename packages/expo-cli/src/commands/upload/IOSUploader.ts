@@ -5,13 +5,13 @@ import chalk from 'chalk';
 
 import { Credentials, UrlUtils } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
+import getenv from 'getenv';
 import BaseUploader, { PlatformOptions } from './BaseUploader';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
 import { runFastlaneAsync } from './utils';
 import CommandError from '../../CommandError';
 import { nonEmptyInput } from '../../validators';
-import getenv from 'getenv';
 
 const PLATFORM = 'ios';
 
@@ -131,7 +131,8 @@ export default class IOSUploader extends BaseUploader {
     if (credential) {
       return credential.teamId;
     }
-    return;
+
+    return undefined;
   }
 
   async _getAppleIdCredentials(): Promise<{ appleId: string; appleIdPassword: string }> {

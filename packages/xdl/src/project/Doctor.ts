@@ -1,10 +1,10 @@
 import {
-  resolveModule,
-  configFilename,
-  fileExistsAsync,
   ExpoConfig,
   PackageJSONConfig,
+  configFilename,
+  fileExistsAsync,
   readConfigJsonAsync,
+  resolveModule,
 } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';

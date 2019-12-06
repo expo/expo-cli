@@ -43,8 +43,7 @@
     "service-worker.js"
   ],
   "devDependencies": {
-    "@expo/babel-preset-cli": "^0.2.1",
-    "typescript": "3.4.5"
+    "@expo/babel-preset-cli": "^0.2.1"
   },
   "peerDependencies": {
     "next": "^9",

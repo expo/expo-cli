@@ -8,7 +8,11 @@ import log from '../../log';
 import { printTableJsonArray } from '../utils/cli-table';
 import { BuildInfo } from './Builder';
 
-async function waitForBuildEnd(client: TurtleApi, buildId: string, { timeoutSec = 1800, intervalSec = 30 } = {}) {
+async function waitForBuildEnd(
+  client: TurtleApi,
+  buildId: string,
+  { timeoutSec = 1800, intervalSec = 30 } = {}
+) {
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
   let time = new Date().getTime();
@@ -46,11 +50,17 @@ async function makeProjectTarball(tarPath: string) {
   const changes = (await spawnAsync('git', ['status', '-s'])).stdout;
   if (changes.length > 0) {
     spinner.fail('Could not make project tarball');
-    throw new Error(
-      'Please commit all files before trying to build your project. Aborting...'
-    );
+    throw new Error('Please commit all files before trying to build your project. Aborting...');
   }
-  await spawnAsync('git', ['archive', '--format=tar.gz', '--prefix', 'project/', '-o', tarPath, 'HEAD']);
+  await spawnAsync('git', [
+    'archive',
+    '--format=tar.gz',
+    '--prefix',
+    'project/',
+    '-o',
+    tarPath,
+    'HEAD',
+  ]);
   spinner.succeed('Project tarball created.');
 }
 
