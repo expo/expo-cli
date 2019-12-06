@@ -385,14 +385,14 @@ export function _simulatorCacheDirectory() {
   return dir;
 }
 
-export async function upgradeExpoAsync(): Promise<boolean> {
+export async function upgradeExpoAsync(url?: string): Promise<boolean> {
   if (!(await _isSimulatorInstalledAsync())) {
     return false;
   }
 
   await _openAndBootSimulatorAsync();
   await _uninstallExpoAppFromSimulatorAsync();
-  let installResult = await _installExpoOnSimulatorAsync();
+  let installResult = await _installExpoOnSimulatorAsync(url);
   if (installResult.status !== 0) {
     return false;
   }
