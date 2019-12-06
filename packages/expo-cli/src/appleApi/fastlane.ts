@@ -12,7 +12,7 @@ const WSL_ONLY_PATH = 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/s
 
 type Options = {
   pipeStdout?: boolean;
-}
+};
 
 async function runAction(fastlaneAction: string, args: string[], options: Options = {}) {
   const { pipeStdout = false } = options;
@@ -40,19 +40,19 @@ function getCommandAndArgsForPlatform(fastlaneAction: string, args: string[]) {
       '-c',
       `${WSL_ONLY_PATH} ${windowsToWSLPath(fastlaneAction)} ${argsJoined}`,
     ];
-    return {command, commandArgs};
+    return { command, commandArgs };
   } else {
     const command = fastlaneAction;
     const commandArgs = [...args];
-    return {command, commandArgs};
+    return { command, commandArgs };
   }
-};
+}
 
 function windowsToWSLPath(_path: string) {
   const slashPath = slash(_path);
   const diskLetter = _path[0].toLowerCase();
   const pathOnDisk = slashPath.slice(2);
   return `/mnt/${diskLetter}${pathOnDisk}`;
-};
+}
 
 export { travelingFastlane, runAction, WSL_BASH_PATH };

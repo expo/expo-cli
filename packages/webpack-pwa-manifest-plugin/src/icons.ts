@@ -1,4 +1,4 @@
-import { ImageFormat, ResizeMode, sharpAsync } from '@expo/image-utils';
+import { ImageFormat, ResizeMode, isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import fs from 'fs-extra';
 import mime from 'mime';
 import fetch from 'node-fetch';
@@ -6,9 +6,11 @@ import path from 'path';
 import stream from 'stream';
 import temporary from 'tempy';
 import util from 'util';
+import chalk from 'chalk';
 
+import crypto from 'crypto';
 import { IconError } from './Errors';
-import { AnySize, generateFingerprint, joinURI, toArray, ImageSize, toSize } from './utils';
+import { AnySize, ImageSize, joinURI, toArray, toSize } from './utils';
 import { fromStartupImage } from './validators/Apple';
 import { Icon, ManifestIcon, ManifestOptions } from './WebpackPWAManifestPlugin.types';
 
@@ -91,11 +93,33 @@ async function downloadImage(url: string): Promise<string> {
   return localPath;
 }
 
+async function ensureCacheDirectory(projectRoot: string, cacheKey: string): Promise<string> {
+  const cacheFolder = path.join(projectRoot, '.expo/web/cache/production/images', cacheKey);
+  await fs.ensureDir(cacheFolder);
+  return cacheFolder;
+}
+
+async function getImageFromCacheAsync(fileName: string, cacheKey: string): Promise<null | Buffer> {
+  try {
+    return await fs.readFile(path.resolve(cacheKeys[cacheKey], fileName));
+  } catch (_) {
+    return null;
+  }
+}
+
+async function cacheImageAsync(fileName: string, buffer: Buffer, cacheKey: string): Promise<void> {
+  try {
+    await fs.writeFile(path.resolve(cacheKeys[cacheKey], fileName), buffer);
+  } catch ({ message }) {
+    console.warn(`error caching image: "${fileName}". ${message}`);
+  }
+}
+
 async function processImageAsync(
   size: AnySize,
   icon: Icon,
-  shouldFingerprint: boolean,
-  publicPath: string
+  publicPath: string,
+  cacheKey: string
 ): Promise<{ manifestIcon: ManifestIcon; webpackAsset: WebpackAsset }> {
   const { width, height } = toSize(size);
   if (width <= 0 || height <= 0) {
@@ -105,12 +129,16 @@ async function processImageAsync(
   if (!mimeType) {
     throw new Error(`Invalid mimeType for image with source: ${icon.src}`);
   }
-  const imageBuffer = await getBufferWithMimeAsync(icon, mimeType, { width, height });
 
   const dimensions = `${width}x${height}`;
-  const fileName = shouldFingerprint
-    ? `icon_${dimensions}.${generateFingerprint(imageBuffer)}.${mime.getExtension(mimeType)}`
-    : `icon_${dimensions}.${mime.getExtension(mimeType)}`;
+  const fileName = `icon_${dimensions}.${mime.getExtension(mimeType)}`;
+
+  let imageBuffer: Buffer | null = await getImageFromCacheAsync(fileName, cacheKey);
+  if (!imageBuffer) {
+    imageBuffer = await getBufferWithMimeAsync(icon, mimeType, { width, height });
+    await cacheImageAsync(fileName, imageBuffer, cacheKey);
+  }
+
   const iconOutputDir = icon.destination ? joinURI(icon.destination, fileName) : fileName;
   const iconPublicUrl = joinURI(publicPath, iconOutputDir);
 
@@ -196,12 +224,45 @@ export function retrieveIcons(manifest: ManifestOptions): [Icon[], ManifestOptio
   return [response, config];
 }
 
+// Calculate SHA256 Checksum value of a file based on its contents
+function calculateHash(filePath: string): string {
+  const contents = fs.readFileSync(filePath);
+  return crypto
+    .createHash('sha256')
+    .update(contents)
+    .digest('hex');
+}
+
+// Create a hash key for caching the images between builds
+function createCacheKey(icon: Icon): string {
+  const hash = calculateHash(icon.src);
+  return [hash, icon.resizeMode, icon.color].filter(Boolean).join('-');
+}
+
+const cacheKeys: { [key: string]: string } = {};
+
 export async function parseIconsAsync(
+  projectRoot: string,
   inputIcons: Icon[],
-  fingerprint: boolean,
   publicPath: string
 ): Promise<{ icons?: ManifestIcon[]; assets?: WebpackAsset[] }> {
   if (!inputIcons.length) {
+    return {};
+  }
+
+  if (!(await isAvailableAsync())) {
+    // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
+    console.log();
+    console.log(
+      chalk.bgRed.black(
+        `PWA Error: It was not possible to generate the images for your progressive web app (splash screens and icons) because the host computer does not have \`sharp\` installed, and \`image-utils\` was unable to install it automatically.`
+      )
+    );
+    console.log(
+      chalk.red(
+        `- You may stop the process and try again after successfully running \`npm install -g sharp\`.\n- If you are using \`expo-cli\` to build your project then you could use the \`--no-pwa\` flag to skip the PWA asset generation step entirely.`
+      )
+    );
     return {};
   }
 
@@ -209,7 +270,13 @@ export async function parseIconsAsync(
   const assets: WebpackAsset[] = [];
 
   let promises: Promise<any>[] = [];
+
   for (const icon of inputIcons) {
+    const cacheKey = createCacheKey(icon);
+    if (!(cacheKey in cacheKeys)) {
+      cacheKeys[cacheKey] = await ensureCacheDirectory(projectRoot, cacheKey);
+    }
+
     const { sizes } = icon;
     promises = [
       ...promises,
@@ -217,8 +284,8 @@ export async function parseIconsAsync(
         const { manifestIcon, webpackAsset } = await processImageAsync(
           size,
           icon,
-          fingerprint,
-          publicPath
+          publicPath,
+          cacheKey
         );
         icons.push(manifestIcon);
         assets.push(webpackAsset);
@@ -226,6 +293,8 @@ export async function parseIconsAsync(
     ];
   }
   await Promise.all(promises);
+
+  await clearUnusedCachesAsync(projectRoot);
 
   return {
     icons: sortByAttribute(icons, 'sizes'),
@@ -235,11 +304,30 @@ export async function parseIconsAsync(
 }
 
 function sortByAttribute(arr: any[], key: string): any[] {
-  return arr
-      .filter(Boolean)
-      .sort((valueA, valueB) => {
-        if (valueA[key] < valueB[key]) return -1;
-        else if (valueA[key] > valueB[key]) return 1;
-        return 0;
-      });
+  return arr.filter(Boolean).sort((valueA, valueB) => {
+    if (valueA[key] < valueB[key]) return -1;
+    else if (valueA[key] > valueB[key]) return 1;
+    return 0;
+  });
+}
+
+async function clearUnusedCachesAsync(projectRoot: string): Promise<void> {
+  // Clean up any old caches
+  const cacheFolder = path.join(projectRoot, '.expo/web/cache/production/images');
+  const currentCaches = await fs.readdir(cacheFolder);
+
+  const deleteCachePromises: Promise<void>[] = [];
+  for (const cache of currentCaches) {
+    // skip hidden folders
+    if (cache.startsWith('.')) {
+      continue;
+    }
+
+    // delete
+    if (!(cache in cacheKeys)) {
+      deleteCachePromises.push(fs.remove(path.join(cacheFolder, cache)));
+    }
+  }
+
+  await Promise.all(deleteCachePromises);
 }

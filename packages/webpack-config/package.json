@@ -1,20 +1,20 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.8.0",
+  "version": "0.10.6",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
+  "types": "webpack.config.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
     "directory": "packages/webpack-config"
   },
   "scripts": {
-    "lint": "eslint .",
     "watch": "tsc --watch",
     "build": "tsc",
     "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
-    "test": "npm run test:unit; npm run test:e2e",
+    "test": "npm run test:unit; npm run test:e2e; npm run test:e2e:nextjs",
     "test:unit": "jest --config jest/unit-test-config.json --rootDir .",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:build": "EXPO_E2E_COMMAND='build' jest --config jest/e2e-test-config.json --rootDir .",
@@ -24,7 +24,8 @@
     "test:e2e:buildNextJsFromExpoCLI": "EXPO_E2E_COMMAND='buildNextJsFromExpoCLI' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:startNextJsFromNextCLI": "EXPO_E2E_COMMAND='startNextJsFromNextCLI' jest --config jest/e2e-test-config.json --rootDir .",
     "test:e2e:buildNextJsFromNextCLI": "EXPO_E2E_COMMAND='buildNextJsFromNextCLI' jest --config jest/e2e-test-config.json --rootDir .",
-    "test:e2e": "npm run test:e2e:start; npm run test:e2e:build; npm run test:e2e:startNextJs; npm run test:e2e:buildNextJs"
+    "test:e2e": "yarn test:e2e:start; yarn test:e2e:build",
+    "test:e2e:nextjs": "yarn test:e2e:startNextJs; yarn test:e2e:buildNextJs"
   },
   "license": "MIT",
   "engines": {
@@ -34,12 +35,12 @@
     "url": "https://github.com/expo/expo-cli/issues"
   },
   "dependencies": {
-    "@babel/core": "^7.0.0",
+    "@babel/core": "^7.4.5",
     "@babel/runtime": "^7.3.4",
-    "@expo/config": "^2.3.0",
-    "@expo/webpack-pwa-manifest-plugin": "^1.2.8",
+    "@expo/config": "^2.5.2",
+    "@expo/webpack-pwa-manifest-plugin": "^1.2.14",
     "@types/yup": "^0.26.24",
-    "babel-loader": "^8.0.5",
+    "babel-loader": "8.0.6",
     "babel-preset-expo": "^7.0.0",
     "brotli-webpack-plugin": "^1.1.0",
     "chalk": "^2.4.2",
@@ -48,7 +49,7 @@
     "copy-webpack-plugin": "5.0.0",
     "css-loader": "^2.1.1",
     "deep-diff": "^1.0.2",
-    "file-loader": "^3.0.1",
+    "file-loader": "4.2.0",
     "find-yarn-workspace-root": "^1.2.1",
     "getenv": "^0.7.0",
     "html-loader": "^0.5.5",
@@ -64,7 +65,7 @@
     "style-loader": "^0.23.1",
     "terser-webpack-plugin": "^1.2.3",
     "url-loader": "^1.1.2",
-    "webpack": "4.29.6",
+    "webpack": "4.39.0",
     "webpack-bundle-analyzer": "^3.0.4",
     "webpack-deep-scope-plugin": "1.6.0",
     "webpack-manifest-plugin": "^2.0.4",
@@ -75,7 +76,7 @@
   "devDependencies": {
     "@babel/core": "^7.4.5",
     "@babel/preset-flow": "^7.0.0",
-    "@expo/babel-preset-cli": "^0.2.1",
+    "@expo/babel-preset-cli": "^0.2.2",
     "@types/copy-webpack-plugin": "^5.0.0",
     "@types/deep-diff": "^1.0.0",
     "@types/html-webpack-plugin": "^3.2.0",
@@ -83,16 +84,15 @@
     "@types/optimize-css-assets-webpack-plugin": "^5.0.0",
     "@types/react-dev-utils": "^9.0.1",
     "@types/terser-webpack-plugin": "^1.2.1",
-    "@types/webpack": "^4.32.1",
+    "@types/webpack": "4.32.1",
     "@types/webpack-bundle-analyzer": "^2.13.2",
-    "@types/webpack-dev-server": "^3.1.7",
+    "@types/webpack-dev-server": "3.1.7",
     "@types/webpack-manifest-plugin": "^2.0.0",
     "@types/webpack-merge": "^4.1.5",
     "@types/workbox-webpack-plugin": "^4.1.0",
     "jest-puppeteer": "^4.3.0",
     "puppeteer": "^1.19.0",
-    "serve": "^11.1.0",
-    "typescript": "3.4.5"
+    "serve": "^11.1.0"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "browserslist": {

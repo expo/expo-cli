@@ -1,5 +1,6 @@
 // @flow
 
+import { readConfigJsonAsync } from '@expo/config';
 import {
   Android,
   Exp,
@@ -39,7 +40,7 @@ const printHelp = () => {
 
 const printUsage = async (projectDir, options = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';

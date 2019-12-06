@@ -1,27 +1,19 @@
 import * as ConfigUtils from '@expo/config';
 import chalk from 'chalk';
-import express from 'express';
-import fs from 'fs-extra';
 import getenv from 'getenv';
 import http from 'http';
-import path from 'path';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
+import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 
-import createWebpackCompiler, {
-  printInstructions,
-  printSuccessMessages,
-} from './createWebpackCompiler';
+import createWebpackCompiler, { printInstructions } from './createWebpackCompiler';
 import ip from './ip';
-
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Web from './Web';
 import XDLError from './XDLError';
 
-// @ts-ignore missing types for Doctor until it gets converted to TypeScript
 export const HOST = getenv.string('WEB_HOST', '0.0.0.0');
 export const DEFAULT_PORT = getenv.int('WEB_PORT', 19006);
 const WEBPACK_LOG_TAG = 'expo';
@@ -104,12 +96,7 @@ export async function startAsync(
     );
   }
 
-  const usingNextJs = await getProjectUseNextJsAsync(projectRoot);
-  options.unimodulesOnly = usingNextJs;
   let serverName = 'Webpack';
-  if (usingNextJs) {
-    serverName = 'Next.js';
-  }
 
   if (webpackDevServerInstance) {
     ProjectUtils.logError(
@@ -150,58 +137,40 @@ export async function startAsync(
   );
 
   let server: DevServer;
-  if (usingNextJs) {
-    if (protocol === 'https') {
-      // TODO: Support https.
-      throw new Error('https with Next.js is not supported for now.');
-    }
-    server = await startNextJsAsync({
-      projectRoot,
-      port: webpackServerPort,
-      dev: env.mode !== 'production',
-    });
-    printSuccessMessages({
-      projectRoot,
-      appName,
-      urls,
-      config,
-      isFirstCompile: true,
-      nonInteractive,
-    });
-  } else {
-    devServerInfo = {
-      urls,
-      protocol,
-      useYarn,
-      appName,
-      nonInteractive,
-      port: webpackServerPort!,
-    };
 
-    server = await new Promise(resolve => {
-      // Create a webpack compiler that is configured with custom messages.
-      const compiler = createWebpackCompiler({
-        projectRoot,
-        appName,
-        config,
-        urls,
-        nonInteractive,
-        webpackFactory: webpack,
-        onFinished: () => resolve(server),
-      });
-      const server = new WebpackDevServer(compiler, config.devServer);
-      // Launch WebpackDevServer.
-      server.listen(port, HOST, error => {
-        if (error) {
-          ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
-        }
-        if (typeof options.onWebpackFinished === 'function') {
-          options.onWebpackFinished(error);
-        }
-      });
-      webpackDevServerInstance = server;
+  devServerInfo = {
+    urls,
+    protocol,
+    useYarn,
+    appName,
+    nonInteractive,
+    port: webpackServerPort!,
+  };
+
+  server = await new Promise(resolve => {
+    // Create a webpack compiler that is configured with custom messages.
+    const compiler = createWebpackCompiler({
+      projectRoot,
+      appName,
+      config,
+      urls,
+      nonInteractive,
+      webpackFactory: webpack,
+      onFinished: () => resolve(server),
     });
-  }
+    const server = new WebpackDevServer(compiler, config.devServer);
+    // Launch WebpackDevServer.
+    server.listen(port, HOST, error => {
+      if (error) {
+        ProjectUtils.logError(projectRoot, WEBPACK_LOG_TAG, error.message);
+      }
+      if (typeof options.onWebpackFinished === 'function') {
+        options.onWebpackFinished(error);
+      }
+    });
+    webpackDevServerInstance = server;
+  });
+
   await ProjectSettings.setPackagerInfoAsync(projectRoot, {
     webpackServerPort,
   });
@@ -320,11 +289,8 @@ export async function bundleWebAppAsync(projectRoot: string, config: Web.Webpack
 }
 
 export async function bundleAsync(projectRoot: string, options?: BundlingOptions): Promise<void> {
-  const isUsingNextJs = await getProjectUseNextJsAsync(projectRoot);
-
   const fullOptions = transformCLIOptions({
     ...options,
-    unimodulesOnly: isUsingNextJs,
   });
 
   const env = await getWebpackConfigEnvFromBundlingOptionsAsync(projectRoot, {
@@ -335,11 +301,7 @@ export async function bundleAsync(projectRoot: string, options?: BundlingOptions
 
   const config = await createWebpackConfigAsync(env, fullOptions);
 
-  if (isUsingNextJs) {
-    await bundleNextJsAsync(projectRoot);
-  } else {
-    await bundleWebAppAsync(projectRoot, config);
-  }
+  await bundleWebAppAsync(projectRoot, config);
 }
 
 export async function getProjectNameAsync(projectRoot: string): Promise<string> {
@@ -348,10 +310,8 @@ export async function getProjectNameAsync(projectRoot: string): Promise<string> 
   return webName;
 }
 
-export async function getProjectUseNextJsAsync(projectRoot: string): Promise<boolean> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, true);
-  const { use = null } = exp.web || {};
-  return use === 'nextjs';
+export function isRunning(): boolean {
+  return !!webpackDevServerInstance;
 }
 
 export function getServer(projectRoot: string): DevServer | null {
@@ -431,7 +391,7 @@ async function createWebpackConfigAsync(
 
   let config;
   if (options.unimodulesOnly) {
-    const withUnimodules = require('@expo/webpack-config/withUnimodules');
+    const { withUnimodules } = require('@expo/webpack-config/addons');
     config = withUnimodules({}, env);
   } else {
     config = await Web.invokeWebpackConfigAsync(env);
@@ -479,134 +439,10 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
   return {
     projectRoot,
     pwa: isImageEditingEnabled,
+    isImageEditingEnabled,
     mode,
     https,
     info: isDebugInfoEnabled,
     ...(options.webpackEnv || {}),
   };
 }
-
-async function startNextJsAsync({
-  projectRoot,
-  port,
-  dev,
-}: {
-  projectRoot: string;
-  port: number;
-  dev: boolean;
-}): Promise<DevServer> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, true);
-
-  let next;
-  try {
-    next = require(ConfigUtils.resolveModule('next', projectRoot, exp));
-  } catch {
-    throw new XDLError(
-      'NEXTJS_NOT_INSTALLED',
-      'Next.js is not installed in your app. See https://docs.expo.io/versions/latest/guides/using-nextjs/'
-    );
-  }
-
-  // Build first if in production mode.
-  // https://nextjs.org/docs#custom-server-and-routing
-  if (!dev) {
-    await bundleNextJsAsync(projectRoot);
-  }
-
-  await _copyCustomNextJsTemplatesAsync(projectRoot);
-
-  const app = next({
-    dev,
-    dir: projectRoot,
-  });
-  const handle = app.getRequestHandler();
-
-  await app.prepare();
-
-  const server = express();
-
-  server.get('/expo-service-worker.js', (req, res) => {
-    res.sendFile(path.resolve(projectRoot, 'static', 'expo-service-worker.js'));
-  });
-
-  server.get('/service-worker.js', (req, res) => {
-    // This file should be provided by https://github.com/hanford/next-offline if installed.
-    const serviceWorkerPath = path.resolve(projectRoot, '.next', 'service-worker.js');
-    if (!fs.existsSync(serviceWorkerPath)) {
-      // Simply return a blank service worker file if the user is not using `next-offline`.
-      res.sendFile(path.resolve(projectRoot, 'static', 'service-worker.js'));
-      return;
-    }
-    res.sendFile(serviceWorkerPath);
-  });
-
-  server.get('*', handle);
-
-  webpackDevServerInstance = server.listen(port, err => {
-    if (err) {
-      throw new Error(`Express server failed to start: ${err.toString()}`);
-    }
-  });
-
-  return webpackDevServerInstance;
-}
-
-async function bundleNextJsAsync(projectRoot: string) {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot, true);
-
-  let nextBuild;
-  try {
-    nextBuild = require(ConfigUtils.resolveModule('next/dist/build', projectRoot, exp)).default;
-  } catch {
-    throw new XDLError(
-      'NEXTJS_NOT_INSTALLED',
-      'Next.js (or its build component) is not installed in your app. See https://docs.expo.io/versions/latest/guides/using-nextjs/'
-    );
-  }
-
-  await _copyCustomNextJsTemplatesAsync(projectRoot);
-  await nextBuild(projectRoot);
-}
-
-async function _copyCustomNextJsTemplatesAsync(projectRoot: string) {
-  // TODO(Bacon): Ensure @expo/next-adapter is installed
-  const pagesDocument = path.join(projectRoot, 'pages', '_document.js');
-  if (!fs.existsSync(pagesDocument)) {
-    // Only write to `pages/_document.js` if it doesn't exists.
-    try {
-      await fs.writeFile(pagesDocument, nextJsImportDocument);
-    } catch (e) {
-      throw new Error(`Could not write to pages/_document.js: ${e.toString()}`);
-    }
-  }
-
-  // TODO: Use `public/` folder when Next.js eventually deprecates `static/` folder.
-  const staticFolder = path.join(projectRoot, 'static');
-  if (!fs.existsSync(staticFolder)) {
-    fs.mkdirSync(staticFolder);
-  }
-
-  try {
-    await fs.copyFile(
-      require.resolve('@expo/webpack-config/web-default/expo-service-worker.js'),
-      path.join(staticFolder, 'expo-service-worker.js')
-    );
-  } catch (e) {
-    throw new Error(`Could not copy expo-service-worker.js: ${e.toString()}`);
-  }
-
-  const serviceWorkerPath = path.join(staticFolder, 'service-worker.js');
-  if (!fs.existsSync(serviceWorkerPath)) {
-    // Write a blank service-worker.js file for users who do not use any other service worker.
-    try {
-      await fs.writeFile(serviceWorkerPath, '');
-    } catch (e) {
-      throw new Error(`Could not write to service-worker.js: ${e.toString()}`);
-    }
-  }
-}
-
-const nextJsImportDocument = `\
-import { Document } from '@expo/next-adapter';
-export default Document;
-`;

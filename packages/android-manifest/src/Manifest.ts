@@ -42,7 +42,9 @@ export function removePermissions(doc: Document, permissionNames?: string[]) {
   }
 }
 
-export function addPermission(doc: Document, permission: Element) {
+// NOTE(brentvatne): it's unclear from the usage here what the expected return
+// value should be. `any` is used to get past an error.
+export function addPermission(doc: Document, permission: Element): any {
   const elements: Element[] = doc.find(`//${USES_PERMISSION}`);
 
   if (elements.length) {
@@ -50,7 +52,6 @@ export function addPermission(doc: Document, permission: Element) {
   }
 
   getRoot(doc).addChild(permission);
-  return;
 }
 
 export function ensurePermissions(
@@ -231,6 +232,7 @@ export async function persistAndroidPermissionsAsync(
 
 // TODO(Bacon): link to resources about required permission prompts
 export const UnimodulePermissions: { [key: string]: string } = {
+  'android.permission.READ_INTERNAL_STORAGE': 'READ_INTERNAL_STORAGE',
   'android.permission.ACCESS_COARSE_LOCATION': 'ACCESS_COARSE_LOCATION',
   'android.permission.ACCESS_FINE_LOCATION': 'ACCESS_FINE_LOCATION',
   'android.permission.CAMERA': 'CAMERA',

@@ -11,7 +11,7 @@ const existingCredsGettersByType = {
   pushKey: Credentials.Ios.getExistingPushKeys,
 };
 
-async function promptForOverrides(appleCtx, types) {
+async function promptForOverrides(appleCtx, types, projectMetadata) {
   const credentials = {};
   const toAskUserFor = [];
   for (const type of types) {
@@ -32,7 +32,7 @@ async function promptForOverrides(appleCtx, types) {
       toAskUserFor.push(type);
     } else {
       if (canReuse) {
-        const choice = await _askIfWantsToReuse(appleCtx, definition);
+        const choice = await _askIfWantsToReuse(appleCtx, definition, projectMetadata);
         if (choice) {
           credentials[type] = { reuse: choice };
         } else {
@@ -61,9 +61,9 @@ async function _willUserProvideCredentialsType(name) {
   return answer;
 }
 
-async function _askIfWantsToReuse(appleCtx, definition) {
+async function _askIfWantsToReuse(appleCtx, definition, projectMetadata) {
   const { name } = definition;
-  const existingCreds = await _getExistingCreds(appleCtx, definition);
+  const existingCreds = await _getExistingCreds(appleCtx, definition, projectMetadata);
   if (!existingCreds) {
     return null;
   }
@@ -82,7 +82,7 @@ async function _askIfWantsToReuse(appleCtx, definition) {
   return userChoice;
 }
 
-async function _getExistingCreds({ username, team: { id: appleTeamId } }, { id, name }) {
+async function _getExistingCreds({ team: { id: appleTeamId } }, { id, name }, { username }) {
   const getter = existingCredsGettersByType[id];
   const spinner = ora(`Looking for ${name} you might have created before...`).start();
   try {

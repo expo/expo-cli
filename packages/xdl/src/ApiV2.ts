@@ -1,9 +1,9 @@
-import merge from 'lodash/merge';
-import ExtendableError from 'es6-error';
-import QueryString from 'querystring';
-import axios, { AxiosRequestConfig } from 'axios';
-import idx from 'idx';
 import { JSONObject, JSONValue } from '@expo/json-file';
+import axios, { AxiosRequestConfig } from 'axios';
+import ExtendableError from 'es6-error';
+import idx from 'idx';
+import merge from 'lodash/merge';
+import QueryString from 'querystring';
 
 import Config from './Config';
 

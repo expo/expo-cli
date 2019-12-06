@@ -1,4 +1,4 @@
-import { graphql, subscribe, parse } from 'graphql';
+import { graphql, parse, subscribe } from 'graphql';
 import schema from '../GraphQLSchema';
 import createContext from '../createContext';
 import AsyncIterableRingBuffer from '../AsyncIterableRingBuffer';

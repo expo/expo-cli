@@ -1,24 +1,22 @@
+import * as ConfigUtils from '@expo/config';
+import * as osascript from '@expo/osascript';
+import spawnAsync from '@expo/spawn-async';
+import delayAsync from 'delay-async';
+import fs from 'fs-extra';
+import glob from 'glob-promise';
 import os from 'os';
 import path from 'path';
-
-import * as ConfigUtils from '@expo/config';
-import delayAsync from 'delay-async';
-import glob from 'glob-promise';
-import * as osascript from '@expo/osascript';
 import semver from 'semver';
-import spawnAsync from '@expo/spawn-async';
-import fs from 'fs-extra';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
-import XDLError from './XDLError';
-import * as UrlUtils from './UrlUtils';
-// @ts-ignore
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import XDLError from './XDLError';
 
 let _lastUrl: string | null = null;
 
@@ -134,7 +132,7 @@ export async function _isSimulatorInstalledAsync() {
 
 // Simulator opened
 export async function _openAndBootSimulatorAsync() {
-  if (!await _isSimulatorRunningAsync()) {
+  if (!(await _isSimulatorRunningAsync())) {
     Logger.global.info('Opening iOS simulator');
     await spawnAsync('open', ['-a', 'Simulator']);
     await _waitForDeviceToBoot();
@@ -147,9 +145,11 @@ export async function _openAndBootSimulatorAsync() {
 }
 
 export async function _isSimulatorRunningAsync() {
-  let zeroMeansNo = (await osascript.execAsync(
-    'tell app "System Events" to count processes whose name is "Simulator"'
-  )).trim();
+  let zeroMeansNo = (
+    await osascript.execAsync(
+      'tell app "System Events" to count processes whose name is "Simulator"'
+    )
+  ).trim();
   if (zeroMeansNo === '0') {
     return false;
   }
@@ -195,7 +195,10 @@ async function _getFirstAvailableDeviceAsync() {
   const devices = simulatorDeviceInfo[iOSRuntimesNewestToOldest[0]];
   for (let i = 0; i < devices.length; i++) {
     const device = devices[i];
-    if (device.isAvailable && device.name.includes('iPhone')) {
+    if (
+      (device.isAvailable || device.availability === '(available)') &&
+      device.name.includes('iPhone')
+    ) {
       return device;
     }
   }
@@ -368,7 +371,6 @@ export async function _uninstallExpoAppFromSimulatorAsync() {
     await _xcrunAsync(['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
   } catch (e) {
     if (e.message && e.message.includes('No devices are booted.')) {
-      return;
     } else {
       console.error(e);
       throw e;
@@ -384,7 +386,7 @@ export function _simulatorCacheDirectory() {
 }
 
 export async function upgradeExpoAsync(): Promise<boolean> {
-  if (!await _isSimulatorInstalledAsync()) {
+  if (!(await _isSimulatorInstalledAsync())) {
     return false;
   }
 
@@ -413,7 +415,7 @@ export async function openUrlInSimulatorSafeAsync(
   url: string,
   isDetached: boolean = false
 ): Promise<{ success: true } | { success: false; msg: string }> {
-  if (!await _isSimulatorInstalledAsync()) {
+  if (!(await _isSimulatorInstalledAsync())) {
     return {
       success: false,
       msg: 'Unable to verify Xcode and Simulator installation.',
@@ -423,7 +425,7 @@ export async function openUrlInSimulatorSafeAsync(
   try {
     await _openAndBootSimulatorAsync();
 
-    if (!isDetached && !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+    if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
     }

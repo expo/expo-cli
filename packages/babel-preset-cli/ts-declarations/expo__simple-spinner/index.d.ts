@@ -1,4 +1,3 @@
-
 declare module '@expo/simple-spinner' {
   export function start(interval?: number): void;
   export function stop(): void;

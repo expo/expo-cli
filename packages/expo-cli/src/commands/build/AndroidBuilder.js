@@ -115,7 +115,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
     if (this.checkEnv()) {
       await this.collectAndValidateCredentialsFromCI(credentialMetadata);
-    } else if (this.options.clearCredentials || !credentialsExist) {
+    } else if (
+      !this.options.generateKeystore &&
+      (this.options.clearCredentials || !credentialsExist)
+    ) {
       console.log('');
       const questions = [
         {

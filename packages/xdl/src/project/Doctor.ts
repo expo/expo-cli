@@ -1,23 +1,24 @@
-import _ from 'lodash';
-import semver from 'semver';
+import {
+  ExpoConfig,
+  PackageJSONConfig,
+  configFilename,
+  fileExistsAsync,
+  readConfigJsonAsync,
+  resolveModule,
+} from '@expo/config';
+import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
+import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
 import getenv from 'getenv';
+import _ from 'lodash';
 import path from 'path';
-import spawnAsync from '@expo/spawn-async';
-import * as ConfigUtils from '@expo/config';
+import semver from 'semver';
 
-import chalk from 'chalk';
-import inquirer from 'inquirer';
-import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
-
-import * as ExpSchema from './ExpSchema';
-import * as ProjectUtils from './ProjectUtils';
-import * as AssetUtils from '../AssetUtils';
-import * as Binaries from '../Binaries';
 import Config from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
-import XDLError from '../XDLError';
+import * as ExpSchema from './ExpSchema';
+import * as ProjectUtils from './ProjectUtils';
 
 export const NO_ISSUES = 0;
 export const WARNING = 1;
@@ -113,7 +114,7 @@ export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await readConfigJsonAsync(projectRoot);
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
@@ -135,9 +136,9 @@ export async function validateWithSchema(
     await validator.validateSchemaAsync(exp);
   } catch (e) {
     if (e instanceof SchemerError) {
-      schemaErrorMessage = `Error: Problem${e.errors.length > 1
-        ? 's'
-        : ''} validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
+      schemaErrorMessage = `Error: Problem${
+        e.errors.length > 1 ? 's' : ''
+      } validating fields in ${configName}. See https://docs.expo.io/versions/v${sdkVersion}/workflow/configuration/`;
       schemaErrorMessage += e.errors.map(formatValidationError).join('');
     }
   }
@@ -147,9 +148,9 @@ export async function validateWithSchema(
       await validator.validateAssetsAsync(exp);
     } catch (e) {
       if (e instanceof SchemerError) {
-        assetsErrorMessage = `Error: Problem${e.errors.length > 1
-          ? ''
-          : 's'} validating asset fields in ${configName}. See ${Config.helpUrl}`;
+        assetsErrorMessage = `Error: Problem${
+          e.errors.length > 1 ? '' : 's'
+        } validating asset fields in ${configName}. See ${Config.helpUrl}`;
         assetsErrorMessage += e.errors.map(formatValidationError).join('');
       }
     }
@@ -158,14 +159,14 @@ export async function validateWithSchema(
 }
 
 function formatValidationError(validationError: ValidationError) {
-  return `\n • ${validationError.fieldPath
-    ? 'Field: ' + validationError.fieldPath + ' - '
-    : ''}${validationError.message}.`;
+  return `\n • ${validationError.fieldPath ? 'Field: ' + validationError.fieldPath + ' - ' : ''}${
+    validationError.message
+  }.`;
 }
 
 async function _validateExpJsonAsync(
-  exp: ConfigUtils.ExpoConfig,
-  pkg: ConfigUtils.PackageJSONConfig,
+  exp: ExpoConfig,
+  pkg: PackageJSONConfig,
   projectRoot: string,
   allowNetwork: boolean
 ): Promise<number> {
@@ -186,8 +187,8 @@ async function _validateExpJsonAsync(
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-problem-checking-watchman-version');
 
-  const expJsonExists = await ConfigUtils.fileExistsAsync(path.join(projectRoot, 'exp.json'));
-  const appJsonExists = await ConfigUtils.fileExistsAsync(path.join(projectRoot, 'app.json'));
+  const expJsonExists = await fileExistsAsync(path.join(projectRoot, 'exp.json'));
+  const appJsonExists = await fileExistsAsync(path.join(projectRoot, 'app.json'));
 
   if (expJsonExists && appJsonExists) {
     ProjectUtils.logWarning(
@@ -201,7 +202,7 @@ async function _validateExpJsonAsync(
   ProjectUtils.clearNotification(projectRoot, 'doctor-both-app-and-exp-json');
 
   let sdkVersion = exp.sdkVersion;
-  const configName = await ConfigUtils.configFilenameAsync(projectRoot);
+  const configName = configFilename(projectRoot);
 
   // Warn if sdkVersion is UNVERSIONED
   if (sdkVersion === 'UNVERSIONED' && !process.env.EXPO_SKIP_MANIFEST_VALIDATION_TOKEN) {
@@ -296,8 +297,8 @@ async function _validateExpJsonAsync(
 }
 
 async function _validateReactNativeVersionAsync(
-  exp: ConfigUtils.ExpoConfig,
-  pkg: ConfigUtils.PackageJSONConfig,
+  exp: ExpoConfig,
+  pkg: PackageJSONConfig,
   projectRoot: string,
   sdkVersions: Versions.SDKVersions,
   sdkVersion: string
@@ -352,9 +353,7 @@ async function _validateReactNativeVersionAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject[
-            'expoReactNativeTag'
-          ]}`,
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
           'doctor-invalid-version-of-react-native'
         );
         return WARNING;
@@ -377,7 +376,7 @@ async function _validateReactNativeVersionAsync(
 }
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { exp } = await readConfigJsonAsync(projectRoot);
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
@@ -409,7 +408,7 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
 
   // Check to make sure react native is installed
   try {
-    ConfigUtils.resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
+    resolveModule('react-native/local-cli/cli.js', projectRoot, exp);
     ProjectUtils.clearNotification(projectRoot, 'doctor-react-native-not-installed');
   } catch (e) {
     if (e.code === 'MODULE_NOT_FOUND') {
@@ -440,7 +439,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
     return NO_ISSUES;
   }
 
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   let status = await _checkNpmVersionAsync(projectRoot);
   if (status === FATAL) {
@@ -471,7 +470,7 @@ export const EXPO_SDK_NOT_INSTALLED = 1;
 export const EXPO_SDK_NOT_IMPORTED = 2;
 
 export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
-  let { pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  let { pkg } = await readConfigJsonAsync(projectRoot);
 
   try {
     let sdkPkg;

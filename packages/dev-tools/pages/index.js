@@ -11,6 +11,7 @@ import { initStore } from 'app/common/store';
 import withRedux from 'app/higher-order/withRedux';
 
 import Root from 'app/components/Root';
+import IndexPageErrors from 'app/components/IndexPageErrors';
 import ProjectManager from 'app/components/ProjectManager';
 
 const MessageFragment = gql`
@@ -513,8 +514,10 @@ export default class IndexPage extends React.Component {
           {result => {
             if (!result.loading && !result.error) {
               return <IndexPageContents {...result} disconnected={this.state.disconnected} />;
+            } else if (result.error) {
+              return <IndexPageErrors error={result.error} />;
             } else {
-              // TODO(freiksenet): fix loading states
+              // TODO(wschurman): maybe add a loading state
               return null;
             }
           }}

@@ -5,7 +5,7 @@ jest.mock('fs');
 const fs = require('fs');
 const mockfs = require('mock-fs');
 
-describe('determineEntryPointAsync', () => {
+describe('determineEntryPoint', () => {
   beforeEach(() => {
     const packageJson = JSON.stringify(
       {
@@ -89,33 +89,33 @@ describe('determineEntryPointAsync', () => {
     mockfs.restore();
   });
 
-  it('exists-no-platform', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync('/exists-no-platform');
+  it('exists-no-platform', () => {
+    const entryPoint = Exp.determineEntryPoint('/exists-no-platform');
     expect(entryPoint).toBe('index.js');
   });
 
-  it('exists-no-platform-no-main', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync('/exists-no-platform-no-main');
+  it('exists-no-platform-no-main', () => {
+    const entryPoint = Exp.determineEntryPoint('/exists-no-platform-no-main');
     expect(entryPoint).toBe('index.js');
   });
 
-  it('exists-android', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync('/exists-android');
+  it('exists-android', () => {
+    const entryPoint = Exp.determineEntryPoint('/exists-android');
     expect(entryPoint).toBe('index.android.js');
   });
 
-  it('exists-ios', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync('/exists-ios');
+  it('exists-ios', () => {
+    const entryPoint = Exp.determineEntryPoint('/exists-ios');
     expect(entryPoint).toBe('index.ios.js');
   });
 
-  it('exists-expjson', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync('/exists-expjson');
+  it('exists-expjson', () => {
+    const entryPoint = Exp.determineEntryPoint('/exists-expjson');
     expect(entryPoint).toBe('main.js');
   });
 
-  it('uses node_modules/expo/AppEntry as a last resort', async () => {
-    const entryPoint = await Exp.determineEntryPointAsync('/expo-app-entry');
+  it('uses node_modules/expo/AppEntry as a last resort', () => {
+    const entryPoint = Exp.determineEntryPoint('/expo-app-entry');
     expect(entryPoint).toBe('node_modules/expo/AppEntry.js');
   });
 });

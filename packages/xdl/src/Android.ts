@@ -1,24 +1,23 @@
-import _ from 'lodash';
-import fs from 'fs-extra';
+import { readConfigJsonAsync, readExpRcAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
+import chalk from 'chalk';
+import fs from 'fs-extra';
+import _ from 'lodash';
 import path from 'path';
 import semver from 'semver';
-import chalk from 'chalk';
-import * as ConfigUtils from '@expo/config';
 
 import * as Analytics from './Analytics';
-import * as Binaries from './Binaries';
 import Api from './Api';
+import * as Binaries from './Binaries';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
-import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
-import UserSettings from './UserSettings';
-import * as UrlUtils from './UrlUtils';
-import * as Versions from './Versions';
 import { getImageDimensionsAsync } from './tools/ImageUtils';
-// @ts-ignore
+import * as UrlUtils from './UrlUtils';
+import UserSettings from './UserSettings';
+import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+
 let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
@@ -224,9 +223,7 @@ async function openUrlAsync(url: string, isDetached: boolean = false): Promise<v
       await _openUrlAsync(url);
     } catch (e) {
       if (isDetached) {
-        e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${
-          e.message
-        }`;
+        e.message = `Error running app. Have you installed the app already using Android Studio? Since you are detached you must build manually. ${e.message}`;
       } else {
         e.message = `Error running app. ${e.message}`;
       }
@@ -251,7 +248,7 @@ export async function openProjectAsync(
     await startAdbReverseAsync(projectRoot);
 
     let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
-    let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+    let { exp } = await readConfigJsonAsync(projectRoot);
 
     await openUrlAsync(projectUrl, !!exp.isDetached);
     return { success: true, url: projectUrl };
@@ -267,11 +264,11 @@ export async function openWebProjectAsync(
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await getWebpackUrlAsync(projectRoot);  
+    const projectUrl = await getWebpackUrlAsync(projectRoot);
     if (projectUrl === null) {
-      return { 
-        success: false, 
-        error: `The web project has not been started yet`
+      return {
+        success: false,
+        error: `The web project has not been started yet`,
       };
     }
     await openUrlAsync(projectUrl, true);
@@ -285,7 +282,7 @@ export async function openWebProjectAsync(
 // Adb reverse
 export async function startAdbReverseAsync(projectRoot: string): Promise<boolean> {
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  const expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+  const expRc = await readExpRcAsync(projectRoot);
   const userDefinedAdbReversePorts = expRc.extraAdbReversePorts || [];
 
   let adbReversePorts = [
@@ -305,7 +302,7 @@ export async function startAdbReverseAsync(projectRoot: string): Promise<boolean
 
 export async function stopAdbReverseAsync(projectRoot: string): Promise<void> {
   const packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  const expRc = await ProjectUtils.readExpRcAsync(projectRoot);
+  const expRc = await readExpRcAsync(projectRoot);
   const userDefinedAdbReversePorts = expRc.extraAdbReversePorts || [];
 
   let adbReversePorts = [
@@ -378,7 +375,7 @@ const splashScreenDPIConstraints = [
  * @since SDK33
  */
 export async function checkSplashScreenImages(projectDir: string): Promise<void> {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
+  const { exp } = await readConfigJsonAsync(projectDir);
 
   // return before SDK33
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
@@ -386,7 +383,7 @@ export async function checkSplashScreenImages(projectDir: string): Promise<void>
   }
 
   const splashScreenMode =
-    _.get(exp, 'android.splash.resizeMode') || _.get(exp, 'splash.resizeMode', 'contain'); 
+    _.get(exp, 'android.splash.resizeMode') || _.get(exp, 'splash.resizeMode', 'contain');
 
   // only mode `native` is handled by this check
   if (splashScreenMode === 'contain' || splashScreenMode === 'cover') {

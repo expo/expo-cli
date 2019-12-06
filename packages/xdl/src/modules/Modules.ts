@@ -1,10 +1,10 @@
 import semver from 'semver';
 
 import {
-  expoSdkUniversalModulesConfigs,
-  vendoredNativeModules,
   ModuleConfig,
   NativeConfig,
+  expoSdkUniversalModulesConfigs,
+  vendoredNativeModules,
 } from './config';
 
 type PlatformSpecificModuleConfig = ModuleConfig & NativeConfig;

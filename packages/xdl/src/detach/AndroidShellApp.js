@@ -371,6 +371,22 @@ function shellPathForContext(context) {
   }
 }
 
+/**
+ *  Resolve the private config for a project.
+ *  For standalone apps, this is copied into a separate context field context.data.privateConfig
+ *  by the turtle builder. For a local project, this is available in app.json under android.config.
+ */
+function getPrivateConfig(context) {
+  if (context.data.privateConfig) {
+    return context.data.privateConfig;
+  } else {
+    const exp = context.data.exp;
+    if (exp && exp.android) {
+      return exp.android.config;
+    }
+  }
+}
+
 export async function runShellAppModificationsAsync(context, sdkVersion, buildMode) {
   const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
 
@@ -383,7 +399,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   // In SDK32 we've unified build process for shell and ejected apps
   const isDetached = ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32 || isRunningInUserContext;
 
-  if (!context.data.privateConfig) {
+  const privateConfig = getPrivateConfig(context);
+  if (!privateConfig) {
     fnLogger.info('No config file specified.');
   }
 
@@ -739,14 +756,17 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Add shell app scheme
-  if (scheme) {
+  const schemes = [scheme, manifest.facebookScheme].filter(e => e);
+  if (schemes.length > 0) {
     const searchLine = isDetached
       ? '<!-- ADD DETACH SCHEME HERE -->'
       : '<!-- ADD SHELL SCHEME HERE -->';
+    const schemesTags = schemes.map(scheme => `<data android:scheme="${scheme}"/>`).join(`
+    `);
     await regexFileAsync(
       searchLine,
       `<intent-filter>
-        <data android:scheme="${scheme}"/>
+        ${schemesTags}
 
         <action android:name="android.intent.action.VIEW"/>
 
@@ -884,10 +904,12 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
     // Delete the placeholder images
-    (await globby(['**/shell_launch_background_image.png'], {
-      cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-      absolute: true,
-    })).forEach(filePath => {
+    (
+      await globby(['**/shell_launch_background_image.png'], {
+        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+        absolute: true,
+      })
+    ).forEach(filePath => {
       fs.removeSync(filePath);
     });
 
@@ -911,13 +933,13 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
 
   let certificateHash = '';
   let googleAndroidApiKey = '';
-  let privateConfig = context.data.privateConfig;
   if (privateConfig) {
     let branch = privateConfig.branch;
     let fabric = privateConfig.fabric;
     let googleMaps = privateConfig.googleMaps;
     let googleSignIn = privateConfig.googleSignIn;
     let googleMobileAdsAppId = privateConfig.googleMobileAdsAppId;
+    let googleMobileAdsAutoInit = privateConfig.googleMobileAdsAutoInit;
 
     // Branch
     if (branch) {
@@ -994,6 +1016,16 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       );
     }
 
+    // Auto-init of Google App Measurement
+    // unless the user explicitly specifies they want to auto-init, we leave delay set to true
+    if (googleMobileAdsAutoInit) {
+      await regexFileAsync(
+        '<meta-data android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT" android:value="true"/>',
+        '<meta-data android:name="com.google.android.gms.ads.DELAY_APP_MEASUREMENT_INIT" android:value="false"/>',
+        path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+      );
+    }
+
     // Google Login
     if (googleSignIn) {
       certificateHash = googleSignIn.certificateHash;
@@ -1065,6 +1097,43 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     `"certificate_hash": "${certificateHash}"`,
     path.join(shellPath, 'app', 'google-services.json')
   );
+
+  // Facebook configuration
+  if (manifest.facebookAppId) {
+    await regexFileAsync(
+      '<!-- ADD FACEBOOK APP ID CONFIG HERE -->',
+      `<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="${manifest.facebookAppId}"/>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  if (manifest.facebookDisplayName) {
+    await regexFileAsync(
+      '<!-- ADD FACEBOOK APP DISPLAY NAME CONFIG HERE -->',
+      `<meta-data android:name="com.facebook.sdk.ApplicationName" android:value="${manifest.facebookDisplayName}"/>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  if (manifest.facebookAutoInitEnabled) {
+    await regexFileAsync(
+      '<meta-data android:name="com.facebook.sdk.AutoInitEnabled" android:value="false"/>',
+      '<meta-data android:name="com.facebook.sdk.AutoInitEnabled" android:value="true"/>',
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  if (manifest.facebookAutoLogAppEventsEnabled) {
+    await regexFileAsync(
+      '<meta-data android:name="com.facebook.sdk.AutoLogAppEventsEnabled" android:value="false"/>',
+      '<meta-data android:name="com.facebook.sdk.AutoLogAppEventsEnabled" android:value="true"/>',
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  if (manifest.facebookAdvertiserIDCollectionEnabled) {
+    await regexFileAsync(
+      '<meta-data android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled" android:value="false"/>',
+      '<meta-data android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled" android:value="true"/>',
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
 }
 
 async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {

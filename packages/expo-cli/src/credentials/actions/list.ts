@@ -6,10 +6,10 @@ import get from 'lodash/get';
 import { AndroidCredentials as Android } from '@expo/xdl';
 import {
   AndroidCredentials,
-  IosCredentials,
   IosAppCredentials,
-  IosPushCredentials,
+  IosCredentials,
   IosDistCredentials,
+  IosPushCredentials,
 } from '../credentials';
 
 import log from '../../log';
@@ -39,10 +39,17 @@ export function displayIosAppCredentials(appCredentials: IosAppCredentials) {
       appCredentials.bundleIdentifier
     }`
   );
-  if (appCredentials.credentials.provisioningProfile && appCredentials.credentials.provisioningProfileId) {
-    log(`    Provisioning profile (ID: ${chalk.green(appCredentials.credentials.provisioningProfileId)})`);
+  if (
+    appCredentials.credentials.provisioningProfile &&
+    appCredentials.credentials.provisioningProfileId
+  ) {
+    log(
+      `    Provisioning profile (ID: ${chalk.green(
+        appCredentials.credentials.provisioningProfileId
+      )})`
+    );
   } else {
-    log('    Provisioning profile is missing. It will be generated durring the next build');
+    log('    Provisioning profile is missing. It will be generated during the next build');
   }
   if (appCredentials.credentials.teamId || appCredentials.credentials.teamName) {
     log(
@@ -67,7 +74,11 @@ export function displayIosUserCredentials(
   if (userCredentials.type === 'push-key') {
     log(`  Push Notifications Key - Key ID: ${chalk.green(userCredentials.apnsKeyId)}`);
   } else if (userCredentials.type === 'dist-cert') {
-    log(`  Distribution Certificate - Certificate ID: ${chalk.green(userCredentials.certId || '-----')}`);
+    log(
+      `  Distribution Certificate - Certificate ID: ${chalk.green(
+        userCredentials.certId || '-----'
+      )}`
+    );
   } else {
     log.warn(`  Unknown key type ${get(userCredentials, 'type')}`);
   }
@@ -89,12 +100,10 @@ export function displayIosUserCredentials(
   }
 }
 
-
-
 export async function displayAndroidCredentials(credentialsList: AndroidCredentials[]) {
   log(chalk.bold('Available Android credentials'));
   log();
-  for(const credentials of credentialsList) {
+  for (const credentials of credentialsList) {
     await displayAndroidAppCredentials(credentials);
   }
 }
@@ -114,9 +123,9 @@ export async function displayAndroidAppCredentials(credentials: AndroidCredentia
       await Android.logKeystoreHashes(
         {
           keystorePath: tmpFilename,
-          ...(credentials.keystore as Android.Keystore)
+          ...(credentials.keystore as Android.Keystore),
         },
-        '    ',
+        '    '
       );
     } else {
       log('    -----------------------');

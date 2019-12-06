@@ -7,9 +7,9 @@ import pascalCase from 'pascal-case';
 
 import {
   getManifestAsync,
+  parseSdkMajorVersion,
   spawnAsync,
   spawnAsyncThrowError,
-  parseSdkMajorVersion,
 } from './ExponentTools';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
@@ -319,8 +319,7 @@ async function createTurtleWorkspaceAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await _createTurtleWorkspaceAsync(context, args);
   logger.info(
-    `Created turtle workspace at ${context.build.ios
-      .workspaceSourcePath}. You can open and run this in Xcode.`
+    `Created turtle workspace at ${context.build.ios.workspaceSourcePath}. You can open and run this in Xcode.`
   );
   if (context.config) {
     await IosNSBundle.configureAsync(context);

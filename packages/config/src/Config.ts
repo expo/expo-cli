@@ -7,8 +7,8 @@ import slug from 'slugify';
 import {
   AppJSONConfig,
   BareAppConfig,
-  ExpoConfig,
   ExpRc,
+  ExpoConfig,
   PackageJSONConfig,
   Platform,
   ProjectConfig,
@@ -31,7 +31,8 @@ const DEFAULT_DESCRIPTION = 'A Neat Expo App';
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
 const DEFAULT_DISPLAY = 'standalone';
-const DEFAULT_STATUS_BAR = 'default';
+// Enable full-screen iOS PWAs
+const DEFAULT_STATUS_BAR = 'black-translucent';
 const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
 const ICON_SIZES = [192, 512];
@@ -63,13 +64,6 @@ export function fileExists(file: string): boolean {
   }
 }
 
-// DEPRECATED: Use findConfigFile
-export async function findConfigFileAsync(
-  projectRoot: string
-): Promise<{ configPath: string; configName: string; configNamespace: 'expo' }> {
-  return findConfigFile(projectRoot);
-}
-
 export function findConfigFile(
   projectRoot: string
 ): { configPath: string; configName: string; configNamespace: 'expo' } {
@@ -80,11 +74,6 @@ export function findConfigFile(
     configPath = path.join(projectRoot, APP_JSON_FILE_NAME);
   }
   return { configPath, configName: APP_JSON_FILE_NAME, configNamespace: 'expo' };
-}
-
-// DEPRECATED: Use configFilename
-export async function configFilenameAsync(projectRoot: string): Promise<string> {
-  return findConfigFile(projectRoot).configName;
 }
 
 export function configFilename(projectRoot: string): string {
@@ -194,6 +183,9 @@ function getWebManifestFromConfig(config: { [key: string]: any } = {}): { [key: 
 }
 
 export function getWebOutputPath(config: { [key: string]: any } = {}): string {
+  if (process.env.WEBPACK_BUILD_OUTPUT_PATH) {
+    return process.env.WEBPACK_BUILD_OUTPUT_PATH;
+  }
   const web = getWebManifestFromConfig(config);
   const { build = {} } = web;
   return build.output || DEFAULT_BUILD_PATH;
@@ -551,19 +543,25 @@ function ensureConfigHasDefaultValues(
   pkg: JSONObject,
   skipNativeValidation: boolean = false
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
-  if (exp && !exp.name && typeof pkg.name === 'string') {
+  if (!exp) exp = {};
+
+  if (!exp.name && typeof pkg.name === 'string') {
     exp.name = pkg.name;
   }
 
-  if (exp && !exp.slug && typeof exp.name === 'string') {
+  if (!exp.description && typeof pkg.description === 'string') {
+    exp.description = pkg.description;
+  }
+
+  if (!exp.slug && typeof exp.name === 'string') {
     exp.slug = slug(exp.name.toLowerCase());
   }
 
-  if (exp && !exp.version) {
+  if (!exp.version) {
     exp.version = pkg.version;
   }
 
-  if (exp && exp.nodeModulesPath) {
+  if (exp.nodeModulesPath) {
     exp.nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
   }
 
@@ -573,7 +571,7 @@ function ensureConfigHasDefaultValues(
     if (!skipNativeValidation) throw error;
   }
 
-  if (exp && !exp.platforms) {
+  if (!exp.platforms) {
     exp.platforms = ['android', 'ios'];
   }
 

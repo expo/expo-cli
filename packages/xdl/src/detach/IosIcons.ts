@@ -1,9 +1,12 @@
 import path from 'path';
 
 import { saveImageToPathAsync, saveUrlToPathAsync, spawnAsyncThrowError } from './ExponentTools';
-import StandaloneContext, {
-  StandaloneContextDataUser,
+import {
+  AnyStandaloneContext,
   StandaloneContextDataService,
+  StandaloneContextDataUser,
+  StandaloneContextService,
+  StandaloneContextUser,
 } from './StandaloneContext';
 import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
 import logger from './Logger';
@@ -23,16 +26,16 @@ function _getAppleIconQualifier(iconSize: number, iconResolution: number): strin
   return iconQualifier;
 }
 
-async function _saveDefaultIconToPathAsync(context: StandaloneContext, path: string) {
-  if (context.type === 'user') {
-    const data = context.data as StandaloneContextDataUser;
+async function _saveDefaultIconToPathAsync(context: AnyStandaloneContext, path: string) {
+  if (context instanceof StandaloneContextUser) {
+    const { data } = context;
     if (data.exp.icon) {
       await saveImageToPathAsync(data.projectPath, data.exp.icon, path);
     } else {
       throw new Error('Cannot save icon because app.json has no exp.icon key.');
     }
   } else {
-    const data = context.data as StandaloneContextDataService;
+    const { data } = context;
     if (data.manifest.ios && data.manifest.ios.iconUrl) {
       await saveUrlToPathAsync(data.manifest.ios.iconUrl, path);
     } else if (data.manifest.iconUrl) {
@@ -51,7 +54,7 @@ async function _saveDefaultIconToPathAsync(context: StandaloneContext, path: str
  * This only works on MacOS (as far as I know) because it uses the sips utility.
  */
 async function createAndWriteIconsToPathAsync(
-  context: StandaloneContext,
+  context: AnyStandaloneContext,
   destinationIconPath: string
 ) {
   let defaultIconFilename: string | null = 'exp-icon.png';
@@ -86,9 +89,9 @@ async function createAndWriteIconsToPathAsync(
           let iconKey = `iconUrl${iconQualifier}`;
           let rawIconFilename;
           let usesDefault = false;
-          if (context.type === 'service') {
+          if (context instanceof StandaloneContextService) {
             // TODO(nikki): Support local paths for these icons
-            const manifest = (context.data as StandaloneContextDataService).manifest;
+            const manifest = context.data.manifest;
             if (manifest.ios && manifest.ios.hasOwnProperty(iconKey)) {
               // manifest specifies an image just for this size/resolution, use that
               rawIconFilename = `exp-icon${iconQualifier}.png`;

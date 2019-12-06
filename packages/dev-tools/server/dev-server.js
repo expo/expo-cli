@@ -5,7 +5,7 @@ import http from 'http';
 import next from 'next';
 import openBrowser from 'react-dev-utils/openBrowser';
 
-import { startGraphQLServer, createAuthenticationContextAsync } from './DevToolsServer';
+import { createAuthenticationContextAsync, startGraphQLServer } from './DevToolsServer';
 
 const PORT = 3333;
 

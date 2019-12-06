@@ -1,5 +1,6 @@
-import os from 'os';
 import Segment from 'analytics-node';
+import os from 'os';
+
 import ip from './ip';
 
 let _segmentNodeInstance: Segment | undefined;

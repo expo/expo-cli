@@ -1,7 +1,5 @@
-// @ts-ignore
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
-import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
-import { Options, Configuration, HotModuleReplacementPlugin, Output } from 'webpack';
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 // @ts-ignore
@@ -17,32 +15,28 @@ import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModul
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
-import { getPathsAsync, getPublicPaths } from './utils/paths';
-import createAllLoaders from './loaders/createAllLoaders';
-import { ExpoDefinePlugin, ExpoProgressBarPlugin, ExpoHtmlWebpackPlugin } from './plugins';
-import { getModuleFileExtensions } from './utils';
-import withOptimizations from './withOptimizations';
-import withReporting from './withReporting';
-import withCompression from './withCompression';
-
 import path from 'path';
-import webpack from 'webpack';
 
-import createDevServerConfigAsync from './createDevServerConfigAsync';
-import { Arguments, DevConfiguration, FilePaths, Mode } from './types';
-
+import { projectHasModule } from '@expo/config';
+import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
+import { createAllLoaders } from './loaders';
 import {
-  DEFAULT_ALIAS,
-  overrideWithPropertyOrConfig,
-} from './utils/config';
-import getMode from './utils/getMode';
-import getConfig from './utils/getConfig';
-import { Environment } from './types';
+  ExpoDefinePlugin,
+  ExpoHtmlWebpackPlugin,
+  ExpoInterpolateHtmlPlugin,
+  ExpoProgressBarPlugin,
+} from './plugins';
+import {
+  withAlias,
+  withCompression,
+  withDevServer,
+  withNodeMocks,
+  withOptimizations,
+  withReporting,
+} from './addons';
 
-function createNoJSComponent(message: string): string {
-  // from twitter.com
-  return `" <form action="location.reload()" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-weight: bold; line-height: 20px; padding: 6px 16px;">Reload</button> </p> </div> </form> "`;
-}
+import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
+import { overrideWithPropertyOrConfig } from './utils';
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -64,21 +58,22 @@ function getDevtool(
 
 function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output {
   const commonOutput: Output = {
-      sourceMapFilename: '[chunkhash].map',
-      // We inferred the "public path" (such as / or /my-project) from homepage.
-      // We use "/" in development.
-      publicPath,
-      // Build folder (default `web-build`)
-      path: locations.production.folder,
-  }
+    sourceMapFilename: '[chunkhash].map',
+    // We inferred the "public path" (such as / or /my-project) from homepage.
+    // We use "/" in development.
+    publicPath,
+    // Build folder (default `web-build`)
+    path: locations.production.folder,
+  };
 
   if (mode === 'production') {
     commonOutput.filename = 'static/js/[name].[contenthash:8].js';
     // There are also additional JS chunk files if you use code splitting.
     commonOutput.chunkFilename = 'static/js/[name].[contenthash:8].chunk.js';
     // Point sourcemap entries to original disk location (format as URL on Windows)
-    commonOutput.devtoolModuleFilenameTemplate = (info: webpack.DevtoolModuleFilenameTemplateInfo): string =>
-      locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/');
+    commonOutput.devtoolModuleFilenameTemplate = (
+      info: webpack.DevtoolModuleFilenameTemplateInfo
+    ): string => locations.absolute(info.absoluteResourcePath).replace(/\\/g, '/');
   } else {
     // Add comments that describe the file import/exports.
     // This will make it easier to debug.
@@ -89,15 +84,18 @@ function getOutput(locations: FilePaths, mode: Mode, publicPath: string): Output
     // There are also additional JS chunk files if you use code splitting.
     commonOutput.chunkFilename = 'static/js/[name].chunk.js';
     // Point sourcemap entries to original disk location (format as URL on Windows)
-    commonOutput.devtoolModuleFilenameTemplate = (info: webpack.DevtoolModuleFilenameTemplateInfo): string =>
-      path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
+    commonOutput.devtoolModuleFilenameTemplate = (
+      info: webpack.DevtoolModuleFilenameTemplateInfo
+    ): string => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/');
   }
 
   return commonOutput;
 }
 
-
-export default async function(env: Environment, argv: Arguments = {}): Promise<Configuration | DevConfiguration> {
+export default async function(
+  env: Environment,
+  argv: Arguments = {}
+): Promise<Configuration | DevConfiguration> {
   const config = getConfig(env);
   const mode = getMode(env);
   const isDev = mode === 'development';
@@ -116,10 +114,8 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
 
   const { publicPath, publicUrl } = getPublicPaths(env);
 
-  const { build: buildConfig = {}, lang } = config.web;
-  const { rootId, babel: babelAppConfig = {} } = buildConfig;
-  const { noJavaScriptMessage } = config.web.dangerous;
-  const noJSComponent = createNoJSComponent(noJavaScriptMessage);
+  const { build: buildConfig = {} } = config.web;
+  const { babel: babelAppConfig = {} } = buildConfig;
 
   const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig);
 
@@ -136,6 +132,17 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
     );
   }
 
+  // Add a loose requirement on the ResizeObserver polyfill if it's installed...
+  // Avoid `withEntry` as we don't need so much complexity with this config.
+  const resizeObserverPolyfill = projectHasModule(
+    'resize-observer-polyfill/dist/ResizeObserver.global',
+    env.projectRoot,
+    config
+  );
+  if (resizeObserverPolyfill) {
+    appEntry.unshift(resizeObserverPolyfill);
+  }
+
   if (isDev) {
     // https://github.com/facebook/create-react-app/blob/e59e0920f3bef0c2ac47bbf6b4ff3092c8ff08fb/packages/react-scripts/config/webpack.config.js#L144
     // Include an alternative client for WebpackDevServer. A client's job is to
@@ -149,6 +156,11 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
     // require.resolve('webpack-dev-server/client') + '?/',
     // require.resolve('webpack/hot/dev-server'),
     appEntry.unshift(require.resolve('react-dev-utils/webpackHotDevClient'));
+  }
+
+  let generatePWAImageAssets: boolean = !isDev;
+  if (!isDev && typeof env.pwa !== 'undefined') {
+    generatePWAImageAssets = env.pwa;
   }
 
   let webpackConfig: DevConfiguration = {
@@ -178,7 +190,15 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
             from: locations.template.folder,
             to: locations.production.folder,
             // We generate new versions of these based on the templates
-            ignore: ['favicon.ico', 'serve.json', 'index.html', 'icon.png'],
+            ignore: [
+              'expo-service-worker.js',
+              'favicon.ico',
+              'serve.json',
+              'index.html',
+              'icon.png',
+              // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
+              'register-service-worker.js',
+            ],
           },
           {
             from: locations.template.serveJson,
@@ -188,23 +208,21 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
             from: locations.template.favicon,
             to: locations.production.favicon,
           },
+          {
+            from: locations.template.serviceWorker,
+            to: locations.production.serviceWorker,
+          },
         ]),
 
       // Generate the `index.html`
       new ExpoHtmlWebpackPlugin(env),
 
-      // Add variables to the `index.html`
-      new InterpolateHtmlPlugin(ExpoHtmlWebpackPlugin, {
-        WEB_PUBLIC_URL: publicPath,
-        WEB_TITLE: config.web.name,
-        NO_SCRIPT: noJSComponent,
-        LANG_ISO_CODE: lang,
-        ROOT_ID: rootId,
-      }),
+      ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
       new WebpackPWAManifestPlugin(config, {
         publicPath,
-        noResources: isDev || !env.pwa,
+        projectRoot: env.projectRoot,
+        noResources: !generatePWAImageAssets,
         filename: locations.production.manifest,
         HtmlWebpackPlugin: ExpoHtmlWebpackPlugin,
       }),
@@ -259,7 +277,6 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
         },
       ].filter(Boolean),
     },
-
     resolveLoader: {
       plugins: [
         // Also related to Plug'n'Play, but this time it tells Webpack to load its loaders
@@ -268,7 +285,7 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
       ],
     },
     resolve: {
-      alias: DEFAULT_ALIAS,
+      mainFields: ['browser', 'module', 'main'],
       extensions: getModuleFileExtensions('web'),
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
@@ -285,31 +302,17 @@ export default async function(env: Environment, argv: Arguments = {}): Promise<C
     },
     // Turn off performance processing because we utilize
     // our own (CRA) hints via the FileSizeReporter
-    performance: boolish('CI', false) ? false : undefined,
+
+    // TODO: Bacon: Remove this higher value
+    performance: boolish('CI', false) ? false : { maxAssetSize: 600000, maxEntrypointSize: 600000 },
   };
 
-  if (isDev) {
-    webpackConfig.devServer = await createDevServerConfigAsync(env, argv);
-  } else if (isProd) {
+  if (isProd) {
     webpackConfig = withCompression(withOptimizations(webpackConfig), env);
   }
 
-  return withReporting(withNodeMocks(webpackConfig), env);
-}
-
-// Some libraries import Node modules but don't use them in the browser.
-// Tell Webpack to provide empty mocks for them so importing them works.
-function withNodeMocks(webpackConfig: Configuration | DevConfiguration): Configuration | DevConfiguration {
-  webpackConfig.node = {
-    ...(webpackConfig.node || {}),
-    module: 'empty',
-    dgram: 'empty',
-    dns: 'mock',
-    fs: 'empty',
-    http2: 'empty',
-    net: 'empty',
-    tls: 'empty',
-    child_process: 'empty',
-  }
-  return webpackConfig;
+  return withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
+    allowedHost: argv.allowedHost,
+    proxy: argv.proxy,
+  });
 }

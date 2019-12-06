@@ -8,7 +8,7 @@ import { PLATFORMS } from '../constants';
 import * as constants from './credentials/constants';
 import * as utils from '../utils';
 import * as credentials from './credentials';
-import * as apple from './appleApi';
+import * as apple from '../../../appleApi';
 import { ensurePNGIsNotTransparent } from './utils/image';
 
 class IOSBuilder extends BaseBuilder {
@@ -41,11 +41,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     await utils.checkIfSdkIsSupported(sdkVersion, PLATFORMS.IOS);
   }
 
-  async getAppleCtx({ bundleIdentifier, username, experienceName }) {
+  async getAppleCtx() {
     if (!this.appleCtx) {
       await apple.setup();
-      const authData = await apple.authenticate(this.options);
-      this.appleCtx = { ...authData, bundleIdentifier, username, experienceName };
+      this.appleCtx = await apple.authenticate(this.options);
     }
     return this.appleCtx;
   }
@@ -85,8 +84,9 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       const credsToClear = await this.clearCredentialsIfRequested(projectMetadata);
       if (credsToClear && this.options.revokeCredentials) {
         await credentials.revoke(
-          await this.getAppleCtx(projectMetadata),
-          Object.keys(credsToClear)
+          await this.getAppleCtx(),
+          Object.keys(credsToClear),
+          projectMetadata
         );
       }
     }
@@ -120,7 +120,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async produceMissingCredentials(projectMetadata, missingCredentials) {
-    const appleCtx = await this.getAppleCtx(projectMetadata);
+    const appleCtx = await this.getAppleCtx();
     const metadata = {};
     if (
       missingCredentials.includes(constants.PROVISIONING_PROFILE) &&
@@ -137,11 +137,16 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       credentials: userProvidedCredentials,
       toGenerate,
       metadata: metadataFromPrompt,
-    } = await credentials.prompt(appleCtx, this.options, missingCredentials);
+    } = await credentials.prompt(appleCtx, this.options, missingCredentials, projectMetadata);
 
     Object.assign(metadata, metadataFromPrompt);
 
-    const generatedCredentials = await credentials.generate(appleCtx, toGenerate, metadata);
+    const generatedCredentials = await credentials.generate(
+      appleCtx,
+      toGenerate,
+      metadata,
+      projectMetadata
+    );
 
     const newCredentials = {
       ...userProvidedCredentials,

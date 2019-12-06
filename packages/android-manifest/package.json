@@ -1,6 +1,6 @@
 {
   "name": "@expo/android-manifest",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "A library for interacting with the app.json",
   "main": "build/Manifest.js",
   "types": "build/Manifest.d.ts",
@@ -39,10 +39,9 @@
     "xml-formatter": "^1.1.0"
   },
   "devDependencies": {
-    "@expo/babel-preset-cli": "^0.2.0",
+    "@expo/babel-preset-cli": "^0.2.2",
     "@types/libxmljs": "^0.18.3",
-    "@types/xml-formatter": "^1.1.0",
-    "typescript": "3.4.5"
+    "@types/xml-formatter": "^1.1.0"
   },
   "publishConfig": {
     "access": "public"

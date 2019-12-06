@@ -1,10 +1,7 @@
 import fs from 'fs-extra';
 import hasbin from 'hasbin';
-import spawnAsync from '@expo/spawn-async';
 import path from 'path';
 
-import Config from './Config';
-import Logger from './Logger';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
 

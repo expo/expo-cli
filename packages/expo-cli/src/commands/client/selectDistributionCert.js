@@ -1,15 +1,15 @@
+import { Credentials } from '@expo/xdl';
 import open from 'open';
 import ora from 'ora';
-import { Credentials } from '@expo/xdl';
 
-import * as appleApi from '../build/ios/appleApi';
-import * as credentials from '../build/ios/credentials';
-import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import log from '../../log';
 import prompt from '../../prompt';
-import { tagForUpdate } from './tagger';
-
+import * as appleApi from '../../appleApi';
+import { ErrorCodes } from '../../CommandError';
+import * as credentials from '../build/ios/credentials';
+import promptForCredentials from '../build/ios/credentials/prompt/promptForCredentials';
 import { choosePreferredCreds } from './selectUtils';
+import { tagForUpdate } from './tagger';
 
 export default async function selectDistributionCert(context, options = {}) {
   const certificates = context.username ? await chooseUnrevokedDistributionCert(context) : [];
@@ -50,6 +50,7 @@ export default async function selectDistributionCert(context, options = {}) {
 
     // tag for updating to Expo servers
     tagForUpdate(distributionCert);
+    return distributionCert;
   } else if (promptValue === 'INFO') {
     open(
       'https://docs.expo.io/versions/latest/guides/adhoc-builds/#distribution-certificate-cli-options'
@@ -113,7 +114,7 @@ async function chooseUnrevokedDistributionCert(context) {
 
 async function filterRevokedDistributionCerts(context, distributionCerts) {
   // if the credentials are valid, check it against apple to make sure it hasnt been revoked
-  const distCertManager = appleApi.createManagers(context).distributionCert;
+  const distCertManager = new appleApi.DistCertManager(context);
   const certsOnAppleServer = await distCertManager.list();
   const validCertSerialsOnAppleServer = certsOnAppleServer
     .filter(
@@ -129,16 +130,16 @@ async function filterRevokedDistributionCerts(context, distributionCerts) {
 }
 
 async function generateDistributionCert(context) {
-  const manager = appleApi.createManagers(context).distributionCert;
+  const manager = new appleApi.DistCertManager(context);
   try {
-    const distributionCert = await manager.create({});
+    const distributionCert = await manager.create();
 
     // tag for updating to Expo servers
     tagForUpdate(distributionCert);
 
     return distributionCert;
   } catch (e) {
-    if (e.code === 'APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR') {
+    if (e.code === ErrorCodes.APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR) {
       const certificates = await manager.list();
       log.warn(`Maximum number (${certificates.length}) of certificates generated.`);
       const { answer } = await prompt({

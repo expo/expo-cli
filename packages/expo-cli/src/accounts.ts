@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import program from 'commander';
 
-import { User, UserManager, RegistrationData } from '@expo/xdl';
+import { RegistrationData, User, UserManager } from '@expo/xdl';
 import CommandError from './CommandError';
 import prompt, { Question } from './prompt';
 import log from './log';
@@ -9,11 +9,11 @@ import log from './log';
 UserManager.initialize();
 
 type CommandOptions = {
-  username?: string,
-  password?: string,
+  username?: string;
+  password?: string;
   parent?: {
-    nonInteractive: boolean,
-  }
+    nonInteractive: boolean;
+  };
 };
 
 export async function loginOrRegisterIfLoggedOut(): Promise<User> {
@@ -70,9 +70,7 @@ export async function login(options: CommandOptions): Promise<User> {
       const question: Question = {
         type: 'confirm',
         name: 'action',
-        message: `You are already logged in as ${chalk.green(
-          user.username
-        )}. Log in as new user?`,
+        message: `You are already logged in as ${chalk.green(user.username)}. Log in as new user?`,
       };
 
       const { action } = await prompt(question);

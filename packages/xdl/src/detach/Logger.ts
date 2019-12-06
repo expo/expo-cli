@@ -1,8 +1,6 @@
-import { Readable } from 'stream';
-
 import bunyan from '@expo/bunyan';
 import _ from 'lodash';
-
+import { Readable } from 'stream';
 
 export enum LogLevel {
   trace = 'trace',

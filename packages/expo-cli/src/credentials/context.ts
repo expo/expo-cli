@@ -1,16 +1,15 @@
-import fs from 'fs-extra';
-import path from 'path';
-import { ApiV2, Exp, User, UserManager, ProjectUtils, Doctor } from '@expo/xdl';
-import log from '../log';
+import { readConfigJsonAsync } from '@expo/config';
+import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
+
 import { AppleCtx, authenticate } from '../appleApi';
 import { IosApi } from './api';
 
 export interface IView {
-  open(ctx: Context): Promise<IView | null>
-};
+  open(ctx: Context): Promise<IView | null>;
+}
 
 export class Context {
-  _hasProjectContext: boolean = false; 
+  _hasProjectContext: boolean = false;
   _user?: User;
   _manifest: any;
   _apiClient?: ApiV2;
@@ -41,7 +40,7 @@ export class Context {
 
   async ensureAppleCtx() {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate(); 
+      this._appleCtx = await authenticate();
     }
   }
 
@@ -49,7 +48,7 @@ export class Context {
     const status = await Doctor.validateLowLatencyAsync(projectDir);
     if (status !== Doctor.FATAL) {
       /* This manager does not need to work in project context */
-      const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
+      const { exp } = await readConfigJsonAsync(projectDir);
       this._manifest = exp;
       this._hasProjectContext = true;
     }

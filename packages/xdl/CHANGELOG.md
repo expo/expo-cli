@@ -12,11 +12,15 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 - added support for `packagesToInstallWhenEjecting` dictionary used to get a list of packages to install when ejecting
 - instead of overwriting `settings.gradle` with static content, XDL will now modify it according to comment rules
 - use `react-native-unimodules` autolinking in ejected apps
+- allowed ejecting to ExpoKit if only one platform is released (makes SDK release easier)
+- adjusted ExpoKit's Podfile generation for SDK36 and newer
 
 ### Changed
 
 ### Removed
 
+- `ProjectUtils.readConfigJsonAsync` from `xdl` in favor of `readConfigJsonAsync` from `@expo/config`
+- `ProjectUtils.readExpRcAsync` from `xdl` in favor of `readExpRcAsync` from `@expo/config`
 - Dropped support for SDK 24, `Detach.detachAsync` now requires SDK version 25.0.0 or newer.
 
 ## [51.1.0] - 2018-08-28

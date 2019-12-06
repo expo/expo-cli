@@ -6,7 +6,7 @@
 <!-- Header -->
 
 <p align="center">
-    <b>The document component for Next.js projects using Unimodules</b>
+    <b>Adapter document and server for Next.js projects using Unimodules</b>
     <br/>
     <br/>
     <a aria-label="Circle CI" href="https://circleci.com/gh/expo/expo-cli/tree/master">
@@ -16,69 +16,16 @@
 
 ---
 
-## 🏁 Setup
+> Warning: Support for Next.js is experimental. Please open an issue at [expo-cli/issues](https://github.com/expo/expo-cli/issues) if you encountered any problems.
 
-Install `@expo/next-adapter` in your project.
+## [Documentation][docs]
 
-```sh
-yarn add @expo/next-adapter
-```
+To learn more about Next.js usage with Expo, check out the docs here: [Using Next.js][docs]
 
-## ⚽️ Usage
+### Contributing to the docs
 
-Re-export this component from the `pages/_document.js` file of your Next.js project.
-
-```js
-// pages/_document.js
-import { Document } from '@expo/next-adapter';
-
-export default Document;
-```
-
-## Customizing the Document
-
-You can import the following fragments from the custom Document:
-
-```js
-import { Document, getInitialProps, style } from '@expo/next-adapter';
-```
-
-Then recompose the Document how you like
-
-```js
-import { getInitialProps } from '@expo/next-adapter';
-import Document, { Head, Main, NextScript } from 'next/document';
-import React from 'react';
-
-class CustomDocument extends Document {
-  render() {
-    return (
-      <html>
-        <Head>
-          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </html>
-    );
-  }
-}
-
-// Import the getInitialProps method and assign it to your component
-CustomDocument.getInitialProps = getInitialProps;
-
-// OR...
-
-CustomDocument.getInitialProps = async props => {
-  const result = await getInitialProps(props);
-  // Mutate result...
-  return result;
-};
-
-export default CustomDocument;
-```
+- [Documentation for the master branch](https://github.com/expo/expo/blob/master/docs/pages/versions/unversioned/guides/using-nextjs.md)
+- [Documentation for the latest stable release](https://docs.expo.io/versions/latest/guides/using-nextjs/)
 
 ## License
 
@@ -96,3 +43,11 @@ The Expo source code is made available under the [MIT license](LICENSE). Some of
         <img align="right" alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge&color=33CC12" target="_blank" />
     </a>
 </p>
+
+[docs]: https://docs.expo.io/versions/latest/guides/using-nextjs/
+[nextjs]: https://nextjs.org/
+[next-docs]: https://nextjs.org/docs
+[custom-document]: https://nextjs.org/docs#custom-document
+[next-offline]: https://github.com/hanford/next-offline
+[next-pwa]: https://nextjs.org/features/progressive-web-apps
+[next-transpile-modules]: https://github.com/martpie/next-transpile-modules

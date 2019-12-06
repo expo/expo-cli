@@ -9,7 +9,7 @@ import glob from 'glob-promise';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
-import * as ConfigUtils from '@expo/config';
+import { findConfigFile, readConfigJsonAsync } from '@expo/config';
 import isPlainObject from 'lodash/isPlainObject';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
@@ -21,7 +21,6 @@ import * as IosWorkspace from './IosWorkspace';
 import * as AndroidShellApp from './AndroidShellApp';
 
 import Api from '../Api';
-import * as ProjectUtils from '../project/ProjectUtils';
 import UserManager from '../User';
 import XDLError from '../XDLError';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
@@ -67,12 +66,8 @@ async function _detachAsync(projectRoot, options) {
   }
 
   let username = user.username;
-  const { configName, configPath, configNamespace } = await ConfigUtils.findConfigFileAsync(
-    projectRoot
-  );
-  let { exp, pkg } = await ProjectUtils.readConfigJsonAsync(projectRoot);
-  if (!exp) throw new Error(`Couldn't read ${configName}`);
-  if (!pkg) throw new Error(`Couldn't read package.json`);
+  const { configName, configPath, configNamespace } = findConfigFile(projectRoot);
+  let { exp } = await readConfigJsonAsync(projectRoot);
   let experienceName = `@${username}/${exp.slug}`;
   let experienceUrl = `exp://exp.host/${experienceName}`;
 
@@ -121,14 +116,11 @@ async function _detachAsync(projectRoot, options) {
   let sdkVersionConfig = versions.sdkVersions[exp.sdkVersion];
   if (
     !sdkVersionConfig ||
-    !sdkVersionConfig.androidExpoViewUrl ||
-    !sdkVersionConfig.iosExpoViewUrl
+    (!sdkVersionConfig.androidExpoViewUrl && !sdkVersionConfig.iosExpoViewUrl)
   ) {
     if (process.env.EXPO_VIEW_DIR) {
       logger.warn(
-        `Detaching is not supported for SDK ${
-          exp.sdkVersion
-        }; ignoring this because you provided EXPO_VIEW_DIR`
+        `Detaching is not supported for SDK ${exp.sdkVersion}; ignoring this because you provided EXPO_VIEW_DIR`
       );
       sdkVersionConfig = {};
     } else {
@@ -175,7 +167,7 @@ async function _detachAsync(projectRoot, options) {
     }
   }
 
-  if (!hasIosDirectory && isIosSupported) {
+  if (!hasIosDirectory && isIosSupported && sdkVersionConfig.iosExpoViewUrl) {
     if (!exp.ios) {
       exp.ios = {};
     }
@@ -199,7 +191,7 @@ async function _detachAsync(projectRoot, options) {
   }
 
   // Android
-  if (!hasAndroidDirectory) {
+  if (!hasAndroidDirectory && sdkVersionConfig.androidExpoViewUrl) {
     if (!exp.android) {
       exp.android = {};
     }
@@ -241,9 +233,7 @@ async function _detachAsync(projectRoot, options) {
 
   if (sdkVersionConfig && sdkVersionConfig.expoReactNativeTag) {
     packagesToInstall.push(
-      `react-native@https://github.com/expo/react-native/archive/${
-        sdkVersionConfig.expoReactNativeTag
-      }.tar.gz`
+      `react-native@https://github.com/expo/react-native/archive/${sdkVersionConfig.expoReactNativeTag}.tar.gz`
     );
   } else if (process.env.EXPO_VIEW_DIR) {
     // ignore, using test directory
@@ -264,11 +254,13 @@ async function _detachAsync(projectRoot, options) {
     packagesToInstall.push(sdkVersionConfig.expokitNpmPackage);
   }
 
-  const { packagesToInstallWhenEjecting } = sdkVersionConfig;
-  if (isPlainObject(packagesToInstallWhenEjecting)) {
-    Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
-      packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
-    });
+  if (sdkVersionConfig) {
+    const { packagesToInstallWhenEjecting } = sdkVersionConfig;
+    if (isPlainObject(packagesToInstallWhenEjecting)) {
+      Object.keys(packagesToInstallWhenEjecting).forEach(packageName => {
+        packagesToInstall.push(`${packageName}@${packagesToInstallWhenEjecting[packageName]}`);
+      });
+    }
   }
 
   if (packagesToInstall.length) {
@@ -359,10 +351,18 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
   return expoKitVersion;
 }
 
+async function readNullableConfigJsonAsync(projectDir) {
+  try {
+    return await readConfigJsonAsync(projectDir);
+  } catch (_) {
+    return null;
+  }
+}
+
 async function prepareDetachedBuildIosAsync(projectDir, args) {
-  const { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
-  if (exp) {
-    return prepareDetachedUserContextIosAsync(projectDir, exp, args);
+  const config = await readNullableConfigJsonAsync(projectDir);
+  if (config) {
+    return prepareDetachedUserContextIosAsync(projectDir, config.exp, args);
   } else {
     return prepareDetachedServiceContextIosAsync(projectDir, args);
   }
@@ -394,7 +394,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
-  const { exp } = await ProjectUtils.readConfigJsonAsync(expoRootDir);
+  const { exp } = await readConfigJsonAsync(expoRootDir, true, true);
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project
@@ -510,18 +510,17 @@ export async function prepareDetachedBuildAsync(projectDir, args) {
 // and `$buildDir/intermediates/assets/$targetPath` on Android (see
 // `android/app/expo.gradle` for an example).
 export async function bundleAssetsAsync(projectDir, args) {
-  let { exp } = await ProjectUtils.readConfigJsonAsync(projectDir);
-  if (!exp) {
+  const options = await readNullableConfigJsonAsync(projectDir);
+  if (!options) {
     // Don't run assets bundling for the service context.
     return;
   }
+  const { exp } = options;
   let publishManifestPath =
     args.platform === 'ios' ? exp.ios.publishManifestPath : exp.android.publishManifestPath;
   if (!publishManifestPath) {
     logger.warn(
-      `Skipped assets bundling because the '${
-        args.platform
-      }.publishManifestPath' key is not specified in the app manifest.`
+      `Skipped assets bundling because the '${args.platform}.publishManifestPath' key is not specified in the app manifest.`
     );
     return;
   }
@@ -531,9 +530,7 @@ export async function bundleAssetsAsync(projectDir, args) {
     manifest = JSON.parse(await fs.readFile(bundledManifestPath, 'utf8'));
   } catch (ex) {
     throw new Error(
-      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${
-        ex.message
-      }`
+      `Error reading the manifest file. Make sure the path '${bundledManifestPath}' is correct.\n\nError: ${ex.message}`
     );
   }
   await AssetBundle.bundleAsync(null, manifest.bundledAssets, args.dest);

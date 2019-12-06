@@ -12,6 +12,7 @@
     "sourceMap": true,
     "strict": true,
     "target": "ES2016",
-    "typeRoots": ["ts-declarations", "node_modules/@types"]
+    "skipLibCheck": true,
+    "typeRoots": [ "./ts-declarations", "node_modules/@types" ]
   }
 }

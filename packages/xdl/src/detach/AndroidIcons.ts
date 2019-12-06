@@ -1,15 +1,15 @@
 import fs from 'fs-extra';
-import path from 'path';
 import globby from 'globby';
+import path from 'path';
 
+import { getImageDimensionsAsync, resizeImageAsync } from '../tools/ImageUtils';
 import {
   regexFileAsync,
   saveImageToPathAsync,
   saveUrlToPathAsync,
   spawnAsyncThrowError,
 } from './ExponentTools';
-import StandaloneContext, { StandaloneContextDataUser } from './StandaloneContext';
-import { resizeImageAsync, getImageDimensionsAsync } from '../tools/ImageUtils';
+import { AnyStandaloneContext, StandaloneContextDataUser } from './StandaloneContext';
 
 const iconScales = {
   mdpi: 1,
@@ -41,7 +41,7 @@ async function _regexFileInResSubfoldersAsync(
 let _hasShownResizeErrorWindowsLinux = false;
 
 async function _resizeIconsAsync(
-  context: StandaloneContext,
+  context: AnyStandaloneContext,
   resPath: string,
   prefix: string,
   mdpiSize: number,
@@ -108,7 +108,7 @@ async function _resizeIconsAsync(
 }
 
 async function createAndWriteIconsToPathAsync(
-  context: StandaloneContext,
+  context: AnyStandaloneContext,
   resPath: string,
   isDetached: boolean
 ) {
@@ -140,10 +140,12 @@ async function createAndWriteIconsToPathAsync(
   if (iconUrl || iconForegroundUrl) {
     // Android 7 and below icon
     if (iconUrl) {
-      (await globby(['**/ic_launcher.png'], {
-        cwd: resPath,
-        absolute: true,
-      })).forEach(filePath => {
+      (
+        await globby(['**/ic_launcher.png'], {
+          cwd: resPath,
+          absolute: true,
+        })
+      ).forEach(filePath => {
         fs.removeSync(filePath);
       });
 
@@ -160,10 +162,12 @@ async function createAndWriteIconsToPathAsync(
 
     // Adaptive icon foreground image
     if (iconForegroundUrl) {
-      (await globby(['**/ic_foreground.png'], {
-        cwd: resPath,
-        absolute: true,
-      })).forEach(filePath => {
+      (
+        await globby(['**/ic_foreground.png'], {
+          cwd: resPath,
+          absolute: true,
+        })
+      ).forEach(filePath => {
         fs.removeSync(filePath);
       });
 
@@ -180,19 +184,23 @@ async function createAndWriteIconsToPathAsync(
       // the OS's default method of coercing normal app icons to adaptive
       // makes them look quite different from using an actual adaptive icon (with xml)
       // so we need to support falling back to the old version on Android 8
-      (await globby(['**/mipmap-*-v26/*'], {
-        cwd: resPath,
-        absolute: true,
-        dot: true,
-      })).forEach(filePath => {
+      (
+        await globby(['**/mipmap-*-v26/*'], {
+          cwd: resPath,
+          absolute: true,
+          dot: true,
+        })
+      ).forEach(filePath => {
         fs.removeSync(filePath);
       });
 
       try {
-        (await globby(['**/mipmap-*-v26'], {
-          cwd: resPath,
-          absolute: true,
-        })).forEach(filePath => {
+        (
+          await globby(['**/mipmap-*-v26'], {
+            cwd: resPath,
+            absolute: true,
+          })
+        ).forEach(filePath => {
           fs.rmdirSync(filePath);
         });
       } catch (e) {
@@ -234,10 +242,12 @@ async function createAndWriteIconsToPathAsync(
 
   // Notification icon
   if (notificationIconUrl) {
-    (await globby(['**/shell_notification_icon.png'], {
-      cwd: resPath,
-      absolute: true,
-    })).forEach(filePath => {
+    (
+      await globby(['**/shell_notification_icon.png'], {
+        cwd: resPath,
+        absolute: true,
+      })
+    ).forEach(filePath => {
       fs.removeSync(filePath);
     });
 

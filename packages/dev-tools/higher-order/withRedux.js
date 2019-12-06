@@ -1,4 +1,4 @@
-import { connect, Provider } from 'react-redux';
+import { Provider, connect } from 'react-redux';
 
 import * as React from 'react';
 

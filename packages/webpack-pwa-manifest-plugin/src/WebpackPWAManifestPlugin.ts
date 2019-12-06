@@ -28,11 +28,13 @@ export default class WebpackPWAManifest {
   expoConfig: ExpoConfig;
   options: any;
   HtmlWebpackPlugin: any;
+  projectRoot: string;
 
   constructor(
     appJson: ExpoConfig,
-    { noResources, filename, publicPath, HtmlWebpackPlugin }: ManifestProps
+    { noResources, filename, publicPath, HtmlWebpackPlugin, projectRoot }: ManifestProps
   ) {
+    this.projectRoot = projectRoot || process.cwd();
     this.HtmlWebpackPlugin = HtmlWebpackPlugin;
 
     this.manifest = createPWAManifestFromExpoConfig(appJson);
@@ -142,7 +144,7 @@ export default class WebpackPWAManifest {
       compiler.plugin('compilation', compilation => {
         compilation.plugin(
           'html-webpack-plugin-before-html-processing',
-          (htmlPluginData: any, callback: (this: Tapable, ...args: any[]) => void) =>
+          (htmlPluginData: any, callback: (_this: Tapable, ...args: any[]) => void) =>
             injectToHTMLAsync(htmlPluginData, compilation, callback)
         );
       });

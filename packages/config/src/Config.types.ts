@@ -5,6 +5,7 @@ export type BareAppConfig = { name: string; displayName: string; [key: string]: 
 export type ExpoConfig = {
   name?: string;
   slug?: string;
+  description?: string;
   sdkVersion?: string;
   platforms?: Array<Platform>;
   nodeModulesPath?: string;

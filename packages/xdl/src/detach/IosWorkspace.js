@@ -6,8 +6,8 @@ import rimraf from 'rimraf';
 import Api from '../Api';
 import {
   isDirectory,
-  rimrafDontThrow,
   parseSdkMajorVersion,
+  rimrafDontThrow,
   spawnAsyncThrowError,
   transformFileContentsAsync,
 } from './ExponentTools';
@@ -272,7 +272,7 @@ async function createDetachedAsync(context) {
 
   const projectPackageJsonPath = path.join(projectRootDirectory, 'package.json');
 
-  if (!await fs.exists(projectPackageJsonPath)) {
+  if (!(await fs.exists(projectPackageJsonPath))) {
     logger.info('Copying blank package.json...');
     await fs.copy(
       path.join(expoRootTemplateDirectory, 'exponent-view-template', 'package.json'),
@@ -308,7 +308,9 @@ async function createDetachedAsync(context) {
 
 async function _getPackagesToInstallWhenEjecting(sdkVersion) {
   const versions = await Versions.versionsAsync();
-  return versions.sdkVersions[sdkVersion].packagesToInstallWhenEjecting;
+  return versions.sdkVersions[sdkVersion]
+    ? versions.sdkVersions[sdkVersion].packagesToInstallWhenEjecting
+    : null;
 }
 
 // @tsapeta: Temporarily copied from Detach._detachAsync. This needs to be invoked also when creating a shell app workspace

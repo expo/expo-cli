@@ -34,4 +34,3 @@ export async function setup() {
 
   setupCompleted = true;
 }
-
