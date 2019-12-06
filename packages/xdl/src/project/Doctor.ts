@@ -1,4 +1,11 @@
-import { resolveModule, configFilename, fileExistsAsync, ExpoConfig, PackageJSONConfig, readConfigJsonAsync } from '@expo/config';
+import {
+  resolveModule,
+  configFilename,
+  fileExistsAsync,
+  ExpoConfig,
+  PackageJSONConfig,
+  readConfigJsonAsync,
+} from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
 import spawnAsync from '@expo/spawn-async';
 import fs from 'fs-extra';
@@ -208,8 +215,7 @@ async function _validateExpJsonAsync(
     return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-
-  let sdkVersions = await Versions.sdkVersionsAsync();
+  let sdkVersions = await Versions.sdkVersionsAsync(!allowNetwork); /////////////// THIS IS SLOW
   if (!sdkVersions) {
     ProjectUtils.logError(
       projectRoot,
@@ -235,7 +241,7 @@ async function _validateExpJsonAsync(
   // Skip validation if the correct token is set in env
   if (sdkVersion !== 'UNVERSIONED') {
     try {
-      let schema = await ExpSchema.getSchemaAsync(sdkVersion);
+      let schema = await ExpSchema.getSchemaAsync(sdkVersion, !allowNetwork);
       let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
         projectRoot,
         exp,
@@ -346,9 +352,7 @@ async function _validateReactNativeVersionAsync(
         ProjectUtils.logWarning(
           projectRoot,
           'expo',
-          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${
-            sdkVersionObject['expoReactNativeTag']
-          }`,
+          `Warning: Invalid version of react-native for sdkVersion ${sdkVersion}. Use github:expo/react-native#${sdkVersionObject['expoReactNativeTag']}`,
           'doctor-invalid-version-of-react-native'
         );
         return WARNING;

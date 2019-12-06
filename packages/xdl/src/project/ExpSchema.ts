@@ -18,8 +18,8 @@ export async function validatorFromProjectRoot(projectRoot: string): Promise<Sch
   return validator;
 }
 
-export async function getSchemaAsync(sdkVersion: string): Promise<Schema> {
-  let json = await _getSchemaJSONAsync(sdkVersion);
+export async function getSchemaAsync(sdkVersion: string, offline?: Boolean): Promise<Schema> {
+  let json = await _getSchemaJSONAsync(sdkVersion, offline);
   return json.schema;
 }
 
@@ -43,7 +43,10 @@ export async function getAssetSchemasAsync(sdkVersion: string): Promise<AssetSch
   return assetSchemas;
 }
 
-async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema }> {
+async function _getSchemaJSONAsync(
+  sdkVersion: string,
+  offline?: Boolean
+): Promise<{ schema: Schema }> {
   if (process.env.LOCAL_XDL_SCHEMA) {
     if (process.env.EXPONENT_UNIVERSE_DIR) {
       return JSON.parse(
@@ -66,7 +69,7 @@ async function _getSchemaJSONAsync(sdkVersion: string): Promise<{ schema: Schema
 
   if (!_xdlSchemaJson[sdkVersion]) {
     try {
-      _xdlSchemaJson[sdkVersion] = await Api.xdlSchemaAsync(sdkVersion);
+      _xdlSchemaJson[sdkVersion] = await Api.xdlSchemaAsync(sdkVersion, offline);
     } catch (e) {
       if (e.code && e.code === 'INVALID_JSON') {
         throw new Error(`Couldn't read schema from server`);

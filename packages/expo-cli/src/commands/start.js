@@ -52,6 +52,10 @@ function parseStartOptions(projectDir: string, options: Object): Object {
     startOpts.maxWorkers = options.maxWorkers;
   }
 
+  if (options.offline) {
+    startOpts.offline = true;
+  }
+
   return startOpts;
 }
 

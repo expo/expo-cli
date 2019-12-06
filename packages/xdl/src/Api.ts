@@ -170,7 +170,7 @@ async function _downloadAsync(
     response.data
       .on('data', (chunk: Buffer) => {
         downloadProgress += chunk.length;
-        const roundedProgress = Math.floor(downloadProgress / totalDownloadSize * 100);
+        const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);
@@ -236,11 +236,16 @@ export default class ApiClient {
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
-  static async xdlSchemaAsync(sdkVersion: string): Promise<JSONObject> {
+  static async xdlSchemaAsync(sdkVersion: string, offline?: Boolean): Promise<JSONObject> {
     if (!ApiClient._schemaCaches.hasOwnProperty(sdkVersion)) {
       ApiClient._schemaCaches[sdkVersion] = new Cacher(
         async () => {
-          return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`);
+          return await ApiClient.callPathAsync(
+            `/--/xdl-schema/${sdkVersion}`,
+            undefined,
+            undefined,
+            offline ? { timeout: 1 } : undefined
+          );
         },
         `schema-${sdkVersion}.json`,
         0,

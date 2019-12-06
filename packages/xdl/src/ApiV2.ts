@@ -36,6 +36,7 @@ type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
+  timeout?: Number;
 };
 
 type QueryParameters = { [key: string]: string | number | boolean | null | undefined };

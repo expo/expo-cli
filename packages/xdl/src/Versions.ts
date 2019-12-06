@@ -47,10 +47,10 @@ type Versions = {
   turtleSdkVersions: TurtleSDKVersionsOld;
 };
 
-export async function versionsAsync(): Promise<Versions> {
+export async function versionsAsync(offline?: Boolean): Promise<Versions> {
   const api = new ApiV2Client();
   const versionCache = new Cacher(
-    () => api.getAsync('versions/latest'),
+    () => api.getAsync('versions/latest', undefined, offline ? { timeout: 1 } : undefined),
     'versions.json',
     0,
     path.join(__dirname, '../caches/versions.json')
@@ -58,8 +58,8 @@ export async function versionsAsync(): Promise<Versions> {
   return await versionCache.getAsync();
 }
 
-export async function sdkVersionsAsync(): Promise<SDKVersions> {
-  const { sdkVersions } = await versionsAsync();
+export async function sdkVersionsAsync(offline?: Boolean): Promise<SDKVersions> {
+  const { sdkVersions } = await versionsAsync(offline);
   return sdkVersions;
 }
 
