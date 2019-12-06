@@ -185,7 +185,7 @@ async function configureAndroid(modulePath: string, { javaPackage, jsModuleName,
   );
   await replaceContent(path.join(androidPath, 'build.gradle'), gradleContent =>
     gradleContent
-      .replace(/version = ['"][\w.-]+['"]/, "version = '1.0.0'")
+      .replace(/\bversion = ['"][\w.-]+['"]/, "version = '1.0.0'")
       .replace(/versionCode \d+/, 'versionCode 1')
       .replace(/versionName ['"][\w.-]+['"]/, "versionName '1.0.0'")
   );
