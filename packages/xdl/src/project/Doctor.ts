@@ -215,7 +215,7 @@ async function _validateExpJsonAsync(
     return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-  let sdkVersions = await Versions.sdkVersionsAsync(!allowNetwork); /////////////// THIS IS SLOW
+  let sdkVersions = await Versions.sdkVersionsAsync(!allowNetwork);
   if (!sdkVersions) {
     ProjectUtils.logError(
       projectRoot,
