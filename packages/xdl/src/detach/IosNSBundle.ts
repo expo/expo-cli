@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import get from 'lodash/get';
 import path from 'path';
 
+import { ExpoConfig } from '@expo/config';
 import * as AssetBundle from './AssetBundle';
 import {
   getManifestAsync,
@@ -20,7 +21,6 @@ import * as IosPlist from './IosPlist';
 // @ts-ignore: No TS support
 import * as IosWorkspace from './IosWorkspace';
 import logger from './Logger';
-import { ExpoConfig } from '@expo/config';
 import {
   AnyStandaloneContext,
   StandaloneContextService,
@@ -236,7 +236,8 @@ function _getPrivateConfig(context: AnyStandaloneContext): { [key: string]: any 
       return exp.ios.config;
     }
   }
-  return;
+
+  return undefined;
 }
 
 function _isAppleUsageDescriptionKey(key: string): boolean {
@@ -331,7 +332,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
 
     infoPlist.FacebookAutoInitEnabled = config.facebookAutoInitEnabled || false;
     infoPlist.FacebookAutoLogAppEventsEnabled = config.facebookAutoLogAppEventsEnabled || false;
-    infoPlist.FacebookAdvertiserIDCollectionEnabled = config.facebookAdvertiserIDCollectionEnabled || false;
+    infoPlist.FacebookAdvertiserIDCollectionEnabled =
+      config.facebookAdvertiserIDCollectionEnabled || false;
 
     // set ITSAppUsesNonExemptEncryption to let people skip manually
     // entering it in iTunes Connect
@@ -613,5 +615,6 @@ function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle: string): string 
         `User interface style "${userInterfaceStyle}" is not supported. Supported values: "light", "dark", "automatic".`
       );
   }
-  return;
+
+  return undefined;
 }

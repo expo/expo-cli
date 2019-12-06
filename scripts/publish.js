@@ -8,9 +8,11 @@ async function run() {
   await spawnAsync(lerna, ['version', ...process.argv.slice(2)], { stdio: 'inherit' });
 
   let packages = JSON.parse(
-    (await spawnAsync(lerna, ['ls', '--toposort', '--json'], {
-      stdio: ['inherit', 'pipe', 'inherit'],
-    })).stdout
+    (
+      await spawnAsync(lerna, ['ls', '--toposort', '--json'], {
+        stdio: ['inherit', 'pipe', 'inherit'],
+      })
+    ).stdout
   );
 
   console.log('🔎 Looking for packages to publish');
@@ -18,9 +20,11 @@ async function run() {
   for (const { name, version, location } of packages) {
     let packageViewStdout;
     try {
-      packageViewStdout = (await spawnAsync('npm', ['view', '--json', name], {
-        stdio: ['inherit', 'pipe', 'inherit'],
-      })).stdout;
+      packageViewStdout = (
+        await spawnAsync('npm', ['view', '--json', name], {
+          stdio: ['inherit', 'pipe', 'inherit'],
+        })
+      ).stdout;
     } catch (e) {
       const response = JSON.parse(e.stdout);
       if (response.error && response.error.code === 'E404') {

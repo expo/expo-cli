@@ -3,16 +3,15 @@ import fs from 'fs';
 import path from 'path';
 import url from 'url';
 
+import {
+  ensureSlash,
+  getAbsolutePathWithProjectRoot,
+  getEntryPoint,
+  getModulesPath,
+  getPossibleProjectRoot,
+} from '@expo/config/paths';
 import { Environment, FilePaths } from '../types';
 import getMode from './getMode';
-
-import {
-  getPossibleProjectRoot,
-  ensureSlash,
-  getModulesPath,
-  getEntryPoint,
-  getAbsolutePathWithProjectRoot,
-} from '@expo/config/paths';
 
 function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();

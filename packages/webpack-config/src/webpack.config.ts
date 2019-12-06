@@ -1,5 +1,5 @@
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
-import { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
+import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 // @ts-ignore
@@ -16,7 +16,8 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
-import webpack from 'webpack';
+
+import { projectHasModule } from '@expo/config';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
 import { createAllLoaders } from './loaders';
 import {
@@ -36,7 +37,6 @@ import {
 
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
-import { projectHasModule } from '@expo/config';
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },

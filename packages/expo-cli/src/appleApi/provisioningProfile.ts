@@ -4,7 +4,7 @@ import { AppleCtx } from './authenticate';
 export type ProvisioningProfile = {
   provisioningProfileId: string;
   provisioningProfile: string;
-}
+};
 
 export class ProvisioningProfileManager {
   ctx: AppleCtx;
@@ -26,7 +26,14 @@ export class ProvisioningProfileManager {
   }
 
   async revoke(bundleIdentifier: string) {
-    const args = ['revoke', this.ctx.appleId, this.ctx.appleIdPassword, this.ctx.team.id, String(this.ctx.team.inHouse), bundleIdentifier];
+    const args = [
+      'revoke',
+      this.ctx.appleId,
+      this.ctx.appleIdPassword,
+      this.ctx.team.id,
+      String(this.ctx.team.inHouse),
+      bundleIdentifier,
+    ];
     await runAction(travelingFastlane.manageProvisioningProfiles, args);
   }
-};
+}

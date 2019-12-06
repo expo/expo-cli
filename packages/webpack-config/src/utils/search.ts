@@ -5,13 +5,13 @@
 import { isRegExp } from 'util';
 import {
   Configuration,
+  Entry,
+  Plugin,
   RuleSetCondition,
   RuleSetLoader,
   RuleSetRule,
   RuleSetUse,
   RuleSetUseItem,
-  Entry,
-  Plugin,
 } from 'webpack';
 
 import { DevConfiguration } from '../types';

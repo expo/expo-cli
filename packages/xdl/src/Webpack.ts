@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import getenv from 'getenv';
 import http from 'http';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import { choosePort, prepareUrls, Urls } from 'react-dev-utils/WebpackDevServerUtils';
+import { Urls, choosePort, prepareUrls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 

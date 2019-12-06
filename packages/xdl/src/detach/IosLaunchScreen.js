@@ -6,9 +6,9 @@ import { DOMParser, XMLSerializer } from 'xmldom';
 import {
   manifestUsesSplashApi,
   saveImageToPathAsync,
+  saveUrlToPathAsync,
   spawnAsyncThrowError,
   transformFileContentsAsync,
-  saveUrlToPathAsync,
 } from './ExponentTools';
 import * as IosWorkspace from './IosWorkspace';
 import StandaloneContext from './StandaloneContext';

@@ -17,9 +17,8 @@ process.on('unhandledRejection', err => {
 });
 const { realpathSync } = require('fs-extra');
 
-const { ensureMinProjectSetupAsync } = require('../build/Config');
-
 const spawnAsync = require('@expo/spawn-async');
+const { ensureMinProjectSetupAsync } = require('../build/Config');
 
 const args = process.argv.slice(2);
 

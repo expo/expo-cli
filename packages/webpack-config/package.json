@@ -10,7 +10,6 @@
     "directory": "packages/webpack-config"
   },
   "scripts": {
-    "lint": "eslint .",
     "watch": "tsc --watch",
     "build": "tsc",
     "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
@@ -36,7 +35,7 @@
     "url": "https://github.com/expo/expo-cli/issues"
   },
   "dependencies": {
-    "@babel/core": "^7.0.0",
+    "@babel/core": "^7.4.5",
     "@babel/runtime": "^7.3.4",
     "@expo/config": "^2.5.1",
     "@expo/webpack-pwa-manifest-plugin": "^1.2.13",
@@ -87,14 +86,13 @@
     "@types/terser-webpack-plugin": "^1.2.1",
     "@types/webpack": "4.32.1",
     "@types/webpack-bundle-analyzer": "^2.13.2",
-    "@types/webpack-dev-server": "^3.1.7",
+    "@types/webpack-dev-server": "3.1.7",
     "@types/webpack-manifest-plugin": "^2.0.0",
     "@types/webpack-merge": "^4.1.5",
     "@types/workbox-webpack-plugin": "^4.1.0",
     "jest-puppeteer": "^4.3.0",
     "puppeteer": "^1.19.0",
-    "serve": "^11.1.0",
-    "typescript": "3.4.5"
+    "serve": "^11.1.0"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "browserslist": {

@@ -1,12 +1,12 @@
 import {
   API,
-  JSCodeshift,
   FileInfo,
   Identifier,
   ImportDeclaration,
-  ImportSpecifier,
-  ImportNamespaceSpecifier,
   ImportDefaultSpecifier,
+  ImportNamespaceSpecifier,
+  ImportSpecifier,
+  JSCodeshift,
   JSXIdentifier,
   TSTypeParameter,
 } from 'jscodeshift';

@@ -1,4 +1,5 @@
 module.exports = {
+  root: true,
   extends: ['universe/node'],
   globals: {
     jasmine: false,

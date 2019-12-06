@@ -12,7 +12,6 @@ import merge from 'lodash/merge';
 import Config from './Config';
 import FormData from './tools/FormData';
 
-
 const apiBaseUrl = `${Config.turtleApi.scheme}://${Config.turtleApi.host}:${Config.turtleApi.port}`;
 
 export class TurtleApiError extends ExtendableError {
@@ -53,7 +52,7 @@ export default class TurtleApiClient {
   async getAsync(
     methodName: string,
     args: QueryParameters = {},
-    extraOptions?: Partial<RequestOptions>,
+    extraOptions?: Partial<RequestOptions>
   ) {
     return this._requestAsync(
       methodName,
@@ -61,57 +60,46 @@ export default class TurtleApiClient {
         httpMethod: 'get',
         queryParameters: args,
       },
-      extraOptions,
+      extraOptions
     );
   }
 
-  async postAsync(
-    methodName: string,
-    data?: any,
-    extraOptions?: Partial<RequestOptions>,
-  ) {
+  async postAsync(methodName: string, data?: any, extraOptions?: Partial<RequestOptions>) {
     return this._requestAsync(
       methodName,
       {
         httpMethod: 'post',
         body: data,
       },
-      extraOptions,
+      extraOptions
     );
   }
 
-  async putAsync(
-    methodName: string,
-    data: JSONObject,
-    extraOptions?: Partial<RequestOptions>,
-  ) {
+  async putAsync(methodName: string, data: JSONObject, extraOptions?: Partial<RequestOptions>) {
     return this._requestAsync(
       methodName,
       {
         httpMethod: 'put',
         body: data,
       },
-      extraOptions,
+      extraOptions
     );
   }
 
-  async deleteAsync(
-    methodName: string,
-    extraOptions?: Partial<RequestOptions>,
-  ) {
+  async deleteAsync(methodName: string, extraOptions?: Partial<RequestOptions>) {
     return this._requestAsync(
       methodName,
       {
         httpMethod: 'delete',
       },
-      extraOptions,
+      extraOptions
     );
   }
 
   async _requestAsync(
     methodName: string,
     options: RequestOptions,
-    extraRequestOptions?: Partial<RequestOptions>,
+    extraRequestOptions?: Partial<RequestOptions>
   ) {
     const formattedUrl = new URL(methodName, apiBaseUrl);
 
@@ -152,7 +140,7 @@ export default class TurtleApiClient {
       data,
       headers,
       maxContentLength: data.byteLength,
-    }
+    };
 
     if (this.sessionSecret) {
       reqOptions.headers['Expo-Session'] = this.sessionSecret;
@@ -192,5 +180,4 @@ export default class TurtleApiClient {
       formData.pipe(concat({ encoding: 'buffer' }, data => resolve({ data })));
     });
   }
-
 }

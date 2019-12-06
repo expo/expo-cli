@@ -1,6 +1,6 @@
 {
   "name": "@expo/xdl",
-  "version": "57.1.0",
+  "version": "57.1.1",
   "description": "The Expo Development Library",
   "main": "build/xdl.js",
   "files": [
@@ -110,6 +110,7 @@
     "@expo/babel-preset-cli": "^0.2.1",
     "@types/analytics-node": "^3.1.1",
     "@types/concat-stream": "^1.6.0",
+    "@types/form-data": "2.2.0",
     "@types/getenv": "^0.7.0",
     "@types/globby": "6.1.0",
     "@types/hashids": "^1.0.30",
@@ -147,8 +148,7 @@
     "mock-fs": "^3.12.1",
     "prettier": "~1.7.4",
     "promise-print": "^2.3.0",
-    "rimraf": "^2.5.4",
-    "typescript": "^3.5.1"
+    "rimraf": "^2.5.4"
   },
   "publishConfig": {
     "access": "public"
