@@ -64,7 +64,7 @@
     "pkg": "^4.2.1"
   },
   "dependencies": {
-    "@expo/build-tools": "0.1.0-alpha.7",
+    "@expo/build-tools": "0.1.0-alpha.8",
     "@expo/bunyan": "3.0.2",
     "@expo/config": "^2.5.1",
     "@expo/dev-tools": "^0.9.1",
