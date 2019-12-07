@@ -3,14 +3,20 @@ import path from 'path';
 import walkSync from 'klaw-sync';
 import { ModuleConfiguration } from './ModuleConfiguration';
 
-const asyncForEach = async <T>(array: T[], callback: (value: T, index: number, array: T[]) => Promise<void>) => {
+const asyncForEach = async <T>(
+  array: T[],
+  callback: (value: T, index: number, array: T[]) => Promise<void>
+) => {
   for (let index = 0; index < array.length; index++) {
     await callback(array[index], index, array);
   }
 };
 
 async function removeFiles(directoryPath: string, filenames: string[]) {
-  await asyncForEach(filenames, async filename => await fse.remove(path.resolve(directoryPath, filename)));
+  await asyncForEach(
+    filenames,
+    async filename => await fse.remove(path.resolve(directoryPath, filename))
+  );
 }
 
 /**
@@ -19,13 +25,17 @@ async function removeFiles(directoryPath: string, filenames: string[]) {
  * @param extensions - array of extensions for files that would be renamed, must be provided with leading dot or empty for no extension, e.g. ['.html', '']
  * @param renamings - array of filenames and their replacers
  */
-const renameFilesWithExtensions = async (directoryPath: string, extensions: string[], renamings: { from: string; to: string; }[]) => {
+const renameFilesWithExtensions = async (
+  directoryPath: string,
+  extensions: string[],
+  renamings: { from: string; to: string }[]
+) => {
   await asyncForEach(
     renamings,
     async ({ from, to }) =>
       await asyncForEach(extensions, async extension => {
         const fromFilename = `${from}${extension}`;
-        if (!(fse.existsSync(path.join(directoryPath, fromFilename)))) {
+        if (!fse.existsSync(path.join(directoryPath, fromFilename))) {
           return;
         }
         const toFilename = `${to}${extension}`;
@@ -42,7 +52,10 @@ const renameFilesWithExtensions = async (directoryPath: string, extensions: stri
  * @param directoryPath - root directory
  * @param replaceFunction - function that converts current content into something different
  */
-const replaceContents = async (directoryPath: string, replaceFunction: (contentOfSingleFile: string) => string) => {
+const replaceContents = async (
+  directoryPath: string,
+  replaceFunction: (contentOfSingleFile: string) => string
+) => {
   for (let file of walkSync(directoryPath, { nodir: true })) {
     replaceContent(file.path, replaceFunction);
   }
@@ -53,7 +66,10 @@ const replaceContents = async (directoryPath: string, replaceFunction: (contentO
  * @param filePath - provided file
  * @param replaceFunction - function that converts current content into something different
  */
-const replaceContent = async (filePath: string, replaceFunction: (contentOfSingleFile: string) => string) => {
+const replaceContent = async (
+  filePath: string,
+  replaceFunction: (contentOfSingleFile: string) => string
+) => {
   const content = await fse.readFile(filePath, 'utf8');
   const newContent = replaceFunction(content);
   if (newContent !== content) {
@@ -89,7 +105,10 @@ const removeUponEmptyOrOnlyEmptySubdirs = async (dirPath: string): Promise<boole
  * @param modulePath - module directory
  * @param configuration - naming configuration
  */
-async function configureIOS(modulePath: string, { podName, jsModuleName, viewManager }: ModuleConfiguration) {
+async function configureIOS(
+  modulePath: string,
+  { podName, jsPackageName, viewManager }: ModuleConfiguration
+) {
   const iosPath = path.join(modulePath, 'ios');
 
   // remove ViewManager from template
@@ -99,7 +118,7 @@ async function configureIOS(modulePath: string, { podName, jsModuleName, viewMan
       `EXModuleTemplateView.m`,
       `EXModuleTemplateViewManager.h`,
       `EXModuleTemplateViewManager.m`,
-    ])
+    ]);
   }
 
   await renameFilesWithExtensions(
@@ -125,7 +144,7 @@ async function configureIOS(modulePath: string, { podName, jsModuleName, viewMan
   await replaceContents(iosPath, singleFileContent =>
     singleFileContent
       .replace(/EXModuleTemplate/g, podName)
-      .replace(/ExpoModuleTemplate/g, jsModuleName)
+      .replace(/ExpoModuleTemplate/g, jsPackageName)
   );
 }
 
@@ -135,7 +154,10 @@ async function configureIOS(modulePath: string, { podName, jsModuleName, viewMan
  * @param modulePath - module directory
  * @param configuration - naming configuration
  */
-async function configureAndroid(modulePath: string, { javaPackage, jsModuleName, viewManager }: ModuleConfiguration) {
+async function configureAndroid(
+  modulePath: string,
+  { javaPackage, jsPackageName, viewManager }: ModuleConfiguration
+) {
   const androidPath = path.join(modulePath, 'android');
   const sourceFilesPath = path.join(
     androidPath,
@@ -144,22 +166,19 @@ async function configureAndroid(modulePath: string, { javaPackage, jsModuleName,
     'kotlin',
     'expo',
     'modules',
-    'template',
+    'template'
   );
   const destinationFilesPath = path.join(
     androidPath,
     'src',
     'main',
     'kotlin',
-    ...javaPackage.split('.'),
+    ...javaPackage.split('.')
   );
 
   // remove ViewManager from template
   if (!viewManager) {
-    removeFiles(sourceFilesPath, [
-      `ModuleTemplateView.kt`,
-      `ModuleTemplateViewManager.kt`,
-    ]);
+    removeFiles(sourceFilesPath, [`ModuleTemplateView.kt`, `ModuleTemplateViewManager.kt`]);
 
     replaceContent(path.join(sourceFilesPath, 'ModuleTemplatePackage.kt'), packageContent =>
       packageContent
@@ -176,12 +195,12 @@ async function configureAndroid(modulePath: string, { javaPackage, jsModuleName,
   // Cleanup all empty subdirs up to provided rootDir
   await removeUponEmptyOrOnlyEmptySubdirs(path.join(androidPath, 'src', 'main', 'kotlin', 'expo'));
 
-  const moduleName = jsModuleName.startsWith('Expo') ? jsModuleName.substring(4) : jsModuleName;
+  const moduleName = jsPackageName.startsWith('Expo') ? jsPackageName.substring(4) : jsPackageName;
   await replaceContents(androidPath, singleFileContent =>
     singleFileContent
       .replace(/expo\.modules\.template/g, javaPackage)
       .replace(/ModuleTemplate/g, moduleName)
-      .replace(/ExpoModuleTemplate/g, jsModuleName)
+      .replace(/ExpoModuleTemplate/g, jsPackageName)
   );
   await replaceContent(path.join(androidPath, 'build.gradle'), gradleContent =>
     gradleContent
@@ -206,9 +225,14 @@ async function configureAndroid(modulePath: string, { javaPackage, jsModuleName,
  * @param modulePath - module directory
  * @param configuration - naming configuration
  */
-async function configureTS(modulePath: string, { jsModuleName, viewManager }: ModuleConfiguration) {
-  const moduleNameWithoutExpoPrefix = jsModuleName.startsWith('Expo') ? jsModuleName.substr(4) : 'Unimodule';
-  const tsPath = path.join(modulePath, 'src')
+async function configureTS(
+  modulePath: string,
+  { jsPackageName, viewManager }: ModuleConfiguration
+) {
+  const moduleNameWithoutExpoPrefix = jsPackageName.startsWith('Expo')
+    ? jsPackageName.substr(4)
+    : 'Unimodule';
+  const tsPath = path.join(modulePath, 'src');
 
   // remove View Manager from template
   if (!viewManager) {
@@ -218,33 +242,32 @@ async function configureTS(modulePath: string, { jsModuleName, viewManager }: Mo
       'ExpoModuleTemplateNativeView.web.tsx',
     ]);
     await replaceContent(path.join(tsPath, 'ModuleTemplate.ts'), fileContent =>
-      fileContent
-        .replace(/(^\s+)+(^.*?){1}ExpoModuleTemplateView.*$/m, '')
-    )
+      fileContent.replace(/(^\s+)+(^.*?){1}ExpoModuleTemplateView.*$/m, '')
+    );
   }
 
   await renameFilesWithExtensions(
     path.join(tsPath, '__tests__'),
     ['.ts'],
-    [{ from: 'ModuleTemplate-test', to: `${moduleNameWithoutExpoPrefix}-test` }],
+    [{ from: 'ModuleTemplate-test', to: `${moduleNameWithoutExpoPrefix}-test` }]
   );
   await renameFilesWithExtensions(
     tsPath,
     ['.tsx', '.ts'],
     [
-      { from: 'ExpoModuleTemplateView', to: `${jsModuleName}View` },
-      { from: 'ExpoModuleTemplateNativeView', to: `${jsModuleName}NativeView` },
-      { from: 'ExpoModuleTemplateNativeView.web', to: `${jsModuleName}NativeView.web` },
-      { from: 'ExpoModuleTemplate', to: jsModuleName },
-      { from: 'ExpoModuleTemplate.web', to: `${jsModuleName}.web` },
+      { from: 'ExpoModuleTemplateView', to: `${jsPackageName}View` },
+      { from: 'ExpoModuleTemplateNativeView', to: `${jsPackageName}NativeView` },
+      { from: 'ExpoModuleTemplateNativeView.web', to: `${jsPackageName}NativeView.web` },
+      { from: 'ExpoModuleTemplate', to: jsPackageName },
+      { from: 'ExpoModuleTemplate.web', to: `${jsPackageName}.web` },
       { from: 'ModuleTemplate', to: moduleNameWithoutExpoPrefix },
-      { from: 'ModuleTemplate.types', to: `${moduleNameWithoutExpoPrefix}.types` }
+      { from: 'ModuleTemplate.types', to: `${moduleNameWithoutExpoPrefix}.types` },
     ]
   );
 
   await replaceContents(tsPath, singleFileContent =>
     singleFileContent
-      .replace(/ExpoModuleTemplate/g, jsModuleName)
+      .replace(/ExpoModuleTemplate/g, jsPackageName)
       .replace(/ModuleTemplate/g, moduleNameWithoutExpoPrefix)
   );
 }
@@ -254,19 +277,24 @@ async function configureTS(modulePath: string, { jsModuleName, viewManager }: Mo
  * @param modulePath - module directory
  * @param configuration - naming configuration
  */
-async function configureNPM(modulePath: string, { npmModuleName, podName, jsModuleName }: ModuleConfiguration) {
-  const moduleNameWithoutExpoPrefix = jsModuleName.startsWith('Expo') ? jsModuleName.substr(4) : 'Unimodule';
+async function configureNPM(
+  modulePath: string,
+  { npmModuleName, podName, jsPackageName }: ModuleConfiguration
+) {
+  const moduleNameWithoutExpoPrefix = jsPackageName.startsWith('Expo')
+    ? jsPackageName.substr(4)
+    : 'Unimodule';
   await replaceContent(path.join(modulePath, 'package.json'), singleFileContent =>
     singleFileContent
       .replace(/expo-module-template/g, npmModuleName)
       .replace(/"version": "[\w.-]+"/, '"version": "1.0.0"')
-      .replace(/ExpoModuleTemplate/g, jsModuleName)
+      .replace(/ExpoModuleTemplate/g, jsPackageName)
       .replace(/ModuleTemplate/g, moduleNameWithoutExpoPrefix)
   );
   await replaceContent(path.join(modulePath, 'README.md'), readmeContent =>
     readmeContent
       .replace(/expo-module-template/g, npmModuleName)
-      .replace(/ExpoModuleTemplate/g, jsModuleName)
+      .replace(/ExpoModuleTemplate/g, jsPackageName)
       .replace(/EXModuleTemplate/g, podName)
   );
 }
@@ -276,7 +304,10 @@ async function configureNPM(modulePath: string, { npmModuleName, podName, jsModu
  * @param modulePath - module directory
  * @param configuration - naming configuration
  */
-export default async function configureModule(newModulePath: string, configuration: ModuleConfiguration) {
+export default async function configureModule(
+  newModulePath: string,
+  configuration: ModuleConfiguration
+) {
   await configureNPM(newModulePath, configuration);
   await configureTS(newModulePath, configuration);
   await configureAndroid(newModulePath, configuration);

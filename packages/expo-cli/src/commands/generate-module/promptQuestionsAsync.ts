@@ -90,7 +90,7 @@ const generateQuestions = (suggestedModuleName: string): Question[] => [
         : true,
   },
   {
-    name: 'jsModuleName',
+    name: 'jsPackageName',
     message: 'How would you like to call your module in JS/TS codebase (eg. ExpoCamera)?',
     default: ({ npmModuleName }) => generateInCodeModuleDefaultName(npmModuleName),
     validate: (answer: string) =>
@@ -112,6 +112,8 @@ const generateQuestions = (suggestedModuleName: string): Question[] => [
  * Prompt user about new module namings.
  * @param suggestedModuleName - suggested module name that would be used to generate all suggestions for each question
  */
-export default async function promptQuestionsAsync(suggestedModuleName: string): Promise<ModuleConfiguration> {
-  return await prompt(generateQuestions(suggestedModuleName)) as ModuleConfiguration;
+export default async function promptQuestionsAsync(
+  suggestedModuleName: string
+): Promise<ModuleConfiguration> {
+  return (await prompt(generateQuestions(suggestedModuleName))) as ModuleConfiguration;
 }
