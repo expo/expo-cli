@@ -60,6 +60,12 @@ jscodeshift --transform ./node_modules/expo-codemod/build/transforms/sdk33-impor
 ```
 Read more about jscodeshift options [here](https://github.com/facebook/jscodeshift#usage-cli).
 
+## Troubleshooting
+
+### Custom babel.config.js not being used
+
+As per [#676](https://github.com/expo/expo-cli/issues/676#issuecomment-505793327) you can pass in the `--parser=flow` option.
+
 ## Transforms
 
 ### sdk33-imports
