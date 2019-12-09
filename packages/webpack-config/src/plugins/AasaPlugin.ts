@@ -1,5 +1,4 @@
 import JsonPlugin from './JsonPlugin';
-import { Mode } from '../types';
 
 const domains = [
   // https://developer.apple.com/documentation/security/password_autofill/setting_up_an_app_s_associated_domains?language=objc
@@ -111,12 +110,15 @@ export function createAasaObjectForMultiApp({
   }
 
   if (hasUniversalLinks) {
-    const details = appIDs.map(appID => ({
-      appID,
-      // Repeating the paths for every app is based on popular websites like wikipedia:
-      // https://www.wikipedia.org/apple-app-site-association
-      paths,
-    }));
+    const details = appIDs.reduce(
+      (prev, appID) => ({
+        ...prev,
+        // Repeating the paths for every app is based on popular websites like wikipedia:
+        // https://www.wikipedia.org/apple-app-site-association
+        [appID]: { paths },
+      }),
+      {}
+    );
     aasa.applinks = {
       // The apps array must be present, but will always be empty.
       apps: [],
@@ -129,33 +131,23 @@ export function createAasaObjectForMultiApp({
 
 // Should always comply with https://search.developer.apple.com/appsearch-validation-tool
 class AasaPlugin extends JsonPlugin {
-  static createSingleApp = (props: SingleAppAasaPluginProps & { mode: Mode }): AasaPlugin => {
+  static createSingleApp = (props: SingleAppAasaPluginProps): AasaPlugin => {
     const aasa = createAasaObjectForSingleApp(props);
     return new AasaPlugin({
-      mode: props.mode,
       aasa,
     });
   };
 
-  static createMultiApp = (props: MultiAppAasaPluginProps & { mode: Mode }): AasaPlugin => {
+  static createMultiApp = (props: MultiAppAasaPluginProps): AasaPlugin => {
     const aasa = createAasaObjectForMultiApp(props);
     return new AasaPlugin({
-      mode: props.mode,
       aasa,
     });
   };
 
-  constructor({
-    mode,
-    useWellKnown = true,
-    aasa = {},
-  }: {
-    mode: Mode;
-    useWellKnown?: boolean;
-    aasa: AasaObject;
-  }) {
+  constructor({ useWellKnown = true, aasa = {} }: { useWellKnown?: boolean; aasa: AasaObject }) {
     super({
-      pretty: mode === 'development',
+      pretty: true,
       path: useWellKnown
         ? '/.well-known/apple-app-site-association'
         : '/apple-app-site-association',

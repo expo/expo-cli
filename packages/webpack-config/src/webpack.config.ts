@@ -324,10 +324,7 @@ export default async function(
   });
 }
 
-function withAasa(
-  config: AnyConfiguration,
-  env: Pick<Environment, 'mode' | 'config'>
-): AnyConfiguration {
+function withAasa(config: AnyConfiguration, env: Pick<Environment, 'config'>): AnyConfiguration {
   const { ios = {} } = env.config;
 
   if (!config.plugins) config.plugins = [];
@@ -335,7 +332,6 @@ function withAasa(
   config.plugins.push(
     AasaPlugin.createSingleApp({
       associatedDomains: ios.associatedDomains || [],
-      mode: env.mode,
       bundleId: ios.bundleIdentifier,
       teamId: ios.teamId,
       paths: ios.aasaPaths || [],
