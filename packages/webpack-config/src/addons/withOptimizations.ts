@@ -1,7 +1,6 @@
 import { boolish } from 'getenv';
 import isWsl from 'is-wsl';
 import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
-// @ts-ignore
 import safePostCssParser from 'postcss-safe-parser';
 import TerserPlugin from 'terser-webpack-plugin';
 import { Configuration } from 'webpack';
