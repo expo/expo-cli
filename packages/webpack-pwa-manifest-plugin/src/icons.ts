@@ -226,7 +226,8 @@ export function retrieveIcons(manifest: ManifestOptions): [Icon[], ManifestOptio
 
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
-  const contents = fs.readFileSync(filePath);
+  const contents = filePath.startsWith('http') ? filePath : fs.readFileSync(filePath);
+
   return crypto
     .createHash('sha256')
     .update(contents)

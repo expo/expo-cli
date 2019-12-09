@@ -8,7 +8,10 @@ import promptQuestionsAsync from './promptQuestionsAsync';
 import configureModule from './configureModule';
 import fetchTemplate from './fetchTemplate';
 
-export default async function generateModuleAsync(newModuleProjectDir: string, options: CommandOptions & { template?: string }) {
+export default async function generateModuleAsync(
+  newModuleProjectDir: string,
+  options: CommandOptions & { template?: string }
+) {
   const newModulePathFromArgv = newModuleProjectDir && path.resolve(newModuleProjectDir);
   const newModuleName = newModulePathFromArgv && path.basename(newModulePathFromArgv);
   const newModuleParentPath = newModulePathFromArgv
