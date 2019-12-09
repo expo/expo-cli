@@ -27,8 +27,8 @@ export default class BaseUploader {
 
   async upload(): Promise<void> {
     await this._getProjectConfig();
-    const buildPath = await this._getBinaryFilePath();
     const platformData = await this._getPlatformSpecificOptions();
+    const buildPath = await this._getBinaryFilePath();
     await this._uploadToTheStore(platformData, buildPath);
     await this._removeBuildFileIfDownloaded(buildPath);
     log(
