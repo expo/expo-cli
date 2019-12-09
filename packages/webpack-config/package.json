@@ -39,7 +39,6 @@
     "@babel/runtime": "^7.3.4",
     "@expo/config": "^2.5.2",
     "@expo/webpack-pwa-manifest-plugin": "^1.2.14",
-    "@types/yup": "^0.26.24",
     "babel-loader": "8.0.6",
     "babel-preset-expo": "^7.0.0",
     "brotli-webpack-plugin": "^1.1.0",
@@ -90,6 +89,7 @@
     "@types/webpack-manifest-plugin": "^2.0.0",
     "@types/webpack-merge": "^4.1.5",
     "@types/workbox-webpack-plugin": "^4.1.0",
+    "@types/yup": "^0.26.24",
     "jest-puppeteer": "^4.3.0",
     "puppeteer": "^1.19.0",
     "serve": "^11.1.0"
