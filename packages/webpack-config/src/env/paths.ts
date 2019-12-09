@@ -132,3 +132,11 @@ export function getProductionPath(projectRoot: string): string {
   const { exp } = readConfigJson(projectRoot, true, true);
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }
+
+/**
+ * get absolute path relative to project root while accounting for `https://` paths
+ */
+export function getAbsolute(projectRoot: string, ...pathComponents: string[]): string {
+  const inputProjectRoot = projectRoot || getPossibleProjectRoot();
+  return getAbsolutePathWithProjectRoot(inputProjectRoot, ...pathComponents);
+}

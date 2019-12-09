@@ -3,8 +3,6 @@ import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } f
 // @ts-ignore
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 // @ts-ignore
-import CleanWebpackPlugin from 'clean-webpack-plugin';
-// @ts-ignore
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 // @ts-ignore
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
@@ -16,6 +14,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 
 import { projectHasModule } from '@expo/config';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
@@ -178,8 +177,8 @@ export default async function(
     plugins: [
       // Delete the build folder
       isProd &&
-        new CleanWebpackPlugin([locations.production.folder], {
-          root: locations.root,
+        new CleanWebpackPlugin({
+          cleanOnceBeforeBuildPatterns: [locations.production.folder],
           dry: false,
           verbose: false,
         }),
