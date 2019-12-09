@@ -14,7 +14,7 @@ import path from 'path';
 // @ts-ignore
 import CleanWebpackPlugin from 'clean-webpack-plugin';
 
-import { projectHasModule } from '@expo/config';
+import { projectHasModule, ExpoConfig } from '@expo/config';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
 import { createAllLoaders } from './loaders';
 import {
@@ -22,6 +22,7 @@ import {
   ExpoHtmlWebpackPlugin,
   ExpoInterpolateHtmlPlugin,
   ExpoProgressBarPlugin,
+  AasaPlugin,
 } from './plugins';
 import {
   withAlias,
@@ -32,7 +33,14 @@ import {
   withReporting,
 } from './addons';
 
-import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
+import {
+  Arguments,
+  DevConfiguration,
+  Environment,
+  FilePaths,
+  Mode,
+  AnyConfiguration,
+} from './types';
 import { overrideWithPropertyOrConfig } from './utils';
 
 function getDevtool(
@@ -308,8 +316,31 @@ export default async function(
     webpackConfig = withCompression(withOptimizations(webpackConfig), env);
   }
 
+  webpackConfig = withAasa(webpackConfig, env);
+
   return withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
     allowedHost: argv.allowedHost,
     proxy: argv.proxy,
   });
+}
+
+function withAasa(
+  config: AnyConfiguration,
+  env: Pick<Environment, 'mode' | 'config'>
+): AnyConfiguration {
+  const { ios = {} } = env.config;
+
+  if (!config.plugins) config.plugins = [];
+
+  config.plugins.push(
+    AasaPlugin.createSingleApp({
+      associatedDomains: ios.associatedDomains || [],
+      mode: env.mode,
+      bundleId: ios.bundleIdentifier,
+      teamId: ios.teamId,
+      paths: ios.aasaPaths || [],
+    })
+  );
+
+  return config;
 }
