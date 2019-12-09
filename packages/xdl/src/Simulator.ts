@@ -132,7 +132,7 @@ export async function _isSimulatorInstalledAsync() {
 
 // Simulator opened
 export async function _openAndBootSimulatorAsync() {
-  if (!await _isSimulatorRunningAsync()) {
+  if (!(await _isSimulatorRunningAsync())) {
     Logger.global.info('Opening iOS simulator');
     await spawnAsync('open', ['-a', 'Simulator']);
     await _waitForDeviceToBoot();
@@ -145,9 +145,11 @@ export async function _openAndBootSimulatorAsync() {
 }
 
 export async function _isSimulatorRunningAsync() {
-  let zeroMeansNo = (await osascript.execAsync(
-    'tell app "System Events" to count processes whose name is "Simulator"'
-  )).trim();
+  let zeroMeansNo = (
+    await osascript.execAsync(
+      'tell app "System Events" to count processes whose name is "Simulator"'
+    )
+  ).trim();
   if (zeroMeansNo === '0') {
     return false;
   }
@@ -369,7 +371,6 @@ export async function _uninstallExpoAppFromSimulatorAsync() {
     await _xcrunAsync(['simctl', 'uninstall', 'booted', 'host.exp.Exponent']);
   } catch (e) {
     if (e.message && e.message.includes('No devices are booted.')) {
-      return;
     } else {
       console.error(e);
       throw e;
@@ -384,14 +385,14 @@ export function _simulatorCacheDirectory() {
   return dir;
 }
 
-export async function upgradeExpoAsync(): Promise<boolean> {
-  if (!await _isSimulatorInstalledAsync()) {
+export async function upgradeExpoAsync(url?: string): Promise<boolean> {
+  if (!(await _isSimulatorInstalledAsync())) {
     return false;
   }
 
   await _openAndBootSimulatorAsync();
   await _uninstallExpoAppFromSimulatorAsync();
-  let installResult = await _installExpoOnSimulatorAsync();
+  let installResult = await _installExpoOnSimulatorAsync(url);
   if (installResult.status !== 0) {
     return false;
   }
@@ -414,7 +415,7 @@ export async function openUrlInSimulatorSafeAsync(
   url: string,
   isDetached: boolean = false
 ): Promise<{ success: true } | { success: false; msg: string }> {
-  if (!await _isSimulatorInstalledAsync()) {
+  if (!(await _isSimulatorInstalledAsync())) {
     return {
       success: false,
       msg: 'Unable to verify Xcode and Simulator installation.',
@@ -424,7 +425,7 @@ export async function openUrlInSimulatorSafeAsync(
   try {
     await _openAndBootSimulatorAsync();
 
-    if (!isDetached && !await _isExpoAppInstalledOnCurrentBootedSimulatorAsync()) {
+    if (!isDetached && !(await _isExpoAppInstalledOnCurrentBootedSimulatorAsync())) {
       await _installExpoOnSimulatorAsync();
       await _waitForExpoAppInstalledOnCurrentBootedSimulatorAsync();
     }

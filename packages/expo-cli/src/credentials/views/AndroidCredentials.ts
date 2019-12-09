@@ -1,4 +1,4 @@
-import { AndroidCredentials as Credentials, ApiV2 } from '@expo/xdl';
+import { ApiV2, AndroidCredentials as Credentials } from '@expo/xdl';
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 import chalk from 'chalk';
@@ -6,8 +6,8 @@ import fs from 'fs-extra';
 import prompt from '../../prompt';
 import log from '../../log';
 
-import { IView, Context } from '../context';
-import { keystoreSchema, AndroidCredentials, FcmCredentials } from '../credentials';
+import { Context, IView } from '../context';
+import { AndroidCredentials, FcmCredentials, keystoreSchema } from '../credentials';
 import { displayAndroidAppCredentials } from '../actions/list';
 import { askForUserProvided } from '../actions/promptForCredentials';
 

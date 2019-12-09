@@ -170,7 +170,7 @@ async function _downloadAsync(
     response.data
       .on('data', (chunk: Buffer) => {
         downloadProgress += chunk.length;
-        const roundedProgress = Math.floor(downloadProgress / totalDownloadSize * 100);
+        const roundedProgress = Math.floor((downloadProgress / totalDownloadSize) * 100);
         if (currentProgress !== roundedProgress) {
           currentProgress = roundedProgress;
           clearTimeout(warningTimer);

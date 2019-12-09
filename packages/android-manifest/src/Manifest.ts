@@ -42,7 +42,9 @@ export function removePermissions(doc: Document, permissionNames?: string[]) {
   }
 }
 
-export function addPermission(doc: Document, permission: Element) {
+// NOTE(brentvatne): it's unclear from the usage here what the expected return
+// value should be. `any` is used to get past an error.
+export function addPermission(doc: Document, permission: Element): any {
   const elements: Element[] = doc.find(`//${USES_PERMISSION}`);
 
   if (elements.length) {
@@ -50,7 +52,6 @@ export function addPermission(doc: Document, permission: Element) {
   }
 
   getRoot(doc).addChild(permission);
-  return;
 }
 
 export function ensurePermissions(

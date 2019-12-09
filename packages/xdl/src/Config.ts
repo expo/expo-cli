@@ -43,7 +43,6 @@ const apiConfig: { [env in Environment]: ApiConfig } = {
   },
 };
 
-
 const turtleApiConfig: { [env in Environment]: ApiConfig } = {
   local: {
     scheme: 'http',

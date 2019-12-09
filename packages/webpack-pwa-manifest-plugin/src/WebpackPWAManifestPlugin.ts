@@ -144,7 +144,7 @@ export default class WebpackPWAManifest {
       compiler.plugin('compilation', compilation => {
         compilation.plugin(
           'html-webpack-plugin-before-html-processing',
-          (htmlPluginData: any, callback: (this: Tapable, ...args: any[]) => void) =>
+          (htmlPluginData: any, callback: (_this: Tapable, ...args: any[]) => void) =>
             injectToHTMLAsync(htmlPluginData, compilation, callback)
         );
       });

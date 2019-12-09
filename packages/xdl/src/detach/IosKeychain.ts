@@ -3,7 +3,7 @@ import _ from 'lodash';
 import fs from 'fs-extra';
 
 import _logger from './Logger';
-import { spawnAsyncThrowError, createSpawner } from './ExponentTools';
+import { createSpawner, spawnAsyncThrowError } from './ExponentTools';
 
 export async function createKeychain(appUUID: string, saveResultToFile = true) {
   const BUILD_PHASE = 'creating keychain';

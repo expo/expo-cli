@@ -84,7 +84,7 @@ export function createBabelLoaderFromEnvironment(
   const { babel = {} } = build;
 
   return createBabelLoader({
-    mode: mode,
+    mode,
     platform: env.platform,
     babelProjectRoot: babel.root || locations.root,
     verbose: babel.verbose,

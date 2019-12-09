@@ -1,4 +1,4 @@
-import { readFile, writeFile, ensureDir } from 'fs-extra';
+import { ensureDir, readFile, writeFile } from 'fs-extra';
 import { join } from 'path';
 import { Entry } from 'webpack';
 import {
@@ -115,10 +115,9 @@ export default function withWorkbox(
     const entries = await resolveEntryAsync(expoEntry);
     const swPath = join(locations.production.registerServiceWorker);
     if (entries.app && !entries.app.includes(swPath) && autoRegister) {
-      const content = (await readFile(
-        require.resolve(locations.template.registerServiceWorker),
-        'utf8'
-      ))
+      const content = (
+        await readFile(require.resolve(locations.template.registerServiceWorker), 'utf8')
+      )
         .replace('SW_PUBLIC_URL', publicUrl)
         .replace('SW_PUBLIC_SCOPE', scope);
       await ensureDir(locations.production.folder);

@@ -191,9 +191,7 @@ export default class AppSigningOptInProcess {
     );
 
     log(
-      `The original keystore is stored in ${
-        this.signKeystore
-      }; remove it only if you are sure that Google Play App Signing is enabled for your app.`
+      `The original keystore is stored in ${this.signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
     );
     AndroidCredentials.logKeystoreCredentials(
       this.signKeystoreCredentials,

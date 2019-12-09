@@ -1,5 +1,5 @@
-import { configFilename, readConfigJsonAsync } from '@expo/config';
-import { AppJSONConfig, BareAppConfig } from '@expo/config';
+import { AppJSONConfig, BareAppConfig, configFilename, readConfigJsonAsync } from '@expo/config';
+
 import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
 import merge from 'lodash/merge';

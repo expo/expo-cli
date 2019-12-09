@@ -9,15 +9,22 @@ import path from 'path';
 import semver from 'semver';
 import temporary from 'tempy';
 
+import * as PackageManager from '@expo/package-manager';
 import { loginOrRegisterIfLoggedOut } from '../../accounts';
 import log from '../../log';
-import * as PackageManager from '@expo/package-manager';
 import prompt, { Question } from '../../prompt';
 import { validateGitStatusAsync } from '../utils/ProjectUtils';
 
 type ValidationErrorMessage = string;
 
 type DependenciesMap = { [key: string]: string | number };
+
+export type EjectAsyncOptions = {
+  ejectMethod: 'bare' | 'expokit' | 'cancel';
+  verbose?: boolean;
+  force?: boolean;
+  packageManager?: 'npm' | 'yarn';
+};
 
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
@@ -60,15 +67,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
   log.nested('');
 }
 
-export async function ejectAsync(
-  projectRoot: string,
-  options: {
-    ejectMethod: 'bare' | 'expokit' | 'cancel';
-    verbose?: boolean;
-    force?: boolean;
-    packageManager?: 'npm' | 'yarn';
-  }
-) {
+export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions) {
   await validateGitStatusAsync();
   log.nested('');
 
@@ -104,10 +103,12 @@ export async function ejectAsync(
 
   const ejectMethod =
     options.ejectMethod ||
-    (await prompt(questions, {
-      nonInteractiveHelp:
-        'Please specify eject method (bare, expokit) with the --eject-method option.',
-    })).ejectMethod;
+    (
+      await prompt(questions, {
+        nonInteractiveHelp:
+          'Please specify eject method (bare, expokit) with the --eject-method option.',
+      })
+    ).ejectMethod;
 
   if (ejectMethod === 'bare') {
     await ejectToBareAsync(projectRoot);

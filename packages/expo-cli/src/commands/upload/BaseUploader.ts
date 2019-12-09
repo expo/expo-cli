@@ -76,7 +76,7 @@ export default class BaseUploader {
 
   _getOwner(): string | undefined {
     if (!this._exp || !this._exp.owner) {
-      return undefined
+      return undefined;
     }
     return this._exp.owner;
   }

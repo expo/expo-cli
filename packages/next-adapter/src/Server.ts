@@ -1,5 +1,5 @@
 /* eslint-env node */
-import { createServer, Server, IncomingMessage, ServerResponse } from 'http';
+import { IncomingMessage, Server, ServerResponse, createServer } from 'http';
 
 import { join } from 'path';
 import { parse } from 'url';

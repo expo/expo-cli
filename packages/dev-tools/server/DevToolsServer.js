@@ -1,4 +1,4 @@
-import { Logger, PackagerLogsStream, ProjectUtils, ProjectSettings } from '@expo/xdl';
+import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from '@expo/xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import * as graphql from 'graphql';
 import express from 'express';

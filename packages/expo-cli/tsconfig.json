@@ -2,7 +2,8 @@
   "extends": "@expo/babel-preset-cli/tsconfig.base",
   "include": ["src/**/*.ts", "package.json"],
   "compilerOptions": {
-    "outDir": "build"
+    "outDir": "build",
+    "resolveJsonModule": true
   },
   "references": [
     { "path": "../xdl" }
