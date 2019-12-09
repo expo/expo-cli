@@ -77,6 +77,14 @@ export async function setVersionsAsync(value: any) {
   });
 }
 
+// NOTE(brentvatne): it is possible for an unreleased version to be published to
+// the versions endpoint, but in some cases we only want to list out released
+// versions
+export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
+  let sdkVersions = await sdkVersionsAsync();
+  return pickBy(sdkVersions, (data, _sdkVersionString) => !!data.releaseNoteUrl);
+}
+
 export function gteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean {
   if (!expJson.sdkVersion) {
     return false;
@@ -121,6 +129,30 @@ export function parseSdkVersionFromTag(tag: string): string {
   }
 
   return tag;
+}
+
+// NOTE(brentvatne): it is possible for an unreleased version to be published to
+// the versions endpoint, but in some cases we need to get the latest *released*
+// version, not just the latest version.
+export async function newestReleasedSdkVersionAsync(): Promise<{
+  version: string;
+  data: SDKVersion | null;
+}> {
+  let sdkVersions = await sdkVersionsAsync();
+  let result = null;
+  let highestMajorVersion = '0.0.0';
+  forEach(sdkVersions, (value, key) => {
+    if (semver.major(key) > semver.major(highestMajorVersion)) {
+      if (value.releaseNoteUrl) {
+        highestMajorVersion = key;
+        result = value;
+      }
+    }
+  });
+  return {
+    version: highestMajorVersion,
+    data: result,
+  };
 }
 
 export async function newestSdkVersionAsync(): Promise<{
