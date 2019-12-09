@@ -1,6 +1,5 @@
 import chalk from 'chalk';
 import { execSync } from 'child_process';
-// @ts-ignore
 import checkForUpdate from 'update-check';
 
 function shouldUseYarn() {
