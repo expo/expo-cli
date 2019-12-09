@@ -59,7 +59,6 @@
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "pnp-webpack-plugin": "^1.2.1",
     "postcss-safe-parser": "^4.0.1",
-    "prettier": "^1.16.4",
     "progress-bar-webpack-plugin": "^1.12.1",
     "react-dev-utils": "9.0.3",
     "style-loader": "^0.23.1",
@@ -69,7 +68,6 @@
     "webpack-bundle-analyzer": "^3.0.4",
     "webpack-deep-scope-plugin": "1.6.0",
     "webpack-manifest-plugin": "^2.0.4",
-    "webpack-merge": "^4.2.1",
     "workbox-webpack-plugin": "^3.6.3",
     "yup": "^0.27.0"
   },
@@ -88,9 +86,9 @@
     "@types/webpack-bundle-analyzer": "^2.13.2",
     "@types/webpack-dev-server": "3.1.7",
     "@types/webpack-manifest-plugin": "^2.0.0",
-    "@types/webpack-merge": "^4.1.5",
     "@types/workbox-webpack-plugin": "^4.1.0",
     "jest-puppeteer": "^4.3.0",
+    "prettier": "^1.16.4",
     "puppeteer": "^1.19.0",
     "serve": "^11.1.0"
   },
