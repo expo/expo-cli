@@ -67,10 +67,7 @@ async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string
   log.nested('');
 }
 
-export async function ejectAsync(
-  projectRoot: string,
-  options: EjectAsyncOptions,
-) {
+export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions) {
   await validateGitStatusAsync();
   log.nested('');
 

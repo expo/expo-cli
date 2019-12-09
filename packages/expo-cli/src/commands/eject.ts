@@ -1,12 +1,12 @@
-import * as Eject from './eject/Eject';
 import { Command } from 'commander';
+import * as Eject from './eject/Eject';
 
 // Set EXPO_VIEW_DIR to universe/exponent to pull expo view code locally instead of from S3
 async function action(projectDir: string, options: Eject.EjectAsyncOptions) {
   await Eject.ejectAsync(projectDir, options);
 }
 
-export default function (program: Command) {
+export default function(program: Command) {
   program
     .command('eject [project-dir]')
     .description(
@@ -22,4 +22,4 @@ export default function (program: Command) {
       'Will attempt to generate an iOS project even when the system is not running macOS. Unsafe and may fail.'
     )
     .asyncActionProjectDir(action, /* skipProjectValidation: */ false, /* skipAuthCheck: */ true);
-};
+}
