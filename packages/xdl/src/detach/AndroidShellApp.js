@@ -756,7 +756,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Add shell app scheme
-  const schemes = [scheme, manifest.facebookScheme].filter(e => e);
+  const schemes = [scheme].filter(e => e);
   if (schemes.length > 0) {
     const searchLine = isDetached
       ? '<!-- ADD DETACH SCHEME HERE -->'
