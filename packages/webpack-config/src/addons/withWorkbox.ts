@@ -11,6 +11,7 @@ import {
 import { AnyConfiguration } from '../types';
 import { resolveEntryAsync } from '../utils';
 import { getPaths } from '../env';
+import { ensureSlash } from '@expo/config/paths';
 
 export type OfflineOptions = {
   projectRoot?: string;
@@ -77,7 +78,7 @@ export default function withWorkbox(
     projectRoot,
     autoRegister = true,
     publicUrl = '',
-    scope = '/',
+    scope,
     useServiceWorker = true,
     generateSWOptions = {},
     injectManifestOptions = {},
@@ -119,7 +120,7 @@ export default function withWorkbox(
         await readFile(require.resolve(locations.template.registerServiceWorker), 'utf8')
       )
         .replace('SW_PUBLIC_URL', publicUrl)
-        .replace('SW_PUBLIC_SCOPE', scope);
+        .replace('SW_PUBLIC_SCOPE', ensureSlash(scope || publicUrl, true));
       await ensureDir(locations.production.folder);
       await writeFile(swPath, content, 'utf8');
 
