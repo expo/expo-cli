@@ -273,14 +273,18 @@ export default program => {
 
       const latestSdk = await Versions.newestSdkVersionAsync();
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const currentSdkVersion = currentSdk.sdkVersion ? sdkVersions[currentSdk.sdkVersion] : null;
+      const currentSdkVersionString =
+        currentSdk && currentSdk.sdkVersion ? currentSdk.sdkVersion : null;
+      const currentSdkVersion = currentSdkVersionString
+        ? sdkVersions[currentSdkVersionString]
+        : null;
 
-      if (!currentSdk.sdkVersion || currentSdk.sdkVersion === latestSdk.version) {
+      if (!currentSdkVersionString || currentSdkVersionString === latestSdk.version) {
         const answer = await prompt({
           type: 'confirm',
           name: 'updateToLatestClient',
           message:
-            currentSdk && currentSdk.sdkVersion === latestSdk.version
+            currentSdkVersionString === latestSdk.version
               ? 'You are using the latest SDK. Do you want to install the latest client?'
               : 'Do you want to install the latest client?',
         });
@@ -301,11 +305,11 @@ export default program => {
         });
         if (answer.updateToRecommendedVersion) {
           targetSdkVersion = currentSdkVersion;
-          targetSdkVersionString = currentSdk.sdkVersion;
+          targetSdkVersionString = currentSdkVersionString;
         }
       } else {
         log(
-          `You are currently using SDK ${currentSdk.sdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
+          `You are currently using SDK ${currentSdkVersionString}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
 
@@ -318,7 +322,7 @@ export default program => {
 
             const versionIsCompatible = currentSdk
               ? Versions.lteSdkVersion(currentSdk, version)
-              : null;
+              : true;
 
             return versionHasClient && versionIsCompatible;
           });
@@ -406,14 +410,18 @@ export default program => {
 
       const latestSdk = await Versions.newestSdkVersionAsync();
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const currentSdkVersion = currentSdk.sdkVersion ? sdkVersions[currentSdk.sdkVersion] : null;
+      const currentSdkVersionString =
+        currentSdk && currentSdk.sdkVersion ? currentSdk.sdkVersion : null;
+      const currentSdkVersion = currentSdkVersionString
+        ? sdkVersions[currentSdkVersionString]
+        : null;
 
-      if (!currentSdk.sdkVersion || currentSdk.sdkVersion === latestSdk.version) {
+      if (!currentSdkVersionString || currentSdkVersionString === latestSdk.version) {
         const answer = await prompt({
           type: 'confirm',
           name: 'updateToLatestClient',
           message:
-            currentSdk && currentSdk.sdkVersion === latestSdk.version
+            currentSdkVersionString === latestSdk.version
               ? 'You are using the latest SDK. Do you want to install the latest client?'
               : 'Do you want to install the latest client?',
         });
@@ -434,11 +442,11 @@ export default program => {
         });
         if (answer.updateToRecommendedVersion) {
           targetSdkVersion = currentSdkVersion;
-          targetSdkVersionString = currentSdk.sdkVersion;
+          targetSdkVersionString = currentSdkVersionString;
         }
       } else {
         log(
-          `You are currently using SDK ${currentSdk.sdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
+          `You are currently using SDK ${currentSdkVersionString}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
 
@@ -451,7 +459,7 @@ export default program => {
 
             const versionIsCompatible = currentSdk
               ? Versions.lteSdkVersion(currentSdk, version)
-              : null;
+              : true;
 
             return versionHasClient && versionIsCompatible;
           });
