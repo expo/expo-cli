@@ -6,6 +6,7 @@ import fs from 'fs-extra';
 import glob from 'glob-promise';
 import os from 'os';
 import path from 'path';
+import url from 'url';
 import semver from 'semver';
 
 import * as Analytics from './Analytics';
@@ -321,16 +322,15 @@ export async function _checkExpoUpToDateAsync() {
   }
 }
 
+// If specific URL given just always download it and don't use cache
 export async function _downloadSimulatorAppAsync(url?: string) {
-  // If specific URL given just always download it and don't use cache
-  if (url) {
-    let dir = path.join(_simulatorCacheDirectory(), `Exponent-tmp.app`);
-    await Api.downloadAsync(url, dir, { extract: true });
-    return dir;
+  if (!url) {
+    let versions = await Versions.versionsAsync();
+    url = versions.iosUrl;
   }
 
-  let versions = await Versions.versionsAsync();
-  let dir = path.join(_simulatorCacheDirectory(), `Exponent-${versions.iosVersion}.app`);
+  let filename = path.parse(url).name;
+  let dir = path.join(_simulatorCacheDirectory(), `${filename}.app`);
 
   if (await fs.pathExists(dir)) {
     let filesInDir = await fs.readdir(dir);
@@ -343,7 +343,7 @@ export async function _downloadSimulatorAppAsync(url?: string) {
 
   fs.mkdirpSync(dir);
   try {
-    await Api.downloadAsync(versions.iosUrl, dir, { extract: true });
+    await Api.downloadAsync(url, dir, { extract: true });
   } catch (e) {
     fs.removeSync(dir);
     throw e;
