@@ -21,11 +21,12 @@ export const allowedConfigFileNames: string[] = (() => {
   ];
 })();
 
-export function findAndReadConfig(request: ConfigContext): ExpoConfig | null {
+export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
+  // TODO(Bacon): Support custom config path with `findConfigFile`
   // TODO(Bacon): Should we support `expo` or `app` field with an object in the `package.json` too?
   for (const configFile of allowedConfigFileNames) {
     try {
-      return evalConfig(path.join(request.projectRoot, configFile), request);
+      return evalConfig(path.join(request.configRoot, configFile), request);
     } catch (error) {
       // If the file doesn't exist then we should skip it and continue searching.
       if (!['ENOENT', 'ENOTDIR'].includes(error.code)) throw error;
@@ -37,7 +38,7 @@ export function findAndReadConfig(request: ConfigContext): ExpoConfig | null {
 
 // We cannot use async config resolution right now because Next.js doesn't support async configs.
 // If they don't add support for async Webpack configs then we may need to pull support for Next.js.
-export function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoConfig> {
+function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoConfig> {
   const data = fs.readFileSync(configFile, 'utf8');
   let result;
   if (configFile.endsWith('.json5') || configFile.endsWith('.json')) {

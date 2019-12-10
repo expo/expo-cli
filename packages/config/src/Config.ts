@@ -3,9 +3,71 @@ import fs from 'fs-extra';
 import path from 'path';
 import slug from 'slugify';
 
-import { AppJSONConfig, ExpRc, ExpoConfig, PackageJSONConfig, ProjectConfig } from './Config.types';
+import {
+  AppJSONConfig,
+  ExpRc,
+  ExpoConfig,
+  PackageJSONConfig,
+  Platform,
+  ProjectConfig,
+} from './Config.types';
 import { ConfigError } from './Errors';
 import { getExpoSDKVersion } from './Project';
+import { getRootPackageJsonPath, projectHasModule } from './Modules';
+import { findAndEvalConfig } from './getConfig';
+
+/**
+ * Get all platforms that a project is currently capable of running.
+ *
+ * @param projectRoot
+ * @param exp
+ */
+function getSupportedPlatforms(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'nodeModulesPath'>
+): Platform[] {
+  const platforms: Platform[] = [];
+  if (projectHasModule('react-native', projectRoot, exp)) {
+    platforms.push('ios', 'android');
+  }
+  if (projectHasModule('react-native-web', projectRoot, exp)) {
+    platforms.push('web');
+  }
+  return platforms;
+}
+
+export function getConfigJson(
+  projectRoot: string,
+  options: { skipSDKVersionRequirement?: boolean }
+): ProjectConfig {
+  // TODO(Bacon): This doesn't support changing the location of the package.json
+  const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
+  const pkg = JsonFile.read(packageJsonPath);
+
+  const configRoot =
+    projectRoot in customConfigPaths ? path.dirname(customConfigPaths[projectRoot]) : projectRoot;
+
+  const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, {}, pkg, true);
+
+  const context = {
+    projectRoot,
+    configRoot,
+    config: configFromPkg,
+  };
+  const config = findAndEvalConfig(context);
+
+  const finalConfig = config || context.config;
+
+  return {
+    ...ensureConfigHasDefaultValues(
+      projectRoot,
+      finalConfig,
+      pkg,
+      options.skipSDKVersionRequirement
+    ),
+    rootConfig: finalConfig as AppJSONConfig,
+  };
+}
 
 export function readConfigJson(
   projectRoot: string,
@@ -109,25 +171,11 @@ function parseAndValidateRootConfig(
   };
 }
 
-function getRootPackageJsonPath(projectRoot: string, exp: ExpoConfig): string {
-  const packageJsonPath =
-    'nodeModulesPath' in exp && typeof exp.nodeModulesPath === 'string'
-      ? path.join(path.resolve(projectRoot, exp.nodeModulesPath), 'package.json')
-      : path.join(projectRoot, 'package.json');
-  if (!fs.existsSync(packageJsonPath)) {
-    throw new ConfigError(
-      `The expected package.json path: ${packageJsonPath} does not exist`,
-      'MODULE_NOT_FOUND'
-    );
-  }
-  return packageJsonPath;
-}
-
 function ensureConfigHasDefaultValues(
   projectRoot: string,
   exp: ExpoConfig,
   pkg: JSONObject,
-  skipNativeValidation: boolean = false
+  skipSDKVersionRequirement: boolean = false
 ): { exp: ExpoConfig; pkg: PackageJSONConfig } {
   if (!exp) exp = {};
 
@@ -154,11 +202,11 @@ function ensureConfigHasDefaultValues(
   try {
     exp.sdkVersion = getExpoSDKVersion(projectRoot, exp);
   } catch (error) {
-    if (!skipNativeValidation) throw error;
+    if (!skipSDKVersionRequirement) throw error;
   }
 
   if (!exp.platforms) {
-    exp.platforms = ['android', 'ios'];
+    exp.platforms = getSupportedPlatforms(projectRoot, exp);
   }
 
   return { exp, pkg };
