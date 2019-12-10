@@ -1,4 +1,4 @@
-import { getWebOutputPath, readConfigJsonAsync } from '@expo/config';
+import { fileExists, getWebOutputPath, readConfigJsonAsync } from '@expo/config';
 import { sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
@@ -10,14 +10,6 @@ import prettyBytes from 'pretty-bytes';
 import temporary from 'tempy';
 
 export type AssetOptimizationState = { [hash: string]: boolean };
-
-function fileExists(file: string): boolean {
-  try {
-    return statSync(file).isFile();
-  } catch (_) {
-    return false;
-  }
-}
 
 // Read the contents of assets.json under .expo-shared folder. Create the file/directory if they don't exist.
 async function readAssetJsonAsync(
