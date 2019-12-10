@@ -9,6 +9,7 @@ import { ConfigError } from './Errors';
 export const allowedConfigFileNames: string[] = (() => {
   const prefix = 'app';
   return [
+    // order is important
     `${prefix}.config.js`,
     `${prefix}.config.json`,
     `${prefix}.config.json5`,
@@ -26,6 +27,7 @@ export function findAndReadConfig(request: ConfigContext): ExpoConfig | null {
     try {
       return evalConfig(path.join(request.projectRoot, configFile), request);
     } catch (error) {
+      // If the file doesn't exist then we should skip it and continue searching.
       if (!['ENOENT', 'ENOTDIR'].includes(error.code)) throw error;
     }
   }

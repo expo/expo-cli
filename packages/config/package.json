@@ -55,6 +55,7 @@
   },
   "devDependencies": {
     "@expo/babel-preset-cli": "^0.2.2",
+    "@types/js-yaml": "^3.12.1",
     "memfs": "^2.15.5"
   },
   "publishConfig": {
