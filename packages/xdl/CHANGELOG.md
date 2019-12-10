@@ -14,6 +14,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 - use `react-native-unimodules` autolinking in ejected apps
 - allowed ejecting to ExpoKit if only one platform is released (makes SDK release easier)
 - adjusted ExpoKit's Podfile generation for SDK36 and newer
+- added replacing of Facebook scheme placeholder with the appropriate `<data>` tag in `AndroidManifest.xml`
 
 ### Changed
 
