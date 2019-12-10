@@ -1,5 +1,4 @@
 import JsonFile, { JSONObject } from '@expo/json-file';
-import fs from 'fs-extra';
 import path from 'path';
 import slug from 'slugify';
 
@@ -12,9 +11,9 @@ import {
   ProjectConfig,
 } from './Config.types';
 import { ConfigError } from './Errors';
-import { getExpoSDKVersion } from './Project';
-import { getRootPackageJsonPath, projectHasModule } from './Modules';
 import { findAndEvalConfig } from './getConfig';
+import { getRootPackageJsonPath, projectHasModule } from './Modules';
+import { getExpoSDKVersion } from './Project';
 
 /**
  * Get all platforms that a project is currently capable of running.
