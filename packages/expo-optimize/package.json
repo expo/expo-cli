@@ -42,6 +42,9 @@
     "commander": "2.20.0",
     "cpy": "7.3.0",
     "cross-spawn": "6.0.5",
+    "glob": "7.1.2",
+    "pretty-bytes": "5.2.0",
+    "tempy": "0.3.0",
     "rimraf": "2.6.3",
     "update-check": "1.5.3",
     "validate-npm-package-name": "3.0.0"

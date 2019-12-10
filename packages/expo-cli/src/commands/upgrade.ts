@@ -162,8 +162,8 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   }
 
   let currentSdkVersionString = exp.sdkVersion;
-  let sdkVersions = await Versions.sdkVersionsAsync();
-  let latestSdkVersion = await Versions.newestSdkVersionAsync();
+  let sdkVersions = await Versions.releasedSdkVersionsAsync();
+  let latestSdkVersion = await Versions.newestReleasedSdkVersionAsync();
   let latestSdkVersionString = latestSdkVersion.version;
   let targetSdkVersionString =
     maybeFormatSdkVersion(requestedSdkVersion) || latestSdkVersion.version;
@@ -197,7 +197,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
 
     if (!answer.updateToLatestSdkVersion) {
       let sdkVersionStringOptions = Object.keys(sdkVersions).filter(
-        v => !Versions.gteSdkVersion(exp, v) && semver.gte('33.0.0', v)
+        v => semver.lte('33.0.0', v) && !Versions.gteSdkVersion(exp, v)
       );
 
       let { selectedSdkVersionString } = await prompt({
@@ -388,7 +388,7 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
 
     let releaseNotesUrls = Object.values(skippedSdkVersions)
       .map(data => data.releaseNoteUrl)
-      .filter(releaseNotesUrl => releaseNotesUrl)
+      .filter(releaseNoteUrl => releaseNoteUrl)
       .reverse();
     if (releaseNotesUrls.length === 1) {
       log(`You should also look at the breaking changes from a release that you skipped:`);

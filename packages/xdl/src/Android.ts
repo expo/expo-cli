@@ -91,16 +91,17 @@ async function _expoVersionAsync() {
   return regexMatch[1];
 }
 
+// NOTE(brentvatne): Temporarily remove this. We should take care of installing
+// automatically, not just warn.
 async function _checkExpoUpToDateAsync() {
-  let versions = await Versions.versionsAsync();
-  let installedVersion = await _expoVersionAsync();
-
-  if (!installedVersion || semver.lt(installedVersion, versions.androidVersion)) {
-    Logger.notifications.warn(
-      { code: NotificationCode.OLD_ANDROID_APP_VERSION },
-      'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.'
-    );
-  }
+  // let versions = await Versions.versionsAsync();
+  // let installedVersion = await _expoVersionAsync();
+  // if (!installedVersion || semver.lt(installedVersion, versions.androidVersion)) {
+  //   Logger.notifications.warn(
+  //     { code: NotificationCode.OLD_ANDROID_APP_VERSION },
+  //     'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.'
+  //   );
+  // }
 }
 
 function _apkCacheDirectory() {
