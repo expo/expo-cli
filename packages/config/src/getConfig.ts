@@ -5,13 +5,14 @@ import path from 'path';
 import JsonFile from '@expo/json-file';
 import { ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
-import { fileExists } from './Modules';
+import { fileExists, projectHasModule, resolveModule } from './Modules';
 
 // support all common config types
 export const allowedConfigFileNames: string[] = (() => {
   const prefix = 'app';
   return [
     // order is important
+    `${prefix}.config.ts`,
     `${prefix}.config.js`,
     `${prefix}.config.json`,
     `${prefix}.config.json5`,
@@ -68,6 +69,21 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
   if (configFile.endsWith('.json5') || configFile.endsWith('.json')) {
     format = 'json';
     result = JsonFile.read(configFile, { json5: true });
+  } else if (configFile.endsWith('.ts')) {
+    format = 'ts';
+    const ts = require('typescript');
+    // const ts = require(projectHasModule('typescript', request.projectRoot, {})!);
+    const tsconfig = require(projectHasModule('./tsconfig', request.projectRoot, {})!);
+    const source = fs.readFileSync(configFile, 'utf8');
+    const { outputText } = ts.transpileModule(source, tsconfig);
+
+    result = eval(outputText);
+    if (result.default != null) {
+      result = result.default;
+    }
+    if (typeof result === 'function') {
+      result = result(request);
+    }
   } else if (configFile.endsWith('.js')) {
     format = 'js';
     result = require(configFile);

@@ -8,8 +8,15 @@ describe('getConfig', () => {
   // - ensure `app.config` has higher priority to `app`
   // - generated `.expo` object is created and the language hint is added
   describe('language support', () => {
-    // ensure config is composed (package.json values still exist)
+    it('parses a ts config', () => {
+      const projectRoot = path.resolve(__dirname, './fixtures/language-support/ts');
+      const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
+      expect(exp.foo).toBe('bar');
+      expect(exp.name).toBe('rewrote+ts-config-test');
+      expect(exp._expo.configType).toBe('ts');
+    });
     it('parses a js config', () => {
+      // ensure config is composed (package.json values still exist)
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
       const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
       expect(exp.foo).toBe('bar');
