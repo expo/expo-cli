@@ -3,7 +3,8 @@ import path from 'path';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 import resolveFrom from 'resolve-from';
-import { readConfigJson, resolveModule } from '../Config';
+import { readConfigJson } from '../Config';
+import { resolveModule } from '../Modules';
 import { getManagedExtensions } from './extensions';
 
 // https://github.com/facebook/create-react-app/blob/9750738cce89a967cc71f28390daf5d4311b193c/packages/react-scripts/config/paths.js#L22
