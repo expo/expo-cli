@@ -776,6 +776,13 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // Add Facebook app scheme
+  if (manifest.facebookScheme) {
+    await regexFileAsync(
+      '<!-- REPLACE WITH FACEBOOK SCHEME -->',
+      `<data android:scheme="${manifest.facebookScheme}" />`
+    );
+  }
 
   // Add permissions
   if (manifest.android && manifest.android.permissions) {
