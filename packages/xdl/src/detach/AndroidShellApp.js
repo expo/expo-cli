@@ -1099,6 +1099,9 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   );
 
   // Facebook configuration
+
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookAppId) {
     await regexFileAsync(
       '<!-- ADD FACEBOOK APP ID CONFIG HERE -->',
@@ -1106,6 +1109,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookDisplayName) {
     await regexFileAsync(
       '<!-- ADD FACEBOOK APP DISPLAY NAME CONFIG HERE -->',
@@ -1113,6 +1118,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookAutoInitEnabled) {
     await regexFileAsync(
       '<meta-data android:name="com.facebook.sdk.AutoInitEnabled" android:value="false"/>',
@@ -1120,6 +1127,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookAutoLogAppEventsEnabled) {
     await regexFileAsync(
       '<meta-data android:name="com.facebook.sdk.AutoLogAppEventsEnabled" android:value="false"/>',
@@ -1127,6 +1136,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookAdvertiserIDCollectionEnabled) {
     await regexFileAsync(
       '<meta-data android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled" android:value="false"/>',
