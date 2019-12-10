@@ -10,12 +10,12 @@ $ipaPath, $username = ARGV
 $result = nil
 
 portal_client = Spaceship::Portal.login($username, ENV['FASTLANE_PASSWORD'])
-developer_team = portal_client.teams.find { |team| team['teamId'] == $teamId }
+developer_team = portal_client.teams.find { |team| team['teamId'] == ENV['FASTLANE_TEAM_ID'] }
 
 Spaceship::Tunes.login($username, ENV['FASTLANE_PASSWORD'])
 itunes_team = Spaceship::Tunes.client.teams.find { |team| team['contentProvider']['name'].start_with? developer_team['name']  }
 
-ENV['FASTLANE_ITC_TEAM_ID'] = itunes_team['contentProvider']['contentProviderId']
+ENV['FASTLANE_ITC_TEAM_ID'] = itunes_team['contentProvider']['contentProviderId'].to_s
 
 captured_stderr = with_captured_stderr{
   begin
@@ -24,7 +24,8 @@ captured_stderr = with_captured_stderr{
       username: $username,
       skip_waiting_for_build_processing: true,
     }
-    Pilot::BuildManager.new.upload(config)
+    manager = Pilot::BuildManager.new
+    manager.upload(config)
     $result = JSON.generate({ result: 'success' })
   rescue Spaceship::Client::InvalidUserCredentialsError => invalid_cred
     $result = JSON.generate({
