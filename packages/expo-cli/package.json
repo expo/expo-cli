@@ -1,6 +1,6 @@
 {
   "name": "expo-cli",
-  "version": "3.11.0",
+  "version": "3.11.1",
   "description": "The command-line tool for creating and publishing Expo apps",
   "preferGlobal": true,
   "main": "build/exp.js",
@@ -74,7 +74,7 @@
     "@expo/package-manager": "^0.0.1",
     "@expo/simple-spinner": "1.0.2",
     "@expo/spawn-async": "1.5.0",
-    "@expo/xdl": "57.2.0",
+    "@expo/xdl": "57.2.1",
     "@types/cli-table": "^0.3.0",
     "@types/untildify": "^3.0.0",
     "ansi-regex": "^4.1.0",
