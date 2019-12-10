@@ -16,7 +16,10 @@ export function isUsingYarn(projectRoot: string): boolean {
   }
 }
 
-export function getExpoSDKVersion(projectRoot: string, exp: ExpoConfig): string {
+export function getExpoSDKVersion(
+  projectRoot: string,
+  exp: Pick<ExpoConfig, 'sdkVersion' | 'nodeModulesPath'>
+): string {
   if (exp && exp.sdkVersion) {
     return exp.sdkVersion;
   }
