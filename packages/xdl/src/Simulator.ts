@@ -310,16 +310,17 @@ export async function _expoVersionOnCurrentBootedSimulatorAsync() {
   return regexMatch[1];
 }
 
+// NOTE(brentvatne): Temporarily remove this. We should take care of installing
+// automatically, not just warn.
 export async function _checkExpoUpToDateAsync() {
-  let versions = await Versions.versionsAsync();
-  let installedVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
-
-  if (!installedVersion || semver.lt(installedVersion, versions.iosVersion)) {
-    Logger.notifications.warn(
-      { code: NotificationCode.OLD_IOS_APP_VERSION },
-      'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.'
-    );
-  }
+  // let versions = await Versions.versionsAsync();
+  // let installedVersion = await _expoVersionOnCurrentBootedSimulatorAsync();
+  // if (!installedVersion || semver.lt(installedVersion, versions.iosVersion)) {
+  //   Logger.notifications.warn(
+  //     { code: NotificationCode.OLD_IOS_APP_VERSION },
+  //     'This version of the Expo app is out of date. Uninstall the app and run again to upgrade.'
+  //   );
+  // }
 }
 
 // If specific URL given just always download it and don't use cache
