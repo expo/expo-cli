@@ -1161,7 +1161,10 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
   let gradleBuildCommand;
   let outputPath;
   if (buildType === 'app-bundle') {
-    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 36) {
+      gradleBuildCommand = `bundle${debugOrRelease}`;
+      outputPath = path.join(outputDirPath, debugOrReleaseL, `app-${debugOrReleaseL}.aab`);
+    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
       gradleBuildCommand = `bundle${debugOrRelease}`;
       outputPath = path.join(outputDirPath, debugOrReleaseL, `app.aab`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {
