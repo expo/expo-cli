@@ -1,12 +1,21 @@
 # So that we can require funcs.rb
 $LOAD_PATH.unshift File.expand_path(__dir__, __FILE__)
 
+require 'spaceship'
 require 'pilot'
 require 'funcs'
 require 'json'
 
 $ipaPath, $username = ARGV
 $result = nil
+
+portal_client = Spaceship::Portal.login($username, ENV['FASTLANE_PASSWORD'])
+developer_team = portal_client.teams.find { |team| team['teamId'] == $teamId }
+
+Spaceship::Tunes.login($username, ENV['FASTLANE_PASSWORD'])
+itunes_team = Spaceship::Tunes.client.teams.find { |team| team['contentProvider']['name'].start_with? developer_team['name']  }
+
+ENV['FASTLANE_ITC_TEAM_ID'] = itunes_team['contentProvider']['contentProviderId']
 
 captured_stderr = with_captured_stderr{
   begin

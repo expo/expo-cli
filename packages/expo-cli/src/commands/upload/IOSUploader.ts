@@ -83,7 +83,6 @@ export type IosPlatformOptions = PlatformOptions & {
   appName: string;
   language?: string;
   appleTeamId?: string;
-  itcTeamId?: string;
   publicUrl?: string;
 };
 
@@ -182,7 +181,7 @@ export default class IOSUploader extends BaseUploader {
     const { appleId, appleIdPassword, appName, language, appleTeamId } = platformData;
     const { bundleIdentifier } = this._exp && this._exp.ios;
 
-    const appleCreds = { appleId, appleIdPassword, appleTeamId, itcTeamId: this.options.itcTeamId };
+    const appleCreds = { appleId, appleIdPassword, appleTeamId };
 
     log('Ensuring the app exists on App Store Connect, this may take a while...');
     await runFastlaneAsync(
