@@ -2,7 +2,7 @@ import { Configuration } from 'webpack';
 
 import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
 import * as Diagnosis from './Diagnosis';
-import { validateEnvironment } from './env';
+import { validateEnvironment, getPublicPaths } from './env';
 import webpackConfig from './webpack.config';
 import { withWorkbox } from './addons';
 
@@ -18,5 +18,9 @@ export default async function(
     Diagnosis.reportAsync(config, environment);
   }
 
-  return withWorkbox(config, { projectRoot: environment.projectRoot, ...argv.workbox });
+  const { workbox = {} } = argv;
+
+  const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
+
+  return withWorkbox(config, { projectRoot: environment.projectRoot, ...workbox, publicUrl });
 }
