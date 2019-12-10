@@ -13,4 +13,13 @@ export type ExpoConfig = {
 };
 export type ExpRc = { [key: string]: any };
 export type Platform = 'android' | 'ios' | 'web';
-export type ConfigErrorCode = 'NO_APP_JSON' | 'NOT_OBJECT' | 'NO_EXPO' | 'MODULE_NOT_FOUND';
+export type ConfigErrorCode =
+  | 'NO_APP_JSON'
+  | 'NOT_OBJECT'
+  | 'NO_EXPO'
+  | 'MODULE_NOT_FOUND'
+  | 'INVALID_CONFIG';
+export type ConfigContext = {
+  projectRoot: string;
+  config: Partial<ExpoConfig>;
+};
