@@ -1,11 +1,11 @@
-import has from 'lodash/has';
-import pick from 'lodash/pick';
-import intersection from 'lodash/intersection';
-import chalk from 'chalk';
-
 import { Credentials, UrlUtils } from '@expo/xdl';
 import { ExpoConfig } from '@expo/config';
-import getenv from 'getenv';
+import chalk from 'chalk';
+import has from 'lodash/has';
+import get from 'lodash/get';
+import pick from 'lodash/pick';
+import intersection from 'lodash/intersection';
+
 import BaseUploader, { PlatformOptions } from './BaseUploader';
 import log from '../../log';
 import prompt, { Question } from '../../prompt';
@@ -127,21 +127,19 @@ export default class IOSUploader extends BaseUploader {
   async _getAppleTeamId(): Promise<string | undefined> {
     const credentialMetadata = await Credentials.getCredentialMetadataAsync(this.projectDir, 'ios');
     const credential = await Credentials.getCredentialsForPlatform(credentialMetadata);
-
-    if (credential) {
-      return credential.teamId;
-    }
-
-    return undefined;
+    return get(credential, 'teamId', undefined);
   }
 
   async _getAppleIdCredentials(): Promise<{ appleId: string; appleIdPassword: string }> {
     const appleCredsKeys = ['appleId', 'appleIdPassword'];
+    const result: AppleCreds = pick(this.options, appleCredsKeys);
 
-    const result: AppleCreds = {
-      appleId: getenv.string('EXPO_APPLE_ID', this.options.appleId),
-      appleIdPassword: getenv.string('EXPO_APPLE_ID_PASSWORD', this.options.appleIdPassword),
-    };
+    if (process.env.EXPO_APPLE_ID) {
+      result.appleId = process.env.EXPO_APPLE_ID;
+    }
+    if (process.env.EXPO_APPLE_ID_PASSWORD) {
+      result.appleIdPassword = process.env.EXPO_APPLE_ID_PASSWORD;
+    }
 
     const { appleId, appleIdPassword } = result;
     if (appleId && appleIdPassword) {
