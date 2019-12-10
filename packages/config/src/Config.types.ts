@@ -21,6 +21,6 @@ export type ConfigErrorCode =
   | 'INVALID_CONFIG';
 export type ConfigContext = {
   projectRoot: string;
-  configRoot: string;
+  configPath?: string;
   config: Partial<ExpoConfig>;
 };

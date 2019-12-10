@@ -36,22 +36,21 @@ function getSupportedPlatforms(
   return platforms;
 }
 
-export function getConfigJson(
+export function getConfig(
   projectRoot: string,
-  options: { skipSDKVersionRequirement?: boolean }
+  options: { configPath?: string; skipSDKVersionRequirement?: boolean }
 ): ProjectConfig {
   // TODO(Bacon): This doesn't support changing the location of the package.json
   const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
   const pkg = JsonFile.read(packageJsonPath);
 
-  const configRoot =
-    projectRoot in customConfigPaths ? path.dirname(customConfigPaths[projectRoot]) : projectRoot;
+  const configPath = options.configPath || customConfigPaths[projectRoot];
 
   const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, {}, pkg, true);
 
   const context = {
     projectRoot,
-    configRoot,
+    configPath,
     config: configFromPkg,
   };
   const config = findAndEvalConfig(context);
