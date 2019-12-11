@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
