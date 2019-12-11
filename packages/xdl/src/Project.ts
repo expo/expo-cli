@@ -72,6 +72,7 @@ import * as Doctor from './project/Doctor';
 import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
+import { ConnectionStatus } from './xdl';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -129,7 +130,6 @@ type StartOptions = {
   nonPersistent?: boolean;
   maxWorkers?: number;
   webOnly?: boolean;
-  offline?: boolean;
 };
 
 type PublishOptions = {
@@ -1877,10 +1877,7 @@ function shouldExposeEnvironmentVariableInManifest(key: string) {
   return key.startsWith('REACT_NATIVE_') || key.startsWith('EXPO_');
 }
 
-export async function startExpoServerAsync(
-  projectRoot: string,
-  options: StartOptions
-): Promise<void> {
+export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   _assertValidProjectRoot(projectRoot);
   await stopExpoServerAsync(projectRoot);
   let app = express();
@@ -1896,7 +1893,7 @@ export async function startExpoServerAsync(
     })
   );
   if (
-    (options.offline
+    (ConnectionStatus.isOffline()
       ? await Doctor.validateLowLatencyAsync(projectRoot)
       : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
   ) {
@@ -2285,7 +2282,7 @@ export async function startAsync(
     DevSession.startSession(projectRoot, exp, 'web');
     return exp;
   } else {
-    await startExpoServerAsync(projectRoot, options);
+    await startExpoServerAsync(projectRoot);
     await startReactNativeServerAsync(projectRoot, options, verbose);
     DevSession.startSession(projectRoot, exp, 'native');
   }

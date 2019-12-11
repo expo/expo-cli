@@ -8,6 +8,7 @@ import semver from 'semver';
 
 import ApiV2Client from './ApiV2';
 import { Cacher } from './tools/FsCache';
+import * as ConnectionStatus from './ConnectionStatus';
 import UserManager from './User';
 import XDLError from './XDLError';
 
@@ -47,10 +48,15 @@ type Versions = {
   turtleSdkVersions: TurtleSDKVersionsOld;
 };
 
-export async function versionsAsync(offline?: Boolean): Promise<Versions> {
+export async function versionsAsync(): Promise<Versions> {
   const api = new ApiV2Client();
   const versionCache = new Cacher(
-    () => api.getAsync('versions/latest', undefined, offline ? { timeout: 1 } : undefined),
+    () =>
+      api.getAsync(
+        'versions/latest',
+        undefined,
+        ConnectionStatus.isOffline() ? { timeout: 1 } : undefined
+      ),
     'versions.json',
     0,
     path.join(__dirname, '../caches/versions.json')
@@ -58,8 +64,8 @@ export async function versionsAsync(offline?: Boolean): Promise<Versions> {
   return await versionCache.getAsync();
 }
 
-export async function sdkVersionsAsync(offline?: Boolean): Promise<SDKVersions> {
-  const { sdkVersions } = await versionsAsync(offline);
+export async function sdkVersionsAsync(): Promise<SDKVersions> {
+  const { sdkVersions } = await versionsAsync();
   return sdkVersions;
 }
 

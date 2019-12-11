@@ -215,7 +215,7 @@ async function _validateExpJsonAsync(
     return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-  let sdkVersions = await Versions.sdkVersionsAsync(!allowNetwork);
+  let sdkVersions = await Versions.sdkVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(
       projectRoot,
@@ -241,7 +241,7 @@ async function _validateExpJsonAsync(
   // Skip validation if the correct token is set in env
   if (sdkVersion !== 'UNVERSIONED') {
     try {
-      let schema = await ExpSchema.getSchemaAsync(sdkVersion, !allowNetwork);
+      let schema = await ExpSchema.getSchemaAsync(sdkVersion);
       let { schemaErrorMessage, assetsErrorMessage } = await validateWithSchema(
         projectRoot,
         exp,

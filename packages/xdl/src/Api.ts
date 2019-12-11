@@ -8,6 +8,7 @@ import isString from 'lodash/isString';
 import path from 'path';
 
 import Config from './Config';
+import * as ConnectionStatus from './ConnectionStatus';
 import * as Extract from './Extract';
 import * as Session from './Session';
 import { Cacher } from './tools/FsCache';
@@ -236,7 +237,7 @@ export default class ApiClient {
     return _callMethodAsync(url, method, requestBody, requestOptions);
   }
 
-  static async xdlSchemaAsync(sdkVersion: string, offline?: Boolean): Promise<JSONObject> {
+  static async xdlSchemaAsync(sdkVersion: string): Promise<JSONObject> {
     if (!ApiClient._schemaCaches.hasOwnProperty(sdkVersion)) {
       ApiClient._schemaCaches[sdkVersion] = new Cacher(
         async () => {
@@ -244,7 +245,7 @@ export default class ApiClient {
             `/--/xdl-schema/${sdkVersion}`,
             undefined,
             undefined,
-            offline ? { timeout: 1 } : undefined
+            ConnectionStatus.isOffline() ? { timeout: 1 } : undefined
           );
         },
         `schema-${sdkVersion}.json`,
