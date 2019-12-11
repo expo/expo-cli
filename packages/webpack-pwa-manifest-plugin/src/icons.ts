@@ -13,6 +13,7 @@ import { IconError } from './Errors';
 import { AnySize, ImageSize, joinURI, toArray, toSize } from './utils';
 import { fromStartupImage } from './validators/Apple';
 import { Icon, ManifestIcon, ManifestOptions } from './WebpackPWAManifestPlugin.types';
+import { resize as jimpResize } from './ImageComposite';
 
 const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
@@ -68,7 +69,12 @@ async function getBufferWithMimeAsync(
       localSrc = await downloadImage(src);
     }
 
-    imagePath = await resize(localSrc, mimeType, width, height, resizeMode, color!);
+    const imageData = await resize(localSrc, mimeType, width, height, resizeMode, color!);
+    if (imageData instanceof Buffer) {
+      return imageData;
+    } else {
+      imagePath = imageData;
+    }
   }
   try {
     return await fs.readFile(imagePath);
@@ -115,6 +121,8 @@ async function cacheImageAsync(fileName: string, buffer: Buffer, cacheKey: strin
   }
 }
 
+let hasWarned: boolean = false;
+
 async function processImageAsync(
   size: AnySize,
   icon: Icon,
@@ -135,6 +143,23 @@ async function processImageAsync(
 
   let imageBuffer: Buffer | null = await getImageFromCacheAsync(fileName, cacheKey);
   if (!imageBuffer) {
+    // Putting the warning here will prevent the warning from showing if all images were reused from the cache
+    if (!hasWarned && !(await isAvailableAsync())) {
+      hasWarned = true;
+      // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
+      console.log('ff', cacheKey, fileName, dimensions);
+      console.log();
+      console.log(
+        chalk.bgYellow.black(
+          `PWA Images: Using node to generate images. This is much slower than using native packages.`
+        )
+      );
+      console.log(
+        chalk.yellow(
+          `- Optionally you can stop the process and try again after successfully running \`npm install -g sharp-cli\`.\n- If you are using \`expo-cli\` to build your project then you could use the \`--no-pwa\` flag to skip the PWA asset generation step entirely.`
+        )
+      );
+    }
     imageBuffer = await getBufferWithMimeAsync(icon, mimeType, { width, height });
     await cacheImageAsync(fileName, imageBuffer, cacheKey);
   }
@@ -176,11 +201,15 @@ async function resize(
   height: number,
   fit: ResizeMode = 'contain',
   background: string
-) {
+): Promise<string | Buffer> {
+  if (!(await isAvailableAsync())) {
+    return await jimpResize(inputPath, mimeType, width, height, fit, background);
+  }
+
   const format = ensureValidMimeType(mimeType.split('/')[1]);
+  const outputPath = temporary.directory();
 
   try {
-    const outputPath = temporary.directory();
     await sharpAsync(
       {
         input: inputPath,
@@ -201,6 +230,7 @@ async function resize(
         },
       ]
     );
+
     return path.join(outputPath, path.basename(inputPath));
   } catch ({ message }) {
     throw new IconError(`It was not possible to generate splash screen '${inputPath}'. ${message}`);
@@ -248,22 +278,6 @@ export async function parseIconsAsync(
   publicPath: string
 ): Promise<{ icons?: ManifestIcon[]; assets?: WebpackAsset[] }> {
   if (!inputIcons.length) {
-    return {};
-  }
-
-  if (!(await isAvailableAsync())) {
-    // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
-    console.log();
-    console.log(
-      chalk.bgRed.black(
-        `PWA Error: It was not possible to generate the images for your progressive web app (splash screens and icons) because the host computer does not have \`sharp\` installed, and \`image-utils\` was unable to install it automatically.`
-      )
-    );
-    console.log(
-      chalk.red(
-        `- You may stop the process and try again after successfully running \`npm install -g sharp\`.\n- If you are using \`expo-cli\` to build your project then you could use the \`--no-pwa\` flag to skip the PWA asset generation step entirely.`
-      )
-    );
     return {};
   }
 
