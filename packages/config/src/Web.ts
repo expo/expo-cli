@@ -1,7 +1,7 @@
 import JsonFile from '@expo/json-file';
 
 import { readConfigJson } from './Config';
-import { AppJSONConfig, ExpoConfig } from './Config.types';
+import { AppJSONConfig, ExpoConfig, WebPlatformConfig, WebSplashScreen } from './Config.types';
 
 const APP_JSON_FILE_NAME = 'app.json';
 
@@ -284,12 +284,15 @@ function inferWebStartupImages(
   getAbsolutePath: (...pathComponents: string[]) => string,
   options: Object
 ) {
-  const { icon, web = {}, splash = {}, primaryColor } = config;
+  const { icon, splash = {}, primaryColor } = config;
+  const web = config.web || ({} as WebPlatformConfig);
+  // @ts-ignore
   if (Array.isArray(web.startupImages)) {
+    // @ts-ignore
     return web.startupImages;
   }
 
-  const { splash: webSplash = {} } = web;
+  const webSplash = web.splash || ({} as WebSplashScreen);
   let startupImages = [];
 
   let splashImageSource;
@@ -318,6 +321,7 @@ export function ensurePWAConfig(
 ): ExpoConfig {
   const config = applyWebDefaults(appJSON);
   if (getAbsolutePath) {
+    if (!config.web) config.web = {};
     config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
     config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
   }

@@ -449,7 +449,7 @@ export type WebPlatformConfig = {
   /**
    * Experimental features. These will break without deprecation notice.
    */
-  dangerous: {
+  dangerous?: {
     [key: string]: any;
 
     /**
@@ -465,20 +465,30 @@ export type WebPlatformConfig = {
   /**
    * Configuration for PWA splash screens.
    */
-  splash?: {
-    /**
-     * Color to fill the loading screen background
-     */
-    backgroundColor?: Color;
-    /**
-     * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover` or `contain`, defaults to `contain`.
-     */
-    resizeMode?: 'cover' | 'contain';
-    /**
-     * Local path or remote url to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
-     */
-    image: Image;
-  };
+  splash?: WebSplashScreen;
+};
+
+/**
+ * Configuration for PWA splash screens.
+ */
+export type WebSplashScreen = {
+  /**
+   * Color to fill the loading screen background
+   */
+  backgroundColor?: Color;
+  /**
+   * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover` or `contain`, defaults to `contain`.
+   */
+  resizeMode?: 'cover' | 'contain';
+  /**
+   * Local path or remote url to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
+   */
+  image: Image;
+
+  /**
+   * Whether your standalone iOS app supports tablet screen sizes. Defaults to `false`.
+   */
+  supportsTablet?: boolean;
 };
 
 export type IosPlatformConfig = {
@@ -836,7 +846,7 @@ export type ExpoConfig = {
   /**
    * Configuration for scripts to run to hook into the publish process
    */
-  hooks: {
+  hooks?: {
     postPublish?: string[];
   };
   /**
