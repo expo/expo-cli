@@ -121,8 +121,8 @@
     "wordwrap": "1.0.0"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.11.2",
-    "@expo/traveling-fastlane-linux": "1.11.2"
+    "@expo/traveling-fastlane-darwin": "1.11.3",
+    "@expo/traveling-fastlane-linux": "1.11.3"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }
