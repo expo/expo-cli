@@ -132,10 +132,24 @@ export default class ApiV2Client {
     );
   }
 
+  async uploadAsync(
+    methodName: string,
+    extraOptions?: any //Partial<RequestOptions>,
+  ) {
+    const url = `${_apiBaseUrl()}/${methodName}`;
+    let extraRequestOptions: AxiosRequestConfig = {
+      url,
+      method: 'post',
+    };
+    extraRequestOptions = { ...extraRequestOptions, ...extraOptions };
+
+    return await this._requestAsync(methodName, { httpMethod: 'post' }, extraRequestOptions);
+  }
+
   async _requestAsync(
     methodName: string,
     options: RequestOptions,
-    extraRequestOptions?: Partial<RequestOptions>,
+    extraRequestOptions?: any, //Partial<RequestOptions>,
     returnEntireResponse: boolean = false
   ) {
     const url = `${_apiBaseUrl()}/${methodName}`;
@@ -146,7 +160,6 @@ export default class ApiV2Client {
         'Exponent-Client': ApiV2Client.exponentClient,
       },
     };
-
     if (this.sessionSecret) {
       reqOptions.headers['Expo-Session'] = this.sessionSecret;
     }

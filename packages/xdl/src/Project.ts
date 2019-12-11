@@ -44,7 +44,8 @@ import uuid from 'uuid';
 
 import * as Analytics from './Analytics';
 import * as Android from './Android';
-import Api from './Api';
+import Api, { convertFormDataToBuffer } from './Api';
+
 import ApiV2 from './ApiV2';
 import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
@@ -943,17 +944,29 @@ async function _uploadArtifactsAsync({
   options: PublishOptions;
   pkg: PackageJSONConfig;
 }) {
+  console.log('TEST <-----------------------------------------------------');
   logger.global.info('Uploading JavaScript bundles');
   let formData = new FormData();
 
   formData.append('expJson', JSON.stringify(exp));
   formData.append('packageJson', JSON.stringify(pkg));
-  formData.append('iosBundle', iosBundle, 'iosBundle');
-  formData.append('androidBundle', androidBundle, 'androidBundle');
+  formData.append('iosBundle', iosBundle.slice(0, 10), 'iosBundle');
+  formData.append('androidBundle', androidBundle.slice(0, 10), 'androidBundle');
   formData.append('options', JSON.stringify(options));
-  let response = await Api.callMethodAsync('publish', null, 'put', null, {
-    formData,
-  });
+
+  let response: any;
+  console.log('WTF');
+  if (false) {
+    response = await Api.callMethodAsync('publish', null, 'post', null, { formData });
+  } else {
+    console.log('V2?');
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    const { data } = await convertFormDataToBuffer(formData);
+    response = await api.uploadAsync('publish/new', { headers: formData.getHeaders(), data });
+    //response = await api.postAsync('publish/new',null,{headers:formData.getHeaders(), data} )
+  }
+  console.log({ response });
   return response;
 }
 
