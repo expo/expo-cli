@@ -13,6 +13,7 @@ import {
   UrlUtils,
   UserManager,
   UserSettings,
+  Webpack,
 } from '@expo/xdl';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
@@ -527,9 +528,7 @@ const resolvers = {
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: platforms.includes('web')
-          ? await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir)
-          : null,
+        webAppUrl: platforms.includes('web') ? Webpack.getUrl(currentProject.projectDir) : null,
       };
     },
     async user() {

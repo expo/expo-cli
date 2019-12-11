@@ -1164,87 +1164,6 @@
   resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.11.0.tgz#a714d87633b030b7190bc0c2b02540eb714bea2b"
   integrity sha512-ia187s91eO3jxilI/rqqy3SSAUdXsq/5k2nPck2Fs9jWiGldks8Dop+6bAl2brUwzY9VrTDPB2u2z4V08XDZFA==
 
-"@expo/xdl@57.2.1":
-  version "57.2.1"
-  resolved "https://registry.yarnpkg.com/@expo/xdl/-/xdl-57.2.1.tgz#9e3daa6e597cce7595a2844fed2b49857ad29060"
-  integrity sha512-ITRey8tSz2NlZ/KyII0OMi70kubNHdUumJHkCiuGU8+zzWpgbBQXyaucQNEenBA+8Zec6cytSEEYO+/E2cMxRg==
-  dependencies:
-    "@expo/bunyan" "3.0.2"
-    "@expo/config" "^2.5.2"
-    "@expo/image-utils" "^0.2.9"
-    "@expo/json-file" "^8.2.2"
-    "@expo/ngrok" "2.4.3"
-    "@expo/osascript" "^2.0.7"
-    "@expo/schemer" "^1.3.1"
-    "@expo/spawn-async" "1.5.0"
-    "@expo/webpack-config" "^0.10.6"
-    analytics-node "3.3.0"
-    axios "0.19.0"
-    boxen "4.1.0"
-    chalk "2.4.1"
-    concat-stream "1.6.2"
-    decache "4.4.0"
-    delay-async "1.2.0"
-    es6-error "4.1.1"
-    express "4.16.4"
-    form-data "2.3.2"
-    freeport-async "2.0.0"
-    fs-extra "6.0.1"
-    getenv "0.7.0"
-    glob "7.1.2"
-    glob-promise "3.4.0"
-    globby "6.1.0"
-    hasbin "1.2.3"
-    hashids "1.1.4"
-    idx "2.4.0"
-    indent-string "3.2.0"
-    inquirer "5.2.0"
-    internal-ip "4.3.0"
-    invariant "2.2.4"
-    joi "14.0.4"
-    latest-version "5.1.0"
-    lodash "4.17.15"
-    md5hex "1.0.0"
-    minimatch "3.0.4"
-    minipass "2.3.5"
-    mv "2.1.1"
-    ncp "2.0.0"
-    node-forge "0.7.6"
-    p-map "3.0.0"
-    p-retry "4.1.0"
-    p-timeout "3.1.0"
-    package-json "6.4.0"
-    pacote "9.3.0"
-    pascal-case "2.0.1"
-    plist "2.1.0"
-    pretty-bytes "5.2.0"
-    probe-image-size "4.0.0"
-    querystring "0.2.0"
-    raven "2.6.3"
-    read-chunk "2.1.0"
-    read-last-lines "1.6.0"
-    replace-string "1.1.0"
-    request "2.88.0"
-    request-promise-native "1.0.5"
-    resolve-from "5.0.0"
-    semver "5.5.0"
-    serialize-error "^5.0.0"
-    slugid "1.1.0"
-    slugify "1.3.1"
-    source-map-support "0.4.18"
-    split "1.0.1"
-    tar "4.4.6"
-    tempy "0.3.0"
-    tree-kill "1.2.0"
-    url "0.11.0"
-    url-join "4.0.0"
-    util.promisify "1.0.0"
-    uuid "3.3.2"
-    validator "11.0.0"
-    webpack "4.39.0"
-    webpack-dev-server "3.2.0"
-    xmldom "0.1.27"
-
 "@gulp-sourcemaps/identity-map@1.X":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@gulp-sourcemaps/identity-map/-/identity-map-1.0.2.tgz#1e6fe5d8027b1f285dc0d31762f566bccd73d5a9"
@@ -17093,14 +17012,6 @@ react@16.2.0:
     object-assign "^4.1.1"
     prop-types "^15.6.0"
 
-read-chunk@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/read-chunk/-/read-chunk-2.1.0.tgz#6a04c0928005ed9d42e1a6ac5600e19cbc7ff655"
-  integrity sha1-agTAkoAF7Z1C4aasVgDhnLx/9lU=
-  dependencies:
-    pify "^3.0.0"
-    safe-buffer "^5.1.1"
-
 read-chunk@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/read-chunk/-/read-chunk-3.2.0.tgz#2984afe78ca9bfbbdb74b19387bf9e86289c16ca"
@@ -17753,11 +17664,6 @@ resolve-dir@^1.0.0, resolve-dir@^1.0.1:
     expand-tilde "^2.0.0"
     global-modules "^1.0.0"
 
-resolve-from@5.0.0, resolve-from@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-5.0.0.tgz#c35225843df8f776df21c57557bc087e9dfdfc69"
-  integrity sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==
-
 resolve-from@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-3.0.0.tgz#b22c7af7d9d6881bc8b6e653335eebcb0a188748"
@@ -17767,6 +17673,11 @@ resolve-from@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-4.0.0.tgz#4abcd852ad32dd7baabfe9b40e00a36db5f392e6"
   integrity sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==
+
+resolve-from@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-5.0.0.tgz#c35225843df8f776df21c57557bc087e9dfdfc69"
+  integrity sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw==
 
 resolve-options@^1.1.0:
   version "1.1.0"
@@ -18440,11 +18351,6 @@ slugid@1.1.0:
   integrity sha1-4J8AiZwJ9acFjtw23UnwRv1QqCo=
   dependencies:
     uuid "^2.0.1"
-
-slugify@1.3.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/slugify/-/slugify-1.3.1.tgz#f572127e8535329fbc6c1edb74ab856b61ad7de2"
-  integrity sha512-6BwyhjF5tG5P8s+0DPNyJmBSBePG6iMyhjvIW5zGdA3tFik9PtK+yNkZgTeiroCRGZYgkHftFA62tGVK1EI9Kw==
 
 slugify@^1.0.2, slugify@^1.3.4:
   version "1.3.6"

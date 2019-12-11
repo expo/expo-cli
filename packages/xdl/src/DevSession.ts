@@ -5,6 +5,7 @@ import Config from './Config';
 import logger from './Logger';
 import * as UrlUtils from './UrlUtils';
 import UserManager from './User';
+import { Webpack } from './xdl';
 
 const UPDATE_FREQUENCY_SECS = 20;
 
@@ -36,7 +37,7 @@ export async function startSession(
       if (platform === 'native') {
         url = await UrlUtils.constructManifestUrlAsync(projectRoot);
       } else if (platform === 'web') {
-        url = await UrlUtils.constructWebAppUrlAsync(projectRoot);
+        url = Webpack.getUrl(projectRoot);
       } else {
         throw new Error(`Unsupported platform: ${platform}`);
       }

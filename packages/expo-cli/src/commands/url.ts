@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import fp from 'lodash/fp';
-import { Project, UrlUtils } from '@expo/xdl';
+import { Project, UrlUtils, Webpack } from '@expo/xdl';
 
 import CommandError from '../CommandError';
 import log from '../log';
@@ -43,8 +43,8 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
   }
 };
 
-async function getWebAppUrlAsync(projectDir: string): Promise<string> {
-  const webAppUrl = await UrlUtils.constructWebAppUrlAsync(projectDir);
+function getWebAppUrl(projectDir: string): string {
+  const webAppUrl = Webpack.getUrl(projectDir);
   if (!webAppUrl) {
     throw new CommandError(
       'NOT_RUNNING',
@@ -64,7 +64,7 @@ async function action(projectDir: string, options: ProjectUrlOptions) {
     );
   }
   const url = options.web
-    ? await getWebAppUrlAsync(projectDir)
+    ? getWebAppUrl(projectDir)
     : await UrlUtils.constructManifestUrlAsync(projectDir);
 
   log.newLine();

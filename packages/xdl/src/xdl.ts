@@ -82,8 +82,6 @@ import * as Utils from './Utils';
 
 import * as Versions from './Versions';
 
-import * as Web from './Web';
-
 import * as Webpack from './Webpack';
 
 import XDLError from './XDLError';
@@ -153,6 +151,5 @@ export { UserManager, User, RegistrationData };
 export { UserSettings };
 export { Utils };
 export { Versions };
-export { Web };
 export { Webpack };
 export { XDLError };

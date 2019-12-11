@@ -7,7 +7,15 @@ import path from 'path';
 import * as ConfigUtils from '@expo/config';
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
-import { Project, ProjectSettings, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
+import {
+  Project,
+  ProjectSettings,
+  UrlUtils,
+  UserSettings,
+  Versions,
+  Web,
+  Webpack,
+} from '@expo/xdl';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import intersection from 'lodash/intersection';
@@ -161,7 +169,7 @@ async function normalizeOptionsAsync(projectDir: string, options: Object): Objec
   if (typeof options.webOnly !== 'undefined') {
     webOnly = options.webOnly;
   } else {
-    webOnly = await Web.onlySupportsWebAsync(projectDir);
+    webOnly = Webpack.isWebOnly(projectDir);
   }
 
   let opts = {};

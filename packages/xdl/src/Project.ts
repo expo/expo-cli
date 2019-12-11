@@ -2341,7 +2341,6 @@ export async function stopAsync(projectDir: string): Promise<void> {
       expoServerNgrokUrl: null,
       packagerNgrokUrl: null,
       ngrokPid: null,
-      webpackServerPort: null,
     });
   }
 }

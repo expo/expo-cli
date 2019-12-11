@@ -10,6 +10,7 @@ import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
 import * as Versions from './Versions';
 import XDLError from './XDLError';
+import { Webpack } from './xdl';
 
 export async function constructBundleUrlAsync(
   projectRoot: string,
@@ -146,21 +147,11 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
   return queryParams;
 }
 
+/**
+ * @deprecated use `Webpack.getUrl(projectRoot)`
+ */
 export async function constructWebAppUrlAsync(projectRoot: string): Promise<string | null> {
-  let packagerInfo = await ProjectSettings.readPackagerInfoAsync(projectRoot);
-  if (!packagerInfo.webpackServerPort) {
-    return null;
-  }
-
-  const { https, hostType } = await ProjectSettings.readAsync(projectRoot);
-  const host = hostType === 'localhost' ? 'localhost' : ip.address();
-
-  let urlType = 'http';
-  if (https === true) {
-    urlType = 'https';
-  }
-
-  return `${urlType}://${host}:${packagerInfo.webpackServerPort}`;
+  return Webpack.getUrl(projectRoot);
 }
 
 export async function constructUrlAsync(

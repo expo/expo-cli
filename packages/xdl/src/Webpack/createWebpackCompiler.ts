@@ -1,24 +1,24 @@
 /**
+ * Copyright (c) 2019-present, Expo.
  * Copyright (c) 2015-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import boxen from 'boxen';
 import chalk from 'chalk';
 import clearConsole from 'react-dev-utils/clearConsole';
 import formatWebpackMessages from 'react-dev-utils/formatWebpackMessages';
-import boxen from 'boxen';
 import { Urls } from 'react-dev-utils/WebpackDevServerUtils';
 import webpack from 'webpack';
 
-import * as ProjectUtils from './project/ProjectUtils';
-import { logEnvironmentInfo, shouldWebpackClearLogs } from './Web';
+import * as ProjectUtils from '../project/ProjectUtils';
+import { shouldWebpackClearLogs } from './WebpackEnv';
+import { PLATFORM_TAG, logEnvironmentInfo } from './WebpackLogger';
 
 const CONSOLE_TAG = 'expo';
 
 const SHOULD_CLEAR_CONSOLE = shouldWebpackClearLogs();
-
-const PLATFORM_TAG = ProjectUtils.getPlatformTag('web');
 
 const withTag = (...messages: any[]) => [PLATFORM_TAG + ' ', ...messages].join('');
 
