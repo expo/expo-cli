@@ -180,7 +180,7 @@ export default class IOSUploader extends BaseUploader {
   async _uploadToTheStore(platformData: IosPlatformOptions, buildPath: string): Promise<void> {
     const { fastlane } = this;
     const { appleId, appleIdPassword, appName, language, appleTeamId } = platformData;
-    const { bundleIdentifier } = this._exp && this._exp.ios;
+    const { bundleIdentifier } = (this._exp || {}).ios || {};
 
     const appleCreds = { appleId, appleIdPassword, appleTeamId, itcTeamId: this.options.itcTeamId };
 

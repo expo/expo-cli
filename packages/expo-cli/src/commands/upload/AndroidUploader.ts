@@ -70,7 +70,7 @@ export default class AndroidUploader extends BaseUploader {
     const { key, track } = platformData;
     if (!this._exp) throw new Error('Expo Config is not defined');
 
-    const { package: androidPackage } = this._exp.android;
+    const { package: androidPackage } = this._exp.android || {};
     await runFastlaneAsync(fastlane.supplyAndroid, [path, androidPackage, key, track], {});
   }
 }
