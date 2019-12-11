@@ -36,7 +36,7 @@ const KERNEL_URL = 'https://expo.io/@exponent/home';
 
 function _configureInfoPlistForLocalDevelopment(config: any, exp: ExpoConfig): ExpoConfig {
   // add detached scheme
-  if (exp.isDetached && exp.detach.scheme) {
+  if (exp.isDetached && exp.detach && exp.detach.scheme) {
     if (!config.CFBundleURLTypes) {
       config.CFBundleURLTypes = [
         {
