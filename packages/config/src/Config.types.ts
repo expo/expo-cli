@@ -3,19 +3,19 @@ export type ProjectConfig = { exp: ExpoConfig; pkg: PackageJSONConfig; rootConfi
 export type AppJSONConfig = { expo: ExpoConfig; [key: string]: any };
 export type BareAppConfig = { name: string; displayName: string; [key: string]: any };
 
-export type Orientation = 'default' | 'portrait' | 'landscape';
-export type Privacy = 'public' | 'unlisted';
-export type ResizeMode = 'cover' | 'contain';
+type ExpoOrientation = 'default' | 'portrait' | 'landscape';
+type ExpoPrivacy = 'public' | 'unlisted';
+type SplashResizeMode = 'cover' | 'contain';
 
 /**
  * 6 character long hex color string, eg: `'#000000'`
  * @pattern ^#|(&#x23;)\\d{6}$
  */
-export type Color = string;
+type Color = string;
 
-export type AndroidMode = 'default' | 'collapse';
+type AndroidMode = 'default' | 'collapse';
 
-export type BarStyle = 'light-content' | 'dark-content';
+type AndroidBarStyle = 'light-content' | 'dark-content';
 
 export type IntentFilter = {
   action: string;
@@ -32,12 +32,12 @@ export type IntentFilter = {
   };
 };
 
-export type WebAppleBarStyle = 'default' | 'black' | 'black-translucent';
+type WebAppleBarStyle = 'default' | 'black' | 'black-translucent';
 
 /**
  * Configuration for loading and splash screen for standalone apps.
  */
-export type Splash = {
+type Splash = {
   /**
    * Color to fill the loading screen background
    */
@@ -46,7 +46,7 @@ export type Splash = {
   /**
    * Determines how the `image` will be displayed in the splash loading screen.
    */
-  resizeMode?: ResizeMode;
+  resizeMode?: SplashResizeMode;
 
   /**
    * Local path or remote url to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
@@ -62,7 +62,7 @@ export type Splash = {
  *   contentTypeHuman: ".png image"
  * }
  */
-export type Image = string;
+type Image = string;
 
 /**
  * Local path or remote url to an image to use as an icon.
@@ -73,9 +73,9 @@ export type Image = string;
  *   square: true
  * }
  */
-export type Icon = string;
+type Icon = string;
 
-export type AndroidAdaptiveIcon = {
+type AndroidAdaptiveIcon = {
   /**
    * Local path or remote url to an image to use for your app's icon on Android. If specified, this overrides the top-level `icon` and the `android.icon` keys. Should follow the guidelines specified at https://developer.android.com/guide/practices/ui_guidelines/icon_design_adaptive. This icon will appear on the home screen.
    */
@@ -612,7 +612,7 @@ export type IosPlatformConfig = {
     /**
      * Determines how the `image` will be displayed in the splash loading screen. Must be one of `cover` or `contain`, defaults to `contain`.
      */
-    resizeMode?: ResizeMode;
+    resizeMode?: SplashResizeMode;
 
     /**
      * Local path or remote url to an image to fill the background of the loading screen. Image size and aspect ratio are up to you. Must be a .png.
@@ -647,7 +647,7 @@ export type ExpoConfig = {
   /**
    * Either `public` or `unlisted`. If not provided, defaults to `unlisted`. In the future `private` will be supported. `unlisted` hides the experience from search results.
    */
-  privacy?: Privacy;
+  privacy?: ExpoPrivacy;
   /**
    * The Expo sdkVersion to run the project on. This should line up with the version specified in your package.json.
    * @pattern ^(\\d+\\.\\d+\\.\\d+)|(UNVERSIONED)$
@@ -669,7 +669,7 @@ export type ExpoConfig = {
   /**
    * Lock your app to a specific orientation with `portrait` or `landscape`. Defaults to no lock.
    */
-  orientation?: Orientation;
+  orientation?: ExpoOrientation;
   /**
    * On Android, this will determine the color of your app in the multitasker. Currently this is not used on iOS, but it may be used for other purposes in the future.
    */
@@ -714,7 +714,7 @@ export type ExpoConfig = {
     /**
      * Configures the status bar icons to have a light or dark color.
      */
-    barStyle?: BarStyle;
+    barStyle?: AndroidBarStyle;
     /**
      * Specifies the background color of the status bar.
      */
@@ -731,7 +731,7 @@ export type ExpoConfig = {
     /**
      * Configure the navigation bar icons to have a light or dark color. Supported on Android Oreo and newer.
      */
-    barStyle?: BarStyle;
+    barStyle?: AndroidBarStyle;
     /**
      * Specifies the background color of the navigation bar.
      */
