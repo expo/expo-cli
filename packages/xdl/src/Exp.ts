@@ -215,8 +215,8 @@ type PublishInfo = {
     remotePackageName: string;
     remoteFullPackageName: string;
     sdkVersion: string;
-    iosBundleIdentifier?: string;
-    androidPackage?: string;
+    iosBundleIdentifier?: string | null;
+    androidPackage?: string | null;
   };
 };
 
