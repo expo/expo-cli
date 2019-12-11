@@ -249,6 +249,56 @@ export type AndroidPlatformConfig = {
   intentFilters?: IntentFilter | IntentFilter[];
 };
 
+// tslint:disable-next-line:max-line-length
+type Devtool =
+  | 'eval'
+  | 'inline-source-map'
+  | 'cheap-eval-source-map'
+  | 'cheap-source-map'
+  | 'cheap-module-eval-source-map'
+  | 'cheap-module-source-map'
+  | 'eval-source-map'
+  | 'source-map'
+  | 'nosources-source-map'
+  | 'hidden-source-map'
+  | 'nosources-source-map'
+  | 'inline-cheap-source-map'
+  | 'inline-cheap-module-source-map'
+  | '@eval'
+  | '@inline-source-map'
+  | '@cheap-eval-source-map'
+  | '@cheap-source-map'
+  | '@cheap-module-eval-source-map'
+  | '@cheap-module-source-map'
+  | '@eval-source-map'
+  | '@source-map'
+  | '@nosources-source-map'
+  | '@hidden-source-map'
+  | '@nosources-source-map'
+  | '#eval'
+  | '#inline-source-map'
+  | '#cheap-eval-source-map'
+  | '#cheap-source-map'
+  | '#cheap-module-eval-source-map'
+  | '#cheap-module-source-map'
+  | '#eval-source-map'
+  | '#source-map'
+  | '#nosources-source-map'
+  | '#hidden-source-map'
+  | '#nosources-source-map'
+  | '#@eval'
+  | '#@inline-source-map'
+  | '#@cheap-eval-source-map'
+  | '#@cheap-source-map'
+  | '#@cheap-module-eval-source-map'
+  | '#@cheap-module-source-map'
+  | '#@eval-source-map'
+  | '#@source-map'
+  | '#@nosources-source-map'
+  | '#@hidden-source-map'
+  | '#@nosources-source-map'
+  | boolean;
+
 /**
  * Web platform specific configuration
  */
@@ -365,7 +415,7 @@ export type WebPlatformConfig = {
     /**
      * Choose a custom style of source mapping to enhance the debugging process. These values can affect build and rebuild speed dramatically.
      */
-    devtool?: string;
+    devtool?: Devtool;
     /**
      * Allows you to specify the base path for all the assets within your application.
      * @deprecated

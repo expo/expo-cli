@@ -23,7 +23,7 @@ export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
     const config = getConfig(env);
     const isProduction = getMode(env) === 'production';
 
-    const { name, build = {} } = config.web;
+    const { name, build = {} } = config.web || {};
     /**
      * The user can disable minify with
      * `web.minifyHTML = false || {}`
