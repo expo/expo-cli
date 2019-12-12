@@ -186,8 +186,7 @@ export default class ApiV2Client {
       reqOptions.data = options.body;
     }
 
-    reqOptions = merge({}, reqOptions, extraRequestOptions);
-    reqOptions = merge({}, reqOptions, uploadOptions);
+    reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions);
 
     let response;
     let result;
