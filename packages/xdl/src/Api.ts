@@ -88,20 +88,21 @@ async function _callMethodAsync(
     };
   }
 
-  if (!requestOptions.timeout && ConnectionStatus.isOffline()) {
-    options.timeout = 1;
-  }
-
   if (requestOptions.formData) {
-    let convertedFormData = await _convertFormDataToBuffer(requestOptions.formData);
+    let { formData, ...rest } = requestOptions;
+    let convertedFormData = await _convertFormDataToBuffer(formData);
     let { data } = convertedFormData;
     options.headers = {
       ...options.headers,
-      ...requestOptions.formData.getHeaders(),
+      ...formData.getHeaders(),
     };
-    options = { ...options, data };
+    options = { ...options, data, ...rest };
   } else {
     options = { ...options, ...requestOptions };
+  }
+
+  if (!requestOptions.timeout && ConnectionStatus.isOffline()) {
+    options.timeout = 1;
   }
 
   let response = await axios.request(options);
