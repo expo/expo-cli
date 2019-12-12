@@ -958,7 +958,7 @@ async function _uploadArtifactsAsync({
     const api = ApiV2.clientForUser(user);
     response = await api.uploadFormDataAsync('publish/new', formData);
   } else {
-    response = await Api.callMethodAsync('publish', null, 'post', null, { formData });
+    response = await Api.callMethodAsync('publish', null, 'put', null, { formData });
   }
   return response;
 }
