@@ -1894,7 +1894,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
   );
   if (
     (ConnectionStatus.isOffline()
-      ? await Doctor.validateLowLatencyAsync(projectRoot)
+      ? await Doctor.validateWithoutNetworkAsync(projectRoot)
       : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
   ) {
     throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);

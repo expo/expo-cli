@@ -88,19 +88,22 @@ async function _callMethodAsync(
     };
   }
 
-  if (requestOptions) {
-    if (requestOptions.formData) {
-      let convertedFormData = await _convertFormDataToBuffer(requestOptions.formData);
-      let { data } = convertedFormData;
-      options.headers = {
-        ...options.headers,
-        ...requestOptions.formData.getHeaders(),
-      };
-      options = { ...options, data };
-    } else {
-      options = { ...options, ...requestOptions };
-    }
+  if (!requestOptions.timeout && ConnectionStatus.isOffline()) {
+    options.timeout = 1;
   }
+
+  if (requestOptions.formData) {
+    let convertedFormData = await _convertFormDataToBuffer(requestOptions.formData);
+    let { data } = convertedFormData;
+    options.headers = {
+      ...options.headers,
+      ...requestOptions.formData.getHeaders(),
+    };
+    options = { ...options, data };
+  } else {
+    options = { ...options, ...requestOptions };
+  }
+
   let response = await axios.request(options);
   if (!response) {
     throw new Error('Unexpected error: Request failed.');
@@ -241,12 +244,7 @@ export default class ApiClient {
     if (!ApiClient._schemaCaches.hasOwnProperty(sdkVersion)) {
       ApiClient._schemaCaches[sdkVersion] = new Cacher(
         async () => {
-          return await ApiClient.callPathAsync(
-            `/--/xdl-schema/${sdkVersion}`,
-            undefined,
-            undefined,
-            ConnectionStatus.isOffline() ? { timeout: 1 } : undefined
-          );
+          return await ApiClient.callPathAsync(`/--/xdl-schema/${sdkVersion}`);
         },
         `schema-${sdkVersion}.json`,
         0,
