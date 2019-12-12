@@ -101,7 +101,7 @@ async function _callMethodAsync(
     options = { ...options, ...requestOptions };
   }
 
-  if (!requestOptions.timeout && ConnectionStatus.isOffline()) {
+  if (!requestOptions.hasOwnProperty('timeout') && ConnectionStatus.isOffline()) {
     options.timeout = 1;
   }
 

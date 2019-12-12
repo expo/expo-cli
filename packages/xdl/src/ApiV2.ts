@@ -164,7 +164,7 @@ export default class ApiV2Client {
       reqOptions.data = options.body;
     }
 
-    if (!extraRequestOptions.timeout && ConnectionStatus.isOffline()) {
+    if (!extraRequestOptions.hasOwnProperty('timeout') && ConnectionStatus.isOffline()) {
       reqOptions.timeout = 1;
     }
 
