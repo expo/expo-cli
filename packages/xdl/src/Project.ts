@@ -951,9 +951,15 @@ async function _uploadArtifactsAsync({
   formData.append('iosBundle', iosBundle, 'iosBundle');
   formData.append('androidBundle', androidBundle, 'androidBundle');
   formData.append('options', JSON.stringify(options));
-  let response = await Api.callMethodAsync('publish', null, 'put', null, {
-    formData,
-  });
+
+  let response: any;
+  if (process.env.EXPO_NEXT_API) {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    response = await api.uploadFormDataAsync('publish/new', formData);
+  } else {
+    response = await Api.callMethodAsync('publish', null, 'put', null, { formData });
+  }
   return response;
 }
 
