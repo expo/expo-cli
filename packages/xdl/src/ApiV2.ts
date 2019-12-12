@@ -1,6 +1,8 @@
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
+import concat from 'concat-stream';
 import ExtendableError from 'es6-error';
+import FormData from 'form-data';
 import idx from 'idx';
 import merge from 'lodash/merge';
 import QueryString from 'querystring';
@@ -20,6 +22,12 @@ function _apiBaseUrl() {
   return rootBaseUrl + '/--/api/v2';
 }
 
+async function _convertFormDataToBuffer(formData: FormData): Promise<{ data: Buffer }> {
+  return new Promise(resolve => {
+    formData.pipe(concat({ encoding: 'buffer' }, data => resolve({ data })));
+  });
+}
+
 export class ApiV2Error extends ExtendableError {
   code: string;
   details?: JSONValue;
@@ -36,6 +44,11 @@ type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
+};
+
+type UploadOptions = {
+  headers: any;
+  data: any;
 };
 
 type QueryParameters = { [key: string]: string | number | boolean | null | undefined };
@@ -132,25 +145,22 @@ export default class ApiV2Client {
     );
   }
 
-  async uploadAsync(
-    methodName: string,
-    extraOptions?: any //Partial<RequestOptions>,
-  ) {
-    const url = `${_apiBaseUrl()}/${methodName}`;
-    let extraRequestOptions: AxiosRequestConfig = {
-      url,
-      method: 'post',
+  async uploadFormDataAsync(methodName: string, formData: FormData) {
+    const options: RequestOptions = { httpMethod: 'put' };
+    const { data } = await _convertFormDataToBuffer(formData);
+    const uploadOptions: UploadOptions = {
+      headers: formData.getHeaders(),
+      data,
     };
-    extraRequestOptions = { ...extraRequestOptions, ...extraOptions };
-
-    return await this._requestAsync(methodName, { httpMethod: 'post' }, extraRequestOptions);
+    return await this._requestAsync(methodName, options, undefined, false, uploadOptions);
   }
 
   async _requestAsync(
     methodName: string,
     options: RequestOptions,
-    extraRequestOptions?: any, //Partial<RequestOptions>,
-    returnEntireResponse: boolean = false
+    extraRequestOptions?: Partial<RequestOptions>,
+    returnEntireResponse: boolean = false,
+    uploadOptions?: UploadOptions
   ) {
     const url = `${_apiBaseUrl()}/${methodName}`;
     let reqOptions: AxiosRequestConfig = {
@@ -160,6 +170,7 @@ export default class ApiV2Client {
         'Exponent-Client': ApiV2Client.exponentClient,
       },
     };
+
     if (this.sessionSecret) {
       reqOptions.headers['Expo-Session'] = this.sessionSecret;
     }
@@ -176,6 +187,8 @@ export default class ApiV2Client {
     }
 
     reqOptions = merge({}, reqOptions, extraRequestOptions);
+    reqOptions = merge({}, reqOptions, uploadOptions);
+
     let response;
     let result;
     try {

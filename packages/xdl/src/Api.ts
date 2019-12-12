@@ -89,11 +89,11 @@ async function _callMethodAsync(
 
   if (requestOptions) {
     if (requestOptions.formData) {
-      let convertedFormData = await convertFormDataToBuffer(requestOptions.formData);
+      let convertedFormData = await _convertFormDataToBuffer(requestOptions.formData);
       let { data } = convertedFormData;
       options.headers = {
         ...options.headers,
-        ...requestOptions.formData.getHeaders(), //<------this is what is missing!
+        ...requestOptions.formData.getHeaders(),
       };
       options = { ...options, data };
     } else {
@@ -130,7 +130,7 @@ async function _callMethodAsync(
   }
 }
 
-export async function convertFormDataToBuffer(formData: FormData): Promise<{ data: Buffer }> {
+async function _convertFormDataToBuffer(formData: FormData): Promise<{ data: Buffer }> {
   return new Promise(resolve => {
     formData.pipe(concat({ encoding: 'buffer' }, data => resolve({ data })));
   });
