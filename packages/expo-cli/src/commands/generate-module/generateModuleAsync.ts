@@ -1,5 +1,6 @@
 import path from 'path';
 import fse from 'fs-extra';
+import { CommandOptions } from 'commander';
 
 import CommandError from '../../CommandError';
 
@@ -7,7 +8,10 @@ import promptQuestionsAsync from './promptQuestionsAsync';
 import configureModule from './configureModule';
 import fetchTemplate from './fetchTemplate';
 
-export default async function generateModuleAsync(newModuleProjectDir, options) {
+export default async function generateModuleAsync(
+  newModuleProjectDir: string,
+  options: CommandOptions & { template?: string }
+) {
   const newModulePathFromArgv = newModuleProjectDir && path.resolve(newModuleProjectDir);
   const newModuleName = newModulePathFromArgv && path.basename(newModulePathFromArgv);
   const newModuleParentPath = newModulePathFromArgv
@@ -16,7 +20,7 @@ export default async function generateModuleAsync(newModuleProjectDir, options) 
 
   const configuration = await promptQuestionsAsync(newModuleName);
   const newModulePath = path.resolve(newModuleParentPath, configuration.npmModuleName);
-  if (await fse.exists(newModulePath)) {
+  if (fse.existsSync(newModulePath)) {
     throw new CommandError('MODULE_ALREADY_EXISTS', `Module '${newModulePath}' already exists!`);
   }
 

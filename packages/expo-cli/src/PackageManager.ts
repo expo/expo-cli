@@ -163,10 +163,9 @@ export class YarnPackageManager implements PackageManager {
   }
 }
 
-export function createForProject(
-  projectRoot: string,
-  options: { npm?: boolean; yarn?: boolean } = {}
-) {
+export type CreateForProjectOptions = { npm?: boolean; yarn?: boolean };
+
+export function createForProject(projectRoot: string, options: CreateForProjectOptions = {}) {
   console.warn(
     '`createForProject` is deprecated in favor of `createForProject` from `@expo/package-manager`'
   );

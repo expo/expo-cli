@@ -1,5 +1,5 @@
 import resolveFrom from 'resolve-from';
-
+import { stat, statSync } from 'fs-extra';
 import { ExpoConfig } from './Config.types';
 
 export function resolveModule(
@@ -30,4 +30,20 @@ export function moduleNameFromPath(modulePath: string): string {
   }
   const [packageName] = modulePath.split('/');
   return packageName ? packageName : modulePath;
+}
+
+export async function fileExistsAsync(file: string): Promise<boolean> {
+  try {
+    return (await stat(file)).isFile();
+  } catch (e) {
+    return false;
+  }
+}
+
+export function fileExists(file: string): boolean {
+  try {
+    return statSync(file).isFile();
+  } catch (e) {
+    return false;
+  }
 }

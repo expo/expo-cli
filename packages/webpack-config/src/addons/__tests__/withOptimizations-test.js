@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import withOptimizations, { isDebugMode } from '../withOptimizations';
 
 it(`only uses optimizations in production`, () => {

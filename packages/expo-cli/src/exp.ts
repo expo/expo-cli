@@ -12,7 +12,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import simpleSpinner from '@expo/simple-spinner';
 import getenv from 'getenv';
-import program, { Command } from 'commander';
+import program, { Command, Option } from 'commander';
 import {
   Analytics,
   Api,
@@ -481,10 +481,101 @@ async function writePathAsync() {
   await Binaries.writePathToUserSettingsAsync();
 }
 
+type OptionData = {
+  flags: string;
+  required: boolean;
+  description: string;
+  default: any;
+};
+
+type CommandData = {
+  name: string;
+  description: string;
+  alias?: string;
+  options: OptionData[];
+};
+
+// Sets up commander with a minimal setup for inspecting commands and extracting
+// data from them.
+function generateCommandJSON() {
+  program.name('expo');
+  registerCommands(program);
+  return program.commands.map(commandAsJSON);
+}
+
+// The type definition for Option seems to be wrong - doesn't include defaultValue
+function optionAsJSON(option: Option & { defaultValue: any }): OptionData {
+  return {
+    flags: option.flags,
+    required: option.required,
+    description: option.description,
+    default: option.defaultValue,
+  };
+}
+
+function commandAsJSON(command: Command): CommandData {
+  return {
+    name: command.name(),
+    description: command.description(),
+    alias: command.alias(),
+    options: command.options.map(optionAsJSON),
+  };
+}
+
+function sanitizeFlags(flags: string) {
+  return flags.replace('<', '[').replace('>', ']');
+}
+
+function formatOptionAsMarkdown(option: OptionData) {
+  return `| \`${sanitizeFlags(option.flags)}\` | ${option.description} |`;
+}
+
+function formatOptionsAsMarkdown(options: OptionData[]) {
+  if (!options || !options.length) {
+    return 'This command does not take any options.';
+  }
+
+  return `| Option         | Description             |
+| ------------ | ----------------------- |
+${options.map(formatOptionAsMarkdown).join('\n')}
+`;
+}
+
+function formatCommandAsMarkdown(command: CommandData) {
+  return `
+<details><summary><h3>expo ${command.name}</h3><p>${command.description}</p></summary>
+<p>${
+    command.alias
+      ? `
+
+Alias: \`expo ${command.alias}\``
+      : ''
+  }
+
+${formatOptionsAsMarkdown(command.options)}
+
+</p>
+</details>
+  `;
+}
+
+function formatCommandsAsMarkdown(commands: CommandData[]) {
+  return commands.map(formatCommandAsMarkdown).join('\n');
+}
+
 // This is the entry point of the CLI
 export function run(programName: string) {
   (async function() {
-    await Promise.all([writePathAsync(), runAsync(programName)]);
+    if (process.argv[2] == 'introspect') {
+      let commands = generateCommandJSON();
+      if (process.argv[3] && process.argv[3].includes('markdown')) {
+        log(formatCommandsAsMarkdown(commands));
+      } else {
+        log(JSON.stringify(commands));
+      }
+    } else {
+      await Promise.all([writePathAsync(), runAsync(programName)]);
+    }
   })().catch(e => {
     console.error('Uncaught Error', e);
     process.exit(1);

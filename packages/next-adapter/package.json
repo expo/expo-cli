@@ -1,6 +1,6 @@
 {
   "name": "@expo/next-adapter",
-  "version": "2.0.0-beta.8",
+  "version": "2.0.0-beta.9",
   "description": "Adapter for using Next.js with Unimodules",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -43,7 +43,7 @@
     "service-worker.js"
   ],
   "devDependencies": {
-    "@expo/babel-preset-cli": "^0.2.1"
+    "@expo/babel-preset-cli": "^0.2.2"
   },
   "peerDependencies": {
     "next": "^9",
@@ -54,8 +54,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@expo/package-manager": "^0.0.0",
-    "@expo/webpack-config": "^0.10.5",
+    "@expo/package-manager": "^0.0.1",
+    "@expo/webpack-config": "^0.10.6",
     "@types/next": "^8.0.6",
     "chalk": "^3.0.0",
     "commander": "^4.0.1",

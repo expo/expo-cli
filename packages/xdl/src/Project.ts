@@ -373,12 +373,16 @@ export async function getLatestReleaseAsync(
   options: {
     releaseChannel: string;
     platform: string;
+    owner?: string;
   }
 ): Promise<Release | null> {
   // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
   let formData = new FormData();
   formData.append('queryType', 'history');
   formData.append('slug', await getSlugAsync(projectRoot));
+  if (options.owner) {
+    formData.append('owner', options.owner);
+  }
   formData.append('version', '2');
   formData.append('count', '1');
   formData.append('releaseChannel', options.releaseChannel);
@@ -948,9 +952,15 @@ async function _uploadArtifactsAsync({
   formData.append('iosBundle', iosBundle, 'iosBundle');
   formData.append('androidBundle', androidBundle, 'androidBundle');
   formData.append('options', JSON.stringify(options));
-  let response = await Api.callMethodAsync('publish', null, 'put', null, {
-    formData,
-  });
+
+  let response: any;
+  if (process.env.EXPO_NEXT_API) {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    response = await api.uploadFormDataAsync('publish/new', formData);
+  } else {
+    response = await Api.callMethodAsync('publish', null, 'put', null, { formData });
+  }
   return response;
 }
 

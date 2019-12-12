@@ -1,6 +1,7 @@
 # So that we can require funcs.rb
 $LOAD_PATH.unshift File.expand_path(__dir__, __FILE__)
 
+require 'spaceship'
 require 'pilot'
 require 'funcs'
 require 'json'
@@ -15,7 +16,8 @@ captured_stderr = with_captured_stderr{
       username: $username,
       skip_waiting_for_build_processing: true,
     }
-    Pilot::BuildManager.new.upload(config)
+    manager = Pilot::BuildManager.new
+    manager.upload(config)
     $result = JSON.generate({ result: 'success' })
   rescue Spaceship::Client::InvalidUserCredentialsError => invalid_cred
     $result = JSON.generate({

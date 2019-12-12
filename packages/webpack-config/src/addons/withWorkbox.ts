@@ -1,6 +1,5 @@
-import { ensureDir, readFile, writeFile } from 'fs-extra';
+import { ensureDirSync, readFileSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import { Entry } from 'webpack';
 import {
   GenerateSW,
   GenerateSWOptions,
@@ -11,6 +10,7 @@ import {
 import { AnyConfiguration } from '../types';
 import { resolveEntryAsync } from '../utils';
 import { getPaths } from '../env';
+import { ensureSlash } from '@expo/config/paths';
 
 export type OfflineOptions = {
   projectRoot?: string;
@@ -77,7 +77,7 @@ export default function withWorkbox(
     projectRoot,
     autoRegister = true,
     publicUrl = '',
-    scope = '/',
+    scope,
     useServiceWorker = true,
     generateSWOptions = {},
     injectManifestOptions = {},
@@ -115,13 +115,18 @@ export default function withWorkbox(
     const entries = await resolveEntryAsync(expoEntry);
     const swPath = join(locations.production.registerServiceWorker);
     if (entries.app && !entries.app.includes(swPath) && autoRegister) {
-      const content = (
-        await readFile(require.resolve(locations.template.registerServiceWorker), 'utf8')
-      )
-        .replace('SW_PUBLIC_URL', publicUrl)
-        .replace('SW_PUBLIC_SCOPE', scope);
-      await ensureDir(locations.production.folder);
-      await writeFile(swPath, content, 'utf8');
+      let content = readFileSync(require.resolve(locations.template.registerServiceWorker), 'utf8');
+      if (content) {
+        content = content
+          .replace('SW_PUBLIC_URL', publicUrl)
+          .replace('SW_PUBLIC_SCOPE', ensureSlash(scope || publicUrl, true));
+        ensureDirSync(locations.production.folder);
+      } else {
+        content = `
+        console.warn("failed to load service-worker in @expo/webpack-config -> withWorkbox. This can be due to the environment the project was built in. Please try again with a globally installed instance of expo-cli. If you continue to run into problems open an issue in https://github.com/expo/expo-cli")
+        `;
+      }
+      writeFileSync(swPath, content, 'utf8');
 
       if (!Array.isArray(entries.app)) {
         entries.app = [entries.app];

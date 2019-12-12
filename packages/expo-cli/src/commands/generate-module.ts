@@ -1,6 +1,8 @@
+import { Command } from 'commander';
+
 import generateModuleAsync from './generate-module/generateModuleAsync';
 
-export default program => {
+export default function(program: Command) {
   program
     .command('generate-module [new-module-project]')
     .option(
@@ -11,4 +13,4 @@ export default program => {
       'Generate a universal module for Expo from a template in [new-module-project] directory.'
     )
     .asyncAction(generateModuleAsync);
-};
+}

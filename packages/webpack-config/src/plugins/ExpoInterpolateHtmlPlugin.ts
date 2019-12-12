@@ -15,7 +15,7 @@ export default class ExpoInterpolateHtmlPlugin extends InterpolateHtmlPlugin {
     HtmlWebpackPlugin: HtmlWebpackPlugin
   ): ExpoInterpolateHtmlPlugin => {
     const config = env.config || getConfig(env);
-    const { publicUrl } = getPublicPaths(env);
+    const { publicPath } = getPublicPaths(env);
 
     const { build: buildConfig = {}, lang } = config.web;
     const { rootId } = buildConfig;
@@ -24,7 +24,7 @@ export default class ExpoInterpolateHtmlPlugin extends InterpolateHtmlPlugin {
 
     // Add variables to the `index.html`
     return new ExpoInterpolateHtmlPlugin(HtmlWebpackPlugin, {
-      WEB_PUBLIC_URL: publicUrl,
+      WEB_PUBLIC_URL: publicPath,
       WEB_TITLE: config.web.name,
       NO_SCRIPT: noJSComponent,
       LANG_ISO_CODE: lang,

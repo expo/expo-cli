@@ -226,7 +226,8 @@ export function retrieveIcons(manifest: ManifestOptions): [Icon[], ManifestOptio
 
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
-  const contents = fs.readFileSync(filePath);
+  const contents = filePath.startsWith('http') ? filePath : fs.readFileSync(filePath);
+
   return crypto
     .createHash('sha256')
     .update(contents)
@@ -250,7 +251,7 @@ export async function parseIconsAsync(
     return {};
   }
 
-  if (!(await isAvailableAsync())) {
+  if (!await isAvailableAsync()) {
     // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
     console.log();
     console.log(
@@ -314,8 +315,12 @@ function sortByAttribute(arr: any[], key: string): any[] {
 async function clearUnusedCachesAsync(projectRoot: string): Promise<void> {
   // Clean up any old caches
   const cacheFolder = path.join(projectRoot, '.expo/web/cache/production/images');
-  const currentCaches = await fs.readdir(cacheFolder);
+  const currentCaches = fs.readdirSync(cacheFolder);
 
+  if (!Array.isArray(currentCaches)) {
+    console.warn('Failed to read the icon cache');
+    return;
+  }
   const deleteCachePromises: Promise<void>[] = [];
   for (const cache of currentCaches) {
     // skip hidden folders
