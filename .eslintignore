@@ -6,7 +6,6 @@ vendor
 # Ignore build artifacts
 /packages/*/build
 /packages/osascript/lib
+# Generated
 .next
-
-# Ignore webpack-config for now, there is a lot going on there...
-/packages/webpack-config/*
+.expo

@@ -12,6 +12,7 @@
   "scripts": {
     "watch": "tsc --watch",
     "build": "tsc",
+    "lint": "eslint .",
     "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
     "test": "npm run test:unit; npm run test:e2e; npm run test:e2e:nextjs",

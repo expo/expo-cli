@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import { ExpoConfig, getWebOutputPath, readConfigJson, readConfigJsonAsync } from '@expo/config';
 import fs from 'fs';
 import path from 'path';
