@@ -953,12 +953,12 @@ async function _uploadArtifactsAsync({
   formData.append('options', JSON.stringify(options));
 
   let response: any;
-  if (process.env.EXPO_LEGACY_API) {
-    response = await Api.callMethodAsync('publish', null, 'post', null, { formData });
-  } else {
+  if (process.env.EXPO_NEXT_API) {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     response = await api.uploadFormDataAsync('publish/new', formData);
+  } else {
+    response = await Api.callMethodAsync('publish', null, 'post', null, { formData });
   }
   return response;
 }
