@@ -1,3 +1,4 @@
+/* eslint-env node */
 import path from 'path';
 
 import { normalizePaths } from '../../utils';
@@ -46,11 +47,12 @@ it(`can use a custom output path`, () => {
     },
     { projectRoot, report: { path: 'random-path', statsFilename: 'my-stats.json' } }
   );
+
   const [cleanPlugin, reportPlugin] = normalizePaths(config.plugins, value =>
     value.split('packages/webpack-config/tests/basic/').pop()
   );
 
-  expect(cleanPlugin.paths).toContain('random-path');
+  expect(cleanPlugin.cleanOnceBeforeBuildPatterns).toContain('random-path');
   expect(reportPlugin.opts.path).toBe('random-path');
   expect(reportPlugin.opts.statsFilename).toBe('random-path/my-stats.json');
 });

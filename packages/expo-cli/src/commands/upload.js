@@ -28,7 +28,6 @@ export default program => {
     ...COMMON_OPTIONS,
     'appleId',
     'appleIdPassword',
-    'itcTeamId',
     'appName',
     'sku',
     'language',
@@ -46,7 +45,7 @@ export default program => {
     // after updating fastlane this value will be unnecessary
     .option(
       '--itc-team-id <itc-team-id>',
-      'App Store Connect Team ID (optional if there is only one team available)'
+      'App Store Connect Team ID - this option is deprecated, the proper ID is resolved automatically'
     )
     .option(
       '--apple-id-password <apple-id-password>',
