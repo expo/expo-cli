@@ -262,22 +262,38 @@ export default program => {
       const sdkVersions = await Versions.sdkVersionsAsync();
       const latestSdk = await Versions.newestSdkVersionAsync();
       const currentSdk = sdkVersions[currentSdkVersion];
+      const recommendedClient = currentSdk
+        ? ClientUpgradeUtils.getClient(currentSdk, 'ios')
+        : undefined;
 
-      if (currentSdk && !ClientUpgradeUtils.getClient(currentSdk, 'ios')) {
+      if (currentSdk && !recommendedClient) {
         log(
           `You are currently using SDK ${currentSdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
         );
       }
 
-      const { upgradeToLatest } = await prompt({
-        type: 'confirm',
-        name: 'upgradeToLatest',
-        message: 'Do you want to install the latest client?',
-      });
-      if (upgradeToLatest) {
-        await Simulator.upgradeExpoAsync();
-        log('Done!');
-        return;
+      if (currentSdk && recommendedClient) {
+        const answer = await prompt({
+          type: 'confirm',
+          name: 'upgradeToRecommended',
+          message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClient.version} released for this SDK?`,
+        });
+        if (answer.upgradeToRecommended) {
+          await Simulator.upgradeExpoAsync(recommendedClient.url);
+          log('Done!');
+          return;
+        }
+      } else {
+        const answer = await prompt({
+          type: 'confirm',
+          name: 'upgradeToLatest',
+          message: 'Do you want to install the latest client?',
+        });
+        if (answer.upgradeToLatest) {
+          await Simulator.upgradeExpoAsync();
+          log('Done!');
+          return;
+        }
       }
 
       const availableClients = ClientUpgradeUtils.getAvailableClients({
