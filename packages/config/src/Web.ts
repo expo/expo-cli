@@ -321,8 +321,9 @@ export function ensurePWAConfig(
 ): ExpoConfig {
   const config = applyWebDefaults(appJSON);
   if (getAbsolutePath) {
-    config.web?.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
-    config.web?.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
+    if (!config.web) config.web = {};
+    config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
+    config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
   }
   return config;
 }
