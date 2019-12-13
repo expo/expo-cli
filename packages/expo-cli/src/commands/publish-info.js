@@ -2,7 +2,7 @@
  * @flow
  */
 import { readConfigJsonAsync } from '@expo/config';
-import { Api, FormData, Project, UserManager } from '@expo/xdl';
+import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
 
 import * as table from '../commands/utils/cli-table';
 
@@ -112,21 +112,32 @@ export default (program: any) => {
       }
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
-      await UserManager.ensureLoggedInAsync();
+      const user = await UserManager.ensureLoggedInAsync();
+      const { exp } = await readConfigJsonAsync(projectDir);
+      const slug = await Project.getSlugAsync(projectDir, options);
 
-      let formData = new FormData();
-      formData.append('queryType', 'details');
+      let result: any;
+      if (process.env.EXPO_NEXT_API) {
+        const api = ApiV2.clientForUser(user);
+        result = await api.postAsync('publish/details', {
+          owner: exp.owner,
+          publishId: options.publishId,
+          slug,
+        });
+      } else {
+        let formData = new FormData();
+        formData.append('queryType', 'details');
 
-      let { exp } = await readConfigJsonAsync(projectDir);
-      if (exp.owner) {
-        formData.append('owner', exp.owner);
+        if (exp.owner) {
+          formData.append('owner', exp.owner);
+        }
+        formData.append('publishId', options.publishId);
+        formData.append('slug', slug);
+
+        result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
+          formData,
+        });
       }
-      formData.append('publishId', options.publishId);
-      formData.append('slug', await Project.getSlugAsync(projectDir, options));
-
-      let result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
-        formData,
-      });
 
       if (options.raw) {
         console.log(JSON.stringify(result));
