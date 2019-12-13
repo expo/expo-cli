@@ -1,5 +1,7 @@
 import * as ConfigUtils from '@expo/config';
 import { Versions } from '@expo/xdl';
+import chalk from 'chalk';
+import prompt from '../../prompt';
 import { findProjectRootAsync } from './ProjectUtils';
 
 export async function getExpoSdkConfig(path: string) {
@@ -41,7 +43,14 @@ interface AvailableClientOptions {
   project?: ConfigUtils.ExpoConfig;
 }
 
-export function getAvailableClients(options: AvailableClientOptions) {
+interface AvailableClient {
+  sdkVersion: Versions.SDKVersion;
+  sdkVersionString: string;
+  clientUrl?: string;
+  clientVersion?: string;
+}
+
+export function getAvailableClients(options: AvailableClientOptions): AvailableClient[] {
   return Object.keys(options.sdkVersions)
     .reverse()
     .map(version => {
@@ -63,4 +72,37 @@ export function getAvailableClients(options: AvailableClientOptions) {
 
       return !isDeprecated && IsCompatible && hasUrl;
     });
+}
+
+interface InstallClientOptions {
+  clients: AvailableClient[];
+  latestSdkVersion?: string;
+  currentSdkVersion?: string;
+}
+
+export async function askClientToInstall(options: InstallClientOptions): Promise<AvailableClient> {
+  const answer = await prompt({
+    type: 'list',
+    name: 'targetClient',
+    message: 'Choose an SDK version to install the client for:',
+    pageSize: 20,
+    choices: options.clients.map(client => {
+      const clientVersion = `- client ${client.clientVersion || 'version unknown'}`;
+      const clientLabels = [
+        client.sdkVersionString === options.latestSdkVersion && 'latest',
+        client.sdkVersionString === options.currentSdkVersion && 'recommended',
+      ].filter(Boolean);
+
+      const clientMessage = clientLabels.length
+        ? `${clientVersion} (${clientLabels.join(', ')})`
+        : clientVersion;
+
+      return {
+        value: client,
+        name: `${chalk.bold(client.sdkVersionString)} ${chalk.gray(clientMessage)}`,
+      };
+    }),
+  });
+
+  return answer.targetClient;
 }

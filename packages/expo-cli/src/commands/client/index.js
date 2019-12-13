@@ -319,30 +319,13 @@ export default program => {
         return;
       }
 
-      const { targetClientUrl } = await prompt({
-        type: 'list',
-        name: 'targetClientUrl',
-        message: 'Choose an SDK version to install the client for:',
-        pageSize: 20,
-        choices: availableClients.map(client => {
-          const clientVersion = `- client ${client.clientVersion || 'version unknown'}`;
-          const clientLabels = [
-            client.sdkVersionString === latestSdk.version && 'latest',
-            client.sdkVersionString === currentSdkVersion && 'recommended',
-          ].filter(Boolean);
-
-          const clientMessage = clientLabels.length
-            ? `${clientVersion} (${clientLabels.join(', ')})`
-            : clientVersion;
-
-          return {
-            value: client.clientUrl,
-            name: `${chalk.bold(client.sdkVersionString)} ${chalk.gray(clientMessage)}`,
-          };
-        }),
+      const targetClient = await ClientUpgradeUtils.askClientToInstall({
+        currentSdkVersion,
+        latestSdkVersion: latestSdk.version,
+        clients: availableClients,
       });
 
-      if (await Simulator.upgradeExpoAsync(targetClientUrl)) {
+      if (await Simulator.upgradeExpoAsync(targetClient.clientUrl)) {
         log('Done!');
       }
     }, true);
