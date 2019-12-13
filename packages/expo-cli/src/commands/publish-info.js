@@ -108,7 +108,7 @@ export default (program: any) => {
     .option('-r, --raw', 'Produce some raw output.')
     .asyncActionProjectDir(async (projectDir, options) => {
       if (!options.publishId) {
-        throw new Error('publishId must be specified.');
+        throw new Error('--publish-id must be specified.');
       }
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
