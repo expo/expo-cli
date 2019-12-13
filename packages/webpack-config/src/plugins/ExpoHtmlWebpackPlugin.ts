@@ -28,7 +28,7 @@ export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
      * `web.minifyHTML = false || {}`
      */
     const minify = overrideWithPropertyOrConfig(
-      isProduction ? config.web?.build.minifyHTML : false,
+      isProduction ? config.web?.build?.minifyHTML : false,
       DEFAULT_MINIFY
     );
 
