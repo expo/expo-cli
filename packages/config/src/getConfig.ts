@@ -1,24 +1,24 @@
-import fs from 'fs-extra';
-import { safeLoad } from 'js-yaml';
+import JsonFile from '@expo/json-file';
 import path from 'path';
 
-import JsonFile from '@expo/json-file';
 import { ConfigContext, ExpoConfig } from './Config.types';
 import { ConfigError } from './Errors';
-import { fileExists, projectHasModule, resolveModule } from './Modules';
+import { fileExists } from './Modules';
 
 // support all common config types
 export const allowedConfigFileNames: string[] = (() => {
   const prefix = 'app';
   return [
     // order is important
-    `${prefix}.config.ts`,
+    // TODO: Bacon: Slowly rollout support for other config languages: ts, yml, toml
+    // `${prefix}.config.ts`,
     `${prefix}.config.js`,
     `${prefix}.config.json`,
     `${prefix}.config.json5`,
-    `${prefix}.config.yml`,
-    `${prefix}.config.yaml`,
-    `${prefix}.config.toml`,
+    // `${prefix}.config.yml`,
+    // `${prefix}.config.yaml`,
+    // `${prefix}.config.toml`,
+
     // app.json should take lowest priority so that files like app.config.js can import, modify, and re-export the app.json config
     `${prefix}.json`,
   ];
@@ -69,6 +69,17 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
   if (configFile.endsWith('.json5') || configFile.endsWith('.json')) {
     format = 'json';
     result = JsonFile.read(configFile, { json5: true });
+  } else {
+    format = 'js';
+    result = require(configFile);
+    if (result.default != null) {
+      result = result.default;
+    }
+    if (typeof result === 'function') {
+      result = result(request);
+    }
+  }
+  /*
   } else if (configFile.endsWith('.ts')) {
     format = 'ts';
     const ts = require('typescript');
@@ -84,15 +95,6 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
     if (typeof result === 'function') {
       result = result(request);
     }
-  } else if (configFile.endsWith('.js')) {
-    format = 'js';
-    result = require(configFile);
-    if (result.default != null) {
-      result = result.default;
-    }
-    if (typeof result === 'function') {
-      result = result(request);
-    }
   } else if (configFile.endsWith('.toml')) {
     format = 'toml';
     const data = fs.readFileSync(configFile, 'utf8');
@@ -102,6 +104,7 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
     const data = fs.readFileSync(configFile, 'utf8');
     result = safeLoad(data);
   }
+  */
 
   // result = await Promise.resolve(result);
 

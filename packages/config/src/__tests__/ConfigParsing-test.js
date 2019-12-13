@@ -8,7 +8,7 @@ describe('getConfig', () => {
   // - ensure `app.config` has higher priority to `app`
   // - generated `.expo` object is created and the language hint is added
   describe('language support', () => {
-    it('parses a ts config', () => {
+    xit('parses a ts config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/ts');
       const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
       expect(exp.foo).toBe('bar');
@@ -39,13 +39,13 @@ describe('getConfig', () => {
       expect(exp.name).toBe('cool+export-json_app.config');
       expect(exp._expo.configType).toBe('js');
     });
-    it('parses a yaml config', () => {
+    xit('parses a yaml config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/yaml');
       const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
       expect(exp.foo).toBe('bar');
       expect(exp._expo.configType).toBe('yaml');
     });
-    it('parses a toml config', () => {
+    xit('parses a toml config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/toml');
       const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
       expect(exp.foo).toBe('bar');
