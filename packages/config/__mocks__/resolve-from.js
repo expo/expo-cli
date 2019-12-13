@@ -4,9 +4,6 @@ module.exports.silent = (fromDirectory, request) => {
   const fs = require('fs');
   const path = require('path');
 
-  // if (fromDirectory.includes('fixtures/language-support')) {
-  //   return require(require.resolve('resolve-from'))(fromDirectory, request);
-  // }
   try {
     fromDirectory = fs.realpathSync(fromDirectory);
   } catch (error) {
