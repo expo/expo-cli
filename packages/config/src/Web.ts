@@ -285,29 +285,29 @@ function inferWebStartupImages(
   options: Object
 ) {
   const { icon, splash = {}, primaryColor } = config;
-  const web = config.web || ({} as WebPlatformConfig);
+  const { web } = config;
   // @ts-ignore
-  if (Array.isArray(web.startupImages)) {
+  if (Array.isArray(web?.startupImages)) {
     // @ts-ignore
-    return web.startupImages;
+    return web?.startupImages;
   }
 
-  const webSplash = web.splash || ({} as WebSplashScreen);
   let startupImages = [];
 
   let splashImageSource;
-  const possibleIconSrc = webSplash.image || splash.image || icon;
+  const possibleIconSrc = web?.splash?.image || splash.image || icon;
   if (possibleIconSrc) {
-    const resizeMode = webSplash.resizeMode || splash.resizeMode || 'contain';
+    const resizeMode = web?.splash?.resizeMode || splash.resizeMode || 'contain';
     const backgroundColor =
-      webSplash.backgroundColor || splash.backgroundColor || primaryColor || '#ffffff';
+      web?.splash?.backgroundColor || splash.backgroundColor || primaryColor || '#ffffff';
     splashImageSource = getAbsolutePath(possibleIconSrc);
     startupImages.push({
       resizeMode,
       color: backgroundColor,
       src: splashImageSource,
-      supportsTablet: webSplash.supportsTablet === undefined ? true : webSplash.supportsTablet,
-      orientation: web.orientation,
+      supportsTablet:
+        web?.splash?.supportsTablet === undefined ? true : web?.splash?.supportsTablet,
+      orientation: web?.orientation,
       destination: `apple/splash`,
     });
   }
@@ -321,9 +321,8 @@ export function ensurePWAConfig(
 ): ExpoConfig {
   const config = applyWebDefaults(appJSON);
   if (getAbsolutePath) {
-    if (!config.web) config.web = {};
-    config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
-    config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
+    config.web?.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
+    config.web?.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
   }
   return config;
 }

@@ -27,7 +27,7 @@ export async function getCredentialMetadataAsync(
     username = exp.owner;
   }
 
-  const bundleIdentifier = platform === 'ios' ? (exp.ios || {}).bundleIdentifier : undefined;
+  const bundleIdentifier = platform === 'ios' ? exp.ios?.bundleIdentifier : undefined;
 
   return {
     username,
