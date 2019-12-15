@@ -25,6 +25,8 @@ const SUGGESTED_XCODE_VERSION = `8.2.0`;
 const XCODE_NOT_INSTALLED_ERROR =
   'Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.';
 
+const INSTALL_WARNING_TIMEOUT = 30 * 1000;
+
 export function isPlatformSupported() {
   return process.platform === 'darwin';
 }
@@ -355,6 +357,11 @@ export async function _downloadSimulatorAppAsync(url?: string) {
 
 // url: Optional URL of Exponent.app tarball to download
 export async function _installExpoOnSimulatorAsync(url?: string) {
+  const warningTimer = setTimeout(() => {
+    Logger.global.info(
+      'This takes longer than expected, you can also download the clients from the website at https://expo.io/tools'
+    );
+  }, INSTALL_WARNING_TIMEOUT);
   Logger.global.info(`Downloading the latest version of Expo client app`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let dir = await _downloadSimulatorAppAsync(url);
@@ -363,6 +370,7 @@ export async function _installExpoOnSimulatorAsync(url?: string) {
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
   let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
+  clearTimeout(warningTimer);
   return result;
 }
 
