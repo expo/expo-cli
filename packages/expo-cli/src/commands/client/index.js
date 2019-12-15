@@ -273,10 +273,11 @@ export default program => {
       }
 
       if (currentSdk && recommendedClient) {
+        const recommendedClientVersion = recommendedClient.version || 'version unknown';
         const answer = await prompt({
           type: 'confirm',
           name: 'upgradeToRecommended',
-          message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClient.version} released for this SDK?`,
+          message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
         if (answer.upgradeToRecommended) {
           await Simulator.upgradeExpoAsync(recommendedClient.url);
@@ -357,10 +358,11 @@ export default program => {
       }
 
       if (currentSdk && recommendedClient) {
+        const recommendedClientVersion = recommendedClient.version || 'version unknown';
         const answer = await prompt({
           type: 'confirm',
           name: 'upgradeToRecommended',
-          message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClient.version} released for this SDK?`,
+          message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
         if (answer.upgradeToRecommended) {
           await Android.upgradeExpoAsync(recommendedClient.url);
