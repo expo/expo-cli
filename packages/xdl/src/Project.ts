@@ -1429,8 +1429,7 @@ type BuildCreatedResult = {
   hasUnlimitedPriorityBuilds: boolean;
 };
 
-function _validateManifest(options, exp, configName, configPrefix) {
-  // only run for 'create'
+function _validateManifest(options: any, exp: any, configName: any, configPrefix: any) {
   if (options.platform === 'ios' || options.platform === 'all') {
     if (!exp.ios || !exp.ios.bundleIdentifier) {
       throw new XDLError(
@@ -1451,7 +1450,7 @@ function _validateManifest(options, exp, configName, configPrefix) {
     }
   }
 }
-function _validateOptions(options) {
+function _validateOptions(options: any) {
   const schema = joi.object().keys({
     current: joi.boolean(),
     mode: joi.string(),
@@ -1470,7 +1469,7 @@ function _validateOptions(options) {
   }
 }
 
-async function _getExpAsync(projectRoot, options) {
+async function _getExpAsync(projectRoot: any, options: any) {
   const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
@@ -1491,7 +1490,7 @@ async function _getExpAsync(projectRoot, options) {
   return { exp, configName, configPrefix };
 }
 
-export async function buildStatusAsync(
+export async function getBuildStatusAsync(
   projectRoot: string,
   options: {
     current?: boolean;
@@ -1510,9 +1509,8 @@ export async function buildStatusAsync(
   _validateOptions(options);
   const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
 
-  const user = await UserManager.ensureLoggedInAsync();
   const api = ApiV2.clientForUser(user);
-  return await api.getAsync('build/status', { manifest: exp, options });
+  return await api.postAsync('build/status', { manifest: exp, options });
 }
 
 export async function startBuildAsync(

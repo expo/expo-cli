@@ -108,14 +108,25 @@ export default class BaseBuilder {
 
   async checkForBuildInProgress() {
     log('Checking if there is a build in progress...\n');
-    const buildStatus = await Project.buildAsync(this.projectDir, {
-      mode: 'status',
-      platform: this.platform(),
-      current: true,
-      releaseChannel: this.options.releaseChannel,
-      publicUrl: this.options.publicUrl,
-      sdkVersion: this.manifest.sdkVersion,
-    });
+    let buildStatus;
+    if (process.env.EXPO_NEXT_API) {
+      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+        platform: this.platform(),
+        current: true,
+        releaseChannel: this.options.releaseChannel,
+        publicUrl: this.options.publicUrl,
+        sdkVersion: this.manifest.sdkVersion,
+      });
+    } else {
+      buildStatus = await Project.buildAsync(this.projectDir, {
+        mode: 'status',
+        platform: this.platform(),
+        current: true,
+        releaseChannel: this.options.releaseChannel,
+        publicUrl: this.options.publicUrl,
+        sdkVersion: this.manifest.sdkVersion,
+      });
+    }
     if (buildStatus.jobs && buildStatus.jobs.length) {
       throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
@@ -123,13 +134,22 @@ export default class BaseBuilder {
 
   async checkStatus(platform: string = 'all'): Promise<void> {
     log('Fetching build history...\n');
-    const buildStatus = await Project.buildAsync(this.projectDir, {
-      mode: 'status',
-      platform,
-      current: false,
-      releaseChannel: this.options.releaseChannel,
-    });
 
+    let buildStatus;
+    if (process.env.EXPO_NEXT_API) {
+      buildStatus = await Project.getBuildStatusAsync(this.projectDir, {
+        platform,
+        current: false,
+        releaseChannel: this.options.releaseChannel,
+      });
+    } else {
+      buildStatus = await Project.buildAsync(this.projectDir, {
+        mode: 'status',
+        platform,
+        current: false,
+        releaseChannel: this.options.releaseChannel,
+      });
+    }
     if (buildStatus.err) {
       throw new Error('Error getting current build status for this project.');
     }
@@ -286,11 +306,19 @@ ${job.id}
     let time = new Date().getTime();
     const endTime = time + secondsToMilliseconds(timeout);
     while (time <= endTime) {
-      const res = await Project.buildAsync(this.projectDir, {
-        current: false,
-        mode: 'status',
-        ...(publicUrl ? { publicUrl } : {}),
-      });
+      let res;
+      if (process.env.EXPO_NEXT_API) {
+        res = await Project.getBuildStatusAsync(this.projectDir, {
+          current: false,
+          ...(publicUrl ? { publicUrl } : {}),
+        });
+      } else {
+        res = await Project.buildAsync(this.projectDir, {
+          current: false,
+          mode: 'status',
+          ...(publicUrl ? { publicUrl } : {}),
+        });
+      }
       const job = fp.compose(
         fp.head,
         fp.filter(job => buildId && job.id === buildId),
@@ -330,32 +358,56 @@ ${job.id}
     const platform = this.platform();
     const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
 
-    let opts = {
-      mode: 'create',
-      expIds,
-      platform,
-      releaseChannel: this.options.releaseChannel,
-      ...(publicUrl ? { publicUrl } : {}),
-    };
+    let result;
+    if (process.env.EXPO_NEXT_API) {
+      let opts = {
+        expIds,
+        platform,
+        releaseChannel: this.options.releaseChannel,
+        ...(publicUrl ? { publicUrl } : {}),
+      };
 
-    if (platform === 'ios') {
-      opts = {
-        ...opts,
-        type: this.options.type,
-        bundleIdentifier,
+      if (platform === 'ios') {
+        opts = {
+          ...opts,
+          type: this.options.type,
+          bundleIdentifier,
+        };
+      } else if (platform === 'android') {
+        opts = {
+          ...opts,
+          type: this.options.type,
+        };
+      }
+
+      // call out to build api here with url
+      result = await Project.startBuildAsync(this.projectDir, opts);
+    } else {
+      let opts = {
+        mode: 'create',
+        expIds,
+        platform,
+        releaseChannel: this.options.releaseChannel,
+        ...(publicUrl ? { publicUrl } : {}),
       };
-    } else if (platform === 'android') {
-      opts = {
-        ...opts,
-        type: this.options.type,
-      };
+
+      if (platform === 'ios') {
+        opts = {
+          ...opts,
+          type: this.options.type,
+          bundleIdentifier,
+        };
+      } else if (platform === 'android') {
+        opts = {
+          ...opts,
+          type: this.options.type,
+        };
+      }
+
+      // call out to build api here with url
+      result = await Project.buildAsync(this.projectDir, opts);
     }
-
-    // call out to build api here with url
-    const { id: buildId, priority, canPurchasePriorityBuilds } = await Project.buildAsync(
-      this.projectDir,
-      opts
-    );
+    const { id: buildId, priority, canPurchasePriorityBuilds } = result;
 
     log('Build started, it may take a few minutes to complete.');
     log(
