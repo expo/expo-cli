@@ -490,7 +490,7 @@ export default class PackagerLogsStream {
       return chunk;
     }
 
-    if (chunk.msg.match(/\(node:.\d*\)/)) {
+    if (typeof chunk.msg === 'string' && chunk.msg.match(/\(node:.\d*\)/)) {
       // Example: (node:13817) UnhandledPromiseRejectionWarning: Unhandled promise rejection (rejection id: 1): SyntaxError: SyntaxError /Users/brent/universe/apps/new-project-template/main.js: Unexpected token (10:6)
       // The first part of this is totally useless, so let's remove it.
       if (chunk.msg.match(/UnhandledPromiseRejectionWarning/)) {
