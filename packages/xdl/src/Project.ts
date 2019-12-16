@@ -1429,6 +1429,68 @@ type BuildCreatedResult = {
   hasUnlimitedPriorityBuilds: boolean;
 };
 
+function _validateManifest(options, exp, configName, configPrefix) {
+  // only run for 'create'
+  if (options.platform === 'ios' || options.platform === 'all') {
+    if (!exp.ios || !exp.ios.bundleIdentifier) {
+      throw new XDLError(
+        'INVALID_MANIFEST',
+        `Must specify a bundle identifier in order to build this experience for iOS. ` +
+          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
+      );
+    }
+  }
+
+  if (options.platform === 'android' || options.platform === 'all') {
+    if (!exp.android || !exp.android.package) {
+      throw new XDLError(
+        'INVALID_MANIFEST',
+        `Must specify a java package in order to build this experience for Android. ` +
+          `Please specify one in ${configName} at "${configPrefix}android.package"`
+      );
+    }
+  }
+}
+function _validateOptions(options) {
+  const schema = joi.object().keys({
+    current: joi.boolean(),
+    mode: joi.string(),
+    platform: joi.any().valid('ios', 'android', 'all'),
+    expIds: joi.array(),
+    type: joi.any().valid('archive', 'simulator', 'client', 'app-bundle', 'apk'),
+    releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
+    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
+    publicUrl: joi.string(),
+    sdkVersion: joi.strict(),
+  });
+
+  const { error } = joi.validate(options, schema);
+  if (error) {
+    throw new XDLError('INVALID_OPTIONS', error.toString());
+  }
+}
+
+async function _getExpAsync(projectRoot, options) {
+  const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
+
+  if (!exp || !pkg) {
+    throw new XDLError(
+      'NO_PACKAGE_JSON',
+      `Couldn't read ${configName} file in project at ${projectRoot}`
+    );
+  }
+
+  // Support version and name being specified in package.json for legacy
+  // support pre: exp.json
+  if (!exp.version && 'version' in pkg && pkg.version) {
+    exp.version = pkg.version;
+  }
+  if (!exp.slug && 'name' in pkg && pkg.name) {
+    exp.slug = pkg.name;
+  }
+  return { exp, configName, configPrefix };
+}
+
 export async function buildAsync(
   projectRoot: string,
   options: {
@@ -1452,59 +1514,10 @@ export async function buildAsync(
     platform: options.platform,
   });
 
-  const schema = joi.object().keys({
-    current: joi.boolean(),
-    mode: joi.string(),
-    platform: joi.any().valid('ios', 'android', 'all'),
-    expIds: joi.array(),
-    type: joi.any().valid('archive', 'simulator', 'client', 'app-bundle', 'apk'),
-    releaseChannel: joi.string().regex(/[a-z\d][a-z\d._-]*/),
-    bundleIdentifier: joi.string().regex(/^[a-zA-Z][a-zA-Z0-9\-.]+$/),
-    publicUrl: joi.string(),
-    sdkVersion: joi.strict(),
-  });
-
-  const { error } = joi.validate(options, schema);
-  if (error) {
-    throw new XDLError('INVALID_OPTIONS', error.toString());
-  }
-
-  const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
-
-  if (!exp || !pkg) {
-    throw new XDLError(
-      'NO_PACKAGE_JSON',
-      `Couldn't read ${configName} file in project at ${projectRoot}`
-    );
-  }
-
-  // Support version and name being specified in package.json for legacy
-  // support pre: exp.json
-  if (!exp.version && 'version' in pkg && pkg.version) {
-    exp.version = pkg.version;
-  }
-  if (!exp.slug && 'name' in pkg && pkg.name) {
-    exp.slug = pkg.name;
-  }
-
-  if (options.mode !== 'status' && (options.platform === 'ios' || options.platform === 'all')) {
-    if (!exp.ios || !exp.ios.bundleIdentifier) {
-      throw new XDLError(
-        'INVALID_MANIFEST',
-        `Must specify a bundle identifier in order to build this experience for iOS. ` +
-          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
-      );
-    }
-  }
-
-  if (options.mode !== 'status' && (options.platform === 'android' || options.platform === 'all')) {
-    if (!exp.android || !exp.android.package) {
-      throw new XDLError(
-        'INVALID_MANIFEST',
-        `Must specify a java package in order to build this experience for Android. ` +
-          `Please specify one in ${configName} at "${configPrefix}android.package"`
-      );
-    }
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+  if (options.mode === 'create') {
+    _validateManifest(options, exp, configName, configPrefix);
   }
 
   const callParameters = { manifest: exp, options };
