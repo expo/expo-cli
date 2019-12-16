@@ -1491,6 +1491,60 @@ async function _getExpAsync(projectRoot, options) {
   return { exp, configName, configPrefix };
 }
 
+export async function buildStatusAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean;
+    platform?: 'android' | 'ios' | 'all';
+    expIds?: Array<string>;
+    type?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+    publicUrl?: string;
+    sdkVersion?: string;
+  } = {}
+): Promise<BuildStatusResult> {
+  const user = await UserManager.ensureLoggedInAsync();
+
+  _assertValidProjectRoot(projectRoot);
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+
+  const user = await UserManager.ensureLoggedInAsync();
+  const api = ApiV2.clientForUser(user);
+  return await api.getAsync('build/status', { manifest: exp, options });
+}
+
+export async function startBuildAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean;
+    platform?: 'android' | 'ios' | 'all';
+    expIds?: Array<string>;
+    type?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+    publicUrl?: string;
+    sdkVersion?: string;
+  } = {}
+): Promise<BuildCreatedResult> {
+  const user = await UserManager.ensureLoggedInAsync();
+
+  _assertValidProjectRoot(projectRoot);
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+  _validateManifest(options, exp, configName, configPrefix);
+
+  Analytics.logEvent('Build Shell App', {
+    projectRoot,
+    developerTool: Config.developerTool,
+    platform: options.platform,
+  });
+
+  const api = ApiV2.clientForUser(user);
+  return await api.putAsync('build/start', { manifest: exp, options });
+}
+
 export async function buildAsync(
   projectRoot: string,
   options: {
@@ -1520,14 +1574,7 @@ export async function buildAsync(
     _validateManifest(options, exp, configName, configPrefix);
   }
 
-  const callParameters = { manifest: exp, options };
-  if (process.env.EXPO_NEXT_API) {
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    return await api.putAsync('build/project', callParameters);
-  } else {
-    return await Api.callMethodAsync('build', [], 'put', callParameters);
-  }
+  return await Api.callMethodAsync('build', [], 'put', { manifest: exp, options });
 }
 
 async function _waitForRunningAsync(
