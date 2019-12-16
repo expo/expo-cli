@@ -1429,7 +1429,7 @@ type BuildCreatedResult = {
   hasUnlimitedPriorityBuilds: boolean;
 };
 
-function _validateManifest(options: any, exp: any, configName: any, configPrefix: any) {
+function _validateManifest(options: any, exp: any, configName: string, configPrefix: string) {
   if (options.platform === 'ios' || options.platform === 'all') {
     if (!exp.ios || !exp.ios.bundleIdentifier) {
       throw new XDLError(
@@ -1469,7 +1469,7 @@ function _validateOptions(options: any) {
   }
 }
 
-async function _getExpAsync(projectRoot: any, options: any) {
+async function _getExpAsync(projectRoot: string, options: any) {
   const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
