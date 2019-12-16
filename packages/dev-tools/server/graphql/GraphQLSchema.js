@@ -600,7 +600,7 @@ const resolvers = {
       let url = await UrlUtils.constructManifestUrlAsync(currentProject.projectDir);
       let result = await Exp.sendAsync(recipient, url);
       await UserSettings.setAsync('sendTo', recipient);
-      return { medium: result.medium, url };
+      return { medium: result.medium, url }; // medium can be a phone number or email
     },
     setProjectManagerLayout(parent, { input }, context) {
       context.setProjectManagerLayout(input);
