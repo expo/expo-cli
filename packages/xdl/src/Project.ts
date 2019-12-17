@@ -1372,7 +1372,14 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
 
         formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
-      await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
+
+      if (process.env.EXPO_NEXT_API) {
+        const user = await UserManager.ensureLoggedInAsync();
+        const api = ApiV2.clientForUser(user);
+        await api.uploadFormDataAsync('assets/upload', formData);
+      } else {
+        await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
+      }
     })
   );
 }
