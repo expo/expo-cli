@@ -72,6 +72,7 @@ import * as Doctor from './project/Doctor';
 import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
+import { ConnectionStatus } from './xdl';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -1973,9 +1974,14 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       extended: true,
     })
   );
-  if ((await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL) {
+  if (
+    (ConnectionStatus.isOffline()
+      ? await Doctor.validateWithoutNetworkAsync(projectRoot)
+      : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
+  ) {
     throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
-  } // Serve the manifest.
+  }
+  // Serve the manifest.
   const manifestHandler = async (req: express.Request, res: express.Response) => {
     try {
       // We intentionally don't `await`. We want to continue trying even

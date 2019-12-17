@@ -306,7 +306,7 @@ Command.prototype.asyncActionProjectDir = function(
       log.setSpinner(spinner);
       // validate that this is a good projectDir before we try anything else
 
-      let status = await Doctor.validateLowLatencyAsync(projectDir);
+      let status = await Doctor.validateWithoutNetworkAsync(projectDir);
       if (status === Doctor.FATAL) {
         throw new Error(`There is an error with your project. See above logs for information.`);
       }

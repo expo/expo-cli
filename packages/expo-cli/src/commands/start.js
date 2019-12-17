@@ -7,7 +7,15 @@ import path from 'path';
 import * as ConfigUtils from '@expo/config';
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
-import { Project, ProjectSettings, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
+import {
+  ConnectionStatus,
+  Project,
+  ProjectSettings,
+  UrlUtils,
+  UserSettings,
+  Versions,
+  Web,
+} from '@expo/xdl';
 import chalk from 'chalk';
 import openBrowser from 'react-dev-utils/openBrowser';
 import intersection from 'lodash/intersection';
@@ -50,6 +58,10 @@ function parseStartOptions(projectDir: string, options: Object): Object {
 
   if (options.maxWorkers) {
     startOpts.maxWorkers = options.maxWorkers;
+  }
+
+  if (options.offline) {
+    ConnectionStatus.setIsOffline(true);
   }
 
   return startOpts;
