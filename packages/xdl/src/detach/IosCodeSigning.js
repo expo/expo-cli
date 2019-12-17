@@ -1,9 +1,11 @@
+import crypto from 'crypto';
+import path from 'path';
+
 import _ from 'lodash';
 import fs from 'fs-extra';
-import path from 'path';
 import glob from 'glob-promise';
 import plist from 'plist';
-import crypto from 'crypto';
+import minimatch from 'minimatch';
 
 import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
 import { spawnAsyncThrowError } from './ExponentTools';
@@ -58,7 +60,7 @@ function _ensureBundleIdentifierIsValid(plistData, expectedBundleIdentifier) {
   const actualApplicationIdentifier = plistData.Entitlements['application-identifier'];
   const actualBundleIdentifier = /\.(.+)/.exec(actualApplicationIdentifier)[1];
 
-  if (expectedBundleIdentifier !== actualBundleIdentifier) {
+  if (!minimatch(expectedBundleIdentifier, actualBundleIdentifier)) {
     throw new Error(
       `validateProvisioningProfile: wrong bundleIdentifier found in provisioning profile; expected: ${expectedBundleIdentifier}, found (in provisioning profile): ${actualBundleIdentifier}`
     );

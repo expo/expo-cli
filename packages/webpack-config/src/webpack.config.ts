@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
@@ -10,9 +12,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
-
-// @ts-ignore
-import CleanWebpackPlugin from 'clean-webpack-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 
 import { projectHasModule } from '@expo/config';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
@@ -175,8 +175,8 @@ export default async function(
     plugins: [
       // Delete the build folder
       isProd &&
-        new CleanWebpackPlugin([locations.production.folder], {
-          root: locations.root,
+        new CleanWebpackPlugin({
+          cleanOnceBeforeBuildPatterns: [locations.production.folder],
           dry: false,
           verbose: false,
         }),

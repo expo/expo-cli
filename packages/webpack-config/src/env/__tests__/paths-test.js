@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import path from 'path';
 import { getPaths, getPathsAsync, getPublicPaths, getServedPath } from '../paths';
 import { normalizePaths } from '../../utils';

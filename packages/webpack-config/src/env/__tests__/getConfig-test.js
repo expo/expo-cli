@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import path from 'path';
 import getConfig from '../getConfig';
 import { normalizePaths } from '../../utils';

@@ -1,3 +1,4 @@
+/* eslint-env node */
 const assert = require('assert');
 
 const launch = process.env.CI
