@@ -1967,7 +1967,6 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
     throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
   } // Serve the manifest.
   const manifestHandler = async (req: express.Request, res: express.Response) => {
-    console.log('MANIFEST HANDLER');
     try {
       // We intentionally don't `await`. We want to continue trying even
       // if there is a potential error in the package.json and don't want to slow
