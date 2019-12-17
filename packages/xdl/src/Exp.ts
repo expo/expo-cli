@@ -276,7 +276,6 @@ export async function sendAsync(recipient: string, url_: string, allowUnauthed: 
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     result = await api.postAsync('send-project', {
-      //keys are what the values are called in the server.
       emailOrPhone: recipient,
       url: url_,
       includeExpoLinks: allowUnauthed,
