@@ -1557,6 +1557,13 @@ export async function buildAsync(
     sdkVersion?: string;
   } = {}
 ): Promise<BuildStatusResult | BuildCreatedResult> {
+  /**
+    This function corresponds to an apiv1 call and is deprecated.
+    Use 
+      * startBuildAsync
+      * getBuildStatusAsync
+    to call apiv2 instead.
+   */
   await UserManager.ensureLoggedInAsync();
   _assertValidProjectRoot(projectRoot);
 
