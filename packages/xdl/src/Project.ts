@@ -756,11 +756,14 @@ export async function publishAsync(
 
   await _fetchAndUploadAssetsAsync(projectRoot, exp);
 
+  const hasHooks = validPostPublishHooks.length > 0;
+
+  const shouldPublishAndroidMaps = !!exp.android && !!exp.android.publishSourceMapPath;
+
+  const shouldPublishIosMaps = !!exp.ios && !!exp.ios.publishSourceMapPath;
+
   let { iosSourceMap, androidSourceMap } = await _maybeBuildSourceMapsAsync(projectRoot, exp, {
-    force:
-      validPostPublishHooks.length > 0 ||
-      (exp.android && exp.android.publishSourceMapPath) ||
-      (exp.ios && exp.ios.publishSourceMapPath),
+    force: hasHooks || shouldPublishAndroidMaps || shouldPublishIosMaps,
   });
 
   let response;

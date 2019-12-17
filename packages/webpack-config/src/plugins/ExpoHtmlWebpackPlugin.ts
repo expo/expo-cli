@@ -23,13 +23,12 @@ export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
     const config = getConfig(env);
     const isProduction = getMode(env) === 'production';
 
-    const { name, build = {} } = config.web;
     /**
      * The user can disable minify with
      * `web.minifyHTML = false || {}`
      */
     const minify = overrideWithPropertyOrConfig(
-      isProduction ? build.minifyHTML : false,
+      isProduction ? config.web?.build?.minifyHTML : false,
       DEFAULT_MINIFY
     );
 
@@ -39,7 +38,7 @@ export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
       // The file to write the HTML to.
       filename: locations.production.indexHtml,
       // The title to use for the generated HTML document.
-      title: name,
+      title: config.web?.name,
       // Pass a html-minifier options object to minify the output.
       // https://github.com/kangax/html-minifier#options-quick-reference
       minify,

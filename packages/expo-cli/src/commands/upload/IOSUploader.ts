@@ -179,7 +179,6 @@ export default class IOSUploader extends BaseUploader {
   async _uploadToTheStore(platformData: IosPlatformOptions, buildPath: string): Promise<void> {
     const { fastlane } = this;
     const { appleId, appleIdPassword, appName, language, appleTeamId } = platformData;
-    const { bundleIdentifier } = this._exp && this._exp.ios;
 
     const appleCreds = { appleId, appleIdPassword, appleTeamId };
 
@@ -198,7 +197,7 @@ export default class IOSUploader extends BaseUploader {
     log('Ensuring the app exists on App Store Connect, this may take a while...');
     await runFastlaneAsync(
       fastlane.appProduce,
-      [bundleIdentifier, appName, appleId, language],
+      [this._exp?.ios?.bundleIdentifier, appName, appleId, language],
       updatedAppleCreds
     );
 
