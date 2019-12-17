@@ -756,7 +756,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Add shell app scheme
-  const schemes = [scheme, manifest.facebookScheme].filter(e => e);
+  const schemes = [scheme].filter(e => e);
   if (schemes.length > 0) {
     const searchLine = isDetached
       ? '<!-- ADD DETACH SCHEME HERE -->'
@@ -912,10 +912,12 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   // Splash Background
   if (backgroundImages && backgroundImages.length > 0) {
     // Delete the placeholder images
-    (await globby(['**/shell_launch_background_image.png'], {
-      cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
-      absolute: true,
-    })).forEach(filePath => {
+    (
+      await globby(['**/shell_launch_background_image.png'], {
+        cwd: path.join(shellPath, 'app', 'src', 'main', 'res'),
+        absolute: true,
+      })
+    ).forEach(filePath => {
       fs.removeSync(filePath);
     });
 
@@ -1111,9 +1113,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   if (manifest.facebookAppId) {
     await regexFileAsync(
       '<!-- ADD FACEBOOK APP ID CONFIG HERE -->',
-      `<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="${
-        manifest.facebookAppId
-      }"/>`,
+      `<meta-data android:name="com.facebook.sdk.ApplicationId" android:value="${manifest.facebookAppId}"/>`,
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
@@ -1122,9 +1122,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   if (manifest.facebookDisplayName) {
     await regexFileAsync(
       '<!-- ADD FACEBOOK APP DISPLAY NAME CONFIG HERE -->',
-      `<meta-data android:name="com.facebook.sdk.ApplicationName" android:value="${
-        manifest.facebookDisplayName
-      }"/>`,
+      `<meta-data android:name="com.facebook.sdk.ApplicationName" android:value="${manifest.facebookDisplayName}"/>`,
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }

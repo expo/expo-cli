@@ -8,6 +8,7 @@ const TRAVELING_FASTLANE = `traveling-fastlane-${version}-osx`;
 module.exports = () => {
   let p = join.bind(null, __dirname, TRAVELING_FASTLANE);
   return {
+    appProduce: p('app_produce'),
     authenticate: p('authenticate'),
     ensureAppExists: p('ensure_app_exists'),
     listDevices: p('list_devices'),
@@ -15,8 +16,8 @@ module.exports = () => {
     manageDistCerts: p('manage_dist_certs'),
     managePushKeys: p('manage_push_keys'),
     manageProvisioningProfiles: p('manage_provisioning_profiles'),
-    appProduce: p('app_produce'),
     pilotUpload: p('pilot_upload'),
+    resolveItcTeamId: p('resolve_itc_team_id'),
     supplyAndroid: p('supply_android'),
   };
 };

@@ -83,7 +83,6 @@ export type IosPlatformOptions = PlatformOptions & {
   appName: string;
   language?: string;
   appleTeamId?: string;
-  itcTeamId?: string;
   publicUrl?: string;
 };
 
@@ -182,17 +181,29 @@ export default class IOSUploader extends BaseUploader {
     const { appleId, appleIdPassword, appName, language, appleTeamId } = platformData;
     const { bundleIdentifier } = this._exp && this._exp.ios;
 
-    const appleCreds = { appleId, appleIdPassword, appleTeamId, itcTeamId: this.options.itcTeamId };
+    const appleCreds = { appleId, appleIdPassword, appleTeamId };
+
+    log('Resolving the ITC team ID...');
+    const { itc_team_id: itcTeamId } = await runFastlaneAsync(
+      fastlane.resolveItcTeamId,
+      [],
+      appleCreds
+    );
+    log(`ITC team ID is ${itcTeamId}`);
+    const updatedAppleCreds = {
+      ...appleCreds,
+      itcTeamId,
+    };
 
     log('Ensuring the app exists on App Store Connect, this may take a while...');
     await runFastlaneAsync(
       fastlane.appProduce,
       [bundleIdentifier, appName, appleId, language],
-      appleCreds
+      updatedAppleCreds
     );
 
     log('Uploading the app to Testflight, hold tight...');
-    await runFastlaneAsync(fastlane.pilotUpload, [buildPath, appleId], appleCreds);
+    await runFastlaneAsync(fastlane.pilotUpload, [buildPath, appleId], updatedAppleCreds);
 
     log(
       `All done! You may want to go to App Store Connect (${chalk.underline(

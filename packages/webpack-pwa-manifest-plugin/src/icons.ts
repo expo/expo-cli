@@ -315,8 +315,12 @@ function sortByAttribute(arr: any[], key: string): any[] {
 async function clearUnusedCachesAsync(projectRoot: string): Promise<void> {
   // Clean up any old caches
   const cacheFolder = path.join(projectRoot, '.expo/web/cache/production/images');
-  const currentCaches = await fs.readdir(cacheFolder);
+  const currentCaches = fs.readdirSync(cacheFolder);
 
+  if (!Array.isArray(currentCaches)) {
+    console.warn('Failed to read the icon cache');
+    return;
+  }
   const deleteCachePromises: Promise<void>[] = [];
   for (const cache of currentCaches) {
     // skip hidden folders

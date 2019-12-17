@@ -1026,12 +1026,13 @@
     unique-filename "^1.1.1"
     which "^1.3.1"
 
-"@expo/build-tools@0.1.0-alpha.8":
-  version "0.1.0-alpha.8"
-  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.0-alpha.8.tgz#5f8722c3b8cda8afe8cc9363d368f81787791362"
-  integrity sha512-6wvio+09Mf9+MBtUKYNkZDeVzHggQl6tjzA6cccXu2UgIphJjl2UB+z1bT9AYGgs3BfKLzNom+z0EWPhJaVwuw==
+"@expo/build-tools@0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.3.tgz#f73d85cd3e6e09f156a54f1bd938369ffedda557"
+  integrity sha512-jIy312NqQU+lCMmJ29825JE/sMD/0RmJwAOnNSXdlbJ7KUE5RbvaApFeZLaYx3WDbgLOj1E9wqSBT56maG/mng==
   dependencies:
     "@expo/spawn-async" "^1.5.0"
+    "@expo/template-file" "^0.1.0"
     "@hapi/boom" "^7.4.3"
     "@hapi/joi" "^16.1.2"
     "@types/bunyan" "^1.8.6"
@@ -1043,8 +1044,6 @@
     node-forge "^0.9.1"
     plist "^3.0.1"
     uuid "^3.3.3"
-  optionalDependencies:
-    envsub "^3.0.9"
 
 "@expo/bunyan@3.0.2":
   version "3.0.2"
@@ -1154,15 +1153,97 @@
   dependencies:
     cross-spawn "^6.0.5"
 
-"@expo/traveling-fastlane-darwin@1.11.0":
-  version "1.11.0"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.11.0.tgz#88f09e2332f2103fafac4759bbbc86832633768a"
-  integrity sha512-owQdOQ0Ag4XE9LtXQ0p1fWwWqa0uhJvEKEmvb5ugPbdkT8BSs92TNfULHPMkGohcHlB0/Q+VXTUbSnP4zczKbQ==
+"@expo/template-file@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@expo/template-file/-/template-file-0.1.0.tgz#d7f162a934c83d29c6a2a7d25c776ad40d93018e"
+  integrity sha512-dUdNS2zXDqSowPqFTP/JVB0OpEt+UcuNCJpRM/+8X/q6Ag6YJY5A1kb+rwx6VVlxMRY4p6buTkb4riR2ygdbbg==
+  dependencies:
+    fs-extra "^8.1.0"
+    lodash "^4.17.15"
 
-"@expo/traveling-fastlane-linux@1.11.0":
-  version "1.11.0"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.11.0.tgz#a714d87633b030b7190bc0c2b02540eb714bea2b"
-  integrity sha512-ia187s91eO3jxilI/rqqy3SSAUdXsq/5k2nPck2Fs9jWiGldks8Dop+6bAl2brUwzY9VrTDPB2u2z4V08XDZFA==
+"@expo/traveling-fastlane-darwin@1.11.3":
+  version "1.11.3"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.11.3.tgz#b353bb9cc653883231bab1736fc835ec67d45320"
+  integrity sha512-7AEJk728ckjqAI45LFsxnNqu1tV6ftypRhaXaclsAAleHlWNUwpy88NX0lTqm66wcFBg6+mmiE8+aw/4zeL/JA==
+
+"@expo/traveling-fastlane-linux@1.11.3":
+  version "1.11.3"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.11.3.tgz#f1812db51db335628474e5ccde7b0762d96c77d4"
+  integrity sha512-cyr0WDkGOEaOjuVBc3m5Ud4Jrqvvz1RoQdgZ5IKhitW9ElLAQS97aKtgKDAAcQ8Yu7FBYRVt0ilJhP5eweI6+A==
+
+"@expo/xdl@57.3.1":
+  version "57.3.1"
+  resolved "https://registry.yarnpkg.com/@expo/xdl/-/xdl-57.3.1.tgz#c7f0e0fad61f1a3c7bab61e9c9c654a72b71222e"
+  integrity sha512-G3SAQ1mrVmzxuh3uKnd21xpGPUk/+mAzUgbC7RsT0O+PN1KpbYxFmtrLYmlS5rmkDWM8OVf/ke9UMzb3Kqx0XQ==
+  dependencies:
+    "@expo/bunyan" "3.0.2"
+    "@expo/config" "^2.5.2"
+    "@expo/json-file" "^8.2.2"
+    "@expo/ngrok" "2.4.3"
+    "@expo/osascript" "^2.0.7"
+    "@expo/schemer" "^1.3.1"
+    "@expo/spawn-async" "1.5.0"
+    "@expo/webpack-config" "^0.10.6"
+    analytics-node "3.3.0"
+    axios "0.19.0"
+    boxen "4.1.0"
+    chalk "2.4.1"
+    concat-stream "1.6.2"
+    decache "4.4.0"
+    delay-async "1.2.0"
+    es6-error "4.1.1"
+    express "4.16.4"
+    form-data "2.3.2"
+    freeport-async "2.0.0"
+    fs-extra "6.0.1"
+    getenv "0.7.0"
+    glob-promise "3.4.0"
+    globby "6.1.0"
+    hasbin "1.2.3"
+    hashids "1.1.4"
+    idx "2.4.0"
+    indent-string "3.2.0"
+    inquirer "5.2.0"
+    internal-ip "4.3.0"
+    invariant "2.2.4"
+    joi "14.0.4"
+    latest-version "5.1.0"
+    lodash "4.17.15"
+    md5hex "1.0.0"
+    minimatch "3.0.4"
+    minipass "2.3.5"
+    mv "2.1.1"
+    ncp "2.0.0"
+    node-forge "0.7.6"
+    p-map "3.0.0"
+    p-retry "4.1.0"
+    p-timeout "3.1.0"
+    package-json "6.4.0"
+    pacote "9.3.0"
+    pascal-case "2.0.1"
+    plist "2.1.0"
+    probe-image-size "4.0.0"
+    querystring "0.2.0"
+    raven "2.6.3"
+    read-last-lines "1.6.0"
+    replace-string "1.1.0"
+    request "2.88.0"
+    request-promise-native "1.0.5"
+    semver "5.5.0"
+    serialize-error "^5.0.0"
+    slugid "1.1.0"
+    source-map-support "0.4.18"
+    split "1.0.1"
+    tar "4.4.6"
+    tree-kill "1.2.0"
+    url "0.11.0"
+    url-join "4.0.0"
+    util.promisify "1.0.0"
+    uuid "3.3.2"
+    validator "11.0.0"
+    webpack "4.39.0"
+    webpack-dev-server "3.2.0"
+    xmldom "0.1.27"
 
 "@gulp-sourcemaps/identity-map@1.X":
   version "1.0.2"
@@ -2856,7 +2937,7 @@
   dependencies:
     "@types/webpack" "*"
 
-"@types/webpack@*", "@types/webpack@4.32.1":
+"@types/webpack@*", "@types/webpack@4.32.1", "@types/webpack@^4.4.31":
   version "4.32.1"
   resolved "https://registry.yarnpkg.com/@types/webpack/-/webpack-4.32.1.tgz#6e95010e806f808abd6551c112097ac09035aacf"
   integrity sha512-9n38CBx9uga1FEAdTipnt0EkbKpsCJFh7xJb1LE65FFb/A6OOLFX022vYsGC1IyVCZ/GroNg9u/RMmlDxGcLIw==
@@ -5061,7 +5142,7 @@ bl@^3.0.0:
   dependencies:
     readable-stream "^3.0.1"
 
-bluebird@^3.5.0, bluebird@^3.5.1, bluebird@^3.5.3, bluebird@^3.5.5:
+bluebird@^3.5.1, bluebird@^3.5.3, bluebird@^3.5.5:
   version "3.7.2"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.7.2.tgz#9f229c15be272454ffa973ace0dbee79a1b0c36f"
   integrity sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==
@@ -5828,12 +5909,13 @@ clean-stack@^2.0.0:
   resolved "https://registry.yarnpkg.com/clean-stack/-/clean-stack-2.2.0.tgz#ee8472dbb129e727b31e8a10a427dee9dfe4008b"
   integrity sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==
 
-clean-webpack-plugin@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/clean-webpack-plugin/-/clean-webpack-plugin-1.0.1.tgz#b16ee2f1386aea403010236e632447c7d3505f5a"
-  integrity sha512-gvwfMsqu3HBgTVvaBa1H3AZKO03CHpr5uP92SPIktP3827EovAitwW+1xoqXyTxCuXnLYpMHG5ytS4AoukHDWA==
+clean-webpack-plugin@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/clean-webpack-plugin/-/clean-webpack-plugin-3.0.0.tgz#a99d8ec34c1c628a4541567aa7b457446460c62b"
+  integrity sha512-MciirUH5r+cYLGCOL5JX/ZLzOZbVr1ot3Fw+KcvbhUb6PM+yycqd9ZhIlcigQ5gl+XhppNmw3bEFuaaMNyLj3A==
   dependencies:
-    rimraf "^2.6.1"
+    "@types/webpack" "^4.4.31"
+    del "^4.1.1"
 
 cli-boxes@^1.0.0:
   version "1.0.0"
@@ -7837,18 +7919,6 @@ envinfo@5.10.0:
   version "5.10.0"
   resolved "https://registry.yarnpkg.com/envinfo/-/envinfo-5.10.0.tgz#503a9774ae15b93ea68bdfae2ccd6306624ea6df"
   integrity sha512-rXbzXWvnQxy+TcqZlARbWVQwgGVVouVJgFZhLVN5htjLxl1thstrP2ZGi0pXC309AbK7gVOPU+ulz/tmpCI7iw==
-
-envsub@^3.0.9:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/envsub/-/envsub-3.1.0.tgz#06a9ef032d026771018335ff8d15e53bdd10cc22"
-  integrity sha1-BqnvAy0CZ3EBgzX/jRXlO90QzCI=
-  dependencies:
-    bluebird "^3.5.0"
-    chalk "^1.1.3"
-    commander "^2.9.0"
-    diff "^3.2.0"
-    handlebars "^4.0.6"
-    lodash "^4.17.4"
 
 err-code@^1.0.0:
   version "1.1.2"
@@ -9986,7 +10056,7 @@ handle-thing@^2.0.0:
   resolved "https://registry.yarnpkg.com/handle-thing/-/handle-thing-2.0.0.tgz#0e039695ff50c93fc288557d696f3c1dc6776754"
   integrity sha512-d4sze1JNC454Wdo2fkuyzCr6aHcbL6PGGuFAz0Li/NcOm1tCHGnWDRmJP85dh9IhQErTc2svWFEX5xHIOo//kQ==
 
-handlebars@^4.0.3, handlebars@^4.0.6, handlebars@^4.1.2, handlebars@^4.4.0:
+handlebars@^4.0.3, handlebars@^4.1.2, handlebars@^4.4.0:
   version "4.5.3"
   resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.5.3.tgz#5cf75bd8714f7605713511a56be7c349becb0482"
   integrity sha512-3yPecJoJHK/4c6aZhSvxOyG4vJKDshV36VHp0iVCDVh7o9w2vwi3NSnL2MMPj3YdduqaBcu7cGbggJQM0br9xA==

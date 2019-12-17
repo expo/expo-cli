@@ -44,7 +44,7 @@ export async function runFastlaneAsync(
           FASTLANE_PASSWORD: appleIdPassword,
           FASTLANE_DONT_STORE_PASSWORD: '1',
           FASTLANE_TEAM_ID: appleTeamId,
-          FASTLANE_ITC_TEAM_ID: itcTeamId ? itcTeamId : undefined,
+          ...(itcTeamId && { FASTLANE_ITC_TEAM_ID: itcTeamId }),
         }
       : {};
 

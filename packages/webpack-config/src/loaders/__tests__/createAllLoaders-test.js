@@ -1,3 +1,4 @@
+/* eslint-env node */
 import path from 'path';
 
 import { conditionMatchesFile, getRules } from '../../utils/search';
