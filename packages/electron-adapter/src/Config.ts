@@ -46,7 +46,7 @@ function resolveFile(projectRoot: string, localPath: string, packagePath: string
 
 export function withExpoAdapter({
   projectRoot,
-  ...config
+  ...config,
 }: {
   projectRoot?: string;
   [key: string]: any;
@@ -103,9 +103,8 @@ export async function ensureMinProjectSetupAsync(projectRoot: string): Promise<v
   await ensureDependenciesAreInstalledAsync(projectRoot);
 }
 
-const generatedTag = `@generated: @expo/electron-adapter@${
-  require('@expo/electron-adapter/package.json').version
-}`;
+const generatedTag = `@generated: @expo/electron-adapter@${require('@expo/electron-adapter/package.json')
+  .version}`;
 
 function createBashTag(): string {
   return `# ${generatedTag}`;
@@ -115,7 +114,7 @@ export async function ensureGitIgnoreAsync(projectRoot: string): Promise<void> {
   const destinationPath = path.resolve(projectRoot, '.gitignore');
 
   // Ensure a default expo .gitignore exists
-  if (!(await fs.pathExists(destinationPath))) {
+  if (!await fs.pathExists(destinationPath)) {
     return;
   }
 
@@ -176,5 +175,5 @@ async function ensureDependenciesAreInstalledAsync(projectRoot: string): Promise
   const packageManager = createForProject(projectRoot);
 
   if (dependencies.length) await packageManager.addAsync(...dependencies);
-  if (devDependencies.length) await packageManager.addAsync(...devDependencies);
+  if (devDependencies.length) await packageManager.addDevAsync(...devDependencies);
 }
