@@ -24,11 +24,9 @@ This library uses the natively powered package [Sharp](https://sharp.pixelplumbi
 
 ## 🚀 Usage
 
-👉 `npx expo-optimize`
-
 ```sh
-# Run this once to ensure sharp is installed. 
-# If this cannot be installed on your computer then you won't be able to optimize images at the moment.
+# Run this once to install the sharp image processing utility.
+# If this cannot be installed on your computer then you won't be able to optimize images.
 npm install -g sharp-cli
 
 # To optimize images simply run this

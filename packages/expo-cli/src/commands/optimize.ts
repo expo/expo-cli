@@ -1,17 +1,9 @@
-import spawnAsync from '@expo/spawn-async';
 import { Command } from 'commander';
 import { readConfigJsonAsync } from '@expo/config';
 
 import log from '../log';
 
-type Options = {
-  save?: boolean;
-  quality?: string;
-  include?: string;
-  exclude?: string;
-};
-
-export async function action(projectDir = './', options: Options = {}) {
+export async function action(projectDir = './') {
   const { exp } = await readConfigJsonAsync(projectDir);
   if (exp === null) {
     log.warn('No Expo configuration found. Are you sure this is a project directory?');
@@ -20,17 +12,8 @@ export async function action(projectDir = './', options: Options = {}) {
 
   // Everything after this is a redirect for the deprecated optimize command
   log.warn(
-    '\u203A `expo optimize` is deprecated please use `npx expo-optimize` as a drop-in replacement for `expo optimize`.'
+    '\u203A The expo optimize command is no longer included in expo-cli, please refer to the expo-optimize README at https://git.io/Je9h6 for a drop-in replacement.'
   );
-
-  const args: string[] = [projectDir];
-
-  if (options.save) args.push('--save');
-  if (options.quality) args.push('--quality', options.quality);
-  if (options.include) args.push('--include', options.include);
-  if (options.exclude) args.push('--exclude', options.exclude);
-
-  await spawnAsync(require.resolve('expo-optimize'), args, { stdio: 'inherit' });
 }
 
 export default function(program: Command) {
