@@ -1432,29 +1432,28 @@ type BuildCreatedResult = {
   hasUnlimitedPriorityBuilds: boolean;
 };
 
-export async function buildAsync(
-  projectRoot: string,
-  options: {
-    current?: boolean;
-    mode?: string;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-    sdkVersion?: string;
-  } = {}
-): Promise<BuildStatusResult | BuildCreatedResult> {
-  await UserManager.ensureLoggedInAsync();
-  _assertValidProjectRoot(projectRoot);
+function _validateManifest(options: any, exp: any, configName: string, configPrefix: string) {
+  if (options.platform === 'ios' || options.platform === 'all') {
+    if (!exp.ios || !exp.ios.bundleIdentifier) {
+      throw new XDLError(
+        'INVALID_MANIFEST',
+        `Must specify a bundle identifier in order to build this experience for iOS. ` +
+          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
+      );
+    }
+  }
 
-  Analytics.logEvent('Build Shell App', {
-    projectRoot,
-    developerTool: Config.developerTool,
-    platform: options.platform,
-  });
-
+  if (options.platform === 'android' || options.platform === 'all') {
+    if (!exp.android || !exp.android.package) {
+      throw new XDLError(
+        'INVALID_MANIFEST',
+        `Must specify a java package in order to build this experience for Android. ` +
+          `Please specify one in ${configName} at "${configPrefix}android.package"`
+      );
+    }
+  }
+}
+function _validateOptions(options: any) {
   const schema = joi.object().keys({
     current: joi.boolean(),
     mode: joi.string(),
@@ -1471,7 +1470,9 @@ export async function buildAsync(
   if (error) {
     throw new XDLError('INVALID_OPTIONS', error.toString());
   }
+}
 
+async function _getExpAsync(projectRoot: string, options: any) {
   const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
@@ -1489,31 +1490,99 @@ export async function buildAsync(
   if (!exp.slug && 'name' in pkg && pkg.name) {
     exp.slug = pkg.name;
   }
+  return { exp, configName, configPrefix };
+}
 
-  if (options.mode !== 'status' && (options.platform === 'ios' || options.platform === 'all')) {
-    if (!exp.ios || !exp.ios.bundleIdentifier) {
-      throw new XDLError(
-        'INVALID_MANIFEST',
-        `Must specify a bundle identifier in order to build this experience for iOS. ` +
-          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
-      );
-    }
-  }
+export async function getBuildStatusAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean;
+    platform?: 'android' | 'ios' | 'all';
+    expIds?: Array<string>;
+    type?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+    publicUrl?: string;
+    sdkVersion?: string;
+  } = {}
+): Promise<BuildStatusResult> {
+  const user = await UserManager.ensureLoggedInAsync();
 
-  if (options.mode !== 'status' && (options.platform === 'android' || options.platform === 'all')) {
-    if (!exp.android || !exp.android.package) {
-      throw new XDLError(
-        'INVALID_MANIFEST',
-        `Must specify a java package in order to build this experience for Android. ` +
-          `Please specify one in ${configName} at "${configPrefix}android.package"`
-      );
-    }
-  }
+  _assertValidProjectRoot(projectRoot);
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
 
-  return await Api.callMethodAsync('build', [], 'put', {
-    manifest: exp,
-    options,
+  const api = ApiV2.clientForUser(user);
+  return await api.postAsync('build/status', { manifest: exp, options });
+}
+
+export async function startBuildAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean;
+    platform?: 'android' | 'ios' | 'all';
+    expIds?: Array<string>;
+    type?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+    publicUrl?: string;
+    sdkVersion?: string;
+  } = {}
+): Promise<BuildCreatedResult> {
+  const user = await UserManager.ensureLoggedInAsync();
+
+  _assertValidProjectRoot(projectRoot);
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+  _validateManifest(options, exp, configName, configPrefix);
+
+  Analytics.logEvent('Build Shell App', {
+    projectRoot,
+    developerTool: Config.developerTool,
+    platform: options.platform,
   });
+
+  const api = ApiV2.clientForUser(user);
+  return await api.putAsync('build/start', { manifest: exp, options });
+}
+
+export async function buildAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean;
+    mode?: string;
+    platform?: 'android' | 'ios' | 'all';
+    expIds?: Array<string>;
+    type?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+    publicUrl?: string;
+    sdkVersion?: string;
+  } = {}
+): Promise<BuildStatusResult | BuildCreatedResult> {
+  /**
+    This function corresponds to an apiv1 call and is deprecated.
+    Use 
+      * startBuildAsync
+      * getBuildStatusAsync
+    to call apiv2 instead.
+   */
+  await UserManager.ensureLoggedInAsync();
+  _assertValidProjectRoot(projectRoot);
+
+  Analytics.logEvent('Build Shell App', {
+    projectRoot,
+    developerTool: Config.developerTool,
+    platform: options.platform,
+  });
+
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+  if (options.mode === 'create') {
+    _validateManifest(options, exp, configName, configPrefix);
+  }
+
+  return await Api.callMethodAsync('build', [], 'put', { manifest: exp, options });
 }
 
 async function _waitForRunningAsync(
