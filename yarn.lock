@@ -1026,10 +1026,10 @@
     unique-filename "^1.1.1"
     which "^1.3.1"
 
-"@expo/build-tools@0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.2.tgz#65d13b158ab06c75720497618af868a25e8196bb"
-  integrity sha512-LPlUXY98cut/srLZNXyxni5RzG5t+xNndLvxvVOkqVc5qfxdcp4rjFmHSnvcyJ6lq4l/aUugBP97TOBowVO71A==
+"@expo/build-tools@0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@expo/build-tools/-/build-tools-0.1.3.tgz#f73d85cd3e6e09f156a54f1bd938369ffedda557"
+  integrity sha512-jIy312NqQU+lCMmJ29825JE/sMD/0RmJwAOnNSXdlbJ7KUE5RbvaApFeZLaYx3WDbgLOj1E9wqSBT56maG/mng==
   dependencies:
     "@expo/spawn-async" "^1.5.0"
     "@expo/template-file" "^0.1.0"
