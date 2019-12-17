@@ -7,10 +7,10 @@ import {
   InjectManifestOptions,
 } from 'workbox-webpack-plugin';
 
+import { ensureSlash } from '@expo/config/paths';
 import { AnyConfiguration } from '../types';
 import { resolveEntryAsync } from '../utils';
 import { getPaths } from '../env';
-import { ensureSlash } from '@expo/config/paths';
 
 export type OfflineOptions = {
   projectRoot?: string;

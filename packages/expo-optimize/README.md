@@ -24,9 +24,12 @@ This library uses the natively powered package [Sharp](https://sharp.pixelplumbi
 
 ## 🚀 Usage
 
-👉 `npx expo-optimize`
-
 ```sh
+# Run this once to install the sharp image processing utility.
+# If this cannot be installed on your computer then you won't be able to optimize images.
+npm install -g sharp-cli
+
+# To optimize images simply run this
 npx expo-optimize <project-directory> [options]
 ```
 
@@ -55,7 +58,7 @@ Read more about how this package works here: [Image compression in Expo projects
 
 - [sharp](https://sharp.pixelplumbing.com/) - native image editing library for node
 - [expo-cli](https://docs.expo.io/versions/latest/workflow/expo-cli/) - the original location for this command
-<!-- - [react-native-cli optimize](https://github.com/react-native-community/cli/pull/419) - an alias for this command -->
+  <!-- - [react-native-cli optimize](https://github.com/react-native-community/cli/pull/419) - an alias for this command -->
 
 ## License
 
