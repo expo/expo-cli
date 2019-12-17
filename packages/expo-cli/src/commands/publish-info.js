@@ -2,7 +2,7 @@
  * @flow
  */
 import { readConfigJsonAsync } from '@expo/config';
-import { Api, FormData, Project, UserManager } from '@expo/xdl';
+import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
 
 import * as table from '../commands/utils/cli-table';
 
@@ -32,30 +32,43 @@ export default (program: any) => {
       }
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
-      await UserManager.ensureLoggedInAsync();
+      const user = await UserManager.ensureLoggedInAsync();
+      const { exp } = await readConfigJsonAsync(projectDir);
 
-      // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
-      let formData = new FormData();
-      formData.append('queryType', 'history');
-      let { exp } = await readConfigJsonAsync(projectDir);
-      if (exp.owner) {
-        formData.append('owner', exp.owner);
-      }
-      formData.append('slug', await Project.getSlugAsync(projectDir, options));
-      formData.append('version', VERSION);
-      if (options.releaseChannel) {
-        formData.append('releaseChannel', options.releaseChannel);
-      }
-      if (options.count) {
-        formData.append('count', options.count);
-      }
-      if (options.platform) {
-        formData.append('platform', options.platform);
-      }
+      let result: any;
+      if (process.env.EXPO_NEXT_API) {
+        const api = ApiV2.clientForUser(user);
+        result = await api.postAsync('publish/history', {
+          owner: exp.owner,
+          slug: await Project.getSlugAsync(projectDir, options),
+          version: VERSION,
+          releaseChannel: options.releaseChannel,
+          count: options.count,
+          platform: options.platform,
+        });
+      } else {
+        // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
+        let formData = new FormData();
+        formData.append('queryType', 'history');
+        if (exp.owner) {
+          formData.append('owner', exp.owner);
+        }
+        formData.append('slug', await Project.getSlugAsync(projectDir, options));
+        formData.append('version', VERSION);
+        if (options.releaseChannel) {
+          formData.append('releaseChannel', options.releaseChannel);
+        }
+        if (options.count) {
+          formData.append('count', options.count);
+        }
+        if (options.platform) {
+          formData.append('platform', options.platform);
+        }
 
-      let result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
-        formData,
-      });
+        result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
+          formData,
+        });
+      }
 
       if (options.raw) {
         console.log(JSON.stringify(result));
