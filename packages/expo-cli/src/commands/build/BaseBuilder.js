@@ -159,7 +159,7 @@ export default class BaseBuilder {
       return;
     }
 
-    this.logBuildStatuses(buildStatus);
+    await this.logBuildStatuses(buildStatus);
   }
 
   async checkStatusBeforeBuild(): Promise<void> {
@@ -185,11 +185,14 @@ Please see the docs (${chalk.underline(
     }
   }
 
-  logBuildStatuses(buildStatus: { jobs: Array<Object>, canPurchasePriorityBuilds: boolean }) {
+  async logBuildStatuses(buildStatus: { jobs: Array<Object>, canPurchasePriorityBuilds: boolean }) {
     log.raw();
     log('=================');
     log(' Builds Statuses ');
     log('=================\n');
+
+    const username = await UserManager.getCurrentUsernameAsync();
+
     buildStatus.jobs.forEach((job, i) => {
       let platform, packageExtension;
       if (job.platform === 'ios') {
@@ -200,7 +203,7 @@ Please see the docs (${chalk.underline(
         packageExtension = 'APK';
       }
 
-      log(`### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl(job.id)} ###`);
+      log(`### ${i} | ${platform} | ${UrlUtils.constructBuildLogsUrl(job.id, username)} ###`);
 
       const hasPriorityBuilds =
         buildStatus.numberOfRemainingPriorityBuilds > 0 || buildStatus.hasUnlimitedPriorityBuilds;
@@ -419,10 +422,12 @@ ${job.id}
       );
     }
 
+    const username = await UserManager.getCurrentUsernameAsync();
+
     if (buildId) {
       log(
         `You can monitor the build at\n\n ${chalk.underline(
-          UrlUtils.constructBuildLogsUrl(buildId)
+          UrlUtils.constructBuildLogsUrl(buildId, username)
         )}\n`
       );
     }
