@@ -2053,7 +2053,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
             if (process.env.EXPO_NEXT_API) {
               const user = await UserManager.ensureLoggedInAsync();
               const api = ApiV2.clientForUser(user);
-              signedManifest = await api.postAsync('sign-manifest', {
+              signedManifest = await api.postAsync('manifest/sign', {
                 args: publishInfo.args,
                 manifest,
               });
