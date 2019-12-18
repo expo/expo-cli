@@ -11,6 +11,7 @@ import pacote, { PackageSpec } from 'pacote';
 import tar from 'tar';
 
 import Api from './Api';
+import ApiV2 from './ApiV2';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
 import UserManager from './User';
@@ -270,7 +271,18 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 }
 
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
-  let result = await Api.callMethodAsync('send', [recipient, url_, allowUnauthed]);
+  let result;
+  if (process.env.EXPO_NEXT_API) {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    result = await api.postAsync('send-project', {
+      emailOrPhone: recipient,
+      url: url_,
+      includeExpoLinks: allowUnauthed,
+    });
+  } else {
+    result = await Api.callMethodAsync('send', [recipient, url_, allowUnauthed]);
+  }
   return result;
 }
 
