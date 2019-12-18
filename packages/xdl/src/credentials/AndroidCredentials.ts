@@ -209,8 +209,6 @@ export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: 
     log.info(`${linePrefix}Google Certificate Hash (SHA-1):    ${googleHash}`);
     log.info(`${linePrefix}Google Certificate Hash (SHA-256):  ${googleHash256}`);
     log.info(`${linePrefix}Facebook Key Hash:                  ${fbHash}`);
-    log.info(`${linePrefix}`);
-    log.info(`${linePrefix}Note: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`);
   } catch (err) {
     if (err.code === 'ENOENT') {
       log.warn('Are you sure you have keytool installed?');
