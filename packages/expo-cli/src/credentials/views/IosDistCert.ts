@@ -3,18 +3,24 @@ import chalk from 'chalk';
 import dateformat from 'dateformat';
 import get from 'lodash/get';
 import ora from 'ora';
+import inquirer from 'inquirer';
 import { IosCodeSigning } from '@expo/xdl';
 
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
-import { Context, IView, ISelect } from '../context';
-import { IosCredentials, IosDistCredentials, distCertSchema } from '../credentials';
+import { Context, IView } from '../context';
+import {
+  IosCredentials,
+  IosDistCredentials,
+  IosAppCredentials,
+  distCertSchema,
+} from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
 import { DistCert, DistCertInfo, DistCertManager, AppleCtx } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 import { CreateAppCredentialsIos } from './IosAppCredentials';
-import { DistCertOptions } from './SelectDistributionCert';
+import { GoBackError, CredentialsManager } from '../route';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline(
@@ -24,47 +30,24 @@ Please revoke the old ones or reuse existing from your other apps.
 Please remember that Apple Distribution Certificates are not application specific!
 `;
 
-export class CreateIosDistSelector implements ISelect<DistCert> {
+export type DistCertOptions = {
+  experienceName: string;
+  bundleIdentifier: string;
+};
+
+export class CreateIosDist implements IView {
   async create(ctx: Context): Promise<IosDistCredentials> {
     const newDistCert = await this.provideOrGenerate(ctx);
     return await ctx.ios.createDistCert(newDistCert);
   }
 
-  // TODO(quin): support the option to go 'back'
-  async select(
-    ctx: Context,
-    options: Partial<DistCertOptions> = {}
-  ): Promise<ISelect<DistCert> | DistCert | null> {
-    return ctx.user
-      ? await this._selectAuthenticated(ctx, options)
-      : await this._selectUnauthenticated(ctx, options);
-  }
-
-  async _selectAuthenticated(ctx: Context, options: Partial<DistCertOptions> = {}) {
+  async open(ctx: Context): Promise<IView | null> {
     const distCert = await this.create(ctx);
 
     log(chalk.green('Successfully created Distribution Certificate\n'));
     displayIosUserCredentials(distCert);
     log();
-
-    const { experienceName, bundleIdentifier } = options;
-    if (experienceName && bundleIdentifier) {
-      await ctx.ios.useDistCert(experienceName, bundleIdentifier, distCert.id);
-      log(
-        chalk.green(
-          `Successfully assigned Distribution Certificate to ${experienceName} (${bundleIdentifier})`
-        )
-      );
-    }
-    return distCert;
-  }
-
-  async _selectUnauthenticated(ctx: Context, options: Partial<DistCertOptions> = {}) {
-    const distCert = await this.provideOrGenerate(ctx);
-
-    log(chalk.green('Successfully created Distribution Certificate\n'));
-    log();
-    return distCert;
+    return null;
   }
 
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
@@ -84,19 +67,6 @@ export class CreateIosDistSelector implements ISelect<DistCert> {
   }
 }
 
-export class CreateIosDist extends CreateIosDistSelector implements IView {
-  async open(ctx: Context): Promise<IView | null> {
-    if (!ctx.hasProjectContext) {
-      const options = getOptionsFromProjectContext(ctx);
-      if (!options) return null;
-      await this.select(ctx, options);
-    } else {
-      await this.select(ctx);
-    }
-    return null;
-  }
-}
-
 export class RemoveIosDist implements IView {
   shouldRevoke: boolean;
 
@@ -109,8 +79,9 @@ export class RemoveIosDist implements IView {
     if (selected) {
       await this.removeSpecific(ctx, selected);
       log(chalk.green('Successfully removed Distribution Certificate\n'));
+      return null;
     }
-    return null;
+    throw new GoBackError();
   }
 
   async removeSpecific(ctx: Context, selected: IosDistCredentials) {
@@ -179,7 +150,7 @@ export class UpdateIosDist implements IView {
       }
       log();
     }
-    return null;
+    throw new GoBackError();
   }
 
   async updateSpecific(ctx: Context, selected: IosDistCredentials) {
@@ -192,7 +163,7 @@ export class UpdateIosDist implements IView {
       const question: Question = {
         type: 'confirm',
         name: 'confirm',
-        message: `You are updating cerificate used by ${appsList}. Do you want to continue?`,
+        message: `You are updating certificate used by ${appsList}. Do you want to continue?`,
       };
       const { confirm } = await prompt(question);
       if (!confirm) {
@@ -236,46 +207,158 @@ export class UpdateIosDist implements IView {
   }
 }
 
-// TODO(quin) implement 'go back' for open
-export class UseExistingDistributionCertSelector implements ISelect<DistCert> {
-  async select(
-    ctx: Context,
-    options: DistCertOptions
-  ): Promise<ISelect<DistCert> | DistCert | null> {
-    const { experienceName, bundleIdentifier, goBack } = options;
+export class UseExistingDistributionCert implements IView {
+  _experienceName: string;
+  _bundleIdentifier: string;
 
-    const selected = await selectDistCertFromList(ctx, {
-      filterInvalid: true,
-      allowSelectNone: !!goBack,
-    });
-    if (selected) {
-      await ctx.ios.useDistCert(experienceName, bundleIdentifier, selected.id);
-      log(
-        chalk.green(
-          `Successfully assigned Distribution Certificate to ${experienceName} (${bundleIdentifier})`
-        )
-      );
-      return selected;
-    }
-    if (!goBack) {
-      log('No existing certificate was selected.');
-      return null;
-    }
-    return await goBack(ctx, options);
+  constructor(options: DistCertOptions) {
+    const { experienceName, bundleIdentifier } = options;
+    this._experienceName = experienceName;
+    this._bundleIdentifier = bundleIdentifier;
   }
-}
 
-export class UseExistingDistributionCert extends UseExistingDistributionCertSelector
-  implements IView {
-  async open(ctx: Context): Promise<IView | null> {
+  static withProjectContext(ctx: Context): UseExistingDistributionCert | null {
     if (!ctx.hasProjectContext) {
       log.error('Can only be used in project context');
       return null;
     }
     const options = getOptionsFromProjectContext(ctx);
     if (!options) return null;
-    await this.select(ctx, options);
-    return null;
+    return new UseExistingDistributionCert(options);
+  }
+
+  async open(ctx: Context): Promise<IView | null> {
+    const selected = await selectDistCertFromList(ctx, {
+      filterInvalid: true,
+    });
+    if (selected) {
+      await ctx.ios.useDistCert(this._experienceName, this._bundleIdentifier, selected.id);
+      log(
+        chalk.green(
+          `Successfully assigned Distribution Certificate to ${this._experienceName} (${
+            this._bundleIdentifier
+          })`
+        )
+      );
+      return null;
+    }
+    throw new GoBackError();
+  }
+}
+
+export class CreateOrReuseDistributionCert implements IView {
+  _experienceName: string;
+  _bundleIdentifier: string;
+  _credentialsManager: CredentialsManager;
+
+  constructor(options: DistCertOptions) {
+    const { experienceName, bundleIdentifier } = options;
+    this._experienceName = experienceName;
+    this._bundleIdentifier = bundleIdentifier;
+    this._credentialsManager = CredentialsManager.get();
+  }
+
+  async _choosePreferredCreds(
+    distCerts: IosDistCredentials[],
+    appCredentials: IosAppCredentials[],
+    experienceName: string
+  ) {
+    // prefer the one that matches our experienceName
+    const appCredentialsForExperience = appCredentials.filter(
+      cred => cred.experienceName === experienceName
+    );
+    for (const distCert of distCerts) {
+      if (appCredentialsForExperience.some(cred => cred.distCredentialsId === distCert.id)) {
+        return distCert;
+      }
+    }
+    // else choose an arbitrary one
+    return distCerts[0];
+  }
+
+  async assignDistCert(ctx: Context, userCredentialsId: number) {
+    await ctx.ios.useDistCert(this._experienceName, this._bundleIdentifier, userCredentialsId);
+    log(
+      chalk.green(
+        `Successfully assigned Distribution Certificate to ${this._experienceName} (${
+          this._bundleIdentifier
+        })`
+      )
+    );
+  }
+
+  async open(ctx: Context): Promise<IView | null> {
+    if (!ctx.user) {
+      throw new Error(`This workflow requires you to be logged in.`);
+    }
+
+    const existingCertificates = await getValidDistCerts(ctx.ios.credentials, ctx.appleCtx);
+
+    if (existingCertificates.length === 0) {
+      const createOperation = async () => new CreateIosDist().create(ctx);
+      const distCert = await this._credentialsManager.doInteractiveOperation(createOperation, this);
+      await this.assignDistCert(ctx, distCert.id);
+      return null;
+    }
+
+    // reuse autoselect
+    // autoselect creds if we find valid ones
+    const autoselectedCertificate = await this._choosePreferredCreds(
+      existingCertificates,
+      ctx.ios.credentials.appCredentials,
+      this._experienceName
+    );
+
+    const confirmQuestion: Question = {
+      type: 'confirm',
+      name: 'confirm',
+      message: `${formatDistCert(
+        autoselectedCertificate,
+        ctx.ios.credentials,
+        'VALID'
+      )} \n Would you like to use this certificate?`,
+      pageSize: Infinity,
+    };
+
+    const { confirm } = await prompt(confirmQuestion);
+    if (confirm) {
+      log(`Using Distribution Certificate: ${autoselectedCertificate.certId}`);
+      await this.assignDistCert(ctx, autoselectedCertificate.id);
+      return null;
+    }
+
+    const choices = [
+      {
+        name: '[Choose existing certificate] (Recommended)',
+        value: 'CHOOSE_EXISTING',
+      },
+      { name: '[Add a new certificate]', value: 'GENERATE' },
+      { name: '[Go back]', value: 'GO_BACK' },
+    ];
+
+    const question: Question = {
+      type: 'list',
+      name: 'action',
+      message: 'Select an iOS distribution certificate to use for code signing:',
+      choices,
+      pageSize: Infinity,
+    };
+
+    const { action } = await prompt(question);
+
+    if (action === 'GENERATE') {
+      const createOperation = async () => new CreateIosDist().create(ctx);
+      const distCert = await this._credentialsManager.doInteractiveOperation(createOperation, this);
+      await this.assignDistCert(ctx, distCert.id);
+      return null;
+    } else if (action === 'CHOOSE_EXISTING') {
+      return new UseExistingDistributionCert({
+        bundleIdentifier: this._bundleIdentifier,
+        experienceName: this._experienceName,
+      });
+    } else {
+      throw new GoBackError(); // go back
+    }
   }
 }
 
@@ -292,7 +375,7 @@ function getOptionsFromProjectContext(
     return null;
   }
 
-  return { ...options, experienceName, bundleIdentifier };
+  return { experienceName, bundleIdentifier };
 }
 
 export async function getValidDistCerts(iosCredentials: IosCredentials, appleCtx?: AppleCtx) {
@@ -305,9 +388,18 @@ export async function getValidDistCerts(iosCredentials: IosCredentials, appleCtx
   return await filterRevokedDistributionCerts<IosDistCredentials>(appleCtx, distCerts);
 }
 
+function getValidityStatus(
+  distCert: IosDistCredentials,
+  validDistCerts: IosDistCredentials[] | null
+): ValidityStatus {
+  if (!validDistCerts) {
+    return 'UNKNOWN';
+  }
+  return validDistCerts.includes(distCert) ? 'VALID' : 'INVALID';
+}
+
 type ListOptions = {
   filterInvalid?: boolean;
-  allowSelectNone?: boolean;
 };
 
 async function selectDistCertFromList(
@@ -334,15 +426,13 @@ async function selectDistCertFromList(
 
   const NONE_SELECTED = -1;
   const choices = distCerts.map((entry, index) => ({
-    name: formatDistCert(entry, iosCredentials, validDistCerts),
+    name: formatDistCert(entry, iosCredentials, getValidityStatus(entry, validDistCerts)),
     value: index,
   }));
-  if (options.allowSelectNone) {
-    choices.push({
-      name: '↩️ [Go back]',
-      value: NONE_SELECTED,
-    });
-  }
+  choices.push({
+    name: '[Go back]',
+    value: NONE_SELECTED,
+  });
 
   const question: Question = {
     type: 'list',
@@ -383,10 +473,11 @@ function formatDistCertFromApple(appleInfo: DistCertInfo, credentials: IosCreden
   ${usedByString}`;
 }
 
+type ValidityStatus = 'UNKNOWN' | 'VALID' | 'INVALID';
 function formatDistCert(
   distCert: IosDistCredentials,
   credentials: IosCredentials,
-  validDistCerts: IosDistCredentials[] | null
+  validityStatus: ValidityStatus = 'UNKNOWN'
 ): string {
   const appCredentials = credentials.appCredentials.filter(
     cred => cred.distCredentialsId === distCert.id
@@ -411,18 +502,19 @@ function formatDistCert(
     serialNumber = chalk.red('invalid serial number');
   }
 
-  let validityStatus = chalk.gray(
-    "\n    ❓ Validity of this certificate on Apple's servers is unknown."
-  );
-  if (validDistCerts) {
-    const isValidCert = validDistCerts.includes(distCert);
-    validityStatus = isValidCert
-      ? chalk.gray("\n    ✅ Currently valid on Apple's servers.")
-      : chalk.gray("\n    ❌ No longer valid on Apple's servers.");
+  let validityText;
+  if (validityStatus === 'VALID') {
+    validityText = chalk.gray("\n    ✅ Currently valid on Apple's servers.");
+  } else if (validityStatus === 'INVALID') {
+    validityText = chalk.gray("\n    ❌ No longer valid on Apple's servers.");
+  } else {
+    validityText = chalk.gray(
+      "\n    ❓ Validity of this certificate on Apple's servers is unknown."
+    );
   }
   return `Distribution Certificate (Cert ID: ${
     distCert.certId
-  }, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}${validityStatus}`;
+  }, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}${validityText}`;
 }
 
 async function generateDistCert(ctx: Context): Promise<DistCert> {
@@ -447,11 +539,11 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
         name: formatDistCertFromApple(cert, ctx.ios.credentials),
       }));
 
-      const MORE_INFO = -1;
-      choices.push({
-        value: MORE_INFO,
-        name: 'Show me more info about these choices ℹ️',
-      });
+      // TODO(quin)
+      const ui = new inquirer.ui.BottomBar();
+      ui.log.write('ℹ️ ℹ️ ℹ️ Show me more info about these choices ℹ️ ℹ️ ℹ️');
+      ui.log.write('ℹ️ ℹ️ ℹ️    todo.quin.makeshorturl.at/aitRV    ℹ️ ℹ️ ℹ️');
+      ui.log.write('\n');
 
       let { revoke } = await prompt([
         {
@@ -462,14 +554,6 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
           pageSize: Infinity,
         },
       ]);
-
-      if (revoke.includes(MORE_INFO)) {
-        // TODO(quin): use cruzan's link
-        open(
-          'https://docs.expo.io/versions/latest/guides/adhoc-builds/#distribution-certificate-cli-options'
-        );
-        revoke = revoke.filter((index: number) => index !== MORE_INFO);
-      }
 
       for (const index of revoke) {
         const certInfo = certs[index];
@@ -505,7 +589,10 @@ async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
   }
 }
 
-async function validateDistributionCertificate(appleContext: AppleCtx, distributionCert: DistCert) {
+export async function validateDistributionCertificate(
+  appleContext: AppleCtx,
+  distributionCert: DistCert
+) {
   const spinner = ora(
     `Checking validity of distribution certificate on Apple Developer Portal...`
   ).start();
@@ -515,9 +602,10 @@ async function validateDistributionCertificate(appleContext: AppleCtx, distribut
   ]);
   const isValidCert = validDistributionCerts.length > 0;
   if (isValidCert) {
-    const successMsg = `Successfully validated Distribution Certificate you uploaded against Apple Servers`;
+    const successMsg = `Successfully validated Distribution Certificate against Apple Servers`;
     spinner.succeed(successMsg);
   } else {
+    // TODO:quin: update this msg
     const failureMsg = `The Distribution Certificate you uploaded is not valid. Please check that you uploaded your certificate to the Apple Servers. See docs.expo.io/versions/latest/guides/adhoc-builds for more details on uploading your credentials.`;
     spinner.fail(failureMsg);
   }

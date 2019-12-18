@@ -1,3 +1,3 @@
 export { Context } from './context';
 
-export { runCredentialsManager } from './route';
+export { runCredentialsManagerStandalone } from './route';

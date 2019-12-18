@@ -7,6 +7,7 @@ import once from 'lodash/once';
 import prompt, { Question as PromptQuestion } from '../../prompt';
 import log from '../../log';
 import * as validators from '../../validators';
+import { GoBackError } from '../route';
 
 export type Question = {
   question: string;
@@ -70,8 +71,12 @@ async function willUserProvideCredentialsType(name: string) {
     choices: [
       { name: 'Let Expo handle the process', value: false },
       { name: 'I want to upload my own file', value: true },
+      { name: 'Go back', value: 'GO BACK' },
     ],
   });
+  if (answer === 'GO BACK') {
+    throw new GoBackError();
+  }
   return answer;
 }
 

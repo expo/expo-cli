@@ -8,14 +8,6 @@ export interface IView {
   open(ctx: Context): Promise<IView | null>;
 }
 
-export interface ISelect<T> {
-  select(ctx: Context, options: ISelectOptions<T>): Promise<ISelect<T> | T | null>;
-}
-
-export type ISelectOptions<T> = {
-  goBack?: (ctx: Context, options: any) => Promise<ISelect<T> | T | null>;
-};
-
 type AppleCtxOptions = {
   appleId?: string;
   appleIdPassword?: string;

@@ -23,11 +23,37 @@ export class IosApi {
 
   async getAllCredentials(): Promise<IosCredentials> {
     if (this.shouldRefetch) {
-      log('Fetching available credentials');
-      this.credentials = await this.api.getAsync('credentials/ios');
-      this.shouldRefetch = false;
+      await this._fetchAllCredentials();
     }
     return this.credentials;
+  }
+
+  async _fetchAllCredentials() {
+    log('Fetching available credentials');
+    this.credentials = await this.api.getAsync('credentials/ios');
+    this.shouldRefetch = false;
+  }
+
+  async getDistCert(
+    experienceName: string,
+    bundleIdentifier: string
+  ): Promise<IosDistCredentials | null> {
+    if (this.shouldRefetch) {
+      await this._fetchAllCredentials();
+    }
+    this._ensureAppCredentials(experienceName, bundleIdentifier);
+    const credIndex = findIndex(
+      this.credentials.appCredentials,
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
+    );
+    const distCertId = this.credentials.appCredentials[credIndex].distCredentialsId;
+    if (!distCertId) {
+      return null;
+    }
+    const distCert = this.credentials.userCredentials.find(cred => cred.id === distCertId) as
+      | IosDistCredentials
+      | undefined;
+    return distCert || null;
   }
 
   async createDistCert(credentials: appleApi.DistCert): Promise<IosDistCredentials> {
