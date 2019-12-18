@@ -201,6 +201,7 @@ export const startAsync = async (projectDir, options) => {
               let sent = false;
               try {
                 await Exp.sendAsync(sendTo, lanAddress);
+                sent = true;
                 log(`Sent link successfully.`);
               } catch (err) {
                 log(`Could not send link. ${err}`);
