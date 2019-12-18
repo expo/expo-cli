@@ -1349,11 +1349,15 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   });
 
   // Collect list of assets missing on host
-  const metas = (
-    await Api.callMethodAsync('assetsMetadata', [], 'post', {
-      keys: Object.keys(paths),
-    })
-  ).metadata;
+  let result;
+  if (process.env.EXPO_NEXT_API) {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    result = await api.postAsync('assets/metadata', { keys: Object.keys(paths) });
+  } else {
+    result = await Api.callMethodAsync('assetsMetadata', [], 'post', { keys: Object.keys(paths) });
+  }
+  const metas = result.metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
 
   if (missing.length === 0) {
@@ -1372,7 +1376,14 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
 
         formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
-      await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
+
+      if (process.env.EXPO_NEXT_API) {
+        const user = await UserManager.ensureLoggedInAsync();
+        const api = ApiV2.clientForUser(user);
+        await api.uploadFormDataAsync('assets/upload', formData);
+      } else {
+        await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
+      }
     })
   );
 }
