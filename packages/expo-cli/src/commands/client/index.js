@@ -19,8 +19,10 @@ import generateBundleIdentifier from './generateBundleIdentifier';
 import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
 import selectPushKey from './selectPushKey';
 import { Updater, clearTags } from './tagger';
-import { SelectDistributionCert } from '../../credentials/views/SelectDistributionCert';
+import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { Context } from '../../credentials/context';
+import { CreateIosDistSelector } from '../../credentials/views/IosDistCert';
+import { runCredentialsManager } from '../../credentials/route';
 
 const { IOS } = PLATFORMS;
 
@@ -69,12 +71,14 @@ export default program => {
         exp.ios.googleServicesFile = contents;
       }
 
+      const user = await UserManager.getCurrentUserAsync();
       const context = new Context();
       await context.init(projectDir, { allowAnonymous: true });
       await context.ensureAppleCtx(options);
-      await context.ios.getAllCredentials(); // initialize credentials
       const appleContext = context.appleCtx;
-      const user = await UserManager.getCurrentUserAsync();
+      if (user) {
+        await context.ios.getAllCredentials(); // initialize credentials
+      }
 
       // check if any builds are in flight
       const { isAllowed, errorMessage } = await isAllowedToBuild({
@@ -105,11 +109,23 @@ export default program => {
         appleContext.team.id,
       ]);
       const udids = devices.map(device => device.deviceNumber);
-      const distSelector = new SelectDistributionCert();
-      const distributionCert = await distSelector.select(context, {
-        experienceName,
-        bundleIdentifier,
-      });
+
+      let distributionCert;
+      if (user) {
+        await runCredentialsManager(
+          context,
+          new SetupIosDist({ experienceName, bundleIdentifier })
+        );
+        distributionCert = await context.ios.getDistCert(experienceName, bundleIdentifier);
+      } else {
+        distributionCert = await new CreateIosDistSelector.provideOrGenerate(context);
+      }
+      if (!distributionCert) {
+        throw new CommandError(
+          'INSUFFICIENT_CREDENTIALS',
+          `This build request requires a valid distribution certificate.`
+        );
+      }
       const pushKey = await selectPushKey(context);
       const provisioningProfile = await selectAdhocProvisioningProfile(
         appleContext,
