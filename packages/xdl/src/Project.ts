@@ -2059,12 +2059,23 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
             _cachedSignedManifest.signedManifest = manifestString;
           } else {
             let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
-            let signedManifest = await Api.callMethodAsync(
-              'signManifest',
-              [publishInfo.args],
-              'post',
-              manifest
-            );
+
+            let signedManifest;
+            if (process.env.EXPO_NEXT_API) {
+              const user = await UserManager.ensureLoggedInAsync();
+              const api = ApiV2.clientForUser(user);
+              signedManifest = await api.postAsync('manifest/sign', {
+                args: publishInfo.args,
+                manifest,
+              });
+            } else {
+              signedManifest = await Api.callMethodAsync(
+                'signManifest',
+                [publishInfo.args],
+                'post',
+                manifest
+              );
+            }
             _cachedSignedManifest.manifestString = manifestString;
             _cachedSignedManifest.signedManifest = signedManifest.response;
             manifestString = signedManifest.response;
