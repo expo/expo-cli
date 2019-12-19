@@ -191,7 +191,9 @@ Please see the docs (${chalk.underline(
     log(' Builds Statuses ');
     log('=================\n');
 
-    const username = await UserManager.getCurrentUsernameAsync();
+    const username = this.manifest.owner
+      ? this.manifest.owner
+      : await UserManager.getCurrentUsernameAsync();
 
     buildStatus.jobs.forEach((job, i) => {
       let platform, packageExtension;
@@ -422,7 +424,9 @@ ${job.id}
       );
     }
 
-    const username = await UserManager.getCurrentUsernameAsync();
+    const username = this.manifest.owner
+      ? this.manifest.owner
+      : await UserManager.getCurrentUsernameAsync();
 
     if (buildId) {
       log(
