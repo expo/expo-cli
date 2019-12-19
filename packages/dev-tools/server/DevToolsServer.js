@@ -51,29 +51,7 @@ export async function createAuthenticationContextAsync({ graphqlHostname, port }
 export async function startAsync(projectDir) {
   const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
-
-  const devtoolsHost = () => {
-    let devtoolHost;
-    if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
-      devtoolHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
-    } else {
-      devtoolHost = `localhost`;
-    }
-    return devtoolHost;
-  };
   const listenHostname = devtoolsHost();
-
-  const devtoolsGraphQLHost = () => {
-    let devtoolsGraphQLHost;
-    if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS && process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
-      devtoolsGraphQLHost = process.env.REACT_NATIVE_PACKAGER_HOSTNAME.trim();
-    } else if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
-      devtoolsGraphQLHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS;
-    } else {
-      devtoolsGraphQLHost = `localhost`;
-    }
-    return devtoolsGraphQLHost;
-  };
   const graphqlHostname = devtoolsGraphQLHost();
 
   const authenticationContext = await createAuthenticationContextAsync({ graphqlHostname, port });
@@ -138,6 +116,28 @@ export function startGraphQLServer(projectDir, httpServer, authenticationContext
       },
     }
   );
+}
+
+function devtoolsHost() {
+  let devtoolHost;
+  if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
+    devtoolHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
+  } else {
+    devtoolHost = `localhost`;
+  }
+  return devtoolHost;
+}
+
+function devtoolsGraphQLHost() {
+  let devtoolsGraphQLHost;
+  if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS && process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
+    devtoolsGraphQLHost = process.env.REACT_NATIVE_PACKAGER_HOSTNAME.trim();
+  } else if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
+    devtoolsGraphQLHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS;
+  } else {
+    devtoolsGraphQLHost = `localhost`;
+  }
+  return devtoolsGraphQLHost;
 }
 
 function createLayout() {
