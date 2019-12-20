@@ -26,7 +26,7 @@ const defaultUniversalModuleConfig = {
     versionable: true,
     // whether the module should be included in the newly created detached app.
     detachable: true,
-    // whether the module should be included in Expo Client
+    // whether the module should be included in Expo client
     includeInExpoClient: true,
   },
   android: {
@@ -41,7 +41,7 @@ const defaultUniversalModuleConfig = {
     // as eg. host.exp.exponent:expoview:28.2.0 the module will
     // be assembled and uploaded to the local maven repo
     detachable: true,
-    // whether the module should be included in Expo Client
+    // whether the module should be included in Expo client
     includeInExpoClient: true,
   },
 };

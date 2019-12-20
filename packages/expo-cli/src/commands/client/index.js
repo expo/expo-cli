@@ -33,7 +33,7 @@ export default program => {
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
     )
     .description(
-      'Build a custom version of the Expo Client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
+      'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       const disabledServices = {
@@ -82,7 +82,7 @@ export default program => {
       if (!isAllowed) {
         throw new CommandError(
           'CLIENT_BUILD_REQUEST_NOT_ALLOWED',
-          `New Expo Client build request disallowed. Reason: ${errorMessage}`
+          `New Expo client build request disallowed. Reason: ${errorMessage}`
         );
       }
 
@@ -130,7 +130,7 @@ export default program => {
 
       if (Object.keys(disabledServices).length > 0) {
         log.newLine();
-        log.warn('These services will be disabled in your custom Expo Client:');
+        log.warn('These services will be disabled in your custom Expo client:');
         const table = new CliTable({ head: ['Service', 'Reason'], style: { head: ['cyan'] } });
         table.push(
           ...Object.keys(disabledServices).map(serviceKey => {
@@ -192,7 +192,7 @@ export default program => {
         addUdid = true;
       } else {
         log(
-          'Custom builds of the Expo Client can only be installed on devices which have been registered with Apple at build-time.'
+          'Custom builds of the Expo client can only be installed on devices which have been registered with Apple at build-time.'
         );
         log('These devices are currently registered on your Apple Developer account:');
         const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
@@ -201,7 +201,7 @@ export default program => {
 
         const udidPrompt = await prompt({
           name: 'addUdid',
-          message: 'Would you like to register a new device to use the Expo Client with?',
+          message: 'Would you like to register a new device to use the Expo client with?',
           type: 'confirm',
           default: true,
         });
@@ -236,7 +236,7 @@ export default program => {
         );
       } else {
         urlOpts.printQRCode(result.statusUrl);
-        log('Your custom Expo Client is being built! 🛠');
+        log('Your custom Expo client is being built! 🛠');
         log(
           'Open this link on your iOS device (or scan the QR code) to view build logs and install the client:'
         );
@@ -248,14 +248,14 @@ export default program => {
 
   program
     .command('client:install:ios')
-    .description('Install the Expo Client for iOS on the simulator')
+    .description('Install the Expo client for iOS on the simulator')
     .asyncAction(async () => {
       const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
       const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
 
       if (!currentSdkVersion) {
         log(
-          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo Client version!'
+          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
 
@@ -333,14 +333,14 @@ export default program => {
 
   program
     .command('client:install:android')
-    .description('Install the Expo Client for Android on a connected device or emulator')
+    .description('Install the Expo client for Android on a connected device or emulator')
     .asyncAction(async () => {
       const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
       const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
 
       if (!currentSdkVersion) {
         log(
-          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo Client version!'
+          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
 

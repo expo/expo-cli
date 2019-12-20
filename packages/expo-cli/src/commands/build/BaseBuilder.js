@@ -101,7 +101,7 @@ export default class BaseBuilder {
           'deprecated'
         )} next! We recommend upgrading versions, ideally to the latest (SDK${semver.major(
           version
-        )}), so you can continue to build new binaries of your app and develop in the Expo Client.\n`
+        )}), so you can continue to build new binaries of your app and develop in the Expo client.\n`
       );
     }
   }
