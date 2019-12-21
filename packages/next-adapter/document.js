@@ -22,6 +22,7 @@ html, body, #__next {
 #__next {
   flex-shrink: 0;
   flex-basis: auto;
+  flex-direction: column;
   flex-grow: 1;
   display: flex;
   flex: 1;
