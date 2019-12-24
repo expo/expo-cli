@@ -266,7 +266,7 @@ export default class ApiClient {
     if (extract) {
       let dotExpoHomeDirectory = UserSettings.dotExpoHomeDirectory();
       let tmpPath = path.join(dotExpoHomeDirectory, 'tmp-download-file');
-      await _downloadAsync(url, tmpPath);
+      await _downloadAsync(url, tmpPath, progressFunction);
       await Extract.extractAsync(tmpPath, outputPath);
       fs.removeSync(tmpPath);
     } else {

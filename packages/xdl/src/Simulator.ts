@@ -8,6 +8,7 @@ import os from 'os';
 import path from 'path';
 import url from 'url';
 import semver from 'semver';
+import ProgressBar from 'progress';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
@@ -326,7 +327,10 @@ export async function _checkExpoUpToDateAsync() {
 }
 
 // If specific URL given just always download it and don't use cache
-export async function _downloadSimulatorAppAsync(url?: string) {
+export async function _downloadSimulatorAppAsync(
+  url?: string,
+  downloadProgressCallback?: (roundedProgress: number) => void
+) {
   if (!url) {
     let versions = await Versions.versionsAsync();
     url = versions.iosUrl;
@@ -346,7 +350,7 @@ export async function _downloadSimulatorAppAsync(url?: string) {
 
   fs.mkdirpSync(dir);
   try {
-    await Api.downloadAsync(url, dir, { extract: true });
+    await Api.downloadAsync(url, dir, { extract: true }, downloadProgressCallback);
   } catch (e) {
     fs.removeSync(dir);
     throw e;
@@ -357,14 +361,17 @@ export async function _downloadSimulatorAppAsync(url?: string) {
 
 // url: Optional URL of Exponent.app tarball to download
 export async function _installExpoOnSimulatorAsync(url?: string) {
+  const bar = new ProgressBar('Downloading the Expo client app [:bar] :percent :etas', {
+    total: 100,
+    width: 40,
+  });
   const warningTimer = setTimeout(() => {
     Logger.global.info(
       'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
     );
   }, INSTALL_WARNING_TIMEOUT);
-  Logger.global.info(`Downloading the latest version of Expo client app`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
-  let dir = await _downloadSimulatorAppAsync(url);
+  let dir = await _downloadSimulatorAppAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   Logger.global.info('Installing Expo client on iOS simulator');
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
