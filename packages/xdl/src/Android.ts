@@ -22,7 +22,7 @@ let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
 const CANT_START_ACTIVITY_ERROR = 'Activity not started, unable to resolve Intent';
 
-const INSTALL_WARNING_TIMEOUT = 30 * 1000;
+const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
 export function isPlatformSupported(): boolean {
   return (
@@ -131,7 +131,7 @@ export async function downloadApkAsync(url?: string) {
 export async function installExpoAsync(url?: string) {
   const warningTimer = setTimeout(() => {
     Logger.global.info(
-      'This takes longer than expected, you can also download the clients from the website at https://expo.io/tools'
+      'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
     );
   }, INSTALL_WARNING_TIMEOUT);
   Logger.global.info(`Downloading latest version of Expo`);
