@@ -359,7 +359,7 @@ export async function _downloadSimulatorAppAsync(url?: string) {
 export async function _installExpoOnSimulatorAsync(url?: string) {
   const warningTimer = setTimeout(() => {
     Logger.global.info(
-      'This takes longer than expected, you can also download the clients from the website at https://expo.io/tools'
+      'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
     );
   }, INSTALL_WARNING_TIMEOUT);
   Logger.global.info(`Downloading the latest version of Expo client app`);
