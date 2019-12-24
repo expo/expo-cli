@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import _ from 'lodash';
 import path from 'path';
 import semver from 'semver';
+import ProgressBar from 'progress';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
@@ -113,7 +114,10 @@ function _apkCacheDirectory() {
   return dir;
 }
 
-export async function downloadApkAsync(url?: string) {
+export async function downloadApkAsync(
+  url?: string,
+  downloadProgressCallback?: (roundedProgress: number) => void
+) {
   let versions = await Versions.versionsAsync();
   let apkPath = path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`);
 
@@ -123,20 +127,25 @@ export async function downloadApkAsync(url?: string) {
 
   await Api.downloadAsync(
     url || versions.androidUrl,
-    path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`)
+    path.join(_apkCacheDirectory(), `Exponent-${versions.androidVersion}.apk`),
+    undefined,
+    downloadProgressCallback
   );
   return apkPath;
 }
 
 export async function installExpoAsync(url?: string) {
+  const bar = new ProgressBar('Downloading the Expo client app [:bar] :percent :etas', {
+    total: 100,
+    width: 40,
+  });
   const warningTimer = setTimeout(() => {
     Logger.global.info(
       'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
     );
   }, INSTALL_WARNING_TIMEOUT);
-  Logger.global.info(`Downloading latest version of Expo`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
-  let path = await downloadApkAsync(url);
+  let path = await downloadApkAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
   Logger.global.info(`Installing Expo on device`);
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
