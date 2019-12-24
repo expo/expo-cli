@@ -25,7 +25,7 @@ const SUGGESTED_XCODE_VERSION = `8.2.0`;
 const XCODE_NOT_INSTALLED_ERROR =
   'Simulator not installed. Please visit https://developer.apple.com/xcode/download/ to download Xcode and the iOS simulator. If you already have the latest version of Xcode installed, you may have to run the command `sudo xcode-select -s /Applications/Xcode.app`.';
 
-const INSTALL_WARNING_TIMEOUT = 30 * 1000;
+const INSTALL_WARNING_TIMEOUT = 60 * 1000;
 
 export function isPlatformSupported() {
   return process.platform === 'darwin';
