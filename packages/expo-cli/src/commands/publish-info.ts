@@ -1,5 +1,6 @@
 import { readConfigJsonAsync } from '@expo/config';
 import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
+import dateFormat from 'dateformat';
 
 import * as table from './utils/cli-table';
 
@@ -17,6 +18,17 @@ type HistoryOptions = {
 type DetailOptions = {
   publishId?: string;
   raw?: boolean;
+};
+
+type Publication = {
+  fullName: string;
+  channel: string;
+  channelId: string;
+  publicationId: string;
+  appVersion: string;
+  sdkVersion: string;
+  publishedTime: string;
+  platform: 'android' | 'ios';
 };
 
 export default (program: any) => {
@@ -116,7 +128,11 @@ export default (program: any) => {
             colWidths.push(HORIZ_CELL_WIDTH_SMALL);
           }
         });
-        let tableString = table.printTableJsonArray(headers, result.queryResult, colWidths);
+        const resultRows = result.queryResult.map((publication: Publication) => ({
+          ...publication,
+          publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
+        }));
+        let tableString = table.printTableJsonArray(headers, resultRows, colWidths);
         console.log(tableString);
       } else {
         throw new Error('No records found matching your query.');
