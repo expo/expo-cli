@@ -1,14 +1,23 @@
-/**
- * @flow
- */
 import { readConfigJsonAsync } from '@expo/config';
 import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
 
-import * as table from '../commands/utils/cli-table';
+import * as table from './utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
 const HORIZ_CELL_WIDTH_BIG = 40;
 const VERSION = 2;
+
+type HistoryOptions = {
+  releaseChannel?: string;
+  count?: number;
+  platform?: 'android' | 'ios';
+  raw?: boolean;
+};
+
+type DetailOptions = {
+  publishId?: string;
+  raw?: boolean;
+};
 
 export default (program: any) => {
   program
@@ -26,7 +35,7 @@ export default (program: any) => {
     )
     .option('-p, --platform <ios|android>', 'Filter by platform, android or ios.')
     .option('-r, --raw', 'Produce some raw output.')
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: HistoryOptions) => {
       if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
         throw new Error('-n must be a number between 1 and 100 inclusive');
       }
@@ -98,7 +107,7 @@ export default (program: any) => {
         ];
 
         // colWidths contains the cell size of each header
-        let colWidths = [];
+        let colWidths: number[] = [];
         let bigCells = new Set(['publicationId', 'channelId', 'publishedTime']);
         headers.forEach(header => {
           if (bigCells.has(header)) {
@@ -119,7 +128,7 @@ export default (program: any) => {
     .description('View the details of a published release.')
     .option('--publish-id <publish-id>', 'Publication id. (Required)')
     .option('-r, --raw', 'Produce some raw output.')
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: DetailOptions) => {
       if (!options.publishId) {
         throw new Error('--publish-id must be specified.');
       }
