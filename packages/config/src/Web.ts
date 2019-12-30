@@ -143,9 +143,8 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
    * >> The banner won't show up if the app is already installed:
    * https://github.com/GoogleChrome/samples/issues/384#issuecomment-326387680
    */
-
-  const preferRelatedApplications =
-    webManifest.preferRelatedApplications || DEFAULT_PREFER_RELATED_APPLICATIONS;
+  const preferRelatedApplications = 
+    webManifest.preferRelatedApplications === undefined ? DEFAULT_PREFER_RELATED_APPLICATIONS : webManifest.preferRelatedApplications;
 
   const relatedApplications = inferWebRelatedApplicationsFromConfig(appManifest);
 
