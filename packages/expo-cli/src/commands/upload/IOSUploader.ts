@@ -84,6 +84,7 @@ export type IosPlatformOptions = PlatformOptions & {
   language?: string;
   appleTeamId?: string;
   publicUrl?: string;
+  companyName?: string;
 };
 
 type AppleCreds = Pick<IosPlatformOptions, 'appleId' | 'appleIdPassword'>;
@@ -114,7 +115,7 @@ export default class IOSUploader extends BaseUploader {
     const appleIdCrentials = await this._getAppleIdCredentials();
     const appleTeamId = await this._getAppleTeamId();
     const appName = await this._getAppName();
-    const otherOptions = pick(this.options, ['language', 'sku']);
+    const otherOptions = pick(this.options, ['language', 'sku', 'companyName']);
     return {
       ...appleIdCrentials,
       appName,
@@ -178,9 +179,9 @@ export default class IOSUploader extends BaseUploader {
 
   async _uploadToTheStore(platformData: IosPlatformOptions, buildPath: string): Promise<void> {
     const { fastlane } = this;
-    const { appleId, appleIdPassword, appName, language, appleTeamId } = platformData;
+    const { appleId, appleIdPassword, appName, language, appleTeamId, companyName } = platformData;
 
-    const appleCreds = { appleId, appleIdPassword, appleTeamId };
+    const appleCreds = { appleId, appleIdPassword, appleTeamId, companyName };
 
     log('Resolving the ITC team ID...');
     const { itc_team_id: itcTeamId } = await runFastlaneAsync(
@@ -195,11 +196,20 @@ export default class IOSUploader extends BaseUploader {
     };
 
     log('Ensuring the app exists on App Store Connect, this may take a while...');
-    await runFastlaneAsync(
-      fastlane.appProduce,
-      [this._exp?.ios?.bundleIdentifier, appName, appleId, language],
-      updatedAppleCreds
-    );
+    try {
+      await runFastlaneAsync(
+        fastlane.appProduce,
+        [this._exp?.ios?.bundleIdentifier, appName, appleId, language],
+        updatedAppleCreds
+      );
+    } catch (err) {
+      if (err.message.match(/You must provide a company name to use on the App Store/)) {
+        log.error(
+          'You haven\'t uploaded any app to App Store yet. Please provide your company name with --company-name "COMPANY NAME"'
+        );
+      }
+      throw err;
+    }
 
     log('Uploading the app to Testflight, hold tight...');
     await runFastlaneAsync(fastlane.pilotUpload, [buildPath, appleId], updatedAppleCreds);
