@@ -1,6 +1,6 @@
-import { projectHasModule } from '@expo/config';
-import chalk from 'chalk';
+import { projectHasModule, readConfigJsonAsync } from '@expo/config';
 import { createForProject } from '@expo/package-manager';
+import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -219,6 +219,41 @@ export const manifest: CustomizeOption[] = [
     },
   },
   {
+    name: 'Add build script',
+    type: 'required',
+    destinationPath: projectRoot => '',
+    description: 'the build script required for deploying to now.',
+    async onEnabledAsync({ projectRoot, force }): Promise<boolean> {
+      if (force) return true;
+
+      const pkg = await readPackageJsonAsync(projectRoot);
+
+      const hasNowBuildScript = pkg.scripts.build && pkg.scripts.build.trim() === 'next build';
+
+      return !hasNowBuildScript;
+    },
+    async onSelectAsync({ projectRoot, force }): Promise<void> {
+      const pkg = await readPackageJsonAsync(projectRoot);
+
+      if (!force && pkg.scripts.build) {
+        console.warn(chalk.yellow(`\u203A A build script already exists.`));
+        return;
+      }
+
+      pkg.scripts.build = 'next build';
+
+      console.log(
+        chalk.magenta(
+          `\u203A Adding a build script to your \`${chalk.bold(
+            `package.json`
+          )}\` for deployment to now.`
+        )
+      );
+
+      await fs.writeFile(path.resolve(projectRoot, 'package.json'), JSON.stringify(pkg, null, 2));
+    },
+  },
+  {
     name: 'Update git ignore',
     type: 'required',
     destinationPath: projectRoot => path.resolve(projectRoot, '.gitignore'),
@@ -288,3 +323,14 @@ export const manifest: CustomizeOption[] = [
     },
   },
 ];
+
+async function readPackageJsonAsync(
+  projectRoot: string
+): Promise<{ scripts: { build?: string }; [key: string]: any }> {
+  const { pkg } = await readConfigJsonAsync(projectRoot, true, true);
+
+  return {
+    scripts: {},
+    ...pkg,
+  };
+}
