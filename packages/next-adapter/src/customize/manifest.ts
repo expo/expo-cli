@@ -1,6 +1,6 @@
-import { projectHasModule, readConfigJsonAsync, PackageJSONConfig } from '@expo/config';
-import chalk from 'chalk';
+import { projectHasModule, readConfigJsonAsync } from '@expo/config';
 import { createForProject } from '@expo/package-manager';
+import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 
