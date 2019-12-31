@@ -11,7 +11,7 @@ import { BuildInfo } from './Builder';
 async function waitForBuildEnd(
   client: TurtleApi,
   buildId: string,
-  { timeoutSec = 1800, intervalSec = 30 } = {}
+  { timeoutSec = 18000, intervalSec = 30 } = {}
 ) {
   log('Waiting for build to complete. You can press Ctrl+C to exit.');
   const spinner = ora().start();
