@@ -365,18 +365,32 @@ export async function _installExpoOnSimulatorAsync(url?: string) {
     total: 100,
     width: 40,
   });
-  const warningTimer = setTimeout(() => {
-    Logger.global.info(
-      'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
+
+  let warningTimer: NodeJS.Timeout;
+  const setWarningTimer = () => {
+    if (warningTimer) {
+      clearTimeout(warningTimer);
+    }
+    return setTimeout(
+      () =>
+        Logger.global.info(
+          'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
+        ),
+      INSTALL_WARNING_TIMEOUT
     );
-  }, INSTALL_WARNING_TIMEOUT);
+  };
+
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
+  warningTimer = setWarningTimer();
   let dir = await _downloadSimulatorAppAsync(url, progress => bar.tick(1, progress));
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
+
   Logger.global.info('Installing Expo client on iOS simulator');
   Logger.notifications.info({ code: NotificationCode.START_LOADING });
+  warningTimer = setWarningTimer();
   let result = await _xcrunAsync(['simctl', 'install', 'booted', dir]);
   Logger.notifications.info({ code: NotificationCode.STOP_LOADING });
+
   clearTimeout(warningTimer);
   return result;
 }
