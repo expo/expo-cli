@@ -63,13 +63,23 @@ export async function action(projectDir: string, options: Options = {}) {
     args: { sdkVersion },
   } = await Exp.getPublishInfoAsync(projectDir);
 
-  const buildStatus = await Project.buildAsync(projectDir, {
-    mode: 'status',
-    platform: 'all',
-    current: true,
-    releaseChannel: options.releaseChannel,
-    sdkVersion,
-  });
+  let buildStatus;
+  if (process.env.EXPO_NEXT_API) {
+    buildStatus = await Project.getBuildStatusAsync(projectDir, {
+      platform: 'all',
+      current: true,
+      releaseChannel: options.releaseChannel,
+      sdkVersion,
+    });
+  } else {
+    buildStatus = await Project.buildAsync(projectDir, {
+      mode: 'status',
+      platform: 'all',
+      current: true,
+      releaseChannel: options.releaseChannel,
+      sdkVersion,
+    });
+  }
 
   const { exp } = await readConfigJsonAsync(projectDir);
 

@@ -15,6 +15,7 @@ import { PLATFORMS } from '../build/constants';
 import * as appleApi from '../../appleApi';
 import { runAction, travelingFastlane } from '../../appleApi/fastlane';
 import { findProjectRootAsync } from '../utils/ProjectUtils';
+import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
 import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
@@ -32,7 +33,7 @@ export default program => {
       'Apple ID username (please also set the Apple ID password as EXPO_APPLE_PASSWORD environment variable).'
     )
     .description(
-      'Build a custom version of the Expo Client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
+      'Build a custom version of the Expo client for iOS using your own Apple credentials and install it on your mobile device using Safari.'
     )
     .asyncActionProjectDir(async (projectDir, options) => {
       const disabledServices = {
@@ -81,7 +82,7 @@ export default program => {
       if (!isAllowed) {
         throw new CommandError(
           'CLIENT_BUILD_REQUEST_NOT_ALLOWED',
-          `New Expo Client build request disallowed. Reason: ${errorMessage}`
+          `New Expo client build request disallowed. Reason: ${errorMessage}`
         );
       }
 
@@ -129,7 +130,7 @@ export default program => {
 
       if (Object.keys(disabledServices).length > 0) {
         log.newLine();
-        log.warn('These services will be disabled in your custom Expo Client:');
+        log.warn('These services will be disabled in your custom Expo client:');
         const table = new CliTable({ head: ['Service', 'Reason'], style: { head: ['cyan'] } });
         table.push(
           ...Object.keys(disabledServices).map(serviceKey => {
@@ -191,7 +192,7 @@ export default program => {
         addUdid = true;
       } else {
         log(
-          'Custom builds of the Expo Client can only be installed on devices which have been registered with Apple at build-time.'
+          'Custom builds of the Expo client can only be installed on devices which have been registered with Apple at build-time.'
         );
         log('These devices are currently registered on your Apple Developer account:');
         const table = new CliTable({ head: ['Name', 'Identifier'], style: { head: ['cyan'] } });
@@ -200,7 +201,7 @@ export default program => {
 
         const udidPrompt = await prompt({
           name: 'addUdid',
-          message: 'Would you like to register a new device to use the Expo Client with?',
+          message: 'Would you like to register a new device to use the Expo client with?',
           type: 'confirm',
           default: true,
         });
@@ -235,7 +236,7 @@ export default program => {
         );
       } else {
         urlOpts.printQRCode(result.statusUrl);
-        log('Your custom Expo Client is being built! 🛠');
+        log('Your custom Expo client is being built! 🛠');
         log(
           'Open this link on your iOS device (or scan the QR code) to view build logs and install the client:'
         );
@@ -247,267 +248,171 @@ export default program => {
 
   program
     .command('client:install:ios')
-    .description('Install the Expo Client for iOS on the simulator')
+    .description('Install the Expo client for iOS on the simulator')
     .asyncAction(async () => {
-      let currentSdk;
-      const getIosVersion = sdkVersion =>
-        sdkVersion.iosClientVersion || sdkVersion.iosVersion || 'version unknown';
+      const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
+      const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
 
-      try {
-        const { projectRoot } = await findProjectRootAsync(process.cwd());
-        const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-        currentSdk = exp;
-      } catch (error) {
-        // When a developer runs the installs command outside the project,
-        // they should be able to install any version
-        if (error.code !== 'NO_PROJECT') {
-          throw error;
-        }
+      if (!currentSdkVersion) {
         log(
-          'Could not find your Expo project. If you run this command from a project, we can help pick the right Expo Client version!'
+          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
 
-      let targetSdkVersion;
-      let targetSdkVersionString;
-
-      const latestSdk = await Versions.newestSdkVersionAsync();
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const currentSdkVersion = currentSdk.sdkVersion ? sdkVersions[currentSdk.sdkVersion] : null;
+      const latestSdk = await Versions.newestSdkVersionAsync();
+      const currentSdk = sdkVersions[currentSdkVersion];
+      const recommendedClient = currentSdk
+        ? ClientUpgradeUtils.getClient(currentSdk, 'ios')
+        : undefined;
 
-      if (!currentSdk.sdkVersion || currentSdk.sdkVersion === latestSdk.version) {
+      if (currentSdk && !recommendedClient) {
+        log(
+          `You are currently using SDK ${currentSdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
+        );
+      }
+
+      if (currentSdk && recommendedClient) {
+        const recommendedClientVersion = recommendedClient.version || 'version unknown';
         const answer = await prompt({
           type: 'confirm',
-          name: 'updateToLatestClient',
-          message:
-            currentSdk && currentSdk.sdkVersion === latestSdk.version
-              ? 'You are using the latest SDK. Do you want to install the latest client?'
-              : 'Do you want to install the latest client?',
+          name: 'upgradeToRecommended',
+          message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
-        if (answer.updateToLatestClient) {
+        if (answer.upgradeToRecommended) {
+          await Simulator.upgradeExpoAsync(recommendedClient.url);
+          log('Done!');
+          return;
+        }
+      } else {
+        const answer = await prompt({
+          type: 'confirm',
+          name: 'upgradeToLatest',
+          message: 'Do you want to install the latest client?',
+        });
+        if (answer.upgradeToLatest) {
           await Simulator.upgradeExpoAsync();
           log('Done!');
           return;
         }
-      } else if (currentSdkVersion && currentSdkVersion.iosClientUrl) {
+      }
+
+      const availableClients = ClientUpgradeUtils.getAvailableClients({
+        sdkVersions,
+        project: currentSdkConfig,
+        platform: 'ios',
+      });
+
+      if (availableClients.length === 0) {
         const answer = await prompt({
           type: 'confirm',
-          name: 'updateToRecommendedVersion',
-          message: `You are currently using SDK ${
-            currentSdk.sdkVersion
-          }. Would you like to install the client version ${getIosVersion(
-            currentSdkVersion
-          )} released for this SDK?`,
+          name: 'updateToAClient',
+          message: currentSdk
+            ? `We don't have a compatible client for SDK ${currentSdkVersion}. Do you want to try the latest client?`
+            : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
-        if (answer.updateToRecommendedVersion) {
-          targetSdkVersion = currentSdkVersion;
-          targetSdkVersionString = currentSdk.sdkVersion;
-        }
-      } else {
-        log(
-          `You are currently using SDK ${currentSdk.sdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
-        );
-      }
-
-      if (!targetSdkVersion) {
-        const sdkVersionStringOptions = Object.keys(sdkVersions)
-          .reverse()
-          .filter(version => {
-            const versionHasClient =
-              !sdkVersions[version].isDeprecated && sdkVersions[version].iosClientUrl;
-
-            const versionIsCompatible = currentSdk
-              ? Versions.lteSdkVersion(currentSdk, version)
-              : null;
-
-            return versionHasClient && versionIsCompatible;
-          });
-        if (sdkVersionStringOptions.length === 0) {
-          const answer = await prompt({
-            type: 'confirm',
-            name: 'updateToAClient',
-            message:
-              "It looks like we don't have a compatible client for your project. Do you want to try the latest client?",
-          });
-
-          if (answer.updateToAClient) {
-            await Simulator.upgradeExpoAsync();
-            log('Done!');
-            return;
-          }
+        if (answer.updateToAClient) {
+          await Simulator.upgradeExpoAsync();
+          log('Done!');
         } else {
-          const answer = await prompt({
-            type: 'list',
-            name: 'selectedSdkVersionString',
-            message: 'Choose an SDK version to install the client for:',
-            pageSize: 20,
-            choices: sdkVersionStringOptions.map(optionSdkVersionString => {
-              const optionClientVersion = getIosVersion(sdkVersions[optionSdkVersionString]);
-              const message =
-                optionSdkVersionString === latestSdk.version
-                  ? `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
-                      `- client ${optionClientVersion} (latest)`
-                    )}`
-                  : `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
-                      `- client ${optionClientVersion}`
-                    )}`;
-
-              return {
-                value: optionSdkVersionString,
-                name: message,
-              };
-            }),
-          });
-
-          targetSdkVersion = sdkVersions[answer.selectedSdkVersionString];
-          targetSdkVersionString = answer.selectedSdkVersionString;
+          log('No client to install');
         }
-      }
-
-      if (!targetSdkVersion) {
-        log('No client to install.');
         return;
       }
 
-      if (await Simulator.upgradeExpoAsync(targetSdkVersion.iosClientUrl)) {
-        log(
-          `Done! We installed the client for SDK ${targetSdkVersionString}, version ${getIosVersion(
-            targetSdkVersion
-          )}`
-        );
+      const targetClient = await ClientUpgradeUtils.askClientToInstall({
+        currentSdkVersion,
+        latestSdkVersion: latestSdk.version,
+        clients: availableClients,
+      });
+
+      if (await Simulator.upgradeExpoAsync(targetClient.clientUrl)) {
+        log('Done!');
       }
     }, true);
 
   program
     .command('client:install:android')
-    .description('Install the Expo Client for Android on a connected device or emulator')
+    .description('Install the Expo client for Android on a connected device or emulator')
     .asyncAction(async () => {
-      let currentSdk;
-      const getAndroidVersion = sdkVersion =>
-        sdkVersion.androidClientVersion || sdkVersion.androidVersion || 'version unknown';
+      const currentSdkConfig = await ClientUpgradeUtils.getExpoSdkConfig(process.cwd());
+      const currentSdkVersion = currentSdkConfig ? currentSdkConfig.sdkVersion : undefined;
 
-      try {
-        const { projectRoot } = await findProjectRootAsync(process.cwd());
-        const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-        currentSdk = exp;
-      } catch (error) {
-        // When a developer runs the installs command outside the project,
-        // they should be able to install any version
-        if (error.code !== 'NO_PROJECT') {
-          throw error;
-        }
+      if (!currentSdkVersion) {
         log(
-          'Could not find your Expo project. If you run this command from a project, we can help pick the right Expo Client version!'
+          'Could not find your Expo project. If you run this from a project, we can help pick the right Expo client version!'
         );
       }
 
-      let targetSdkVersion;
-      let targetSdkVersionString;
-
-      const latestSdk = await Versions.newestSdkVersionAsync();
       const sdkVersions = await Versions.sdkVersionsAsync();
-      const currentSdkVersion = currentSdk.sdkVersion ? sdkVersions[currentSdk.sdkVersion] : null;
+      const latestSdk = await Versions.newestSdkVersionAsync();
+      const currentSdk = sdkVersions[currentSdkVersion];
+      const recommendedClient = currentSdk
+        ? ClientUpgradeUtils.getClient(currentSdk, 'android')
+        : undefined;
 
-      if (!currentSdk.sdkVersion || currentSdk.sdkVersion === latestSdk.version) {
+      if (currentSdk && !recommendedClient) {
+        log(
+          `You are currently using SDK ${currentSdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
+        );
+      }
+
+      if (currentSdk && recommendedClient) {
+        const recommendedClientVersion = recommendedClient.version || 'version unknown';
         const answer = await prompt({
           type: 'confirm',
-          name: 'updateToLatestClient',
-          message:
-            currentSdk && currentSdk.sdkVersion === latestSdk.version
-              ? 'You are using the latest SDK. Do you want to install the latest client?'
-              : 'Do you want to install the latest client?',
+          name: 'upgradeToRecommended',
+          message: `You are currently using SDK ${currentSdkVersion}. Would you like to install client ${recommendedClientVersion} released for this SDK?`,
         });
-        if (answer.updateToLatestClient) {
+        if (answer.upgradeToRecommended) {
+          await Android.upgradeExpoAsync(recommendedClient.url);
+          log('Done!');
+          return;
+        }
+      } else {
+        const answer = await prompt({
+          type: 'confirm',
+          name: 'upgradeToLatest',
+          message: 'Do you want to install the latest client?',
+        });
+        if (answer.upgradeToLatest) {
           await Android.upgradeExpoAsync();
           log('Done!');
           return;
         }
-      } else if (currentSdkVersion && currentSdkVersion.androidClientUrl) {
+      }
+
+      const availableClients = ClientUpgradeUtils.getAvailableClients({
+        sdkVersions,
+        project: currentSdkConfig,
+        platform: 'android',
+      });
+
+      if (availableClients.length === 0) {
         const answer = await prompt({
           type: 'confirm',
-          name: 'updateToRecommendedVersion',
-          message: `You are currently using SDK ${
-            currentSdk.sdkVersion
-          }. Would you like to install the client version ${getAndroidVersion(
-            currentSdkVersion
-          )} released for this SDK?`,
+          name: 'updateToAClient',
+          message: currentSdk
+            ? `We don't have a compatible client for SDK ${currentSdkVersion}. Do you want to try the latest client?`
+            : "It looks like we don't have a compatible client. Do you want to try the latest client?",
         });
-        if (answer.updateToRecommendedVersion) {
-          targetSdkVersion = currentSdkVersion;
-          targetSdkVersionString = currentSdk.sdkVersion;
-        }
-      } else {
-        log(
-          `You are currently using SDK ${currentSdk.sdkVersion}. Unfortunately, we couldn't detect the proper client version for this SDK.`
-        );
-      }
-
-      if (!targetSdkVersion) {
-        const sdkVersionStringOptions = Object.keys(sdkVersions)
-          .reverse()
-          .filter(version => {
-            const versionHasClient =
-              !sdkVersions[version].isDeprecated && sdkVersions[version].androidClientUrl;
-
-            const versionIsCompatible = currentSdk
-              ? Versions.lteSdkVersion(currentSdk, version)
-              : null;
-
-            return versionHasClient && versionIsCompatible;
-          });
-        if (sdkVersionStringOptions.length === 0) {
-          const answer = await prompt({
-            type: 'confirm',
-            name: 'updateToAClient',
-            message:
-              "It looks like we don't have a compatible client for your project. Do you want to try the latest client?",
-          });
-
-          if (answer.updateToAClient) {
-            await Android.upgradeExpoAsync();
-            log('Done!');
-            return;
-          }
+        if (answer.updateToAClient) {
+          await Android.upgradeExpoAsync();
+          log('Done!');
         } else {
-          const answer = await prompt({
-            type: 'list',
-            name: 'selectedSdkVersionString',
-            message: 'Choose an SDK version to install the client for:',
-            pageSize: 20,
-            choices: sdkVersionStringOptions.map(optionSdkVersionString => {
-              const optionClientVersion = getAndroidVersion(sdkVersions[optionSdkVersionString]);
-              const message =
-                optionSdkVersionString === latestSdk.version
-                  ? `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
-                      `- client ${optionClientVersion} (latest)`
-                    )}`
-                  : `${chalk.bold(optionSdkVersionString)} ${chalk.grey(
-                      `- client ${optionClientVersion}`
-                    )}`;
-
-              return {
-                value: optionSdkVersionString,
-                name: message,
-              };
-            }),
-          });
-
-          targetSdkVersion = sdkVersions[answer.selectedSdkVersionString];
-          targetSdkVersionString = answer.selectedSdkVersionString;
+          log('No client to install');
         }
-      }
-
-      if (!targetSdkVersion) {
-        log('No client to install.');
         return;
       }
 
-      if (await Android.upgradeExpoAsync(targetSdkVersion.androidClientUrl)) {
-        log(
-          `Done! We installed the client for SDK ${targetSdkVersionString}, version ${getAndroidVersion(
-            targetSdkVersion
-          )}`
-        );
+      const targetClient = await ClientUpgradeUtils.askClientToInstall({
+        currentSdkVersion,
+        latestSdkVersion: latestSdk.version,
+        clients: availableClients,
+      });
+
+      if (await Android.upgradeExpoAsync(targetClient.clientUrl)) {
+        log('Done!');
       }
     }, true);
 };

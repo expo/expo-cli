@@ -30,11 +30,11 @@ async function generateSecureRandomTokenAsync() {
   });
 }
 
-export async function createAuthenticationContextAsync({ port }) {
+export async function createAuthenticationContextAsync({ graphqlHostname, port }) {
   const clientAuthenticationToken = await generateSecureRandomTokenAsync();
   const endpointUrlToken = await generateSecureRandomTokenAsync();
   const graphQLEndpointPath = `/${endpointUrlToken}/graphql`;
-  const hostname = `localhost:${port}`;
+  const hostname = `${graphqlHostname}:${port}`;
   const webSocketGraphQLUrl = `ws://${hostname}${graphQLEndpointPath}`;
   const allowedOrigin = `http://${hostname}`;
   return {
@@ -51,8 +51,10 @@ export async function createAuthenticationContextAsync({ port }) {
 export async function startAsync(projectDir) {
   const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
+  const listenHostname = devtoolsHost();
+  const graphqlHostname = devtoolsGraphQLHost();
 
-  const authenticationContext = await createAuthenticationContextAsync({ port });
+  const authenticationContext = await createAuthenticationContextAsync({ graphqlHostname, port });
   const { webSocketGraphQLUrl, clientAuthenticationToken } = authenticationContext;
   server.get('/dev-tools-info', authenticationContext.requestHandler);
   server.use(
@@ -70,11 +72,11 @@ export async function startAsync(projectDir) {
   await new Promise((resolve, reject) => {
     httpServer.once('error', reject);
     httpServer.once('listening', resolve);
-    httpServer.listen(port, 'localhost');
+    httpServer.listen(port, listenHostname);
   });
   startGraphQLServer(projectDir, httpServer, authenticationContext);
   await ProjectSettings.setPackagerInfoAsync(projectDir, { devToolsPort: port });
-  return `http://localhost:${port}`;
+  return `http://${listenHostname}:${port}`;
 }
 
 export function startGraphQLServer(projectDir, httpServer, authenticationContext) {
@@ -114,6 +116,28 @@ export function startGraphQLServer(projectDir, httpServer, authenticationContext
       },
     }
   );
+}
+
+function devtoolsHost() {
+  let devtoolHost;
+  if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
+    devtoolHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
+  } else {
+    devtoolHost = `localhost`;
+  }
+  return devtoolHost;
+}
+
+function devtoolsGraphQLHost() {
+  let devtoolsGraphQLHost;
+  if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS && process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
+    devtoolsGraphQLHost = process.env.REACT_NATIVE_PACKAGER_HOSTNAME.trim();
+  } else if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
+    devtoolsGraphQLHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS;
+  } else {
+    devtoolsGraphQLHost = `localhost`;
+  }
+  return devtoolsGraphQLHost;
 }
 
 function createLayout() {

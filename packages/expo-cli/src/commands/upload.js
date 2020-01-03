@@ -29,6 +29,7 @@ export default program => {
     'appleId',
     'appleIdPassword',
     'appName',
+    'companyName',
     'sku',
     'language',
     'publicUrl',
@@ -54,6 +55,10 @@ export default program => {
     .option(
       '--app-name <app-name>',
       `the name of your app as it will appear on the App Store, this can't be longer than 30 characters (default: expo.name from app.json)`
+    )
+    .option(
+      '--company-name <company-name>',
+      'the name of your company, needed only for the first upload of any app to App Store'
     )
     .option(
       '--sku <sku>',

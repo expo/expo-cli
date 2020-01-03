@@ -1,5 +1,5 @@
 import { fileExists, getWebOutputPath, readConfigJsonAsync } from '@expo/config';
-import { sharpAsync } from '@expo/image-utils';
+import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
 import crypto from 'crypto';
@@ -48,6 +48,7 @@ async function optimizeImageAsync(
   quality: number
 ): Promise<string> {
   console.log(`\u203A Checking ${chalk.reset.bold(relative(projectRoot, inputPath))}`);
+
   const outputPath = temporary.directory();
   await sharpAsync({
     input: inputPath,
@@ -177,11 +178,22 @@ export async function optimizeAsync(
   const quality = options.quality == null ? 80 : options.quality;
 
   const images = include || exclude ? selectedFiles : allFiles;
+
   for (const image of images) {
     const hash = hashes[image];
     if (assetInfo[hash]) {
       continue;
     }
+
+    if (!(await isAvailableAsync())) {
+      console.log(
+        chalk.bold.red(
+          `\u203A Cannot optimize images without sharp-cli.\n\u203A Run this command again after successfully installing sharp with \`${chalk.magenta`npm install -g sharp-cli`}\``
+        )
+      );
+      return;
+    }
+
     const { size: prevSize } = statSync(image);
 
     const newName = createNewFilename(image);

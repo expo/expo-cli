@@ -4,7 +4,7 @@ import { ExpoConfig } from '@expo/config';
 import chalk from 'chalk';
 import { AnyConfiguration, Environment } from '../types';
 import { enableWithPropertyOrConfig } from '../utils/config';
-import { getConfig, getMode, getAbsolute } from '../env';
+import { getAbsolute, getConfig, getMode } from '../env';
 
 export const DEFAULT_REPORTING_OPTIONS: BundleAnalyzerPlugin.Options & {
   verbose?: boolean;

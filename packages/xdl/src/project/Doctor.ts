@@ -215,7 +215,6 @@ async function _validateExpJsonAsync(
     return ERROR;
   }
   ProjectUtils.clearNotification(projectRoot, 'doctor-unversioned');
-
   let sdkVersions = await Versions.sdkVersionsAsync();
   if (!sdkVersions) {
     ProjectUtils.logError(
@@ -434,7 +433,7 @@ async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
   return NO_ISSUES;
 }
 
-export async function validateLowLatencyAsync(projectRoot: string): Promise<number> {
+export async function validateWithoutNetworkAsync(projectRoot: string): Promise<number> {
   return validateAsync(projectRoot, false);
 }
 

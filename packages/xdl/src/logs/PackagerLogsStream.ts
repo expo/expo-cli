@@ -486,7 +486,7 @@ export default class PackagerLogsStream {
   }
 
   _cleanUpNodeErrors = (chunk: LogRecord) => {
-    if (typeof chunk.msg === 'object') {
+    if (typeof chunk.msg !== 'string') {
       return chunk;
     }
 

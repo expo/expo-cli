@@ -8,7 +8,10 @@ export function getExpoDomainUrl(): string {
   }
 }
 
-export function constructBuildLogsUrl(buildId: string): string {
+export function constructBuildLogsUrl(buildId: string, username?: string): string {
+  if (username) {
+    return `${getExpoDomainUrl()}/dashboard/${username}/builds/${buildId}`;
+  }
   return `${getExpoDomainUrl()}/builds/${buildId}`;
 }
 

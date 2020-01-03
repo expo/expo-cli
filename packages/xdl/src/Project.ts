@@ -72,6 +72,7 @@ import * as Doctor from './project/Doctor';
 import * as IosPlist from './detach/IosPlist';
 // @ts-ignore IosWorkspace not yet converted to TypeScript
 import * as IosWorkspace from './detach/IosWorkspace';
+import { ConnectionStatus } from './xdl';
 
 const EXPO_CDN = 'https://d1wp6m56sqw74a.cloudfront.net';
 const MINIMUM_BUNDLE_SIZE = 500;
@@ -756,11 +757,14 @@ export async function publishAsync(
 
   await _fetchAndUploadAssetsAsync(projectRoot, exp);
 
+  const hasHooks = validPostPublishHooks.length > 0;
+
+  const shouldPublishAndroidMaps = !!exp.android && !!exp.android.publishSourceMapPath;
+
+  const shouldPublishIosMaps = !!exp.ios && !!exp.ios.publishSourceMapPath;
+
   let { iosSourceMap, androidSourceMap } = await _maybeBuildSourceMapsAsync(projectRoot, exp, {
-    force:
-      validPostPublishHooks.length > 0 ||
-      (exp.android && exp.android.publishSourceMapPath) ||
-      (exp.ios && exp.ios.publishSourceMapPath),
+    force: hasHooks || shouldPublishAndroidMaps || shouldPublishIosMaps,
   });
 
   let response;
@@ -1345,11 +1349,15 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   });
 
   // Collect list of assets missing on host
-  const metas = (
-    await Api.callMethodAsync('assetsMetadata', [], 'post', {
-      keys: Object.keys(paths),
-    })
-  ).metadata;
+  let result;
+  if (process.env.EXPO_NEXT_API) {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    result = await api.postAsync('assets/metadata', { keys: Object.keys(paths) });
+  } else {
+    result = await Api.callMethodAsync('assetsMetadata', [], 'post', { keys: Object.keys(paths) });
+  }
+  const metas = result.metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
 
   if (missing.length === 0) {
@@ -1368,7 +1376,14 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
 
         formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
-      await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
+
+      if (process.env.EXPO_NEXT_API) {
+        const user = await UserManager.ensureLoggedInAsync();
+        const api = ApiV2.clientForUser(user);
+        await api.uploadFormDataAsync('assets/upload', formData);
+      } else {
+        await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
+      }
     })
   );
 }
@@ -1429,29 +1444,28 @@ type BuildCreatedResult = {
   hasUnlimitedPriorityBuilds: boolean;
 };
 
-export async function buildAsync(
-  projectRoot: string,
-  options: {
-    current?: boolean;
-    mode?: string;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-    sdkVersion?: string;
-  } = {}
-): Promise<BuildStatusResult | BuildCreatedResult> {
-  await UserManager.ensureLoggedInAsync();
-  _assertValidProjectRoot(projectRoot);
+function _validateManifest(options: any, exp: any, configName: string, configPrefix: string) {
+  if (options.platform === 'ios' || options.platform === 'all') {
+    if (!exp.ios || !exp.ios.bundleIdentifier) {
+      throw new XDLError(
+        'INVALID_MANIFEST',
+        `Must specify a bundle identifier in order to build this experience for iOS. ` +
+          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
+      );
+    }
+  }
 
-  Analytics.logEvent('Build Shell App', {
-    projectRoot,
-    developerTool: Config.developerTool,
-    platform: options.platform,
-  });
-
+  if (options.platform === 'android' || options.platform === 'all') {
+    if (!exp.android || !exp.android.package) {
+      throw new XDLError(
+        'INVALID_MANIFEST',
+        `Must specify a java package in order to build this experience for Android. ` +
+          `Please specify one in ${configName} at "${configPrefix}android.package"`
+      );
+    }
+  }
+}
+function _validateOptions(options: any) {
   const schema = joi.object().keys({
     current: joi.boolean(),
     mode: joi.string(),
@@ -1468,7 +1482,9 @@ export async function buildAsync(
   if (error) {
     throw new XDLError('INVALID_OPTIONS', error.toString());
   }
+}
 
+async function _getExpAsync(projectRoot: string, options: any) {
   const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
@@ -1486,31 +1502,99 @@ export async function buildAsync(
   if (!exp.slug && 'name' in pkg && pkg.name) {
     exp.slug = pkg.name;
   }
+  return { exp, configName, configPrefix };
+}
 
-  if (options.mode !== 'status' && (options.platform === 'ios' || options.platform === 'all')) {
-    if (!exp.ios || !exp.ios.bundleIdentifier) {
-      throw new XDLError(
-        'INVALID_MANIFEST',
-        `Must specify a bundle identifier in order to build this experience for iOS. ` +
-          `Please specify one in ${configName} at "${configPrefix}ios.bundleIdentifier"`
-      );
-    }
-  }
+export async function getBuildStatusAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean;
+    platform?: 'android' | 'ios' | 'all';
+    expIds?: Array<string>;
+    type?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+    publicUrl?: string;
+    sdkVersion?: string;
+  } = {}
+): Promise<BuildStatusResult> {
+  const user = await UserManager.ensureLoggedInAsync();
 
-  if (options.mode !== 'status' && (options.platform === 'android' || options.platform === 'all')) {
-    if (!exp.android || !exp.android.package) {
-      throw new XDLError(
-        'INVALID_MANIFEST',
-        `Must specify a java package in order to build this experience for Android. ` +
-          `Please specify one in ${configName} at "${configPrefix}android.package"`
-      );
-    }
-  }
+  _assertValidProjectRoot(projectRoot);
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
 
-  return await Api.callMethodAsync('build', [], 'put', {
-    manifest: exp,
-    options,
+  const api = ApiV2.clientForUser(user);
+  return await api.postAsync('build/status', { manifest: exp, options });
+}
+
+export async function startBuildAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean;
+    platform?: 'android' | 'ios' | 'all';
+    expIds?: Array<string>;
+    type?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+    publicUrl?: string;
+    sdkVersion?: string;
+  } = {}
+): Promise<BuildCreatedResult> {
+  const user = await UserManager.ensureLoggedInAsync();
+
+  _assertValidProjectRoot(projectRoot);
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+  _validateManifest(options, exp, configName, configPrefix);
+
+  Analytics.logEvent('Build Shell App', {
+    projectRoot,
+    developerTool: Config.developerTool,
+    platform: options.platform,
   });
+
+  const api = ApiV2.clientForUser(user);
+  return await api.putAsync('build/start', { manifest: exp, options });
+}
+
+export async function buildAsync(
+  projectRoot: string,
+  options: {
+    current?: boolean;
+    mode?: string;
+    platform?: 'android' | 'ios' | 'all';
+    expIds?: Array<string>;
+    type?: string;
+    releaseChannel?: string;
+    bundleIdentifier?: string;
+    publicUrl?: string;
+    sdkVersion?: string;
+  } = {}
+): Promise<BuildStatusResult | BuildCreatedResult> {
+  /**
+    This function corresponds to an apiv1 call and is deprecated.
+    Use 
+      * startBuildAsync
+      * getBuildStatusAsync
+    to call apiv2 instead.
+   */
+  await UserManager.ensureLoggedInAsync();
+  _assertValidProjectRoot(projectRoot);
+
+  Analytics.logEvent('Build Shell App', {
+    projectRoot,
+    developerTool: Config.developerTool,
+    platform: options.platform,
+  });
+
+  _validateOptions(options);
+  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+  if (options.mode === 'create') {
+    _validateManifest(options, exp, configName, configPrefix);
+  }
+
+  return await Api.callMethodAsync('build', [], 'put', { manifest: exp, options });
 }
 
 async function _waitForRunningAsync(
@@ -1901,9 +1985,14 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       extended: true,
     })
   );
-  if ((await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL) {
+  if (
+    (ConnectionStatus.isOffline()
+      ? await Doctor.validateWithoutNetworkAsync(projectRoot)
+      : await Doctor.validateWithNetworkAsync(projectRoot)) === Doctor.FATAL
+  ) {
     throw new Error(`Couldn't start project. Please fix the errors and restart the project.`);
-  } // Serve the manifest.
+  }
+  // Serve the manifest.
   const manifestHandler = async (req: express.Request, res: express.Response) => {
     try {
       // We intentionally don't `await`. We want to continue trying even
@@ -1970,12 +2059,23 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
             _cachedSignedManifest.signedManifest = manifestString;
           } else {
             let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
-            let signedManifest = await Api.callMethodAsync(
-              'signManifest',
-              [publishInfo.args],
-              'post',
-              manifest
-            );
+
+            let signedManifest;
+            if (process.env.EXPO_NEXT_API) {
+              const user = await UserManager.ensureLoggedInAsync();
+              const api = ApiV2.clientForUser(user);
+              signedManifest = await api.postAsync('manifest/sign', {
+                args: publishInfo.args,
+                manifest,
+              });
+            } else {
+              signedManifest = await Api.callMethodAsync(
+                'signManifest',
+                [publishInfo.args],
+                'post',
+                manifest
+              );
+            }
             _cachedSignedManifest.manifestString = manifestString;
             _cachedSignedManifest.signedManifest = signedManifest.response;
             manifestString = signedManifest.response;

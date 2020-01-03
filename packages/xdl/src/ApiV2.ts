@@ -8,6 +8,7 @@ import merge from 'lodash/merge';
 import QueryString from 'querystring';
 
 import Config from './Config';
+import * as ConnectionStatus from './ConnectionStatus';
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
@@ -44,6 +45,7 @@ type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
+  timeout?: Number;
 };
 
 type UploadOptions = {
@@ -158,7 +160,7 @@ export default class ApiV2Client {
   async _requestAsync(
     methodName: string,
     options: RequestOptions,
-    extraRequestOptions?: Partial<RequestOptions>,
+    extraRequestOptions: Partial<RequestOptions> = {},
     returnEntireResponse: boolean = false,
     uploadOptions?: UploadOptions
   ) {
@@ -184,6 +186,10 @@ export default class ApiV2Client {
     // Handle body
     if (options.body) {
       reqOptions.data = options.body;
+    }
+
+    if (!extraRequestOptions.hasOwnProperty('timeout') && ConnectionStatus.isOffline()) {
+      reqOptions.timeout = 1;
     }
 
     reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions);

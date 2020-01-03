@@ -38,9 +38,16 @@ export function addCompressionPlugins(
   webpackConfig: Configuration | DevConfiguration,
   config: ExpoConfig
 ): Configuration | DevConfiguration {
-  const { build = {} } = config.web;
-  const gzipConfig = overrideWithPropertyOrConfig(build.gzip, DEFAULT_GZIP_OPTIONS, true);
-  const brotliConfig = enableWithPropertyOrConfig(build.brotli, DEFAULT_BROTLI_OPTIONS, true);
+  const gzipConfig = overrideWithPropertyOrConfig(
+    config.web?.build?.gzip,
+    DEFAULT_GZIP_OPTIONS,
+    true
+  );
+  const brotliConfig = enableWithPropertyOrConfig(
+    config.web?.build?.brotli,
+    DEFAULT_BROTLI_OPTIONS,
+    true
+  );
 
   if (!Array.isArray(webpackConfig.plugins)) webpackConfig.plugins = [];
 
