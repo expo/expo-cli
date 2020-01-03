@@ -33,9 +33,7 @@ async function fetchAndroidHashesAsync(projectDir) {
       keystorePassword: get(view, 'credentials.keystorePassword'),
       keyAlias: get(view, 'credentials.keyAlias'),
     });
-    log(
-      `\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`
-    );
+    log(`\nNote: if you are using Google Play signing, this app will be signed with a different key after publishing to the store, and you'll need to use the hashes displayed in the Google Play console.`);
   } finally {
     try {
       fs.unlink(outputPath);
