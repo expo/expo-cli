@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
@@ -10,9 +12,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { boolish } from 'getenv';
 import path from 'path';
-
-// @ts-ignore
-import CleanWebpackPlugin from 'clean-webpack-plugin';
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 
 import { projectHasModule } from '@expo/config';
 import { getConfig, getMode, getModuleFileExtensions, getPathsAsync, getPublicPaths } from './env';
@@ -111,10 +111,13 @@ export default async function(
 
   const { publicPath, publicUrl } = getPublicPaths(env);
 
-  const { build: buildConfig = {} } = config.web;
+  const { build: buildConfig = {} } = config.web || {};
   const { babel: babelAppConfig = {} } = buildConfig;
 
-  const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig);
+  const devtool = getDevtool(
+    { production: isProd, development: isDev },
+    buildConfig as { devtool: Options.Devtool }
+  );
 
   const babelProjectRoot = babelAppConfig.root || locations.root;
 
@@ -175,8 +178,8 @@ export default async function(
     plugins: [
       // Delete the build folder
       isProd &&
-        new CleanWebpackPlugin([locations.production.folder], {
-          root: locations.root,
+        new CleanWebpackPlugin({
+          cleanOnceBeforeBuildPatterns: [locations.production.folder],
           dry: false,
           verbose: false,
         }),

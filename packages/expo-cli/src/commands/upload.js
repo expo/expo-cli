@@ -28,8 +28,8 @@ export default program => {
     ...COMMON_OPTIONS,
     'appleId',
     'appleIdPassword',
-    'itcTeamId',
     'appName',
+    'companyName',
     'sku',
     'language',
     'publicUrl',
@@ -46,7 +46,7 @@ export default program => {
     // after updating fastlane this value will be unnecessary
     .option(
       '--itc-team-id <itc-team-id>',
-      'App Store Connect Team ID (optional if there is only one team available)'
+      'App Store Connect Team ID - this option is deprecated, the proper ID is resolved automatically'
     )
     .option(
       '--apple-id-password <apple-id-password>',
@@ -55,6 +55,10 @@ export default program => {
     .option(
       '--app-name <app-name>',
       `the name of your app as it will appear on the App Store, this can't be longer than 30 characters (default: expo.name from app.json)`
+    )
+    .option(
+      '--company-name <company-name>',
+      'the name of your company, needed only for the first upload of any app to App Store'
     )
     .option(
       '--sku <sku>',

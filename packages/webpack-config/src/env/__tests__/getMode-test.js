@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import getMode from '../getMode';
 
 let mode;

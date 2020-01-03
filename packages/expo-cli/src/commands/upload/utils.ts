@@ -30,7 +30,14 @@ export async function runFastlaneAsync(
     appleIdPassword,
     appleTeamId,
     itcTeamId,
-  }: { appleId?: string; appleIdPassword?: string; appleTeamId?: string; itcTeamId?: string },
+    companyName,
+  }: {
+    appleId?: string;
+    appleIdPassword?: string;
+    appleTeamId?: string;
+    itcTeamId?: string;
+    companyName?: string;
+  },
   pipeToLogger = false
 ): Promise<{ [key: string]: any }> {
   const pipeToLoggerOptions: any = pipeToLogger
@@ -44,7 +51,8 @@ export async function runFastlaneAsync(
           FASTLANE_PASSWORD: appleIdPassword,
           FASTLANE_DONT_STORE_PASSWORD: '1',
           FASTLANE_TEAM_ID: appleTeamId,
-          FASTLANE_ITC_TEAM_ID: itcTeamId ? itcTeamId : undefined,
+          ...(itcTeamId && { FASTLANE_ITC_TEAM_ID: itcTeamId }),
+          ...(companyName && { PRODUCE_COMPANY_NAME: companyName }),
         }
       : {};
 

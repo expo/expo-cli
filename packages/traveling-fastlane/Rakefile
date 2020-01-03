@@ -2,24 +2,25 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.11.0"
+VERSION = "1.11.3"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
 
 # Be sure to add the name of a script here when you add it to actions
 SCRIPTS = [
-  'funcs',
-  'preload',
   'app_produce',
   'authenticate',
   'ensure_app_exists',
+  'funcs',
   'list_devices',
   'manage_ad_hoc_provisioning_profile',
   'manage_dist_certs',
   'manage_provisioning_profiles',
   'manage_push_keys',
   'pilot_upload',
+  'preload',
+  'resolve_itc_team_id',
   'supply_android',
 ]
 

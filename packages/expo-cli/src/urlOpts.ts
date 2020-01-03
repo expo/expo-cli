@@ -1,7 +1,7 @@
 import indentString from 'indent-string';
 import qrcodeTerminal from 'qrcode-terminal';
 
-import { Android, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
+import { Android, ConnectionStatus, ProjectSettings, Simulator, Webpack } from '@expo/xdl';
 import { Command } from 'commander';
 
 import CommandError from './CommandError';
@@ -33,6 +33,13 @@ async function optsAsync(projectDir: string, options: any) {
     );
   }
 
+  opts.hostType = 'lan';
+
+  if (options.offline) {
+    ConnectionStatus.setIsOffline(true);
+    opts.hostType = 'localhost';
+  }
+
   if (options.host) {
     opts.hostType = options.host;
   } else if (options.tunnel) {
@@ -41,8 +48,6 @@ async function optsAsync(projectDir: string, options: any) {
     opts.hostType = 'lan';
   } else if (options.localhost) {
     opts.hostType = 'localhost';
-  } else {
-    opts.hostType = 'lan';
   }
 
   await ProjectSettings.setAsync(projectDir, opts);

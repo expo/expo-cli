@@ -8,6 +8,7 @@ import isString from 'lodash/isString';
 import path from 'path';
 
 import Config from './Config';
+import * as ConnectionStatus from './ConnectionStatus';
 import * as Extract from './Extract';
 import * as Session from './Session';
 import { Cacher } from './tools/FsCache';
@@ -87,19 +88,23 @@ async function _callMethodAsync(
     };
   }
 
-  if (requestOptions) {
-    if (requestOptions.formData) {
-      let convertedFormData = await _convertFormDataToBuffer(requestOptions.formData);
-      let { data } = convertedFormData;
-      options.headers = {
-        ...options.headers,
-        ...requestOptions.formData.getHeaders(),
-      };
-      options = { ...options, data };
-    } else {
-      options = { ...options, ...requestOptions };
-    }
+  if (requestOptions.formData) {
+    let { formData, ...rest } = requestOptions;
+    let convertedFormData = await _convertFormDataToBuffer(formData);
+    let { data } = convertedFormData;
+    options.headers = {
+      ...options.headers,
+      ...formData.getHeaders(),
+    };
+    options = { ...options, data, ...rest };
+  } else {
+    options = { ...options, ...requestOptions };
   }
+
+  if (!requestOptions.hasOwnProperty('timeout') && ConnectionStatus.isOffline()) {
+    options.timeout = 1;
+  }
+
   let response = await axios.request(options);
   if (!response) {
     throw new Error('Unexpected error: Request failed.');

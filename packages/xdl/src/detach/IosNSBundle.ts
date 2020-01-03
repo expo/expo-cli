@@ -36,7 +36,7 @@ const KERNEL_URL = 'https://expo.io/@exponent/home';
 
 function _configureInfoPlistForLocalDevelopment(config: any, exp: ExpoConfig): ExpoConfig {
   // add detached scheme
-  if (exp.isDetached && exp.detach.scheme) {
+  if (exp.isDetached && exp.detach?.scheme) {
     if (!config.CFBundleURLTypes) {
       config.CFBundleURLTypes = [
         {
@@ -330,10 +330,12 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       delete infoPlist['FacebookDisplayName'];
     }
 
-    infoPlist.FacebookAutoInitEnabled = config.facebookAutoInitEnabled || false;
-    infoPlist.FacebookAutoLogAppEventsEnabled = config.facebookAutoLogAppEventsEnabled || false;
-    infoPlist.FacebookAdvertiserIDCollectionEnabled =
-      config.facebookAdvertiserIDCollectionEnabled || false;
+    if (parseSdkMajorVersion(config.sdkVersion) >= 36) {
+      infoPlist.FacebookAutoInitEnabled = config.facebookAutoInitEnabled || false;
+      infoPlist.FacebookAutoLogAppEventsEnabled = config.facebookAutoLogAppEventsEnabled || false;
+      infoPlist.FacebookAdvertiserIDCollectionEnabled =
+        config.facebookAdvertiserIDCollectionEnabled || false;
+    }
 
     // set ITSAppUsesNonExemptEncryption to let people skip manually
     // entering it in iTunes Connect

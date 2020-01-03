@@ -14,6 +14,9 @@ import * as Webhooks from './Webhooks';
 
 import Config from './Config';
 
+import * as ConnectionStatus from './ConnectionStatus';
+export { ConnectionStatus };
+
 import * as Credentials from './credentials/Credentials';
 
 import * as AndroidCredentials from './credentials/AndroidCredentials';

@@ -87,7 +87,7 @@ export const printServerInfo = async (projectDir, options = {}) => {
       item(
         `Sign in as ${i(
           '@' + username
-        )} in Expo Client on Android or iOS. Your projects will automatically appear in the "Projects" tab.`
+        )} in Expo client on Android or iOS. Your projects will automatically appear in the "Projects" tab.`
       )
     );
   }
@@ -201,8 +201,8 @@ export const startAsync = async (projectDir, options) => {
               let sent = false;
               try {
                 await Exp.sendAsync(sendTo, lanAddress);
-                log(`Sent link successfully.`);
                 sent = true;
+                log(`Sent link successfully.`);
               } catch (err) {
                 log(`Could not send link. ${err}`);
               }

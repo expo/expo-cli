@@ -756,7 +756,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 
   // Add shell app scheme
-  const schemes = [scheme, manifest.facebookScheme].filter(e => e);
+  const schemes = [scheme].filter(e => e);
   if (schemes.length > 0) {
     const searchLine = isDetached
       ? '<!-- ADD DETACH SCHEME HERE -->'
@@ -773,6 +773,14 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
       </intent-filter>`,
+      path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
+    );
+  }
+  // Add Facebook app scheme
+  if (manifest.facebookScheme) {
+    await regexFileAsync(
+      '<!-- REPLACE WITH FACEBOOK SCHEME -->',
+      `<data android:scheme="${manifest.facebookScheme}" />`,
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
@@ -1099,6 +1107,9 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   );
 
   // Facebook configuration
+
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookAppId) {
     await regexFileAsync(
       '<!-- ADD FACEBOOK APP ID CONFIG HERE -->',
@@ -1106,6 +1117,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookDisplayName) {
     await regexFileAsync(
       '<!-- ADD FACEBOOK APP DISPLAY NAME CONFIG HERE -->',
@@ -1113,6 +1126,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookAutoInitEnabled) {
     await regexFileAsync(
       '<meta-data android:name="com.facebook.sdk.AutoInitEnabled" android:value="false"/>',
@@ -1120,6 +1135,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookAutoLogAppEventsEnabled) {
     await regexFileAsync(
       '<meta-data android:name="com.facebook.sdk.AutoLogAppEventsEnabled" android:value="false"/>',
@@ -1127,6 +1144,8 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       path.join(shellPath, 'app', 'src', 'main', 'AndroidManifest.xml')
     );
   }
+  // There's no such pattern to replace in shell apps below SDK 36,
+  // so this will not have any effect on these apps.
   if (manifest.facebookAdvertiserIDCollectionEnabled) {
     await regexFileAsync(
       '<meta-data android:name="com.facebook.sdk.AdvertiserIDCollectionEnabled" android:value="false"/>',
@@ -1161,7 +1180,10 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
   let gradleBuildCommand;
   let outputPath;
   if (buildType === 'app-bundle') {
-    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
+    if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 36) {
+      gradleBuildCommand = `bundle${debugOrRelease}`;
+      outputPath = path.join(outputDirPath, debugOrReleaseL, `app-${debugOrReleaseL}.aab`);
+    } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 33) {
       gradleBuildCommand = `bundle${debugOrRelease}`;
       outputPath = path.join(outputDirPath, debugOrReleaseL, `app.aab`);
     } else if (ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32) {

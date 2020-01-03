@@ -18,7 +18,7 @@ async function waitForBuildEnd(
   let time = new Date().getTime();
   const endTime = time + timeoutSec * 1000;
   while (time <= endTime) {
-    const buildInfo: BuildInfo = await client.getAsync(`build/status/${buildId}`);
+    const buildInfo: BuildInfo = await client.getAsync(`builds/${buildId}`);
     switch (buildInfo.status) {
       case 'finished':
         spinner.succeed('Build finished.');

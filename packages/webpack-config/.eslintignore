@@ -1,0 +1,14 @@
+/webpack/
+node_modules
+/web-default/
+/jest/
+
+.expo
+.next
+web-build
+
+tsconfig.tsbuildinfo
+
+yarn.lock
+yarn-error.log
+*.d.ts

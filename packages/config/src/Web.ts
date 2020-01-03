@@ -1,7 +1,7 @@
 import JsonFile from '@expo/json-file';
 
 import { readConfigJson } from './Config';
-import { AppJSONConfig, ExpoConfig } from './Config.types';
+import { AppJSONConfig, ExpoConfig, WebPlatformConfig, WebSplashScreen } from './Config.types';
 
 const APP_JSON_FILE_NAME = 'app.json';
 
@@ -143,9 +143,10 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
    * >> The banner won't show up if the app is already installed:
    * https://github.com/GoogleChrome/samples/issues/384#issuecomment-326387680
    */
-
   const preferRelatedApplications =
-    webManifest.preferRelatedApplications || DEFAULT_PREFER_RELATED_APPLICATIONS;
+    webManifest.preferRelatedApplications === undefined
+      ? DEFAULT_PREFER_RELATED_APPLICATIONS
+      : webManifest.preferRelatedApplications;
 
   const relatedApplications = inferWebRelatedApplicationsFromConfig(appManifest);
 
@@ -284,27 +285,30 @@ function inferWebStartupImages(
   getAbsolutePath: (...pathComponents: string[]) => string,
   options: Object
 ) {
-  const { icon, web = {}, splash = {}, primaryColor } = config;
-  if (Array.isArray(web.startupImages)) {
-    return web.startupImages;
+  const { icon, splash = {}, primaryColor } = config;
+  const { web } = config;
+  // @ts-ignore
+  if (Array.isArray(web?.startupImages)) {
+    // @ts-ignore
+    return web?.startupImages;
   }
 
-  const { splash: webSplash = {} } = web;
   let startupImages = [];
 
   let splashImageSource;
-  const possibleIconSrc = webSplash.image || splash.image || icon;
+  const possibleIconSrc = web?.splash?.image || splash.image || icon;
   if (possibleIconSrc) {
-    const resizeMode = webSplash.resizeMode || splash.resizeMode || 'contain';
+    const resizeMode = web?.splash?.resizeMode || splash.resizeMode || 'contain';
     const backgroundColor =
-      webSplash.backgroundColor || splash.backgroundColor || primaryColor || '#ffffff';
+      web?.splash?.backgroundColor || splash.backgroundColor || primaryColor || '#ffffff';
     splashImageSource = getAbsolutePath(possibleIconSrc);
     startupImages.push({
       resizeMode,
       color: backgroundColor,
       src: splashImageSource,
-      supportsTablet: webSplash.supportsTablet === undefined ? true : webSplash.supportsTablet,
-      orientation: web.orientation,
+      supportsTablet:
+        web?.splash?.supportsTablet === undefined ? true : web?.splash?.supportsTablet,
+      orientation: web?.orientation,
       destination: `apple/splash`,
     });
   }
@@ -318,6 +322,7 @@ export function ensurePWAConfig(
 ): ExpoConfig {
   const config = applyWebDefaults(appJSON);
   if (getAbsolutePath) {
+    if (!config.web) config.web = {};
     config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
     config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
   }

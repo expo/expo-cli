@@ -41,7 +41,7 @@ export default class Builder {
       const { s3Url } = await this.client.uploadFile(tarPath);
       spinner.succeed('Project uploaded.');
       const job = await prepareJob(options, s3Url, projectDir);
-      const response = await this.client.postAsync('build/start', job);
+      const response = await this.client.postAsync('builds', job);
       return await waitForBuildEnd(this.client, response.buildId);
     } finally {
       await fs.remove(tarPath);
@@ -49,6 +49,6 @@ export default class Builder {
   }
 
   async getLatestBuilds(): Promise<StatusResult> {
-    return await this.client.getAsync('build/status');
+    return await this.client.getAsync('builds');
   }
 }

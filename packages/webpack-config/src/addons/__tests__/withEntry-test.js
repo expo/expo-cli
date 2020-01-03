@@ -1,3 +1,5 @@
+/* eslint-env node */
+
 import { resolveEntryAsync } from '../../utils';
 import withEntry from '../withEntry';
 
@@ -75,6 +77,6 @@ it(`Throws when app is missing from entry in strict mode`, async () => {
   );
 
   expect(resolveEntryAsync(config.entry)).rejects.toThrow(
-    /Failed to include required app entry module: "foo" because the webpack entry object doesn't contain an \`app\` field/
+    /Failed to include required app entry module: "foo" because the webpack entry object doesn't contain an `app` field/
   );
 });

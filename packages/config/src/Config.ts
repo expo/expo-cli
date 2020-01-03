@@ -189,7 +189,7 @@ function ensureConfigHasDefaultValues(
     exp.slug = slug(exp.name.toLowerCase());
   }
 
-  if (!exp.version) {
+  if (!exp.version && typeof pkg.version === 'string') {
     exp.version = pkg.version;
   }
 

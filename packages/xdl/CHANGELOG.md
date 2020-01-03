@@ -14,6 +14,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 - use `react-native-unimodules` autolinking in ejected apps
 - allowed ejecting to ExpoKit if only one platform is released (makes SDK release easier)
 - adjusted ExpoKit's Podfile generation for SDK36 and newer
+- added replacing of Facebook scheme placeholder with the appropriate `<data>` tag in `AndroidManifest.xml`
 
 ### Changed
 
@@ -22,6 +23,7 @@ For guidelines on how to update this file, visit http://keepachangelog.com/en/0.
 - `ProjectUtils.readConfigJsonAsync` from `xdl` in favor of `readConfigJsonAsync` from `@expo/config`
 - `ProjectUtils.readExpRcAsync` from `xdl` in favor of `readExpRcAsync` from `@expo/config`
 - Dropped support for SDK 24, `Detach.detachAsync` now requires SDK version 25.0.0 or newer.
+- Removed adding `facebookScheme` to `MainActivity`'s intent-filters.
 
 ## [51.1.0] - 2018-08-28
 

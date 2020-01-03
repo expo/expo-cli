@@ -1,14 +1,35 @@
-/**
- * @flow
- */
 import { readConfigJsonAsync } from '@expo/config';
-import { Api, FormData, Project, UserManager } from '@expo/xdl';
+import { Api, ApiV2, FormData, Project, UserManager } from '@expo/xdl';
+import dateFormat from 'dateformat';
 
-import * as table from '../commands/utils/cli-table';
+import * as table from './utils/cli-table';
 
 const HORIZ_CELL_WIDTH_SMALL = 15;
 const HORIZ_CELL_WIDTH_BIG = 40;
 const VERSION = 2;
+
+type HistoryOptions = {
+  releaseChannel?: string;
+  count?: number;
+  platform?: 'android' | 'ios';
+  raw?: boolean;
+};
+
+type DetailOptions = {
+  publishId?: string;
+  raw?: boolean;
+};
+
+type Publication = {
+  fullName: string;
+  channel: string;
+  channelId: string;
+  publicationId: string;
+  appVersion: string;
+  sdkVersion: string;
+  publishedTime: string;
+  platform: 'android' | 'ios';
+};
 
 export default (program: any) => {
   program
@@ -26,36 +47,49 @@ export default (program: any) => {
     )
     .option('-p, --platform <ios|android>', 'Filter by platform, android or ios.')
     .option('-r, --raw', 'Produce some raw output.')
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: HistoryOptions) => {
       if (options.count && (isNaN(options.count) || options.count < 1 || options.count > 100)) {
         throw new Error('-n must be a number between 1 and 100 inclusive');
       }
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
-      await UserManager.ensureLoggedInAsync();
+      const user = await UserManager.ensureLoggedInAsync();
+      const { exp } = await readConfigJsonAsync(projectDir);
 
-      // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
-      let formData = new FormData();
-      formData.append('queryType', 'history');
-      let { exp } = await readConfigJsonAsync(projectDir);
-      if (exp.owner) {
-        formData.append('owner', exp.owner);
-      }
-      formData.append('slug', await Project.getSlugAsync(projectDir, options));
-      formData.append('version', VERSION);
-      if (options.releaseChannel) {
-        formData.append('releaseChannel', options.releaseChannel);
-      }
-      if (options.count) {
-        formData.append('count', options.count);
-      }
-      if (options.platform) {
-        formData.append('platform', options.platform);
-      }
+      let result: any;
+      if (process.env.EXPO_NEXT_API) {
+        const api = ApiV2.clientForUser(user);
+        result = await api.postAsync('publish/history', {
+          owner: exp.owner,
+          slug: await Project.getSlugAsync(projectDir, options),
+          version: VERSION,
+          releaseChannel: options.releaseChannel,
+          count: options.count,
+          platform: options.platform,
+        });
+      } else {
+        // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
+        let formData = new FormData();
+        formData.append('queryType', 'history');
+        if (exp.owner) {
+          formData.append('owner', exp.owner);
+        }
+        formData.append('slug', await Project.getSlugAsync(projectDir, options));
+        formData.append('version', VERSION);
+        if (options.releaseChannel) {
+          formData.append('releaseChannel', options.releaseChannel);
+        }
+        if (options.count) {
+          formData.append('count', options.count);
+        }
+        if (options.platform) {
+          formData.append('platform', options.platform);
+        }
 
-      let result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
-        formData,
-      });
+        result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
+          formData,
+        });
+      }
 
       if (options.raw) {
         console.log(JSON.stringify(result));
@@ -85,7 +119,7 @@ export default (program: any) => {
         ];
 
         // colWidths contains the cell size of each header
-        let colWidths = [];
+        let colWidths: number[] = [];
         let bigCells = new Set(['publicationId', 'channelId', 'publishedTime']);
         headers.forEach(header => {
           if (bigCells.has(header)) {
@@ -94,7 +128,11 @@ export default (program: any) => {
             colWidths.push(HORIZ_CELL_WIDTH_SMALL);
           }
         });
-        let tableString = table.printTableJsonArray(headers, result.queryResult, colWidths);
+        const resultRows = result.queryResult.map((publication: Publication) => ({
+          ...publication,
+          publishedTime: dateFormat(publication.publishedTime, 'ddd mmm dd yyyy HH:MM:ss Z'),
+        }));
+        let tableString = table.printTableJsonArray(headers, resultRows, colWidths);
         console.log(tableString);
       } else {
         throw new Error('No records found matching your query.');
@@ -106,27 +144,38 @@ export default (program: any) => {
     .description('View the details of a published release.')
     .option('--publish-id <publish-id>', 'Publication id. (Required)')
     .option('-r, --raw', 'Produce some raw output.')
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: DetailOptions) => {
       if (!options.publishId) {
-        throw new Error('publishId must be specified.');
+        throw new Error('--publish-id must be specified.');
       }
 
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
-      await UserManager.ensureLoggedInAsync();
+      const user = await UserManager.ensureLoggedInAsync();
+      const { exp } = await readConfigJsonAsync(projectDir);
+      const slug = await Project.getSlugAsync(projectDir, options);
 
-      let formData = new FormData();
-      formData.append('queryType', 'details');
+      let result: any;
+      if (process.env.EXPO_NEXT_API) {
+        const api = ApiV2.clientForUser(user);
+        result = await api.postAsync('publish/details', {
+          owner: exp.owner,
+          publishId: options.publishId,
+          slug,
+        });
+      } else {
+        let formData = new FormData();
+        formData.append('queryType', 'details');
 
-      let { exp } = await readConfigJsonAsync(projectDir);
-      if (exp.owner) {
-        formData.append('owner', exp.owner);
+        if (exp.owner) {
+          formData.append('owner', exp.owner);
+        }
+        formData.append('publishId', options.publishId);
+        formData.append('slug', slug);
+
+        result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
+          formData,
+        });
       }
-      formData.append('publishId', options.publishId);
-      formData.append('slug', await Project.getSlugAsync(projectDir, options));
-
-      let result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
-        formData,
-      });
 
       if (options.raw) {
         console.log(JSON.stringify(result));

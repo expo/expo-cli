@@ -1,11 +1,14 @@
 import { JSONObject, JSONValue } from '@expo/json-file';
 import axios, { AxiosRequestConfig } from 'axios';
+import concat from 'concat-stream';
 import ExtendableError from 'es6-error';
+import FormData from 'form-data';
 import idx from 'idx';
 import merge from 'lodash/merge';
 import QueryString from 'querystring';
 
 import Config from './Config';
+import * as ConnectionStatus from './ConnectionStatus';
 
 // These aren't constants because some commands switch between staging and prod
 function _rootBaseUrl() {
@@ -18,6 +21,12 @@ function _apiBaseUrl() {
     rootBaseUrl += ':' + Config.api.port;
   }
   return rootBaseUrl + '/--/api/v2';
+}
+
+async function _convertFormDataToBuffer(formData: FormData): Promise<{ data: Buffer }> {
+  return new Promise(resolve => {
+    formData.pipe(concat({ encoding: 'buffer' }, data => resolve({ data })));
+  });
 }
 
 export class ApiV2Error extends ExtendableError {
@@ -36,6 +45,12 @@ type RequestOptions = {
   httpMethod: 'get' | 'post' | 'put' | 'delete';
   queryParameters?: QueryParameters;
   body?: JSONObject;
+  timeout?: Number;
+};
+
+type UploadOptions = {
+  headers: any;
+  data: any;
 };
 
 type QueryParameters = { [key: string]: string | number | boolean | null | undefined };
@@ -132,11 +147,22 @@ export default class ApiV2Client {
     );
   }
 
+  async uploadFormDataAsync(methodName: string, formData: FormData) {
+    const options: RequestOptions = { httpMethod: 'put' };
+    const { data } = await _convertFormDataToBuffer(formData);
+    const uploadOptions: UploadOptions = {
+      headers: formData.getHeaders(),
+      data,
+    };
+    return await this._requestAsync(methodName, options, undefined, false, uploadOptions);
+  }
+
   async _requestAsync(
     methodName: string,
     options: RequestOptions,
-    extraRequestOptions?: Partial<RequestOptions>,
-    returnEntireResponse: boolean = false
+    extraRequestOptions: Partial<RequestOptions> = {},
+    returnEntireResponse: boolean = false,
+    uploadOptions?: UploadOptions
   ) {
     const url = `${_apiBaseUrl()}/${methodName}`;
     let reqOptions: AxiosRequestConfig = {
@@ -162,7 +188,12 @@ export default class ApiV2Client {
       reqOptions.data = options.body;
     }
 
-    reqOptions = merge({}, reqOptions, extraRequestOptions);
+    if (!extraRequestOptions.hasOwnProperty('timeout') && ConnectionStatus.isOffline()) {
+      reqOptions.timeout = 1;
+    }
+
+    reqOptions = merge({}, reqOptions, extraRequestOptions, uploadOptions);
+
     let response;
     let result;
     try {

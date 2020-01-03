@@ -139,7 +139,7 @@ async function findSharpBinAsync(): Promise<string> {
   if (_sharpBin) {
     return _sharpBin;
   }
-  const requiredCliVersion = require('../package.json').optionalDependencies['sharp-cli'];
+  const requiredCliVersion = require('../package.json').peerDependencies['sharp-cli'];
   try {
     const sharpCliPackage = require('sharp-cli/package.json');
     const libVipsVersion = require('sharp').versions.vips;

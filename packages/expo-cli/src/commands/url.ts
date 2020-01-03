@@ -23,11 +23,20 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
   if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
     throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
   }
-  const res = await Project.buildAsync(projectDir, {
-    current: false,
-    mode: 'status',
-    ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-  });
+
+  let res;
+  if (process.env.EXPO_NEXT_API) {
+    res = await Project.getBuildStatusAsync(projectDir, {
+      current: false,
+      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+    });
+  } else {
+    res = await Project.buildAsync(projectDir, {
+      current: false,
+      mode: 'status',
+      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+    });
+  }
   const url = fp.compose(
     fp.get(['artifacts', 'url']),
     fp.head,
