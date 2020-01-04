@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`readConfigJson serializing serializes item 1`] = `
+Object {
+  "boo": true,
+  "foo": "bar",
+  "fun": Object {
+    "time": Array [
+      "val",
+    ],
+  },
+  "inn": 200,
+  "last": Object {
+    "bar": "foo",
+    "kid": Array [
+      2,
+      "yo",
+    ],
+  },
+  "then": Array [
+    true,
+    Object {
+      "foo": "bar",
+    },
+  ],
+}
+`;

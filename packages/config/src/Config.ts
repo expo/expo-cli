@@ -35,6 +35,27 @@ function getSupportedPlatforms(
   return platforms;
 }
 
+export function serialize(val: any): any {
+  if (['undefined', 'string', 'boolean', 'number'].includes(typeof val)) {
+    return val;
+  } else if (typeof val === 'function') {
+    // TODO: Bacon: Should we support async methods?
+    return val();
+  } else if (Array.isArray(val)) {
+    return val.map(serialize);
+  } else if (typeof val === 'object') {
+    const output: { [key: string]: any } = {};
+    for (const property in val) {
+      if (val.hasOwnProperty(property)) {
+        output[property] = serialize(val[property]);
+      }
+    }
+    return output;
+  }
+
+  throw new Error(`Unhandled item type: ${typeof val}`);
+}
+
 export function getConfig(
   projectRoot: string,
   options: { configPath?: string; skipSDKVersionRequirement?: boolean }
@@ -56,13 +77,15 @@ export function getConfig(
 
   const finalConfig = config || context.config;
 
+  const configs = ensureConfigHasDefaultValues(
+    projectRoot,
+    finalConfig,
+    pkg,
+    options.skipSDKVersionRequirement
+  );
   return {
-    ...ensureConfigHasDefaultValues(
-      projectRoot,
-      finalConfig,
-      pkg,
-      options.skipSDKVersionRequirement
-    ),
+    ...configs,
+    exp: serialize(configs.exp),
     rootConfig: finalConfig as AppJSONConfig,
   };
 }
@@ -81,8 +104,10 @@ export function readConfigJson(
   const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = JsonFile.read(packageJsonPath);
 
+  const configs = ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation);
   return {
-    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
+    ...configs,
+    exp: serialize(configs.exp),
     rootConfig: rootConfig as AppJSONConfig,
   };
 }
