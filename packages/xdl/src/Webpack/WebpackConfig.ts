@@ -11,7 +11,7 @@ export function setMode(mode: 'development' | 'production' | 'test' | 'none'): v
   process.env.NODE_ENV = mode;
 }
 
-async function invokeWebpackConfigAsync(
+export async function invokeWebpackConfigAsync(
   env: WebEnvironment,
   argv?: string[]
 ): Promise<AnyConfiguration> {

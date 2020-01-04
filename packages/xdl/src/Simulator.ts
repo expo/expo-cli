@@ -16,7 +16,7 @@ import NotificationCode from './NotificationCode';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
-import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import { getUrl } from './Webpack';
 import XDLError from './XDLError';
 
 let _lastUrl: string | null = null;
@@ -492,7 +492,7 @@ export async function openProjectAsync(
 export async function openWebProjectAsync(
   projectRoot: string
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
-  const projectUrl = await getWebpackUrlAsync(projectRoot);
+  const projectUrl = getUrl(projectRoot);
   if (projectUrl === null) {
     return {
       success: false,

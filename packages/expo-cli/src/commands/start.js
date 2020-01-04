@@ -169,7 +169,7 @@ async function normalizeOptionsAsync(projectDir: string, options: Object): Objec
   if (typeof options.webOnly !== 'undefined') {
     webOnly = options.webOnly;
   } else {
-    webOnly = Webpack.isWebOnly(projectDir);
+    webOnly = await Web.onlySupportsWebAsync(projectDir);
   }
 
   let opts = {};

@@ -16,7 +16,7 @@ import { getImageDimensionsAsync } from './tools/ImageUtils';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
-import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import { getUrl } from './Webpack';
 
 let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -265,7 +265,7 @@ export async function openWebProjectAsync(
   try {
     await startAdbReverseAsync(projectRoot);
 
-    const projectUrl = await getWebpackUrlAsync(projectRoot);
+    const projectUrl = getUrl(projectRoot);
     if (projectUrl === null) {
       return {
         success: false,
