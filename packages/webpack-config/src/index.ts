@@ -2,7 +2,7 @@ import { Configuration } from 'webpack';
 
 import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
 import * as Diagnosis from './Diagnosis';
-import { validateEnvironment, getPublicPaths } from './env';
+import { getPublicPaths, validateEnvironment } from './env';
 import webpackConfig from './webpack.config';
 import { withWorkbox } from './addons';
 
