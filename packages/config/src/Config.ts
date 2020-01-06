@@ -17,7 +17,7 @@ export function readConfigJson(
   try {
     rawConfig = JsonFile.read(configPath, { json5: true });
   } catch (_) {}
-  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation, projectRoot);
   const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = JsonFile.read(packageJsonPath);
 
@@ -37,7 +37,7 @@ export async function readConfigJsonAsync(
   try {
     rawConfig = await JsonFile.readAsync(configPath, { json5: true });
   } catch (_) {}
-  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation);
+  const { rootConfig, exp } = parseAndValidateRootConfig(rawConfig, skipValidation, projectRoot);
   const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = await JsonFile.readAsync(packageJsonPath);
 
@@ -86,20 +86,26 @@ const APP_JSON_EXAMPLE = JSON.stringify({
 
 function parseAndValidateRootConfig(
   rootConfig: JSONObject | null,
-  skipValidation: boolean
+  skipValidation: boolean,
+  projectRoot: string
 ): { exp: ExpoConfig; rootConfig: JSONObject } {
   let outputRootConfig: JSONObject | null = rootConfig;
   if (outputRootConfig === null || typeof outputRootConfig !== 'object') {
     if (skipValidation) {
       outputRootConfig = { expo: {} };
     } else {
-      throw new ConfigError('app.json must include a JSON object.', 'NOT_OBJECT');
+      throw new ConfigError(
+        `Project at path ${path.resolve(projectRoot)} does not contain a valid app.json.`,
+        'NOT_OBJECT'
+      );
     }
   }
   const exp = outputRootConfig.expo as ExpoConfig;
   if (exp === null || typeof exp !== 'object') {
     throw new ConfigError(
-      `Property 'expo' in app.json is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
+      `Property 'expo' in app.json for project at path ${path.resolve(
+        projectRoot
+      )} is not an object. Please make sure app.json includes a managed Expo app config like this: ${APP_JSON_EXAMPLE}`,
       'NO_EXPO'
     );
   }
