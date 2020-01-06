@@ -1859,6 +1859,10 @@ export async function startReactNativeServerAsync(
     ['start']
   );
 
+  if (process.env.EXPO_DEBUG) {
+    cliOpts.push('--verbose');
+  }
+
   if (options.reset) {
     cliOpts.push('--reset-cache');
   } // Get custom CLI path from project package.json, but fall back to node_module path
