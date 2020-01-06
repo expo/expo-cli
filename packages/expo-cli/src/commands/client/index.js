@@ -14,7 +14,6 @@ import urlOpts from '../../urlOpts';
 import { PLATFORMS } from '../build/constants';
 import * as appleApi from '../../appleApi';
 import { runAction, travelingFastlane } from '../../appleApi/fastlane';
-import { findProjectRootAsync } from '../utils/ProjectUtils';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
@@ -23,7 +22,7 @@ import selectPushKey from './selectPushKey';
 import { Updater, clearTags } from './tagger';
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { Context } from '../../credentials/context';
-import { CreateIosDistSelector } from '../../credentials/views/IosDistCert';
+import { CreateIosDist } from '../../credentials/views/IosDistCert';
 import { runCredentialsManager } from '../../credentials/route';
 
 const { IOS } = PLATFORMS;
@@ -120,7 +119,7 @@ export default program => {
         );
         distributionCert = await context.ios.getDistCert(experienceName, bundleIdentifier);
       } else {
-        distributionCert = await new CreateIosDistSelector.provideOrGenerate(context);
+        distributionCert = await new CreateIosDist().provideOrGenerate(context);
       }
       if (!distributionCert) {
         throw new CommandError(
