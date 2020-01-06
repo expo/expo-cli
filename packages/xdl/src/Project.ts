@@ -1634,6 +1634,16 @@ async function _waitForRunningAsync(
   }
 }
 
+// The --verbose flag is intended for react-native-cli/metro, not expo-cli
+const METRO_VERBOSE_WARNING = 'Run CLI with --verbose flag for more details.';
+
+// Remove these constants and related code when SDK35 isn't supported anymore
+// Context: https://github.com/expo/expo-cli/issues/1074
+const NODE_12_WINDOWS_METRO_ERROR = `Invalid regular expression: /(.*\\__fixtures__\\.*|node_modules[\\\]react[\\\]dist[\\\].*|website\\node_modules\\.*|heapCapture\\bundle\.js|.*\\__tests__\\.*)$/: Unterminated character class`;
+const NODE_12_WINDOWS_METRO_SUGGESTION = `\nUnable to start the project due to a documented incompatibility between Node 12 LTS and Expo SDK 35 on Windows.
+Please refer to this GitHub comment for a solution:
+https://github.com/expo/expo-cli/issues/1074#issuecomment-559220752\n`;
+
 function _logPackagerOutput(projectRoot: string, level: string, data: object) {
   let output = data.toString();
   if (!output) {
@@ -1653,6 +1663,15 @@ function _logPackagerOutput(projectRoot: string, level: string, data: object) {
   if (_isIgnorableMetroConsoleOutput(output) || _isIgnorableRnpmWarning(output)) {
     ProjectUtils.logDebug(projectRoot, 'expo', output);
     return;
+  }
+
+  if (output.includes(NODE_12_WINDOWS_METRO_ERROR)) {
+    ProjectUtils.logError(projectRoot, 'expo', NODE_12_WINDOWS_METRO_SUGGESTION);
+    return;
+  }
+
+  if (output.includes(METRO_VERBOSE_WARNING)) {
+    output = output.replace(METRO_VERBOSE_WARNING, '');
   }
 
   if (/^Scanning folders for symlinks in /.test(output)) {
