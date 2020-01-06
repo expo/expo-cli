@@ -1,19 +1,12 @@
-import open from 'open';
-import prompt, { Question } from '../../prompt';
-import log from '../../log';
-
 import * as iosDistView from './IosDistCert';
 
 import { Context, IView } from '../context';
-import { DistCert } from '../../appleApi';
-import { IosDistCredentials, IosAppCredentials } from '../credentials';
-import { DistCertOptions } from './IosDistCert';
 
 export class SetupIosDist implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
 
-  constructor(options: DistCertOptions) {
+  constructor(options: iosDistView.DistCertOptions) {
     const { experienceName, bundleIdentifier } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
@@ -36,10 +29,8 @@ export class SetupIosDist implements IView {
       });
     }
 
-    // TODO(quin): give an optional way for ppl to check apple ctx
     if (!ctx.hasAppleCtx) {
-      console.log('cannot verify ur thing');
-      return null;
+      throw new Error(`This workflow requires you to provide your Apple Credentials.`);
     }
 
     // check if valid

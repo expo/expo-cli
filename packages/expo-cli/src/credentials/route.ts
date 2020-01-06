@@ -1,7 +1,7 @@
 import log from '../log';
 
 import { Context, IView } from './context';
-import { askQuit, doQuit, QuitError, IQuit } from './views/Select';
+import { IQuit, QuitError, askQuit, doQuit } from './views/Select';
 
 export async function runCredentialsManagerStandalone(ctx: Context, startView: IView) {
   const manager = new CredentialsManager(ctx, startView, askQuit);
@@ -58,11 +58,11 @@ export class CredentialsManager {
           return null;
         } else if (error instanceof GoBackError) {
           this._currentView = this.popFromHistory() || (await this._quit(this._mainView));
-          continue;
+        } else {
+          log(error);
+          await new Promise(res => setTimeout(res, 1000));
+          this._currentView = await this._quit(this._mainView);
         }
-        log(error);
-        await new Promise(res => setTimeout(res, 1000));
-        this._currentView = await this._quit(this._mainView);
       }
     }
   }

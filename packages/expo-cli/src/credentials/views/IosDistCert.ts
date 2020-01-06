@@ -10,17 +10,17 @@ import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
 import {
+  IosAppCredentials,
   IosCredentials,
   IosDistCredentials,
-  IosAppCredentials,
   distCertSchema,
 } from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { DistCert, DistCertInfo, DistCertManager, AppleCtx } from '../../appleApi';
+import { AppleCtx, DistCert, DistCertInfo, DistCertManager } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 import { CreateAppCredentialsIos } from './IosAppCredentials';
-import { GoBackError, CredentialsManager } from '../route';
+import { CredentialsManager, GoBackError } from '../route';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline(
@@ -54,7 +54,7 @@ export class CreateIosDist implements IView {
     const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
       if (!ctx.hasAppleCtx()) {
-        log(
+        chalk.yellow(
           "WARNING! Unable to validate Distribution Certificate due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
         );
         return userProvided;
@@ -125,9 +125,7 @@ export class RemoveIosDist implements IView {
 
     for (const appCredentials of apps) {
       log(
-        `Removing Provisioning Profile for ${appCredentials.experienceName} (${
-          appCredentials.bundleIdentifier
-        })`
+        `Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`
       );
       await new RemoveProvisioningProfile(shouldRevoke || this.shouldRevoke).removeSpecific(
         ctx,
@@ -149,6 +147,7 @@ export class UpdateIosDist implements IView {
         displayIosUserCredentials(updated);
       }
       log();
+      return null;
     }
     throw new GoBackError();
   }
@@ -182,9 +181,7 @@ export class UpdateIosDist implements IView {
 
     for (const appCredentials of apps) {
       log(
-        `Removing Provisioning Profile for ${appCredentials.experienceName} (${
-          appCredentials.bundleIdentifier
-        })`
+        `Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`
       );
       await new RemoveProvisioningProfile(true).removeSpecific(ctx, appCredentials);
     }
@@ -194,7 +191,7 @@ export class UpdateIosDist implements IView {
     const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
       if (!ctx.hasAppleCtx()) {
-        log(
+        chalk.yellow(
           "WARNING! Unable to validate Distribution Certificate due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
         );
         return userProvided;
@@ -235,9 +232,7 @@ export class UseExistingDistributionCert implements IView {
       await ctx.ios.useDistCert(this._experienceName, this._bundleIdentifier, selected.id);
       log(
         chalk.green(
-          `Successfully assigned Distribution Certificate to ${this._experienceName} (${
-            this._bundleIdentifier
-          })`
+          `Successfully assigned Distribution Certificate to ${this._experienceName} (${this._bundleIdentifier})`
         )
       );
       return null;
@@ -280,9 +275,7 @@ export class CreateOrReuseDistributionCert implements IView {
     await ctx.ios.useDistCert(this._experienceName, this._bundleIdentifier, userCredentialsId);
     log(
       chalk.green(
-        `Successfully assigned Distribution Certificate to ${this._experienceName} (${
-          this._bundleIdentifier
-        })`
+        `Successfully assigned Distribution Certificate to ${this._experienceName} (${this._bundleIdentifier})`
       )
     );
   }
@@ -466,9 +459,7 @@ function formatDistCertFromApple(appleInfo: DistCertInfo, credentials: IosCreden
   const { name, status, id, expires, created, ownerName, serialNumber } = appleInfo;
   const expiresDate = dateformat(new Date(expires * 1000));
   const createdDate = dateformat(new Date(created * 1000));
-  return `${name} (${status}) - Cert ID: ${id}, Serial number: ${serialNumber}, Team ID: ${
-    appleInfo.ownerId
-  }, Team name: ${ownerName}
+  return `${name} (${status}) - Cert ID: ${id}, Serial number: ${serialNumber}, Team ID: ${appleInfo.ownerId}, Team name: ${ownerName}
     expires: ${expiresDate}, created: ${createdDate}
   ${usedByString}`;
 }
@@ -512,9 +503,7 @@ function formatDistCert(
       "\n    ❓ Validity of this certificate on Apple's servers is unknown."
     );
   }
-  return `Distribution Certificate (Cert ID: ${
-    distCert.certId
-  }, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}${validityText}`;
+  return `Distribution Certificate (Cert ID: ${distCert.certId}, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}${validityText}`;
 }
 
 async function generateDistCert(ctx: Context): Promise<DistCert> {

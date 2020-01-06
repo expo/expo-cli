@@ -57,7 +57,7 @@ export class Context {
     }
   }
 
-  async init(projectDir: string) {
+  async init(projectDir: string, options: CtxOptions = {}) {
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);
     if (status !== Doctor.FATAL) {
       /* This manager does not need to work in project context */
