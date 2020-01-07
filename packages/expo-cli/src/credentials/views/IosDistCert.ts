@@ -528,10 +528,11 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
         name: formatDistCertFromApple(cert, ctx.ios.credentials),
       }));
 
-      // TODO(quin)
       const ui = new inquirer.ui.BottomBar();
       ui.log.write('ℹ️ ℹ️ ℹ️ Show me more info about these choices ℹ️ ℹ️ ℹ️');
-      ui.log.write('ℹ️ ℹ️ ℹ️    todo.quin.makeshorturl.at/aitRV    ℹ️ ℹ️ ℹ️');
+      ui.log.write(
+        'ℹ️ ℹ️ ℹ️ https://docs.expo.io/versions/latest/distribution/app-signing/#summary ℹ️ ℹ️ ℹ️'
+      );
       ui.log.write('\n');
 
       let { revoke } = await prompt([
@@ -594,8 +595,7 @@ export async function validateDistributionCertificate(
     const successMsg = `Successfully validated Distribution Certificate against Apple Servers`;
     spinner.succeed(successMsg);
   } else {
-    // TODO:quin: update this msg
-    const failureMsg = `The Distribution Certificate you uploaded is not valid. Please check that you uploaded your certificate to the Apple Servers. See docs.expo.io/versions/latest/guides/adhoc-builds for more details on uploading your credentials.`;
+    const failureMsg = `The Distribution Certificate is no longer valid on the Apple Developer Portal`;
     spinner.fail(failureMsg);
   }
   return isValidCert;
