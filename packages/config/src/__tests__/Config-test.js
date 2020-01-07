@@ -154,7 +154,7 @@ describe('readConfigJson', () => {
     });
 
     it(`will throw if the app.json is missing`, () => {
-      expect(() => readConfigJson('/no-config')).toThrow(/app.json must include a JSON object./);
+      expect(() => readConfigJson('/no-config')).toThrow(/does not contain a valid app\.json/);
     });
 
     it(`will throw if the expo package is missing`, () => {
