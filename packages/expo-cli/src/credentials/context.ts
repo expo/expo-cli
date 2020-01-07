@@ -8,6 +8,15 @@ export interface IView {
   open(ctx: Context): Promise<IView | null>;
 }
 
+type AppleCtxOptions = {
+  appleId?: string;
+  appleIdPassword?: string;
+};
+
+type CtxOptions = {
+  allowAnonymous?: boolean;
+};
+
 export class Context {
   _hasProjectContext: boolean = false;
   _user?: User;
@@ -38,13 +47,17 @@ export class Context {
     return this._appleCtx;
   }
 
-  async ensureAppleCtx() {
+  hasAppleCtx(): boolean {
+    return !!this._appleCtx;
+  }
+
+  async ensureAppleCtx(options: AppleCtxOptions = {}) {
     if (!this._appleCtx) {
-      this._appleCtx = await authenticate();
+      this._appleCtx = await authenticate(options);
     }
   }
 
-  async init(projectDir: string) {
+  async init(projectDir: string, options: CtxOptions = {}) {
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);
     if (status !== Doctor.FATAL) {
       /* This manager does not need to work in project context */
@@ -53,8 +66,12 @@ export class Context {
       this._hasProjectContext = true;
     }
 
-    this._user = await UserManager.ensureLoggedInAsync();
+    if (options.allowAnonymous) {
+      this._user = (await UserManager.getCurrentUserAsync()) || undefined;
+    } else {
+      this._user = await UserManager.ensureLoggedInAsync();
+    }
     this._apiClient = ApiV2.clientForUser(this.user);
-    this._iosApiClient = new IosApi(this._user);
+    this._iosApiClient = new IosApi(this.user);
   }
 }

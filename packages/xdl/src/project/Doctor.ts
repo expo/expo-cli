@@ -446,7 +446,20 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
     return NO_ISSUES;
   }
 
-  let { exp, pkg } = await readConfigJsonAsync(projectRoot);
+  let exp, pkg;
+  try {
+    const config = await readConfigJsonAsync(projectRoot);
+    exp = config.exp;
+    pkg = config.pkg;
+  } catch (e) {
+    ProjectUtils.logError(
+      projectRoot,
+      'expo',
+      `Error: could not load config json at ${projectRoot}: ${e.toString()}`,
+      'doctor-config-json-not-read'
+    );
+    return FATAL;
+  }
 
   let status = await _checkNpmVersionAsync(projectRoot);
   if (status === FATAL) {
