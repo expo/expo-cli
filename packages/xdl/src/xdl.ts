@@ -15,7 +15,6 @@ import * as Webhooks from './Webhooks';
 import Config from './Config';
 
 import * as ConnectionStatus from './ConnectionStatus';
-export { ConnectionStatus };
 
 import * as Credentials from './credentials/Credentials';
 
@@ -90,6 +89,7 @@ import * as Web from './Web';
 import * as Webpack from './Webpack';
 
 import XDLError from './XDLError';
+export { ConnectionStatus };
 
 if (process.env.NODE_ENV !== 'production') {
   installSourceMapSupport();

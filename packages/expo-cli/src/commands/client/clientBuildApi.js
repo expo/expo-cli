@@ -2,7 +2,7 @@ import { ApiV2 } from '@expo/xdl';
 
 async function createClientBuildRequest({
   user = null,
-  context,
+  appleContext,
   distributionCert,
   provisioningProfile,
   pushKey,
@@ -13,8 +13,8 @@ async function createClientBuildRequest({
   customAppConfig = {},
 }) {
   return await ApiV2.clientForUser(user).postAsync('client-build/create-ios-request', {
-    appleTeamId: context.team.id,
-    appleTeamName: context.team.name,
+    appleTeamId: appleContext.team.id,
+    appleTeamName: appleContext.team.name,
     addUdid,
     bundleIdentifier,
     email,
@@ -26,8 +26,8 @@ async function createClientBuildRequest({
       certPassword: distributionCert.certPassword,
       provisioningProfileId: provisioningProfile.provisioningProfileId,
       provisioningProfile: provisioningProfile.provisioningProfile,
-      teamId: context.team.id,
-      appleSession: context.fastlaneSession,
+      teamId: appleContext.team.id,
+      appleSession: appleContext.fastlaneSession,
       udidsString: JSON.stringify(udids),
     },
   });

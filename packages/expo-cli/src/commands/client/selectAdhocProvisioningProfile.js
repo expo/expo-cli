@@ -4,7 +4,7 @@ import { runAction, travelingFastlane } from '../../appleApi/fastlane';
 import { tagForUpdate } from './tagger';
 
 export default async function selectAdhocProvisioningProfile(
-  context,
+  appleContext,
   udids,
   bundleIdentifier,
   distCertSerialNumber,
@@ -13,10 +13,10 @@ export default async function selectAdhocProvisioningProfile(
   const spinner = ora(`Handling Adhoc provisioning profiles on Apple Developer Portal...`).start();
   const args = [
     '--apple-id',
-    context.appleId,
+    appleContext.appleId,
     '--apple-password',
-    context.appleIdPassword,
-    context.team.id,
+    appleContext.appleIdPassword,
+    appleContext.team.id,
     udids,
     bundleIdentifier,
     distCertSerialNumber,

@@ -30,11 +30,11 @@ async function generateSecureRandomTokenAsync() {
   });
 }
 
-export async function createAuthenticationContextAsync({ graphqlHostname, port }) {
+export async function createAuthenticationContextAsync({ port }) {
   const clientAuthenticationToken = await generateSecureRandomTokenAsync();
   const endpointUrlToken = await generateSecureRandomTokenAsync();
   const graphQLEndpointPath = `/${endpointUrlToken}/graphql`;
-  const hostname = `${graphqlHostname}:${port}`;
+  const hostname = `${devtoolsGraphQLHost()}:${port}`;
   const webSocketGraphQLUrl = `ws://${hostname}${graphQLEndpointPath}`;
   const allowedOrigin = `http://${hostname}`;
   return {
@@ -51,11 +51,8 @@ export async function createAuthenticationContextAsync({ graphqlHostname, port }
 export async function startAsync(projectDir) {
   const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
-  const listenHostname = devtoolsHost();
-  const graphqlHostname = devtoolsGraphQLHost();
 
-  const authenticationContext = await createAuthenticationContextAsync({ graphqlHostname, port });
-  const { webSocketGraphQLUrl, clientAuthenticationToken } = authenticationContext;
+  const authenticationContext = await createAuthenticationContextAsync({ port });
   server.get('/dev-tools-info', authenticationContext.requestHandler);
   server.use(
     '/_next',
@@ -68,6 +65,7 @@ export async function startAsync(projectDir) {
   );
   server.use(express.static(path.join(__dirname, '../client'), { setHeaders }));
 
+  const listenHostname = devtoolsHost();
   const httpServer = http.createServer(server);
   await new Promise((resolve, reject) => {
     httpServer.once('error', reject);
@@ -119,25 +117,21 @@ export function startGraphQLServer(projectDir, httpServer, authenticationContext
 }
 
 function devtoolsHost() {
-  let devtoolHost;
   if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
-    devtoolHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
+    return process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
   } else {
-    devtoolHost = `localhost`;
+    return 'localhost';
   }
-  return devtoolHost;
 }
 
 function devtoolsGraphQLHost() {
-  let devtoolsGraphQLHost;
   if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS && process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
-    devtoolsGraphQLHost = process.env.REACT_NATIVE_PACKAGER_HOSTNAME.trim();
+    return process.env.REACT_NATIVE_PACKAGER_HOSTNAME.trim();
   } else if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
-    devtoolsGraphQLHost = process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS;
+    return process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS;
   } else {
-    devtoolsGraphQLHost = `localhost`;
+    return 'localhost';
   }
-  return devtoolsGraphQLHost;
 }
 
 function createLayout() {

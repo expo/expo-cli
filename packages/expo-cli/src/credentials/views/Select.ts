@@ -10,7 +10,7 @@ import * as iosProvisionigProfileView from './IosProvisioningProfile';
 
 import { Context, IView } from '../context';
 import { AndroidCredentials, IosCredentials } from '../credentials';
-import { changeMainView } from '../route';
+import { CredentialsManager } from '../route';
 import { displayAndroidCredentials, displayIosCredentials } from '../actions/list';
 
 export class SelectPlatform implements IView {
@@ -25,7 +25,7 @@ export class SelectPlatform implements IView {
       },
     ]);
     const view = platform === 'ios' ? new SelectIosExperience() : new SelectAndroidExperience();
-    changeMainView(view);
+    CredentialsManager.get().changeMainView(view);
     return view;
   }
 }
@@ -101,7 +101,7 @@ export class SelectIosExperience implements IView {
       case 'use-existing-push-ios':
         return new iosPushView.UseExistingPushNotification();
       case 'use-existing-dist-ios':
-        return new iosDistView.UseExistingDistributionCert();
+        return iosDistView.UseExistingDistributionCert.withProjectContext(ctx);
       case 'remove-provisioning-profile':
         return new iosProvisionigProfileView.RemoveProvisioningProfile();
       default:
@@ -126,7 +126,7 @@ export class SelectAndroidExperience implements IView {
       ]);
       if (runProjectContext) {
         const view = new androidView.ExperienceView(ctx.manifest.slug, null);
-        changeMainView(view);
+        CredentialsManager.get().changeMainView(view);
         return view;
       }
     }
@@ -158,6 +158,22 @@ export class SelectAndroidExperience implements IView {
     }
     return null;
   }
+}
+
+export class QuitError extends Error {
+  constructor() {
+    super();
+
+    // Set the prototype explicitly.
+    // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    Object.setPrototypeOf(this, QuitError.prototype);
+  }
+}
+
+export type IQuit = (view: IView) => Promise<IView>;
+
+export async function doQuit(mainpage: IView): Promise<IView> {
+  throw new QuitError();
 }
 
 export async function askQuit(mainpage: IView): Promise<IView> {

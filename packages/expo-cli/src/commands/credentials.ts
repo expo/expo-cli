@@ -1,5 +1,5 @@
 import { CommanderStatic } from 'commander';
-import { Context, runCredentialsManager } from '../credentials';
+import { Context, runCredentialsManagerStandalone } from '../credentials';
 import {
   SelectAndroidExperience,
   SelectIosExperience,
@@ -27,6 +27,6 @@ export default function(program: CommanderStatic) {
       } else {
         mainpage = new SelectPlatform();
       }
-      await runCredentialsManager(context, mainpage);
+      await runCredentialsManagerStandalone(context, mainpage);
     }, /* skip project validation */ true);
 }
