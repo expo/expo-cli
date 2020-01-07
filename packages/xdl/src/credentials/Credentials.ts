@@ -1,4 +1,5 @@
 import { Platform, readConfigJsonAsync } from '@expo/config';
+import { ApiV2 } from '../xdl';
 
 import Api from '../Api';
 import UserManager from '../User';
@@ -61,18 +62,32 @@ async function fetchCredentials(
   decrypt: boolean
 ): Promise<Credentials | undefined> {
   // this doesn't hit our mac rpc channel, so it needs significantly less debugging
-  const { err, credentials } = await Api.callMethodAsync('getCredentials', [], 'post', {
-    username,
-    experienceName,
-    bundleIdentifier,
-    platform,
-    decrypt,
-  });
+  let credentials;
+  if (process.env.EXPO_NEXT_API) {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    //TODO-JJ ios getCredentials
+    credentials = (await api.getAsync(`credentials/android/keystore/${experienceName}`)) ?? {};
+    console.log('INT', { credentials });
+    credentials['keystore']['keystoreAlias'] = credentials['keystore']['keyAlias'];
+    delete credentials['keystore']['keyAlias'];
+  } else {
+    const response = await Api.callMethodAsync('getCredentials', [], 'post', {
+      username,
+      experienceName,
+      bundleIdentifier,
+      platform,
+      decrypt,
+    });
 
-  if (err) {
-    throw new Error('Error fetching credentials.');
+    if (response.err) {
+      //console.log('ERR triggered');
+      //console.log(response.err);
+      throw new Error('Error fetching credentials.');
+    }
+    credentials = response.credentials;
   }
-
+  //console.log('here', { credentials });
   return credentials;
 }
 
