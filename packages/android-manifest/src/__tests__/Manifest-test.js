@@ -60,7 +60,7 @@ describe('Permissions', () => {
     expect(Manifest.ensurePermission(manifest, 'NEW_PERMISSION_2')).toBe(true);
     expect(Manifest.getPermissions(manifest).length).toBe(3);
 
-    expect(Manifest.format(Manifest.getRoot(manifest).toString())).toMatchSnapshot();
+    expect(Manifest.format(manifest)).toMatchSnapshot();
   });
 
   describe('E2E', () => {

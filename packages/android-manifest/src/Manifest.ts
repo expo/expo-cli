@@ -1,57 +1,37 @@
 import fs from 'fs-extra';
-import { Attribute, Document, Element, parseXml } from 'libxmljs';
+import { Builder, Parser } from 'xml2js';
+
 import { EOL } from 'os';
 import path from 'path';
 
 const USES_PERMISSION = 'uses-permission';
 
-export function manipulateAttributeInTag(
-  doc: Document,
-  attribute: string,
-  tag: string,
-  manipulate: (attribute: Attribute) => any
-): Array<any> {
-  const elements = doc.find(`//${tag}`);
-  return elements.map(element => {
-    const targetAttribute = element.attr(attribute);
-    if (targetAttribute) {
-      return manipulate(targetAttribute);
-    }
-    return null;
-  });
-}
-
-export function createPermission(doc: Document, name: string): Element {
-  const permission = new Element(doc, USES_PERMISSION);
-  permission.attr({ 'android:name': name });
-  return permission;
-}
+type Document = { [key: string]: any };
 
 export function removePermissions(doc: Document, permissionNames?: string[]) {
   const targetNames = permissionNames ? permissionNames.map(ensurePermissionNameFormat) : null;
-
-  for (const attribute of getPermissionAttributes(doc)) {
+  const permissions = doc.manifest[USES_PERMISSION] || [];
+  let nextPermissions = [];
+  for (let attribute of permissions) {
     if (targetNames) {
-      if (targetNames.includes(attribute.value())) {
-        // continue to iterate in case there are duplicates
-        attribute.remove();
+      const value = attribute['$']['android:name'] || attribute['$']['name'];
+      if (!targetNames.includes(value)) {
+        nextPermissions.push(attribute);
       }
-    } else {
-      attribute.remove();
     }
   }
+
+  doc.manifest[USES_PERMISSION] = nextPermissions;
 }
 
 // NOTE(brentvatne): it's unclear from the usage here what the expected return
 // value should be. `any` is used to get past an error.
-export function addPermission(doc: Document, permission: Element): any {
-  const elements: Element[] = doc.find(`//${USES_PERMISSION}`);
-
-  if (elements.length) {
-    return elements[elements.length - 1].addNextSibling(permission);
-  }
-
-  getRoot(doc).addChild(permission);
+export function addPermission(doc: Document, permissionName: string): void {
+  const usesPermissions: { [key: string]: any }[] = doc.manifest[USES_PERMISSION] || [];
+  usesPermissions.push({
+    $: { 'android:name': permissionName },
+  });
+  doc.manifest[USES_PERMISSION] = usesPermissions;
 }
 
 export function ensurePermissions(
@@ -64,8 +44,7 @@ export function ensurePermissions(
   for (const permissionName of permissionNames) {
     const targetName = ensurePermissionNameFormat(permissionName);
     if (!permissions.includes(targetName)) {
-      const permissionElement = createPermission(doc, targetName);
-      addPermission(doc, permissionElement);
+      addPermission(doc, targetName);
       results[permissionName] = true;
     } else {
       results[permissionName] = false;
@@ -79,29 +58,10 @@ export function ensurePermission(doc: Document, permissionName: string): boolean
   const targetName = ensurePermissionNameFormat(permissionName);
 
   if (!permissions.includes(targetName)) {
-    const permissionElement = createPermission(doc, targetName);
-    addPermission(doc, permissionElement);
+    addPermission(doc, targetName);
     return true;
   }
   return false;
-}
-
-export function getRoot(doc: Document): Element {
-  const root = doc.root();
-  if (!root) throw new Error('no root');
-  return root;
-}
-
-export function findAttributeInTag(doc: Document, attribute: string, tag: string): Attribute[] {
-  const values: Array<Attribute | null> = manipulateAttributeInTag(
-    doc,
-    attribute,
-    tag,
-    (attribute: Attribute) => {
-      return attribute;
-    }
-  );
-  return values.filter(value => value !== null) as Attribute[];
 }
 
 export function ensurePermissionNameFormat(permissionName: string): string {
@@ -115,21 +75,22 @@ export function ensurePermissionNameFormat(permissionName: string): string {
   }
 }
 
-export function getPermissionAttributes(doc: Document): Attribute[] {
-  const tags: Attribute[] = [];
-  // newly added permissions are found with `android:name` instead of `name` (?)
-  for (const id of ['name', 'android:name']) {
-    tags.push(...findAttributeInTag(doc, id, 'uses-permission'));
-  }
-  return tags;
+export function getPermissionAttributes(doc: Document): Document[] {
+  return doc.manifest[USES_PERMISSION] || [];
 }
 
 export function getPermissions(doc: Document): string[] {
-  return getPermissionAttributes(doc).map(element => element.value());
+  const usesPermissions: { [key: string]: any }[] = doc.manifest[USES_PERMISSION] || [];
+  const permissions = usesPermissions.map(permissionObject => {
+    return permissionObject['$']['android:name'] || permissionObject['$']['name'];
+  });
+  return permissions;
 }
 
 export function logManifest(doc: Document) {
-  console.log(getRoot(doc).toString());
+  const builder = new Builder();
+  const xmlInput = builder.buildObject(doc);
+  console.log(xmlInput);
 }
 
 const stringTimesN = (n: number, char: string) => Array(n + 1).join(char);
@@ -139,7 +100,9 @@ export function format(manifest: any, { indentLevel = 2, newline = EOL } = {}): 
   if (typeof manifest === 'string') {
     xmlInput = manifest;
   } else if (manifest.toString) {
-    xmlInput = manifest.toString();
+    const builder = new Builder({ headless: true });
+    xmlInput = builder.buildObject(manifest);
+    return xmlInput;
   } else {
     throw new Error(`@expo/android-manifest: invalid manifest value passed in: ${manifest}`);
   }
@@ -180,8 +143,9 @@ export async function writeAndroidManifestAsync(
   manifestPath: string,
   manifest: any
 ): Promise<void> {
+  const manifestXml = new Builder().buildObject(manifest);
   await fs.ensureDir(path.dirname(manifestPath));
-  await fs.writeFile(manifestPath, manifest);
+  await fs.writeFile(manifestPath, manifestXml);
 }
 
 export async function getProjectAndroidManifestPathAsync(
@@ -202,7 +166,8 @@ export async function getProjectAndroidManifestPathAsync(
 
 export async function readAsync(manifestPath: string): Promise<Document> {
   const contents = await fs.readFile(manifestPath, { encoding: 'utf8', flag: 'r' });
-  const manifest: Document = parseXml(contents);
+  const parser = new Parser();
+  const manifest = parser.parseStringPromise(contents);
   return manifest;
 }
 
@@ -226,6 +191,7 @@ export async function persistAndroidPermissionsAsync(
       )}`
     );
   }
+
   await writeAndroidManifestAsync(manifestPath, manifest);
   return true;
 }
