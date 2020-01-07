@@ -56,10 +56,44 @@ export function serialize(val: any): any {
   throw new Error(`Unhandled item type: ${typeof val}`);
 }
 
+/**
+ * Evaluate the config for an Expo project.
+ * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
+ * The partial config is composed from any existing app.json, and certain fields from the `package.json` like name and description.
+ *
+ * You should use the supplied `mode` option in an `app.config.js` instead of `process.env.NODE_ENV`
+ *
+ * **Example**
+ * ```js
+ * module.exports = function({ config, mode }) {
+ *   // mutate the config before returning it.
+ *   config.slug = 'new slug'
+ *   return config;
+ * }
+ *
+ * **Supports**
+ * - `app.config.js`
+ * - `app.config.json`
+ * - `app.json`
+ *
+ * @param projectRoot the root folder containing all of your application code
+ * @param options enforce criteria for a project config
+ */
 export function getConfig(
   projectRoot: string,
-  options: { configPath?: string; skipSDKVersionRequirement?: boolean } = {}
+  options: {
+    mode: 'development' | 'production';
+    configPath?: string;
+    skipSDKVersionRequirement?: boolean;
+  }
 ): ProjectConfig {
+  if (!['development', 'production'].includes(options.mode)) {
+    throw new ConfigError(
+      `Invalid mode "${options.mode}" was used to evaluate the project config.`,
+      'INVALID_MODE'
+    );
+  }
+
   // TODO(Bacon): This doesn't support changing the location of the package.json
   const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
   const pkg = JsonFile.read(packageJsonPath);
@@ -76,6 +110,7 @@ export function getConfig(
   const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, rawConfig, pkg, true);
 
   const context = {
+    mode: options.mode,
     projectRoot,
     configPath,
     config: configFromPkg,

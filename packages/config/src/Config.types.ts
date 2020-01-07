@@ -920,9 +920,12 @@ export type ConfigErrorCode =
   | 'NOT_OBJECT'
   | 'NO_EXPO'
   | 'MODULE_NOT_FOUND'
+  | 'INVALID_MODE'
   | 'INVALID_CONFIG';
+
 export type ConfigContext = {
   projectRoot: string;
   configPath?: string;
   config: Partial<ExpoConfig>;
+  mode: 'development' | 'production';
 };
