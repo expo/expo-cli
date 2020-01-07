@@ -21,6 +21,8 @@ describe('getConfig', () => {
       const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('js-config-test+config');
+      // Ensures that the app.json is read and passed to the method
+      expect(exp.slug).toBe('someslug+config');
       expect(exp._expo.configType).toBe('js');
     });
     it('parses a js config with export default', () => {

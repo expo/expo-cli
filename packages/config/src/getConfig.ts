@@ -18,9 +18,6 @@ export const allowedConfigFileNames: string[] = (() => {
     // `${prefix}.config.yml`,
     // `${prefix}.config.yaml`,
     // `${prefix}.config.toml`,
-
-    // app.json should take lowest priority so that files like app.config.js can import, modify, and re-export the app.json config
-    `${prefix}.json`,
   ];
 })();
 

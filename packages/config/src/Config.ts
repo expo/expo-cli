@@ -58,7 +58,7 @@ export function serialize(val: any): any {
 
 export function getConfig(
   projectRoot: string,
-  options: { configPath?: string; skipSDKVersionRequirement?: boolean }
+  options: { configPath?: string; skipSDKVersionRequirement?: boolean } = {}
 ): ProjectConfig {
   // TODO(Bacon): This doesn't support changing the location of the package.json
   const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
@@ -66,7 +66,14 @@ export function getConfig(
 
   const configPath = options.configPath || customConfigPaths[projectRoot];
 
-  const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, {}, pkg, true);
+  // If the app.json exists, we'll read it and pass it to the app.config.js for further modification
+  const { configPath: appJsonConfigPath } = findConfigFile(projectRoot);
+  let rawConfig: JSONObject = {};
+  try {
+    rawConfig = JsonFile.read(appJsonConfigPath, { json5: true });
+  } catch (_) {}
+
+  const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, rawConfig, pkg, true);
 
   const context = {
     projectRoot,

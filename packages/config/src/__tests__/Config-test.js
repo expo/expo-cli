@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { readConfigJson, serialize } from '../Config';
+import { getConfig, readConfigJson, serialize } from '../Config';
 
 jest.mock('fs');
 jest.mock('resolve-from');
@@ -115,11 +115,18 @@ describe('readConfigJson', () => {
     });
 
     it(`will throw if the app.json is missing`, () => {
-      expect(() => readConfigJson('/no-config')).toThrow(/app.json must include a JSON object./);
+      expect(() => readConfigJson('/no-config')).toThrow(
+        /Project at path \/no-config does not contain a valid app.json/
+      );
+      // No config is required for new method
+      expect(() => getConfig('/no-config')).not.toThrow();
     });
 
     it(`will throw if the expo package is missing`, () => {
       expect(() => readConfigJson('/no-package', true)).toThrow(
+        /Cannot determine which native SDK version your project uses/
+      );
+      expect(() => getConfig('/no-package', { skipSDKVersionRequirement: false })).toThrow(
         /Cannot determine which native SDK version your project uses/
       );
     });
