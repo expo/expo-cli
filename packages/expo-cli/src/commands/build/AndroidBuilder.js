@@ -22,7 +22,6 @@ const { ANDROID } = PLATFORMS;
 
 export default class AndroidBuilder extends BaseBuilder {
   async run() {
-    console.log('STARTING BUILD');
     // Validate project
     await this.validateProject();
 
@@ -30,23 +29,18 @@ export default class AndroidBuilder extends BaseBuilder {
     await Android.checkSplashScreenImages(this.projectDir);
 
     // Check the status of any current builds
-    //await this.checkForBuildInProgress();
-    console.log('skip checkForBuildInProgress');
-
+    await this.checkForBuildInProgress();
     // Check for existing credentials, collect any missing credentials, and validate them
     await this.collectAndValidateCredentials();
     // Publish the current experience, if necessary
-    //let publishedExpIds = this.options.publicUrl ? undefined : await this.ensureReleaseExists();
-    console.log('skip publishedExpIds');
+    let publishedExpIds = this.options.publicUrl ? undefined : await this.ensureReleaseExists();
 
     if (!this.options.publicUrl) {
-      //await this.checkStatusBeforeBuild();
-      console.log('skip checkStatusBeforeBuild');
+      await this.checkStatusBeforeBuild();
     }
 
     // Initiate a build
-    console.log('NOT building');
-    //await this.build(publishedExpIds);
+    await this.build(publishedExpIds);
   }
 
   async validateProject() {
@@ -118,12 +112,9 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     );
 
     const credentialsExist = await Credentials.credentialsExistForPlatformAsync(credentialMetadata);
-    console.log({ credentialsExist });
 
     if (this.checkEnv()) {
-      console.log('START collectAndValidateCredentialsFromCI');
       await this.collectAndValidateCredentialsFromCI(credentialMetadata);
-      console.log('END collectAndValidateCredentialsFromCI');
     } else if (
       !this.options.generateKeystore &&
       (this.options.clearCredentials || !credentialsExist)
