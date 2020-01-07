@@ -1,5 +1,7 @@
 import Api from '../Api';
 import { findP12CertSerialNumber } from '../detach/PKCS12Utils';
+import UserManager from '../User';
+import { ApiV2 } from '../xdl';
 
 export type Credentials = {
   appleId?: string;
@@ -100,19 +102,38 @@ async function getExistingUserCredentials(
   appleTeamId: string,
   type: string
 ): Promise<CredsList> {
-  const { err, certs } = await Api.callMethodAsync('getExistingUserCredentials', [], 'post', {
-    username,
-    appleTeamId,
-    type,
-  });
+  let certs;
+  if (process.env.EXPO_NEXT_API) {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    const { userCredentials, appCredentials } = await api.getAsync(`credentials/ios`);
 
-  if (err) {
-    throw new Error('Error getting existing distribution certificates.');
+    certs = userCredentials
+      .filter((cred: any) => cred.type === type && cred.teamId === appleTeamId)
+      .map(({ id, ...cred }: any) => ({
+        ...cred,
+        userCredentialsId: id,
+        usedByApps: appCredentials
+          .filter((app: any) => app.pushCredentialsId === id || app.distCredentialsId === id)
+          .map(({ experienceName }: any) => experienceName)
+          .join(';'),
+      }));
   } else {
-    return certs.map(({ usedByApps, userCredentialsId, ...rest }: any) => ({
-      usedByApps: usedByApps && usedByApps.split(';'),
-      userCredentialsId: String(userCredentialsId),
-      ...rest,
-    }));
+    const result = await Api.callMethodAsync('getExistingUserCredentials', [], 'post', {
+      username,
+      appleTeamId,
+      type,
+    });
+
+    if (result.err) {
+      throw new Error('Error getting existing distribution certificates.');
+    }
+    certs = result.certs;
   }
+
+  return certs.map(({ usedByApps, userCredentialsId, ...rest }: any) => ({
+    usedByApps: usedByApps && usedByApps.split(';'),
+    userCredentialsId: String(userCredentialsId),
+    ...rest,
+  }));
 }
