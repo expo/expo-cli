@@ -360,41 +360,58 @@ async function promptForManagedConfig(
     }
   }
 
-  let { values } = await new Snippet({
-    name: 'expo',
-    message:
-      'Please enter a few initial configuration values.\n  Read more: https://docs.expo.io/versions/latest/workflow/configuration/',
-    required: true,
-    fields: [
-      {
-        name: 'name',
-        message: 'The name of your app visible on the home screen',
-        initial: isString(options.name) ? options.name : undefined,
-        filter: (name: string) => name.trim(),
-        required: true,
+  // Skip prompt for invocations like: `expo init demo`
+  const initialName = (isString(options.name) ? options.name : dirName)?.trim();
+  if (dirName && validateName(parentDir, dirName)) {
+    return {
+      expo: {
+        name: initialName!,
+        slug: dirName.trim(),
       },
-      {
-        name: 'slug',
-        message: 'A URL friendly name for your app',
-        initial: dirName,
-        filter: (name: string) => name.trim(),
-        validate: (name: string) => validateName(parentDir, name),
-        required: true,
-      },
-    ],
-    initial: 'slug',
-    template: JSON.stringify(
-      {
-        expo: {
-          name: '{{name}}',
-          slug: '{{slug}}',
+    };
+  }
+
+  try {
+    let { values } = await new Snippet({
+      name: 'expo',
+      message:
+        'Please enter a few initial configuration values.\n  Read more: https://docs.expo.io/versions/latest/workflow/configuration/',
+      required: true,
+      fields: [
+        {
+          name: 'name',
+          message: 'The name of your app visible on the home screen',
+          initial: initialName,
+          filter: (name: string) => name.trim(),
+          required: true,
         },
-      },
-      null,
-      2
-    ),
-  }).run();
-  return { expo: values };
+        {
+          name: 'slug',
+          message: 'A URL friendly name for your app',
+          initial: dirName,
+          filter: (name: string) => name.trim(),
+          validate: (name: string) => validateName(parentDir, name),
+          required: true,
+        },
+      ],
+      initial: 'slug',
+      template: JSON.stringify(
+        {
+          expo: {
+            name: '{{name}}',
+            slug: '{{slug}}',
+          },
+        },
+        null,
+        2
+      ),
+    }).run();
+    return { expo: values };
+  } catch (error) {
+    // Skip `undefined` log when a user quits
+    if (error) throw error;
+  }
+  process.exit(0);
 }
 
 export default function(program: Command) {
