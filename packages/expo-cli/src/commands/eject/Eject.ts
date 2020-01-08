@@ -1,6 +1,6 @@
 import * as ConfigUtils from '@expo/config';
 import JsonFile from '@expo/json-file';
-import { Detach, Exp, Versions } from '@expo/xdl';
+import { Detach, Exp, IosWorkspace, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
@@ -315,6 +315,12 @@ if (Platform.OS === 'web') {
   log('Installing new packages...');
   const packageManager = PackageManager.createForProject(projectRoot, { log });
   await packageManager.installAsync();
+
+  // If the bundleIdentifier exists then set it on the project
+  if (exp.ios?.bundleIdentifier) {
+    IosWorkspace.setBundleIdentifier(projectRoot, exp.ios?.bundleIdentifier);
+  }
+
   log.newLine();
 }
 
