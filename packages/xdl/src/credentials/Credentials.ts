@@ -62,19 +62,35 @@ async function fetchCredentials(
   decrypt: boolean
 ): Promise<Credentials | undefined | null> {
   // this doesn't hit our mac rpc channel, so it needs significantly less debugging
-  console.log('fetchCredentials', { username, experienceName, bundleIdentifier, platform });
   let credentials;
   if (process.env.EXPO_NEXT_API) {
-    //TODO-JJ make this work for ios as well
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
-    credentials = await api.getAsync(`credentials/${platform}/keystore/${experienceName}`);
-    console.log({ credentials });
-    if (credentials['keystore']) {
-      credentials['keystore']['keystoreAlias'] = credentials['keystore']['keyAlias'];
-      delete credentials['keystore']['keyAlias'];
-    } else {
-      return null;
+
+    if (platform === 'android') {
+      credentials = await api.getAsync(`credentials/${platform}/keystore/${experienceName}`);
+      if (credentials['keystore']) {
+        credentials['keystore']['keystoreAlias'] = credentials['keystore']['keyAlias'];
+        delete credentials['keystore']['keyAlias'];
+      } else {
+        return null;
+      }
+    } else if (platform === 'ios') {
+      const record = await api.getAsync(`credentials/${platform}/${experienceName}`, {
+        bundleIdentifier: encodeURI(bundleIdentifier),
+      });
+      if (record) {
+        const { pushCredentials, distCredentials, credentials } = record;
+        return {
+          credentials: {
+            ...pushCredentials,
+            ...distCredentials,
+            ...credentials,
+          },
+        };
+      } else {
+        return {};
+      }
     }
   } else {
     const response = await Api.callMethodAsync('getCredentials', [], 'post', {
