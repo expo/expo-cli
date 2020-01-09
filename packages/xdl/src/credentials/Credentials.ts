@@ -1,3 +1,5 @@
+import isEmpty from 'lodash/isEmpty';
+
 import { Platform, readConfigJsonAsync } from '@expo/config';
 import { ApiV2 } from '../xdl';
 
@@ -76,9 +78,9 @@ async function fetchCredentials(
         return null;
       }
     } else if (platform === 'ios') {
-      const record = await api.getAsync(`credentials/${platform}/${experienceName}`, {
-        bundleIdentifier: encodeURI(bundleIdentifier),
-      });
+      const record = await api.getAsync(
+        `credentials/${platform}/${experienceName}/${encodeURI(bundleIdentifier)}`
+      );
       if (record) {
         const { pushCredentials, distCredentials, credentials } = record;
         return {
@@ -162,17 +164,51 @@ export async function removeCredentialsForPlatform(
   console.log({ platform, metadata });
 
   if (process.env.EXPO_NEXT_API) {
-    //TODO-JJ make this work for ios as well
     console.log('API V2 Delete CredentialsForPlatform');
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
-    const result = await api.deleteAsync(
-      `credentials/${platform}/keystore/${metadata.experienceName}`
-    );
+    if (platform === 'android') {
+      const result = await api.deleteAsync(
+        `credentials/android/keystore/${metadata.experienceName}`
+      );
 
-    console.log('API V2 creds result:', result);
-    if (!result) {
-      throw new Error('Error deleting credentials.');
+      console.log('API V2 creds result:', result);
+      if (!result) {
+        throw new Error('Error deleting credentials.');
+      }
+    } else if (platform === 'ios') {
+      const { only } = metadata;
+
+      if (only.appCredentials) {
+        only.provisioningProfile = true;
+        only.pushCert = true;
+        delete only.appCredentials;
+      }
+      const currentCredentials = await api.getAsync(
+        `credentials/ios/${metadata.experienceName}/${encodeURI(metadata.bundleIdentifier)}`
+      );
+      if (isEmpty(currentCredentials)) {
+        return;
+      }
+
+      if (only.provisioningProfile) {
+        await api.postAsync('/credentials/ios/provisioningProfile/delete', {
+          experienceName: metadata.experienceName,
+          bundleIdentifier: metadata.bundleIdentifier,
+        });
+      }
+      if (only.pushCert) {
+        await api.postAsync('/credentials/ios/pushCert/delete', {
+          experienceName: metadata.experienceName,
+          bundleIdentifier: metadata.bundleIdentifier,
+        });
+      }
+      if (only.pushKey && currentCredentials.pushCredentialsId) {
+        await api.delAsync(`/credentials/ios/push/${currentCredentials.pushCredentialsId}`);
+      }
+      if (only.distributionCert && currentCredentials.distCredentialsId) {
+        await api.delAsync(`/credentials/ios/dist/${currentCredentials.distCredentialsId}`);
+      }
     }
   } else {
     const { err } = await Api.callMethodAsync('deleteCredentials', [], 'post', {
