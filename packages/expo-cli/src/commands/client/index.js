@@ -139,13 +139,6 @@ export default program => {
       } else {
         pushKey = await new CreateIosPush().provideOrGenerate(context);
       }
-      // TODO: push keys arent required
-      if (!pushKey) {
-        throw new CommandError(
-          'INSUFFICIENT_CREDENTIALS',
-          `This build request requires a valid push key.`
-        );
-      }
 
       const provisioningProfile = await selectAdhocProvisioningProfile(
         appleContext,
