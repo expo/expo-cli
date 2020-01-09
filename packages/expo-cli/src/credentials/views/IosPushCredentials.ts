@@ -1,6 +1,8 @@
 import chalk from 'chalk';
 import get from 'lodash/get';
+import ora from 'ora';
 
+import inquirer from 'inquirer';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
@@ -12,15 +14,21 @@ import {
 } from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
+import { AppleCtx, PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 import { CreateAppCredentialsIos } from './IosAppCredentials';
+import { CredentialsManager, GoBackError } from '../route';
 
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline('two')} Push Notifactions Keys on your Apple Developer account.
 Please revoke the old ones or reuse existing from your other apps.
 Please remember that Apple Keys are not application specific!
 `;
+
+export type PushKeyOptions = {
+  experienceName: string;
+  bundleIdentifier: string;
+};
 
 export class CreateIosPush implements IView {
   async create(ctx: Context): Promise<IosPushCredentials> {
@@ -40,7 +48,17 @@ export class CreateIosPush implements IView {
   async provideOrGenerate(ctx: Context): Promise<PushKey> {
     const userProvided = await askForUserProvided(pushKeySchema);
     if (userProvided) {
-      return userProvided;
+      if (!ctx.hasAppleCtx()) {
+        log(
+          chalk.yellow(
+            "WARNING! Unable to validate Push Key due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
+          )
+        );
+        return userProvided;
+      }
+
+      const isValid = await validatePushKey(ctx.appleCtx, userProvided);
+      return isValid ? userProvided : await this.provideOrGenerate(ctx);
     }
     return await generatePushKey(ctx);
   }
@@ -54,7 +72,7 @@ export class RemoveIosPush implements IView {
   }
 
   async open(ctx: Context): Promise<IView | null> {
-    const selected = await selectPushCredFromList(ctx.ios.credentials);
+    const selected = await selectPushCredFromList(ctx);
     if (!selected) {
     } else if (!get(selected, 'type')) {
       await this.removePushCert(ctx, selected as IosAppCredentials);
@@ -106,10 +124,9 @@ export class RemoveIosPush implements IView {
 
 export class UpdateIosPush implements IView {
   async open(ctx: Context) {
-    const selected = (await selectPushCredFromList(
-      ctx.ios.credentials,
-      false
-    )) as IosPushCredentials;
+    const selected = (await selectPushCredFromList(ctx, {
+      allowLegacy: false,
+    })) as IosPushCredentials;
     if (selected) {
       await this.updateSpecific(ctx, selected);
 
@@ -119,8 +136,9 @@ export class UpdateIosPush implements IView {
         displayIosUserCredentials(updated);
       }
       log();
+      return null;
     }
-    return null;
+    throw new GoBackError();
   }
 
   async updateSpecific(ctx: Context, selected: IosPushCredentials) {
@@ -159,32 +177,34 @@ export class UpdateIosPush implements IView {
 }
 
 export class UseExistingPushNotification implements IView {
-  async open(ctx: Context): Promise<IView | null> {
+  _experienceName: string;
+  _bundleIdentifier: string;
+
+  constructor(options: PushKeyOptions) {
+    const { experienceName, bundleIdentifier } = options;
+    this._experienceName = experienceName;
+    this._bundleIdentifier = bundleIdentifier;
+  }
+
+  static withProjectContext(ctx: Context): UseExistingPushNotification | null {
     if (!ctx.hasProjectContext) {
       log.error('Can only be used in project context');
       return null;
     }
-    const experience = get(ctx, 'manifest.slug');
-    const experienceName = `@${ctx.user.username}/${experience}`;
-    const bundleIdentifier = get(ctx, 'manifest.ios.bundleIdentifier');
-    if (!experience || !bundleIdentifier) {
-      log.error(`slug and ios.bundleIdentifier needs to be defined`);
-      return null;
-    }
+    const options = getOptionsFromProjectContext(ctx);
+    if (!options) return null;
+    return new UseExistingPushNotification(options);
+  }
 
-    const filtered = ctx.ios.credentials.appCredentials.filter(
-      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
-    );
-
-    const selected = (await selectPushCredFromList(
-      ctx.ios.credentials,
-      false
-    )) as IosPushCredentials;
+  async open(ctx: Context): Promise<IView | null> {
+    const selected = (await selectPushCredFromList(ctx, {
+      allowLegacy: false,
+    })) as IosPushCredentials;
     if (selected) {
-      await ctx.ios.usePushKey(experienceName, bundleIdentifier, selected.id);
+      await ctx.ios.usePushKey(this._experienceName, this._bundleIdentifier, selected.id);
       log(
         chalk.green(
-          `Successfully assigned Push Notifactions Key to ${experienceName} (${bundleIdentifier})`
+          `Successfully assigned Push Notifactions Key to ${this._experienceName} (${this._bundleIdentifier})`
         )
       );
     }
@@ -192,13 +212,154 @@ export class UseExistingPushNotification implements IView {
   }
 }
 
-async function selectPushCredFromList(
-  iosCredentials: IosCredentials,
-  allowLegacy: boolean = true
-): Promise<IosPushCredentials | IosAppCredentials | null> {
+export class CreateOrReusePushKey implements IView {
+  _experienceName: string;
+  _bundleIdentifier: string;
+  _credentialsManager: CredentialsManager;
+
+  constructor(options: PushKeyOptions) {
+    const { experienceName, bundleIdentifier } = options;
+    this._experienceName = experienceName;
+    this._bundleIdentifier = bundleIdentifier;
+    this._credentialsManager = CredentialsManager.get();
+  }
+
+  async assignPushKey(ctx: Context, userCredentialsId: number) {
+    await ctx.ios.usePushKey(this._experienceName, this._bundleIdentifier, userCredentialsId);
+    log(
+      chalk.green(
+        `Successfully assigned Push Key to ${this._experienceName} (${this._bundleIdentifier})`
+      )
+    );
+  }
+
+  async open(ctx: Context): Promise<IView | null> {
+    if (!ctx.user) {
+      throw new Error(`This workflow requires you to be logged in.`);
+    }
+
+    const existingPushKeys = await getValidPushKeys(ctx.ios.credentials, ctx.appleCtx);
+
+    if (existingPushKeys.length === 0) {
+      const createOperation = async () => new CreateIosPush().create(ctx);
+      const pushKey = await this._credentialsManager.doInteractiveOperation(createOperation, this);
+      await this.assignPushKey(ctx, pushKey.id);
+      return null;
+    }
+
+    // autoselect creds if we find valid keys
+    const autoselectedPushKey = existingPushKeys[0];
+    const confirmQuestion: Question = {
+      type: 'confirm',
+      name: 'confirm',
+      message: `${formatPushKey(
+        autoselectedPushKey,
+        ctx.ios.credentials,
+        'VALID'
+      )} \n Would you like to use this Push Key?`,
+      pageSize: Infinity,
+    };
+
+    const { confirm } = await prompt(confirmQuestion);
+    if (confirm) {
+      log(`Using Push Key: ${autoselectedPushKey.apnsKeyId}`);
+      await this.assignPushKey(ctx, autoselectedPushKey.id);
+      return null;
+    }
+
+    const choices = [
+      {
+        name: '[Choose existing push key] (Recommended)',
+        value: 'CHOOSE_EXISTING',
+      },
+      { name: '[Add a new push key]', value: 'GENERATE' },
+      { name: '[Go back]', value: 'GO_BACK' },
+    ];
+
+    const question: Question = {
+      type: 'list',
+      name: 'action',
+      message: 'Select an iOS push key to use for push notifications:',
+      choices,
+      pageSize: Infinity,
+    };
+
+    const { action } = await prompt(question);
+
+    if (action === 'GENERATE') {
+      const createOperation = async () => new CreateIosPush().create(ctx);
+      const pushKey = await this._credentialsManager.doInteractiveOperation(createOperation, this);
+      await this.assignPushKey(ctx, pushKey.id);
+      return null;
+    } else if (action === 'CHOOSE_EXISTING') {
+      return new UseExistingPushNotification({
+        bundleIdentifier: this._bundleIdentifier,
+        experienceName: this._experienceName,
+      });
+    } else {
+      throw new GoBackError(); // go back
+    }
+  }
+}
+
+async function getValidPushKeys(iosCredentials: IosCredentials, appleCtx?: AppleCtx) {
   const pushKeys = iosCredentials.userCredentials.filter(
+    (cred): cred is IosPushCredentials => cred.type === 'push-key'
+  );
+  if (!appleCtx) {
+    log(chalk.yellow(`Unable to determine validity of Push Keys.`));
+    return pushKeys;
+  }
+  const pushKeyManager = new PushKeyManager(appleCtx);
+  const pushInfoFromApple = await pushKeyManager.list();
+  return await filterRevokedPushKeys<IosPushCredentials>(pushInfoFromApple, pushKeys);
+}
+
+function getValidityStatus(
+  pushKey: IosPushCredentials,
+  validPushKeys: IosPushCredentials[] | null
+): ValidityStatus {
+  if (!validPushKeys) {
+    return 'UNKNOWN';
+  }
+  return validPushKeys.includes(pushKey) ? 'VALID' : 'INVALID';
+}
+
+function getOptionsFromProjectContext(ctx: Context): PushKeyOptions | null {
+  const experience = get(ctx, 'manifest.slug');
+  const owner = get(ctx, 'manifest.owner');
+  const experienceName = `@${owner || ctx.user.username}/${experience}`;
+  const bundleIdentifier = get(ctx, 'manifest.ios.bundleIdentifier');
+  if (!experience || !bundleIdentifier) {
+    log.error(`slug and ios.bundleIdentifier needs to be defined`);
+    return null;
+  }
+
+  return { experienceName, bundleIdentifier };
+}
+
+type ListOptions = {
+  filterInvalid?: boolean;
+  allowLegacy?: boolean;
+};
+
+async function selectPushCredFromList(
+  ctx: Context,
+  options: ListOptions = {}
+): Promise<IosPushCredentials | IosAppCredentials | null> {
+  const iosCredentials = ctx.ios.credentials;
+  const allowLegacy = options.allowLegacy || true;
+  let pushKeys = iosCredentials.userCredentials.filter(
     cred => cred.type === 'push-key'
   ) as IosPushCredentials[];
+  let validPushKeys: IosPushCredentials[] | null = null;
+  if (ctx.hasAppleCtx()) {
+    const pushKeyManager = new PushKeyManager(ctx.appleCtx);
+    const pushInfoFromApple = await pushKeyManager.list();
+    validPushKeys = await filterRevokedPushKeys<IosPushCredentials>(pushInfoFromApple, pushKeys);
+  }
+  pushKeys = options.filterInvalid && validPushKeys ? validPushKeys : pushKeys;
+
   const pushCerts = allowLegacy
     ? iosCredentials.appCredentials.filter(
         ({ credentials }) => credentials.pushP12 && credentials.pushPassword
@@ -212,7 +373,11 @@ async function selectPushCredFromList(
 
   const getName = (pushCred: IosPushCredentials | IosAppCredentials) => {
     if (get(pushCred, 'type') === 'push-key') {
-      return formatPushKey(pushCred as IosPushCredentials, iosCredentials);
+      return formatPushKey(
+        pushCred as IosPushCredentials,
+        iosCredentials,
+        getValidityStatus(pushCred as IosPushCredentials, validPushKeys)
+      );
     } else {
       const pushCert = pushCred as IosAppCredentials;
       return `Push Certificate (PushId: ${pushCert.credentials.pushId ||
@@ -223,16 +388,26 @@ async function selectPushCredFromList(
     return 'unknown credentials';
   };
 
+  const NONE_SELECTED = -1;
+  const choices = pushCredentials.map((entry, index) => ({
+    name: getName(entry),
+    value: index,
+  }));
+  choices.push({
+    name: '[Go back]',
+    value: NONE_SELECTED,
+  });
+
   const question: Question = {
     type: 'list',
     name: 'credentialsIndex',
     message: 'Select credentials from list',
-    choices: pushCredentials.map((entry, index) => ({
-      name: getName(entry),
-      value: index,
-    })),
+    choices,
   };
   const { credentialsIndex } = await prompt(question);
+  if (credentialsIndex === NONE_SELECTED) {
+    return null;
+  }
   return pushCredentials[credentialsIndex];
 }
 
@@ -275,7 +450,12 @@ function formatPushKeyFromApple(appleInfo: PushKeyInfo, credentials: IosCredenti
   return `${name} - KeyId: ${id}${teamText}\n${usedByString}`;
 }
 
-function formatPushKey(pushKey: IosPushCredentials, credentials: IosCredentials): string {
+type ValidityStatus = 'UNKNOWN' | 'VALID' | 'INVALID';
+function formatPushKey(
+  pushKey: IosPushCredentials,
+  credentials: IosCredentials,
+  validityStatus: ValidityStatus = 'UNKNOWN'
+): string {
   const appCredentials = credentials.appCredentials.filter(
     cred => cred.pushCredentialsId === pushKey.id
   );
@@ -287,7 +467,17 @@ function formatPushKey(pushKey: IosPushCredentials, credentials: IosCredentials)
     ? `\n    ${chalk.gray(`used by ${joinApps}`)}`
     : `\n    ${chalk.gray(`not used by any apps`)}`;
 
-  return `Push Notifications Key (Key ID: ${pushKey.apnsKeyId}, Team ID: ${pushKey.teamId})${usedByString}`;
+  let validityText;
+  if (validityStatus === 'VALID') {
+    validityText = chalk.gray("\n    ✅ Currently valid on Apple's servers.");
+  } else if (validityStatus === 'INVALID') {
+    validityText = chalk.gray("\n    ❌ No longer valid on Apple's servers.");
+  } else {
+    validityText = chalk.gray(
+      "\n    ❓ Validity of this certificate on Apple's servers is unknown."
+    );
+  }
+  return `Push Notifications Key (Key ID: ${pushKey.apnsKeyId}, Team ID: ${pushKey.teamId})${usedByString}${validityText}`;
 }
 
 async function generatePushKey(ctx: Context): Promise<PushKey> {
@@ -306,6 +496,13 @@ async function generatePushKey(ctx: Context): Promise<PushKey> {
           (acc, cert) => ({ ...acc, [cert.apnsKeyId]: cert }),
           {}
         );
+
+      const ui = new inquirer.ui.BottomBar();
+      ui.log.write('ℹ️ ℹ️ ℹ️ Show me more info about these choices ℹ️ ℹ️ ℹ️');
+      ui.log.write(
+        'ℹ️ ℹ️ ℹ️ https://docs.expo.io/versions/latest/distribution/app-signing/#summary ℹ️ ℹ️ ℹ️'
+      );
+      ui.log.write('\n');
 
       const { revoke } = await prompt([
         {
@@ -333,4 +530,33 @@ async function generatePushKey(ctx: Context): Promise<PushKey> {
     }
   }
   return await generatePushKey(ctx);
+}
+
+export async function validatePushKey(appleContext: AppleCtx, pushKey: PushKey) {
+  const spinner = ora(`Checking validity of push key on Apple Developer Portal...`).start();
+
+  const pushKeyManager = new PushKeyManager(appleContext);
+  const pushInfoFromApple = await pushKeyManager.list();
+  const filteredFormattedPushKeyArray = await filterRevokedPushKeys(pushInfoFromApple, [pushKey]);
+  const isValidPushKey = filteredFormattedPushKeyArray.length > 0;
+  if (isValidPushKey) {
+    const successMsg = `Successfully validated Push Key against Apple Servers`;
+    spinner.succeed(successMsg);
+  } else {
+    const failureMsg = `This Push Key is no longer valid on the Apple Developer Portal`;
+    spinner.fail(failureMsg);
+  }
+  return isValidPushKey;
+}
+
+async function filterRevokedPushKeys<T extends PushKey>(
+  pushInfoFromApple: PushKeyInfo[],
+  pushKeys: T[]
+): Promise<T[]> {
+  // if the credentials are valid, check it against apple to make sure it hasnt been revoked
+  const validKeyIdsOnAppleServer = pushInfoFromApple.map(pushKey => pushKey.id);
+  const validPushKeysOnExpoServer = pushKeys.filter(pushKey => {
+    return validKeyIdsOnAppleServer.includes(pushKey.apnsKeyId);
+  });
+  return validPushKeysOnExpoServer;
 }
