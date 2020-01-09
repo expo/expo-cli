@@ -18,12 +18,13 @@ import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
 import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
-import selectPushKey from './selectPushKey';
 import { Updater, clearTags } from './tagger';
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
+import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import { Context } from '../../credentials/context';
 import { CreateIosDist } from '../../credentials/views/IosDistCert';
 import { runCredentialsManager } from '../../credentials/route';
+import { CreateIosPush } from '../../credentials/views/IosPushCredentials';
 
 const { IOS } = PLATFORMS;
 
@@ -127,7 +128,25 @@ export default program => {
           `This build request requires a valid distribution certificate.`
         );
       }
-      const pushKey = await selectPushKey(context);
+
+      let pushKey;
+      if (user) {
+        await runCredentialsManager(
+          context,
+          new SetupIosPush({ experienceName, bundleIdentifier })
+        );
+        pushKey = await context.ios.getPushKey(experienceName, bundleIdentifier);
+      } else {
+        pushKey = await new CreateIosPush().provideOrGenerate(context);
+      }
+      // TODO: push keys arent required
+      if (!pushKey) {
+        throw new CommandError(
+          'INSUFFICIENT_CREDENTIALS',
+          `This build request requires a valid push key.`
+        );
+      }
+
       const provisioningProfile = await selectAdhocProvisioningProfile(
         appleContext,
         udids,
