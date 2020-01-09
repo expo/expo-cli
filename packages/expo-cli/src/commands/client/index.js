@@ -136,8 +136,6 @@ export default program => {
           new SetupIosPush({ experienceName, bundleIdentifier })
         );
         pushKey = await context.ios.getPushKey(experienceName, bundleIdentifier);
-      } else {
-        pushKey = await new CreateIosPush().provideOrGenerate(context);
       }
 
       const provisioningProfile = await selectAdhocProvisioningProfile(
