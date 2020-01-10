@@ -171,7 +171,7 @@ export async function updateCredentialsForPlatform(
 
       if (!isEmpty(pushCredentials)) {
         const pushCredentialsId = get(currentCredentials, 'pushCredentialsId');
-        const updatedId = await api.putAsync(`credentials/ios/push/${pushCredentialsId}`, {
+        const { id: updatedId } = await api.putAsync(`credentials/ios/push/${pushCredentialsId}`, {
           credentials: { ...pushCredentials, ...appleTeam },
         });
         if (!pushCredentialsId) {
@@ -186,7 +186,7 @@ export async function updateCredentialsForPlatform(
       if (!isEmpty(distCredentials)) {
         const distCredentialsId = get(currentCredentials, 'distCredentialsId');
         //const updatedId = await IosCredentials.updateDistCert(
-        const updatedId = await api.putAsync(`credentials/ios/dist/${distCredentialsId}`, {
+        const { id: updatedId } = await api.putAsync(`credentials/ios/dist/${distCredentialsId}`, {
           credentials: { ...distCredentials, ...appleTeam },
         });
         if (!distCredentialsId) {
