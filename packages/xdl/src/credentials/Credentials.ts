@@ -119,17 +119,8 @@ export async function updateCredentialsForPlatform(
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
-  console.log('updateCredentialsForPlatform', {
-    platform,
-    newCredentials,
-    userCredentialsIds,
-    metadata,
-  });
-
   if (process.env.EXPO_NEXT_API) {
     const { experienceName, bundleIdentifier } = metadata;
-    //TODO-JJ make this work for ios as well
-    console.log('API V2 updateCredentialsForPlatform');
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     if (platform === 'android') {
@@ -137,7 +128,6 @@ export async function updateCredentialsForPlatform(
         credentials: newCredentials,
       });
 
-      console.log('API V2 creds result:', result);
       if (!result) {
         throw new Error('Error updating credentials.');
       }
@@ -185,7 +175,6 @@ export async function updateCredentialsForPlatform(
 
       if (!isEmpty(distCredentials)) {
         const distCredentialsId = get(currentCredentials, 'distCredentialsId');
-        //const updatedId = await IosCredentials.updateDistCert(
         const { id: updatedId } = await api.putAsync(`credentials/ios/dist/${distCredentialsId}`, {
           credentials: { ...distCredentials, ...appleTeam },
         });
@@ -200,17 +189,14 @@ export async function updateCredentialsForPlatform(
 
       // reused credentials
       for (const id of userCredentialsIdOverride) {
-        //const record = await IosCredentials.getUserCredentials(id, userId, false);
         const record = await api.get(`credentials/ios/userCredentials/${id}`, { decrypt: false });
         if (record && record.type === 'push-key') {
-          //await IosCredentials.usePushKey({ experienceName, bundleIdentifier }, id, userId);
           await api.postAsync(`credentials/ios/use/push`, {
             experienceName,
             bundleIdentifier,
             userCredentialsId: id,
           });
         } else if (record && record.type === 'dist-cert') {
-          //await IosCredentials.useDistCert({ experienceName, bundleIdentifier }, id, userId);
           await api.postAsync(`credentials/ios/use/dist`, {
             experienceName,
             bundleIdentifier,
@@ -227,7 +213,6 @@ export async function updateCredentialsForPlatform(
       ...metadata,
     });
 
-    console.log({ err, credentials });
     if (err || !credentials) {
       throw new Error('Error updating credentials.');
     }
@@ -239,11 +224,7 @@ export async function removeCredentialsForPlatform(
   metadata: CredentialMetadata
 ): Promise<void> {
   // doesn't go through mac rpc, no request id needed
-  console.log('deleteCredentials');
-  console.log({ platform, metadata });
-
   if (process.env.EXPO_NEXT_API) {
-    console.log('API V2 Delete CredentialsForPlatform');
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     if (platform === 'android') {
@@ -251,7 +232,6 @@ export async function removeCredentialsForPlatform(
         `credentials/android/keystore/${metadata.experienceName}`
       );
 
-      console.log('API V2 creds result:', result);
       if (!result) {
         throw new Error('Error deleting credentials.');
       }
@@ -295,7 +275,6 @@ export async function removeCredentialsForPlatform(
       ...metadata,
     });
 
-    console.log({ err });
     if (err) {
       throw new Error('Error deleting credentials.');
     }
