@@ -201,7 +201,7 @@ export async function updateCredentialsForPlatform(
       // reused credentials
       for (const id of userCredentialsIdOverride) {
         //const record = await IosCredentials.getUserCredentials(id, userId, false);
-        const record = await api.get(`/credentials/ios/userCredentials/${id}`, { decrypt: false });
+        const record = await api.get(`credentials/ios/userCredentials/${id}`, { decrypt: false });
         if (record && record.type === 'push-key') {
           //await IosCredentials.usePushKey({ experienceName, bundleIdentifier }, id, userId);
           await api.postAsync(`credentials/ios/use/push`, {
@@ -271,22 +271,22 @@ export async function removeCredentialsForPlatform(
       }
 
       if (only.provisioningProfile) {
-        await api.postAsync('/credentials/ios/provisioningProfile/delete', {
+        await api.postAsync('credentials/ios/provisioningProfile/delete', {
           experienceName: metadata.experienceName,
           bundleIdentifier: metadata.bundleIdentifier,
         });
       }
       if (only.pushCert) {
-        await api.postAsync('/credentials/ios/pushCert/delete', {
+        await api.postAsync('credentials/ios/pushCert/delete', {
           experienceName: metadata.experienceName,
           bundleIdentifier: metadata.bundleIdentifier,
         });
       }
       if (only.pushKey && currentCredentials.pushCredentialsId) {
-        await api.delAsync(`/credentials/ios/push/${currentCredentials.pushCredentialsId}`);
+        await api.deleteAsync(`credentials/ios/push/${currentCredentials.pushCredentialsId}`);
       }
       if (only.distributionCert && currentCredentials.distCredentialsId) {
-        await api.delAsync(`/credentials/ios/dist/${currentCredentials.distCredentialsId}`);
+        await api.deleteAsync(`credentials/ios/dist/${currentCredentials.distCredentialsId}`);
       }
     }
   } else {
