@@ -201,7 +201,7 @@ export async function updateCredentialsForPlatform(
       // reused credentials
       for (const id of userCredentialsIdOverride) {
         //const record = await IosCredentials.getUserCredentials(id, userId, false);
-        const record = await api.get(`/credentials/ios/record/${id}`, { decrypt: false });
+        const record = await api.get(`/credentials/ios/userCredentials/${id}`, { decrypt: false });
         if (record && record.type === 'push-key') {
           //await IosCredentials.usePushKey({ experienceName, bundleIdentifier }, id, userId);
           await api.postAsync(`credentials/ios/use/push`, {
