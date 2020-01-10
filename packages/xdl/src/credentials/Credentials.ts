@@ -86,11 +86,9 @@ async function fetchCredentials(
       if (record) {
         const { pushCredentials, distCredentials, credentials } = record;
         return {
-          credentials: {
-            ...pushCredentials,
-            ...distCredentials,
-            ...credentials,
-          },
+          ...pushCredentials,
+          ...distCredentials,
+          ...credentials,
         };
       } else {
         return {};
