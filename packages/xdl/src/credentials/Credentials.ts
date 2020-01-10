@@ -1,4 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
+import get from 'lodash/get';
+import pick from 'lodash/pick';
 
 import { Platform, readConfigJsonAsync } from '@expo/config';
 import { ApiV2 } from '../xdl';
@@ -125,20 +127,97 @@ export async function updateCredentialsForPlatform(
   });
 
   if (process.env.EXPO_NEXT_API) {
+    const { experienceName, bundleIdentifier } = metadata;
     //TODO-JJ make this work for ios as well
     console.log('API V2 updateCredentialsForPlatform');
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
-    const result = await api.putAsync(
-      `credentials/${platform}/keystore/${metadata.experienceName}`,
-      {
+    if (platform === 'android') {
+      const result = await api.putAsync(`credentials/${platform}/keystore/${experienceName}`, {
         credentials: newCredentials,
-      }
-    );
+      });
 
-    console.log('API V2 creds result:', result);
-    if (!result) {
-      throw new Error('Error updating credentials.');
+      console.log('API V2 creds result:', result);
+      if (!result) {
+        throw new Error('Error updating credentials.');
+      }
+    } else if (platform === 'ios') {
+      const { userCredentialsId: idFromCredentials, ...credentials } = newCredentials;
+      const userCredentialsIdOverride = idFromCredentials
+        ? [idFromCredentials]
+        : userCredentialsIds;
+
+      const currentCredentials = await api.getAsync(
+        `credentials/ios/${experienceName}/${encodeURI(bundleIdentifier)}`
+      );
+      const appleTeam = pick(credentials, ['teamId', 'teamName']);
+      const distCredentials = pick(credentials, [
+        'certP12',
+        'certPassword',
+        'certId',
+        'certPrivateSigningKey',
+        'distCertSerialNumber',
+      ]);
+      const pushCredentials = pick(credentials, ['apnsKeyId', 'apnsKeyP8']);
+      const appCredentials = pick(credentials, ['provisioningProfile', 'provisioningProfileId']);
+
+      if (!isEmpty(appCredentials)) {
+        await api.postAsync('credentials/ios/provisioningProfile/update', {
+          experienceName,
+          bundleIdentifier,
+          credentials: { ...appCredentials, ...appleTeam },
+        });
+      }
+
+      if (!isEmpty(pushCredentials)) {
+        const pushCredentialsId = get(currentCredentials, 'pushCredentialsId');
+        const updatedId = await api.putAsync(`credentials/ios/push/${pushCredentialsId}`, {
+          credentials: { ...pushCredentials, ...appleTeam },
+        });
+        if (!pushCredentialsId) {
+          await api.postAsync(`credentials/ios/use/push`, {
+            experienceName,
+            bundleIdentifier,
+            userCredentialsId: updatedId,
+          });
+        }
+      }
+
+      if (!isEmpty(distCredentials)) {
+        const distCredentialsId = get(currentCredentials, 'distCredentialsId');
+        //const updatedId = await IosCredentials.updateDistCert(
+        const updatedId = await api.putAsync(`credentials/ios/dist/${distCredentialsId}`, {
+          credentials: { ...distCredentials, ...appleTeam },
+        });
+        if (!distCredentialsId) {
+          await api.postAsync(`credentials/ios/use/dist`, {
+            experienceName,
+            bundleIdentifier,
+            userCredentialsId: updatedId,
+          });
+        }
+      }
+
+      // reused credentials
+      for (const id of userCredentialsIdOverride) {
+        //const record = await IosCredentials.getUserCredentials(id, userId, false);
+        const record = await api.get(`/credentials/ios/record/${id}`, { decrypt: false });
+        if (record && record.type === 'push-key') {
+          //await IosCredentials.usePushKey({ experienceName, bundleIdentifier }, id, userId);
+          await api.postAsync(`credentials/ios/use/push`, {
+            experienceName,
+            bundleIdentifier,
+            userCredentialsId: id,
+          });
+        } else if (record && record.type === 'dist-cert') {
+          //await IosCredentials.useDistCert({ experienceName, bundleIdentifier }, id, userId);
+          await api.postAsync(`credentials/ios/use/dist`, {
+            experienceName,
+            bundleIdentifier,
+            userCredentialsId: id,
+          });
+        }
+      }
     }
   } else {
     const { err, credentials } = await Api.callMethodAsync('updateCredentials', [], 'post', {
