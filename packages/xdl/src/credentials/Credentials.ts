@@ -81,7 +81,7 @@ async function fetchCredentials(
       }
     } else if (platform === 'ios') {
       const record = await api.getAsync(
-        `credentials/${platform}/${experienceName}/${encodeURI(bundleIdentifier)}`
+        `credentials/${platform}/${experienceName}/${encodeURI(bundleIdentifier ?? '')}`
       );
       if (record) {
         const { pushCredentials, distCredentials, credentials } = record;
@@ -138,7 +138,7 @@ export async function updateCredentialsForPlatform(
         : userCredentialsIds;
 
       const currentCredentials = await api.getAsync(
-        `credentials/ios/${experienceName}/${encodeURI(bundleIdentifier)}`
+        `credentials/ios/${experienceName}/${encodeURI(bundleIdentifier ?? '')}`
       );
       const appleTeam = pick(credentials, ['teamId', 'teamName']);
       const distCredentials = pick(credentials, [
@@ -244,7 +244,7 @@ export async function removeCredentialsForPlatform(
         delete only.appCredentials;
       }
       const currentCredentials = await api.getAsync(
-        `credentials/ios/${metadata.experienceName}/${encodeURI(metadata.bundleIdentifier)}`
+        `credentials/ios/${metadata.experienceName}/${encodeURI(metadata.bundleIdentifier ?? '')}`
       );
       if (isEmpty(currentCredentials)) {
         return;
