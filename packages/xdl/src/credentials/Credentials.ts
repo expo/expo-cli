@@ -236,7 +236,7 @@ export async function removeCredentialsForPlatform(
         throw new Error('Error deleting credentials.');
       }
     } else if (platform === 'ios') {
-      const { only } = metadata;
+      const { experienceName, bundleIdentifier, only } = metadata;
 
       if (only.appCredentials) {
         only.provisioningProfile = true;
@@ -244,7 +244,7 @@ export async function removeCredentialsForPlatform(
         delete only.appCredentials;
       }
       const currentCredentials = await api.getAsync(
-        `credentials/ios/${metadata.experienceName}/${encodeURI(metadata.bundleIdentifier ?? '')}`
+        `credentials/ios/${experienceName}/${encodeURI(bundleIdentifier ?? '')}`
       );
       if (isEmpty(currentCredentials)) {
         return;
@@ -252,14 +252,14 @@ export async function removeCredentialsForPlatform(
 
       if (only.provisioningProfile) {
         await api.postAsync('credentials/ios/provisioningProfile/delete', {
-          experienceName: metadata.experienceName,
-          bundleIdentifier: metadata.bundleIdentifier,
+          experienceName,
+          bundleIdentifier,
         });
       }
       if (only.pushCert) {
         await api.postAsync('credentials/ios/pushCert/delete', {
-          experienceName: metadata.experienceName,
-          bundleIdentifier: metadata.bundleIdentifier,
+          experienceName,
+          bundleIdentifier,
         });
       }
       if (only.pushKey && currentCredentials.pushCredentialsId) {
