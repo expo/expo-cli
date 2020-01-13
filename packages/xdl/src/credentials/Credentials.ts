@@ -72,26 +72,25 @@ async function fetchCredentials(
     const api = ApiV2.clientForUser(user);
 
     if (platform === 'android') {
-      credentials = await api.getAsync(`credentials/${platform}/keystore/${experienceName}`);
+      credentials = await api.getAsync(`credentials/android/keystore/${experienceName}`);
       if (credentials['keystore']) {
         credentials['keystore']['keystoreAlias'] = credentials['keystore']['keyAlias'];
         delete credentials['keystore']['keyAlias'];
       } else {
-        return null;
+        credentials = null;
       }
     } else if (platform === 'ios') {
       const record = await api.getAsync(
-        `credentials/${platform}/${experienceName}/${encodeURI(bundleIdentifier ?? '')}`
+        `credentials/ios/${experienceName}/${encodeURI(bundleIdentifier ?? '')}`
       );
       if (record) {
-        const { pushCredentials, distCredentials, credentials } = record;
-        return {
-          ...pushCredentials,
-          ...distCredentials,
-          ...credentials,
+        credentials = {
+          ...record.pushCredentials,
+          ...record.distCredentials,
+          ...record.credentials,
         };
       } else {
-        return {};
+        credentials = {};
       }
     }
   } else {
@@ -122,7 +121,7 @@ export async function updateCredentialsForPlatform(
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     if (platform === 'android') {
-      const result = await api.putAsync(`credentials/${platform}/keystore/${experienceName}`, {
+      const result = await api.putAsync(`credentials/android/keystore/${experienceName}`, {
         credentials: newCredentials,
       });
 
