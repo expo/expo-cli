@@ -227,13 +227,8 @@ export async function removeCredentialsForPlatform(
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     if (platform === 'android') {
-      const result = await api.deleteAsync(
-        `credentials/android/keystore/${metadata.experienceName}`
-      );
-
-      if (!result) {
-        throw new Error('Error deleting credentials.');
-      }
+      console.log('deleting android credentials');
+      await api.deleteAsync(`credentials/android/keystore/${metadata.experienceName}`);
     } else if (platform === 'ios') {
       const { experienceName, bundleIdentifier, only } = metadata;
 
