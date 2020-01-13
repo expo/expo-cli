@@ -104,13 +104,13 @@ async function getExistingUserCredentials(
     const { userCredentials, appCredentials } = await api.getAsync(`credentials/ios`);
 
     certs = userCredentials
-      .filter(cred => cred.type === type && cred.teamId === appleTeamId)
-      .map(({ id, ...cred }) => ({
+      .filter((cred: any) => cred.type === type && cred.teamId === appleTeamId)
+      .map(({ id, ...cred }: any) => ({
         ...cred,
         userCredentialsId: id,
         usedByApps: appCredentials
-          .filter(app => app.pushCredentialsId === id || app.distCredentialsId === id)
-          .map(({ experienceName }) => experienceName)
+          .filter((app: any) => app.pushCredentialsId === id || app.distCredentialsId === id)
+          .map(({ experienceName }: any) => experienceName)
           .join(';'),
       }));
   } else {
