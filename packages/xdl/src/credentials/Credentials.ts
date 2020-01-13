@@ -113,7 +113,7 @@ async function fetchCredentials(
 
 export async function updateCredentialsForPlatform(
   platform: string,
-  newCredentials: Credentials,
+  newCredentials: Credentials & { userCredentialsId: string },
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
@@ -221,7 +221,7 @@ export async function updateCredentialsForPlatform(
 
 export async function removeCredentialsForPlatform(
   platform: string,
-  metadata: CredentialMetadata
+  metadata: CredentialMetadata & { only: any }
 ): Promise<void> {
   // doesn't go through mac rpc, no request id needed
   if (process.env.EXPO_NEXT_API) {
