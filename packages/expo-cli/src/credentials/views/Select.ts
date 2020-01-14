@@ -99,7 +99,7 @@ export class SelectIosExperience implements IView {
       case 'remove-ios-dist':
         return new iosDistView.RemoveIosDist();
       case 'use-existing-push-ios':
-        return new iosPushView.UseExistingPushNotification();
+        return iosPushView.UseExistingPushNotification.withProjectContext(ctx);
       case 'use-existing-dist-ios':
         return iosDistView.UseExistingDistributionCert.withProjectContext(ctx);
       case 'remove-provisioning-profile':

@@ -5,7 +5,6 @@ import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } f
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
 import PnpWebpackPlugin from 'pnp-webpack-plugin';
-import ModuleScopePlugin from 'react-dev-utils/ModuleScopePlugin';
 import ManifestPlugin from 'webpack-manifest-plugin';
 import WatchMissingNodeModulesPlugin from 'react-dev-utils/WatchMissingNodeModulesPlugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
@@ -30,6 +29,7 @@ import {
   withNodeMocks,
   withOptimizations,
   withReporting,
+  withTypeScriptAsync,
 } from './addons';
 
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
@@ -291,12 +291,6 @@ export default async function(
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
         // guards against forgotten dependencies and such.
         PnpWebpackPlugin,
-        // Prevents users from importing files from outside of node_modules/.
-        // This often causes confusion because we only process files within the root folder with babel.
-        // To fix this, we prevent you from importing files out of the root folder -- if you'd like to,
-        // please link the files into your node_modules/ and let module-resolution kick in.
-        // Make sure your source files are compiled, as they will not be processed in any way.
-        new ModuleScopePlugin(babelProjectRoot, [locations.packageJson]),
       ],
       symlinks: false,
     },
@@ -311,8 +305,11 @@ export default async function(
     webpackConfig = withCompression(withOptimizations(webpackConfig), env);
   }
 
-  return withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
-    allowedHost: argv.allowedHost,
-    proxy: argv.proxy,
-  });
+  return withTypeScriptAsync(
+    withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
+      allowedHost: argv.allowedHost,
+      proxy: argv.proxy,
+    }),
+    env
+  );
 }

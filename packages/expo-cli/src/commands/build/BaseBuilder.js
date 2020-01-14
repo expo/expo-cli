@@ -305,7 +305,7 @@ ${job.id}
     }
   }
 
-  async wait(buildId, { timeout = 1200, interval = 30, publicUrl } = {}) {
+  async wait(buildId, { timeout = 3600, interval = 30, publicUrl } = {}) {
     log(`Waiting for build to complete. You can press Ctrl+C to exit.`);
     let spinner = ora().start();
     let time = new Date().getTime();

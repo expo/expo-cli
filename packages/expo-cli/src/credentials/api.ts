@@ -130,6 +130,27 @@ export class IosApi {
       return record;
     });
   }
+  async getPushKey(
+    experienceName: string,
+    bundleIdentifier: string
+  ): Promise<IosPushCredentials | null> {
+    if (this.shouldRefetch) {
+      await this._fetchAllCredentials();
+    }
+    this._ensureAppCredentials(experienceName, bundleIdentifier);
+    const credIndex = findIndex(
+      this.credentials.appCredentials,
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
+    );
+    const pushKeyId = this.credentials.appCredentials[credIndex].pushCredentialsId;
+    if (!pushKeyId) {
+      return null;
+    }
+    const pushKey = this.credentials.userCredentials.find(cred => cred.id === pushKeyId) as
+      | IosPushCredentials
+      | undefined;
+    return pushKey || null;
+  }
   async usePushKey(experienceName: string, bundleIdentifier: string, userCredentialsId: number) {
     await this.api.postAsync('credentials/ios/use/push', {
       experienceName,

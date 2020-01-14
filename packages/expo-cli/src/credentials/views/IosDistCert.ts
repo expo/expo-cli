@@ -54,8 +54,10 @@ export class CreateIosDist implements IView {
     const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
       if (!ctx.hasAppleCtx()) {
-        chalk.yellow(
-          "WARNING! Unable to validate Distribution Certificate due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
+        log(
+          chalk.yellow(
+            "WARNING! Unable to validate Distribution Certificate due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
+          )
         );
         return userProvided;
       }
@@ -191,8 +193,10 @@ export class UpdateIosDist implements IView {
     const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
       if (!ctx.hasAppleCtx()) {
-        chalk.yellow(
-          "WARNING! Unable to validate Distribution Certificate due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
+        log(
+          chalk.yellow(
+            "WARNING! Unable to validate Distribution Certificate due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
+          )
         );
         return userProvided;
       }
@@ -253,24 +257,6 @@ export class CreateOrReuseDistributionCert implements IView {
     this._credentialsManager = CredentialsManager.get();
   }
 
-  async _choosePreferredCreds(
-    distCerts: IosDistCredentials[],
-    appCredentials: IosAppCredentials[],
-    experienceName: string
-  ) {
-    // prefer the one that matches our experienceName
-    const appCredentialsForExperience = appCredentials.filter(
-      cred => cred.experienceName === experienceName
-    );
-    for (const distCert of distCerts) {
-      if (appCredentialsForExperience.some(cred => cred.distCredentialsId === distCert.id)) {
-        return distCert;
-      }
-    }
-    // else choose an arbitrary one
-    return distCerts[0];
-  }
-
   async assignDistCert(ctx: Context, userCredentialsId: number) {
     await ctx.ios.useDistCert(this._experienceName, this._bundleIdentifier, userCredentialsId);
     log(
@@ -294,14 +280,8 @@ export class CreateOrReuseDistributionCert implements IView {
       return null;
     }
 
-    // reuse autoselect
-    // autoselect creds if we find valid ones
-    const autoselectedCertificate = await this._choosePreferredCreds(
-      existingCertificates,
-      ctx.ios.credentials.appCredentials,
-      this._experienceName
-    );
-
+    // autoselect creds if we find valid certs
+    const autoselectedCertificate = existingCertificates[0];
     const confirmQuestion: Question = {
       type: 'confirm',
       name: 'confirm',
@@ -355,10 +335,7 @@ export class CreateOrReuseDistributionCert implements IView {
   }
 }
 
-function getOptionsFromProjectContext(
-  ctx: Context,
-  options: Partial<DistCertOptions> = {}
-): DistCertOptions | null {
+function getOptionsFromProjectContext(ctx: Context): DistCertOptions | null {
   const experience = get(ctx, 'manifest.slug');
   const owner = get(ctx, 'manifest.owner');
   const experienceName = `@${owner || ctx.user.username}/${experience}`;
@@ -371,14 +348,21 @@ function getOptionsFromProjectContext(
   return { experienceName, bundleIdentifier };
 }
 
-export async function getValidDistCerts(iosCredentials: IosCredentials, appleCtx?: AppleCtx) {
+async function getValidDistCerts(iosCredentials: IosCredentials, appleCtx?: AppleCtx) {
   const distCerts = iosCredentials.userCredentials.filter(
     (cred): cred is IosDistCredentials => cred.type === 'dist-cert'
   );
   if (!appleCtx) {
+    log(chalk.yellow(`Unable to determine validity of Distribution Certificates.`));
     return distCerts;
   }
-  return await filterRevokedDistributionCerts<IosDistCredentials>(appleCtx, distCerts);
+  const distCertManager = new DistCertManager(appleCtx);
+  const certInfoFromApple = await distCertManager.list();
+  const validCerts = await filterRevokedDistributionCerts<IosDistCredentials>(
+    certInfoFromApple,
+    distCerts
+  );
+  return sortByExpiryDesc(certInfoFromApple, validCerts);
 }
 
 function getValidityStatus(
@@ -405,8 +389,10 @@ async function selectDistCertFromList(
   );
   let validDistCerts: IosDistCredentials[] | null = null;
   if (ctx.hasAppleCtx()) {
+    const distCertManager = new DistCertManager(ctx.appleCtx);
+    const certInfoFromApple = await distCertManager.list();
     validDistCerts = await filterRevokedDistributionCerts<IosDistCredentials>(
-      ctx.appleCtx,
+      certInfoFromApple,
       distCerts
     );
   }
@@ -523,15 +509,11 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
           {}
         );
 
-      const choices = certs.map((cert, index) => ({
-        value: index,
-        name: formatDistCertFromApple(cert, ctx.ios.credentials),
-      }));
-
-      // TODO(quin)
       const ui = new inquirer.ui.BottomBar();
       ui.log.write('ℹ️ ℹ️ ℹ️ Show me more info about these choices ℹ️ ℹ️ ℹ️');
-      ui.log.write('ℹ️ ℹ️ ℹ️    todo.quin.makeshorturl.at/aitRV    ℹ️ ℹ️ ℹ️');
+      ui.log.write(
+        'ℹ️ ℹ️ ℹ️ https://docs.expo.io/versions/latest/distribution/app-signing/#summary ℹ️ ℹ️ ℹ️'
+      );
       ui.log.write('\n');
 
       let { revoke } = await prompt([
@@ -539,7 +521,10 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
           type: 'checkbox',
           name: 'revoke',
           message: 'Select certificates to revoke.',
-          choices,
+          choices: certs.map((cert, index) => ({
+            value: index,
+            name: formatDistCertFromApple(cert, ctx.ios.credentials),
+          })),
           pageSize: Infinity,
         },
       ]);
@@ -586,7 +571,9 @@ export async function validateDistributionCertificate(
     `Checking validity of distribution certificate on Apple Developer Portal...`
   ).start();
 
-  const validDistributionCerts = await filterRevokedDistributionCerts(appleContext, [
+  const distCertManager = new DistCertManager(appleContext);
+  const certInfoFromApple = await distCertManager.list();
+  const validDistributionCerts = await filterRevokedDistributionCerts(certInfoFromApple, [
     distributionCert,
   ]);
   const isValidCert = validDistributionCerts.length > 0;
@@ -594,15 +581,14 @@ export async function validateDistributionCertificate(
     const successMsg = `Successfully validated Distribution Certificate against Apple Servers`;
     spinner.succeed(successMsg);
   } else {
-    // TODO:quin: update this msg
-    const failureMsg = `The Distribution Certificate you uploaded is not valid. Please check that you uploaded your certificate to the Apple Servers. See docs.expo.io/versions/latest/guides/adhoc-builds for more details on uploading your credentials.`;
+    const failureMsg = `The Distribution Certificate is no longer valid on the Apple Developer Portal`;
     spinner.fail(failureMsg);
   }
   return isValidCert;
 }
 
-export async function filterRevokedDistributionCerts<T extends DistCert>(
-  appleCtx: AppleCtx,
+async function filterRevokedDistributionCerts<T extends DistCert>(
+  certInfoFromApple: DistCertInfo[],
   distributionCerts: T[]
 ): Promise<T[]> {
   if (distributionCerts.length === 0) {
@@ -610,9 +596,7 @@ export async function filterRevokedDistributionCerts<T extends DistCert>(
   }
 
   // if the credentials are valid, check it against apple to make sure it hasnt been revoked
-  const distCertManager = new DistCertManager(appleCtx);
-  const certsOnAppleServer = await distCertManager.list();
-  const validCertSerialsOnAppleServer = certsOnAppleServer
+  const validCertSerialsOnAppleServer = certInfoFromApple
     .filter(
       // remove expired certs
       cert => cert.expires > Math.floor(Date.now() / 1000)
@@ -626,4 +610,17 @@ export async function filterRevokedDistributionCerts<T extends DistCert>(
     return validCertSerialsOnAppleServer.includes(serialNumber);
   });
   return validDistributionCerts;
+}
+
+function sortByExpiryDesc<T extends DistCert>(
+  certInfoFromApple: DistCertInfo[],
+  distributionCerts: T[]
+): T[] {
+  return distributionCerts.sort((certA, certB) => {
+    const certAInfo = certInfoFromApple.find(cert => cert.id === certA.certId);
+    const certAExpiry = certAInfo ? certAInfo.expires : Number.NEGATIVE_INFINITY;
+    const certBInfo = certInfoFromApple.find(cert => cert.id === certB.certId);
+    const certBExpiry = certBInfo ? certBInfo.expires : Number.NEGATIVE_INFINITY;
+    return certBExpiry - certAExpiry;
+  });
 }

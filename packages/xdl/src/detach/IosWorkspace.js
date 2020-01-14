@@ -15,10 +15,11 @@ import { renderPodfileAsync } from './IosPodsTools.js';
 import * as IosPlist from './IosPlist';
 import logger from './Logger';
 import * as Utils from '../Utils';
-import StandaloneContext from './StandaloneContext';
 import * as Versions from '../Versions';
 import * as Modules from '../modules/Modules';
 import installPackagesAsync from './installPackagesAsync';
+
+export { setBundleIdentifier } from './IosSetBundleIdentifier';
 
 async function _getVersionedExpoKitConfigAsync(sdkVersion, skipServerValidation) {
   const versions = await Versions.versionsAsync();

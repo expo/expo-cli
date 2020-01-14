@@ -34,7 +34,7 @@ export type CredentialSchema<T> = {
 
 const EXPERT_PROMPT = once(() =>
   log.warn(`
-WARNING! In this mode, we won't be able to make sure that your crdentials are valid.
+WARNING! In this mode, we won't be able to make sure that your credentials are valid.
 Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!
 
 When building for IOS make sure you've created your App ID on the Apple Developer Portal, that your App ID
