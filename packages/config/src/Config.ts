@@ -4,6 +4,7 @@ import slug from 'slugify';
 
 import {
   AppJSONConfig,
+  ConfigContext,
   ExpRc,
   ExpoConfig,
   PackageJSONConfig,
