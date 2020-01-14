@@ -109,10 +109,5 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
     throw new ConfigError(`Config file ${configFile} cannot return a Promise.`, 'INVALID_CONFIG');
   }
 
-  // Add a generated field.
-  if (!result._expo) result._expo = {};
-  // Set the config format
-  result._expo.configType = format;
-
   return result;
 }
