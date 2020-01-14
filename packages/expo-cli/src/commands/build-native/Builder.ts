@@ -8,7 +8,8 @@ import ora from 'ora';
 import uuidv4 from 'uuid/v4';
 
 import { Options, prepareJob } from './prepare';
-import { makeProjectTarball, waitForBuildEnd } from './utils';
+import { getLogsUrl, makeProjectTarball, waitForBuildEnd } from './utils';
+import log from '../../log';
 
 export interface StatusResult {
   builds: BuildInfo[];
@@ -41,8 +42,9 @@ export default class Builder {
       const { s3Url } = await this.client.uploadFile(tarPath);
       spinner.succeed('Project uploaded.');
       const job = await prepareJob(options, s3Url, projectDir);
-      const response = await this.client.postAsync('builds', job);
-      return await waitForBuildEnd(this.client, response.buildId);
+      const { buildId } = await this.client.postAsync('builds', job);
+      log(`Build logs: ${getLogsUrl(buildId)}`);
+      return await waitForBuildEnd(this.client, buildId);
     } finally {
       await fs.remove(tarPath);
     }
