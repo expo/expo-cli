@@ -33,9 +33,10 @@ export default async function withTypeScriptAsync(
 
   const isTypeScriptEnabled = Boolean(typeScriptPath && (await fileExistsAsync(tsConfigPath)));
 
-  if (config.resolve?.extensions) {
+  if (!isTypeScriptEnabled && config.resolve?.extensions) {
     config.resolve.extensions = config.resolve.extensions.filter(extension => {
-      return isTypeScriptEnabled || !extension.includes('.ts');
+      // filter out ts and tsx extensions, including .web.ts
+      return !extension.endsWith('.ts') && !extension.endsWith('.tsx');
     });
   }
 
