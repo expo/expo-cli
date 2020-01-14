@@ -35,27 +35,6 @@ function getSupportedPlatforms(
   return platforms;
 }
 
-export function serialize(val: any): any {
-  if (['undefined', 'string', 'boolean', 'number'].includes(typeof val)) {
-    return val;
-  } else if (typeof val === 'function') {
-    // TODO: Bacon: Should we support async methods?
-    return val();
-  } else if (Array.isArray(val)) {
-    return val.map(serialize);
-  } else if (typeof val === 'object') {
-    const output: { [key: string]: any } = {};
-    for (const property in val) {
-      if (val.hasOwnProperty(property)) {
-        output[property] = serialize(val[property]);
-      }
-    }
-    return output;
-  }
-
-  throw new Error(`Unhandled item type: ${typeof val}`);
-}
-
 /**
  * Evaluate the config for an Expo project.
  * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
@@ -119,15 +98,13 @@ export function getConfig(
 
   const finalConfig = config || context.config;
 
-  const configs = ensureConfigHasDefaultValues(
-    projectRoot,
-    finalConfig,
-    pkg,
-    options.skipSDKVersionRequirement
-  );
   return {
-    ...configs,
-    exp: serialize(configs.exp),
+    ...ensureConfigHasDefaultValues(
+      projectRoot,
+      finalConfig,
+      pkg,
+      options.skipSDKVersionRequirement
+    ),
     rootConfig: finalConfig as AppJSONConfig,
   };
 }
@@ -146,10 +123,8 @@ export function readConfigJson(
   const packageJsonPath = getRootPackageJsonPath(projectRoot, exp);
   const pkg = JsonFile.read(packageJsonPath);
 
-  const configs = ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation);
   return {
-    ...configs,
-    exp: serialize(configs.exp),
+    ...ensureConfigHasDefaultValues(projectRoot, exp, pkg, skipNativeValidation),
     rootConfig: rootConfig as AppJSONConfig,
   };
 }
