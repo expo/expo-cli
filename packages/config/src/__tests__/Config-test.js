@@ -1,6 +1,6 @@
 import { vol } from 'memfs';
 
-import { getConfig, readConfigJson, serialize } from '../Config';
+import { getConfig, readConfigJson } from '../Config';
 
 jest.mock('fs');
 jest.mock('resolve-from');
@@ -59,24 +59,6 @@ describe('readConfigJson', () => {
     it('skips resolution of the SDK version', () => {
       const { exp } = readConfigJson('/no-version', true, true);
       expect(exp.sdkVersion).not.toBeDefined();
-    });
-  });
-
-  describe('serializing', () => {
-    it(`serializes item`, () => {
-      expect(
-        serialize({
-          foo: 'bar',
-          boo: true,
-          inn: 200,
-          then: [true, { foo: 'bar' }],
-          fun: () => ({ time: ['val'] }),
-          last: {
-            bar: 'foo',
-            kid: [2, 'yo'],
-          },
-        })
-      ).toMatchSnapshot();
     });
   });
 

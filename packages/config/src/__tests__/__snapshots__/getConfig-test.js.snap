@@ -1,20 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`readConfigJson serializing serializes item 1`] = `
+exports[`serializeAndEvaluate serializes item 1`] = `
 Object {
-  "boo": true,
-  "foo": "bar",
-  "fun": Object {
-    "time": Array [
+  "alpha": Object {
+    "beta": Array [
       "val",
     ],
   },
+  "boo": true,
+  "foo": "bar",
   "inn": 200,
   "last": Object {
     "bar": "foo",
-    "kid": Array [
+    "charlie": Array [
       2,
-      "yo",
+      "delta",
     ],
   },
   "then": Array [

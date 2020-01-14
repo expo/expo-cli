@@ -8,10 +8,10 @@ describe('serializeAndEvaluate', () => {
         boo: true,
         inn: 200,
         then: [true, { foo: 'bar' }],
-        fun: () => ({ time: ['val'] }),
+        alpha: () => ({ beta: ['val'] }),
         last: {
           bar: 'foo',
-          kid: [2, 'yo'],
+          charlie: [2, 'delta'],
         },
       })
     ).toMatchSnapshot();
