@@ -94,18 +94,12 @@ export function getConfig(
     configPath,
     config: configFromPkg,
   };
-  const config = findAndEvalConfig(context);
 
-  const finalConfig = config || context.config;
+  const config = findAndEvalConfig(context) ?? configFromPkg;
 
   return {
-    ...ensureConfigHasDefaultValues(
-      projectRoot,
-      finalConfig,
-      pkg,
-      options.skipSDKVersionRequirement
-    ),
-    rootConfig: finalConfig as AppJSONConfig,
+    ...ensureConfigHasDefaultValues(projectRoot, config, pkg, options.skipSDKVersionRequirement),
+    rootConfig: config as AppJSONConfig,
   };
 }
 
