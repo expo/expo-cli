@@ -35,6 +35,42 @@ function getSupportedPlatforms(
   return platforms;
 }
 
+type GetConfigOptions = {
+  mode: 'development' | 'production';
+  configPath?: string;
+  skipSDKVersionRequirement?: boolean;
+};
+
+function getConfigContext(
+  projectRoot: string,
+  options: GetConfigOptions
+): { context: ConfigContext; pkg: JSONObject } {
+  // TODO(Bacon): This doesn't support changing the location of the package.json
+  const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
+  const pkg = JsonFile.read(packageJsonPath);
+
+  const configPath = options.configPath || customConfigPaths[projectRoot];
+
+  // If the app.json exists, we'll read it and pass it to the app.config.js for further modification
+  const { configPath: appJsonConfigPath } = findConfigFile(projectRoot);
+  let rawConfig: JSONObject = {};
+  try {
+    rawConfig = JsonFile.read(appJsonConfigPath, { json5: true });
+  } catch (_) {}
+
+  const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, rawConfig, pkg, true);
+
+  return {
+    pkg,
+    context: {
+      mode: options.mode,
+      projectRoot,
+      configPath,
+      config: configFromPkg,
+    },
+  };
+}
+
 /**
  * Evaluate the config for an Expo project.
  * If a function is exported from the `app.config.js` then a partial config will be passed as an argument.
@@ -58,14 +94,7 @@ function getSupportedPlatforms(
  * @param projectRoot the root folder containing all of your application code
  * @param options enforce criteria for a project config
  */
-export function getConfig(
-  projectRoot: string,
-  options: {
-    mode: 'development' | 'production';
-    configPath?: string;
-    skipSDKVersionRequirement?: boolean;
-  }
-): ProjectConfig {
+export function getConfig(projectRoot: string, options: GetConfigOptions): ProjectConfig {
   if (!['development', 'production'].includes(options.mode)) {
     throw new ConfigError(
       `Invalid mode "${options.mode}" was used to evaluate the project config.`,
@@ -73,29 +102,9 @@ export function getConfig(
     );
   }
 
-  // TODO(Bacon): This doesn't support changing the location of the package.json
-  const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
-  const pkg = JsonFile.read(packageJsonPath);
+  const { context, pkg } = getConfigContext(projectRoot, options);
 
-  const configPath = options.configPath || customConfigPaths[projectRoot];
-
-  // If the app.json exists, we'll read it and pass it to the app.config.js for further modification
-  const { configPath: appJsonConfigPath } = findConfigFile(projectRoot);
-  let rawConfig: JSONObject = {};
-  try {
-    rawConfig = JsonFile.read(appJsonConfigPath, { json5: true });
-  } catch (_) {}
-
-  const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, rawConfig, pkg, true);
-
-  const context = {
-    mode: options.mode,
-    projectRoot,
-    configPath,
-    config: configFromPkg,
-  };
-
-  const config = findAndEvalConfig(context) ?? configFromPkg;
+  const config = findAndEvalConfig(context) ?? context.config;
 
   return {
     ...ensureConfigHasDefaultValues(projectRoot, config, pkg, options.skipSDKVersionRequirement),
