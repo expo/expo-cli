@@ -40,7 +40,7 @@ self.addEventListener('push', event => {
   options.image = data._richContent && data._richContent.image ? options.data._richContent.image : payload.image;
   options.tag = data._tag || payload.collapseKey;
   if (option.tag) {
-    options.renotify = options.data._renotify;
+    options.renotify = data._renotify;
   }
 
   event.waitUntil(self.registration.showNotification(title, options));
