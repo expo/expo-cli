@@ -16,7 +16,6 @@ describe('getConfig', () => {
       });
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('rewrote+ts-config-test');
-      expect(exp._expo.configType).toBe('ts');
     });
     it('parses a js config', () => {
       // ensure config is composed (package.json values still exist)
@@ -30,7 +29,6 @@ describe('getConfig', () => {
       expect(exp.name).toBe('js-config-test+config+development');
       // Ensures that the app.json is read and passed to the method
       expect(exp.slug).toBe('someslug+config');
-      expect(exp._expo.configType).toBe('js');
     });
     it('parses a js config with export default', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
@@ -42,7 +40,6 @@ describe('getConfig', () => {
       });
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('js-config-test+config-default');
-      expect(exp._expo.configType).toBe('js');
     });
     it('parses a js config that exports json', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
@@ -54,7 +51,6 @@ describe('getConfig', () => {
       });
       expect(exp.foo).toBe('bar');
       expect(exp.name).toBe('cool+export-json_app.config');
-      expect(exp._expo.configType).toBe('js');
     });
     xit('parses a yaml config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/yaml');
@@ -63,7 +59,6 @@ describe('getConfig', () => {
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar');
-      expect(exp._expo.configType).toBe('yaml');
     });
     xit('parses a toml config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/toml');
@@ -72,7 +67,6 @@ describe('getConfig', () => {
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar');
-      expect(exp._expo.configType).toBe('toml');
     });
     it('parses a json5 config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/json5');
@@ -81,7 +75,6 @@ describe('getConfig', () => {
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar');
-      expect(exp._expo.configType).toBe('json');
     });
   });
 });
