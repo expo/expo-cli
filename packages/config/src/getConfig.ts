@@ -11,13 +11,9 @@ export const allowedConfigFileNames: string[] = (() => {
   return [
     // order is important
     // TODO: Bacon: Slowly rollout support for other config languages: ts, yml, toml
-    // `${prefix}.config.ts`,
     `${prefix}.config.js`,
     `${prefix}.config.json`,
     `${prefix}.config.json5`,
-    // `${prefix}.config.yml`,
-    // `${prefix}.config.yaml`,
-    // `${prefix}.config.toml`,
   ];
 })();
 
@@ -73,34 +69,6 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
       result = result(request);
     }
   }
-  /*
-  } else if (configFile.endsWith('.ts')) {
-    format = 'ts';
-    const ts = require('typescript');
-    // const ts = require(projectHasModule('typescript', request.projectRoot, {})!);
-    const tsconfig = require(projectHasModule('./tsconfig', request.projectRoot, {})!);
-    const source = fs.readFileSync(configFile, 'utf8');
-    const { outputText } = ts.transpileModule(source, tsconfig);
-
-    result = eval(outputText);
-    if (result.default != null) {
-      result = result.default;
-    }
-    if (typeof result === 'function') {
-      result = result(request);
-    }
-  } else if (configFile.endsWith('.toml')) {
-    format = 'toml';
-    const data = fs.readFileSync(configFile, 'utf8');
-    result = require('toml').parse(data);
-  } else {
-    format = 'yaml';
-    const data = fs.readFileSync(configFile, 'utf8');
-    result = safeLoad(data);
-  }
-  */
-
-  // result = await Promise.resolve(result);
 
   if (result instanceof Promise) {
     throw new ConfigError(`Config file ${configFile} cannot return a Promise.`, 'INVALID_CONFIG');
