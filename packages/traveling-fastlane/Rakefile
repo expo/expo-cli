@@ -118,6 +118,7 @@ def create_package target
   sh "tar -xzf packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}.tar.gz -C #{package_dir}/lib/ruby"
 
   # Hack to replace traveling ruby's expired ca-bundle.crt with cURL's most recent one
+  # TODO: Remove this when https://github.com/phusion/traveling-ruby/pull/102 lands upstream and we upgrade from traveling ruby version 20150715-2.2.2
   sh "curl -o #{package_dir}/lib/ruby/lib/ca-bundle.crt #{CA_CERT_URL}"
 
   for script in SCRIPTS do
