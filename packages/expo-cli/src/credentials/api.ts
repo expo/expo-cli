@@ -1,6 +1,7 @@
 import { ApiV2, User } from '@expo/xdl';
 import findIndex from 'lodash/findIndex';
 import omit from 'lodash/omit';
+import assign from 'lodash/assign';
 
 import log from '../log';
 import * as appleApi from '../appleApi';
@@ -177,6 +178,45 @@ export class IosApi {
       this.credentials.appCredentials[credIndex].credentials,
       ['pushId', 'pushP12', 'pushPassword']
     );
+  }
+
+  async updateProvisioningProfile(
+    experienceName: string,
+    bundleIdentifier: string,
+    provisioningProfile: appleApi.ProvisioningProfile,
+    appleTeam: appleApi.Team
+  ) {
+    await this.api.postAsync(`credentials/ios/provisioningProfile/update`, {
+      experienceName,
+      bundleIdentifier,
+      credentials: { ...provisioningProfile, teamId: appleTeam.id, teamName: appleTeam.name },
+    });
+    const credIndex = findIndex(
+      this.credentials.appCredentials,
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
+    );
+    assign(this.credentials.appCredentials[credIndex].credentials, provisioningProfile);
+  }
+
+  async getProvisioningProfile(
+    experienceName: string,
+    bundleIdentifier: string
+  ): Promise<appleApi.ProvisioningProfile | null> {
+    if (this.shouldRefetch) {
+      await this._fetchAllCredentials();
+    }
+    this._ensureAppCredentials(experienceName, bundleIdentifier);
+    const credIndex = findIndex(
+      this.credentials.appCredentials,
+      app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
+    );
+    const { provisioningProfile, provisioningProfileId } = this.credentials.appCredentials[
+      credIndex
+    ].credentials;
+    if (provisioningProfile && provisioningProfileId) {
+      return { provisioningProfile, provisioningProfileId };
+    }
+    return null;
   }
 
   async deleteProvisioningProfile(experienceName: string, bundleIdentifier: string) {
