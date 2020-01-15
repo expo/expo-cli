@@ -6,6 +6,7 @@ VERSION = "1.11.3"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
+CA_CERT_URL = 'https://curl.haxx.se/ca/cacert.pem' # from cURL
 
 # Be sure to add the name of a script here when you add it to actions
 SCRIPTS = [
@@ -115,6 +116,10 @@ def create_package target
   end
   sh "mkdir #{package_dir}/lib/ruby"
   sh "tar -xzf packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}.tar.gz -C #{package_dir}/lib/ruby"
+
+  # Hack to replace traveling ruby's expired ca-bundle.crt with cURL's most recent one
+  sh "wget #{CA_CERT_URL} -O #{package_dir}/lib/ruby/lib/ca-bundle.crt"
+
   for script in SCRIPTS do
     if script != 'funcs' && script != 'preload'
       sh "cp wrappers/#{script}_wrapper.sh #{package_dir}/#{script}"
