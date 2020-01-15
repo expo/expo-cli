@@ -118,7 +118,7 @@ def create_package target
   sh "tar -xzf packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}.tar.gz -C #{package_dir}/lib/ruby"
 
   # Hack to replace traveling ruby's expired ca-bundle.crt with cURL's most recent one
-  sh "wget #{CA_CERT_URL} -O #{package_dir}/lib/ruby/lib/ca-bundle.crt"
+  sh "curl -o #{package_dir}/lib/ruby/lib/ca-bundle.crt #{CA_CERT_URL}"
 
   for script in SCRIPTS do
     if script != 'funcs' && script != 'preload'
