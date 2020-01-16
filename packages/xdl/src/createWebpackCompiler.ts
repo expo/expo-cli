@@ -88,8 +88,8 @@ export function printPreviewNotice(projectRoot: string, showInDevtools: boolean)
     projectRoot,
     boxen(
       chalk.yellow(
-        'Web support in Expo is experimental and subject to breaking changes.\n' +
-          'Do not use this in production yet.'
+        'Web support is in late-beta, please report any bugs or missing features on the Expo repo.\n' +
+          'Follow the V1 release for more info: https://github.com/expo/expo/issues/6782'
       ),
       { borderColor: 'yellow', padding: 1 }
     ),
