@@ -87,11 +87,11 @@ export function printPreviewNotice(projectRoot: string, showInDevtools: boolean)
   log(
     projectRoot,
     boxen(
-      chalk.yellow(
-        'Web support is in late-beta, please report any bugs or missing features on the Expo repo.\n' +
-          'Follow the V1 release for more info: https://github.com/expo/expo/issues/6782'
+      chalk.magenta(
+        'Expo web is in beta, please report any bugs or missing features on the Expo repo.\n' +
+          'You can follow the V1 release for more info: https://github.com/expo/expo/issues/6782'
       ),
-      { borderColor: 'yellow', padding: 1 }
+      { borderColor: 'magenta', padding: 1 }
     ),
     showInDevtools
   );
