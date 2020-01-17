@@ -29,7 +29,6 @@ import {
   withNodeMocks,
   withOptimizations,
   withReporting,
-  withTypeScriptAsync,
 } from './addons';
 
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
@@ -305,11 +304,8 @@ export default async function(
     webpackConfig = withCompression(withOptimizations(webpackConfig), env);
   }
 
-  return withTypeScriptAsync(
-    withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
-      allowedHost: argv.allowedHost,
-      proxy: argv.proxy,
-    }),
-    env
-  );
+  return withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
+    allowedHost: argv.allowedHost,
+    proxy: argv.proxy,
+  });
 }
