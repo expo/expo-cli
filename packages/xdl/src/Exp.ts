@@ -58,11 +58,25 @@ class Transformer extends Minipass {
   }
   end() {
     let replaced = this.data
-      .replace(/Hello App Display Name/g, this.config.displayName || this.config.name)
+      .replace(
+        /Hello App Display Name/g,
+        this.escapeXML(this.config.displayName || this.config.name)
+      )
       .replace(/HelloWorld/g, this.config.name)
       .replace(/helloworld/g, this.config.name.toLowerCase());
     super.write(replaced);
     return super.end();
+  }
+
+  escapeXML(input: string): string {
+    const escapedString = input
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+
+    return escapedString;
   }
 }
 
