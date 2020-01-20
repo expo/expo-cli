@@ -260,6 +260,10 @@ export default async function(
       new ManifestPlugin({
         fileName: 'asset-manifest.json',
         publicPath,
+        filter = ({ path }) => {
+          // Remove compressed versions
+          return !path.endsWith('.gz')
+        },
       }),
 
       deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),
