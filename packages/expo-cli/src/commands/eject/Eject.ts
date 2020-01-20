@@ -6,7 +6,7 @@ import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import path from 'path';
-import semver from 'semver';
+import semver, { valid } from 'semver';
 import temporary from 'tempy';
 
 import * as PackageManager from '@expo/package-manager';
@@ -334,14 +334,14 @@ async function getAppNamesAsync(
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
 
   let { displayName, name } = appJson;
-  if (!displayName || !name) {
+  if (!displayName || !name || name.includes('-') || name.includes(' ')) {
     log("We have a couple of questions to ask you about how you'd like to name your app:");
     ({ displayName, name } = await prompt(
       [
         {
           name: 'displayName',
           message: "What should your app appear as on a user's home screen?",
-          default: name || exp.name,
+          default: displayName || exp.name,
           validate({ length }: string): true | ValidationErrorMessage {
             return length ? true : 'App display name cannot be empty.';
           },
@@ -349,7 +349,7 @@ async function getAppNamesAsync(
         {
           name: 'name',
           message: 'What should your Android Studio and Xcode projects be called?',
-          default: pkg.name ? stripDashes(pkg.name) : undefined,
+          default: name || (pkg.name ? stripDashes(pkg.name) : undefined),
           validate(value: string): true | ValidationErrorMessage {
             if (value.length === 0) {
               return 'Project name cannot be empty.';
@@ -361,7 +361,8 @@ async function getAppNamesAsync(
         },
       ],
       {
-        nonInteractiveHelp: 'Please specify "displayName" and "name" in app.json.',
+        nonInteractiveHelp:
+          'Please specify "name" (cannot contain spaces) and "displayName" in app.json.',
       }
     ));
   }
