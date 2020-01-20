@@ -5,9 +5,9 @@ var semver = require('semver');
 var version = process.versions.node;
 
 var supportedVersions = [
-  { range: '>=8.9.0 <9.0.0', name: 'Maintenance LTS' },
-  { range: '>=10.13.0 <11.0.0', name: 'Active LTS' },
-  { range: '>=12.0.0', name: 'Current Release' },
+  { range: semver.validRange('^10.13.0'), name: 'Active LTS' },
+  { range: semver.validRange('^12.0.0'), name: 'Active LTS' },
+  { range: semver.validRange('^13.0.0'), name: 'Current Release' },
 ];
 var isSupported = supportedVersions.some(function(supported) {
   return semver.satisfies(version, supported.range);
