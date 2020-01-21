@@ -63,7 +63,15 @@ class Transformer extends Minipass {
         this.escapeXML(this.config.displayName || this.config.name)
       )
       .replace(/HelloWorld/g, this.config.name)
-      .replace(/helloworld/g, this.config.name.toLowerCase());
+      .replace(/helloworld/g, this.config.name.toLowerCase())
+      .replace(/<string>1.0<\/string>/, `<string>${this.config.expo.version}</string>`)
+      .replace(/versionName "1.0"/, `versionName "${this.config.expo.version}"`)
+      .replace(
+        /<string>1<\/string>/,
+        `<string>${this.config.expo.ios?.buildNumber || '1'}</string>`
+      )
+      .replace(/versionCode 1/, `versionCode ${this.config.expo.android?.versionCode || '1'}`);
+
     super.write(replaced);
     return super.end();
   }
