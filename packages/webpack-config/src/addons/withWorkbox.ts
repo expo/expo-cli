@@ -62,16 +62,22 @@ const defaultGenerateSWOptions: GenerateSWOptions = {
   runtimeCaching: [runtimeCache],
 };
 
+/**
+ * Add offline support to the provided Webpack config.
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @param options configure the service worker.
+ */
 export default function withWorkbox(
-  config: AnyConfiguration,
+  webpackConfig: AnyConfiguration,
   options: OfflineOptions = {}
 ): AnyConfiguration {
   // Do nothing in dev mode
-  if (config.mode !== 'production') {
-    return config;
+  if (webpackConfig.mode !== 'production') {
+    return webpackConfig;
   }
 
-  if (!config.plugins) config.plugins = [];
+  if (!webpackConfig.plugins) webpackConfig.plugins = [];
 
   const {
     projectRoot,
@@ -90,7 +96,7 @@ export default function withWorkbox(
   };
 
   if (useServiceWorker) {
-    config.plugins.push(
+    webpackConfig.plugins.push(
       new GenerateSW({
         ...defaultGenerateSWOptions,
         ...customManifestProps,
@@ -104,14 +110,14 @@ export default function withWorkbox(
       ...injectManifestOptions,
     };
 
-    config.plugins.push(
+    webpackConfig.plugins.push(
       // @ts-ignore: unused swSrc
       new InjectManifest(props)
     );
   }
 
-  const expoEntry = config.entry;
-  config.entry = async () => {
+  const expoEntry = webpackConfig.entry;
+  webpackConfig.entry = async () => {
     const entries = await resolveEntryAsync(expoEntry);
     const swPath = join(locations.production.registerServiceWorker);
     if (entries.app && !entries.app.includes(swPath) && autoRegister) {
@@ -136,5 +142,5 @@ export default function withWorkbox(
     return entries;
   };
 
-  return config;
+  return webpackConfig;
 }
