@@ -5,6 +5,8 @@ require 'spaceship'
 require 'pilot'
 require 'funcs'
 require 'json'
+require "i18n"
+I18n.available_locales = [:en]
 
 $result = nil
 
@@ -14,7 +16,7 @@ captured_stderr = with_captured_stderr{
     developer_team = portal_client.teams.find { |team| team['teamId'] == ENV['FASTLANE_TEAM_ID'] }
 
     Spaceship::Tunes.login(ENV['FASTLANE_USER'], ENV['FASTLANE_PASSWORD'])
-    itunes_team = Spaceship::Tunes.client.teams.find { |team| team['contentProvider']['name'].start_with? developer_team['name']  }
+    itunes_team = Spaceship::Tunes.client.teams.find { |team| I18n.transliterate(team['contentProvider']['name']).start_with? I18n.transliterate(developer_team['name'])  }
 
     itc_team_id = itunes_team['contentProvider']['contentProviderId'].to_s
 
