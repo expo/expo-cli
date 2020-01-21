@@ -1,20 +1,15 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import { Command } from 'commander';
-import { AppJSONConfig, BareAppConfig } from '@expo/config';
+import { AppJSONConfig, BareAppConfig, ExpoConfig } from '@expo/config';
 import { Exp } from '@expo/xdl';
-import isString from 'lodash/isString';
 import padEnd from 'lodash/padEnd';
-// @ts-ignore enquirer has no exported member 'Snippet'
-import { Snippet } from 'enquirer';
 import semver from 'semver';
-import set from 'lodash/set';
 import spawnAsync from '@expo/spawn-async';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import trimStart from 'lodash/trimStart';
 import wordwrap from 'wordwrap';
-
 import path from 'path';
 import prompt from '../prompt';
 import log from '../log';
@@ -22,13 +17,10 @@ import CommandError from '../CommandError';
 
 type Options = {
   template?: string;
-  npm?: boolean;
-  yarn?: boolean;
-  workflow?: string;
+  npm: boolean;
+  yarn: boolean;
+  yes: boolean;
   name?: string;
-  androidPackage?: string;
-  iosBundleIdentifier?: string;
-  parent?: Command;
 };
 
 const FEATURED_TEMPLATES = [
@@ -53,24 +45,33 @@ const FEATURED_TEMPLATES = [
     shortName: 'minimal',
     name: 'expo-template-bare-minimum',
     description: 'bare and minimal, just the essentials to get you started',
-    bare: true,
   },
   {
     shortName: 'minimal (TypeScript)',
     name: 'expo-template-bare-typescript',
     description: 'same as minimal but with TypeScript configuration',
-    bare: true,
   },
-  // {
-  //   shortName: 'bare-foundation',
-  //   name: 'expo-template-bare-foundation',
-  //   description: 'all currently available foundation unimodules',
-  // },
 ];
 
 const BARE_WORKFLOW_TEMPLATES = ['expo-template-bare-minimum', 'expo-template-bare-typescript'];
 
-async function action(projectDir: string, options: Options) {
+async function action(projectDir: string, command: Command) {
+  const options: Options = {
+    yes: !!command.yes,
+    yarn: !!command.yarn,
+    npm: !!command.npm,
+    template: command.template,
+    /// XXX(ville): this is necessary because with Commander.js, when the --name
+    // option is not set, `command.name` will point to `Command.prototype.name`.
+    name: typeof command.name === 'string' ? ((command.name as unknown) as string) : undefined,
+  };
+  if (options.yes) {
+    projectDir = '.';
+    if (!options.template) {
+      options.template = 'blank';
+    }
+  }
+
   let parentDir;
   let dirName;
 
@@ -82,7 +83,7 @@ async function action(projectDir: string, options: Options) {
     if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_DIR', validationResult);
     }
-  } else if (options.parent && options.parent.nonInteractive) {
+  } else if (command.parent && command.parent.nonInteractive) {
     throw new CommandError(
       'NON_INTERACTIVE',
       'The project dir argument is required in non-interactive mode.'
@@ -100,8 +101,7 @@ async function action(projectDir: string, options: Options) {
     if (
       (templateSpec.name === 'blank' ||
         templateSpec.name === 'tabs' ||
-        templateSpec.name === 'bare-minimum' ||
-        templateSpec.name === 'bare-foundation') &&
+        templateSpec.name === 'bare-minimum') &&
       templateSpec.registry
     ) {
       templateSpec.escapedName = `expo-template-${templateSpec.name}`;
@@ -109,10 +109,10 @@ async function action(projectDir: string, options: Options) {
       templateSpec.raw = templateSpec.escapedName;
     }
   } else {
-    let descriptionColumn =
+    const descriptionColumn =
       Math.max(...FEATURED_TEMPLATES.map(t => (typeof t === 'object' ? t.shortName.length : 0))) +
       2;
-    let { template } = await prompt(
+    const { template } = await prompt(
       {
         type: 'list',
         name: 'template',
@@ -139,23 +139,12 @@ async function action(projectDir: string, options: Options) {
       },
       {
         nonInteractiveHelp:
-          '--template: argument is required in non-interactive mode. Valid choices are: ' +
-          FEATURED_TEMPLATES.map(template =>
-            typeof template === 'object' && template.shortName ? `'${template.shortName}'` : ''
-          )
-            .filter(text => text)
-            .join(', ') +
-          ' or any custom template (name of npm package).',
+          '--template: argument is required in non-interactive mode. Valid choices are: "blank", "tabs", "bare-minimum" or any custom template (name of npm package).',
       }
     );
     templateSpec = npmPackageArg(template);
   }
 
-  if (options.workflow) {
-    log.warn(
-      `The --workflow flag is deprecated. Workflow is chosen automatically based on the chosen template.`
-    );
-  }
   let initialConfig;
   let templateManifest = await pacote.manifest(templateSpec);
   let isBare = BARE_WORKFLOW_TEMPLATES.includes(templateManifest.name);
@@ -170,8 +159,11 @@ async function action(projectDir: string, options: Options) {
     packageManager = 'yarn';
   } else if (options.npm) {
     packageManager = 'npm';
+  } else if (await shouldUseYarnAsync()) {
+    packageManager = 'yarn';
+    log('Using Yarn to install packages. You can pass --npm to use npm instead.');
   } else {
-    packageManager = (await shouldUseYarnAsync()) ? 'yarn' : 'npm';
+    log('Using npm to install packages. You can pass --yarn to use Yarn instead.');
   }
 
   let projectPath = await Exp.extractAndInitializeTemplateApp(
@@ -251,24 +243,12 @@ function isNonExistentOrEmptyDir(dir: string) {
 async function shouldUseYarnAsync() {
   try {
     let version = (await spawnAsync('yarnpkg', ['--version'])).stdout.trim();
-    if (!semver.valid(version)) {
-      return false;
+    if (semver.valid(version)) {
+      return true;
     }
-    let answer = await prompt(
-      {
-        type: 'confirm',
-        name: 'useYarn',
-        message: `Yarn v${version} found. Use Yarn to install dependencies?`,
-      },
-      {
-        nonInteractiveHelp:
-          'Please specify either --npm or --yarn to choose the installation method.',
-      }
-    );
-    return answer.useYarn;
-  } catch (e) {
-    return false;
-  }
+  } catch (e) {}
+
+  return false;
 }
 
 async function promptForBareConfig(
@@ -276,67 +256,32 @@ async function promptForBareConfig(
   dirName: string | undefined,
   options: Options
 ): Promise<BareAppConfig> {
-  let projectName = undefined;
+  let projectName: string;
   if (dirName) {
     let validationResult = validateProjectName(dirName);
-    if (validationResult === true) {
-      projectName = dirName;
-    } else {
+    if (validationResult !== true) {
       throw new CommandError('INVALID_PROJECT_NAME', validationResult);
     }
-  }
-
-  if (options.parent && options.parent.nonInteractive) {
-    if (!projectName) {
-      throw new CommandError(
-        'NON_INTERACTIVE',
-        'The project dir argument is required in non-interactive mode.'
-      );
-    }
-    if (typeof options.name !== 'string' || options.name === '') {
-      throw new CommandError(
-        'NON_INTERACTIVE',
-        '--name: argument is required in non-interactive mode.'
-      );
-    }
-    return {
-      name: projectName,
-      displayName: options.name,
-    };
-  }
-
-  let { values } = await new Snippet({
-    name: 'app',
-    message: 'Please enter names for your project.',
-    required: true,
-    fields: [
+    projectName = dirName;
+  } else {
+    ({ projectName } = await prompt([
       {
-        name: 'name',
-        message: 'The name of the Android Studio and Xcode projects to be created',
-        initial: projectName,
+        type: 'input',
+        name: 'projectName',
+        message: 'What is the name of your project?',
         filter: (name: string) => name.trim(),
         validate: (name: string) => validateProjectName(name),
-        required: true,
       },
-      {
-        name: 'displayName',
-        message: 'The name of your app visible on the home screen',
-        initial: isString(options.name) ? options.name : undefined,
-        filter: (name: string) => name.trim(),
-        required: true,
-      },
-    ],
-    initial: 'name',
-    template: JSON.stringify(
-      {
-        name: '{{name}}',
-        displayName: '{{displayName}}',
-      },
-      null,
-      2
-    ),
-  }).run();
-  return values;
+    ]));
+  }
+
+  return {
+    name: projectName,
+    displayName: options.name || projectName,
+    expo: {
+      name: options.name || projectName,
+    },
+  };
 }
 
 async function promptForManagedConfig(
@@ -344,74 +289,22 @@ async function promptForManagedConfig(
   dirName: string | undefined,
   options: Options
 ): Promise<AppJSONConfig> {
-  if (options.parent && options.parent.nonInteractive) {
-    if (!isString(options.name) || options.name === '') {
-      throw new CommandError(
-        'NON_INTERACTIVE',
-        '--name: argument is required in non-interactive mode.'
-      );
-    } else {
-      return {
-        expo: {
-          slug: dirName,
-          name: options.name,
-        },
-      };
-    }
+  let slug;
+  if (dirName) {
+    slug = dirName;
+  } else {
+    ({ slug } = await prompt({
+      name: 'slug',
+      message: 'What is the name of your project?',
+      filter: (name: string) => name.trim(),
+      validate: (name: string) => validateName(parentDir, name),
+    }));
   }
-
-  // Skip prompt for invocations like: `expo init demo`
-  const initialName = (isString(options.name) ? options.name : dirName)?.trim();
-  if (dirName && validateName(parentDir, dirName)) {
-    return {
-      expo: {
-        name: initialName!,
-        slug: dirName.trim(),
-      },
-    };
+  const expo: ExpoConfig = { slug };
+  if (options.name) {
+    expo.name = options.name;
   }
-
-  try {
-    let { values } = await new Snippet({
-      name: 'expo',
-      message:
-        'Please enter a few initial configuration values.\n  Read more: https://docs.expo.io/versions/latest/workflow/configuration/',
-      required: true,
-      fields: [
-        {
-          name: 'name',
-          message: 'The name of your app visible on the home screen',
-          initial: initialName,
-          filter: (name: string) => name.trim(),
-          required: true,
-        },
-        {
-          name: 'slug',
-          message: 'A URL friendly name for your app',
-          initial: dirName,
-          filter: (name: string) => name.trim(),
-          validate: (name: string) => validateName(parentDir, name),
-          required: true,
-        },
-      ],
-      initial: 'slug',
-      template: JSON.stringify(
-        {
-          expo: {
-            name: '{{name}}',
-            slug: '{{slug}}',
-          },
-        },
-        null,
-        2
-      ),
-    }).run();
-    return { expo: values };
-  } catch (error) {
-    // Skip `undefined` log when a user quits
-    if (error) throw error;
-  }
-  process.exit(0);
+  return { expo };
 }
 
 export default function(program: Command) {
@@ -427,9 +320,7 @@ export default function(program: Command) {
     )
     .option('--npm', 'Use npm to install dependencies. (default when Yarn is not installed)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when Yarn is installed)')
-    .option('--workflow [name]', '(Deprecated) The workflow to use. managed (default) or advanced')
     .option('--name [name]', 'The name of your app visible on the home screen.')
-    .option('--android-package [name]', 'The package name for your Android app.')
-    .option('--ios-bundle-identifier [name]', 'The bundle identifier for your iOS app.')
+    .option('--yes', 'Use default options. Same as "expo init . --template blank')
     .asyncAction(action);
 }
