@@ -123,7 +123,7 @@ export function getServedPath(projectRoot: string): string {
  */
 export function getPublicPaths({
   projectRoot,
-  ...env,
+  ...env
 }: Pick<Environment, 'mode' | 'projectRoot'>): {
   /**
    * Webpack uses `publicPath` to determine where the app is being served from.

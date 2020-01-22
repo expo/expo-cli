@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
-    "doc": "rm -rf ./doc; npx typedoc --out docs/ --plugin typedoc-plugin-markdown",
+    "doc": "rm -rf ./doc; yarn typedoc",
     "test": "npm run test:unit; npm run test:e2e; npm run test:e2e:nextjs",
     "test:unit": "jest --config jest/unit-test-config.json --rootDir .",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",

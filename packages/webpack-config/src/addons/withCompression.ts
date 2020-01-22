@@ -54,6 +54,7 @@ export default function withCompression(
  *
  * @param webpackConfig Existing Webpack config to modify.
  * @param expoConfig Expo config with compression options.
+ * @internal
  */
 export function addCompressionPlugins(
   webpackConfig: AnyConfiguration,

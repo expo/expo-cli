@@ -1,21 +1,33 @@
+const path = require('path');
 const pkg = require('./package.json');
 const tsconfig = require('./tsconfig.json');
 
 module.exports = {
   src: './src/index.ts',
-  theme: 'markdown',
+  // theme: 'minimal',
+  // plugin: 'none',
+
+  mode: 'file',
+
   target: 'esnext',
   readme: 'none',
+  name: pkg.name,
+  out: 'docs',
+  defaultCategory: 'internal',
   stripInternal: true,
-  hideSources: true,
   exclude: tsconfig.exclude,
   includeDeclarations: false,
   excludeExternals: true,
   excludeNotExported: true,
   excludePrivate: true,
+  excludeProtected: true,
   hideGenerator: true,
-  mode: 'file',
-  name: pkg.name,
-  out: 'docs',
-  plugin: 'typedoc-plugin-markdown',
+  // markdown
+  theme: 'markdown',
+  plugin: [
+    // path.resolve('./typedoc-no-other-plugin'),
+    'typedoc-plugin-markdown',
+  ],
+  hideSources: true,
+  hideBreadcrumbs: true,
 };
