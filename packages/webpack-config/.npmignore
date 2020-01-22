@@ -10,3 +10,6 @@
 # Building
 /src
 /tsconfig.tsbuildinfo
+
+/docs
+/typedoc.js
