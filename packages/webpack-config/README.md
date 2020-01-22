@@ -16,9 +16,11 @@
 
 ---
 
-## [Documentation][docs]
+## Documentation
 
-To learn more about how to use this Webpack config, check out the docs here: [Customizing the Webpack config][docs]
+To learn more about how to use this Webpack config, check out the guide here: [Customizing the Webpack config][docs].
+
+The generated API reference can be found here: [docs](./docs).
 
 ## API
 
