@@ -1,3 +1,5 @@
+/** @internal */ /** */
+
 import { ensurePWAConfig, readConfigJson } from '@expo/config';
 import chalk from 'chalk';
 import diff from 'deep-diff';

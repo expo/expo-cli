@@ -1,3 +1,4 @@
+/** @internal */ /** */
 /* eslint-env node */
 
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';

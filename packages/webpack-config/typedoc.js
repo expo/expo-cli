@@ -2,8 +2,8 @@ const pkg = require('./package.json');
 const tsconfig = require('./tsconfig.json');
 
 module.exports = {
-  src: './src/index.ts',
-  mode: 'file',
+  src: './src',
+  mode: 'modules',
   target: 'esnext',
   readme: 'none',
   name: pkg.name,
@@ -19,6 +19,4 @@ module.exports = {
   hideGenerator: true,
   theme: 'markdown',
   plugin: ['typedoc-plugin-markdown'],
-  hideSources: true,
-  hideBreadcrumbs: true,
 };
