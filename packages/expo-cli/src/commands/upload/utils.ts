@@ -72,10 +72,15 @@ export async function runFastlaneAsync(
   if (res.result !== 'failure') {
     return res;
   } else {
-    const message =
+    let message =
       res.reason !== 'Unknown reason'
         ? res.reason
         : get(res, 'rawDump.message', 'Unknown error when running fastlane');
+    message = `${message}${
+      res?.rawDump?.backtrace
+        ? `\n${res.rawDump.backtrace.map((i: string) => `    ${i}`).join('\n')}`
+        : ''
+    }`;
     throw new Error(message);
   }
 }

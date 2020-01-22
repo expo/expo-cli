@@ -1,5 +1,5 @@
 import * as ConfigUtils from '@expo/config';
-import { Android, Credentials, Simulator, UserManager, Versions } from '@expo/xdl';
+import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table';
 import fs from 'fs-extra';
@@ -11,22 +11,17 @@ import CommandError from '../../CommandError';
 import log from '../../log';
 import prompt from '../../prompt';
 import urlOpts from '../../urlOpts';
-import { PLATFORMS } from '../build/constants';
 import * as appleApi from '../../appleApi';
 import { runAction, travelingFastlane } from '../../appleApi/fastlane';
 import * as ClientUpgradeUtils from '../utils/ClientUpgradeUtils';
 import { createClientBuildRequest, getExperienceName, isAllowedToBuild } from './clientBuildApi';
 import generateBundleIdentifier from './generateBundleIdentifier';
-import selectAdhocProvisioningProfile from './selectAdhocProvisioningProfile';
-import { Updater, clearTags } from './tagger';
 import { SetupIosDist } from '../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../credentials/views/SetupIosPush';
 import { Context } from '../../credentials/context';
 import { CreateIosDist } from '../../credentials/views/IosDistCert';
+import { CreateOrReuseProvisioningProfileAdhoc } from '../../credentials/views/IosProvisioningProfileAdhoc';
 import { runCredentialsManager } from '../../credentials/route';
-import { CreateIosPush } from '../../credentials/views/IosPushCredentials';
-
-const { IOS } = PLATFORMS;
 
 export default program => {
   program
@@ -138,12 +133,28 @@ export default program => {
         pushKey = await context.ios.getPushKey(experienceName, bundleIdentifier);
       }
 
-      const provisioningProfile = await selectAdhocProvisioningProfile(
-        appleContext,
-        udids,
+      let provisioningProfile;
+      const createOrReuseProfile = new CreateOrReuseProvisioningProfileAdhoc({
+        experienceName,
         bundleIdentifier,
-        distributionCert.distCertSerialNumber
-      );
+        distCertSerialNumber: distributionCert.distCertSerialNumber,
+        udids,
+      });
+      if (user) {
+        await runCredentialsManager(context, createOrReuseProfile);
+        provisioningProfile = await context.ios.getProvisioningProfile(
+          experienceName,
+          bundleIdentifier
+        );
+      } else {
+        provisioningProfile = await createOrReuseProfile.createOrReuse(context);
+      }
+      if (!provisioningProfile) {
+        throw new CommandError(
+          'INSUFFICIENT_CREDENTIALS',
+          `This build request requires a valid provisioning profile.`
+        );
+      }
 
       // push notifications won't work if we dont have any push creds
       // we also dont store anonymous creds, so user needs to be logged in
@@ -172,33 +183,6 @@ export default program => {
         log(
           'See https://docs.expo.io/versions/latest/guides/adhoc-builds/#optional-additional-configuration-steps for more details.'
         );
-      }
-
-      // if user is logged in, then we should update credentials
-      const credentialsList = [distributionCert, pushKey, provisioningProfile].filter(i => i);
-      if (user) {
-        // store all the credentials that we mark for update
-        const updateCredentialsFn = async listOfCredentials => {
-          if (listOfCredentials.length === 0) {
-            return;
-          }
-          const credentials = listOfCredentials.reduce(
-            (acc, credential) => {
-              return { ...acc, ...credential };
-            },
-            { teamId: appleContext.team.id }
-          );
-          await Credentials.updateCredentialsForPlatform(IOS, credentials, [], {
-            username: user.username,
-            experienceName,
-            bundleIdentifier,
-          });
-        };
-        const CredentialsUpdater = new Updater(updateCredentialsFn);
-        await CredentialsUpdater.updateAllAsync(credentialsList);
-      } else {
-        // clear update tags, we dont store credentials for anonymous users
-        clearTags(credentialsList);
       }
 
       let email;

@@ -75,4 +75,17 @@ function printBuildTable(builds: BuildInfo[]) {
   console.log(buildTable);
 }
 
-export { waitForBuildEnd, makeProjectTarball, printBuildTable };
+function getLogsUrl(buildId: string) {
+  let baseUrl;
+  if (process.env.EXPO_STAGING) {
+    baseUrl = `https://staging.turtle.expo.io`;
+  } else if (process.env.EXPO_LOCAL) {
+    baseUrl = `http://localhost:3006`;
+  } else {
+    baseUrl = `https://turtle.expo.io`;
+  }
+
+  return `${baseUrl}/logs/${buildId}`;
+}
+
+export { waitForBuildEnd, makeProjectTarball, printBuildTable, getLogsUrl };

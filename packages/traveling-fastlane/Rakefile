@@ -2,10 +2,11 @@
 require 'bundler/setup'
 
 PACKAGE_NAME = "traveling-fastlane"
-VERSION = "1.11.3"
+VERSION = "1.11.4"
 TRAVELING_RUBY_VERSION = "20150715-2.2.2"
 JSON_VERSION = '1.8.2'
 UNF_VERSION = '0.0.6'
+CA_CERT_URL = 'https://curl.haxx.se/ca/cacert.pem' # from cURL
 
 # Be sure to add the name of a script here when you add it to actions
 SCRIPTS = [
@@ -115,6 +116,11 @@ def create_package target
   end
   sh "mkdir #{package_dir}/lib/ruby"
   sh "tar -xzf packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}.tar.gz -C #{package_dir}/lib/ruby"
+
+  # Hack to replace traveling ruby's expired ca-bundle.crt with cURL's most recent one
+  # TODO: Remove this when https://github.com/phusion/traveling-ruby/pull/102 lands upstream and we upgrade from traveling ruby version 20150715-2.2.2
+  sh "curl -o #{package_dir}/lib/ruby/lib/ca-bundle.crt #{CA_CERT_URL}"
+
   for script in SCRIPTS do
     if script != 'funcs' && script != 'preload'
       sh "cp wrappers/#{script}_wrapper.sh #{package_dir}/#{script}"
