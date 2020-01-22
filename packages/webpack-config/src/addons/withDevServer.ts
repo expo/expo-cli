@@ -14,6 +14,11 @@ import { getPaths } from '../env';
 // @ts-ignore
 const host = process.env.HOST || '0.0.0.0';
 
+/**
+ *
+ * @param input
+ * @internal
+ */
 export function isDevConfig(input: AnyConfiguration): input is DevConfiguration {
   return input && input.mode === 'development';
 }
@@ -31,6 +36,7 @@ type DevServerOptions = {
  * @param webpackConfig Existing Webpack config to modify.
  * @param env locations, projectRoot, and https options.
  * @param options Configure how the dev server is setup.
+ * @category addons
  */
 export default function withDevServer(
   webpackConfig: AnyConfiguration,
@@ -48,6 +54,7 @@ export default function withDevServer(
  *
  * @param env locations, projectRoot, and https options.
  * @param options Configure how the dev server is setup.
+ * @internal
  */
 export function createDevServer(
   env: SelectiveEnv,

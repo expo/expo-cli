@@ -1,3 +1,9 @@
+/**
+ *
+ * @param initial
+ * @param transformString
+ * @internal
+ */
 export default function normalizePaths(
   initial: any,
   transformString: (value: string) => string

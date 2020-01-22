@@ -11,6 +11,7 @@ import { resolveEntryAsync } from '../utils';
  * @param webpackConfig Existing Webpack config to modify.
  * @param env Environment props used to get the Expo config.
  * @param options new entry path to inject.
+ * @category addons
  */
 export default function withEntry(
   webpackConfig: AnyConfiguration,

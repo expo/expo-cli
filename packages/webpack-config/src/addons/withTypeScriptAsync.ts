@@ -13,6 +13,7 @@ import { AnyConfiguration, InputEnvironment } from '../types';
  *
  * @param webpackConfig input Webpack config to modify and return.
  * @param env Environment used to configure the input config.
+ * @category addons
  */
 export default async function withTypeScriptAsync(
   webpackConfig: AnyConfiguration,

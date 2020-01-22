@@ -6,6 +6,9 @@ import { AnyConfiguration, Environment } from '../types';
 import { enableWithPropertyOrConfig } from '../utils/config';
 import { getAbsolute, getConfig, getMode } from '../env';
 
+/**
+ * @internal
+ */
 export const DEFAULT_REPORTING_OPTIONS: BundleAnalyzerPlugin.Options & {
   verbose?: boolean;
   path: string;
@@ -20,6 +23,11 @@ export const DEFAULT_REPORTING_OPTIONS: BundleAnalyzerPlugin.Options & {
   reportFilename: 'report.html',
 };
 
+/**
+ *
+ * @param param0
+ * @internal
+ */
 export function throwDeprecatedConfig({ web = {} }: ExpoConfig) {
   const { build = {} } = web;
 
@@ -30,6 +38,11 @@ export function throwDeprecatedConfig({ web = {} }: ExpoConfig) {
   }
 }
 
+/**
+ *
+ * @param env
+ * @internal
+ */
 export function maybeWarnAboutRebuilds(env: Environment) {
   const mode = getMode(env);
   if (mode === 'development') {
@@ -44,6 +57,7 @@ export function maybeWarnAboutRebuilds(env: Environment) {
  *
  * @param webpackConfig Existing Webpack config to modify.
  * @param env Use the `report` prop to enable and configure reporting tools.
+ * @category addons
  */
 export default function withReporting(
   webpackConfig: AnyConfiguration,

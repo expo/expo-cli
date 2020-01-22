@@ -4,11 +4,19 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { Environment } from '../types';
 import { getConfig, getPublicPaths } from '../env';
 
+/**
+ *
+ * @param message
+ * @internal
+ */
 export function createNoJSComponent(message: string): string {
   // from twitter.com
   return `" <form action="location.reload()" method="POST" style="background-color:#fff;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;"><div style="font-size:18px;font-family:Helvetica,sans-serif;line-height:24px;margin:10%;width:80%;"> <p>${message}</p> <p style="margin:20px 0;"> <button type="submit" style="background-color: #4630EB; border-radius: 100px; border: none; box-shadow: none; color: #fff; cursor: pointer; font-weight: bold; line-height: 20px; padding: 6px 16px;">Reload</button> </p> </div> </form> "`;
 }
 
+/**
+ * @category plugins
+ */
 export default class ExpoInterpolateHtmlPlugin extends InterpolateHtmlPlugin {
   static fromEnv = (
     env: Pick<Environment, 'mode' | 'config' | 'locations' | 'projectRoot'>,

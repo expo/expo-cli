@@ -7,6 +7,9 @@ import { getConfig } from '../env';
 import { AnyConfiguration, Environment } from '../types';
 import { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } from '../utils';
 
+/**
+ * @internal
+ */
 export const DEFAULT_GZIP_OPTIONS = {
   test: /\.(js|css)$/,
   filename: '[path].gz[query]',
@@ -15,6 +18,9 @@ export const DEFAULT_GZIP_OPTIONS = {
   minRatio: 0.8,
 };
 
+/**
+ * @internal
+ */
 export const DEFAULT_BROTLI_OPTIONS = {
   asset: '[path].br[query]',
   test: /\.(js|css)$/,
@@ -27,6 +33,7 @@ export const DEFAULT_BROTLI_OPTIONS = {
  *
  * @param webpackConfig Existing Webpack config to modify.
  * @param env Environment used for getting the Expo project config.
+ * @category addons
  */
 export default function withCompression(
   webpackConfig: AnyConfiguration,

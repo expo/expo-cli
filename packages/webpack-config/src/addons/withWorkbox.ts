@@ -12,6 +12,9 @@ import { AnyConfiguration } from '../types';
 import { resolveEntryAsync } from '../utils';
 import { getPaths } from '../env';
 
+/**
+ * @internal
+ */
 export type OfflineOptions = {
   projectRoot?: string;
   serviceWorkerPath?: string;
@@ -67,6 +70,7 @@ const defaultGenerateSWOptions: GenerateSWOptions = {
  *
  * @param webpackConfig Existing Webpack config to modify.
  * @param options configure the service worker.
+ * @category addons
  */
 export default function withWorkbox(
   webpackConfig: AnyConfiguration,

@@ -73,6 +73,11 @@ function generateCacheIdentifier(projectRoot: string, version: string = '1'): st
   return `${cacheKey}${JSON.stringify(partial!.options)}`;
 }
 
+/**
+ *
+ * @param env
+ * @internal
+ */
 export function createBabelLoaderFromEnvironment(
   env: Pick<Environment, 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
 ): Rule {
@@ -95,26 +100,29 @@ export function createBabelLoaderFromEnvironment(
 /**
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
+ * @category loaders
  */
-export default function createBabelLoader({
-  /**
+export default function createBabelLoader(
+  {
+    /**
    * The webpack mode: `"production" | "development"`
    */
-  mode,
-  babelProjectRoot,
-  include = [],
-  verbose,
-  platform,
-  useCustom,
-  ...options
-}: {
-  useCustom?: boolean;
-  mode?: Mode;
-  babelProjectRoot?: string;
-  include?: string[];
-  verbose?: boolean;
-  [key: string]: any;
-} = {}): Rule {
+    mode,
+    babelProjectRoot,
+    include = [],
+    verbose,
+    platform,
+    useCustom,
+    ...options,
+  }: {
+    useCustom?: boolean;
+    mode?: Mode;
+    babelProjectRoot?: string;
+    include?: string[];
+    verbose?: boolean;
+    [key: string]: any;
+  } = {}
+): Rule {
   const ensuredProjectRoot = ensureRoot(babelProjectRoot);
   const modules = [...includeModulesThatContainPaths, ...include];
   const customUse = options.use || {};

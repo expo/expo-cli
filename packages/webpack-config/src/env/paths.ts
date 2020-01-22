@@ -73,11 +73,21 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
   };
 }
 
+/**
+ *
+ * @param projectRoot
+ * @category env
+ */
 export function getPaths(projectRoot: string): FilePaths {
   const { exp } = readConfigJson(projectRoot, true, true);
   return parsePaths(projectRoot, exp);
 }
 
+/**
+ *
+ * @param projectRoot
+ * @category env
+ */
 export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
   let exp;
   try {
@@ -86,6 +96,11 @@ export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
   return parsePaths(projectRoot, exp);
 }
 
+/**
+ *
+ * @param projectRoot
+ * @category env
+ */
 export function getServedPath(projectRoot: string): string {
   const { pkg } = readConfigJson(projectRoot, true, true);
   const envPublicUrl = process.env.WEB_PUBLIC_URL;
@@ -101,9 +116,14 @@ export function getServedPath(projectRoot: string): string {
   return ensureSlash(servedUrl!, true);
 }
 
+/**
+ *
+ * @param env
+ * @category env
+ */
 export function getPublicPaths({
   projectRoot,
-  ...env
+  ...env,
 }: Pick<Environment, 'mode' | 'projectRoot'>): {
   /**
    * Webpack uses `publicPath` to determine where the app is being served from.
@@ -130,6 +150,11 @@ export function getPublicPaths({
   return { publicUrl: '', publicPath: '/' };
 }
 
+/**
+ *
+ * @param projectRoot
+ * @category env
+ */
 export function getProductionPath(projectRoot: string): string {
   const { exp } = readConfigJson(projectRoot, true, true);
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
@@ -137,6 +162,7 @@ export function getProductionPath(projectRoot: string): string {
 
 /**
  * get absolute path relative to project root while accounting for `https://` paths
+ * @category env
  */
 export function getAbsolute(projectRoot: string, ...pathComponents: string[]): string {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();

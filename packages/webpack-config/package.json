@@ -15,6 +15,7 @@
     "lint": "eslint .",
     "clean": "rm -rf ./webpack/ ./tsconfig.tsbuildinfo",
     "prepare": "yarn run clean && yarn run build",
+    "doc": "rm -rf ./doc; npx typedoc --out docs/ --plugin typedoc-plugin-markdown",
     "test": "npm run test:unit; npm run test:e2e; npm run test:e2e:nextjs",
     "test:unit": "jest --config jest/unit-test-config.json --rootDir .",
     "test:e2e:start": "EXPO_E2E_COMMAND='start' jest --config jest/e2e-test-config.json --rootDir .",
@@ -90,7 +91,9 @@
     "jest-puppeteer": "^4.3.0",
     "prettier": "^1.16.4",
     "puppeteer": "^1.19.0",
-    "serve": "^11.1.0"
+    "serve": "^11.1.0",
+    "typedoc": "^0.17.0-2",
+    "typedoc-plugin-markdown": "^2.2.16"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df",
   "browserslist": {

@@ -25,6 +25,7 @@ import withEntry from './withEntry';
  * @param webpackConfig Optional existing Webpack config to modify.
  * @param env Optional Environment options for configuring what features the Webpack config supports.
  * @param argv
+ * @category addons
  */
 export default function withUnimodules(
   webpackConfig: AnyConfiguration = {},

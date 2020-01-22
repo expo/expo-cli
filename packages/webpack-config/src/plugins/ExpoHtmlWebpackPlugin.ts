@@ -17,6 +17,9 @@ const DEFAULT_MINIFY = {
   minifyURLs: true,
 };
 
+/**
+ * @category plugins
+ */
 export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
   constructor(env: Environment) {
     const locations = env.locations || getPaths(env.projectRoot);

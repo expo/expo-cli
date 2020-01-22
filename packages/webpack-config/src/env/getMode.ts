@@ -4,8 +4,9 @@ import { Mode } from '../types';
  * Resolve the `mode` in a way that accounts for legacy treatment and environment variables.
  *
  * mode -> production -> development -> process.env.NODE_ENV -> 'development'
+ * @category env
  */
-function getMode({
+export default function getMode({
   production,
   development,
   mode,
@@ -36,5 +37,3 @@ function isValidMode(inputMode?: string): boolean {
   }
   return mode === 'production' || mode === 'development';
 }
-
-export default getMode;

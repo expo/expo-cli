@@ -5,6 +5,7 @@ import { AnyConfiguration } from '../types';
  * Tell Webpack to provide empty mocks for them so importing them works.
  *
  * @param webpackConfig Existing Webpack config to modify.
+ * @category addons
  */
 export default function withNodeMocks(webpackConfig: AnyConfiguration): AnyConfiguration {
   if (

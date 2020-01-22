@@ -1,6 +1,12 @@
 import { Rule } from 'webpack';
 
-function createFontLoader(
+/**
+ *
+ * @param projectRoot
+ * @param includeModule
+ * @category loaders
+ */
+export default function createFontLoader(
   projectRoot: string,
   includeModule: (...props: string[]) => string
 ): Rule {
@@ -22,5 +28,3 @@ function createFontLoader(
     ],
   };
 }
-
-export default createFontLoader;

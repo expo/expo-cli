@@ -4,11 +4,21 @@ import { DefinePlugin } from 'webpack';
 import { Environment, Mode } from '../types';
 import { getConfig, getMode, getPaths, getPublicPaths } from '../env';
 
+/**
+ * @internal
+ */
 export interface ClientEnv {
   __DEV__: boolean;
   'process.env': { [key: string]: string };
 }
 
+/**
+ *
+ * @param mode
+ * @param publicPath
+ * @param nativeAppManifest
+ * @internal
+ */
 export function createClientEnvironment(
   mode: Mode,
   publicPath: string,
@@ -57,6 +67,7 @@ export function createClientEnvironment(
 /**
  * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/
  * This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
+ * @category plugins
  */
 export default class ExpoDefinePlugin extends DefinePlugin {
   static createClientEnvironment = createClientEnvironment;

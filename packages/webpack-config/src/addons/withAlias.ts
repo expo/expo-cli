@@ -6,6 +6,7 @@ import { aliases } from '../env';
  *
  * @param webpackConfig Existing Webpack config to modify.
  * @param alias Extra aliases to inject
+ * @category addons
  */
 export default function withAlias(
   webpackConfig: AnyConfiguration,
