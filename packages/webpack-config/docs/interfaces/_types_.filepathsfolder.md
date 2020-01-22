@@ -25,7 +25,7 @@
 
 • **favicon**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:64](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L64)*
+*Defined in [packages/webpack-config/src/types.ts:64](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L64)*
 
 ___
 
@@ -33,7 +33,7 @@ ___
 
 • **folder**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:60](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L60)*
+*Defined in [packages/webpack-config/src/types.ts:60](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L60)*
 
 ___
 
@@ -41,7 +41,7 @@ ___
 
 • **get**: *PathResolver*
 
-*Defined in [packages/webpack-config/src/types.ts:59](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L59)*
+*Defined in [packages/webpack-config/src/types.ts:59](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L59)*
 
 ___
 
@@ -49,7 +49,7 @@ ___
 
 • **indexHtml**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:61](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L61)*
+*Defined in [packages/webpack-config/src/types.ts:61](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L61)*
 
 ___
 
@@ -57,7 +57,7 @@ ___
 
 • **manifest**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:62](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L62)*
+*Defined in [packages/webpack-config/src/types.ts:62](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L62)*
 
 ___
 
@@ -65,7 +65,7 @@ ___
 
 • **registerServiceWorker**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:66](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L66)*
+*Defined in [packages/webpack-config/src/types.ts:66](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L66)*
 
 ___
 
@@ -73,7 +73,7 @@ ___
 
 • **serveJson**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:63](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L63)*
+*Defined in [packages/webpack-config/src/types.ts:63](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L63)*
 
 ___
 
@@ -81,4 +81,4 @@ ___
 
 • **serviceWorker**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:65](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L65)*
+*Defined in [packages/webpack-config/src/types.ts:65](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L65)*

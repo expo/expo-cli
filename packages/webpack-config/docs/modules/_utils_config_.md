@@ -15,7 +15,7 @@
 
 ▸ **enableWithPropertyOrConfig**(`prop`: any, `config`: boolean | object, `merge`: boolean): *any*
 
-*Defined in [packages/webpack-config/src/utils/config.ts:15](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/config.ts#L15)*
+*Defined in [packages/webpack-config/src/utils/config.ts:16](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/config.ts#L16)*
 
 Given a config option that could evalutate to true, config, or null; return a config.
 e.g.
@@ -38,7 +38,7 @@ ___
 
 ▸ **overrideWithPropertyOrConfig**(`prop`: any, `config`: boolean | object, `merge`: boolean): *any*
 
-*Defined in [packages/webpack-config/src/utils/config.ts:48](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/config.ts#L48)*
+*Defined in [packages/webpack-config/src/utils/config.ts:50](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/config.ts#L50)*
 
 Used for features that are enabled by default unless specified otherwise.
 

@@ -18,6 +18,8 @@ const DEFAULT_MINIFY = {
 };
 
 /**
+ * Generates an `index.html` file with the <script> injected.
+ *
  * @category plugins
  */
 export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
@@ -34,8 +36,6 @@ export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
       isProduction ? config.web?.build?.minifyHTML : false,
       DEFAULT_MINIFY
     );
-
-    // Generates an `index.html` file with the <script> injected.
 
     super({
       // The file to write the HTML to.

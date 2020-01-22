@@ -15,6 +15,8 @@ export function createNoJSComponent(message: string): string {
 }
 
 /**
+ * Add variables to the `index.html`
+ *
  * @category plugins
  */
 export default class ExpoInterpolateHtmlPlugin extends InterpolateHtmlPlugin {
@@ -30,7 +32,6 @@ export default class ExpoInterpolateHtmlPlugin extends InterpolateHtmlPlugin {
     const { noJavaScriptMessage } = config.web.dangerous;
     const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
-    // Add variables to the `index.html`
     return new ExpoInterpolateHtmlPlugin(HtmlWebpackPlugin, {
       WEB_PUBLIC_URL: publicPath,
       WEB_TITLE: config.web.name,

@@ -15,7 +15,7 @@
 
 ▸ **validateEnvironment**(`env`: [InputEnvironment](_types_.md#inputenvironment)): *[Environment](_types_.md#environment)*
 
-*Defined in [packages/webpack-config/src/env/validate.ts:60](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/env/validate.ts#L60)*
+*Defined in [packages/webpack-config/src/env/validate.ts:60](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/env/validate.ts#L60)*
 
 **Parameters:**
 
@@ -31,7 +31,7 @@ ___
 
 ▸ **validateReport**(`report`: boolean | [Report](_types_.md#report)): *[Report](_types_.md#report) | null*
 
-*Defined in [packages/webpack-config/src/env/validate.ts:47](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/env/validate.ts#L47)*
+*Defined in [packages/webpack-config/src/env/validate.ts:47](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/env/validate.ts#L47)*
 
 **Parameters:**
 

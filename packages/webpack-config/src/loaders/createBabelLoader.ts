@@ -74,6 +74,8 @@ function generateCacheIdentifier(projectRoot: string, version: string = '1'): st
 }
 
 /**
+ * Creates a Rule for loading Application code and packages from the Expo ecosystem.
+ * This method attempts to recreate how Metro loads ES modules in the `node_modules` folder.
  *
  * @param env
  * @internal

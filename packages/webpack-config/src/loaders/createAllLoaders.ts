@@ -65,6 +65,7 @@ export const styleLoaderRule: Rule = {
 };
 
 /**
+ * Create the fallback loader for parsing any unhandled file type.
  *
  * @param env
  * @category loaders

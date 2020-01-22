@@ -4,7 +4,8 @@ import { ProgressPlugin } from 'webpack';
 
 /**
  * Fork of https://github.com/clessg/progress-bar-webpack-plugin
- * but with TS
+ * but with TypeScript support.
+ *
  * @category plugins
  */
 export default class ExpoProgressBarPlugin extends ProgressPlugin {

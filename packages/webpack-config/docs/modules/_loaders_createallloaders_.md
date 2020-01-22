@@ -24,7 +24,9 @@
 
 ▸ **createAllLoaders**(`env`: [Environment](_types_.md#environment)): *Rule[]*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:72](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L72)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:73](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L73)*
+
+Create the fallback loader for parsing any unhandled file type.
 
 **Parameters:**
 
@@ -40,7 +42,7 @@ ___
 
 ▸ **getAllLoaderRules**(`config`: ExpoConfig, `mode`: [Mode](_types_.md#mode), `__namedParameters`: object, `platform`: string): *Rule[]*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:146](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L146)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:147](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L147)*
 
 **Parameters:**
 
@@ -66,7 +68,7 @@ ___
 
 ▸ **getBabelLoaderRule**(`projectRoot`: string, `__namedParameters`: object, `mode`: [Mode](_types_.md#mode), `platform`: string): *Rule*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:105](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L105)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:106](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L106)*
 
 **Parameters:**
 
@@ -90,7 +92,7 @@ ___
 
 ▸ **getBabelLoaderRuleFromEnv**(`env`: [Environment](_types_.md#environment)): *Rule*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:87](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L87)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:88](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L88)*
 
 **Parameters:**
 
@@ -106,7 +108,7 @@ ___
 
 ▸ **getHtmlLoaderRule**(`exclude`: string): *Rule*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:130](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L130)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:131](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L131)*
 
 **Parameters:**
 
@@ -122,7 +124,7 @@ Name | Type |
 
 ### ▪ **fallbackLoaderRule**: *object*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:45](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L45)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:45](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L45)*
 
 "file" loader makes sure those assets get served by WebpackDevServer.
 When you `import` an asset, you get its (virtual) filename.
@@ -134,17 +136,17 @@ that fall through the other loaders.
 
 • **exclude**: *RegExp‹›[]* = [/\.(mjs|[jt]sx?)$/, /\.html$/, /\.json$/]
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:53](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L53)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:53](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L53)*
 
 ###  loader
 
 • **loader**: *string* = require.resolve('file-loader')
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:46](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L46)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:46](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L46)*
 
 ▪ **options**: *object*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:54](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L54)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:54](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L54)*
 
 * **name**: *string* = "static/media/[name].[hash:8].[ext]"
 
@@ -154,7 +156,7 @@ ___
 
 ### ▪ **imageLoaderRule**: *object*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:18](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L18)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:18](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L18)*
 
 This is needed for webpack to import static images in JavaScript files.
 "url" loader works like "file" loader except that it embeds assets
@@ -165,11 +167,11 @@ A missing `test` is equivalent to a match.
 
 • **test**: *RegExp‹›* = /\.(gif|jpe?g|png|svg)$/
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:19](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L19)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:19](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L19)*
 
 ▪ **use**: *object*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:20](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L20)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:20](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L20)*
 
 * **loader**: *string* = require.resolve('url-loader')
 
@@ -185,16 +187,16 @@ ___
 
 ### ▪ **styleLoaderRule**: *object*
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:62](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L62)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:62](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L62)*
 
 ###  test
 
 • **test**: *RegExp‹›* = /\.(css)$/
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:63](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L63)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:63](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L63)*
 
 ###  use
 
 • **use**: *string[]* = [require.resolve('style-loader'), require.resolve('css-loader')]
 
-*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:64](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createAllLoaders.ts#L64)*
+*Defined in [packages/webpack-config/src/loaders/createAllLoaders.ts:64](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createAllLoaders.ts#L64)*

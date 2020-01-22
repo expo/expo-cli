@@ -14,7 +14,7 @@
 
 ▸ **withEntry**(`webpackConfig`: [AnyConfiguration](_types_.md#anyconfiguration), `env`: Pick‹[InputEnvironment](_types_.md#inputenvironment), "projectRoot" | "config" | "locations"›, `options`: object): *[AnyConfiguration](_types_.md#anyconfiguration)*
 
-*Defined in [packages/webpack-config/src/addons/withEntry.ts:16](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/addons/withEntry.ts#L16)*
+*Defined in [packages/webpack-config/src/addons/withEntry.ts:16](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/addons/withEntry.ts#L16)*
 
 Inject a new entry path into an existing Webpack config.
 

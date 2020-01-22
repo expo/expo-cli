@@ -13,10 +13,11 @@ export interface ClientEnv {
 }
 
 /**
+ * Create the global environment variables to surface in the project. Also creates the `__DEV__` boolean to provide better parity with Metro bundler.
  *
- * @param mode
- * @param publicPath
- * @param nativeAppManifest
+ * @param mode defines the Metro bundler `global.__DEV__` value.
+ * @param publicPath passed as `process.env.PUBLIC_URL` to the app.
+ * @param nativeAppManifest public values to be used in `expo-constants`.
  * @internal
  */
 export function createClientEnvironment(

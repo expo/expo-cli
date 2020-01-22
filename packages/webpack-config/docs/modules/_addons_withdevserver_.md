@@ -14,7 +14,7 @@
 
 ▸ **withDevServer**(`webpackConfig`: [AnyConfiguration](_types_.md#anyconfiguration), `env`: SelectiveEnv, `options`: DevServerOptions): *[AnyConfiguration](_types_.md#anyconfiguration)*
 
-*Defined in [packages/webpack-config/src/addons/withDevServer.ts:41](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/addons/withDevServer.ts#L41)*
+*Defined in [packages/webpack-config/src/addons/withDevServer.ts:41](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/addons/withDevServer.ts#L41)*
 
 Add a valid dev server to the provided Webpack config.
 

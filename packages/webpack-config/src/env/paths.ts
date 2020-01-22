@@ -74,6 +74,8 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
 }
 
 /**
+ * Sync method for getting default paths used throughout the Webpack config.
+ * This is useful for Next.js which doesn't support async Webpack configs.
  *
  * @param projectRoot
  * @category env
@@ -84,6 +86,7 @@ export function getPaths(projectRoot: string): FilePaths {
 }
 
 /**
+ * Async method for getting default paths used throughout the Webpack config.
  *
  * @param projectRoot
  * @category env
@@ -97,6 +100,7 @@ export async function getPathsAsync(projectRoot: string): Promise<FilePaths> {
 }
 
 /**
+ * Get paths dictating where the app is served regardless of the current Webpack mode.
  *
  * @param projectRoot
  * @category env
@@ -117,6 +121,7 @@ export function getServedPath(projectRoot: string): string {
 }
 
 /**
+ * Get paths dictating where the app is served. In development mode this returns default values.
  *
  * @param env
  * @category env
@@ -151,6 +156,7 @@ export function getPublicPaths({
 }
 
 /**
+ * Get the output folder path. Defaults to `web-build`.
  *
  * @param projectRoot
  * @category env
@@ -161,7 +167,9 @@ export function getProductionPath(projectRoot: string): string {
 }
 
 /**
- * get absolute path relative to project root while accounting for `https://` paths
+ * Get an absolute path relative to the project root while accounting for remote paths (`https://`).
+ *
+ * @param projectRoot
  * @category env
  */
 export function getAbsolute(projectRoot: string, ...pathComponents: string[]): string {

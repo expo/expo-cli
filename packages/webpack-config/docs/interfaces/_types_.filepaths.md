@@ -26,7 +26,7 @@
 
 • **absolute**: *PathResolver*
 
-*Defined in [packages/webpack-config/src/types.ts:69](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L69)*
+*Defined in [packages/webpack-config/src/types.ts:69](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L69)*
 
 ___
 
@@ -34,7 +34,7 @@ ___
 
 • **appMain**: *string | null*
 
-*Defined in [packages/webpack-config/src/types.ts:75](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L75)*
+*Defined in [packages/webpack-config/src/types.ts:75](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L75)*
 
 ___
 
@@ -42,7 +42,7 @@ ___
 
 • **includeModule**: *PathResolver*
 
-*Defined in [packages/webpack-config/src/types.ts:70](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L70)*
+*Defined in [packages/webpack-config/src/types.ts:70](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L70)*
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 • **modules**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:76](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L76)*
+*Defined in [packages/webpack-config/src/types.ts:76](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L76)*
 
 ___
 
@@ -58,7 +58,7 @@ ___
 
 • **packageJson**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:73](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L73)*
+*Defined in [packages/webpack-config/src/types.ts:73](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L73)*
 
 ___
 
@@ -66,7 +66,7 @@ ___
 
 • **production**: *[FilePathsFolder](_types_.filepathsfolder.md)*
 
-*Defined in [packages/webpack-config/src/types.ts:72](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L72)*
+*Defined in [packages/webpack-config/src/types.ts:72](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L72)*
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 • **root**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:74](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L74)*
+*Defined in [packages/webpack-config/src/types.ts:74](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L74)*
 
 ___
 
@@ -82,7 +82,7 @@ ___
 
 • **servedPath**: *string*
 
-*Defined in [packages/webpack-config/src/types.ts:77](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L77)*
+*Defined in [packages/webpack-config/src/types.ts:77](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L77)*
 
 ___
 
@@ -90,4 +90,4 @@ ___
 
 • **template**: *[FilePathsFolder](_types_.filepathsfolder.md)*
 
-*Defined in [packages/webpack-config/src/types.ts:71](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L71)*
+*Defined in [packages/webpack-config/src/types.ts:71](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L71)*

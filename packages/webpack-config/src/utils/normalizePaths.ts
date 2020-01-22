@@ -1,4 +1,5 @@
 /**
+ * Converts absolute paths to relative paths for testing purposes.
  *
  * @param initial
  * @param transformString

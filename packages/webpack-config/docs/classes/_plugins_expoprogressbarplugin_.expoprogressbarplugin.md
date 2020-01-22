@@ -3,7 +3,7 @@
 # Class: ExpoProgressBarPlugin
 
 Fork of https://github.com/clessg/progress-bar-webpack-plugin
-but with TS
+but with TypeScript support.
 
 ## Hierarchy
 
@@ -33,7 +33,7 @@ but with TS
 
 *Overrides void*
 
-*Defined in [packages/webpack-config/src/plugins/ExpoProgressBarPlugin.ts:10](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/plugins/ExpoProgressBarPlugin.ts#L10)*
+*Defined in [packages/webpack-config/src/plugins/ExpoProgressBarPlugin.ts:11](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/plugins/ExpoProgressBarPlugin.ts#L11)*
 
 **Returns:** *[ExpoProgressBarPlugin](_plugins_expoprogressbarplugin_.expoprogressbarplugin.md)*
 

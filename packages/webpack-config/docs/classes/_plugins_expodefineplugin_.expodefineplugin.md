@@ -38,7 +38,7 @@ This surfaces the `app.json` (config) as an environment variable which is then p
 
 *Overrides void*
 
-*Defined in [packages/webpack-config/src/plugins/ExpoDefinePlugin.ts:88](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/plugins/ExpoDefinePlugin.ts#L88)*
+*Defined in [packages/webpack-config/src/plugins/ExpoDefinePlugin.ts:89](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/plugins/ExpoDefinePlugin.ts#L89)*
 
 **Parameters:**
 
@@ -59,7 +59,7 @@ Name | Type |
 
 ▪ **createClientEnvironment**: *createClientEnvironment* = createClientEnvironment
 
-*Defined in [packages/webpack-config/src/plugins/ExpoDefinePlugin.ts:73](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/plugins/ExpoDefinePlugin.ts#L73)*
+*Defined in [packages/webpack-config/src/plugins/ExpoDefinePlugin.ts:74](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/plugins/ExpoDefinePlugin.ts#L74)*
 
 ## Methods
 
@@ -85,7 +85,7 @@ ___
 
 ▸ **fromEnv**(`env`: Pick‹[Environment](../modules/_types_.md#environment), "projectRoot" | "mode" | "config" | "locations"›): *[ExpoDefinePlugin](_plugins_expodefineplugin_.expodefineplugin.md)*
 
-*Defined in [packages/webpack-config/src/plugins/ExpoDefinePlugin.ts:74](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/plugins/ExpoDefinePlugin.ts#L74)*
+*Defined in [packages/webpack-config/src/plugins/ExpoDefinePlugin.ts:75](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/plugins/ExpoDefinePlugin.ts#L75)*
 
 **Parameters:**
 

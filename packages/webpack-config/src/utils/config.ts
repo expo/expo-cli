@@ -10,6 +10,7 @@ function isObject(val: any): boolean {
  * e.g.
  * `polyfill: true` returns the `config`
  * `polyfill: {}` returns `{}`
+ *
  * @category utils
  */
 export function enableWithPropertyOrConfig(
@@ -43,6 +44,7 @@ export function enableWithPropertyOrConfig(
 
 /**
  * Used for features that are enabled by default unless specified otherwise.
+ *
  * @category utils
  */
 export function overrideWithPropertyOrConfig(

@@ -2,6 +2,8 @@
 
 # Class: ExpoInterpolateHtmlPlugin
 
+Add variables to the `index.html`
+
 ## Hierarchy
 
 * InterpolateHtmlPlugin
@@ -66,7 +68,7 @@ ___
 
 ▸ **fromEnv**(`env`: Pick‹[Environment](../modules/_types_.md#environment), "mode" | "config" | "locations" | "projectRoot"›, `HtmlWebpackPlugin`: HtmlWebpackPlugin): *[ExpoInterpolateHtmlPlugin](_plugins_expointerpolatehtmlplugin_.expointerpolatehtmlplugin.md)*
 
-*Defined in [packages/webpack-config/src/plugins/ExpoInterpolateHtmlPlugin.ts:21](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/plugins/ExpoInterpolateHtmlPlugin.ts#L21)*
+*Defined in [packages/webpack-config/src/plugins/ExpoInterpolateHtmlPlugin.ts:23](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/plugins/ExpoInterpolateHtmlPlugin.ts#L23)*
 
 **Parameters:**
 

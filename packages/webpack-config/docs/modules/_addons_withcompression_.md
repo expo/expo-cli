@@ -14,7 +14,7 @@
 
 ▸ **withCompression**(`webpackConfig`: [AnyConfiguration](_types_.md#anyconfiguration), `env`: Pick‹[Environment](_types_.md#environment), "projectRoot" | "config" | "locations"›): *[AnyConfiguration](_types_.md#anyconfiguration)*
 
-*Defined in [packages/webpack-config/src/addons/withCompression.ts:38](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/addons/withCompression.ts#L38)*
+*Defined in [packages/webpack-config/src/addons/withCompression.ts:38](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/addons/withCompression.ts#L38)*
 
 Add production compression options to the provided Webpack config.
 

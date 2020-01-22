@@ -25,7 +25,7 @@
 
 Ƭ **AnyConfiguration**: *[DevConfiguration](../interfaces/_types_.devconfiguration.md) | WebpackConfiguration*
 
-*Defined in [packages/webpack-config/src/types.ts:12](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L12)*
+*Defined in [packages/webpack-config/src/types.ts:12](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L12)*
 
 ___
 
@@ -33,7 +33,7 @@ ___
 
 Ƭ **Environment**: *object*
 
-*Defined in [packages/webpack-config/src/types.ts:35](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L35)*
+*Defined in [packages/webpack-config/src/types.ts:35](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L35)*
 
 #### Type declaration:
 
@@ -65,7 +65,7 @@ ___
 
 Ƭ **InputEnvironment**: *object*
 
-*Defined in [packages/webpack-config/src/types.ts:14](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L14)*
+*Defined in [packages/webpack-config/src/types.ts:14](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L14)*
 
 #### Type declaration:
 
@@ -101,7 +101,7 @@ ___
 
 Ƭ **Mode**: *"production" | "development" | "none"*
 
-*Defined in [packages/webpack-config/src/types.ts:81](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L81)*
+*Defined in [packages/webpack-config/src/types.ts:81](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L81)*
 
 ___
 
@@ -109,7 +109,7 @@ ___
 
 Ƭ **Report**: *object*
 
-*Defined in [packages/webpack-config/src/types.ts:49](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L49)*
+*Defined in [packages/webpack-config/src/types.ts:49](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L49)*
 
 #### Type declaration:
 

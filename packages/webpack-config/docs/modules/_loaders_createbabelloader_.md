@@ -14,7 +14,7 @@
 
 ▸ **createBabelLoader**(`__namedParameters`: object): *Rule*
 
-*Defined in [packages/webpack-config/src/loaders/createBabelLoader.ts:105](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createBabelLoader.ts#L105)*
+*Defined in [packages/webpack-config/src/loaders/createBabelLoader.ts:107](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createBabelLoader.ts#L107)*
 
 A complex babel loader which uses the project's `babel.config.js`
 to resolve all of the Unimodules which are shipped as ES modules (early 2019).

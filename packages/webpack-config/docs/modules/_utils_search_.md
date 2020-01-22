@@ -29,7 +29,7 @@
 
 ▸ **conditionMatchesFile**(`condition`: RuleSetCondition | undefined, `file`: string): *boolean*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:202](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L202)*
+*Defined in [packages/webpack-config/src/utils/search.ts:202](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L202)*
 
 **Parameters:**
 
@@ -46,7 +46,7 @@ ___
 
 ▸ **findLoader**(`loaderName`: string, `rules`: RuleSetRule[]): *RuleSetRule | null*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:48](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L48)*
+*Defined in [packages/webpack-config/src/utils/search.ts:48](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L48)*
 
 **Parameters:**
 
@@ -63,7 +63,7 @@ ___
 
 ▸ **getLoaders**(`config`: [AnyConfiguration](_types_.md#anyconfiguration)): *LoaderItem[]*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:127](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L127)*
+*Defined in [packages/webpack-config/src/utils/search.ts:127](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L127)*
 
 **Parameters:**
 
@@ -79,7 +79,7 @@ ___
 
 ▸ **getLoadersFromRules**(`rules`: RuleItem[]): *LoaderItem[]*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:107](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L107)*
+*Defined in [packages/webpack-config/src/utils/search.ts:107](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L107)*
 
 **Parameters:**
 
@@ -95,7 +95,7 @@ ___
 
 ▸ **getPlugins**(`__namedParameters`: object): *PluginItem[]*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:243](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L243)*
+*Defined in [packages/webpack-config/src/utils/search.ts:243](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L243)*
 
 **Parameters:**
 
@@ -113,7 +113,7 @@ ___
 
 ▸ **getPluginsByName**(`config`: [AnyConfiguration](_types_.md#anyconfiguration), `name`: string): *PluginItem[]*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:253](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L253)*
+*Defined in [packages/webpack-config/src/utils/search.ts:253](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L253)*
 
 **Parameters:**
 
@@ -130,7 +130,7 @@ ___
 
 ▸ **getRules**(`config`: [AnyConfiguration](_types_.md#anyconfiguration)): *RuleItem[]*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:79](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L79)*
+*Defined in [packages/webpack-config/src/utils/search.ts:79](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L79)*
 
 **Parameters:**
 
@@ -146,7 +146,7 @@ ___
 
 ▸ **getRulesAsItems**(`rules`: RuleSetRule[]): *RuleItem[]*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:67](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L67)*
+*Defined in [packages/webpack-config/src/utils/search.ts:67](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L67)*
 
 **Parameters:**
 
@@ -162,7 +162,7 @@ ___
 
 ▸ **getRulesByMatchingFiles**(`config`: [AnyConfiguration](_types_.md#anyconfiguration), `files`: string[]): *object*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:151](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L151)*
+*Defined in [packages/webpack-config/src/utils/search.ts:151](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L151)*
 
 **Parameters:**
 
@@ -181,7 +181,7 @@ ___
 
 ▸ **getRulesFromRules**(`rules`: RuleSetRule[]): *RuleSetRule[]*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:89](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L89)*
+*Defined in [packages/webpack-config/src/utils/search.ts:89](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L89)*
 
 **Parameters:**
 
@@ -197,7 +197,7 @@ ___
 
 ▸ **isEntry**(`arg`: any): *arg is Entry*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:285](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L285)*
+*Defined in [packages/webpack-config/src/utils/search.ts:285](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L285)*
 
 **Parameters:**
 
@@ -213,7 +213,7 @@ ___
 
 ▸ **isRuleSetItem**(`loader`: RuleSetUse): *loader is RuleSetUseItem*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:267](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L267)*
+*Defined in [packages/webpack-config/src/utils/search.ts:267](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L267)*
 
 **Parameters:**
 
@@ -229,7 +229,7 @@ ___
 
 ▸ **isRuleSetLoader**(`loader`: RuleSetUse): *loader is RuleSetLoader*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:276](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L276)*
+*Defined in [packages/webpack-config/src/utils/search.ts:276](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L276)*
 
 **Parameters:**
 
@@ -245,7 +245,7 @@ ___
 
 ▸ **resolveEntryAsync**(`arg`: any): *Promise‹Entry›*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:302](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L302)*
+*Defined in [packages/webpack-config/src/utils/search.ts:302](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L302)*
 
 **Parameters:**
 
@@ -261,7 +261,7 @@ ___
 
 ▸ **resolveRuleSetUse**(`rule?`: RuleSetUse | RuleSetUse[]): *ResolvedRuleSet[]*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:179](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L179)*
+*Defined in [packages/webpack-config/src/utils/search.ts:179](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L179)*
 
 **Parameters:**
 
@@ -277,7 +277,7 @@ ___
 
 ▸ **rulesMatchAnyFiles**(`config`: [AnyConfiguration](_types_.md#anyconfiguration), `files`: string[]): *boolean*
 
-*Defined in [packages/webpack-config/src/utils/search.ts:169](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/utils/search.ts#L169)*
+*Defined in [packages/webpack-config/src/utils/search.ts:169](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/utils/search.ts#L169)*
 
 **Parameters:**
 

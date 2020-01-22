@@ -14,7 +14,7 @@
 
 ▸ **getModuleFileExtensions**(...`platforms`: string[]): *string[]*
 
-*Defined in [packages/webpack-config/src/env/extensions.ts:9](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/env/extensions.ts#L9)*
+*Defined in [packages/webpack-config/src/env/extensions.ts:9](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/env/extensions.ts#L9)*
 
 Get the platform specific platform extensions in the format that Webpack expects (with a dot prefix).
 

@@ -14,7 +14,7 @@
 
 ▸ **getMode**(`__namedParameters`: object): *[Mode](_types_.md#mode)*
 
-*Defined in [packages/webpack-config/src/env/getMode.ts:9](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/env/getMode.ts#L9)*
+*Defined in [packages/webpack-config/src/env/getMode.ts:9](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/env/getMode.ts#L9)*
 
 Resolve the `mode` in a way that accounts for legacy treatment and environment variables.
 

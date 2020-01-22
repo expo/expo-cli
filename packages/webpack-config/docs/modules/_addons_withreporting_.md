@@ -14,7 +14,7 @@
 
 ▸ **withReporting**(`webpackConfig`: [AnyConfiguration](_types_.md#anyconfiguration), `env`: [Environment](_types_.md#environment)): *[AnyConfiguration](_types_.md#anyconfiguration)*
 
-*Defined in [packages/webpack-config/src/addons/withReporting.ts:62](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/addons/withReporting.ts#L62)*
+*Defined in [packages/webpack-config/src/addons/withReporting.ts:62](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/addons/withReporting.ts#L62)*
 
 Generate a bundle analysis and stats.json via the `webpack-bundle-analyzer` plugin.
 

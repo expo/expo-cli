@@ -7,8 +7,9 @@ import webpackConfig from './webpack.config';
 import { withWorkbox } from './addons';
 
 /**
+ * Create the official Webpack config for loading Expo web apps.
  *
- * @param env
+ * @param env Environment props used to configure features.
  * @param argv
  * @category default
  */

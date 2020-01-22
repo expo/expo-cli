@@ -14,7 +14,7 @@
 
 ▸ **withTypeScriptAsync**(`webpackConfig`: [AnyConfiguration](_types_.md#anyconfiguration), `env`: Pick‹[InputEnvironment](_types_.md#inputenvironment), "config" | "locations" | "projectRoot"›): *Promise‹[AnyConfiguration](_types_.md#anyconfiguration)›*
 
-*Defined in [packages/webpack-config/src/addons/withTypeScriptAsync.ts:18](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/addons/withTypeScriptAsync.ts#L18)*
+*Defined in [packages/webpack-config/src/addons/withTypeScriptAsync.ts:18](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/addons/withTypeScriptAsync.ts#L18)*
 
 Enable or disable TypeScript in the Webpack config that's provided.
 - Disabling will filter out any TypeScript extensions.

@@ -2,6 +2,8 @@
 
 # Class: ExpoHtmlWebpackPlugin
 
+Generates an `index.html` file with the <script> injected.
+
 ## Hierarchy
 
 * HtmlWebpackPlugin
@@ -70,7 +72,7 @@ Defined in node_modules/@types/html-webpack-plugin/index.d.ts:22
 
 *Overrides void*
 
-*Defined in [packages/webpack-config/src/plugins/ExpoHtmlWebpackPlugin.ts:23](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/plugins/ExpoHtmlWebpackPlugin.ts#L23)*
+*Defined in [packages/webpack-config/src/plugins/ExpoHtmlWebpackPlugin.ts:25](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/plugins/ExpoHtmlWebpackPlugin.ts#L25)*
 
 **Parameters:**
 

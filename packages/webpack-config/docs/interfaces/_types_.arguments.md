@@ -23,7 +23,7 @@
 
 • **allowedHost**? : *undefined | string*
 
-*Defined in [packages/webpack-config/src/types.ts:84](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L84)*
+*Defined in [packages/webpack-config/src/types.ts:84](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L84)*
 
 ___
 
@@ -31,4 +31,4 @@ ___
 
 • **proxy**? : *ProxyConfigMap | ProxyConfigArray*
 
-*Defined in [packages/webpack-config/src/types.ts:85](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/types.ts#L85)*
+*Defined in [packages/webpack-config/src/types.ts:85](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/types.ts#L85)*

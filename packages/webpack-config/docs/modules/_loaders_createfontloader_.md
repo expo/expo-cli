@@ -14,13 +14,20 @@
 
 ▸ **createFontLoader**(`projectRoot`: string, `includeModule`: function): *Rule*
 
-*Defined in [packages/webpack-config/src/loaders/createFontLoader.ts:9](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/loaders/createFontLoader.ts#L9)*
+*Defined in [packages/webpack-config/src/loaders/createFontLoader.ts:11](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/loaders/createFontLoader.ts#L11)*
+
+Create a `Webpack.Rule` for loading fonts and including Expo vector icons.
+Fonts will be loaded to `./fonts/[name].[ext]`.
 
 **Parameters:**
 
 ▪ **projectRoot**: *string*
 
+root project folder.
+
 ▪ **includeModule**: *function*
+
+method for resolving a node module given its package name.
 
 ▸ (...`props`: string[]): *string*
 

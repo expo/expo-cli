@@ -14,7 +14,7 @@
 
 ▸ **withUnimodules**(`webpackConfig`: [AnyConfiguration](_types_.md#anyconfiguration), `env`: [InputEnvironment](_types_.md#inputenvironment), `argv`: [Arguments](../interfaces/_types_.arguments.md)): *[AnyConfiguration](_types_.md#anyconfiguration)*
 
-*Defined in [packages/webpack-config/src/addons/withUnimodules.ts:30](https://github.com/expo/expo-cli/blob/bafc13a2/packages/webpack-config/src/addons/withUnimodules.ts#L30)*
+*Defined in [packages/webpack-config/src/addons/withUnimodules.ts:30](https://github.com/expo/expo-cli/blob/61a3bbc1/packages/webpack-config/src/addons/withUnimodules.ts#L30)*
 
 Wrap your existing webpack config with support for Unimodules.
 ex: Storybook `({ config }) => withUnimodules(config)`
