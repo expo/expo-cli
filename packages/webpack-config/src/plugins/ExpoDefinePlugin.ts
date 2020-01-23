@@ -18,9 +18,10 @@ export function createClientEnvironment(
   const __DEV__ = environment !== 'production';
 
   const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_|CI$)/i;
+  const SECRET_REGEX = /(PASSWORD|SECRET|TOKEN)/i;
 
   const processEnv = Object.keys(process.env)
-    .filter(key => ENV_VAR_REGEX.test(key))
+    .filter(key => ENV_VAR_REGEX.test(key) && !SECRET_REGEX.test(key))
     .reduce(
       (env, key) => {
         env[key] = JSON.stringify(process.env[key]);
