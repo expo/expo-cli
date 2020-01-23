@@ -63,12 +63,12 @@ async function _requestAppleIdCreds(options: Options): Promise<AppleCredentials>
   return _getAppleIdFromParams(options) || (await _promptForAppleId(options));
 }
 
-function _getAppleIdFromParams({ appleId }: Options): AppleCredentials | null {
-  const appleIdPassword = process.env.EXPO_APPLE_PASSWORD;
-  if (appleId && appleIdPassword) {
+function _getAppleIdFromParams({ appleId, appleIdPassword }: Options): AppleCredentials | null {
+  const passedAppleIdPassword = appleIdPassword || process.env.EXPO_APPLE_PASSWORD;
+  if (appleId && passedAppleIdPassword) {
     return {
       appleId,
-      appleIdPassword,
+      appleIdPassword: passedAppleIdPassword,
     };
   } else {
     return null;
