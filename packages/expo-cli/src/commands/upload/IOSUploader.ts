@@ -12,6 +12,7 @@ import prompt, { Question } from '../../prompt';
 import { runFastlaneAsync } from './utils';
 import CommandError from '../../CommandError';
 import { nonEmptyInput } from '../../validators';
+import { authenticate } from '../../appleApi';
 
 const PLATFORM = 'ios';
 
@@ -89,6 +90,11 @@ export type IosPlatformOptions = PlatformOptions & {
 
 type AppleCreds = Pick<IosPlatformOptions, 'appleId' | 'appleIdPassword'>;
 
+interface AppleIdCredentials {
+  appleId: string;
+  appleIdPassword: string;
+}
+
 export default class IOSUploader extends BaseUploader {
   static validateOptions(options: IosPlatformOptions): void {
     if (options.language && !LANGUAGES.includes(options.language)) {
@@ -113,7 +119,7 @@ export default class IOSUploader extends BaseUploader {
 
   async _getPlatformSpecificOptions(): Promise<{ [key: string]: any }> {
     const appleIdCrentials = await this._getAppleIdCredentials();
-    const appleTeamId = await this._getAppleTeamId();
+    const appleTeamId = await this._getAppleTeamId(appleIdCrentials);
     const appName = await this._getAppName();
     const otherOptions = pick(this.options, ['language', 'sku', 'companyName']);
     return {
@@ -124,13 +130,19 @@ export default class IOSUploader extends BaseUploader {
     };
   }
 
-  async _getAppleTeamId(): Promise<string | undefined> {
+  async _getAppleTeamId(appleIdCrentials: AppleIdCredentials): Promise<string | undefined> {
     const credentialMetadata = await Credentials.getCredentialMetadataAsync(this.projectDir, 'ios');
     const credential = await Credentials.getCredentialsForPlatform(credentialMetadata);
-    return get(credential, 'teamId', undefined);
+    let teamId = get(credential, 'teamId', undefined);
+    if (teamId) {
+      return teamId;
+    } else {
+      const { team } = await authenticate(appleIdCrentials);
+      return team.id;
+    }
   }
 
-  async _getAppleIdCredentials(): Promise<{ appleId: string; appleIdPassword: string }> {
+  async _getAppleIdCredentials(): Promise<AppleIdCredentials> {
     const appleCredsKeys = ['appleId', 'appleIdPassword'];
     const result: AppleCreds = pick(this.options, appleCredsKeys);
 
