@@ -1,6 +1,7 @@
 import { Rule } from 'webpack';
 
 export default (): Rule => ({
-  test: /\.worker\.(js|mjs|jsx|ts|tsx)$/,
+  // Cannot exclude any node modules yet but in the future we should just target a select few.
+  test: /\.worker\.(js|mjs|ts)$/,
   use: { loader: require.resolve('worker-loader') },
 });
