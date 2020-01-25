@@ -5,6 +5,7 @@ import IOSBuilder from './ios/IOSBuilder';
 import AndroidBuilder from './AndroidBuilder';
 import log from '../../log';
 import CommandError from '../../CommandError';
+import { askBuildType } from './utils';
 
 import { AndroidOptions, IosOptions } from './BaseBuilder.types';
 
@@ -53,7 +54,7 @@ export default function(program: Command) {
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
-    .asyncActionProjectDir((projectDir: string, options: IosOptions) => {
+    .asyncActionProjectDir(async (projectDir: string, options: IosOptions) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
         throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
       }
@@ -64,14 +65,10 @@ export default function(program: Command) {
         );
         process.exit(1);
       }
-      if (
-        options.type !== undefined &&
-        options.type !== 'archive' &&
-        options.type !== 'simulator'
-      ) {
-        log.error('Build type must be one of {archive, simulator}');
-        process.exit(1);
-      }
+      options.type = await askBuildType(options.type, {
+        archive: 'Deploy the build to the store',
+        simulator: 'Run the build on a simulator',
+      });
       const iosBuilder = new IOSBuilder(projectDir, options);
       return iosBuilder.command();
     });
@@ -91,7 +88,7 @@ export default function(program: Command) {
     .description(
       'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
-    .asyncActionProjectDir((projectDir: string, options: AndroidOptions) => {
+    .asyncActionProjectDir(async (projectDir: string, options: AndroidOptions) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
         throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
       }
@@ -102,6 +99,10 @@ export default function(program: Command) {
         );
         process.exit(1);
       }
+      options.type = await askBuildType(options.type, {
+        apk: 'Build a package to deploy to the store or install directly on Android devices',
+        'app-bundle': 'Build an optimized bundle for the store',
+      });
       const androidBuilder = new AndroidBuilder(projectDir, options);
       return androidBuilder.command();
     });

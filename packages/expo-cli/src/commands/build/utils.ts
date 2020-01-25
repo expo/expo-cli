@@ -1,7 +1,10 @@
 import { Versions } from '@expo/xdl';
 import chalk from 'chalk';
+import program from 'commander';
 
 import log from '../../log';
+import prompt from '../../prompt';
+import { AndroidOptions, IosOptions } from './BaseBuilder.types';
 
 export async function checkIfSdkIsSupported(
   sdkVersion: string,
@@ -23,4 +26,37 @@ export async function checkIfSdkIsSupported(
     );
     throw new Error('Unsupported SDK version');
   }
+}
+
+export async function askBuildType<T extends string>(
+  typeFromFlag: T,
+  availableTypes: Record<T, string>
+) {
+  const allowedTypes = Object.keys(availableTypes) as T[];
+  const typeIsInvalid = typeFromFlag !== undefined && !allowedTypes.includes(typeFromFlag);
+
+  if (typeFromFlag && !typeIsInvalid) {
+    return typeFromFlag;
+  }
+
+  if (typeIsInvalid) {
+    log.error(`Build type must be one of (${allowedTypes.join(', ')})`);
+
+    if (program.nonInteractive) {
+      process.exit(1);
+    }
+  }
+
+  const { answer } = await prompt({
+    type: 'list',
+    name: 'answer',
+    message: 'Choose the build type you would like:',
+    choices: allowedTypes.map(type => ({
+      value: type,
+      short: type,
+      name: `${type} ${chalk.gray(`- ${availableTypes[type]}`)}`,
+    })),
+  });
+
+  return answer as T;
 }
