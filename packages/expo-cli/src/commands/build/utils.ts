@@ -47,6 +47,10 @@ export async function askBuildType<T extends string>(
     }
   }
 
+  if (!typeFromFlag && program.nonInteractive) {
+    return allowedTypes[0];
+  }
+
   const { answer } = await prompt({
     type: 'list',
     name: 'answer',
