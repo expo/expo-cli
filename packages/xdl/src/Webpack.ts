@@ -239,8 +239,8 @@ export async function compileWebAppAsync(
         return reject(new Error(messages.errors.join('\n\n')));
       }
       if (
-        process.env.CI &&
-        (typeof process.env.CI !== 'string' || process.env.CI.toLowerCase() !== 'false') &&
+        getenv.boolish('EXPO_WEB_BUILD_STRICT', false) &&
+        getenv.boolish('CI', false) &&
         messages.warnings.length
       ) {
         ProjectUtils.logWarning(
@@ -248,7 +248,7 @@ export async function compileWebAppAsync(
           WEBPACK_LOG_TAG,
           withTag(
             chalk.yellow(
-              '\nTreating warnings as errors because process.env.CI = true.\n' +
+              '\nTreating warnings as errors because `process.env.CI = true` and `process.env.EXPO_WEB_BUILD_STRICT = true`. \n' +
                 'Most CI servers set it automatically.\n'
             )
           )
