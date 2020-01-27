@@ -68,6 +68,7 @@
     "webpack-deep-scope-plugin": "1.6.0",
     "webpack-manifest-plugin": "^2.0.4",
     "workbox-webpack-plugin": "^3.6.3",
+    "worker-loader": "^2.0.0",
     "yup": "^0.27.0"
   },
   "devDependencies": {

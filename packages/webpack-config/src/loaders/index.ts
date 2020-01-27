@@ -11,3 +11,4 @@ export {
 export { default as createBabelLoader } from './createBabelLoader';
 export * from './createBabelLoader';
 export { default as createFontLoader } from './createFontLoader';
+export { default as createWorkerLoader } from './createWorkerLoader';

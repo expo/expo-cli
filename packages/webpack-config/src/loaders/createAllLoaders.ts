@@ -5,6 +5,7 @@ import { Environment, FilePaths, Mode } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
 import createBabelLoader from './createBabelLoader';
 import createFontLoader from './createFontLoader';
+import createWorkerLoader from './createWorkerLoader';
 
 // This is needed for webpack to import static images in JavaScript files.
 // "url" loader works like "file" loader except that it embeds assets
@@ -111,6 +112,7 @@ export function getAllLoaderRules(
     getHtmlLoaderRule(template.folder),
     imageLoaderRule,
     getBabelLoaderRule(root, config, mode, platform),
+    createWorkerLoader(),
     createFontLoader(root, includeModule),
     styleLoaderRule,
     // This needs to be the last loader
