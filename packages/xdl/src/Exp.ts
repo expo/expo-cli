@@ -272,7 +272,9 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
 export async function sendAsync(recipient: string, url_: string, allowUnauthed: boolean = true) {
   let result;
-  if (process.env.EXPO_NEXT_API) {
+  if (process.env.EXPO_LEGACY_API === 'true') {
+    result = await Api.callMethodAsync('send', [recipient, url_, allowUnauthed]);
+  } else {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     result = await api.postAsync('send-project', {
@@ -280,8 +282,6 @@ export async function sendAsync(recipient: string, url_: string, allowUnauthed: 
       url: url_,
       includeExpoLinks: allowUnauthed,
     });
-  } else {
-    result = await Api.callMethodAsync('send', [recipient, url_, allowUnauthed]);
   }
   return result;
 }
