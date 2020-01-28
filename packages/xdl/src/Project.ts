@@ -851,6 +851,8 @@ export async function publishAsync(
       }
     }
 
+    let fullManifestUrl = response.url.replace('exp://', 'https://');
+
     if (exp.ios && exp.ios.publishManifestPath) {
       await _writeArtifactSafelyAsync(
         projectRoot,
@@ -860,10 +862,18 @@ export async function publishAsync(
       );
       const context = StandaloneContext.createUserContext(projectRoot, exp);
       const { supportingDirectory } = IosWorkspace.getPaths(context);
-      await IosPlist.modifyAsync(supportingDirectory, 'EXShell', (shellPlist: any) => {
-        shellPlist.releaseChannel = options.releaseChannel;
-        return shellPlist;
-      });
+      if (fs.existsSync(path.join(supportingDirectory, 'EXShell.plist'))) {
+        await IosPlist.modifyAsync(supportingDirectory, 'EXShell', (shellPlist: any) => {
+          shellPlist.releaseChannel = options.releaseChannel;
+          return shellPlist;
+        });
+      } else if (fs.existsSync(path.join(supportingDirectory, 'expo-config.plist'))) {
+        await IosPlist.modifyAsync(supportingDirectory, 'expo-config', (configPlist: any) => {
+          configPlist.remoteUrl = fullManifestUrl;
+          configPlist.releaseChannel = options.releaseChannel;
+          return configPlist;
+        });
+      }
     }
 
     if (exp.android && exp.android.publishManifestPath) {
@@ -875,10 +885,7 @@ export async function publishAsync(
       );
     }
 
-    // We need to add EmbeddedResponse instances on Android to tell the runtime
-    // that the shell app manifest and bundle is packaged.
     if (exp.android && exp.android.publishManifestPath && exp.android.publishBundlePath) {
-      let fullManifestUrl = response.url.replace('exp://', 'https://');
       let constantsPath = path.join(
         projectRoot,
         'android',
@@ -892,26 +899,63 @@ export async function publishAsync(
         'generated',
         'AppConstants.java'
       );
-      await ExponentTools.deleteLinesInFileAsync(
-        `START EMBEDDED RESPONSES`,
-        `END EMBEDDED RESPONSES`,
-        constantsPath
-      );
-      await ExponentTools.regexFileAsync(
-        '// ADD EMBEDDED RESPONSES HERE',
-        `
-        // ADD EMBEDDED RESPONSES HERE
-        // START EMBEDDED RESPONSES
-        embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
-        embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
-        // END EMBEDDED RESPONSES`,
-        constantsPath
-      );
-      await ExponentTools.regexFileAsync(
-        /RELEASE_CHANNEL = "[^"]*"/,
-        `RELEASE_CHANNEL = "${options.releaseChannel}"`,
-        constantsPath
-      );
+      if (fs.existsSync(constantsPath)) {
+        // We need to add EmbeddedResponse instances on Android to tell the runtime
+        // that the shell app manifest and bundle is packaged.
+        await ExponentTools.deleteLinesInFileAsync(
+          `START EMBEDDED RESPONSES`,
+          `END EMBEDDED RESPONSES`,
+          constantsPath
+        );
+        await ExponentTools.regexFileAsync(
+          '// ADD EMBEDDED RESPONSES HERE',
+          `
+          // ADD EMBEDDED RESPONSES HERE
+          // START EMBEDDED RESPONSES
+          embeddedResponses.add(new Constants.EmbeddedResponse("${fullManifestUrl}", "assets://shell-app-manifest.json", "application/json"));
+          embeddedResponses.add(new Constants.EmbeddedResponse("${androidManifest.bundleUrl}", "assets://shell-app.bundle", "application/javascript"));
+          // END EMBEDDED RESPONSES`,
+          constantsPath
+        );
+        await ExponentTools.regexFileAsync(
+          /RELEASE_CHANNEL = "[^"]*"/,
+          `RELEASE_CHANNEL = "${options.releaseChannel}"`,
+          constantsPath
+        );
+      } else {
+        let androidManifestXmlPath = path.join(
+          projectRoot,
+          'android',
+          'app',
+          'src',
+          'main',
+          'AndroidManifest.xml'
+        );
+        let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
+        let expoAppUrlRegex = /<meta-data android:name="expo.modules.updates.EXPO_APP_URL" android:value="[^"]*" \/>/;
+        if (androidManifestXmlFile.search(expoAppUrlRegex) < 0) {
+          // try to insert the meta-data tag if it isn't found
+          await ExponentTools.regexFileAsync(
+            /<activity\s+android:name=".MainActivity"/,
+            `<meta-data android:name="expo.modules.updates.EXPO_APP_URL" android:value="${fullManifestUrl}" />
+
+      <activity
+        android:name=".MainActivity"`,
+            androidManifestXmlPath
+          );
+        } else {
+          await ExponentTools.regexFileAsync(
+            expoAppUrlRegex,
+            `<meta-data android:name="expo.modules.updates.EXPO_APP_URL" android:value="${fullManifestUrl}" />`,
+            androidManifestXmlPath
+          );
+        }
+        await ExponentTools.regexFileAsync(
+          /<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="[^"]*" \/>/,
+          `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${options.releaseChannel}" />`,
+          androidManifestXmlPath
+        );
+      }
     }
   }
 
