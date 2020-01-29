@@ -10,6 +10,15 @@ import * as utils from '../utils';
 import * as credentials from './credentials';
 import * as apple from '../../../appleApi';
 import { ensurePNGIsNotTransparent } from './utils/image';
+import { runCredentialsManager } from '../../../credentials/route';
+import { Context } from '../../../credentials/context';
+import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
+import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
+import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
+import CommandError from '../../../CommandError';
+import { RemoveIosDist } from '../../../credentials/views/IosDistCert';
+import { RemoveIosPush } from '../../../credentials/views/IosPushCredentials';
+import { RemoveProvisioningProfile } from '../../../credentials/views/IosProvisioningProfile';
 
 class IOSBuilder extends BaseBuilder {
   async run() {
@@ -50,23 +59,48 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async prepareCredentials() {
-    const username = this.manifest.owner || this.user.username;
-    const projectMetadata = {
-      username,
-      experienceName: `@${username}/${this.manifest.slug}`,
-      sdkVersion: this.manifest.sdkVersion,
-      bundleIdentifier: get(this.manifest, 'ios.bundleIdentifier'),
-    };
-    await this.clearAndRevokeCredentialsIfRequested(projectMetadata);
+    const context = new Context();
+    await context.init(this.projectDir);
+    await context.ensureAppleCtx({ appleId: this.options.appleId });
 
-    const existingCredentials = await credentials.fetch(projectMetadata);
+    const username = this.manifest.owner || this.user.username;
+    const experienceName = `@${username}/${this.manifest.slug}`;
+    const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
+    await this.clearAndRevokeCredentialsIfRequested(context, { experienceName, bundleIdentifier });
+
+    /*     const existingCredentials = await credentials.fetch(projectMetadata);
     const missingCredentials = credentials.determineMissingCredentials(existingCredentials);
     if (missingCredentials) {
       await this.produceMissingCredentials(projectMetadata, missingCredentials);
-    }
+    } */
+
+    await this.produceCredentials(context, experienceName, bundleIdentifier);
+    throw new Error('REMOVE ME!');
   }
 
-  async clearAndRevokeCredentialsIfRequested(projectMetadata) {
+  async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
+    await runCredentialsManager(ctx, new SetupIosDist({ experienceName, bundleIdentifier }));
+    const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
+    if (!distributionCert) {
+      throw new CommandError(
+        'INSUFFICIENT_CREDENTIALS',
+        `This build request requires a valid distribution certificate.`
+      );
+    }
+
+    await runCredentialsManager(ctx, new SetupIosPush({ experienceName, bundleIdentifier }));
+
+    await runCredentialsManager(
+      ctx,
+      new SetupIosProvisioningProfile({
+        experienceName,
+        bundleIdentifier,
+        distCert: distributionCert,
+      })
+    );
+  }
+
+  async clearAndRevokeCredentialsIfRequested(ctx: Context, projectMetadata) {
     const {
       clearCredentials,
       clearDistCert,
@@ -81,24 +115,64 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       clearPushCert ||
       clearProvisioningProfile;
     if (shouldClearAnything) {
-      const credsToClear = await this.clearCredentialsIfRequested(projectMetadata);
+      // TODO: ensure we have the same behaviour when the option to `revokeCredentials` in the CLI is passed in
+      const { experienceName, bundleIdentifier } = projectMetadata;
+      const credsToClear = this.determineCredentialsToClear();
+      await this.clearCredentials(ctx, experienceName, bundleIdentifier, credsToClear);
+      /* const credsToClear = await this.clearCredentialsIfRequested(projectMetadata);
       if (credsToClear && this.options.revokeCredentials) {
         await credentials.revoke(
           await this.getAppleCtx(),
           Object.keys(credsToClear),
           projectMetadata
         );
-      }
+      } */
     }
   }
 
-  async clearCredentialsIfRequested(projectMetadata) {
+  async clearCredentials(
+    ctx: Context,
+    experienceName: string,
+    bundleIdentifier: string,
+    credsToClear: Object<String, boolean>
+  ): Promise<void> {
+    const shouldRevokeOnApple = this.options.revokeCredentials;
+    const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
+    if (credsToClear.distributionCert && distributionCert) {
+      console.log('Removing iOS Distribution Certificate');
+      await new RemoveIosDist(shouldRevokeOnApple).removeSpecific(ctx, distributionCert);
+    }
+
+    const pushKey = await ctx.ios.getPushKey(experienceName, bundleIdentifier);
+    if (credsToClear.pushKey && pushKey) {
+      console.log('Removing iOS Push Key');
+      await new RemoveIosPush(shouldRevokeOnApple).removeSpecific(ctx, pushKey);
+    }
+
+    const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
+    const provisioningProfile = await ctx.ios.getProvisioningProfile(
+      experienceName,
+      bundleIdentifier
+    );
+    if (credsToClear.provisioningProfile && provisioningProfile) {
+      console.log('Removing iOS Provisioning PRofile');
+      await new RemoveProvisioningProfile(shouldRevokeOnApple).removeSpecific(ctx, appCredentials);
+    }
+
+    const pushCert = await ctx.ios.getPushCert(experienceName, bundleIdentifier);
+    if (credsToClear.pushCert && pushCert) {
+      console.log('Removing iOS deprecated push cert');
+      await ctx.ios.deletePushCert(experienceName, bundleIdentifier);
+    }
+  }
+
+  /*   async clearCredentialsIfRequested(projectMetadata) {
     const credsToClear = this.determineCredentialsToClear();
     if (credsToClear) {
       await credentials.clear(projectMetadata, credsToClear);
     }
     return credsToClear;
-  }
+  } */
 
   determineCredentialsToClear() {
     const {
@@ -119,7 +193,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     return isEmpty(credsToClear) ? null : credsToClear;
   }
 
-  async produceMissingCredentials(projectMetadata, missingCredentials) {
+  /*   async produceMissingCredentials(projectMetadata, missingCredentials) {
     const appleCtx = await this.getAppleCtx();
     const metadata = {};
     if (
@@ -154,7 +228,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       teamId: appleCtx.team.id,
     };
     await credentials.update(projectMetadata, newCredentials, userCredentialsIds);
-  }
+  } */
 
   async ensureProjectIsPublished() {
     if (this.options.publicUrl) {

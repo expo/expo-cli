@@ -167,6 +167,19 @@ export class IosApi {
     );
     this.credentials.appCredentials[credIndex].pushCredentialsId = userCredentialsId;
   }
+  async getPushCert(
+    experienceName: string,
+    bundleIdentifier: string
+  ): Promise<{ pushId: string; pushP12: string; pushPassword: string } | null> {
+    const appCredentials = await this.getAppCredentials(experienceName, bundleIdentifier);
+    const pushId = get(appCredentials, 'credentials.pushId');
+    const pushP12 = get(appCredentials, 'credentials.pushP12');
+    const pushPassword = get(appCredentials, 'credentials.pushPassword');
+    if (!pushId || !pushP12 || !pushPassword) {
+      return null;
+    }
+    return { pushId, pushP12, pushPassword };
+  }
   async deletePushCert(experienceName: string, bundleIdentifier: string) {
     await this.api.postAsync(`credentials/ios/pushCert/delete`, {
       experienceName,
