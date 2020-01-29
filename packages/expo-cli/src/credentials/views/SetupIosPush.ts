@@ -61,7 +61,7 @@ export class SetupIosPush implements IView {
     }
 
     // check if valid
-    const isValid = await iosPushView.validatePushKey(ctx.appleCtx, configuredPushKey);
+    const isValid = await iosPushView.validatePushKey(ctx, configuredPushKey);
 
     if (isValid) {
       return null;

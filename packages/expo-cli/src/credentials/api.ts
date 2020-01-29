@@ -4,6 +4,7 @@ import find from 'lodash/find';
 import omit from 'lodash/omit';
 import assign from 'lodash/assign';
 import get from 'lodash/get';
+import pick from 'lodash/pick';
 
 import log from '../log';
 import * as appleApi from '../appleApi';
@@ -49,11 +50,11 @@ export class IosApi {
       this.credentials.appCredentials,
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
-    const distCertId = this.credentials.appCredentials[credIndex].distCredentialsId;
-    if (!distCertId) {
+    const distCertExpoId = this.credentials.appCredentials[credIndex].distCredentialsId;
+    if (!distCertExpoId) {
       return null;
     }
-    const distCert = this.credentials.userCredentials.find(cred => cred.id === distCertId) as
+    const distCert = this.credentials.userCredentials.find(cred => cred.id === distCertExpoId) as
       | IosDistCredentials
       | undefined;
     return distCert || null;
@@ -167,6 +168,19 @@ export class IosApi {
     );
     this.credentials.appCredentials[credIndex].pushCredentialsId = userCredentialsId;
   }
+  async getPushCert(
+    experienceName: string,
+    bundleIdentifier: string
+  ): Promise<{ pushId: string; pushP12: string; pushPassword: string } | null> {
+    const appCredentials = await this.getAppCredentials(experienceName, bundleIdentifier);
+    const pushId = get(appCredentials, 'credentials.pushId');
+    const pushP12 = get(appCredentials, 'credentials.pushP12');
+    const pushPassword = get(appCredentials, 'credentials.pushPassword');
+    if (!pushId || !pushP12 || !pushPassword) {
+      return null;
+    }
+    return { pushId, pushP12, pushPassword };
+  }
   async deletePushCert(experienceName: string, bundleIdentifier: string) {
     await this.api.postAsync(`credentials/ios/pushCert/delete`, {
       experienceName,
@@ -186,12 +200,12 @@ export class IosApi {
     experienceName: string,
     bundleIdentifier: string,
     provisioningProfile: appleApi.ProvisioningProfile,
-    appleTeam: appleApi.Team
+    appleTeam: Pick<appleApi.Team, 'id'>
   ): Promise<appleApi.ProvisioningProfile> {
     await this.api.postAsync(`credentials/ios/provisioningProfile/update`, {
       experienceName,
       bundleIdentifier,
-      credentials: { ...provisioningProfile, teamId: appleTeam.id, teamName: appleTeam.name },
+      credentials: { ...provisioningProfile, teamId: appleTeam.id },
     });
     const credIndex = findIndex(
       this.credentials.appCredentials,
@@ -220,12 +234,14 @@ export class IosApi {
     bundleIdentifier: string
   ): Promise<appleApi.ProvisioningProfile | null> {
     const appCredentials = await this.getAppCredentials(experienceName, bundleIdentifier);
-    const provisioningProfileId = get(appCredentials, 'credentials.provisioningProfileId');
     const provisioningProfile = get(appCredentials, 'credentials.provisioningProfile');
-    if (!provisioningProfileId || !provisioningProfile) {
+    if (!provisioningProfile) {
       return null;
     }
-    return { provisioningProfileId, provisioningProfile };
+    return pick(appCredentials.credentials, [
+      'provisioningProfile',
+      'provisioningProfileId',
+    ]) as appleApi.ProvisioningProfile;
   }
 
   async deleteProvisioningProfile(experienceName: string, bundleIdentifier: string) {

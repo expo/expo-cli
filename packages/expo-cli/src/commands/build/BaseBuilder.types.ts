@@ -4,6 +4,7 @@ export type CommonOptions = {
   releaseChannel: string;
   publish: boolean;
   wait: boolean;
+  parent?: { nonInteractive: boolean };
 };
 
 export type IosOptions = CommonOptions & {
