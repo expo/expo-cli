@@ -1,9 +1,7 @@
-import chalk from 'chalk';
 import * as iosProfileView from './IosProvisioningProfile';
 
 import { Context, IView } from '../context';
 import { IosDistCredentials } from '../credentials';
-import log from '../../log';
 
 export type ProvisioningProfileOptions = {
   experienceName: string;
@@ -58,15 +56,14 @@ export class SetupIosProvisioningProfile implements IView {
       });
     }
 
-    const updatedProfile = await iosProfileView.configureProfileWithApple(
+    const profileFromApple = await iosProfileView.getAppleInfo(
       ctx.appleCtx,
       this._bundleIdentifier,
-      configuredProfile,
-      this._distCert
+      configuredProfile
     );
 
-    // Profile on expo servers can't be found on Apple servers
-    if (!updatedProfile) {
+    // Profile can't be found on Apple servers
+    if (!profileFromApple) {
       return new iosProfileView.CreateOrReuseProvisioningProfile({
         experienceName: this._experienceName,
         bundleIdentifier: this._bundleIdentifier,
@@ -74,16 +71,12 @@ export class SetupIosProvisioningProfile implements IView {
       });
     }
 
-    await ctx.ios.updateProvisioningProfile(
+    await iosProfileView.configureAndUpdateProvisioningProfile(
+      ctx,
       this._experienceName,
       this._bundleIdentifier,
-      updatedProfile,
-      ctx.appleCtx.team
-    );
-    log(
-      chalk.green(
-        `Successfully assigned Provisioning Profile to ${this._experienceName} (${this._bundleIdentifier})`
-      )
+      this._distCert,
+      profileFromApple
     );
     return null;
   }

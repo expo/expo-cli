@@ -114,17 +114,23 @@ export class CreateProvisioningProfile implements IView {
         );
         return userProvided;
       }
-      const updatedProfile = await configureProfileWithApple(
+      const profileFromApple = await getAppleInfo(
         ctx.appleCtx,
         this._bundleIdentifier,
-        userProvided,
-        this._distCert
+        userProvided
       );
-      if (!updatedProfile) {
+      if (!profileFromApple) {
         throw new Error(
-          `Provisioning profile ${userProvided.provisioningProfileId} could not be configured`
+          `Provisioning profile ${userProvided.provisioningProfileId} could be found on Apple Servers`
         );
       }
+      // configure profile on Apple's Server to use our distCert
+      const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
+      const updatedProfile = await ppManager.useExisting(
+        this._bundleIdentifier,
+        profileFromApple,
+        this._distCert
+      );
       return updatedProfile;
     }
     return await generateProvisioningProfile(ctx, this._bundleIdentifier, this._distCert);
@@ -147,22 +153,12 @@ export class UseExistingProvisioningProfile implements IView {
     await ctx.ensureAppleCtx();
     const selected = await selectProfileFromApple(ctx.appleCtx, this._bundleIdentifier);
     if (selected) {
-      const manager = new ProvisioningProfileManager(ctx.appleCtx);
-      const updatedProfile = await manager.useExisting(
-        this._bundleIdentifier,
-        selected,
-        this._distCert
-      );
-      await ctx.ios.updateProvisioningProfile(
+      await configureAndUpdateProvisioningProfile(
+        ctx,
         this._experienceName,
         this._bundleIdentifier,
-        updatedProfile,
-        ctx.appleCtx.team
-      );
-      log(
-        chalk.green(
-          `Successfully assigned Provisioning Profile to ${this._experienceName} (${this._bundleIdentifier})`
-        )
+        this._distCert,
+        selected
       );
       return null;
     }
@@ -180,20 +176,6 @@ export class CreateOrReuseProvisioningProfile implements IView {
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
     this._distCert = distCert;
-  }
-
-  async updateProvisioningProfile(ctx: Context, provisioningProfile: ProvisioningProfile) {
-    await ctx.ios.updateProvisioningProfile(
-      this._experienceName,
-      this._bundleIdentifier,
-      provisioningProfile,
-      ctx.appleCtx.team
-    );
-    log(
-      chalk.green(
-        `Successfully assigned Provisioning Profile to ${this._experienceName} (${this._bundleIdentifier})`
-      )
-    );
   }
 
   choosePreferred(profiles: ProvisioningProfileInfo[]): ProvisioningProfileInfo {
@@ -236,7 +218,13 @@ export class CreateOrReuseProvisioningProfile implements IView {
     const { confirm } = await prompt(confirmQuestion);
     if (confirm) {
       log(`Using Provisioning Profile: ${autoselectedProfile.provisioningProfileId}`);
-      await this.updateProvisioningProfile(ctx, autoselectedProfile);
+      await configureAndUpdateProvisioningProfile(
+        ctx,
+        this._experienceName,
+        this._bundleIdentifier,
+        this._distCert,
+        autoselectedProfile
+      );
       return null;
     }
 
@@ -392,13 +380,12 @@ export async function validateProfileWithoutApple(
   return true;
 }
 
-export async function configureProfileWithApple(
+export async function getAppleInfo(
   appleCtx: AppleCtx,
   bundleIdentifier: string,
-  profile: ProvisioningProfile,
-  distCert: DistCert
-): Promise<ProvisioningProfile | null> {
-  const spinner = ora(`Configuring Provisioning Profile on Apple's Servers...\n`).start();
+  profile: ProvisioningProfile
+): Promise<ProvisioningProfileInfo | null> {
+  const spinner = ora(`Getting Provisioning Profile info from Apple's Servers...\n`).start();
   const ppManager = new ProvisioningProfileManager(appleCtx);
   const profilesFromApple = await ppManager.list(bundleIdentifier);
 
@@ -413,12 +400,40 @@ export async function configureProfileWithApple(
     return null;
   }
 
-  const updatedProfile = await ppManager.useExisting(bundleIdentifier, profile, distCert);
-
   spinner.succeed(
-    `Successfully configured ${profile.provisioningProfileId} on Apple Servers with distribution certificate ${distCert.certId}`
+    `Successfully fetched Provisioning Profile ${profile.provisioningProfileId} from Apple Servers`
   );
-  return updatedProfile;
+  return configuredProfileFromApple;
+}
+
+export async function configureAndUpdateProvisioningProfile(
+  ctx: Context,
+  experienceName: string,
+  bundleIdentifier: string,
+  distCert: DistCert,
+  profileFromApple: ProvisioningProfileInfo
+) {
+  // configure profile on Apple's Server to use our distCert
+  const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
+  const updatedProfile = await ppManager.useExisting(bundleIdentifier, profileFromApple, distCert);
+  log(
+    chalk.green(
+      `Successfully configured Provisioning Profile ${profileFromApple.provisioningProfileId} on Apple Servers with distribution certificate ${distCert.certId}`
+    )
+  );
+
+  // Update profile on expo servers
+  await ctx.ios.updateProvisioningProfile(
+    experienceName,
+    bundleIdentifier,
+    updatedProfile,
+    ctx.appleCtx.team
+  );
+  log(
+    chalk.green(
+      `Successfully assigned Provisioning Profile to ${experienceName} (${bundleIdentifier})`
+    )
+  );
 }
 
 function formatProvisioningProfileFromApple(appleInfo: ProvisioningProfileInfo) {
