@@ -261,8 +261,8 @@ export default async function(
         fileName: 'asset-manifest.json',
         publicPath,
         filter = ({ path }) => {
-          // Remove compressed versions
-          return !path.endsWith('.gz')
+          // Remove compressed versions and service workers
+          return !(path.endsWith('.gz') || path.endsWith('worker.js'))
         },
       }),
 
