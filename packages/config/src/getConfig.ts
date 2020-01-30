@@ -1,4 +1,5 @@
 import JsonFile from '@expo/json-file';
+import { formatExecError } from 'jest-message-util';
 import path from 'path';
 
 import { ConfigContext, ExpoConfig } from './Config.types';
@@ -17,6 +18,10 @@ export const allowedConfigFileNames: string[] = (() => {
   ];
 })();
 
+function isMissingFileCode(code: string): boolean {
+  return ['ENOENT', 'ENOTDIR'].includes(code);
+}
+
 export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   // TODO(Bacon): Support custom config path with `findConfigFile`
   // TODO(Bacon): Should we support `expo` or `app` field with an object in the `package.json` too?
@@ -28,7 +33,9 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
       return evalConfig(configFilePath, request);
     } catch (error) {
       // If the file doesn't exist then we should skip it and continue searching.
-      if (!['ENOENT', 'ENOTDIR'].includes(error.code)) throw error;
+      if (!isMissingFileCode(error.code)) {
+        throw error;
+      }
     }
     return null;
   }
@@ -61,7 +68,25 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
   if (configFile.endsWith('.json5') || configFile.endsWith('.json')) {
     result = JsonFile.read(configFile, { json5: true });
   } else {
-    result = require(configFile);
+    try {
+      require('@babel/register')({
+        only: [configFile],
+      });
+
+      result = require(configFile);
+    } catch (error) {
+      if (isMissingFileCode(error.code) || !(error instanceof SyntaxError)) {
+        throw error;
+      }
+      const message = formatExecError(
+        error,
+        { rootDir: request.projectRoot, testMatch: [] },
+        { noStackTrace: true },
+        undefined,
+        true
+      );
+      throw new ConfigError(`\n${message}`, 'INVALID_CONFIG');
+    }
     if (result.default != null) {
       result = result.default;
     }
