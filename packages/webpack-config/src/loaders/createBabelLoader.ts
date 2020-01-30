@@ -23,9 +23,9 @@ const includeModulesThatContainPaths = [
 ];
 
 const excludedRootPaths = [
-  'node_modules',
-  'bower_components',
-  '.expo',
+  '/node_modules',
+  '/bower_components',
+  '/.expo/',
   // Prevent transpiling webpack generated files.
   '(webpack)',
 ];
