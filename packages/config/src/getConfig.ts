@@ -103,7 +103,7 @@ function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoCon
 }
 
 export function serializeAndEvaluate(val: any): any {
-  if (['undefined', 'string', 'boolean', 'number'].includes(typeof val)) {
+  if (['undefined', 'string', 'boolean', 'number', 'bigint'].includes(typeof val)) {
     return val;
   } else if (typeof val === 'function') {
     // TODO: Bacon: Should we support async methods?
@@ -119,6 +119,6 @@ export function serializeAndEvaluate(val: any): any {
     }
     return output;
   }
-
-  throw new Error(`Unhandled item type: ${typeof val}`);
+  // symbol
+  throw new ConfigError(`Expo config doesn't support \`Symbols\`: ${val}`, 'INVALID_CONFIG');
 }
