@@ -21,7 +21,7 @@ test('init', async () => {
   const cwd = temporary.directory();
   const { stdout } = await runAsync(
     ['init', 'hello-world', '--template', 'blank', '--name', 'Hello'],
-    { cwd }
+    { cwd, env: { ...process.env, YARN_CACHE_FOLDER: path.join(cwd, 'yarn-cache') } }
   );
   expect(stdout).toMatch(`Your project is ready at ${cwd}`);
   const appJson = await JsonFile.readAsync(path.join(cwd, 'hello-world/app.json'));
