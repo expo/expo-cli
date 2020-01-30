@@ -1,4 +1,6 @@
 {
-  "foo": "invalid",
-  "slug": "someslug"
+  "expo": {
+    "foo": "invalid",
+    "slug": "someslug"
+  }
 }

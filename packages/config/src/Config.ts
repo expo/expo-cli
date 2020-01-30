@@ -57,6 +57,9 @@ function getConfigContext(
   let rawConfig: JSONObject = {};
   try {
     rawConfig = JsonFile.read(appJsonConfigPath, { json5: true });
+    if (typeof rawConfig.expo === 'object') {
+      rawConfig = rawConfig.expo as JSONObject;
+    }
   } catch (_) {}
 
   const { exp: configFromPkg } = ensureConfigHasDefaultValues(projectRoot, rawConfig, pkg, true);
