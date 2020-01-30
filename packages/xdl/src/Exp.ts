@@ -10,6 +10,8 @@ import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import tar from 'tar';
 
+import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
+import semver from 'semver';
 import Api from './Api';
 import ApiV2 from './ApiV2';
 import Logger from './Logger';
@@ -184,16 +186,16 @@ async function initGitRepoAsync(root: string) {
 async function installDependenciesAsync(projectRoot: string, packageManager: 'yarn' | 'npm') {
   Logger.global.info('Installing dependencies...');
 
+  const options = { cwd: projectRoot };
   if (packageManager === 'yarn') {
-    await spawnAsync('yarnpkg', ['install'], {
-      cwd: projectRoot,
-      stdio: 'inherit',
-    });
+    const yarn = new YarnPackageManager(options);
+    const version = await yarn.versionAsync();
+    if (semver.satisfies(version, '>=2.0.0-rc.24')) {
+      await fs.writeFile(path.join(projectRoot, '.yarnrc.yml'), 'nodeLinker: node-modules\n');
+    }
+    await yarn.installAsync();
   } else {
-    await spawnAsync('npm', ['install'], {
-      cwd: projectRoot,
-      stdio: 'inherit',
-    });
+    await new NpmPackageManager(options).installAsync();
   }
 }
 

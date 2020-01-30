@@ -92,6 +92,10 @@ export class NpmPackageManager implements PackageManager {
       await this._runAsync(['install', '--save-dev', ...unversioned.map(spec => spec.raw)]);
     }
   }
+  async versionAsync() {
+    const { stdout } = await spawnAsync('npm', ['--version'], { stdio: 'pipe' });
+    return stdout.trim();
+  }
 
   // Private
   private async _runAsync(args: string[]) {
@@ -103,7 +107,7 @@ export class NpmPackageManager implements PackageManager {
         .pipe(new NpmStderrTransform())
         .pipe(process.stderr);
     }
-    await promise;
+    return promise;
   }
 
   private _parseSpecs(names: string[]) {
@@ -164,6 +168,10 @@ export class YarnPackageManager implements PackageManager {
   async addDevAsync(...names: string[]) {
     await this._runAsync(['add', '--dev', ...names]);
   }
+  async versionAsync() {
+    const { stdout } = await spawnAsync('yarnpkg', ['--version'], { stdio: 'pipe' });
+    return stdout.trim();
+  }
 
   // Private
   private async _runAsync(args: string[]) {
@@ -172,7 +180,7 @@ export class YarnPackageManager implements PackageManager {
     if (promise.child.stderr) {
       promise.child.stderr.pipe(new YarnStderrTransform()).pipe(process.stderr);
     }
-    await promise;
+    return promise;
   }
 }
 
