@@ -178,6 +178,7 @@ class ProjectManager extends React.Component {
         onUpdateState={this.props.onUpdateState}
         onRecipientChange={this._handleRecipientChange}
         onSimulatorClickIOS={this.props.onSimulatorClickIOS}
+        onStartWebClick={this.props.onStartWebClick}
         onSimulatorClickAndroid={this.props.onSimulatorClickAndroid}
         onDeviceClickIOS={this._handleDeviceClickIOS}
         onDeviceClickAndroid={this._handleDeviceClickAndroid}

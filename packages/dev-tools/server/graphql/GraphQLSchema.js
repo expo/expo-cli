@@ -13,6 +13,7 @@ import {
   UrlUtils,
   UserManager,
   UserSettings,
+  Webpack,
 } from '@expo/xdl';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
@@ -515,21 +516,10 @@ const resolvers = {
     },
     async processInfo(parent, args, context) {
       const currentProject = context.getCurrentProject();
-
-      let platforms = [];
-      try {
-        const { exp } = await readConfigJsonAsync(currentProject.projectDir);
-        platforms = exp.platforms;
-      } catch (error) {
-        ProjectUtils.logError(currentProject.projectDir, 'expo', error.message);
-      }
-
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: platforms.includes('web')
-          ? await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir)
-          : null,
+        webAppUrl: await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir),
       };
     },
     async user() {
@@ -543,6 +533,16 @@ const resolvers = {
       let result;
       if (platform === 'ANDROID') {
         result = await Android.openProjectAsync(currentProject.projectDir);
+      } else if (platform === 'WEB') {
+        try {
+          await Webpack.openAsync(currentProject.projectDir);
+          result = {
+            success: true,
+            url: await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir),
+          };
+        } catch (error) {
+          result = { success: false, error };
+        }
       } else {
         result = await Simulator.openProjectAsync(currentProject.projectDir);
       }

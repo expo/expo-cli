@@ -147,9 +147,13 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             className={STYLES_CONTENT_GROUP}
             href={this.props.processInfo.webAppUrl}
             target="_blank">
-            <span className={STYLES_CONTENT_GROUP_LEFT}>Run on web browser</span>
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Run in the web browser</span>
           </a>
-        ) : null}
+        ) : (
+          <div className={STYLES_CONTENT_GROUP} onClick={this.props.onStartWebClick}>
+            <span className={STYLES_CONTENT_GROUP_LEFT}>Start Expo Web</span>
+          </div>
+        )}
 
         <ContentGroup header={sendHeader} isActive={isSendFormVisible}>
           <InputWithButton
