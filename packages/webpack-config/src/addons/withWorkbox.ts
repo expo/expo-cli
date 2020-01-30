@@ -76,11 +76,6 @@ export default function withWorkbox(
   webpackConfig: AnyConfiguration,
   options: OfflineOptions = {}
 ): AnyConfiguration {
-  // Do nothing in dev mode
-  if (webpackConfig.mode !== 'production') {
-    return webpackConfig;
-  }
-
   if (!webpackConfig.plugins) webpackConfig.plugins = [];
 
   const {
@@ -95,31 +90,7 @@ export default function withWorkbox(
 
   const locations = getPaths(projectRoot!);
 
-  const customManifestProps = {
-    navigateFallback: join(publicUrl, 'index.html'),
-  };
-
-  if (useServiceWorker) {
-    webpackConfig.plugins.push(
-      new GenerateSW({
-        ...defaultGenerateSWOptions,
-        ...customManifestProps,
-        ...generateSWOptions,
-      })
-    );
-  } else {
-    const props = {
-      ...defaultInjectManifestOptions,
-      ...customManifestProps,
-      ...injectManifestOptions,
-    };
-
-    webpackConfig.plugins.push(
-      // @ts-ignore: unused swSrc
-      new InjectManifest(props)
-    );
-  }
-
+  // Always register general service worker
   const expoEntry = webpackConfig.entry;
   webpackConfig.entry = async () => {
     const entries = await resolveEntryAsync(expoEntry);
@@ -145,6 +116,36 @@ export default function withWorkbox(
     }
     return entries;
   };
+
+  // ... but do not register Workbox in development
+  if (webpackConfig.mode !== 'production') {
+    return webpackConfig;
+  }
+
+  const customManifestProps = {
+    navigateFallback: join(publicUrl, 'index.html'),
+  };
+
+  if (useServiceWorker) {
+    webpackConfig.plugins.push(
+      new GenerateSW({
+        ...defaultGenerateSWOptions,
+        ...customManifestProps,
+        ...generateSWOptions,
+      })
+    );
+  } else {
+    const props = {
+      ...defaultInjectManifestOptions,
+      ...customManifestProps,
+      ...injectManifestOptions,
+    };
+
+    webpackConfig.plugins.push(
+      // @ts-ignore: unused swSrc
+      new InjectManifest(props)
+    );
+  }
 
   return webpackConfig;
 }

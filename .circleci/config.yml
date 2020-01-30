@@ -122,7 +122,7 @@ jobs:
       - restore_cache:
           name: Restore Yarn Package Cache
           keys:
-            - yarn-{{ checksum "/tmp/.executor_name" }}-{{ checksum "yarn.lock" }}
+            - yarn-{{ checksum "/tmp/.executor_name" }}-{{ checksum "yarn.lock" }}-v2
       - run:
           name: Install Dependencies
           command: yarn install --frozen-lockfile
@@ -135,7 +135,7 @@ jobs:
             - expo-cli
       - save_cache:
           name: Save Yarn Package Cache
-          key: yarn-{{ checksum "/tmp/.executor_name" }}-{{ checksum "yarn.lock" }}
+          key: yarn-{{ checksum "/tmp/.executor_name" }}-{{ checksum "yarn.lock" }}-v2
           paths:
             - ~/.cache/yarn
   test-dev-tools:

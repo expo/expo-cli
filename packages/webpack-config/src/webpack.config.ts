@@ -116,7 +116,9 @@ export default async function(
 
   const devtool = getDevtool(
     { production: isProd, development: isDev },
-    buildConfig as { devtool: Options.Devtool }
+    buildConfig as {
+      devtool: Options.Devtool;
+    }
   );
 
   const babelProjectRoot = babelAppConfig.root || locations.root;
@@ -303,10 +305,12 @@ export default async function(
 
   if (isProd) {
     webpackConfig = withCompression(withOptimizations(webpackConfig), env);
+  } else {
+    webpackConfig = withDevServer(webpackConfig, env, {
+      allowedHost: argv.allowedHost,
+      proxy: argv.proxy,
+    });
   }
 
-  return withDevServer(withReporting(withNodeMocks(withAlias(webpackConfig)), env), env, {
-    allowedHost: argv.allowedHost,
-    proxy: argv.proxy,
-  });
+  return withReporting(withNodeMocks(withAlias(webpackConfig)), env);
 }
