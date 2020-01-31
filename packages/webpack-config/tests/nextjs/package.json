@@ -1,5 +1,6 @@
 {
   "name": "webpack-config-nextjs-test",
+  "description": "A Neat Expo App",
   "scripts": {
     "start": "next dev",
     "android": "expo start --android",
