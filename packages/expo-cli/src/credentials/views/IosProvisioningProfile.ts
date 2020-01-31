@@ -8,9 +8,10 @@ import {
   IosAppCredentials,
   IosCredentials,
   IosDistCredentials,
+  appleTeamSchema,
   provisioningProfileSchema,
 } from '../credentials';
-import { askForUserProvided } from '../actions/promptForCredentials';
+import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
 import { displayIosAppCredentials } from '../actions/list';
 import {
   AppleCtx,
@@ -80,11 +81,17 @@ export class CreateProvisioningProfile implements IView {
 
   async create(ctx: Context): Promise<ProvisioningProfile> {
     const provisioningProfile = await this.provideOrGenerate(ctx);
+    const appleTeam = ctx.hasAppleCtx()
+      ? ctx.appleCtx.team
+      : await getCredentialsFromUser(appleTeamSchema);
+    if (!appleTeam) {
+      throw new Error('Must provide a valid Apple Team Id');
+    }
     return await ctx.ios.updateProvisioningProfile(
       this._experienceName,
       this._bundleIdentifier,
       provisioningProfile,
-      ctx.appleCtx.team
+      appleTeam
     );
   }
 
@@ -191,6 +198,14 @@ export class CreateOrReuseProvisioningProfile implements IView {
   async open(ctx: Context): Promise<IView | null> {
     if (!ctx.user) {
       throw new Error(`This workflow requires you to be logged in.`);
+    }
+
+    if (!ctx.hasAppleCtx()) {
+      return new CreateProvisioningProfile({
+        experienceName: this._experienceName,
+        bundleIdentifier: this._bundleIdentifier,
+        distCert: this._distCert,
+      });
     }
 
     const ppManager = new ProvisioningProfileManager(ctx.appleCtx);

@@ -21,7 +21,7 @@ type AppleCredentials = {
 
 export type Team = {
   id: string;
-  name: string;
+  name?: string;
   inHouse?: boolean;
 };
 

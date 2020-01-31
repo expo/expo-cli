@@ -7,6 +7,7 @@ import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as utils from '../utils';
 import * as apple from '../../../appleApi';
+import prompt from '../../../prompt';
 import { ensurePNGIsNotTransparent } from './utils/image';
 import { runCredentialsManager } from '../../../credentials/route';
 import { Context } from '../../../credentials/context';
@@ -56,16 +57,41 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     return this.appleCtx;
   }
 
-  async prepareCredentials() {
-    const context = new Context();
-    await context.init(this.projectDir);
-    await context.ensureAppleCtx({ appleId: this.options.appleId });
+  // Try to get the user to provide Apple credentials upfront
+  // We will be able to do full validation of their iOS creds this way
+  async bestEffortAppleCtx(ctx: Context, bundleIdentifier: string) {
+    if (this.options.appleId) {
+      return await ctx.ensureAppleCtx(this.options);
+    }
 
+    if (this.options.parent.nonInteractive) {
+      return null;
+    }
+
+    const { confirm } = await prompt([
+      {
+        type: 'confirm',
+        name: 'confirm',
+        message: `Do you have the access to the Apple Account of ${bundleIdentifier}?`,
+      },
+    ]);
+    if (confirm) {
+      return await ctx.ensureAppleCtx(this.options);
+    }
+  }
+
+  async prepareCredentials() {
     const username = this.manifest.owner || this.user.username;
     const experienceName = `@${username}/${this.manifest.slug}`;
     const bundleIdentifier = get(this.manifest, 'ios.bundleIdentifier');
+    const context = new Context();
+    await context.init(this.projectDir);
+    await this.bestEffortAppleCtx(context, bundleIdentifier);
     await this.clearAndRevokeCredentialsIfRequested(context, { experienceName, bundleIdentifier });
     await this.produceCredentials(context, experienceName, bundleIdentifier);
+
+    //TODO
+    throw new Error('ABORT');
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {

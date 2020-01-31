@@ -199,12 +199,12 @@ export class IosApi {
     experienceName: string,
     bundleIdentifier: string,
     provisioningProfile: appleApi.ProvisioningProfile,
-    appleTeam: appleApi.Team
+    appleTeam: Pick<appleApi.Team, 'id'>
   ): Promise<appleApi.ProvisioningProfile> {
     await this.api.postAsync(`credentials/ios/provisioningProfile/update`, {
       experienceName,
       bundleIdentifier,
-      credentials: { ...provisioningProfile, teamId: appleTeam.id, teamName: appleTeam.name },
+      credentials: { ...provisioningProfile, teamId: appleTeam.id },
     });
     const credIndex = findIndex(
       this.credentials.appCredentials,

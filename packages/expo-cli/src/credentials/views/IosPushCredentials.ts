@@ -48,16 +48,7 @@ export class CreateIosPush implements IView {
   async provideOrGenerate(ctx: Context): Promise<PushKey> {
     const userProvided = await askForUserProvided(pushKeySchema);
     if (userProvided) {
-      if (!ctx.hasAppleCtx()) {
-        log(
-          chalk.yellow(
-            "WARNING! Unable to validate Push Key due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
-          )
-        );
-        return userProvided;
-      }
-
-      const isValid = await validatePushKey(ctx.appleCtx, userProvided);
+      const isValid = await validatePushKey(ctx, userProvided);
       return isValid ? userProvided : await this.provideOrGenerate(ctx);
     }
     return await generatePushKey(ctx);
@@ -170,7 +161,8 @@ export class UpdateIosPush implements IView {
   async provideOrGenerate(ctx: Context): Promise<PushKey> {
     const userProvided = await askForUserProvided(pushKeySchema);
     if (userProvided) {
-      return userProvided;
+      const isValid = await validatePushKey(ctx, userProvided);
+      return isValid ? userProvided : await this.provideOrGenerate(ctx);
     }
     return await generatePushKey(ctx);
   }
@@ -238,7 +230,7 @@ export class CreateOrReusePushKey implements IView {
       throw new Error(`This workflow requires you to be logged in.`);
     }
 
-    const existingPushKeys = await getValidPushKeys(ctx.ios.credentials, ctx.appleCtx);
+    const existingPushKeys = await getValidPushKeys(ctx.ios.credentials, ctx);
 
     if (existingPushKeys.length === 0) {
       const createOperation = async () => new CreateIosPush().create(ctx);
@@ -302,15 +294,19 @@ export class CreateOrReusePushKey implements IView {
   }
 }
 
-async function getValidPushKeys(iosCredentials: IosCredentials, appleCtx?: AppleCtx) {
+async function getValidPushKeys(iosCredentials: IosCredentials, ctx: Context) {
   const pushKeys = iosCredentials.userCredentials.filter(
     (cred): cred is IosPushCredentials => cred.type === 'push-key'
   );
-  if (!appleCtx) {
-    log(chalk.yellow(`Unable to determine validity of Push Keys.`));
+  if (!ctx.hasAppleCtx()) {
+    log(
+      chalk.yellow(
+        `Unable to determine validity of Push Keys due to insufficient Apple Credentials`
+      )
+    );
     return pushKeys;
   }
-  const pushKeyManager = new PushKeyManager(appleCtx);
+  const pushKeyManager = new PushKeyManager(ctx.appleCtx);
   const pushInfoFromApple = await pushKeyManager.list();
   return await filterRevokedPushKeys<IosPushCredentials>(pushInfoFromApple, pushKeys);
 }
@@ -532,10 +528,14 @@ async function generatePushKey(ctx: Context): Promise<PushKey> {
   return await generatePushKey(ctx);
 }
 
-export async function validatePushKey(appleContext: AppleCtx, pushKey: PushKey) {
+export async function validatePushKey(ctx: Context, pushKey: PushKey) {
+  if (!ctx.hasAppleCtx()) {
+    log.warn('Unable to validate Push Keys due to insufficient Apple Credentials');
+    return true;
+  }
   const spinner = ora(`Checking validity of push key on Apple Developer Portal...`).start();
 
-  const pushKeyManager = new PushKeyManager(appleContext);
+  const pushKeyManager = new PushKeyManager(ctx.appleCtx);
   const pushInfoFromApple = await pushKeyManager.list();
   const filteredFormattedPushKeyArray = await filterRevokedPushKeys(pushInfoFromApple, [pushKey]);
   const isValidPushKey = filteredFormattedPushKeyArray.length > 0;

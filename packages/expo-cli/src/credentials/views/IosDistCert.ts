@@ -53,16 +53,7 @@ export class CreateIosDist implements IView {
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
     const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
-      if (!ctx.hasAppleCtx()) {
-        log(
-          chalk.yellow(
-            "WARNING! Unable to validate Distribution Certificate due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
-          )
-        );
-        return userProvided;
-      }
-
-      const isValid = await validateDistributionCertificate(ctx.appleCtx, userProvided);
+      const isValid = await validateDistributionCertificate(ctx, userProvided);
       return isValid ? userProvided : await this.provideOrGenerate(ctx);
     }
     return await generateDistCert(ctx);
@@ -192,16 +183,7 @@ export class UpdateIosDist implements IView {
   async provideOrGenerate(ctx: Context): Promise<DistCert> {
     const userProvided = await promptForDistCert(ctx);
     if (userProvided) {
-      if (!ctx.hasAppleCtx()) {
-        log(
-          chalk.yellow(
-            "WARNING! Unable to validate Distribution Certificate due to insufficient Apple Credentials. Please double check that you're uploading valid files for your app otherwise you may encounter strange errors!"
-          )
-        );
-        return userProvided;
-      }
-
-      const isValid = await validateDistributionCertificate(ctx.appleCtx, userProvided);
+      const isValid = await validateDistributionCertificate(ctx, userProvided);
       return isValid ? userProvided : await this.provideOrGenerate(ctx);
     }
     return await generateDistCert(ctx);
@@ -271,7 +253,7 @@ export class CreateOrReuseDistributionCert implements IView {
       throw new Error(`This workflow requires you to be logged in.`);
     }
 
-    const existingCertificates = await getValidDistCerts(ctx.ios.credentials, ctx.appleCtx);
+    const existingCertificates = await getValidDistCerts(ctx.ios.credentials, ctx);
 
     if (existingCertificates.length === 0) {
       const createOperation = async () => new CreateIosDist().create(ctx);
@@ -348,15 +330,15 @@ function getOptionsFromProjectContext(ctx: Context): DistCertOptions | null {
   return { experienceName, bundleIdentifier };
 }
 
-async function getValidDistCerts(iosCredentials: IosCredentials, appleCtx?: AppleCtx) {
+async function getValidDistCerts(iosCredentials: IosCredentials, ctx: Context) {
   const distCerts = iosCredentials.userCredentials.filter(
     (cred): cred is IosDistCredentials => cred.type === 'dist-cert'
   );
-  if (!appleCtx) {
+  if (!ctx.hasAppleCtx()) {
     log(chalk.yellow(`Unable to determine validity of Distribution Certificates.`));
     return distCerts;
   }
-  const distCertManager = new DistCertManager(appleCtx);
+  const distCertManager = new DistCertManager(ctx.appleCtx);
   const certInfoFromApple = await distCertManager.list();
   const validCerts = await filterRevokedDistributionCerts<IosDistCredentials>(
     certInfoFromApple,
@@ -563,15 +545,16 @@ async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
   }
 }
 
-export async function validateDistributionCertificate(
-  appleContext: AppleCtx,
-  distributionCert: DistCert
-) {
+export async function validateDistributionCertificate(ctx: Context, distributionCert: DistCert) {
+  if (!ctx.hasAppleCtx()) {
+    log.warn('Unable to validate distribution certificate due to insufficient Apple Credentials');
+    return true;
+  }
   const spinner = ora(
     `Checking validity of distribution certificate on Apple Developer Portal...`
   ).start();
 
-  const distCertManager = new DistCertManager(appleContext);
+  const distCertManager = new DistCertManager(ctx.appleCtx);
   const certInfoFromApple = await distCertManager.list();
   const validDistributionCerts = await filterRevokedDistributionCerts(certInfoFromApple, [
     distributionCert,

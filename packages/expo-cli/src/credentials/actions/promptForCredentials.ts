@@ -53,7 +53,7 @@ export async function askForUserProvided<T extends Results>(
   return null;
 }
 
-async function getCredentialsFromUser<T extends Results>(
+export async function getCredentialsFromUser<T extends Results>(
   credentialType: CredentialSchema<T>
 ): Promise<T | null> {
   const results: Results = {};

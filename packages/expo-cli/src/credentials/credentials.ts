@@ -48,7 +48,7 @@ export const distCertSchema: CredentialSchema<appleApi.DistCert> = {
   id: 'distributionCert',
   canReuse: true,
   name: 'Apple Distribution Certificate',
-  required: ['certP12', 'certPassword', 'teamId'],
+  required: ['certP12', 'certPassword'],
   questions: {
     certP12: {
       question: 'Path to P12 file:',
@@ -59,10 +59,6 @@ export const distCertSchema: CredentialSchema<appleApi.DistCert> = {
       type: 'password',
       question: 'P12 password:',
     },
-    teamId: {
-      type: 'string',
-      question: 'Apple Team ID:',
-    },
   },
 };
 
@@ -70,7 +66,7 @@ export const pushKeySchema: CredentialSchema<appleApi.PushKey> = {
   id: 'pushKey',
   canReuse: true,
   name: 'Apple Push Notifications service key',
-  required: ['apnsKeyP8', 'apnsKeyId', 'teamId'],
+  required: ['apnsKeyP8', 'apnsKeyId'],
   questions: {
     apnsKeyP8: {
       type: 'file',
@@ -80,23 +76,35 @@ export const pushKeySchema: CredentialSchema<appleApi.PushKey> = {
       type: 'string',
       question: 'Key ID:',
     },
-    teamId: {
-      type: 'string',
-      question: 'Apple Team ID:',
-    },
   },
 };
 
 export const provisioningProfileSchema: CredentialSchema<appleApi.ProvisioningProfile> = {
   id: 'provisioningProfile',
   name: 'Apple Provisioning Profile',
-  required: ['provisioningProfile'],
+  required: ['provisioningProfile', 'provisioningProfileId'],
   dependsOn: 'distributionCert',
   questions: {
     provisioningProfile: {
       type: 'file',
       question: 'Path to .mobile provisioning profile:',
       base64Encode: true,
+    },
+    provisioningProfileId: {
+      type: 'string',
+      question: 'Profile ID:', // TODO (more info for user?)
+    },
+  },
+};
+
+export const appleTeamSchema: CredentialSchema<Pick<appleApi.Team, 'id'>> = {
+  id: 'team',
+  name: 'Apple Team',
+  required: ['id'],
+  questions: {
+    id: {
+      type: 'string',
+      question: 'Apple Team ID:',
     },
   },
 };
