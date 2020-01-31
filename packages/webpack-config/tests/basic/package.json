@@ -1,5 +1,6 @@
 {
   "name": "webpack-config-basic-test",
+  "description": "A Neat Expo App",
   "version": "1.0.0",
   "main": "./index",
   "scripts": {

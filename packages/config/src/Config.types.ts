@@ -348,7 +348,7 @@ export type WebPlatformConfig = {
   themeColor?: Color;
   /**
    * Provides a general description of what the pinned website does.
-   * @fallback 'expo.description', "'A Neat Expo App'"
+   * @fallback 'expo.description'
    * @pwa description
    */
   description?: string;

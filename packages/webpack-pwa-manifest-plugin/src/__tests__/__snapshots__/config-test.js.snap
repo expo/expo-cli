@@ -4,7 +4,6 @@ exports[`matches 1`] = `
 Object {
   "background_color": "#ffffff",
   "crossorigin": undefined,
-  "description": "A Neat Expo App",
   "dir": "auto",
   "display": "standalone",
   "icons": Array [
