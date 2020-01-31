@@ -3,22 +3,33 @@ import isWsl from 'is-wsl';
 import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 import safePostCssParser from 'postcss-safe-parser';
 import TerserPlugin from 'terser-webpack-plugin';
-import { Configuration } from 'webpack';
 
-export function isDebugMode() {
+import { AnyConfiguration } from '../types';
+
+/**
+ * Returns `true` if the Expo web environment variable enabled.
+ * @internal
+ */
+export function isDebugMode(): boolean {
   return boolish('EXPO_WEB_DEBUG', false);
 }
 
-export default function withOptimizations(config: Configuration): Configuration {
-  if (config.mode !== 'production') {
-    return config;
+/**
+ * Add the minifier and other optimizations for production builds.
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @category addons
+ */
+export default function withOptimizations(webpackConfig: AnyConfiguration): AnyConfiguration {
+  if (webpackConfig.mode !== 'production') {
+    return webpackConfig;
   }
-  const shouldUseSourceMap = config.devtool !== null;
+  const shouldUseSourceMap = webpackConfig.devtool !== null;
 
   const _isDebugMode = isDebugMode();
 
-  config.optimization = {
-    ...(config.optimization || {}),
+  webpackConfig.optimization = {
+    ...(webpackConfig.optimization || {}),
     nodeEnv: false,
     minimize: true,
     minimizer: [
@@ -100,5 +111,5 @@ export default function withOptimizations(config: Configuration): Configuration 
     noEmitOnErrors: true,
   };
 
-  return config;
+  return webpackConfig;
 }

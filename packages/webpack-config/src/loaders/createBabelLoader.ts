@@ -73,6 +73,13 @@ function generateCacheIdentifier(projectRoot: string, version: string = '1'): st
   return `${cacheKey}${JSON.stringify(partial!.options)}`;
 }
 
+/**
+ * Creates a Rule for loading Application code and packages from the Expo ecosystem.
+ * This method attempts to recreate how Metro loads ES modules in the `node_modules` folder.
+ *
+ * @param env
+ * @internal
+ */
 export function createBabelLoaderFromEnvironment(
   env: Pick<Environment, 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
 ): Rule {
@@ -95,6 +102,7 @@ export function createBabelLoaderFromEnvironment(
 /**
  * A complex babel loader which uses the project's `babel.config.js`
  * to resolve all of the Unimodules which are shipped as ES modules (early 2019).
+ * @category loaders
  */
 export default function createBabelLoader({
   /**

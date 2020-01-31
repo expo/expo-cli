@@ -1,3 +1,5 @@
+/** @internal */ /** */
+
 import { ensurePWAConfig, readConfigJson } from '@expo/config';
 import chalk from 'chalk';
 import diff from 'deep-diff';
@@ -169,6 +171,12 @@ async function logAutoConfigValuesAsync(env: Environment) {
   logFooter();
 }
 
+/**
+ *
+ * @param webpackConfig
+ * @param env
+ * @internal
+ */
 export async function reportAsync(webpackConfig: DevConfiguration, env: Environment) {
   console.log(chalk.bold('\n\nStart Copy\n\n'));
 

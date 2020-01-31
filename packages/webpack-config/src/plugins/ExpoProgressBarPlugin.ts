@@ -1,12 +1,13 @@
-/**
- * Fork of https://github.com/clessg/progress-bar-webpack-plugin
- * but with TS
- */
-
 import chalk from 'chalk';
 import ProgressBar from 'progress';
 import { ProgressPlugin } from 'webpack';
 
+/**
+ * Fork of https://github.com/clessg/progress-bar-webpack-plugin
+ * but with TypeScript support.
+ *
+ * @category plugins
+ */
 export default class ExpoProgressBarPlugin extends ProgressPlugin {
   constructor() {
     const stream = process.stderr;

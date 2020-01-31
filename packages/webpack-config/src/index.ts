@@ -6,7 +6,14 @@ import { getPublicPaths, validateEnvironment } from './env';
 import webpackConfig from './webpack.config';
 import { withWorkbox } from './addons';
 
-export default async function(
+/**
+ * Create the official Webpack config for loading Expo web apps.
+ *
+ * @param env Environment props used to configure features.
+ * @param argv
+ * @category default
+ */
+export default async function createWebpackConfigAsync(
   env: InputEnvironment,
   argv: Arguments = {}
 ): Promise<Configuration | DevConfiguration> {

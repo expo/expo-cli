@@ -12,6 +12,9 @@ import { AnyConfiguration } from '../types';
 import { resolveEntryAsync } from '../utils';
 import { getPaths } from '../env';
 
+/**
+ * @internal
+ */
 export type OfflineOptions = {
   projectRoot?: string;
   serviceWorkerPath?: string;
@@ -62,11 +65,18 @@ const defaultGenerateSWOptions: GenerateSWOptions = {
   runtimeCaching: [runtimeCache],
 };
 
+/**
+ * Add offline support to the provided Webpack config.
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @param options configure the service worker.
+ * @category addons
+ */
 export default function withWorkbox(
-  config: AnyConfiguration,
+  webpackConfig: AnyConfiguration,
   options: OfflineOptions = {}
 ): AnyConfiguration {
-  if (!config.plugins) config.plugins = [];
+  if (!webpackConfig.plugins) webpackConfig.plugins = [];
 
   const {
     projectRoot,
@@ -79,10 +89,10 @@ export default function withWorkbox(
   } = options;
 
   const locations = getPaths(projectRoot!);
-  
+
   // Always register general service worker
-  const expoEntry = config.entry;
-  config.entry = async () => {
+  const expoEntry = webpackConfig.entry;
+  webpackConfig.entry = async () => {
     const entries = await resolveEntryAsync(expoEntry);
     const swPath = join(locations.production.registerServiceWorker);
     if (entries.app && !entries.app.includes(swPath) && autoRegister) {
@@ -106,10 +116,10 @@ export default function withWorkbox(
     }
     return entries;
   };
-  
+
   // ... but do not register Workbox in development
-  if (config.mode !== 'production') {
-    return config;
+  if (webpackConfig.mode !== 'production') {
+    return webpackConfig;
   }
 
   const customManifestProps = {
@@ -117,7 +127,7 @@ export default function withWorkbox(
   };
 
   if (useServiceWorker) {
-    config.plugins.push(
+    webpackConfig.plugins.push(
       new GenerateSW({
         ...defaultGenerateSWOptions,
         ...customManifestProps,
@@ -131,11 +141,11 @@ export default function withWorkbox(
       ...injectManifestOptions,
     };
 
-    config.plugins.push(
+    webpackConfig.plugins.push(
       // @ts-ignore: unused swSrc
       new InjectManifest(props)
     );
   }
 
-  return config;
+  return webpackConfig;
 }
