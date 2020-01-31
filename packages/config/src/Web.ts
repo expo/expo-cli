@@ -13,7 +13,6 @@ const DEFAULT_ROOT_ID = `root`;
 const DEFAULT_BUILD_PATH = `web-build`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
 const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
-const DEFAULT_NAME = 'Expo App';
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
 const DEFAULT_DISPLAY = 'standalone';
@@ -79,7 +78,7 @@ export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webN
   const { web = {} } = appManifest;
 
   // rn-cli apps use a displayName value as well.
-  const appName = exp.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
+  const appName = exp.displayName || appManifest.displayName || appManifest.name;
   const webName = web.name || appName;
 
   return {
