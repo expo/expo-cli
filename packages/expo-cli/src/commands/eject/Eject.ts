@@ -6,7 +6,7 @@ import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
 import pacote from 'pacote';
 import path from 'path';
-import semver, { valid } from 'semver';
+import semver from 'semver';
 import temporary from 'tempy';
 
 import * as PackageManager from '@expo/package-manager';
