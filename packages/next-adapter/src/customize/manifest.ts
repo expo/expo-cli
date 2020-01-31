@@ -65,10 +65,10 @@ const packageRoot = path.join(__dirname, '../../');
 function getDependencies(
   projectRoot: string
 ): { dependencies: string[]; devDependencies: string[] } {
-  const dependencies = ['react-native-web', '@expo/next-adapter', 'next'].filter(
+  const dependencies = ['react-native-web', 'next'].filter(
     dependency => !projectHasModule(dependency, projectRoot, {})
   );
-  const devDependencies = ['babel-preset-expo'].filter(
+  const devDependencies = ['@expo/next-adapter', 'babel-preset-expo'].filter(
     dependency => !projectHasModule(dependency, projectRoot, {})
   );
 
