@@ -1,7 +1,7 @@
 import JsonFile from '@expo/json-file';
 
 import { readConfigJson } from './Config';
-import { AppJSONConfig, ExpoConfig, WebPlatformConfig, WebSplashScreen } from './Config.types';
+import { AppJSONConfig, ExpoConfig } from './Config.types';
 
 const APP_JSON_FILE_NAME = 'app.json';
 
@@ -13,9 +13,6 @@ const DEFAULT_ROOT_ID = `root`;
 const DEFAULT_BUILD_PATH = `web-build`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
 const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
-const DEFAULT_NAME = 'Expo App';
-const DEFAULT_THEME_COLOR = '#4630EB';
-const DEFAULT_DESCRIPTION = 'A Neat Expo App';
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 const DEFAULT_START_URL = '.';
 const DEFAULT_DISPLAY = 'standalone';
@@ -81,7 +78,7 @@ export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webN
   const { web = {} } = appManifest;
 
   // rn-cli apps use a displayName value as well.
-  const appName = exp.displayName || appManifest.displayName || appManifest.name || DEFAULT_NAME;
+  const appName = exp.displayName || appManifest.displayName || appManifest.name;
   const webName = web.name || appName;
 
   return {
@@ -110,8 +107,8 @@ function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
   const rootId = webBuild.rootId || DEFAULT_ROOT_ID;
   const buildOutputPath = getWebOutputPath(appJSON);
   const publicPath = sanitizePublicPath(webManifest.publicPath);
-  const primaryColor = appManifest.primaryColor || DEFAULT_THEME_COLOR;
-  const description = appManifest.description || DEFAULT_DESCRIPTION;
+  const primaryColor = appManifest.primaryColor;
+  const description = appManifest.description;
   // The theme_color sets the color of the tool bar, and may be reflected in the app's preview in task switchers.
   const webThemeColor = webManifest.themeColor || primaryColor;
   const dir = webManifest.dir || DEFAULT_LANG_DIR;
