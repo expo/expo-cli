@@ -18,7 +18,7 @@ Object {
     "android",
     "web",
   ],
-  "primaryColor": "#4630EB",
+  "primaryColor": undefined,
   "privacy": "public",
   "sdkVersion": "33.0.0",
   "slug": "basic",
@@ -89,7 +89,7 @@ Object {
         "supportsTablet": true,
       },
     ],
-    "themeColor": "#4630EB",
+    "themeColor": undefined,
   },
 }
 `;
