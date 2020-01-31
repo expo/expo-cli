@@ -11,14 +11,15 @@ import { AnyConfiguration, InputEnvironment } from '../types';
  * - Disabling will filter out any TypeScript extensions.
  * - Enabling will add fork TS checker to the plugins.
  *
- * @param config input webpack config to modify and return.
- * @param env environment used to configure the input config.
+ * @param webpackConfig input Webpack config to modify and return.
+ * @param env Environment used to configure the input config.
+ * @category addons
  */
 export default async function withTypeScriptAsync(
-  config: AnyConfiguration,
+  webpackConfig: AnyConfiguration,
   env: Pick<InputEnvironment, 'config' | 'locations' | 'projectRoot'> = {}
 ): Promise<AnyConfiguration> {
-  const isDev = config.mode !== 'production';
+  const isDev = webpackConfig.mode !== 'production';
 
   env.projectRoot = env.projectRoot || getPossibleProjectRoot();
   // @ts-ignore
@@ -33,20 +34,20 @@ export default async function withTypeScriptAsync(
 
   const isTypeScriptEnabled = Boolean(typeScriptPath && (await fileExistsAsync(tsConfigPath)));
 
-  if (!isTypeScriptEnabled && config.resolve?.extensions) {
-    config.resolve.extensions = config.resolve.extensions.filter(extension => {
+  if (!isTypeScriptEnabled && webpackConfig.resolve?.extensions) {
+    webpackConfig.resolve.extensions = webpackConfig.resolve.extensions.filter(extension => {
       // filter out ts and tsx extensions, including .web.ts
       return !extension.endsWith('.ts') && !extension.endsWith('.tsx');
     });
   }
 
   if (!isTypeScriptEnabled) {
-    return config;
+    return webpackConfig;
   }
 
-  if (!config.plugins) config.plugins = [];
+  if (!webpackConfig.plugins) webpackConfig.plugins = [];
 
-  config.plugins.push(
+  webpackConfig.plugins.push(
     new ForkTsCheckerWebpackPlugin(
       PnpWebpackPlugin.forkTsCheckerOptions({
         async: isDev,
@@ -75,5 +76,5 @@ export default async function withTypeScriptAsync(
     )
   );
 
-  return config;
+  return webpackConfig;
 }

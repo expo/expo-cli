@@ -1,5 +1,6 @@
 import path from 'path';
 
+import { getPossibleProjectRoot } from '@expo/config/paths';
 import {
   getConfig,
   getMode,
@@ -17,28 +18,35 @@ import withEntry from './withEntry';
 
 // import ManifestPlugin from 'webpack-manifest-plugin';
 
-// Wrap your existing webpack config with support for Unimodules.
-// ex: Storybook `({ config }) => withUnimodules(config)`
+/**
+ * Wrap your existing webpack config with support for Unimodules.
+ * ex: Storybook `({ config }) => withUnimodules(config)`
+ *
+ * @param webpackConfig Optional existing Webpack config to modify.
+ * @param env Optional Environment options for configuring what features the Webpack config supports.
+ * @param argv
+ * @category addons
+ */
 export default function withUnimodules(
-  inputWebpackConfig: AnyConfiguration = {},
+  webpackConfig: AnyConfiguration = {},
   env: InputEnvironment = {},
   argv: Arguments = {}
 ): AnyConfiguration {
-  inputWebpackConfig = withAlias(inputWebpackConfig);
+  webpackConfig = withAlias(webpackConfig);
 
-  if (!inputWebpackConfig.module) inputWebpackConfig.module = { rules: [] };
-  else if (!inputWebpackConfig.module.rules)
-    inputWebpackConfig.module = { ...inputWebpackConfig.module, rules: [] };
+  if (!webpackConfig.module) webpackConfig.module = { rules: [] };
+  else if (!webpackConfig.module.rules)
+    webpackConfig.module = { ...webpackConfig.module, rules: [] };
 
-  if (!inputWebpackConfig.plugins) inputWebpackConfig.plugins = [];
-  if (!inputWebpackConfig.resolve) inputWebpackConfig.resolve = {};
-  if (!inputWebpackConfig.output) inputWebpackConfig.output = {};
+  if (!webpackConfig.plugins) webpackConfig.plugins = [];
+  if (!webpackConfig.resolve) webpackConfig.resolve = {};
+  if (!webpackConfig.output) webpackConfig.output = {};
 
   // @ts-ignore: We should attempt to use the project root that the other config is already using (used for Gatsby support).
-  env.projectRoot = env.projectRoot || inputWebpackConfig.context;
+  env.projectRoot = env.projectRoot || webpackConfig.context || getPossibleProjectRoot();
 
   // Attempt to use the input webpack config mode
-  env.mode = env.mode || inputWebpackConfig.mode;
+  env.mode = env.mode || webpackConfig.mode;
 
   const environment: Environment = validateEnvironment(env);
 
@@ -50,7 +58,7 @@ export default function withUnimodules(
     const testFontFileNames = supportedFonts.map(ext =>
       path.resolve(environment.projectRoot, `cool-font.${ext}`)
     );
-    if (rulesMatchAnyFiles(inputWebpackConfig, testFontFileNames)) {
+    if (rulesMatchAnyFiles(webpackConfig, testFontFileNames)) {
       supportsFontLoading = false;
     }
   }
@@ -77,8 +85,8 @@ export default function withUnimodules(
   });
 
   function reuseOrCreatePublicPaths() {
-    if (inputWebpackConfig.output && inputWebpackConfig.output.publicPath) {
-      const publicPath = inputWebpackConfig.output.publicPath;
+    if (webpackConfig.output && webpackConfig.output.publicPath) {
+      const publicPath = webpackConfig.output.publicPath;
       return {
         publicPath,
         publicUrl: publicPath.endsWith('/') ? publicPath.slice(0, -1) : publicPath,
@@ -89,16 +97,16 @@ export default function withUnimodules(
 
   const { publicPath, publicUrl } = reuseOrCreatePublicPaths();
 
-  inputWebpackConfig.mode = mode;
+  webpackConfig.mode = mode;
 
-  inputWebpackConfig.output = {
+  webpackConfig.output = {
     // This is the URL that app is served from.
     // We use "/" in development.
-    ...inputWebpackConfig.output,
+    ...webpackConfig.output,
     publicPath,
   };
 
-  inputWebpackConfig.plugins.push(
+  webpackConfig.plugins.push(
     // Generate a manifest file which contains a mapping of all asset filenames
     // to their corresponding output file so that tools can pick it up without
     // having to parse `index.html`.
@@ -117,7 +125,7 @@ export default function withUnimodules(
   );
 
   const rules = [
-    ...inputWebpackConfig.module.rules,
+    ...webpackConfig.module.rules,
 
     // TODO: Bacon: Auto remove this loader
     {
@@ -131,13 +139,13 @@ export default function withUnimodules(
     supportsFontLoading && createFontLoader(locations.root, locations.includeModule),
   ].filter(Boolean);
 
-  inputWebpackConfig.module = {
-    ...inputWebpackConfig.module,
+  webpackConfig.module = {
+    ...webpackConfig.module,
     rules,
   };
 
-  inputWebpackConfig.resolve = {
-    ...inputWebpackConfig.resolve,
+  webpackConfig.resolve = {
+    ...webpackConfig.resolve,
     symlinks: false,
     // Support platform extensions like .web.js
     extensions: getModuleFileExtensions('web'),
@@ -150,8 +158,8 @@ export default function withUnimodules(
   // https://github.com/zeit/next.js/blob/0b496a45e85f3c9aa3cf2e77eef10888be5884fc/packages/next/build/webpack-config.ts#L185-L258
   // `include` function is from https://github.com/expo/expo-cli/blob/3933f3d6ba65bffec2738ece71b62f2c284bd6e4/packages/webpack-config/webpack/loaders/createBabelLoaderAsync.js#L76-L96
   const includeFunc = babelLoader.include as (path: string) => boolean;
-  if (inputWebpackConfig.externals) {
-    inputWebpackConfig.externals = (inputWebpackConfig.externals as any).map((external: any) => {
+  if (webpackConfig.externals) {
+    webpackConfig.externals = (webpackConfig.externals as any).map((external: any) => {
       if (typeof external !== 'function') return external;
       return (ctx: any, req: any, cb: any) => {
         const relPath = path.join('node_modules', req);
@@ -161,9 +169,9 @@ export default function withUnimodules(
   }
 
   // Add a loose requirement on the ResizeObserver polyfill if it's installed...
-  inputWebpackConfig = withEntry(inputWebpackConfig, env, {
+  webpackConfig = withEntry(webpackConfig, env, {
     entryPath: 'resize-observer-polyfill/dist/ResizeObserver.global',
   });
 
-  return inputWebpackConfig;
+  return webpackConfig;
 }

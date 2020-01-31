@@ -17,6 +17,11 @@ const DEFAULT_MINIFY = {
   minifyURLs: true,
 };
 
+/**
+ * Generates an `index.html` file with the <script> injected.
+ *
+ * @category plugins
+ */
 export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
   constructor(env: Environment) {
     const locations = env.locations || getPaths(env.projectRoot);
@@ -31,8 +36,6 @@ export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
       isProduction ? config.web?.build?.minifyHTML : false,
       DEFAULT_MINIFY
     );
-
-    // Generates an `index.html` file with the <script> injected.
 
     super({
       // The file to write the HTML to.

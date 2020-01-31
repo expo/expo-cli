@@ -39,6 +39,11 @@ const reportSchema = yup.object({
   reportFilename: yup.string().default(DEFAULT_REPORT.reportFilename),
 });
 
+/**
+ *
+ * @param report
+ * @category env
+ */
 export function validateReport(report: boolean | Report): Report | null {
   const reportConfig = enableWithPropertyOrConfig(report, DEFAULT_REPORT, true);
   if (!reportConfig) return null;
@@ -47,6 +52,11 @@ export function validateReport(report: boolean | Report): Report | null {
   return filledReport;
 }
 
+/**
+ *
+ * @param env
+ * @category env
+ */
 export function validateEnvironment(env: InputEnvironment): Environment {
   if (typeof env.projectRoot !== 'string') {
     throw new Error(
@@ -82,6 +92,13 @@ function shouldWarnDeprecated(
   return (!warnOnce || !(key in warned)) && typeof config[key] !== 'undefined';
 }
 
+/**
+ *
+ * @param env
+ * @param warnOnce
+ * @category env
+ * @internal
+ */
 export function warnEnvironmentDeprecation(env: InputEnvironment, warnOnce: boolean = false) {
   const warnings: { [key: string]: string } = {
     production: 'Please use `mode: "production"` instead.',
@@ -101,6 +118,11 @@ export function warnEnvironmentDeprecation(env: InputEnvironment, warnOnce: bool
   }
 }
 
+/**
+ * Used for testing
+ * @category env
+ * @internal
+ */
 export function _resetWarnings() {
   warned = {};
 }

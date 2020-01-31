@@ -6,6 +6,9 @@ import { AnyConfiguration, Environment } from '../types';
 import { enableWithPropertyOrConfig } from '../utils/config';
 import { getAbsolute, getConfig, getMode } from '../env';
 
+/**
+ * @internal
+ */
 export const DEFAULT_REPORTING_OPTIONS: BundleAnalyzerPlugin.Options & {
   verbose?: boolean;
   path: string;
@@ -20,6 +23,11 @@ export const DEFAULT_REPORTING_OPTIONS: BundleAnalyzerPlugin.Options & {
   reportFilename: 'report.html',
 };
 
+/**
+ *
+ * @param param0
+ * @internal
+ */
 export function throwDeprecatedConfig({ web = {} }: ExpoConfig) {
   const { build = {} } = web;
 
@@ -30,6 +38,11 @@ export function throwDeprecatedConfig({ web = {} }: ExpoConfig) {
   }
 }
 
+/**
+ *
+ * @param env
+ * @internal
+ */
 export function maybeWarnAboutRebuilds(env: Environment) {
   const mode = getMode(env);
   if (mode === 'development') {
@@ -39,24 +52,35 @@ export function maybeWarnAboutRebuilds(env: Environment) {
   }
 }
 
+/**
+ * Generate a bundle analysis and stats.json via the `webpack-bundle-analyzer` plugin.
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @param env Use the `report` prop to enable and configure reporting tools.
+ * @category addons
+ */
 export default function withReporting(
-  config: AnyConfiguration,
+  webpackConfig: AnyConfiguration,
   env: Environment
 ): AnyConfiguration {
+  // Force deprecate the report option in the app.json in favor of modifying the Webpack config directly.
   throwDeprecatedConfig(getConfig(env));
 
   const reportConfig = enableWithPropertyOrConfig(env.report, DEFAULT_REPORTING_OPTIONS, true);
 
+  // If reporting isn't enabled then bail out.
   if (!reportConfig) {
-    return config;
+    return webpackConfig;
   }
+  // webpack-bundle-analyzer adds time to builds
+  // if verbose mode is turned on then we should inform developers about why re-builds are slower.
   if (reportConfig.verbose) {
     maybeWarnAboutRebuilds(env);
   }
   const reportDir = reportConfig.path;
-  if (!Array.isArray(config.plugins)) config.plugins = [];
+  if (!Array.isArray(webpackConfig.plugins)) webpackConfig.plugins = [];
 
-  config.plugins.push(
+  webpackConfig.plugins.push(
     // Delete the report folder
     new CleanWebpackPlugin({
       cleanOnceBeforeBuildPatterns: [getAbsolute(env.projectRoot, reportDir)],
@@ -73,5 +97,5 @@ export default function withReporting(
     })
   );
 
-  return config;
+  return webpackConfig;
 }

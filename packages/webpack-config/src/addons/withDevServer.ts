@@ -14,6 +14,11 @@ import { getPaths } from '../env';
 // @ts-ignore
 const host = process.env.HOST || '0.0.0.0';
 
+/**
+ *
+ * @param input
+ * @internal
+ */
 export function isDevConfig(input: AnyConfiguration): input is DevConfiguration {
   return input && input.mode === 'development';
 }
@@ -25,17 +30,32 @@ type DevServerOptions = {
   proxy?: ProxyConfigMap | ProxyConfigArray;
 };
 
+/**
+ * Add a valid dev server to the provided Webpack config.
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @param env locations, projectRoot, and https options.
+ * @param options Configure how the dev server is setup.
+ * @category addons
+ */
 export default function withDevServer(
-  config: AnyConfiguration,
+  webpackConfig: AnyConfiguration,
   env: SelectiveEnv,
   options: DevServerOptions = {}
 ): AnyConfiguration {
-  if (isDevConfig(config)) {
-    config.devServer = createDevServer(env, options);
+  if (isDevConfig(webpackConfig)) {
+    webpackConfig.devServer = createDevServer(env, options);
   }
-  return config;
+  return webpackConfig;
 }
 
+/**
+ * Create a valid Webpack dev server config.
+ *
+ * @param env locations, projectRoot, and https options.
+ * @param options Configure how the dev server is setup.
+ * @internal
+ */
 export function createDevServer(
   env: SelectiveEnv,
   { allowedHost, proxy }: DevServerOptions = {}

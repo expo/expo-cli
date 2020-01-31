@@ -1,3 +1,9 @@
+/** @internal */ /** */
+
+/**
+ * @category env
+ * @internal
+ */
 export const aliases = {
   // Alias direct react-native imports to react-native-web
   'react-native$': 'react-native-web',

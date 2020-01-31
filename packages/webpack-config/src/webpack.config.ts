@@ -1,3 +1,4 @@
+/** @internal */ /** */
 /* eslint-env node */
 
 import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
@@ -113,9 +114,12 @@ export default async function(
   const { build: buildConfig = {} } = config.web || {};
   const { babel: babelAppConfig = {} } = buildConfig;
 
-  const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig as {
-    devtool: Options.Devtool;
-  });
+  const devtool = getDevtool(
+    { production: isProd, development: isDev },
+    buildConfig as {
+      devtool: Options.Devtool;
+    }
+  );
 
   const babelProjectRoot = babelAppConfig.root || locations.root;
 

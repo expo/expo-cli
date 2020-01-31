@@ -1,12 +1,15 @@
-import { Configuration } from 'webpack';
-
-import CompressionPlugin from 'compression-webpack-plugin';
-import BrotliPlugin from 'brotli-webpack-plugin';
 import { ExpoConfig } from '@expo/config';
-import { DevConfiguration, Environment } from '../types';
-import { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } from '../utils';
-import { getConfig } from '../env';
+import { getPossibleProjectRoot } from '@expo/config/paths';
+import BrotliPlugin from 'brotli-webpack-plugin';
+import CompressionPlugin from 'compression-webpack-plugin';
 
+import { getConfig } from '../env';
+import { AnyConfiguration, Environment } from '../types';
+import { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } from '../utils';
+
+/**
+ * @internal
+ */
 export const DEFAULT_GZIP_OPTIONS = {
   test: /\.(js|css)$/,
   filename: '[path].gz[query]',
@@ -15,6 +18,9 @@ export const DEFAULT_GZIP_OPTIONS = {
   minRatio: 0.8,
 };
 
+/**
+ * @internal
+ */
 export const DEFAULT_BROTLI_OPTIONS = {
   asset: '[path].br[query]',
   test: /\.(js|css)$/,
@@ -22,29 +28,45 @@ export const DEFAULT_BROTLI_OPTIONS = {
   minRatio: 0.8,
 };
 
+/**
+ * Add production compression options to the provided Webpack config.
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @param env Environment used for getting the Expo project config.
+ * @category addons
+ */
 export default function withCompression(
-  webpackConfig: Configuration | DevConfiguration,
-  env: Environment
-): Configuration | DevConfiguration {
+  webpackConfig: AnyConfiguration,
+  env: Pick<Environment, 'projectRoot' | 'config' | 'locations'>
+): AnyConfiguration {
   if (webpackConfig.mode !== 'production') {
     return webpackConfig;
   }
+
+  env.projectRoot = env.projectRoot || getPossibleProjectRoot();
 
   const config = getConfig(env);
   return addCompressionPlugins(webpackConfig, config);
 }
 
+/**
+ * Add Gzip and Brotli compression plugins to the provided Webpack config.
+ *
+ * @param webpackConfig Existing Webpack config to modify.
+ * @param expoConfig Expo config with compression options.
+ * @internal
+ */
 export function addCompressionPlugins(
-  webpackConfig: Configuration | DevConfiguration,
-  config: ExpoConfig
-): Configuration | DevConfiguration {
+  webpackConfig: AnyConfiguration,
+  expoConfig: ExpoConfig
+): AnyConfiguration {
   const gzipConfig = overrideWithPropertyOrConfig(
-    config.web?.build?.gzip,
+    expoConfig.web?.build?.gzip,
     DEFAULT_GZIP_OPTIONS,
     true
   );
   const brotliConfig = enableWithPropertyOrConfig(
-    config.web?.build?.brotli,
+    expoConfig.web?.build?.brotli,
     DEFAULT_BROTLI_OPTIONS,
     true
   );
