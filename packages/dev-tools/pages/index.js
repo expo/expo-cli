@@ -181,7 +181,7 @@ class IndexPageContents extends React.Component {
   _handleChangeSectionCount = count => State.sectionCount({ count }, this.props);
   _handleUpdateState = options => State.update(options, this.props);
   _handleSimulatorClickIOS = () => State.openSimulator('IOS', this.props);
-  _handleStartWebClick = () => State.openSimulator('WEB', this.props);
+  _handleStartWebClick = () => State.openBrowser(this.props);
   _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
   _handleHostTypeClick = hostType => State.setHostType({ hostType }, this.props);
   _handlePublishProject = options => State.publishProject(options, this.props);

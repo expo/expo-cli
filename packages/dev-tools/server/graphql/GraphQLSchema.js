@@ -106,6 +106,10 @@ const typeDefs = graphql`
     error: String!
   }
 
+  type OpenWebResult {
+    error: String
+  }
+
   type PublishProjectResult {
     url: String!
   }
@@ -282,6 +286,8 @@ const typeDefs = graphql`
   type Mutation {
     # Opens the app in an iOS simulator or and Android device/emulator.
     openSimulator(platform: Platform!): OpenSimulatorResult
+    # Starts WebPack server
+    openWeb: OpenWebResult
     # Publishes the current project to expo.io
     publishProject(releaseChannel: String): PublishProjectResult
     # Sends the project URL by email.
@@ -515,11 +521,9 @@ const resolvers = {
       return context.getProjectManagerLayout();
     },
     async processInfo(parent, args, context) {
-      const currentProject = context.getCurrentProject();
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir),
       };
     },
     async user() {
@@ -528,21 +532,27 @@ const resolvers = {
     },
   },
   Mutation: {
+    async openWeb(parent, props, context) {
+      const currentProject = context.getCurrentProject();
+      try {
+        await Webpack.openAsync(currentProject.projectDir);
+
+        return {
+          success: true,
+          error: null,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error.toString(),
+        };
+      }
+    },
     async openSimulator(parent, { platform }, context) {
       const currentProject = context.getCurrentProject();
       let result;
       if (platform === 'ANDROID') {
         result = await Android.openProjectAsync(currentProject.projectDir);
-      } else if (platform === 'WEB') {
-        try {
-          await Webpack.openAsync(currentProject.projectDir);
-          result = {
-            success: true,
-            url: await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir),
-          };
-        } catch (error) {
-          result = { success: false, error };
-        }
       } else {
         result = await Simulator.openProjectAsync(currentProject.projectDir);
       }

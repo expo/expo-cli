@@ -137,23 +137,13 @@ export default class ProjectManagerSidebarOptions extends React.Component {
         <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickAndroid}>
           <span className={STYLES_CONTENT_GROUP_LEFT}>Run on Android device/emulator</span>
         </div>
-
         <div className={STYLES_CONTENT_GROUP} onClick={this.props.onSimulatorClickIOS}>
           <span className={STYLES_CONTENT_GROUP_LEFT}>Run on iOS simulator</span>
         </div>
 
-        {this.props.processInfo.webAppUrl ? (
-          <a
-            className={STYLES_CONTENT_GROUP}
-            href={this.props.processInfo.webAppUrl}
-            target="_blank">
-            <span className={STYLES_CONTENT_GROUP_LEFT}>Run in the web browser</span>
-          </a>
-        ) : (
-          <div className={STYLES_CONTENT_GROUP} onClick={this.props.onStartWebClick}>
-            <span className={STYLES_CONTENT_GROUP_LEFT}>Start Expo Web</span>
-          </div>
-        )}
+        <a className={STYLES_CONTENT_GROUP} onClick={this.props.onStartWebClick}>
+          <span className={STYLES_CONTENT_GROUP_LEFT}>Run in web browser</span>
+        </a>
 
         <ContentGroup header={sendHeader} isActive={isSendFormVisible}>
           <InputWithButton
@@ -165,7 +155,6 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             Send
           </InputWithButton>
         </ContentGroup>
-
         {this.props.user ? (
           <div className={STYLES_CONTENT_GROUP} onClick={this._handleShowPublishView}>
             <span className={STYLES_CONTENT_GROUP_LEFT}>Publish or republish project…</span>
@@ -174,7 +163,6 @@ export default class ProjectManagerSidebarOptions extends React.Component {
             </span>
           </div>
         ) : null}
-
         <div className={STYLES_URL_SECTION}>
           <SettingsControl
             onClick={this.props.onToggleProductionMode}

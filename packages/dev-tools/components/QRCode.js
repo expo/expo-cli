@@ -34,6 +34,7 @@ export default class QRCode extends React.Component {
     if (!this.props.url) return null;
     return (
       <div className={STYLES_CONTAINER}>
+        {/* TODO: size should be a number not a string */}
         <QRCodeReact renderAs="svg" size="100%" value={this.props.url} />
       </div>
     );
