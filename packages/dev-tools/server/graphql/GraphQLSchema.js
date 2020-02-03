@@ -13,6 +13,7 @@ import {
   UrlUtils,
   UserManager,
   UserSettings,
+  Webpack,
 } from '@expo/xdl';
 import { makeExecutableSchema } from 'graphql-tools';
 import { $$asyncIterator } from 'iterall';
@@ -103,6 +104,10 @@ const typeDefs = graphql`
 
   type OpenSimulatorError {
     error: String!
+  }
+
+  type OpenWebResult {
+    error: String
   }
 
   type PublishProjectResult {
@@ -281,6 +286,8 @@ const typeDefs = graphql`
   type Mutation {
     # Opens the app in an iOS simulator or and Android device/emulator.
     openSimulator(platform: Platform!): OpenSimulatorResult
+    # Starts WebPack server
+    openWeb: OpenWebResult
     # Publishes the current project to expo.io
     publishProject(releaseChannel: String): PublishProjectResult
     # Sends the project URL by email.
@@ -514,22 +521,9 @@ const resolvers = {
       return context.getProjectManagerLayout();
     },
     async processInfo(parent, args, context) {
-      const currentProject = context.getCurrentProject();
-
-      let platforms = [];
-      try {
-        const { exp } = await readConfigJsonAsync(currentProject.projectDir);
-        platforms = exp.platforms;
-      } catch (error) {
-        ProjectUtils.logError(currentProject.projectDir, 'expo', error.message);
-      }
-
       return {
         isAndroidSimulatorSupported: Android.isPlatformSupported(),
         isIosSimulatorSupported: Simulator.isPlatformSupported(),
-        webAppUrl: platforms.includes('web')
-          ? await UrlUtils.constructWebAppUrlAsync(currentProject.projectDir)
-          : null,
       };
     },
     async user() {
@@ -538,6 +532,22 @@ const resolvers = {
     },
   },
   Mutation: {
+    async openWeb(parent, props, context) {
+      const currentProject = context.getCurrentProject();
+      try {
+        await Webpack.openAsync(currentProject.projectDir);
+
+        return {
+          success: true,
+          error: null,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: error.toString(),
+        };
+      }
+    },
     async openSimulator(parent, { platform }, context) {
       const currentProject = context.getCurrentProject();
       let result;

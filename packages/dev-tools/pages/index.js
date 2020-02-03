@@ -181,6 +181,7 @@ class IndexPageContents extends React.Component {
   _handleChangeSectionCount = count => State.sectionCount({ count }, this.props);
   _handleUpdateState = options => State.update(options, this.props);
   _handleSimulatorClickIOS = () => State.openSimulator('IOS', this.props);
+  _handleStartWebClick = () => State.openBrowser(this.props);
   _handleSimulatorClickAndroid = () => State.openSimulator('ANDROID', this.props);
   _handleHostTypeClick = hostType => State.setHostType({ hostType }, this.props);
   _handlePublishProject = options => State.publishProject(options, this.props);
@@ -425,6 +426,7 @@ class IndexPageContents extends React.Component {
           onToggleProductionMode={this._handleToggleProductionMode}
           onHostTypeClick={this._handleHostTypeClick}
           onSimulatorClickIOS={this._handleSimulatorClickIOS}
+          onStartWebClick={this._handleStartWebClick}
           onSimulatorClickAndroid={this._handleSimulatorClickAndroid}
           onSectionDrag={this._handleSectionDrag}
           onSectionDismiss={this._handleSectionDismiss}

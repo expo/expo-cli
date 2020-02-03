@@ -40,13 +40,12 @@ const printHelp = () => {
 
 const printUsage = async (projectDir, options = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
-  const { exp } = await readConfigJsonAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await UserManager.getCurrentUsernameAsync();
   const devMode = dev ? 'development' : 'production';
   const androidInfo = `${b`a`} to run on ${u`A`}ndroid device/emulator`;
   const iosInfo = process.platform === 'darwin' ? `${b`i`} to run on ${u`i`}OS simulator` : '';
-  const webInfo = exp.platforms.includes('web') ? `${b`w`} to run on ${u`w`}eb` : '';
+  const webInfo = `${b`w`} to run on ${u`w`}eb`;
   const platformInfo = [androidInfo, iosInfo, webInfo].filter(Boolean).join(', or ');
   log.nested(`
  \u203A Press ${platformInfo}.
@@ -81,6 +80,7 @@ export const printServerInfo = async (projectDir, options = {}) => {
   const wrapItem = wordwrap(4, process.stdout.columns || 80);
   const item = text => '  \u2022 ' + trimStart(wrapItem(text));
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
+  const webInfo = `${b`w`} to run on ${u`w`}eb`;
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));
   if (username) {
     log.nested(
@@ -92,7 +92,7 @@ export const printServerInfo = async (projectDir, options = {}) => {
     );
   }
   log.nested(item(`Scan the QR code above with the Expo app (Android) or the Camera app (iOS).`));
-  log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}.`));
+  log.nested(item(`Press ${b`a`} for Android emulator${iosInfo}, or ${webInfo}.`));
   log.nested(item(`Press ${b`e`} to send a link to your phone with email.`));
   if (!username) {
     log.nested(item(`Press ${b`s`} to sign in and enable more options.`));
