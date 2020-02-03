@@ -1,7 +1,6 @@
 import { Configuration } from 'webpack';
 
 import { Arguments, DevConfiguration, Environment, InputEnvironment } from './types';
-import * as Diagnosis from './Diagnosis';
 import { getPublicPaths, validateEnvironment } from './env';
 import webpackConfig from './webpack.config';
 import { withWorkbox } from './addons';
@@ -21,8 +20,9 @@ export default async function createWebpackConfigAsync(
 
   const config: Configuration | DevConfiguration = await webpackConfig(environment, argv);
 
+  // @ts-ignore: deprecated
   if (environment.info) {
-    Diagnosis.reportAsync(config, environment);
+    console.warn('environment.info is deprecated');
   }
 
   const { workbox = {} } = argv;

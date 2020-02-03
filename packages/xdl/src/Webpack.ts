@@ -44,7 +44,6 @@ type BundlingOptions = {
   dev?: boolean;
   pwa?: boolean;
   isImageEditingEnabled?: boolean;
-  isDebugInfoEnabled?: boolean;
   webpackEnv?: Object;
   mode?: 'development' | 'production' | 'test' | 'none';
   https?: boolean;
@@ -430,11 +429,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     options.isImageEditingEnabled,
     true
   );
-  const isDebugInfoEnabled = validateBoolOption(
-    'isDebugInfoEnabled',
-    options.isDebugInfoEnabled,
-    Web.isInfoEnabled()
-  );
 
   return {
     projectRoot,
@@ -442,7 +436,6 @@ async function getWebpackConfigEnvFromBundlingOptionsAsync(
     isImageEditingEnabled,
     mode,
     https,
-    info: isDebugInfoEnabled,
     ...(options.webpackEnv || {}),
   };
 }

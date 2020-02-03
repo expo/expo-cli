@@ -10,7 +10,6 @@ import { enableWithPropertyOrConfig } from '../utils';
 const environmentSchema = yup.object({
   config: yup.object().notRequired(),
   locations: yup.object().notRequired(),
-  info: yup.boolean().default(false),
   https: yup.boolean().default(false),
   polyfill: yup.boolean().notRequired(),
   removeUnusedImportExports: yup.boolean().default(false),
