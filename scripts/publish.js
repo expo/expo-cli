@@ -5,7 +5,7 @@ let spawnAsync = require('@expo/spawn-async');
 let lerna = path.join(__dirname, '../node_modules/.bin/lerna');
 
 async function run() {
-  await spawnAsync(lerna, ['version', ...process.argv.slice(2)], { stdio: 'inherit' });
+  await spawnAsync(lerna, ['version', '--exact', ...process.argv.slice(2)], { stdio: 'inherit' });
 
   let packages = JSON.parse(
     (
