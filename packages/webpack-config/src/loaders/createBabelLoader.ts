@@ -20,6 +20,7 @@ const includeModulesThatContainPaths = [
   getModule('@expo'),
   getModule('@unimodules'),
   getModule('native-base'),
+  getModule('styled-components'),
 ];
 
 const excludedRootPaths = [
