@@ -1,6 +1,7 @@
 import { Rule } from 'webpack';
 
 import { ExpoConfig } from '@expo/config';
+import { getPossibleProjectRoot } from '@expo/config/paths';
 import { Environment, FilePaths, Mode } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
 import createBabelLoader from './createBabelLoader';
@@ -71,29 +72,27 @@ export const styleLoaderRule: Rule = {
  * @param env
  * @category loaders
  */
-export default function createAllLoaders(env: Environment): Rule[] {
-  const config = getConfig(env);
-  const mode = getMode(env);
-  const { platform = 'web' } = env;
+export default function createAllLoaders(
+  env: Pick<Environment, 'projectRoot' | 'locations' | 'mode' | 'config' | 'platform' | 'babel'>
+): Rule[] {
+  env.projectRoot = env.projectRoot || getPossibleProjectRoot();
+  // @ts-ignore
+  env.config = env.config || getConfig(env);
+  // @ts-ignore
+  env.locations = env.locations || getPaths(env.projectRoot);
 
-  const locations = env.locations || getPaths(env.projectRoot);
+  const { root, includeModule, template } = env.locations;
 
-  return getAllLoaderRules(config, mode, locations, platform);
-}
-
-/**
- *
- * @param env
- * @category loaders
- */
-export function getBabelLoaderRuleFromEnv(env: Environment): Rule {
-  const config = getConfig(env);
-  const mode = getMode(env);
-  const { platform = 'web' } = env;
-
-  const locations = env.locations || getPaths(env.projectRoot);
-
-  return getBabelLoaderRule(locations.root, config, mode, platform);
+  return [
+    getHtmlLoaderRule(template.folder),
+    imageLoaderRule,
+    getBabelLoaderRule(env),
+    createWorkerLoader(),
+    createFontLoader(root, includeModule),
+    styleLoaderRule,
+    // This needs to be the last loader
+    fallbackLoaderRule,
+  ].filter(Boolean);
 }
 
 /**
@@ -105,21 +104,26 @@ export function getBabelLoaderRuleFromEnv(env: Environment): Rule {
  * @category loaders
  */
 export function getBabelLoaderRule(
-  projectRoot: string,
-  { web: { build: { babel = {} } = {} } = {} }: ExpoConfig,
-  mode: Mode,
-  platform: string = 'web'
+  env: Pick<Environment, 'projectRoot' | 'config' | 'locations' | 'mode' | 'platform' | 'babel'>
 ): Rule {
-  const { root, verbose, include, use } = babel;
+  env.projectRoot = env.projectRoot || getPossibleProjectRoot();
+  // @ts-ignore
+  env.config = env.config || getConfig(env);
 
-  const babelProjectRoot = root || projectRoot;
+  env.locations = env.locations || getPaths(env.projectRoot);
+
+  const { web: { build: { babel = {} } = {} } = {} } = env.config;
+
+  const { root, verbose, include = [], use } = babel;
+
+  const babelProjectRoot = root || env.projectRoot;
 
   return createBabelLoader({
-    mode,
-    platform,
+    mode: env.mode,
+    platform: env.platform,
     babelProjectRoot,
     verbose,
-    include,
+    include: [...include, ...(env.babel?.dangerouslyAddModulePathsToTranspile || [])],
     use,
   });
 }
@@ -135,30 +139,4 @@ export function getHtmlLoaderRule(exclude: string): Rule {
     use: [require.resolve('html-loader')],
     exclude,
   };
-}
-
-/**
- *
- * @param config
- * @param mode
- * @param param2
- * @param platform
- * @category loaders
- */
-export function getAllLoaderRules(
-  config: ExpoConfig,
-  mode: Mode,
-  { root, includeModule, template }: FilePaths,
-  platform: string = 'web'
-): Rule[] {
-  return [
-    getHtmlLoaderRule(template.folder),
-    imageLoaderRule,
-    getBabelLoaderRule(root, config, mode, platform),
-    createWorkerLoader(),
-    createFontLoader(root, includeModule),
-    styleLoaderRule,
-    // This needs to be the last loader
-    fallbackLoaderRule,
-  ].filter(Boolean);
 }

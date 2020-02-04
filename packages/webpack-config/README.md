@@ -20,6 +20,11 @@
 
 To learn more about how to use this Webpack config, check out the docs here: [Customizing the Webpack config][docs]
 
+### Contributing to the docs
+
+- [Documentation for the master branch][docs-latest]
+- [Documentation for the latest stable release][docs]
+
 ## API
 
 Running `expo customize:web` will generate this default config in your project.
@@ -74,10 +79,73 @@ Tools for resolving fields, or searching and indexing loaders and plugins.
 import /* */ '@expo/webpack-config/utils';
 ```
 
-### Contributing to the docs
+## Guides
 
-- [Documentation for the master branch][docs-latest]
-- [Documentation for the latest stable release][docs]
+### Include modules
+
+You may find that you want to include universal modules that aren't part of the default modules. You can do this by customizing the Webpack config:
+
+```ts
+const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+
+module.exports = async function(env, argv) {
+    const config = await createExpoWebpackConfigAsync({
+        ...env,
+        babel: {
+            dangerouslyAddModulePathsToTranspile: [
+                // Ensure that all packages starting with @evanbacon are transpiled.
+                '@evanbacon'
+            ]
+        }
+    }, argv);
+    return config;
+};
+```
+
+**`withUnimodules`**
+
+If you're adding support to some other Webpack config like in Storybook or Gatsby you can use the same process to include custom modules:
+
+```ts
+const { withUnimodules } = require('@expo/webpack-config/addons');
+
+module.exports = function() {
+  const someWebpackConfig = { /* Your custom Webpack config */ }
+
+  // Add Expo support...
+  const configWithExpo = withUnimodules(someWebpackConfig, {
+      projectRoot: __dirname,
+      babel: {
+          dangerouslyAddModulePathsToTranspile: [
+              // Ensure that all packages starting with @evanbacon are transpiled.
+              '@evanbacon'
+          ]
+      }
+  });
+
+  return configWithExpo;
+};
+```
+
+This method should be used instead of using the `expo.web.build.babel.include` field of the `app.json`.
+
+### Modify the babel loader
+
+If you want to modify the babel loader further, you can retrieve it using the helper method `getExpoBabelLoader` like this:
+
+```ts
+const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+const { getExpoBabelLoader } = require('@expo/webpack-config/utils');
+
+module.exports = async function(env, argv) {
+  const config = await createExpoWebpackConfigAsync(env, argv);
+  const loader = getExpoBabelLoader(config);
+  if (loader) {
+      // Modify the loader...
+  }
+  return config;
+};
+```
 
 ## License
 
