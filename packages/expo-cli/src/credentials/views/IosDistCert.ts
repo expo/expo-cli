@@ -277,7 +277,7 @@ export class CreateOrReuseDistributionCert implements IView {
 
     const { confirm } = await prompt(confirmQuestion);
     if (confirm) {
-      log(`Using Distribution Certificate: ${autoselectedCertificate.certId}`);
+      log(`Using Distribution Certificate: ${autoselectedCertificate.certId || '-----'}`);
       await this.assignDistCert(ctx, autoselectedCertificate.id);
       return null;
     }
@@ -471,7 +471,10 @@ function formatDistCert(
       "\n    ❓ Validity of this certificate on Apple's servers is unknown."
     );
   }
-  return `Distribution Certificate (Cert ID: ${distCert.certId}, Serial number: ${serialNumber}, Team ID: ${distCert.teamId})${usedByString}${validityText}`;
+  return `Distribution Certificate (Cert ID: ${distCert.certId ||
+    '-----'}, Serial number: ${serialNumber}, Team ID: ${
+    distCert.teamId
+  })${usedByString}${validityText}`;
 }
 
 async function generateDistCert(ctx: Context): Promise<DistCert> {

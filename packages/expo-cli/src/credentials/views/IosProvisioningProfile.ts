@@ -113,32 +113,9 @@ export class CreateProvisioningProfile implements IView {
   async provideOrGenerate(ctx: Context): Promise<ProvisioningProfile> {
     const userProvided = await askForUserProvided(provisioningProfileSchema);
     if (userProvided) {
-      if (!ctx.hasAppleCtx()) {
-        log(
-          chalk.yellow(
-            'Provisioning profile: Unable to validate profile, insufficient Apple Credentials'
-          )
-        );
-        return userProvided;
-      }
-      const profileFromApple = await getAppleInfo(
-        ctx.appleCtx,
-        this._bundleIdentifier,
-        userProvided
-      );
-      if (!profileFromApple) {
-        throw new Error(
-          `Provisioning profile ${userProvided.provisioningProfileId} could be found on Apple Servers`
-        );
-      }
-      // configure profile on Apple's Server to use our distCert
-      const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
-      const updatedProfile = await ppManager.useExisting(
-        this._bundleIdentifier,
-        profileFromApple,
-        this._distCert
-      );
-      return updatedProfile;
+      // userProvided profiles don't come with ProvisioningProfileId's (only accessible from Apple Portal API)
+      log(chalk.yellow('Provisioning profile: Unable to validate uploaded profile.'));
+      return userProvided;
     }
     return await generateProvisioningProfile(ctx, this._bundleIdentifier, this._distCert);
   }
@@ -400,6 +377,13 @@ export async function getAppleInfo(
   bundleIdentifier: string,
   profile: ProvisioningProfile
 ): Promise<ProvisioningProfileInfo | null> {
+  if (!profile.provisioningProfileId) {
+    log(
+      chalk.yellow('Provisioning Profile: cannot look up profile on Apple Servers - there is no id')
+    );
+    return null;
+  }
+
   const spinner = ora(`Getting Provisioning Profile info from Apple's Servers...\n`).start();
   const ppManager = new ProvisioningProfileManager(appleCtx);
   const profilesFromApple = await ppManager.list(bundleIdentifier);

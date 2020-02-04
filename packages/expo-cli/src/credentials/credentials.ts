@@ -90,10 +90,6 @@ export const provisioningProfileSchema: CredentialSchema<appleApi.ProvisioningPr
       question: 'Path to .mobile provisioning profile:',
       base64Encode: true,
     },
-    provisioningProfileId: {
-      type: 'string',
-      question: 'Profile ID:', // TODO (more info for user?)
-    },
   },
 };
 

@@ -1,3 +1,4 @@
+import assert from 'assert';
 import plist, { PlistObject } from 'plist';
 import { IosCodeSigning } from '@expo/xdl';
 import { runAction, travelingFastlane } from './fastlane';
@@ -13,7 +14,7 @@ export type ProvisioningProfileInfo = {
 } & ProvisioningProfile;
 
 export type ProvisioningProfile = {
-  provisioningProfileId: string;
+  provisioningProfileId?: string;
   provisioningProfile: string;
 };
 

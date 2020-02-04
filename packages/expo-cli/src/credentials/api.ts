@@ -49,11 +49,11 @@ export class IosApi {
       this.credentials.appCredentials,
       app => app.experienceName === experienceName && app.bundleIdentifier === bundleIdentifier
     );
-    const distCertId = this.credentials.appCredentials[credIndex].distCredentialsId;
-    if (!distCertId) {
+    const distCertExpoId = this.credentials.appCredentials[credIndex].distCredentialsId;
+    if (!distCertExpoId) {
       return null;
     }
-    const distCert = this.credentials.userCredentials.find(cred => cred.id === distCertId) as
+    const distCert = this.credentials.userCredentials.find(cred => cred.id === distCertExpoId) as
       | IosDistCredentials
       | undefined;
     return distCert || null;

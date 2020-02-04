@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+import log from '../../log';
 import * as iosProfileView from './IosProvisioningProfile';
 
 import { Context, IView } from '../context';
@@ -53,6 +55,15 @@ export class SetupIosProvisioningProfile implements IView {
       if (!isValid) {
         throw new Error(`The provisioning profile we have on file is no longer valid.`);
       }
+      return null;
+    }
+
+    if (!configuredProfile.provisioningProfileId) {
+      log(
+        chalk.yellow(
+          "The provisioning profile we have on file cannot be validated on Apple's servers."
+        )
+      );
       return null;
     }
 

@@ -19,7 +19,7 @@ export type DistCertInfo = {
 };
 
 export type DistCert = {
-  certId: string;
+  certId?: string;
   certP12: string;
   certPassword: string;
   certPrivateSigningKey?: string;
