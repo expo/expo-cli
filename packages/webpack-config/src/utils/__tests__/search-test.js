@@ -7,6 +7,18 @@ import * as LoaderUtils from '../search';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 
+it(`getExpoBabelLoader gets the Expo babel loader`, async () => {
+  const config = await createWebpackConfigAsync({
+    projectRoot,
+    mode: 'development',
+    platform: 'web',
+  });
+
+  const loader = LoaderUtils.getExpoBabelLoader(config);
+  expect(loader).toBeDefined();
+  expect(loader.use.options.caller.__dangerous_rule_id).toBe('expo-babel-loader');
+});
+
 it(`getPluginsByName gets a known plugin`, async () => {
   const config = await createWebpackConfigAsync({
     projectRoot,

@@ -7,6 +7,7 @@ import {
   Configuration,
   Entry,
   Plugin,
+  Rule,
   RuleSetCondition,
   RuleSetLoader,
   RuleSetRule,
@@ -79,6 +80,30 @@ export function getRulesAsItems(rules: RuleSetRule[]): RuleItem[] {
 export function getRules(config: AnyConfiguration): RuleItem[] {
   const { preLoaders = [], postLoaders = [], rules = [] } = config.module || {};
   return getRulesAsItems(getRulesFromRules([...preLoaders, ...postLoaders, ...rules]));
+}
+
+/**
+ * Get the babel-loader rule created by `@expo/webpack-config/loaders`
+ *
+ * @param config
+ * @category utils
+ */
+export function getExpoBabelLoader(config: AnyConfiguration): Rule | null {
+  const { preLoaders = [], postLoaders = [], rules = [] } = config.module || {};
+  const currentRules = getRulesAsItems(
+    getRulesFromRules([...preLoaders, ...postLoaders, ...rules])
+  );
+  for (const ruleItem of currentRules) {
+    const rule: any = ruleItem.rule;
+    if (
+      rule.use &&
+      typeof rule.use === 'object' &&
+      rule.use.options?.caller?.__dangerous_rule_id === 'expo-babel-loader'
+    ) {
+      return rule;
+    }
+  }
+  return null;
 }
 
 /**

@@ -80,7 +80,10 @@ export default function withUnimodules(
     platform,
     babelProjectRoot,
     verbose: babelAppConfig.verbose,
-    include: babelAppConfig.include,
+    include: [
+      ...(babelAppConfig.include || []),
+      ...(env.babel?.dangerouslyAddModulePathsToTranspile || []),
+    ],
     use: babelAppConfig.use,
   });
 

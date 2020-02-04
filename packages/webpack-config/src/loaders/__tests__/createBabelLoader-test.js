@@ -2,7 +2,7 @@
 import path from 'path';
 
 import { conditionMatchesFile, getRules } from '../../utils/search';
-import { getBabelLoaderRuleFromEnv } from '../createAllLoaders';
+import { getBabelLoaderRule } from '../createAllLoaders';
 
 const projectRoot = path.resolve(__dirname, '../../../tests/basic');
 
@@ -14,7 +14,7 @@ const env = {
 
 const rules = getRules({
   module: {
-    rules: [getBabelLoaderRuleFromEnv(env)],
+    rules: [getBabelLoaderRule(env)],
   },
 });
 for (const library of [

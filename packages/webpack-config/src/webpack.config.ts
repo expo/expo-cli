@@ -112,7 +112,6 @@ export default async function(
   const { publicPath, publicUrl } = getPublicPaths(env);
 
   const { build: buildConfig = {} } = config.web || {};
-  const { babel: babelAppConfig = {} } = buildConfig;
 
   const devtool = getDevtool(
     { production: isProd, development: isDev },
@@ -120,8 +119,6 @@ export default async function(
       devtool: Options.Devtool;
     }
   );
-
-  const babelProjectRoot = babelAppConfig.root || locations.root;
 
   const appEntry: string[] = [];
 

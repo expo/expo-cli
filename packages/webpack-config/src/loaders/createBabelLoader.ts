@@ -82,7 +82,7 @@ function generateCacheIdentifier(projectRoot: string, version: string = '1'): st
  * @internal
  */
 export function createBabelLoaderFromEnvironment(
-  env: Pick<Environment, 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
+  env: Pick<Environment, 'babel' | 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
 ): Rule {
   const locations = env.locations || getPaths(env.projectRoot);
   const appConfig = env.config || getConfig(env);
@@ -96,7 +96,7 @@ export function createBabelLoaderFromEnvironment(
     platform: env.platform,
     babelProjectRoot: babel.root || locations.root,
     verbose: babel.verbose,
-    include: babel.include,
+    include: [...(babel.include || []), ...(env.babel?.dangerouslyAddModulePathsToTranspile || [])],
     use: babel.use,
   });
 }
@@ -197,6 +197,7 @@ export default function createBabelLoader({
         ...(customUseOptions || {}),
 
         caller: {
+          __dangerous_rule_id: 'expo-babel-loader',
           bundler: 'webpack',
           platform,
           mode,

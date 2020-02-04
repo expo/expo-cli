@@ -30,6 +30,9 @@ export type InputEnvironment = {
     statsFilename: string;
     reportFilename: string;
   };
+  babel?: {
+    dangerouslyAddModulePathsToTranspile: string[];
+  };
 };
 
 export type Environment = {
@@ -44,6 +47,9 @@ export type Environment = {
   removeUnusedImportExports?: boolean;
   pwa?: boolean;
   report?: Report;
+  babel?: {
+    dangerouslyAddModulePathsToTranspile: string[];
+  };
 };
 
 export type Report = {
