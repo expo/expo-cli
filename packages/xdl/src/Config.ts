@@ -1,6 +1,30 @@
 import getenv from 'getenv';
 
+import { GetConfigOptions, ProjectConfig, getConfig } from '@expo/config';
 import * as Env from './Env';
+
+import * as ProjectSettings from './ProjectSettings';
+
+/**
+ * Get the project config with mode defaulting to the ProjectSettings module.
+ *
+ * @param projectRoot
+ * @param options if `mode` is not supplied it will be inferred from the ProjectSettings module.
+ */
+export async function getProjectConfigAsync(
+  projectRoot: string,
+  options: Partial<GetConfigOptions>
+): Promise<ProjectConfig> {
+  let { mode } = options;
+  if (!mode || !['development', 'production'].includes(mode)) {
+    const { dev } = await ProjectSettings.readAsync(projectRoot);
+    mode = dev ? 'development' : 'production';
+  }
+  return getConfig(projectRoot, {
+    ...options,
+    mode,
+  });
+}
 
 interface ApiConfig {
   scheme: string;
