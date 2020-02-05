@@ -1,10 +1,9 @@
-import { readConfigJsonAsync, readExpRcAsync } from '@expo/config';
+import { getConfig, readExpRcAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import _ from 'lodash';
 import path from 'path';
-import semver from 'semver';
 import ProgressBar from 'progress';
 
 import * as Analytics from './Analytics';
@@ -280,7 +279,11 @@ export async function openProjectAsync(
     await startAdbReverseAsync(projectRoot);
 
     let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
-    let { exp } = await readConfigJsonAsync(projectRoot);
+    const { dev } = await ProjectSettings.readAsync(projectRoot);
+    const { exp } = getConfig(projectRoot, {
+      skipSDKVersionRequirement: true,
+      mode: dev ? 'development' : 'production',
+    });
 
     await openUrlAsync(projectUrl, !!exp.isDetached);
     return { success: true, url: projectUrl };
@@ -407,7 +410,10 @@ const splashScreenDPIConstraints = [
  * @since SDK33
  */
 export async function checkSplashScreenImages(projectDir: string): Promise<void> {
-  const { exp } = await readConfigJsonAsync(projectDir);
+  const { dev } = await ProjectSettings.readAsync(projectDir);
+  const { exp } = getConfig(projectDir, {
+    mode: dev ? 'development' : 'production',
+  });
 
   // return before SDK33
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {

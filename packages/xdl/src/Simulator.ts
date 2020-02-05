@@ -1,4 +1,4 @@
-import * as ConfigUtils from '@expo/config';
+import { getConfig } from '@expo/config';
 import * as osascript from '@expo/osascript';
 import spawnAsync from '@expo/spawn-async';
 import delayAsync from 'delay-async';
@@ -6,14 +6,15 @@ import fs from 'fs-extra';
 import glob from 'glob-promise';
 import os from 'os';
 import path from 'path';
-import url from 'url';
-import semver from 'semver';
 import ProgressBar from 'progress';
+import semver from 'semver';
+import url from 'url';
 
 import * as Analytics from './Analytics';
 import Api from './Api';
 import Logger from './Logger';
 import NotificationCode from './NotificationCode';
+import * as ProjectSettings from './ProjectSettings';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
@@ -507,8 +508,11 @@ export async function openProjectAsync(
   let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot, {
     hostType: 'localhost',
   });
-
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { dev } = await ProjectSettings.readAsync(projectRoot);
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+    mode: dev ? 'development' : 'production',
+  });
 
   let result = await openUrlInSimulatorSafeAsync(projectUrl, !!exp.isDetached);
   if (result.success) {
