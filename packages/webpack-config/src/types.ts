@@ -36,7 +36,6 @@ export type InputEnvironment = {
 };
 
 export type Environment = {
-  info: boolean;
   https: boolean;
   config: { [key: string]: any };
   locations: FilePaths;

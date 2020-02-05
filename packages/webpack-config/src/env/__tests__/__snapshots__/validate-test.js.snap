@@ -3,7 +3,6 @@
 exports[`auto fills a truthy report 1`] = `
 Object {
   "https": false,
-  "info": false,
   "mode": "development",
   "platform": "web",
   "removeUnusedImportExports": false,
@@ -19,7 +18,6 @@ Object {
 exports[`returns a full environment 1`] = `
 Object {
   "https": false,
-  "info": false,
   "mode": "development",
   "platform": "web",
   "removeUnusedImportExports": false,
