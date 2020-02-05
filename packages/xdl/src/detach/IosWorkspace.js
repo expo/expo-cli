@@ -273,7 +273,7 @@ async function createDetachedAsync(context) {
 
   const projectPackageJsonPath = path.join(projectRootDirectory, 'package.json');
 
-  if (!await fs.exists(projectPackageJsonPath)) {
+  if (!(await fs.exists(projectPackageJsonPath))) {
     logger.info('Copying blank package.json...');
     await fs.copy(
       path.join(expoRootTemplateDirectory, 'exponent-view-template', 'package.json'),
