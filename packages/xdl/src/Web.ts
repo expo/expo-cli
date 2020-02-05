@@ -1,4 +1,4 @@
-import { readConfigJsonAsync } from '@expo/config';
+import { getConfig } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
@@ -10,6 +10,7 @@ import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-serv
 import Logger from './Logger';
 import { LogTag, logWarning } from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
+import * as ProjectSettings from './ProjectSettings';
 
 export interface WebpackConfiguration extends webpack.Configuration {
   devServer?: WebpackDevServerConfiguration;
@@ -136,7 +137,11 @@ export async function openProjectAsync(
 
 // If platforms only contains the "web" field
 export async function onlySupportsWebAsync(projectRoot: string): Promise<boolean> {
-  const { exp } = await readConfigJsonAsync(projectRoot, true);
+  const { dev } = await ProjectSettings.readAsync(projectRoot);
+  const { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: true,
+    mode: dev ? 'development' : 'production',
+  });
   if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
     return exp.platforms[0] === 'web';
   }
