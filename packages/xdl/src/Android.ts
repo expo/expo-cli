@@ -1,10 +1,9 @@
-import { readConfigJsonAsync, readExpRcAsync } from '@expo/config';
+import { readExpRcAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import _ from 'lodash';
 import path from 'path';
-import semver from 'semver';
 import ProgressBar from 'progress';
 
 import * as Analytics from './Analytics';
@@ -18,6 +17,7 @@ import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as Versions from './Versions';
 import { getUrlAsync as getWebpackUrlAsync } from './Webpack';
+import { getProjectConfigAsync } from './Config';
 
 let _lastUrl: string | null = null;
 const BEGINNING_OF_ADB_ERROR_MESSAGE = 'error: ';
@@ -280,7 +280,9 @@ export async function openProjectAsync(
     await startAdbReverseAsync(projectRoot);
 
     let projectUrl = await UrlUtils.constructManifestUrlAsync(projectRoot);
-    let { exp } = await readConfigJsonAsync(projectRoot);
+    const { exp } = await getProjectConfigAsync(projectRoot, {
+      skipSDKVersionRequirement: true,
+    });
 
     await openUrlAsync(projectUrl, !!exp.isDetached);
     return { success: true, url: projectUrl };
@@ -407,7 +409,9 @@ const splashScreenDPIConstraints = [
  * @since SDK33
  */
 export async function checkSplashScreenImages(projectDir: string): Promise<void> {
-  const { exp } = await readConfigJsonAsync(projectDir);
+  const { exp } = await getProjectConfigAsync(projectDir, {
+    skipSDKVersionRequirement: false,
+  });
 
   // return before SDK33
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {

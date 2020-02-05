@@ -7,10 +7,12 @@ import {
   ConfigContext,
   ExpRc,
   ExpoConfig,
+  GetConfigOptions,
   PackageJSONConfig,
   Platform,
   ProjectConfig,
 } from './Config.types';
+
 import { ConfigError } from './Errors';
 import { findAndEvalConfig } from './getConfig';
 import { getRootPackageJsonPath, projectHasModule } from './Modules';
@@ -35,12 +37,6 @@ function getSupportedPlatforms(
   }
   return platforms;
 }
-
-type GetConfigOptions = {
-  mode: 'development' | 'production';
-  configPath?: string;
-  skipSDKVersionRequirement?: boolean;
-};
 
 function getConfigContext(
   projectRoot: string,
@@ -282,3 +278,5 @@ export async function writeConfigJsonAsync(
     rootConfig,
   };
 }
+
+export * from './Config.types';
