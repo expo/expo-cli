@@ -291,9 +291,9 @@ async function _resolveManifestAssets(
 ) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+    const assetSchemas = (
+      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
+    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -360,7 +360,7 @@ export async function getSlugAsync(
   projectRoot: string,
   {
     mode = 'production',
-    ...options,
+    ...options
   }: { mode?: 'production' | 'development'; [key: string]: any } = {}
 ): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: options.mode });
@@ -1872,7 +1872,7 @@ export async function startReactNativeServerAsync(
       ...process.env,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...nodePath ? { NODE_PATH: nodePath } : {},
+      ...(nodePath ? { NODE_PATH: nodePath } : {}),
     },
     silent: true,
   });
