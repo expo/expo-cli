@@ -32,7 +32,7 @@ export default (program: any) => {
         let result = await api.postAsync('publish/set', {
           releaseChannel: options.releaseChannel,
           publishId: options.publishId,
-          slug: await Project.getSlugAsync(projectDir, { ...options, mode: 'production' }),
+          slug: await Project.getSlugAsync(projectDir, options),
         });
         let tableString = table.printTableJson(
           result.queryResult,
@@ -58,7 +58,7 @@ export default (program: any) => {
       try {
         let result = await api.postAsync('publish/rollback', {
           channelId: options.channelId,
-          slug: await Project.getSlugAsync(projectDir, { ...options, mode: 'production' }),
+          slug: await Project.getSlugAsync(projectDir, options),
         });
         let tableString = table.printTableJson(
           result.queryResult,

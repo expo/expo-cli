@@ -360,7 +360,10 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoC
 // TODO: Move to @expo/config
 export async function getSlugAsync(
   projectRoot: string,
-  options: { mode: 'production' | 'development'; [key: string]: any }
+  {
+    mode = 'production',
+    ...options
+  }: { mode?: 'production' | 'development'; [key: string]: any } = {}
 ): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: options.mode });
   if (exp.slug) {
@@ -383,7 +386,7 @@ export async function getLatestReleaseAsync(
   // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
   let formData = new FormData();
   formData.append('queryType', 'history');
-  formData.append('slug', await getSlugAsync(projectRoot, { mode: 'production' }));
+  formData.append('slug', await getSlugAsync(projectRoot));
   if (options.owner) {
     formData.append('owner', options.owner);
   }
