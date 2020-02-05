@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Rule } from 'webpack';
 
+import { projectHasModule } from '@expo/config';
 import { Environment, Mode } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
 
@@ -142,11 +143,15 @@ export default function createBabelLoader({
     !fs.existsSync(path.join(projectRoot, 'babel.config.js')) &&
     !fs.existsSync(path.join(projectRoot, '.babelrc'))
   ) {
-    presetOptions = {
-      babelrc: false,
-      configFile: false,
-      presets: [require.resolve('babel-preset-expo')],
-    };
+    if (projectHasModule('babel-preset-expo', projectRoot, {})) {
+      presetOptions = {
+        babelrc: false,
+        configFile: false,
+        presets: [require.resolve('babel-preset-expo')],
+      };
+    } else {
+      console.log(chalk.yellow('\u203A Webpack failed to locate a valid Babel config'));
+    }
   }
 
   const cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot);
