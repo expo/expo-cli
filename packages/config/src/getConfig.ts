@@ -18,7 +18,7 @@ export const allowedConfigFileNames: string[] = (() => {
 })();
 
 function isMissingFileCode(code: string): boolean {
-  return ['ENOENT', 'ENOTDIR'].includes(code);
+  return ['ENOENT', 'MODULE_NOT_FOUND', 'ENOTDIR'].includes(code);
 }
 
 export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
