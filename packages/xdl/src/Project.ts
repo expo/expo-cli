@@ -3,6 +3,7 @@ import {
   PackageJSONConfig,
   Platform,
   configFilename,
+  getConfig,
   projectHasModule,
   readConfigJson,
   readConfigJsonAsync,
@@ -357,14 +358,17 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoC
 }
 
 // TODO: Move to @expo/config
-export async function getSlugAsync(projectRoot: string, options = {}): Promise<string> {
-  const { exp } = await readConfigJsonAsync(projectRoot);
+export async function getSlugAsync(
+  projectRoot: string,
+  options: { mode: 'production' | 'development'; [key: string]: any }
+): Promise<string> {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: options.mode });
   if (exp.slug) {
     return exp.slug;
   }
   throw new XDLError(
     'INVALID_MANIFEST',
-    `app.json in ${projectRoot} must contain the "slug" field`
+    `Your project config in ${projectRoot} must contain a "slug" field. Please supply this in your app.config.js or app.json`
   );
 }
 
@@ -379,7 +383,7 @@ export async function getLatestReleaseAsync(
   // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
   let formData = new FormData();
   formData.append('queryType', 'history');
-  formData.append('slug', await getSlugAsync(projectRoot));
+  formData.append('slug', await getSlugAsync(projectRoot, { mode: 'production' }));
   if (options.owner) {
     formData.append('owner', options.owner);
   }

@@ -61,7 +61,7 @@ export default (program: any) => {
         const api = ApiV2.clientForUser(user);
         result = await api.postAsync('publish/history', {
           owner: exp.owner,
-          slug: await Project.getSlugAsync(projectDir, options),
+          slug: await Project.getSlugAsync(projectDir, { ...options, mode: 'production' }),
           version: VERSION,
           releaseChannel: options.releaseChannel,
           count: options.count,
@@ -74,7 +74,10 @@ export default (program: any) => {
         if (exp.owner) {
           formData.append('owner', exp.owner);
         }
-        formData.append('slug', await Project.getSlugAsync(projectDir, options));
+        formData.append(
+          'slug',
+          await Project.getSlugAsync(projectDir, { ...options, mode: 'production' })
+        );
         formData.append('version', VERSION);
         if (options.releaseChannel) {
           formData.append('releaseChannel', options.releaseChannel);
@@ -152,7 +155,7 @@ export default (program: any) => {
       // TODO(ville): handle the API result for not authenticated user instead of checking upfront
       const user = await UserManager.ensureLoggedInAsync();
       const { exp } = await readConfigJsonAsync(projectDir);
-      const slug = await Project.getSlugAsync(projectDir, options);
+      const slug = await Project.getSlugAsync(projectDir, { ...options, mode: 'production' });
 
       let result: any;
       if (process.env.EXPO_NEXT_API) {
