@@ -197,6 +197,9 @@ jobs:
     steps:
       - attach_workspace:
           at: '~'
+      - run:
+          name: Install test project dependencies
+          command: cd tests/basic && yarn; cd ../..
       - run: yarn test:unit
   test-webpack-config-e2e:
     parameters:
