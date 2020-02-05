@@ -3130,7 +3130,7 @@
   resolved "https://registry.yarnpkg.com/@types/webpack-env/-/webpack-env-1.14.1.tgz#0d8a53f308f017c53a5ddc3d07f4d6fa76b790d7"
   integrity sha512-0Ki9jAAhKDSuLDXOIMADg54Hu60SuBTEsWaJGGy5cV+SSUQ63J2a+RrYYGrErzz39fXzTibhKrAQJAb8M7PNcA==
 
-"@types/webpack-manifest-plugin@^2.0.0":
+"@types/webpack-manifest-plugin@^2.2.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@types/webpack-manifest-plugin/-/webpack-manifest-plugin-2.1.0.tgz#1fc52fc795d165493ab957656a7aa9f5cb7c145e"
   integrity sha512-6OROnT+O0nht7QAr1juVZLm5E8V92LU7EDLyoEVFDUdRE67lU9c9fpPjrVVN+QXPYeaBP7ZzbQI8A4LEUtv8rg==
@@ -20930,7 +20930,7 @@ webpack-log@^2.0.0:
     ansi-colors "^3.0.0"
     uuid "^3.3.2"
 
-webpack-manifest-plugin@^2.0.4:
+webpack-manifest-plugin@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/webpack-manifest-plugin/-/webpack-manifest-plugin-2.2.0.tgz#19ca69b435b0baec7e29fbe90fb4015de2de4f16"
   integrity sha512-9S6YyKKKh/Oz/eryM1RyLVDVmy3NSPV0JXMRhZ18fJsq+AwGxUY34X54VNwkzYcEmEkDwNxuEOboCZEebJXBAQ==

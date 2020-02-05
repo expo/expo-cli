@@ -16,8 +16,6 @@ import { rulesMatchAnyFiles } from '../utils';
 import withAlias from './withAlias';
 import withEntry from './withEntry';
 
-// import ManifestPlugin from 'webpack-manifest-plugin';
-
 /**
  * Wrap your existing webpack config with support for Unimodules.
  * ex: Storybook `({ config }) => withUnimodules(config)`
@@ -110,14 +108,6 @@ export default function withUnimodules(
   };
 
   webpackConfig.plugins.push(
-    // Generate a manifest file which contains a mapping of all asset filenames
-    // to their corresponding output file so that tools can pick it up without
-    // having to parse `index.html`.
-    // new ManifestPlugin({
-    //   fileName: 'asset-manifest.json',
-    //   publicPath,
-    // }),
-
     // Used for surfacing information related to constants
     new ExpoDefinePlugin({
       mode,
