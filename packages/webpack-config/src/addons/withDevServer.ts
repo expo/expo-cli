@@ -8,8 +8,62 @@ import {
   Configuration as WebpackDevServerConfiguration,
 } from 'webpack-dev-server';
 
-import { AnyConfiguration, DevConfiguration, Environment } from '../types';
+import fs from 'fs-extra';
+import * as path from 'path';
+import crypto from 'crypto';
+import chalk from 'chalk';
 import { getPaths } from '../env';
+import { AnyConfiguration, DevConfiguration, Environment } from '../types';
+
+// Ensure the certificate and key provided are valid and if not
+// throw an easy to debug error
+function validateKeyAndCerts({ cert, key, keyFile, crtFile }: any) {
+  let encrypted;
+  try {
+    // publicEncrypt will throw an error with an invalid cert
+    encrypted = crypto.publicEncrypt(cert, Buffer.from('test'));
+  } catch (err) {
+    throw new Error(`The certificate "${chalk.yellow(crtFile)}" is invalid.\n${err.message}`);
+  }
+
+  try {
+    // privateDecrypt will throw an error with an invalid key
+    crypto.privateDecrypt(key, encrypted);
+  } catch (err) {
+    throw new Error(`The certificate key "${chalk.yellow(keyFile)}" is invalid.\n${err.message}`);
+  }
+}
+
+// Read file and throw an error if it doesn't exist
+function readEnvFile(file: string, type: string): any {
+  if (!fs.existsSync(file)) {
+    throw new Error(
+      `You specified ${chalk.cyan(type)} in your env, but the file "${chalk.yellow(
+        file
+      )}" can't be found.`
+    );
+  }
+  return fs.readFileSync(file);
+}
+
+// Get the https config
+// Return cert files if provided in env, otherwise just true or false
+function getHttpsConfig(projectRoot: string, isHttps: boolean): any {
+  const { SSL_CRT_FILE, SSL_KEY_FILE } = process.env;
+
+  if (isHttps && SSL_CRT_FILE && SSL_KEY_FILE) {
+    const crtFile = path.resolve(projectRoot, SSL_CRT_FILE);
+    const keyFile = path.resolve(projectRoot, SSL_KEY_FILE);
+    const config = {
+      cert: readEnvFile(crtFile, 'SSL_CRT_FILE'),
+      key: readEnvFile(keyFile, 'SSL_KEY_FILE'),
+    };
+
+    validateKeyAndCerts({ ...config, keyFile, crtFile });
+    return config;
+  }
+  return isHttps;
+}
 
 // @ts-ignore
 const host = process.env.HOST || '0.0.0.0';
@@ -134,7 +188,7 @@ export function createDevServer(
     // Enable HTTPS if the HTTPS environment variable is set to 'true'
     // https: protocol === 'https',
 
-    https,
+    https: getHttpsConfig(env.projectRoot, https),
     disableHostCheck: !proxy,
     // allowedHosts: [host, 'localhost'],
     headers: {
