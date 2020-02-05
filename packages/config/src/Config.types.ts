@@ -923,9 +923,17 @@ export type ConfigErrorCode =
   | 'INVALID_MODE'
   | 'INVALID_CONFIG';
 
+export type ConfigMode = 'development' | 'production';
+
 export type ConfigContext = {
   projectRoot: string;
   configPath?: string;
   config: Partial<ExpoConfig>;
-  mode: 'development' | 'production';
+  mode: ConfigMode;
+};
+
+export type GetConfigOptions = {
+  mode: ConfigMode;
+  configPath?: string;
+  skipSDKVersionRequirement?: boolean;
 };
