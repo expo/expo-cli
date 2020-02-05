@@ -14,7 +14,6 @@ export const allowedConfigFileNames: string[] = (() => {
     // TODO: Bacon: Slowly rollout support for other config languages: ts, yml, toml
     `${prefix}.config.js`,
     `${prefix}.config.json`,
-    `${prefix}.config.json5`,
   ];
 })();
 
@@ -65,7 +64,7 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
 // If they don't add support for async Webpack configs then we may need to pull support for Next.js.
 function evalConfig(configFile: string, request: ConfigContext): Partial<ExpoConfig> {
   let result: any;
-  if (configFile.endsWith('.json5') || configFile.endsWith('.json')) {
+  if (configFile.endsWith('.json')) {
     result = JsonFile.read(configFile, { json5: true });
   } else {
     try {

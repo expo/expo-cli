@@ -68,13 +68,5 @@ describe('getConfig', () => {
       });
       expect(exp.foo).toBe('bar');
     });
-    it('parses a json5 config', () => {
-      const projectRoot = path.resolve(__dirname, './fixtures/language-support/json5');
-      const { exp } = getConfig(projectRoot, {
-        mode: 'development',
-        skipSDKVersionRequirement: true,
-      });
-      expect(exp.foo).toBe('bar');
-    });
   });
 });
