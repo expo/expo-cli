@@ -18,7 +18,7 @@ export const allowedConfigFileNames: string[] = (() => {
 })();
 
 function isMissingFileCode(code: string): boolean {
-  return ['ENOENT', 'ENOTDIR'].includes(code);
+  return ['ENOENT', 'MODULE_NOT_FOUND', 'ENOTDIR'].includes(code);
 }
 
 export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
@@ -52,7 +52,7 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   }
 
   for (const configFileName of allowedConfigFileNames) {
-    const configFilePath = path.join(request.projectRoot, configFileName);
+    const configFilePath = path.resolve(request.projectRoot, configFileName);
     const config = testFileName(configFilePath);
     if (config) return serializeAndEvaluate(config);
   }

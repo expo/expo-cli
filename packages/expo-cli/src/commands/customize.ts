@@ -84,14 +84,18 @@ async function generateFilesAsync({
 }
 
 export async function action(projectDir: string = './', options: Options = { force: false }) {
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectDir);
+  // Get the static path (defaults to 'web/')
+  // Doesn't matter if expo is installed or which mode is used.
+  const { exp } = ConfigUtils.getConfig(projectDir, {
+    skipSDKVersionRequirement: true,
+    mode: 'development',
+  });
 
   const templateFolder = path.dirname(
     require.resolve('@expo/webpack-config/web-default/index.html')
   );
 
   const files = (await fs.readdir(templateFolder)).filter(item => item !== 'icon.png');
-  // { expo: { web: { staticPath: ... } } }
   const { web: { staticPath = 'web' } = {} } = exp;
 
   const allFiles = [
