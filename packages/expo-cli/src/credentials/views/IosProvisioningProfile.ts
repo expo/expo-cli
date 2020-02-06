@@ -1,6 +1,8 @@
 import chalk from 'chalk';
+import fs from 'fs-extra';
 import find from 'lodash/find';
 import ora from 'ora';
+import every from 'lodash/every';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
@@ -368,7 +370,6 @@ export async function validateProfileWithoutApple(
   }
 
   spinner.succeed('Successfully performed best effort validation of Provisioning Profile.');
-  log(chalk.yellow('To perform full validation, please provide sufficient Apple Credentials'));
   return true;
 }
 
@@ -417,7 +418,9 @@ export async function configureAndUpdateProvisioningProfile(
   const updatedProfile = await ppManager.useExisting(bundleIdentifier, profileFromApple, distCert);
   log(
     chalk.green(
-      `Successfully configured Provisioning Profile ${profileFromApple.provisioningProfileId} on Apple Servers with distribution certificate ${distCert.certId}`
+      `Successfully configured Provisioning Profile ${
+        profileFromApple.provisioningProfileId
+      } on Apple Servers with Distribution Certificate ${distCert.certId || ''}`
     )
   );
 
@@ -440,4 +443,46 @@ function formatProvisioningProfileFromApple(appleInfo: ProvisioningProfileInfo) 
   const id = chalk.green(provisioningProfileId || '-----');
   const details = `Status: ${status} || Expiry: ${expires}`;
   return `Provisioning Profile (ID: ${id}, Name: ${name})\n    ${details}`;
+}
+
+export async function getProvisioningProfileFromParams(builderOptions: {
+  provisioningProfilePath?: string;
+  teamId?: string;
+}): Promise<ProvisioningProfile | null> {
+  const { provisioningProfilePath, teamId } = builderOptions;
+
+  // none of the provisioningProfile params were set, assume user has no intention of passing it in
+  if (!provisioningProfilePath) {
+    return null;
+  }
+
+  // partial provisioningProfile params were set, assume user has intention of passing it in
+  if (!every([provisioningProfilePath, teamId])) {
+    throw new Error('You have to pass --provisioning-profile-path and --team-id parameters.');
+  }
+
+  return {
+    provisioningProfile: await fs.readFile(provisioningProfilePath as string, 'base64'),
+  };
+}
+
+export async function useProvisioningProfileFromParams(
+  ctx: Context,
+  appCredentials: IosAppCredentials,
+  distCert: IosDistCredentials,
+  teamId: string,
+  provisioningProfile: ProvisioningProfile
+): Promise<ProvisioningProfile> {
+  const { experienceName, bundleIdentifier } = appCredentials;
+  const isValid = await validateProfileWithoutApple(appCredentials, distCert);
+  if (!isValid) {
+    throw new Error('Uploaded invalid Provisioning Profile');
+  }
+
+  return await ctx.ios.updateProvisioningProfile(
+    experienceName,
+    bundleIdentifier,
+    provisioningProfile,
+    { id: teamId }
+  );
 }

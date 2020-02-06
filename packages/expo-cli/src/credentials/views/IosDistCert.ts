@@ -1,7 +1,9 @@
-import open from 'open';
 import chalk from 'chalk';
 import dateformat from 'dateformat';
+import fs from 'fs-extra';
+import every from 'lodash/every';
 import get from 'lodash/get';
+import some from 'lodash/some';
 import ora from 'ora';
 import inquirer from 'inquirer';
 import { IosCodeSigning } from '@expo/xdl';
@@ -9,17 +11,11 @@ import { IosCodeSigning } from '@expo/xdl';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
-import {
-  IosAppCredentials,
-  IosCredentials,
-  IosDistCredentials,
-  distCertSchema,
-} from '../credentials';
+import { IosCredentials, IosDistCredentials, distCertSchema } from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { AppleCtx, DistCert, DistCertInfo, DistCertManager } from '../../appleApi';
+import { DistCert, DistCertInfo, DistCertManager } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
-import { CreateAppCredentialsIos } from './IosAppCredentials';
 import { CredentialsManager, GoBackError } from '../route';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
@@ -166,7 +162,7 @@ export class UpdateIosDist implements IView {
 
     const newDistCert = await this.provideOrGenerate(ctx);
     await ctx.ensureAppleCtx();
-    const updatedUserCredentials = await ctx.ios.updateDistCert(selected.id, {
+    await ctx.ios.updateDistCert(selected.id, {
       ...newDistCert,
       teamId: ctx.appleCtx.team.id,
       teamName: ctx.appleCtx.team.name,
@@ -410,7 +406,7 @@ async function selectDistCertFromList(
 
 function formatDistCertFromApple(appleInfo: DistCertInfo, credentials: IosCredentials): string {
   const userCredentials = credentials.userCredentials.filter(
-    cred => cred.type == 'dist-cert' && cred.certId === appleInfo.id
+    cred => cred.type === 'dist-cert' && cred.certId === appleInfo.id
   );
   const appCredentials =
     userCredentials.length !== 0
@@ -532,20 +528,24 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
 async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
   const userProvided = await askForUserProvided(distCertSchema);
   if (userProvided) {
-    try {
-      userProvided.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
-        userProvided.certP12,
-        userProvided.certPassword
-      );
-    } catch (error) {
-      log.warn('Unable to access certificate serial number.');
-      log.warn('Make sure that certificate and password are correct.');
-      log.warn(error);
-    }
-    return userProvided;
+    return await _getDistCertWithSerial(userProvided);
   } else {
     return null;
   }
+}
+
+async function _getDistCertWithSerial(distCert: DistCert) {
+  try {
+    distCert.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+      distCert.certP12,
+      distCert.certPassword
+    );
+  } catch (error) {
+    log.warn('Unable to access certificate serial number.');
+    log.warn('Make sure that certificate and password are correct.');
+    log.warn(error);
+  }
+  return distCert;
 }
 
 export async function validateDistributionCertificate(ctx: Context, distributionCert: DistCert) {
@@ -609,4 +609,42 @@ function sortByExpiryDesc<T extends DistCert>(
     const certBExpiry = certBInfo ? certBInfo.expires : Number.NEGATIVE_INFINITY;
     return certBExpiry - certAExpiry;
   });
+}
+
+export async function getDistCertFromParams(builderOptions: {
+  distP12Path?: string;
+  teamId?: string;
+}): Promise<DistCert | null> {
+  const { distP12Path, teamId } = builderOptions;
+  const certPassword = process.env.EXPO_IOS_DIST_P12_PASSWORD;
+
+  // none of the distCert params were set, assume user has no intention of passing it in
+  if (!some([distP12Path, certPassword])) {
+    return null;
+  }
+
+  // partial distCert params were set, assume user has intention of passing it in
+  if (!every([distP12Path, certPassword, teamId])) {
+    throw new Error(
+      'You have to both pass --dist-p12-path parameter, --team-id parameter and set EXPO_IOS_DIST_P12_PASSWORD environment variable.'
+    );
+  }
+
+  const distCert = {
+    certP12: await fs.readFile(distP12Path as string, 'base64'),
+    teamId,
+    certPassword,
+  } as DistCert;
+  return await _getDistCertWithSerial(distCert);
+}
+
+export async function useDistCertFromParams(
+  ctx: Context,
+  distCert: DistCert
+): Promise<IosDistCredentials> {
+  const isValid = await validateDistributionCertificate(ctx, distCert);
+  if (!isValid) {
+    throw new Error('Cannot validate uploaded Distribution Certificate');
+  }
+  return await ctx.ios.createDistCert(distCert);
 }

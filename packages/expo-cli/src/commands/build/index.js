@@ -44,7 +44,7 @@ export default (program: any) => {
       'Path to your Distribution Certificate P12 (set password as EXPO_IOS_DIST_P12_PASSWORD environment variable).'
     )
     .option('--push-id <push-id>', 'Push Key ID (ex: 123AB4C56D).')
-    .option('--push-p8-path <push.p12>', 'Path to your Push Key .p8 file.')
+    .option('--push-p8-path <push.p8>', 'Path to your Push Key .p8 file.')
     .option('--provisioning-profile-path <.mobileprovision>', 'Path to your Provisioning Profile.')
     .option(
       '--public-url <url>',

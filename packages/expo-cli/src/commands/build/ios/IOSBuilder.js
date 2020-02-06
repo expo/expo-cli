@@ -15,9 +15,21 @@ import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
 import CommandError from '../../../CommandError';
-import { RemoveIosDist } from '../../../credentials/views/IosDistCert';
-import { RemoveIosPush } from '../../../credentials/views/IosPushCredentials';
-import { RemoveProvisioningProfile } from '../../../credentials/views/IosProvisioningProfile';
+import {
+  RemoveIosDist,
+  getDistCertFromParams,
+  useDistCertFromParams,
+} from '../../../credentials/views/IosDistCert';
+import {
+  RemoveIosPush,
+  getPushKeyFromParams,
+  usePushKeyFromParams,
+} from '../../../credentials/views/IosPushCredentials';
+import {
+  RemoveProvisioningProfile,
+  getProvisioningProfileFromParams,
+  useProvisioningProfileFromParams,
+} from '../../../credentials/views/IosProvisioningProfile';
 
 class IOSBuilder extends BaseBuilder {
   async run() {
@@ -95,7 +107,13 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
-    await runCredentialsManager(ctx, new SetupIosDist({ experienceName, bundleIdentifier }));
+    const distCertFromParams = await getDistCertFromParams(this.options);
+    if (distCertFromParams) {
+      await useDistCertFromParams(ctx, distCertFromParams);
+    } else {
+      await runCredentialsManager(ctx, new SetupIosDist({ experienceName, bundleIdentifier }));
+    }
+
     const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
     if (!distributionCert) {
       throw new CommandError(
@@ -104,16 +122,33 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       );
     }
 
-    await runCredentialsManager(ctx, new SetupIosPush({ experienceName, bundleIdentifier }));
+    const pushKeyFromParams = await getPushKeyFromParams(this.options);
+    if (pushKeyFromParams) {
+      await usePushKeyFromParams(ctx, pushKeyFromParams);
+    } else {
+      await runCredentialsManager(ctx, new SetupIosPush({ experienceName, bundleIdentifier }));
+    }
 
-    await runCredentialsManager(
-      ctx,
-      new SetupIosProvisioningProfile({
-        experienceName,
-        bundleIdentifier,
-        distCert: distributionCert,
-      })
-    );
+    const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
+    if (provisioningProfileFromParams) {
+      const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
+      await useProvisioningProfileFromParams(
+        ctx,
+        appCredentials,
+        distributionCert,
+        this.options.teamId,
+        provisioningProfileFromParams
+      );
+    } else {
+      await runCredentialsManager(
+        ctx,
+        new SetupIosProvisioningProfile({
+          experienceName,
+          bundleIdentifier,
+          distCert: distributionCert,
+        })
+      );
+    }
   }
 
   async clearAndRevokeCredentialsIfRequested(ctx: Context, projectMetadata) {
@@ -131,7 +166,6 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       clearPushCert ||
       clearProvisioningProfile;
     if (shouldClearAnything) {
-      // TODO: ensure we have the same behaviour when the option to `revokeCredentials` in the CLI is passed in
       const { experienceName, bundleIdentifier } = projectMetadata;
       const credsToClear = this.determineCredentialsToClear();
       await this.clearCredentials(ctx, experienceName, bundleIdentifier, credsToClear);
@@ -142,12 +176,15 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     ctx: Context,
     experienceName: string,
     bundleIdentifier: string,
-    credsToClear: Object<String, boolean>
+    credsToClear: Object<string, boolean>
   ): Promise<void> {
     const shouldRevokeOnApple = this.options.revokeCredentials;
     const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
     if (credsToClear.distributionCert && distributionCert) {
-      await new RemoveIosDist(shouldRevokeOnApple).removeSpecific(ctx, distributionCert);
+      await new RemoveIosDist(
+        shouldRevokeOnApple,
+        this.options.parent.nonInteractive
+      ).removeSpecific(ctx, distributionCert);
     }
 
     const pushKey = await ctx.ios.getPushKey(experienceName, bundleIdentifier);

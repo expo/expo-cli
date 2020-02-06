@@ -1,5 +1,8 @@
 import chalk from 'chalk';
+import fs from 'fs-extra';
+import every from 'lodash/every';
 import get from 'lodash/get';
+import some from 'lodash/some';
 import ora from 'ora';
 
 import inquirer from 'inquirer';
@@ -14,9 +17,7 @@ import {
 } from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { AppleCtx, PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
-import { RemoveProvisioningProfile } from './IosProvisioningProfile';
-import { CreateAppCredentialsIos } from './IosAppCredentials';
+import { PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
 import { CredentialsManager, GoBackError } from '../route';
 
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
@@ -374,14 +375,11 @@ async function selectPushCredFromList(
         iosCredentials,
         getValidityStatus(pushCred as IosPushCredentials, validPushKeys)
       );
-    } else {
-      const pushCert = pushCred as IosAppCredentials;
-      return `Push Certificate (PushId: ${pushCert.credentials.pushId ||
-        '------'}, TeamId: ${pushCert.credentials.teamId || '-------'} used in ${
-        pushCert.experienceName
-      })`;
     }
-    return 'unknown credentials';
+
+    const pushCert = pushCred as IosAppCredentials;
+    return `Push Certificate (PushId: ${pushCert.credentials.pushId || '------'}, TeamId: ${pushCert
+      .credentials.teamId || '-------'} used in ${pushCert.experienceName})`;
   };
 
   const NONE_SELECTED = -1;
@@ -423,7 +421,7 @@ function getAppsUsingPushCred(
 
 function formatPushKeyFromApple(appleInfo: PushKeyInfo, credentials: IosCredentials): string {
   const userCredentials = credentials.userCredentials.filter(
-    cred => cred.type == 'push-key' && cred.apnsKeyId === appleInfo.id
+    cred => cred.type === 'push-key' && cred.apnsKeyId === appleInfo.id
   );
   const appCredentials =
     userCredentials.length !== 0
@@ -559,4 +557,39 @@ async function filterRevokedPushKeys<T extends PushKey>(
     return validKeyIdsOnAppleServer.includes(pushKey.apnsKeyId);
   });
   return validPushKeysOnExpoServer;
+}
+
+export async function getPushKeyFromParams(builderOptions: {
+  pushId?: string;
+  pushP8Path?: string;
+  teamId?: string;
+}): Promise<PushKey | null> {
+  const { pushId, pushP8Path, teamId } = builderOptions;
+
+  // none of the pushKey params were set, assume user has no intention of passing it in
+  if (!some([pushId, pushP8Path])) {
+    return null;
+  }
+
+  // partial pushKey params were set, assume user has intention of passing it in
+  if (!every([pushId, pushP8Path, teamId])) {
+    throw new Error('You have to pass --push-id, --push-p8-path and --team-id parameters.');
+  }
+
+  return {
+    apnsKeyId: pushId,
+    apnsKeyP8: await fs.readFile(pushP8Path as string, 'base64'),
+    teamId,
+  } as PushKey;
+}
+
+export async function usePushKeyFromParams(
+  ctx: Context,
+  pushKey: PushKey
+): Promise<IosPushCredentials> {
+  const isValid = await validatePushKey(ctx, pushKey);
+  if (!isValid) {
+    throw new Error('Cannot validate uploaded Push Key');
+  }
+  return await ctx.ios.createPushKey(pushKey);
 }

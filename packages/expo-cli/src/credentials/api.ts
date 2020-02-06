@@ -4,6 +4,7 @@ import find from 'lodash/find';
 import omit from 'lodash/omit';
 import assign from 'lodash/assign';
 import get from 'lodash/get';
+import pick from 'lodash/pick';
 
 import log from '../log';
 import * as appleApi from '../appleApi';
@@ -233,12 +234,14 @@ export class IosApi {
     bundleIdentifier: string
   ): Promise<appleApi.ProvisioningProfile | null> {
     const appCredentials = await this.getAppCredentials(experienceName, bundleIdentifier);
-    const provisioningProfileId = get(appCredentials, 'credentials.provisioningProfileId');
     const provisioningProfile = get(appCredentials, 'credentials.provisioningProfile');
-    if (!provisioningProfileId || !provisioningProfile) {
+    if (!provisioningProfile) {
       return null;
     }
-    return { provisioningProfileId, provisioningProfile };
+    return pick(appCredentials.credentials, [
+      'provisioningProfile',
+      'provisioningProfileId',
+    ]) as appleApi.ProvisioningProfile;
   }
 
   async deleteProvisioningProfile(experienceName: string, bundleIdentifier: string) {
