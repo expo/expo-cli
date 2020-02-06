@@ -1,4 +1,4 @@
-import { fileExists, getWebOutputPath, readConfigJsonAsync } from '@expo/config';
+import { fileExists, getConfig, getWebOutputPath } from '@expo/config';
 import { isAvailableAsync, sharpAsync } from '@expo/image-utils';
 import JsonFile from '@expo/json-file';
 import chalk from 'chalk';
@@ -72,7 +72,10 @@ async function getAssetFilesAsync(
   projectDir: string,
   options: OptimizationOptions
 ): Promise<{ allFiles: string[]; selectedFiles: string[] }> {
-  const { exp } = await readConfigJsonAsync(projectDir, true, true);
+  const { exp } = await getConfig(projectDir, {
+    skipSDKVersionRequirement: true,
+    mode: 'production',
+  });
   const webOutputPath = await getWebOutputPath(exp);
   const { assetBundlePatterns } = exp;
   const globOptions = {
@@ -185,7 +188,7 @@ export async function optimizeAsync(
       continue;
     }
 
-    if (!(await isAvailableAsync())) {
+    if (!await isAvailableAsync()) {
       console.log(
         chalk.bold.red(
           `\u203A Cannot optimize images without sharp-cli.\n\u203A Run this command again after successfully installing sharp with \`${chalk.magenta`npm install -g sharp-cli`}\``
