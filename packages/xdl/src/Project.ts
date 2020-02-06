@@ -932,12 +932,12 @@ export async function publishAsync(
           'AndroidManifest.xml'
         );
         let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
-        let expoAppUrlRegex = /<meta-data android:name="expo.modules.updates.EXPO_APP_URL" android:value="[^"]*" \/>/;
-        if (androidManifestXmlFile.search(expoAppUrlRegex) < 0) {
+        let expoUpdateUrlRegex = /<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="[^"]*" \/>/;
+        if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
           // try to insert the meta-data tag if it isn't found
           await ExponentTools.regexFileAsync(
             /<activity\s+android:name=".MainActivity"/,
-            `<meta-data android:name="expo.modules.updates.EXPO_APP_URL" android:value="${fullManifestUrl}" />
+            `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />
 
       <activity
         android:name=".MainActivity"`,
@@ -945,8 +945,8 @@ export async function publishAsync(
           );
         } else {
           await ExponentTools.regexFileAsync(
-            expoAppUrlRegex,
-            `<meta-data android:name="expo.modules.updates.EXPO_APP_URL" android:value="${fullManifestUrl}" />`,
+            expoUpdateUrlRegex,
+            `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />`,
             androidManifestXmlPath
           );
         }
