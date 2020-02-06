@@ -24,7 +24,7 @@ const DEFAULT_MINIFY = {
  */
 export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
   constructor(env: Environment) {
-    const locations = env.locations || getPaths(env.projectRoot);
+    const locations = env.locations || getPaths(env.projectRoot, env.mode);
     const config = getConfig(env);
     const isProduction = getMode(env) === 'production';
 

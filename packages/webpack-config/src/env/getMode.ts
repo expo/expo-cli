@@ -13,7 +13,7 @@ export default function getMode({
 }: {
   production?: boolean;
   development?: boolean;
-  mode?: Mode;
+  mode?: string;
 }): Mode {
   if (mode === undefined) {
     if (process.env.NODE_ENV != null && isValidMode(process.env.NODE_ENV)) {

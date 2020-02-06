@@ -79,7 +79,7 @@ export default class ExpoDefinePlugin extends DefinePlugin {
     const mode = getMode(env);
     const { publicUrl } = getPublicPaths(env);
     const config = env.config || getConfig(env);
-    const locations = env.locations || getPaths(env.projectRoot);
+    const locations = env.locations || getPaths(env.projectRoot, mode);
     const productionManifestPath = locations.production.manifest;
     return new ExpoDefinePlugin({
       mode,

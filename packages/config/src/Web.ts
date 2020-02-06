@@ -1,6 +1,6 @@
 import JsonFile from '@expo/json-file';
 
-import { readConfigJson } from './Config';
+import { getConfig, readConfigJson } from './Config';
 import { AppJSONConfig, ExpoConfig } from './Config.types';
 
 const APP_JSON_FILE_NAME = 'app.json';
@@ -66,9 +66,9 @@ function sanitizePublicPath(publicPath: unknown): string {
 export function getConfigForPWA(
   projectRoot: string,
   getAbsolutePath: (...pathComponents: string[]) => string,
-  options: object
+  options: { templateIcon: string; mode: 'development' | 'production' }
 ) {
-  const { exp } = readConfigJson(projectRoot, true, true);
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: options.mode });
   return ensurePWAConfig(exp, getAbsolutePath, options);
 }
 
