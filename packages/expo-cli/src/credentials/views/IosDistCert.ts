@@ -11,12 +11,18 @@ import { IosCodeSigning } from '@expo/xdl';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
-import { IosCredentials, IosDistCredentials, distCertSchema } from '../credentials';
+import {
+  IosAppCredentials,
+  IosCredentials,
+  IosDistCredentials,
+  distCertSchema,
+} from '../credentials';
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
 import { DistCert, DistCertInfo, DistCertManager } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 import { CredentialsManager, GoBackError } from '../route';
+import { CreateAppCredentialsIos } from './IosAppCredentials';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline(
@@ -58,9 +64,11 @@ export class CreateIosDist implements IView {
 
 export class RemoveIosDist implements IView {
   shouldRevoke: boolean;
+  nonInteractive: boolean;
 
-  constructor(shouldRevoke: boolean = false) {
+  constructor(shouldRevoke: boolean = false, nonInteractive: boolean = false) {
     this.shouldRevoke = shouldRevoke;
+    this.nonInteractive = nonInteractive;
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -79,7 +87,7 @@ export class RemoveIosDist implements IView {
     );
     const appsList = apps.map(appCred => chalk.green(appCred.experienceName)).join(', ');
 
-    if (appsList) {
+    if (appsList && !this.nonInteractive) {
       const { confirm } = await prompt([
         {
           type: 'confirm',
@@ -93,30 +101,33 @@ export class RemoveIosDist implements IView {
       }
     }
 
+    log('Removing Distribution Certificate...\n');
     await ctx.ios.deleteDistCert(selected.id);
 
-    let shouldRevoke = false;
+    let shouldRevoke = this.shouldRevoke;
     if (selected.certId) {
-      const { revoke } = await prompt([
-        {
-          type: 'confirm',
-          name: 'revoke',
-          message: `Do you also want to revoke it on Apple Developer Portal?`,
-          when: !this.shouldRevoke,
-        },
-      ]);
-      if (revoke || this.shouldRevoke) {
+      if (!shouldRevoke && !this.nonInteractive) {
+        const { revoke } = await prompt([
+          {
+            type: 'confirm',
+            name: 'revoke',
+            message: `Do you also want to revoke it on Apple Developer Portal?`,
+          },
+        ]);
+        shouldRevoke = revoke;
+      }
+
+      if (shouldRevoke) {
         await ctx.ensureAppleCtx();
         await new DistCertManager(ctx.appleCtx).revoke([selected.certId]);
       }
-      shouldRevoke = revoke;
     }
 
     for (const appCredentials of apps) {
       log(
         `Removing Provisioning Profile for ${appCredentials.experienceName} (${appCredentials.bundleIdentifier})`
       );
-      await new RemoveProvisioningProfile(shouldRevoke || this.shouldRevoke).removeSpecific(
+      await new RemoveProvisioningProfile(shouldRevoke, this.nonInteractive).removeSpecific(
         ctx,
         appCredentials
       );
@@ -640,11 +651,21 @@ export async function getDistCertFromParams(builderOptions: {
 
 export async function useDistCertFromParams(
   ctx: Context,
+  appCredentials: IosAppCredentials,
   distCert: DistCert
 ): Promise<IosDistCredentials> {
   const isValid = await validateDistributionCertificate(ctx, distCert);
   if (!isValid) {
     throw new Error('Cannot validate uploaded Distribution Certificate');
   }
-  return await ctx.ios.createDistCert(distCert);
+  const iosDistCredentials = await ctx.ios.createDistCert(distCert);
+  const { experienceName, bundleIdentifier } = appCredentials;
+
+  await ctx.ios.useDistCert(experienceName, bundleIdentifier, iosDistCredentials.id);
+  log(
+    chalk.green(
+      `Successfully assigned Distribution Certificate to ${experienceName} (${bundleIdentifier})`
+    )
+  );
+  return iosDistCredentials;
 }

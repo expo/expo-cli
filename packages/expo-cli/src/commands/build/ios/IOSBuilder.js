@@ -84,7 +84,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       {
         type: 'confirm',
         name: 'confirm',
-        message: `Do you have the access to the Apple Account of ${bundleIdentifier}?`,
+        message: `Do you have access to the Apple Account of ${bundleIdentifier}?`,
       },
     ]);
     if (confirm) {
@@ -107,9 +107,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
+    const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
     const distCertFromParams = await getDistCertFromParams(this.options);
     if (distCertFromParams) {
-      await useDistCertFromParams(ctx, distCertFromParams);
+      await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
     } else {
       await runCredentialsManager(ctx, new SetupIosDist({ experienceName, bundleIdentifier }));
     }
@@ -124,18 +125,16 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
     const pushKeyFromParams = await getPushKeyFromParams(this.options);
     if (pushKeyFromParams) {
-      await usePushKeyFromParams(ctx, pushKeyFromParams);
+      await usePushKeyFromParams(ctx, appCredentials, pushKeyFromParams);
     } else {
       await runCredentialsManager(ctx, new SetupIosPush({ experienceName, bundleIdentifier }));
     }
 
     const provisioningProfileFromParams = await getProvisioningProfileFromParams(this.options);
     if (provisioningProfileFromParams) {
-      const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
       await useProvisioningProfileFromParams(
         ctx,
         appCredentials,
-        distributionCert,
         this.options.teamId,
         provisioningProfileFromParams
       );
@@ -179,17 +178,18 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     credsToClear: Object<string, boolean>
   ): Promise<void> {
     const shouldRevokeOnApple = this.options.revokeCredentials;
+    const nonInteractive = this.options.parent.nonInteractive;
     const distributionCert = await ctx.ios.getDistCert(experienceName, bundleIdentifier);
     if (credsToClear.distributionCert && distributionCert) {
-      await new RemoveIosDist(
-        shouldRevokeOnApple,
-        this.options.parent.nonInteractive
-      ).removeSpecific(ctx, distributionCert);
+      await new RemoveIosDist(shouldRevokeOnApple, nonInteractive).removeSpecific(
+        ctx,
+        distributionCert
+      );
     }
 
     const pushKey = await ctx.ios.getPushKey(experienceName, bundleIdentifier);
     if (credsToClear.pushKey && pushKey) {
-      await new RemoveIosPush(shouldRevokeOnApple).removeSpecific(ctx, pushKey);
+      await new RemoveIosPush(shouldRevokeOnApple, nonInteractive).removeSpecific(ctx, pushKey);
     }
 
     const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
@@ -198,7 +198,10 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       bundleIdentifier
     );
     if (credsToClear.provisioningProfile && provisioningProfile) {
-      await new RemoveProvisioningProfile(shouldRevokeOnApple).removeSpecific(ctx, appCredentials);
+      await new RemoveProvisioningProfile(shouldRevokeOnApple, nonInteractive).removeSpecific(
+        ctx,
+        appCredentials
+      );
     }
 
     const pushCert = await ctx.ios.getPushCert(experienceName, bundleIdentifier);

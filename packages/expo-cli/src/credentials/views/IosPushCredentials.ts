@@ -58,9 +58,11 @@ export class CreateIosPush implements IView {
 
 export class RemoveIosPush implements IView {
   shouldRevoke: boolean;
+  nonInteractive: boolean;
 
-  constructor(shouldRevoke: boolean = false) {
+  constructor(shouldRevoke: boolean = false, nonInteractive: boolean = false) {
     this.shouldRevoke = shouldRevoke;
+    this.nonInteractive = nonInteractive;
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -84,7 +86,7 @@ export class RemoveIosPush implements IView {
     const apps = getAppsUsingPushCred(ctx.ios.credentials, selected);
     const appsList = apps.map(appCred => appCred.experienceName).join(', ');
 
-    if (appsList) {
+    if (appsList && !this.nonInteractive) {
       const { confirm } = await prompt([
         {
           type: 'confirm',
@@ -97,17 +99,23 @@ export class RemoveIosPush implements IView {
         return;
       }
     }
+
+    log('Removing Push Key...\n');
     await ctx.ios.deletePushKey(selected.id);
 
-    const { revoke } = await prompt([
-      {
-        type: 'confirm',
-        name: 'revoke',
-        message: `Do you also want to revoke it on Apple Developer Portal?`,
-        when: !this.shouldRevoke,
-      },
-    ]);
-    if (revoke || this.shouldRevoke) {
+    let shouldRevoke = this.shouldRevoke;
+    if (!shouldRevoke && !this.nonInteractive) {
+      const { revoke } = await prompt([
+        {
+          type: 'confirm',
+          name: 'revoke',
+          message: `Do you also want to revoke it on Apple Developer Portal?`,
+        },
+      ]);
+      shouldRevoke = revoke;
+    }
+
+    if (shouldRevoke) {
       await ctx.ensureAppleCtx();
       await new PushKeyManager(ctx.appleCtx).revoke([selected.apnsKeyId]);
     }
@@ -585,11 +593,17 @@ export async function getPushKeyFromParams(builderOptions: {
 
 export async function usePushKeyFromParams(
   ctx: Context,
+  appCredentials: IosAppCredentials,
   pushKey: PushKey
 ): Promise<IosPushCredentials> {
   const isValid = await validatePushKey(ctx, pushKey);
   if (!isValid) {
     throw new Error('Cannot validate uploaded Push Key');
   }
-  return await ctx.ios.createPushKey(pushKey);
+  const iosPushCredentials = await ctx.ios.createPushKey(pushKey);
+  const { experienceName, bundleIdentifier } = appCredentials;
+
+  await ctx.ios.usePushKey(experienceName, bundleIdentifier, iosPushCredentials.id);
+  log(chalk.green(`Successfully assigned Push Key to ${experienceName} (${bundleIdentifier})`));
+  return iosPushCredentials;
 }

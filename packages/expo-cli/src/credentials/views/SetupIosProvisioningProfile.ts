@@ -48,10 +48,7 @@ export class SetupIosProvisioningProfile implements IView {
     }
 
     if (!ctx.hasAppleCtx()) {
-      const isValid = await iosProfileView.validateProfileWithoutApple(
-        appCredentials,
-        this._distCert
-      );
+      const isValid = await iosProfileView.validateProfileWithoutApple(configuredProfile);
       if (!isValid) {
         throw new Error(`The provisioning profile we have on file is no longer valid.`);
       }

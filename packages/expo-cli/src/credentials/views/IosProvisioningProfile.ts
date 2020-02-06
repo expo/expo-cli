@@ -32,9 +32,11 @@ export type ProvisioningProfileOptions = {
 
 export class RemoveProvisioningProfile implements IView {
   shouldRevoke: boolean;
+  nonInteractive: boolean;
 
-  constructor(shouldRevoke: boolean = false) {
+  constructor(shouldRevoke: boolean = false, nonInteractive: boolean = false) {
     this.shouldRevoke = shouldRevoke;
+    this.nonInteractive = nonInteractive;
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -51,17 +53,22 @@ export class RemoveProvisioningProfile implements IView {
   }
 
   async removeSpecific(ctx: Context, selected: IosAppCredentials) {
+    log('Removing Provisioning Profile...\n');
     await ctx.ios.deleteProvisioningProfile(selected.experienceName, selected.bundleIdentifier);
 
-    const { revoke } = await prompt([
-      {
-        type: 'confirm',
-        name: 'revoke',
-        message: 'Do you also want to revoke it on Apple Developer Portal?',
-        when: !this.shouldRevoke,
-      },
-    ]);
-    if (revoke || this.shouldRevoke) {
+    let shouldRevoke = this.shouldRevoke;
+    if (!shouldRevoke && !this.nonInteractive) {
+      const { revoke } = await prompt([
+        {
+          type: 'confirm',
+          name: 'revoke',
+          message: 'Do you also want to revoke it on Apple Developer Portal?',
+        },
+      ]);
+      shouldRevoke = revoke;
+    }
+
+    if (shouldRevoke) {
       await ctx.ensureAppleCtx();
       const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
       await ppManager.revoke(selected.bundleIdentifier);
@@ -349,16 +356,10 @@ async function generateProvisioningProfile(
 
 // Best effort validation without Apple credentials
 export async function validateProfileWithoutApple(
-  appCredentials: IosAppCredentials,
-  distCert: IosDistCredentials
+  provisioningProfile: ProvisioningProfile
 ): Promise<boolean> {
   const spinner = ora(`Performing best effort validation of Provisioning Profile...\n`).start();
-  if (appCredentials.distCredentialsId !== distCert.id) {
-    spinner.fail('Provisioning profile on file is associated with a different distribution cert');
-    return false;
-  }
-
-  const base64EncodedProfile = appCredentials.credentials.provisioningProfile;
+  const base64EncodedProfile = provisioningProfile.provisioningProfile;
   if (!base64EncodedProfile) {
     spinner.fail('No profile on file');
     return false;
@@ -469,12 +470,11 @@ export async function getProvisioningProfileFromParams(builderOptions: {
 export async function useProvisioningProfileFromParams(
   ctx: Context,
   appCredentials: IosAppCredentials,
-  distCert: IosDistCredentials,
   teamId: string,
   provisioningProfile: ProvisioningProfile
 ): Promise<ProvisioningProfile> {
   const { experienceName, bundleIdentifier } = appCredentials;
-  const isValid = await validateProfileWithoutApple(appCredentials, distCert);
+  const isValid = await validateProfileWithoutApple(provisioningProfile);
   if (!isValid) {
     throw new Error('Uploaded invalid Provisioning Profile');
   }
