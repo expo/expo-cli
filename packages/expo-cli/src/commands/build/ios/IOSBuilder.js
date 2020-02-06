@@ -125,8 +125,18 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       displayProjectCredentials(experienceName, bundleIdentifier, credentials);
     }
 
-    //TODO
-    throw new Error('ABORT');
+    // TODO: DO NOT COMMIT THIS TO PRODUCTION!
+    const { continueUserTestingForQuin } = await prompt([
+      {
+        type: 'confirm',
+        name: 'continueUserTestingForQuin',
+        message:
+          '====USER TESTING FOR QUIN==== \nThe credentials section is complete. Would you like to continue with the rest of the build proccess?',
+      },
+    ]);
+    if (!continueUserTestingForQuin) {
+      throw new Error('ABORT');
+    }
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
