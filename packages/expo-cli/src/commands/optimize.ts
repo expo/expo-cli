@@ -1,15 +1,8 @@
 import { Command } from 'commander';
-import { readConfigJsonAsync } from '@expo/config';
 
 import log from '../log';
 
 export async function action(projectDir = './') {
-  const { exp } = await readConfigJsonAsync(projectDir);
-  if (exp === null) {
-    log.warn('No Expo configuration found. Are you sure this is a project directory?');
-    process.exit(1);
-  }
-
   // Everything after this is a redirect for the deprecated optimize command
   log.warn(
     '\u203A The expo optimize command is no longer included in expo-cli, please refer to the expo-optimize README at https://git.io/Je9h6 for a drop-in replacement.'
