@@ -863,11 +863,13 @@ export async function publishAsync(
       const context = StandaloneContext.createUserContext(projectRoot, exp);
       const { supportingDirectory } = IosWorkspace.getPaths(context);
       if (fs.existsSync(path.join(supportingDirectory, 'EXShell.plist'))) {
+        // This is an ExpoKit app, set properties in EXShell.plist
         await IosPlist.modifyAsync(supportingDirectory, 'EXShell', (shellPlist: any) => {
           shellPlist.releaseChannel = options.releaseChannel;
           return shellPlist;
         });
       } else if (fs.existsSync(path.join(supportingDirectory, 'expo-config.plist'))) {
+        // This is an app with expo-updates installed, set properties in expo-config.plist
         await IosPlist.modifyAsync(supportingDirectory, 'expo-config', (configPlist: any) => {
           configPlist.remoteUrl = fullManifestUrl;
           configPlist.releaseChannel = options.releaseChannel;
@@ -900,6 +902,7 @@ export async function publishAsync(
         'AppConstants.java'
       );
       if (fs.existsSync(constantsPath)) {
+        // This is an ExpoKit app
         // We need to add EmbeddedResponse instances on Android to tell the runtime
         // that the shell app manifest and bundle is packaged.
         await ExponentTools.deleteLinesInFileAsync(
@@ -923,6 +926,8 @@ export async function publishAsync(
           constantsPath
         );
       } else {
+        // This is an app with expo-updates installed, so set the applicable meta-data properties in
+        // AndroidManifest.xml
         let androidManifestXmlPath = path.join(
           projectRoot,
           'android',
