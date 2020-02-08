@@ -1,4 +1,4 @@
-import { AppJSONConfig, BareAppConfig, configFilename, readConfigJsonAsync } from '@expo/config';
+import { AppJSONConfig, BareAppConfig } from '@expo/config';
 
 import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
@@ -18,6 +18,7 @@ import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
+import { getProjectConfigAsync } from './Config';
 
 // TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
 type ReadEntry = any;
@@ -231,24 +232,23 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
 
   let { username } = user;
 
-  const { exp } = await readConfigJsonAsync(root);
+  // Evaluate the project config and throw an error if the `sdkVersion` cannot be found.
+  const { exp } = await getProjectConfigAsync(root, { skipSDKVersionRequirement: false });
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;
 
-  const configName = configFilename(root);
-
-  if (!sdkVersion) {
-    throw new Error(`sdkVersion is missing from ${configName}`);
-  }
-
   if (!name) {
     // slug is made programmatically for app.json
-    throw new Error(`slug field is missing from exp.json.`);
+    throw new Error(
+      `Cannot find the project's \`slug\`. Please add a \`name\` or \`slug\` field in the project's \`app.json\` or \`app.config.js\`). ex: \`"slug": "my-project"\``
+    );
   }
 
   if (!version) {
-    throw new Error(`Can't get version of package.`);
+    throw new Error(
+      `Cannot find the project's \`version\`. Please define it in one of the project's config files: \`package.json\`, \`app.json\`, or \`app.config.js\`. ex: \`"version": "1.0.0"\``
+    );
   }
 
   const remotePackageName = name;
@@ -263,7 +263,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
       remoteUsername,
       remotePackageName,
       remoteFullPackageName,
-      sdkVersion,
+      sdkVersion: sdkVersion!,
       iosBundleIdentifier,
       androidPackage,
     },
