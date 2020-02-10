@@ -1,4 +1,3 @@
-import { readConfigJsonAsync } from '@expo/config';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import getenv from 'getenv';
@@ -7,6 +6,7 @@ import openBrowser from 'react-dev-utils/openBrowser';
 import webpack from 'webpack';
 import { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 
+import { getProjectConfigAsync } from './Config';
 import Logger from './Logger';
 import { LogTag, logWarning } from './project/ProjectUtils';
 import * as UrlUtils from './UrlUtils';
@@ -134,9 +134,17 @@ export async function openProjectAsync(
   }
 }
 
-// If platforms only contains the "web" field
+/**
+ * If the project config `platforms` only contains the "web" field.
+ * If no `platforms` array is defined this could still resolve true because platforms
+ * will be inferred from the existence of `react-native-web` and `react-native`.
+ *
+ * @param projectRoot
+ */
 export async function onlySupportsWebAsync(projectRoot: string): Promise<boolean> {
-  const { exp } = await readConfigJsonAsync(projectRoot, true);
+  const { exp } = await getProjectConfigAsync(projectRoot, {
+    skipSDKVersionRequirement: true,
+  });
   if (Array.isArray(exp.platforms) && exp.platforms.length === 1) {
     return exp.platforms[0] === 'web';
   }
