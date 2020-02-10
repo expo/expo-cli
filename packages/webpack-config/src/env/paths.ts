@@ -13,6 +13,7 @@ import url from 'url';
 
 import { Environment, FilePaths, Mode } from '../types';
 import getMode from './getMode';
+import { getConfigMode } from './getConfigMode';
 
 function parsePaths(projectRoot: string, mode: Mode, nativeAppManifest?: ExpoConfig): FilePaths {
   const inputProjectRoot = projectRoot || getPossibleProjectRoot();
@@ -80,11 +81,12 @@ function parsePaths(projectRoot: string, mode: Mode, nativeAppManifest?: ExpoCon
  * @category env
  */
 export function getPaths(projectRoot: string, mode?: string): FilePaths {
+  const configMode = getConfigMode(getMode({ mode }));
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
-    mode: getMode({ mode }),
+    mode: configMode,
   });
-  return parsePaths(projectRoot, exp);
+  return parsePaths(projectRoot, configMode, exp);
 }
 
 /**
@@ -94,11 +96,13 @@ export function getPaths(projectRoot: string, mode?: string): FilePaths {
  * @category env
  */
 export async function getPathsAsync(projectRoot: string, mode?: string): Promise<FilePaths> {
+  const configMode = getConfigMode(getMode({ mode }));
+
   let exp;
   try {
-    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: getMode({ mode }) }).exp;
+    exp = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: configMode }).exp;
   } catch (error) {}
-  return parsePaths(projectRoot, exp);
+  return parsePaths(projectRoot, configMode, exp);
 }
 
 /**
@@ -108,9 +112,11 @@ export async function getPathsAsync(projectRoot: string, mode?: string): Promise
  * @category env
  */
 export function getServedPath(projectRoot: string, mode?: string): string {
+  const configMode = getConfigMode(getMode({ mode }));
+
   const { pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
-    mode: getMode({ mode }),
+    mode: configMode,
   });
   const envPublicUrl = process.env.WEB_PUBLIC_URL;
 
@@ -131,10 +137,9 @@ export function getServedPath(projectRoot: string, mode?: string): string {
  * @param env
  * @category env
  */
-export function getPublicPaths({
-  projectRoot,
-  ...env,
-}: Pick<Environment, 'mode' | 'projectRoot'>): {
+export function getPublicPaths(
+  env: Pick<Environment, 'mode' | 'projectRoot'>
+): {
   /**
    * Webpack uses `publicPath` to determine where the app is being served from.
    * It requires a trailing slash, or the file assets will get an incorrect path.
@@ -149,8 +154,9 @@ export function getPublicPaths({
    */
   publicUrl: string;
 } {
-  if (getMode(env) === 'production') {
-    const publicPath = getServedPath(projectRoot, env.mode);
+  const parsedMode = getMode(env);
+  if (parsedMode === 'production') {
+    const publicPath = getServedPath(env.projectRoot, parsedMode);
     return {
       publicPath,
       publicUrl: publicPath.slice(0, -1),
@@ -167,9 +173,11 @@ export function getPublicPaths({
  * @category env
  */
 export function getProductionPath(projectRoot: string, mode?: string): string {
+  const configMode = getConfigMode(getMode({ mode }));
+
   const { exp } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
-    mode: getMode({ mode }),
+    mode: configMode,
   });
   return getAbsolutePathWithProjectRoot(projectRoot, getWebOutputPath(exp));
 }

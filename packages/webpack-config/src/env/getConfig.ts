@@ -1,8 +1,9 @@
 import { ExpoConfig, getConfigForPWA } from '@expo/config';
 
 import { Environment } from '../types';
-import { getPaths } from './paths';
+import { getConfigMode } from './getConfigMode';
 import getMode from './getMode';
+import { getPaths } from './paths';
 
 /**
  * Get the Expo project config in a way that's optimized for web.
@@ -20,7 +21,7 @@ function getConfig(
   // Fill all config values with PWA defaults
   return getConfigForPWA(env.projectRoot, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),
-    mode: getMode({ mode: env.mode }),
+    mode: getMode({ mode: getConfigMode(env.mode) }),
   });
 }
 
