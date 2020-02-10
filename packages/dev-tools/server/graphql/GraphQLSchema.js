@@ -641,6 +641,7 @@ const resolvers = {
         const issueIterator = context.getIssueIterator();
         const messageIterator = context.getMessageIterator(parsedCursor);
         const iterator = mergeAsyncIterators(issueIterator, messageIterator);
+
         return {
           async next() {
             const result = await iterator.next();
@@ -653,6 +654,14 @@ const resolvers = {
               },
               done,
             };
+          },
+
+          return() {
+            return iterator.return();
+          },
+
+          throw(error) {
+            return iterator.throw(error);
           },
 
           [$$asyncIterator]() {

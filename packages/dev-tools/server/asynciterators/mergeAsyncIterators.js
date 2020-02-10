@@ -19,6 +19,30 @@ export default function mergeAsyncIterators(...iterators: Array<AsyncIterator>) 
       };
     },
 
+    async return() {
+      for (const iterator of iterators) {
+        if (iterator.return) {
+          await iterator.return();
+        }
+      }
+      return {
+        done: true,
+        value: undefined,
+      };
+    },
+
+    async throw(error) {
+      for (const iterator of iterators) {
+        if (iterator.throw) {
+          await iterator.throw(error);
+        }
+      }
+      return {
+        done: true,
+        value: undefined,
+      };
+    },
+
     [$$asyncIterator]() {
       return this;
     },
