@@ -17,11 +17,13 @@ function getConfig(
   if (env.config) {
     return env.config;
   }
-  const locations = env.locations || getPaths(env.projectRoot, env.mode);
+  const mode = getMode(env);
+  const configMode = getConfigMode(mode);
+  const locations = env.locations || getPaths(env.projectRoot, configMode);
   // Fill all config values with PWA defaults
   return getConfigForPWA(env.projectRoot, locations.absolute, {
     templateIcon: locations.template.get('icon.png'),
-    mode: getMode({ mode: getConfigMode(env.mode) }),
+    mode: configMode,
   });
 }
 
