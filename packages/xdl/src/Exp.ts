@@ -9,6 +9,7 @@ import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
 import tar from 'tar';
+import yaml from 'js-yaml';
 
 import { NpmPackageManager, YarnPackageManager } from '@expo/package-manager';
 import semver from 'semver';
@@ -190,8 +191,24 @@ async function installDependenciesAsync(projectRoot: string, packageManager: 'ya
   if (packageManager === 'yarn') {
     const yarn = new YarnPackageManager(options);
     const version = await yarn.versionAsync();
-    if (semver.satisfies(version, '>=2.0.0-rc.24')) {
-      await fs.writeFile(path.join(projectRoot, '.yarnrc.yml'), 'nodeLinker: node-modules\n');
+    const nodeLinker = await yarn.getConfigAsync('nodeLinker');
+    if (semver.satisfies(version, '>=2.0.0-rc.24') && nodeLinker !== 'node-modules') {
+      const yarnRc = path.join(projectRoot, '.yarnrc.yml');
+      let yamlString = '';
+      try {
+        yamlString = fs.readFileSync(yarnRc, 'utf8');
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+      const config = yamlString ? yaml.safeLoad(yamlString) : {};
+      config.nodeLinker = 'node-modules';
+      Logger.global.warn(
+        `Yarn v${version} detected, enabling experimental Yarn v2 support using the node-modules plugin.`
+      );
+      Logger.global.info(`Writing ${yarnRc}...`);
+      fs.writeFileSync(yarnRc, yaml.safeDump(config));
     }
     await yarn.installAsync();
   } else {

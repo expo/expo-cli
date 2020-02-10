@@ -56,6 +56,8 @@ export interface PackageManager {
   installAsync(): Promise<void>;
   addAsync(...names: string[]): Promise<void>;
   addDevAsync(...names: string[]): Promise<void>;
+  versionAsync(): Promise<string>;
+  getConfigAsync(key: string): Promise<string>;
 }
 
 export class NpmPackageManager implements PackageManager {
@@ -94,6 +96,10 @@ export class NpmPackageManager implements PackageManager {
   }
   async versionAsync() {
     const { stdout } = await spawnAsync('npm', ['--version'], { stdio: 'pipe' });
+    return stdout.trim();
+  }
+  async getConfigAsync(key: string) {
+    const { stdout } = await spawnAsync('npm', ['config', 'get', key], { stdio: 'pipe' });
     return stdout.trim();
   }
 
@@ -170,6 +176,10 @@ export class YarnPackageManager implements PackageManager {
   }
   async versionAsync() {
     const { stdout } = await spawnAsync('yarnpkg', ['--version'], { stdio: 'pipe' });
+    return stdout.trim();
+  }
+  async getConfigAsync(key: string) {
+    const { stdout } = await spawnAsync('yarnpkg', ['config', 'get', key], { stdio: 'pipe' });
     return stdout.trim();
   }
 
