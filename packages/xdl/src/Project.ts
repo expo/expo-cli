@@ -365,7 +365,7 @@ export async function getSlugAsync(
     ...options
   }: { mode?: 'production' | 'development'; [key: string]: any } = {}
 ): Promise<string> {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: options.mode });
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode });
   if (exp.slug) {
     return exp.slug;
   }

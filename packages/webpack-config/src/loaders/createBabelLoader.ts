@@ -1,10 +1,11 @@
-import { loadPartialConfig } from '@babel/core';
+import { TransformOptions, loadPartialConfig } from '@babel/core';
 import { getPossibleProjectRoot } from '@expo/config/paths';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import { Rule } from 'webpack';
 
+import { projectHasModule } from '@expo/config';
 import { Environment, Mode } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
 
@@ -61,13 +62,18 @@ function ensureRoot(possibleProjectRoot?: string): string {
   return getPossibleProjectRoot();
 }
 
-function generateCacheIdentifier(projectRoot: string, version: string = '1'): string {
+function generateCacheIdentifier(
+  projectRoot: string,
+  babelOptions: TransformOptions,
+  version: string = '1'
+): string {
   const filename = path.join(projectRoot, 'foobar.js');
   const cacheKey = `babel-cache-${version}-`;
 
   const partial = loadPartialConfig({
     filename,
     cwd: projectRoot,
+    ...babelOptions,
     sourceFileName: filename,
   });
 
@@ -113,7 +119,7 @@ export default function createBabelLoader({
   babelProjectRoot,
   include = [],
   verbose,
-  platform,
+  platform = 'web',
   useCustom,
   ...options
 }: {
@@ -138,18 +144,59 @@ export default function createBabelLoader({
     // Attempt to use local babel.config.js file for compiling project.
     configFile: true,
   };
+
   if (
     !fs.existsSync(path.join(projectRoot, 'babel.config.js')) &&
     !fs.existsSync(path.join(projectRoot, '.babelrc'))
   ) {
-    presetOptions = {
-      babelrc: false,
-      configFile: false,
-      presets: [require.resolve('babel-preset-expo')],
-    };
+    if (projectHasModule('babel-preset-expo', projectRoot, {})) {
+      presetOptions = {
+        babelrc: false,
+        configFile: false,
+        presets: [require.resolve('babel-preset-expo')],
+      };
+    } else {
+      console.log(chalk.yellow('\u203A Webpack failed to locate a valid Babel config'));
+    }
   }
 
-  const cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot);
+  presetOptions = {
+    ...presetOptions,
+    ...(customUseOptions || {}),
+
+    sourceType: 'unambiguous',
+    root: ensuredProjectRoot,
+    compact: isProduction,
+  };
+
+  let cacheIdentifier: string | undefined;
+
+  try {
+    cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot, {
+      ...presetOptions,
+    });
+  } catch (error) {
+    console.log(chalk.black.bgRed(`Your Babel config is invalid!`));
+    throw error;
+  }
+  presetOptions.cacheIdentifier = customUseOptions.cacheIdentifier || cacheIdentifier;
+  presetOptions.cacheCompression = !isProduction;
+  presetOptions.cacheDirectory =
+    customUseOptions.cacheDirectory ||
+    path.join(
+      ensuredProjectRoot,
+      '.expo',
+      platform,
+      'cache',
+      mode || 'development',
+      'babel-loader'
+    );
+  presetOptions.caller = {
+    __dangerous_rule_id: 'expo-babel-loader',
+    bundler: 'webpack',
+    platform,
+    mode,
+  };
   return {
     test: /\.(mjs|[jt]sx?)$/,
     // Can only clobber test
@@ -179,33 +226,7 @@ export default function createBabelLoader({
     use: {
       ...customUse,
       loader: require.resolve('babel-loader'),
-      options: {
-        ...presetOptions,
-
-        cacheCompression: !isProduction,
-        cacheDirectory: path.join(
-          ensuredProjectRoot,
-          '.expo',
-          'web',
-          'cache',
-          mode || 'development',
-          'babel-loader'
-        ),
-        cacheIdentifier,
-
-        // Only clobber hard coded values.
-        ...(customUseOptions || {}),
-
-        caller: {
-          __dangerous_rule_id: 'expo-babel-loader',
-          bundler: 'webpack',
-          platform,
-          mode,
-        },
-        sourceType: 'unambiguous',
-        root: ensuredProjectRoot,
-        compact: isProduction,
-      },
+      options: presetOptions,
     },
   };
 }
