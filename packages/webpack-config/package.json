@@ -1,6 +1,6 @@
 {
   "name": "@expo/webpack-config",
-  "version": "0.10.12",
+  "version": "0.11.0",
   "description": "The default Webpack configuration used to build Expo apps targeting the web.",
   "main": "webpack.config.js",
   "types": "webpack.config.d.ts",
@@ -38,8 +38,8 @@
   "dependencies": {
     "@babel/core": "^7.4.5",
     "@babel/runtime": "^7.3.4",
-    "@expo/config": "2.5.7",
-    "@expo/webpack-pwa-manifest-plugin": "1.2.19",
+    "@expo/config": "2.6.0",
+    "@expo/webpack-pwa-manifest-plugin": "1.2.20",
     "babel-loader": "8.0.6",
     "brotli-webpack-plugin": "^1.1.0",
     "chalk": "^2.4.2",
