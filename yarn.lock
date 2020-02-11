@@ -2904,6 +2904,11 @@
   resolved "https://registry.yarnpkg.com/@types/joi/-/joi-14.3.4.tgz#eed1e14cbb07716079c814138831a520a725a1e0"
   integrity sha512-1TQNDJvIKlgYXGNIABfgFp9y0FziDpuGrd799Q5RcnsDu+krD+eeW/0Fs5PHARvWWFelOhIG2OPCo6KbadBM4A==
 
+"@types/js-yaml@^3.12.2":
+  version "3.12.2"
+  resolved "https://registry.yarnpkg.com/@types/js-yaml/-/js-yaml-3.12.2.tgz#a35a1809c33a68200fb6403d1ad708363c56470a"
+  integrity sha512-0CFu/g4mDSNkodVwWijdlr8jH7RoplRWNgovjFLEZeT+QEbbZXjBmCe3HwaWheAlCbHwomTwzZoSedeOycABug==
+
 "@types/jscodeshift@^0.6.0":
   version "0.6.3"
   resolved "https://registry.yarnpkg.com/@types/jscodeshift/-/jscodeshift-0.6.3.tgz#96b3acc2b5b761faa77056f777c295b3d16ee2f2"
@@ -3240,7 +3245,7 @@
   resolved "https://registry.yarnpkg.com/@types/webpack-env/-/webpack-env-1.14.1.tgz#0d8a53f308f017c53a5ddc3d07f4d6fa76b790d7"
   integrity sha512-0Ki9jAAhKDSuLDXOIMADg54Hu60SuBTEsWaJGGy5cV+SSUQ63J2a+RrYYGrErzz39fXzTibhKrAQJAb8M7PNcA==
 
-"@types/webpack-manifest-plugin@^2.2.0":
+"@types/webpack-manifest-plugin@^2.1.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@types/webpack-manifest-plugin/-/webpack-manifest-plugin-2.1.0.tgz#1fc52fc795d165493ab957656a7aa9f5cb7c145e"
   integrity sha512-6OROnT+O0nht7QAr1juVZLm5E8V92LU7EDLyoEVFDUdRE67lU9c9fpPjrVVN+QXPYeaBP7ZzbQI8A4LEUtv8rg==
