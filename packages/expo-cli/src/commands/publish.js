@@ -64,16 +64,16 @@ export async function action(projectDir: string, options: Options = {}) {
   } = await Exp.getPublishInfoAsync(projectDir);
 
   let buildStatus;
-  if (process.env.EXPO_NEXT_API) {
-    buildStatus = await Project.getBuildStatusAsync(projectDir, {
+  if (process.env.EXPO_LEGACY_API === 'true') {
+    buildStatus = await Project.buildAsync(projectDir, {
+      mode: 'status',
       platform: 'all',
       current: true,
       releaseChannel: options.releaseChannel,
       sdkVersion,
     });
   } else {
-    buildStatus = await Project.buildAsync(projectDir, {
-      mode: 'status',
+    buildStatus = await Project.getBuildStatusAsync(projectDir, {
       platform: 'all',
       current: true,
       releaseChannel: options.releaseChannel,
