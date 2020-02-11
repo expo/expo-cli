@@ -264,15 +264,12 @@ async function promptForBareConfig(
     }
     projectName = dirName;
   } else {
-    ({ projectName } = await prompt([
-      {
-        type: 'input',
-        name: 'projectName',
-        message: 'What is the name of your project?',
-        filter: (name: string) => name.trim(),
-        validate: (name: string) => validateProjectName(name),
-      },
-    ]));
+    ({ projectName } = await prompt({
+      name: 'projectName',
+      message: 'What is the name of your project?',
+      filter: (name: string) => name.trim(),
+      validate: (name: string) => validateProjectName(name),
+    }));
   }
 
   return {
@@ -280,6 +277,7 @@ async function promptForBareConfig(
     displayName: options.name || projectName,
     expo: {
       name: options.name || projectName,
+      slug: projectName,
     },
   };
 }
