@@ -57,7 +57,17 @@ export default (program: any) => {
       const { exp } = await readConfigJsonAsync(projectDir);
 
       let result: any;
-      if (process.env.EXPO_LEGACY_API === 'true') {
+      if (process.env.EXPO_NEXT_API) {
+        const api = ApiV2.clientForUser(user);
+        result = await api.postAsync('publish/history', {
+          owner: exp.owner,
+          slug: await Project.getSlugAsync(projectDir, options),
+          version: VERSION,
+          releaseChannel: options.releaseChannel,
+          count: options.count,
+          platform: options.platform,
+        });
+      } else {
         // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
         let formData = new FormData();
         formData.append('queryType', 'history');
@@ -78,16 +88,6 @@ export default (program: any) => {
 
         result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
           formData,
-        });
-      } else {
-        const api = ApiV2.clientForUser(user);
-        result = await api.postAsync('publish/history', {
-          owner: exp.owner,
-          slug: await Project.getSlugAsync(projectDir, options),
-          version: VERSION,
-          releaseChannel: options.releaseChannel,
-          count: options.count,
-          platform: options.platform,
         });
       }
 
@@ -155,7 +155,14 @@ export default (program: any) => {
       const slug = await Project.getSlugAsync(projectDir, options);
 
       let result: any;
-      if (process.env.EXPO_LEGACY_API === 'true') {
+      if (process.env.EXPO_NEXT_API) {
+        const api = ApiV2.clientForUser(user);
+        result = await api.postAsync('publish/details', {
+          owner: exp.owner,
+          publishId: options.publishId,
+          slug,
+        });
+      } else {
         let formData = new FormData();
         formData.append('queryType', 'details');
 
@@ -167,13 +174,6 @@ export default (program: any) => {
 
         result = await Api.callMethodAsync('publishInfo', null, 'post', null, {
           formData,
-        });
-      } else {
-        const api = ApiV2.clientForUser(user);
-        result = await api.postAsync('publish/details', {
-          owner: exp.owner,
-          publishId: options.publishId,
-          slug,
         });
       }
 
