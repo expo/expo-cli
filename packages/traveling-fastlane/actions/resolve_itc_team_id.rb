@@ -21,9 +21,31 @@ captured_stderr = with_captured_stderr{
       })
     else
       Spaceship::Tunes.login(ENV['FASTLANE_USER'], ENV['FASTLANE_PASSWORD'])
-      itunes_team = Spaceship::Tunes.client.teams.find { |team|
+
+      itunes_teams = Spaceship::Tunes.client.teams
+      itunes_team = itunes_teams.find { |team|
         team && team['contentProvider'] && team['contentProvider']['name'] && team['contentProvider']['name'].start_with?(developer_team['name'])
       }
+
+      if itunes_team.nil?
+        if itunes_teams.length === 1
+          itunes_team = itunes_teams[0]
+        else
+          puts "Please choose the App Store Connect team"
+          itunes_teams.each_with_index { |i, idx|
+            puts "#{idx + 1}) #{i['contentProvider']['name']}"
+          }
+          n = 0
+          loop do
+            print "Available teams (please enter number 1-#{itunes_teams.length}): "
+            n = $stdin.gets.to_i
+            break if (n >= 1 && n <= itunes_teams.length)
+            puts "Please enter a valid number!"
+          end
+          itunes_team = itunes_teams[n - 1]
+        end
+      end
+
       if itunes_team.nil?
         $result = JSON.generate({
           result: 'failure',
