@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
 
 import { runAction, travelingFastlane } from './fastlane';
@@ -81,11 +82,19 @@ async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials
     wrap(
       'Please enter your Apple Developer Program account credentials. ' +
         'These credentials are needed to manage certificates, keys and provisioning profiles ' +
-        'in your Apple Developer account.'
+        `in your Apple Developer account.`
     )
   );
 
-  log(wrap(chalk.bold('The password is only used to authenticate with Apple and never stored.')));
+  // https://docs.expo.io/versions/latest/distribution/security/#apple-developer-account-credentials
+  const here = terminalLink('here', 'https://shorturl.at/hnOY1');
+  log(
+    wrap(
+      chalk.bold(
+        `The password is only used to authenticate with Apple and never stored, learn more ${here}.`
+      )
+    )
+  );
 
   const { appleId: promptAppleId } = await prompt(
     {

@@ -84,7 +84,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       {
         type: 'confirm',
         name: 'confirm',
-        message: `Do you have access to the Apple Account of ${bundleIdentifier}?`,
+        message: `Do you have access to the Apple Account that owns the app with the bundle identifier ${bundleIdentifier}?`,
       },
     ]);
     if (confirm) {
@@ -108,6 +108,15 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
     const appCredentials = await ctx.ios.getAppCredentials(experienceName, bundleIdentifier);
+
+    if (ctx.hasAppleCtx()) {
+      await apple.ensureAppExists(
+        ctx.appleCtx,
+        { experienceName, bundleIdentifier },
+        { enablePushNotifications: true }
+      );
+    }
+
     const distCertFromParams = await getDistCertFromParams(this.options);
     if (distCertFromParams) {
       await useDistCertFromParams(ctx, appCredentials, distCertFromParams);
