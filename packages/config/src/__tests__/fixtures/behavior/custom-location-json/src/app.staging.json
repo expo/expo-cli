@@ -1,0 +1,9 @@
+{
+  "name": "failed-to-reduced",
+  "expo": {
+    "name": "app-staging-json",
+    "expo": {
+      "name": "invalid-reduced"
+    }
+  }
+}
