@@ -21,6 +21,16 @@ function isMissingFileCode(code: string): boolean {
   return ['ENOENT', 'MODULE_NOT_FOUND', 'ENOTDIR'].includes(code);
 }
 
+function reduceExpoObject(config?: ExpoConfig): ExpoConfig | null {
+  if (!config) return null;
+
+  if (typeof config.expo === 'object') {
+    // TODO: We should warn users in the future that if there are more values than "expo", those values outside of "expo" will be omitted in favor of the "expo" object.
+    return config.expo as ExpoConfig;
+  }
+  return config;
+}
+
 export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   // TODO(Bacon): Support custom config path with `findConfigFile`
   // TODO(Bacon): Should we support `expo` or `app` field with an object in the `package.json` too?
@@ -42,7 +52,7 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   if (request.configPath) {
     const config = testFileName(request.configPath);
     if (config) {
-      return serializeAndEvaluate(config);
+      return reduceExpoObject(serializeAndEvaluate(config));
     } else {
       throw new ConfigError(
         `Config with custom path ${request.configPath} couldn't be parsed.`,
@@ -54,7 +64,7 @@ export function findAndEvalConfig(request: ConfigContext): ExpoConfig | null {
   for (const configFileName of allowedConfigFileNames) {
     const configFilePath = path.resolve(request.projectRoot, configFileName);
     const config = testFileName(configFilePath);
-    if (config) return serializeAndEvaluate(config);
+    if (config) return reduceExpoObject(serializeAndEvaluate(config));
   }
 
   return null;

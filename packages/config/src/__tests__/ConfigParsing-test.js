@@ -1,6 +1,11 @@
 import * as path from 'path';
 
-import { getConfig } from '../Config';
+import { getConfig, setCustomConfigPath } from '../Config';
+
+const fixtures = {
+  customLocationJson: path.resolve(__dirname, 'fixtures/behavior/custom-location-json'),
+  syntaxError: path.resolve(__dirname, 'fixtures/behavior/syntax-error'),
+};
 
 describe('getConfig', () => {
   // Tests the following:
@@ -67,6 +72,54 @@ describe('getConfig', () => {
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar');
+    });
+  });
+
+  function resetAllCustomFixtureLocations() {
+    // Reset custom paths
+    for (const fixturePath of Object.values(fixtures)) {
+      setCustomConfigPath(fixturePath, undefined);
+    }
+  }
+
+  describe('behavior', () => {
+    beforeEach(() => {
+      resetAllCustomFixtureLocations();
+    });
+
+    // Test that setCustomConfigPath works to read custom json configs.
+    it('uses a custom location', () => {
+      const projectRoot = path.resolve(fixtures.customLocationJson);
+      const customConfigPath = path.resolve(projectRoot, 'src/app.staging.json');
+      setCustomConfigPath(fixtures.customLocationJson, customConfigPath);
+
+      const { exp } = getConfig(projectRoot, {
+        mode: 'development',
+        skipSDKVersionRequirement: true,
+      });
+      // Ensure the expo object is reduced out. See #1542.
+      // Also test that a nested expo object isn't recursively reduced.
+      expect(exp.expo).toStrictEqual({ name: 'invalid-reduced' });
+      // name is read from the correct config at the custom location.
+      expect(exp.name).toBe('app-staging-json');
+      // slug should be copied from name if it wasn't defined.
+      expect(exp.slug).toBe('app-staging-json');
+      // Version comes from package.json in the root.
+      expect(exp.version).toBe('1.0.0');
+      // No packages are installed and no platforms are specified.
+      expect(exp.platforms).toEqual(expect.any(Array));
+
+      // Ensure this works
+      resetAllCustomFixtureLocations();
+      // After the rest, read the root config and ensure it doesn't match the custom location config.
+      const { exp: baseExp } = getConfig(projectRoot, {
+        mode: 'development',
+        skipSDKVersionRequirement: true,
+      });
+      // name is read from the default config.
+      expect(baseExp.name).toBe('app-json');
+      // A base app.json is parsed differently, ensure the app.config.js parsing doesn't accidentally reduce the "expo" object multiple times.
+      expect(baseExp.expo).toStrictEqual({ name: 'invalid-reduced' });
     });
   });
 });
