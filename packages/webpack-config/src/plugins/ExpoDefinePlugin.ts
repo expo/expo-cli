@@ -25,7 +25,7 @@ export function createClientEnvironment(
   publicPath: string,
   nativeAppManifest: ExpoConfig
 ): ClientEnv {
-  const environment = mode || 'development';
+  const environment = getMode({ mode });
   const __DEV__ = environment !== 'production';
 
   const ENV_VAR_REGEX = /^(EXPO_|REACT_NATIVE_|CI$)/i;
