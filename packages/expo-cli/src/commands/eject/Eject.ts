@@ -324,6 +324,12 @@ if (Platform.OS === 'web') {
   log.newLine();
 }
 
+/**
+ * Returns a name that adheres to Xcode and Android naming conventions.
+ *
+ * - package name: https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html
+ * @param projectRoot
+ */
 async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
