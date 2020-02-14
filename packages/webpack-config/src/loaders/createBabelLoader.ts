@@ -90,9 +90,9 @@ function generateCacheIdentifier(
 export function createBabelLoaderFromEnvironment(
   env: Pick<Environment, 'babel' | 'locations' | 'projectRoot' | 'config' | 'mode' | 'platform'>
 ): Rule {
-  const locations = env.locations || getPaths(env.projectRoot);
-  const appConfig = env.config || getConfig(env);
   const mode = getMode(env);
+  const locations = env.locations || getPaths(env.projectRoot, mode);
+  const appConfig = env.config || getConfig(env);
 
   const { build = {} } = appConfig.web;
   const { babel = {} } = build;

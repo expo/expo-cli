@@ -107,18 +107,15 @@ export default async function(
     // isProd
   );
 
-  const locations = env.locations || (await getPathsAsync(env.projectRoot));
+  const locations = env.locations || (await getPathsAsync(env.projectRoot, mode));
 
   const { publicPath, publicUrl } = getPublicPaths(env);
 
   const { build: buildConfig = {} } = config.web || {};
 
-  const devtool = getDevtool(
-    { production: isProd, development: isDev },
-    buildConfig as {
-      devtool: Options.Devtool;
-    }
-  );
+  const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig as {
+    devtool: Options.Devtool;
+  });
 
   const appEntry: string[] = [];
 

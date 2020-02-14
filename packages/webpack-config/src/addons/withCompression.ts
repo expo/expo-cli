@@ -37,7 +37,7 @@ export const DEFAULT_BROTLI_OPTIONS = {
  */
 export default function withCompression(
   webpackConfig: AnyConfiguration,
-  env: Pick<Environment, 'projectRoot' | 'config' | 'locations'>
+  env: Pick<Environment, 'projectRoot' | 'mode' | 'config' | 'locations'>
 ): AnyConfiguration {
   if (webpackConfig.mode !== 'production') {
     return webpackConfig;

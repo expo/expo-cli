@@ -6,6 +6,7 @@ it(`matches`, async () => {
   // Fill all config values with PWA defaults
   const config = getConfigForPWA(__dirname, (...props) => resolve(__dirname, ...props), {
     templateIcon: require.resolve('./icon.png'),
+    mode: 'development',
   });
 
   const manifest = createPWAManifestFromExpoConfig(config);

@@ -88,7 +88,7 @@ export default function withWorkbox(
     injectManifestOptions = {},
   } = options;
 
-  const locations = getPaths(projectRoot!);
+  const locations = getPaths(projectRoot!, webpackConfig.mode);
 
   // Always register general service worker
   const expoEntry = webpackConfig.entry;
