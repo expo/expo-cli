@@ -29,5 +29,8 @@ export default async function createWebpackConfigAsync(
 
   const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
 
+  if (environment.offline === false) {
+    return config;
+  }
   return withWorkbox(config, { projectRoot: environment.projectRoot, ...workbox, publicUrl });
 }
