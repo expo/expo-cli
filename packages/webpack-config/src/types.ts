@@ -11,6 +11,8 @@ export interface DevConfiguration extends WebpackConfiguration {
 
 export type AnyConfiguration = DevConfiguration | WebpackConfiguration;
 
+type AnyObject = { [key: string]: any };
+
 export type InputEnvironment = {
   projectRoot?: string;
   platform?: 'ios' | 'android' | 'web' | 'electron';
@@ -18,12 +20,13 @@ export type InputEnvironment = {
   https?: boolean;
   production?: boolean;
   development?: boolean;
-  config?: { [key: string]: any };
+  config?: AnyObject;
   locations?: FilePaths;
   polyfill?: boolean;
   mode?: Mode;
   removeUnusedImportExports?: boolean;
   pwa?: boolean;
+  offline?: boolean;
   report?: {
     verbose: boolean;
     path: string;
@@ -36,21 +39,89 @@ export type InputEnvironment = {
 };
 
 export type Environment = {
+  /**
+   * Should the dev server use https protocol.
+   *
+   * @default false
+   */
   https: boolean;
+  /**
+   * The Expo project config, this should be read using `@expo/config`.
+   *
+   * @default undefined
+   */
   config: { [key: string]: any };
+  /**
+   * Paths used to locate where things are.
+   */
   locations: FilePaths;
+  /**
+   * Root of the Expo project.
+   */
   projectRoot: string;
-  polyfill?: boolean;
+  /**
+   * Passing `true` will disable offline support and skip adding a service worker.
+   *
+   * @default true
+   */
+  offline?: boolean;
+  /**
+   * The Webpack mode to bundle the project in.
+   */
   mode: Mode;
-  platform: 'ios' | 'android' | 'web' | 'electron';
+  /**
+   * The target platform to bundle for. Currently only `web` and `electron` are supported.
+   */
+  platform: ExpoPlatform;
+  /**
+   * Enables advanced tree-shaking with deep scope analysis.
+   *
+   * @default false
+   */
   removeUnusedImportExports?: boolean;
+  /**
+   * Generate the PWA image assets in production mode.
+   *
+   * @default true
+   */
   pwa?: boolean;
+  /**
+   * Configure Webpack bundle reports.
+   * Using this adds time to rebuilds, you should only use it in production mode.
+   *
+   * Passing an empty object defaults to `true`.
+   */
   report?: Report;
-  babel?: {
-    dangerouslyAddModulePathsToTranspile: string[];
-  };
+  /**
+   * Control how the default Babel loader is configured.
+   */
+  babel?: ExpoBabelOptions;
+  /**
+   * Includes all Babel polyfills.
+   *
+   * @deprecated
+   */
+  polyfill?: boolean;
 };
 
+/**
+ * The target platform to bundle for. Currently only `web` and `electron` are supported.
+ */
+export type ExpoPlatform = 'ios' | 'android' | 'web' | 'electron';
+
+/**
+ * Control how the default Babel loader is configured.
+ */
+export type ExpoBabelOptions = {
+  /**
+   * Add the names of node_modules that should be included transpilation step.
+   */
+  dangerouslyAddModulePathsToTranspile: string[];
+};
+
+/**
+ * Configure Webpack bundle reports.
+ */
 export type Report = {
   verbose: boolean;
   path: string;

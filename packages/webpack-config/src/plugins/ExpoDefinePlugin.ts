@@ -67,7 +67,7 @@ export function createClientEnvironment(
 }
 
 /**
- * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/
+ * Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/.
  * This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
  * @category plugins
  */
