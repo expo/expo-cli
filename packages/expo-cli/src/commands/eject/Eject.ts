@@ -369,14 +369,6 @@ async function getAppNamesAsync(
   return { displayName, name };
 }
 
-function stripDashes(s: string): string {
-  let ret = '';
-
-  for (let c of s) {
-    if (c !== ' ' && c !== '-') {
-      ret += c;
-    }
-  }
-
-  return ret;
+export function stripDashes(s: string): string {
+  return s.replace(/\s|-/g, '');
 }
