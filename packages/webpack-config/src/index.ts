@@ -25,12 +25,10 @@ export default async function createWebpackConfigAsync(
     console.warn('environment.info is deprecated');
   }
 
-  const { workbox = {} } = argv;
-
-  const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
-
   if (environment.offline === false) {
     return config;
   }
+  const { workbox = {} } = argv;
+  const publicUrl = workbox.publicUrl || getPublicPaths(environment).publicUrl;
   return withWorkbox(config, { projectRoot: environment.projectRoot, ...workbox, publicUrl });
 }
