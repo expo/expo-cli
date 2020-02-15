@@ -1,6 +1,7 @@
 {
   "extends": "@expo/babel-preset-cli/tsconfig.base",
   "include": ["src/**/*.ts"],
+  "exclude": ["**/__mocks__/*", "**/__tests__/*"],
   "compilerOptions": {
     "outDir": "build",
     "rootDir": "src"
