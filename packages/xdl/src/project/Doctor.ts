@@ -3,7 +3,7 @@ import {
   PackageJSONConfig,
   configFilename,
   fileExistsAsync,
-  readConfigJsonAsync,
+  getPackageJson,
   resolveModule,
 } from '@expo/config';
 import Schemer, { SchemerError, ValidationError } from '@expo/schemer';
@@ -14,7 +14,7 @@ import _ from 'lodash';
 import path from 'path';
 import semver from 'semver';
 
-import Config from '../Config';
+import Config, { getProjectConfigAsync } from '../Config';
 import * as Versions from '../Versions';
 import * as Watchman from '../Watchman';
 import * as ExpSchema from './ExpSchema';
@@ -114,7 +114,7 @@ export async function validateWithSchemaFileAsync(
   projectRoot: string,
   schemaPath: string
 ): Promise<{ schemaErrorMessage: string | undefined; assetsErrorMessage: string | undefined }> {
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  let { exp } = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: false });
   let schema = JSON.parse(await fs.readFile(schemaPath, 'utf8'));
   return validateWithSchema(projectRoot, exp, schema.schema, 'exp.json', 'UNVERSIONED', true);
 }
@@ -171,7 +171,7 @@ async function _validateExpJsonAsync(
   allowNetwork: boolean
 ): Promise<number> {
   if (!exp || !pkg) {
-    // readConfigJsonAsync already logged an error
+    // getProjectConfigAsync already logged an error
     return FATAL;
   }
 
@@ -383,7 +383,8 @@ async function _validateReactNativeVersionAsync(
 }
 
 async function _validateNodeModulesAsync(projectRoot: string): Promise<number> {
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  // Just need `nodeModulesPath` so it doesn't matter if expo is installed or the sdkVersion is defined.
+  let { exp } = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: true });
   let nodeModulesPath = projectRoot;
   if (exp.nodeModulesPath) {
     nodeModulesPath = path.resolve(projectRoot, exp.nodeModulesPath);
@@ -448,7 +449,7 @@ async function validateAsync(projectRoot: string, allowNetwork: boolean): Promis
 
   let exp, pkg;
   try {
-    const config = await readConfigJsonAsync(projectRoot);
+    const config = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: false });
     exp = config.exp;
     pkg = config.pkg;
   } catch (e) {
@@ -490,7 +491,7 @@ export const EXPO_SDK_NOT_INSTALLED = 1;
 export const EXPO_SDK_NOT_IMPORTED = 2;
 
 export async function getExpoSdkStatus(projectRoot: string): Promise<ExpoSdkStatus> {
-  let { pkg } = await readConfigJsonAsync(projectRoot);
+  const { pkg } = getPackageJson(projectRoot);
 
   try {
     if (

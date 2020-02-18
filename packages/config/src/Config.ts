@@ -112,6 +112,12 @@ export function getConfig(projectRoot: string, options: GetConfigOptions): Proje
   };
 }
 
+export function getPackageJson(projectRoot: string): PackageJSONConfig {
+  // TODO(Bacon): This doesn't support changing the location of the package.json
+  const packageJsonPath = getRootPackageJsonPath(projectRoot, {});
+  return JsonFile.read(packageJsonPath);
+}
+
 export function readConfigJson(
   projectRoot: string,
   skipValidation: boolean = false,
