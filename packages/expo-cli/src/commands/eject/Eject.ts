@@ -29,7 +29,11 @@ export type EjectAsyncOptions = {
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  // We just need the custom `nodeModulesPath` from the config.
+  const { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
+    mode: 'production',
+    skipSDKVersionRequirement: true,
+  });
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
