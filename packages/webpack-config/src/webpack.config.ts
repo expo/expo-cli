@@ -159,6 +159,38 @@ export default async function(
     generatePWAImageAssets = env.pwa;
   }
 
+  const filesToCopy = [
+    {
+      from: locations.template.folder,
+      to: locations.production.folder,
+      // We generate new versions of these based on the templates
+      ignore: [
+        'expo-service-worker.js',
+        'favicon.ico',
+        'serve.json',
+        'index.html',
+        'icon.png',
+        // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
+        'register-service-worker.js',
+      ],
+    },
+    {
+      from: locations.template.serveJson,
+      to: locations.production.serveJson,
+    },
+    {
+      from: locations.template.favicon,
+      to: locations.production.favicon,
+    },
+  ];
+
+  if (env.offline !== false) {
+    filesToCopy.push({
+      from: locations.template.serviceWorker,
+      to: locations.production.serviceWorker,
+    });
+  }
+
   let webpackConfig: DevConfiguration = {
     mode,
     entry: {
@@ -180,35 +212,7 @@ export default async function(
           verbose: false,
         }),
       // Copy the template files over
-      isProd &&
-        new CopyWebpackPlugin([
-          {
-            from: locations.template.folder,
-            to: locations.production.folder,
-            // We generate new versions of these based on the templates
-            ignore: [
-              'expo-service-worker.js',
-              'favicon.ico',
-              'serve.json',
-              'index.html',
-              'icon.png',
-              // We copy this over in `withWorkbox` as it must be part of the Webpack `entry` and have templates replaced.
-              'register-service-worker.js',
-            ],
-          },
-          {
-            from: locations.template.serveJson,
-            to: locations.production.serveJson,
-          },
-          {
-            from: locations.template.favicon,
-            to: locations.production.favicon,
-          },
-          {
-            from: locations.template.serviceWorker,
-            to: locations.production.serviceWorker,
-          },
-        ]),
+      isProd && new CopyWebpackPlugin(filesToCopy),
 
       // Generate the `index.html`
       new ExpoHtmlWebpackPlugin(env),
