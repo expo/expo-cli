@@ -6,18 +6,20 @@ import { Credentials, Exp } from '@expo/xdl';
 
 import log from '../../log';
 
-async function fetchIosCerts(projectDir) {
+async function fetchIosCerts(projectDir: string): Promise<void> {
   const {
     args: { remotePackageName },
   } = await Exp.getPublishInfoAsync(projectDir);
 
-  const inProjectDir = filename => path.resolve(projectDir, filename);
+  const inProjectDir = (filename: string): string => path.resolve(projectDir, filename);
   const credentialMetadata = await Credentials.getCredentialMetadataAsync(projectDir, 'ios');
-  const { experienceName } = credentialMetadata;
 
   log(`Retrieving iOS credentials for ${credentialMetadata.experienceName}`);
 
   try {
+    const creds = await Credentials.getCredentialsForPlatform(credentialMetadata);
+    if (!creds) throw new Error('Error fetching credentials.');
+
     const {
       certP12,
       certPassword,
@@ -29,7 +31,7 @@ async function fetchIosCerts(projectDir) {
       pushPrivateSigningKey,
       provisioningProfile,
       teamId,
-    } = await Credentials.getCredentialsForPlatform(credentialMetadata);
+    } = creds;
 
     if (teamId !== undefined) {
       log(`These credentials are associated with Apple Team ID: ${teamId}`);

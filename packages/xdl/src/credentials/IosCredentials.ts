@@ -15,6 +15,11 @@ export type Credentials = {
   certId?: string;
   pushId?: string;
   provisioningProfileId?: string;
+
+  pushPrivateSigningKey?: string;
+  certPrivateSigningKey?: string;
+  apnsKeyId?: string;
+  apnsKeyP8?: string;
 };
 
 export type CredObject = {
