@@ -246,7 +246,8 @@ jobs:
     steps:
       - attach_workspace:
           at: '~'
-      - run: yarn test
+      - run: yarn test --coverage
+      - run: yarn danger ci
   test-electron-adapter:
     parameters:
       e:

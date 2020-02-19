@@ -26,6 +26,8 @@
   },
   "devDependencies": {
     "@expo/spawn-async": "^1.5.0",
+    "danger": "^9.2.10",
+    "danger-plugin-istanbul-coverage": "^1.6.2",
     "eslint": "^6.6.0",
     "eslint-config-universe": "^2.1.0",
     "husky": "^1.1.3",
