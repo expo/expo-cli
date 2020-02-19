@@ -1,3 +1,5 @@
+import { Command } from 'commander';
+
 import {
   fetchAndroidHashesAsync,
   fetchAndroidKeystoreAsync,
@@ -5,7 +7,7 @@ import {
 } from './android';
 import fetchIosCerts from './ios';
 
-export default program => {
+export default function(program: Command) {
   program
     .command('fetch:ios:certs [project-dir]')
     .description(
@@ -33,4 +35,4 @@ export default program => {
       "Fetch this project's upload certificate needed after opting in to app signing by Google Play or after resetting a previous upload certificate."
     )
     .asyncActionProjectDir(fetchAndroidUploadCertAsync, true);
-};
+}

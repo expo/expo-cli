@@ -8,7 +8,7 @@ import { Context } from '../../credentials';
 
 import log from '../../log';
 
-async function fetchAndroidKeystoreAsync(projectDir) {
+export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<void> {
   const ctx = new Context();
   await ctx.init(projectDir);
 
@@ -19,7 +19,7 @@ async function fetchAndroidKeystoreAsync(projectDir) {
   await view.save(ctx, backupKeystoreOutputPath, true);
 }
 
-async function fetchAndroidHashesAsync(projectDir) {
+export async function fetchAndroidHashesAsync(projectDir: string): Promise<void> {
   const ctx = new Context();
   await ctx.init(projectDir);
   const outputPath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
@@ -28,6 +28,7 @@ async function fetchAndroidHashesAsync(projectDir) {
     await view.fetch(ctx);
     await view.save(ctx, outputPath);
 
+    // @ts-ignore: keyPassword isn't defined
     await AndroidCredentials.logKeystoreHashes({
       keystorePath: outputPath,
       keystorePassword: get(view, 'credentials.keystorePassword'),
@@ -47,7 +48,7 @@ async function fetchAndroidHashesAsync(projectDir) {
   }
 }
 
-async function fetchAndroidUploadCertAsync(projectDir) {
+export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<void> {
   const ctx = new Context();
   await ctx.init(projectDir);
 
@@ -77,5 +78,3 @@ async function fetchAndroidUploadCertAsync(projectDir) {
     }
   }
 }
-
-export { fetchAndroidKeystoreAsync, fetchAndroidHashesAsync, fetchAndroidUploadCertAsync };

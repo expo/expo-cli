@@ -58,7 +58,11 @@ export async function exportCertBinary(
 }
 
 export async function exportCertBase64(
-  { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
+  {
+    keystorePath,
+    keystorePassword,
+    keyAlias,
+  }: Pick<KeystoreInfo, 'keystorePath' | 'keystorePassword' | 'keyAlias'>,
   certFile: string
 ): Promise<SpawnResult> {
   try {
