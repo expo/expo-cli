@@ -48,7 +48,7 @@ export default class AppSigningOptInProcess {
       await this.prepareKeystores(ctx.user.username, ctx.manifest);
     } catch (error) {
       log.error(error);
-      this.cleanup(true);
+      await this.cleanup(true);
       return;
     }
     await this.afterStoreSubmit(ctx.user.username, ctx.manifest);
@@ -80,7 +80,7 @@ export default class AppSigningOptInProcess {
     this.uploadKeystore = path.join(this.projectDir, `${slug}_upload.jks.tmp`);
     this.privateSigningKey = path.join(this.projectDir, `${slug}_private_sign_key`);
     this.publicUploadCert = path.join(this.projectDir, `${slug}_upload_cert.pem`);
-    this.cleanup(true);
+    await this.cleanup(true);
   }
 
   async exportPrivateKey() {
@@ -169,7 +169,7 @@ export default class AppSigningOptInProcess {
       },
     ]);
     if (!confirmUpload) {
-      this.cleanup(true);
+      await this.cleanup(true);
       log.error('Aborting, no changes were applied');
       process.exit(1);
     }
@@ -198,7 +198,8 @@ export default class AppSigningOptInProcess {
     );
 
     log(
-      `The original keystore is stored in ${this.signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
+      `The original keystore is stored in ${this
+        .signKeystore}; remove it only if you are sure that Google Play App Signing is enabled for your app.`
     );
     if (!this.signKeystoreCredentials) {
       throw new Error(
@@ -210,10 +211,10 @@ export default class AppSigningOptInProcess {
       'Credentials for original keystore'
     );
 
-    this.cleanup();
+    await this.cleanup();
   }
 
-  cleanup(all: boolean = false): void {
+  private async cleanup(all: boolean = false): Promise<void> {
     tryUnlink(this.uploadKeystore);
     tryUnlink(this.publicUploadCert);
     tryUnlink(this.privateSigningKey);
