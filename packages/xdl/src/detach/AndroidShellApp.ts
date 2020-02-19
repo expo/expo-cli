@@ -1,15 +1,22 @@
 import fs from 'fs-extra';
 import path from 'path';
+// @ts-ignore
 import replaceString from 'replace-string';
 import _ from 'lodash';
 import globby from 'globby';
 import uuid from 'uuid';
 
+import { ExpoConfig } from '@expo/config';
 import { createAndWriteIconsToPathAsync } from './AndroidIcons';
 import * as AssetBundle from './AssetBundle';
 import * as ExponentTools from './ExponentTools';
 import StandaloneBuildFlags from './StandaloneBuildFlags';
-import StandaloneContext from './StandaloneContext';
+import StandaloneContext, {
+  AnyStandaloneContext,
+  StandaloneContextUser,
+  isStandaloneContextService,
+  isStandaloneContextUser,
+} from './StandaloneContext';
 import renderIntentFilters from './AndroidIntentFilters';
 import logger from './Logger';
 
@@ -26,17 +33,16 @@ const {
 const imageKeys = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi', 'xxxhdpi'];
 
 // Do not call this from anything used by detach
-function exponentDirectory(workingDir) {
+function exponentDirectory<T>(workingDir: T): T | string {
   if (workingDir) {
     return workingDir;
   } else if (process.env.EXPO_UNIVERSE_DIR) {
     return path.join(process.env.EXPO_UNIVERSE_DIR, 'exponent');
-  } else {
-    return null;
   }
+  return workingDir;
 }
 
-function xmlWeirdAndroidEscape(original) {
+function xmlWeirdAndroidEscape(original: string): string {
   let noAmps = replaceString(original, '&', '&amp;');
   let noLt = replaceString(noAmps, '<', '&lt;');
   let noGt = replaceString(noLt, '>', '&gt;');
@@ -44,7 +50,12 @@ function xmlWeirdAndroidEscape(original) {
   return replaceString(noApos, "'", "\\'");
 }
 
-exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(args) {
+exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(args: {
+  url: string;
+  sdkVersion: string;
+  releaseChannel?: string;
+  workingDir: string;
+}) {
   let { url, sdkVersion, releaseChannel, workingDir } = args;
 
   releaseChannel = releaseChannel ? releaseChannel : 'default';
@@ -128,7 +139,7 @@ exports.updateAndroidShellAppAsync = async function updateAndroidShellAppAsync(a
   );
 };
 
-function getRemoteOrLocalUrl(manifest, key, isDetached) {
+function getRemoteOrLocalUrl(manifest: any, key: string, isDetached: boolean) {
   // in detached apps, `manifest` is actually just app.json, so there are no remote url fields
   // we should return a local url starting with file:// instead
   if (isDetached) {
@@ -137,7 +148,11 @@ function getRemoteOrLocalUrl(manifest, key, isDetached) {
   return _.get(manifest, `${key}Url`);
 }
 
-function backgroundImagesForApp(shellPath, manifest, isDetached) {
+function backgroundImagesForApp(
+  shellPath: string,
+  manifest: any,
+  isDetached: boolean
+): { url: string; path: string }[] {
   // returns an array like:
   // [
   //   {url: 'urlToDownload', path: 'pathToSaveTo'},
@@ -159,7 +174,7 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
 
         return acc;
       },
-      []
+      [] as { url: string; path: string }[]
     );
 
     // No splash screen images declared in 'android.splash' configuration, proceed to general one
@@ -181,7 +196,7 @@ function backgroundImagesForApp(shellPath, manifest, isDetached) {
   return [];
 }
 
-function getSplashScreenBackgroundColor(manifest) {
+function getSplashScreenBackgroundColor(manifest: ExpoConfig): string {
   let backgroundColor;
   if (manifest.android && manifest.android.splash && manifest.android.splash.backgroundColor) {
     backgroundColor = manifest.android.splash.backgroundColor;
@@ -201,7 +216,7 @@ function getSplashScreenBackgroundColor(manifest) {
   that is presenting splash image in ImageView what allows full control over image sizing unlike
   ImageDrawable that is provided by Android native splash screen API
 */
-function shouldShowLoadingView(manifest, sdkVersion) {
+function shouldShowLoadingView(manifest: ExpoConfig, sdkVersion: string) {
   const resizeMode =
     (manifest.android && manifest.android.splash && manifest.android.splash.resizeMode) ||
     (manifest.splash && manifest.splash.resizeMode);
@@ -215,11 +230,11 @@ function shouldShowLoadingView(manifest, sdkVersion) {
 }
 
 export async function copyInitialShellAppFilesAsync(
-  androidSrcPath,
-  shellPath,
-  isDetached,
-  sdkVersion
-) {
+  androidSrcPath: string,
+  shellPath: string,
+  isDetached: boolean,
+  sdkVersion: string
+): Promise<void> {
   if (androidSrcPath && !isDetached) {
     // check if Android template files exist
     // since we take out the prebuild step later on
@@ -232,7 +247,7 @@ export async function copyInitialShellAppFilesAsync(
     });
   }
 
-  const copyToShellApp = async fileName => {
+  const copyToShellApp = async (fileName: string): Promise<void> => {
     try {
       await fs.copy(path.join(androidSrcPath, fileName), path.join(shellPath, fileName));
     } catch (e) {
@@ -274,7 +289,7 @@ export async function copyInitialShellAppFilesAsync(
   }
 }
 
-exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(args) {
+exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(args: any) {
   let {
     url,
     sdkVersion,
@@ -337,6 +352,7 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   }
 
   let buildFlags = StandaloneBuildFlags.createAndroid(configuration, androidBuildConfiguration);
+  // @ts-ignore: An argument for 'shellAppSdkVersion' was not provided.
   let context = StandaloneContext.createServiceContext(
     androidSrcPath,
     null,
@@ -358,17 +374,14 @@ exports.createAndroidShellAppAsync = async function createAndroidShellAppAsync(a
   }
 };
 
-function shellPathForContext(context) {
-  if (context.type === 'user') {
+function shellPathForContext(context: AnyStandaloneContext): string {
+  if (isStandaloneContextUser(context)) {
     return path.join(context.data.projectPath, 'android');
-  } else {
-    return path.join(
-      exponentDirectory(
-        context.data.expoSourcePath && path.join(context.data.expoSourcePath, '..')
-      ),
-      'android-shell-app'
-    );
   }
+  return path.join(
+    exponentDirectory(context.data.expoSourcePath && path.join(context.data.expoSourcePath, '..')),
+    'android-shell-app'
+  );
 }
 
 /**
@@ -376,10 +389,10 @@ function shellPathForContext(context) {
  *  For standalone apps, this is copied into a separate context field context.data.privateConfig
  *  by the turtle builder. For a local project, this is available in app.json under android.config.
  */
-function getPrivateConfig(context) {
-  if (context.data.privateConfig) {
+function getPrivateConfig(context: AnyStandaloneContext): any {
+  if (isStandaloneContextService(context) && context.data.privateConfig) {
     return context.data.privateConfig;
-  } else {
+  } else if (isStandaloneContextUser(context)) {
     const exp = context.data.exp;
     if (exp && exp.android) {
       return exp.android.config;
@@ -387,7 +400,11 @@ function getPrivateConfig(context) {
   }
 }
 
-export async function runShellAppModificationsAsync(context, sdkVersion, buildMode) {
+export async function runShellAppModificationsAsync(
+  context: AnyStandaloneContext,
+  sdkVersion: string,
+  buildMode?: string
+): Promise<void> {
   const fnLogger = logger.withFields({ buildPhase: 'running shell app modifications' });
 
   let shellPath = shellPathForContext(context);
@@ -395,7 +412,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   let manifest = context.config; // manifest or app.json
   let releaseChannel = context.published.releaseChannel;
 
-  const isRunningInUserContext = context.type === 'user';
+  const isRunningInUserContext = isStandaloneContextUser(context);
   // In SDK32 we've unified build process for shell and ejected apps
   const isDetached = ExponentTools.parseSdkMajorVersion(sdkVersion) >= 32 || isRunningInUserContext;
 
@@ -404,7 +421,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
     fnLogger.info('No config file specified.');
   }
 
-  let fullManifestUrl = url.replace('exp://', 'https://');
+  let fullManifestUrl = url?.replace('exp://', 'https://');
 
   let versionCode = 1;
   let javaPackage = manifest.android.package;
@@ -468,7 +485,7 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
 
     await regexFileAsync(
       'TEMPLATE_INITIAL_URL',
-      url,
+      url!,
       path.join(
         shellPath,
         'app',
@@ -787,9 +804,9 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
 
   // Add permissions
   if (manifest.android && manifest.android.permissions) {
-    const whitelist = [];
+    const whitelist: string[] = [];
 
-    manifest.android.permissions.forEach(s => {
+    manifest.android.permissions.forEach((s: string) => {
       if (s.includes('.')) {
         whitelist.push(s);
       } else {
@@ -925,7 +942,10 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
       backgroundImages.map(async image => {
         if (isRunningInUserContext) {
           // local file so just copy it
-          await fs.copy(path.resolve(context.data.projectPath, image.url), image.path);
+          await fs.copy(
+            path.resolve((context as StandaloneContextUser).data.projectPath, image.url),
+            image.path
+          );
         } else {
           await saveUrlToPathAsync(image.url, image.path);
         }
@@ -1155,7 +1175,12 @@ export async function runShellAppModificationsAsync(context, sdkVersion, buildMo
   }
 }
 
-async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
+async function buildShellAppAsync(
+  context: AnyStandaloneContext,
+  sdkVersion: string,
+  buildType: string,
+  buildMode: string
+): Promise<void> {
   let shellPath = shellPathForContext(context);
   const ext = buildType === 'app-bundle' ? 'aab' : 'apk';
 
@@ -1229,7 +1254,8 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
   await ExponentTools.removeIfExists(shellFile);
   await ExponentTools.removeIfExists(outputPath);
   if (isRelease) {
-    const androidBuildConfiguration = context.build.android;
+    // TODO: Verify this is defined
+    const androidBuildConfiguration = context.build.android!;
 
     const gradleArgs = [gradleBuildCommand];
     if (process.env.GRADLE_DAEMON_DISABLED) {
@@ -1252,6 +1278,7 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
       await fs.copy(outputPath, shellFile);
       // -c means "only verify"
       await spawnAsync(`zipalign`, ['-c', '-v', '4', shellFile], {
+        // @ts-ignore: 'pipeToLogger' does not exist in type 'SpawnOptions'
         pipeToLogger: true,
         loggerFields: { buildPhase: 'verifying apk alignment' },
       });
@@ -1275,11 +1302,13 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
           androidBuildConfiguration.keyAlias,
         ],
         {
+          // @ts-ignore: 'pipeToLogger' does not exist in type 'SpawnOptions'
           pipeToLogger: true,
           loggerFields: { buildPhase: 'signing created apk' },
         }
       );
       await spawnAsync(`zipalign`, ['-v', '4', shellUnalignedFile, shellFile], {
+        // @ts-ignore: 'pipeToLogger' does not exist in type 'SpawnOptions'
         pipeToLogger: true,
         loggerFields: { buildPhase: 'verifying apk alignment' },
       });
@@ -1289,6 +1318,7 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
       `jarsigner`,
       ['-verify', '-verbose', '-certs', '-keystore', androidBuildConfiguration.keystore, shellFile],
       {
+        // @ts-ignore: 'pipeToLogger' does not exist in type 'SpawnOptions'
         pipeToLogger: true,
         loggerFields: { buildPhase: 'verifying apk' },
       }
@@ -1309,11 +1339,16 @@ async function buildShellAppAsync(context, sdkVersion, buildType, buildMode) {
   }
 }
 
-export function addDetachedConfigToExp(exp, context) {
-  if (context.type !== 'user') {
+export function addDetachedConfigToExp(
+  exp: ExpoConfig,
+  context: StandaloneContextUser
+): ExpoConfig {
+  if (!isStandaloneContextUser(context)) {
     console.warn(`Tried to modify exp for a non-user StandaloneContext, ignoring`);
     return exp;
   }
+  if (!exp.android) exp.android = {};
+
   let shellPath = shellPathForContext(context);
   let assetsDirectory = path.join(shellPath, 'app', 'src', 'main', 'assets');
   exp.android.publishBundlePath = path.relative(
@@ -1369,7 +1404,10 @@ some SDK 29-specific code
 This allows us to use `deleteLinesInFileAsync` function to remove obsolete SDKs code easily.
 
  */
-const removeInvalidSdkLinesWhenPreparingShell = async (majorSdkVersion, filePath) => {
+const removeInvalidSdkLinesWhenPreparingShell = async (
+  majorSdkVersion: string,
+  filePath: string
+): Promise<void> => {
   await regexFileAsync(
     new RegExp(`BEGIN_SDK_${majorSdkVersion}`, 'g'),
     `WHEN_PREPARING_SHELL_REMOVE_TO_HERE`,
@@ -1387,7 +1425,7 @@ const removeInvalidSdkLinesWhenPreparingShell = async (majorSdkVersion, filePath
   );
 };
 
-async function removeObsoleteSdks(shellPath, requiredSdkVersion) {
+async function removeObsoleteSdks(shellPath: string, requiredSdkVersion: string): Promise<void> {
   const filePathsToTransform = {
     // Remove obsolete `expoview-abiXX_X_X` dependencies
     appBuildGradle: path.join(shellPath, 'app/build.gradle'),
@@ -1428,7 +1466,10 @@ async function removeObsoleteSdks(shellPath, requiredSdkVersion) {
   );
 }
 
-async function prepareEnabledModules(shellPath, modules) {
+async function prepareEnabledModules(
+  shellPath: string,
+  modules?: { dirname: string }[]
+): Promise<void> {
   const enabledModulesDir = path.join(shellPath, 'enabled-modules');
   const packagesDir = path.join(shellPath, '..', 'packages');
   await fs.remove(enabledModulesDir);

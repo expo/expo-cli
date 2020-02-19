@@ -1,8 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
 import rimraf from 'rimraf';
+// @ts-ignore
 import { DOMParser, XMLSerializer } from 'xmldom';
 
+import { ExpoConfig } from '@expo/config';
 import {
   manifestUsesSplashApi,
   saveImageToPathAsync,
@@ -11,8 +13,8 @@ import {
   transformFileContentsAsync,
 } from './ExponentTools';
 import * as IosWorkspace from './IosWorkspace';
-import StandaloneContext from './StandaloneContext';
 import _logger from './Logger';
+import { AnyStandaloneContext, isStandaloneContextUser } from './StandaloneContext';
 
 const logger = _logger.withFields({ buildPhase: 'configuring NSBundle' });
 
@@ -22,7 +24,7 @@ const ASPECT_FIT = 'scaleAspectFit';
 const backgroundImageViewID = 'Bsh-cT-K4l';
 const backgroundViewID = 'OfY-5Y-tS4';
 
-function _backgroundColorFromHexString(hexColor) {
+function _backgroundColorFromHexString(hexColor: string): { r: number; g: number; b: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
   if (!result || result.length < 4) {
     // Default to white if we can't parse the color. We should have 3 matches.
@@ -36,7 +38,7 @@ function _backgroundColorFromHexString(hexColor) {
   return { r, g, b };
 }
 
-function _setBackgroundColor(manifest, dom) {
+function _setBackgroundColor(manifest: ExpoConfig, dom: any): void {
   let backgroundColorString;
   if (manifest.ios && manifest.ios.splash && manifest.ios.splash.backgroundColor) {
     backgroundColorString = manifest.ios.splash.backgroundColor;
@@ -72,10 +74,10 @@ function _setBackgroundColor(manifest, dom) {
   }
 }
 
-async function _saveImageAssetsAsync(context) {
+async function _saveImageAssetsAsync(context: AnyStandaloneContext): Promise<void> {
   let tabletImagePathOrUrl, phoneImagePathOrUrl;
 
-  if (context.type === 'user') {
+  if (isStandaloneContextUser(context)) {
     // copy images from local project
     const exp = context.data.exp;
     if (exp.ios && exp.ios.splash && exp.ios.splash.image) {
@@ -123,7 +125,9 @@ async function _saveImageAssetsAsync(context) {
   }
 
   const { supportingDirectory } = IosWorkspace.getPaths(context);
-  const projectRoot = context.type === 'user' ? context.data.projectPath : supportingDirectory;
+  const projectRoot = isStandaloneContextUser(context)
+    ? context.data.projectPath
+    : supportingDirectory;
   outputs.forEach(async output => {
     const { pathOrUrl, filename } = output;
     const destinationPath = path.join(supportingDirectory, filename);
@@ -131,7 +135,7 @@ async function _saveImageAssetsAsync(context) {
   });
 }
 
-function _setBackgroundImageResizeMode(manifest, dom) {
+function _setBackgroundImageResizeMode(manifest: ExpoConfig, dom: any): void {
   let backgroundViewMode = (() => {
     let mode;
     if (!manifest) {
@@ -153,9 +157,12 @@ function _setBackgroundImageResizeMode(manifest, dom) {
   }
 }
 
-async function _copyIntermediateLaunchScreenAsync(context, launchScreenPath) {
+async function _copyIntermediateLaunchScreenAsync(
+  context: AnyStandaloneContext,
+  launchScreenPath: string
+) {
   let splashTemplateFilename;
-  if (context.type === 'user') {
+  if (isStandaloneContextUser(context)) {
     const { supportingDirectory } = IosWorkspace.getPaths(context);
     splashTemplateFilename = path.join(supportingDirectory, 'LaunchScreen.xib');
   } else {
@@ -179,7 +186,10 @@ async function _copyIntermediateLaunchScreenAsync(context, launchScreenPath) {
   });
 }
 
-async function configureLaunchAssetsAsync(context, intermediatesDirectory) {
+export async function configureLaunchAssetsAsync(
+  context: AnyStandaloneContext,
+  intermediatesDirectory: string
+): Promise<void> {
   logger.info('Configuring iOS Launch Screen...');
 
   fs.mkdirpSync(intermediatesDirectory);
@@ -189,7 +199,7 @@ async function configureLaunchAssetsAsync(context, intermediatesDirectory) {
   const splashIntermediateFilename = path.join(intermediatesDirectory, 'LaunchScreen.xib');
 
   let xibFile = null;
-  if (context.type === 'user') {
+  if (isStandaloneContextUser(context)) {
     xibFile =
       context.data.exp.ios && context.data.exp.ios.splash && context.data.exp.ios.splash.xib;
   } else {
@@ -199,7 +209,7 @@ async function configureLaunchAssetsAsync(context, intermediatesDirectory) {
       context.data.manifest.ios.splash.xibUrl;
   }
   if (xibFile) {
-    if (context.type === 'user') {
+    if (isStandaloneContextUser(context)) {
       const sourcePath = path.resolve(context.data.projectPath, xibFile);
       await spawnAsyncThrowError('/bin/cp', [sourcePath, splashIntermediateFilename], {
         stdio: 'inherit',
@@ -226,7 +236,7 @@ async function configureLaunchAssetsAsync(context, intermediatesDirectory) {
     }
   }
 
-  if (context.type === 'user') {
+  if (isStandaloneContextUser(context)) {
     await spawnAsyncThrowError(
       '/bin/cp',
       [splashIntermediateFilename, path.join(supportingDirectory, 'LaunchScreen.xib')],
@@ -248,5 +258,3 @@ async function configureLaunchAssetsAsync(context, intermediatesDirectory) {
     }
   }
 }
-
-export { configureLaunchAssetsAsync };

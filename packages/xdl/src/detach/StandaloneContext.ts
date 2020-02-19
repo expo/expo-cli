@@ -24,6 +24,13 @@ export function isStandaloneContextDataService(value: any): value is StandaloneC
   );
 }
 
+export function isStandaloneContextUser(value: any): value is StandaloneContextUser {
+  return value && value.type === 'user';
+}
+export function isStandaloneContextService(value: any): value is StandaloneContextService {
+  return value && value.type === 'service';
+}
+
 /**
  *  A user context is used when we are configuring a standalone app locally on a user's machine,
  *  such as during `exp detach`.

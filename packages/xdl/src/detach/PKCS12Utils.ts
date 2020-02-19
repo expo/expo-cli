@@ -25,7 +25,7 @@ export function findP12CertSerialNumber(
   return serialNumber ? certData.serialNumber.replace(/^0+/, '').toUpperCase() : null;
 }
 
-function _getCertData(p12Buffer: Buffer | string, passwordRaw: string | null) {
+function _getCertData(p12Buffer: Buffer | string, passwordRaw: string | null): any {
   if (Buffer.isBuffer(p12Buffer)) {
     p12Buffer = p12Buffer.toString('base64');
   } else if (typeof p12Buffer !== 'string') {

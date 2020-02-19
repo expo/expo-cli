@@ -10,7 +10,12 @@ import * as IosCodeSigning from './IosCodeSigning';
 
 const logger = _logger.withFields({ buildPhase: 'building and signing IPA' });
 
-export default function createIPABuilder(buildParams) {
+export default function createIPABuilder(
+  buildParams: IosCodeSigning.IPABuilderParams
+): {
+  build: () => Promise<void>;
+  cleanup: () => Promise<void>;
+} {
   const { appUUID, keychainPath, bundleIdentifier, teamID, manifest, workspacePath } = buildParams;
   const appDir = path.join('/private/tmp/turtle', appUUID);
   const buildDir = path.join(appDir, 'build');
@@ -18,7 +23,7 @@ export default function createIPABuilder(buildParams) {
   const outputPath = path.join(appDir, 'archive.xcarchive');
   const uploadPath = path.join(buildDir, 'archive.ipa');
 
-  async function build() {
+  async function build(): Promise<void> {
     const { provisioningProfilePath, clientBuild } = buildParams;
 
     await copyProvisioningProfileToHomedir(provisioningProfilePath, appUUID);
@@ -35,7 +40,6 @@ export default function createIPABuilder(buildParams) {
       logger.info('validating provisioning profile...');
       IosCodeSigning.validateProvisioningProfile(plistData, {
         distCertFingerprint: codeSignIdentity,
-        teamID,
         bundleIdentifier,
       });
       logger.info('provisioning profile is valid');
@@ -45,6 +49,7 @@ export default function createIPABuilder(buildParams) {
       const exportOptionsPlistPath = path.join(provisionDir, 'export-options.plist');
       const exportOptionsData = {
         bundleIdentifier,
+        // @ts-ignore
         provisioningProfileUUID: plistData.UUID,
         exportMethod,
         teamID,
@@ -96,7 +101,7 @@ export default function createIPABuilder(buildParams) {
     }
   }
 
-  async function cleanup() {
+  async function cleanup(): Promise<void> {
     try {
       await fs.remove(getProvisioningProfilePath(appUUID));
     } catch (err) {
@@ -104,18 +109,21 @@ export default function createIPABuilder(buildParams) {
     }
   }
 
-  async function copyProvisioningProfileToHomedir(provisioningProfilePath, appUUID) {
+  async function copyProvisioningProfileToHomedir(
+    provisioningProfilePath: string,
+    appUUID: string
+  ): Promise<void> {
     await fs.mkdirp(getProvisioningProfileDirPath());
     const newProvisioningProfilePath = getProvisioningProfilePath(appUUID);
     await fs.copy(provisioningProfilePath, newProvisioningProfilePath);
   }
 
-  async function removeProvisioningProfileFromHomedir(appUUID) {
+  async function removeProvisioningProfileFromHomedir(appUUID: string): Promise<void> {
     const provisioningProfilePath = getProvisioningProfilePath(appUUID);
     await fs.remove(provisioningProfilePath);
   }
 
-  async function readCMSMessage(provisioningProfilePath) {
+  async function readCMSMessage(provisioningProfilePath: string): Promise<plist.PlistValue> {
     const { output } = await spawnAsyncThrowError(
       'security',
       ['cms', '-D', '-i', provisioningProfilePath],
@@ -131,10 +139,10 @@ export default function createIPABuilder(buildParams) {
     return plistData;
   }
 
-  const getProvisioningProfileDirPath = () =>
+  const getProvisioningProfileDirPath = (): string =>
     path.join(os.homedir(), 'Library/MobileDevice/Provisioning Profiles');
 
-  const getProvisioningProfilePath = appUUID =>
+  const getProvisioningProfilePath = (appUUID: string): string =>
     path.join(getProvisioningProfileDirPath(), `${appUUID}.mobileprovision`);
 
   return { build, cleanup };

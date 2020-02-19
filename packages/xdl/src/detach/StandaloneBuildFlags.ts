@@ -5,7 +5,8 @@ import get from 'lodash/get';
  *  how to compile native code during the build step.
  */
 
-type StandaloneBuildConfiguration = 'Debug' | 'Release';
+export type StandaloneBuildConfiguration = 'Debug' | 'Release';
+
 type StandaloneBuildAndroidFlags = {
   keystore: string;
   keystorePassword: string;

@@ -22,7 +22,7 @@ function _getFilesizeInBytes(path: string) {
   return fileSizeInBytes;
 }
 
-function parseSdkMajorVersion(expSdkVersion: string) {
+function parseSdkMajorVersion(expSdkVersion: string): number {
   // We assume that the unversioned SDK is the latest
   if (expSdkVersion === 'UNVERSIONED') {
     return Infinity;
@@ -214,7 +214,7 @@ function isDirectory(dir: string) {
   }
 }
 
-type LocaleMap = { [lang: string]: any };
+export type LocaleMap = { [lang: string]: any };
 
 async function getResolvedLocalesAsync(exp: ExpoConfig): Promise<LocaleMap> {
   const locales: LocaleMap = {};

@@ -89,6 +89,20 @@ import * as Web from './Web';
 import * as Webpack from './Webpack';
 
 import XDLError from './XDLError';
+
+import * as AndroidShellApp from './detach/AndroidShellApp';
+
+import * as Detach from './detach/Detach';
+
+import * as IosIPABuilder from './detach/IosIPABuilder';
+
+import * as IosWorkspace from './detach/IosWorkspace';
+
+import * as IosPodsTools from './detach/IosPodsTools';
+
+import * as IosShellApp from './detach/IosShellApp';
+
+import * as IosCodeSigning from './detach/IosCodeSigning';
 export { ConnectionStatus };
 
 if (process.env.NODE_ENV !== 'production') {
@@ -96,8 +110,6 @@ if (process.env.NODE_ENV !== 'production') {
 }
 export { Analytics };
 export { Android };
-
-const AndroidShellApp: any = require('./detach/AndroidShellApp.js');
 export { AndroidShellApp };
 export { Api };
 export { ApiV2 };
@@ -106,8 +118,6 @@ export { Webhooks };
 export { Config };
 export { Credentials };
 export { AndroidCredentials };
-
-const Detach: any = require('./detach/Detach.js');
 export { Detach };
 export { Doctor };
 export { Env };
@@ -121,22 +131,12 @@ export { FsCache };
 export { ImageUtils };
 export { StandaloneBuild };
 export { IosIcons };
-
-const IosIPABuilder = require('./detach/IosIPABuilder.js').default;
 export { IosIPABuilder };
 export { IosKeychain };
-
-const IosWorkspace = require('./detach/IosWorkspace');
 export { IosWorkspace };
 export { IosPlist };
-
-const IosPodsTools = require('./detach/IosPodsTools.js');
 export { IosPodsTools };
-
-const IosShellApp = require('./detach/IosShellApp.js');
 export { IosShellApp };
-
-const IosCodeSigning = require('./detach/IosCodeSigning.js');
 export { IosCodeSigning };
 export { Logger };
 export { LoggerDetach };

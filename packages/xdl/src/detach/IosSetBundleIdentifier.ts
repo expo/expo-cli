@@ -7,7 +7,7 @@ import { project as Project } from 'xcode';
 
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 
-export function resetAllPlistBundleIdentifiers(projectRoot: string) {
+export function resetAllPlistBundleIdentifiers(projectRoot: string): void {
   const infoPlistPaths = sync(join(projectRoot, 'ios', '*', 'Info.plist'));
 
   for (const plistPath of infoPlistPaths) {
@@ -15,7 +15,7 @@ export function resetAllPlistBundleIdentifiers(projectRoot: string) {
   }
 }
 
-export function resetPlistBundleIdentifier(plistPath: string) {
+export function resetPlistBundleIdentifier(plistPath: string): void {
   // Read Plist as source
   const rawPlist = fs.readFileSync(plistPath, 'utf8');
 
@@ -58,7 +58,10 @@ function filterHosts(input: any[]): boolean {
   return !buildSettings.TEST_HOST;
 }
 
-export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIdentifier: string) {
+export function updateBundleIdentifierForPbxproj(
+  pbxprojPath: string,
+  bundleIdentifier: string
+): void {
   const project = Project(pbxprojPath);
   project.parseSync();
 
@@ -81,7 +84,7 @@ export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIden
   fs.writeFileSync(pbxprojPath, project.writeSync());
 }
 
-export function setBundleIdentifier(projectRoot: string, bundleIdentifier: string) {
+export function setBundleIdentifier(projectRoot: string, bundleIdentifier: string): void {
   // Get all pbx projects
   const pbxprojPaths = sync(join(projectRoot, 'ios', '*', 'project.pbxproj'));
 

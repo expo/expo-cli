@@ -13,22 +13,70 @@ import {
 } from './ExponentTools';
 import * as IosNSBundle from './IosNSBundle';
 import * as IosWorkspace from './IosWorkspace';
-import StandaloneBuildFlags from './StandaloneBuildFlags';
-import StandaloneContext from './StandaloneContext';
+import StandaloneBuildFlags, { StandaloneBuildConfiguration } from './StandaloneBuildFlags';
+import StandaloneContext, { StandaloneContextService } from './StandaloneContext';
 import logger from './Logger';
 
 export const EXPOKIT_APP = 'ExpoKitApp';
 export const EXPONENT_APP = 'Exponent';
 
-function _validateCLIArgs(args) {
+type ShellAppType = 'simulator' | 'archive' | 'client';
+
+type ShellAppActionArgs = {
+  action: ShellAppAction;
+  configuration: 'Debug' | 'Release';
+  /**
+   * @default archive
+   * @android: 'app-bundle' | 'apk'
+   */
+  type: ShellAppType;
+  testEnvironment: 'local' | 'ci' | 'none';
+  verbose: boolean;
+
+  // Unknown
+  appleTeamId?: string;
+  reuseWorkspace?: boolean;
+  skipRepoUpdate?: boolean;
+  shellAppSdkVersion?: string;
+  expoSourcePath?: string;
+  workspacePath?: string;
+  privateConfigFile?: string;
+  privateConfigData?: string;
+  output?: string;
+  manifest?: any;
+  archivePath: string | null;
+};
+
+type ShellAppAction = 'configure' | 'build' | 'create-workspace';
+
+type ShellAppActionCreateWorkspaceArgs = ShellAppActionArgs & {
+  action: 'create-workspace';
+};
+type ShellAppActionBuildArgs = ShellAppActionArgs & {
+  action: 'build';
+};
+type ShellAppActionConfigureArgs = ShellAppActionArgs & {
+  action: 'configure';
+  url: string;
+  sdkVersion: string;
+  releaseChannel?: string;
+};
+
+type AnyShellAppArgs =
+  | ShellAppActionCreateWorkspaceArgs
+  | ShellAppActionBuildArgs
+  | ShellAppActionConfigureArgs;
+
+function _validateCLIArgs(args: Partial<AnyShellAppArgs>): AnyShellAppArgs {
   args.type = args.type || 'archive';
   args.configuration = args.configuration || 'Release';
   args.verbose = args.verbose || false;
   args.testEnvironment = args.testEnvironment || 'none';
+  args.archivePath = typeof args.archivePath === 'undefined' ? null : args.archivePath;
 
   switch (args.type) {
     case 'simulator': {
-      if (args.configuration !== 'Debug' && args.configuration !== 'Release') {
+      if (!['Debug', 'Release'].includes(args.configuration!)) {
         throw new Error(`Unsupported build configuration ${args.configuration}`);
       }
       break;
@@ -48,42 +96,41 @@ function _validateCLIArgs(args) {
 
   switch (args.action) {
     case 'configure': {
-      if (args.type === 'client') {
-        break;
+      const appArgs = args as ShellAppActionConfigureArgs;
+      if (appArgs.type === 'client') {
+        return appArgs;
       }
 
-      if (!args.url) {
+      if (!appArgs.url) {
         throw new Error('Must run with `--url MANIFEST_URL`');
       }
-      if (!args.sdkVersion) {
+      if (!appArgs.sdkVersion) {
         throw new Error('Must run with `--sdkVersion SDK_VERSION`');
       }
-      if (!args.archivePath) {
+      if (!appArgs.archivePath) {
         throw new Error(
           'Need to provide --archivePath <path to existing archive for configuration>'
         );
       }
       if (
-        args.testEnvironment !== 'local' &&
-        args.testEnvironment !== 'ci' &&
-        args.testEnvironment !== 'none'
+        appArgs.testEnvironment !== 'local' &&
+        appArgs.testEnvironment !== 'ci' &&
+        appArgs.testEnvironment !== 'none'
       ) {
-        throw new Error(`Unsupported test environment ${args.testEnvironment}`);
+        throw new Error(`Unsupported test environment ${appArgs.testEnvironment}`);
       }
-      break;
+      return appArgs;
     }
     case 'build': {
-      break;
+      return args as ShellAppActionBuildArgs;
     }
     case 'create-workspace': {
-      break;
+      return args as ShellAppActionCreateWorkspaceArgs;
     }
     default: {
       throw new Error(`Unsupported build action ${args.action}`);
     }
   }
-
-  return args;
 }
 
 /**
@@ -91,13 +138,13 @@ function _validateCLIArgs(args) {
  *  @return the path to the resulting build artifact
  */
 async function _buildAsync(
-  projectName,
-  workspacePath,
-  configuration,
-  type,
-  relativeBuildDestination,
-  verbose,
-  useModernBuildSystem = false
+  projectName: string,
+  workspacePath: string,
+  configuration: StandaloneBuildConfiguration,
+  type: ShellAppType,
+  relativeBuildDestination: string,
+  verbose: boolean,
+  useModernBuildSystem: boolean = false
 ) {
   const modernBuildSystemFragment = `-UseModernBuildSystem=${useModernBuildSystem ? 'YES' : 'NO'}`;
   const buildDest = `${relativeBuildDestination}-${type}`;
@@ -126,6 +173,7 @@ async function _buildAsync(
       '\nxcodebuild is running. Logging errors only. To see full output, use --verbose 1...'
     );
   }
+  // @ts-ignore
   await spawnAsyncThrowError(buildCmd, null, {
     // only stderr
     stdio: verbose ? 'inherit' : ['ignore', 'ignore', 'inherit'],
@@ -135,7 +183,10 @@ async function _buildAsync(
   return path.resolve(workspacePath, pathToArtifact);
 }
 
-async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
+async function _podInstallAsync(
+  workspacePath: string,
+  isRepoUpdateEnabled: boolean
+): Promise<void> {
   // ensure pods are clean
   const pathsToClean = [path.join(workspacePath, 'Pods'), path.join(workspacePath, 'Podfile.lock')];
   pathsToClean.forEach(path => {
@@ -146,6 +197,7 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
 
   // Disable cocoapod stats to speed up the install
   const COCOAPODS_DISABLE_STATS = process.env.COCOAPODS_DISABLE_STATS;
+  // @ts-ignore
   process.env.COCOAPODS_DISABLE_STATS = true;
 
   // install
@@ -171,11 +223,13 @@ async function _podInstallAsync(workspacePath, isRepoUpdateEnabled) {
  * @param expoSourcePath path to expo client app sourcecode (/ios dir from expo/expo repo)
  * @param shellAppSdkVersion sdk version for shell app
  */
-async function _createStandaloneContextAsync(args) {
+async function _createStandaloneContextAsync(
+  args: AnyShellAppArgs
+): Promise<StandaloneContextService> {
   // right now we only ever build a single detached workspace for service contexts.
   // TODO: support multiple different pod configurations, assemble a cache of those builds.
   const expoSourcePath = args.expoSourcePath || '../ios';
-  let workspaceSourcePath;
+  let workspaceSourcePath: string;
   if (args.workspacePath) {
     workspaceSourcePath = args.workspacePath;
   } else {
@@ -197,7 +251,7 @@ async function _createStandaloneContextAsync(args) {
     logger
       .withFields({ buildPhase: 'reading manifest' })
       .info('Using manifest:', JSON.stringify(manifest));
-  } else if (args.url && args.sdkVersion) {
+  } else if (args.action === 'configure' && args.url && args.sdkVersion) {
     const { url, sdkVersion, releaseChannel } = args;
     manifest = await getManifestAsync(url, {
       'Exponent-SDK-Version': sdkVersion,
@@ -216,7 +270,7 @@ async function _createStandaloneContextAsync(args) {
 
   const buildFlags = StandaloneBuildFlags.createIos(args.configuration, {
     workspaceSourcePath,
-    appleTeamId: args.appleTeamId,
+    appleTeamId: typeof args.appleTeamId === 'undefined' ? null : args.appleTeamId,
     buildType: args.type,
     bundleExecutable,
   });
@@ -227,8 +281,11 @@ async function _createStandaloneContextAsync(args) {
     privateConfig,
     args.testEnvironment,
     buildFlags,
+    // @ts-ignore
     args.url,
+    // @ts-ignore
     args.releaseChannel,
+    // @ts-ignore
     args.shellAppSdkVersion
   );
   return context;
@@ -246,25 +303,35 @@ async function _createStandaloneContextAsync(args) {
  *  @param type type of artifact to configure (simulator or archive)
  *  @param expoSourcePath path to expo client app sourcecode (/ios dir from expo/expo repo)
  */
-async function configureAndCopyArchiveAsync(args) {
-  args = _validateCLIArgs(args);
+export async function configureAndCopyArchiveAsync(
+  inputArgs: Partial<AnyShellAppArgs>
+): Promise<any> {
+  let args = _validateCLIArgs(inputArgs);
   const { output, type } = args;
   const context = await _createStandaloneContextAsync(args);
   await IosNSBundle.configureAsync(context);
+
+  // Unsafe
+  const archivePath = context.data.archivePath!;
+  // Unsafe
+  const bundleExecutable = context.build.ios?.bundleExecutable!;
+
   if (output) {
     const workspaceName = type === 'client' ? EXPONENT_APP : EXPOKIT_APP;
-    if (context.build.ios.bundleExecutable !== workspaceName) {
-      await spawnAsync('/bin/mv', [workspaceName, context.build.ios.bundleExecutable], {
+    if (bundleExecutable !== workspaceName) {
+      await spawnAsync('/bin/mv', [workspaceName, bundleExecutable], {
+        // @ts-ignore
         pipeToLogger: true,
-        cwd: context.data.archivePath,
+        cwd: archivePath,
         loggerFields: { buildPhase: 'renaming bundle executable' },
       });
     }
     if (type === 'simulator') {
       const archiveName = context.config.slug.replace(/[^0-9a-z_-]/gi, '_');
-      const appReleasePath = path.resolve(context.data.archivePath, '..');
+      const appReleasePath = path.resolve(archivePath, '..');
       await spawnAsync(
         `mv ${workspaceName}.app ${archiveName}.app && tar -czvf ${output} ${archiveName}.app`,
+        // @ts-ignore
         null,
         {
           stdoutOnly: true,
@@ -276,8 +343,9 @@ async function configureAndCopyArchiveAsync(args) {
       );
     } else if (type === 'archive' || type === 'client') {
       await spawnAsync('/bin/mv', [`${workspaceName}.xcarchive`, output], {
+        // @ts-ignore
         pipeToLogger: true,
-        cwd: path.join(context.data.archivePath, '../../../..'),
+        cwd: path.join(archivePath, '../../../..'),
         loggerFields: { buildPhase: 'renaming archive' },
       });
     }
@@ -289,16 +357,22 @@ async function configureAndCopyArchiveAsync(args) {
  * possible args:
  *  @param skipRepoUpdate if true, omit `--repo-update` cocoapods flag.
  */
-async function _createTurtleWorkspaceAsync(context, args) {
+async function _createTurtleWorkspaceAsync(
+  context: StandaloneContextService,
+  args: AnyShellAppArgs
+): Promise<void> {
   const { skipRepoUpdate } = args;
-  if (fs.existsSync(context.build.ios.workspaceSourcePath)) {
+  if (
+    context.build.ios?.workspaceSourcePath &&
+    fs.existsSync(context.build.ios.workspaceSourcePath)
+  ) {
     logger.info(`Removing existing workspace at ${context.build.ios.workspaceSourcePath}...`);
     try {
       rimraf.sync(context.build.ios.workspaceSourcePath);
     } catch (_) {}
   }
   await IosWorkspace.createDetachedAsync(context);
-  await _podInstallAsync(context.build.ios.workspaceSourcePath, !skipRepoUpdate);
+  await _podInstallAsync(context.build.ios?.workspaceSourcePath!, !skipRepoUpdate);
 }
 
 /**
@@ -309,8 +383,8 @@ async function _createTurtleWorkspaceAsync(context, args) {
  * @param url (optional, with sdkVersion) url to an expo manifest, if you want the workspace to be configured automatically
  * @param sdkVersion (optional, with url) sdkVersion to an expo manifest, if you want the workspace to be configured automatically
  */
-async function createTurtleWorkspaceAsync(args) {
-  args = _validateCLIArgs(args);
+export async function createTurtleWorkspaceAsync(inputArgs: Partial<AnyShellAppArgs>) {
+  let args = _validateCLIArgs(inputArgs);
   if (!args.workspacePath) {
     logger.info(
       'No workspace path was provided with --workspacePath, so the default will be used.'
@@ -319,11 +393,12 @@ async function createTurtleWorkspaceAsync(args) {
   const context = await _createStandaloneContextAsync(args);
   await _createTurtleWorkspaceAsync(context, args);
   logger.info(
-    `Created turtle workspace at ${context.build.ios.workspaceSourcePath}. You can open and run this in Xcode.`
+    `Created turtle workspace at ${context.build.ios?.workspaceSourcePath}. You can open and run this in Xcode.`
   );
   if (context.config) {
     await IosNSBundle.configureAsync(context);
     logger.info(
+      // @ts-ignore
       `The turtle workspace was configured for the url ${args.url}. To run this app with a Debug scheme, make sure to add a development url to 'EXBuildConstants.plist'.`
     );
   } else {
@@ -341,8 +416,10 @@ async function createTurtleWorkspaceAsync(args) {
  *  @param type type of artifact to build (simulator or archive)
  *  @param shellAppSdkVersion sdk version for shell app
  */
-async function buildAndCopyArtifactAsync(args) {
-  args = _validateCLIArgs(args);
+export async function buildAndCopyArtifactAsync(
+  inputArgs: Partial<AnyShellAppArgs>
+): Promise<void> {
+  let args = _validateCLIArgs(inputArgs);
   const context = await _createStandaloneContextAsync(args);
   const { verbose, type, reuseWorkspace } = args;
   const { projectName } = IosWorkspace.getPaths(context);
@@ -350,14 +427,20 @@ async function buildAndCopyArtifactAsync(args) {
   if (!reuseWorkspace) {
     await _createTurtleWorkspaceAsync(context, args);
   }
+
+  // TODO: This is assumed to be a valid string?
+  const workspaceSourcePath = context.build.ios?.workspaceSourcePath!;
+  // TODO: This is assumed to be a valid string?
+  const shellAppSdkVersion = args.shellAppSdkVersion!;
+
   const pathToArtifact = await _buildAsync(
     projectName,
-    context.build.ios.workspaceSourcePath,
+    workspaceSourcePath,
     context.build.configuration,
     type,
-    path.relative(context.build.ios.workspaceSourcePath, '../shellAppBase'),
+    path.relative(workspaceSourcePath, '../shellAppBase'),
     verbose,
-    parseSdkMajorVersion(args.shellAppSdkVersion) > 33
+    parseSdkMajorVersion(shellAppSdkVersion) > 33
   );
   const artifactDestPath = path.join('../shellAppBase-builds', type, context.build.configuration);
   logger.info(`\nFinished building, copying artifact to ${path.resolve(artifactDestPath)}...`);
@@ -369,5 +452,3 @@ async function buildAndCopyArtifactAsync(args) {
   logger.info(`cp -R ${pathToArtifact} ${artifactDestPath}`);
   await spawnAsyncThrowError('/bin/cp', ['-R', pathToArtifact, artifactDestPath]);
 }
-
-export { buildAndCopyArtifactAsync, configureAndCopyArchiveAsync, createTurtleWorkspaceAsync };

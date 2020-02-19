@@ -2849,6 +2849,13 @@
   dependencies:
     "@types/node" "*"
 
+"@types/indent-string@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@types/indent-string/-/indent-string-4.0.1.tgz#fb4e6b8cdd8e94f70c105e78fb5d357a767b7193"
+  integrity sha512-cIe4VIMWLlX9ugJRULZMgKoh88+AdD+6e7K9Y0s5QkbEJujoyVfKcmO2y9hbOU8ma/tbyHFaJN1+hQ0SyWo2iA==
+  dependencies:
+    indent-string "*"
+
 "@types/inflection@^1.5.28":
   version "1.5.28"
   resolved "https://registry.yarnpkg.com/@types/inflection/-/inflection-1.5.28.tgz#43d55e0d72cf333a2dffd9c4ec0407455a1b0931"
@@ -3084,6 +3091,13 @@
   resolved "https://registry.yarnpkg.com/@types/relateurl/-/relateurl-0.2.28.tgz#6bda7db8653fa62643f5ee69e9f69c11a392e3a6"
   integrity sha1-a9p9uGU/piZD9e5p6facEaOS46Y=
 
+"@types/replace-string@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@types/replace-string/-/replace-string-3.0.0.tgz#42f8d25fd2f155916df830400fc2f70e128d7611"
+  integrity sha512-Qp+ZO0gz50a1OQ7AH4rbzUxq3NqBDosc8HiwODWNofGH0NGbATQ54TdSoznVrcP7pNWx/pMlSwPotu/ob5Z3CA==
+  dependencies:
+    replace-string "*"
+
 "@types/request-promise-native@^1.0.16":
   version "1.0.17"
   resolved "https://registry.yarnpkg.com/@types/request-promise-native/-/request-promise-native-1.0.17.tgz#74a2d7269aebf18b9bdf35f01459cf0a7bfc7fab"
@@ -3105,6 +3119,14 @@
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/@types/retry/-/retry-0.12.0.tgz#2b35eccfcee7d38cd72ad99232fbd58bffb3c84d"
   integrity sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==
+
+"@types/rimraf@^2.0.3":
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@types/rimraf/-/rimraf-2.0.3.tgz#0199a46af106729ba14213fda7b981278d8c84f2"
+  integrity sha512-dZfyfL/u9l/oi984hEXdmAjX3JHry7TLWw43u1HQ8HhPv6KtfxnrZ3T/bleJ0GEvnk9t5sM7eePkgMqz3yBcGg==
+  dependencies:
+    "@types/glob" "*"
+    "@types/node" "*"
 
 "@types/semver@^6.0.0":
   version "6.2.0"
@@ -11072,15 +11094,15 @@ imurmurhash@^0.1.4:
   resolved "https://registry.yarnpkg.com/imurmurhash/-/imurmurhash-0.1.4.tgz#9218b9b2b928a238b13dc4fb6b6d576f231453ea"
   integrity sha1-khi5srkoojixPcT7a21XbyMUU+o=
 
+indent-string@*, indent-string@4.0.0, indent-string@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/indent-string/-/indent-string-4.0.0.tgz#624f8f4497d619b2d9768531d58f4122854d7251"
+  integrity sha512-EdDDZu4A2OyIK7Lr/2zG+w5jmbuk1DVBnEwREQvBzspBJkCEbRa8GxU1lghYcaGJCnRWibjDXlq779X1/y5xwg==
+
 indent-string@3.2.0, indent-string@^3.0.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/indent-string/-/indent-string-3.2.0.tgz#4a5fd6d27cc332f37e5419a504dbb837105c9289"
   integrity sha1-Sl/W0nzDMvN+VBmlBNu4NxBckok=
-
-indent-string@4.0.0, indent-string@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/indent-string/-/indent-string-4.0.0.tgz#624f8f4497d619b2d9768531d58f4122854d7251"
-  integrity sha512-EdDDZu4A2OyIK7Lr/2zG+w5jmbuk1DVBnEwREQvBzspBJkCEbRa8GxU1lghYcaGJCnRWibjDXlq779X1/y5xwg==
 
 indent-string@^2.1.0:
   version "2.1.0"
@@ -18061,6 +18083,11 @@ replace-homedir@^1.0.0:
     homedir-polyfill "^1.0.1"
     is-absolute "^1.0.0"
     remove-trailing-separator "^1.1.0"
+
+replace-string@*:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/replace-string/-/replace-string-3.0.0.tgz#49deafb57839fa3bab9c11ad449b006e0d436e69"
+  integrity sha512-jE5X/k3p2v8p6+wxhM1Ti0Oj9lYtwPbMj0ty8iSFpAFIihkiNpl6uHgYW1De/r9DG3vA7HGIgIBMjlwJZXL02w==
 
 replace-string@1.1.0:
   version "1.1.0"

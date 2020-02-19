@@ -467,7 +467,7 @@ function formatDistCert(
     ? `\n    ${chalk.gray(`used by ${joinApps}`)}`
     : `\n    ${chalk.gray(`not used by any apps`)}`;
 
-  let serialNumber = distCert.distCertSerialNumber;
+  let serialNumber: string | null = distCert.distCertSerialNumber ?? null;
   try {
     if (!serialNumber) {
       serialNumber = IosCodeSigning.findP12CertSerialNumber(
@@ -548,10 +548,9 @@ async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
   const userProvided = await askForUserProvided(distCertSchema);
   if (userProvided) {
     try {
-      userProvided.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
-        userProvided.certP12,
-        userProvided.certPassword
-      );
+      userProvided.distCertSerialNumber =
+        IosCodeSigning.findP12CertSerialNumber(userProvided.certP12, userProvided.certPassword) ??
+        undefined;
     } catch (error) {
       log.warn('Unable to access certificate serial number.');
       log.warn('Make sure that certificate and password are correct.');

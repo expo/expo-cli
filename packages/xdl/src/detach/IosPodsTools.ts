@@ -1,12 +1,13 @@
 import fs from 'fs-extra';
 import glob from 'glob-promise';
+// @ts-ignore
 import indentString from 'indent-string';
 import JsonFile from '@expo/json-file';
 import path from 'path';
 
 import { parseSdkMajorVersion } from './ExponentTools';
 
-function _validatePodfileSubstitutions(substitutions) {
+function _validatePodfileSubstitutions(substitutions: { [key: string]: any }): true {
   const validKeys = [
     // a pod dependency on ExpoKit (can be local or remote)
     'EXPOKIT_DEPENDENCY',
@@ -58,9 +59,12 @@ function _validatePodfileSubstitutions(substitutions) {
   return true;
 }
 
-function _renderExpoKitDependency(options, sdkVersion) {
+function _renderExpoKitDependency(
+  options: { expoKitPath?: string; expoKitTag?: string },
+  sdkVersion: string
+): string {
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
-  let attributes;
+  let attributes: { [key: string]: string | boolean | string[] };
   if (options.expoKitPath) {
     attributes = {
       path: options.expoKitPath,
@@ -99,7 +103,10 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
  *  as 'UNVERSIONED', e.g. if we are detaching a sdk15 project, we render
  *  an unversioned dependency pointing at RN#sdk-15.
  */
-function _renderUnversionedReactNativeDependency(options, sdkVersion) {
+function _renderUnversionedReactNativeDependency(
+  options: { reactNativePath?: string },
+  sdkVersion: string
+): string {
   let sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
 
   if (sdkMajorVersion >= 36) {
@@ -136,7 +143,10 @@ ${_renderUnversionedThirdPartyDependency(
   );
 }
 
-function _renderUnversionedReactDependency(options, sdkVersion) {
+function _renderUnversionedReactDependency(
+  options: { reactNativePath?: string },
+  sdkVersion?: string
+): string {
   if (!options.reactNativePath) {
     throw new Error(`Unsupported options for RN dependency: ${options}`);
   }
@@ -163,7 +173,7 @@ function _renderUnversionedReactDependency(options, sdkVersion) {
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 }
 
-function _renderUnversionedYogaDependency(options) {
+function _renderUnversionedYogaDependency(options: { reactNativePath?: string }): string {
   let attributes;
   if (options.reactNativePath) {
     attributes = {
@@ -177,7 +187,11 @@ function _renderUnversionedYogaDependency(options) {
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 }
 
-function _renderUnversionedThirdPartyDependency(podName, podspecRelativePath, options) {
+function _renderUnversionedThirdPartyDependency(
+  podName: string,
+  podspecRelativePath: string,
+  options: { reactNativePath?: string }
+): string {
   let attributes;
   if (options.reactNativePath) {
     attributes = {
@@ -191,7 +205,7 @@ function _renderUnversionedThirdPartyDependency(podName, podspecRelativePath, op
 ${indentString(_renderDependencyAttributes(attributes), 2)}`;
 }
 
-function _renderDependencyAttributes(attributes) {
+function _renderDependencyAttributes(attributes: { [key: string]: any }): string {
   let attributesStrings = [];
   for (let key of Object.keys(attributes)) {
     let value = JSON.stringify(attributes[key], null, 2);
@@ -200,7 +214,7 @@ function _renderDependencyAttributes(attributes) {
   return attributesStrings.join(',\n');
 }
 
-function createSdkFilterFn(sdkVersion) {
+function createSdkFilterFn(sdkVersion: any): undefined | ((i: string) => boolean) {
   if (sdkVersion && String(sdkVersion).toUpperCase() === 'UNVERSIONED') {
     return () => false;
   }
@@ -208,30 +222,30 @@ function createSdkFilterFn(sdkVersion) {
     return;
   }
   const sdkVersionWithUnderscores = sdkVersion.replace(/\./g, '_');
-  return i => i.endsWith(`/ReactABI${sdkVersionWithUnderscores}.rb`);
+  return (i: string): boolean => i.endsWith(`/ReactABI${sdkVersionWithUnderscores}.rb`);
 }
 
 async function _renderVersionedReactNativeDependenciesAsync(
-  templatesDirectory,
-  versionedReactNativePath,
-  expoSubspecs,
-  shellAppSdkVersion
-) {
+  templatesDirectory: string,
+  versionedReactNativePath: string,
+  expoSubspecs: string[],
+  shellAppSdkVersion: any
+): Promise<string> {
   const filterFn = createSdkFilterFn(shellAppSdkVersion);
   let result = await _concatTemplateFilesInDirectoryAsync(
     path.join(templatesDirectory, 'versioned-react-native', 'dependencies'),
     filterFn
   );
-  expoSubspecs = expoSubspecs.map(subspec => `'${subspec}'`).join(', ');
+  const expoSubspecsString = expoSubspecs.map(subspec => `'${subspec}'`).join(', ');
   result = result.replace(/\$\{VERSIONED_REACT_NATIVE_PATH\}/g, versionedReactNativePath);
-  result = result.replace(/\$\{REACT_NATIVE_EXPO_SUBSPECS\}/g, expoSubspecs);
+  result = result.replace(/\$\{REACT_NATIVE_EXPO_SUBSPECS\}/g, expoSubspecsString);
   return result;
 }
 
 async function _renderVersionedReactNativePostinstallsAsync(
-  templatesDirectory,
-  shellAppSdkVersion
-) {
+  templatesDirectory: string,
+  shellAppSdkVersion: any
+): Promise<string> {
   const filterFn = createSdkFilterFn(shellAppSdkVersion);
   return _concatTemplateFilesInDirectoryAsync(
     path.join(templatesDirectory, 'versioned-react-native', 'postinstalls'),
@@ -239,7 +253,10 @@ async function _renderVersionedReactNativePostinstallsAsync(
   );
 }
 
-async function _concatTemplateFilesInDirectoryAsync(directory, filterFn) {
+async function _concatTemplateFilesInDirectoryAsync(
+  directory: string,
+  filterFn: any
+): Promise<string> {
   let templateFilenames = (await glob(path.join(directory, '*.rb'))).sort();
   let filteredTemplateFilenames = filterFn ? templateFilenames.filter(filterFn) : templateFilenames;
   let templateStrings = [];
@@ -254,7 +271,7 @@ async function _concatTemplateFilesInDirectoryAsync(directory, filterFn) {
   return templateStrings.join('\n');
 }
 
-function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
+function _renderDetachedPostinstall(sdkVersion: string, isServiceContext: boolean): string {
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
   const podNameExpression = sdkMajorVersion < 33 ? 'target.pod_name' : 'pod_name';
   const targetExpression = sdkMajorVersion < 33 ? 'target' : 'target_installation_result';
@@ -287,7 +304,7 @@ function _renderDetachedPostinstall(sdkVersion, isServiceContext) {
 `;
 }
 
-function _renderUnversionedPostinstall(sdkVersion) {
+function _renderUnversionedPostinstall(sdkVersion: string): string {
   const podsToChangeDeployTarget = [
     'Amplitude-iOS',
     'Analytics',
@@ -344,7 +361,7 @@ ${podsToChangeDeployTargetIfEnd}
 `;
 }
 
-function _renderTestTarget(reactNativePath) {
+function _renderTestTarget(reactNativePath?: string): string {
   return `
   target 'ExponentIntegrationTests' do
     inherit! :search_paths
@@ -356,26 +373,38 @@ function _renderTestTarget(reactNativePath) {
 `;
 }
 
-async function _renderPodDependenciesAsync(dependenciesConfigPath, options) {
+async function _renderPodDependenciesAsync(
+  dependenciesConfigPath: string,
+  options: { isPodfile?: boolean }
+): Promise<string> {
   let dependencies = await new JsonFile(dependenciesConfigPath).readAsync();
   const type = options.isPodfile ? 'pod' : 'ss.dependency';
   const noWarningsFlag = options.isPodfile ? `, :inhibit_warnings => true` : '';
-  let depsStrings = dependencies.map(dependency => {
-    let builder = '';
-    if (dependency.comments) {
-      builder += dependency.comments.map(commentLine => `  # ${commentLine}`).join('\n');
-      builder += '\n';
-    }
-    const otherPodfileFlags = options.isPodfile && dependency.otherPodfileFlags;
-    builder += `  ${type} '${dependency.name}', '${
-      dependency.version
-    }'${noWarningsFlag}${otherPodfileFlags || ''}`;
-    return builder;
-  });
+  let depsStrings: string[] = [];
+  if (Array.isArray(dependencies)) {
+    depsStrings = dependencies.map(dependency => {
+      let builder = '';
+      if (dependency.comments) {
+        builder += dependency.comments
+          .map((commentLine: string) => `  # ${commentLine}`)
+          .join('\n');
+        builder += '\n';
+      }
+      const otherPodfileFlags = options.isPodfile && dependency.otherPodfileFlags;
+      builder += `  ${type} '${dependency.name}', '${
+        dependency.version
+      }'${noWarningsFlag}${otherPodfileFlags || ''}`;
+      return builder;
+    });
+  }
   return depsStrings.join('\n');
 }
 
-async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubstitutions) {
+export async function renderExpoKitPodspecAsync(
+  pathToTemplate: string,
+  pathToOutput: string,
+  moreSubstitutions: { [key: string]: any }
+): Promise<void> {
   let templatesDirectory = path.dirname(pathToTemplate);
   let templateString = await fs.readFile(pathToTemplate, 'utf8');
   let dependencies = await _renderPodDependenciesAsync(
@@ -394,10 +423,10 @@ async function renderExpoKitPodspecAsync(pathToTemplate, pathToOutput, moreSubst
 }
 
 function _renderUnversionedUniversalModulesDependencies(
-  universalModules,
-  universalModulesPath,
-  sdkVersion
-) {
+  universalModules: { podName: string; path: string }[],
+  universalModulesPath: string,
+  sdkVersion: string
+): string {
   const sdkMajorVersion = parseSdkMajorVersion(sdkVersion);
 
   if (sdkMajorVersion >= 33) {
@@ -431,7 +460,11 @@ use_unimodules!(
   }
 }
 
-function _renderUnversionedUniversalModuleDependency(podName, path, sdkVersion) {
+function _renderUnversionedUniversalModuleDependency(
+  podName: string,
+  path: string,
+  sdkVersion?: string
+): string {
   const attributes = {
     path,
   };
@@ -445,11 +478,11 @@ ${indentString(_renderDependencyAttributes(attributes), 2)}`;
  *  @param moreSubstitutions dictionary of additional substitution keys and values to replace
  *         in the template, such as: TARGET_NAME, REACT_NATIVE_PATH
  */
-async function renderPodfileAsync(
-  pathToTemplate,
-  pathToOutput,
-  moreSubstitutions,
-  shellAppSdkVersion,
+export async function renderPodfileAsync(
+  pathToTemplate: string,
+  pathToOutput: string,
+  moreSubstitutions: undefined | { [key: string]: any },
+  shellAppSdkVersion: any,
   sdkVersion = 'UNVERSIONED'
 ) {
   if (!moreSubstitutions) {
@@ -504,7 +537,7 @@ async function renderPodfileAsync(
     universalModules = [];
   }
 
-  let substitutions = {
+  let substitutions: { [key: string]: string } = {
     EXPONENT_CLIENT_DEPS: podDependencies,
     EXPOKIT_DEPENDENCY: _renderExpoKitDependency(expoKitDependencyOptions, sdkVersion),
     PODFILE_UNVERSIONED_EXPO_MODULES_DEPENDENCIES: _renderUnversionedUniversalModulesDependencies(
@@ -536,5 +569,3 @@ async function renderPodfileAsync(
 
   await fs.writeFile(pathToOutput, result);
 }
-
-export { renderExpoKitPodspecAsync, renderPodfileAsync };

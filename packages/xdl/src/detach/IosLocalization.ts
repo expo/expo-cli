@@ -1,12 +1,23 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { getResolvedLocalesAsync } from './ExponentTools';
+import { LocaleMap, getResolvedLocalesAsync } from './ExponentTools';
+import {
+  AnyStandaloneContext,
+  isStandaloneContextService,
+  isStandaloneContextUser,
+} from './StandaloneContext';
 
-export async function writeLocalizationResourcesAsync({ supportingDirectory, context }) {
-  let locales = {};
-  if (context.type === 'user') {
+export async function writeLocalizationResourcesAsync({
+  supportingDirectory,
+  context,
+}: {
+  supportingDirectory: string;
+  context: AnyStandaloneContext;
+}): Promise<void> {
+  let locales: LocaleMap = {};
+  if (isStandaloneContextUser(context)) {
     locales = await getResolvedLocalesAsync(context.config);
-  } else if (context.type === 'service') {
+  } else if (isStandaloneContextService(context)) {
     locales = context.config.locales !== undefined ? context.config.locales : {};
   }
   for (const [lang, localizationObj] of Object.entries(locales)) {

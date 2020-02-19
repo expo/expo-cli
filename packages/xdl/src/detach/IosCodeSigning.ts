@@ -7,12 +7,30 @@ import glob from 'glob-promise';
 import plist from 'plist';
 import minimatch from 'minimatch';
 
-import { findP12CertSerialNumber, getP12CertFingerprint } from './PKCS12Utils';
+import { getP12CertFingerprint } from './PKCS12Utils';
 import { spawnAsyncThrowError } from './ExponentTools';
+export { findP12CertSerialNumber } from './PKCS12Utils';
 
-async function ensureCertificateValid({ certPath, certPassword, teamID }) {
+export type IPABuilderParams = {
+  provisioningProfilePath: string;
+  certPath: string;
+  certPassword?: string;
+  appUUID: string;
+  keychainPath: string;
+  bundleIdentifier: string;
+  teamID: string;
+  manifest: any;
+  workspacePath: string;
+  clientBuild?: boolean;
+};
+
+export async function ensureCertificateValid({
+  certPath,
+  certPassword,
+  teamID,
+}: Pick<IPABuilderParams, 'certPath' | 'certPassword' | 'teamID'>): Promise<string> {
   const certData = await fs.readFile(certPath);
-  const fingerprint = getP12CertFingerprint(certData, certPassword);
+  const fingerprint = getP12CertFingerprint(certData, certPassword!);
   const identities = await _findIdentitiesByTeamID(teamID);
   const isValid = identities.indexOf(fingerprint) !== -1;
   if (!isValid) {
@@ -21,7 +39,7 @@ async function ensureCertificateValid({ certPath, certPassword, teamID }) {
   return fingerprint;
 }
 
-async function _findIdentitiesByTeamID(teamID) {
+async function _findIdentitiesByTeamID(teamID: string): Promise<string> {
   const { output } = await spawnAsyncThrowError(
     'security',
     ['find-identity', '-v', '-s', `(${teamID})`],
@@ -32,12 +50,18 @@ async function _findIdentitiesByTeamID(teamID) {
   return output.join('');
 }
 
-function validateProvisioningProfile(plistData, { distCertFingerprint, bundleIdentifier }) {
+export function validateProvisioningProfile(
+  plistData: plist.PlistValue,
+  {
+    distCertFingerprint,
+    bundleIdentifier,
+  }: { distCertFingerprint: string; bundleIdentifier: string }
+): void {
   _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint);
   _ensureBundleIdentifierIsValid(plistData, bundleIdentifier);
 }
 
-function _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
+function _ensureDeveloperCertificateIsValid(plistData: any, distCertFingerprint: string): void {
   const devCertBase64 = plistData.DeveloperCertificates[0];
   const devCertFingerprint = _genDerCertFingerprint(devCertBase64);
   if (devCertFingerprint !== distCertFingerprint) {
@@ -47,7 +71,7 @@ function _ensureDeveloperCertificateIsValid(plistData, distCertFingerprint) {
   }
 }
 
-function _genDerCertFingerprint(certBase64) {
+function _genDerCertFingerprint(certBase64: string): string {
   const certBuffer = Buffer.from(certBase64, 'base64');
   return crypto
     .createHash('sha1')
@@ -56,9 +80,9 @@ function _genDerCertFingerprint(certBase64) {
     .toUpperCase();
 }
 
-function _ensureBundleIdentifierIsValid(plistData, expectedBundleIdentifier) {
+function _ensureBundleIdentifierIsValid(plistData: any, expectedBundleIdentifier: string): void {
   const actualApplicationIdentifier = plistData.Entitlements['application-identifier'];
-  const actualBundleIdentifier = /\.(.+)/.exec(actualApplicationIdentifier)[1];
+  const actualBundleIdentifier = (/\.(.+)/.exec(actualApplicationIdentifier) || [])[1];
 
   if (!minimatch(expectedBundleIdentifier, actualBundleIdentifier)) {
     throw new Error(
@@ -67,7 +91,17 @@ function _ensureBundleIdentifierIsValid(plistData, expectedBundleIdentifier) {
   }
 }
 
-async function writeExportOptionsPlistFile(plistPath, data) {
+export type ExportOptionsPlist = {
+  bundleIdentifier: string;
+  provisioningProfileUUID: string;
+  exportMethod: string;
+  teamID: string;
+};
+
+export async function writeExportOptionsPlistFile(
+  plistPath: string,
+  data: ExportOptionsPlist
+): Promise<void> {
   const toWrite = createExportOptionsPlist(data);
   await fs.writeFile(plistPath, toWrite);
 }
@@ -77,7 +111,7 @@ const createExportOptionsPlist = ({
   provisioningProfileUUID,
   exportMethod,
   teamID,
-}) => {
+}: ExportOptionsPlist): string => {
   const disableBitcodeCompiling = `<key>uploadBitcode</key>
     <false/>
     <key>compileBitcode</key>
@@ -102,18 +136,28 @@ const createExportOptionsPlist = ({
 </plist>`;
 };
 
-async function buildIPA(
+type BuildIPAOptions = {
+  ipaPath: string;
+  workspacePath: string;
+  archivePath: string;
+  codeSignIdentity: string;
+  exportOptionsPlistPath: string;
+  plistData: plist.PlistValue;
+  keychainPath: string;
+  exportMethod: string;
+};
+
+export async function buildIPA(
   {
     ipaPath,
     workspacePath,
     archivePath,
     codeSignIdentity,
     exportOptionsPlistPath,
-    plistData,
     keychainPath,
     exportMethod,
-  },
-  credentials,
+  }: BuildIPAOptions,
+  credentials: FastlaneCredentials,
   client = false
 ) {
   if (client) {
@@ -126,11 +170,12 @@ async function buildIPA(
         '-exportOptionsPlist',
         exportOptionsPlistPath,
         '-exportPath',
+        // @ts-ignore: Property 'Dir' does not exist on type 'typeof import("path")'
         path.Dir(ipaPath),
         `OTHER_CODE_SIGN_FLAGS="--keychain ${keychainPath}"`,
       ],
       {
-        env: { ...process.env, CI: 1 },
+        env: { ...process.env, CI: '1' },
       }
     );
   } else {
@@ -163,14 +208,13 @@ async function buildIPA(
   }
 }
 
-const resolveExportMethod = plistData => {
+export const resolveExportMethod = (plistData: any): string => {
   if (plistData.ProvisionedDevices) {
     return 'ad-hoc';
   } else if (plistData.ProvisionsAllDevices === true) {
     return 'enterprise';
-  } else {
-    return 'app-store';
   }
+  return 'app-store';
 };
 
 const entitlementTransferRules = [
@@ -210,12 +254,19 @@ const blacklistedEntitlementKeys = [
 
 const icloudContainerEnvKey = 'com.apple.developer.icloud-container-environment';
 
-async function createEntitlementsFile({
+export type EntitlementsFileOptions = {
+  generatedEntitlementsPath: string;
+  plistData: any;
+  archivePath: string;
+  manifest: IPABuilderParams['manifest'];
+};
+
+export async function createEntitlementsFile({
   generatedEntitlementsPath,
   plistData,
   archivePath,
   manifest,
-}) {
+}: EntitlementsFileOptions): Promise<void> {
   const decodedProvisioningProfileEntitlements = plistData.Entitlements;
 
   const entitlementsPattern = path.join(archivePath, 'Products/Applications/*.app/*.entitlements');
@@ -235,12 +286,14 @@ async function createEntitlementsFile({
   const entitlements = { ...decodedProvisioningProfileEntitlements };
 
   entitlementTransferRules.forEach(rule => {
+    // @ts-ignore: The right-hand side of an 'in' expression must be of type 'any', an object type or a type parameter.
     if (rule in archiveEntitlementsData) {
+      // @ts-ignore
       entitlements[rule] = archiveEntitlementsData[rule];
     }
   });
 
-  let generatedEntitlements = _.omit(entitlements, blacklistedEntitlementKeys);
+  let generatedEntitlements: any = _.omit(entitlements, blacklistedEntitlementKeys);
 
   if (!manifest.ios.usesIcloudStorage) {
     generatedEntitlements = _.omit(generatedEntitlements, blacklistedEntitlementKeysWithoutICloud);
@@ -259,7 +312,9 @@ async function createEntitlementsFile({
     generatedEntitlements = _.omit(generatedEntitlements, 'com.apple.developer.applesignin');
   }
   if (generatedEntitlements[icloudContainerEnvKey]) {
-    const envs = generatedEntitlements[icloudContainerEnvKey].filter(i => i === 'Production');
+    const envs = generatedEntitlements[icloudContainerEnvKey].filter(
+      (i: any) => i === 'Production'
+    );
     generatedEntitlements[icloudContainerEnvKey] = envs;
   }
 
@@ -280,7 +335,16 @@ async function createEntitlementsFile({
   });
 }
 
-async function resignIPA(
+export type ResignIPAOptions = {
+  codeSignIdentity: string;
+  entitlementsPath: string;
+  provisioningProfilePath: string;
+  sourceIpaPath: string;
+  destIpaPath: string;
+  keychainPath: string;
+};
+
+export async function resignIPA(
   {
     codeSignIdentity,
     entitlementsPath,
@@ -288,9 +352,9 @@ async function resignIPA(
     sourceIpaPath,
     destIpaPath,
     keychainPath,
-  },
-  credentials
-) {
+  }: ResignIPAOptions,
+  credentials: FastlaneCredentials
+): Promise<void> {
   await spawnAsyncThrowError('cp', ['-rf', sourceIpaPath, destIpaPath]);
   await runFastlane(
     credentials,
@@ -312,7 +376,13 @@ async function resignIPA(
   );
 }
 
-async function runFastlane({ teamID }, fastlaneArgs, loggerFields) {
+type FastlaneCredentials = Pick<IPABuilderParams, 'teamID'>;
+
+async function runFastlane(
+  { teamID }: FastlaneCredentials,
+  fastlaneArgs: string[],
+  loggerFields: any
+): Promise<void> {
   const fastlaneEnvVars = {
     FASTLANE_SKIP_UPDATE_CHECK: 1,
     FASTLANE_DISABLE_COLORS: 1,
@@ -327,18 +397,8 @@ async function runFastlane({ teamID }, fastlaneArgs, loggerFields) {
       ...fastlaneEnvVars,
     },
     pipeToLogger: true,
+    // @ts-ignore
     dontShowStdout: false,
     loggerFields,
   });
 }
-
-export {
-  ensureCertificateValid,
-  findP12CertSerialNumber,
-  validateProvisioningProfile,
-  writeExportOptionsPlistFile,
-  buildIPA,
-  resolveExportMethod,
-  createEntitlementsFile,
-  resignIPA,
-};
