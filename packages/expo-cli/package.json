@@ -53,6 +53,7 @@
     "@types/inquirer": "6.0.3",
     "@types/klaw-sync": "^6.0.0",
     "@types/npm-package-arg": "^6.1.0",
+    "@types/pngjs": "^3.4.1",
     "@types/progress": "^2.0.3",
     "@types/slash": "^2.0.0",
     "@types/split": "^1.0.0",
