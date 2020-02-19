@@ -1,10 +1,8 @@
-/**
- * @flow
- */
 import { readConfigJsonAsync } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Exp, Project } from '@expo/xdl';
 import chalk from 'chalk';
+import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 
@@ -13,11 +11,13 @@ import log from '../log';
 import sendTo from '../sendTo';
 
 type Options = {
-  clear?: boolean,
-  sendTo?: string,
-  quiet?: boolean,
-  releaseChannel?: string,
-  duringBuild?: boolean,
+  clear?: boolean;
+  sendTo?: string | boolean;
+  quiet?: boolean;
+  releaseChannel?: string;
+  duringBuild?: boolean;
+  maxWorkers?: number;
+  parent?: { nonInteractive: boolean };
 };
 
 export async function action(projectDir: string, options: Options = {}) {
@@ -47,7 +47,10 @@ export async function action(projectDir: string, options: Options = {}) {
     log('Unable to find an existing Expo CLI instance for this directory, starting a new one...');
     installExitHooks(projectDir);
 
-    const startOpts = { reset: options.clear, nonPersistent: true };
+    const startOpts: { reset?: boolean; nonPersistent: boolean; maxWorkers?: number } = {
+      reset: options.clear,
+      nonPersistent: true,
+    };
     if (options.maxWorkers) {
       startOpts.maxWorkers = options.maxWorkers;
     }
@@ -59,9 +62,7 @@ export async function action(projectDir: string, options: Options = {}) {
   let recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
-  const {
-    args: { sdkVersion },
-  } = await Exp.getPublishInfoAsync(projectDir);
+  const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(projectDir);
 
   let buildStatus;
   if (process.env.EXPO_LEGACY_API === 'true') {
@@ -84,6 +85,7 @@ export async function action(projectDir: string, options: Options = {}) {
   const { exp } = await readConfigJsonAsync(projectDir);
 
   if (
+    'userHasBuiltExperienceBefore' in buildStatus &&
     buildStatus.userHasBuiltExperienceBefore &&
     !buildStatus.userHasBuiltAppBefore &&
     !options.duringBuild &&
@@ -127,7 +129,7 @@ export async function action(projectDir: string, options: Options = {}) {
   return result;
 }
 
-export default (program: any) => {
+export default function(program: Command) {
   program
     .command('publish [project-dir]')
     .alias('p')
@@ -143,4 +145,4 @@ export default (program: any) => {
       'default'
     )
     .asyncActionProjectDir(action, true);
-};
+}
