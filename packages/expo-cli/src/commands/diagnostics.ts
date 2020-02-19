@@ -1,8 +1,10 @@
+import { Command } from 'commander';
+// @ts-ignore
 import envinfo from 'envinfo';
 import { version } from '../../package.json';
 
-async function action(options) {
-  let info = await envinfo.run(
+async function action(options: never): Promise<void> {
+  const info = await envinfo.run(
     {
       System: ['OS', 'Shell'],
       Binaries: ['Node', 'Yarn', 'npm', 'Watchman'],
@@ -17,9 +19,9 @@ async function action(options) {
   console.log(info);
 }
 
-export default program => {
+export default function(program: Command) {
   program
     .command('diagnostics [project-dir]')
     .description('Prints environment info to console.')
     .asyncAction(action);
-};
+}
