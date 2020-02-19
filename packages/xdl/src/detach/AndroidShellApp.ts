@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import path from 'path';
-// @ts-ignore
 import replaceString from 'replace-string';
 import _ from 'lodash';
 import globby from 'globby';

@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import glob from 'glob-promise';
-// @ts-ignore
 import indentString from 'indent-string';
 import JsonFile from '@expo/json-file';
 import path from 'path';
