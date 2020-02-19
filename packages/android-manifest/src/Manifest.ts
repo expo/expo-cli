@@ -24,7 +24,7 @@ export function removePermissions(doc: Document, permissionNames?: string[]) {
   doc.manifest[USES_PERMISSION] = nextPermissions;
 }
 
-// NOTE(brentvatne): it's unclear from the usage here what the expected return
+// NOTE(brentvatne): it is unclear from the usage here what the expected return
 // value should be. `any` is used to get past an error.
 export function addPermission(doc: Document, permissionName: string): void {
   const usesPermissions: { [key: string]: any }[] = doc.manifest[USES_PERMISSION] || [];
