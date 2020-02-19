@@ -1,18 +1,42 @@
 import path from 'path';
 import fs from 'fs-extra';
 import get from 'lodash/get';
+import program from 'commander';
 
 import { AndroidCredentials } from '@expo/xdl';
 import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
 import { Context } from '../../credentials';
+import prompt from '../../prompt';
 
 import log from '../../log';
+
+async function promptIfFileExists(projectDir, filename) {
+  while (
+    (await fs.pathExists(await path.resolve(projectDir, filename))) &&
+    !program.nonInteractive
+  ) {
+    let question = {
+      type: 'input',
+      name: 'newName',
+      message: `You already have a file in your project directory named "${filename}"\n\n  Press enter to overwrite this file, or provide a different filename:`,
+      default: 'overwrite',
+    };
+    const answer = await prompt(question);
+    if (answer.newName === 'overwrite') {
+      break;
+    } else {
+      filename = answer.newName;
+    }
+  }
+  return filename;
+}
 
 export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<void> {
   const ctx = new Context();
   await ctx.init(projectDir);
 
-  const backupKeystoreOutputPath = path.resolve(projectDir, `${ctx.manifest.slug}.jks`);
+  const keystoreFilename = await promptIfFileExists(projectDir, `${ctx.manifest.slug}.jks`);
+  const backupKeystoreOutputPath = path.resolve(projectDir, keystoreFilename);
 
   const view = new DownloadKeystore(ctx.manifest.slug);
   await view.fetch(ctx);
@@ -53,7 +77,13 @@ export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<v
   await ctx.init(projectDir);
 
   const keystorePath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
-  const uploadKeyPath = path.resolve(projectDir, `${ctx.manifest.slug}_upload_cert.pem`);
+
+  const uploadKeyFilename = await promptIfFileExists(
+    projectDir,
+    `${ctx.manifest.slug}_upload_cert.pem`
+  );
+  const uploadKeyPath = path.resolve(projectDir, uploadKeyFilename);
+
   try {
     const view = new DownloadKeystore(ctx.manifest.slug);
     await view.fetch(ctx);
