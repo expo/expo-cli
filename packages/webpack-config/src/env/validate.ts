@@ -14,6 +14,7 @@ const environmentSchema = yup.object({
   polyfill: yup.boolean().notRequired(),
   removeUnusedImportExports: yup.boolean().default(false),
   pwa: yup.boolean().notRequired(),
+  offline: yup.boolean().notRequired(),
   projectRoot: yup.string().required(),
   mode: yup
     .mixed<'production' | 'development' | 'none'>()

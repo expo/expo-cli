@@ -39,45 +39,44 @@ module.exports = async function(env, argv) {
 };
 ```
 
-### addons
+## Types
 
-For composing features into an existing Webpack config.
+### `Environment`
 
-```js
-import /* */ '@expo/webpack-config/addons';
-```
+The main options used to configure how `@expo/webpack-config` works.
 
-### env
+| name                        | type                                    | default     | description                                                                     |
+| --------------------------- | --------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| `projectRoot`               | `string`                                | required    | Root of the Expo project.                                                       |
+| `https`                     | `boolean`                               | `false`     | Should the dev server use https protocol.                                       |
+| `offline`                   | `boolean`                               | `true`      | Passing `true` will disable offline support and skip adding a service worker.   |
+| `mode`                      | `Mode`                                  | required    | The Webpack mode to bundle the project in.                                      |
+| `platform`                  | [`ExpoPlatform`](#ExpoPlatform)         | required    | The target platform to bundle for. Only `web` and `electron` are supported.     |
+| `removeUnusedImportExports` | `boolean`                               | `false`     | Enables advanced tree-shaking with deep scope analysis.                         |
+| `pwa`                       | `boolean`                               | `true`      | Generate the PWA image assets in production mode.                               |
+| `report`                    | `Report`                                | `undefined` | Configure Webpack bundle reports. Using this adds significant time to rebuilds. |
+| `babel`                     | [`ExpoBabelOptions`](#ExpoBabelOptions) | `undefined` | Control how the default Babel loader is configured.                             |
 
-Getting the config, paths, mode, and various other settings in your environment.
+### `Environment` internal
 
-```js
-import /* */ '@expo/webpack-config/env';
-```
+| name        | type         | default     | description                                                        |
+| ----------- | ------------ | ----------- | ------------------------------------------------------------------ |
+| `config`    | `ExpoConfig` | `undefined` | The Expo project config, this should be read using `@expo/config`. |
+| `locations` | `FilePaths`  | `undefined` | Paths used to locate where things are.                             |
 
-### loaders
+### `ExpoPlatform`
 
-The module rules used to load various files.
+| type                                     | description                                                                 |
+| ---------------------------------------- | --------------------------------------------------------------------------- |
+| `'ios' | 'android' | 'web' | 'electron'` | The target platform to bundle for. Only `web` and `electron` are supported. |
 
-```js
-import /* */ '@expo/webpack-config/loaders';
-```
+### `ExpoBabelOptions`
 
-### plugins
+Control how the default Babel loader is configured.
 
-Custom versions of Webpack Plugins that are optimized for use with React Native.
-
-```js
-import /* */ '@expo/webpack-config/plugins';
-```
-
-### utils
-
-Tools for resolving fields, or searching and indexing loaders and plugins.
-
-```js
-import /* */ '@expo/webpack-config/utils';
-```
+| name                                   | type       | default     | description                                                               |
+| -------------------------------------- | ---------- | ----------- | ------------------------------------------------------------------------- |
+| `dangerouslyAddModulePathsToTranspile` | `string[]` | `undefined` | Add the names of node_modules that should be included transpilation step. |
 
 ## Guides
 
@@ -89,16 +88,19 @@ You may find that you want to include universal modules that aren't part of the 
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
 
 module.exports = async function(env, argv) {
-    const config = await createExpoWebpackConfigAsync({
-        ...env,
-        babel: {
-            dangerouslyAddModulePathsToTranspile: [
-                // Ensure that all packages starting with @evanbacon are transpiled.
-                '@evanbacon'
-            ]
-        }
-    }, argv);
-    return config;
+  const config = await createExpoWebpackConfigAsync(
+    {
+      ...env,
+      babel: {
+        dangerouslyAddModulePathsToTranspile: [
+          // Ensure that all packages starting with @evanbacon are transpiled.
+          '@evanbacon',
+        ],
+      },
+    },
+    argv
+  );
+  return config;
 };
 ```
 
@@ -110,17 +112,19 @@ If you're adding support to some other Webpack config like in Storybook or Gatsb
 const { withUnimodules } = require('@expo/webpack-config/addons');
 
 module.exports = function() {
-  const someWebpackConfig = { /* Your custom Webpack config */ }
+  const someWebpackConfig = {
+    /* Your custom Webpack config */
+  };
 
   // Add Expo support...
   const configWithExpo = withUnimodules(someWebpackConfig, {
-      projectRoot: __dirname,
-      babel: {
-          dangerouslyAddModulePathsToTranspile: [
-              // Ensure that all packages starting with @evanbacon are transpiled.
-              '@evanbacon'
-          ]
-      }
+    projectRoot: __dirname,
+    babel: {
+      dangerouslyAddModulePathsToTranspile: [
+        // Ensure that all packages starting with @evanbacon are transpiled.
+        '@evanbacon',
+      ],
+    },
   });
 
   return configWithExpo;
@@ -141,10 +145,235 @@ module.exports = async function(env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
   const loader = getExpoBabelLoader(config);
   if (loader) {
-      // Modify the loader...
+    // Modify the loader...
   }
   return config;
 };
+```
+
+## Exports
+
+### addons
+
+For adding features to an existing Webpack config.
+
+#### `withUnimodules`
+
+```js
+import { withUnimodules } from '@expo/webpack-config/addons';
+```
+
+Wrap your existing webpack config with support for Unimodules (Expo web). ex: **Storybook** `({ config }) => withUnimodules(config)`
+
+**params**
+
+- `webpackConfig: AnyConfiguration = {}` Optional existing Webpack config to modify.
+- `env: InputEnvironment = {}` Optional [`Environment`][#environment] options for configuring what features the Webpack config supports.
+- `argv: Arguments = {}`
+
+#### `withWorkbox`
+
+Add offline support with Workbox (`workbox-webpack-plugin`).
+
+```js
+import { withWorkbox } from '@expo/webpack-config/addons';
+```
+
+#### `withOptimizations`
+
+```js
+import { withOptimizations } from '@expo/webpack-config/addons';
+```
+
+#### `withReporting`
+
+```js
+import { withReporting } from '@expo/webpack-config/addons';
+```
+
+#### `withCompression`
+
+```js
+import { withCompression } from '@expo/webpack-config/addons';
+```
+
+#### `withAlias`
+
+Add aliases for React Native web.
+
+```js
+import { withAlias } from '@expo/webpack-config/addons';
+```
+
+#### `withDevServer`
+
+```js
+import { withDevServer } from '@expo/webpack-config/addons';
+```
+
+#### `withNodeMocks`
+
+```js
+import { withNodeMocks } from '@expo/webpack-config/addons';
+```
+
+#### `withEntry`
+
+```js
+import { withEntry } from '@expo/webpack-config/addons';
+```
+
+#### `withTypeScriptAsync`
+
+```js
+import { withTypeScriptAsync } from '@expo/webpack-config/addons';
+```
+
+### env
+
+Getting the config, paths, mode, and various other settings in your environment.
+
+#### `getConfig`
+
+```js
+import { getConfig } from '@expo/webpack-config/env';
+```
+
+#### `getMode`
+
+```js
+import { getMode } from '@expo/webpack-config/env';
+```
+
+#### `validateEnvironment`
+
+```js
+import { validateEnvironment } from '@expo/webpack-config/env';
+```
+
+#### `aliases`
+
+```js
+import { aliases } from '@expo/webpack-config/env';
+```
+
+#### `getPaths`
+
+```js
+import { getPaths } from '@expo/webpack-config/env';
+```
+
+#### `getPathsAsync`
+
+```js
+import { getPathsAsync } from '@expo/webpack-config/env';
+```
+
+#### `getServedPath`
+
+```js
+import { getServedPath } from '@expo/webpack-config/env';
+```
+
+#### `getPublicPaths`
+
+```js
+import { getPublicPaths } from '@expo/webpack-config/env';
+```
+
+#### `getProductionPath`
+
+```js
+import { getProductionPath } from '@expo/webpack-config/env';
+```
+
+#### `getAbsolute`
+
+```js
+import { getAbsolute } from '@expo/webpack-config/env';
+```
+
+#### `getModuleFileExtensions`
+
+```js
+import { getModuleFileExtensions } from '@expo/webpack-config/env';
+```
+
+### loaders
+
+The module rules used to load various files.
+
+#### `imageLoaderRule`
+
+```js
+import { imageLoaderRule } from '@expo/webpack-config/loaders';
+```
+
+This is needed for webpack to import static images in JavaScript files.
+"url" loader works like "file" loader except that it embeds assets smaller than specified limit in bytes as data URLs to avoid requests.
+A missing `test` is equivalent to a match.
+
+#### `fallbackLoaderRule`
+
+```js
+import { fallbackLoaderRule } from '@expo/webpack-config/loaders';
+```
+
+"file" loader makes sure those assets get served by WebpackDevServer.
+When you `import` an asset, you get its (virtual) filename.
+In production, they would get copied to the `build` folder.
+This loader doesn't use a "test" so it will catch all modules
+that fall through the other loaders.
+
+#### `styleLoaderRule`
+
+```js
+import { styleLoaderRule } from '@expo/webpack-config/loaders';
+```
+
+Default CSS loader.
+
+### plugins
+
+```js
+import /* */ '@expo/webpack-config/plugins';
+```
+
+Custom versions of Webpack Plugins that are optimized for use with React Native.
+
+#### `ExpoDefinePlugin`
+
+```js
+import { ExpoDefinePlugin } from '@expo/webpack-config/plugins';
+```
+
+Required for `expo-constants` https://docs.expo.io/versions/latest/sdk/constants/.
+This surfaces the `app.json` (config) as an environment variable which is then parsed by `expo-constants`.
+
+#### `ExpoHtmlWebpackPlugin`
+
+```js
+import { ExpoHtmlWebpackPlugin } from '@expo/webpack-config/plugins';
+```
+
+Generates an `index.html` file with the <script> injected.
+
+#### `ExpoInterpolateHtmlPlugin`
+
+```js
+import { ExpoInterpolateHtmlPlugin } from '@expo/webpack-config/plugins';
+```
+
+Add variables to the `index.html`.
+
+### utils
+
+Tools for resolving fields, or searching and indexing loaders and plugins.
+
+#### `resolveEntryAsync`
+
+```js
+import { resolveEntryAsync } from '@expo/webpack-config/utils';
 ```
 
 ## License

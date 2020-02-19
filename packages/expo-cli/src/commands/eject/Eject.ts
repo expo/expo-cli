@@ -29,7 +29,11 @@ export type EjectAsyncOptions = {
 const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  // We just need the custom `nodeModulesPath` from the config.
+  const { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
+    mode: 'production',
+    skipSDKVersionRequirement: true,
+  });
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
@@ -324,6 +328,12 @@ if (Platform.OS === 'web') {
   log.newLine();
 }
 
+/**
+ * Returns a name that adheres to Xcode and Android naming conventions.
+ *
+ * - package name: https://docs.oracle.com/javase/tutorial/java/package/namingpkgs.html
+ * @param projectRoot
+ */
 async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
@@ -369,14 +379,6 @@ async function getAppNamesAsync(
   return { displayName, name };
 }
 
-function stripDashes(s: string): string {
-  let ret = '';
-
-  for (let c of s) {
-    if (c !== ' ' && c !== '-') {
-      ret += c;
-    }
-  }
-
-  return ret;
+export function stripDashes(s: string): string {
+  return s.replace(/\s|-/g, '');
 }

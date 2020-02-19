@@ -15,7 +15,7 @@ export function createNoJSComponent(message: string): string {
 }
 
 /**
- * Add variables to the `index.html`
+ * Add variables to the `index.html`.
  *
  * @category plugins
  */

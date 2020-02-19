@@ -1,9 +1,8 @@
+import { getPossibleProjectRoot } from '@expo/config/paths';
 import { Rule } from 'webpack';
 
-import { ExpoConfig } from '@expo/config';
-import { getPossibleProjectRoot } from '@expo/config/paths';
-import { Environment, FilePaths, Mode } from '../types';
-import { getConfig, getMode, getPaths } from '../env';
+import { getConfig, getPaths } from '../env';
+import { Environment } from '../types';
 import createBabelLoader from './createBabelLoader';
 import createFontLoader from './createFontLoader';
 import createWorkerLoader from './createWorkerLoader';
@@ -59,6 +58,8 @@ export const fallbackLoaderRule: Rule = {
 };
 
 /**
+ * Default CSS loader.
+ *
  * @category loaders
  */
 export const styleLoaderRule: Rule = {
@@ -96,11 +97,10 @@ export default function createAllLoaders(
 }
 
 /**
+ * Creates a Rule for loading application code and packages that work with the Expo ecosystem.
+ * This method attempts to emulate how Metro loads ES modules in the `node_modules` folder.
  *
- * @param projectRoot
- * @param param1
- * @param mode
- * @param platform
+ * @param env partial Environment object.
  * @category loaders
  */
 export function getBabelLoaderRule(
@@ -114,6 +114,7 @@ export function getBabelLoaderRule(
 
   const { web: { build: { babel = {} } = {} } = {} } = env.config;
 
+  // TODO: deprecate app.json method in favor of env.babel
   const { root, verbose, include = [], use } = babel;
 
   const babelProjectRoot = root || env.projectRoot;

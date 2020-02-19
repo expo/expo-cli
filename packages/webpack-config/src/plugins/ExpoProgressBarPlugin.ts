@@ -7,6 +7,7 @@ import { ProgressPlugin } from 'webpack';
  * but with TypeScript support.
  *
  * @category plugins
+ * @internal
  */
 export default class ExpoProgressBarPlugin extends ProgressPlugin {
   constructor() {
