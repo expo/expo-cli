@@ -261,9 +261,9 @@ export default async function(
       new ManifestPlugin({
         fileName: 'asset-manifest.json',
         publicPath,
-        filter = ({ path }) => {
+        filter: ({ path }) => {
           // Remove compressed versions and service workers
-          return !(path.endsWith('.gz') || path.endsWith('worker.js'))
+          return !(path.endsWith('.gz') || path.endsWith('worker.js'));
         },
       }),
 
