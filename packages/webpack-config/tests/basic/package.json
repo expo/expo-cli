@@ -1,27 +1,18 @@
 {
-  "name": "webpack-config-basic-test",
-  "description": "A Neat Expo App",
-  "version": "1.0.0",
   "main": "./index",
-  "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "serve": "serve web-build",
-    "eject": "expo eject"
-  },
   "dependencies": {
-    "expo": "^33.0.0",
-    "expo-constants": "~5.0.1",
-    "react": "16.8.3",
-    "react-dom": "^16.8.6",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz",
-    "react-native-web": "^0.11.5",
+    "expo": "~36.0.0",
+    "expo-constants": "8.0.0",
+    "react": "~16.9.0",
+    "react-dom": "~16.9.0",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-36.0.0.tar.gz",
+    "react-native-svg": "^11.0.1",
+    "react-native-web": "~0.11.7",
     "resize-observer-polyfill": "^1.5.1"
   },
   "devDependencies": {
-    "babel-preset-expo": "^6.0.0"
+    "@babel/core": "^7.0.0",
+    "babel-preset-expo": "~8.0.0"
   },
   "private": true
 }

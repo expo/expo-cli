@@ -3,32 +3,22 @@
 exports[`has consistent defaults 1`] = `
 Object {
   "android": Object {},
-  "assetBundlePatterns": Array [
-    "**/*",
-  ],
   "description": "A Neat Expo App",
-  "icon": "./assets/icon.png",
-  "ios": Object {
-    "supportsTablet": true,
-  },
+  "icon": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
+  "ios": Object {},
   "name": "basic",
-  "orientation": "portrait",
   "platforms": Array [
     "ios",
     "android",
     "web",
   ],
   "primaryColor": undefined,
-  "privacy": "public",
-  "sdkVersion": "33.0.0",
+  "sdkVersion": "36.0.0",
   "slug": "basic",
   "splash": Object {
     "backgroundColor": "#ffffff",
-    "image": "./assets/splash.png",
+    "image": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/splash.png?raw=true",
     "resizeMode": "contain",
-  },
-  "updates": Object {
-    "fallbackToCacheTimeout": 0,
   },
   "version": "1.0.0",
   "web": Object {
@@ -53,13 +43,13 @@ Object {
           192,
           512,
         ],
-        "src": "tests/basic/assets/icon.png",
+        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
       },
       Object {
         "destination": "apple/icons",
         "ios": true,
         "sizes": 180,
-        "src": "tests/basic/assets/icon.png",
+        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/icon.png?raw=true",
       },
     ],
     "lang": "en",
@@ -73,7 +63,7 @@ Object {
       "viewport": "width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover",
     },
     "name": "basic",
-    "orientation": "portrait",
+    "orientation": "any",
     "preferRelatedApplications": true,
     "relatedApplications": Array [],
     "scope": undefined,
@@ -83,9 +73,9 @@ Object {
       Object {
         "color": "#ffffff",
         "destination": "apple/splash",
-        "orientation": "portrait",
+        "orientation": "any",
         "resizeMode": "contain",
-        "src": "tests/basic/assets/splash.png",
+        "src": "https://github.com/expo/expo/blob/master/templates/expo-template-blank/assets/splash.png?raw=true",
         "supportsTablet": true,
       },
     ],
