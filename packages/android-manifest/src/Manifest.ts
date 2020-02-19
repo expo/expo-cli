@@ -32,6 +32,7 @@ export function addPermission(doc: Document, permissionName: string): void {
     $: { 'android:name': permissionName },
   });
   doc.manifest[USES_PERMISSION] = usesPermissions;
+  //#
 }
 
 export function ensurePermissions(
