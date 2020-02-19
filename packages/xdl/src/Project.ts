@@ -293,9 +293,9 @@ async function _resolveManifestAssets(
 ) {
   try {
     // Asset fields that the user has set
-    const assetSchemas = (await ExpSchema.getAssetSchemasAsync(
-      manifest.sdkVersion
-    )).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
+    const assetSchemas = (
+      await ExpSchema.getAssetSchemasAsync(manifest.sdkVersion)
+    ).filter((assetSchema: ExpSchema.AssetSchema) => get(manifest, assetSchema.fieldPath));
 
     // Get the URLs
     const urls = await Promise.all(
@@ -362,7 +362,7 @@ export async function getSlugAsync(
   projectRoot: string,
   {
     mode = 'production',
-    ...options,
+    ...options
   }: { mode?: 'production' | 'development'; [key: string]: any } = {}
 ): Promise<string> {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode });
@@ -1887,13 +1887,14 @@ export async function startReactNativeServerAsync(
   // ELECTRON_RUN_AS_NODE environment variable
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
   // child process
+  const nodePathEnv = nodePath ? { NODE_PATH: nodePath } : {};
   let packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
       ...process.env,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...nodePath ? { NODE_PATH: nodePath } : {},
+      ...nodePathEnv,
     },
     silent: true,
   });
