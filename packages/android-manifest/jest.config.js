@@ -8,4 +8,5 @@ module.exports = {
   },
   testEnvironment: 'node',
   resetModules: false,
+  coverageReporters: ['json'],
 };
