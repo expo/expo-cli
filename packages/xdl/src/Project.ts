@@ -873,6 +873,7 @@ export async function publishAsync(
         await IosPlist.modifyAsync(supportingDirectory, 'expo-config', (configPlist: any) => {
           configPlist.remoteUrl = fullManifestUrl;
           configPlist.releaseChannel = options.releaseChannel;
+          configPlist.sdkVersion = exp.sdkVersion;
           return configPlist;
         });
       }
@@ -938,26 +939,47 @@ export async function publishAsync(
         );
         let androidManifestXmlFile = fs.readFileSync(androidManifestXmlPath, 'utf8');
         let expoUpdateUrlRegex = /<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="[^"]*" \/>/;
+        let expoSdkVersionRegex = /<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="[^"]*" \/>/;
+        let expoReleaseChannelRegex = /<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="[^"]*" \/>/;
+
+        let expoUpdateUrlTag = `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />`;
+        let expoSdkVersionTag = `<meta-data android:name="expo.modules.updates.EXPO_SDK_VERSION" android:value="${exp.sdkVersion}" />`;
+        let expoReleaseChannelTag = `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${options.releaseChannel}" />`;
+
+        let tagsToInsert = [];
         if (androidManifestXmlFile.search(expoUpdateUrlRegex) < 0) {
-          // try to insert the meta-data tag if it isn't found
+          tagsToInsert.push(expoUpdateUrlTag);
+        }
+        if (androidManifestXmlFile.search(expoSdkVersionRegex) < 0) {
+          tagsToInsert.push(expoSdkVersionTag);
+        }
+        if (androidManifestXmlFile.search(expoReleaseChannelRegex) < 0) {
+          tagsToInsert.push(expoReleaseChannelTag);
+        }
+        if (tagsToInsert.length) {
+          // try to insert the meta-data tags that aren't found
           await ExponentTools.regexFileAsync(
             /<activity\s+android:name=".MainActivity"/,
-            `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />
+            `${tagsToInsert.join('\n      ')}
 
       <activity
         android:name=".MainActivity"`,
             androidManifestXmlPath
           );
-        } else {
-          await ExponentTools.regexFileAsync(
-            expoUpdateUrlRegex,
-            `<meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="${fullManifestUrl}" />`,
-            androidManifestXmlPath
-          );
         }
         await ExponentTools.regexFileAsync(
-          /<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="[^"]*" \/>/,
-          `<meta-data android:name="expo.modules.updates.EXPO_RELEASE_CHANNEL" android:value="${options.releaseChannel}" />`,
+          expoUpdateUrlRegex,
+          expoUpdateUrlTag,
+          androidManifestXmlPath
+        );
+        await ExponentTools.regexFileAsync(
+          expoSdkVersionRegex,
+          expoSdkVersionTag,
+          androidManifestXmlPath
+        );
+        await ExponentTools.regexFileAsync(
+          expoReleaseChannelRegex,
+          expoReleaseChannelTag,
           androidManifestXmlPath
         );
       }
