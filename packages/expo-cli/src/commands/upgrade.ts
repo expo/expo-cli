@@ -100,6 +100,23 @@ async function getUpdatedDependenciesAsync(
   return result;
 }
 
+async function upgradeAppJson(
+  projectRoot: string,
+  targetSdkVersionString: string
+): ConfigUtils.ExpoConfig {
+  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  exp.sdkVersion = targetSdkVersionString;
+  switch (targetSdkVersionString) {
+    case '37.0.0':
+      if (exp.androidNavigationBar?.visible === false) {
+        exp.androidNavigationBar.visible = 'leanback';
+      } else if (exp.androidNavigationBar?.visible === true) {
+        delete exp.androidNavigationBar?.visible;
+      }
+  }
+  await ConfigUtils.writeConfigJsonAsync(projectRoot, exp);
+}
+
 async function upgradeAsync(requestedSdkVersion: string | null, options: Options) {
   let { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
   let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
@@ -289,8 +306,8 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   await packageManager.addAsync(`expo@^${targetSdkVersionString}`);
 
   log.addNewLineIfNone();
-  log(chalk.underline.bold('Updating sdkVersion in app.json...'));
-  await ConfigUtils.writeConfigJsonAsync(projectRoot, { sdkVersion: targetSdkVersionString });
+  log(chalk.underline.bold('Updating your app.json file...'));
+  await upgradeAppJson(projectRoot, targetSdkVersionString);
 
   log(chalk.bold.underline('Updating packages to compatible versions (where known)...'));
   log.addNewLineIfNone();
