@@ -1,5 +1,3 @@
-import { install as installSourceMapSupport } from 'source-map-support';
-
 import * as Analytics from './Analytics';
 
 import * as Android from './Android';
@@ -103,11 +101,8 @@ import * as IosPodsTools from './detach/IosPodsTools';
 import * as IosShellApp from './detach/IosShellApp';
 
 import * as IosCodeSigning from './detach/IosCodeSigning';
-export { ConnectionStatus };
 
-if (process.env.NODE_ENV !== 'production') {
-  installSourceMapSupport();
-}
+export { ConnectionStatus };
 export { Analytics };
 export { Android };
 export { AndroidShellApp };
