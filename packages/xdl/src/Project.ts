@@ -4,13 +4,11 @@ import {
   Platform,
   configFilename,
   getConfig,
-  projectHasModule,
-  readConfigJson,
-  readConfigJsonAsync,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
 
+import slug from 'slugify';
 import { getManagedExtensions } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
@@ -47,7 +45,7 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
-import Config from './Config';
+import Config, { getProjectConfigAsync } from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
 import * as DevSession from './DevSession';
@@ -1008,7 +1006,7 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
   // Verify that exp/app.json and package.json exist
-  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await getProjectConfigAsync(projectRoot);
 
   if (exp.android && exp.android.config) {
     delete exp.android.config;
@@ -1395,22 +1393,25 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
   );
 }
 
+type GetExpConfigOptions = {
+  current?: boolean;
+  mode?: string;
+  platform?: 'android' | 'ios' | 'all';
+  expIds?: string[];
+  type?: string;
+  releaseChannel?: string;
+  bundleIdentifier?: string;
+  publicUrl?: string;
+  sdkVersion?: string;
+};
+
 async function getConfigAsync(
   projectRoot: string,
-  options: {
-    current?: boolean;
-    mode?: string;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-  } = {}
+  options: Pick<GetExpConfigOptions, 'publicUrl' | 'mode' | 'platform'> = {}
 ) {
   if (!options.publicUrl) {
     // get the manifest from the project directory
-    const { exp, pkg } = await readConfigJsonAsync(projectRoot);
+    const { exp, pkg } = await getProjectConfigAsync(projectRoot, { mode: options.mode as any });
     const configName = configFilename(projectRoot);
     return {
       exp,
@@ -1491,7 +1492,10 @@ function _validateOptions(options: any) {
   }
 }
 
-async function _getExpAsync(projectRoot: string, options: any) {
+async function _getExpAsync(
+  projectRoot: string,
+  options: Pick<GetExpConfigOptions, 'publicUrl' | 'mode' | 'platform'>
+) {
   const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
@@ -1506,30 +1510,24 @@ async function _getExpAsync(projectRoot: string, options: any) {
   if (!exp.version && 'version' in pkg && pkg.version) {
     exp.version = pkg.version;
   }
-  if (!exp.slug && 'name' in pkg && pkg.name) {
-    exp.slug = pkg.name;
+  if (!exp.name && 'name' in pkg && typeof pkg.name === 'string') {
+    exp.name = pkg.name;
+  }
+  if (!exp.slug && typeof exp.name === 'string') {
+    exp.slug = slug(exp.name.toLowerCase());
   }
   return { exp, configName, configPrefix };
 }
 
 export async function getBuildStatusAsync(
   projectRoot: string,
-  options: {
-    current?: boolean;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-    sdkVersion?: string;
-  } = {}
+  options: GetExpConfigOptions = {}
 ): Promise<BuildStatusResult> {
   const user = await UserManager.ensureLoggedInAsync();
 
   _assertValidProjectRoot(projectRoot);
   _validateOptions(options);
-  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+  const { exp } = await _getExpAsync(projectRoot, options);
 
   const api = ApiV2.clientForUser(user);
   return await api.postAsync('build/status', { manifest: exp, options });
@@ -1537,16 +1535,7 @@ export async function getBuildStatusAsync(
 
 export async function startBuildAsync(
   projectRoot: string,
-  options: {
-    current?: boolean;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-    sdkVersion?: string;
-  } = {}
+  options: GetExpConfigOptions = {}
 ): Promise<BuildCreatedResult> {
   const user = await UserManager.ensureLoggedInAsync();
 
@@ -1567,17 +1556,7 @@ export async function startBuildAsync(
 
 export async function buildAsync(
   projectRoot: string,
-  options: {
-    current?: boolean;
-    mode?: string;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-    sdkVersion?: string;
-  } = {}
+  options: GetExpConfigOptions = {}
 ): Promise<BuildStatusResult | BuildCreatedResult> {
   /**
     This function corresponds to an apiv1 call and is deprecated.
@@ -1805,7 +1784,7 @@ export async function startReactNativeServerAsync(
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
 
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  let { exp } = await getProjectConfigAsync(projectRoot);
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
@@ -2029,9 +2008,12 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       // if there is a potential error in the package.json and don't want to slow
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
-      let { exp: manifest } = readConfigJson(projectRoot);
       // Get packager opts and then copy into bundleUrlPackagerOpts
-      let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+      let packagerOpts = await ProjectSettings.readAsync(projectRoot);
+      let { exp: manifest } = getConfig(projectRoot, {
+        skipSDKVersionRequirement: false,
+        mode: packagerOpts.dev ? 'development' : 'production',
+      });
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
       if (bundleUrlPackagerOpts.hostType === 'redirect') {
@@ -2410,7 +2392,7 @@ export async function startAsync(
     developerTool: Config.developerTool,
   });
 
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  let { exp } = await getProjectConfigAsync(projectRoot);
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');
