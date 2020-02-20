@@ -38,10 +38,6 @@ workflows:
           requires:
             - build10
       - test-config:
-          e: node-12
-          requires:
-            - build12
-      - test-config:
           e: node-10
           requires:
             - build10
