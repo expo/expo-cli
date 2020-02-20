@@ -1,8 +1,9 @@
-import { Platform, readConfigJsonAsync } from '@expo/config';
+import { Platform } from '@expo/config';
 
 import Api from '../Api';
 import UserManager from '../User';
 import * as Ios from './IosCredentials';
+import { getProjectConfigAsync } from '../Config';
 
 export type Credentials = Ios.Credentials; // can't import android types from typescript
 
@@ -20,7 +21,7 @@ export async function getCredentialMetadataAsync(
   projectRoot: string,
   platform: Platform
 ): Promise<CredentialMetadata> {
-  const { exp } = await readConfigJsonAsync(projectRoot);
+  const { exp } = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: true });
 
   const user = await UserManager.ensureLoggedInAsync();
   let { username } = user;

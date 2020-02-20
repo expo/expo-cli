@@ -1,4 +1,4 @@
-import { readConfigJsonAsync } from '@expo/config';
+import { getConfig } from '@expo/config';
 import simpleSpinner from '@expo/simple-spinner';
 import { Exp, Project } from '@expo/xdl';
 import chalk from 'chalk';
@@ -62,7 +62,9 @@ export async function action(projectDir: string, options: Options = {}) {
   let recipient = await sendTo.getRecipient(options.sendTo);
   log(`Publishing to channel '${options.releaseChannel}'...`);
 
-  const { args: { sdkVersion } } = await Exp.getPublishInfoAsync(projectDir);
+  const {
+    args: { sdkVersion },
+  } = await Exp.getPublishInfoAsync(projectDir);
 
   let buildStatus;
   if (process.env.EXPO_LEGACY_API === 'true') {
@@ -82,7 +84,10 @@ export async function action(projectDir: string, options: Options = {}) {
     });
   }
 
-  const { exp } = await readConfigJsonAsync(projectDir);
+  const { exp } = await getConfig(projectDir, {
+    skipSDKVersionRequirement: true,
+    mode: 'production',
+  });
 
   if (
     'userHasBuiltExperienceBefore' in buildStatus &&

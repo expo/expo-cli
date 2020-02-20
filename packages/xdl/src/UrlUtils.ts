@@ -1,4 +1,4 @@
-import { readConfigJsonAsync, resolveModule } from '@expo/config';
+import { getConfig, resolveModule } from '@expo/config';
 import joi from 'joi';
 import os from 'os';
 import url from 'url';
@@ -125,7 +125,10 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   queryParams += '&hot=false';
 
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  let { exp } = getConfig(projectRoot, {
+    skipSDKVersionRequirement: false,
+    mode: opts.dev ? 'development' : 'production',
+  });
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
@@ -207,7 +210,10 @@ export async function constructUrlAsync(
   } else {
     protocol = 'exp';
 
-    let { exp } = await readConfigJsonAsync(projectRoot);
+    let { exp } = getConfig(projectRoot, {
+      skipSDKVersionRequirement: false,
+      mode: opts.dev ? 'development' : 'production',
+    });
     if (exp.detach) {
       if (exp.scheme && Versions.gteSdkVersion(exp, '27.0.0')) {
         protocol = exp.scheme;

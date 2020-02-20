@@ -1,4 +1,4 @@
-import { ExpoConfig, Platform, readConfigJsonAsync } from '@expo/config';
+import { ExpoConfig, Platform, getConfig } from '@expo/config';
 import { StandaloneBuild } from '@expo/xdl';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -39,7 +39,10 @@ export default class BaseUploader {
   }
 
   async _getProjectConfig(): Promise<void> {
-    const { exp } = await readConfigJsonAsync(this.projectDir);
+    const { exp } = getConfig(this.projectDir, {
+      skipSDKVersionRequirement: true,
+      mode: 'production',
+    });
     this._ensureExperienceIsValid(exp);
     this._exp = exp;
   }

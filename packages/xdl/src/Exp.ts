@@ -1,4 +1,4 @@
-import { AppJSONConfig, BareAppConfig } from '@expo/config';
+import { AppJSONConfig, BareAppConfig, ConfigMode } from '@expo/config';
 
 import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
@@ -29,7 +29,11 @@ type ReadEntry = any;
 
 const supportedPlatforms = ['ios', 'android', 'web'];
 
-export function determineEntryPoint(projectRoot: string, platform?: string): string {
+export function determineEntryPoint(
+  projectRoot: string,
+  mode: ConfigMode,
+  platform?: string
+): string {
   if (platform && !supportedPlatforms.includes(platform)) {
     throw new Error(
       `Failed to resolve the project's entry file: The platform "${platform}" is not supported.`
@@ -39,7 +43,7 @@ export function determineEntryPoint(projectRoot: string, platform?: string): str
   // const platforms = [platform, 'native'].filter(Boolean) as string[];
   const platforms: string[] = [];
 
-  const entry = getEntryPoint(projectRoot, ['./index'], platforms);
+  const entry = getEntryPoint(projectRoot, ['./index'], platforms, mode);
   if (!entry)
     throw new Error(
       `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
@@ -184,7 +188,7 @@ async function initGitRepoAsync(root: string) {
     });
     Logger.global.debug('New project is already inside of a git repo, skipping git init.');
   } catch (e) {
-    if (e.errno == 'ENOENT') {
+    if (e.errno === 'ENOENT') {
       Logger.global.warn('Unable to initialize git repo. `git` not in PATH.');
     }
     insideGit = false;

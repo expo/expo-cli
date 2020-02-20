@@ -44,7 +44,12 @@ function parsePaths(projectRoot: string, mode: Mode, nativeAppManifest?: ExpoCon
 
   let appMain: string | null = null;
   try {
-    appMain = getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']);
+    appMain = getEntryPoint(
+      inputProjectRoot,
+      ['./index', './src/index'],
+      ['web'],
+      getConfigMode(mode)
+    );
   } catch (_) {
     // ignore the error
   }

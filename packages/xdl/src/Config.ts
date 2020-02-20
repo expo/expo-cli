@@ -1,6 +1,6 @@
 import getenv from 'getenv';
 
-import { GetConfigOptions, ProjectConfig, getConfig } from '@expo/config';
+import { ConfigMode, GetConfigOptions, ProjectConfig, getConfig } from '@expo/config';
 import * as Env from './Env';
 
 import * as ProjectSettings from './ProjectSettings';
@@ -17,13 +17,17 @@ export async function getProjectConfigAsync(
 ): Promise<ProjectConfig> {
   let { mode } = options;
   if (!mode || !['development', 'production'].includes(mode)) {
-    const { dev } = await ProjectSettings.readAsync(projectRoot);
-    mode = dev ? 'development' : 'production';
+    mode = await getConfigModeAsync(projectRoot);
   }
   return getConfig(projectRoot, {
     ...options,
     mode,
   });
+}
+
+export async function getConfigModeAsync(projectRoot: string): Promise<ConfigMode> {
+  const { dev } = await ProjectSettings.readAsync(projectRoot);
+  return dev ? 'development' : 'production';
 }
 
 interface ApiConfig {

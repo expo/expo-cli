@@ -27,7 +27,6 @@ import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
 import reduce from 'lodash/reduce';
 import set from 'lodash/set';
-import uniq from 'lodash/uniq';
 import md5hex from 'md5hex';
 import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
@@ -45,7 +44,7 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
-import Config, { getProjectConfigAsync } from './Config';
+import Config, { getConfigModeAsync, getProjectConfigAsync } from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
 import * as DevSession from './DevSession';
@@ -1028,7 +1027,7 @@ async function _getPublishExpConfigAsync(
 
 // Fetch iOS and Android bundles for publishing
 async function _buildPublishBundlesAsync(projectRoot: string, opts?: PackagerOptions) {
-  const entryPoint = Exp.determineEntryPoint(projectRoot);
+  const entryPoint = Exp.determineEntryPoint(projectRoot, opts?.dev ? 'development' : 'production');
   const publishUrl = await UrlUtils.constructPublishUrlAsync(
     projectRoot,
     entryPoint,
@@ -1069,7 +1068,8 @@ async function _maybeBuildSourceMapsAsync(
 // production should use sourcemaps for error reporting, and in the worst
 // case, adding a few seconds to a postPublish hook isn't too annoying
 async function _buildSourceMapsAsync(projectRoot: string, exp: ExpoConfig) {
-  let entryPoint = Exp.determineEntryPoint(projectRoot);
+  const mode = await getConfigModeAsync(projectRoot);
+  let entryPoint = Exp.determineEntryPoint(projectRoot, mode);
   let sourceMapUrl = await UrlUtils.constructSourceMapUrlAsync(projectRoot, entryPoint);
 
   logger.global.info('Building sourcemaps');
@@ -1100,7 +1100,8 @@ async function _collectAssets(
   exp: PublicConfig,
   hostedAssetPrefix: string
 ): Promise<Asset[]> {
-  let entryPoint = Exp.determineEntryPoint(projectRoot);
+  const mode = await getConfigModeAsync(projectRoot);
+  let entryPoint = Exp.determineEntryPoint(projectRoot, mode);
   let assetsUrl = await UrlUtils.constructAssetsUrlAsync(projectRoot, entryPoint);
 
   let iosAssetsJson = await _getForPlatformAsync(projectRoot, assetsUrl, 'ios', {
@@ -2011,9 +2012,10 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       Doctor.validateWithNetworkAsync(projectRoot);
       // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.readAsync(projectRoot);
+      const mode = packagerOpts.dev ? 'development' : 'production';
       let { exp: manifest } = getConfig(projectRoot, {
         skipSDKVersionRequirement: false,
-        mode: packagerOpts.dev ? 'development' : 'production',
+        mode,
       });
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
@@ -2033,7 +2035,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
         }
       }
       let platform = (req.headers['exponent-platform'] || 'ios').toString();
-      let entryPoint = Exp.determineEntryPoint(projectRoot, platform);
+      let entryPoint = Exp.determineEntryPoint(projectRoot, mode, platform);
       let mainModuleName = UrlUtils.guessMainModulePath(entryPoint);
       let queryParams = await UrlUtils.constructBundleQueryParamsAsync(projectRoot, packagerOpts);
       let path = `/${encodeURI(mainModuleName)}.bundle?platform=${encodeURIComponent(

@@ -1,4 +1,4 @@
-import { projectHasModule, readConfigJsonAsync } from '@expo/config';
+import { getPackageJson, projectHasModule } from '@expo/config';
 import { createForProject } from '@expo/package-manager';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -327,7 +327,7 @@ export const manifest: CustomizeOption[] = [
 async function readPackageJsonAsync(
   projectRoot: string
 ): Promise<{ scripts: { build?: string }; [key: string]: any }> {
-  const { pkg } = await readConfigJsonAsync(projectRoot, true, true);
+  const { pkg } = getPackageJson(projectRoot);
 
   return {
     scripts: {},

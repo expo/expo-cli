@@ -24,7 +24,10 @@ async function installAsync(packages: string[], options: PackageManager.CreateFo
     return await packageManager.addAsync(...packages);
   }
 
-  const { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp } = await ConfigUtils.getConfig(projectRoot, {
+    skipSDKVersionRequirement: false,
+    mode: 'development',
+  });
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     throw new CommandError(
       'UNSUPPORTED_SDK_VERSION',
