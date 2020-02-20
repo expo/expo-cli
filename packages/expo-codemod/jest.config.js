@@ -1,9 +1,9 @@
 const path = require('path');
 
 module.exports = {
-  rootDir: path.resolve(__dirname),
+  rootDir: path.resolve(__dirname, 'src'),
   displayName: require('./package.json').name,
-  testRegex: '/__tests__/.*(test|spec)\\.(j|t)sx?$',
+  testRegex: '/__(tests|testfixtures)__/.*(test|spec)\\.(j|t)sx?$',
   moduleNameMapper: {
     '^jest/(.*)': path.join(__dirname, '../../jest/$1'),
   },

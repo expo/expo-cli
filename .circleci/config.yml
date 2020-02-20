@@ -38,17 +38,9 @@ workflows:
           requires:
             - build10
       - test-config:
-          e: node-12
-          requires:
-            - build12
-      - test-config:
           e: node-10
           requires:
             - build10
-      - test-json-file:
-          e: node-12
-          requires:
-            - build12
       - test-json-file:
           e: node-10
           requires:
@@ -61,10 +53,6 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-expo-codemod:
-          e: node-12
-          requires:
-            - build12
       - test-expo-codemod:
           e: node-10
           requires:
@@ -85,10 +73,6 @@ workflows:
           e: puppeteer
           requires:
             - puppeteerEnv
-      - test-expo-schemer:
-          e: node-12
-          requires:
-            - build12
       - test-expo-schemer:
           e: node-10
           requires:
