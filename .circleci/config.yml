@@ -93,14 +93,10 @@ workflows:
           e: node-10
           requires:
             - build10
-      - test-android-manifest:
+      - test-coverage:
           e: node-12
           requires:
             - build12
-      - test-android-manifest:
-          e: node-10
-          requires:
-            - build10
       - test-electron-adapter:
           e: node-10
           requires:
@@ -237,16 +233,16 @@ jobs:
       - attach_workspace:
           at: '~'
       - run: yarn test
-  test-android-manifest:
+  test-coverage:
     parameters:
       e:
         type: executor
     executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/android-manifest
+    working_directory: ~/expo-cli
     steps:
       - attach_workspace:
           at: '~'
-      - run: yarn test
+      - run: yarn test-coverage
   test-electron-adapter:
     parameters:
       e:
