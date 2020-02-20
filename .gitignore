@@ -12,3 +12,5 @@ node_modules
 *.swp
 *.swo
 *.tsbuildinfo
+
+coverage/

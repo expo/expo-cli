@@ -23,88 +23,88 @@ workflows:
       - build:
           name: build12
           e: node-12
-      - build:
-          name: build10
-          e: node-10
-      - build:
-          name: puppeteerEnv
-          e: puppeteer
-      - test-dev-tools:
-          e: node-12
-          requires:
-            - build12
-      - test-dev-tools:
-          e: node-10
-          requires:
-            - build10
-      - test-config:
-          e: node-12
-          requires:
-            - build12
-      - test-config:
-          e: node-10
-          requires:
-            - build10
-      - test-json-file:
-          e: node-12
-          requires:
-            - build12
-      - test-json-file:
-          e: node-10
-          requires:
-            - build10
-      - test-expo-cli:
-          e: node-12
-          requires:
-            - build12
-      - test-expo-cli:
-          e: node-10
-          requires:
-            - build10
-      - test-expo-codemod:
-          e: node-12
-          requires:
-            - build12
-      - test-expo-codemod:
-          e: node-10
-          requires:
-            - build10
-      - test-webpack-config-unit:
-          e: node-12
-          requires:
-            - build12
-      - test-webpack-config-unit:
-          e: node-10
-          requires:
-            - build10
-      - test-webpack-config-e2e:
-          e: puppeteer
-          requires:
-            - puppeteerEnv
-      - test-webpack-config-e2e-next-js:
-          e: puppeteer
-          requires:
-            - puppeteerEnv
-      - test-expo-schemer:
-          e: node-12
-          requires:
-            - build12
-      - test-expo-schemer:
-          e: node-10
-          requires:
-            - build10
+      # - build:
+      #     name: build10
+      #     e: node-10
+      # - build:
+      #     name: puppeteerEnv
+      #     e: puppeteer
+      # - test-dev-tools:
+      #     e: node-12
+      #     requires:
+      #       - build12
+      # - test-dev-tools:
+      #     e: node-10
+      #     requires:
+      #       - build10
+      # - test-config:
+      #     e: node-12
+      #     requires:
+      #       - build12
+      # - test-config:
+      #     e: node-10
+      #     requires:
+      #       - build10
+      # - test-json-file:
+      #     e: node-12
+      #     requires:
+      #       - build12
+      # - test-json-file:
+      #     e: node-10
+      #     requires:
+      #       - build10
+      # - test-expo-cli:
+      #     e: node-12
+      #     requires:
+      #       - build12
+      # - test-expo-cli:
+      #     e: node-10
+      #     requires:
+      #       - build10
+      # - test-expo-codemod:
+      #     e: node-12
+      #     requires:
+      #       - build12
+      # - test-expo-codemod:
+      #     e: node-10
+      #     requires:
+      #       - build10
+      # - test-webpack-config-unit:
+      #     e: node-12
+      #     requires:
+      #       - build12
+      # - test-webpack-config-unit:
+      #     e: node-10
+      #     requires:
+      #       - build10
+      # - test-webpack-config-e2e:
+      #     e: puppeteer
+      #     requires:
+      #       - puppeteerEnv
+      # - test-webpack-config-e2e-next-js:
+      #     e: puppeteer
+      #     requires:
+      #       - puppeteerEnv
+      # - test-expo-schemer:
+      #     e: node-12
+      #     requires:
+      #       - build12
+      # - test-expo-schemer:
+      #     e: node-10
+      #     requires:
+      #       - build10
       - test-android-manifest:
           e: node-12
           requires:
             - build12
-      - test-android-manifest:
-          e: node-10
-          requires:
-            - build10
-      - test-electron-adapter:
-          e: node-10
-          requires:
-            - build10
+      # - test-android-manifest:
+      #     e: node-10
+      #     requires:
+      #       - build10
+      # - test-electron-adapter:
+      #     e: node-10
+      #     requires:
+      #       - build10
 jobs:
   build:
     parameters:
@@ -242,11 +242,11 @@ jobs:
       e:
         type: executor
     executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/android-manifest
+    working_directory: ~/expo-cli
     steps:
       - attach_workspace:
           at: '~'
-      - run: yarn test
+      - run: yarn test-coverage
   test-electron-adapter:
     parameters:
       e:
