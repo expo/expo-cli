@@ -8,11 +8,28 @@ import { Context } from '../../credentials';
 
 import log from '../../log';
 
+async function maybeRenameExistingFile(projectDir: string, filename: string) {
+  let desiredFilePath = path.resolve(projectDir, filename);
+
+  if (await fs.pathExists(desiredFilePath)) {
+    let num = 1;
+    while (await fs.pathExists(path.resolve(projectDir, `OLD_${num}_${filename}`))) {
+      num++;
+    }
+    log(
+      `\nA file already exists at "${desiredFilePath}"\n  Renaming the existing file to OLD_${num}_${filename}\n`
+    );
+    await fs.rename(desiredFilePath, path.resolve(projectDir, `OLD_${num}_${filename}`));
+  }
+}
+
 export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<void> {
   const ctx = new Context();
   await ctx.init(projectDir);
 
-  const backupKeystoreOutputPath = path.resolve(projectDir, `${ctx.manifest.slug}.jks`);
+  const keystoreFilename = `${ctx.manifest.slug}.jks`;
+  await maybeRenameExistingFile(projectDir, keystoreFilename);
+  const backupKeystoreOutputPath = path.resolve(projectDir, keystoreFilename);
 
   const view = new DownloadKeystore(ctx.manifest.slug);
   await view.fetch(ctx);
@@ -53,7 +70,11 @@ export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<v
   await ctx.init(projectDir);
 
   const keystorePath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
-  const uploadKeyPath = path.resolve(projectDir, `${ctx.manifest.slug}_upload_cert.pem`);
+
+  const uploadKeyFilename = `${ctx.manifest.slug}_upload_cert.pem`;
+  await maybeRenameExistingFile(projectDir, uploadKeyFilename);
+  const uploadKeyPath = path.resolve(projectDir, uploadKeyFilename);
+
   try {
     const view = new DownloadKeystore(ctx.manifest.slug);
     await view.fetch(ctx);
