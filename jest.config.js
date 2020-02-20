@@ -4,6 +4,7 @@ module.exports = {
     require('./packages/config/jest.config'),
     require('./packages/expo-codemod/jest.config'),
     require('./packages/json-file/jest.config'),
+    require('./packages/package-manager/jest.config'),
     require('./packages/schemer/jest.config'),
   ],
   testPathIgnorePatterns: ['.*'],
