@@ -54,10 +54,6 @@ workflows:
           requires:
             - build10
       - test-expo-codemod:
-          e: node-12
-          requires:
-            - build12
-      - test-expo-codemod:
           e: node-10
           requires:
             - build10
