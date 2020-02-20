@@ -100,10 +100,7 @@ async function getUpdatedDependenciesAsync(
   return result;
 }
 
-async function upgradeAppJson(
-  projectRoot: string,
-  targetSdkVersionString: string
-): ConfigUtils.ExpoConfig {
+async function upgradeAppJson(projectRoot: string, targetSdkVersionString: string) {
   let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
   exp.sdkVersion = targetSdkVersionString;
   switch (targetSdkVersionString) {
