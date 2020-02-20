@@ -1,41 +1,34 @@
 import path from 'path';
 import fs from 'fs-extra';
 import get from 'lodash/get';
-import program from 'commander';
 
 import { AndroidCredentials } from '@expo/xdl';
 import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
 import { Context } from '../../credentials';
-import prompt from '../../prompt';
 
 import log from '../../log';
 
-async function promptIfFileExists(projectDir, filename) {
-  while (
-    (await fs.pathExists(await path.resolve(projectDir, filename))) &&
-    !program.nonInteractive
-  ) {
-    let question = {
-      type: 'input',
-      name: 'newName',
-      message: `You already have a file in your project directory named "${filename}"\n\n  Press enter to overwrite this file, or provide a different filename:`,
-      default: 'overwrite',
-    };
-    const answer = await prompt(question);
-    if (answer.newName === 'overwrite') {
-      break;
-    } else {
-      filename = answer.newName;
+async function maybeRenameExistingFile(projectDir, filename) {
+  let desiredFilePath = path.resolve(projectDir, filename);
+
+  if (await fs.pathExists(desiredFilePath)) {
+    let num = 1;
+    while (await fs.pathExists(path.resolve(projectDir, `OLD_${num}_${filename}`))) {
+      num++;
     }
+    log(
+      `\nA file already exists at "${desiredFilePath}"\n  Renaming the existing file to OLD_${num}_${filename}\n`
+    );
+    await fs.rename(desiredFilePath, path.resolve(projectDir, `OLD_${num}_${filename}`));
   }
-  return filename;
 }
 
 export async function fetchAndroidKeystoreAsync(projectDir: string): Promise<void> {
   const ctx = new Context();
   await ctx.init(projectDir);
 
-  const keystoreFilename = await promptIfFileExists(projectDir, `${ctx.manifest.slug}.jks`);
+  const keystoreFilename = `${ctx.manifest.slug}.jks`;
+  await maybeRenameExistingFile(projectDir, keystoreFilename);
   const backupKeystoreOutputPath = path.resolve(projectDir, keystoreFilename);
 
   const view = new DownloadKeystore(ctx.manifest.slug);
@@ -78,10 +71,8 @@ export async function fetchAndroidUploadCertAsync(projectDir: string): Promise<v
 
   const keystorePath = path.resolve(projectDir, `${ctx.manifest.slug}.tmp.jks`);
 
-  const uploadKeyFilename = await promptIfFileExists(
-    projectDir,
-    `${ctx.manifest.slug}_upload_cert.pem`
-  );
+  const uploadKeyFilename = `${ctx.manifest.slug}_upload_cert.pem`;
+  await maybeRenameExistingFile(projectDir, uploadKeyFilename);
   const uploadKeyPath = path.resolve(projectDir, uploadKeyFilename);
 
   try {
