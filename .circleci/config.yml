@@ -42,10 +42,6 @@ workflows:
           requires:
             - build10
       - test-json-file:
-          e: node-12
-          requires:
-            - build12
-      - test-json-file:
           e: node-10
           requires:
             - build10
