@@ -74,6 +74,7 @@ export default function withUnimodules(
   const babelProjectRoot = babelAppConfig.root || locations.root;
 
   const babelLoader = createBabelLoader({
+    projectRoot: locations.root,
     mode,
     platform,
     babelProjectRoot,

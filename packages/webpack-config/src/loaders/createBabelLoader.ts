@@ -62,18 +62,13 @@ function ensureRoot(possibleProjectRoot?: string): string {
   return getPossibleProjectRoot();
 }
 
-function generateCacheIdentifier(
-  projectRoot: string,
-  babelOptions: TransformOptions,
-  version: string = '1'
-): string {
+function generateCacheIdentifier(projectRoot: string, version: string = '1'): string {
   const filename = path.join(projectRoot, 'foobar.js');
   const cacheKey = `babel-cache-${version}-`;
 
   const partial = loadPartialConfig({
     filename,
     cwd: projectRoot,
-    ...babelOptions,
     sourceFileName: filename,
   });
 
@@ -98,6 +93,7 @@ export function createBabelLoaderFromEnvironment(
   const { babel = {} } = build;
 
   return createBabelLoader({
+    projectRoot: locations.root,
     mode,
     platform: env.platform,
     babelProjectRoot: babel.root || locations.root,
@@ -116,6 +112,7 @@ export default function createBabelLoader({
    * The webpack mode: `"production" | "development"`
    */
   mode,
+  projectRoot: inputProjectRoot,
   babelProjectRoot,
   include = [],
   verbose,
@@ -123,6 +120,7 @@ export default function createBabelLoader({
   useCustom,
   ...options
 }: {
+  projectRoot?: string;
   useCustom?: boolean;
   mode?: Mode;
   babelProjectRoot?: string;
@@ -137,7 +135,7 @@ export default function createBabelLoader({
 
   const isProduction = mode === 'production';
 
-  const projectRoot = getPossibleProjectRoot();
+  const projectRoot = inputProjectRoot || getPossibleProjectRoot();
   let presetOptions: any = {
     // Explicitly use babel.config.js instead of .babelrc
     babelrc: false,
@@ -169,18 +167,18 @@ export default function createBabelLoader({
     compact: isProduction,
   };
 
-  let cacheIdentifier: string | undefined;
+  let cacheIdentifier: string | undefined = customUseOptions.cacheIdentifier;
+  if (!cacheIdentifier) {
+    try {
+      cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot);
+    } catch (error) {
+      console.log(chalk.black.bgRed(`The project's Babel config is invalid: ${error.message}`));
 
-  try {
-    cacheIdentifier = generateCacheIdentifier(ensuredProjectRoot, {
-      ...presetOptions,
-    });
-  } catch (error) {
-    console.log(chalk.black.bgRed(`Your Babel config is invalid!`));
-    throw error;
+      throw error;
+    }
   }
-  presetOptions.cacheIdentifier = customUseOptions.cacheIdentifier || cacheIdentifier;
-  presetOptions.cacheCompression = !isProduction;
+  presetOptions.cacheIdentifier = cacheIdentifier;
+  presetOptions.cacheCompression = false;
   presetOptions.cacheDirectory =
     customUseOptions.cacheDirectory ||
     path.join(
