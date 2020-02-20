@@ -8,7 +8,7 @@ import { Context } from '../../credentials';
 
 import log from '../../log';
 
-async function maybeRenameExistingFile(projectDir, filename) {
+async function maybeRenameExistingFile(projectDir: string, filename: string) {
   let desiredFilePath = path.resolve(projectDir, filename);
 
   if (await fs.pathExists(desiredFilePath)) {
