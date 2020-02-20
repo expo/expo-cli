@@ -86,10 +86,6 @@ workflows:
           requires:
             - puppeteerEnv
       - test-expo-schemer:
-          e: node-12
-          requires:
-            - build12
-      - test-expo-schemer:
           e: node-10
           requires:
             - build10
