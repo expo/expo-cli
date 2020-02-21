@@ -1,4 +1,5 @@
 import plist, { PlistObject } from 'plist';
+import { IosCodeSigning } from '@expo/xdl';
 import { runAction, travelingFastlane } from './fastlane';
 import { AppleCtx } from './authenticate';
 import { DistCert, DistCertInfo } from './distributionCert';
@@ -27,6 +28,17 @@ export class ProvisioningProfileManager {
     provisioningProfile: ProvisioningProfile,
     distCert: T
   ): Promise<ProvisioningProfile> {
+    if (!provisioningProfile.provisioningProfileId) {
+      throw new Error('Provisioning profile: cannot use existing profile, insufficient id');
+    }
+
+    if (!distCert.distCertSerialNumber) {
+      distCert.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        distCert.certP12,
+        distCert.certPassword
+      ) as string;
+    }
+
     const args = [
       'use-existing',
       this.ctx.appleId,
@@ -35,7 +47,7 @@ export class ProvisioningProfileManager {
       String(this.ctx.team.inHouse),
       bundleIdentifier,
       provisioningProfile.provisioningProfileId,
-      distCert.distCertSerialNumber || '__last__',
+      distCert.distCertSerialNumber,
     ];
     return await runAction(travelingFastlane.manageProvisioningProfiles, args);
   }
@@ -58,6 +70,13 @@ export class ProvisioningProfileManager {
     distCert: T,
     profileName: string
   ): Promise<ProvisioningProfile> {
+    if (!distCert.distCertSerialNumber) {
+      distCert.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        distCert.certP12,
+        distCert.certPassword
+      ) as string;
+    }
+
     const args = [
       'create',
       this.ctx.appleId,
@@ -65,7 +84,7 @@ export class ProvisioningProfileManager {
       this.ctx.team.id,
       String(this.ctx.team.inHouse),
       bundleIdentifier,
-      distCert.distCertSerialNumber || '__last__',
+      distCert.distCertSerialNumber,
       profileName,
     ];
     return await runAction(travelingFastlane.manageProvisioningProfiles, args);
