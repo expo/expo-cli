@@ -3159,6 +3159,21 @@
   resolved "https://registry.yarnpkg.com/@types/tapable/-/tapable-1.0.2.tgz#e13182e1b69871a422d7863e11a4a6f5b814a4bd"
   integrity sha512-42zEJkBpNfMEAvWR5WlwtTH22oDzcMjFsL9gDGExwF8X8WvAiw7Vwop7hPw03QT8TKfec83LwbHj6SvpqM4ELQ==
 
+"@types/tar-fs@*":
+  version "1.16.2"
+  resolved "https://registry.yarnpkg.com/@types/tar-fs/-/tar-fs-1.16.2.tgz#6f5acea15d3b7777b8bf3f1c6d4e80ce71288f34"
+  integrity sha512-eds/pbRf0Fe0EKmrHDbs8mRkfbjz2upAdoUfREw14dPboZaHqqZ1Y+uVeoakoPavpZMpj22nhUTAYkX5bz3DXA==
+  dependencies:
+    "@types/node" "*"
+    "@types/tar-stream" "*"
+
+"@types/tar-stream@*":
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@types/tar-stream/-/tar-stream-1.6.1.tgz#67d759068ff781d976cad978893bb7a334ec8809"
+  integrity sha512-pYCDOPuRE+4tXFk1rSMYiuI+kSrXiJ4av1bboQbkcEBA2rqwEWfIn9kdMSH+5nYu58WksHuxwx+7kVbtg0Le7w==
+  dependencies:
+    "@types/node" "*"
+
 "@types/tar@^4.0.1":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@types/tar/-/tar-4.0.3.tgz#e2cce0b8ff4f285293243f5971bd7199176ac489"
@@ -3166,6 +3181,13 @@
   dependencies:
     "@types/minipass" "*"
     "@types/node" "*"
+
+"@types/targz@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/targz/-/targz-1.0.0.tgz#cca3b2c87548d98f961b57306dc36d06f9fd15b2"
+  integrity sha512-kNFPOpsmdtT+DMXHuu5H7gXD5LlMHtS/kSQjuVY3QqxHQqGFV854o+EimC1GZ5/+iYZWzk9dNRiAUFbI/mvUsQ==
+  dependencies:
+    "@types/tar-fs" "*"
 
 "@types/terser-webpack-plugin@^1.2.1":
   version "1.2.1"
