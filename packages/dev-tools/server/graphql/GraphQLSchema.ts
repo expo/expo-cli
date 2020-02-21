@@ -444,7 +444,7 @@ const resolvers = {
       try {
         const { dev } = await ProjectSettings.readAsync(project.projectDir);
         const mode = dev ? 'development' : 'production';
-        const { exp } = await getConfig(project.projectDir, { mode });
+        const { exp } = getConfig(project.projectDir, { mode });
         return exp;
       } catch (error) {
         ProjectUtils.logError(project.projectDir, 'expo', error.message);

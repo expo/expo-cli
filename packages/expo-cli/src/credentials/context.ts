@@ -1,4 +1,4 @@
-import { readConfigJsonAsync } from '@expo/config';
+import { getConfig } from '@expo/config';
 import { ApiV2, Doctor, User, UserManager } from '@expo/xdl';
 
 import { AppleCtx, authenticate } from '../appleApi';
@@ -61,7 +61,7 @@ export class Context {
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);
     if (status !== Doctor.FATAL) {
       /* This manager does not need to work in project context */
-      const { exp } = await readConfigJsonAsync(projectDir);
+      const { exp } = getConfig(projectDir, { mode: 'production' });
       this._manifest = exp;
       this._hasProjectContext = true;
     }
