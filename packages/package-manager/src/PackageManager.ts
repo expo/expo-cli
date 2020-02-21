@@ -125,15 +125,13 @@ export class NpmPackageManager implements PackageManager {
       versioned: npmPackageArg.Result[];
       unversioned: npmPackageArg.Result[];
     } = { versioned: [], unversioned: [] };
-    names
-      .map(name => npmPackageArg(name))
-      .forEach(spec => {
-        if (spec.rawSpec) {
-          result.versioned.push(spec);
-        } else {
-          result.unversioned.push(spec);
-        }
-      });
+    names.map(name => npmPackageArg(name)).forEach(spec => {
+      if (spec.rawSpec) {
+        result.versioned.push(spec);
+      } else {
+        result.unversioned.push(spec);
+      }
+    });
     return result;
   }
 
