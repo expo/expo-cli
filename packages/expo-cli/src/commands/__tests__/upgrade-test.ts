@@ -13,6 +13,9 @@ describe('maybeFormatSdkVersion', () => {
   it(`returns null`, () => {
     expect(maybeFormatSdkVersion(null)).toBe(null);
   });
+  it(`supports UNVERSIONED`, () => {
+    expect(maybeFormatSdkVersion('UNVERSIONED')).toBe('UNVERSIONED');
+  });
   it(`returns formatted version`, () => {
     expect(maybeFormatSdkVersion('2')).toBe('2.0.0');
     expect(maybeFormatSdkVersion('2.4')).toBe('2.4.0');
