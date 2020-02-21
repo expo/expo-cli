@@ -6,6 +6,7 @@ module.exports = {
     require('./packages/json-file/jest.config'),
     require('./packages/package-manager/jest.config'),
     require('./packages/schemer/jest.config'),
+    require('./packages/webpack-config/jest/unit-test-config'),
   ],
   testPathIgnorePatterns: ['.*'],
 };
