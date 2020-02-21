@@ -1,4 +1,3 @@
-import * as ConfigUtils from '@expo/config';
 import { Android, Simulator, UserManager, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import CliTable from 'cli-table';
@@ -7,6 +6,7 @@ import _ from 'lodash';
 import ora from 'ora';
 import path from 'path';
 
+import { getConfig, setCustomConfigPath } from '@expo/config';
 import CommandError from '../../CommandError';
 import log from '../../log';
 import prompt from '../../prompt';
@@ -45,18 +45,22 @@ export default program => {
       // get custom project manifest if it exists
       // Note: this is the current developer's project, NOT the Expo client's manifest
       const spinner = ora(`Finding custom configuration for the Expo client...`).start();
-      const appJsonPath = options.config || path.join(projectDir, 'app.json');
-      const appJsonExists = await ConfigUtils.fileExistsAsync(appJsonPath);
-      const { exp } = appJsonExists ? await ConfigUtils.readConfigJsonAsync(projectDir) : {};
+      if (options.config) {
+        setCustomConfigPath(options.config);
+      }
+      const { exp } = getConfig(projectDir, {
+        skipSDKVersionRequirement: true,
+        mode: 'production',
+      });
 
       if (exp) {
-        spinner.succeed(`Found custom configuration for the Expo client at ${appJsonPath}`);
+        spinner.succeed(`Found custom configuration for the Expo client`);
       } else {
         spinner.warn(`Unable to find custom configuration for the Expo client`);
       }
       if (!_.has(exp, 'ios.config.googleMapsApiKey')) {
         const disabledReason = exp
-          ? `ios.config.googleMapsApiKey does not exist in configuration file found in ${appJsonPath}`
+          ? `ios.config.googleMapsApiKey does not exist in the expo configuration file`
           : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
         disabledServices.googleMaps = { name: 'Google Maps', reason: disabledReason };
       }
