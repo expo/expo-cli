@@ -53,6 +53,7 @@ import { maySkipManifestValidation } from './Env';
 import { ErrorCode } from './ErrorCode';
 import * as Exp from './Exp';
 import logger from './Logger';
+import * as Hermes from './Hermes';
 import * as ExpSchema from './project/ExpSchema';
 import * as ProjectUtils from './project/ProjectUtils';
 import * as ProjectSettings from './ProjectSettings';
@@ -541,10 +542,14 @@ export async function exportForAppHosting(
     .update(androidBundle)
     .digest('hex');
   const androidBundleUrl = `android-${androidBundleHash}.js`;
+  const androidBundleBytecodeUrl = `android-${androidBundleHash}.hbc`;
   const androidJsPath = path.join(outputDir, 'bundles', androidBundleUrl);
+  const androidBytecodePath = path.join(outputDir, 'bundles', androidBundleBytecodeUrl);
 
   await _writeArtifactSafelyAsync(projectRoot, null, iosJsPath, iosBundle);
   await _writeArtifactSafelyAsync(projectRoot, null, androidJsPath, androidBundle);
+
+  await Hermes.tryGenerateBytecode(projectRoot, androidJsPath, androidBytecodePath);
   logger.global.info('Finished saving JS Bundles.');
 
   // save the assets
@@ -597,6 +602,12 @@ export async function exportForAppHosting(
 
   // save the android manifest
   exp.bundleUrl = urljoin(publicUrl, 'bundles', androidBundleUrl);
+  if (await fs.pathExists(androidBytecodePath)) {
+    exp.bytecode = {
+      url: urljoin(publicUrl, 'bundles', androidBundleBytecodeUrl),
+      version: await Hermes.getBytecodeVersion(projectRoot),
+    };
+  }
   exp.platform = 'android';
   await _writeArtifactSafelyAsync(
     projectRoot,
@@ -604,6 +615,7 @@ export async function exportForAppHosting(
     path.join(outputDir, 'android-index.json'),
     JSON.stringify({ ...exp, dependencies: Object.keys(pkg.dependencies) })
   );
+  delete exp.bytecode;
 
   // save the ios manifest
   exp.bundleUrl = urljoin(publicUrl, 'bundles', iosBundleUrl);
@@ -1560,7 +1572,7 @@ export async function buildAsync(
 ): Promise<BuildStatusResult | BuildCreatedResult> {
   /**
     This function corresponds to an apiv1 call and is deprecated.
-    Use 
+    Use
       * startBuildAsync
       * getBuildStatusAsync
     to call apiv2 instead.
