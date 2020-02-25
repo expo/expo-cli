@@ -962,12 +962,12 @@ async function _uploadArtifactsAsync({
   formData.append('options', JSON.stringify(options));
 
   let response: any;
-  if (process.env.EXPO_NEXT_API) {
+  if (process.env.EXPO_LEGACY_API === 'true') {
+    response = await Api.callMethodAsync('publish', null, 'put', null, { formData });
+  } else {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     response = await api.uploadFormDataAsync('publish/new', formData);
-  } else {
-    response = await Api.callMethodAsync('publish', null, 'put', null, { formData });
   }
   return response;
 }
@@ -1355,12 +1355,12 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
 
   // Collect list of assets missing on host
   let result;
-  if (process.env.EXPO_NEXT_API) {
+  if (process.env.EXPO_LEGACY_API === 'true') {
+    result = await Api.callMethodAsync('assetsMetadata', [], 'post', { keys: Object.keys(paths) });
+  } else {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     result = await api.postAsync('assets/metadata', { keys: Object.keys(paths) });
-  } else {
-    result = await Api.callMethodAsync('assetsMetadata', [], 'post', { keys: Object.keys(paths) });
   }
   const metas = result.metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
@@ -1382,12 +1382,12 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
         formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
 
-      if (process.env.EXPO_NEXT_API) {
+      if (process.env.EXPO_LEGACY_API === 'true') {
+        await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
+      } else {
         const user = await UserManager.ensureLoggedInAsync();
         const api = ApiV2.clientForUser(user);
         await api.uploadFormDataAsync('assets/upload', formData);
-      } else {
-        await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
       }
     })
   );
@@ -2073,20 +2073,20 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
             let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
 
             let signedManifest;
-            if (process.env.EXPO_NEXT_API) {
-              const user = await UserManager.ensureLoggedInAsync();
-              const api = ApiV2.clientForUser(user);
-              signedManifest = await api.postAsync('manifest/sign', {
-                args: publishInfo.args,
-                manifest,
-              });
-            } else {
+            if (process.env.EXPO_LEGACY_API === 'true') {
               signedManifest = await Api.callMethodAsync(
                 'signManifest',
                 [publishInfo.args],
                 'post',
                 manifest
               );
+            } else {
+              const user = await UserManager.ensureLoggedInAsync();
+              const api = ApiV2.clientForUser(user);
+              signedManifest = await api.postAsync('manifest/sign', {
+                args: publishInfo.args,
+                manifest,
+              });
             }
             _cachedSignedManifest.manifestString = manifestString;
             _cachedSignedManifest.signedManifest = signedManifest.response;
