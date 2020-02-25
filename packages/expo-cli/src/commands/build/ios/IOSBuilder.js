@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
@@ -11,10 +12,13 @@ import prompt from '../../../prompt';
 import { ensurePNGIsNotTransparent } from './utils/image';
 import { runCredentialsManager } from '../../../credentials/route';
 import { Context } from '../../../credentials/context';
+import { displayProjectCredentials } from '../../../credentials/actions/list';
 import { SetupIosDist } from '../../../credentials/views/SetupIosDist';
 import { SetupIosPush } from '../../../credentials/views/SetupIosPush';
 import { SetupIosProvisioningProfile } from '../../../credentials/views/SetupIosProvisioningProfile';
 import CommandError from '../../../CommandError';
+import log from '../../../log';
+
 import {
   RemoveIosDist,
   getDistCertFromParams,
@@ -89,6 +93,12 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     ]);
     if (confirm) {
       return await ctx.ensureAppleCtx(this.options);
+    } else {
+      log(
+        chalk.green(
+          'No problem! 👌 \nWe can’t auto-generate credentials if you don’t have access to the main Apple account. \nBut we can still set it up if you upload your credentials.'
+        )
+      );
     }
   }
 
@@ -100,7 +110,20 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     await context.init(this.projectDir);
     await this.bestEffortAppleCtx(context, bundleIdentifier);
     await this.clearAndRevokeCredentialsIfRequested(context, { experienceName, bundleIdentifier });
-    await this.produceCredentials(context, experienceName, bundleIdentifier);
+
+    try {
+      await this.produceCredentials(context, experienceName, bundleIdentifier);
+    } catch (e) {
+      log(
+        chalk.bold.red(
+          'Failed to prepare all credentials. \nThe next time you build, we will automatically use the following configuration:'
+        )
+      );
+      throw e;
+    } finally {
+      const credentials = await context.ios.getAllCredentials();
+      displayProjectCredentials(experienceName, bundleIdentifier, credentials);
+    }
 
     //TODO
     throw new Error('ABORT');
