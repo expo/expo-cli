@@ -21,7 +21,7 @@ import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
 import { DistCert, DistCertInfo, DistCertManager } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
-import { CredentialsManager, GoBackError } from '../route';
+import { CredentialsManager } from '../route';
 import { CreateAppCredentialsIos } from './IosAppCredentials';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
@@ -76,9 +76,8 @@ export class RemoveIosDist implements IView {
     if (selected) {
       await this.removeSpecific(ctx, selected);
       log(chalk.green('Successfully removed Distribution Certificate\n'));
-      return null;
     }
-    throw new GoBackError();
+    return null;
   }
 
   async removeSpecific(ctx: Context, selected: IosDistCredentials) {
@@ -147,9 +146,8 @@ export class UpdateIosDist implements IView {
         displayIosUserCredentials(updated);
       }
       log();
-      return null;
     }
-    throw new GoBackError();
+    return null;
   }
 
   async updateSpecific(ctx: Context, selected: IosDistCredentials) {
@@ -228,9 +226,8 @@ export class UseExistingDistributionCert implements IView {
           `Successfully assigned Distribution Certificate to ${this._experienceName} (${this._bundleIdentifier})`
         )
       );
-      return null;
     }
-    throw new GoBackError();
+    return null;
   }
 }
 
@@ -263,8 +260,7 @@ export class CreateOrReuseDistributionCert implements IView {
     const existingCertificates = await getValidDistCerts(ctx.ios.credentials, ctx);
 
     if (existingCertificates.length === 0) {
-      const createOperation = async () => new CreateIosDist().create(ctx);
-      const distCert = await this._credentialsManager.doInteractiveOperation(createOperation, this);
+      const distCert = await new CreateIosDist().create(ctx);
       await this.assignDistCert(ctx, distCert.id);
       return null;
     }
@@ -295,7 +291,6 @@ export class CreateOrReuseDistributionCert implements IView {
         value: 'CHOOSE_EXISTING',
       },
       { name: '[Add a new certificate]', value: 'GENERATE' },
-      { name: '[Go back]', value: 'GO_BACK' },
     ];
 
     const question: Question = {
@@ -309,8 +304,7 @@ export class CreateOrReuseDistributionCert implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      const createOperation = async () => new CreateIosDist().create(ctx);
-      const distCert = await this._credentialsManager.doInteractiveOperation(createOperation, this);
+      const distCert = await new CreateIosDist().create(ctx);
       await this.assignDistCert(ctx, distCert.id);
       return null;
     } else if (action === 'CHOOSE_EXISTING') {
@@ -318,9 +312,9 @@ export class CreateOrReuseDistributionCert implements IView {
         bundleIdentifier: this._bundleIdentifier,
         experienceName: this._experienceName,
       });
-    } else {
-      throw new GoBackError(); // go back
     }
+
+    throw new Error('unsupported action');
   }
 }
 
@@ -392,26 +386,16 @@ async function selectDistCertFromList(
     return null;
   }
 
-  const NONE_SELECTED = -1;
-  const choices = distCerts.map((entry, index) => ({
-    name: formatDistCert(entry, iosCredentials, getValidityStatus(entry, validDistCerts)),
-    value: index,
-  }));
-  choices.push({
-    name: '[Go back]',
-    value: NONE_SELECTED,
-  });
-
   const question: Question = {
     type: 'list',
     name: 'credentialsIndex',
     message: 'Select certificate from the list.',
-    choices,
+    choices: distCerts.map((entry, index) => ({
+      name: formatDistCert(entry, iosCredentials, getValidityStatus(entry, validDistCerts)),
+      value: index,
+    })),
   };
   const { credentialsIndex } = await prompt(question);
-  if (credentialsIndex === NONE_SELECTED) {
-    return null;
-  }
   return distCerts[credentialsIndex];
 }
 

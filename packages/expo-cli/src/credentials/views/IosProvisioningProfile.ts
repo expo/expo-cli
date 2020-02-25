@@ -22,7 +22,6 @@ import {
   ProvisioningProfileInfo,
   ProvisioningProfileManager,
 } from '../../appleApi';
-import { GoBackError } from '../route';
 
 export type ProvisioningProfileOptions = {
   experienceName: string;
@@ -153,9 +152,8 @@ export class UseExistingProvisioningProfile implements IView {
         this._distCert,
         selected
       );
-      return null;
     }
-    throw new GoBackError();
+    return null;
   }
 }
 
@@ -235,7 +233,6 @@ export class CreateOrReuseProvisioningProfile implements IView {
         value: 'CHOOSE_EXISTING',
       },
       { name: '[Add a new provisioning profile]', value: 'GENERATE' },
-      { name: '[Go back]', value: 'GO_BACK' },
     ];
 
     const question: Question = {
@@ -260,9 +257,9 @@ export class CreateOrReuseProvisioningProfile implements IView {
         bundleIdentifier: this._bundleIdentifier,
         distCert: this._distCert,
       });
-    } else {
-      throw new GoBackError(); // go back
     }
+
+    throw new Error('unsupported action');
   }
 }
 
@@ -279,26 +276,16 @@ async function selectProfileFromApple(
     return null;
   }
 
-  const NONE_SELECTED = -1;
-  const choices = profiles.map((entry, index) => ({
-    name: formatProvisioningProfileFromApple(entry),
-    value: index,
-  }));
-  choices.push({
-    name: '[Go back]',
-    value: NONE_SELECTED,
-  });
-
   const question: Question = {
     type: 'list',
     name: 'credentialsIndex',
     message: 'Select Provisioning Profile from the list.',
-    choices,
+    choices: profiles.map((entry, index) => ({
+      name: formatProvisioningProfileFromApple(entry),
+      value: index,
+    })),
   };
   const { credentialsIndex } = await prompt(question);
-  if (credentialsIndex === NONE_SELECTED) {
-    return null;
-  }
   return profiles[credentialsIndex];
 }
 
@@ -319,26 +306,16 @@ async function selectProfileFromExpo(
     return `Provisioning Profile (ID: ${id}, Team ID: ${teamId})`;
   };
 
-  const NONE_SELECTED = -1;
-  const choices = profiles.map((entry, index) => ({
-    name: getName(entry),
-    value: index,
-  }));
-  choices.push({
-    name: '[Go back]',
-    value: NONE_SELECTED,
-  });
-
   const question: Question = {
     type: 'list',
     name: 'credentialsIndex',
     message: 'Select Provisioning Profile from the list.',
-    choices,
+    choices: profiles.map((entry, index) => ({
+      name: getName(entry),
+      value: index,
+    })),
   };
   const { credentialsIndex } = await prompt(question);
-  if (credentialsIndex === NONE_SELECTED) {
-    return null;
-  }
   return profiles[credentialsIndex];
 }
 

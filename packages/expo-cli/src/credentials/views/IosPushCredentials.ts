@@ -18,7 +18,7 @@ import {
 import { askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
 import { PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
-import { CredentialsManager, GoBackError } from '../route';
+import { CredentialsManager } from '../route';
 
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline('two')} Push Notifactions Keys on your Apple Developer account.
@@ -136,9 +136,8 @@ export class UpdateIosPush implements IView {
         displayIosUserCredentials(updated);
       }
       log();
-      return null;
     }
-    throw new GoBackError();
+    return null;
   }
 
   async updateSpecific(ctx: Context, selected: IosPushCredentials) {
@@ -242,8 +241,7 @@ export class CreateOrReusePushKey implements IView {
     const existingPushKeys = await getValidPushKeys(ctx.ios.credentials, ctx);
 
     if (existingPushKeys.length === 0) {
-      const createOperation = async () => new CreateIosPush().create(ctx);
-      const pushKey = await this._credentialsManager.doInteractiveOperation(createOperation, this);
+      const pushKey = await new CreateIosPush().create(ctx);
       await this.assignPushKey(ctx, pushKey.id);
       return null;
     }
@@ -274,7 +272,6 @@ export class CreateOrReusePushKey implements IView {
         value: 'CHOOSE_EXISTING',
       },
       { name: '[Add a new push key]', value: 'GENERATE' },
-      { name: '[Go back]', value: 'GO_BACK' },
     ];
 
     const question: Question = {
@@ -288,8 +285,7 @@ export class CreateOrReusePushKey implements IView {
     const { action } = await prompt(question);
 
     if (action === 'GENERATE') {
-      const createOperation = async () => new CreateIosPush().create(ctx);
-      const pushKey = await this._credentialsManager.doInteractiveOperation(createOperation, this);
+      const pushKey = await new CreateIosPush().create(ctx);
       await this.assignPushKey(ctx, pushKey.id);
       return null;
     } else if (action === 'CHOOSE_EXISTING') {
@@ -297,9 +293,9 @@ export class CreateOrReusePushKey implements IView {
         bundleIdentifier: this._bundleIdentifier,
         experienceName: this._experienceName,
       });
-    } else {
-      throw new GoBackError(); // go back
     }
+
+    throw new Error('unsupported action');
   }
 }
 
@@ -390,26 +386,16 @@ async function selectPushCredFromList(
       .credentials.teamId || '-------'} used in ${pushCert.experienceName})`;
   };
 
-  const NONE_SELECTED = -1;
-  const choices = pushCredentials.map((entry, index) => ({
-    name: getName(entry),
-    value: index,
-  }));
-  choices.push({
-    name: '[Go back]',
-    value: NONE_SELECTED,
-  });
-
   const question: Question = {
     type: 'list',
     name: 'credentialsIndex',
     message: 'Select credentials from list',
-    choices,
+    choices: pushCredentials.map((entry, index) => ({
+      name: getName(entry),
+      value: index,
+    })),
   };
   const { credentialsIndex } = await prompt(question);
-  if (credentialsIndex === NONE_SELECTED) {
-    return null;
-  }
   return pushCredentials[credentialsIndex];
 }
 
