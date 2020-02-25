@@ -1,5 +1,4 @@
 import program from 'commander';
-import get from 'lodash/get';
 import inquirer, { ChoiceType, Question } from 'inquirer';
 
 import CommandError from './CommandError';
