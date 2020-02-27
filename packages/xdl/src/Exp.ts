@@ -129,8 +129,8 @@ export async function extractTemplateAppAsync(
 ) {
   await pacote.tarball.stream(
     templateSpec,
-    () => {
-      return extractTemplateAppAsyncImpl(templateSpec, targetPath, config);
+    tarStream => {
+      return extractTemplateAppAsyncImpl(templateSpec, targetPath, config, tarStream);
     },
     {
       cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
