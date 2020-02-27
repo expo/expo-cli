@@ -8,6 +8,7 @@ import spawnAsync from '@expo/spawn-async';
 import JsonFile from '@expo/json-file';
 import Minipass from 'minipass';
 import pacote, { PackageSpec } from 'pacote';
+import { Readable } from 'stream';
 import tar from 'tar';
 import yaml from 'js-yaml';
 
@@ -126,9 +127,25 @@ export async function extractTemplateAppAsync(
   targetPath: string,
   config: AppJSONConfig | BareAppConfig
 ) {
-  let tarStream = await pacote.tarball.stream(templateSpec, {
-    cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
-  });
+  await pacote.tarball.stream(
+    templateSpec,
+    () => {
+      return extractTemplateAppAsyncImpl(templateSpec, targetPath, config);
+    },
+    {
+      cache: path.join(UserSettings.dotExpoHomeDirectory(), 'template-cache'),
+    }
+  );
+
+  return targetPath;
+}
+
+async function extractTemplateAppAsyncImpl(
+  templateSpec: PackageSpec,
+  targetPath: string,
+  config: AppJSONConfig | BareAppConfig,
+  tarStream: Readable
+) {
   await fs.mkdirp(targetPath);
   await new Promise((resolve, reject) => {
     const extractStream = tar.x({
@@ -156,8 +173,6 @@ export async function extractTemplateAppAsync(
     extractStream.on('close', resolve);
     tarStream.pipe(extractStream);
   });
-
-  return targetPath;
 }
 
 async function initGitRepoAsync(root: string) {
