@@ -60,7 +60,7 @@ export default program => {
       }
       if (!_.has(exp, 'ios.config.googleMapsApiKey')) {
         const disabledReason = exp
-          ? `ios.config.googleMapsApiKey does not exist in the expo configuration file`
+          ? `ios.config.googleMapsApiKey does not exist in the app configuration`
           : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
         disabledServices.googleMaps = { name: 'Google Maps', reason: disabledReason };
       }
