@@ -1,6 +1,21 @@
-import { ApiV2 } from '@expo/xdl';
+import { ApiV2, User } from '@expo/xdl';
+import { ExpoConfig } from '@expo/config';
 
-async function createClientBuildRequest({
+export type ClientBuildRequestOptions = {
+  user: User | null;
+  appleTeamId?: string;
+  appleContext: any;
+  distributionCert: any;
+  provisioningProfile: any;
+  pushKey: any;
+  udids: string[];
+  addUdid: any;
+  email: any;
+  bundleIdentifier: string;
+  customAppConfig: ExpoConfig;
+};
+
+export async function createClientBuildRequest({
   user = null,
   appleContext,
   distributionCert,
@@ -11,7 +26,7 @@ async function createClientBuildRequest({
   email,
   bundleIdentifier,
   customAppConfig = {},
-}) {
+}: ClientBuildRequestOptions) {
   return await ApiV2.clientForUser(user).postAsync('client-build/create-ios-request', {
     appleTeamId: appleContext.team.id,
     appleTeamName: appleContext.team.name,
@@ -33,7 +48,10 @@ async function createClientBuildRequest({
   });
 }
 
-async function getExperienceName({ user = null, appleTeamId }) {
+export async function getExperienceName({
+  user = null,
+  appleTeamId,
+}: Pick<ClientBuildRequestOptions, 'user' | 'appleTeamId'>): Promise<string> {
   const { experienceName } = await ApiV2.clientForUser(user).postAsync(
     'client-build/experience-name',
     {
@@ -43,10 +61,11 @@ async function getExperienceName({ user = null, appleTeamId }) {
   return experienceName;
 }
 
-async function isAllowedToBuild({ user = null, appleTeamId }) {
+export async function isAllowedToBuild({
+  user = null,
+  appleTeamId,
+}: Pick<ClientBuildRequestOptions, 'user' | 'appleTeamId'>) {
   return await ApiV2.clientForUser(user).postAsync('client-build/allowed-to-build', {
     appleTeamId,
   });
 }
-
-export { createClientBuildRequest, getExperienceName, isAllowedToBuild };
