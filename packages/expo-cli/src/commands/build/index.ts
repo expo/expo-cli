@@ -1,15 +1,14 @@
-/**
- * @flow
- */
-
 import { UrlUtils, Webpack } from '@expo/xdl';
+import { Command } from 'commander';
 import BaseBuilder from './BaseBuilder';
 import IOSBuilder from './ios/IOSBuilder';
 import AndroidBuilder from './AndroidBuilder';
 import log from '../../log';
 import CommandError from '../../CommandError';
 
-export default (program: any) => {
+import { AndroidOptions, IosOptions } from './BaseBuilder.types';
+
+export default function(program: Command) {
   program
     .command('build:ios [project-dir]')
     .alias('bi')
@@ -53,7 +52,7 @@ export default (program: any) => {
     .description(
       'Build a standalone IPA for your project, signed and ready for submission to the Apple App Store.'
     )
-    .asyncActionProjectDir((projectDir, options) => {
+    .asyncActionProjectDir((projectDir: string, options: IosOptions) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
         throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
       }
@@ -91,7 +90,7 @@ export default (program: any) => {
     .description(
       'Build a standalone APK or App Bundle for your project, signed and ready for submission to the Google Play Store.'
     )
-    .asyncActionProjectDir((projectDir, options) => {
+    .asyncActionProjectDir((projectDir: string, options: AndroidOptions) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
         throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
       }
@@ -115,7 +114,7 @@ export default (program: any) => {
     .option('-d, --dev', 'Turns dev flag on before bundling')
     .description('Build a production bundle for your project, compressed and ready for deployment.')
     .asyncActionProjectDir(
-      (projectDir, options) => {
+      (projectDir: string, options: { pwa: boolean; dev: boolean }) => {
         return Webpack.bundleAsync(projectDir, {
           ...options,
           dev: typeof options.dev === 'undefined' ? false : options.dev,
@@ -133,11 +132,11 @@ export default (program: any) => {
       'The URL of an externally hosted manifest (for self-hosted apps).'
     )
     .description(`Gets the status of a current (or most recently finished) build for your project.`)
-    .asyncActionProjectDir(async (projectDir, options) => {
+    .asyncActionProjectDir(async (projectDir: string, options: { publicUrl?: string }) => {
       if (options.publicUrl && !UrlUtils.isHttps(options.publicUrl)) {
         throw new CommandError('INVALID_PUBLIC_URL', '--public-url must be a valid HTTPS URL.');
       }
       const builder = new BaseBuilder(projectDir, options);
       return builder.commandCheckStatus();
     }, /* skipProjectValidation: */ true);
-};
+}

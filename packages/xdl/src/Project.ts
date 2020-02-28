@@ -1433,7 +1433,7 @@ async function getConfigAsync(
 // TODO(ville): add the full type
 type BuildJob = unknown;
 
-type BuildStatusResult = {
+export type BuildStatusResult = {
   jobs: BuildJob[];
   err: null;
   userHasBuiltAppBefore: boolean;
@@ -1443,7 +1443,7 @@ type BuildStatusResult = {
   hasUnlimitedPriorityBuilds: boolean;
 };
 
-type BuildCreatedResult = {
+export type BuildCreatedResult = {
   id: string;
   ids: string[];
   priority: 'normal' | 'high';
@@ -1866,13 +1866,14 @@ export async function startReactNativeServerAsync(
   // ELECTRON_RUN_AS_NODE environment variable
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
   // child process
+  const nodePathEnv = nodePath ? { NODE_PATH: nodePath } : {};
   let packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
       ...process.env,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...(nodePath ? { NODE_PATH: nodePath } : {}),
+      ...nodePathEnv,
     },
     silent: true,
   });

@@ -3,7 +3,28 @@ const PUSH_KEY = 'pushKey';
 const PUSH_CERT = 'pushCert';
 const PROVISIONING_PROFILE = 'provisioningProfile';
 
-const CREDENTIALS = {
+export type Question = {
+  question: string;
+  type: 'file' | 'password' | 'string';
+  base64Encode?: boolean;
+};
+
+export type Rule = {
+  required: string[];
+  name: string;
+  id: string;
+  canReuse?: boolean;
+  migrationDocs?: string;
+  dependsOn?: string;
+  deprecated?: boolean;
+  questions?: Record<string, Question>;
+};
+
+export type Condition = {
+  or: Rule[];
+};
+
+const CREDENTIALS: Record<string, Rule> = {
   [DISTRIBUTION_CERT]: {
     id: DISTRIBUTION_CERT,
     canReuse: true,

@@ -3,8 +3,21 @@ import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
 import pickBy from 'lodash/pickBy';
 import fs from 'fs-extra';
+import { BuilderOptions } from '../../../BaseBuilder.types';
 
-async function getFromParams(options) {
+export type UserParameters = {
+  distributionCert?: string;
+  certP12?: string;
+  certPassword?: string;
+  pushKey?: string;
+  apnsKeyP8?: string;
+  apnsKeyId?: string;
+  provisioningProfile?: string;
+};
+
+async function getFromParams(
+  options: Pick<BuilderOptions, 'distP12Path' | 'pushP8Path' | 'pushId' | 'provisioningProfilePath'>
+): Promise<UserParameters> {
   const distPassword = process.env.EXPO_IOS_DIST_P12_PASSWORD;
   const { distP12Path, pushP8Path, pushId, provisioningProfilePath } = options;
 
@@ -41,6 +54,6 @@ async function getFromParams(options) {
   return pickBy(withoutEmptyObjects);
 }
 
-const _isOnlyOneSet = (a, b) => (a && !b) || (b && !a);
+const _isOnlyOneSet = (a: any, b: any): boolean => (a && !b) || (b && !a);
 
 export default getFromParams;

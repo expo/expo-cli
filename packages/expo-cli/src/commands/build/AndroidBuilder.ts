@@ -1,7 +1,3 @@
-/**
- * @flow
- */
-
 import fs from 'fs-extra';
 import path from 'path';
 import untildify from 'untildify';
@@ -12,16 +8,16 @@ import get from 'lodash/get';
 import log from '../../log';
 import BuildError from './BuildError';
 import BaseBuilder from './BaseBuilder';
-import prompt from '../../prompt';
+import prompt, { Question } from '../../prompt';
 import * as utils from './utils';
-import { PLATFORMS } from './constants';
+import { PLATFORMS, Platform } from './constants';
 import { Context } from '../../credentials';
 import { DownloadKeystore } from '../../credentials/views/AndroidCredentials';
 
 const { ANDROID } = PLATFORMS;
 
 export default class AndroidBuilder extends BaseBuilder {
-  async run() {
+  async run(): Promise<void> {
     // Validate project
     await this.validateProject();
 
@@ -44,7 +40,7 @@ export default class AndroidBuilder extends BaseBuilder {
   }
 
   async validateProject() {
-    await utils.checkIfSdkIsSupported(this.manifest.sdkVersion, ANDROID);
+    await utils.checkIfSdkIsSupported(this.manifest.sdkVersion!, ANDROID);
     if (!get(this.manifest, 'android.package')) {
       throw new BuildError(`Your project must have an Android package set in app.json
 See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#2-configure-appjson`);
@@ -80,7 +76,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     log.warn(
       "We'll store a backup of your Android keystore in this directory in case you decide to delete it from our servers."
     );
-    let questions = [
+    let questions: Question[] = [
       {
         type: 'confirm',
         name: 'confirm',
@@ -120,7 +116,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       (this.options.clearCredentials || !credentialsExist)
     ) {
       console.log('');
-      const questions = [
+      const questions: Question[] = [
         {
           type: 'rawlist',
           name: 'uploadKeystore',
@@ -134,7 +130,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
           type: 'input',
           name: 'keystorePath',
           message: `Path to keystore:`,
-          validate: async keystorePath => {
+          validate: async (keystorePath: string): Promise<boolean> => {
             try {
               const keystorePathStats = await fs.stat(keystorePath);
               return keystorePathStats.isFile();
@@ -144,41 +140,45 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
               return false;
             }
           },
-          filter: keystorePath => {
+          filter: (keystorePath: string): string => {
             keystorePath = untildify(keystorePath);
             if (!path.isAbsolute(keystorePath)) {
               keystorePath = path.resolve(keystorePath);
             }
             return keystorePath;
           },
-          when: answers => answers.uploadKeystore,
+          // @ts-ignore: The expected type comes from property 'when' which is declared here on type 'Question<Record<string, any>>'
+          when: (answers: Record<string, Question>) => answers.uploadKeystore,
         },
         {
           type: 'input',
           name: 'keystoreAlias',
           message: `Keystore Alias:`,
-          validate: val => val !== '',
-          when: answers => answers.uploadKeystore,
+          validate: (val: string): boolean => val !== '',
+          // @ts-ignore: The expected type comes from property 'when' which is declared here on type 'Question<Record<string, any>>'
+          when: (answers: Record<string, Question>) => answers.uploadKeystore,
         },
         {
           type: 'password',
           name: 'keystorePassword',
           message: `Keystore Password:`,
-          validate: val => val !== '',
-          when: answers => answers.uploadKeystore,
+          validate: (val: string): boolean => val !== '',
+          // @ts-ignore: The expected type comes from property 'when' which is declared here on type 'Question<Record<string, any>>'
+          when: (answers: Record<string, Question>) => answers.uploadKeystore,
         },
         {
           type: 'password',
           name: 'keyPassword',
           message: `Key Password:`,
-          validate: (password, answers) => {
+          validate: (password: string): boolean => {
             if (password === '') {
               return false;
             }
             // Todo validate keystore passwords
             return true;
           },
-          when: answers => answers.uploadKeystore,
+          // @ts-ignore: The expected type comes from property 'when' which is declared here on type 'Question<Record<string, any>>'
+          when: (answers: Record<string, Question>) => answers.uploadKeystore,
         },
       ];
 
@@ -203,6 +203,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
         };
         await Credentials.updateCredentialsForPlatform(
           ANDROID,
+          // @ts-ignore: Type '{ keystore: string; keystoreAlias: any; keystorePassword: any; keyPassword: any; }' has no properties in common with type 'Credentials'.
           credentials,
           [],
           credentialMetadata
@@ -211,18 +212,20 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     }
   }
 
-  checkEnv() {
+  checkEnv(): boolean {
     return (
-      this.options.keystorePath &&
-      this.options.keystoreAlias &&
-      process.env.EXPO_ANDROID_KEYSTORE_PASSWORD &&
-      process.env.EXPO_ANDROID_KEY_PASSWORD
+      !!this.options.keystorePath &&
+      !!this.options.keystoreAlias &&
+      !!process.env.EXPO_ANDROID_KEYSTORE_PASSWORD &&
+      !!process.env.EXPO_ANDROID_KEY_PASSWORD
     );
   }
 
-  async collectAndValidateCredentialsFromCI(credentialMetadata) {
-    const credentials = {
-      keystore: (await fs.readFile(this.options.keystorePath)).toString('base64'),
+  async collectAndValidateCredentialsFromCI(
+    credentialMetadata: Credentials.CredentialMetadata
+  ): Promise<void> {
+    const credentials: any = {
+      keystore: (await fs.readFile(this.options.keystorePath!)).toString('base64'),
       keystoreAlias: this.options.keystoreAlias,
       keystorePassword: process.env.EXPO_ANDROID_KEYSTORE_PASSWORD,
       keyPassword: process.env.EXPO_ANDROID_KEY_PASSWORD,
@@ -230,7 +233,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     await Credentials.updateCredentialsForPlatform(ANDROID, credentials, [], credentialMetadata);
   }
 
-  platform() {
+  platform(): Platform {
     return ANDROID;
   }
 }

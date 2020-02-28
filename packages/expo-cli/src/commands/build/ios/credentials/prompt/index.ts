@@ -3,14 +3,29 @@ import isObject from 'lodash/isObject';
 import pickBy from 'lodash/pickBy';
 import merge from 'lodash/merge';
 
-import getFromParams from './getFromParams';
+import getFromParams, { UserParameters } from './getFromParams';
 import promptForCredentials from './promptForCredentials';
-import promptForOverrides from './promptForOverrides';
+import promptForOverrides, { ProjectMetadata } from './promptForOverrides';
 import * as constants from '../constants';
 import log from '../../../../../log';
 import _prompt from '../../../../../prompt';
+import { AppleCtx } from '../../../../../appleApi';
+import { BuilderOptions } from '../../../BaseBuilder.types';
 
-async function prompt(appleCtx, options, missingCredentials, projectMetadata) {
+async function prompt(
+  appleCtx: AppleCtx,
+  options: Pick<
+    BuilderOptions,
+    'distP12Path' | 'pushP8Path' | 'pushId' | 'provisioningProfilePath'
+  >,
+  missingCredentials: string[],
+  projectMetadata: ProjectMetadata
+): Promise<{
+  credentials?: UserParameters;
+  userCredentialsIds?: string[];
+  metadata?: Record<string, any>;
+  toGenerate?: string[];
+}> {
   const credentialsFromParams = await getFromParams(options);
   const stillMissingCredentials = difference(
     missingCredentials,
@@ -60,7 +75,7 @@ async function prompt(appleCtx, options, missingCredentials, projectMetadata) {
   };
 }
 
-async function _shouldExpoGenerateCerts() {
+async function _shouldExpoGenerateCerts(): Promise<boolean> {
   const { expoShouldGenerateCerts } = await _prompt({
     type: 'list',
     name: 'expoShouldGenerateCerts',
@@ -79,7 +94,7 @@ async function _shouldExpoGenerateCerts() {
   return expoShouldGenerateCerts;
 }
 
-const _flattenObject = obj => {
+const _flattenObject = (obj: any): any => {
   return Object.keys(obj).reduce((acc, key) => {
     const value = obj[key];
     if (isObject(value)) {

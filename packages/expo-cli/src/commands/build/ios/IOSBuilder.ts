@@ -3,6 +3,7 @@ import pickBy from 'lodash/pickBy';
 import get from 'lodash/get';
 import { XDLError } from '@expo/xdl';
 
+import { Dictionary } from 'lodash';
 import BaseBuilder from '../BaseBuilder';
 import { PLATFORMS } from '../constants';
 import * as constants from './credentials/constants';
@@ -12,7 +13,9 @@ import * as apple from '../../../appleApi';
 import { ensurePNGIsNotTransparent } from './utils/image';
 
 class IOSBuilder extends BaseBuilder {
-  async run() {
+  appleCtx?: apple.AppleCtx;
+
+  async run(): Promise<void> {
     await this.validateProject();
     await this.checkForBuildInProgress();
     if (this.options.type === 'archive') {
@@ -38,10 +41,10 @@ class IOSBuilder extends BaseBuilder {
 See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#2-configure-appjson`
       );
     }
-    await utils.checkIfSdkIsSupported(sdkVersion, PLATFORMS.IOS);
+    await utils.checkIfSdkIsSupported(sdkVersion!, PLATFORMS.IOS);
   }
 
-  async getAppleCtx() {
+  async getAppleCtx(): Promise<apple.AppleCtx> {
     if (!this.appleCtx) {
       await apple.setup();
       this.appleCtx = await apple.authenticate(this.options);
@@ -50,7 +53,8 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async prepareCredentials() {
-    const username = this.manifest.owner || this.user.username;
+    // TODO: Fix forcing the username to be valid
+    const username = this.manifest.owner ?? this.user?.username!;
     const projectMetadata = {
       username,
       experienceName: `@${username}/${this.manifest.slug}`,
@@ -66,7 +70,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     }
   }
 
-  async clearAndRevokeCredentialsIfRequested(projectMetadata) {
+  async clearAndRevokeCredentialsIfRequested(projectMetadata: any): Promise<void> {
     const {
       clearCredentials,
       clearDistCert,
@@ -92,7 +96,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     }
   }
 
-  async clearCredentialsIfRequested(projectMetadata) {
+  async clearCredentialsIfRequested(projectMetadata: any): Promise<Dictionary<boolean> | null> {
     const credsToClear = this.determineCredentialsToClear();
     if (credsToClear) {
       await credentials.clear(projectMetadata, credsToClear);
@@ -100,7 +104,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     return credsToClear;
   }
 
-  determineCredentialsToClear() {
+  determineCredentialsToClear(): Dictionary<boolean> | null {
     const {
       clearCredentials,
       clearDistCert,
@@ -119,9 +123,9 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     return isEmpty(credsToClear) ? null : credsToClear;
   }
 
-  async produceMissingCredentials(projectMetadata, missingCredentials) {
+  async produceMissingCredentials(projectMetadata: any, missingCredentials: any): Promise<void> {
     const appleCtx = await this.getAppleCtx();
-    const metadata = {};
+    const metadata: Record<string, any> = {};
     if (
       missingCredentials.includes(constants.PROVISIONING_PROFILE) &&
       !missingCredentials.includes(constants.DISTRIBUTION_CERT)
@@ -143,6 +147,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
 
     const generatedCredentials = await credentials.generate(
       appleCtx,
+      // @ts-ignore: Type 'undefined' is not assignable to type '("provisioningProfile" | "distributionCert" | "pushKey")[]'.
       toGenerate,
       metadata,
       projectMetadata
@@ -153,6 +158,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       ...generatedCredentials,
       teamId: appleCtx.team.id,
     };
+    // @ts-ignore: Argument of type 'string[] | undefined' is not assignable to parameter of type 'number[]'.
     await credentials.update(projectMetadata, newCredentials, userCredentialsIds);
   }
 
@@ -160,7 +166,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
     if (this.options.publicUrl) {
       return undefined;
     } else {
-      return await this.ensureReleaseExists(PLATFORMS.IOS);
+      return await this.ensureReleaseExists();
     }
   }
 

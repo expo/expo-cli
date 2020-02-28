@@ -3051,6 +3051,13 @@
     "@types/node" "*"
     xmlbuilder ">=11.0.1"
 
+"@types/pngjs@^3.4.1":
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/@types/pngjs/-/pngjs-3.4.1.tgz#2da41c25e4eb4c4e4c703cb306f7561311ac3a0c"
+  integrity sha512-cMBddD0y1zHkyT2nHNvQh1VQZyAnQc+i2I3GhY74CMyCEbGBfQ2fmDUuIwcsw6saVj4EdoJ/PAXZYOXRO368MA==
+  dependencies:
+    "@types/node" "*"
+
 "@types/progress@^2.0.3":
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/@types/progress/-/progress-2.0.3.tgz#7ccbd9c6d4d601319126c469e73b5bb90dfc8ccc"
