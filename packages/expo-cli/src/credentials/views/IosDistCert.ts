@@ -17,9 +17,9 @@ import {
   IosDistCredentials,
   distCertSchema,
 } from '../credentials';
-import { askForUserProvided } from '../actions/promptForCredentials';
+import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { DistCert, DistCertInfo, DistCertManager } from '../../appleApi';
+import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
 import { CredentialsManager } from '../route';
 import { CreateAppCredentialsIos } from './IosAppCredentials';
@@ -520,16 +520,36 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
   return await generateDistCert(ctx);
 }
 
+function _getRequiredQuestions(ctx: Context): CredentialSchema<DistCert> {
+  const requiredQuestions = { ...distCertSchema };
+  if (ctx.hasAppleCtx() && requiredQuestions.required) {
+    requiredQuestions.required = requiredQuestions.required.filter(q => q !== 'teamId');
+  }
+  return requiredQuestions;
+}
+
+function _ensureDistCert(ctx: Context, partialCert: Partial<DistCert>): DistCert {
+  if (ctx.hasAppleCtx()) {
+    partialCert.teamId = ctx.appleCtx.team.id;
+  }
+  if (!isDistCert(partialCert)) {
+    throw new Error(`Not of type DistCert: ${partialCert}`);
+  }
+  return partialCert;
+}
+
 async function promptForDistCert(ctx: Context): Promise<DistCert | null> {
-  const userProvided = await askForUserProvided(distCertSchema);
+  const requiredQuestions = _getRequiredQuestions(ctx);
+  const userProvided = await askForUserProvided(requiredQuestions);
   if (userProvided) {
-    return await _getDistCertWithSerial(userProvided);
+    const distCert = _ensureDistCert(ctx, userProvided);
+    return await _getDistCertWithSerial(distCert);
   } else {
     return null;
   }
 }
 
-async function _getDistCertWithSerial(distCert: DistCert) {
+async function _getDistCertWithSerial(distCert: DistCert): Promise<DistCert> {
   try {
     distCert.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
       distCert.certP12,

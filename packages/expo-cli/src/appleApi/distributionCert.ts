@@ -28,6 +28,17 @@ export type DistCert = {
   teamName?: string;
 };
 
+export function isDistCert(obj: { [key: string]: any }): obj is DistCert {
+  return (
+    obj.certP12 &&
+    typeof obj.certP12 === 'string' &&
+    obj.certPassword &&
+    typeof obj.certPassword === 'string' &&
+    obj.teamId &&
+    typeof obj.teamId === 'string'
+  );
+}
+
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline(
   'three'

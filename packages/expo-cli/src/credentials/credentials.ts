@@ -48,7 +48,7 @@ export const distCertSchema: CredentialSchema<appleApi.DistCert> = {
   id: 'distributionCert',
   canReuse: true,
   name: 'Apple Distribution Certificate',
-  required: ['certP12', 'certPassword'],
+  required: ['certP12', 'certPassword', 'teamId'],
   questions: {
     certP12: {
       question: 'Path to P12 file:',
@@ -59,6 +59,10 @@ export const distCertSchema: CredentialSchema<appleApi.DistCert> = {
       type: 'password',
       question: 'P12 password:',
     },
+    teamId: {
+      type: 'string',
+      question: 'Apple Team ID:',
+    },
   },
 };
 
@@ -66,7 +70,7 @@ export const pushKeySchema: CredentialSchema<appleApi.PushKey> = {
   id: 'pushKey',
   canReuse: true,
   name: 'Apple Push Notifications service key',
-  required: ['apnsKeyP8', 'apnsKeyId'],
+  required: ['apnsKeyP8', 'apnsKeyId', 'teamId'],
   questions: {
     apnsKeyP8: {
       type: 'file',
@@ -75,6 +79,10 @@ export const pushKeySchema: CredentialSchema<appleApi.PushKey> = {
     apnsKeyId: {
       type: 'string',
       question: 'Key ID:',
+    },
+    teamId: {
+      type: 'string',
+      question: 'Apple Team ID:',
     },
   },
 };

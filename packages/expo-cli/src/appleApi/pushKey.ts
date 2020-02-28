@@ -18,6 +18,17 @@ export type PushKey = {
   teamName?: string;
 };
 
+export function isPushKey(obj: { [key: string]: any }): obj is PushKey {
+  return (
+    obj.apnsKeyP8 &&
+    typeof obj.apnsKeyP8 === 'string' &&
+    obj.apnsKeyId &&
+    typeof obj.apnsKeyId === 'string' &&
+    obj.teamId &&
+    typeof obj.teamId === 'string'
+  );
+}
+
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline('two')} Apple Keys generated on your Apple Developer account.
 Please revoke the old ones or reuse existing from your other apps.

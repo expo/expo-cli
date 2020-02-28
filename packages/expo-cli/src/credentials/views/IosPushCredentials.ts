@@ -15,9 +15,9 @@ import {
   IosPushCredentials,
   pushKeySchema,
 } from '../credentials';
-import { askForUserProvided } from '../actions/promptForCredentials';
+import { CredentialSchema, askForUserProvided } from '../actions/promptForCredentials';
 import { displayIosUserCredentials } from '../actions/list';
-import { PushKey, PushKeyInfo, PushKeyManager } from '../../appleApi';
+import { PushKey, PushKeyInfo, PushKeyManager, isPushKey } from '../../appleApi';
 import { CredentialsManager } from '../route';
 
 const APPLE_KEYS_TOO_MANY_GENERATED_ERROR = `
@@ -46,10 +46,30 @@ export class CreateIosPush implements IView {
     return null;
   }
 
+  _getRequiredQuestions(ctx: Context): CredentialSchema<PushKey> {
+    const requiredQuestions = { ...pushKeySchema };
+    if (ctx.hasAppleCtx() && requiredQuestions.questions) {
+      requiredQuestions.required = requiredQuestions.required.filter(q => q !== 'teamId');
+    }
+    return requiredQuestions;
+  }
+
+  _ensurePushKey(ctx: Context, partialKey: Partial<PushKey>): PushKey {
+    if (ctx.hasAppleCtx()) {
+      partialKey.teamId = ctx.appleCtx.team.id;
+    }
+    if (!isPushKey(partialKey)) {
+      throw new Error(`Not of type PushKey: ${partialKey}`);
+    }
+    return partialKey;
+  }
+
   async provideOrGenerate(ctx: Context): Promise<PushKey> {
-    const userProvided = await askForUserProvided(pushKeySchema);
+    const requiredQuestions = this._getRequiredQuestions(ctx);
+    const userProvided = await askForUserProvided(requiredQuestions);
     if (userProvided) {
-      const isValid = await validatePushKey(ctx, userProvided);
+      const pushKey = this._ensurePushKey(ctx, userProvided);
+      const isValid = await validatePushKey(ctx, pushKey);
       return isValid ? userProvided : await this.provideOrGenerate(ctx);
     }
     return await generatePushKey(ctx);
