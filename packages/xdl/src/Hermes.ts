@@ -46,7 +46,7 @@ export async function tryGenerateBytecode(
 export async function getBytecodeVersion(projectRoot: string) {
   const binPath = await getBinForPlatform(projectRoot);
   if (!binPath) {
-    throw new Error('Hermes binnary not found');
+    throw new Error('Hermes binary not found');
   }
   const { stdout } = await spawn(binPath, ['--version'], { stdio: 'pipe' });
   const match = stdout.match(/HBC bytecode version: (\d+)/);
