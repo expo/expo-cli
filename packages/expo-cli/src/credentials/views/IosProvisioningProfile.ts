@@ -420,11 +420,8 @@ function formatProvisioningProfileFromApple(appleInfo: ProvisioningProfileInfo) 
   const { expires, provisioningProfileId } = appleInfo;
   const id = provisioningProfileId ?? '-----';
   const name = appleInfo.name ?? '-----';
-  const status = appleInfo.status ?? 'unknown';
   const expireString = expires ? new Date(expires * 1000).toDateString() : 'unknown';
-  const details = chalk.green(
-    `\n    Name: ${name}\n    Status: ${status},  Expiry: ${expireString}`
-  );
+  const details = chalk.green(`\n    Name: ${name}\n    Expiry: ${expireString}`);
   return `Provisioning Profile - ID: ${id}${details}`;
 }
 

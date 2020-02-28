@@ -90,7 +90,7 @@ export const pushKeySchema: CredentialSchema<appleApi.PushKey> = {
 export const provisioningProfileSchema: CredentialSchema<appleApi.ProvisioningProfile> = {
   id: 'provisioningProfile',
   name: 'Apple Provisioning Profile',
-  required: ['provisioningProfile', 'provisioningProfileId'],
+  required: ['provisioningProfile'],
   dependsOn: 'distributionCert',
   questions: {
     provisioningProfile: {

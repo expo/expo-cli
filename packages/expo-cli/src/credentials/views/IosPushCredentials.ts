@@ -6,6 +6,7 @@ import some from 'lodash/some';
 import ora from 'ora';
 
 import inquirer from 'inquirer';
+import terminalLink from 'terminal-link';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
@@ -505,12 +506,11 @@ async function generatePushKey(ctx: Context): Promise<PushKey> {
           {}
         );
 
-      const ui = new inquirer.ui.BottomBar();
-      ui.log.write('ℹ️ ℹ️ ℹ️ Show me more info about these choices ℹ️ ℹ️ ℹ️');
-      ui.log.write(
-        'ℹ️ ℹ️ ℹ️ https://docs.expo.io/versions/latest/distribution/app-signing/#summary ℹ️ ℹ️ ℹ️'
-      );
-      ui.log.write('\n');
+      // https://docs.expo.io/versions/latest/distribution/app-signing/#summary
+      const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
+      log(chalk.grey(`⚠️  Revoking a Push Key will affect other apps that rely on it`));
+      log(chalk.grey(`ℹ️  Learn more ${here}`));
+      log();
 
       const { revoke } = await prompt([
         {

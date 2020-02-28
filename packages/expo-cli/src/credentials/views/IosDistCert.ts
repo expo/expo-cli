@@ -5,9 +5,9 @@ import every from 'lodash/every';
 import get from 'lodash/get';
 import some from 'lodash/some';
 import ora from 'ora';
-import inquirer from 'inquirer';
 import { IosCodeSigning } from '@expo/xdl';
 
+import terminalLink from 'terminal-link';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
@@ -485,12 +485,13 @@ async function generateDistCert(ctx: Context): Promise<DistCert> {
           {}
         );
 
-      const ui = new inquirer.ui.BottomBar();
-      ui.log.write('ℹ️ ℹ️ ℹ️ Show me more info about these choices ℹ️ ℹ️ ℹ️');
-      ui.log.write(
-        'ℹ️ ℹ️ ℹ️ https://docs.expo.io/versions/latest/distribution/app-signing/#summary ℹ️ ℹ️ ℹ️'
+      // https://docs.expo.io/versions/latest/distribution/app-signing/#summary
+      const here = terminalLink('here', 'https://bit.ly/3cfJJkQ');
+      log(
+        chalk.grey(`✅  Distribution Certificates can be revoked with no production side effects`)
       );
-      ui.log.write('\n');
+      log(chalk.grey(`ℹ️  Learn more ${here}`));
+      log();
 
       let { revoke } = await prompt([
         {
