@@ -120,6 +120,7 @@ export function getBabelLoaderRule(
   const babelProjectRoot = root || env.projectRoot;
 
   return createBabelLoader({
+    projectRoot: env.locations.root,
     mode: env.mode,
     platform: env.platform,
     babelProjectRoot,

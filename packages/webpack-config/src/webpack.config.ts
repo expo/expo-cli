@@ -113,19 +113,18 @@ export default async function(
 
   const { build: buildConfig = {} } = config.web || {};
 
-  const devtool = getDevtool({ production: isProd, development: isDev }, buildConfig as {
-    devtool: Options.Devtool;
-  });
+  const devtool = getDevtool(
+    { production: isProd, development: isDev },
+    buildConfig as {
+      devtool: Options.Devtool;
+    }
+  );
 
   const appEntry: string[] = [];
 
   // In solutions like Gatsby the main entry point doesn't need to be known.
   if (locations.appMain) {
     appEntry.push(locations.appMain);
-  } else {
-    throw new Error(
-      `The entry point for your project couldn't be found. Please define it in the package.json main field`
-    );
   }
 
   // Add a loose requirement on the ResizeObserver polyfill if it's installed...
@@ -261,6 +260,10 @@ export default async function(
       new ManifestPlugin({
         fileName: 'asset-manifest.json',
         publicPath,
+        filter: ({ path }) => {
+          // Remove compressed versions and service workers
+          return !(path.endsWith('.gz') || path.endsWith('worker.js'));
+        },
       }),
 
       deepScopeAnalysisEnabled && new WebpackDeepScopeAnalysisPlugin(),

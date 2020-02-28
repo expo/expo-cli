@@ -1,6 +1,3 @@
-/**
- * @flow
- */
 import axios from 'axios';
 import crypto from 'crypto';
 import fs from 'fs-extra';
@@ -8,12 +5,27 @@ import validator from 'validator';
 import path from 'path';
 import targz from 'targz';
 import { Project, UrlUtils } from '@expo/xdl';
+import { Command } from 'commander';
 
 import log from '../log';
 import { installExitHooks } from '../exit';
 import CommandError from '../CommandError';
 
-export async function action(projectDir: string, options: Options = {}) {
+type Options = {
+  outputDir: string;
+  assetUrl: string;
+  publicUrl?: string;
+  mergeSrcUrl: string[];
+  mergeSrcDir: string[];
+  dev: boolean;
+  clear: boolean;
+  quiet: boolean;
+  dumpAssetmap: boolean;
+  dumpSourcemap: boolean;
+  maxWorkers?: number;
+};
+
+export async function action(projectDir: string, options: Options) {
   const outputPath = path.resolve(projectDir, options.outputDir);
   if (fs.existsSync(outputPath)) {
     throw new CommandError(
@@ -39,7 +51,10 @@ export async function action(projectDir: string, options: Options = {}) {
 
     installExitHooks(projectDir);
 
-    const startOpts = { reset: options.clear, nonPersistent: true };
+    const startOpts: { reset: boolean; nonPersistent: boolean; maxWorkers?: number } = {
+      reset: !!options.clear,
+      nonPersistent: true,
+    };
     if (options.maxWorkers) {
       startOpts.maxWorkers = options.maxWorkers;
     }
@@ -79,19 +94,21 @@ export async function action(projectDir: string, options: Options = {}) {
     await fs.ensureDir(tmpFolder);
 
     // Download the urls into a tmp dir
-    const downloadDecompressPromises = options.mergeSrcUrl.map(async url => {
-      // Add the absolute paths to srcDir
-      const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
-        .randomBytes(16)
-        .toString('hex')}`;
-      const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
-      const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
-      await download(url, tmpFileCompressed);
-      await decompress(tmpFileCompressed, tmpFolderUncompressed);
+    const downloadDecompressPromises = options.mergeSrcUrl.map(
+      async (url: string): Promise<void> => {
+        // Add the absolute paths to srcDir
+        const uniqFilename = `${path.basename(url, '.tar.gz')}_${crypto
+          .randomBytes(16)
+          .toString('hex')}`;
+        const tmpFileCompressed = path.resolve(tmpFolder, uniqFilename + '_compressed');
+        const tmpFolderUncompressed = path.resolve(tmpFolder, uniqFilename);
+        await download(url, tmpFileCompressed);
+        await decompress(tmpFileCompressed, tmpFolderUncompressed);
 
-      // add the decompressed folder to be merged
-      mergeSrcDirs.push(tmpFolderUncompressed);
-    });
+        // add the decompressed folder to be merged
+        mergeSrcDirs.push(tmpFolderUncompressed);
+      }
+    );
 
     await Promise.all(downloadDecompressPromises);
   }
@@ -114,25 +131,31 @@ export async function action(projectDir: string, options: Options = {}) {
   log(`Export was successful. Your exported files can be found in ${options.outputDir}`);
 }
 
-const download = async (uri, filename) => {
+const download = async (uri: string, filename: string): Promise<null> => {
+  const response = await axios({
+    method: 'get',
+    url: uri,
+    responseType: 'stream',
+  });
+
+  response.data.pipe(fs.createWriteStream(filename));
+
   return new Promise((resolve, reject) => {
-    axios(uri)
-      .pipe(fs.createWriteStream(filename))
-      .on('close', () => resolve(null))
-      .on('error', err => {
-        reject(err);
-      });
+    response.data.on('close', () => resolve(null));
+    response.data.on('error', (err?: Error) => {
+      reject(err);
+    });
   });
 };
 
-const decompress = async (src, dest) => {
+const decompress = async (src: string, dest: string): Promise<null> => {
   return new Promise((resolve, reject) => {
     targz.decompress(
       {
         src,
         dest,
       },
-      error => {
+      (error: string | Error | null) => {
         if (error) {
           reject(error);
         } else {
@@ -143,12 +166,12 @@ const decompress = async (src, dest) => {
   });
 };
 
-function collect(val, memo) {
+function collect<T>(val: T, memo: Array<T>): Array<T> {
   memo.push(val);
   return memo;
 }
 
-export default (program: any) => {
+export default function(program: Command) {
   program
     .command('export [project-dir]')
     .description('Exports the static files of the app for hosting it on a web server.')
@@ -176,4 +199,4 @@ export default (program: any) => {
     )
     .option('--max-workers [num]', 'Maximum number of tasks to allow Metro to spawn.')
     .asyncActionProjectDir(action, false, true);
-};
+}

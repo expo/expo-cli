@@ -1,6 +1,3 @@
-// @flow
-
-import { readConfigJsonAsync } from '@expo/config';
 import {
   Android,
   Exp,
@@ -28,17 +25,25 @@ const CTRL_L = '\u000C';
 
 const { bold: b, italic: i, underline: u } = chalk;
 
-const clearConsole = () => {
+type StartOptions = {
+  reset?: boolean;
+  nonInteractive?: boolean;
+  nonPersistent?: boolean;
+  maxWorkers?: number;
+  webOnly?: boolean;
+};
+
+const clearConsole = (): void => {
   process.stdout.write(process.platform === 'win32' ? '\x1Bc' : '\x1B[2J\x1B[3J\x1B[H');
 };
 
-const printHelp = () => {
+const printHelp = (): void => {
   const PLATFORM_TAG = ProjectUtils.getPlatformTag('Expo');
   log.newLine();
   log.nested(`${PLATFORM_TAG} Press ${b('?')} to show a list of all available commands.`);
 };
 
-const printUsage = async (projectDir, options = {}) => {
+const printUsage = async (projectDir: string, options: Pick<StartOptions, 'webOnly'> = {}) => {
   const { dev } = await ProjectSettings.readAsync(projectDir);
   const openDevToolsAtStartup = await UserSettings.getAsync('openDevToolsAtStartup', true);
   const username = await UserManager.getCurrentUsernameAsync();
@@ -64,7 +69,10 @@ const printUsage = async (projectDir, options = {}) => {
 `);
 };
 
-export const printServerInfo = async (projectDir, options = {}) => {
+export const printServerInfo = async (
+  projectDir: string,
+  options: Pick<StartOptions, 'webOnly'> = {}
+) => {
   if (options.webOnly) {
     Webpack.printConnectionInstructions(projectDir);
     printHelp();
@@ -78,7 +86,7 @@ export const printServerInfo = async (projectDir, options = {}) => {
   urlOpts.printQRCode(url);
   const wrap = wordwrap(2, process.stdout.columns || 80);
   const wrapItem = wordwrap(4, process.stdout.columns || 80);
-  const item = text => '  \u2022 ' + trimStart(wrapItem(text));
+  const item = (text: string): string => '  \u2022 ' + trimStart(wrapItem(text));
   const iosInfo = process.platform === 'darwin' ? `, or ${b('i')} for iOS simulator` : '';
   const webInfo = `${b`w`} to run on ${u`w`}eb`;
   log.nested(wrap(u('To run the app with live reloading, choose one of:')));
@@ -102,7 +110,7 @@ export const printServerInfo = async (projectDir, options = {}) => {
   printHelp();
 };
 
-export const startAsync = async (projectDir, options) => {
+export const startAsync = async (projectDir: string, options: StartOptions) => {
   const { stdin } = process;
   const startWaitingForCommand = () => {
     stdin.setRawMode(true);
@@ -121,7 +129,7 @@ export const startAsync = async (projectDir, options) => {
 
   await printServerInfo(projectDir, options);
 
-  async function handleKeypress(key) {
+  async function handleKeypress(key: string) {
     if (options.webOnly) {
       switch (key) {
         case 'a':
@@ -166,7 +174,7 @@ export const startAsync = async (projectDir, options) => {
             input: process.stdin,
             output: process.stdout,
           });
-          const handleKeypress = (chr, key) => {
+          const handleKeypress = (chr: string, key: { name: string }) => {
             if (key && key.name === 'escape') {
               cleanup();
               cancel();
@@ -220,6 +228,7 @@ export const startAsync = async (projectDir, options) => {
     switch (key) {
       case CTRL_C:
       case CTRL_D: {
+        // @ts-ignore: Argument of type '"SIGINT"' is not assignable to parameter of type '"disconnect"'.
         process.emit('SIGINT');
         break;
       }

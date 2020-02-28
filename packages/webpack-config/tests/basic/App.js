@@ -1,13 +1,12 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
 import Constants from 'expo-constants';
 import { boolish } from 'getenv';
+import React from 'react';
+import { Text, View } from 'react-native';
 
 function AspectView(props) {
   const [layout, setLayout] = React.useState(null);
 
-  const { aspectRatio = 1, ...inputStyle } = StyleSheet.flatten(props.style) || {};
+  const { aspectRatio = 1, ...inputStyle } = props.style;
   const style = [inputStyle, { aspectRatio }];
 
   if (layout) {
@@ -26,7 +25,9 @@ function AspectView(props) {
 
 export default function App() {
   return (
-    <LinearGradient colors={['orange', 'blue']} style={styles.container}>
+    <View
+      colors={['orange', 'blue']}
+      style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <AspectView style={{ aspectRatio: 1, backgroundColor: 'green', width: 40 }} />
       <Text testID="basic-text">Open up App.js to start working on your app!</Text>
       <Text testID="expo-constants-manifest">{JSON.stringify(Constants.manifest)}</Text>
@@ -34,14 +35,6 @@ export default function App() {
       {global.ResizeObserver && (
         <Text testID="has-resize-observer">Has ResizeObserver polyfill</Text>
       )}
-    </LinearGradient>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

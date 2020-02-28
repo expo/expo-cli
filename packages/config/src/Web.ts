@@ -353,6 +353,13 @@ export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestL
     android: undefined,
 
     // Use the PWA `manifest.json` as the native web manifest.
-    web,
+    web: {
+      ...web,
+
+      // Pass through config properties that are not stored in the
+      // PWA `manifest.json`, but still need to be accessible
+      // through `Constants.manifest`.
+      config: appManifest.web?.config,
+    },
   };
 }

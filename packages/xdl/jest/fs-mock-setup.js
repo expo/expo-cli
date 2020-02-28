@@ -5,4 +5,5 @@
 // result is that you need to require mock fs before anything else or it
 // doesn't work.
 
-require('mock-fs');
+jest.mock('fs');
+jest.mock('resolve-from');

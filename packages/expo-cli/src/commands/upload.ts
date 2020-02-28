@@ -1,13 +1,14 @@
 import pick from 'lodash/pick';
 import size from 'lodash/size';
+import { Command } from 'commander';
 
-import IOSUploader, { LANGUAGES } from './upload/IOSUploader';
-import AndroidUploader from './upload/AndroidUploader';
+import IOSUploader, { IosPlatformOptions, LANGUAGES } from './upload/IOSUploader';
+import AndroidUploader, { AndroidPlatformOptions } from './upload/AndroidUploader';
 import log from '../log';
 
 const COMMON_OPTIONS = ['id', 'latest', 'path'];
 
-export default program => {
+export default function(program: Command) {
   const ANDROID_OPTIONS = [...COMMON_OPTIONS, 'key', 'track'];
   const androidCommand = program.command('upload:android [projectDir]').alias('ua');
   setCommonOptions(androidCommand, '.apk');
@@ -79,20 +80,25 @@ export default program => {
       console.log();
     })
     .asyncActionProjectDir(createUploadAction(IOSUploader, IOS_OPTIONS));
-};
+}
 
-function setCommonOptions(command, fileExtension) {
+function setCommonOptions(command: Command, fileExtension: string) {
   command
     .option('--latest', 'uploads the latest build (default)')
     .option('--id <id>', 'id of the build to upload')
     .option('--path <path>', `path to the ${fileExtension} file`);
 }
 
-function createUploadAction(UploaderClass, optionKeys) {
-  return async (projectDir, command) => {
+type AnyUploader = any;
+
+function createUploadAction(UploaderClass: AnyUploader, optionKeys: string[]) {
+  return async (
+    projectDir: string,
+    command: AndroidPlatformOptions | IosPlatformOptions
+  ): Promise<void> => {
     try {
       ensurePlatformIsSupported();
-      await ensureOptionsAreValid(command);
+      ensureOptionsAreValid(command);
 
       const options = pick(command, optionKeys);
       if (UploaderClass.validateOptions) {
@@ -107,14 +113,14 @@ function createUploadAction(UploaderClass, optionKeys) {
   };
 }
 
-function ensurePlatformIsSupported() {
+function ensurePlatformIsSupported(): void {
   if (process.platform !== 'darwin') {
     log.error('Unsupported platform! This feature works on macOS only.');
     process.exit(1);
   }
 }
 
-async function ensureOptionsAreValid(command) {
+function ensureOptionsAreValid(command: AndroidPlatformOptions | IosPlatformOptions): void {
   const args = pick(command, COMMON_OPTIONS);
   if (size(args) > 1) {
     throw new Error(`You have to choose only one of --path, --id or --latest parameters`);

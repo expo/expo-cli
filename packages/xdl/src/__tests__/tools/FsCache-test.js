@@ -34,7 +34,7 @@ describe('Cacher', () => {
     }, 3000);
   });
 
-  it('works with a bootstrap file', async () => {
+  xit('works with a bootstrap file', async () => {
     const expected = JSON.parse(await fs.readFile(path.join(__dirname, '../../../package.json')));
 
     const failCacher = new Cacher(
