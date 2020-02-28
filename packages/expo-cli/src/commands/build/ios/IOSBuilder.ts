@@ -53,7 +53,8 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
   }
 
   async prepareCredentials() {
-    const username = this.manifest.owner || this.user?.username!;
+    // TODO: Fix forcing the username to be valid
+    const username = this.manifest.owner ?? this.user?.username!;
     const projectMetadata = {
       username,
       experienceName: `@${username}/${this.manifest.slug}`,

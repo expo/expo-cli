@@ -36,7 +36,7 @@ async function _revokeByType(
 
   if (manager.list) {
     const list = await manager.list();
-    if (!list || list.length === 0) {
+    if (!list?.length) {
       return;
     }
     const choices = list.map((cert: PushKeyInfo) => ({

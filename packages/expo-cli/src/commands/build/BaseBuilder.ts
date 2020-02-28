@@ -313,13 +313,13 @@ ${job.id}
       if (process.env.EXPO_NEXT_API) {
         res = await Project.getBuildStatusAsync(this.projectDir, {
           current: false,
-          ...publicUrl ? { publicUrl } : {},
+          ...(publicUrl ? { publicUrl } : {}),
         });
       } else {
         res = await Project.buildAsync(this.projectDir, {
           current: false,
           mode: 'status',
-          ...publicUrl ? { publicUrl } : {},
+          ...(publicUrl ? { publicUrl } : {}),
         });
       }
       const job = fp.compose(
@@ -367,7 +367,7 @@ ${job.id}
         expIds,
         platform,
         releaseChannel: this.options.releaseChannel,
-        ...publicUrl ? { publicUrl } : {},
+        ...(publicUrl ? { publicUrl } : {}),
       };
 
       if (platform === PLATFORMS.IOS) {
@@ -391,7 +391,7 @@ ${job.id}
         expIds,
         platform,
         releaseChannel: this.options.releaseChannel,
-        ...publicUrl ? { publicUrl } : {},
+        ...(publicUrl ? { publicUrl } : {}),
       };
 
       if (platform === PLATFORMS.IOS) {
@@ -429,7 +429,7 @@ ${job.id}
     if (buildId) {
       log(
         `You can monitor the build at\n\n ${chalk.underline(
-          UrlUtils.constructBuildLogsUrl(buildId, username === null ? undefined : username)
+          UrlUtils.constructBuildLogsUrl(buildId, username ?? undefined)
         )}\n`
       );
     }
