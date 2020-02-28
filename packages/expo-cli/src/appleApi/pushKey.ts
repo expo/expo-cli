@@ -1,3 +1,4 @@
+import ora from 'ora';
 import get from 'lodash/get';
 import dateformat from 'dateformat';
 import chalk from 'chalk';
@@ -42,17 +43,21 @@ export class PushKeyManager {
   }
 
   async list(): Promise<PushKeyInfo[]> {
+    const spinner = ora(`Getting Push Keys from Apple...`).start();
     const args = ['list', this.ctx.appleId, this.ctx.appleIdPassword, this.ctx.team.id];
     const { keys } = await runAction(travelingFastlane.managePushKeys, args);
+    spinner.succeed();
     return keys;
   }
 
   async create(
     name = `Expo Push Notifications Key ${dateformat('yyyymmddHHMMss')}`
   ): Promise<PushKey> {
+    const spinner = ora(`Creating Push Key on Apple Servers...`).start();
     try {
       const args = ['create', this.ctx.appleId, this.ctx.appleIdPassword, this.ctx.team.id, name];
       const { apnsKeyId, apnsKeyP8 } = await runAction(travelingFastlane.managePushKeys, args);
+      spinner.succeed();
       return {
         apnsKeyId,
         apnsKeyP8,
@@ -60,6 +65,7 @@ export class PushKeyManager {
         teamName: this.ctx.team.name,
       };
     } catch (err) {
+      spinner.stop();
       const resultString = get(err, 'rawDump.resultString');
       if (resultString && resultString.match(/maximum allowed number of Keys/)) {
         throw new CommandError(
@@ -72,6 +78,7 @@ export class PushKeyManager {
   }
 
   async revoke(ids: string[]) {
+    const spinner = ora(`Revoking Push Key on Apple Servers...`).start();
     const args = [
       'revoke',
       this.ctx.appleId,
@@ -80,6 +87,7 @@ export class PushKeyManager {
       ids.join(','),
     ];
     await runAction(travelingFastlane.managePushKeys, args);
+    spinner.succeed();
   }
 
   format({ id, name }: PushKeyInfo): string {

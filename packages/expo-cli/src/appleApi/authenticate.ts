@@ -1,3 +1,4 @@
+import ora from 'ora';
 import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import wordwrap from 'wordwrap';
@@ -42,8 +43,8 @@ export type AppleCtx = {
 
 export async function authenticate(options: Options = {}): Promise<AppleCtx> {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
+  const spinner = ora(`Trying to authenticate with Apple Developer Portal...`).start();
   try {
-    log('Trying to authenticate with Apple Developer Portal...');
     const { teams, fastlaneSession } = await runAction(
       travelingFastlane.authenticate,
       [appleId, appleIdPassword],
@@ -51,11 +52,11 @@ export async function authenticate(options: Options = {}): Promise<AppleCtx> {
         pipeStdout: true,
       }
     );
-    log('Authenticated with Apple Developer Portal successfully!');
+    spinner.succeed('Authenticated with Apple Developer Portal successfully!');
     const team = await _chooseTeam(teams, options.teamId);
     return { appleId, appleIdPassword, team, fastlaneSession };
   } catch (err) {
-    log('Authentication with Apple Developer Portal failed!');
+    spinner.fail('Authentication with Apple Developer Portal failed!');
     throw err;
   }
 }
@@ -87,14 +88,9 @@ async function _promptForAppleId({ appleId }: Options): Promise<AppleCredentials
   );
 
   // https://docs.expo.io/versions/latest/distribution/security/#apple-developer-account-credentials
-  const here = terminalLink('here', 'https://shorturl.at/hnOY1');
-  log(
-    wrap(
-      chalk.bold(
-        `The password is only used to authenticate with Apple and never stored, learn more ${here}.`
-      )
-    )
-  );
+  const here = terminalLink('here', 'https://bit.ly/2VtGWhU');
+  log(wrap(chalk.bold(`The password is only used to authenticate with Apple and never stored`)));
+  log(wrap(chalk.grey(`Learn more ${here}`)));
 
   const { appleId: promptAppleId } = await prompt(
     {
