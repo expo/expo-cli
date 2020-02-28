@@ -106,7 +106,7 @@ export default class BaseBuilder {
         sdkVersion: this.manifest.sdkVersion,
       } as any);
     }
-    if ('jobs' in buildStatus && Array.isArray(buildStatus.jobs) && buildStatus.jobs.length) {
+    if ('jobs' in buildStatus && buildStatus.jobs?.length > 0) {
       throw new BuildError('Cannot start a new build, as there is already an in-progress build.');
     }
   }
