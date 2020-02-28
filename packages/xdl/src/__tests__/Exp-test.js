@@ -88,37 +88,38 @@ describe('determineEntryPoint', () => {
       '/expo-app-entry/App.js': 'console.log("lol")',
     });
   });
+
   afterEach(() => vol.reset());
 
   it('exists-no-platform', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-no-platform');
+    const entryPoint = Exp.determineEntryPoint('/exists-no-platform', 'development');
     expect(entryPoint).toBe('index.js');
   });
 
   // Can't test resolving modules yet
   xit('exists-no-platform-no-main', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-no-platform-no-main');
+    const entryPoint = Exp.determineEntryPoint('/exists-no-platform-no-main', 'development');
     expect(entryPoint).toBe('index.js');
   });
 
   it('exists-android', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-android');
+    const entryPoint = Exp.determineEntryPoint('/exists-android', 'development');
     expect(entryPoint).toBe('index.android.js');
   });
 
   it('exists-ios', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-ios');
+    const entryPoint = Exp.determineEntryPoint('/exists-ios', 'development');
     expect(entryPoint).toBe('index.ios.js');
   });
 
   it('exists-expjson', () => {
-    const entryPoint = Exp.determineEntryPoint('/exists-expjson');
+    const entryPoint = Exp.determineEntryPoint('/exists-expjson', 'development');
     expect(entryPoint).toBe('main.js');
   });
 
   // Can't test resolving modules yet
   xit('uses node_modules/expo/AppEntry as a last resort', () => {
-    const entryPoint = Exp.determineEntryPoint('/expo-app-entry');
+    const entryPoint = Exp.determineEntryPoint('/expo-app-entry', 'development');
     expect(entryPoint).toBe('node_modules/expo/AppEntry.js');
   });
 });
