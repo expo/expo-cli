@@ -417,10 +417,15 @@ export async function configureAndUpdateProvisioningProfile(
 }
 
 function formatProvisioningProfileFromApple(appleInfo: ProvisioningProfileInfo) {
-  const { name, status, expires, provisioningProfileId } = appleInfo;
-  const id = chalk.green(provisioningProfileId || '-----');
-  const details = `Status: ${status} || Expiry: ${expires}`;
-  return `Provisioning Profile (ID: ${id}, Name: ${name})\n    ${details}`;
+  const { expires, provisioningProfileId } = appleInfo;
+  const id = provisioningProfileId ?? '-----';
+  const name = appleInfo.name ?? '-----';
+  const status = appleInfo.status ?? 'unknown';
+  const expireString = expires ? new Date(expires * 1000).toDateString() : 'unknown';
+  const details = chalk.green(
+    `\n    Name: ${name}\n    Status: ${status},  Expiry: ${expireString}`
+  );
+  return `Provisioning Profile - ID: ${id}${details}`;
 }
 
 export async function getProvisioningProfileFromParams(builderOptions: {
