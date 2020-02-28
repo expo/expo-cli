@@ -7,6 +7,7 @@ module.exports = {
     require('./packages/package-manager/jest.config'),
     require('./packages/schemer/jest.config'),
     require('./packages/webpack-config/jest/unit-test-config'),
+    require('./packages/xdl/jest/unit-test-config'),
   ],
   testPathIgnorePatterns: ['.*'],
 };
