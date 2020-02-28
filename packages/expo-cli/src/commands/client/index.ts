@@ -7,7 +7,7 @@ import ora from 'ora';
 import path from 'path';
 import { Command } from 'commander';
 
-import { ExpoConfig, fileExistsAsync, readConfigJsonAsync } from '@expo/config';
+import { getConfig, setCustomConfigPath } from '@expo/config';
 import CommandError from '../../CommandError';
 import log from '../../log';
 import prompt from '../../prompt';
@@ -47,15 +47,16 @@ export default function(program: Command) {
         // get custom project manifest if it exists
         // Note: this is the current developer's project, NOT the Expo client's manifest
         const spinner = ora(`Finding custom configuration for the Expo client...`).start();
-        const appJsonPath = options.config || path.join(projectDir, 'app.json');
-        const appJsonExists = await fileExistsAsync(appJsonPath);
-        let exp: ExpoConfig = {};
-        if (appJsonExists) {
-          exp = (await readConfigJsonAsync(projectDir)).exp;
+        if (options.config) {
+          setCustomConfigPath(projectDir, options.config);
         }
+        const { exp } = getConfig(projectDir, {
+          skipSDKVersionRequirement: true,
+          mode: 'production',
+        });
 
         if (exp) {
-          spinner.succeed(`Found custom configuration for the Expo client at ${appJsonPath}`);
+          spinner.succeed(`Found custom configuration for the Expo client`);
         } else {
           spinner.warn(`Unable to find custom configuration for the Expo client`);
         }
@@ -63,7 +64,7 @@ export default function(program: Command) {
 
         if (!_.has(exp, 'ios.config.googleMapsApiKey')) {
           const disabledReason = exp
-            ? `ios.config.googleMapsApiKey does not exist in configuration file found in ${appJsonPath}`
+            ? `ios.config.googleMapsApiKey does not exist in the app configuration.`
             : 'No custom configuration file could be found. You will need to provide a json file with a valid ios.config.googleMapsApiKey field.';
           disabledServices.googleMaps = { name: 'Google Maps', reason: disabledReason };
         }
