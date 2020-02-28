@@ -871,7 +871,7 @@ export async function publishAsync(
       } else if (fs.existsSync(path.join(supportingDirectory, 'expo-config.plist'))) {
         // This is an app with expo-updates installed, set properties in expo-config.plist
         await IosPlist.modifyAsync(supportingDirectory, 'expo-config', (configPlist: any) => {
-          configPlist.remoteUrl = fullManifestUrl;
+          configPlist.updateUrl = fullManifestUrl;
           configPlist.releaseChannel = options.releaseChannel;
           configPlist.sdkVersion = exp.sdkVersion;
           return configPlist;
