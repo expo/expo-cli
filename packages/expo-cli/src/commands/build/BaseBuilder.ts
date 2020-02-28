@@ -9,7 +9,6 @@ import semver from 'semver';
 
 import * as UrlUtils from '../utils/url';
 import log from '../../log';
-// @ts-ignore
 import { action as publishAction } from '../publish';
 import BuildError from './BuildError';
 import { PLATFORMS, Platform } from './constants';
@@ -269,7 +268,6 @@ ${job.id}
     if (this.options.publish) {
       const { ids, url, err } = await publishAction(this.projectDir, {
         ...this.options,
-        platform: this.platform(),
         duringBuild: true,
       });
       if (err) {
