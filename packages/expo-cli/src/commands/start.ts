@@ -22,7 +22,7 @@ type NormalizedOptions = {
   dev?: boolean;
   minify?: boolean;
   https?: boolean;
-  nonInteractive: boolean;
+  nonInteractive?: boolean;
   clear?: boolean;
   maxWorkers?: number;
   sendTo?: string;
@@ -54,18 +54,12 @@ async function normalizeOptionsAsync(
   projectDir: string,
   options: Options
 ): Promise<NormalizedOptions> {
-  let opts: NormalizedOptions = {
-    webOnly: false,
-    nonInteractive: !!options.parent?.nonInteractive,
+  const opts: NormalizedOptions = {
+    webOnly: options.webOnly ?? (await Web.onlySupportsWebAsync(projectDir)),
+    nonInteractive: options.parent?.nonInteractive,
   };
 
-  if (typeof options.webOnly !== 'undefined') {
-    opts.webOnly = options.webOnly;
-  } else {
-    opts.webOnly = await Web.onlySupportsWebAsync(projectDir);
-  }
-
-  let rawArgs = options.parent?.rawArgs || [];
+  const rawArgs = options.parent?.rawArgs || [];
 
   if (hasBooleanArg(rawArgs, 'dev')) {
     opts.dev = getBooleanArg(rawArgs, 'dev');
@@ -81,13 +75,21 @@ async function normalizeOptionsAsync(
     opts.https = getBooleanArg(rawArgs, 'https');
   }
 
-  await ProjectSettings.setAsync(projectDir, opts);
+  await cacheOptionsAsync(projectDir, opts);
 
   return options;
 }
 
+async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
+  await ProjectSettings.setAsync(projectDir, {
+    dev: options.dev,
+    minify: options.minify,
+    https: options.https,
+  });
+}
+
 function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
-  let startOpts: Project.StartOptions = {};
+  const startOpts: Project.StartOptions = {};
 
   if (options.clear) {
     startOpts.reset = true;
@@ -307,7 +309,7 @@ export default (program: any) => {
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectDir: string, options: Options) => {
+      async (projectDir: string, options: Options): Promise<void> => {
         return startWebAction(
           projectDir,
           await normalizeOptionsAsync(projectDir, { ...options, webOnly: true })
