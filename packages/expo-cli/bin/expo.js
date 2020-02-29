@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 var chalk = require('chalk');
-var getenv = require('getenv');
 var semver = require('semver');
 var version = process.versions.node;
 
@@ -14,9 +13,6 @@ var isSupported = supportedVersions.some(function(supported) {
 });
 
 if (isSupported) {
-  if (getenv.boolish('EXPO_DEBUG', false)) {
-    require('source-map-support').install();
-  }
   require('../build/exp.js').run('expo');
 } else {
   var versionInfo = supportedVersions

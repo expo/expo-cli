@@ -31,11 +31,11 @@ import {
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
+import packageJSON from '@expo/xdl/package.json';
 import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
-import packageJSON from '../package.json';
 import { registerCommands } from './commands';
 
 Api.setClientName(packageJSON.version);

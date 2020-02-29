@@ -1,7 +1,9 @@
 import { Command } from 'commander';
 // @ts-ignore
 import envinfo from 'envinfo';
-import { version } from '../../package.json';
+import packageJSON from '@expo/xdl/package.json';
+
+const { version } = packageJSON;
 
 async function action(options: never): Promise<void> {
   const info = await envinfo.run(
