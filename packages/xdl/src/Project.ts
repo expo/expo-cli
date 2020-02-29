@@ -123,7 +123,7 @@ type SelfHostedIndex = PublicConfig & {
   dependencies: string[];
 };
 
-type StartOptions = {
+export type StartOptions = {
   reset?: boolean;
   nonInteractive?: boolean;
   nonPersistent?: boolean;
