@@ -19,7 +19,7 @@ import * as Versions from '../Versions';
 import * as Modules from '../modules/Modules';
 import installPackagesAsync from './installPackagesAsync';
 
-export { setBundleIdentifier } from './IosSetBundleIdentifier';
+export { setBundleIdentifier } from '@expo/config/ios';
 
 async function _getVersionedExpoKitConfigAsync(sdkVersion, skipServerValidation) {
   const versions = await Versions.versionsAsync();
