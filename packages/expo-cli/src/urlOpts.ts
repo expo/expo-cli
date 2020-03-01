@@ -60,25 +60,31 @@ function printQRCode(url: string) {
 }
 
 async function handleMobileOptsAsync(projectDir: string, options: any) {
-  if (options.android) {
-    if (options.webOnly) {
-      await Android.openWebProjectAsync(projectDir);
-    } else {
-      await Android.openProjectAsync(projectDir);
-    }
-  }
-
-  if (options.ios) {
-    if (options.webOnly) {
-      await Simulator.openWebProjectAsync(projectDir);
-    } else {
-      await Simulator.openProjectAsync(projectDir);
-    }
-  }
-
-  if (options.web) {
-    await Webpack.openAsync(projectDir);
-  }
+  await Promise.all([
+    (async () => {
+      if (options.android) {
+        if (options.webOnly) {
+          await Android.openWebProjectAsync(projectDir);
+        } else {
+          await Android.openProjectAsync(projectDir);
+        }
+      }
+    })(),
+    (async () => {
+      if (options.ios) {
+        if (options.webOnly) {
+          await Simulator.openWebProjectAsync(projectDir);
+        } else {
+          await Simulator.openProjectAsync(projectDir);
+        }
+      }
+    })(),
+    (async () => {
+      if (options.web) {
+        await Webpack.openAsync(projectDir);
+      }
+    })(),
+  ]);
 
   return !!options.android || !!options.ios;
 }
