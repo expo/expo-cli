@@ -6,7 +6,7 @@ const changed = require('gulp-changed');
 const plumber = require('gulp-plumber');
 const sourcemaps = require('gulp-sourcemaps');
 
-const packageJSON = require('./package.json');
+const packageJSON = require('expo-cli/package.json');
 
 const paths = {
   source: {

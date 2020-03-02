@@ -8,7 +8,7 @@ const request = require('request');
 const sourcemaps = require('gulp-sourcemaps');
 const rimraf = require('rimraf');
 
-const packageJson = require('../package.json');
+const packageJson = require('@expo/xdl/package.json');
 
 const paths = {
   source: {

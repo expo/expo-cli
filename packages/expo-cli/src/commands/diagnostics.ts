@@ -1,7 +1,9 @@
 import { Command } from 'commander';
 // @ts-ignore
 import envinfo from 'envinfo';
-import { version } from '../../package.json';
+
+// @ts-ignore: expo-cli is not listed in its own dependencies
+import packageJSON from 'expo-cli/package.json';
 
 async function action(options: never): Promise<void> {
   const info = await envinfo.run(
@@ -13,7 +15,7 @@ async function action(options: never): Promise<void> {
       npmGlobalPackages: ['expo-cli'],
     },
     {
-      title: `Expo CLI ${version} environment info`,
+      title: `Expo CLI ${packageJSON.version} environment info`,
     }
   );
   console.log(info);

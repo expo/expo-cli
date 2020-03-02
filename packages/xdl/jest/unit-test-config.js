@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   rootDir: path.resolve(__dirname, '..'),
   roots: ['__mocks__', 'src'],
-  displayName: require('../package.json').name,
+  displayName: require('@expo/xdl/package.json').name,
   testRegex: '/__(tests|testfixtures)__/.*(test|spec)\\.(j|t)sx?$',
   moduleNameMapper: {
     '^jest/(.*)': path.join(__dirname, '../../../jest/$1'),
