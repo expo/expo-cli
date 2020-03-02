@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   rootDir: path.resolve(__dirname),
-  displayName: require('./package.json').name,
+  displayName: require('@expo/schemer/package.json').name,
   testRegex: '/__tests__/.*(test|spec)\\.(j|t)sx?$',
   moduleNameMapper: {
     '^jest/(.*)': path.join(__dirname, '../../jest/$1'),

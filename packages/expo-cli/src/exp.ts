@@ -31,11 +31,13 @@ import {
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
+// @ts-ignore: expo-cli is not listed in its own dependencies
+import packageJSON from 'expo-cli/package.json';
+
 import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
-import packageJSON from '../package.json';
 import { registerCommands } from './commands';
 
 Api.setClientName(packageJSON.version);
