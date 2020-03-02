@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 import { resolve } from 'path';
-// @ts-ignore: expo-cli is not listed in its own dependencies
+// @ts-ignore: expo-optimize is not listed in its own dependencies
 import packageJSON from 'expo-optimize/package.json';
 
 import { isProjectOptimized as isProjectOptimizedAsync, optimizeAsync } from './assets';
