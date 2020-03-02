@@ -31,7 +31,9 @@ import {
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
-import packageJSON from '@expo/xdl/package.json';
+// @ts-ignore: expo-cli is not listed in its own dependencies
+import packageJSON from 'expo-cli/package.json';
+
 import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
 import update from './update';
