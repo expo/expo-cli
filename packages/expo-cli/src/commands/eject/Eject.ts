@@ -1,6 +1,13 @@
-import * as ConfigUtils from '@expo/config';
+import {
+  IOSConfig,
+  findConfigFile,
+  getConfig,
+  isUsingYarn,
+  readConfigJsonAsync,
+  resolveModule,
+} from '@expo/config';
 import JsonFile from '@expo/json-file';
-import { Detach, Exp, IosWorkspace, Versions } from '@expo/xdl';
+import { Detach, Exp, Versions } from '@expo/xdl';
 import chalk from 'chalk';
 import fse from 'fs-extra';
 import npmPackageArg from 'npm-package-arg';
@@ -30,12 +37,12 @@ const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
   // We just need the custom `nodeModulesPath` from the config.
-  const { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
+  const { exp, pkg } = getConfig(projectRoot, {
     skipSDKVersionRequirement: true,
   });
 
   const pkgsWithExtraSetup = await JsonFile.readAsync(
-    ConfigUtils.resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
+    resolveModule('expo/requiresExtraSetup.json', projectRoot, exp)
   );
   const packagesToWarn: string[] = Object.keys(pkg.dependencies).filter(pkgName =>
     pkgsWithExtraSetup.hasOwnProperty(pkgName)
@@ -126,7 +133,7 @@ export async function ejectAsync(projectRoot: string, options: EjectAsyncOptions
     log.nested('');
     log.nested('Then you can run the project:');
     log.nested('');
-    let packageManager = ConfigUtils.isUsingYarn(projectRoot) ? 'yarn' : 'npm';
+    let packageManager = isUsingYarn(projectRoot) ? 'yarn' : 'npm';
     log.nested(`  ${packageManager === 'npm' ? 'npm run android' : 'yarn android'}`);
     log.nested(`  ${packageManager === 'npm' ? 'npm run ios' : 'yarn ios'}`);
     await warnIfDependenciesRequireAdditionalSetupAsync(projectRoot);
@@ -168,10 +175,10 @@ function ensureDependenciesMap(dependencies: any): DependenciesMap {
 }
 
 async function ejectToBareAsync(projectRoot: string): Promise<void> {
-  const useYarn = ConfigUtils.isUsingYarn(projectRoot);
+  const useYarn = isUsingYarn(projectRoot);
   const npmOrYarn = useYarn ? 'yarn' : 'npm';
-  const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { configPath, configName } = findConfigFile(projectRoot);
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
@@ -327,9 +334,13 @@ if (Platform.OS === 'web') {
   await packageManager.installAsync();
 
   // --Apply app config to iOS and Android projects here--
+
   // If the bundleIdentifier exists then set it on the project
   if (exp.ios?.bundleIdentifier) {
-    IosWorkspace.setBundleIdentifier(projectRoot, exp.ios?.bundleIdentifier);
+    IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(
+      projectRoot,
+      exp.ios?.bundleIdentifier
+    );
   }
 
   log.newLine();
@@ -344,8 +355,8 @@ if (Platform.OS === 'web') {
 async function getAppNamesAsync(
   projectRoot: string
 ): Promise<{ displayName: string; name: string }> {
-  const { configPath, configName } = ConfigUtils.findConfigFile(projectRoot);
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { configPath, configName } = findConfigFile(projectRoot);
+  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
 
   const configBuffer = await fse.readFile(configPath);
   const appJson = configName === 'app.json' ? JSON.parse(configBuffer.toString()) : {};
