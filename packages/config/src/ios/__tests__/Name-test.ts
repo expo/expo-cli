@@ -15,9 +15,7 @@ describe('name', () => {
     });
   });
 
-  it(`makes no changes to the infoPlist no bundleIdentifier is provided`, () => {
-    expect(setName({ name: 'Short name' }, {})).toMatchObject({
-      CFBundleName: 'Short name',
-    });
+  it(`makes no changes to the infoPlist no name is provided`, () => {
+    expect(setName({}, {})).toMatchObject({});
   });
 });
