@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import Jimp from 'jimp';
-
+import * as path from 'path';
 import {
   FlattenOptions,
   Position,
@@ -9,7 +9,25 @@ import {
   SharpGlobalOptions,
 } from './sharp.types';
 
-type JimpGlobalOptions = Omit<SharpGlobalOptions, 'input'> & { input: string | Buffer | Jimp };
+type JimpGlobalOptions = Omit<SharpGlobalOptions, 'input'> & {
+  input: string | Buffer | Jimp;
+  originalInput: string;
+};
+
+export function convertFormat(format?: string): string | undefined {
+  if (typeof format === 'undefined') return format;
+
+  const input = format?.toLowerCase();
+  switch (input) {
+    case 'png':
+    case 'webp':
+    case 'jpeg':
+      return `image/${input}`;
+    case 'jpg':
+      return `image/jpeg`;
+  }
+  return undefined;
+}
 
 export async function jimpAsync(
   options: JimpGlobalOptions,
@@ -36,9 +54,24 @@ export async function jimpAsync(
   const imgBuffer = await image.getBufferAsync(mime);
 
   if (typeof options.output === 'string') {
-    await fs.writeFile(imgBuffer, options.input);
+    if (await isFolderAsync(options.output)) {
+      await fs.writeFile(
+        path.join(options.output, path.basename(options.originalInput)),
+        imgBuffer
+      );
+    } else {
+      await fs.writeFile(options.output, imgBuffer);
+    }
   }
   return imgBuffer;
+}
+
+export async function isFolderAsync(path: string): Promise<boolean> {
+  try {
+    return (await fs.stat(path)).isDirectory();
+  } catch (e) {
+    return false;
+  }
 }
 
 async function getJimpImageAsync(input: string | Buffer | Jimp): Promise<Jimp> {
@@ -63,9 +96,6 @@ export async function resize(
       resizedImage = await resizedImage.background(Jimp.cssColorToHex(background));
     }
     return resizedImage;
-    //   const canvas = await createBaseImageAsync(width, height, background);
-    //   const combinedImage = await compositeImagesAsync(canvas, resizedImage);
-    //   return combinedImage.getBufferAsync(mime);
   } else {
     throw new Error(
       `Unsupported fit: ${fit}. Please choose either 'cover', or 'contain' when using Jimp`
