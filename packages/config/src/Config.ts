@@ -282,5 +282,3 @@ export async function writeConfigJsonAsync(
     rootConfig,
   };
 }
-
-export * from './Config.types';

@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import get from 'lodash/get';
 import path from 'path';
 
-import { ExpoConfig } from '@expo/config';
+import { ExpoConfig, IOSConfig } from '@expo/config';
 import * as AssetBundle from './AssetBundle';
 import {
   getManifestAsync,
@@ -271,17 +271,19 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     }
 
     // bundle id
-    infoPlist.CFBundleIdentifier =
-      config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
-    if (!infoPlist.CFBundleIdentifier) {
+    let bundleIdentifier = IOSConfig.BundleIdenitifer.getBundleIdentifier(config);
+    if (!bundleIdentifier) {
       throw new Error(`Cannot configure an iOS app with no bundle identifier.`);
     }
+    infoPlist = IOSConfig.BundleIdenitifer.setBundleIdentifier(config, infoPlist);
 
     // app name
-    infoPlist.CFBundleName = config.name;
-    infoPlist.CFBundleDisplayName = context.build.isExpoClientBuild()
-      ? 'Expo (Custom)'
-      : config.name;
+    infoPlist = IOSConfig.Name.setName(config, infoPlist);
+    if (context.build.isExpoClientBuild()) {
+      infoPlist = IOSConfig.Name.setDisplayName('Expo (Custom)', infoPlist);
+    } else {
+      infoPlist = IOSConfig.Name.setDisplayName(config, infoPlist);
+    }
 
     // determine app linking schemes
     let linkingSchemes = config.scheme ? [config.scheme] : [];
@@ -365,10 +367,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     );
 
     // use version from manifest
-    let version = config.version ? config.version : '0.0.0';
-    let buildNumber = config.ios && config.ios.buildNumber ? config.ios.buildNumber : '1';
-    infoPlist.CFBundleShortVersionString = version;
-    infoPlist.CFBundleVersion = buildNumber;
+    infoPlist = IOSConfig.Version.setVersion(config, infoPlist);
+    infoPlist = IOSConfig.Version.setBuildNumber(config, infoPlist);
 
     infoPlist.Fabric = {
       APIKey:
