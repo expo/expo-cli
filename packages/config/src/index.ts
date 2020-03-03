@@ -1,3 +1,6 @@
+import * as IOSConfig from './ios';
+import * as AndroidConfig from './android';
+export { IOSConfig, AndroidConfig };
 export * from './Modules';
 export * from './Config';
 export * from './Config.types';

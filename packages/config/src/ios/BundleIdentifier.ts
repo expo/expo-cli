@@ -4,11 +4,34 @@ import { join } from 'path';
 // @ts-ignore
 import { project as Project } from 'xcode';
 import plist, { PlistObject } from '@expo/plist';
+import { InfoPlist } from './IosConfig.types';
+import { ExpoConfig } from '../Config.types';
+
+export function getBundleIdentifier(config: ExpoConfig) {
+  return config.ios && config.ios.bundleIdentifier ? config.ios.bundleIdentifier : null;
+}
+
+/**
+ * In Turtle v1 we set the bundleIdentifier directly on Info.plist rather
+ * than in pbxproj
+ */
+
+export function setBundleIdentifier(config: ExpoConfig, infoPlist: InfoPlist) {
+  let bundleIdentifier = getBundleIdentifier(config);
+
+  if (!bundleIdentifier) {
+    return infoPlist;
+  }
+
+  return {
+    ...infoPlist,
+    CFBundleIdentifier: bundleIdentifier,
+  };
+}
 
 /**
  * Updates the bundle identifier for a given pbxproj
- *
- * @param pbxprojPath Path to pbxproj file
+ * * @param pbxprojPath Path to pbxproj file
  * @param bundleIdentifier Bundle identifier to set in the pbxproj
  */
 
@@ -41,7 +64,7 @@ export function updateBundleIdentifierForPbxproj(pbxprojPath: string, bundleIden
  * @param projectRoot Path to project root containing the ios directory
  * @param bundleIdentifier Desired bundle identifier
  */
-export function setBundleIdentifier(projectRoot: string, bundleIdentifier: string) {
+export function setBundleIdentifierForPbxproj(projectRoot: string, bundleIdentifier: string) {
   // Get all pbx projects in the ${projectRoot}/ios directory
   const pbxprojPaths = globSync(join(projectRoot, 'ios', '*', 'project.pbxproj'));
 
