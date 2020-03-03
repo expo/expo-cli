@@ -438,7 +438,9 @@ export async function getProvisioningProfileFromParams(builderOptions: {
 
   // partial provisioningProfile params were set, assume user has intention of passing it in
   if (!every([provisioningProfilePath, teamId])) {
-    throw new Error('You have to pass --provisioning-profile-path and --team-id parameters.');
+    throw new Error(
+      'In order to provide a Provisioning Profile through the CLI parameters, you have to pass --provisioning-profile-path and --team-id parameters.'
+    );
   }
 
   return {

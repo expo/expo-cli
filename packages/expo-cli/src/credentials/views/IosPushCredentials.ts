@@ -585,7 +585,9 @@ export async function getPushKeyFromParams(builderOptions: {
 
   // partial pushKey params were set, assume user has intention of passing it in
   if (!every([pushId, pushP8Path, teamId])) {
-    throw new Error('You have to pass --push-id, --push-p8-path and --team-id parameters.');
+    throw new Error(
+      'In order to provide a Push Key through the CLI parameters, you have to pass --push-id, --push-p8-path and --team-id parameters.'
+    );
   }
 
   return {

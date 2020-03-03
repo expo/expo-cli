@@ -638,7 +638,7 @@ export async function getDistCertFromParams(builderOptions: {
   // partial distCert params were set, assume user has intention of passing it in
   if (!every([distP12Path, certPassword, teamId])) {
     throw new Error(
-      'You have to both pass --dist-p12-path parameter, --team-id parameter and set EXPO_IOS_DIST_P12_PASSWORD environment variable.'
+      'In order to provide a Distribution Certificate through the CLI parameters, you have to pass --dist-p12-path parameter, --team-id parameter and set EXPO_IOS_DIST_P12_PASSWORD environment variable.'
     );
   }
 
