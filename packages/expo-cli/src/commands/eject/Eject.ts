@@ -335,11 +335,11 @@ if (Platform.OS === 'web') {
 
   // --Apply app config to iOS and Android projects here--
 
-  // If the bundleIdentifier exists then set it on the project
+  // This is probably mandatory! But the template does have some default one.
   if (exp.ios?.bundleIdentifier) {
     IOSConfig.BundleIdenitifer.setBundleIdentifierForPbxproj(
       projectRoot,
-      exp.ios?.bundleIdentifier
+      exp.ios!.bundleIdentifier!
     );
   }
 

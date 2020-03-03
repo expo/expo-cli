@@ -285,10 +285,13 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       infoPlist = IOSConfig.Name.setDisplayName(config, infoPlist);
     }
 
-    // determine app linking schemes
-    let linkingSchemes = config.scheme ? [config.scheme] : [];
+    // maybe set the default linking scheme
+    infoPlist = IOSConfig.Scheme.setScheme(config, infoPlist);
+
+    // maybe set additional linking schemes from services like fb and google
+    let serviceLinkingSchemes = [];
     if (config.facebookScheme && config.facebookScheme.startsWith('fb')) {
-      linkingSchemes.push(config.facebookScheme);
+      serviceLinkingSchemes.push(config.facebookScheme);
     }
 
     if (
@@ -296,13 +299,14 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       privateConfig.googleSignIn &&
       privateConfig.googleSignIn.reservedClientId
     ) {
-      linkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
+      serviceLinkingSchemes.push(privateConfig.googleSignIn.reservedClientId);
     }
 
     // remove exp scheme, add app scheme(s)
     infoPlist.CFBundleURLTypes = [
+      ...infoPlist.CFBundleURLTypes,
       {
-        CFBundleURLSchemes: linkingSchemes,
+        CFBundleURLSchemes: serviceLinkingSchemes,
       },
       {
         // Add the generic oauth redirect, it's important that it has the name
