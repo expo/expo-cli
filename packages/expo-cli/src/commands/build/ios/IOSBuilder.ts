@@ -129,9 +129,6 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       const credentials = await context.ios.getAllCredentials();
       displayProjectCredentials(experienceName, bundleIdentifier, credentials);
     }
-
-    //TODO
-    throw new Error('ABORT');
   }
 
   async produceCredentials(ctx: Context, experienceName: string, bundleIdentifier: string) {
