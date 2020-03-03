@@ -55,7 +55,11 @@ function createFilename(
 }
 
 // Create `manifest.json`
-function writeManifestToFile(manifest: ManifestOptions, options: any, publicPath: string) {
+function writeManifestToFile(
+  manifest: ManifestOptions,
+  options: any,
+  publicPath: string
+): { output: string; url: string; source: string; size: number } {
   let content = { ...manifest };
 
   if (content.orientation === 'omit') {

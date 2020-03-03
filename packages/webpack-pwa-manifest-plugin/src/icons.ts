@@ -1,4 +1,6 @@
-import { ImageFormat, ResizeMode, isAvailableAsync, sharpAsync } from '@expo/image-utils';
+import { isAvailableAsync } from '@expo/image-utils';
+import chalk from 'chalk';
+import crypto from 'crypto';
 import fs from 'fs-extra';
 import mime from 'mime';
 import fetch from 'node-fetch';
@@ -6,14 +8,12 @@ import path from 'path';
 import stream from 'stream';
 import temporary from 'tempy';
 import util from 'util';
-import chalk from 'chalk';
 
-import crypto from 'crypto';
 import { IconError } from './Errors';
+import resizeAsync from './generate/resize';
 import { AnySize, ImageSize, joinURI, toArray, toSize } from './utils';
 import { fromStartupImage } from './validators/Apple';
 import { Icon, ManifestIcon, ManifestOptions } from './WebpackPWAManifestPlugin.types';
-import { resize as jimpResize } from './ImageComposite';
 
 const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
@@ -69,7 +69,7 @@ async function getBufferWithMimeAsync(
       localSrc = await downloadImage(src);
     }
 
-    const imageData = await resize(localSrc, mimeType, width, height, resizeMode, color!);
+    const imageData = await resizeAsync(localSrc, mimeType, width, height, resizeMode, color!);
     if (imageData instanceof Buffer) {
       return imageData;
     } else {
@@ -144,7 +144,7 @@ async function processImageAsync(
   let imageBuffer: Buffer | null = await getImageFromCacheAsync(fileName, cacheKey);
   if (!imageBuffer) {
     // Putting the warning here will prevent the warning from showing if all images were reused from the cache
-    if (!hasWarned && !(await isAvailableAsync())) {
+    if (!hasWarned && !await isAvailableAsync()) {
       hasWarned = true;
       // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
       console.log('ff', cacheKey, fileName, dimensions);
@@ -185,56 +185,6 @@ async function processImageAsync(
       color: icon.color,
     },
   };
-}
-
-function ensureValidMimeType(mimeType: string): ImageFormat {
-  if (['input', 'jpeg', 'jpg', 'png', 'raw', 'tiff', 'webp'].includes(mimeType)) {
-    return mimeType as ImageFormat;
-  }
-  return 'png';
-}
-
-async function resize(
-  inputPath: string,
-  mimeType: string,
-  width: number,
-  height: number,
-  fit: ResizeMode = 'contain',
-  background: string
-): Promise<string | Buffer> {
-  if (!(await isAvailableAsync())) {
-    return await jimpResize(inputPath, mimeType, width, height, fit, background);
-  }
-
-  const format = ensureValidMimeType(mimeType.split('/')[1]);
-  const outputPath = temporary.directory();
-
-  try {
-    await sharpAsync(
-      {
-        input: inputPath,
-        output: outputPath,
-        format,
-      },
-      [
-        {
-          operation: 'flatten',
-          background,
-        },
-        {
-          operation: 'resize',
-          width,
-          height,
-          fit,
-          background,
-        },
-      ]
-    );
-
-    return path.join(outputPath, path.basename(inputPath));
-  } catch ({ message }) {
-    throw new IconError(`It was not possible to generate splash screen '${inputPath}'. ${message}`);
-  }
 }
 
 export function retrieveIcons(manifest: ManifestOptions): [Icon[], ManifestOptions] {

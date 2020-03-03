@@ -1,7 +1,8 @@
 import { ExpoConfig } from '@expo/config';
 import { Tapable } from 'tapable';
 import webpack from 'webpack';
-
+import path from 'path';
+import * as Favicon from './generate/Favicon';
 import { createPWAManifestFromExpoConfig, validateManifest } from './config';
 import createMetatagsFromConfig from './createMetatagsFromConfig';
 import {
@@ -29,6 +30,7 @@ export default class WebpackPWAManifest {
   options: any;
   HtmlWebpackPlugin: any;
   projectRoot: string;
+  faviconPath?: string;
 
   constructor(
     appJson: ExpoConfig,
@@ -40,6 +42,12 @@ export default class WebpackPWAManifest {
     this.manifest = createPWAManifestFromExpoConfig(appJson);
 
     this.expoConfig = appJson;
+
+    // Allow empty string to disable favicon
+    this.faviconPath =
+      typeof this.expoConfig.web?.favicon === 'string'
+        ? this.expoConfig.web?.favicon
+        : this.expoConfig.icon;
 
     this.options = {
       fingerprints: true,
@@ -83,6 +91,12 @@ export default class WebpackPWAManifest {
       // It will be written to disk here.
       const manifestFile = await buildResourcesAsync(this, publicPath);
 
+      const favicons = await Favicon.generate(
+        this.faviconPath ? path.resolve(this.projectRoot, this.faviconPath) : '',
+        this.options.publicPath
+      );
+      this.assets = [...this.assets, ...favicons.files];
+
       if (!this.options.inject) {
         callback(null, htmlPluginData);
         return;
@@ -109,7 +123,7 @@ export default class WebpackPWAManifest {
         tags = applyTag(tags, 'link', manifestLink);
       }
 
-      const tagsHTML = generateHtmlTags(tags);
+      const tagsHTML = generateHtmlTags(tags) + favicons.html.join('');
       htmlPluginData.html = htmlPluginData.html.replace(/(<\/head>)/i, `${tagsHTML}</head>`);
 
       callback(null, htmlPluginData);
