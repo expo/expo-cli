@@ -29,15 +29,8 @@ export class SetupIosDist implements IView {
       });
     }
 
-    if (!ctx.hasAppleCtx) {
-      throw new Error(`This workflow requires you to provide your Apple Credentials.`);
-    }
-
     // check if valid
-    const isValid = await iosDistView.validateDistributionCertificate(
-      ctx.appleCtx,
-      configuredDistCert
-    );
+    const isValid = await iosDistView.validateDistributionCertificate(ctx, configuredDistCert);
 
     if (isValid) {
       return null;

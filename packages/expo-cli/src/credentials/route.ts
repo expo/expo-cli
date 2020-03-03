@@ -13,19 +13,8 @@ export async function runCredentialsManager(ctx: Context, startView: IView): Pro
   return await manager.run();
 }
 
-export class GoBackError extends Error {
-  constructor() {
-    super();
-
-    // Set the prototype explicitly.
-    // https://github.com/Microsoft/TypeScript-wiki/blob/master/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    Object.setPrototypeOf(this, GoBackError.prototype);
-  }
-}
-
 export class CredentialsManager {
   static _manager?: CredentialsManager;
-  _viewHistory: IView[] = [];
   _ctx: Context;
   _mainView: IView;
   _currentView: IView;
@@ -49,15 +38,11 @@ export class CredentialsManager {
   async run(): Promise<null> {
     while (true) {
       try {
-        const previousView = this._currentView;
         this._currentView =
           (await this._currentView.open(this._ctx)) || (await this._quit(this._mainView));
-        this.addToHistory(previousView);
       } catch (error) {
         if (error instanceof QuitError) {
           return null;
-        } else if (error instanceof GoBackError) {
-          this._currentView = this.popFromHistory() || (await this._quit(this._mainView));
         } else {
           log(error);
           await new Promise(res => setTimeout(res, 1000));
@@ -65,21 +50,6 @@ export class CredentialsManager {
         }
       }
     }
-  }
-
-  addToHistory(view: IView) {
-    this._viewHistory.push(view);
-  }
-
-  popFromHistory(): IView | null {
-    return this._viewHistory.pop() || null;
-  }
-
-  async doInteractiveOperation<T>(operation: () => Promise<T>, currentView: IView): Promise<T> {
-    this.addToHistory(currentView);
-    const result = await operation();
-    this.popFromHistory();
-    return result;
   }
 
   changeMainView(view: IView) {
