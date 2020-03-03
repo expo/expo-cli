@@ -1201,15 +1201,15 @@
     fs-extra "^8.1.0"
     lodash "^4.17.15"
 
-"@expo/traveling-fastlane-darwin@1.12.1":
-  version "1.12.1"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.12.1.tgz#a963e3248d206cd8c8f5753d26121dd5b8128a5c"
-  integrity sha512-x8hC6o57EqzwCrtwhms+J3YlP6Ld9xr+ajzeVTFhwjq0ag+aJmnZl8EsVLtbZWgiiAL/xBNnh+9vcCOy6S8q+g==
+"@expo/traveling-fastlane-darwin@1.13.1":
+  version "1.13.1"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-darwin/-/traveling-fastlane-darwin-1.13.1.tgz#ef0d7a4331f524d1a6e1d83cfa2f836b48cf14ea"
+  integrity sha512-3YivoxYTmvuA3/DZR3vAm4+6zqSnzUoaMiKTtVVJO8ykAnBrpAL4oxyZqG9FBe7H4Sz4GCk1pUAx9COIXvYGpw==
 
-"@expo/traveling-fastlane-linux@1.12.1":
-  version "1.12.1"
-  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.12.1.tgz#e9081b6fc092eaf2f79bf8f6d041f29f6b5fd135"
-  integrity sha512-oJ4uNcuD0hd/5W3eGBVtaTvvn7n14RjN8Z8E+WUjDXhZMLFg25xLtb+uhC8AIaEdvofIgU5DShVkRBCLmLNHgw==
+"@expo/traveling-fastlane-linux@1.13.1":
+  version "1.13.1"
+  resolved "https://registry.yarnpkg.com/@expo/traveling-fastlane-linux/-/traveling-fastlane-linux-1.13.1.tgz#23d0bedfc085c455c29f2445e7419ce4fadd76b8"
+  integrity sha512-6VnrOfbU9vOtdVpkalu23q1BIyoj5AKALDWo2mVhoPm8Qi9xiIdjT+pfiMeBUDrRuAitRZ3DORmpz4RtsZqDsg==
 
 "@gulp-sourcemaps/identity-map@1.X":
   version "1.0.2"
