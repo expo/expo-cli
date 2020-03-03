@@ -96,7 +96,6 @@ end
 
 def list_dist_certs(certs)
   certs.map do |cert|
-    puts 'cert'
     cert_info = {
       id: cert.id,
       name: cert.name,
