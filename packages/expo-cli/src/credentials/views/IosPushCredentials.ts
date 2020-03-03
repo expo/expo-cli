@@ -236,13 +236,11 @@ export class UseExistingPushNotification implements IView {
 export class CreateOrReusePushKey implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
-  _credentialsManager: CredentialsManager;
 
   constructor(options: PushKeyOptions) {
     const { experienceName, bundleIdentifier } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
-    this._credentialsManager = CredentialsManager.get();
   }
 
   async assignPushKey(ctx: Context, userCredentialsId: number) {

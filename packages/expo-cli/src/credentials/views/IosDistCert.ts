@@ -21,8 +21,6 @@ import { CredentialSchema, askForUserProvided } from '../actions/promptForCreden
 import { displayIosUserCredentials } from '../actions/list';
 import { DistCert, DistCertInfo, DistCertManager, isDistCert } from '../../appleApi';
 import { RemoveProvisioningProfile } from './IosProvisioningProfile';
-import { CredentialsManager } from '../route';
-import { CreateAppCredentialsIos } from './IosAppCredentials';
 
 const APPLE_DIST_CERTS_TOO_MANY_GENERATED_ERROR = `
 You can have only ${chalk.underline(
@@ -234,13 +232,11 @@ export class UseExistingDistributionCert implements IView {
 export class CreateOrReuseDistributionCert implements IView {
   _experienceName: string;
   _bundleIdentifier: string;
-  _credentialsManager: CredentialsManager;
 
   constructor(options: DistCertOptions) {
     const { experienceName, bundleIdentifier } = options;
     this._experienceName = experienceName;
     this._bundleIdentifier = bundleIdentifier;
-    this._credentialsManager = CredentialsManager.get();
   }
 
   async assignDistCert(ctx: Context, userCredentialsId: number) {
