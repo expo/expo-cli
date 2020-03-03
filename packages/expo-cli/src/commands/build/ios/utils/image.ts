@@ -5,7 +5,7 @@ import { XDLError } from '@expo/xdl';
 import request from 'request';
 import validator from 'validator';
 
-async function ensurePNGIsNotTransparent(imagePathOrURL) {
+export async function ensurePNGIsNotTransparent(imagePathOrURL: string): Promise<void> {
   let hasAlreadyResolved = false;
   const stream = validator.isURL(imagePathOrURL, {
     protocols: ['http', 'https'],
@@ -19,7 +19,7 @@ async function ensurePNGIsNotTransparent(imagePathOrURL) {
       .on('metadata', ({ alpha }) => {
         if (!alpha) {
           hasAlreadyResolved = true;
-          stream.close();
+          if ('close' in stream) stream.close();
           res();
         }
       })
@@ -28,6 +28,7 @@ async function ensurePNGIsNotTransparent(imagePathOrURL) {
           return;
         }
         try {
+          // @ts-ignore: 'this' implicitly has type 'any' because it does not have a type annotation.
           validateAlphaChannelIsEmpty(this.data, pick(this, ['width', 'height']));
           res();
         } catch (err) {
@@ -38,7 +39,10 @@ async function ensurePNGIsNotTransparent(imagePathOrURL) {
   });
 }
 
-function validateAlphaChannelIsEmpty(data, { width, height }) {
+function validateAlphaChannelIsEmpty(
+  data: Buffer,
+  { width, height }: { width: number; height: number }
+): void {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       let idx = (width * y + x) * 4;
@@ -51,5 +55,3 @@ function validateAlphaChannelIsEmpty(data, { width, height }) {
     }
   }
 }
-
-export { ensurePNGIsNotTransparent };

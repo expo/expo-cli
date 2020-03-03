@@ -33,8 +33,12 @@ declare module 'pacote' {
   function packument(spec: PackageSpec, opts?: Options): Promise<Packument>;
   function tarball(spec: PackageSpec, opts?: Options): Promise<Buffer>;
   namespace tarball {
-    function stream(spec: PackageSpec, opts?: Options): Readable;
-    function toFile(spec: PackageSpec, opts?: Options): Promise<void>;
+    function stream(
+      spec: PackageSpec,
+      fn: (stream: Readable) => Promise<void>,
+      opts?: Options
+    ): Promise<void>;
+    function file(spec: PackageSpec, opts?: Options): Promise<void>;
   }
   function clearMemoized(): void;
 }

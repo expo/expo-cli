@@ -1,6 +1,6 @@
 import JsonFile from '@expo/json-file';
 
-import { getConfig, readConfigJson } from './Config';
+import { getConfig } from './Config';
 import { AppJSONConfig, ExpoConfig } from './Config.types';
 
 const APP_JSON_FILE_NAME = 'app.json';

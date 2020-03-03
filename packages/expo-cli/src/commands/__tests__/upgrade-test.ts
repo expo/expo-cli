@@ -292,7 +292,7 @@ describe('upgradeAsync', () => {
     expect(json.expo.sdkVersion).not.toBeDefined();
     // Uses expo package version
     expect(exp.sdkVersion).toBe('35.0.0');
-  }, 5000);
+  }, 10000);
 
   // Important to ensure that we don't modify the app.json extraneously
   it(`skips modifying the app.json if the app.json doesn't define an sdkVersion`, async () => {
@@ -303,7 +303,7 @@ describe('upgradeAsync', () => {
       { yarn: true }
     );
     expect(require('@expo/config').writeConfigJsonAsync).toBeCalledTimes(0);
-  }, 5000);
+  }, 10000);
 
   // Ensure we skip modifying an unversioned app.json
   // Skip for now because upgrade doesn't support UNVERSIONED
@@ -315,5 +315,5 @@ describe('upgradeAsync', () => {
       { yarn: true }
     );
     expect(require('@expo/config').writeConfigJsonAsync).toBeCalledTimes(0);
-  }, 5000);
+  }, 10000);
 });

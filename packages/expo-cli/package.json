@@ -58,7 +58,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",
-    "@babel/preset-flow": "^7.0.0",
     "@expo/babel-preset-cli": "^0.2.5",
     "@types/ansi-regex": "^4.0.0",
     "@types/dateformat": "^3.0.0",
@@ -66,6 +65,7 @@
     "@types/inquirer": "6.0.3",
     "@types/klaw-sync": "^6.0.0",
     "@types/npm-package-arg": "^6.1.0",
+    "@types/pngjs": "^3.4.1",
     "@types/progress": "^2.0.3",
     "@types/slash": "^2.0.0",
     "@types/split": "^1.0.0",
@@ -119,7 +119,7 @@
     "npm-package-arg": "6.1.0",
     "open": "6.3.0",
     "ora": "3.4.0",
-    "pacote": "9.3.0",
+    "pacote": "^11.1.0",
     "plist": "3.0.1",
     "pngjs": "3.4.0",
     "progress": "2.0.0",
@@ -136,8 +136,8 @@
     "wordwrap": "1.0.0"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.12.1",
-    "@expo/traveling-fastlane-linux": "1.12.1"
+    "@expo/traveling-fastlane-darwin": "1.13.1",
+    "@expo/traveling-fastlane-linux": "1.13.1"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }

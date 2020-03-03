@@ -2,8 +2,8 @@ const path = require('path');
 
 module.exports = {
   rootDir: path.resolve(__dirname, '..'),
-  roots: ['src'],
-  displayName: require('@expo/webpack-config/package.json').name,
+  roots: ['__mocks__', 'src'],
+  displayName: require('@expo/xdl/package.json').name,
   testRegex: '/__(tests|testfixtures)__/.*(test|spec)\\.(j|t)sx?$',
   moduleNameMapper: {
     '^jest/(.*)': path.join(__dirname, '../../../jest/$1'),
@@ -13,4 +13,5 @@ module.exports = {
   },
   testEnvironment: 'node',
   resetModules: false,
+  setupFiles: ['<rootDir>/jest/fs-mock-setup.js'],
 };

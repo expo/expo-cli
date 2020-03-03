@@ -5,15 +5,25 @@ import isObject from 'lodash/isObject';
 import * as constants from '../constants';
 import promptForCredentials from './promptForCredentials';
 import prompt from '../../../../../prompt';
+import { AppleCtx } from '../../../../../appleApi';
 
-const existingCredsGettersByType = {
+export type Definition = { id: string; name: string };
+export type ProjectMetadata = { username: string };
+
+const existingCredsGettersByType: {
+  [key: string]: (name: string, team: string) => Promise<Credentials.Ios.CredsList>;
+} = {
   distributionCert: Credentials.Ios.getExistingDistCerts,
   pushKey: Credentials.Ios.getExistingPushKeys,
 };
 
-async function promptForOverrides(appleCtx, types, projectMetadata) {
-  const credentials = {};
-  const toAskUserFor = [];
+async function promptForOverrides(
+  appleCtx: AppleCtx,
+  types: string[],
+  projectMetadata: ProjectMetadata
+) {
+  const credentials: Record<string, any> = {};
+  const toAskUserFor: string[] = [];
   for (const type of types) {
     const definition = constants.CREDENTIALS[type];
     const { dependsOn, name, canReuse } = definition;
@@ -48,7 +58,7 @@ async function promptForOverrides(appleCtx, types, projectMetadata) {
   return { credentials: credentialsToReturn, metadata: userProvidedCredentials.metadata };
 }
 
-async function _willUserProvideCredentialsType(name) {
+async function _willUserProvideCredentialsType(name: string): Promise<boolean> {
   const { answer } = await prompt({
     type: 'list',
     name: 'answer',
@@ -61,7 +71,11 @@ async function _willUserProvideCredentialsType(name) {
   return answer;
 }
 
-async function _askIfWantsToReuse(appleCtx, definition, projectMetadata) {
+async function _askIfWantsToReuse(
+  appleCtx: AppleCtx,
+  definition: Definition,
+  projectMetadata: ProjectMetadata
+): Promise<null | string> {
   const { name } = definition;
   const existingCreds = await _getExistingCreds(appleCtx, definition, projectMetadata);
   if (!existingCreds) {
@@ -82,7 +96,11 @@ async function _askIfWantsToReuse(appleCtx, definition, projectMetadata) {
   return userChoice;
 }
 
-async function _getExistingCreds({ team: { id: appleTeamId } }, { id, name }, { username }) {
+async function _getExistingCreds(
+  { team: { id: appleTeamId } }: any,
+  { id, name }: Definition,
+  { username }: ProjectMetadata
+): Promise<any> {
   const getter = existingCredsGettersByType[id];
   const spinner = ora(`Looking for ${name} you might have created before...`).start();
   try {

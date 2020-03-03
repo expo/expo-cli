@@ -6,7 +6,14 @@ import * as constants from './constants';
 import log from '../../../../log';
 import * as apple from '../../../../appleApi';
 
-async function generate(appleCtx, credentialsToGenerate, metadata, projectMetadata) {
+type Metadata = Record<string, any>;
+
+export async function generate(
+  appleCtx: apple.AppleCtx,
+  credentialsToGenerate: ('distributionCert' | 'pushKey' | 'provisioningProfile')[],
+  metadata: Metadata,
+  projectMetadata: Metadata
+): Promise<Partial<apple.ProvisioningProfile>> {
   if (!credentialsToGenerate || credentialsToGenerate.length === 0) {
     return {};
   }
@@ -25,7 +32,7 @@ async function generate(appleCtx, credentialsToGenerate, metadata, projectMetada
     log(`- ${constants.CREDENTIALS[type].name}`);
   });
 
-  let newCredentials = {};
+  let newCredentials: Partial<apple.ProvisioningProfile> = {};
   for (const id of credentialsToGenerate) {
     const { name } = constants.CREDENTIALS[id];
     const spinner = ora(`Generating ${name}...`).start();
@@ -41,7 +48,12 @@ async function generate(appleCtx, credentialsToGenerate, metadata, projectMetada
   return newCredentials;
 }
 
-async function _create(appleCtx, type, metadata, projectMetadata) {
+async function _create(
+  appleCtx: apple.AppleCtx,
+  type: 'distributionCert' | 'pushKey' | 'provisioningProfile',
+  metadata: Metadata,
+  projectMetadata: Metadata
+): Promise<apple.ProvisioningProfile | apple.DistCert | apple.PushKey> {
   const manager = apple.createManagers(appleCtx)[type];
   if (manager instanceof apple.ProvisioningProfileManager) {
     const { bundleIdentifier } = projectMetadata;
@@ -51,48 +63,57 @@ async function _create(appleCtx, type, metadata, projectMetadata) {
   return await manager.create();
 }
 
-function determineMissingCredentials(existingCredentials = {}) {
+export function determineMissingCredentials(
+  existingCredentials: Record<string, any> = {}
+): null | string[] {
   const existingCredentialsKeys = Object.keys(existingCredentials);
-  const missing = constants.REQUIRED_CREDENTIALS.reduce((acc, ruleOrCondition) => {
-    const id = _applyRuleOrCondition(existingCredentialsKeys, ruleOrCondition);
-    if (id) {
-      acc.push(id);
-    }
-    return acc;
-  }, []);
+  const missing = constants.REQUIRED_CREDENTIALS.reduce(
+    (acc, ruleOrCondition) => {
+      const id = _applyRuleOrCondition(existingCredentialsKeys, ruleOrCondition);
+      if (id) {
+        acc.push(id);
+      }
+      return acc;
+    },
+    [] as string[]
+  );
   return missing.length === 0 ? null : missing;
 }
 
-function _applyRuleOrCondition(keys, ruleOrCondition) {
+function _applyRuleOrCondition(
+  keys: string[],
+  ruleOrCondition: constants.Rule | constants.Condition
+): string | null | undefined {
   if ('or' in ruleOrCondition) {
     return _applyOrCondition(keys, ruleOrCondition.or);
-  } else {
-    return _applyRule(keys, ruleOrCondition);
   }
+  return _applyRule(keys, ruleOrCondition);
 }
 
-function _applyOrCondition(keys, condition) {
+function _applyOrCondition(keys: string[], condition: constants.Rule[]): string | null | undefined {
   const applyingRules = condition.filter(rule => _doCredentialsExist(keys, rule));
   if (applyingRules.length === 0) {
     const notDeprecatedRule = condition.find(rule => !rule.deprecated);
+    // @ts-ignore
     return notDeprecatedRule.id;
   } else if (applyingRules.length === 1) {
     const { deprecated, name, migrationDocs } = applyingRules[0];
     if (deprecated) {
       log.warn(
-        `You're using deprecated ${name}. Read our docs to learn how to use more modern solution. ${
-          migrationDocs ? chalk.underline(migrationDocs) : ''
-        }`
+        `You're using deprecated ${name}. Read our docs to learn how to use more modern solution. ${migrationDocs
+          ? chalk.underline(migrationDocs)
+          : ''}`
       );
     }
     return null;
   }
+  return undefined;
 }
-const _applyRule = (keys, rule) => (!_doCredentialsExist(keys, rule) ? rule.id : null);
 
-function _doCredentialsExist(keys, rule) {
+const _applyRule = (keys: string[], rule: constants.Rule): string | null =>
+  !_doCredentialsExist(keys, rule) ? rule.id : null;
+
+function _doCredentialsExist(keys: string[], rule: constants.Rule): boolean {
   const common = intersection(keys, rule.required);
   return rule.required.length === common.length;
 }
-
-export { generate, determineMissingCredentials };

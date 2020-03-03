@@ -1,31 +1,48 @@
-/**
- * @flow
- */
-
-import path from 'path';
-
-import * as ConfigUtils from '@expo/config';
+import { ExpoConfig, PackageJSONConfig, readConfigJsonAsync, resolveModule } from '@expo/config';
+// @ts-ignore: not typed
 import { DevToolsServer } from '@expo/dev-tools';
 import JsonFile from '@expo/json-file';
 import { Project, ProjectSettings, UrlUtils, UserSettings, Versions, Web } from '@expo/xdl';
 import chalk from 'chalk';
-import openBrowser from 'react-dev-utils/openBrowser';
-import intersection from 'lodash/intersection';
-import semver from 'semver';
 import attempt from 'lodash/attempt';
+import intersection from 'lodash/intersection';
 import isError from 'lodash/isError';
+import path from 'path';
+import openBrowser from 'react-dev-utils/openBrowser';
+import semver from 'semver';
 
+import { installExitHooks } from '../exit';
 import log from '../log';
 import sendTo from '../sendTo';
-import { installExitHooks } from '../exit';
 import urlOpts from '../urlOpts';
 import * as TerminalUI from './start/TerminalUI';
 
-function hasBooleanArg(rawArgs: string[], argName: string) {
+type NormalizedOptions = {
+  webOnly?: boolean;
+  dev?: boolean;
+  minify?: boolean;
+  https?: boolean;
+  nonInteractive?: boolean;
+  clear?: boolean;
+  maxWorkers?: number;
+  sendTo?: string;
+};
+
+type Options = NormalizedOptions & {
+  parent?: { nonInteractive: boolean; rawArgs: string[] };
+};
+
+type OpenDevToolsOptions = {
+  rootPath: string;
+  exp: ExpoConfig;
+  options: NormalizedOptions;
+};
+
+function hasBooleanArg(rawArgs: string[], argName: string): boolean {
   return rawArgs.includes('--' + argName) || rawArgs.includes('--no-' + argName);
 }
 
-function getBooleanArg(rawArgs: string[], argName: string) {
+function getBooleanArg(rawArgs: string[], argName: string): boolean {
   if (rawArgs.includes('--' + argName)) {
     return true;
   } else {
@@ -33,8 +50,46 @@ function getBooleanArg(rawArgs: string[], argName: string) {
   }
 }
 
-function parseStartOptions(projectDir: string, options: Object): Object {
-  let startOpts = {};
+async function normalizeOptionsAsync(
+  projectDir: string,
+  options: Options
+): Promise<NormalizedOptions> {
+  const opts: NormalizedOptions = {
+    webOnly: options.webOnly ?? (await Web.onlySupportsWebAsync(projectDir)),
+    nonInteractive: options.parent?.nonInteractive,
+  };
+
+  const rawArgs = options.parent?.rawArgs || [];
+
+  if (hasBooleanArg(rawArgs, 'dev')) {
+    opts.dev = getBooleanArg(rawArgs, 'dev');
+  } else {
+    opts.dev = true;
+  }
+  if (hasBooleanArg(rawArgs, 'minify')) {
+    opts.minify = getBooleanArg(rawArgs, 'minify');
+  } else {
+    opts.minify = false;
+  }
+  if (hasBooleanArg(rawArgs, 'https')) {
+    opts.https = getBooleanArg(rawArgs, 'https');
+  }
+
+  await cacheOptionsAsync(projectDir, opts);
+
+  return options;
+}
+
+async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {
+  await ProjectSettings.setAsync(projectDir, {
+    dev: options.dev,
+    minify: options.minify,
+    https: options.https,
+  });
+}
+
+function parseStartOptions(options: NormalizedOptions): Project.StartOptions {
+  const startOpts: Project.StartOptions = {};
 
   if (options.clear) {
     startOpts.reset = true;
@@ -55,9 +110,9 @@ function parseStartOptions(projectDir: string, options: Object): Object {
   return startOpts;
 }
 
-async function startWebAction(projectDir, options) {
+async function startWebAction(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, rootPath } = await configureProjectAsync(projectDir, options);
-  const startOpts = parseStartOptions(projectDir, options);
+  const startOpts = parseStartOptions(options);
   await Project.startAsync(rootPath, startOpts);
   await urlOpts.handleMobileOptsAsync(projectDir, options);
 
@@ -66,12 +121,12 @@ async function startWebAction(projectDir, options) {
   }
 }
 
-async function action(projectDir, options) {
+async function action(projectDir: string, options: NormalizedOptions): Promise<void> {
   const { exp, pkg, rootPath } = await configureProjectAsync(projectDir, options);
 
   await validateDependenciesVersions(projectDir, exp, pkg);
 
-  const startOpts = parseStartOptions(projectDir, options);
+  const startOpts = parseStartOptions(options);
 
   await Project.startAsync(rootPath, startOpts);
 
@@ -96,13 +151,17 @@ async function action(projectDir, options) {
   log.nested(chalk.green('Logs for your project will appear below. Press Ctrl+C to exit.'));
 }
 
-async function validateDependenciesVersions(projectDir, exp, pkg) {
+async function validateDependenciesVersions(
+  projectDir: string,
+  exp: ExpoConfig,
+  pkg: PackageJSONConfig
+): Promise<void> {
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
     return;
   }
 
   const bundleNativeModulesPath = attempt(() =>
-    ConfigUtils.resolveModule('expo/bundledNativeModules.json', projectDir, exp)
+    resolveModule('expo/bundledNativeModules.json', projectDir, exp)
   );
   if (isError(bundleNativeModulesPath)) {
     log.warn(
@@ -124,6 +183,7 @@ async function validateDependenciesVersions(projectDir, exp, pkg) {
     const actualRange = pkg.dependencies[moduleName];
     if (
       (semver.valid(actualRange) || semver.validRange(actualRange)) &&
+      typeof expectedRange === 'string' &&
       !semver.intersects(expectedRange, actualRange)
     ) {
       incorrectDeps.push({
@@ -153,44 +213,11 @@ async function validateDependenciesVersions(projectDir, exp, pkg) {
   }
 }
 
-async function normalizeOptionsAsync(projectDir: string, options: Object): Object {
-  const nonInteractive = options.parent && options.parent.nonInteractive;
-
-  let webOnly: boolean = false;
-
-  if (typeof options.webOnly !== 'undefined') {
-    webOnly = options.webOnly;
-  } else {
-    webOnly = await Web.onlySupportsWebAsync(projectDir);
-  }
-
-  let opts = {};
-  let rawArgs = options.parent.rawArgs;
-
-  if (hasBooleanArg(rawArgs, 'dev')) {
-    opts.dev = getBooleanArg(rawArgs, 'dev');
-  } else {
-    opts.dev = true;
-  }
-  if (hasBooleanArg(rawArgs, 'minify')) {
-    opts.minify = getBooleanArg(rawArgs, 'minify');
-  } else {
-    opts.minify = false;
-  }
-  if (hasBooleanArg(rawArgs, 'https')) {
-    opts.https = getBooleanArg(rawArgs, 'https');
-  }
-
-  await ProjectSettings.setAsync(projectDir, opts);
-
-  return {
-    ...options,
-    webOnly,
-    nonInteractive,
-  };
-}
-
-async function tryOpeningDevToolsAsync({ rootPath, exp, options }): Promise<void> {
+async function tryOpeningDevToolsAsync({
+  rootPath,
+  exp,
+  options,
+}: OpenDevToolsOptions): Promise<void> {
   const devToolsUrl = await DevToolsServer.startAsync(rootPath);
   log(`Expo DevTools is running at ${chalk.underline(devToolsUrl)}`);
 
@@ -206,7 +233,10 @@ async function tryOpeningDevToolsAsync({ rootPath, exp, options }): Promise<void
   }
 }
 
-async function configureProjectAsync(projectDir, options) {
+async function configureProjectAsync(
+  projectDir: string,
+  options: NormalizedOptions
+): Promise<{ rootPath: string; exp: ExpoConfig; pkg: PackageJSONConfig }> {
   if (options.webOnly) {
     installExitHooks(projectDir, Project.stopWebOnlyAsync);
   } else {
@@ -216,7 +246,7 @@ async function configureProjectAsync(projectDir, options) {
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectDir, options.webOnly);
+  const { exp, pkg } = await readConfigJsonAsync(projectDir, options.webOnly);
 
   const rootPath = path.resolve(projectDir);
 
@@ -255,7 +285,7 @@ export default (program: any) => {
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectDir, options) => {
+      async (projectDir: string, options: Options): Promise<void> => {
         const normalizedOptions = await normalizeOptionsAsync(projectDir, options);
         if (normalizedOptions.webOnly) {
           return await startWebAction(projectDir, normalizedOptions);
@@ -279,7 +309,7 @@ export default (program: any) => {
     .urlOpts()
     .allowOffline()
     .asyncActionProjectDir(
-      async (projectDir, options) => {
+      async (projectDir: string, options: Options): Promise<void> => {
         return startWebAction(
           projectDir,
           await normalizeOptionsAsync(projectDir, { ...options, webOnly: true })

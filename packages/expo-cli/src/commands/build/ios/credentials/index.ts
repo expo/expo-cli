@@ -6,8 +6,11 @@ import { determineMissingCredentials, generate } from './generate';
 import { PLATFORMS } from '../../constants';
 import log from '../../../../log';
 
-async function fetch(projectMetadata, decrypt = false) {
-  const query = {
+export async function fetch(
+  projectMetadata: Pick<Credentials.CredentialMetadata, 'username' | 'experienceName'>,
+  decrypt: boolean = false
+) {
+  const query: Credentials.CredentialMetadata = {
     ...projectMetadata,
     platform: PLATFORMS.IOS,
   };
@@ -16,8 +19,13 @@ async function fetch(projectMetadata, decrypt = false) {
     : await Credentials.getEncryptedCredentialsForPlatformAsync(query);
 }
 
-async function getDistributionCertSerialNumber(projectMetadata) {
-  const { certP12, certPassword } = await fetch(projectMetadata, true);
+export async function getDistributionCertSerialNumber(
+  projectMetadata: Pick<Credentials.CredentialMetadata, 'username' | 'experienceName'>
+) {
+  const { certP12, certPassword } = (await fetch(
+    projectMetadata,
+    true
+  )) as Credentials.Ios.Credentials;
   if (certP12 && certPassword) {
     return IosCodeSigning.findP12CertSerialNumber(certP12, certPassword);
   } else {
@@ -25,7 +33,11 @@ async function getDistributionCertSerialNumber(projectMetadata) {
   }
 }
 
-async function update(projectMetadata, credentials, userCredentialsIds) {
+export async function update(
+  projectMetadata: Credentials.CredentialMetadata,
+  credentials: Credentials.Credentials,
+  userCredentialsIds: number[]
+): Promise<void> {
   await Credentials.updateCredentialsForPlatform(
     PLATFORMS.IOS,
     credentials,
@@ -35,7 +47,15 @@ async function update(projectMetadata, credentials, userCredentialsIds) {
   log.warn('Encrypted credentials and saved to the Expo servers');
 }
 
-async function clear({ username, experienceName, bundleIdentifier }, only) {
+export async function clear(
+  {
+    username,
+    experienceName,
+    bundleIdentifier,
+  }: Pick<Credentials.CredentialMetadata, 'username' | 'experienceName' | 'bundleIdentifier'>,
+  only: any
+) {
+  // @ts-ignore: 'platform' is declared here.
   await Credentials.removeCredentialsForPlatform(PLATFORMS.IOS, {
     username,
     experienceName,
@@ -45,13 +65,4 @@ async function clear({ username, experienceName, bundleIdentifier }, only) {
   log.warn('Removed existing credentials from expo servers');
 }
 
-export {
-  fetch,
-  getDistributionCertSerialNumber,
-  update,
-  generate,
-  clear,
-  revoke,
-  determineMissingCredentials,
-  prompt,
-};
+export { generate, revoke, determineMissingCredentials, prompt };
