@@ -35,7 +35,6 @@
     "@expo/config": "2.6.1",
     "@expo/image-utils": "^0.2.12",
     "is-color": "^1.0.2",
-    "jimp": "^0.9.3",
     "mime": "^2.4.0",
     "node-fetch": "^2.6.0",
     "tempy": "^0.3.0"
