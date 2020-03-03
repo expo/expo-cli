@@ -325,10 +325,9 @@ async function attemptToStartEmulatorOrAssertAsync() {
   if (!(await _isDeviceAttachedAsync())) {
     // If no devices or emulators are attached we should attempt to open one.
     if (!(await maybeStartAnyEmulatorAsync())) {
-      // TODO(Bacon): Maybe add instructions for easily creating an emulator.
       const genymotionMessage = `https://developer.android.com/studio/run/device.html#developer-device-options. If you are using Genymotion go to Settings -> ADB, select "Use custom Android SDK tools", and point it at your Android SDK directory.`;
       throw new Error(
-        `No Android connected device found, and no emulators can be started automatically. Please connect a device or create an emulator, then follow the instructions here to enable USB debugging:\n${genymotionMessage}`
+        `No Android connected device found, and no emulators could be started automatically.\nPlease connect a device or create an emulator (https://docs.expo.io/versions/latest/workflow/android-studio-emulator).\nThen follow the instructions here to enable USB debugging:\n${genymotionMessage}`
       );
     }
   }
