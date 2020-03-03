@@ -1,76 +1,12 @@
 import semver from 'semver';
 import spawnAsync from '@expo/spawn-async';
-
-export type SharpGlobalOptions = {
-  compressionLevel?: '';
-  format?: ImageFormat;
-  input: string;
-  limitInputPixels?: number;
-  output: string;
-  progressive?: boolean;
-  quality?: number;
-  withMetadata?: boolean;
-  [key: string]: string | number | boolean | undefined | null;
-};
-
-export type SharpCommandOptions = RemoveAlphaOptions | ResizeOptions | FlattenOptions;
-
-type FlattenOptions = {
-  operation: 'flatten';
-  background: string;
-};
-
-export type ResizeMode = 'contain' | 'cover' | 'fill' | 'inside' | 'outside';
-
-export type ImageFormat = 'input' | 'jpeg' | 'jpg' | 'png' | 'raw' | 'tiff' | 'webp';
-
-type RemoveAlphaOptions = {
-  operation: 'removeAlpha';
-};
-
-type ResizeOptions = {
-  operation: 'resize';
-  background?: string;
-  fastShrinkOnLoad?: boolean;
-  fit?: ResizeMode;
-  height?: number;
-  kernel?: 'nearest' | 'cubic' | 'mitchell' | 'lanczos2' | 'lanczos3';
-  position?:
-    | 'center'
-    | 'centre'
-    | 'north'
-    | 'east'
-    | 'south'
-    | 'west'
-    | 'northeast'
-    | 'southeast'
-    | 'southwest'
-    | 'northwest'
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left'
-    | 'right top'
-    | 'right bottom'
-    | 'left bottom'
-    | 'left top'
-    | 'entropy'
-    | 'attention';
-  width: number;
-  withoutEnlargement?: boolean;
-};
-
-type Options =
-  | {}
-  | {
-      [key: string]: boolean | number | string | undefined;
-    };
+import { Options, SharpCommandOptions, SharpGlobalOptions } from './sharp.types';
 
 const SHARP_HELP_PATTERN = /\n\nSpecify --help for available options/g;
 
 export async function isAvailableAsync(): Promise<boolean> {
   try {
-    return !!(await findSharpBinAsync());
+    return !!await findSharpBinAsync();
   } catch (_) {
     return false;
   }
