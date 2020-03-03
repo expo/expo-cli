@@ -1,5 +1,16 @@
+import plist, { PlistObject } from 'plist';
+import { IosCodeSigning } from '@expo/xdl';
 import { runAction, travelingFastlane } from './fastlane';
 import { AppleCtx } from './authenticate';
+import { DistCert, DistCertInfo } from './distributionCert';
+
+export type ProvisioningProfileInfo = {
+  name: string;
+  status: string;
+  expires: number;
+  distributionMethod: string;
+  certificates: DistCertInfo[];
+} & ProvisioningProfile;
 
 export type ProvisioningProfile = {
   provisioningProfileId: string;
@@ -12,15 +23,69 @@ export class ProvisioningProfileManager {
     this.ctx = appleCtx;
   }
 
-  async create(bundleIdentifier: string, metadata: any = {}): Promise<ProvisioningProfile> {
+  async useExisting<T extends DistCert>(
+    bundleIdentifier: string,
+    provisioningProfile: ProvisioningProfile,
+    distCert: T
+  ): Promise<ProvisioningProfile> {
+    if (!provisioningProfile.provisioningProfileId) {
+      throw new Error('Provisioning profile: cannot use existing profile, insufficient id');
+    }
+
+    if (!distCert.distCertSerialNumber) {
+      distCert.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        distCert.certP12,
+        distCert.certPassword
+      ) as string;
+    }
+
+    const args = [
+      'use-existing',
+      this.ctx.appleId,
+      this.ctx.appleIdPassword,
+      this.ctx.team.id,
+      String(this.ctx.team.inHouse),
+      bundleIdentifier,
+      provisioningProfile.provisioningProfileId,
+      distCert.distCertSerialNumber,
+    ];
+    return await runAction(travelingFastlane.manageProvisioningProfiles, args);
+  }
+
+  async list(bundleIdentifier: string): Promise<ProvisioningProfileInfo[]> {
+    const args = [
+      'list',
+      this.ctx.appleId,
+      this.ctx.appleIdPassword,
+      this.ctx.team.id,
+      String(this.ctx.team.inHouse),
+      bundleIdentifier,
+    ];
+    const { profiles } = await runAction(travelingFastlane.manageProvisioningProfiles, args);
+    return profiles;
+  }
+
+  async create<T extends DistCert>(
+    bundleIdentifier: string,
+    distCert: T,
+    profileName: string
+  ): Promise<ProvisioningProfile> {
+    if (!distCert.distCertSerialNumber) {
+      distCert.distCertSerialNumber = IosCodeSigning.findP12CertSerialNumber(
+        distCert.certP12,
+        distCert.certPassword
+      ) as string;
+    }
+
     const args = [
       'create',
       this.ctx.appleId,
       this.ctx.appleIdPassword,
       this.ctx.team.id,
-      this.ctx.team.inHouse,
+      String(this.ctx.team.inHouse),
       bundleIdentifier,
-      metadata.distCertSerialNumber || '__last__',
+      distCert.distCertSerialNumber,
+      profileName,
     ];
     return await runAction(travelingFastlane.manageProvisioningProfiles, args);
   }
@@ -35,5 +100,12 @@ export class ProvisioningProfileManager {
       bundleIdentifier,
     ];
     await runAction(travelingFastlane.manageProvisioningProfiles, args);
+  }
+
+  static isExpired(base64EncodedProfile: string): boolean {
+    const buffer = Buffer.from(base64EncodedProfile, 'base64');
+    const profile = buffer.toString('utf-8');
+    const profilePlist = plist.parse(profile) as PlistObject;
+    return new Date(profilePlist['ExpirationDate'] as string) <= new Date();
   }
 }
