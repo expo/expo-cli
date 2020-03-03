@@ -5,11 +5,16 @@ import generateICO from 'to-ico';
 import { fileExistsAsync } from '@expo/config';
 import { resizeIconAsync } from './resize';
 import generateMeta from './HTML';
+import { downloadImage } from '../icons';
 
 export async function generate(
   src: string,
   publicPath: string
 ): Promise<{ html: string[]; files: any[] }> {
+  if (src.startsWith('http')) {
+    src = await downloadImage(src);
+  }
+
   if (!(await fileExistsAsync(src))) return { files: [], html: [] };
 
   const files: { output: string; size: number; source: Buffer }[] = [];

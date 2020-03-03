@@ -83,7 +83,7 @@ async function getBufferWithMimeAsync(
   }
 }
 
-async function downloadImage(url: string): Promise<string> {
+export async function downloadImage(url: string): Promise<string> {
   const outputPath = temporary.directory();
   const localPath = path.join(outputPath, path.basename(url));
 
@@ -144,7 +144,7 @@ async function processImageAsync(
   let imageBuffer: Buffer | null = await getImageFromCacheAsync(fileName, cacheKey);
   if (!imageBuffer) {
     // Putting the warning here will prevent the warning from showing if all images were reused from the cache
-    if (!hasWarned && !await isAvailableAsync()) {
+    if (!hasWarned && !(await isAvailableAsync())) {
       hasWarned = true;
       // TODO: Bacon: Fallback to nodejs image resizing as native doesn't work in the host environment.
       console.log('ff', cacheKey, fileName, dimensions);
