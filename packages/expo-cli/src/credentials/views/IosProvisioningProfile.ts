@@ -1,6 +1,8 @@
 import chalk from 'chalk';
+import fs from 'fs-extra';
 import find from 'lodash/find';
 import ora from 'ora';
+import every from 'lodash/every';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
@@ -8,9 +10,10 @@ import {
   IosAppCredentials,
   IosCredentials,
   IosDistCredentials,
+  appleTeamSchema,
   provisioningProfileSchema,
 } from '../credentials';
-import { askForUserProvided } from '../actions/promptForCredentials';
+import { askForUserProvided, getCredentialsFromUser } from '../actions/promptForCredentials';
 import { displayIosAppCredentials } from '../actions/list';
 import {
   AppleCtx,
@@ -19,7 +22,6 @@ import {
   ProvisioningProfileInfo,
   ProvisioningProfileManager,
 } from '../../appleApi';
-import { GoBackError } from '../route';
 
 export type ProvisioningProfileOptions = {
   experienceName: string;
@@ -29,9 +31,11 @@ export type ProvisioningProfileOptions = {
 
 export class RemoveProvisioningProfile implements IView {
   shouldRevoke: boolean;
+  nonInteractive: boolean;
 
-  constructor(shouldRevoke: boolean = false) {
+  constructor(shouldRevoke: boolean = false, nonInteractive: boolean = false) {
     this.shouldRevoke = shouldRevoke;
+    this.nonInteractive = nonInteractive;
   }
 
   async open(ctx: Context): Promise<IView | null> {
@@ -48,17 +52,22 @@ export class RemoveProvisioningProfile implements IView {
   }
 
   async removeSpecific(ctx: Context, selected: IosAppCredentials) {
+    log('Removing Provisioning Profile...\n');
     await ctx.ios.deleteProvisioningProfile(selected.experienceName, selected.bundleIdentifier);
 
-    const { revoke } = await prompt([
-      {
-        type: 'confirm',
-        name: 'revoke',
-        message: 'Do you also want to revoke it on Apple Developer Portal?',
-        when: !this.shouldRevoke,
-      },
-    ]);
-    if (revoke || this.shouldRevoke) {
+    let shouldRevoke = this.shouldRevoke;
+    if (!shouldRevoke && !this.nonInteractive) {
+      const { revoke } = await prompt([
+        {
+          type: 'confirm',
+          name: 'revoke',
+          message: 'Do you also want to revoke it on Apple Developer Portal?',
+        },
+      ]);
+      shouldRevoke = revoke;
+    }
+
+    if (shouldRevoke) {
       await ctx.ensureAppleCtx();
       const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
       await ppManager.revoke(selected.bundleIdentifier);
@@ -80,11 +89,17 @@ export class CreateProvisioningProfile implements IView {
 
   async create(ctx: Context): Promise<ProvisioningProfile> {
     const provisioningProfile = await this.provideOrGenerate(ctx);
+    const appleTeam = ctx.hasAppleCtx()
+      ? ctx.appleCtx.team
+      : await getCredentialsFromUser(appleTeamSchema);
+    if (!appleTeam) {
+      throw new Error('Must provide a valid Apple Team Id');
+    }
     return await ctx.ios.updateProvisioningProfile(
       this._experienceName,
       this._bundleIdentifier,
       provisioningProfile,
-      ctx.appleCtx.team
+      appleTeam
     );
   }
 
@@ -106,32 +121,9 @@ export class CreateProvisioningProfile implements IView {
   async provideOrGenerate(ctx: Context): Promise<ProvisioningProfile> {
     const userProvided = await askForUserProvided(provisioningProfileSchema);
     if (userProvided) {
-      if (!ctx.hasAppleCtx()) {
-        log(
-          chalk.yellow(
-            'Provisioning profile: Unable to validate profile, insufficient Apple Credentials'
-          )
-        );
-        return userProvided;
-      }
-      const profileFromApple = await getAppleInfo(
-        ctx.appleCtx,
-        this._bundleIdentifier,
-        userProvided
-      );
-      if (!profileFromApple) {
-        throw new Error(
-          `Provisioning profile ${userProvided.provisioningProfileId} could be found on Apple Servers`
-        );
-      }
-      // configure profile on Apple's Server to use our distCert
-      const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
-      const updatedProfile = await ppManager.useExisting(
-        this._bundleIdentifier,
-        profileFromApple,
-        this._distCert
-      );
-      return updatedProfile;
+      // userProvided profiles don't come with ProvisioningProfileId's (only accessible from Apple Portal API)
+      log(chalk.yellow('Provisioning profile: Unable to validate uploaded profile.'));
+      return userProvided;
     }
     return await generateProvisioningProfile(ctx, this._bundleIdentifier, this._distCert);
   }
@@ -160,9 +152,8 @@ export class UseExistingProvisioningProfile implements IView {
         this._distCert,
         selected
       );
-      return null;
     }
-    throw new GoBackError();
+    return null;
   }
 }
 
@@ -191,6 +182,14 @@ export class CreateOrReuseProvisioningProfile implements IView {
   async open(ctx: Context): Promise<IView | null> {
     if (!ctx.user) {
       throw new Error(`This workflow requires you to be logged in.`);
+    }
+
+    if (!ctx.hasAppleCtx()) {
+      return new CreateProvisioningProfile({
+        experienceName: this._experienceName,
+        bundleIdentifier: this._bundleIdentifier,
+        distCert: this._distCert,
+      });
     }
 
     const ppManager = new ProvisioningProfileManager(ctx.appleCtx);
@@ -234,7 +233,6 @@ export class CreateOrReuseProvisioningProfile implements IView {
         value: 'CHOOSE_EXISTING',
       },
       { name: '[Add a new provisioning profile]', value: 'GENERATE' },
-      { name: '[Go back]', value: 'GO_BACK' },
     ];
 
     const question: Question = {
@@ -259,9 +257,9 @@ export class CreateOrReuseProvisioningProfile implements IView {
         bundleIdentifier: this._bundleIdentifier,
         distCert: this._distCert,
       });
-    } else {
-      throw new GoBackError(); // go back
     }
+
+    throw new Error('unsupported action');
   }
 }
 
@@ -278,26 +276,16 @@ async function selectProfileFromApple(
     return null;
   }
 
-  const NONE_SELECTED = -1;
-  const choices = profiles.map((entry, index) => ({
-    name: formatProvisioningProfileFromApple(entry),
-    value: index,
-  }));
-  choices.push({
-    name: '[Go back]',
-    value: NONE_SELECTED,
-  });
-
   const question: Question = {
     type: 'list',
     name: 'credentialsIndex',
     message: 'Select Provisioning Profile from the list.',
-    choices,
+    choices: profiles.map((entry, index) => ({
+      name: formatProvisioningProfileFromApple(entry),
+      value: index,
+    })),
   };
   const { credentialsIndex } = await prompt(question);
-  if (credentialsIndex === NONE_SELECTED) {
-    return null;
-  }
   return profiles[credentialsIndex];
 }
 
@@ -318,26 +306,16 @@ async function selectProfileFromExpo(
     return `Provisioning Profile (ID: ${id}, Team ID: ${teamId})`;
   };
 
-  const NONE_SELECTED = -1;
-  const choices = profiles.map((entry, index) => ({
-    name: getName(entry),
-    value: index,
-  }));
-  choices.push({
-    name: '[Go back]',
-    value: NONE_SELECTED,
-  });
-
   const question: Question = {
     type: 'list',
     name: 'credentialsIndex',
     message: 'Select Provisioning Profile from the list.',
-    choices,
+    choices: profiles.map((entry, index) => ({
+      name: getName(entry),
+      value: index,
+    })),
   };
   const { credentialsIndex } = await prompt(question);
-  if (credentialsIndex === NONE_SELECTED) {
-    return null;
-  }
   return profiles[credentialsIndex];
 }
 
@@ -355,16 +333,10 @@ async function generateProvisioningProfile(
 
 // Best effort validation without Apple credentials
 export async function validateProfileWithoutApple(
-  appCredentials: IosAppCredentials,
-  distCert: IosDistCredentials
+  provisioningProfile: ProvisioningProfile
 ): Promise<boolean> {
   const spinner = ora(`Performing best effort validation of Provisioning Profile...\n`).start();
-  if (appCredentials.distCredentialsId !== distCert.id) {
-    spinner.fail('Provisioning profile on file is associated with a different distribution cert');
-    return false;
-  }
-
-  const base64EncodedProfile = appCredentials.credentials.provisioningProfile;
+  const base64EncodedProfile = provisioningProfile.provisioningProfile;
   if (!base64EncodedProfile) {
     spinner.fail('No profile on file');
     return false;
@@ -376,7 +348,6 @@ export async function validateProfileWithoutApple(
   }
 
   spinner.succeed('Successfully performed best effort validation of Provisioning Profile.');
-  log(chalk.yellow('To perform full validation, please provide sufficient Apple Credentials'));
   return true;
 }
 
@@ -385,6 +356,13 @@ export async function getAppleInfo(
   bundleIdentifier: string,
   profile: ProvisioningProfile
 ): Promise<ProvisioningProfileInfo | null> {
+  if (!profile.provisioningProfileId) {
+    log(
+      chalk.yellow('Provisioning Profile: cannot look up profile on Apple Servers - there is no id')
+    );
+    return null;
+  }
+
   const spinner = ora(`Getting Provisioning Profile info from Apple's Servers...\n`).start();
   const ppManager = new ProvisioningProfileManager(appleCtx);
   const profilesFromApple = await ppManager.list(bundleIdentifier);
@@ -418,7 +396,9 @@ export async function configureAndUpdateProvisioningProfile(
   const updatedProfile = await ppManager.useExisting(bundleIdentifier, profileFromApple, distCert);
   log(
     chalk.green(
-      `Successfully configured Provisioning Profile ${profileFromApple.provisioningProfileId} on Apple Servers with distribution certificate ${distCert.certId}`
+      `Successfully configured Provisioning Profile ${
+        profileFromApple.provisioningProfileId
+      } on Apple Servers with Distribution Certificate ${distCert.certId || ''}`
     )
   );
 
@@ -437,8 +417,53 @@ export async function configureAndUpdateProvisioningProfile(
 }
 
 function formatProvisioningProfileFromApple(appleInfo: ProvisioningProfileInfo) {
-  const { name, status, expires, provisioningProfileId } = appleInfo;
-  const id = chalk.green(provisioningProfileId || '-----');
-  const details = `Status: ${status} || Expiry: ${expires}`;
-  return `Provisioning Profile (ID: ${id}, Name: ${name})\n    ${details}`;
+  const { expires, provisioningProfileId } = appleInfo;
+  const id = provisioningProfileId ?? '-----';
+  const name = appleInfo.name ?? '-----';
+  const expireString = expires ? new Date(expires * 1000).toDateString() : 'unknown';
+  const details = chalk.green(`\n    Name: ${name}\n    Expiry: ${expireString}`);
+  return `Provisioning Profile - ID: ${id}${details}`;
+}
+
+export async function getProvisioningProfileFromParams(builderOptions: {
+  provisioningProfilePath?: string;
+  teamId?: string;
+}): Promise<ProvisioningProfile | null> {
+  const { provisioningProfilePath, teamId } = builderOptions;
+
+  // none of the provisioningProfile params were set, assume user has no intention of passing it in
+  if (!provisioningProfilePath) {
+    return null;
+  }
+
+  // partial provisioningProfile params were set, assume user has intention of passing it in
+  if (!every([provisioningProfilePath, teamId])) {
+    throw new Error(
+      'In order to provide a Provisioning Profile through the CLI parameters, you have to pass --provisioning-profile-path and --team-id parameters.'
+    );
+  }
+
+  return {
+    provisioningProfile: await fs.readFile(provisioningProfilePath as string, 'base64'),
+  };
+}
+
+export async function useProvisioningProfileFromParams(
+  ctx: Context,
+  appCredentials: IosAppCredentials,
+  teamId: string,
+  provisioningProfile: ProvisioningProfile
+): Promise<ProvisioningProfile> {
+  const { experienceName, bundleIdentifier } = appCredentials;
+  const isValid = await validateProfileWithoutApple(provisioningProfile);
+  if (!isValid) {
+    throw new Error('Uploaded invalid Provisioning Profile');
+  }
+
+  return await ctx.ios.updateProvisioningProfile(
+    experienceName,
+    bundleIdentifier,
+    provisioningProfile,
+    { id: teamId }
+  );
 }

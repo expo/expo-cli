@@ -14,6 +14,46 @@ import {
 
 import log from '../../log';
 
+export async function displayProjectCredentials(
+  experienceName: string,
+  bundleIdentifier: string,
+  credentials: IosCredentials
+): Promise<void> {
+  const appCredential = credentials.appCredentials.find(
+    appCredential =>
+      appCredential.experienceName === experienceName &&
+      appCredential.bundleIdentifier === bundleIdentifier
+  );
+
+  if (!appCredential) {
+    log(
+      chalk.bold(
+        `No credentials configured for app ${experienceName} with bundle identifier ${bundleIdentifier}\n`
+      )
+    );
+    return;
+  }
+
+  log();
+  log(chalk.bold('Project Credential Configuration:'));
+  displayIosAppCredentials(appCredential);
+  log();
+
+  const distCertId = appCredential.distCredentialsId;
+  const distCert =
+    distCertId && credentials.userCredentials.find(credential => credential.id === distCertId);
+  if (distCert) {
+    displayIosUserCredentials(distCert, credentials);
+  }
+
+  const pushKeyId = appCredential.pushCredentialsId;
+  const pushKey =
+    pushKeyId && credentials.userCredentials.find(credential => credential.id === pushKeyId);
+  if (pushKey) {
+    displayIosUserCredentials(pushKey, credentials);
+  }
+}
+
 export async function displayIosCredentials(credentials: IosCredentials) {
   log(chalk.bold('Available credentials for iOS apps\n'));
 

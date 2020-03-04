@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+import log from '../../log';
 import * as iosProfileView from './IosProvisioningProfile';
 
 import { Context, IView } from '../context';
@@ -30,17 +32,6 @@ export class SetupIosProvisioningProfile implements IView {
       this._bundleIdentifier
     );
 
-    if (!ctx.hasAppleCtx) {
-      const isValid = await iosProfileView.validateProfileWithoutApple(
-        appCredentials,
-        this._distCert
-      );
-      if (!isValid) {
-        throw new Error(`The provisioning profile we have on file is no longer valid.`);
-      }
-      return null;
-    }
-
     // Try to use the profile we have on file first
     const configuredProfile = await ctx.ios.getProvisioningProfile(
       this._experienceName,
@@ -54,6 +45,23 @@ export class SetupIosProvisioningProfile implements IView {
         bundleIdentifier: this._bundleIdentifier,
         distCert: this._distCert,
       });
+    }
+
+    if (!ctx.hasAppleCtx()) {
+      const isValid = await iosProfileView.validateProfileWithoutApple(configuredProfile);
+      if (!isValid) {
+        throw new Error(`The provisioning profile we have on file is no longer valid.`);
+      }
+      return null;
+    }
+
+    if (!configuredProfile.provisioningProfileId) {
+      log(
+        chalk.yellow(
+          "The provisioning profile we have on file cannot be validated on Apple's servers."
+        )
+      );
+      return null;
     }
 
     const profileFromApple = await iosProfileView.getAppleInfo(
