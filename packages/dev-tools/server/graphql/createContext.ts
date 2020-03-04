@@ -14,27 +14,26 @@ export const PROCESS_SOURCE = {
 };
 const DEFAULT_SOURCES = [ISSUES_SOURCE, PROCESS_SOURCE];
 
-export default function createContext({ projectDir, messageBuffer, layout, issues }) {
+export default function createContext({ projectDir, messageBuffer, layout, issues }: any): any {
   return {
-    getCurrentProject() {
+    getCurrentProject(): { projectDir: string } {
       return {
         projectDir,
       };
     },
-    getMessageIterator(cursor) {
+    getMessageIterator(cursor: number) {
       return messageBuffer.getIterator(cursor);
     },
-    getMessageEdges(source) {
+    getMessageEdges(source?: any) {
       if (source) {
         if (source.id === ISSUES_SOURCE.id) {
           return issues.getIssueList();
         }
         return flattenMessagesFromBuffer(messageBuffer, source.id);
-      } else {
-        return flattenMessagesFromBuffer(messageBuffer);
       }
+      return flattenMessagesFromBuffer(messageBuffer);
     },
-    getMessageConnection(source) {
+    getMessageConnection(source: any) {
       const edges = this.getMessageEdges(source);
 
       let unreadCount = 0;
@@ -48,7 +47,7 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
         unreadCount,
         edges,
         // on-demand mapping
-        nodes: () => edges.map(({ node }) => node),
+        nodes: () => edges.map(({ node }: any) => node),
         pageInfo: {
           hasNextPage: false,
           lastReadCursor,
@@ -62,13 +61,13 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
     getProcessSource() {
       return PROCESS_SOURCE;
     },
-    getSourceById(id) {
+    getSourceById(id: string): any {
       const allSources = this.getSources();
-      return allSources.find(source => source.id === id);
+      return allSources.find((source: any) => source.id === id);
     },
-    getSources() {
-      const chunks = messageBuffer.all().filter(({ node }) => node && node.tag === 'device');
-      const devices = uniqBy(chunks, ({ node }) => node.deviceId).map(({ node }) => ({
+    getSources(): any[] {
+      const chunks = messageBuffer.all().filter(({ node }: any) => node && node.tag === 'device');
+      const devices = uniqBy(chunks, ({ node }) => node.deviceId).map(({ node }: any) => ({
         __typename: 'Device',
         id: node.deviceId,
         name: node.deviceName,
@@ -78,13 +77,13 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
     getProjectManagerLayout() {
       return layout.get();
     },
-    setProjectManagerLayout(newLayout) {
-      newLayout.sources.forEach(sourceId => {
+    setProjectManagerLayout(newLayout: any) {
+      newLayout.sources.forEach((sourceId: string) => {
         this.setLastRead(sourceId);
       });
       layout.set(newLayout);
     },
-    setLastRead(sourceId, lastReadCursor) {
+    setLastRead(sourceId: string, lastReadCursor: any) {
       if (!lastReadCursor) {
         const source = this.getSourceById(sourceId);
         const edges = this.getMessageEdges(source);
@@ -96,14 +95,16 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
       }
       layout.setLastRead(sourceId, lastReadCursor.toString());
     },
-    clearMessages(sourceId) {
+    clearMessages(sourceId: string): void {
       messageBuffer.push({
         type: 'CLEARED',
         sourceId,
       });
     },
     getIssueIterator() {
+      // @ts-ignore
       const iterator = eventEmitterToAsyncIterator(issues, ['ADDED', 'UPDATED', 'DELETED']);
+
       return {
         async next() {
           const { value, done } = await iterator.next();
@@ -115,10 +116,12 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
             done,
           };
         },
-        return() {
+        return(): any {
+          // @ts-ignore
           return iterator.return();
         },
-        throw(error) {
+        throw(error: Error): any {
+          // @ts-ignore
           return iterator.throw(error);
         },
         [$$asyncIterator]() {
@@ -129,10 +132,10 @@ export default function createContext({ projectDir, messageBuffer, layout, issue
   };
 }
 
-function flattenMessagesFromBuffer(buffer, sourceId) {
+function flattenMessagesFromBuffer(buffer: any, sourceId?: string) {
   const items = buffer.allWithCursor();
   const itemsById = new Map();
-  const flattenedItems = [];
+  const flattenedItems: any[] = [];
   for (let i = items.length - 1; i >= 0; i--) {
     const { cursor, item } = items[i];
     if (sourceId && item.sourceId !== sourceId) {
@@ -153,7 +156,7 @@ function flattenMessagesFromBuffer(buffer, sourceId) {
   return flattenedItems;
 }
 
-function extractReadInfo(layout, sourceId, items) {
+function extractReadInfo(layout: any, sourceId: any, items: any[]) {
   let lastReadCursor = layout.sourceLastReads[sourceId];
   let unreadCount;
   if (!lastReadCursor) {

@@ -1,40 +1,36 @@
-/* @flow */
-
 import { $$asyncIterator } from 'iterall';
 
 export default class AsyncIterableRingBuffer {
-  constructor(size: number) {
-    this.size = size;
-    this.buffer = [];
-    this._startItem = 0;
-    this._endItem = 0;
-    this._pushResolves = [];
-  }
+  buffer: any[] = [];
+  _startItem: number = 0;
+  _endItem: number = 0;
+  _pushResolves: Function[] = [];
 
-  all() {
+  constructor(public size: number) {}
+
+  all(): number[] {
     return [...this.buffer];
   }
 
-  allWithCursor() {
+  allWithCursor(): { item: any; cursor: number }[] {
     return this.buffer.map((item, i) => ({
       item,
       cursor: this._startItem + i,
     }));
   }
 
-  getNextCursor(cursor: ?number) {
-    if (cursor !== null && cursor >= this._startItem) {
+  getNextCursor(cursor?: number): number {
+    if (cursor != null && cursor >= this._startItem) {
       return cursor + 1;
-    } else {
-      return this._startItem;
     }
+    return this._startItem;
   }
 
-  getLastCursor() {
+  getLastCursor(): number {
     return this._endItem;
   }
 
-  async get(cursor) {
+  async get(cursor: number) {
     if (this._endItem > cursor) {
       const adjustedCursor = cursor - this._startItem;
       return this.buffer[adjustedCursor];
@@ -45,11 +41,11 @@ export default class AsyncIterableRingBuffer {
     }
   }
 
-  length() {
+  length(): number {
     return this.buffer.length;
   }
 
-  push(item) {
+  push(item: any): void {
     this.buffer.push(item);
     this._endItem++;
     this._pushResolves.forEach(resolve => resolve(item));
@@ -61,8 +57,10 @@ export default class AsyncIterableRingBuffer {
     }
   }
 
-  filterWithCursor(filter) {
-    let cursor;
+  filterWithCursor(
+    filter: (item: any, cursor: number) => number
+  ): { cursor?: number; items: any[] } {
+    let cursor: number | undefined;
     const items = this.buffer.filter((item, i) => {
       cursor = this._startItem + i;
       return filter(item, cursor);
@@ -73,7 +71,7 @@ export default class AsyncIterableRingBuffer {
     };
   }
 
-  getIterator(cursor: ?number) {
+  getIterator(cursor?: number): Record<string, any> {
     let buffer = this;
     let iterableCursor = cursor;
     return {

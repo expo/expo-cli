@@ -9,14 +9,14 @@ import { createAuthenticationContextAsync, startGraphQLServer } from './DevTools
 
 const PORT = 3333;
 
-async function run() {
+async function run(): Promise<void> {
   try {
     const projectDir = process.argv[2];
     if (!projectDir) {
       throw new Error('No project dir specified.\nUsage: yarn dev <project-dir>');
     }
 
-    const app = next({ dev: true });
+    const app: any = next({ dev: true });
     await app.prepare();
 
     const server = express();
