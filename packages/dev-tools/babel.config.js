@@ -1,8 +1,5 @@
 module.exports = api => {
-  const isTest = api.env('test');
-
-  // Hack to circumvent old version of Next.js being used.
-  if (isTest) return {};
+  api.cache(true);
 
   return {
     presets: ['next/babel'],
@@ -16,7 +13,7 @@ module.exports = api => {
           },
         },
       ],
-      'transform-decorators-legacy',
+      [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
     ],
   };
 };
