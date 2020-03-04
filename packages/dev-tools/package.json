@@ -3,11 +3,11 @@
   "version": "0.10.2",
   "main": "build/server/index.js",
   "scripts": {
-    "dev": "NODE_ENV=development node ./scripts/dev-server.js",
+    "dev": "NODE_ENV=development ts-node ./server/dev-server",
     "build": "yarn clean && yarn build-server && yarn extract-fragment-types && yarn build-client",
     "build-client": "NODE_ENV=production next build && next export -o ./build/client",
     "build-server": "NODE_ENV=production tsc",
-    "extract-fragment-types": "node ./scripts/extract-fragment-types",
+    "extract-fragment-types": "ts-node ./server/extract-fragment-types",
     "clean": "rm -rf ./build",
     "prepare": "yarn build",
     "start": "yarn dev",
@@ -66,6 +66,7 @@
     "react-textarea-autosize": "^6.1.0",
     "redux": "^3.7.2",
     "slugify": "^1.0.2",
+    "ts-node": "^8.6.2",
     "velocity-react": "^1.4.1"
   },
   "license": "MIT",
