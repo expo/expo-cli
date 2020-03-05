@@ -1,5 +1,6 @@
 import { Logger, PackagerLogsStream, ProjectSettings, ProjectUtils } from '@expo/xdl';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+// @ts-ignore
 import * as graphql from 'graphql';
 import express from 'express';
 import freeportAsync from 'freeport-async';
@@ -11,17 +12,17 @@ import base64url from 'base64url';
 import AsyncIterableRingBuffer from './graphql/AsyncIterableRingBuffer';
 import GraphQLSchema from './graphql/GraphQLSchema';
 import createContext, { PROCESS_SOURCE } from './graphql/createContext';
-import Issues from './graphql/Issues';
+import Issues, { Issue } from './graphql/Issues';
 
 const serverStartTimeUTCString = new Date().toUTCString();
 
-function setHeaders(res) {
+function setHeaders(res: express.Response): void {
   // Set the Last-Modified header to server start time because otherwise it
   // becomes Sat, 26 Oct 1985 08:15:00 GMT for files installed from npm.
   res.setHeader('Last-Modified', serverStartTimeUTCString);
 }
 
-async function generateSecureRandomTokenAsync() {
+async function generateSecureRandomTokenAsync(): Promise<string> {
   return new Promise((resolve, reject) => {
     crypto.randomBytes(32, (error, buffer) => {
       if (error) reject(error);
@@ -30,7 +31,7 @@ async function generateSecureRandomTokenAsync() {
   });
 }
 
-export async function createAuthenticationContextAsync({ port }) {
+export async function createAuthenticationContextAsync({ port }: { port: number }) {
   const clientAuthenticationToken = await generateSecureRandomTokenAsync();
   const endpointUrlToken = await generateSecureRandomTokenAsync();
   const graphQLEndpointPath = `/${endpointUrlToken}/graphql`;
@@ -42,13 +43,13 @@ export async function createAuthenticationContextAsync({ port }) {
     graphQLEndpointPath,
     webSocketGraphQLUrl,
     allowedOrigin,
-    requestHandler: (request, response) => {
+    requestHandler: (request: express.Request, response: express.Response): void => {
       response.json({ webSocketGraphQLUrl, clientAuthenticationToken });
     },
   };
 }
 
-export async function startAsync(projectDir) {
+export async function startAsync(projectDir: string): Promise<string> {
   const port = await freeportAsync(19002, { hostnames: [null, 'localhost'] });
   const server = express();
 
@@ -77,7 +78,11 @@ export async function startAsync(projectDir) {
   return `http://${listenHostname}:${port}`;
 }
 
-export function startGraphQLServer(projectDir, httpServer, authenticationContext) {
+export function startGraphQLServer(
+  projectDir: string,
+  httpServer: http.Server,
+  authenticationContext: any
+) {
   const layout = createLayout();
   const issues = new Issues();
   const messageBuffer = createMessageBuffer(projectDir, issues);
@@ -116,22 +121,20 @@ export function startGraphQLServer(projectDir, httpServer, authenticationContext
   );
 }
 
-function devtoolsHost() {
+function devtoolsHost(): string {
   if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
     return process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS.trim();
-  } else {
-    return 'localhost';
   }
+  return 'localhost';
 }
 
-function devtoolsGraphQLHost() {
+function devtoolsGraphQLHost(): string {
   if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS && process.env.REACT_NATIVE_PACKAGER_HOSTNAME) {
     return process.env.REACT_NATIVE_PACKAGER_HOSTNAME.trim();
   } else if (process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS) {
     return process.env.EXPO_DEVTOOLS_LISTEN_ADDRESS;
-  } else {
-    return 'localhost';
   }
+  return 'localhost';
 }
 
 function createLayout() {
@@ -141,22 +144,22 @@ function createLayout() {
     sourceLastReads: {},
   };
   return {
-    get() {
+    get(): any {
       return layout;
     },
-    set(newLayout) {
+    set(newLayout: any): void {
       layout = {
         ...layout,
         ...newLayout,
       };
     },
-    setLastRead(sourceId, lastReadCursor) {
+    setLastRead(sourceId: string, lastReadCursor: any): void {
       layout.sourceLastReads[sourceId] = lastReadCursor;
     },
   };
 }
 
-function createMessageBuffer(projectRoot, issues) {
+function createMessageBuffer(projectRoot: string, issues: Issue): AsyncIterableRingBuffer {
   const buffer = new AsyncIterableRingBuffer(10000);
 
   // eslint-disable-next-line no-new
@@ -198,6 +201,7 @@ function createMessageBuffer(projectRoot, issues) {
         node: {
           ...chunk,
           progress: percentage,
+          // @ts-ignore
           duration: new Date() - (start || new Date()),
         },
       });
@@ -209,6 +213,7 @@ function createMessageBuffer(projectRoot, issues) {
         node: {
           ...chunk,
           error,
+          // @ts-ignore
           duration: end - (start || new Date()),
         },
       });

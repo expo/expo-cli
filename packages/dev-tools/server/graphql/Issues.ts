@@ -1,12 +1,11 @@
 import { EventEmitter } from 'events';
 
-export default class Issues extends EventEmitter {
-  constructor() {
-    super();
-    this.issues = {};
-  }
+export type Issue = Record<string, any>;
 
-  addIssue(issueId, issue) {
+export default class Issues extends EventEmitter {
+  issues: Record<string, Issue> = {};
+
+  addIssue(issueId: string, issue: Issue): void {
     let newIssue = false;
     if (!this.issues[issueId]) {
       newIssue = true;
@@ -22,7 +21,7 @@ export default class Issues extends EventEmitter {
     }
   }
 
-  clearIssue(issueId) {
+  clearIssue(issueId: string): void {
     const issue = this.issues[issueId];
     if (issue) {
       delete this.issues[issueId];
@@ -30,7 +29,7 @@ export default class Issues extends EventEmitter {
     }
   }
 
-  getIssueList() {
+  getIssueList(): { cursor: string; node: Issue }[] {
     return Object.keys(this.issues).map(key => ({
       cursor: key,
       node: this.issues[key],

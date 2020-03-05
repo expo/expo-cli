@@ -8,13 +8,14 @@ export default function eventEmitterToAsyncIterator<T>(
   eventEmitter: EventEmitter,
   eventsNames: string | string[]
 ): AsyncIterator<T> {
-  const pullQueue = [];
-  const pushQueue = [];
+  const pullQueue: any[] = [];
+  const pushQueue: any[] = [];
   const eventsArray = typeof eventsNames === 'string' ? [eventsNames] : eventsNames;
   let listening = true;
 
   const pushValue = event => {
     if (pullQueue.length !== 0) {
+      // @ts-ignore
       pullQueue.shift()({ value: event, done: false });
     } else {
       pushQueue.push(event);
@@ -41,7 +42,7 @@ export default function eventEmitterToAsyncIterator<T>(
     }
   };
 
-  const listeners = [];
+  const listeners: any[] = [];
 
   const addEventListeners = () => {
     for (const eventName of eventsArray) {
@@ -54,6 +55,7 @@ export default function eventEmitterToAsyncIterator<T>(
           }),
       ];
       listeners.push(listener);
+      // @ts-ignore
       eventEmitter.addListener(eventName, listener[1]);
     }
   };
@@ -67,7 +69,8 @@ export default function eventEmitterToAsyncIterator<T>(
   addEventListeners();
 
   return {
-    next() {
+    next(): Promise<IteratorResult<T, any>> {
+      // @ts-ignore
       return listening ? pullValue() : this.return();
     },
     return() {
