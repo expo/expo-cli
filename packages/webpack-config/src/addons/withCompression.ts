@@ -11,7 +11,7 @@ import { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } from '../uti
  * @internal
  */
 export const DEFAULT_GZIP_OPTIONS = {
-  test: /\.(js|css)$/,
+  test: /static\/.*\.(js|css)$/,
   filename: '[path].gz[query]',
   algorithm: 'gzip',
   threshold: 1024,
