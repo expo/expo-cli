@@ -31,27 +31,16 @@ describe('addCompressionPlugins', () => {
     const shimWebpackConfig = {};
 
     const noPluginsWebpackConfig = addCompressionPlugins(shimWebpackConfig, {
-      web: { build: { gzip: false, brotli: false } },
+      web: { build: { gzip: false } },
     });
     expect(noPluginsWebpackConfig.plugins.length).toBe(0);
-  });
-
-  it(`can enable brotli compression with custom options`, () => {
-    const shimWebpackConfig = {};
-
-    const customWebpackConfig = addCompressionPlugins(shimWebpackConfig, {
-      web: { build: { gzip: false, brotli: { threshold: 6500000 } } },
-    });
-
-    expect(customWebpackConfig.plugins.length).toBe(1);
-    expect(customWebpackConfig.plugins[0].threshold).toBe(6500000);
   });
 
   it(`can customize gzip with custom options`, () => {
     const shimWebpackConfig = {};
 
     const customWebpackConfig = addCompressionPlugins(shimWebpackConfig, {
-      web: { build: { gzip: { cache: true, minRatio: -1000 }, brotli: false } },
+      web: { build: { gzip: { cache: true, minRatio: -1000 } } },
     });
 
     expect(customWebpackConfig.plugins.length).toBe(1);

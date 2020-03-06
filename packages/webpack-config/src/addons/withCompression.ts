@@ -1,29 +1,18 @@
 import { ExpoConfig } from '@expo/config';
 import { getPossibleProjectRoot } from '@expo/config/paths';
-import BrotliPlugin from 'brotli-webpack-plugin';
 import CompressionPlugin from 'compression-webpack-plugin';
 
 import { getConfig } from '../env';
 import { AnyConfiguration, Environment } from '../types';
-import { enableWithPropertyOrConfig, overrideWithPropertyOrConfig } from '../utils';
+import { overrideWithPropertyOrConfig } from '../utils';
 
 /**
  * @internal
  */
 export const DEFAULT_GZIP_OPTIONS = {
-  test: /\.(js|css)$/,
+  test: /static\/.*\.(js|css)$/,
   filename: '[path].gz[query]',
   algorithm: 'gzip',
-  threshold: 1024,
-  minRatio: 0.8,
-};
-
-/**
- * @internal
- */
-export const DEFAULT_BROTLI_OPTIONS = {
-  asset: '[path].br[query]',
-  test: /\.(js|css)$/,
   threshold: 1024,
   minRatio: 0.8,
 };
@@ -50,7 +39,7 @@ export default function withCompression(
 }
 
 /**
- * Add Gzip and Brotli compression plugins to the provided Webpack config.
+ * Add Gzip compression to the provided Webpack config.
  *
  * @param webpackConfig Existing Webpack config to modify.
  * @param expoConfig Expo config with compression options.
@@ -65,16 +54,16 @@ export function addCompressionPlugins(
     DEFAULT_GZIP_OPTIONS,
     true
   );
-  const brotliConfig = enableWithPropertyOrConfig(
-    expoConfig.web?.build?.brotli,
-    DEFAULT_BROTLI_OPTIONS,
-    true
-  );
+
+  if (typeof expoConfig.web?.build?.brotli !== 'undefined') {
+    console.warn(
+      'The app.json value `expo.web.build.brotli` has been deprecated. You can add Brotli support manually by customizing the Webpack config with `expo customize:web`.'
+    );
+  }
 
   if (!Array.isArray(webpackConfig.plugins)) webpackConfig.plugins = [];
 
   if (gzipConfig) webpackConfig.plugins.push(new CompressionPlugin(gzipConfig));
-  if (brotliConfig) webpackConfig.plugins.push(new BrotliPlugin(brotliConfig));
 
   return webpackConfig;
 }
