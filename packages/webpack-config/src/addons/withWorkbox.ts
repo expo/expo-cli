@@ -1,4 +1,6 @@
-import { ensureDirSync, readFileSync, writeFileSync } from 'fs-extra';
+import { ensureSlash } from '@expo/config/paths';
+import CopyPlugin from 'copy-webpack-plugin';
+import { ensureDirSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import {
   GenerateSW,
@@ -7,11 +9,9 @@ import {
   InjectManifestOptions,
 } from 'workbox-webpack-plugin';
 
-import CopyPlugin from 'copy-webpack-plugin';
-import { ensureSlash } from '@expo/config/paths';
+import { getPaths } from '../env';
 import { AnyConfiguration } from '../types';
 import { resolveEntryAsync } from '../utils';
-import { getPaths } from '../env';
 
 /**
  * @internal
