@@ -1,7 +1,6 @@
-// @flow
 import { $$asyncIterator } from 'iterall';
 
-export default function mergeAsyncIterators(...iterators: Array<AsyncIterator>) {
+export default function mergeAsyncIterators(...iterators: Array<any>) {
   const promises = iterators.map(() => null);
 
   return {
@@ -12,9 +11,12 @@ export default function mergeAsyncIterators(...iterators: Array<AsyncIterator>) 
         }
       }
       const [i, result] = await Promise.race(promises.map(async (value, i) => [i, await value]));
+
+      // @ts-ignore
       promises[i] = null;
       return {
         done: false,
+        // @ts-ignore
         value: result.value,
       };
     },

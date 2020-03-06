@@ -1,4 +1,3 @@
-/* @flow */
 import { readConfigJsonAsync, writeConfigJsonAsync } from '@expo/config';
 import spawnAsync from '@expo/spawn-async';
 import {
@@ -21,7 +20,7 @@ import { $$asyncIterator } from 'iterall';
 import mergeAsyncIterators from '../asynciterators/mergeAsyncIterators';
 
 // for prettier
-const graphql = text => text;
+const graphql = <T>(text: T): T => text;
 
 const typeDefs = graphql`
   enum Platform {
@@ -313,7 +312,7 @@ const typeDefs = graphql`
 `;
 
 const messageResolvers = {
-  level(message) {
+  level(message: { level: number }): string {
     if (message.level <= Logger.DEBUG) return 'DEBUG';
     if (message.level <= Logger.INFO) return 'INFO';
     if (message.level <= Logger.WARN) return 'WARN';
@@ -634,7 +633,7 @@ const resolvers = {
   Subscription: {
     messages: {
       subscribe(parent, { after }, context) {
-        let parsedCursor = null;
+        let parsedCursor: number | null = null;
         if (after) {
           parsedCursor = parseInt(after, 10);
         }

@@ -120,6 +120,7 @@
     "open": "6.3.0",
     "ora": "3.4.0",
     "pacote": "^11.1.0",
+    "plist": "3.0.1",
     "pngjs": "3.4.0",
     "progress": "2.0.0",
     "qrcode-terminal": "0.11.0",
@@ -129,14 +130,15 @@
     "source-map-support": "0.5.9",
     "split": "1.0.1",
     "targz": "^1.0.1",
+    "terminal-link": "^2.1.1",
     "tempy": "^0.3.0",
     "untildify": "3.0.3",
     "validator": "10.5.0",
     "wordwrap": "1.0.0"
   },
   "optionalDependencies": {
-    "@expo/traveling-fastlane-darwin": "1.12.1",
-    "@expo/traveling-fastlane-linux": "1.12.1"
+    "@expo/traveling-fastlane-darwin": "1.13.1",
+    "@expo/traveling-fastlane-linux": "1.13.1"
   },
   "gitHead": "613642fe06827cc231405784b099cf71c29072df"
 }

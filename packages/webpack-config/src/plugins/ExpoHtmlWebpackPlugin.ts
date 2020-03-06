@@ -1,4 +1,4 @@
-import HtmlWebpackPlugin from 'html-webpack-plugin';
+import OriginalHtmlWebpackPlugin from 'html-webpack-plugin';
 
 import { Environment } from '../types';
 import { getConfig, getMode, getPaths } from '../env';
@@ -22,7 +22,7 @@ const DEFAULT_MINIFY = {
  *
  * @category plugins
  */
-export default class ExpoHtmlWebpackPlugin extends HtmlWebpackPlugin {
+export default class HtmlWebpackPlugin extends OriginalHtmlWebpackPlugin {
   constructor(env: Environment) {
     const locations = env.locations || getPaths(env.projectRoot, env.mode);
     const config = getConfig(env);

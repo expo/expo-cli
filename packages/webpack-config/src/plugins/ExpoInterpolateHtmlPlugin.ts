@@ -1,4 +1,4 @@
-import InterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
+import OriginalInterpolateHtmlPlugin from 'react-dev-utils/InterpolateHtmlPlugin';
 
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { Environment } from '../types';
@@ -19,11 +19,11 @@ export function createNoJSComponent(message: string): string {
  *
  * @category plugins
  */
-export default class ExpoInterpolateHtmlPlugin extends InterpolateHtmlPlugin {
+export default class InterpolateHtmlPlugin extends OriginalInterpolateHtmlPlugin {
   static fromEnv = (
     env: Pick<Environment, 'mode' | 'config' | 'locations' | 'projectRoot'>,
     HtmlWebpackPlugin: HtmlWebpackPlugin
-  ): ExpoInterpolateHtmlPlugin => {
+  ): InterpolateHtmlPlugin => {
     const config = env.config || getConfig(env);
     const { publicPath } = getPublicPaths(env);
 
@@ -32,7 +32,7 @@ export default class ExpoInterpolateHtmlPlugin extends InterpolateHtmlPlugin {
     const { noJavaScriptMessage } = config.web.dangerous;
     const noJSComponent = createNoJSComponent(noJavaScriptMessage);
 
-    return new ExpoInterpolateHtmlPlugin(HtmlWebpackPlugin, {
+    return new InterpolateHtmlPlugin(HtmlWebpackPlugin, {
       WEB_PUBLIC_URL: publicPath,
       WEB_TITLE: config.web.name,
       NO_SCRIPT: noJSComponent,

@@ -12,5 +12,6 @@ node_modules
 *.swp
 *.swo
 *.tsbuildinfo
+.history
 
 coverage/
