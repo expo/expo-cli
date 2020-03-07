@@ -1,6 +1,6 @@
 {
   "name": "@expo/dev-tools",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "main": "build/server/index.js",
   "scripts": {
     "dev": "NODE_ENV=development ts-node ./server/dev-server",
@@ -20,7 +20,7 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "@expo/config": "2.6.1",
+    "@expo/config": "2.6.2",
     "base64url": "3.0.1",
     "express": "4.16.4",
     "freeport-async": "2.0.0",
@@ -35,8 +35,8 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.8.3",
-    "@expo/babel-preset-cli": "^0.2.5",
-    "@expo/xdl": "57.5.2",
+    "@expo/babel-preset-cli": "0.2.6",
+    "@expo/xdl": "57.5.3",
     "anser": "^1.4.7",
     "apollo-cache-inmemory": "^1.1.12",
     "apollo-client": "^2.2.8",
