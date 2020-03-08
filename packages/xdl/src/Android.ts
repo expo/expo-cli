@@ -263,7 +263,11 @@ export async function installExpoAsync(url?: string) {
 
 export async function uninstallExpoAsync() {
   Logger.global.info('Uninstalling Expo from Android device.');
-  return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
+  const isInstalled = await _isExpoInstalledAsync();
+  if (isInstalled) {
+    return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
+  }
+  return '';
 }
 
 export async function upgradeExpoAsync(url?: string): Promise<boolean> {
