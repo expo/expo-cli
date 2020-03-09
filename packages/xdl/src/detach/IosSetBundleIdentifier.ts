@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 import { sync } from 'glob';
 import { join } from 'path';
-import plist from 'plist';
 // @ts-ignore
 import { project as Project } from 'xcode';
+import plist, { PlistObject } from '@expo/plist';
 
 const defaultBundleId = '$(PRODUCT_BUNDLE_IDENTIFIER)';
 
@@ -19,7 +19,7 @@ export function resetPlistBundleIdentifier(plistPath: string) {
   // Read Plist as source
   const rawPlist = fs.readFileSync(plistPath, 'utf8');
 
-  const plistObject = plist.parse(rawPlist) as plist.PlistObject;
+  const plistObject = plist.parse(rawPlist) as PlistObject;
 
   if (plistObject.CFBundleIdentifier) {
     // Maybe bail out

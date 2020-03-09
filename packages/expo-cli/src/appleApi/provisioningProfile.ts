@@ -1,5 +1,5 @@
 import ora from 'ora';
-import plist, { PlistObject } from 'plist';
+import plist, { PlistObject } from '@expo/plist';
 import { IosCodeSigning } from '@expo/xdl';
 import { runAction, travelingFastlane } from './fastlane';
 import { AppleCtx } from './authenticate';
