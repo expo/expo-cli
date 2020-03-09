@@ -296,17 +296,13 @@ ${job.id}
 
   async wait(
     buildId: string,
-    {
-      timeout = 3600,
-      interval = 30,
-      publicUrl,
-    }: { timeout?: number; interval?: number; publicUrl?: string } = {}
+    { interval = 30, publicUrl }: { interval?: number; publicUrl?: string } = {}
   ): Promise<any> {
-    log(`Waiting for build to complete. You can press Ctrl+C to exit.`);
+    log(
+      `Waiting for build to complete.\nYou can press Ctrl+C to exit. It won't cancel the build, you'll able to monitor it at the printed URL.`
+    );
     let spinner = ora().start();
-    let time = new Date().getTime();
-    const endTime = time + secondsToMilliseconds(timeout);
-    while (time <= endTime) {
+    while (true) {
       let res;
       if (process.env.EXPO_NEXT_API) {
         res = await Project.getBuildStatusAsync(this.projectDir, {
@@ -345,13 +341,8 @@ ${job.id}
           spinner.warn('Unknown status.');
           throw new BuildError(`Unknown status: ${job.status} - aborting!`);
       }
-      time = new Date().getTime();
       await delayAsync(secondsToMilliseconds(interval));
     }
-    spinner.warn('Timed out.');
-    throw new BuildError(
-      'Timeout reached! Project is taking longer than expected to finish building, aborting wait...'
-    );
   }
 
   async build(expIds?: Array<string>) {
