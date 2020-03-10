@@ -92,7 +92,7 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
       {
         type: 'confirm',
         name: 'confirm',
-        message: `Do you have access to the Apple Account that owns the app with the bundle identifier ${bundleIdentifier}?`,
+        message: `Do you have access to the Apple account that will be used for submitting this app to the App Store?`,
       },
     ]);
     if (confirm) {
