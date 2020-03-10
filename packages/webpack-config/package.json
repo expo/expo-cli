@@ -55,7 +55,7 @@
     "optimize-css-assets-webpack-plugin": "^5.0.1",
     "pnp-webpack-plugin": "^1.5.0",
     "postcss-safe-parser": "^4.0.1",
-    "progress-bar-webpack-plugin": "^1.12.1",
+    "progress": "^2.0.3",
     "react-dev-utils": "9.0.3",
     "style-loader": "^0.23.1",
     "terser-webpack-plugin": "^1.2.3",
