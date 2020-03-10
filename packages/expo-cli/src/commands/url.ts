@@ -25,15 +25,15 @@ const logArtifactUrl = (platform: 'ios' | 'android') => async (
   }
 
   let res;
-  if (process.env.EXPO_NEXT_API) {
-    res = await Project.getBuildStatusAsync(projectDir, {
-      current: false,
-      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
-    });
-  } else {
+  if (process.env.EXPO_LEGACY_API === 'true') {
     res = await Project.buildAsync(projectDir, {
       current: false,
       mode: 'status',
+      ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
+    });
+  } else {
+    res = await Project.getBuildStatusAsync(projectDir, {
+      current: false,
       ...(options.publicUrl ? { publicUrl: options.publicUrl } : {}),
     });
   }
