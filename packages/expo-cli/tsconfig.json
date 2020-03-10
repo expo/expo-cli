@@ -1,6 +1,7 @@
 {
   "extends": "@expo/babel-preset-cli/tsconfig.base",
   "compilerOptions": {
+    "rootDir": "src",
     "outDir": "build",
     "resolveJsonModule": true
   },
