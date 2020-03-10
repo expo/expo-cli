@@ -3,6 +3,8 @@ import fs from 'fs-extra';
 import find from 'lodash/find';
 import ora from 'ora';
 import every from 'lodash/every';
+import plist, { PlistObject } from '@expo/plist';
+import { IosCodeSigning, PKCS12Utils } from '@expo/xdl';
 import prompt, { Question } from '../../prompt';
 import log from '../../log';
 import { Context, IView } from '../context';
@@ -333,7 +335,9 @@ async function generateProvisioningProfile(
 
 // Best effort validation without Apple credentials
 export async function validateProfileWithoutApple(
-  provisioningProfile: ProvisioningProfile
+  provisioningProfile: ProvisioningProfile,
+  distCert: DistCert,
+  bundleIdentifier: string
 ): Promise<boolean> {
   const spinner = ora(`Performing best effort validation of Provisioning Profile...\n`).start();
   const base64EncodedProfile = provisioningProfile.provisioningProfile;
@@ -342,8 +346,28 @@ export async function validateProfileWithoutApple(
     return false;
   }
 
-  if (ProvisioningProfileManager.isExpired(base64EncodedProfile)) {
-    spinner.fail('Provisioning profile on file is expired');
+  const buffer = Buffer.from(base64EncodedProfile, 'base64');
+  const profile = buffer.toString('utf-8');
+  const profilePlist = plist.parse(profile) as PlistObject;
+
+  const distCertFingerprint = await PKCS12Utils.getP12CertFingerprint(
+    distCert.certP12,
+    distCert.certPassword
+  );
+
+  try {
+    IosCodeSigning.validateProvisioningProfile(profilePlist, {
+      distCertFingerprint,
+      bundleIdentifier,
+    });
+  } catch (e) {
+    spinner.fail(`Provisioning profile is invalid: ${e.toString()}`);
+    return false;
+  }
+
+  const isExpired = new Date(profilePlist['ExpirationDate'] as string) <= new Date();
+  if (isExpired) {
+    spinner.fail('Provisioning profile is expired');
     return false;
   }
 
@@ -452,10 +476,15 @@ export async function useProvisioningProfileFromParams(
   ctx: Context,
   appCredentials: IosAppCredentials,
   teamId: string,
-  provisioningProfile: ProvisioningProfile
+  provisioningProfile: ProvisioningProfile,
+  distCert: DistCert
 ): Promise<ProvisioningProfile> {
   const { experienceName, bundleIdentifier } = appCredentials;
-  const isValid = await validateProfileWithoutApple(provisioningProfile);
+  const isValid = await validateProfileWithoutApple(
+    provisioningProfile,
+    distCert,
+    appCredentials.bundleIdentifier
+  );
   if (!isValid) {
     throw new Error('Uploaded invalid Provisioning Profile');
   }
