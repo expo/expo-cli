@@ -43,7 +43,7 @@ export type AppleCtx = {
 
 export async function authenticate(options: Options = {}): Promise<AppleCtx> {
   const { appleId, appleIdPassword } = await _requestAppleIdCreds(options);
-  const spinner = ora(`Trying to authenticate with Apple Developer Portal...`).start();
+  log(`Authenticating to Apple Developer Portal...`); // use log instead of spinner in case we need to prompt user for 2fa
   try {
     const { teams, fastlaneSession } = await runAction(
       travelingFastlane.authenticate,
@@ -52,11 +52,11 @@ export async function authenticate(options: Options = {}): Promise<AppleCtx> {
         pipeStdout: true,
       }
     );
-    spinner.succeed('Authenticated with Apple Developer Portal successfully!');
+    log(chalk.green('Authenticated with Apple Developer Portal successfully!'));
     const team = await _chooseTeam(teams, options.teamId);
     return { appleId, appleIdPassword, team, fastlaneSession };
   } catch (err) {
-    spinner.fail('Authentication with Apple Developer Portal failed!');
+    log(chalk.green('Authentication with Apple Developer Portal failed!'));
     throw err;
   }
 }
