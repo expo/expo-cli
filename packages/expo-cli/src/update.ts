@@ -1,7 +1,6 @@
 import { ModuleVersion } from '@expo/xdl';
 
-// @ts-ignore: expo-cli is not listed in its own dependencies
-import packageJSON from 'expo-cli/package.json';
+const packageJSON = require('../package.json');
 
 const ModuleVersionChecker = ModuleVersion.createModuleVersionChecker(
   packageJSON.name,

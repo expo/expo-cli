@@ -2,8 +2,7 @@ import { Command } from 'commander';
 // @ts-ignore
 import envinfo from 'envinfo';
 
-// @ts-ignore: expo-cli is not listed in its own dependencies
-import packageJSON from 'expo-cli/package.json';
+const packageJSON = require('../../package.json');
 
 async function action(options: never): Promise<void> {
   const info = await envinfo.run(

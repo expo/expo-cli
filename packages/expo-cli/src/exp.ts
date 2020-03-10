@@ -31,14 +31,16 @@ import {
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
-// @ts-ignore: expo-cli is not listed in its own dependencies
-import packageJSON from 'expo-cli/package.json';
-
 import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import { registerCommands } from './commands';
+
+// We use require() to exclude package.json from TypeScript's analysis since it lives outside the
+// src directory and would change the directory structure of the emitted files under the build
+// directory
+const packageJSON = require('../package.json');
 
 Api.setClientName(packageJSON.version);
 ApiV2.setClientName(packageJSON.version);
