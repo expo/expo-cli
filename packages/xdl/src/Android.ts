@@ -274,7 +274,7 @@ export async function uninstallExpoAsync() {
     return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
   } catch (e) {
     Logger.global.error(
-      'Could not uninstall Expo from your device, please uninstall Expo manually and try again.'
+      'Could not uninstall Expo client from your device, please uninstall Expo client manually and try again.'
     );
     throw e;
   }
