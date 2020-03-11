@@ -27,23 +27,16 @@ if (config.hasServerSideRendering) {
     );
   });
 } else {
-  it(
-    isProduction
-      ? `should register expo service worker`
-      : `should not register expo service worker`,
-    async () => {
+  if (isProduction) {
+    it(`should register expo service worker`, async () => {
       const swID = 'div[data-testid="has-sw-text"]';
-      if (isProduction) {
-        await expect(page).toMatchElement(swID, {
-          text: 'Has SW installed',
-          timeout: 2000,
-        });
-      } else {
-        await expect(page).not.toMatchElement(swID, { timeout: 2000 });
-      }
-    },
-    2500
-  );
+
+      await expect(page).toMatchElement(swID, {
+        text: 'Has SW installed',
+        timeout: 2000,
+      });
+    }, 2500);
+  }
 }
 
 describe('Optional polyfills', () => {
