@@ -36,11 +36,13 @@ if (config.hasServerSideRendering) {
       if (isProduction) {
         await expect(page).toMatchElement(swID, {
           text: 'Has SW installed',
+          timeout: 2000,
         });
       } else {
-        await expect(page).not.toMatchElement(swID);
+        await expect(page).not.toMatchElement(swID, { timeout: 2000 });
       }
-    }
+    },
+    2500
   );
 }
 
