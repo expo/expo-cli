@@ -267,7 +267,7 @@ export async function uninstallExpoAsync() {
   // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
   const isInstalled = await _isExpoInstalledAsync();
   if (!isInstalled) {
-    return '';
+    return;
   }
 
   try {
