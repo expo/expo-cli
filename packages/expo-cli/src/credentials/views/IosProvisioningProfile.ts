@@ -350,12 +350,12 @@ export async function validateProfileWithoutApple(
   const profile = buffer.toString('utf-8');
   const profilePlist = plist.parse(profile) as PlistObject;
 
-  const distCertFingerprint = await PKCS12Utils.getP12CertFingerprint(
-    distCert.certP12,
-    distCert.certPassword
-  );
-
   try {
+    const distCertFingerprint = await PKCS12Utils.getP12CertFingerprint(
+      distCert.certP12,
+      distCert.certPassword
+    );
+
     IosCodeSigning.validateProvisioningProfile(profilePlist, {
       distCertFingerprint,
       bundleIdentifier,
