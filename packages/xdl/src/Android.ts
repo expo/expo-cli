@@ -261,7 +261,7 @@ export async function installExpoAsync(url?: string) {
   return result;
 }
 
-export async function uninstallExpoAsync() {
+export async function uninstallExpoAsync(): Promise<string | undefined> {
   Logger.global.info('Uninstalling Expo from Android device.');
 
   // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
