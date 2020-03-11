@@ -254,21 +254,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
 
   let result = await IosPlist.modifyAsync(supportingDirectory, 'Info', infoPlist => {
     // make sure this happens first:
-    // apply any custom information from ios.infoPlist prior to all other exponent config
-    let usageDescriptionKeysConfigured: { [key: string]: any } = {};
-    if (config.ios && config.ios.infoPlist) {
-      let extraConfig = config.ios.infoPlist;
-      for (let key in extraConfig) {
-        if (extraConfig.hasOwnProperty(key)) {
-          infoPlist[key] = extraConfig[key];
-
-          // if the user provides *UsageDescription keys, don't override them later.
-          if (_isAppleUsageDescriptionKey(key)) {
-            usageDescriptionKeysConfigured[key] = true;
-          }
-        }
-      }
-    }
+    // apply any custom information from ios.infoPlist prior to all other Expo config
+    infoPlist = IOSConfig.CustomInfoPlistEntries.setCustomInfoPlistEntries(config, infoPlist);
 
     // bundle id
     let bundleIdentifier = IOSConfig.BundleIdenitifer.getBundleIdentifier(config);
@@ -392,12 +379,15 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       };
     }
 
+    // TODO(brentvatne): we will need a way in bare workflow to know what permissions are needed for iOS apps.
+    // We currently add usage descriptions for all of them in Expo client / standalone apps in managed workflow.
     let permissionsAppName = config.name ? config.name : 'this app';
+    let customInfoPlistEntries = IOSConfig.CustomInfoPlistEntries.getCustomInfoPlistEntries(config);
     for (let key in infoPlist) {
       if (
         infoPlist.hasOwnProperty(key) &&
         _isAppleUsageDescriptionKey(key) &&
-        !usageDescriptionKeysConfigured.hasOwnProperty(key)
+        !customInfoPlistEntries.hasOwnProperty(key)
       ) {
         infoPlist[key] = infoPlist[key].replace('Expo experiences', permissionsAppName);
       }
