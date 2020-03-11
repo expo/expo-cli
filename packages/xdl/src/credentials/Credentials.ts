@@ -220,50 +220,15 @@ export async function updateCredentialsForPlatform(
 }
 
 export async function removeCredentialsForPlatform(
-  platform: string,
-  metadata: CredentialMetadata & { only: any }
+  platform: 'android', // this is only used for android credential management now.
+  metadata: CredentialMetadata
 ): Promise<void> {
   // doesn't go through mac rpc, no request id needed
   if (process.env.EXPO_NEXT_API) {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
-    if (platform === 'android') {
-      console.log('deleting android credentials');
-      await api.deleteAsync(`credentials/android/keystore/${metadata.experienceName}`);
-    } else if (platform === 'ios') {
-      const { experienceName, bundleIdentifier, only } = metadata;
-
-      if (only.appCredentials) {
-        only.provisioningProfile = true;
-        only.pushCert = true;
-        delete only.appCredentials;
-      }
-      const currentCredentials = await api.getAsync(
-        `credentials/ios/${experienceName}/${encodeURI(bundleIdentifier ?? '')}`
-      );
-      if (isEmpty(currentCredentials)) {
-        return;
-      }
-
-      if (only.provisioningProfile) {
-        await api.postAsync('credentials/ios/provisioningProfile/delete', {
-          experienceName,
-          bundleIdentifier,
-        });
-      }
-      if (only.pushCert) {
-        await api.postAsync('credentials/ios/pushCert/delete', {
-          experienceName,
-          bundleIdentifier,
-        });
-      }
-      if (only.pushKey && currentCredentials.pushCredentialsId) {
-        await api.deleteAsync(`credentials/ios/push/${currentCredentials.pushCredentialsId}`);
-      }
-      if (only.distributionCert && currentCredentials.distCredentialsId) {
-        await api.deleteAsync(`credentials/ios/dist/${currentCredentials.distCredentialsId}`);
-      }
-    }
+    console.log('deleting android credentials');
+    await api.deleteAsync(`credentials/android/keystore/${metadata.experienceName}`);
   } else {
     const { err } = await Api.callMethodAsync('deleteCredentials', [], 'post', {
       platform,
