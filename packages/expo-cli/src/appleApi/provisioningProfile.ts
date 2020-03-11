@@ -1,5 +1,4 @@
 import ora from 'ora';
-import plist, { PlistObject } from '@expo/plist';
 import { IosCodeSigning } from '@expo/xdl';
 import { runAction, travelingFastlane } from './fastlane';
 import { AppleCtx } from './authenticate';
@@ -111,12 +110,5 @@ export class ProvisioningProfileManager {
     ];
     await runAction(travelingFastlane.manageProvisioningProfiles, args);
     spinner.succeed();
-  }
-
-  static isExpired(base64EncodedProfile: string): boolean {
-    const buffer = Buffer.from(base64EncodedProfile, 'base64');
-    const profile = buffer.toString('utf-8');
-    const profilePlist = plist.parse(profile) as PlistObject;
-    return new Date(profilePlist['ExpirationDate'] as string) <= new Date();
   }
 }
