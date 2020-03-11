@@ -146,7 +146,6 @@ export async function removeCredentialsForPlatform(
   if (process.env.EXPO_NEXT_API) {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
-    console.log('deleting android credentials');
     await api.deleteAsync(`credentials/android/keystore/${metadata.experienceName}`);
   } else {
     const { err } = await Api.callMethodAsync('deleteCredentials', [], 'post', {
