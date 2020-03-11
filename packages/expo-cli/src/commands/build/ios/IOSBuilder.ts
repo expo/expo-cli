@@ -170,7 +170,8 @@ See https://docs.expo.io/versions/latest/distribution/building-standalone-apps/#
         ctx,
         appCredentials,
         this.options.teamId!,
-        provisioningProfileFromParams
+        provisioningProfileFromParams,
+        distributionCert
       );
     } else {
       await runCredentialsManager(

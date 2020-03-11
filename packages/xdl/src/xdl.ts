@@ -60,6 +60,8 @@ import NotificationCode from './NotificationCode';
 
 import PackagerLogsStream, { LogRecord, LogUpdater } from './logs/PackagerLogsStream';
 
+import * as PKCS12Utils from './detach/PKCS12Utils';
+
 import * as Project from './Project';
 
 import * as ProjectSettings from './ProjectSettings';
@@ -144,6 +146,7 @@ export { ModuleVersion };
 export { Modules };
 export { NotificationCode };
 export { PackagerLogsStream, LogRecord, LogUpdater };
+export { PKCS12Utils };
 export { Project };
 export { ProjectSettings };
 export { ProjectUtils };
