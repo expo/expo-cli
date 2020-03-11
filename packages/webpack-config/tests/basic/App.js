@@ -3,6 +3,7 @@ import { boolish } from 'getenv';
 import React from 'react';
 import { Text, View } from 'react-native';
 
+// Used to test resize-observer
 function AspectView(props) {
   const [layout, setLayout] = React.useState(null);
 
@@ -24,6 +25,15 @@ function AspectView(props) {
 }
 
 export default function App() {
+  // Test that the SW is registered
+  const [isSWRegistered, setSW] = React.useState(null);
+  React.useEffect(() => {
+    global.navigator.serviceWorker.ready.then(v => {
+      console.log('ready', v.active.scriptURL);
+      setSW(v.active.scriptURL.includes('expo-service-worker'));
+    });
+  }, []);
+
   return (
     <View
       colors={['orange', 'blue']}
@@ -32,6 +42,7 @@ export default function App() {
       <Text testID="basic-text">Open up App.js to start working on your app!</Text>
       <Text testID="expo-constants-manifest">{JSON.stringify(Constants.manifest)}</Text>
       {boolish('CI', false) && <Text testID="has-ci-text">Has CI env</Text>}
+      {isSWRegistered && <Text testID="has-sw-text">Has SW installed</Text>}
       {global.ResizeObserver && (
         <Text testID="has-resize-observer">Has ResizeObserver polyfill</Text>
       )}

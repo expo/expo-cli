@@ -23,6 +23,17 @@ if (config.hasServerSideRendering) {
       expect.stringContaining('Open up App.js to start working on your app!')
     );
   });
+} else {
+  it(`should register expo service worker`, async () => {
+    const swID = 'div[data-testid="has-sw-text"]';
+    if (!global.__DEV__) {
+      await expect(page).toMatchElement(swID, {
+        text: 'Has SW installed',
+      });
+    } else {
+      await expect(page).not.toMatchElement(swID);
+    }
+  });
 }
 
 describe('Optional polyfills', () => {

@@ -1,6 +1,6 @@
 import { ensureSlash } from '@expo/config/paths';
 import CopyPlugin from 'copy-webpack-plugin';
-import { ensureDirSync, writeFileSync } from 'fs-extra';
+import { ensureDirSync, readFileSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import {
   GenerateSW,
@@ -113,8 +113,18 @@ export default function withWorkbox(
     const entries = await resolveEntryAsync(expoEntry);
     const swPath = join(locations.production.registerServiceWorker);
     if (entries.app && !entries.app.includes(swPath) && autoRegister) {
-      ensureDirSync(locations.production.folder);
-      writeFileSync(swPath, '// noop', 'utf8');
+      let content = readFileSync(require.resolve(locations.template.registerServiceWorker), 'utf8');
+      if (content) {
+        content = content
+          .replace('SW_PUBLIC_URL', publicUrl)
+          .replace('SW_PUBLIC_SCOPE', ensureSlash(scope || publicUrl, true));
+        ensureDirSync(locations.production.folder);
+      } else {
+        content = `
+        console.warn("failed to load service-worker in @expo/webpack-config -> withWorkbox(). This can be due to the environment the project was built in. Please try again with a globally installed instance of expo-cli. If you continue to run into problems open an issue in https://github.com/expo/expo-cli")
+        `;
+      }
+      writeFileSync(swPath, content, 'utf8');
       if (!Array.isArray(entries.app)) {
         entries.app = [entries.app];
       }
