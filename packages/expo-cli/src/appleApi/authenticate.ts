@@ -56,7 +56,7 @@ export async function authenticate(options: Options = {}): Promise<AppleCtx> {
     const team = await _chooseTeam(teams, options.teamId);
     return { appleId, appleIdPassword, team, fastlaneSession };
   } catch (err) {
-    log(chalk.green('Authentication with Apple Developer Portal failed!'));
+    log(chalk.red('Authentication with Apple Developer Portal failed!'));
     throw err;
   }
 }
