@@ -4,6 +4,9 @@ import config from '../../jest-puppeteer.config';
 
 // We know that CI works in this process, but we want to test that it matches the process that our app runs in.
 const isInCI = getenv.boolish('CI', false);
+const type = getenv.string('EXPO_E2E_COMMAND');
+
+const isProduction = ['buildNextJsFromNextCLI', 'buildNextJsFromExpoCLI', 'build'].includes(type);
 
 let response;
 beforeEach(async () => {
@@ -25,12 +28,12 @@ if (config.hasServerSideRendering) {
   });
 } else {
   it(
-    global.__DEV__
-      ? `should not register expo service worker`
-      : `should register expo service worker`,
+    isProduction
+      ? `should register expo service worker`
+      : `should not register expo service worker`,
     async () => {
       const swID = 'div[data-testid="has-sw-text"]';
-      if (!global.__DEV__) {
+      if (isProduction) {
         await expect(page).toMatchElement(swID, {
           text: 'Has SW installed',
         });
