@@ -34,15 +34,6 @@ export type CredObject = {
 
 export type CredsList = Array<CredObject>;
 
-export async function getExistingDistCerts(
-  username: string,
-  appleTeamId: string,
-  options: { provideFullCertificate?: boolean } = {}
-): Promise<CredsList> {
-  const distCerts = await getExistingUserCredentials(username, appleTeamId, 'dist-cert');
-  return formatDistCerts(distCerts, options);
-}
-
 export function formatDistCerts(distCerts: any, options: { provideFullCertificate?: boolean }) {
   return distCerts.map(({ usedByApps, userCredentialsId, certId, certP12, certPassword }: any) => {
     let serialNumber;
@@ -70,15 +61,6 @@ export function formatDistCerts(distCerts: any, options: { provideFullCertificat
   });
 }
 
-export async function getExistingPushKeys(
-  username: string,
-  appleTeamId: string,
-  options: { provideFullPushKey?: boolean } = {}
-): Promise<CredsList> {
-  const pushKeys = await getExistingUserCredentials(username, appleTeamId, 'push-key');
-  return formatPushKeys(pushKeys, options);
-}
-
 export function formatPushKeys(pushKeys: any, options: { provideFullPushKey?: boolean }) {
   return pushKeys.map(({ usedByApps, userCredentialsId, apnsKeyId, apnsKeyP8 }: any) => {
     let name = `Key ID: ${apnsKeyId}`;
@@ -95,45 +77,4 @@ export function formatPushKeys(pushKeys: any, options: { provideFullPushKey?: bo
       short: apnsKeyId,
     };
   });
-}
-
-async function getExistingUserCredentials(
-  username: string,
-  appleTeamId: string,
-  type: string
-): Promise<CredsList> {
-  let certs;
-  if (process.env.EXPO_NEXT_API) {
-    const user = await UserManager.ensureLoggedInAsync();
-    const api = ApiV2.clientForUser(user);
-    const { userCredentials, appCredentials } = await api.getAsync(`credentials/ios`);
-
-    certs = userCredentials
-      .filter((cred: any) => cred.type === type && cred.teamId === appleTeamId)
-      .map(({ id, ...cred }: any) => ({
-        ...cred,
-        userCredentialsId: id,
-        usedByApps: appCredentials
-          .filter((app: any) => app.pushCredentialsId === id || app.distCredentialsId === id)
-          .map(({ experienceName }: any) => experienceName)
-          .join(';'),
-      }));
-  } else {
-    const result = await Api.callMethodAsync('getExistingUserCredentials', [], 'post', {
-      username,
-      appleTeamId,
-      type,
-    });
-
-    if (result.err) {
-      throw new Error('Error getting existing distribution certificates.');
-    }
-    certs = result.certs;
-  }
-
-  return certs.map(({ usedByApps, userCredentialsId, ...rest }: any) => ({
-    usedByApps: usedByApps && usedByApps.split(';'),
-    userCredentialsId: String(userCredentialsId),
-    ...rest,
-  }));
 }
