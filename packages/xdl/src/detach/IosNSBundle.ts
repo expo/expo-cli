@@ -361,6 +361,8 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     infoPlist = IOSConfig.Version.setVersion(config, infoPlist);
     infoPlist = IOSConfig.Version.setBuildNumber(config, infoPlist);
 
+    // NOTE(brentvatne):
+    // As far as I know there is no point of including an API key for Fabric on iOS?
     infoPlist.Fabric = {
       APIKey:
         (privateConfig && privateConfig.fabric && privateConfig.fabric.apiKey) ||
