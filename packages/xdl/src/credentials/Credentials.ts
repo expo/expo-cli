@@ -109,7 +109,7 @@ async function fetchCredentials(
 
 export async function updateCredentialsForPlatform(
   platform: 'android',
-  newCredentials: Credentials & { userCredentialsId: string },
+  newCredentials: Credentials,
   userCredentialsIds: Array<number>,
   metadata: CredentialMetadata
 ): Promise<void> {
