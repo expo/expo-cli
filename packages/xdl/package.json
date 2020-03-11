@@ -13,6 +13,7 @@
     "start": "yarn run prepare && yarn run watch",
     "build": "tsc --emitDeclarationOnly && gulp build",
     "prepare": "yarn run clean && yarn run build",
+    "prepack": "gulp caches",
     "clean": "rm -rf build ./tsconfig.tsbuildinfo",
     "watch": "concurrently \"tsc --emitDeclarationOnly --watch\" \"gulp watch\"",
     "test": "jest --config jest/unit-test-config.js",
