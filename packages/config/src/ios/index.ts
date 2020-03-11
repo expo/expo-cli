@@ -1,4 +1,5 @@
 import * as BundleIdenitifer from './BundleIdentifier';
+import * as DeviceFamily from './DeviceFamily';
 import * as Version from './Version';
 import * as Name from './Name';
 import * as Scheme from './Scheme';
@@ -13,6 +14,7 @@ import { InfoPlist } from './IosConfig.types';
 export {
   BundleIdenitifer,
   CustomInfoPlistEntries,
+  DeviceFamily,
   Name,
   Scheme,
   UserInterfaceStyle,

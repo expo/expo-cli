@@ -1,6 +1,7 @@
 import { getUserInterfaceStyle, setUserInterfaceStyle } from '../UserInterfaceStyle';
 
 describe('user interface style', () => {
+  // TODO: should we default to 'Light' just as we do in the client if none is specified?
   it(`returns null if no userInterfaceStyle is provided`, () => {
     expect(getUserInterfaceStyle({})).toBe(null);
   });
@@ -25,6 +26,7 @@ describe('user interface style', () => {
     });
   });
 
+  // TODO: should we default to 'Light' just as we do in the client if none is specified?
   it(`makes no changes to the infoPlist if the value is invalid`, () => {
     expect(setUserInterfaceStyle({ userInterfaceStyle: 'not-a-real-one' }, {})).toMatchObject({});
   });

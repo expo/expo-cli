@@ -395,13 +395,7 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       }
     }
 
-    // 1 is iPhone, 2 is iPad
-    infoPlist.UIDeviceFamily = config.ios && config.ios.supportsTablet ? [1, 2] : [1];
-
-    // allow iPad-only
-    if (config.ios && config.ios.isTabletOnly) {
-      infoPlist.UIDeviceFamily = [2];
-    }
+    infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(config, infoPlist);
 
     // Whether requires full screen on iPad
     infoPlist.UIRequiresFullScreen = config.ios && config.ios.requireFullScreen;
@@ -413,11 +407,7 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
     infoPlist.UIRequiresFullScreen = Boolean(infoPlist.UIRequiresFullScreen);
 
     // Put `ios.userInterfaceStyle` into `UIUserInterfaceStyle` property of Info.plist
-    const userInterfaceStyle = config.ios && config.ios.userInterfaceStyle;
-    if (userInterfaceStyle) {
-      // To convert our config value to the InfoPlist value, we can just capitalize it.
-      infoPlist.UIUserInterfaceStyle = _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle);
-    }
+    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(config, infoPlist);
 
     // context-specific plist changes
     if (context instanceof StandaloneContextUser) {
@@ -598,21 +588,4 @@ export async function configureAsync(context: AnyStandaloneContext): Promise<voi
       fs.remove(intermediatesDirectory),
     ]);
   }
-}
-
-function _mapUserInterfaceStyleForInfoPlist(userInterfaceStyle: string): string | undefined {
-  switch (userInterfaceStyle) {
-    case 'light':
-      return 'Light';
-    case 'dark':
-      return 'Dark';
-    case 'automatic':
-      return 'Automatic';
-    default:
-      logger.warn(
-        `User interface style "${userInterfaceStyle}" is not supported. Supported values: "light", "dark", "automatic".`
-      );
-  }
-
-  return undefined;
 }
