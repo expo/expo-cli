@@ -403,7 +403,6 @@ export async function getLatestReleaseAsync(
     result = await api.postAsync('publish/history', {
       owner: options.owner,
       slug: await getSlugAsync(projectRoot),
-      version: '2',
       releaseChannel: options.releaseChannel,
       count: '1',
       platform: options.platform,
