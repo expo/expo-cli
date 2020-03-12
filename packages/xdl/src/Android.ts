@@ -125,7 +125,7 @@ export async function getAdbOutputAsync(args: string[]): Promise<string> {
     let result = await spawnAsync(adb, args);
     return result.stdout;
   } catch (e) {
-    let errorMessage = _.trim(e.stderr);
+    let errorMessage = _.trim(e.stderr || e.stdout);
     if (errorMessage.startsWith(BEGINNING_OF_ADB_ERROR_MESSAGE)) {
       errorMessage = errorMessage.substring(BEGINNING_OF_ADB_ERROR_MESSAGE.length);
     }
@@ -260,9 +260,23 @@ export async function installExpoAsync(url?: string) {
   return result;
 }
 
-export async function uninstallExpoAsync() {
+export async function uninstallExpoAsync(): Promise<string | undefined> {
   Logger.global.info('Uninstalling Expo from Android device.');
-  return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
+
+  // we need to check if its installed, else we might bump into "Failure [DELETE_FAILED_INTERNAL_ERROR]"
+  const isInstalled = await _isExpoInstalledAsync();
+  if (!isInstalled) {
+    return;
+  }
+
+  try {
+    return await getAdbOutputAsync(['uninstall', 'host.exp.exponent']);
+  } catch (e) {
+    Logger.global.error(
+      'Could not uninstall Expo client from your device, please uninstall Expo client manually and try again.'
+    );
+    throw e;
+  }
 }
 
 export async function upgradeExpoAsync(url?: string): Promise<boolean> {
