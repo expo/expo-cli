@@ -138,30 +138,29 @@ async function makeBreakingChangesToConfig(
 
   switch (targetSdkVersionString) {
     case '37.0.0':
-      if (rootConfig?.androidNavigationBar?.visible) {
-        if (rootConfig.androidNavigationBar?.visible === false) {
+      if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
+        if (rootConfig?.expo.androidNavigationBar?.visible === false) {
           log.addNewLineIfNone();
           log(
             chalk.underline.bold(
               'Updating "androidNavigationBar.visible" property in app.json to "leanback"...'
             )
           );
-          rootConfig.androidNavigationBar.visible = 'leanback';
-        } else if (rootConfig.androidNavigationBar?.visible === true) {
+          rootConfig.expo.androidNavigationBar.visible = 'leanback';
+        } else if (rootConfig?.expo.androidNavigationBar?.visible === true) {
           log.addNewLineIfNone();
           log(
             chalk.underline.bold(
               'Removing extraneous "androidNavigationBar.visible" property in app.json...'
             )
           );
-          delete rootConfig.androidNavigationBar?.visible;
+          delete rootConfig?.expo.androidNavigationBar?.visible;
         }
-        await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig);
-      } else if (currentExp?.androidNavigationBar?.visible) {
-        log.addNewLineIfNone();
+        await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig.expo);
+      } else if (currentExp?.androidNavigationBar?.visible !== undefined) {
         log(
           chalk.underline.bold(
-            `Please manually update "androidNavigationBar.visible" according to these docs https://docs.expo.io/versions/latest/workflow/configuration/#androidnavigationbar`
+            `⚠️  Please manually update "androidNavigationBar.visible" according to these docs https://docs.expo.io/versions/latest/workflow/configuration/#androidnavigationbar`
           )
         );
       }
@@ -469,9 +468,14 @@ export async function upgradeAsync(
   }
 
   log.addNewLineIfNone();
-  log(chalk.underline.bold('Updating your app.json to account for breaking changes...'));
+  log(
+    chalk.underline.bold(
+      'Updating your app.json to account for breaking changes (if applicable)...'
+    )
+  );
   await makeBreakingChangesToConfig(projectRoot, targetSdkVersionString);
 
+  log.addNewLineIfNone();
   log(chalk.bold.underline('Updating packages to compatible versions (where known)...'));
   log.addNewLineIfNone();
 
