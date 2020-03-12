@@ -84,9 +84,8 @@ export async function action(projectDir: string, options: Options = {}) {
     });
   }
 
-  const { exp } = await getConfig(projectDir, {
+  const { exp } = getConfig(projectDir, {
     skipSDKVersionRequirement: true,
-    mode: 'production',
   });
 
   if (
