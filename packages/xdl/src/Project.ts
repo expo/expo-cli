@@ -868,12 +868,12 @@ export async function publishAsync(
           shellPlist.releaseChannel = options.releaseChannel;
           return shellPlist;
         });
-      } else if (fs.existsSync(path.join(supportingDirectory, 'expo-config.plist'))) {
-        // This is an app with expo-updates installed, set properties in expo-config.plist
-        await IosPlist.modifyAsync(supportingDirectory, 'expo-config', (configPlist: any) => {
-          configPlist.updateUrl = fullManifestUrl;
-          configPlist.releaseChannel = options.releaseChannel;
-          configPlist.sdkVersion = exp.sdkVersion;
+      } else if (fs.existsSync(path.join(supportingDirectory, 'Expo.plist'))) {
+        // This is an app with expo-updates installed, set properties in Expo.plist
+        await IosPlist.modifyAsync(supportingDirectory, 'Expo', (configPlist: any) => {
+          configPlist.EXUpdatesURL = fullManifestUrl;
+          configPlist.EXUpdatesReleaseChannel = options.releaseChannel;
+          configPlist.EXUpdatesSDKVersion = exp.sdkVersion;
           return configPlist;
         });
       }
