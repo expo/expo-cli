@@ -246,9 +246,8 @@ async function configureProjectAsync(
 
   log(chalk.gray(`Starting project at ${projectDir}`));
 
-  const { exp, pkg } = await getConfig(projectDir, {
+  const { exp, pkg } = getConfig(projectDir, {
     skipSDKVersionRequirement: options.webOnly,
-    mode: options.dev ? 'development' : 'production',
   });
 
   const rootPath = path.resolve(projectDir);
