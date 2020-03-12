@@ -11,7 +11,7 @@ import fs from 'fs';
 import path from 'path';
 import url from 'url';
 
-import { Environment, FilePaths } from '../types';
+import { Environment, FilePaths, Mode } from '../types';
 import getMode from './getMode';
 
 function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
