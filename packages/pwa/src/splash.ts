@@ -1,18 +1,7 @@
 import { ResizeMode } from '@expo/image-utils';
 import * as path from 'path';
 
-import { isLandscape, isPortrait, isValid } from './Orientation';
-
-export type Orientation =
-  | 'any'
-  | 'natural'
-  | 'landscape'
-  | 'landscape-primary'
-  | 'landscape-secondary'
-  | 'portrait'
-  | 'portrait-primary'
-  | 'portrait-secondary'
-  | 'omit';
+import { Orientation, isLandscape, isPortrait, isValid } from './Orientation';
 
 export interface Icon {
   src: string;

@@ -11,6 +11,17 @@ const VALID_ORIENTATIONS = [
   'omit',
 ];
 
+export type Orientation =
+  | 'any'
+  | 'natural'
+  | 'landscape'
+  | 'landscape-primary'
+  | 'landscape-secondary'
+  | 'portrait'
+  | 'portrait-primary'
+  | 'portrait-secondary'
+  | 'omit';
+
 const PORTRAIT_ORIENTATIONS = [
   'any',
   'natural',

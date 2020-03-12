@@ -39,7 +39,6 @@
     "@babel/core": "^7.4.5",
     "@babel/runtime": "^7.3.4",
     "@expo/config": "2.6.1",
-    "@pwa/manifest": "^1.1.0",
     "babel-loader": "8.0.6",
     "brotli-webpack-plugin": "^1.1.0",
     "chalk": "^2.4.2",

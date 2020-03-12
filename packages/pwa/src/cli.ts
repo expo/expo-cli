@@ -2,16 +2,10 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs-extra';
-import { relative, resolve } from 'path';
+import { dirname, resolve } from 'path';
 
-import { generateManifestAsync } from './generate-manifest';
-import {
-  generateAndroidAppIconsAsync,
-  generateIosAppIconsAsync,
-  generateWindowsAppIconsAsync,
-} from './generateAppIconsAsync';
-import { generateFaviconsAsync } from './generateFaviconsAsync';
-import { generateSplashScreensAsync } from './generateSplashScreensAsync';
+import { HTMLOutput, generateAsync } from '.';
+import { htmlTagObjectToString } from './HTML';
 import shouldUpdate from './update';
 
 async function commandDidThrowAsync(reason: any) {
@@ -39,16 +33,15 @@ program
   .description('Generate the homescreen icons for a PWA')
   .option('-o, --output <folder>', 'Output directory', 'public')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
-  .option('--platform <platform>', 'Platform to generate for: ios, android, ms')
+  .option('--platform <platform>', 'Platform to generate for: safari, chrome')
   .option('--resize <mode>', 'Resize mode to use', 'contain')
   .option('--color <color>', 'Background color for images (must be opaque)')
   .action((src: string, options) => {
     if (!src) throw new Error('pass image path with --src <path.png>');
-    icon({
+    genImage(options.platform + '-icon', {
       src,
       output: options.output,
       publicPath: options.public || options.output,
-      platform: options.platform,
       resizeMode: options.resize,
       color: options.color,
     })
@@ -61,9 +54,17 @@ program
   .description('Generate the favicons for a website')
   .option('-o, --output <folder>', 'Output directory', 'public')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
+  .option('--resize <mode>', 'Resize mode to use', 'contain')
+  .option('--color <color>', 'Background color of the image', 'transparent')
   .action((src: string, options) => {
     if (!src) throw new Error('pass image path with --src <path.png>');
-    favicon({ src, output: options.output, publicPath: options.public || options.output })
+    genImage('favicon', {
+      src,
+      output: options.output,
+      publicPath: options.public || options.output,
+      resizeMode: options.resize,
+      color: options.color,
+    })
       .then(shouldUpdate)
       .catch(commandDidThrowAsync);
   });
@@ -77,7 +78,7 @@ program
   .option('--color <color>', 'Background color of the image', 'white')
   .action((src: string, options) => {
     if (!src) throw new Error('pass image path with --src <path.png>');
-    splash({
+    genImage('splash', {
       src,
       output: options.output,
       publicPath: options.public || options.output,
@@ -95,10 +96,12 @@ program
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
   .action((config: string, options) => {
     if (!config) throw new Error('pass an expo config path with --config <path>');
-    manifest({
-      src: config,
+    genImage('manifest', {
+      src: '',
       output: options.output,
       publicPath: options.public || options.output,
+      resizeMode: options.resize,
+      color: options.color,
     })
       .then(shouldUpdate)
       .catch(commandDidThrowAsync);
@@ -106,115 +109,64 @@ program
 
 program.parse(process.argv);
 
-async function splash({
-  src,
-  output,
-  publicPath,
-  color,
-  resizeMode,
-}: {
-  src: string;
-  output: string;
-  publicPath: string;
-  color: string;
-  resizeMode: string;
-}) {
-  const sourcePath = resolve(src);
-  const outputPath = resolve(output);
-  const _publicPath = resolve(publicPath);
-  fs.removeSync(outputPath);
-  fs.ensureDirSync(outputPath);
-
-  const meta: string[] = await generateSplashScreensAsync(
-    sourcePath,
-    outputPath,
-    relative(_publicPath, outputPath),
-    color,
-    resizeMode
+async function genImage(
+  type: string,
+  {
+    src,
+    output,
+    publicPath,
+    color: backgroundColor,
+    resizeMode,
+  }: {
+    src: string;
+    output: string;
+    publicPath: string;
+    color: string;
+    resizeMode: string;
+  }
+) {
+  const items = await generateAsync(
+    type,
+    { projectRoot: resolve(process.cwd()), publicPath: resolve(publicPath) },
+    { src: resolve(src), backgroundColor, resizeMode: resizeMode as any }
   );
-  logMeta(meta);
-}
-async function manifest({
-  src,
-  output,
-  publicPath,
-}: {
-  src: string;
-  output: string;
-  publicPath: string;
-}) {
-  const sourcePath = resolve(src);
+
   const outputPath = resolve(output);
-  const _publicPath = resolve(publicPath);
+  await resolveOutputAsync(outputPath, items);
+}
+
+async function resolveOutputAsync(outputPath: string, items: HTMLOutput[]) {
   fs.removeSync(outputPath);
   fs.ensureDirSync(outputPath);
 
-  let meta: string[] = await generateManifestAsync({
-    src: sourcePath,
-    dest: outputPath,
-    publicPath: relative(_publicPath, outputPath),
-  });
-  logMeta(meta);
-}
-async function favicon({
-  src,
-  output,
-  publicPath,
-}: {
-  src: string;
-  output: string;
-  publicPath: string;
-}) {
-  const sourcePath = resolve(src);
-  const outputPath = resolve(output);
-  const _publicPath = resolve(publicPath);
-  fs.removeSync(outputPath);
-  fs.ensureDirSync(outputPath);
+  let meta: string[] = [];
+  let manifest: Record<string, any> = {};
 
-  const meta: string[] = await generateFaviconsAsync(
-    sourcePath,
-    outputPath,
-    relative(_publicPath, outputPath)
-  );
-  logMeta(meta);
-}
-async function icon({
-  src,
-  output,
-  publicPath,
-  platform,
-  color,
-  resizeMode,
-}: {
-  src: string;
-  output: string;
-  publicPath: string;
-  platform: string;
-  color: string;
-  resizeMode: string;
-}) {
-  const sourcePath = resolve(src);
-  const outputPath = resolve(output);
-  const _publicPath = resolve(publicPath);
-  fs.removeSync(outputPath);
-  fs.ensureDirSync(outputPath);
+  for (const item of items) {
+    if (item.tag) {
+      // Write HTML
+      meta.push(htmlTagObjectToString(item.tag));
+    }
+    if (item.manifest) {
+      // Write Manifest
+      if (!Array.isArray(manifest.icons)) manifest.icons = [];
+      manifest.icons.push(item.manifest);
+    }
 
-  // @ts-ignore
-  const genAsync = {
-    android: generateAndroidAppIconsAsync,
-    ios: generateIosAppIconsAsync,
-    ms: generateWindowsAppIconsAsync,
-  }[platform] as any;
+    // Write image
+    const assetPath = resolve(outputPath, item.asset.path);
+    fs.ensureDirSync(dirname(assetPath));
+    console.log(`writing file: ${assetPath}`);
+    await fs.writeFile(assetPath, item.asset.source);
+  }
 
-  const { meta, manifest } = await genAsync(
-    sourcePath,
-    outputPath,
-    relative(_publicPath, outputPath),
-    color,
-    resizeMode
-  );
-  logMeta(meta);
-  logManifest(manifest);
+  if (meta.length) {
+    logMeta(meta);
+  }
+
+  if (Object.keys(manifest).length) {
+    logManifest(manifest);
+  }
 }
 
 function logManifest(manifest: Record<string, any>) {

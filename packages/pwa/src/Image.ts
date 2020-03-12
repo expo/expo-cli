@@ -16,6 +16,7 @@ export type Icon = {
   backgroundColor: string;
   width: number;
   height: number;
+  padding?: number;
 };
 
 const supportedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
@@ -137,5 +138,3 @@ export async function generateImageAsync(
 
   return { source: imageBuffer, name: fileName };
 }
-
-// await Cache.clearUnusedCachesAsync(projectRoot, type);

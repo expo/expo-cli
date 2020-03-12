@@ -2,9 +2,6 @@ import { Compiler, Plugin, compilation } from 'webpack';
 import * as path from 'path';
 import JsonWebpackPlugin from './JsonWebpackPlugin';
 
-// @ts-ignore: no types found
-// import pwaManifest from '@pwa/manifest';
-
 export type Options = {
   path: string;
   json: any;

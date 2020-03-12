@@ -1,9 +1,13 @@
 import * as path from 'path';
 // @ts-ignore
 import generateICO from 'to-ico';
+import { ExpoConfig, getConfig } from '@expo/config';
 import * as Image from './Image';
 import * as Cache from './Cache';
-import { assembleOrientationMedia, getDevices } from './splash';
+import { assembleOrientationMedia, getDevices } from './Splash';
+
+import { createPWAManifestFromConfig } from './Web';
+import { Manifest } from './Web.types';
 
 type WebpackAsset = {
   source: Buffer;
@@ -12,7 +16,6 @@ type WebpackAsset = {
 
 type HtmlTag = {
   tagName: 'link';
-  voidTag: boolean;
   attributes: { rel?: string; href?: string; media?: string; sizes?: string; type?: string };
 };
 
@@ -23,12 +26,38 @@ type SplashIcon = Image.Icon & {
 type ProjectOptions = {
   projectRoot: string;
   publicPath: string;
+  // unimp
+  destination?: string;
 };
+
+export type HTMLOutput = { asset: WebpackAsset; tag?: HtmlTag; manifest?: ManifestIcon };
+
+export type IconOptions = Omit<Image.Icon, 'name' | 'width' | 'height'>; //| any[];
+
+export async function generateAsync(
+  type: string,
+  options: ProjectOptions,
+  icon: IconOptions
+): Promise<HTMLOutput[]> {
+  switch (type) {
+    case 'splash':
+      return generateSplashAsync(options, icon);
+    case 'safari-icon':
+      return generateAppleIconAsync(options, icon);
+    case 'chrome-icon':
+      return generateChromeIconAsync(options, icon);
+    case 'favicon':
+      return generateFaviconAsync(options, icon);
+    case 'manifest':
+      return generateManifestAsync(options);
+  }
+  throw new Error('invalid type: ' + type);
+}
 
 export async function generateSplashAsync(
   { projectRoot, publicPath }: ProjectOptions,
-  icon: Omit<Image.Icon, 'width' | 'height'> | any[]
-): Promise<{ asset: WebpackAsset; tag: HtmlTag }[]> {
+  icon: IconOptions
+): Promise<HTMLOutput[]> {
   const cacheType = 'apple-touch-startup-image';
 
   // You cannot lock iOS PWA orientation, we should produce every splash screen.
@@ -61,7 +90,7 @@ export async function generateSplashAsync(
     }
   }
 
-  const data: { asset: WebpackAsset; tag: HtmlTag }[] = await Promise.all<{
+  const data: HTMLOutput[] = await Promise.all<{
     asset: WebpackAsset;
     tag: HtmlTag;
   }>(
@@ -78,7 +107,6 @@ export async function generateSplashAsync(
           },
           tag: {
             tagName: 'link',
-            voidTag: false,
             attributes: {
               rel: 'apple-touch-startup-image',
               media: icon.media,
@@ -97,11 +125,11 @@ export async function generateSplashAsync(
 
 export async function generateAppleIconAsync(
   { projectRoot, publicPath }: ProjectOptions,
-  icon: Omit<Image.Icon, 'width' | 'height'>
-): Promise<{ asset: WebpackAsset; tag: HtmlTag }[]> {
+  icon: IconOptions
+): Promise<HTMLOutput[]> {
   const cacheType = 'apple-touch-icon';
 
-  const data: { asset: WebpackAsset; tag: HtmlTag }[] = await Promise.all<{
+  const data: HTMLOutput[] = await Promise.all<{
     asset: WebpackAsset;
     tag: HtmlTag;
   }>(
@@ -122,7 +150,6 @@ export async function generateAppleIconAsync(
           },
           tag: {
             tagName: 'link',
-            voidTag: false,
             attributes: {
               rel,
               sizes: `${size}x${size}`,
@@ -139,10 +166,12 @@ export async function generateAppleIconAsync(
   return data;
 }
 
+type ManifestIcon = { src: string; sizes: string; type: 'image/png' };
+
 export async function generateChromeIconAsync(
   { projectRoot, publicPath }: ProjectOptions,
-  icon: Omit<Image.Icon, 'width' | 'height'>
-): Promise<{ asset: WebpackAsset; manifest: { src: string; sizes: string; type: 'image/png' } }[]> {
+  icon: IconOptions
+): Promise<HTMLOutput[]> {
   const cacheType = 'chrome-icon';
 
   const data = await Promise.all<{
@@ -182,15 +211,15 @@ export async function generateChromeIconAsync(
 
 export async function generateFaviconAsync(
   { projectRoot, publicPath }: ProjectOptions,
-  icon: Omit<Image.Icon, 'width' | 'height'>
-): Promise<{ asset: WebpackAsset; tag: HtmlTag }[]> {
+  icon: IconOptions
+): Promise<HTMLOutput[]> {
   const cacheType = 'favicon';
 
   //   favicon: ({ href }: any) => `<link rel="shortcut icon" href="${href}">`,
   //   faviconPng: ({ href, size }: any) =>
   //     `<link rel="icon" type="image/png" sizes="${size}x${size}" href="${href}">`,
 
-  const data: { asset: WebpackAsset; tag: HtmlTag }[] = await Promise.all<{
+  const data: HTMLOutput[] = await Promise.all<{
     asset: WebpackAsset;
     tag: HtmlTag;
   }>(
@@ -218,7 +247,6 @@ export async function generateFaviconAsync(
           },
           tag: {
             tagName: 'link',
-            voidTag: false,
             attributes: {
               rel,
               type: 'image/png',
@@ -246,9 +274,36 @@ export async function generateFaviconAsync(
       asset: { source: imageBuffer, path: 'favicon.ico' },
       tag: {
         tagName: 'link',
-        voidTag: false,
         attributes: { rel: 'shortcut icon', href: faviconUrl },
       },
     },
   ];
+}
+
+export async function generateManifestAsync(
+  options: ProjectOptions,
+  config?: ExpoConfig
+): Promise<HTMLOutput[]> {
+  const manifest = generateManifestJson(options, config);
+  return [
+    {
+      // TODO: Bacon: Make the types more flexible
+      asset: { source: manifest as Buffer, path: 'manifest.json' },
+      tag: {
+        tagName: 'link',
+        attributes: { rel: 'manifest', href: 'manifest.json' },
+      },
+    },
+  ];
+}
+
+export function generateManifestJson(
+  { projectRoot }: Partial<ProjectOptions>,
+  config?: ExpoConfig
+): Manifest {
+  if (!config) {
+    if (!projectRoot) throw new Error('You must either define projectRoot or config');
+    config = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: 'development' });
+  }
+  return createPWAManifestFromConfig(config);
 }

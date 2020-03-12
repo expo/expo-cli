@@ -1,17 +1,17 @@
-import JsonFile from '@expo/json-file';
-
-import { getConfig } from './Config';
-import { AppJSONConfig, ExpoConfig } from './Config.types';
+import {
+  AppJSONConfig,
+  ExpoConfig,
+  getConfig,
+  getNameFromConfig,
+  getWebOutputPath,
+} from '@expo/config';
 import { Manifest } from './Web.types';
-
-const APP_JSON_FILE_NAME = 'app.json';
 
 // To work with the iPhone X "notch" add `viewport-fit=cover` to the `viewport` meta tag.
 const DEFAULT_VIEWPORT =
   'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1.00001,viewport-fit=cover';
 // Use root to work better with create-react-app
 const DEFAULT_ROOT_ID = `root`;
-const DEFAULT_BUILD_PATH = `web-build`;
 const DEFAULT_LANGUAGE_ISO_CODE = `en`;
 const DEFAULT_NO_JS_MESSAGE = `Oh no! It looks like JavaScript is not enabled in your browser.`;
 const DEFAULT_BACKGROUND_COLOR = '#ffffff';
@@ -21,26 +21,7 @@ const DEFAULT_STATUS_BAR = 'black-translucent';
 const DEFAULT_LANG_DIR = 'auto';
 const DEFAULT_ORIENTATION = 'any';
 const ICON_SIZES = [192, 512];
-const MAX_SHORT_NAME_LENGTH = 12;
 const DEFAULT_PREFER_RELATED_APPLICATIONS = true;
-
-export function getWebOutputPath(config: { [key: string]: any } = {}): string {
-  if (process.env.WEBPACK_BUILD_OUTPUT_PATH) {
-    return process.env.WEBPACK_BUILD_OUTPUT_PATH;
-  }
-  const web = getWebManifestFromConfig(config);
-  const { build = {} } = web;
-  return build.output || DEFAULT_BUILD_PATH;
-}
-
-export async function validateShortName(shortName: string): Promise<void> {
-  // Validate short name
-  if (shortName.length > MAX_SHORT_NAME_LENGTH) {
-    console.warn(
-      `PWA short name should be 12 characters or less, otherwise it'll be curtailed on the mobile device homepage. You should define web.shortName in your ${APP_JSON_FILE_NAME} as a string that is ${MAX_SHORT_NAME_LENGTH} or less characters.`
-    );
-  }
-}
 
 // Convert expo value to PWA value
 function ensurePWAorientation(orientation: string): string {
@@ -69,28 +50,8 @@ export function getConfigForPWA(
   getAbsolutePath: (...pathComponents: string[]) => string,
   options: { templateIcon: string; mode: 'development' | 'production' }
 ) {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: options.mode });
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: 'development' });
   return ensurePWAConfig(exp, getAbsolutePath, options);
-}
-
-export function getNameFromConfig(exp: ExpoConfig = {}): { appName: string; webName: string } {
-  // For RN CLI support
-  const appManifest = exp.expo || exp;
-  const { web = {} } = appManifest;
-
-  // rn-cli apps use a displayName value as well.
-  const appName = exp.displayName || appManifest.displayName || appManifest.name;
-  const webName = web.name || appName;
-
-  return {
-    appName,
-    webName,
-  };
-}
-
-function getWebManifestFromConfig(config: { [key: string]: any } = {}): { [key: string]: any } {
-  const appManifest = config.expo || config || {};
-  return appManifest.web || {};
 }
 
 function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
@@ -310,7 +271,7 @@ function inferWebStartupImages(
   return startupImages;
 }
 
-export function ensurePWAConfig(
+function ensurePWAConfig(
   appJSON: AppJSONConfig | ExpoConfig,
   getAbsolutePath: ((...pathComponents: string[]) => string) | undefined,
   options: object
@@ -322,44 +283,6 @@ export function ensurePWAConfig(
     config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
   }
   return config;
-}
-
-export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestLocation: string) {
-  let web;
-  try {
-    web = JsonFile.read(pwaManifestLocation);
-  } catch (e) {
-    web = {};
-  }
-
-  return {
-    ...appManifest,
-    name: appManifest.displayName || appManifest.name,
-    /**
-     * Omit app.json properties that get removed during the native turtle build
-     *
-     * `facebookScheme`
-     * `facebookAppId`
-     * `facebookDisplayName`
-     */
-    facebookScheme: undefined,
-    facebookAppId: undefined,
-    facebookDisplayName: undefined,
-
-    // Remove iOS and Android.
-    ios: undefined,
-    android: undefined,
-
-    // Use the PWA `manifest.json` as the native web manifest.
-    web: {
-      ...web,
-
-      // Pass through config properties that are not stored in the
-      // PWA `manifest.json`, but still need to be accessible
-      // through `Constants.manifest`.
-      config: appManifest.web?.config,
-    },
-  };
 }
 
 function isObject(item: any): boolean {

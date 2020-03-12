@@ -1,4 +1,6 @@
-import { ExpoConfig, createPWAManifestFromConfig } from '@expo/config';
+import { ExpoConfig } from '@expo/config';
+
+import { generateManifestJson } from '@expo/pwa';
 
 import PwaManifestWebpackPlugin from './PwaManifestWebpackPlugin';
 
@@ -7,6 +9,6 @@ export default class ExpoPwaManifestWebpackPlugin extends PwaManifestWebpackPlug
     pwaOptions: { path: string; inject?: boolean | Function; publicPath: string },
     config: ExpoConfig
   ) {
-    super(pwaOptions, createPWAManifestFromConfig(config));
+    super(pwaOptions, generateManifestJson({}, config));
   }
 }
