@@ -140,7 +140,6 @@ async function makeBreakingChangesToConfig(
     case '37.0.0':
       if (rootConfig?.expo?.androidNavigationBar?.visible !== undefined) {
         if (rootConfig?.expo.androidNavigationBar?.visible === false) {
-          log.addNewLineIfNone();
           log(
             chalk.underline.bold(
               'Updating "androidNavigationBar.visible" property in app.json to "leanback"...'
@@ -148,7 +147,6 @@ async function makeBreakingChangesToConfig(
           );
           rootConfig.expo.androidNavigationBar.visible = 'leanback';
         } else if (rootConfig?.expo.androidNavigationBar?.visible === true) {
-          log.addNewLineIfNone();
           log(
             chalk.underline.bold(
               'Removing extraneous "androidNavigationBar.visible" property in app.json...'
