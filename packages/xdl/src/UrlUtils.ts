@@ -125,10 +125,7 @@ export async function constructBundleQueryParamsAsync(projectRoot: string, opts:
 
   queryParams += '&hot=false';
 
-  let { exp } = getConfig(projectRoot, {
-    skipSDKVersionRequirement: false,
-    mode: opts.dev ? 'development' : 'production',
-  });
+  let { exp } = getConfig(projectRoot);
 
   // SDK11 to SDK32 require us to inject hashAssetFiles through the params, but this is not
   // needed with SDK33+
@@ -210,10 +207,7 @@ export async function constructUrlAsync(
   } else {
     protocol = 'exp';
 
-    let { exp } = getConfig(projectRoot, {
-      skipSDKVersionRequirement: false,
-      mode: opts.dev ? 'development' : 'production',
-    });
+    let { exp } = getConfig(projectRoot);
     if (exp.detach) {
       if (exp.scheme && Versions.gteSdkVersion(exp, '27.0.0')) {
         protocol = exp.scheme;
