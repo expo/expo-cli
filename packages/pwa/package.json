@@ -40,8 +40,9 @@
     "@expo/json-file": "^8.2.5",
     "chalk": "2.4.2",
     "commander": "2.20.0",
+    "jimp": "^0.9.5",
     "tempy": "0.3.0",
-    "update-check": "1.5.3",
-    "to-ico": "^1.1.5"
+    "to-ico": "^1.1.5",
+    "update-check": "1.5.3"
   }
 }

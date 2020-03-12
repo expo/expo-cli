@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 import fs from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { dirname, relative, resolve } from 'path';
 
 import { HTMLOutput, generateAsync } from '.';
 import { htmlTagObjectToString } from './HTML';
@@ -132,11 +132,10 @@ async function genImage(
   );
 
   const outputPath = resolve(output);
-  await resolveOutputAsync(outputPath, items);
+  await resolveOutputAsync(publicPath, outputPath, items);
 }
 
-async function resolveOutputAsync(outputPath: string, items: HTMLOutput[]) {
-  fs.removeSync(outputPath);
+async function resolveOutputAsync(publicPath: string, outputPath: string, items: HTMLOutput[]) {
   fs.ensureDirSync(outputPath);
 
   let meta: string[] = [];
@@ -144,6 +143,9 @@ async function resolveOutputAsync(outputPath: string, items: HTMLOutput[]) {
 
   for (const item of items) {
     if (item.tag) {
+      if (item.tag?.attributes?.href) {
+        item.tag.attributes.href = relative(publicPath, item.tag?.attributes?.href);
+      }
       // Write HTML
       meta.push(htmlTagObjectToString(item.tag));
     }
