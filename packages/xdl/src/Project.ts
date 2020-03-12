@@ -27,6 +27,7 @@ import escapeRegExp from 'lodash/escapeRegExp';
 import get from 'lodash/get';
 import reduce from 'lodash/reduce';
 import set from 'lodash/set';
+import uniq from 'lodash/uniq';
 import md5hex from 'md5hex';
 import minimatch from 'minimatch';
 import { AddressInfo } from 'net';
