@@ -47,11 +47,10 @@ function sanitizePublicPath(publicPath: unknown): string {
 
 export function getConfigForPWA(
   projectRoot: string,
-  getAbsolutePath: (...pathComponents: string[]) => string,
-  options: { templateIcon: string }
+  getAbsolutePath: (...pathComponents: string[]) => string
 ) {
   const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
-  return ensurePWAConfig(exp, getAbsolutePath, options);
+  return ensurePWAConfig(exp, getAbsolutePath);
 }
 
 function applyWebDefaults(appJSON: AppJSONConfig | ExpoConfig): ExpoConfig {
@@ -209,20 +208,18 @@ function inferWebRelatedApplicationsFromConfig({ web = {}, ios = {}, android = {
 
 function inferWebHomescreenIcons(
   config: any = {},
-  getAbsolutePath: (...pathComponents: string[]) => string,
-  options: any
+  getAbsolutePath: (...pathComponents: string[]) => string
 ) {
   const { web = {}, ios = {} } = config;
   if (Array.isArray(web.icons)) {
     return web.icons;
   }
-  let icons = [];
+  let icons: any[] = [];
   let icon;
   if (web.icon || config.icon) {
     icon = getAbsolutePath(web.icon || config.icon);
   } else {
-    // Use template icon
-    icon = options.templateIcon;
+    return icons;
   }
   const destination = `apple/icons`;
   icons.push({ src: icon, size: ICON_SIZES, destination });
@@ -241,8 +238,7 @@ function inferWebHomescreenIcons(
 
 function inferWebStartupImages(
   config: ExpoConfig,
-  getAbsolutePath: (...pathComponents: string[]) => string,
-  options: Object
+  getAbsolutePath: (...pathComponents: string[]) => string
 ) {
   const { icon, splash = {}, primaryColor } = config;
   const { web } = config;
@@ -273,14 +269,13 @@ function inferWebStartupImages(
 
 function ensurePWAConfig(
   appJSON: AppJSONConfig | ExpoConfig,
-  getAbsolutePath: ((...pathComponents: string[]) => string) | undefined,
-  options: object
+  getAbsolutePath: ((...pathComponents: string[]) => string) | undefined
 ): ExpoConfig {
   const config = applyWebDefaults(appJSON);
   if (getAbsolutePath) {
     if (!config.web) config.web = {};
-    config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath, options);
-    config.web.startupImages = inferWebStartupImages(config, getAbsolutePath, options);
+    config.web.icons = inferWebHomescreenIcons(config, getAbsolutePath);
+    config.web.startupImages = inferWebStartupImages(config, getAbsolutePath);
   }
   return config;
 }

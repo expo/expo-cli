@@ -16,9 +16,7 @@ function getConfig(env: Pick<Environment, 'projectRoot' | 'config' | 'locations'
   }
   const locations = env.locations || getPaths(env.projectRoot);
   // Fill all config values with PWA defaults
-  return getConfigForPWA(env.projectRoot, locations.absolute, {
-    templateIcon: locations.template.get('icon.png'),
-  });
+  return getConfigForPWA(env.projectRoot, locations.absolute);
 }
 
 export default getConfig;
