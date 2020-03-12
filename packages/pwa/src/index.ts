@@ -303,7 +303,7 @@ export function generateManifestJson(
 ): Manifest {
   if (!config) {
     if (!projectRoot) throw new Error('You must either define projectRoot or config');
-    config = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: 'development' });
+    config = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   }
   return createPWAManifestFromConfig(config);
 }
