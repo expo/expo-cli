@@ -18,7 +18,7 @@
   "author": "Expo <support@expo.io>",
   "license": "MIT",
   "bin": {
-    "expo-pwa": "./build/index.js"
+    "expo-pwa": "./build/cli.js"
   },
   "files": [
     "build"
