@@ -9,7 +9,6 @@ export async function getExpoSdkConfig(path: string) {
     const { projectRoot } = await findProjectRootAsync(path);
     const { exp } = ConfigUtils.getConfig(projectRoot, {
       skipSDKVersionRequirement: true,
-      mode: 'production',
     });
     return exp;
   } catch (error) {

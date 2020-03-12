@@ -77,7 +77,7 @@ async function normalizeOptionsAsync(
 
   await cacheOptionsAsync(projectDir, opts);
 
-  return options;
+  return opts;
 }
 
 async function cacheOptionsAsync(projectDir: string, options: NormalizedOptions): Promise<void> {

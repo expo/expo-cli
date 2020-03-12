@@ -66,7 +66,7 @@ export default function withUnimodules(
   const config = argv.expoConfig || getConfig(environment);
 
   const mode = getMode(env);
-  const locations = env.locations || getPaths(environment.projectRoot, mode);
+  const locations = env.locations || getPaths(environment.projectRoot);
 
   const { build: buildConfig = {} } = config.web || {};
   const { babel: babelAppConfig = {} } = buildConfig;

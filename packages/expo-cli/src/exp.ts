@@ -31,14 +31,16 @@ import {
 } from '@expo/xdl';
 import * as ConfigUtils from '@expo/config';
 
-// @ts-ignore: expo-cli is not listed in its own dependencies
-import packageJSON from 'expo-cli/package.json';
-
 import { loginOrRegisterIfLoggedOut } from './accounts';
 import log from './log';
 import update from './update';
 import urlOpts from './urlOpts';
 import { registerCommands } from './commands';
+
+// We use require() to exclude package.json from TypeScript's analysis since it lives outside the
+// src directory and would change the directory structure of the emitted files under the build
+// directory
+const packageJSON = require('../package.json');
 
 Api.setClientName(packageJSON.version);
 ApiV2.setClientName(packageJSON.version);
@@ -397,7 +399,8 @@ async function checkCliVersionAsync() {
       boxen(
         chalk.green(`There is a new version of ${packageJSON.name} available (${latest}).
 You are currently using ${packageJSON.name} ${current}
-Install expo-cli globally using the package manager of your choice; for example: \`npm install -g ${packageJSON.name}\` to get the latest version`),
+Install expo-cli globally using the package manager of your choice;
+for example: \`npm install -g ${packageJSON.name}\` to get the latest version`),
         { borderColor: 'green', padding: 1 }
       )
     );
@@ -407,7 +410,7 @@ Install expo-cli globally using the package manager of your choice; for example:
     log.nestedWarn(
       boxen(
         chalk.red(
-          `This version of expo-cli is not supported anymore. 
+          `This version of expo-cli is not supported anymore.
 It's highly recommended to update to the newest version.
 
 The API endpoints used in this version of expo-cli might not exist,

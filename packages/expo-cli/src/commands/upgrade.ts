@@ -304,10 +304,7 @@ export async function upgradeAsync(
   },
   options: Options
 ) {
-  let { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
-    skipSDKVersionRequirement: false,
-    mode: 'development',
-  });
+  let { exp, pkg } = await ConfigUtils.getConfig(projectRoot);
 
   if (await maybeBailOnGitStatusAsync()) return;
 
@@ -415,7 +412,7 @@ export async function upgradeAsync(
   } catch (_) {}
 
   // Evaluate project config (app.config.js)
-  const { exp: currentExp } = ConfigUtils.getConfig(projectRoot, { mode: 'development' });
+  const { exp: currentExp } = ConfigUtils.getConfig(projectRoot);
 
   if (
     !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&

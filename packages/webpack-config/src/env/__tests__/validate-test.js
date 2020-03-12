@@ -8,7 +8,7 @@ import {
   warnEnvironmentDeprecation,
 } from '../validate';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 const mode = 'development';
 
 it(`returns a full environment`, () => {

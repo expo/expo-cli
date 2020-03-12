@@ -4,9 +4,8 @@ import path from 'path';
 import getConfig from '../getConfig';
 import { normalizePaths } from '../../utils';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
-const mode = 'development';
-const env = { projectRoot, mode };
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
+const env = { projectRoot };
 
 it(`has consistent defaults`, () => {
   const config = getConfig(env);

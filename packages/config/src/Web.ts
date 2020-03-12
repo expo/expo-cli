@@ -66,9 +66,9 @@ function sanitizePublicPath(publicPath: unknown): string {
 export function getConfigForPWA(
   projectRoot: string,
   getAbsolutePath: (...pathComponents: string[]) => string,
-  options: { templateIcon: string; mode: 'development' | 'production' }
+  options: { templateIcon: string }
 ) {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode: options.mode });
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   return ensurePWAConfig(exp, getAbsolutePath, options);
 }
 

@@ -15,8 +15,7 @@ import { Cacher } from './tools/FsCache';
 import UserManager from './User';
 import UserSettings from './UserSettings';
 import XDLError from './XDLError';
-
-const MAX_CONTENT_LENGTH = 100 /* MB */ * 1024 * 1024;
+import { MAX_CONTENT_LENGTH } from './ApiV2';
 
 const TIMER_DURATION = 30000;
 const TIMEOUT = 3600000;

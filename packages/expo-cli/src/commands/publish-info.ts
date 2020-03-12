@@ -67,7 +67,7 @@ export default (program: any) => {
         if (exp.owner) {
           formData.append('owner', exp.owner);
         }
-        formData.append('slug', await Project.getSlugAsync(projectDir, options));
+        formData.append('slug', await Project.getSlugAsync(projectDir));
         formData.append('version', VERSION);
         if (options.releaseChannel) {
           formData.append('releaseChannel', options.releaseChannel);
@@ -86,7 +86,7 @@ export default (program: any) => {
         const api = ApiV2.clientForUser(user);
         result = await api.postAsync('publish/history', {
           owner: exp.owner,
-          slug: await Project.getSlugAsync(projectDir, options),
+          slug: await Project.getSlugAsync(projectDir),
           version: VERSION,
           releaseChannel: options.releaseChannel,
           count: options.count,
@@ -156,9 +156,8 @@ export default (program: any) => {
       const user = await UserManager.ensureLoggedInAsync();
       const { exp } = getConfig(projectDir, {
         skipSDKVersionRequirement: true,
-        mode: 'development',
       });
-      const slug = await Project.getSlugAsync(projectDir, options);
+      const slug = await Project.getSlugAsync(projectDir);
 
       let result: any;
       if (process.env.EXPO_LEGACY_API === 'true') {

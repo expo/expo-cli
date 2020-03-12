@@ -88,7 +88,6 @@ export async function action(projectDir: string = './', options: Options = { for
   // Doesn't matter if expo is installed or which mode is used.
   const { exp } = ConfigUtils.getConfig(projectDir, {
     skipSDKVersionRequirement: true,
-    mode: 'development',
   });
 
   const templateFolder = path.dirname(

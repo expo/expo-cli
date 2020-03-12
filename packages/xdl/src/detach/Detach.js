@@ -9,7 +9,7 @@ import glob from 'glob-promise';
 import uuid from 'uuid';
 import inquirer from 'inquirer';
 import spawnAsync from '@expo/spawn-async';
-import { findConfigFile } from '@expo/config';
+import { findConfigFile, getConfig } from '@expo/config';
 import isPlainObject from 'lodash/isPlainObject';
 
 import { isDirectory, regexFileAsync, rimrafDontThrow } from './ExponentTools';
@@ -29,7 +29,6 @@ import * as UrlUtils from '../UrlUtils';
 import * as Versions from '../Versions';
 import installPackagesAsync from './installPackagesAsync';
 import logger from './Logger';
-import { getProjectConfigAsync } from '../Config';
 
 async function yesnoAsync(message) {
   const { ok } = await inquirer.prompt([
@@ -68,7 +67,7 @@ async function _detachAsync(projectRoot, options) {
 
   let username = user.username;
   const { configName, configPath, configNamespace } = findConfigFile(projectRoot);
-  let { exp } = await getProjectConfigAsync(projectRoot, { skipSDKVersionRequirement: false });
+  let { exp } = getConfig(projectRoot);
   let experienceName = `@${username}/${exp.slug}`;
   let experienceUrl = `exp://exp.host/${experienceName}`;
 
@@ -354,7 +353,7 @@ async function _getIosExpoKitVersionThrowErrorAsync(iosProjectDirectory) {
 
 async function readNullableConfigJsonAsync(projectDir) {
   try {
-    return await getProjectConfigAsync(projectDir, { skipSDKVersionRequirement: false });
+    return getConfig(projectDir);
   } catch (_) {
     return null;
   }
@@ -395,7 +394,7 @@ async function prepareDetachedServiceContextIosAsync(projectDir, args) {
     path.join(context.data.expoSourcePath, '__internal__', 'keys.json')
   );
 
-  const { exp } = await getProjectConfigAsync(expoRootDir, { skipSDKVersionRequirement: true });
+  const { exp } = getConfig(expoRootDir, { skipSDKVersionRequirement: true });
 
   await IosPlist.modifyAsync(supportingDirectory, 'EXBuildConstants', constantsConfig => {
     // verify that we are actually in a service context and not a misconfigured project

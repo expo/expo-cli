@@ -1,4 +1,4 @@
-import { AppJSONConfig, BareAppConfig, ConfigMode } from '@expo/config';
+import { AppJSONConfig, BareAppConfig, getConfig } from '@expo/config';
 
 import { getEntryPoint } from '@expo/config/paths';
 import fs from 'fs-extra';
@@ -22,18 +22,13 @@ import UserManager from './User';
 import * as UrlUtils from './UrlUtils';
 import UserSettings from './UserSettings';
 import * as ProjectSettings from './ProjectSettings';
-import { getProjectConfigAsync } from './Config';
 
 // TODO(ville): update when this has landed: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/36598
 type ReadEntry = any;
 
 const supportedPlatforms = ['ios', 'android', 'web'];
 
-export function determineEntryPoint(
-  projectRoot: string,
-  mode: ConfigMode,
-  platform?: string
-): string {
+export function determineEntryPoint(projectRoot: string, platform?: string): string {
   if (platform && !supportedPlatforms.includes(platform)) {
     throw new Error(
       `Failed to resolve the project's entry file: The platform "${platform}" is not supported.`
@@ -43,7 +38,7 @@ export function determineEntryPoint(
   // const platforms = [platform, 'native'].filter(Boolean) as string[];
   const platforms: string[] = [];
 
-  const entry = getEntryPoint(projectRoot, ['./index'], platforms, mode);
+  const entry = getEntryPoint(projectRoot, ['./index'], platforms);
   if (!entry)
     throw new Error(
       `The project entry file could not be resolved. Please either define it in the \`package.json\` (main), \`app.json\` (expo.entryPoint), create an \`index.js\`, or install the \`expo\` package.`
@@ -271,7 +266,7 @@ export async function getPublishInfoAsync(root: string): Promise<PublishInfo> {
   let { username } = user;
 
   // Evaluate the project config and throw an error if the `sdkVersion` cannot be found.
-  const { exp } = await getProjectConfigAsync(root, { skipSDKVersionRequirement: false });
+  const { exp } = getConfig(root);
 
   const name = exp.slug;
   const { version, sdkVersion } = exp;
