@@ -272,8 +272,12 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       infoPlist = IOSConfig.Name.setDisplayName(config, infoPlist);
     }
 
-    // maybe set the default linking scheme
     infoPlist = IOSConfig.Scheme.setScheme(config, infoPlist);
+    infoPlist = IOSConfig.Version.setVersion(config, infoPlist);
+    infoPlist = IOSConfig.Version.setBuildNumber(config, infoPlist);
+    infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(config, infoPlist);
+    infoPlist = IOSConfig.RequiresFullScreen.setRequiresFullScreen(config, infoPlist);
+    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(config, infoPlist);
 
     // maybe set additional linking schemes from services like fb and google
     let serviceLinkingSchemes = [];
@@ -357,10 +361,6 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
       privateConfig && privateConfig.googleMobileAdsAutoInit
     );
 
-    // use version from manifest
-    infoPlist = IOSConfig.Version.setVersion(config, infoPlist);
-    infoPlist = IOSConfig.Version.setBuildNumber(config, infoPlist);
-
     // NOTE(brentvatne):
     // As far as I know there is no point of including an API key for Fabric on iOS?
     infoPlist.Fabric = {
@@ -394,20 +394,6 @@ async function _configureInfoPlistAsync(context: AnyStandaloneContext): Promise<
         infoPlist[key] = infoPlist[key].replace('Expo experiences', permissionsAppName);
       }
     }
-
-    infoPlist = IOSConfig.DeviceFamily.setDeviceFamily(config, infoPlist);
-
-    // Whether requires full screen on iPad
-    infoPlist.UIRequiresFullScreen = config.ios && config.ios.requireFullScreen;
-    if (infoPlist.UIRequiresFullScreen == null) {
-      // NOTES: This is defaulted to `true` for now to match the behavior prior to SDK 34, but will change to `false` in a future SDK version.
-      infoPlist.UIRequiresFullScreen = true;
-    }
-    // Cast to make sure that it is a boolean.
-    infoPlist.UIRequiresFullScreen = Boolean(infoPlist.UIRequiresFullScreen);
-
-    // Put `ios.userInterfaceStyle` into `UIUserInterfaceStyle` property of Info.plist
-    infoPlist = IOSConfig.UserInterfaceStyle.setUserInterfaceStyle(config, infoPlist);
 
     // context-specific plist changes
     if (context instanceof StandaloneContextUser) {

@@ -5,6 +5,7 @@ import * as Name from './Name';
 import * as Scheme from './Scheme';
 import * as CustomInfoPlistEntries from './CustomInfoPlistEntries';
 import * as UserInterfaceStyle from './UserInterfaceStyle';
+import * as RequiresFullScreen from './RequiresFullScreen';
 
 import { InfoPlist } from './IosConfig.types';
 
@@ -20,4 +21,5 @@ export {
   UserInterfaceStyle,
   Version,
   InfoPlist,
+  RequiresFullScreen,
 };
