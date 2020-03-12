@@ -2,6 +2,7 @@ import JsonFile from '@expo/json-file';
 
 import { getConfig } from './Config';
 import { AppJSONConfig, ExpoConfig } from './Config.types';
+import { Manifest } from './Web.types';
 
 const APP_JSON_FILE_NAME = 'app.json';
 
@@ -303,9 +304,6 @@ function inferWebStartupImages(
       resizeMode,
       color: backgroundColor,
       src: splashImageSource,
-      supportsTablet:
-        web?.splash?.supportsTablet === undefined ? true : web?.splash?.supportsTablet,
-      orientation: web?.orientation,
       destination: `apple/splash`,
     });
   }
@@ -362,4 +360,40 @@ export function createEnvironmentConstants(appManifest: ExpoConfig, pwaManifestL
       config: appManifest.web?.config,
     },
   };
+}
+
+function isObject(item: any): boolean {
+  return typeof item === 'object' && !Array.isArray(item) && item !== null;
+}
+
+export function createPWAManifestFromConfig(appJson: ExpoConfig): Manifest {
+  if (!isObject(appJson)) {
+    throw new Error('app.json must be an object');
+  }
+
+  const { web: config = {} } = appJson;
+
+  const manifest: Manifest = {
+    background_color: config.backgroundColor,
+    description: config.description,
+    dir: config.dir,
+    display: config.display,
+    lang: config.lang,
+    name: config.name,
+    orientation: config.orientation,
+    scope: config.scope,
+    short_name: config.shortName,
+    start_url:
+      typeof config.startUrl === 'undefined' ? '/?utm_source=web_app_manifest' : config.startUrl,
+    theme_color: config.themeColor,
+    crossorigin: config.crossorigin,
+  };
+
+  // Avoid defining an empty array, or setting prefer_related_applications to true when no applications are defined.
+  if (Array.isArray(config.relatedApplications) && config.relatedApplications.length > 0) {
+    manifest.related_applications = config.relatedApplications;
+    manifest.prefer_related_applications = config.preferRelatedApplications;
+  }
+
+  return manifest;
 }

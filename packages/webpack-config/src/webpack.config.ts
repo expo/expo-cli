@@ -1,7 +1,6 @@
 /** @internal */ /** */
 /* eslint-env node */
 
-import WebpackPWAManifestPlugin from '@expo/webpack-pwa-manifest-plugin';
 import webpack, { Configuration, HotModuleReplacementPlugin, Options, Output } from 'webpack';
 import WebpackDeepScopeAnalysisPlugin from 'webpack-deep-scope-plugin';
 import ModuleNotFoundPlugin from 'react-dev-utils/ModuleNotFoundPlugin';
@@ -34,6 +33,10 @@ import {
 
 import { Arguments, DevConfiguration, Environment, FilePaths, Mode } from './types';
 import { overrideWithPropertyOrConfig } from './utils';
+import ChromeIconsWebpackPlugin from './plugins/ChromeIconsWebpackPlugin';
+import ApplePwaWebpackPlugin from './plugins/ApplePwaWebpackPlugin';
+import FaviconWebpackPlugin from './plugins/FaviconWebpackPlugin';
+import ExpoPwaManifestWebpackPlugin from './plugins/ExpoPwaManifestWebpackPlugin';
 
 function getDevtool(
   { production, development }: { production: boolean; development: boolean },
@@ -165,7 +168,6 @@ export default async function(
       // We generate new versions of these based on the templates
       ignore: [
         'expo-service-worker.js',
-        'favicon.ico',
         'serve.json',
         'index.html',
         'icon.png',
@@ -177,10 +179,6 @@ export default async function(
       from: locations.template.serveJson,
       to: locations.production.serveJson,
     },
-    {
-      from: locations.template.favicon,
-      to: locations.production.favicon,
-    },
   ];
 
   if (env.offline !== false) {
@@ -189,6 +187,9 @@ export default async function(
       to: locations.production.serviceWorker,
     });
   }
+
+  const appleTouchIcon = env.config.icon ?? env.config.ios.icon;
+  const chromeIcon = env.config.icon ?? env.config.android.icon;
 
   let webpackConfig: DevConfiguration = {
     mode,
@@ -218,13 +219,46 @@ export default async function(
 
       ExpoInterpolateHtmlPlugin.fromEnv(env, ExpoHtmlWebpackPlugin),
 
-      new WebpackPWAManifestPlugin(config, {
-        publicPath,
-        projectRoot: env.projectRoot,
-        noResources: !generatePWAImageAssets,
-        filename: locations.production.manifest,
-        HtmlWebpackPlugin: ExpoHtmlWebpackPlugin,
-      }),
+      env.pwa &&
+        new ExpoPwaManifestWebpackPlugin(
+          {
+            path: 'manifest.json',
+            publicPath,
+          },
+          config
+        ),
+      new FaviconWebpackPlugin(
+        {
+          projectRoot: env.projectRoot,
+          publicPath,
+        },
+        {
+          src: typeof config.web?.favicon === 'string' ? config.web?.favicon : config.icon,
+        }
+      ),
+      generatePWAImageAssets &&
+        new ApplePwaWebpackPlugin(
+          {
+            projectRoot: env.projectRoot,
+            publicPath,
+          },
+          {
+            name: env.config.web.shortName,
+            isFullScreen: env.config.web.meta.apple.touchFullscreen,
+            isWebAppCapable: env.config.web.meta.apple.mobileWebAppCapable,
+            barStyle: env.config.web.meta.apple.barStyle,
+          },
+          appleTouchIcon ? locations.absolute(appleTouchIcon) : undefined,
+          env.config.web.startupImages
+        ),
+      generatePWAImageAssets &&
+        new ChromeIconsWebpackPlugin(
+          {
+            projectRoot: env.projectRoot,
+            publicPath,
+          },
+          { src: chromeIcon ? locations.absolute(chromeIcon) : undefined }
+        ),
 
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
@@ -261,6 +295,11 @@ export default async function(
         fileName: 'asset-manifest.json',
         publicPath,
         filter: ({ path }) => {
+          if (
+            path.match(/(apple-touch-startup-image|apple-touch-icon|chrome-icon|precache-manifest)/)
+          ) {
+            return false;
+          }
           // Remove compressed versions and service workers
           return !(path.endsWith('.gz') || path.endsWith('worker.js'));
         },
