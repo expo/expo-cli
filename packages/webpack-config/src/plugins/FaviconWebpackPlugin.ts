@@ -1,8 +1,7 @@
 import { Compiler, compilation } from 'webpack';
 
+import { generateFaviconAsync } from '@expo/pwa';
 import ModifyHtmlWebpackPlugin from './ModifyHtmlWebpackPlugin';
-
-import { generateFaviconAsync } from '../../../pwa/build/Webpack';
 
 export default class FaviconWebpackPlugin extends ModifyHtmlWebpackPlugin {
   constructor(private pwaOptions: any, private favicon: any) {

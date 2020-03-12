@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Compiler, compilation } from 'webpack';
+import { generateChromeIconAsync } from '@expo/pwa';
 import ModifyJsonWebpackPlugin from './ModifyJsonWebpackPlugin';
-import { generateChromeIconAsync } from '../../../pwa/build/Webpack';
 
 export type Options = {
   source: string;

@@ -307,3 +307,5 @@ export function generateManifestJson(
   }
   return createPWAManifestFromConfig(config);
 }
+
+export { getConfigForPWA } from './Web';

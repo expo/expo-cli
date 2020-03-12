@@ -31,7 +31,7 @@ const program = new Command(packageJson().name).version(packageJson().version);
 program
   .command('icon <src>')
   .description('Generate the homescreen icons for a PWA')
-  .option('-o, --output <folder>', 'Output directory', 'public')
+  .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
   .option('--platform <platform>', 'Platform to generate for: safari, chrome')
   .option('--resize <mode>', 'Resize mode to use', 'contain')
@@ -52,7 +52,7 @@ program
 program
   .command('favicon <src>')
   .description('Generate the favicons for a website')
-  .option('-o, --output <folder>', 'Output directory', 'public')
+  .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
   .option('--resize <mode>', 'Resize mode to use', 'contain')
   .option('--color <color>', 'Background color of the image', 'transparent')
@@ -72,7 +72,7 @@ program
 program
   .command('splash <src>')
   .description('Generate the iOS splash screens for a PWA')
-  .option('-o, --output <folder>', 'Output directory', 'public')
+  .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
   .option('--resize <mode>', 'Resize mode to use', 'contain')
   .option('--color <color>', 'Background color of the image', 'white')
@@ -92,7 +92,7 @@ program
 program
   .command('manifest <config>')
   .description('Generate the PWA manifest from an Expo project config')
-  .option('-o, --output <folder>', 'Output directory', 'public')
+  .option('-o, --output <folder>', 'Output directory', 'web')
   .option('-p, --public <folder>', 'Public folder. Default: <output>')
   .action((config: string, options) => {
     if (!config) throw new Error('pass an expo config path with --config <path>');
@@ -183,6 +183,7 @@ function logManifest(manifest: Record<string, any>) {
   console.log(JSON.stringify(manifest, null, 2));
   console.log();
 }
+
 function logMeta(meta: string[]) {
   if (!meta.length) return;
   console.log();

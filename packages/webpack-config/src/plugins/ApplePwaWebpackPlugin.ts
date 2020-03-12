@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Compiler, compilation } from 'webpack';
 
-import { generateAppleIconAsync, generateSplashAsync } from '../../../pwa/build/Webpack';
+import { generateAppleIconAsync, generateSplashAsync } from '@expo/pwa';
 
 import ModifyHtmlWebpackPlugin from './ModifyHtmlWebpackPlugin';
 

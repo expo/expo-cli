@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs-extra';
 import path from 'path';
 
+const CACHE_LOCATION = '.expo/web/cache/production/images';
 // Calculate SHA256 Checksum value of a file based on its contents
 function calculateHash(filePath: string): string {
   const contents = filePath.startsWith('http') ? filePath : fs.readFileSync(filePath);
@@ -37,7 +38,7 @@ export async function ensureCacheDirectory(
   type: string,
   cacheKey: string
 ): Promise<string> {
-  const cacheFolder = path.join(projectRoot, '.expo/web/cache/production/images', type, cacheKey);
+  const cacheFolder = path.join(projectRoot, CACHE_LOCATION, type, cacheKey);
   await fs.ensureDir(cacheFolder);
   return cacheFolder;
 }
@@ -67,7 +68,7 @@ export async function cacheImageAsync(
 
 export async function clearUnusedCachesAsync(projectRoot: string, type: string): Promise<void> {
   // Clean up any old caches
-  const cacheFolder = path.join(projectRoot, '.expo/web/cache/production/images', type);
+  const cacheFolder = path.join(projectRoot, CACHE_LOCATION, type);
   await fs.ensureDir(cacheFolder);
   const currentCaches = fs.readdirSync(cacheFolder);
 
