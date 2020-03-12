@@ -20,8 +20,13 @@ type SplashIcon = Image.Icon & {
   media: string;
 };
 
+type ProjectOptions = {
+  projectRoot: string;
+  publicPath: string;
+};
+
 export async function generateSplashAsync(
-  { projectRoot, publicPath }: { projectRoot: string; publicPath: string },
+  { projectRoot, publicPath }: ProjectOptions,
   icon: Omit<Image.Icon, 'width' | 'height'> | any[]
 ): Promise<{ asset: WebpackAsset; tag: HtmlTag }[]> {
   const cacheType = 'apple-touch-startup-image';
@@ -91,7 +96,7 @@ export async function generateSplashAsync(
 }
 
 export async function generateAppleIconAsync(
-  { projectRoot, publicPath }: { projectRoot: string; publicPath: string },
+  { projectRoot, publicPath }: ProjectOptions,
   icon: Omit<Image.Icon, 'width' | 'height'>
 ): Promise<{ asset: WebpackAsset; tag: HtmlTag }[]> {
   const cacheType = 'apple-touch-icon';
@@ -135,7 +140,7 @@ export async function generateAppleIconAsync(
 }
 
 export async function generateChromeIconAsync(
-  { projectRoot, publicPath }: { projectRoot: string; publicPath: string },
+  { projectRoot, publicPath }: ProjectOptions,
   icon: Omit<Image.Icon, 'width' | 'height'>
 ): Promise<{ asset: WebpackAsset; manifest: { src: string; sizes: string; type: 'image/png' } }[]> {
   const cacheType = 'chrome-icon';
@@ -176,7 +181,7 @@ export async function generateChromeIconAsync(
 }
 
 export async function generateFaviconAsync(
-  { projectRoot, publicPath }: { projectRoot: string; publicPath: string },
+  { projectRoot, publicPath }: ProjectOptions,
   icon: Omit<Image.Icon, 'width' | 'height'>
 ): Promise<{ asset: WebpackAsset; tag: HtmlTag }[]> {
   const cacheType = 'favicon';

@@ -1,5 +1,5 @@
 {
-  "name": "expo-plugin-pwa",
+  "name": "@expo/pwa",
   "version": "0.0.0",
   "main": "build",
   "preferGlobal": true,
@@ -14,7 +14,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/expo/expo-cli.git",
-    "directory": "packages/expo-plugin-pwa"
+    "directory": "packages/pwa"
   },
   "author": "Expo <support@expo.io>",
   "license": "MIT",
