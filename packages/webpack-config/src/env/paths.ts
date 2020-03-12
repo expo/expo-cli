@@ -11,7 +11,7 @@ import fs from 'fs';
 import path from 'path';
 import url from 'url';
 
-import { Environment, FilePaths, Mode } from '../types';
+import { Environment, FilePaths } from '../types';
 import getMode from './getMode';
 
 function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePaths {
@@ -43,12 +43,7 @@ function parsePaths(projectRoot: string, nativeAppManifest?: ExpoConfig): FilePa
 
   let appMain: string | null = null;
   try {
-    appMain = getEntryPoint(
-      inputProjectRoot,
-      ['./index', './src/index'],
-      ['web'],
-      getConfigMode(mode)
-    );
+    appMain = getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']);
   } catch (_) {
     // ignore the error
   }
