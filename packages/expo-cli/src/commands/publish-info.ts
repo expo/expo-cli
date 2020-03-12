@@ -56,7 +56,6 @@ export default (program: any) => {
       const user = await UserManager.ensureLoggedInAsync();
       const { exp } = getConfig(projectDir, {
         skipSDKVersionRequirement: true,
-        mode: 'development',
       });
 
       let result: any;
