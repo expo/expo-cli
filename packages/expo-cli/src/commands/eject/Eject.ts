@@ -31,7 +31,6 @@ const EXPO_APP_ENTRY = 'node_modules/expo/AppEntry.js';
 async function warnIfDependenciesRequireAdditionalSetupAsync(projectRoot: string): Promise<void> {
   // We just need the custom `nodeModulesPath` from the config.
   const { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
-    mode: 'production',
     skipSDKVersionRequirement: true,
   });
 

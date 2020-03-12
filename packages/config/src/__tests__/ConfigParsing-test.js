@@ -16,7 +16,6 @@ describe('getConfig', () => {
     xit('parses a ts config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/ts');
       const { exp } = getConfig(projectRoot, {
-        mode: 'development',
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar');
@@ -26,12 +25,11 @@ describe('getConfig', () => {
       // ensure config is composed (package.json values still exist)
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
       const { exp } = getConfig(projectRoot, {
-        mode: 'development',
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar');
-      // Ensure the config is passed the package.json values and mode
-      expect(exp.name).toBe('js-config-test+config+development');
+      // Ensure the config is passed the package.json values
+      expect(exp.name).toBe('js-config-test+config');
       // Ensures that the app.json is read and passed to the method
       expect(exp.slug).toBe('someslug+config');
     });
@@ -39,7 +37,6 @@ describe('getConfig', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
       const configPath = path.resolve(projectRoot, 'with-default_app.config.js');
       const { exp } = getConfig(projectRoot, {
-        mode: 'development',
         skipSDKVersionRequirement: true,
         configPath,
       });
@@ -50,7 +47,6 @@ describe('getConfig', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/js');
       const configPath = path.resolve(projectRoot, 'export-json_app.config.js');
       const { exp } = getConfig(projectRoot, {
-        mode: 'development',
         skipSDKVersionRequirement: true,
         configPath,
       });
@@ -60,7 +56,6 @@ describe('getConfig', () => {
     xit('parses a yaml config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/yaml');
       const { exp } = getConfig(projectRoot, {
-        mode: 'development',
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar');
@@ -68,7 +63,6 @@ describe('getConfig', () => {
     xit('parses a toml config', () => {
       const projectRoot = path.resolve(__dirname, './fixtures/language-support/toml');
       const { exp } = getConfig(projectRoot, {
-        mode: 'development',
         skipSDKVersionRequirement: true,
       });
       expect(exp.foo).toBe('bar');
@@ -94,7 +88,6 @@ describe('getConfig', () => {
       setCustomConfigPath(fixtures.customLocationJson, customConfigPath);
 
       const { exp } = getConfig(projectRoot, {
-        mode: 'development',
         skipSDKVersionRequirement: true,
       });
       // Ensure the expo object is reduced out. See #1542.
@@ -113,7 +106,6 @@ describe('getConfig', () => {
       resetAllCustomFixtureLocations();
       // After the rest, read the root config and ensure it doesn't match the custom location config.
       const { exp: baseExp } = getConfig(projectRoot, {
-        mode: 'development',
         skipSDKVersionRequirement: true,
       });
       // name is read from the default config.

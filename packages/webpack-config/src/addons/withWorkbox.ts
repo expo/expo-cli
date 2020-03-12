@@ -90,7 +90,7 @@ export default function withWorkbox(
     injectManifestOptions = {},
   } = options;
 
-  const locations = getPaths(projectRoot!, webpackConfig.mode);
+  const locations = getPaths(projectRoot!);
 
   webpackConfig.plugins.push(
     new CopyPlugin([
