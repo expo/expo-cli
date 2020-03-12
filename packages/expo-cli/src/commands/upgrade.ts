@@ -43,7 +43,7 @@ export async function getUpdatedDependenciesAsync(
   targetSdkVersion: TargetSDKVersion | null
 ): Promise<DependencyList> {
   // Get the updated version for any bundled modules
-  const { exp, pkg } = ConfigUtils.getConfig(projectRoot, { mode: 'development' });
+  const { exp, pkg } = ConfigUtils.getConfig(projectRoot);
   const bundledNativeModules = (await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/bundledNativeModules.json', projectRoot, exp)
   )) as DependencyList;
