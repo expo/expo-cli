@@ -45,7 +45,7 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
-import Config, { getProjectConfigAsync } from './Config';
+import Config from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
 import * as DevSession from './DevSession';
@@ -356,14 +356,8 @@ function _requireFromProject(modulePath: string, projectRoot: string, exp: ExpoC
 }
 
 // TODO: Move to @expo/config
-export async function getSlugAsync(
-  projectRoot: string,
-  {
-    mode = 'production',
-    ...options
-  }: { mode?: 'production' | 'development'; [key: string]: any } = {}
-): Promise<string> {
-  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode });
+export async function getSlugAsync(projectRoot: string): Promise<string> {
+  const { exp } = getConfig(projectRoot, { skipSDKVersionRequirement: true });
   if (exp.slug) {
     return exp.slug;
   }
@@ -1006,7 +1000,7 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
   // Verify that exp/app.json and package.json exist
-  const { exp, pkg } = await getProjectConfigAsync(projectRoot);
+  const { exp, pkg } = getConfig(projectRoot);
 
   if (exp.android && exp.android.config) {
     delete exp.android.config;
@@ -1407,11 +1401,11 @@ type GetExpConfigOptions = {
 
 async function getConfigAsync(
   projectRoot: string,
-  options: Pick<GetExpConfigOptions, 'publicUrl' | 'mode' | 'platform'> = {}
+  options: Pick<GetExpConfigOptions, 'publicUrl' | 'platform'> = {}
 ) {
   if (!options.publicUrl) {
     // get the manifest from the project directory
-    const { exp, pkg } = await getProjectConfigAsync(projectRoot, { mode: options.mode as any });
+    const { exp, pkg } = getConfig(projectRoot);
     const configName = configFilename(projectRoot);
     return {
       exp,
@@ -1784,7 +1778,7 @@ export async function startReactNativeServerAsync(
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
 
-  let { exp } = await getProjectConfigAsync(projectRoot);
+  let { exp } = getConfig(projectRoot);
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
@@ -2011,10 +2005,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       Doctor.validateWithNetworkAsync(projectRoot);
       // Get packager opts and then copy into bundleUrlPackagerOpts
       let packagerOpts = await ProjectSettings.readAsync(projectRoot);
-      let { exp: manifest } = getConfig(projectRoot, {
-        skipSDKVersionRequirement: false,
-        mode: packagerOpts.dev ? 'development' : 'production',
-      });
+      let { exp: manifest } = getConfig(projectRoot);
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
       if (bundleUrlPackagerOpts.hostType === 'redirect') {
@@ -2393,7 +2384,7 @@ export async function startAsync(
     developerTool: Config.developerTool,
   });
 
-  let { exp } = await getProjectConfigAsync(projectRoot);
+  let { exp } = getConfig(projectRoot);
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');

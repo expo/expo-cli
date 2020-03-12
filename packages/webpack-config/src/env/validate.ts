@@ -68,7 +68,7 @@ export function validateEnvironment(env: InputEnvironment): Environment {
   const filledEnv: any = environmentSchema.validateSync(env);
 
   if (!env.locations) {
-    filledEnv.locations = getPaths(env.projectRoot, env.mode);
+    filledEnv.locations = getPaths(env.projectRoot);
   }
 
   if (!env.config) {

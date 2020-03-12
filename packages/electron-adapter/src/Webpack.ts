@@ -22,12 +22,10 @@ export function withExpoWebpack(
 
   const projectRoot = options.projectRoot || process.cwd();
 
-  const enforcedMode = config.mode === 'production' ? config.mode : 'development';
   const env: any = {
     platform: 'electron',
     projectRoot,
-    mode: enforcedMode,
-    locations: getPaths(projectRoot, enforcedMode),
+    locations: getPaths(projectRoot),
   };
   if (!config.plugins) config.plugins = [];
   if (!config.resolve) config.resolve = {};
