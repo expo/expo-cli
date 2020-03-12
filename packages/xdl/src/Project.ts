@@ -381,20 +381,34 @@ export async function getLatestReleaseAsync(
     owner?: string;
   }
 ): Promise<Release | null> {
-  // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
-  let formData = new FormData();
-  formData.append('queryType', 'history');
-  formData.append('slug', await getSlugAsync(projectRoot));
-  if (options.owner) {
-    formData.append('owner', options.owner);
+  let result;
+  if (process.env.EXPO_LEGACY_API === 'true') {
+    // TODO(ville): move request from multipart/form-data to JSON once supported by the endpoint.
+    let formData = new FormData();
+    formData.append('queryType', 'history');
+    formData.append('slug', await getSlugAsync(projectRoot));
+    if (options.owner) {
+      formData.append('owner', options.owner);
+    }
+    formData.append('version', '2');
+    formData.append('count', '1');
+    formData.append('releaseChannel', options.releaseChannel);
+    formData.append('platform', options.platform);
+    result = await Api.callMethodAsync('publishInfo', [], 'post', null, {
+      formData,
+    });
+  } else {
+    const user = await UserManager.ensureLoggedInAsync();
+    const api = ApiV2.clientForUser(user);
+    result = await api.postAsync('publish/history', {
+      owner: options.owner,
+      slug: await getSlugAsync(projectRoot),
+      releaseChannel: options.releaseChannel,
+      count: 1,
+      platform: options.platform,
+    });
   }
-  formData.append('version', '2');
-  formData.append('count', '1');
-  formData.append('releaseChannel', options.releaseChannel);
-  formData.append('platform', options.platform);
-  const { queryResult } = await Api.callMethodAsync('publishInfo', [], 'post', null, {
-    formData,
-  });
+  const { queryResult } = result;
   if (queryResult && queryResult.length > 0) {
     return queryResult[0];
   } else {
