@@ -61,7 +61,7 @@ export class Context {
     const status = await Doctor.validateWithoutNetworkAsync(projectDir);
     if (status !== Doctor.FATAL) {
       /* This manager does not need to work in project context */
-      const { exp } = getConfig(projectDir, { mode: 'production' });
+      const { exp } = getConfig(projectDir);
       this._manifest = exp;
       this._hasProjectContext = true;
     }
