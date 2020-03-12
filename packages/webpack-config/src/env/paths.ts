@@ -42,12 +42,19 @@ function parsePaths(projectRoot: string, mode: Mode, nativeAppManifest?: ExpoCon
     return path.resolve(modulesPath, ...props);
   }
 
+  let appMain: string | null = null;
+  try {
+    appMain = getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']);
+  } catch (_) {
+    // ignore the error
+  }
+
   return {
     absolute,
     includeModule: getIncludeModule,
     packageJson: packageJsonPath,
     root: path.resolve(inputProjectRoot),
-    appMain: getEntryPoint(inputProjectRoot, ['./index', './src/index'], ['web']),
+    appMain,
     modules: modulesPath,
     servedPath: getServedPath(inputProjectRoot, mode),
     template: {

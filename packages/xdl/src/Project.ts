@@ -4,13 +4,11 @@ import {
   Platform,
   configFilename,
   getConfig,
-  projectHasModule,
-  readConfigJson,
-  readConfigJsonAsync,
   readExpRcAsync,
   resolveModule,
 } from '@expo/config';
 
+import slug from 'slugify';
 import { getManagedExtensions } from '@expo/config/paths';
 import JsonFile from '@expo/json-file';
 import ngrok from '@expo/ngrok';
@@ -47,7 +45,7 @@ import * as Analytics from './Analytics';
 import * as Android from './Android';
 import Api from './Api';
 import ApiV2 from './ApiV2';
-import Config from './Config';
+import Config, { getProjectConfigAsync } from './Config';
 import * as ExponentTools from './detach/ExponentTools';
 import StandaloneContext from './detach/StandaloneContext';
 import * as DevSession from './DevSession';
@@ -125,7 +123,7 @@ type SelfHostedIndex = PublicConfig & {
   dependencies: string[];
 };
 
-type StartOptions = {
+export type StartOptions = {
   reset?: boolean;
   nonInteractive?: boolean;
   nonPersistent?: boolean;
@@ -964,12 +962,12 @@ async function _uploadArtifactsAsync({
   formData.append('options', JSON.stringify(options));
 
   let response: any;
-  if (process.env.EXPO_NEXT_API) {
+  if (process.env.EXPO_LEGACY_API === 'true') {
+    response = await Api.callMethodAsync('publish', null, 'put', null, { formData });
+  } else {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     response = await api.uploadFormDataAsync('publish/new', formData);
-  } else {
-    response = await Api.callMethodAsync('publish', null, 'put', null, { formData });
   }
   return response;
 }
@@ -1008,7 +1006,7 @@ async function _getPublishExpConfigAsync(
   options.releaseChannel = options.releaseChannel || 'default'; // joi default not enforcing this :/
 
   // Verify that exp/app.json and package.json exist
-  const { exp, pkg } = await readConfigJsonAsync(projectRoot);
+  const { exp, pkg } = await getProjectConfigAsync(projectRoot);
 
   if (exp.android && exp.android.config) {
     delete exp.android.config;
@@ -1357,12 +1355,12 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
 
   // Collect list of assets missing on host
   let result;
-  if (process.env.EXPO_NEXT_API) {
+  if (process.env.EXPO_LEGACY_API === 'true') {
+    result = await Api.callMethodAsync('assetsMetadata', [], 'post', { keys: Object.keys(paths) });
+  } else {
     const user = await UserManager.ensureLoggedInAsync();
     const api = ApiV2.clientForUser(user);
     result = await api.postAsync('assets/metadata', { keys: Object.keys(paths) });
-  } else {
-    result = await Api.callMethodAsync('assetsMetadata', [], 'post', { keys: Object.keys(paths) });
   }
   const metas = result.metadata;
   const missing = Object.keys(paths).filter(key => !metas[key].exists);
@@ -1384,33 +1382,36 @@ async function uploadAssetsAsync(projectRoot: string, assets: Asset[]) {
         formData.append(key, fs.createReadStream(paths[key]), paths[key]);
       }
 
-      if (process.env.EXPO_NEXT_API) {
+      if (process.env.EXPO_LEGACY_API === 'true') {
+        await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
+      } else {
         const user = await UserManager.ensureLoggedInAsync();
         const api = ApiV2.clientForUser(user);
         await api.uploadFormDataAsync('assets/upload', formData);
-      } else {
-        await Api.callMethodAsync('uploadAssets', [], 'put', null, { formData });
       }
     })
   );
 }
 
+type GetExpConfigOptions = {
+  current?: boolean;
+  mode?: string;
+  platform?: 'android' | 'ios' | 'all';
+  expIds?: string[];
+  type?: string;
+  releaseChannel?: string;
+  bundleIdentifier?: string;
+  publicUrl?: string;
+  sdkVersion?: string;
+};
+
 async function getConfigAsync(
   projectRoot: string,
-  options: {
-    current?: boolean;
-    mode?: string;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-  } = {}
+  options: Pick<GetExpConfigOptions, 'publicUrl' | 'mode' | 'platform'> = {}
 ) {
   if (!options.publicUrl) {
     // get the manifest from the project directory
-    const { exp, pkg } = await readConfigJsonAsync(projectRoot);
+    const { exp, pkg } = await getProjectConfigAsync(projectRoot, { mode: options.mode as any });
     const configName = configFilename(projectRoot);
     return {
       exp,
@@ -1432,7 +1433,7 @@ async function getConfigAsync(
 // TODO(ville): add the full type
 type BuildJob = unknown;
 
-type BuildStatusResult = {
+export type BuildStatusResult = {
   jobs: BuildJob[];
   err: null;
   userHasBuiltAppBefore: boolean;
@@ -1442,7 +1443,7 @@ type BuildStatusResult = {
   hasUnlimitedPriorityBuilds: boolean;
 };
 
-type BuildCreatedResult = {
+export type BuildCreatedResult = {
   id: string;
   ids: string[];
   priority: 'normal' | 'high';
@@ -1491,7 +1492,10 @@ function _validateOptions(options: any) {
   }
 }
 
-async function _getExpAsync(projectRoot: string, options: any) {
+async function _getExpAsync(
+  projectRoot: string,
+  options: Pick<GetExpConfigOptions, 'publicUrl' | 'mode' | 'platform'>
+) {
   const { exp, pkg, configName, configPrefix } = await getConfigAsync(projectRoot, options);
 
   if (!exp || !pkg) {
@@ -1506,30 +1510,24 @@ async function _getExpAsync(projectRoot: string, options: any) {
   if (!exp.version && 'version' in pkg && pkg.version) {
     exp.version = pkg.version;
   }
-  if (!exp.slug && 'name' in pkg && pkg.name) {
-    exp.slug = pkg.name;
+  if (!exp.name && 'name' in pkg && typeof pkg.name === 'string') {
+    exp.name = pkg.name;
+  }
+  if (!exp.slug && typeof exp.name === 'string') {
+    exp.slug = slug(exp.name.toLowerCase());
   }
   return { exp, configName, configPrefix };
 }
 
 export async function getBuildStatusAsync(
   projectRoot: string,
-  options: {
-    current?: boolean;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-    sdkVersion?: string;
-  } = {}
+  options: GetExpConfigOptions = {}
 ): Promise<BuildStatusResult> {
   const user = await UserManager.ensureLoggedInAsync();
 
   _assertValidProjectRoot(projectRoot);
   _validateOptions(options);
-  const { exp, configName, configPrefix } = await _getExpAsync(projectRoot, options);
+  const { exp } = await _getExpAsync(projectRoot, options);
 
   const api = ApiV2.clientForUser(user);
   return await api.postAsync('build/status', { manifest: exp, options });
@@ -1537,16 +1535,7 @@ export async function getBuildStatusAsync(
 
 export async function startBuildAsync(
   projectRoot: string,
-  options: {
-    current?: boolean;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-    sdkVersion?: string;
-  } = {}
+  options: GetExpConfigOptions = {}
 ): Promise<BuildCreatedResult> {
   const user = await UserManager.ensureLoggedInAsync();
 
@@ -1567,17 +1556,7 @@ export async function startBuildAsync(
 
 export async function buildAsync(
   projectRoot: string,
-  options: {
-    current?: boolean;
-    mode?: string;
-    platform?: 'android' | 'ios' | 'all';
-    expIds?: Array<string>;
-    type?: string;
-    releaseChannel?: string;
-    bundleIdentifier?: string;
-    publicUrl?: string;
-    sdkVersion?: string;
-  } = {}
+  options: GetExpConfigOptions = {}
 ): Promise<BuildStatusResult | BuildCreatedResult> {
   /**
     This function corresponds to an apiv1 call and is deprecated.
@@ -1805,7 +1784,7 @@ export async function startReactNativeServerAsync(
   await Watchman.addToPathAsync(); // Attempt to fix watchman if it's hanging
   await Watchman.unblockAndGetVersionAsync(projectRoot);
 
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  let { exp } = await getProjectConfigAsync(projectRoot);
 
   let packagerPort = await _getFreePortAsync(19001); // Create packager options
 
@@ -1887,13 +1866,14 @@ export async function startReactNativeServerAsync(
   // ELECTRON_RUN_AS_NODE environment variable
   // Note: the CLI script sets up graceful-fs and sets ulimit to 4096 in the
   // child process
+  const nodePathEnv = nodePath ? { NODE_PATH: nodePath } : {};
   let packagerProcess = child_process.fork(cliPath, cliOpts, {
     cwd: projectRoot,
     env: {
       ...process.env,
       REACT_NATIVE_APP_ROOT: projectRoot,
       ELECTRON_RUN_AS_NODE: '1',
-      ...(nodePath ? { NODE_PATH: nodePath } : {}),
+      ...nodePathEnv,
     },
     silent: true,
   });
@@ -2029,9 +2009,12 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       // if there is a potential error in the package.json and don't want to slow
       // down the request
       Doctor.validateWithNetworkAsync(projectRoot);
-      let { exp: manifest } = readConfigJson(projectRoot);
       // Get packager opts and then copy into bundleUrlPackagerOpts
-      let packagerOpts = await ProjectSettings.getPackagerOptsAsync(projectRoot);
+      let packagerOpts = await ProjectSettings.readAsync(projectRoot);
+      let { exp: manifest } = getConfig(projectRoot, {
+        skipSDKVersionRequirement: false,
+        mode: packagerOpts.dev ? 'development' : 'production',
+      });
       let bundleUrlPackagerOpts = JSON.parse(JSON.stringify(packagerOpts));
       bundleUrlPackagerOpts.urlType = 'http';
       if (bundleUrlPackagerOpts.hostType === 'redirect') {
@@ -2091,20 +2074,20 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
             let publishInfo = await Exp.getPublishInfoAsync(projectRoot);
 
             let signedManifest;
-            if (process.env.EXPO_NEXT_API) {
-              const user = await UserManager.ensureLoggedInAsync();
-              const api = ApiV2.clientForUser(user);
-              signedManifest = await api.postAsync('manifest/sign', {
-                args: publishInfo.args,
-                manifest,
-              });
-            } else {
+            if (process.env.EXPO_LEGACY_API === 'true') {
               signedManifest = await Api.callMethodAsync(
                 'signManifest',
                 [publishInfo.args],
                 'post',
                 manifest
               );
+            } else {
+              const user = await UserManager.ensureLoggedInAsync();
+              const api = ApiV2.clientForUser(user);
+              signedManifest = await api.postAsync('manifest/sign', {
+                args: publishInfo.args,
+                manifest,
+              });
             }
             _cachedSignedManifest.manifestString = manifestString;
             _cachedSignedManifest.signedManifest = signedManifest.response;
@@ -2115,7 +2098,7 @@ export async function startExpoServerAsync(projectRoot: string): Promise<void> {
       const hostInfo = {
         host: hostUUID,
         server: 'xdl',
-        serverVersion: require('../package.json').version,
+        serverVersion: require('@expo/xdl/package.json').version,
         serverDriver: Config.developerTool,
         serverOS: os.platform(),
         serverOSVersion: os.release(),
@@ -2410,7 +2393,7 @@ export async function startAsync(
     developerTool: Config.developerTool,
   });
 
-  let { exp } = await readConfigJsonAsync(projectRoot);
+  let { exp } = await getProjectConfigAsync(projectRoot);
   if (options.webOnly) {
     await Webpack.restartAsync(projectRoot, options);
     DevSession.startSession(projectRoot, exp, 'web');

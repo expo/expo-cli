@@ -38,17 +38,9 @@ workflows:
           requires:
             - build10
       - test-config:
-          e: node-12
-          requires:
-            - build12
-      - test-config:
           e: node-10
           requires:
             - build10
-      - test-json-file:
-          e: node-12
-          requires:
-            - build12
       - test-json-file:
           e: node-10
           requires:
@@ -62,17 +54,9 @@ workflows:
           requires:
             - build10
       - test-expo-codemod:
-          e: node-12
-          requires:
-            - build12
-      - test-expo-codemod:
           e: node-10
           requires:
             - build10
-      - test-webpack-config-unit:
-          e: node-12
-          requires:
-            - build12
       - test-webpack-config-unit:
           e: node-10
           requires:
@@ -86,22 +70,18 @@ workflows:
           requires:
             - puppeteerEnv
       - test-expo-schemer:
-          e: node-12
-          requires:
-            - build12
-      - test-expo-schemer:
           e: node-10
           requires:
             - build10
-      - test-android-manifest:
+      - test-coverage:
           e: node-12
           requires:
             - build12
-      - test-android-manifest:
-          e: node-10
-          requires:
-            - build10
       - test-electron-adapter:
+          e: node-10
+          requires:
+            - build10
+      - test-plist:
           e: node-10
           requires:
             - build10
@@ -197,9 +177,6 @@ jobs:
     steps:
       - attach_workspace:
           at: '~'
-      - run:
-          name: Install test project dependencies
-          command: cd tests/basic && yarn; cd ../..
       - run: yarn test:unit
   test-webpack-config-e2e:
     parameters:
@@ -212,7 +189,7 @@ jobs:
           at: '~'
       - run:
           name: Install test project dependencies
-          command: cd tests/basic && yarn; cd ../..
+          command: cd e2e/basic && yarn; cd ../..
       - run: yarn test:e2e
   test-webpack-config-e2e-next-js:
     parameters:
@@ -225,7 +202,7 @@ jobs:
           at: '~'
       - run:
           name: Install test project dependencies
-          command: cd tests/nextjs && yarn; cd ../..
+          command: cd e2e/nextjs && yarn; cd ../..
       - run: yarn test:e2e:nextjs
   test-expo-schemer:
     parameters:
@@ -237,22 +214,32 @@ jobs:
       - attach_workspace:
           at: '~'
       - run: yarn test
-  test-android-manifest:
+  test-coverage:
     parameters:
       e:
         type: executor
     executor: << parameters.e >>
-    working_directory: ~/expo-cli/packages/android-manifest
+    working_directory: ~/expo-cli
     steps:
       - attach_workspace:
           at: '~'
-      - run: yarn test
+      - run: yarn test-coverage
   test-electron-adapter:
     parameters:
       e:
         type: executor
     executor: << parameters.e >>
     working_directory: ~/expo-cli/packages/electron-adapter
+    steps:
+      - attach_workspace:
+          at: '~'
+      - run: yarn test
+  test-plist:
+    parameters:
+      e:
+        type: executor
+    executor: << parameters.e >>
+    working_directory: ~/expo-cli/packages/plist
     steps:
       - attach_workspace:
           at: '~'

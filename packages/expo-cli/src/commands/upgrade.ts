@@ -1,24 +1,32 @@
-import { Command } from 'commander';
-import { Android, Project, Simulator, Versions } from '@expo/xdl';
-import JsonFile from '@expo/json-file';
 import * as ConfigUtils from '@expo/config';
-import chalk from 'chalk';
-import semver from 'semver';
-import _ from 'lodash';
-
+import JsonFile from '@expo/json-file';
 import * as PackageManager from '@expo/package-manager';
-import CommandError from '../CommandError';
-import prompt from '../prompt';
+import { Android, Project, Simulator, Versions } from '@expo/xdl';
+import chalk from 'chalk';
+import program, { Command } from 'commander';
+import _ from 'lodash';
+import semver from 'semver';
+
 import log from '../log';
+import prompt from '../prompt';
 import { findProjectRootAsync, validateGitStatusAsync } from './utils/ProjectUtils';
+
+type DependencyList = Record<string, string>;
 
 type Options = {
   npm?: boolean;
   yarn?: boolean;
 };
 
-function maybeFormatSdkVersion(sdkVersionString: string | null) {
-  if (typeof sdkVersionString !== 'string') {
+export type ExpoWorkflow = 'managed' | 'bare';
+
+export type TargetSDKVersion = Pick<
+  Versions.SDKVersion,
+  'expoReactNativeTag' | 'facebookReactVersion' | 'facebookReactNativeVersion' | 'relatedPackages'
+>;
+
+export function maybeFormatSdkVersion(sdkVersionString: string | null): string | null {
+  if (typeof sdkVersionString !== 'string' || sdkVersionString === 'UNVERSIONED') {
     return sdkVersionString;
   }
 
@@ -26,37 +34,60 @@ function maybeFormatSdkVersion(sdkVersionString: string | null) {
   return semver.valid(semver.coerce(sdkVersionString) || '');
 }
 
-type DependencyList = { [key: string]: string };
-
 /**
  * Produce a list of dependencies used by the project that need to be updated
  */
-async function getUpdatedDependenciesAsync(
+export async function getUpdatedDependenciesAsync(
   projectRoot: string,
-  workflow: 'managed' | 'bare',
-  targetSdkVersion: {
-    expoReactNativeTag: string;
-    facebookReactVersion?: string;
-    facebookReactNativeVersion: string;
-    relatedPackages?: { [name: string]: string };
-  } | null
+  workflow: ExpoWorkflow,
+  targetSdkVersion: TargetSDKVersion | null
 ): Promise<DependencyList> {
-  let result: DependencyList = {};
-
   // Get the updated version for any bundled modules
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-  let bundledNativeModules = (await JsonFile.readAsync(
+  const { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const bundledNativeModules = (await JsonFile.readAsync(
     ConfigUtils.resolveModule('expo/bundledNativeModules.json', projectRoot, exp)
   )) as DependencyList;
 
   // Smoosh regular and dev dependencies together for now
-  let dependencies = { ...pkg.dependencies, ...pkg.devDependencies };
+  const projectDependencies = { ...pkg.dependencies, ...pkg.devDependencies };
+
+  return getDependenciesFromBundledNativeModules({
+    projectDependencies,
+    bundledNativeModules,
+    sdkVersion: exp.sdkVersion,
+    workflow,
+    targetSdkVersion,
+  });
+}
+
+export type UpgradeDependenciesOptions = {
+  projectDependencies: DependencyList;
+  bundledNativeModules: DependencyList;
+  sdkVersion?: string;
+  workflow: ExpoWorkflow;
+  targetSdkVersion: TargetSDKVersion | null;
+};
+
+export function getDependenciesFromBundledNativeModules({
+  projectDependencies,
+  bundledNativeModules,
+  sdkVersion,
+  workflow,
+  targetSdkVersion,
+}: UpgradeDependenciesOptions): DependencyList {
+  const result: DependencyList = {};
 
   Object.keys(bundledNativeModules).forEach(name => {
-    if (dependencies[name]) {
+    if (projectDependencies[name]) {
       result[name] = bundledNativeModules[name];
     }
   });
+
+  // If sdkVersion is known and jest-expo is used, then upgrade to the current sdk version
+  // jest-expo is versioned with expo because jest-expo mocks out the native SDKs used it expo.
+  if (sdkVersion && projectDependencies['jest-expo']) {
+    result['jest-expo'] = `^${sdkVersion}`;
+  }
 
   if (!targetSdkVersion) {
     log.warn(
@@ -65,12 +96,8 @@ async function getUpdatedDependenciesAsync(
     return result;
   }
 
-  if (dependencies['jest-expo']) {
-    result['jest-expo'] = `^${exp.sdkVersion}`;
-  }
-
   // Get the supported react/react-native/react-dom versions and other related packages
-  if (workflow === 'managed' || dependencies['expokit']) {
+  if (workflow === 'managed' || projectDependencies['expokit']) {
     result[
       'react-native'
     ] = `https://github.com/expo/react-native/archive/${targetSdkVersion.expoReactNativeTag}.tar.gz`;
@@ -83,7 +110,7 @@ async function getUpdatedDependenciesAsync(
     result['react'] = targetSdkVersion.facebookReactVersion;
 
     // react-dom version is always the same as the react version
-    if (dependencies['react-dom']) {
+    if (projectDependencies['react-dom']) {
       result['react-dom'] = targetSdkVersion.facebookReactVersion;
     }
   }
@@ -91,7 +118,7 @@ async function getUpdatedDependenciesAsync(
   // Update any related packages
   if (targetSdkVersion.relatedPackages) {
     Object.keys(targetSdkVersion.relatedPackages).forEach(name => {
-      if (dependencies[name]) {
+      if (projectDependencies[name]) {
         result[name] = targetSdkVersion.relatedPackages![name];
       }
     });
@@ -100,71 +127,105 @@ async function getUpdatedDependenciesAsync(
   return result;
 }
 
-async function upgradeAppJson(projectRoot: string, targetSdkVersionString: string) {
-  let { exp } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-  exp.sdkVersion = targetSdkVersionString;
+async function makeBreakingChangesToConfig(
+  projectRoot: string,
+  targetSdkVersionString: string
+): Promise<void> {
+  let { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+  const { exp: currentExp } = ConfigUtils.getConfig(projectRoot, {
+    mode: 'development',
+  });
+
   switch (targetSdkVersionString) {
     case '37.0.0':
-      if (exp.androidNavigationBar?.visible === false) {
-        exp.androidNavigationBar.visible = 'leanback';
-      } else if (exp.androidNavigationBar?.visible === true) {
-        delete exp.androidNavigationBar?.visible;
+      if (rootConfig?.androidNavigationBar?.visible) {
+        if (rootConfig.androidNavigationBar?.visible === false) {
+          log.addNewLineIfNone();
+          log(
+            chalk.underline.bold(
+              'Updating "androidNavigationBar.visible" property in app.json to "leanback"...'
+            )
+          );
+          rootConfig.androidNavigationBar.visible = 'leanback';
+        } else if (rootConfig.androidNavigationBar?.visible === true) {
+          log.addNewLineIfNone();
+          log(
+            chalk.underline.bold(
+              'Removing extraneous "androidNavigationBar.visible" property in app.json...'
+            )
+          );
+          delete rootConfig.androidNavigationBar?.visible;
+        }
+        await ConfigUtils.writeConfigJsonAsync(projectRoot, rootConfig);
+      } else if (currentExp?.androidNavigationBar?.visible) {
+        log.addNewLineIfNone();
+        log(
+          chalk.underline.bold(
+            `Please manually update "androidNavigationBar.visible" according to these docs https://docs.expo.io/versions/latest/workflow/configuration/#androidnavigationbar`
+          )
+        );
       }
   }
-  await ConfigUtils.writeConfigJsonAsync(projectRoot, exp);
 }
 
-async function upgradeAsync(requestedSdkVersion: string | null, options: Options) {
-  let { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
-  let { exp, pkg } = await ConfigUtils.readConfigJsonAsync(projectRoot);
-  let isGitStatusClean = await validateGitStatusAsync();
+async function maybeBailOnGitStatusAsync(): Promise<boolean> {
+  const isGitStatusClean = await validateGitStatusAsync();
   log.newLine();
 
   // Give people a chance to bail out if git working tree is dirty
   if (!isGitStatusClean) {
-    let answer = await prompt({
+    if (program.nonInteractive) {
+      log.warn(
+        `Git status is dirty but the command will continue because nonInteractive is enabled.`
+      );
+      return false;
+    }
+
+    const answer = await prompt({
       type: 'confirm',
       name: 'ignoreDirtyGit',
       message: `Would you like to proceed?`,
     });
 
     if (!answer.ignoreDirtyGit) {
-      return;
+      return true;
     }
 
     log.newLine();
   }
+  return false;
+}
 
+async function maybeBailOnUnsafeFunctionalityAsync(
+  exp: Pick<ConfigUtils.ExpoConfig, 'sdkVersion'>
+): Promise<boolean> {
   // Give people a chance to bail out if they're updating from a super old version because YMMV
   if (!Versions.gteSdkVersion(exp, '33.0.0')) {
-    let answer = await prompt({
+    if (program.nonInteractive) {
+      log.warn(
+        `This command works best on SDK 33 and higher. Because the command is running in nonInteractive mode it'll continue regardless.`
+      );
+      return true;
+    }
+
+    const answer = await prompt({
       type: 'confirm',
       name: 'attemptOldUpdate',
       message: `This command works best on SDK 33 and higher. We can try updating for you, but you will likely need to follow up with the instructions from https://docs.expo.io/versions/latest/workflow/upgrading-expo-sdk-walkthrough/. Continue anyways?`,
     });
 
     if (!answer.attemptOldUpdate) {
-      return;
+      return true;
     }
 
     log.newLine();
   }
+  return false;
+}
 
-  // Can't upgrade if we don't have a SDK version (tapping on head meme)
-  if (!exp.sdkVersion) {
-    if (workflow === 'bare') {
-      log.error(
-        'This command only works for bare workflow projects that also have the expo package installed and sdkVersion configured in app.json.'
-      );
-      throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND_IN_BARE');
-    } else {
-      log.error('No sdkVersion field is present in app.json, cannot upgrade project.');
-      throw new CommandError('SDK_VERSION_REQUIRED_FOR_UPGRADE_COMMAND_IN_MANAGED');
-    }
-  }
-
+async function stopExpoServerAsync(projectRoot: string): Promise<void> {
   // Can't upgrade if Expo is running
-  let status = await Project.currentStatus(projectRoot);
+  const status = await Project.currentStatus(projectRoot);
   if (status === 'running') {
     await Project.stopAsync(projectRoot);
     log(
@@ -174,8 +235,128 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
     );
     log.addNewLineIfNone();
   }
+}
 
-  let currentSdkVersionString = exp.sdkVersion;
+async function shouldBailWhenUsingLatest(
+  currentSdkVersionString: string,
+  targetSdkVersionString: string
+): Promise<boolean> {
+  // Maybe bail out early if people are trying to update to the current version
+  if (targetSdkVersionString === currentSdkVersionString) {
+    if (program.nonInteractive) {
+      log.warn(
+        `You are already using the latest SDK version but the command will continue because nonInteractive is enabled.`
+      );
+      return false;
+    }
+    const answer = await prompt({
+      type: 'confirm',
+      name: 'attemptUpdateAgain',
+      message: `You are already using the latest SDK version. Do you want to run the update anyways? This may be useful to ensure that all of your packages are set to the correct version.`,
+    });
+
+    if (!answer.attemptUpdateAgain) {
+      log('Follow the Expo blog at https://blog.expo.io for new release information!');
+      return true;
+    }
+  }
+  return false;
+}
+
+async function shouldUpgradeSimulatorAsync(): Promise<boolean> {
+  // Check if we can, and probably should, upgrade the (ios) simulator
+  if (Simulator.isPlatformSupported()) {
+    if (program.nonInteractive) {
+      log.warn(`Skipping attempt to upgrade the client app on iOS simulator.`);
+      return false;
+    }
+
+    let answer = await prompt({
+      type: 'confirm',
+      name: 'upgradeSimulator',
+      message:
+        'You might have to upgrade your iOS simulator. Before you can do that, you have to run the simulator. Do you want to upgrade it now?',
+      default: false,
+    });
+
+    return answer.upgradeSimulator;
+  }
+  return false;
+}
+
+async function maybeUpgradeSimulatorAsync() {
+  // Check if we can, and probably should, upgrade the (ios) simulator
+  if (Simulator.isPlatformSupported()) {
+    if (await shouldUpgradeSimulatorAsync()) {
+      let result = await Simulator.upgradeExpoAsync();
+      if (!result) {
+        log.error(
+          "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
+        );
+      }
+    }
+    log.newLine();
+  }
+}
+
+async function shouldUpgradeEmulatorAsync(): Promise<boolean> {
+  // Check if we can, and probably should, upgrade the android client
+  if (Android.isPlatformSupported()) {
+    if (program.nonInteractive) {
+      log.warn(`Skipping attempt to upgrade the client app on the Android emulator.`);
+      return false;
+    }
+
+    const answer = await prompt({
+      type: 'confirm',
+      name: 'upgradeAndroid',
+      message:
+        'You might have to upgrade your Android client. Before you can do that, you have to run the emulator, or plug a device in. Do you want to upgrade it now?',
+      default: false,
+    });
+
+    return answer.upgradeAndroid;
+  }
+  return false;
+}
+
+async function maybeUpgradeEmulatorAsync() {
+  // Check if we can, and probably should, upgrade the android client
+  if (await shouldUpgradeEmulatorAsync()) {
+    const result = await Android.upgradeExpoAsync();
+    if (!result) {
+      log.error(
+        "The upgrade of your Android client didn't go as planned. You might have to reinstall it manually with expo client:install:android."
+      );
+    }
+    log.newLine();
+  }
+}
+
+export async function upgradeAsync(
+  {
+    requestedSdkVersion,
+    projectRoot,
+    workflow,
+  }: {
+    requestedSdkVersion: string | null;
+    projectRoot: string;
+    workflow: ExpoWorkflow;
+  },
+  options: Options
+) {
+  let { exp, pkg } = await ConfigUtils.getConfig(projectRoot, {
+    skipSDKVersionRequirement: false,
+    mode: 'development',
+  });
+
+  if (await maybeBailOnGitStatusAsync()) return;
+
+  if (await maybeBailOnUnsafeFunctionalityAsync(exp)) return;
+
+  await stopExpoServerAsync(projectRoot);
+
+  let currentSdkVersionString = exp.sdkVersion!;
   let sdkVersions = await Versions.releasedSdkVersionsAsync();
   let latestSdkVersion = await Versions.newestReleasedSdkVersionAsync();
   let latestSdkVersionString = latestSdkVersion.version;
@@ -184,22 +365,12 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   let targetSdkVersion = sdkVersions[targetSdkVersionString];
 
   // Maybe bail out early if people are trying to update to the current version
-  if (targetSdkVersionString === currentSdkVersionString) {
-    let answer = await prompt({
-      type: 'confirm',
-      name: 'attemptUpdateAgain',
-      message: `You are already using the latest SDK version. Do you want to run the update anyways? This may be useful to ensure that all of your packages are set to the correct version.`,
-    });
-
-    if (!answer.attemptUpdateAgain) {
-      log('Follow the Expo blog at https://blog.expo.io for new release information!');
-      return;
-    }
-  }
+  if (await shouldBailWhenUsingLatest(currentSdkVersionString, targetSdkVersionString)) return;
 
   if (
     targetSdkVersionString === latestSdkVersionString &&
-    currentSdkVersionString !== targetSdkVersionString
+    currentSdkVersionString !== targetSdkVersionString &&
+    !program.nonInteractive
   ) {
     let answer = await prompt({
       type: 'confirm',
@@ -231,64 +402,36 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
       log.newLine();
     }
   } else if (!targetSdkVersion) {
-    // If they provide an apparently unsupported sdk version then let people try
-    // anyways, maybe we want to use this for testing alpha versions or
-    // something...
-    let answer = await prompt({
-      type: 'confirm',
-      name: 'attemptUnknownUpdate',
-      message: `You provided the target SDK version value of ${targetSdkVersionString} which does not seem to exist. But hey, I'm just a program, what do I know. Do you want to try to upgrade to it anyways?`,
-    });
+    if (program.nonInteractive) {
+      log.warn(
+        `You provided the target SDK version value of ${targetSdkVersionString} which does not seem to exist. Upgrading anyways because the command is running in nonInteractive mode.`
+      );
+    } else {
+      // If they provide an apparently unsupported sdk version then let people try
+      // anyways, maybe we want to use this for testing alpha versions or
+      // something...
+      let answer = await prompt({
+        type: 'confirm',
+        name: 'attemptUnknownUpdate',
+        message: `You provided the target SDK version value of ${targetSdkVersionString} which does not seem to exist. But hey, I'm just a program, what do I know. Do you want to try to upgrade to it anyways?`,
+      });
 
-    if (!answer.attemptUnknownUpdate) {
-      return;
+      if (!answer.attemptUnknownUpdate) {
+        return;
+      }
     }
   }
 
   const platforms = exp.platforms || [];
 
   // Check if we can, and probably should, upgrade the (ios) simulator
-  if (Simulator.isPlatformSupported() && platforms.includes('ios')) {
-    let answer = await prompt({
-      type: 'confirm',
-      name: 'upgradeSimulator',
-      message:
-        'You might have to upgrade your iOS simulator. Before you can do that, you have to run the simulator. Do you want to upgrade it now?',
-      default: false,
-    });
-
-    if (answer.upgradeSimulator) {
-      let result = await Simulator.upgradeExpoAsync();
-      if (!result) {
-        log.error(
-          "The upgrade of your simulator didn't go as planned. You might have to reinstall it manually with expo client:install:ios."
-        );
-      }
-    }
-
-    log.newLine();
+  if (platforms.includes('ios')) {
+    await maybeUpgradeSimulatorAsync();
   }
 
   // Check if we can, and probably should, upgrade the android client
-  if (Android.isPlatformSupported() && platforms.includes('android')) {
-    let answer = await prompt({
-      type: 'confirm',
-      name: 'upgradeAndroid',
-      message:
-        'You might have to upgrade your Android client. Before you can do that, you have to run the emulator, or plug a device in. Do you want to upgrade it now?',
-      default: false,
-    });
-
-    if (answer.upgradeAndroid) {
-      let result = await Android.upgradeExpoAsync();
-      if (!result) {
-        log.error(
-          "The upgrade of your Android client didn't go as planned. You might have to reinstall it manually with expo client:install:android."
-        );
-      }
-    }
-
-    log.newLine();
+  if (platforms.includes('android')) {
+    await maybeUpgradeEmulatorAsync();
   }
 
   let packageManager = PackageManager.createForProject(projectRoot, {
@@ -302,9 +445,32 @@ async function upgradeAsync(requestedSdkVersion: string | null, options: Options
   log.addNewLineIfNone();
   await packageManager.addAsync(`expo@^${targetSdkVersionString}`);
 
+  // Remove sdkVersion from app.json
+  try {
+    const { rootConfig } = await ConfigUtils.readConfigJsonAsync(projectRoot);
+    if (rootConfig.expo.sdkVersion && rootConfig.expo.sdkVersion !== 'UNVERSIONED') {
+      log.addNewLineIfNone();
+      log(chalk.underline.bold('Removing deprecated sdkVersion property from the app.json...'));
+      await ConfigUtils.writeConfigJsonAsync(projectRoot, { sdkVersion: undefined });
+    }
+  } catch (_) {}
+
+  // Evaluate project config (app.config.js)
+  const { exp: currentExp } = ConfigUtils.getConfig(projectRoot, { mode: 'development' });
+
+  if (
+    !Versions.gteSdkVersion(currentExp, targetSdkVersionString) &&
+    currentExp.sdkVersion !== 'UNVERSIONED'
+  ) {
+    log.addNewLineIfNone();
+    log(
+      chalk.underline.bold("Please manually delete the sdkVersion in your project's app.config...")
+    );
+  }
+
   log.addNewLineIfNone();
-  log(chalk.underline.bold('Updating your app.json file...'));
-  await upgradeAppJson(projectRoot, targetSdkVersionString);
+  log(chalk.underline.bold('Updating your app.json to account for breaking changes...'));
+  await makeBreakingChangesToConfig(projectRoot, targetSdkVersionString);
 
   log(chalk.bold.underline('Updating packages to compatible versions (where known)...'));
   log.addNewLineIfNone();
@@ -427,5 +593,16 @@ export default function(program: Command) {
     .option('--npm', 'Use npm to install dependencies. (default when package-lock.json exists)')
     .option('--yarn', 'Use Yarn to install dependencies. (default when yarn.lock exists)')
     .description('Upgrades your project dependencies and app.json and to the given SDK version')
-    .asyncAction(upgradeAsync);
+    .asyncAction(async (requestedSdkVersion: string | null, options: Options) => {
+      const { projectRoot, workflow } = await findProjectRootAsync(process.cwd());
+
+      await upgradeAsync(
+        {
+          requestedSdkVersion,
+          projectRoot,
+          workflow,
+        },
+        options
+      );
+    });
 }

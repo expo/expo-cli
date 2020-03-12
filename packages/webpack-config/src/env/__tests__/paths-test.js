@@ -4,9 +4,9 @@ import path from 'path';
 import { getPaths, getPathsAsync, getPublicPaths, getServedPath } from '../paths';
 import { normalizePaths } from '../../utils';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
-const projectRootCustomHomepage = path.resolve(__dirname, '../../../tests/custom-homepage');
-const projectRootMinimum = path.resolve(__dirname, '../../../tests/minimum');
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
+const projectRootCustomHomepage = path.resolve(__dirname, '../../../e2e/custom-homepage');
+const projectRootMinimum = path.resolve(__dirname, '../../../e2e/minimum');
 
 function defaultNormalize(locations) {
   return normalizePaths(locations, value => value.split('packages/webpack-config/').pop());

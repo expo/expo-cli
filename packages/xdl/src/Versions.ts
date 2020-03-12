@@ -85,7 +85,10 @@ export async function releasedSdkVersionsAsync(): Promise<SDKVersions> {
   return pickBy(sdkVersions, (data, _sdkVersionString) => !!data.releaseNoteUrl);
 }
 
-export function gteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean {
+export function gteSdkVersion(
+  expJson: Pick<ExpoConfig, 'sdkVersion'>,
+  sdkVersion: string
+): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }
@@ -104,7 +107,10 @@ export function gteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean 
   }
 }
 
-export function lteSdkVersion(expJson: ExpoConfig, sdkVersion: string): boolean {
+export function lteSdkVersion(
+  expJson: Pick<ExpoConfig, 'sdkVersion'>,
+  sdkVersion: string
+): boolean {
   if (!expJson.sdkVersion) {
     return false;
   }

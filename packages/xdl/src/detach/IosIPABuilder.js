@@ -2,7 +2,7 @@ import _ from 'lodash';
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import plist from 'plist';
+import plist from '@expo/plist';
 
 import _logger from './Logger';
 import { spawnAsyncThrowError } from './ExponentTools';

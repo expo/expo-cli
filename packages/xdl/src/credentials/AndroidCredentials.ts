@@ -21,7 +21,7 @@ export type Keystore = {
   keyAlias: string;
 };
 
-type KeystoreInfo = {
+export type KeystoreInfo = {
   keystorePath: string;
   keystorePassword: string;
   keyPassword: string;
@@ -29,7 +29,11 @@ type KeystoreInfo = {
 };
 
 export async function exportCertBinary(
-  { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
+  {
+    keystorePath,
+    keystorePassword,
+    keyAlias,
+  }: Pick<KeystoreInfo, 'keystorePath' | 'keystorePassword' | 'keyAlias'>,
   certFile: string
 ): Promise<SpawnResult> {
   try {
@@ -58,7 +62,11 @@ export async function exportCertBinary(
 }
 
 export async function exportCertBase64(
-  { keystorePath, keystorePassword, keyAlias }: KeystoreInfo,
+  {
+    keystorePath,
+    keystorePassword,
+    keyAlias,
+  }: Pick<KeystoreInfo, 'keystorePath' | 'keystorePassword' | 'keyAlias'>,
   certFile: string
 ): Promise<SpawnResult> {
   try {
@@ -181,7 +189,7 @@ export async function exportPrivateKey(
 }
 
 export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: string = '') {
-  const { keystorePath, keystorePassword, keyAlias } = keystoreInfo;
+  const { keystorePath } = keystoreInfo;
   const certFile = `${keystorePath}.cer`;
   try {
     await exportCertBinary(keystoreInfo, certFile);
@@ -234,7 +242,11 @@ export async function logKeystoreHashes(keystoreInfo: KeystoreInfo, linePrefix: 
 }
 
 export function logKeystoreCredentials(
-  { keystorePassword, keyAlias, keyPassword }: Keystore,
+  {
+    keystorePassword,
+    keyAlias,
+    keyPassword,
+  }: Pick<Keystore, 'keystorePassword' | 'keyAlias' | 'keyPassword'>,
   title: string = 'Keystore credentials',
   linePrefix: string = ''
 ) {

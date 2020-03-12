@@ -4,7 +4,7 @@ import path from 'path';
 import { conditionMatchesFile, getRules } from '../../utils/search';
 import { getBabelLoaderRule } from '../createAllLoaders';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 
 describe('preset', () => {
   for (const platform of ['ios', 'web']) {
@@ -13,7 +13,16 @@ describe('preset', () => {
         projectRoot,
         platform,
         mode: 'development',
-        config: { web: { build: { babel: { include: ['custom-lib'] } } } },
+        config: {
+          web: {
+            build: {
+              babel: {
+                include: ['custom-lib'],
+                use: { options: { cacheIdentifier: 'custom-value-to-skip-babel-config-error' } },
+              },
+            },
+          },
+        },
       };
 
       const babelLoader = getBabelLoaderRule(env);
@@ -42,7 +51,16 @@ describe('includes', () => {
     const env = {
       projectRoot,
       mode: 'development',
-      config: { web: { build: { babel: { include: ['custom-lib'] } } } },
+      config: {
+        web: {
+          build: {
+            babel: {
+              include: ['custom-lib'],
+              use: { options: { cacheIdentifier: 'custom-value-to-skip-babel-config-error' } },
+            },
+          },
+        },
+      },
     };
 
     rules = getRules({

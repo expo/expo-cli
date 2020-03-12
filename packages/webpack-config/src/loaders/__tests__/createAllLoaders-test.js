@@ -4,7 +4,7 @@ import path from 'path';
 import { conditionMatchesFile, getRules } from '../../utils/search';
 import createAllLoaders from '../createAllLoaders';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 
 const env = { projectRoot, mode: 'development' };
 

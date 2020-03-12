@@ -2,16 +2,16 @@
 import chalk from 'chalk';
 import { Command } from 'commander';
 import { resolve } from 'path';
+// @ts-ignore: expo-optimize is not listed in its own dependencies
+import packageJSON from 'expo-optimize/package.json';
 
 import { isProjectOptimized as isProjectOptimizedAsync, optimizeAsync } from './assets';
 import shouldUpdate from './update';
 
 let projectDirectory: string = '';
 
-const packageJson = () => require('../package.json');
-
-const program = new Command(packageJson().name)
-  .version(packageJson().version)
+const program = new Command(packageJSON.name)
+  .version(packageJSON.version)
   .arguments('<project-directory>')
   .usage(`${chalk.green('<project-directory>')} [options]`)
   .description('Compress the assets in your Expo project')

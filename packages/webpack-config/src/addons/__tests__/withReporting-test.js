@@ -4,7 +4,7 @@ import path from 'path';
 import { normalizePaths } from '../../utils';
 import withReporting, { throwDeprecatedConfig } from '../withReporting';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 
 it(`throws an error if the deprecated app.json value is used`, () => {
   expect(() =>
@@ -49,7 +49,7 @@ it(`can use a custom output path`, () => {
   );
 
   const [cleanPlugin, reportPlugin] = normalizePaths(config.plugins, value =>
-    value.split('packages/webpack-config/tests/basic/').pop()
+    value.split('packages/webpack-config/e2e/basic/').pop()
   );
 
   expect(cleanPlugin.cleanOnceBeforeBuildPatterns).toContain('random-path');

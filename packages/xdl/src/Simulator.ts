@@ -370,13 +370,12 @@ export async function _installExpoOnSimulatorAsync(url?: string) {
     if (warningTimer) {
       clearTimeout(warningTimer);
     }
-    return setTimeout(
-      () =>
-        Logger.global.info(
-          'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
-        ),
-      INSTALL_WARNING_TIMEOUT
-    );
+    return setTimeout(() => {
+      Logger.global.info('');
+      Logger.global.info(
+        'This download is taking longer than expected. You can also try downloading the clients from the website at https://expo.io/tools'
+      );
+    }, INSTALL_WARNING_TIMEOUT);
   };
 
   Logger.notifications.info({ code: NotificationCode.START_LOADING });

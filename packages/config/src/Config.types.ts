@@ -520,6 +520,14 @@ export type WebPlatformConfig = {
    * Configuration for PWA splash screens.
    */
   splash?: WebSplashScreen;
+  config?: {
+    /**
+     * [Firebase Configuration Object](https://support.google.com/firebase/answer/7015592) Firebase web configuration.
+     */
+    firebase?: {
+      [key: string]: any;
+    };
+  };
 };
 
 /**

@@ -13,7 +13,7 @@ import * as ProjectSettings from './ProjectSettings';
  */
 export async function getProjectConfigAsync(
   projectRoot: string,
-  options: Partial<GetConfigOptions>
+  options: Partial<GetConfigOptions> = {}
 ): Promise<ProjectConfig> {
   let { mode } = options;
   if (!mode || !['development', 'production'].includes(mode)) {

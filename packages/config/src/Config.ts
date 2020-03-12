@@ -221,8 +221,8 @@ function parseAndValidateRootConfig(
     );
   }
   return {
-    exp,
-    rootConfig: outputRootConfig,
+    exp: { ...exp },
+    rootConfig: { ...outputRootConfig },
   };
 }
 
@@ -273,7 +273,7 @@ export async function writeConfigJsonAsync(
 ): Promise<ProjectConfig> {
   const { configPath } = findConfigFile(projectRoot);
   let { exp, pkg, rootConfig } = await readConfigJsonAsync(projectRoot);
-  exp = { ...exp, ...options };
+  exp = { ...rootConfig.expo, ...options };
   rootConfig = { ...rootConfig, expo: exp };
 
   await JsonFile.writeAsync(configPath, rootConfig, { json5: false });

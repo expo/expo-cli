@@ -3,9 +3,10 @@ import path from 'path';
 import findWorkspaceRoot from 'find-yarn-workspace-root';
 
 import resolveFrom from 'resolve-from';
-import { readConfigJson } from '../Config';
+import { getConfig } from '../Config';
 import { resolveModule } from '../Modules';
 import { getManagedExtensions } from './extensions';
+import { ConfigMode } from '../Config.types';
 
 // https://github.com/facebook/create-react-app/blob/9750738cce89a967cc71f28390daf5d4311b193c/packages/react-scripts/config/paths.js#L22
 export function ensureSlash(inputPath: string, needsSlash: boolean): string {
@@ -47,19 +48,21 @@ export function getAbsolutePathWithProjectRoot(
 export function getEntryPoint(
   projectRoot: string,
   entryFiles: string[],
-  platforms: string[]
+  platforms: string[],
+  mode: ConfigMode = 'development'
 ): string | null {
   const extensions = getManagedExtensions(platforms);
-  return getEntryPointWithExtensions(projectRoot, entryFiles, extensions);
+  return getEntryPointWithExtensions(projectRoot, entryFiles, extensions, mode);
 }
 
 // Used to resolve the main entry file for a project.
 export function getEntryPointWithExtensions(
   projectRoot: string,
   entryFiles: string[],
-  extensions: string[]
+  extensions: string[],
+  mode: ConfigMode = 'development'
 ): string {
-  const { exp, pkg } = readConfigJson(projectRoot, true, true);
+  const { exp, pkg } = getConfig(projectRoot, { skipSDKVersionRequirement: true, mode });
 
   // This will first look in the `app.json`s `expo.entryPoint` field for a potential main file.
   // We check the Expo config first in case you want your project to start differently with Expo then in a standalone environment.
