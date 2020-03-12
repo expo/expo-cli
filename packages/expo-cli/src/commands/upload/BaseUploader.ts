@@ -41,7 +41,6 @@ export default class BaseUploader {
   async _getProjectConfig(): Promise<void> {
     const { exp } = getConfig(this.projectDir, {
       skipSDKVersionRequirement: true,
-      mode: 'production',
     });
     this._ensureExperienceIsValid(exp);
     this._exp = exp;
