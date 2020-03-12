@@ -4,7 +4,7 @@ import path from 'path';
 import getConfig from '../getConfig';
 import { normalizePaths } from '../../utils';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 const mode = 'development';
 const env = { projectRoot, mode };
 

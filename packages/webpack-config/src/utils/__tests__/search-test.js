@@ -5,7 +5,7 @@ import path from 'path';
 import createWebpackConfigAsync from '../..';
 import * as LoaderUtils from '../search';
 
-const projectRoot = path.resolve(__dirname, '../../../tests/basic');
+const projectRoot = path.resolve(__dirname, '../../../e2e/basic');
 
 it(`getExpoBabelLoader gets the Expo babel loader`, async () => {
   const config = await createWebpackConfigAsync({
